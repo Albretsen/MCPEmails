@@ -218,6 +218,19 @@ test('payment mode, missing metadata and stale replays are skipped', () => {
   assert.deepEqual(decide(session({ expiresAt: NOW_S - 4 * 86400 }), ctx(), NOW), { kind: 'skip', reason: 'stale_event' });
 });
 
+test('a chat-link session expired because a racing open won is never reminded', async () => {
+  const superseded = session({
+    metadata: { user_id: USER, plan_id: 'personal', interval: 'month', checkout_link_superseded: 'true' },
+  });
+  assert.deepEqual(decide(superseded, ctx(), NOW), { kind: 'skip', reason: 'superseded' });
+  const store = new MemoryStore(ctx());
+  const s = recordingSender();
+  const out = await handleExpiredSession({ session: superseded, store, send: s.send, mode: 'on', now: NOW });
+  assert.equal(out, 'skipped:superseded');
+  assert.equal(store.rows.length, 0);
+  assert.equal(s.sent.length, 0);
+});
+
 test('the owner on the session must be the owner loaded', () => {
   const c = ctx();
   c.owner!.id = 'someone-else';

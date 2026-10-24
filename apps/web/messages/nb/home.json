@@ -154,6 +154,7 @@
     "sub": "Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til opptil 10 for én person som driver en bedrift. Business har 10 postkasser inkludert, $3 i måneden for hver ekstra, og plass til hele teamet.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
+    "inclVat": "inkl. mva.",
     "tiers": {
       "free": {
         "name": "Gratis",
