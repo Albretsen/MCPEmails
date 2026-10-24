@@ -11,6 +11,7 @@ import {
   nextAttemptAt,
   RETRY_DELAYS_MS,
   runSends,
+  SEND_BATCH,
   type WebhookDeps,
 } from "../webhooks/deliver.ts";
 import { loginRefusedMarker } from "../mail/health.ts";
@@ -260,11 +261,24 @@ Deno.test("headers reads in the send step respect the per-host cap", async () =>
   assert(maxInFlight <= HOST_CONCURRENCY, `max ${maxInFlight} reads on one host`);
 });
 
-Deno.test("first attempts are sent before retries", async () => {
+// The guarantee is LEASE order, not POST order: deliveries in one round are
+// sent concurrently and may finish in any order. What first-before-retry
+// promises is that, when more are due than a round leases, first attempts
+// get the slots.
+Deno.test("first attempts are leased before retries when more are due than one round takes", async () => {
   const r = rig();
   r.hooks.endpoint({ id: "ep", workspace_id: WS });
-  r.pending("d1", { attempt: 3, next_attempt_at: r.now() - HOUR });
-  r.pending("d2", { attempt: 0, next_attempt_at: r.now() });
+  for (let n = 0; n < SEND_BATCH; n++) r.pending(`r${n}`, { attempt: 3, next_attempt_at: r.now() - HOUR - n });
+  r.pending("f9", { attempt: 0, next_attempt_at: r.now() });
+  const rounds: string[][] = [];
+  const leaseDue = r.hooks.leaseDue.bind(r.hooks);
+  r.hooks.leaseDue = async (limit, seconds) => {
+    const batch = await leaseDue(limit, seconds);
+    rounds.push(batch.map((d) => d.delivery_id));
+    return batch;
+  };
   await r.retry();
-  assertEquals(r.transport.sent.map((s) => JSON.parse(s.body).id), [`evt_${"a".repeat(31)}2`, `evt_${"a".repeat(31)}1`]);
+  assertEquals(rounds[0].length, SEND_BATCH);
+  assertEquals(rounds[0][0], "f9", "the first attempt is leased first, ahead of older retries");
+  assertEquals(r.transport.sent.length, SEND_BATCH + 1, "the retry left out of round one goes in round two");
 });

@@ -541,7 +541,7 @@ BEGIN
      WHERE d.status = 'pending'
        AND d.next_attempt_at <= now()
        AND (d.leased_until IS NULL OR d.leased_until <= now())
-     ORDER BY (d.attempt > 0), d.next_attempt_at
+     ORDER BY (d.attempt > 0), d.next_attempt_at, d.id
      LIMIT v_limit
        FOR UPDATE SKIP LOCKED
   ),
@@ -564,7 +564,7 @@ BEGIN
     JOIN public.webhook_endpoints e ON e.id = c.endpoint_id
     LEFT JOIN public.inboxes i ON i.id = c.inbox_id
     LEFT JOIN public.inbox_watch_state s ON s.inbox_id = c.inbox_id
-   ORDER BY (c.attempt > 0), c.created_at;
+   ORDER BY (c.attempt > 0), c.created_at, c.id;
 END;
 $fn$;
 
