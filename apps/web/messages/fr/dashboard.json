@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro en couvre jusqu'à 10.",
     "multiInboxCompact": "Vous gérez aussi info@, ventes@ ou factures@ ? Connectez-les : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation.",
     "multiInboxCompactUpgrade": "Vous gérez aussi info@, ventes@ ou factures@ ? Votre agent peut gérer toutes les boîtes de l'entreprise depuis une seule conversation. Une deuxième boîte nécessite une offre payante.",
-    "multiInboxCta": "Ajouter une boîte"
+    "multiInboxCta": "Ajouter une boîte",
+    "waitingTitle": "En attente de votre premier appel",
+    "waitingDesc": "Votre boîte mail est connectée. Connectez votre app d'IA et posez-lui une question. Cette page se met à jour dès que le premier appel arrive.",
+    "connectAppTitle": "Connecter votre app d'IA",
+    "connectAppDesc": "Collez cette URL dans votre app d'IA, puis choisissez-la ci-dessous pour voir les étapes.",
+    "connectAppDone": "Votre app d'IA est connectée à MCPEmails.",
+    "askTitle": "Posez-lui une question",
+    "askDesc": "Ouvrez une nouvelle conversation et collez l'une de ces phrases.",
+    "copyPrompt": "Copier le prompt",
+    "prompts": {
+      "unread": "Résume mes e-mails non lus d'aujourd'hui",
+      "bank": "Trouve le dernier e-mail de ma banque et dis-moi ce qu'il contient",
+      "draftReply": "Rédige une réponse à mon e-mail le plus récent, mais ne l'envoie pas"
+    },
+    "clientToggle": {
+      "claude": "Dans Claude, cliquez sur + dans la zone de message, ouvrez Connecteurs et vérifiez que MCPEmails est activé pour la conversation. Sinon, Claude répond sans vos e-mails.",
+      "chatgpt": "Dans ChatGPT, cliquez sur + dans chaque nouvelle conversation, choisissez le mode développeur et sélectionnez l'app MCPEmails. Sinon, ChatGPT ne voit pas vos e-mails."
+    },
+    "itWorksTitle": "Ça marche",
+    "itWorksDesc": "Votre app d'IA vient de faire son premier appel à MCPEmails. Continuez dans la même conversation.",
+    "waitingLive": "Cette page se met à jour toute seule dès que le premier appel arrive.",
+    "waitingStopped": "Toujours aucun appel. Rechargez cette page après avoir essayé un prompt."
   },
   "firstWeek": {
     "title": "Votre première semaine",
@@ -476,7 +497,6 @@
       "nextStep1": "Dans claude.ai ou Claude Desktop, ouvrez Paramètres → Connecteurs → Ajouter un connecteur personnalisé.",
       "nextStep2": "Collez l'URL ci-dessus. Les clients OAuth se connectent en un clic.",
       "nextStep3": "Demandez ensuite à Claude :",
-      "nextPrompt": "Résume mes e-mails non lus d'aujourd'hui.",
       "nextGuide": "Guide étape par étape",
       "warning": "Conservez cette clé en lieu sûr. Elle ne peut plus être affichée. Si vous la perdez, révoquez-la et créez-en une nouvelle.",
       "acknowledge": "J'ai copié ma clé API et je comprends qu'elle ne peut plus être affichée.",

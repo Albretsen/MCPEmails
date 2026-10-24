@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Verbinden Sie info@, sales@, invoices@ und die übrigen Adressen. Ihr Agent bearbeitet dann jedes Firmenpostfach in einer Unterhaltung und antwortet von der richtigen Adresse. Free umfasst ein Postfach, Pro bis zu 10.",
     "multiInboxCompact": "Betreiben Sie auch info@, sales@ oder invoices@? Verbinden Sie diese Postfächer, und Ihr Agent bearbeitet jedes Firmenpostfach in einer Unterhaltung.",
     "multiInboxCompactUpgrade": "Betreiben Sie auch info@, sales@ oder invoices@? Ihr Agent kann jedes Firmenpostfach in einer Unterhaltung bearbeiten. Ein zweites Postfach erfordert einen kostenpflichtigen Plan.",
-    "multiInboxCta": "Postfach hinzufügen"
+    "multiInboxCta": "Postfach hinzufügen",
+    "waitingTitle": "Warten auf Ihren ersten Aufruf",
+    "waitingDesc": "Ihr Postfach ist verbunden. Verbinden Sie Ihre KI-App und stellen Sie ihr eine Frage. Diese Seite aktualisiert sich, sobald der erste Aufruf ankommt.",
+    "connectAppTitle": "KI-App verbinden",
+    "connectAppDesc": "Fügen Sie diese URL in Ihre KI-App ein und wählen Sie die App unten aus, um die Schritte zu sehen.",
+    "connectAppDone": "Ihre KI-App ist mit MCPEmails verbunden.",
+    "askTitle": "Stellen Sie eine Frage",
+    "askDesc": "Starten Sie einen neuen Chat und fügen Sie einen dieser Sätze ein.",
+    "copyPrompt": "Prompt kopieren",
+    "prompts": {
+      "unread": "Fasse meine ungelesenen E-Mails von heute zusammen",
+      "bank": "Finde die letzte E-Mail von meiner Bank und sag mir, was drinsteht",
+      "draftReply": "Entwirf eine Antwort auf meine neueste E-Mail, aber schick sie nicht ab"
+    },
+    "clientToggle": {
+      "claude": "Klicken Sie in Claude im Eingabefeld auf +, öffnen Sie Konnektoren und prüfen Sie, ob MCPEmails für den Chat eingeschaltet ist. Sonst antwortet Claude ohne Ihre E-Mails.",
+      "chatgpt": "Klicken Sie in ChatGPT in jedem neuen Chat auf +, wählen Sie Entwicklermodus und dann die App MCPEmails. Sonst sieht ChatGPT Ihre E-Mails nicht."
+    },
+    "itWorksTitle": "Es funktioniert",
+    "itWorksDesc": "Ihre KI-App hat gerade ihren ersten Aufruf an MCPEmails gemacht. Machen Sie im selben Chat weiter.",
+    "waitingLive": "Diese Seite aktualisiert sich von selbst, sobald der erste Aufruf ankommt.",
+    "waitingStopped": "Noch kein Aufruf. Laden Sie die Seite neu, nachdem Sie einen Prompt ausprobiert haben."
   },
   "firstWeek": {
     "title": "Ihre erste Woche",
@@ -476,7 +497,6 @@
       "nextStep1": "Öffnen Sie in claude.ai oder Claude Desktop „Einstellungen“ → „Konnektoren“ → „Benutzerdefinierten Konnektor hinzufügen“.",
       "nextStep2": "Fügen Sie die obige URL ein. OAuth-Clients verbinden sich mit einem Klick.",
       "nextStep3": "Dann fragen Sie Claude einfach:",
-      "nextPrompt": "Fasse meine ungelesenen E-Mails von heute zusammen.",
       "nextGuide": "Schritt-für-Schritt-Anleitung",
       "warning": "Bewahren Sie diesen Schlüssel sicher auf. Er kann nicht erneut angezeigt werden. Wenn Sie ihn verlieren, widerrufen Sie ihn und erstellen Sie einen neuen.",
       "acknowledge": "Ich habe meinen API-Schlüssel kopiert und verstehe, dass er nicht erneut angezeigt werden kann.",

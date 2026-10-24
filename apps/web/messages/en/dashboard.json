@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers up to 10.",
     "multiInboxCompact": "Running info@, sales@ or invoices@ too? Connect them and your agent works every company mailbox from one conversation.",
     "multiInboxCompactUpgrade": "Running info@, sales@ or invoices@ too? Your agent can work every company mailbox from one conversation. A second mailbox needs a paid plan.",
-    "multiInboxCta": "Add a mailbox"
+    "multiInboxCta": "Add a mailbox",
+    "waitingTitle": "Waiting for your first call",
+    "waitingDesc": "Your inbox is connected. Connect your AI app and ask it something. This page updates when the first call arrives.",
+    "connectAppTitle": "Connect your AI app",
+    "connectAppDesc": "Paste this URL into your AI app, then pick it below for the steps.",
+    "connectAppDone": "Your AI app is connected to MCPEmails.",
+    "askTitle": "Ask it something",
+    "askDesc": "Start a new chat and paste one of these.",
+    "copyPrompt": "Copy prompt",
+    "prompts": {
+      "unread": "Summarize my unread email from today",
+      "bank": "Find the last email from my bank and tell me what it says",
+      "draftReply": "Draft a reply to my most recent email, but don't send it"
+    },
+    "clientToggle": {
+      "claude": "In Claude, click + in the message box, open Connectors and check that MCPEmails is switched on for the chat. If it is off, Claude answers without your email.",
+      "chatgpt": "In ChatGPT, click + in each new chat, choose Developer mode and select the MCPEmails app. Without that, ChatGPT cannot see your email."
+    },
+    "itWorksTitle": "It works",
+    "itWorksDesc": "Your AI app just made its first call to MCPEmails. Keep going in the same chat.",
+    "waitingLive": "This page updates by itself when the first call arrives.",
+    "waitingStopped": "Still no call. Reload this page after you try a prompt."
   },
   "firstWeek": {
     "title": "Your first week",
@@ -476,7 +497,6 @@
       "nextStep1": "In claude.ai or Claude Desktop, open Settings → Connectors → Add custom connector.",
       "nextStep2": "Paste the URL above. OAuth clients connect in one click.",
       "nextStep3": "Then just ask Claude:",
-      "nextPrompt": "Summarize my unread email from today.",
       "nextGuide": "Step-by-step guide",
       "warning": "Store this key somewhere safe. It cannot be shown again. If you lose it, revoke this key and create a new one.",
       "acknowledge": "I have copied my API key and understand it cannot be shown again.",
