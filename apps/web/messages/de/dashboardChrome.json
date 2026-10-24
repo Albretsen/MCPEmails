@@ -441,6 +441,7 @@
   },
   "founder": {
     "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",
-    "places": "Noch {left} von {total} Plätzen frei"
+    "places": "Noch {left} von {total} Plätzen frei",
+    "priceChanged": "Der Preis hat sich geändert, bevor Sie bestätigt haben, daher wurde nichts berechnet. Die Beträge oben sind der Preis, der jetzt gilt."
   }
 }

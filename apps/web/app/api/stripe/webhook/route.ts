@@ -105,7 +105,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
-import { recordFounderPlace } from '@/lib/stripe/founder-places';
+import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
@@ -390,6 +390,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'invoice.payment_failed',
     'invoice.payment_action_required',
     'invoice.payment_succeeded',
+    // Only retries the idempotent founder-place insert; no plan state.
+    'invoice.paid',
   ]);
 
   if (customerIdForEvent && !EXEMPT_FROM_STALENESS.has(event.type)) {
@@ -444,6 +446,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        retryFounderPlace(event.data.object as Stripe.Invoice);
+        break;
+
+      // Only the founder-place retry listens to this one; the lifecycle
+      // handlers stay on invoice.payment_succeeded. Both are idempotent.
+      case 'invoice.paid':
+        retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
 
       case 'customer.subscription.deleted':
@@ -1227,6 +1236,28 @@ async function queueDunningForInvoice(
  * they are a paying customer again, whatever the subscription record said when
  * the sequence was queued.
  */
+/**
+ * A paid invoice on the Business founder price records its place again (an
+ * idempotent no-op once the row exists), so a place whose first insert failed
+ * after a subscription event is recovered on the next payment. After the
+ * response, and it cannot throw.
+ */
+function retryFounderPlace(invoice: Stripe.Invoice): void {
+  after(() =>
+    recordFounderPlaceFromInvoice({
+      db: createServiceRoleClient(),
+      invoice,
+      retrieveSubscription: (id) => stripe.subscriptions.retrieve(id),
+      resolveOwner: async (subscription) => {
+        const customerId =
+          typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
+        return resolveUserId(createServiceRoleClient(), customerId, subscription.metadata?.user_id ?? null);
+      },
+      tagSubscription: (id, metadata) => stripe.subscriptions.update(id, { metadata }),
+    }),
+  );
+}
+
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
   if (!lifecycleQueueingEnabled()) return;
 

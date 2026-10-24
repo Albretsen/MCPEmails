@@ -33,7 +33,7 @@ const nodeMock = mock as unknown as {
 
 /** Whether the mocked offer lookup says the founder price is open. */
 let offerOpen = false;
-const offerLookups: Array<{ ownerId?: string | null }> = [];
+const offerLookups: Array<{ ownerId?: string | null; fresh?: boolean }> = [];
 let billingRow: { plan: string; subscription_status: string | null; stripe_subscription_id: string | null } | null =
   null;
 let currentPrice = 'price_solo_month';
@@ -170,10 +170,13 @@ test('new Business checkout during the offer: founder price, no promotion codes,
   const session = sessionsCreated[0];
   assert.deepEqual((session.line_items as unknown[])[0], { price: 'price_founder_year', quantity: 1 });
   assert.equal('allow_promotion_codes' in session, false);
-  assert.equal((session.subscription_data as { metadata: Record<string, string> }).metadata.offer, 'founder2026');
-  assert.equal((session.metadata as Record<string, string>).offer, 'founder2026');
+  const subMeta = (session.subscription_data as { metadata: Record<string, string> }).metadata;
+  assert.equal(subMeta.founder_offer, 'founder2026');
+  assert.equal('offer' in subMeta, false, 'the shared seasonal key is left alone');
+  assert.equal((session.metadata as Record<string, string>).founder_offer, 'founder2026');
   assert.match(String(session.success_url), /&interval=year&offer=founder$/);
-  assert.deepEqual(offerLookups, [{ ownerId: USER_ID }]);
+  // The place count is read uncached when a price is decided.
+  assert.deepEqual(offerLookups, [{ ownerId: USER_ID, fresh: true }]);
 });
 
 test('new Business checkout with no offer: $39 price and promotion codes as before', async () => {
@@ -182,7 +185,7 @@ test('new Business checkout with no offer: $39 price and promotion codes as befo
   const session = sessionsCreated[0];
   assert.deepEqual((session.line_items as unknown[])[0], { price: 'price_business_month', quantity: 1 });
   assert.equal(session.allow_promotion_codes, true);
-  assert.equal('offer' in (session.subscription_data as { metadata: object }).metadata, false);
+  assert.equal('founder_offer' in (session.subscription_data as { metadata: object }).metadata, false);
   assert.doesNotMatch(String(session.success_url), /offer=/);
 });
 
@@ -228,4 +231,51 @@ test('a $39 Business subscriber switching interval during the offer stays at $39
   reset({ open: true, billing: ACTIVE('pro'), price: 'price_business_month' });
   await runCheckout({ planId: 'pro', interval: 'year', confirmChange: true });
   assert.equal(planItemPrice(subscriptionsUpdated[0]), 'price_business_year');
+});
+
+// ── Quote and charge must be the same price ─────────────────────────────
+
+test('the quote carries the price it was priced with', async () => {
+  reset({ open: true, billing: ACTIVE('solo'), price: 'price_solo_month' });
+  const quote = await runCheckout({ planId: 'pro', interval: 'month' });
+  assert.equal(quote.kind, 'confirmation_required');
+  assert.equal(quote.kind === 'confirmation_required' && quote.quotedPriceId, 'price_founder_month');
+  assert.equal(subscriptionsUpdated.length, 0);
+});
+
+test('offer gone between quote and confirm: nothing is charged, a fresh $39 quote comes back', async () => {
+  // Quoted at the founder price while the offer was open...
+  reset({ open: true, billing: ACTIVE('solo'), price: 'price_solo_month' });
+  const quote = await runCheckout({ planId: 'pro', interval: 'month' });
+  assert.equal(quote.kind, 'confirmation_required');
+  const quotedPriceId = quote.kind === 'confirmation_required' ? quote.quotedPriceId : '';
+  // ...and confirmed after it closed (window, cap or flag).
+  reset({ open: false, billing: ACTIVE('solo'), price: 'price_solo_month' });
+  const outcome = await runCheckout({ planId: 'pro', interval: 'month', confirmChange: true, quotedPriceId });
+  assert.equal(outcome.kind, 'confirmation_required');
+  if (outcome.kind !== 'confirmation_required') return;
+  assert.equal(outcome.priceChanged, true);
+  assert.equal(outcome.quotedPriceId, 'price_business_month');
+  assert.equal(subscriptionsUpdated.length, 0, 'no swap, no charge');
+  // Confirming the fresh quote goes through at the price it named.
+  const second = await runCheckout({
+    planId: 'pro',
+    interval: 'month',
+    confirmChange: true,
+    quotedPriceId: outcome.quotedPriceId,
+  });
+  assert.equal(second.kind, 'changed');
+  assert.equal(planItemPrice(subscriptionsUpdated[0]), 'price_business_month');
+});
+
+test('a confirm with the quoted price that still applies charges as before', async () => {
+  reset({ open: true, billing: ACTIVE('solo'), price: 'price_solo_month' });
+  const outcome = await runCheckout({
+    planId: 'pro',
+    interval: 'month',
+    confirmChange: true,
+    quotedPriceId: 'price_founder_month',
+  });
+  assert.equal(outcome.kind, 'changed');
+  assert.equal(planItemPrice(subscriptionsUpdated[0]), 'price_founder_month');
 });

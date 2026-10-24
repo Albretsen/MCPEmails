@@ -41,6 +41,11 @@ export interface StripePlanPrices {
    * founder line prints. Absent everywhere else. Set by `withFounderPrices`.
    */
   founder?: FounderDisplay;
+  /**
+   * Business only: the viewer already pays the founder price, and the amounts
+   * above are that price. Set by `withFounderSubscriberPrices`.
+   */
+  founderSubscriber?: boolean;
 }
 
 /** What a surface needs to print the founder line. */

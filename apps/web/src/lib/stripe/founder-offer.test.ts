@@ -22,6 +22,7 @@ const {
   businessPriceFor,
   founderOfferFor,
   founderPlacesLeft,
+  founderTermsVisibleFor,
   inFounderWindow,
   pricesWithFounder,
 } = await import('./founder-offer.ts');
@@ -65,6 +66,19 @@ test('still open at 2026-12-31 23:59:59 Oslo, closed from 2027-01-01 00:00 Oslo'
 
 test('an invalid date is outside the window', () => {
   assert.equal(inFounderWindow(new Date('not a date')), false);
+});
+
+// ── The terms clause ───────────────────────────────────────────────────────
+
+test('terms clause: started offer or an existing founder, never zh', () => {
+  const at = (now: string, flagOn: boolean | null, placesTaken: number | null, locale = 'en') =>
+    founderTermsVisibleFor({ locale, now: new Date(now), flagOn, placesTaken });
+  assert.equal(at('2026-11-20T00:00:00Z', false, 0), false, 'flag off, no rows');
+  assert.equal(at('2026-11-08T22:59:59Z', true, 0), false, 'flag on before the start');
+  assert.equal(at('2026-11-08T23:00:00Z', true, 0), true, 'flag on at the start');
+  assert.equal(at('2027-03-01T00:00:00Z', false, 1), true, 'rows after the window');
+  assert.equal(at('2026-11-20T00:00:00Z', true, 5, 'zh'), false, 'never zh');
+  assert.equal(at('2026-11-20T00:00:00Z', null, null), false, 'failed reads');
 });
 
 // ── The flag, the cap, one per owner ───────────────────────────────────────

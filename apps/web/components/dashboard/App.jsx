@@ -616,7 +616,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // page; once the plan has landed they are not, and the price rows are
         // left out rather than showing the $39 nobody was charged.
         const founderPurchase = readQuery(searchParams, 'offer') === 'founder';
-        const priceKnown = !founderPurchase || Boolean(stripePrices?.pro?.founder);
+        const priceKnown =
+          !founderPurchase ||
+          Boolean(stripePrices?.pro?.founder) ||
+          stripePrices?.pro?.founderSubscriber === true;
         // The return URL is a one-shot signal that only exists on the client,
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that

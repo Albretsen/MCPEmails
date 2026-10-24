@@ -7,7 +7,8 @@
  * price and no surface prints a number it could not check.
  *
  *   flag   cached at most FLAG_TTL_MS (60 s) per server instance
- *   count  cached at most COUNT_TTL_MS (5 min) per server instance
+ *   count  cached at most COUNT_TTL_MS (60 s) for pages; read uncached
+ *          (`fresh: true`) when a checkout or an upgrade is priced
  *   owner  read on every call (one indexed row)
  *
  * Nothing is read at all outside the window or when the founder prices are
@@ -21,12 +22,13 @@ import { founderPriceIdFor } from '@/lib/stripe/plans';
 import {
   FOUNDER_FLAG_KEY,
   founderOfferFor,
+  founderTermsVisibleFor,
   inFounderWindow,
   type FounderOffer,
 } from '@/lib/stripe/founder-offer';
 
 const FLAG_TTL_MS = 60_000;
-const COUNT_TTL_MS = 5 * 60_000;
+const COUNT_TTL_MS = 60_000;
 
 type Db = SupabaseClient<Database>;
 
@@ -55,8 +57,8 @@ async function readFlag(db: Db, nowMs: number): Promise<boolean | null> {
   return value;
 }
 
-async function readPlacesTaken(db: Db, nowMs: number): Promise<number | null> {
-  if (countCache && nowMs - countCache.at < COUNT_TTL_MS) return countCache.value;
+async function readPlacesTaken(db: Db, nowMs: number, fresh = false): Promise<number | null> {
+  if (!fresh && countCache && nowMs - countCache.at < COUNT_TTL_MS) return countCache.value;
   const { count, error } = await db
     .from('business_founder_places')
     .select('stripe_subscription_id', { count: 'exact', head: true });
@@ -86,11 +88,15 @@ async function readOwnerHasFounderSub(db: Db, ownerId: string): Promise<boolean 
  *
  * `ownerId` is the buyer, when there is one. Public pages pass none: they show
  * the offer as it stands for a new company, and checkout re-checks the buyer.
+ *
+ * `fresh: true` reads the place count past the cache. Checkout and the
+ * in-place upgrade pass it, so a price is never decided on a stale count.
  */
 export async function currentFounderOffer(opts?: {
   ownerId?: string | null;
   now?: Date;
   db?: Db;
+  fresh?: boolean;
 }): Promise<FounderOffer | null> {
   const now = opts?.now ?? new Date();
   if (!inFounderWindow(now)) return null;
@@ -101,7 +107,7 @@ export async function currentFounderOffer(opts?: {
     const nowMs = now.getTime();
     const [flagOn, placesTaken, ownerHas] = await Promise.all([
       readFlag(db, nowMs),
-      readPlacesTaken(db, nowMs),
+      readPlacesTaken(db, nowMs, opts?.fresh === true),
       opts?.ownerId ? readOwnerHasFounderSub(db, opts.ownerId) : Promise.resolve(false),
     ]);
     if (flagOn !== true || ownerHas == null) return null;
@@ -117,5 +123,31 @@ export async function currentFounderOffer(opts?: {
       err instanceof Error ? err.message : String(err),
     );
     return null;
+  }
+}
+
+/**
+ * Whether the terms page may print the founder clause (5.8). See
+ * `founderTermsVisibleFor`: never in zh, and otherwise only once the offer has
+ * started or a founder subscription exists. Any read that fails hides it.
+ */
+export async function founderTermsVisible(opts: {
+  locale?: string | null;
+  now?: Date;
+  db?: Db;
+}): Promise<boolean> {
+  if (opts.locale === 'zh') return false;
+  const now = opts.now ?? new Date();
+  try {
+    const db = opts.db ?? createServiceRoleClient();
+    const nowMs = now.getTime();
+    const [flagOn, placesTaken] = await Promise.all([readFlag(db, nowMs), readPlacesTaken(db, nowMs)]);
+    return founderTermsVisibleFor({ locale: opts.locale, now, flagOn, placesTaken });
+  } catch (err) {
+    console.error(
+      '[founder-offer] terms visibility failed',
+      err instanceof Error ? err.message : String(err),
+    );
+    return false;
   }
 }

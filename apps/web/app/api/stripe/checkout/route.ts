@@ -69,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm, locale, offer } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale, offer, quotedPriceId } = body as Record<string, unknown>;
 
   const outcome = await runCheckout({
     planId,
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     confirmChange: confirm,
     locale,
     ...(offer !== undefined ? { quotedOffer: offer } : {}),
+    ...(quotedPriceId !== undefined ? { quotedPriceId } : {}),
   });
 
   if (outcome.kind === 'checkout') {
@@ -95,6 +96,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         interval: outcome.interval,
         preview: outcome.preview,
         ...(outcome.offerEnded ? { seasonal_offer_ended: true } : {}),
+        // Sent back as `quotedPriceId` on confirm; see runCheckout.
+        quoted_price_id: outcome.quotedPriceId,
+        ...(outcome.priceChanged ? { price_changed: true } : {}),
       },
       { status: 200 },
     );

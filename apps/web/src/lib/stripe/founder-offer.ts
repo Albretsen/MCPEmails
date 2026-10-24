@@ -51,8 +51,15 @@ export const FOUNDER_WINDOW_CLOSED = new Date('2026-12-31T23:00:00Z');
 /** The `priceValidUntil` date in the /pricing structured data. */
 export const FOUNDER_VALID_UNTIL = '2026-12-31';
 
-/** Stripe metadata `offer` value on every founder subscription (cohort tag). */
+/** The cohort tag on every founder subscription, under FOUNDER_METADATA_KEY. */
 export const FOUNDER_OFFER_TAG = 'founder2026';
+
+/**
+ * The Stripe metadata key the cohort tag is written under. Its own key, not
+ * the shared `offer` key the Black Week offer writes `bw2026` to, so neither
+ * tag can ever overwrite the other.
+ */
+export const FOUNDER_METADATA_KEY = 'founder_offer';
 
 /** The `pricing_switches` key of the runtime flag. */
 export const FOUNDER_FLAG_KEY = 'business_founder_price';
@@ -125,6 +132,27 @@ export function founderOfferFor(input: FounderOfferInput): FounderOffer | null {
     endsAt: FOUNDER_WINDOW_END.toISOString(),
     endsAtLabel: FOUNDER_VALID_UNTIL,
   };
+}
+
+/**
+ * Whether the terms may print the founder clause (5.8).
+ *
+ * Never in zh (frozen; it would fall back to the English clause). Otherwise
+ * when the offer has been switched on and has started, or when at least one
+ * founder subscription exists, so the clause stays for existing founders after
+ * the window closes. A failed read arrives as null and counts as "no".
+ */
+export function founderTermsVisibleFor(input: {
+  locale: string | null | undefined;
+  now: Date;
+  flagOn: boolean | null;
+  placesTaken: number | null;
+}): boolean {
+  if (input.locale === 'zh') return false;
+  const started =
+    input.flagOn === true && input.now.getTime() >= FOUNDER_WINDOW_START.getTime();
+  const founderExists = input.placesTaken != null && input.placesTaken > 0;
+  return started || founderExists;
 }
 
 /**

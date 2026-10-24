@@ -441,6 +441,7 @@
   },
   "founder": {
     "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
-    "places": "{left} of {total} places left"
+    "places": "{left} of {total} places left",
+    "priceChanged": "The price changed before you confirmed, so nothing was charged. The amounts above are the price that applies now."
   }
 }

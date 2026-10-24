@@ -21,7 +21,12 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
-import { attachFounder, founderDisplayFor } from '../../../src/lib/stripe/founder-display';
+import {
+  attachFounder,
+  founderDisplayFor,
+  ownerIsOnFounderPrice,
+  withFounderSubscriberPrices,
+} from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
@@ -934,7 +939,14 @@ export default async function DashboardPage({ params }) {
     workspace?.owner_id === user.id && plan !== 'pro' && !compedScale
       ? await founderDisplayFor({ ownerId: user.id })
       : null;
-  const stripePrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
+  const offeredPrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
+  // An owner who already pays the founder price sees Business at that price
+  // ($29 / $278.40), not the $39 list price, on every surface that prices it.
+  const stripePrices =
+    workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&
+    (await ownerIsOnFounderPrice(user.id))
+      ? await withFounderSubscriberPrices(offeredPrices)
+      : offeredPrices;
 
   return (
     <DashboardApp

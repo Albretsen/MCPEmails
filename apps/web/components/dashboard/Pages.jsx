@@ -5914,6 +5914,7 @@ function BillingSection({
           planName: data.plan,
           interval: data.interval ?? checkoutInterval,
           preview: data.preview ?? null,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -5952,6 +5953,9 @@ function BillingSection({
           ...(pendingChange.preview?.seasonalOffer?.offerId
             ? { offer: pendingChange.preview.seasonalOffer.offerId }
             : {}),
+          // The plan price this quote was priced with. If a different price
+          // applies by now, the server charges nothing and quotes again.
+          ...(pendingChange.quotedPriceId ? { quotedPriceId: pendingChange.quotedPriceId } : {}),
         }),
       });
 
@@ -6006,6 +6010,8 @@ function BillingSection({
           interval: data.interval ?? pendingChange.interval,
           preview: data.preview ?? null,
           offerEnded: data.seasonal_offer_ended === true,
+          priceChanged: data.price_changed === true,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6831,6 +6837,17 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
               lineHeight: 1.5,
             }}>
               {trc('seasonal.ended')}
+            </p>
+          )}
+          {change.priceChanged && !change.offerEnded && (
+            <p data-price-changed="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('founder.priceChanged')}
             </p>
           )}
 

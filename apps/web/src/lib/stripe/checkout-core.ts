@@ -21,7 +21,7 @@ import {
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
-import { businessPriceFor, FOUNDER_OFFER_TAG } from '@/lib/stripe/founder-offer';
+import { businessPriceFor, FOUNDER_METADATA_KEY, FOUNDER_OFFER_TAG } from '@/lib/stripe/founder-offer';
 import { currentFounderOffer } from '@/lib/stripe/founder-offer-server';
 import {
   countOwnedInboxes,
@@ -233,6 +233,18 @@ export type CheckoutOutcome =
        * at the price that now applies.
        */
       offerEnded?: boolean;
+      /**
+       * The plan price this quote is priced with. The caller sends it back as
+       * `quotedPriceId` on the confirmed pass.
+       */
+      quotedPriceId: string;
+      /**
+       * True when the caller confirmed a quote at a different plan price than
+       * the one that applies now (the Business founder price closed, filled
+       * up or was switched off). Nothing was charged; `preview` is the fresh
+       * quote.
+       */
+      priceChanged?: boolean;
     }
   /**
    * An existing subscriber's price was swapped in place and the proration was
@@ -507,6 +519,13 @@ function fail(
  * dashboard echoes `preview.seasonalOffer.offerId`). On the confirmed pass of a
  * plan change, an offer that was quoted but is no longer available stops the
  * swap and returns a fresh quote, so nobody is charged a price they did not see.
+ *
+ * `quotedPriceId` is the plan price the confirmed quote was priced with (the
+ * dashboard echoes the quote's `quotedPriceId`). When the price this pass
+ * would put on the subscription is a different one (the founder offer closed,
+ * filled up or was switched off between the quote and the click), nothing is
+ * charged and a fresh quote comes back with `priceChanged: true`. A confirm
+ * without it (a tab opened before this shipped) is accepted as before.
  */
 export async function runCheckout(input: {
   planId: unknown;
@@ -515,6 +534,7 @@ export async function runCheckout(input: {
   locale?: unknown;
   recoveredFrom?: unknown;
   quotedOffer?: unknown;
+  quotedPriceId?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -667,6 +687,7 @@ async function checkoutFor(
     locale?: unknown;
     recoveredFrom?: unknown;
     quotedOffer?: unknown;
+    quotedPriceId?: unknown;
   },
   options: CheckoutOptions & { allowPlanChange: boolean },
 ): Promise<CheckoutOutcome> {
@@ -969,7 +990,7 @@ async function checkoutFor(
       // other plan resolves to `priceId` unchanged.
       const founderOffer =
         planId === 'pro' && fromPrice?.planId !== 'pro'
-          ? await currentFounderOffer({ ownerId: user.id })
+          ? await currentFounderOffer({ ownerId: user.id, fresh: true })
           : null;
       const targetPriceId = businessPriceFor({
         planId,
@@ -1102,14 +1123,23 @@ async function checkoutFor(
       // not charge the full price they never saw; quote again instead.
       const offerEnded =
         Boolean(confirmChange) && input.quotedOffer === BLACK_WEEK_2026.id && offer === null;
+      // The same rule for the plan price itself: the quote was for one price
+      // and this pass would charge another (the founder price closed, filled
+      // up or was switched off in between). Quote again, charge nothing.
+      const priceChanged =
+        Boolean(confirmChange) &&
+        typeof input.quotedPriceId === 'string' &&
+        input.quotedPriceId !== swapPriceId;
 
-      if (!confirmChange || offerEnded) {
+      if (!confirmChange || offerEnded || priceChanged) {
         return {
           kind: 'confirmation_required',
           planId,
           planName: plan.name,
           interval,
+          quotedPriceId: swapPriceId,
           ...(offerEnded ? { offerEnded: true } : {}),
+          ...(priceChanged ? { priceChanged: true } : {}),
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
@@ -1268,7 +1298,7 @@ async function checkoutFor(
     planId,
     interval,
     normalPriceId: priceId,
-    offer: planId === 'pro' ? await currentFounderOffer({ ownerId: user.id }) : null,
+    offer: planId === 'pro' ? await currentFounderOffer({ ownerId: user.id, fresh: true }) : null,
   });
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     { price: sold.priceId, quantity: 1 },
@@ -1407,10 +1437,11 @@ async function checkoutFor(
         metadata: {
           user_id: user.id,
           ...offerMetadata,
-          // The founder cohort tag, on the same `offer` key. The webhook also
+          // The founder cohort tag, on its own `founder_offer` key so the
+          // seasonal `offer` tag is never overwritten. The webhook also
           // sets it after an in-place upgrade, which cannot carry metadata
           // (pending updates refuse it).
-          ...(sold.founder ? { offer: FOUNDER_OFFER_TAG } : {}),
+          ...(sold.founder ? { [FOUNDER_METADATA_KEY]: FOUNDER_OFFER_TAG } : {}),
         },
       },
       // Unset unless the caller asks (the chat link's 31 minutes). Every other
@@ -1429,7 +1460,7 @@ async function checkoutFor(
         // session can be written in it. Allow-listed; English adds nothing.
         ...(reminderLang ? { lang: reminderLang } : {}),
         ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
-        ...(sold.founder ? { offer: FOUNDER_OFFER_TAG } : {}),
+        ...(sold.founder ? { [FOUNDER_METADATA_KEY]: FOUNDER_OFFER_TAG } : {}),
       },
       // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
       //
