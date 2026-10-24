@@ -132,6 +132,10 @@ Deno.test("a dashboard key is still filtered to exactly the tools its scopes all
     "email_read",
     "folder_list",
     "folder",
+    // Pro (reminders): in the registry, but hidden by the Pro gate in
+    // handleToolsList until the features are visible to the workspace.
+    "reminder_list",
+    "reminder",
     "signature_get",
     "contact_search",
     // In the scope-filtered registry list; tools/list then drops it for a
@@ -449,6 +453,14 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     "schedule:create": ["schedule:email"],
     "schedule:list": ["schedule:email"],
     "schedule:cancel": ["schedule:email"],
+    // Pro (reminders). Writes need manage:automations (standing unattended
+    // work), a snooze manage:folders (it moves mail); the list is a read.
+    "reminder_list": ["read:email"],
+    "reminder:follow_up": ["manage:automations"],
+    "reminder:snooze": ["manage:folders"],
+    "reminder:list": ["read:email"],
+    "reminder:done": ["manage:automations"],
+    "reminder:cancel": ["manage:automations"],
     "signature_get": ["read:email"],
     "signature_set": ["send:email"],
     "signature:get": ["read:email"],

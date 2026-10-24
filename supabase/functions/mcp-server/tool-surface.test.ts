@@ -118,6 +118,11 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft",
       "schedule_list",
       "schedule",
+      // Pro (reminders): registered here, hidden from every workspace by the
+      // Pro gate until pro_features_enabled / pro_features_public (see the
+      // reminders tests for the hidden listing).
+      "reminder_list",
+      "reminder",
       "signature_get",
       "signature_set",
       "automation_read",
