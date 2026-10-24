@@ -210,6 +210,7 @@ export const ROUTES = [
   ['app/api/oauth/token/route.ts', 'arn1', '9 (refresh 6)', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/userinfo/route.ts', 'arn1', '2', '-'],
   ['app/api/onboarding/route.ts', 'arn1', '4', '-'],
+  ['app/api/seasonal-offer/route.ts', 'arn1', '0', 'Stripe API x0-4 in the Black Week window (cached 60 s), none outside it'],
   ['app/api/security/audit-log/route.ts', 'arn1', '3', '-'],
   ['app/api/security/sessions/route.ts', 'arn1', '9', '-'],
   ['app/api/sso/connection/route.ts', 'arn1', '~6', 'Supabase Management API x1-2 (PUT only)'],

@@ -9,6 +9,7 @@ import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 import { useAppLocale } from '../i18n/LocaleCore';
 import { buysAnnual, sharedIntervalChoice } from '@/lib/billing/inbox-cap-offer.mjs';
 import { reportInboxPaywallClick } from '@/lib/analytics/use-inbox-paywall.mjs';
+import { liveSeasonalOffer, seasonalOfferValues } from '@/lib/billing/seasonal-offer-view.mjs';
 
 /**
  * The monthly / annual choice on the in-product upsell surfaces.
@@ -133,7 +134,48 @@ export function IntervalToggle({ value, onChange, options, ariaLabel, size = 'md
  * @param {string} planId Internal plan id ('personal' | 'solo' | 'pro').
  */
 export function annualOfferForPlan(stripePrices, planId) {
-  return annualOfferFromPrices(stripePrices?.[planId]);
+  const offer = annualOfferFromPrices(stripePrices?.[planId]);
+  if (!offer) return null;
+  // Black Week 2026: the server attaches the live first-year offer to the
+  // Personal and Pro entries (see withSeasonalOffers). `firstYear` is null for
+  // every other plan, outside the window, and once `endsAt` has passed.
+  const firstYear = liveSeasonalOffer(stripePrices?.[planId]?.seasonalOffer);
+  return firstYear ? { ...offer, firstYear } : offer;
+}
+
+/**
+ * The Black Week line for an annual option: first-year price and renewal price
+ * in one sentence, the computed saving, and the fixed end date. All numbers
+ * come from the offer object. Renders nothing without a live offer.
+ *
+ * @param {{ offer: unknown, size?: 'sm' | 'md' }} props
+ */
+export function SeasonalOfferNote({ offer, size = 'md' }) {
+  const tr = useTranslations('dashboardChrome');
+  const { locale } = useAppLocale();
+  const values = seasonalOfferValues(offer, locale);
+  if (!values) return null;
+  const compact = size === 'sm';
+  return (
+    <div
+      data-seasonal-offer={offer.planId}
+      style={{
+        padding: compact ? '6px 8px' : '8px 10px',
+        borderRadius: 8,
+        background: 'var(--brand-soft)',
+        border: '1px solid var(--border-1)',
+        fontFamily: 'var(--font-sans)',
+        lineHeight: 1.45,
+      }}
+    >
+      <div style={{ fontSize: compact ? 11.5 : 12, fontWeight: 500, color: 'var(--fg-1)' }}>
+        {tr('seasonal.line', values)}
+      </div>
+      <div style={{ fontSize: compact ? 10.5 : 11, color: 'var(--fg-3)', marginTop: 2 }}>
+        {tr('seasonal.ends', { date: values.date, time: values.time })}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -169,9 +211,12 @@ export default function UpgradeIntervalChoice({ offer, value, onChange, size = '
         price: formatPriceCents(offer.yearlyPerMonthCents),
       }),
       // No saving, no saving claim. A yearly price that is not cheaper is still
-      // real and still buyable, it just does not get a badge for it.
-      badge:
-        offer.savingPercent != null
+      // real and still buyable, it just does not get a badge for it. During
+      // Black Week the badge names the offer instead; the line under the
+      // toggle states its numbers.
+      badge: offer.firstYear
+        ? tr('seasonal.badge')
+        : offer.savingPercent != null
           ? tr('connect.intervalSave', { percent: offer.savingPercent })
           : undefined,
     },
@@ -188,7 +233,13 @@ export default function UpgradeIntervalChoice({ offer, value, onChange, size = '
       />
       {/* The one number the buyer is actually charged on this option, stated
           before they click rather than discovered on Stripe's page. */}
-      {value === 'year' && (
+      {/* During Black Week the first-year price IS the number charged today,
+          so the offer line replaces the plain annual note rather than sitting
+          next to a second, different amount. */}
+      {value === 'year' && offer.firstYear && (
+        <SeasonalOfferNote offer={offer.firstYear} size={size} />
+      )}
+      {value === 'year' && !offer.firstYear && (
         <div
           style={{
             fontFamily: 'var(--font-sans)',
@@ -221,6 +272,10 @@ export default function UpgradeIntervalChoice({ offer, value, onChange, size = '
  */
 export function upgradeCtaLabel(tr, { offer, interval, planName, monthlyLabel }) {
   if (!offer || interval !== 'year') return monthlyLabel;
+  // Black Week: no amount on the button. The first-year price may only be
+  // stated together with the renewal price, which the offer line right above
+  // the button does; "$144/yr" here would contradict the $99 charged today.
+  if (offer.firstYear) return tr('seasonal.ctaAnnual', { plan: planName });
   return tr('connect.upgradeCtaAnnual', {
     plan: planName,
     price: formatPriceCents(offer.yearlyPriceCents),
@@ -253,6 +308,8 @@ export function SharedIntervalChoice({ annualOffers, value, onChange, size = 'md
   const tr = useTranslations('dashboardChrome');
   const { annualAvailable, savingPercent } = sharedIntervalChoice(annualOffers);
   if (!annualAvailable) return null;
+  // Black Week names the offer only when every plan on screen has one.
+  const seasonal = annualOffers.length > 0 && annualOffers.every(o => o?.firstYear);
 
   return (
     <IntervalToggle
@@ -265,8 +322,9 @@ export function SharedIntervalChoice({ annualOffers, value, onChange, size = 'md
         {
           value: 'year',
           label: tr('connect.intervalAnnual'),
-          badge:
-            savingPercent != null
+          badge: seasonal
+            ? tr('seasonal.badge')
+            : savingPercent != null
               ? tr('connect.intervalSave', { percent: savingPercent })
               : undefined,
         },

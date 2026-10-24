@@ -426,5 +426,14 @@
     "unavailableBody": "Wir konnten die Genehmigung nicht starten. Bitte versuchen Sie es in ein paar Minuten erneut.",
     "closeHint": "Fragen? Schreiben Sie an hello@mcpemails.com.",
     "openApp": "MCPEmails öffnen"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} im ersten Jahr, danach ${renewal} pro Jahr. Sie sparen ${saving}.",
+    "ends": "Endet am {date} um {time} Uhr (Osloer Zeit).",
+    "ctaAnnual": "Auf {plan} jährlich upgraden",
+    "switchBody": "Black Week: Wechseln Sie zur jährlichen Abrechnung für ${firstYear} im ersten Jahr, danach ${renewal} pro Jahr. Die ungenutzten Tage Ihres aktuellen Monats werden abgezogen, deshalb zahlen Sie heute etwas weniger.",
+    "switchCta": "Zur jährlichen Abrechnung wechseln",
+    "switchBusy": "Wird vorbereitet..."
   }
 }
