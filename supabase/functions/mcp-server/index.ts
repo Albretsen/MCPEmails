@@ -554,6 +554,7 @@ import {
   type SubscriptionDeps,
   supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
+import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -10784,110 +10785,8 @@ function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   };
 }
 
-/**
- * Decrypts an AES-256-GCM ciphertext produced by
- * `apps/web/src/lib/crypto.ts#encryptToken` using the Web Crypto API.
- *
- * Ciphertext layout (base64url-encoded):
- *   bytes  0–11 : 12-byte random IV
- *   bytes 12–N  : encrypted payload
- *   bytes N–N+15: 16-byte GCM authentication tag
- *
- * Web Crypto's `decrypt()` for AES-GCM expects: payload || authTag
- * concatenated in one Uint8Array with the IV passed separately, so
- * `raw.slice(12)` is the exact input needed.
- *
- * ENCRYPTION_KEY must be a 64-character lowercase hex string (32 bytes)
- * that matches the key used to encrypt the stored token.
- *
- * @throws if ENCRYPTION_KEY is misconfigured or if decryption fails.
- */
-async function decryptStoredToken(encrypted: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY");
-  if (!keyHex || keyHex.length !== 64) {
-    throw new Error(
-      "ENCRYPTION_KEY env var is not set or is not 64 hex characters.",
-    );
-  }
-
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-
-  // base64url → Uint8Array
-  const b64 = encrypted.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  const binaryStr = atob(padded);
-  const raw = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    raw[i] = binaryStr.charCodeAt(i);
-  }
-
-  if (raw.length < 12 + 16) {
-    throw new Error("Encrypted token is too short to be valid.");
-  }
-
-  const iv = raw.slice(0, 12);
-  // raw.slice(12) = ciphertext || authTag — exactly what Web Crypto AES-GCM needs.
-  const ciphertextWithTag = raw.slice(12);
-
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    ciphertextWithTag,
-  );
-
-  return new TextDecoder().decode(decrypted);
-}
-
-/**
- * Encrypts a plaintext string using AES-256-GCM and returns the ciphertext
- * encoded as base64url. Mirror of `apps/web/src/lib/crypto.ts#encryptToken`.
- *
- * Layout: IV(12) || ciphertext || authTag(16), base64url-encoded.
- * Used to persist refreshed OAuth access tokens back to the database.
- */
-async function encryptForStorage(plaintext: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY")!;
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"],
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    new TextEncoder().encode(plaintext),
-  );
-
-  // IV || ciphertext || authTag (Web Crypto appends the tag automatically)
-  const combined = new Uint8Array(12 + encrypted.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encrypted), 12);
-
-  return btoa(String.fromCharCode(...combined))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
+// decryptStoredToken / encryptForStorage live in storage-crypto.ts (testable,
+// chunked base64: a whole-buffer spread overflowed the stack on large plans).
 
 /**
  * inbox_list — returns all inboxes the API key may access.

@@ -623,17 +623,75 @@ const KEEP_RECEIVING_WORDS = [
   "statement",
   "tax",
   "password",
-  "verification",
+  "verif",
+  "credential",
+  "passcode",
+  // Person-to-person notices relayed by a platform: an invitation or a
+  // message from someone the user knows ("invitations@", "messages-noreply@",
+  // LinkedIn InMail), not a newsletter.
+  "invit",
+  "inmail",
+  "messag",
 ];
 
-/** True when the sender looks like billing, banking or account mail. */
+/**
+ * Sign-in and second-factor mail. Short words, so matched as WHOLE tokens
+ * only: as prefixes they would catch ordinary words ("author", "login" is
+ * fine but "auth" would take "authors").
+ */
+const KEEP_RECEIVING_TOKENS = new Set(["auth", "login", "logon", "signin", "2fa", "mfa", "otp", "sso"]);
+
+/** True when the sender looks like billing, banking, account, security or person-to-person mail. */
 export function looksLikeKeepReceiving(...values: Array<string | null | undefined>): boolean {
   for (const value of values) {
     if (!value) continue;
     for (const token of value.toLowerCase().split(/[^a-z0-9]+/)) {
-      if (token && KEEP_RECEIVING_WORDS.some((w) => token.startsWith(w))) return true;
+      if (!token) continue;
+      if (KEEP_RECEIVING_TOKENS.has(token) || KEEP_RECEIVING_WORDS.some((w) => token.startsWith(w))) return true;
     }
   }
+  return false;
+}
+
+/**
+ * Code hosts. Their mail is repository, review and CI notifications: work the
+ * user acts on (a failing build of their own repo), and unsubscribing from it
+ * by List-Unsubscribe mutes a repository or a workflow, not a newsletter.
+ * Matched on the From domain and on the List-Id (GitHub's is
+ * `repo.owner.github.com`), the domain itself or any subdomain.
+ */
+export const CODE_HOST_DOMAINS = ["github.com", "gitlab.com", "bitbucket.org", "codeberg.org", "sr.ht", "gitea.com"];
+
+function isCodeHostDomain(domain: string | null | undefined): boolean {
+  if (!domain) return false;
+  const d = domain.trim().toLowerCase().replace(/\.$/, "");
+  return CODE_HOST_DOMAINS.some((host) => d === host || d.endsWith(`.${host}`));
+}
+
+/**
+ * A display name that says a platform is relaying a PERSON: "Jane Doe via
+ * LinkedIn", "John (via Google Docs)". The sender is someone the user knows.
+ */
+const RELAYED_PERSON = /(^|[\s(])via\s+\S/i;
+
+/** An automated account of a code host or CI system: "github-actions[bot]", "dependabot[bot]". */
+const BOT_NAME = /\[bot\]/i;
+
+/**
+ * Mail that must never be pre-selected for unsubscribing, beyond
+ * {@link looksLikeKeepReceiving}: code-host and CI notifications, bots, and
+ * person-to-person mail relayed by a social platform. Like that check it only
+ * removes the pre-tick; the sender is still listed and the user can pick it.
+ * Every name, address and List-Id the group used is checked.
+ */
+export function neverSuggest(input: {
+  names: Array<string | null | undefined>;
+  addresses: Array<string | null | undefined>;
+  listId: string | null;
+}): boolean {
+  if (input.names.some((n) => !!n && (RELAYED_PERSON.test(n) || BOT_NAME.test(n)))) return true;
+  if (input.addresses.some((a) => !!a && (BOT_NAME.test(a) || isCodeHostDomain(domainOf(a))))) return true;
+  if (input.listId && isCodeHostDomain(input.listId)) return true;
   return false;
 }
 
@@ -703,15 +761,15 @@ export function classifySender(records: ListHeaderRecord[], trust: AuthservTrust
   const readShare = messageCount === 0 ? 0 : (messageCount - unreadCount) / messageCount;
   const displayName = cleanDisplayName(sorted.find((r) => r.fromName.trim())?.fromName ?? "") || fromAddress;
 
+  // Every name and address the group used, not just the newest: a bank that
+  // once wrote "Example Bank Alerts" is still a bank.
+  const names = [...new Set([displayName, ...records.map((r) => cleanDisplayName(r.fromName))])];
+  const addresses = [...new Set(records.map((r) => r.fromAddress))];
   const suggested = messageCount >= SUGGEST_MIN_MESSAGES && readShare < SUGGEST_MAX_READ_SHARE &&
     method !== "none" && safe &&
-    // Every name and address the group used, not just the newest: a bank that
-    // once wrote "Example Bank Alerts" is still a bank.
-    !looksLikeKeepReceiving(
-      displayName,
-      listId,
-      ...new Set(records.flatMap((r) => [cleanDisplayName(r.fromName), r.fromAddress])),
-    );
+    // One value per call, never spread: a list's group can hold thousands of addresses.
+    ![listId, ...names, ...addresses].some((value) => looksLikeKeepReceiving(value)) &&
+    !neverSuggest({ names, addresses, listId });
 
   const messageIds = sorted.map((r) => r.messageId);
   const candidate: SenderCandidate = {
