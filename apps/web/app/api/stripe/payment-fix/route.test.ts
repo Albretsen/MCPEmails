@@ -31,6 +31,8 @@ let customers: Record<string, Customer>;
 let openInvoices: Record<string, Array<{ id: string; customer: string; hosted_invoice_url: string | null }>>;
 let invoiceLookups: string[];
 let portalSessions: Array<{ customer: string; configuration?: string; return_url: string }>;
+let fixClicks: Array<{ userId: string; failure: string | null }>;
+let listThrows: boolean;
 
 function reset() {
   caller = { id: CALLER, email: 'caller@example.test', email_confirmed_at: '2026-06-01T00:00:00Z' };
@@ -42,6 +44,8 @@ function reset() {
   openInvoices = {};
   invoiceLookups = [];
   portalSessions = [];
+  fixClicks = [];
+  listThrows = false;
 }
 reset();
 
@@ -76,6 +80,7 @@ nodeMock.module('@/lib/stripe/client', {
       invoices: {
         list: async ({ customer, status }: { customer: string; status: string }) => {
           invoiceLookups.push(customer);
+          if (listThrows) throw new Error('Stripe is down');
           assert.equal(status, 'open');
           return { data: openInvoices[customer] ?? [] };
         },
@@ -88,6 +93,13 @@ nodeMock.module('@/lib/stripe/client', {
           },
         },
       },
+    },
+  },
+});
+nodeMock.module('@/lib/analytics/billing-funnel', {
+  namedExports: {
+    recordPaymentFixClicked: async (userId: string, failure?: string) => {
+      fixClicks.push({ userId, failure: failure ?? null });
     },
   },
 });
@@ -128,6 +140,7 @@ test('an open invoice redirects (302) to its hosted invoice page', async () => {
   assert.equal(res.location, 'https://invoice.stripe.test/i/in_open');
   assert.match(res.cache, /no-store/);
   assert.equal(portalSessions.length, 0);
+  assert.deepEqual(fixClicks, [{ userId: CALLER, failure: null }], 'one payment_fix_clicked success row');
 });
 
 test('no open invoice falls back to a pinned billing portal session', async () => {
@@ -139,6 +152,7 @@ test('no open invoice falls back to a pinned billing portal session', async () =
   assert.equal(portalSessions.length, 1);
   assert.equal(portalSessions[0].configuration, 'bpc_mcpemails');
   assert.equal(portalSessions[0].return_url, 'https://mcpemails.test/dashboard/settings');
+  assert.deepEqual(fixClicks, [{ userId: CALLER, failure: null }]);
 });
 
 test('signed out redirects to /login and back here', async () => {
@@ -150,6 +164,7 @@ test('signed out redirects to /login and back here', async () => {
   assert.equal(url.pathname, '/login');
   assert.equal(url.searchParams.get('redirect'), '/api/stripe/payment-fix');
   assert.equal(invoiceLookups.length, 0);
+  assert.equal(fixClicks.length, 0, 'a signed-out hit is not a click by an owner');
 });
 
 test("someone else's customer on a workspace row is refused", async () => {
@@ -188,6 +203,16 @@ test('no customer at all goes to settings', async () => {
   const res = await click();
   assert.equal(res.status, 302);
   assert.equal(new URL(res.location).pathname, '/dashboard/settings');
+  assert.deepEqual(fixClicks, [{ userId: CALLER, failure: 'no_customer' }]);
+});
+
+test('a Stripe error goes to settings and is recorded as a failed click', async () => {
+  reset();
+  tables.user_billing.push({ user_id: CALLER, stripe_customer_id: 'cus_caller' });
+  listThrows = true;
+  const res = await click();
+  assert.equal(new URL(res.location).pathname, '/dashboard/settings');
+  assert.deepEqual(fixClicks, [{ userId: CALLER, failure: 'stripe_error' }]);
 });
 
 test('only GET is exported, so every other method is a 405', () => {

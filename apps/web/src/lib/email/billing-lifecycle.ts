@@ -338,6 +338,12 @@ export type LifecyclePayload = {
   currency?: string | null;
   /** Stripe decline code from the failed payment intent, when there was one. */
   declineCode?: string | null;
+  /**
+   * The payment method on the failed attempt (a Stripe pm_ id), when known.
+   * Never printed in an email: the webhook compares it with the method that
+   * finally paid, to tell a customer fix from a silent retry (recovered_by).
+   */
+  failedPaymentMethodId?: string | null;
   /** Stripe hosted invoice page: lets them pay the exact invoice in one click. */
   hostedInvoiceUrl?: string | null;
   /** ISO date the paid period ends (cancellation) or ended (win-back). */
