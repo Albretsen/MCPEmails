@@ -71,3 +71,18 @@ test('no paid comparison value answers the actions row with a number', () => {
   assert.equal(typeof value, 'string', 'pricing.json has no comparison.values.actionsPaid');
   assert.ok(!/\d/.test(value!), `comparison.values.actionsPaid ("${value}") quotes a number`);
 });
+
+test('every EUR amount shown is the USD amount the catalogue sells, same digits', async () => {
+  // Decided 2026-10-24: EU visitors pay the same digits in EUR, VAT included.
+  // With no EUR currency option on a price (or Stripe unreachable), the page
+  // falls back to the USD cents, so the fallback must BE the sold amount, for
+  // every tier and interval, including Pro after a price switch.
+  const { eurCentsFor } = await import('./eur-prices.ts');
+  const { proSoldAmounts } = await import('./pro-price-change.ts');
+  for (const plan of Object.values(PLANS)) {
+    assert.equal(eurCentsFor(null, plan.monthlyPriceCents), plan.monthlyPriceCents, `${plan.id} monthly`);
+    assert.equal(eurCentsFor(undefined, plan.yearlyPriceCents), plan.yearlyPriceCents, `${plan.id} yearly`);
+  }
+  assert.equal(PLANS.solo.monthlyPriceCents, proSoldAmounts().monthlyCents, 'Pro EUR follows the sold Pro price');
+  assert.equal(PLANS.solo.yearlyPriceCents, proSoldAmounts().yearlyCents, 'Pro EUR follows the sold Pro price');
+});

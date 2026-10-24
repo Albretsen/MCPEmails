@@ -154,6 +154,7 @@
     "sub": "Gratuit connecte une boîte avec 150 actions e-mail par mois. Personal en connecte trois. Pro en connecte jusqu'à 10 pour une personne qui gère une entreprise. Business inclut 10 boîtes, ajoute 3 $ par mois par boîte en plus et accueille toute votre équipe.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
+    "inclVat": "TVA incluse",
     "tiers": {
       "free": {
         "name": "Gratuit",

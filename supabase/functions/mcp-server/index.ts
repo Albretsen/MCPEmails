@@ -478,6 +478,7 @@ import {
   instructionsByInbox,
   withOwnerInstructions,
 } from "./inbox-instructions.ts";
+import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
   buildUsageLimitText,
@@ -502,6 +503,13 @@ import {
   type ProGateInputs,
 } from "./pro-features.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
+import {
+  type CheckoutLinkIo,
+  checkoutLinkMode,
+  type ExperimentRow,
+  type MintedCheckoutLink,
+  mintCheckoutLink,
+} from "./checkout-link.ts";
 import {
   type ActionReservationRow,
   type AllowanceGateIo,
@@ -1480,6 +1488,11 @@ interface RequestContext {
    * on the per-query path; stampCardDiagnostics then reads it itself.
    */
   cardDiagnostics?: boolean;
+  /**
+   * The failed-payment markers off the workspace row the plan check read
+   * (payment-notice.ts). Absent when that read failed open: no notice then.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 // ---------------------------------------------------------------------------
@@ -2872,6 +2885,11 @@ interface PlanQuotaResult {
   firstUse?: FirstUseMarkers;
   /** True only when the window count itself succeeded (not a fail-open answer). */
   counted?: boolean;
+  /**
+   * The failed-payment markers off the same row, for the once-a-day billing
+   * notice (payment-notice.ts). Absent when the workspace lookup failed open.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 /**
@@ -2936,12 +2954,14 @@ async function checkPlanQuota(
     );
 
   // 1. Look up workspace plan. The two activation columns ride along for
-  // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
+  // markFirstProductUse (see PlanQuotaResult.firstUse), and the three payment
+  // columns for the billing notice (PlanQuotaResult.paymentIssue); nothing
+  // here reads them.
   const { data: workspace, error: wsError } = preloaded
     ? { data: preloaded.workspace, error: null }
     : await supabase
       .from("workspaces")
-      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at, payment_issue_since, payment_issue_kind, payment_notice_shown_on")
       .eq("id", workspaceId)
       .maybeSingle();
 
@@ -2998,6 +3018,12 @@ async function checkPlanQuota(
     analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
     onboarding_value_activated_at: workspace.onboarding_value_activated_at,
   };
+  // Undefined on a gate RPC that predates the columns: then there is no notice.
+  const paymentIssue: PaymentIssueMarkers = {
+    payment_issue_since: workspace.payment_issue_since ?? null,
+    payment_issue_kind: workspace.payment_issue_kind ?? null,
+    payment_notice_shown_on: workspace.payment_notice_shown_on ?? null,
+  };
 
   // 2. Count the workspace's calls in the trailing 60s window (issued above).
   const { count, error: countError } = await windowCount;
@@ -3015,6 +3041,7 @@ async function checkPlanQuota(
       usedThisMinute: 0,
       retryAfterSeconds: 0,
       firstUse,
+      paymentIssue,
     };
   }
 
@@ -3030,6 +3057,7 @@ async function checkPlanQuota(
       retryAfterSeconds: 0,
       firstUse,
       counted: true,
+      paymentIssue,
     };
   }
 
@@ -4116,15 +4144,26 @@ function usageLimitResult(
   requestId: string | number | null,
   refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
   wording: PlanLimitWording = "standard",
+  checkout: MintedCheckoutLink | null = null,
 ): JsonRpcSuccessResponse {
   const { plan, usedActions, cap, periodEnd } = refusal;
+  // The link rides only with the wording that prints it, and only for Free.
+  const link = plan === "free" && wording === "checkout" ? checkout : null;
   return {
     jsonrpc: "2.0",
     id: requestId,
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL, wording),
+        text: buildUsageLimitText(
+          plan,
+          usedActions,
+          cap,
+          periodEnd,
+          APP_URL,
+          wording,
+          link ? { url: link.url, minutes: link.minutes } : null,
+        ),
       }],
       isError: true,
       _meta: {
@@ -4148,6 +4187,10 @@ function usageLimitResult(
               ...(wording === "directory"
                 ? { plans_url: plansInfoUrl(APP_URL) }
                 : { upgrade_url: freeCapUpgradeUrl(APP_URL) }),
+              // The checkout link, beside upgrade_url rather than instead of
+              // it: a client that already reads upgrade_url keeps working, and
+              // one that knows the new field can render the shorter path.
+              ...(link ? { checkout_url: link.url, checkout_expires_at: link.expiresAt } : {}),
             }
             // Paid: support, not pricing. A client rendering a pricing URL
             // here would offer to sell a bigger allowance, which no paid plan
@@ -4202,12 +4245,94 @@ async function actionLimitResponse(
       return { response: null, reservationId: null };
     case "reserved":
       return { response: null, reservationId: reservation.reservationId };
-    case "refused":
+    case "refused": {
+      const { wording, checkout } = await freeCapRefusalWording(apiKey, reservation, toolName);
       return {
-        response: usageLimitResult(requestId, reservation, await planLimitWording(apiKey)),
+        response: usageLimitResult(requestId, reservation, wording, checkout),
         reservationId: null,
       };
+    }
   }
+}
+
+/**
+ * The service-role binding of checkout-link.ts's database. Every method throws
+ * on an error so mintCheckoutLink can tell "no" from "could not ask" and log
+ * the second as checkout_link_mint_failed.
+ */
+const checkoutLinkIo: CheckoutLinkIo = {
+  async workspace(workspaceId) {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("owner_id, chat_checkout_link_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) throw new Error(`workspace read: ${error.message}`);
+    return data as { owner_id: string | null; chat_checkout_link_enabled: boolean | null } | null;
+  },
+  async experiment(key) {
+    const { data, error } = await supabase
+      .from("experiments")
+      .select("key, status, variants, winner_variant_id")
+      .eq("key", key)
+      .maybeSingle();
+    if (error) throw new Error(`experiment read: ${error.message}`);
+    return data as ExperimentRow | null;
+  },
+  async assign(key, subjectId, variantId) {
+    const { data, error } = await supabase.rpc("experiment_assign", {
+      p_key: key,
+      p_subject_id: subjectId,
+      p_variant_id: variantId,
+    });
+    if (error) throw new Error(`experiment_assign: ${error.message}`);
+    // The RPC returns the STORED variant, which wins over the proposed one.
+    return typeof data === "string" && data ? data : variantId;
+  },
+  async issue(args) {
+    const { data, error } = await supabase.rpc("checkout_link_issue", args);
+    if (error) throw new Error(`checkout_link_issue: ${error.message}`);
+    const row = Array.isArray(data) ? data[0] : data;
+    return (row ?? null) as { id: string; expires_at: string; reused: boolean } | null;
+  },
+};
+
+/**
+ * The wording, and the checkout link if there is one, for a call the allowance
+ * has ALREADY refused. Never called on a successful call, so nothing here costs
+ * a successful call anything.
+ *
+ * Anything that is not a Free refusal under an active rollout takes exactly
+ * today's path (planLimitWording). Otherwise the OpenAI test is made once,
+ * here, and its client name is handed on to the mint for the label, so the
+ * refusal does not ask mcp_client_capabilities twice. A failed client lookup
+ * renders `standard`, as planLimitWording would, and gets no link. Every mint
+ * failure is `standard` too; checkout-link.ts logs it.
+ */
+async function freeCapRefusalWording(
+  apiKey: ApiKeyRow,
+  refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
+  toolName: string,
+): Promise<{ wording: PlanLimitWording; checkout: MintedCheckoutLink | null }> {
+  const modeEnv = Deno.env.get("CHAT_CHECKOUT_LINK");
+  if (refusal.plan !== "free" || checkoutLinkMode(modeEnv) === "off" || INTROSPECTION_ONLY) {
+    return { wording: await planLimitWording(apiKey), checkout: null };
+  }
+  if (isOpenAiOAuthKeyName(apiKey.name)) return { wording: "directory", checkout: null };
+  const clientName = await latestInitializeClientName(apiKey);
+  if (isOpenAiClientName(clientName ?? null)) return { wording: "directory", checkout: null };
+  const checkout = await mintCheckoutLink(checkoutLinkIo, {
+    workspaceId: apiKey.workspace_id,
+    plan: refusal.plan,
+    keyName: apiKey.name,
+    keyCreatedBy: apiKey.created_by ?? null,
+    clientName,
+    blockedTool: toolName,
+    appOrigin: APP_URL,
+    modeEnv,
+    secretEnv: Deno.env.get("CHECKOUT_LINK_SECRET"),
+  });
+  return checkout ? { wording: "checkout", checkout } : { wording: "standard", checkout: null };
 }
 
 /** Records the first server-confirmed successful MCP tool call per workspace.
@@ -4382,8 +4507,21 @@ async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
   // The key's own name first: free, and set by our OAuth issuer from the
   // client's registration (`OAuth: ChatGPT`). See isOpenAiOAuthKeyName.
   if (isOpenAiOAuthKeyName(apiKey.name)) return true;
+  // A failed lookup (undefined) is "not OpenAI" here, as it always was.
+  return isOpenAiClientName((await latestInitializeClientName(apiKey)) ?? null);
+}
+
+/**
+ * The client name most recently recorded for this key at `initialize`
+ * (recordClientCapabilities): the name, null when the key has never sent one,
+ * or undefined when the lookup FAILED. The three are kept apart because the
+ * callers want different things from a failure: isOpenAiClientKey treats it as
+ * "not OpenAI" (it only picks a shape), while the checkout link treats it as
+ * "do not offer one" (see checkout-link.ts, condition 2).
+ */
+async function latestInitializeClientName(apiKey: ApiKeyRow): Promise<string | null | undefined> {
   // Introspection mode has no database to ask; see keyReviewCardGates.
-  if (INTROSPECTION_ONLY) return false;
+  if (INTROSPECTION_ONLY) return undefined;
   const apiKeyId = apiKey.id;
   try {
     const { data, error } = await supabase
@@ -4398,17 +4536,16 @@ async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
         key_id: apiKeyId,
         error: error.message,
       });
-      return false;
+      return undefined;
     }
-    return isOpenAiClientName(
-      (data as { client_name?: string } | null)?.client_name ?? null,
-    );
+    const name = (data as { client_name?: unknown } | null)?.client_name;
+    return typeof name === "string" ? name : null;
   } catch (err) {
     console.error("[mcp-server] client_identity_lookup_threw", {
       key_id: apiKeyId,
       error: err instanceof Error ? err.message : String(err),
     });
-    return false;
+    return undefined;
   }
 }
 
@@ -34291,6 +34428,22 @@ async function handleToolsCall(
     ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
+  // The once-a-day billing notice, while the owner's renewal payment is
+  // failing (payment-notice.ts). Successful results only, at most once per
+  // workspace per UTC day (claimed in the database), and it never fails the
+  // call. After the audit log and the idempotency snapshot, like the card
+  // stamp below, so a replay does not repeat it. No query unless an issue is
+  // recorded and today's notice is still unclaimed.
+  await maybeAttachPaymentNotice({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    markers: ctx.paymentIssue,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
   // Last thing before the result leaves: if this is one of our own
   // workspaces AND this result carries a card, let that card show its
   // protocol diagnostics line. Deliberately after the audit log and the
@@ -36676,6 +36829,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // failed open to "free"): the Pro gate reuses it rather than deciding on a
   // second plan answer.
   if ("firstUse" in quotaResult && quotaResult.firstUse) primeProGatePlan(apiKey, quotaResult.plan);
+  if ("paymentIssue" in quotaResult) ctx.paymentIssue = quotaResult.paymentIssue;
 
   // ── RateLimit-* headers on an answered tools/call ────────────────────────
   // So a client can pace itself before it meets a 429. Built from what the

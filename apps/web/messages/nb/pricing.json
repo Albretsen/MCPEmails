@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/for alltid",
     "perMonth": "/måned",
-    "billedYearly": "Faktureres ${total}/år"
+    "billedYearly": "Faktureres ${total}/år",
+    "inclVat": "inkl. mva."
   },
   "plans": {
     "free": {
