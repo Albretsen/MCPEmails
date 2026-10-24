@@ -48,7 +48,7 @@ async function ownerFor(db: Db, stripeCustomerId: string): Promise<string | null
 }
 
 function logFailure(what: string, stripeCustomerId: string, err: unknown): void {
-  console.error(`[payment-issue] ${what} failed for ${stripeCustomerId}, swallowed:`, {
+  console.error('[payment-issue] %s failed for %s, swallowed:', what, stripeCustomerId, {
     error: err instanceof Error ? err.message : String(err),
   });
 }
@@ -74,7 +74,7 @@ export async function recordPaymentIssue(
 
     const ownerId = await ownerFor(db, stripeCustomerId);
     if (!ownerId) {
-      console.error(`[payment-issue] no owner for ${stripeCustomerId}; nothing projected.`);
+      console.error('[payment-issue] no owner for %s; nothing projected.', stripeCustomerId);
       return;
     }
 
@@ -94,7 +94,7 @@ export async function recordPaymentIssue(
     if (kindError) throw new Error(`workspaces kind: ${kindError.message}`);
 
     console.log(
-      `[payment-issue] recorded for ${stripeCustomerId} (kind=${paymentIssueKind(declineCode)}).`,
+      '[payment-issue] recorded for %s (kind=%s).', stripeCustomerId, paymentIssueKind(declineCode),
     );
   } catch (err) {
     logFailure('record', stripeCustomerId, err);
@@ -160,7 +160,7 @@ export async function clearPaymentIssue(
     if (wsError) throw new Error(`workspaces: ${wsError.message}`);
 
     if (Array.isArray(cleared) && cleared.length > 0) {
-      console.log(`[payment-issue] cleared for ${stripeCustomerId} (${source}).`);
+      console.log('[payment-issue] cleared for %s (%s).', stripeCustomerId, source);
     }
   } catch (err) {
     logFailure(`clear (${source})`, stripeCustomerId, err);

@@ -1309,12 +1309,12 @@ async function recordPaymentIssueForInvoice(
         const live = await stripe.invoices.retrieve(invoice.id);
         if (live.status === 'paid' || live.status === 'void') {
           console.log(
-            `[stripe-webhook] ${invoice.id} is already ${live.status}; no payment issue recorded.`,
+            '[stripe-webhook] %s is already %s; no payment issue recorded.', invoice.id, live.status,
           );
           return;
         }
       } catch (err) {
-        console.error(`[stripe-webhook] could not re-read invoice ${invoice.id}:`, {
+        console.error('[stripe-webhook] could not re-read invoice %s:', invoice.id, {
           error: err instanceof Error ? err.message : String(err),
         });
       }
