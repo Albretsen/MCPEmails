@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Koble e-post til Grok: oppsett av egendefinert MCP-kobling",
+    "description": "Gi Grok en ekte innboks som egendefinert MCP-kobling. Lim inn én URL på grok.com, logg inn med OAuth, og les, søk i, send og planlegg e-post. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Grok + e-post",
+    "titleLine1": "Koble innboksen din til Grok",
+    "titleLine2": "som egendefinert MCP-kobling",
+    "lead": "Legg til én URL under Connectors på grok.com, så kan Grok lese, søke i, sende, svare på, videresende, planlegge og organisere e-post på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Gå til grok.com/connectors, klikk New Connector, velg Custom og lim inn https://mcpemails.com/api/mcp som MCP-server-URL. Logg deretter inn på MCPEmails når Grok ber om det, og godkjenn tilgangene. På Grok Business og Enterprise må en teamadministrator først legge til serveren i skykonsollen."
+  },
+  "method": {
+    "title": "Slik kobler Grok seg til: OAuth, ingen API-nøkkel",
+    "body": "Grok kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne Connectors på grok.com",
+      "p": "Gå til <code>grok.com/connectors</code> mens du er logget inn på Grok."
+    },
+    {
+      "h": "Legg til en egendefinert kobling",
+      "p": "Klikk <b>New Connector</b> og velg <b>Custom</b>. Lim inn <code>https://mcpemails.com/api/mcp</code> som MCP-server-URL."
+    },
+    {
+      "h": "Logg inn og godkjenn",
+      "p": "Fullfør autentiseringen Grok ber om: du sendes til MCPEmails, der du logger inn og godkjenner tilgangene du vil at Grok skal ha. Deretter finner Grok verktøyene serveren tilbyr."
+    },
+    {
+      "h": "Spør om e-posten din",
+      "p": "Start en samtale og spør for eksempel \"hvilke innbokser har jeg?\" eller \"oppsummer de uleste e-postene mine\". Grok bruker verktøyene til en kobling når spørsmålet ditt handler om den."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "På Business og Enterprise må en administrator legge den til først",
+      "p": "På Grok Business- og Enterprise-planer kan ikke medlemmene legge til serveren selv før en teamadministrator har klargjort den. Administratoren logger inn på <code>console.x.ai</code>, velger teamet, åpner <b>Grok Business</b>, <b>Connectors</b>, klikker <b>+ Add Connector</b>, velger <b>Other</b> og skriver inn <code>https://mcpemails.com/api/mcp</code>. Det krever tillatelsen Team Read-Write. Deretter kobler hvert medlem til sin egen MCPEmails-konto på <code>grok.com/connectors</code>."
+    },
+    {
+      "h": "Sett det opp på nettet",
+      "p": "xAI beskriver bare hvordan du legger til en egendefinert kobling på <code>grok.com/connectors</code>, uten noen fremgangsmåte for iOS- eller Android-appene. Legg til koblingen fra en nettleser."
+    },
+    {
+      "h": "Bare lesetilgang er et reelt valg, og ofte det riktige å starte med",
+      "p": "Samtykkeskjermen lar deg gi Grok bare <code>read:email</code> og <code>search:email</code>. Det holder for sortering, oppsummering og søk, og det tar alle handlinger som ikke kan angres, ut av bildet mens du bestemmer deg for hvor langt du vil gå. Gir du <code>send:email</code>, kan eieren av en innboks slå på menneskelig godkjenning slik at hver sending venter på en person."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Grok?",
+      "a": "Gå til grok.com/connectors, klikk New Connector, velg Custom, lim inn https://mcpemails.com/api/mcp, og logg deretter inn på MCPEmails og godkjenn tilgangene. Da har Grok verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Grok?",
+      "a": "Nei. Grok kjører OAuth-flyten når du legger til koblingen, så ingenting hemmelig limes inn i Grok. En bearer-nøkkel er tilgjengelig for andre klienter som ikke kan gjøre det."
+    },
+    {
+      "q": "Er Groks innebygde Gmail-kobling det samme?",
+      "a": "Nei. Groks innebygde Gmail- og Outlook-koblinger når bare de to leverandørene. MCPEmails er en egendefinert kobling som når Outlook, Microsoft 365, Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver IMAP-postkasse gjennom én tilkobling, med tilganger du velger selv og valgfri menneskelig godkjenning av sendinger."
+    },
+    {
+      "q": "Hvilke postkasser kan Grok nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Grok ser alle gjennom den samme tilkoblingen: den kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Grok sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Grok den ekte innboksen din",
+    "sub": "Én URL, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

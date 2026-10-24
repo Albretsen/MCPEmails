@@ -15,6 +15,7 @@
 // - the npm package (npx -y mcpemails), the registry id com.mcpemails/...
 // - the GitHub repo Albretsen/MCPEmails
 // - the CLI server name in "claude mcp add --transport http mcpemails https://..."
+//   and in "codex mcp add mcpemails" / "openclaw mcp login mcpemails"
 // - the server key in a JSON config sample ("mcpemails": { ... })
 // - a lowercase "MCP" next to the generic word "emails" ("an MCP server for
 //   emails") is not the brand and never matches, because the check is case
@@ -41,6 +42,7 @@ const ALLOWED = [
   /\bnpx -y mcpemails\b/g, // npm package
   /\bAlbretsen\/MCPEmails\b/g, // GitHub repo
   /--transport http mcpemails\b/g, // CLI server name
+  /\b(?:codex|openclaw) mcp (?:add|login|logout|remove|get|show|status) mcpemails\b/g, // CLI server name (Codex, OpenClaw)
   /\\?"mcpemails\\?"\s*:/g, // server key in a JSON config sample
 ];
 
@@ -96,6 +98,9 @@ test('the checker flags brand misspellings and allows technical values', () => {
   assert.deepEqual(brandProblems('Run npx -y mcpemails, see github.com/Albretsen/MCPEmails'), []);
   assert.deepEqual(brandProblems('_meta["com.mcpemails/usage_limit"]'), []);
   assert.deepEqual(brandProblems('claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp'), []);
+  assert.deepEqual(brandProblems('codex mcp add mcpemails --url https://mcpemails.com/api/mcp'), []);
+  assert.deepEqual(brandProblems('openclaw mcp login mcpemails'), []);
+  assert.deepEqual(brandProblems('Use mcpemails to read mail'), ['mcpemails']);
   assert.deepEqual(brandProblems('{ "mcpServers": { "mcpemails": { "url": "https://mcpemails.com/api/mcp" } } }'), []);
 });
 
