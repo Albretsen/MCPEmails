@@ -217,6 +217,17 @@ export interface ImapSession {
   list(refName: string, pattern: string): Promise<ImapMailboxInfo[]>;
 
   /**
+   * APPEND one RFC 5322 message to a mailbox (RFC 3501 6.3.11), sent as a
+   * synchronizing literal. `flags` are system flags such as '\\Draft'.
+   *
+   * Used by exactly one caller today: the first-30-days note, which saves a
+   * draft into our own mailbox (src/lib/retention/first-30-days-draft.ts).
+   *
+   * @throws ImapNoError when the server refuses the literal or the APPEND
+   */
+  append(mailbox: string, message: string, flags?: string[]): Promise<void>;
+
+  /**
    * Send LOGOUT and destroy the socket.
    * Always call this (even on error paths) to allow the server to cleanly
    * account for the disconnected session.
@@ -1120,6 +1131,33 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
       }
 
       return parseListResponse(result.untagged);
+    },
+
+    async append(mailbox: string, message: string, flags: string[] = []): Promise<void> {
+      // Flags are atoms like \Draft. Anything else could smuggle syntax into
+      // the command line, so it is refused rather than escaped.
+      for (const flag of flags) {
+        if (!/^\\?[A-Za-z]+$/.test(flag)) {
+          throw new McpEmailsError('IMAP_PROTOCOL_ERROR', 'Invalid APPEND flag');
+        }
+      }
+      const bytes = Buffer.from(message, 'utf8');
+      const appendTag = nextTag();
+      const flagList = flags.length > 0 ? ` (${flags.join(' ')})` : '';
+      await socketWrite(socket, `${appendTag} APPEND ${quoteMailbox(mailbox)}${flagList} {${bytes.length}}\r\n`);
+      const reply = await readContinuationOrTagged(reader, appendTag);
+      if (!('continuation' in reply)) {
+        throw new ImapNoError(`APPEND ${reply.status}: ${reply.text}`);
+      }
+      await socketWrite(socket, bytes);
+      await socketWrite(socket, '\r\n');
+      const result = await readTaggedResponse(reader, appendTag, TIMEOUT.COMMAND);
+      if (result.status === 'NO') {
+        throw new ImapNoError(`APPEND NO: ${result.text}`);
+      }
+      if (result.status === 'BAD') {
+        throw new ImapBadError(`APPEND BAD: ${result.text}`);
+      }
     },
 
     async logout(): Promise<void> {
