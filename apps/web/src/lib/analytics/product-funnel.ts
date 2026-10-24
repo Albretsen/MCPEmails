@@ -79,7 +79,7 @@ export type ProductFunnelEvent = {
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
     | 'paywall_clicked'
-    // Pause and switch to Personal (migration 20261024220000). Category is the
+    // Pause and switch to Personal (migration 20261024233000). Category is the
     // plan the customer was on, except pause_resumed (early | auto) and
     // retention_option_clicked (pause | downgrade).
     | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'

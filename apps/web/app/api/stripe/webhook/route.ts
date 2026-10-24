@@ -180,7 +180,6 @@ import {
   type PlanChangeRow,
 } from '@/lib/billing/plan-change-sync';
 import { PAUSE_EARLY_KEY } from '@/lib/billing/pause';
-import { recordPlanChange } from '@/lib/analytics/billing-funnel';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { expireGrowthCache } from '@/lib/analytics/growth-queries';
 
@@ -1564,7 +1563,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
  * Writes the user_billing pause and downgrade columns, parks inboxes when the
  * plan has just dropped (pause running, downgrade landed), unparks them when
  * it comes back, and records the transitions. The column write and the
- * transition rows are skipped before migration 20261024220000 is applied
+ * transition rows are skipped before migration 20261024233000 is applied
  * (`before` is null); parking for a running pause still happens, because it
  * only needs the parking columns.
  *
@@ -1624,11 +1623,13 @@ async function syncPlanChange(
         basePlanItem(subscription.items.data)?.price?.recurring?.interval === 'year' ? 'year' : 'month';
       const target = projection.grantPlan;
       if (target !== 'free') {
-        await recordPlanChange({
+        // The same row recordPlanChange writes, through the writer itself:
+        // this file's other billing-funnel imports are all it needs from there.
+        await recordProductFunnelEvent(db, {
           workspaceId,
-          direction: 'downgrade',
-          target: billingTarget(target, interval),
+          stage: 'plan_downgraded',
           outcome: 'success',
+          category: billingTarget(target, interval),
         });
       }
     }

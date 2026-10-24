@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Pause and switch-to-Personal at period end: state columns, funnel stages,
 -- the two pause emails, and the Free allowance window during a pause.
--- 20261024220000_pause_downgrade
+-- 20261024233000_pause_downgrade
 -- ============================================================================
 --
 -- WHY. Documents/plans/pause-downgrade-20261024.md (section 12 overrides the
@@ -29,13 +29,13 @@
 --      authenticated), so a customer cannot move paused_from to widen their
 --      Free allowance window. Paired CHECKs keep each pair consistent.
 --   2. product_funnel_events: nine new stages and four new categories
---      (pause_resumed early|auto, retention_option_clicked pause|downgrade).
---      Both lists are copied from their latest definitions
---      (stage: 20261019150000, category: 20260827100000) with the additions.
---   3. billing_email_sends: templates pause_started and pause_ending_3. Their
---      GENERATED category is 'transactional' (only winback_* is marketing), so
---      neither is suppressible: both are about money on an existing contract.
---      The template list is copied from 20260912200000.
+--      (pause_resumed early|auto, retention_option_clicked pause|downgrade),
+--      appended to the LIVE lists (see the note at section 2), so this file
+--      works in any order with the other migrations that extend them.
+--   3. billing_email_sends: templates pause_started and pause_ending_3,
+--      appended the same way. Their GENERATED category is 'transactional'
+--      (only winback_* is marketing), so neither is suppressible: both are
+--      about money on an existing contract.
 --   4. workspace_action_allowance() and workspace_action_allowance_terms():
 --      for a Free workspace whose owner has paused_from in the past, the
 --      counting window opens at greatest(month_start, grace end, paused_from).
@@ -103,74 +103,103 @@ COMMENT ON COLUMN public.user_billing.pause_history IS
   'jsonb array of {from: unix seconds, months: int}, one per pause. Enforces the '
   'rolling 12-month cap of 3 paused months. Mirrors metadata.mcpe_pause_history.';
 
--- 2. Funnel stages and categories --------------------------------------------
+-- 2 and 3. Funnel stages, funnel categories, billing email templates ----------
+--
+-- ADDITIVE, NOT VERBATIM, like 20261024225000_dunning_measurement. Other open
+-- branches redefine the same three CHECKs with values of their own (the
+-- cancel-email work adds 'cancel_reason_submitted' and
+-- 'retention_option_clicked'), so restating a fixed list here would drop
+-- theirs, or theirs would drop ours, depending on order. Instead a helper
+-- reads the live definition, keeps every value already in it, appends the
+-- missing ones, and rebuilds the CHECK. A value already present is a no-op,
+-- so this works before or after those migrations, and on a re-run.
+--
+-- The helper is created and dropped inside this file: it is a migration tool,
+-- not part of the schema.
 
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_stage_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_stage_check
-  CHECK (stage IN (
-    'onboarding_started', 'client_selected', 'provider_selected', 'inbox_connection',
-    'connection_verified', 'credential_created', 'technical_activation',
-    'value_activation', 'first_tool_call',
-    -- Billing funnel
-    'paywall_reached', 'pricing_viewed', 'checkout_started', 'checkout_completed',
-    'billing_portal_opened',
-    -- An existing subscriber's price was swapped in place, in either direction.
-    'plan_upgraded', 'plan_downgraded',
-    -- The Overview guide asked a business-domain workspace to connect a second
-    -- work mailbox: started = shown, success = clicked.
-    'multi_inbox_prompt',
-    -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
-    -- the paywall_reached row with connection_type = 'first_connect'.
-    'paywall_clicked',
-    -- Pause and switch to Personal (20261024220000). Category is the plan the
-    -- customer was on, except pause_resumed (early | auto) and
-    -- retention_option_clicked (pause | downgrade).
+CREATE OR REPLACE FUNCTION pg_temp.mcpe_extend_in_check(
+  p_table regclass,
+  p_constraint text,
+  p_column text,
+  p_values text[]
+) RETURNS void
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  def      text;
+  existing text[];
+  merged   text[];
+  nullable boolean;
+BEGIN
+  SELECT pg_get_constraintdef(c.oid) INTO def
+  FROM pg_constraint c
+  WHERE c.conname = p_constraint AND c.conrelid = p_table;
+
+  -- No constraint at all: nothing restricts the column, nothing to add.
+  IF def IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Postgres prints the list as ARRAY['a'::text, ...] (or ANY of it); an
+  -- array literal '{a,b}'::text[] is read too.
+  SELECT array_agg(DISTINCT s ORDER BY s) INTO existing
+  FROM (
+    SELECT m[1] AS s FROM regexp_matches(def, '''([a-z0-9_]+)''::text', 'g') AS m
+    UNION
+    SELECT trim(both '"' from x) FROM regexp_matches(def, '''\{([^}]*)\}''', 'g') AS a,
+      unnest(string_to_array(a[1], ',')) AS x
+  ) found
+  WHERE s ~ '^[a-z0-9_]+$';
+
+  IF existing IS NULL OR array_length(existing, 1) IS NULL THEN
+    RAISE EXCEPTION '% has no readable value list: %', p_constraint, def;
+  END IF;
+
+  IF p_values <@ existing THEN
+    RETURN;
+  END IF;
+
+  SELECT array_agg(DISTINCT v ORDER BY v) INTO merged
+  FROM unnest(existing || p_values) AS v;
+
+  -- Keep "column IS NULL OR ..." when the original allowed NULL.
+  nullable := def ILIKE '%' || p_column || ' IS NULL%';
+
+  EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', p_table, p_constraint);
+  EXECUTE format(
+    'ALTER TABLE %s ADD CONSTRAINT %I CHECK (%s%I IN (%s))',
+    p_table,
+    p_constraint,
+    CASE WHEN nullable THEN format('%I IS NULL OR ', p_column) ELSE '' END,
+    p_column,
+    (SELECT string_agg(quote_literal(v), ', ' ORDER BY v) FROM unnest(merged) AS v)
+  );
+END
+$fn$;
+
+-- Stages. Category is the plan the customer was on, except pause_resumed
+-- (early | auto) and retention_option_clicked (pause | downgrade).
+SELECT pg_temp.mcpe_extend_in_check(
+  'public.product_funnel_events'::regclass, 'product_funnel_events_stage_check', 'stage',
+  ARRAY[
     'pause_started', 'pause_extended', 'pause_resumed', 'pause_ended_cancelled',
     'downgrade_scheduled', 'downgrade_undone',
     'inbox_parked', 'inbox_unparked',
     'retention_option_clicked'
-  ));
+  ]);
 
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_category_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_category_check
-  CHECK (category IN (
-    'gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex',
-    'generic_imap', 'api_key', 'oauth', 'claude', 'chatgpt', 'cursor',
-    'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast',
-    'warp', 'curl', 'unknown',
-    -- Billing: the plan+interval a checkout targeted ...
-    'personal_month', 'personal_year',
-    'solo_month', 'solo_year', 'pro_month', 'pro_year',
-    -- ... the plan a user was on when a paywall or portal event fired ...
-    'free', 'personal', 'solo', 'pro',
-    -- ... and the surface a pricing view happened on.
-    'pricing_page', 'dashboard_billing',
-    -- pause_resumed: who ended the pause. retention_option_clicked: which one.
-    'early', 'auto', 'pause', 'downgrade'
-  ));
+-- Categories: who ended a pause, and which retention option was clicked.
+SELECT pg_temp.mcpe_extend_in_check(
+  'public.product_funnel_events'::regclass, 'product_funnel_events_category_check', 'category',
+  ARRAY['early', 'auto', 'pause', 'downgrade']);
 
--- 3. Billing email templates -------------------------------------------------
+-- Templates: a pause receipt, and the notice 3 days before billing resumes.
+-- Their GENERATED category is 'transactional' (only winback_* is marketing).
+SELECT pg_temp.mcpe_extend_in_check(
+  'public.billing_email_sends'::regclass, 'billing_email_sends_template_check', 'template',
+  ARRAY['pause_started', 'pause_ending_3']);
 
-ALTER TABLE public.billing_email_sends
-  DROP CONSTRAINT IF EXISTS billing_email_sends_template_check;
-ALTER TABLE public.billing_email_sends
-  ADD CONSTRAINT billing_email_sends_template_check CHECK (template IN (
-    -- transactional: the payment is broken or about to be
-    'dunning_1', 'dunning_3', 'dunning_7', 'dunning_14',
-    'card_expiry_30', 'card_expiry_7',
-    -- transactional: they cancelled, we ask one question
-    'cancel_ask',
-    -- marketing-adjacent: they are already gone
-    'winback_14', 'winback_30',
-    -- transactional: the Free allowance is 80% used, used up, or paused a rule
-    'usage_warning_80', 'usage_limit_reached', 'automation_paused_limit',
-    -- transactional: a pause receipt, and the notice 3 days before billing resumes
-    'pause_started', 'pause_ending_3'
-  ));
+DROP FUNCTION pg_temp.mcpe_extend_in_check(regclass, text, text, text[]);
 
 -- 4. The Free allowance window during a pause --------------------------------
 
@@ -301,7 +330,7 @@ BEGIN
     -- empty (period_start = period_end, used = 0), next month's starts on
     -- the 5th.
     --
-    -- A paused subscriber (20261024220000) is on Free from paused_from, and
+    -- A paused subscriber (20261024233000) is on Free from paused_from, and
     -- the window opens no earlier than that, so the paid month before the
     -- pause is not counted against the Free allowance. Only a pause that has
     -- started counts; GREATEST ignores the NULL of everyone else.

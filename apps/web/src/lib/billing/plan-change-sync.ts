@@ -9,7 +9,7 @@
  *                          pause/downgrade columns, and whether inboxes park
  *                          (plan dropped) or unpark (plan restored).
  *   read/writePlanChangeColumns()
- *                          the six user_billing columns of 20261024220000.
+ *                          the six user_billing columns of 20261024233000.
  *   parkOwner() / unparkOwner()
  *                          parking.ts over every workspace the owner has, at
  *                          the plan's inbox cap.
@@ -19,7 +19,7 @@
  * run again. A failure is logged and a later event (or the cron) repairs it.
  *
  * THE COLUMNS AND THE GENERATED TYPES. `src/types/database.types.ts` is
- * generated from production, where 20261024220000 is not applied yet, while
+ * generated from production, where 20261024233000 is not applied yet, while
  * CI also type-checks against types generated from a freshly migrated local
  * database, where it is. The six columns are therefore reached through one
  * narrow facade (`planChangeTable`), cast once from the real client. It

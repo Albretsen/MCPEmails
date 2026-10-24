@@ -697,7 +697,7 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     current_period_start timestamp with time zone,
-    -- Pause / downgrade state (20261024220000). Hosted-only in practice (a
+    -- Pause / downgrade state (20261024233000). Hosted-only in practice (a
     -- self-host stack has no Stripe), mirrored because
     -- workspace_action_allowance() reads paused_from.
     paused_from timestamp with time zone,
@@ -1527,7 +1527,7 @@ BEGIN
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
     -- A paused subscriber's window opens no earlier than paused_from
-    -- (20261024220000). Always NULL on a self-host stack.
+    -- (20261024233000). Always NULL on a self-host stack.
     SELECT ub.paused_from INTO v_paused_from
     FROM public.user_billing ub
     WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
