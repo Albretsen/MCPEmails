@@ -1754,6 +1754,50 @@ AS $$
 $$;
 
 -- ============================================================
+-- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
+-- 20261024211000). message_ref and summary are AES-256-GCM wrappers
+-- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
+-- /reminders-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.reminders (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  kind                 text NOT NULL CHECK (kind IN ('follow_up', 'snooze')),
+  status               text NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'due', 'replied', 'returned', 'done', 'cancelled', 'failed')),
+  condition            text NOT NULL DEFAULT 'always' CHECK (condition IN ('always', 'no_reply')),
+  due_at               timestamptz NOT NULL,
+  next_check_at        timestamptz,
+  message_digest       text NOT NULL,
+  message_ref          jsonb NOT NULL,
+  summary              jsonb,
+  folder               text,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  last_error_code      text,
+  last_checked_at      timestamptz,
+  replied_at           timestamptz,
+  returned_at          timestamptz,
+  completed_at         timestamptz,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
+  WHERE status IN ('pending', 'due') AND claimed_at IS NULL AND next_check_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS reminders_inbox_open_idx ON public.reminders (inbox_id, next_check_at)
+  WHERE status IN ('pending', 'due');
+CREATE INDEX IF NOT EXISTS reminders_workspace_status_idx ON public.reminders (workspace_id, status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS reminders_open_message_uniq ON public.reminders (inbox_id, kind, message_digest)
+  WHERE status IN ('pending', 'due', 'failed');
+CREATE OR REPLACE TRIGGER reminders_updated_at
+  BEFORE UPDATE ON public.reminders
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- ============================================================
 -- Grants, service_role bypasses RLS and owns the data plane.
 -- ============================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;

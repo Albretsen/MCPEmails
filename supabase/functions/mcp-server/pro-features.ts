@@ -56,7 +56,16 @@ export const PRO_FEATURE_ERROR_CODE = "pro_feature_required";
  * here is hidden and unknown until the feature is visible, and refused until
  * it is allowed. Feature branches add their entries here.
  */
-export const PRO_FEATURE_TOOLS: Readonly<Record<string, ProFeature>> = {};
+export const PRO_FEATURE_TOOLS: Readonly<Record<string, ProFeature>> = {
+  // reminders: the consolidated write tool, its read companion, and the
+  // per-operation names an OpenAI key is listed (and any client may call).
+  reminder: "reminders",
+  reminder_list: "reminders",
+  reminder_follow_up: "reminders",
+  reminder_snooze: "reminders",
+  reminder_done: "reminders",
+  reminder_cancel: "reminders",
+};
 
 /**
  * Pro-only arguments on tools everyone has: tool name, then argument name.
@@ -66,7 +75,17 @@ export const PRO_FEATURE_TOOLS: Readonly<Record<string, ProFeature>> = {};
  * `inbox_id: "all"`) cannot be expressed here: check it in the handler with
  * proFeatureAccess() from index.ts.
  */
-export const PRO_FEATURE_ARGS: Readonly<Record<string, Readonly<Record<string, ProFeature>>>> = {};
+export const PRO_FEATURE_ARGS: Readonly<Record<string, Readonly<Record<string, ProFeature>>>> = {
+  // reminders: "follow up if nobody replies within N days" on every send path,
+  // consolidated (email_compose send/reply/forward, draft send) and
+  // per-operation.
+  email_compose: { follow_up_days: "reminders" },
+  draft: { follow_up_days: "reminders" },
+  email_send: { follow_up_days: "reminders" },
+  email_reply: { follow_up_days: "reminders" },
+  email_forward: { follow_up_days: "reminders" },
+  draft_send: { follow_up_days: "reminders" },
+};
 
 /** What the gate needs to know about a workspace. */
 export interface ProGateInputs {

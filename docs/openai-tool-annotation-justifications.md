@@ -582,6 +582,78 @@ openWorld stays false. `draft_update` ADDS files and keeps the stored ones.
   delivery to outside recipients. Cancelling does the reverse and addresses
   nobody.
 
+## reminder_list (readOnly: true, destructive: false, openWorld: false)
+
+Pro feature, not listed to any client until it launches. Written ahead so the
+strings exist when it does.
+
+**Submitted text.**
+
+- **readOnlyHint:** It lists the follow-ups and snoozes this workspace has set, with the id done and cancel take.
+- **destructiveHint:** It is a read. No reminder is changed and no message is moved by listing.
+- **openWorldHint:** The reminders are this workspace's own stored data; nothing is transmitted by reading them.
+
+**Reasoning.**
+
+- **readOnly true:** a select over the workspace's own reminders.
+- **destructive false:** it is a read.
+- **openWorld false:** workspace data only.
+
+## reminder_follow_up (readOnly: false, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It stores a new reminder that tracks one sent message until a reply arrives or it falls due.
+- **destructiveHint:** It only adds a tracking record. No message is changed, moved or sent, and a repeat returns the same record.
+- **openWorldHint:** It reads the user's own connected mailbox for a reply. Nothing is sent to anyone.
+
+**Reasoning.**
+
+- **destructive false:** purely additive: one new row, and the same message is
+  tracked once.
+- **openWorld false:** the later reply checks read the same one mailbox.
+
+## reminder_snooze (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It moves one message out of the inbox into a snooze folder and stores when to bring it back.
+- **destructiveHint:** It moves the message out of the inbox now. The server moves it back at the chosen time, or on cancel.
+- **openWorldHint:** It moves a message inside the user's own mailbox. Nothing is sent to anyone.
+
+**Reasoning.**
+
+- **destructive true:** a move is not additive, by the same rule as `email_move`.
+- **openWorld false:** one connected mailbox.
+
+## reminder_done (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It marks one reminder, named by id, as done.
+- **destructiveHint:** It ends a reminder the user set; tracking it again means setting a new one. No message is moved.
+- **openWorldHint:** It changes this workspace's own stored reminder. Nothing is transmitted.
+
+**Reasoning.**
+
+- **destructive true:** it ends something the user created, like
+  `schedule_cancel`.
+- **openWorld false:** workspace data only.
+
+## reminder_cancel (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It cancels one reminder, named by id, and moves a snoozed message back to the inbox.
+- **destructiveHint:** It ends a reminder the user set, and a snoozed message is moved back now. Setting it again means a new reminder.
+- **openWorldHint:** It changes this workspace's own reminder and moves a message inside the user's own mailbox. Nothing is sent.
+
+**Reasoning.**
+
+- **destructive true:** it ends something the user created and may move a
+  message.
+- **openWorld false:** one connected mailbox and workspace data.
+
 ## signature_get (readOnly: true, destructive: false, openWorld: false)
 
 **Submitted text.**
