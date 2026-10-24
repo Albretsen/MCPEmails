@@ -3,6 +3,6 @@
 // LAST_UPDATED is the Terms page's date. The Privacy Policy has its own since
 // 2026-09-29 (the marketing-email consent purpose), because bumping one
 // document's date must not claim the other changed too.
-export const LAST_UPDATED = 'October 20, 2026';
+export const LAST_UPDATED = 'October 24, 2026';
 export const PRIVACY_LAST_UPDATED = 'October 20, 2026';
 export const EFFECTIVE_DATE = 'May 25, 2026';

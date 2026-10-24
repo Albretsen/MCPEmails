@@ -3,6 +3,27 @@
 Raw idea capture. Nothing here is decided, scoped or scheduled. One heading per
 idea, newest first, with the date it was captured.
 
+## Affiliate program, invite-only pilot (2026-10-24)
+
+Pay a small group of hand-picked partners (AI workflow creators, AI tool
+newsletters, automation consultants) a share of what their referrals pay.
+Researched and parked on 2026-10-24; full design in the gitignored
+Documents/plans/affiliate-program-20261024.md.
+
+- 25% of net revenue for the first 12 months per referred customer, not
+  lifetime. 30-day hold, refunds and chargebacks clawed back.
+- One Stripe promotion code per partner, because connector installs never see
+  a tracking cookie. Checkout already accepts promotion codes.
+- Rewardful or PromoteKit, or Stripe codes plus manual payouts for under 5
+  partners. 90-day pilot with a kill rule.
+- Never put partner codes in directory listings or tool output (Anthropic and
+  OpenAI directory rules).
+
+Open questions: whether partners bring enough volume at our price points,
+discount leakage to buyers who would pay anyway, and the Norwegian tax side
+(private Norwegian partners count as fee recipients, reverse-charge VAT on
+foreign commissions).
+
 ## Inbox handled for you (2026-10-24)
 
 Sell the result instead of the tool ("service as software"). A scheduled agent

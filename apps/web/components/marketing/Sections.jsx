@@ -375,7 +375,7 @@ function MarqueeItem({ name, logo, color }) {
       <span className="marquee-logo" style={{ background: color }}>
         {g && (
           <svg viewBox={g.viewBox} width="17" height="17" fill="#fff" aria-hidden="true">
-            <path d={g.d} />
+            <path d={g.d} fillRule={g.fillRule} />
           </svg>
         )}
       </span>
