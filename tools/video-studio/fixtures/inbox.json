@@ -1,0 +1,79 @@
+{
+  "note": "Video fixture mail, appended to the Demo folder of the demo mailbox by `npm run seed`. The same mailbox holds the OpenAI reviewer corpus in INBOX, Archive and Sent, whose counts the review test cases check, so video mail lives in its own folder and seed never touches the corpus: it removes and re-adds only messages FROM the exact sender addresses below, so no sender here may also appear in that corpus (nora.feldt@bergentek.example, escalations@helpdesk.example and sam.okafor@northwind-labs.example are taken). Every sender is on a .example domain (RFC 2606, unregistrable). ageHours is how long before the seed each message is dated, so 'today' stays today on every run. Keep subjects free of prices and plan talk: a chat scene may quote them on camera.",
+  "folder": "Demo",
+  "recipientName": "Alex Demo",
+  "messages": [
+    {
+      "fromName": "Field Notes",
+      "from": "letters@fieldnotes-weekly.example",
+      "subject": "Field Notes #42: the quiet week issue",
+      "ageHours": 50,
+      "seen": true,
+      "body": "This week: three short essays on working with fewer tabs open, a reading list, and a photo from a reader's desk in Trondheim.\n\nYou are receiving this because you subscribed at fieldnotes-weekly.example. Unsubscribe any time."
+    },
+    {
+      "fromName": "Northwind Cloud Billing",
+      "from": "billing@northwind-cloud.example",
+      "subject": "Invoice INV-30117 paid, thank you",
+      "ageHours": 30,
+      "seen": true,
+      "body": "Hi Alex,\n\nWe received your payment for invoice INV-30117. No action is needed.\n\nNorthwind Cloud Billing"
+    },
+    {
+      "fromName": "ParcelPost",
+      "from": "orders@parcelpost.example",
+      "subject": "Your order has shipped",
+      "ageHours": 26,
+      "seen": false,
+      "body": "Good news: order 55-1029 is on its way and should arrive on Tuesday. Track it at parcelpost.example/track."
+    },
+    {
+      "fromName": "The Weekly Byte",
+      "from": "newsletter@weeklybyte.example",
+      "subject": "The Weekly Byte: five desk tools we kept",
+      "ageHours": 9,
+      "seen": false,
+      "body": "This issue: five small desk tools our editors actually kept using after a month, and two they returned.\n\nUnsubscribe at weeklybyte.example/unsubscribe."
+    },
+    {
+      "fromName": "Harbor Logistics Legal",
+      "from": "legal@harborlogistics.example",
+      "subject": "Contract draft v3 for your review",
+      "ageHours": 7,
+      "seen": false,
+      "body": "Hi Alex,\n\nAttached in our shared folder is v3 of the services agreement with the changes to section 4 we discussed. Could you review it by Thursday?\n\nThanks,\nMarta"
+    },
+    {
+      "fromName": "Tidewater Support",
+      "from": "support-escalations@tidewater-desk.example",
+      "subject": "Ticket #4471 escalated to you",
+      "ageHours": 5,
+      "seen": false,
+      "body": "Ticket #4471 has been escalated to you.\n\nCustomer: Harbor Logistics\nSummary: the monthly report export times out for all users.\nPlease reply to the customer within 18 hours."
+    },
+    {
+      "fromName": "Tomas Berg",
+      "from": "tomas.berg@lindqvist.example",
+      "subject": "Lunch on Friday?",
+      "ageHours": 4,
+      "seen": false,
+      "body": "Hey Alex, are you free for lunch on Friday? The place by the harbour has reopened.\n\nTomas"
+    },
+    {
+      "fromName": "Lena Brandt",
+      "from": "lena.brandt@kvarts-studio.example",
+      "subject": "Reminder: invoice KV-1182 is overdue",
+      "ageHours": 3,
+      "seen": false,
+      "body": "Hi Alex,\n\nA friendly reminder that invoice KV-1182 was due on the 14th and is now past due. We have not yet received the payment. Could you arrange payment, or let me know if something is holding it up?\n\nBest regards,\nLena Brandt\nKvarts Studio"
+    },
+    {
+      "fromName": "Ana Halden",
+      "from": "ana@studiohalden.example",
+      "subject": "Moved: design review to Thursday 14:00",
+      "ageHours": 2,
+      "seen": false,
+      "body": "Hi all, the design review has moved to Thursday at 14:00, same room. Bring the latest mockups.\n\nAna"
+    }
+  ]
+}

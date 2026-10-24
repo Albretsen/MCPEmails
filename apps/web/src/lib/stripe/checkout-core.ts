@@ -14,6 +14,7 @@ import {
   mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  retainedPriceGenerationId,
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
@@ -23,6 +24,13 @@ import {
   readMailboxAddonState,
   type MailboxAddonItemChange,
 } from '@/lib/stripe/mailbox-addon';
+import { getActiveSeasonalOffers } from '@/lib/stripe/seasonal-offer-server';
+import {
+  BLACK_WEEK_2026,
+  SEASONAL_OFFER_METADATA_KEY,
+  isSeasonalPlanId,
+  type SeasonalOffer,
+} from '@/lib/stripe/seasonal-offer';
 import {
   billingTarget,
   planCategory,
@@ -168,6 +176,17 @@ export interface PlanChangePreview {
   extraMailboxes: number;
   /** Unix seconds. Null when Stripe reports no period on the subscription. */
   nextRenewalAt: number | null;
+  /**
+   * The seasonal first-year discount already included in `amountDueNowCents`,
+   * as Stripe priced it. Zero when no offer applies.
+   */
+  discountCents: number;
+  /**
+   * The seasonal offer this change is priced with (Black Week 2026), or null.
+   * When set, `amountDueNowCents` already includes it and `recurringCents` is
+   * the normal renewal price, because the coupon applies to the first year only.
+   */
+  seasonalOffer: SeasonalOffer | null;
 }
 
 export type CheckoutOutcome =
@@ -188,6 +207,13 @@ export type CheckoutOutcome =
       planName: string;
       interval: BillingInterval;
       preview: PlanChangePreview | null;
+      /**
+       * True when the caller confirmed a quote that carried a seasonal offer
+       * and the offer is no longer available (window closed, coupon killed,
+       * redeemed elsewhere). Nothing was charged; `preview` is the fresh quote
+       * at the price that now applies.
+       */
+      offerEnded?: boolean;
     }
   /**
    * An existing subscriber's price was swapped in place and the proration was
@@ -241,8 +267,10 @@ async function previewPlanChange(args: {
   addonChanges: MailboxAddonItemChange[];
   extraMailboxes: number;
   addonPriceId: string | null;
+  /** The seasonal offer the confirmed swap will apply, so the quote matches. */
+  offer: SeasonalOffer | null;
 }): Promise<PlanChangePreview | null> {
-  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId } = args;
+  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId, offer } = args;
 
   try {
     const customerId =
@@ -260,6 +288,10 @@ async function previewPlanChange(args: {
           items: [{ id: itemId, price: priceId }, ...addonChanges],
           proration_behavior: 'always_invoice',
         },
+        // The same discounts the confirmed swap sends. Top-level `discounts`
+        // replaces what the preview would inherit from the subscription, so
+        // the subscription's existing ones are passed through with it.
+        ...(offer ? { discounts: offerDiscounts(subscription, offer) } : {}),
       }),
       stripe.prices.retrieve(priceId),
       extraMailboxes > 0 && addonPriceId
@@ -284,6 +316,11 @@ async function previewPlanChange(args: {
         (price.unit_amount ?? 0) + (addonPrice?.unit_amount ?? 0) * extraMailboxes,
       extraMailboxes,
       nextRenewalAt: basePlanItem(subscription.items.data)?.current_period_end ?? null,
+      discountCents: (preview.total_discount_amounts ?? []).reduce(
+        (sum, d) => sum + (d.amount ?? 0),
+        0,
+      ),
+      seasonalOffer: offer,
     };
   } catch (err) {
     console.error(
@@ -362,6 +399,59 @@ function checkoutCustomText(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Seasonal offer (Black Week 2026) helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * The `discounts` list for a swap that adds the seasonal coupon: whatever the
+ * subscription already carries, then the coupon. Passing `discounts` replaces
+ * the list, so dropping the existing entries would silently remove a discount
+ * the customer already has.
+ */
+export function offerDiscounts(
+  subscription: Pick<Stripe.Subscription, 'discounts'>,
+  offer: SeasonalOffer,
+): Array<{ discount: string } | { coupon: string }> {
+  const existing = (subscription.discounts ?? [])
+    .map((d) => (typeof d === 'string' ? d : d?.id))
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    .map((id) => ({ discount: id }));
+  return [...existing, { coupon: offer.couponId }];
+}
+
+/**
+ * Has this Stripe customer ever had a subscription tagged with the offer?
+ * One redemption per person. FAILS CLOSED: if Stripe cannot answer, the offer
+ * is not applied, and the buyer sees the normal price on Stripe's own page
+ * (never a charge different from what that page states).
+ */
+export async function hasRedeemedSeasonalOffer(customerId: string): Promise<boolean> {
+  try {
+    const list = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
+    return list.data.some(
+      (sub) => sub.metadata?.[SEASONAL_OFFER_METADATA_KEY] === BLACK_WEEK_2026.id,
+    );
+  } catch (err) {
+    console.error(
+      '[checkout] seasonal offer redemption check failed, offer not applied:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return true;
+  }
+}
+
+/** The live offer for this plan and interval, or null. Never throws. */
+async function liveOfferFor(planId: string, interval: string): Promise<SeasonalOffer | null> {
+  if (interval !== 'year' || !isSeasonalPlanId(planId)) return null;
+  try {
+    const offers = await getActiveSeasonalOffers();
+    return offers[planId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function fail(
   reason: CheckoutReason,
   status: number,
@@ -393,6 +483,11 @@ function fail(
  * reminder linked from (see src/lib/email/abandoned-checkout.ts). It only lands
  * in the new session's metadata, after a format check, so the completed
  * purchase can be credited to the reminder.
+ *
+ * `quotedOffer` is the seasonal offer id the confirmed quote carried (the
+ * dashboard echoes `preview.seasonalOffer.offerId`). On the confirmed pass of a
+ * plan change, an offer that was quoted but is no longer available stops the
+ * swap and returns a fresh quote, so nobody is charged a price they did not see.
  */
 export async function runCheckout(input: {
   planId: unknown;
@@ -400,6 +495,7 @@ export async function runCheckout(input: {
   confirmChange?: unknown;
   locale?: unknown;
   recoveredFrom?: unknown;
+  quotedOffer?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -749,7 +845,14 @@ export async function runCheckout(input: {
       const samePlanAndInterval =
         fromPrice?.planId === planId && fromPrice?.interval === interval;
 
-      if (currentItem.price.id === priceId || samePlanAndInterval) {
+      // A Pro subscriber who kept $15 / $144 at the Pro price change keeps
+      // that generation when switching interval: monthly $15 goes to yearly
+      // $144, not to the $182.40 Pro now sells. Null for everyone else, who
+      // move to the sold price as before. See retainedPriceGenerationId.
+      const swapPriceId =
+        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? priceId;
+
+      if (currentItem.price.id === swapPriceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
         // on 2026-09-14 (see the note at the top of this branch): the
         // subscription is already on the exact price being asked for.
@@ -805,6 +908,36 @@ export async function runCheckout(input: {
         );
       }
 
+      // ── The seasonal offer on a switch ───────────────────────────────────
+      //
+      // Black Week 2026: a MONTHLY Personal or Pro subscriber on the current
+      // monthly price who moves to annual Personal or Pro gets the first-year
+      // coupon on this swap. Existing annual subscribers, Business, legacy
+      // Team and the retired Personal $5 price get nothing. One redemption per
+      // customer (any subscription ever tagged offer=bw2026, this one included).
+      let offer: SeasonalOffer | null = null;
+      const fromCurrentMonthly =
+        fromPrice !== null &&
+        fromPrice.interval === 'month' &&
+        isSeasonalPlanId(fromPrice.planId) &&
+        currentItem.price.id === PLANS[fromPrice.planId].stripePriceIdMonthly;
+      // Only on the price the offer was checked against: the offer reader
+      // vetted the SOLD yearly price, so a retained-generation swap (Pro price
+      // change, see retainedPriceGenerationId) never carries the coupon.
+      if (fromCurrentMonthly && interval === 'year' && swapPriceId === priceId) {
+        offer = await liveOfferFor(planId, interval);
+        if (offer) {
+          const customerId =
+            typeof subscription.customer === 'string'
+              ? subscription.customer
+              : subscription.customer.id;
+          const redeemed =
+            subscription.metadata?.[SEASONAL_OFFER_METADATA_KEY] === BLACK_WEEK_2026.id ||
+            (await hasRedeemedSeasonalOffer(customerId));
+          if (redeemed) offer = null;
+        }
+      }
+
       // ── The consent gate ───────────────────────────────────────────────────
       //
       // Everything above this line is a read. Below it, a card gets charged.
@@ -819,19 +952,27 @@ export async function runCheckout(input: {
       // Nothing is recorded here: the funnel counts attempts, and asking the
       // price is not one. The row is written below, on the confirmed pass,
       // exactly once per completed decision.
-      if (!confirmChange) {
+      // The quote the customer confirmed carried the offer, and it is gone
+      // now (typically: shown at 23:58 on 1 December, clicked at 00:01). Do
+      // not charge the full price they never saw; quote again instead.
+      const offerEnded =
+        Boolean(confirmChange) && input.quotedOffer === BLACK_WEEK_2026.id && offer === null;
+
+      if (!confirmChange || offerEnded) {
         return {
           kind: 'confirmation_required',
           planId,
           planName: plan.name,
           interval,
+          ...(offerEnded ? { offerEnded: true } : {}),
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
-            priceId,
+            priceId: swapPriceId,
             addonChanges,
             extraMailboxes,
             addonPriceId: mailboxAddonPriceId(interval),
+            offer,
           }),
         };
       }
@@ -874,11 +1015,22 @@ export async function runCheckout(input: {
       // this call used to write is gone. Nothing read it: `user_id` is already
       // on the subscription from `subscription_data` at creation and survives
       // untouched, and the webhook resolves the plan from the price id.
+      //
+      // A seasonal offer rides on the same call: `discounts` and `metadata`
+      // are both supported on a pending update (Stripe "Pending updates"
+      // reference), so an unpaid switch neither consumes the coupon on the
+      // monthly plan nor tags a subscription that did not move.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: priceId }, ...addonChanges],
+        items: [{ id: currentItem.id, price: swapPriceId }, ...addonChanges],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
+        ...(offer
+          ? {
+              discounts: offerDiscounts(subscription, offer),
+              metadata: { [SEASONAL_OFFER_METADATA_KEY]: offer.offerId },
+            }
+          : {}),
       });
 
       const latestInvoice =
@@ -1021,6 +1173,15 @@ export async function runCheckout(input: {
     `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}`;
   const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
 
+  // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
+  // Annual Personal or Pro inside the window, coupon live, price unchanged,
+  // and this customer has never had a subscription tagged with the offer.
+  let offer = await liveOfferFor(planId, interval);
+  if (offer && (await hasRedeemedSeasonalOffer(customerId))) offer = null;
+  const offerMetadata: Record<string, string> = offer
+    ? { [SEASONAL_OFFER_METADATA_KEY]: offer.offerId }
+    : {};
+
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
   const locale = checkoutLocale(input.locale);
   const lang = reminderLocale(input.locale);
@@ -1033,7 +1194,12 @@ export async function runCheckout(input: {
       line_items: lineItems,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      allow_promotion_codes: true,
+      // `discounts` and `allow_promotion_codes` cannot be combined in one
+      // session, so an offer session applies the coupon server side and
+      // shows no promotion-code field.
+      ...(offer
+        ? { discounts: [{ coupon: offer.couponId }] }
+        : { allow_promotion_codes: true }),
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
       // Local-currency checkout for buyers outside the US. Prices stay USD and
@@ -1078,12 +1244,14 @@ export async function runCheckout(input: {
       subscription_data: {
         metadata: {
           user_id: user.id,
+          ...offerMetadata,
         },
       },
       metadata: {
         user_id: user.id,
         plan_id: planId,
         interval,
+        ...offerMetadata,
         // The buyer's app language, so an abandoned-checkout reminder for this
         // session can be written in it. Allow-listed; English adds nothing.
         ...(reminderLang ? { lang: reminderLang } : {}),

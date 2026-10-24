@@ -15,7 +15,34 @@
  *     is the worst outcome: the render succeeds and the video is wrong.
  */
 
-export const SCENE_TYPES = ['title', 'capture', 'chat', 'terminal', 'outro'];
+import { lintCopy } from './copy-lint.mjs';
+
+export const SCENE_TYPES = ['title', 'capture', 'chat', 'terminal', 'outro', 'clip', 'query'];
+
+/**
+ * `format` picks the canvas and the layout rules every scene follows.
+ * "vertical" is the 9:16 short (TikTok, Reels, Shorts): 1080x1920, text kept
+ * out of the bottom 20% and the right-hand button rail. See src/layout.tsx.
+ */
+export const FORMATS = {
+  landscape: { width: 1920, height: 1080 },
+  vertical: { width: 1080, height: 1920 },
+};
+
+/** Where a query card says the question came from. Shown as a display name. */
+export const QUERY_PLATFORMS = {
+  reddit: 'Reddit',
+  x: 'X',
+  'hacker-news': 'Hacker News',
+  'stack-overflow': 'Stack Overflow',
+  github: 'GitHub',
+  discord: 'Discord',
+  forum: 'a forum',
+  quora: 'Quora',
+};
+
+/** Keys whose values a viewer reads or hears. Linted by src/copy-lint.mjs. */
+const COPY_KEYS = new Set(['headline', 'sub', 'cta', 'text', 'question', 'caption', 'label', 'lead']);
 
 /**
  * How much a clip may overrun its recording before it is an error rather than
@@ -62,6 +89,22 @@ const SCENE_SPEC = {
     required: { durationInSeconds: 'number', cta: 'string' },
     optional: { sub: ['string', undefined] },
   },
+  // An external mp4, typically a generated hook. Always carries the
+  // "AI-generated" badge: there is deliberately no key to turn it off.
+  clip: {
+    required: { durationInSeconds: 'number', src: 'string' },
+    optional: {
+      from: ['number', 0],
+      caption: ['string', undefined],
+      muted: ['boolean', true],
+    },
+  },
+  // A paraphrased real question, with where it was asked. The URL is evidence
+  // for post.json and is never drawn: it may carry a username.
+  query: {
+    required: { durationInSeconds: 'number', question: 'string', platform: 'string', sourceUrl: 'string' },
+    optional: { lead: ['string', undefined] },
+  },
 };
 
 const TOP_REQUIRED = { id: 'string', scenes: 'array' };
@@ -73,6 +116,12 @@ const TOP_OPTIONAL = {
   voiceover: ['string', undefined],
   captions: ['boolean', false],
   posterFrame: ['number', undefined],
+  format: ['string', 'landscape'],
+  // true = written by a routine with nobody watching. Refuses capture scenes,
+  // which need a human-signed-in browser session.
+  automated: ['boolean', false],
+  timer: ['timer', undefined],
+  post: ['post', undefined],
 };
 
 class StoryboardError extends Error {
@@ -138,10 +187,60 @@ function checkPrimitive(where, key, value, expected) {
       if (typeOf(c.at) !== 'number') throw new StoryboardError(`${cw}: "at" must be a number, in seconds from the start of the CLIP.`);
       if (typeOf(c.for) !== 'number' || c.for <= 0) throw new StoryboardError(`${cw}: "for" must be a positive number of seconds.`);
       if (typeOf(c.text) !== 'string' || !c.text.trim()) throw new StoryboardError(`${cw}: "text" must be a non-empty string.`);
-      if (c.text.includes('—')) {
-        throw new StoryboardError(`${cw}: "text" contains an em dash. House style forbids them in on-screen text. Use a comma, colon or full stop.`);
-      }
+      const problems = lintCopy(c.text, `${cw}: "text"`);
+      if (problems.length) throw new StoryboardError(problems[0]);
     });
+    return;
+  }
+
+  if (expected === 'timer') {
+    if (actual !== 'object') {
+      throw new StoryboardError(`${where}: "timer" must be an object like { "from": 1, "to": 2 }, got ${actual}.`);
+    }
+    for (const k of Object.keys(value)) {
+      if (!['from', 'to', 'label'].includes(k)) {
+        throw new StoryboardError(`${where}: "timer" has unknown key "${k}". Allowed: from, to, label.`);
+      }
+    }
+    for (const k of ['from', 'to']) {
+      if (!Number.isInteger(value[k]) || value[k] < 0) {
+        throw new StoryboardError(`${where}: "timer.${k}" must be a scene index (an integer from 0).`);
+      }
+    }
+    if (value.label !== undefined) checkPrimitive(where, 'label', value.label, 'string');
+    return;
+  }
+
+  if (expected === 'post') {
+    if (actual !== 'object') {
+      throw new StoryboardError(`${where}: "post" must be an object like { "caption": "...", "hashtags": ["#email"] }, got ${actual}.`);
+    }
+    for (const k of Object.keys(value)) {
+      if (!['caption', 'hashtags', 'sourceUrl'].includes(k)) {
+        throw new StoryboardError(`${where}: "post" has unknown key "${k}". Allowed: caption, hashtags, sourceUrl.`);
+      }
+    }
+    if (typeOf(value.caption) !== 'string' || !value.caption.trim()) {
+      throw new StoryboardError(`${where}: "post.caption" must be a non-empty string.`);
+    }
+    if (value.caption.length > 2200) {
+      throw new StoryboardError(`${where}: "post.caption" is ${value.caption.length} characters. TikTok's limit is 2200.`);
+    }
+    checkPrimitive(where, 'caption', value.caption, 'string');
+    if (value.hashtags !== undefined) {
+      if (!Array.isArray(value.hashtags) || value.hashtags.length > 8) {
+        throw new StoryboardError(`${where}: "post.hashtags" must be an array of at most 8 tags.`);
+      }
+      for (const h of value.hashtags) {
+        if (typeOf(h) !== 'string' || !/^#?[A-Za-z0-9_]{2,40}$/.test(h)) {
+          throw new StoryboardError(`${where}: hashtag ${JSON.stringify(h)} must be letters, digits or underscores, with or without a leading #.`);
+        }
+        checkPrimitive(where, 'label', h, 'string');
+      }
+    }
+    if (value.sourceUrl !== undefined && !/^https:\/\/\S+$/.test(String(value.sourceUrl))) {
+      throw new StoryboardError(`${where}: "post.sourceUrl" must be an https URL.`);
+    }
     return;
   }
 
@@ -153,6 +252,8 @@ function checkPrimitive(where, key, value, expected) {
       if (typeOf(l) !== 'string') {
         throw new StoryboardError(`${where}: "lines[${li}]" must be a string, got ${typeOf(l)}.`);
       }
+      const problems = lintCopy(l, `${where}: "lines[${li}]"`);
+      if (problems.length) throw new StoryboardError(problems[0]);
     });
     return;
   }
@@ -165,6 +266,10 @@ function checkPrimitive(where, key, value, expected) {
   }
   if (expected === 'string' && value.includes('—')) {
     throw new StoryboardError(`${where}: "${key}" contains an em dash. House style forbids them in on-screen text. Use a comma, colon or full stop.`);
+  }
+  if (expected === 'string' && COPY_KEYS.has(key)) {
+    const problems = lintCopy(value, `${where}: "${key}"`);
+    if (problems.length) throw new StoryboardError(problems[0]);
   }
 }
 
@@ -221,6 +326,24 @@ export function validateStoryboard(raw, captureDurations = {}) {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(top.id)) {
     throw new StoryboardError(`storyboard: "id" must be lower-case kebab-case (it becomes the output filename), got "${top.id}".`);
   }
+  if (!Object.hasOwn(FORMATS, top.format)) {
+    throw new StoryboardError(`storyboard: "format" must be ${Object.keys(FORMATS).map((f) => `"${f}"`).join(' or ')}, got "${top.format}".`);
+  }
+  // The format owns the canvas. Width and height are only defaults for the
+  // landscape cut, so a vertical storyboard that also writes 1920x1080 is a
+  // contradiction, not an override.
+  if (top.format === 'vertical') {
+    const wantW = FORMATS.vertical.width;
+    const wantH = FORMATS.vertical.height;
+    if (('width' in raw && raw.width !== wantW) || ('height' in raw && raw.height !== wantH)) {
+      throw new StoryboardError(`storyboard: "format": "vertical" is ${wantW}x${wantH}. Leave "width" and "height" out.`);
+    }
+    top.width = wantW;
+    top.height = wantH;
+    if (!top.post) {
+      throw new StoryboardError('storyboard: a vertical short needs "post": { "caption", "hashtags" }, which verify writes to out/<id>.post.json for the person who publishes it.');
+    }
+  }
   if (!['dark', 'light'].includes(top.theme)) {
     throw new StoryboardError(`storyboard: "theme" must be "dark" or "light", got "${top.theme}".`);
   }
@@ -252,6 +375,10 @@ export function validateStoryboard(raw, captureDurations = {}) {
     }
     if (!SCENE_TYPES.includes(type)) {
       throw new StoryboardError(`${where}: unknown type "${type}". One of: ${SCENE_TYPES.join(', ')}.`);
+    }
+
+    if (top.automated && type === 'capture') {
+      throw new StoryboardError(`${where}: an "automated" storyboard cannot use a capture scene. Captures need a human-signed-in browser session. Use chat, terminal, title, query or clip.`);
     }
 
     const spec = SCENE_SPEC[type];
@@ -340,6 +467,35 @@ export function validateStoryboard(raw, captureDurations = {}) {
       norm.durationInSeconds = seconds;
     }
 
+    if (type === 'clip') {
+      // Served through the public/clips symlink, so it has to live there.
+      if (!/^assets\/clips\/[A-Za-z0-9._-]+\.mp4$/.test(norm.src)) {
+        throw new StoryboardError(`${w}: "src" must be an mp4 directly inside assets/clips/, like "assets/clips/hook.mp4", got "${norm.src}".`);
+      }
+      if (norm.from < 0) throw new StoryboardError(`${w}: "from" must not be negative.`);
+    }
+
+    if (type === 'query') {
+      if (!Object.hasOwn(QUERY_PLATFORMS, norm.platform)) {
+        throw new StoryboardError(`${w}: "platform" must be one of ${Object.keys(QUERY_PLATFORMS).join(', ')}, got "${norm.platform}".`);
+      }
+      if (!/^https:\/\/\S+$/.test(norm.sourceUrl)) {
+        throw new StoryboardError(`${w}: "sourceUrl" must be the https URL of the original question.`);
+      }
+      // A paraphrase, not a quote: no handles, addresses or links, which are
+      // how a stranger's identity would reach the frame.
+      if (/@|https?:\/\/|www\./i.test(norm.question)) {
+        throw new StoryboardError(`${w}: "question" contains a handle, address or link. Paraphrase it without them.`);
+      }
+      if (norm.question.length > 160) {
+        throw new StoryboardError(`${w}: "question" is ${norm.question.length} characters. Paraphrase it to 160 or fewer so it reads in one go.`);
+      }
+    }
+
+    if (top.format === 'vertical' && type === 'capture') {
+      warnings.push(`${w}: a 16:9 recording in a vertical cut is letterboxed to a third of the frame. Prefer chat, terminal or query scenes.`);
+    }
+
     if (norm.durationInSeconds <= 0) {
       throw new StoryboardError(`${w}: "durationInSeconds" must be greater than 0, got ${norm.durationInSeconds}.`);
     }
@@ -359,6 +515,13 @@ export function validateStoryboard(raw, captureDurations = {}) {
   if (top.posterFrame !== undefined) {
     if (!Number.isInteger(top.posterFrame) || top.posterFrame < 0 || top.posterFrame >= durationInFrames) {
       throw new StoryboardError(`storyboard: "posterFrame" must be an integer between 0 and ${durationInFrames - 1}, got ${top.posterFrame}.`);
+    }
+  }
+
+  if (top.timer) {
+    const { from, to } = top.timer;
+    if (from >= scenes.length || to >= scenes.length || to < from) {
+      throw new StoryboardError(`storyboard: "timer" runs from scene ${from} to scene ${to}, but there are ${scenes.length} scenes (0 to ${scenes.length - 1}) and "to" may not come before "from".`);
     }
   }
 

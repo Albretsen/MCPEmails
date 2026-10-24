@@ -16,13 +16,20 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import { emit, fail, heading, log, parseArgs, paths, readJson, loadEnv } from './lib/common.mjs';
 import { ensurePublicDir } from './lib/public-dir.mjs';
-import { assertCapturesPresent, captureMeta, loadTimelines, loadTranscripts } from './lib/inputs.mjs';
+import {
+  assertCapturesPresent,
+  assertClipsPresent,
+  captureMeta,
+  checkVoiceover,
+  loadTimelines,
+  loadTranscripts,
+} from './lib/inputs.mjs';
 import { validateStoryboard } from '../src/storyboard-schema.mjs';
 import { generateCaptions } from './lib/captions.mjs';
 
@@ -41,6 +48,13 @@ if (!existsSync(storyboardFile)) {
 
 mkdirSync(paths.out, { recursive: true });
 ensurePublicDir();
+
+// --- 0. Clear this storyboard's previous outputs ---------------------------
+// Before anything can fail. A render that dies halfway must leave NOTHING for
+// verify to find: an older mp4 sitting next to an older manifest is exactly
+// how a green verify was once reported for a cut that had not rendered.
+const OUTPUTS = ['mp4', 'partial.mp4', 'jpg', 'json', 'post.json', 'sheet.png', 'vtt'];
+for (const ext of OUTPUTS) rmSync(resolve(paths.out, `${id}.${ext}`), { force: true });
 
 // --- 1. Validate -----------------------------------------------------------
 
@@ -68,6 +82,22 @@ try {
 } catch (e) {
   fail('render', e.message, { problems: e.problems });
 }
+try {
+  assertClipsPresent(storyboard);
+} catch (e) {
+  fail('render', e.message, { problems: e.problems });
+}
+
+let voiceover = null;
+try {
+  voiceover = checkVoiceover(storyboard);
+} catch (e) {
+  fail('render', e.message);
+}
+if (voiceover) {
+  log(`  ${voiceover.file}: ${voiceover.seconds?.toFixed(2)}s${voiceover.provenance ? `, made by ${voiceover.provenance.generator}` : ''}`);
+}
+
 for (const [rel, t] of Object.entries(transcripts)) {
   const age = ((Date.now() - Date.parse(t.verifiedAt)) / 86_400_000).toFixed(1);
   log(`  ${rel}: ${t.turns.length} turns, verified ${age} days ago, every tool call ok`);
@@ -112,6 +142,9 @@ const composition = await selectComposition({
 // --- 4. Render -------------------------------------------------------------
 
 const mp4 = resolve(paths.out, `${id}.mp4`);
+// Rendered under a different name and moved into place only once complete, so
+// a crash mid-encode can never leave a truncated file at the real path.
+const partial = resolve(paths.out, `${id}.partial.mp4`);
 const jpg = resolve(paths.out, `${id}.jpg`);
 
 heading('Rendering');
@@ -134,7 +167,7 @@ await renderMedia({
   colorSpace: 'bt709',
   crf: Number(args.quality ?? 18),
   audioCodec: 'aac',
-  outputLocation: mp4,
+  outputLocation: partial,
   inputProps,
   concurrency: Number(args.concurrency ?? 4),
   onProgress: ({ progress }) => {
@@ -145,6 +178,7 @@ await renderMedia({
     }
   },
 });
+renameSync(partial, mp4);
 log(`  wrote out/${id}.mp4`);
 
 // The poster is taken at a frame the storyboard names, not guessed. Default to
@@ -170,10 +204,33 @@ log(`  wrote out/${id}.jpg (frame ${posterFrame})`);
 
 // --- 5. Manifest -----------------------------------------------------------
 
-const sha = (file) =>
-  existsSync(file) ? createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 16) : null;
+const sha256Full = (file) =>
+  existsSync(file) ? createHash('sha256').update(readFileSync(file)).digest('hex') : null;
+const sha = (file) => sha256Full(file)?.slice(0, 16) ?? null;
 
 const vtt = resolve(paths.out, `${id}.vtt`);
+
+// Every input file, hashed, so verify can refuse a cut whose inputs changed
+// after it was rendered.
+const inputFiles = [
+  `storyboards/${id}.json`,
+  ...Object.keys(transcripts),
+  ...(storyboard.voiceover ? [storyboard.voiceover] : []),
+  ...storyboard.scenes.filter((s) => s.type === 'clip').map((s) => s.src),
+];
+const inputs = Object.fromEntries(inputFiles.map((rel) => [rel, sha(resolve(paths.root, rel))]));
+
+// Is this cut AI-generated content, in the sense the platforms' labels mean?
+// Generated footage is. So is a synthetic voice. A drawn chat replaying a real
+// transcript is not: it is a diagram of something that happened.
+const voiceMatches =
+  voiceover?.provenance && voiceover.provenance.audioSha256 === sha256Full(resolve(paths.root, storyboard.voiceover));
+const aigcReasons = [
+  ...storyboard.scenes
+    .map((s, i) => (s.type === 'clip' ? `scene ${i} is generated footage (${s.src})` : null))
+    .filter(Boolean),
+  ...(voiceMatches ? [`the voiceover is synthetic (${voiceover.provenance.generator}, voice "${voiceover.provenance.voice}")`] : []),
+];
 
 const manifest = {
   id,
@@ -185,6 +242,18 @@ const manifest = {
   durationInSeconds: Number((storyboard.durationInFrames / storyboard.fps).toFixed(3)),
   posterFrame,
   theme: storyboard.theme,
+  format: storyboard.format,
+  voiceover: storyboard.voiceover ?? null,
+  automated: storyboard.automated,
+  inputs,
+  aigc: { isAigc: aigcReasons.length > 0, reasons: aigcReasons },
+  post: storyboard.post
+    ? {
+        ...storyboard.post,
+        sourceUrl: storyboard.post.sourceUrl ?? storyboard.scenes.find((s) => s.type === 'query')?.sourceUrl ?? null,
+        sourcePlatform: storyboard.scenes.find((s) => s.type === 'query')?.platform ?? null,
+      }
+    : null,
   boundaries: storyboard.boundaries,
   callouts: storyboard.scenes.flatMap((s, i) =>
     s.type === 'capture'
