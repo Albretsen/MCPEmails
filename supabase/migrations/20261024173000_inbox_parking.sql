@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Inbox parking: inboxes above a lower plan's inbox cap are parked, not lost.
--- 20261024150000_inbox_parking
+-- 20261024173000_inbox_parking
 -- ============================================================================
 --
 -- WHY. The inbox cap is enforced only at connect time
@@ -73,7 +73,7 @@ COMMENT ON COLUMN public.inboxes.parked_at IS
   'When the inbox was parked because the workspace plan includes fewer inboxes. '
   'NULL = active. A parked inbox keeps its credentials but no MCP tool, '
   'automation or new scheduled send can use it. Written only by service-role '
-  'code (apps/web/src/lib/billing/parking.ts). 20261024150000.';
+  'code (apps/web/src/lib/billing/parking.ts). 20261024173000.';
 
 COMMENT ON COLUMN public.inboxes.parked_reason IS
   'Why the inbox is parked. ''plan_limit'' is the only reason. NULL exactly '
@@ -103,4 +103,4 @@ COMMENT ON COLUMN public.triage_rules.paused_reason IS
   'allowance; lifts by itself at paused_until. ''inbox_parked'': the rule''s '
   'inbox is parked (inboxes.parked_at); paused_until is ''infinity'' and the '
   'pause lifts only when the inbox is unparked. Distinct from disabled_reason, '
-  'which is terminal. 20260912200000, 20261024150000.';
+  'which is terminal. 20260912200000, 20261024173000.';

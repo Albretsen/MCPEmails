@@ -50,24 +50,16 @@ export const INBOX_PARKED_PAUSED_UNTIL = 'infinity';
 /** The usage window the choice is ranked on. */
 export const PARKING_USAGE_DAYS = 30;
 
-// ── Types for the columns gen:types has not seen yet ─────────────────────────
-//
-// `src/types/database.types.ts` is generated from the linked project, and the
-// parking columns exist there only once 20261024173000 is applied. Until then
-// the client stays `SupabaseClient<Database>` and the two columns are handled
-// in exactly two narrow places: the inbox read below names its row shape
-// (`ParkingInboxRow`), and the inbox writes pass their patch as a
-// `Record<string, unknown>` (`InboxParkingPatch`), the same shape
-// src/lib/approvals/columns.ts uses for columns a migration adds after the
-// code. Filters on the columns use the client's string-column overloads. After
-// the migration is applied and `npm run gen:types` has run, both can become the
-// generated Row and Update types.
+// ── Row and patch shapes ─────────────────────────────────────────────────────
 
-type InboxParkingPatch = Record<string, unknown> & {
-  parked_at: string | null;
-  parked_reason: string | null;
-};
-type ParkingInboxRow = { id: string; created_at: string; parked_at: string | null };
+type InboxParkingPatch = Pick<
+  Database['public']['Tables']['inboxes']['Update'],
+  'parked_at' | 'parked_reason'
+>;
+type ParkingInboxRow = Pick<
+  Database['public']['Tables']['inboxes']['Row'],
+  'id' | 'created_at' | 'parked_at'
+>;
 
 // ── The pure choice ──────────────────────────────────────────────────────────
 
@@ -194,7 +186,7 @@ async function loadCandidates(
   }
   // The projection names `parked_at`, which the generated row type does not
   // know yet (see the type notes above), so the row shape is stated here.
-  const rows = (inboxes.data ?? []) as unknown as ParkingInboxRow[];
+  const rows: ParkingInboxRow[] = inboxes.data ?? [];
   return rows.map((row) => ({
     id: row.id,
     created_at: row.created_at,
