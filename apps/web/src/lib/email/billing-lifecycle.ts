@@ -2,7 +2,7 @@
  * Billing lifecycle email: dunning, card expiry, cancellation save, win-back,
  * and the Free allowance notices.
  *
- * Twelve templates in two categories, and the split between them is the most
+ * Fourteen templates in two categories, and the split between them is the most
  * important thing in this file.
  *
  * TRANSACTIONAL (dunning_1/3/7/14, card_expiry_30/7, cancel_ask)
@@ -24,6 +24,11 @@
  *   "Your service is about to stop" is account status, so they are not
  *   suppressible and carry no unsubscribe header. The upgrade line in each is
  *   secondary to the numbers, which is what keeps them out of marketing.
+ *
+ * TRANSACTIONAL, PASS NOTICES (pass_ending_7d, pass_ended)
+ *   The 3-month Personal pass ends in 7 days, or has ended. About the end of a
+ *   fixed-term contract the customer bought, so no consent and no unsubscribe;
+ *   queued at purchase by src/lib/billing/pass-notices.ts, two per pass.
  *
  * MARKETING-ADJACENT (winback_14, winback_30)
  *   Sent to somebody who has already left. Carries List-Unsubscribe and
@@ -91,7 +96,7 @@
 
 import { Resend } from 'resend';
 
-import { FREE_ACTION_ALLOWANCE, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
+import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
@@ -127,6 +132,8 @@ export const BILLING_TEMPLATES = [
   'usage_warning_80',
   'usage_limit_reached',
   'automation_paused_limit',
+  'pass_ending_7d',
+  'pass_ended',
   'pause_started',
   'pause_ending_3',
 ] as const;
@@ -144,6 +151,20 @@ export type UsageTemplate = (typeof USAGE_TEMPLATES)[number];
 
 export function isUsageTemplate(template: string): template is UsageTemplate {
   return (USAGE_TEMPLATES as ReadonlyArray<string>).includes(template);
+}
+
+/**
+ * The two service notices of a 3-month Personal pass (migration
+ * 20261025010100, src/lib/billing/pass-notices.ts). Keyed on the Stripe
+ * customer with scope_key = the user_passes id. Transactional: they are about
+ * the end of a contract the customer bought, so no consent and no unsubscribe.
+ */
+export const PASS_TEMPLATES = ['pass_ending_7d', 'pass_ended'] as const satisfies ReadonlyArray<BillingTemplate>;
+
+export type PassTemplate = (typeof PASS_TEMPLATES)[number];
+
+export function isPassTemplate(template: string): template is PassTemplate {
+  return (PASS_TEMPLATES as ReadonlyArray<string>).includes(template);
 }
 
 export type BillingCategory = 'transactional' | 'marketing';
@@ -430,6 +451,14 @@ export type LifecyclePayload = {
   /** ISO time of the subscription's first charge, when known (withdrawal window). */
   firstChargeAt?: string | null;
   /**
+   * Decision D3 (src/lib/billing/park-on-cancel.ts). Set at queue time only
+   * when this subscription's end will park inboxes: the largest number of
+   * active inboxes in one workspace above Free's cap. Above 1, the
+   * confirmation adds one factual sentence about parking. Absent on every row
+   * queued before D3, and for anyone the marker does not cover.
+   */
+  parkInboxCount?: number | null;
+  /**
    * The cancellation's identity for the signed /billing/feedback links. Not
    * stored in the queued payload: sendInputForQueueRow fills them from the
    * row's stripe_customer_id and scope_key (`${subscriptionId}:${periodEnd}`).
@@ -613,6 +642,61 @@ function usageUpgradeUrl(base: string): string {
 /** Nothing is ever deleted on a downgrade, and saying so removes real anxiety. */
 const NOTHING_DELETED =
   'Nothing is deleted either way. Your inbox connections, API keys and settings stay exactly where they are, and reconnecting is one click if you come back.';
+
+/** Decision D3: the one sentence about parking, stated as a fact. */
+export const CANCEL_PARKING_SENTENCE =
+  'When your plan ends, one inbox stays active on Free and the others are parked, not deleted. They come back if you subscribe again.';
+
+/** True when the cancel confirmation carries the parking sentence. */
+function cancelMentionsParking(payload: LifecyclePayload): boolean {
+  return typeof payload.parkInboxCount === 'number' && payload.parkInboxCount > 1 && payload.grandfathered !== true;
+}
+
+// ---------------------------------------------------------------------------
+// Pass notice helpers
+// ---------------------------------------------------------------------------
+
+/** "$9", "$86.40", "$29": whole dollars when whole, from the catalogue. */
+function dollars(cents: number): string {
+  return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
+}
+
+/**
+ * The three ways to keep Personal, as links to the checkout start route. A
+ * Personal subscription bought by a pass holder is anchored to the pass end
+ * by checkout-core, so nobody pays twice for the same days.
+ */
+function passOptions(base: string, firstChargeOn: string | null) {
+  const monthly = dollars(PLANS.personal.monthlyPriceCents);
+  const yearlyCents = PLANS.personal.yearlyPriceCents;
+  const on = firstChargeOn ? `, first charge on ${firstChargeOn}` : '';
+  const options: Array<{ label: string; url: string }> = [
+    {
+      label: `Subscribe monthly, ${monthly} a month${on}`,
+      url: `${base}/api/stripe/checkout/start?plan=personal&interval=month`,
+    },
+  ];
+  if (yearlyCents) {
+    options.push({
+      label: `Yearly, ${dollars(yearlyCents)} a year${on}`,
+      url: `${base}/api/stripe/checkout/start?plan=personal&interval=year`,
+    });
+  }
+  options.push({
+    label: `Another 3 months, ${dollars(PERSONAL_PASS_3M.priceCents)}, paid once`,
+    url: `${base}/api/stripe/checkout/start?product=personal_pass_3m&arm=holder&from=pass_reminder`,
+  });
+  return options;
+}
+
+/** What Free means after a pass, from the catalogue. */
+function freeAfterPass(): string {
+  const inboxes = PLANS.free.limits.maxInboxes;
+  const inboxPhrase = inboxes === 1 ? 'one inbox' : `${inboxes} inboxes`;
+  return `${FREE_ACTION_ALLOWANCE} email actions a month and ${inboxPhrase} for new connections`;
+}
+
+const PASS_KEEPS = 'Your inboxes, drafts and settings stay.';
 
 // ---------------------------------------------------------------------------
 // The HTML shell
@@ -1348,6 +1432,7 @@ export function composeBillingEmail(
         ? `It stays active until ${endsOn}, which you have already paid for.`
         : 'It stays active until the end of the period you have already paid for.';
       const lead = `You cancelled ${yourPlan}. ${until}`;
+      const parking = cancelMentionsParking(payload) ? CANCEL_PARKING_SENTENCE : null;
 
       const withdrawalUrl = `${base}${WITHDRAWAL_PATH}`;
       const withdrawalText = cancelWithdrawalSentence(payload, Date.now());
@@ -1362,6 +1447,7 @@ export function composeBillingEmail(
 
       const body = [
         lead,
+        ...(parking ? [parking] : []),
         NOTHING_DELETED,
         '',
         ...(withdrawalText ? [`${withdrawalText}: ${withdrawalUrl}`, ''] : []),
@@ -1398,6 +1484,7 @@ export function composeBillingEmail(
           title: 'Your cancellation is confirmed',
           html:
             p(lead) +
+            (parking ? p(parking) : '') +
             p(NOTHING_DELETED) +
             (withdrawalText ? pLink(`${withdrawalText}.`, withdrawalUrl) : '') +
             reasonHtml +
@@ -1640,6 +1727,61 @@ export function composeBillingEmail(
           ctaLabel: 'See the plans',
           footerNote: SUPPORT_FOOTER,
           unsubscribe: unsub,
+        }),
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 3-month Personal pass. Two service notices per pass, nothing after:
+    // the date, what Free means, what stays, and the same three options.
+    // No countdown, no urgency, no discount, never the word trial.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'pass_ending_7d':
+    case 'pass_ended': {
+      if (!endsOn) {
+        console.error(`[billing-email] ${template} not composed: no end date in the payload.`);
+        return null;
+      }
+      const ending = template === 'pass_ending_7d';
+      const subject = ending
+        ? `Your MCPEmails Personal pass ends on ${endsOn}`
+        : 'Your MCPEmails Personal pass has ended';
+      const title = ending ? `Your Personal pass ends on ${endsOn}` : 'Your Personal pass has ended';
+      const lead = ending
+        ? `Your Personal pass ends on ${endsOn}. After that this workspace goes back to Free: ${freeAfterPass()}. ${PASS_KEEPS}`
+        : `Your Personal pass ended on ${endsOn}, and the workspace is on Free: ${freeAfterPass()}. ${PASS_KEEPS}`;
+      const ask = ending
+        ? 'To keep Personal, pick one of these. Nothing happens unless you do.'
+        : 'To go back to Personal, pick one of these. This is the only email about it.';
+      // The first charge lands on the pass end only while the pass still runs.
+      const options = passOptions(base, ending ? endsOn : null);
+      const body = [
+        lead,
+        '',
+        ask,
+        '',
+        ...options.flatMap((option) => [`${option.label}:`, option.url, '']),
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title,
+          html:
+            p(lead) +
+            p(ask) +
+            options.slice(1).map((option) => pLink(`${option.label}:`, option.url)).join(''),
+          ctaUrl: options[0].url,
+          ctaLabel: options[0].label,
+          footerNote: SUPPORT_FOOTER,
         }),
       };
     }

@@ -3,6 +3,7 @@ import { after } from 'next/server';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { decideProFeatureAccess, PRO_FEATURES_PUBLIC_SWITCH } from '@/lib/plans/pro-features';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
@@ -21,7 +22,14 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import {
+  attachFounder,
+  founderDisplayFor,
+  ownerIsOnFounderPrice,
+  withFounderSubscriberPrices,
+} from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
+import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -670,7 +678,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -747,8 +755,12 @@ export default async function DashboardPage({ params }) {
   // case the Overview shows a plain call count and no bar, as it did before
   // the allowance existed.
   let actionAllowance = null;
+  // The Pro feature gate's two switches (lib/plans/pro-features.ts). Each in
+  // its own query, never in the shared workspace select above: before the
+  // gate's migration lands a missing column only closes the gate. Fails closed.
+  let proGateSwitches = { rolloutEnabled: false, publicLaunch: false };
   if (workspace) {
-    const [{ data: memberRow }, { data: effectivePlanRows }, allowance] = await Promise.all([
+    const [{ data: memberRow }, { data: effectivePlanRows }, allowance, proRollout, proLaunch] = await Promise.all([
       supabase
         .from('workspace_members')
         .select('role')
@@ -764,7 +776,14 @@ export default async function DashboardPage({ params }) {
       // user_billing row) is not used for it. The viewer's membership is
       // established by the RLS-filtered workspace list above.
       fetchWorkspaceActionAllowance(createServiceRoleClient(), workspace.id),
+      supabase.from('workspaces').select('pro_features_enabled').eq('id', workspace.id).maybeSingle(),
+      // Server-owned switch (no grant to authenticated), so the service role.
+      createServiceRoleClient().from('pricing_switches').select('enabled').eq('key', PRO_FEATURES_PUBLIC_SWITCH).maybeSingle(),
     ]);
+    proGateSwitches = {
+      rolloutEnabled: !proRollout.error && proRollout.data?.pro_features_enabled === true,
+      publicLaunch: !proLaunch.error && proLaunch.data?.enabled === true,
+    };
     userRole = memberRow?.role ?? 'member';
     effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
     actionAllowance = allowance;
@@ -798,6 +817,13 @@ export default async function DashboardPage({ params }) {
   // Read here for the same reason as the grandfather above.
   const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
+  // Pro features (lib/plans/pro-features.ts): visible = rollout flag OR launch
+  // switch, allowed = visible AND Pro or Business. Only the effective plan the
+  // RPC resolved counts; an unresolved plan stays closed.
+  const proFeatureAccess = decideProFeatureAccess({
+    plan: effectiveWorkspacePlan?.plan ?? null,
+    ...proGateSwitches,
+  });
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -937,7 +963,32 @@ export default async function DashboardPage({ params }) {
   // else (annual, Business, legacy, comped) would be quoted a price that
   // checkout-core does not apply to their swap, so they are shown none.
   const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
-  const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
+  //
+  // The Business founder line rides on the Business entry, for an owner who is
+  // not on Business already (src/lib/stripe/founder-offer.ts). The client
+  // swaps the founder amounts in for its language (zh keeps the normal price).
+  // The seasonal offer never touches Business, so the two do not meet.
+  const founder =
+    workspace?.owner_id === user.id && plan !== 'pro' && !compedScale
+      ? await founderDisplayFor({ ownerId: user.id })
+      : null;
+  const offeredPrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
+  // An owner who already pays the founder price sees Business at that price
+  // ($29 / $278.40), not the $39 list price, on every surface that prices it.
+  const stripePrices =
+    workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&
+    (await ownerIsOnFounderPrice(user.id))
+      ? await withFounderSubscriberPrices(offeredPrices)
+      : offeredPrices;
+
+  // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
+  // until {date}" and the ways to keep it. Null for everyone else, and for a
+  // member viewing someone else's workspace. Tolerant: a failed read is null.
+  const passState = await loadPassBillingState(
+    createServiceRoleClient(),
+    user.id,
+    workspace?.owner_id === user.id,
+  );
 
   return (
     <DashboardApp
@@ -950,6 +1001,9 @@ export default async function DashboardPage({ params }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // Whether this workspace has ever made a tool call. The Overview guide
+        // shows its "waiting for your first call" step only while it has not.
+        firstToolUsed: Boolean(workspace?.analytics_first_tool_used_at),
         // The draft editor card, at the workspace grain. Two separate columns
         // on purpose: `draftEditorEnabled` is OUR rollout gate (internal only
         // in v1, so most workspaces see no control at all) and
@@ -961,6 +1015,8 @@ export default async function DashboardPage({ params }) {
         // "Confirm in chat" send review: OUR rollout gate, internal only for
         // now. Without it the option is not offered (the API refuses it too).
         chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
+        // The Pro feature gate for this workspace: { visible, allowed }.
+        proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,
@@ -978,6 +1034,7 @@ export default async function DashboardPage({ params }) {
       actionAllowance={actionAllowance}
       inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
+      passState={passState}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
       inboxes={inboxes}

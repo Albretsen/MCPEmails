@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker opptil 10.",
     "multiInboxCompact": "Har du også post@, salg@ eller faktura@? Koble dem til, så jobber agenten med alle firmaets postkasser fra én samtale.",
     "multiInboxCompactUpgrade": "Har du også post@, salg@ eller faktura@? Agenten kan jobbe med alle firmaets postkasser fra én samtale. Postkasse nummer to krever en betalt plan.",
-    "multiInboxCta": "Legg til en postkasse"
+    "multiInboxCta": "Legg til en postkasse",
+    "waitingTitle": "Venter på første kall",
+    "waitingDesc": "Innboksen er koblet til. Koble til AI-appen din og spør den om noe. Siden oppdateres når det første kallet kommer.",
+    "connectAppTitle": "Koble til AI-appen din",
+    "connectAppDesc": "Lim inn denne URL-en i AI-appen din, og velg den nedenfor for å se stegene.",
+    "connectAppDone": "AI-appen din er koblet til MCPEmails.",
+    "askTitle": "Spør den om noe",
+    "askDesc": "Start en ny samtale og lim inn en av disse.",
+    "copyPrompt": "Kopier forespørsel",
+    "prompts": {
+      "unread": "Oppsummer de uleste e-postene mine fra i dag",
+      "bank": "Finn den siste e-posten fra banken min og fortell meg hva den sier",
+      "draftReply": "Skriv et utkast til svar på den nyeste e-posten min, men ikke send det"
+    },
+    "clientToggle": {
+      "claude": "I Claude klikker du + i meldingsfeltet, åpner Connectors og sjekker at MCPEmails er slått på for samtalen. Ellers svarer Claude uten e-posten din.",
+      "chatgpt": "I ChatGPT klikker du + i hver nye samtale, velger Developer mode og så MCPEmails-appen. Ellers ser ikke ChatGPT e-posten din."
+    },
+    "itWorksTitle": "Det virker",
+    "itWorksDesc": "AI-appen din gjorde nettopp sitt første kall til MCPEmails. Fortsett i samme samtale.",
+    "waitingLive": "Siden oppdateres av seg selv når det første kallet kommer.",
+    "waitingStopped": "Fortsatt ingen kall. Last inn siden på nytt etter at du har prøvd en forespørsel."
   },
   "firstWeek": {
     "title": "Din første uke",
@@ -189,6 +210,19 @@
     "statusError": "Feil",
     "statusParked": "Parkert",
     "parkedNote": "Parkert fordi planen din har færre innbokser. Den kommer tilbake når du oppgraderer. Ingenting er slettet.",
+    "makeActive": "Gjør aktiv",
+    "swapDialog": {
+      "title": "Gjør {label} aktiv",
+      "pickLead": "Velg innboksen som skal parkeres i stedet. Ingenting slettes.",
+      "freeSlot": "Den tar den ledige plassen i planen din.",
+      "pickLabel": "Innboks som parkeres",
+      "onceADay": "Du kan bytte én parkert innboks per dag.",
+      "cancel": "Avbryt",
+      "confirm": "Gjør aktiv",
+      "swapping": "Bytter…",
+      "errorLimit": "Du har allerede byttet en innboks i dag. Prøv igjen etter {time}.",
+      "errorFailed": "Byttet gikk ikke gjennom. Prøv igjen."
+    },
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
     "viewerActionsNote": "Lesere i arbeidsområdet kan se denne innboksen, men ikke sjekke, koble til på nytt, koble fra eller redigere den.",
@@ -360,13 +394,34 @@
           "unreachable": "Fikk ikke kontakt med {server}-serveren med disse innstillingene. Ingenting ble endret.",
           "save": "Kunne ikke lagre. Prøv igjen."
         }
+      },
+      "instructions": {
+        "title": "Instruksjoner til AI-en din",
+        "help": "Alle AI-klienter som bruker denne innboksen, ser disse, for eksempel hvem det skal signeres som eller hvilken e-post som skal stå i fred.",
+        "placeholder": "Dette er kundeservice-innboksen. Signer som Kundeservice. Svar aldri på fakturaer; flytt dem til Økonomi.",
+        "loading": "Laster inn…",
+        "count": "{count} av {max} tegn",
+        "save": "Lagre",
+        "saved": "Lagret. AI-klienter ser disse instruksjonene fra nå.",
+        "cleared": "Lagret. Denne innboksen har ingen instruksjoner.",
+        "proOnly": "Instruksjoner til AI-en din er en del av Pro-planen.",
+        "upgrade": "Se planer",
+        "errors": {
+          "load": "Kunne ikke laste inn instruksjonene. Prøv igjen.",
+          "save": "Kunne ikke lagre. Prøv igjen.",
+          "too_long": "Bruk høyst {max} tegn.",
+          "unavailable": "Instruksjoner er ikke tilgjengelige ennå.",
+          "pro_feature_required": "Instruksjoner til AI-en din krever Pro-planen."
+        }
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
     "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
     "emptyReadDocs": "Les oppsettsveiledningene",
     "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
-    "capCtaBusiness": "Oppgrader til Business, 39 $/md"
+    "capCtaBusiness": "Oppgrader til Business, 39 $/md",
+    "capBodyProCapFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md"
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -457,7 +512,6 @@
       "nextStep1": "I claude.ai eller Claude Desktop, åpne Innstillinger → Koblinger → Legg til egendefinert kobling.",
       "nextStep2": "Lim inn URL-en over. OAuth-klienter kobler til med ett klikk.",
       "nextStep3": "Spør deretter Claude:",
-      "nextPrompt": "Oppsummer mine uleste e-poster fra i dag.",
       "nextGuide": "Trinn-for-trinn-guide",
       "warning": "Lagre denne nøkkelen et trygt sted. Den kan ikke vises igjen. Hvis du mister den, opphev denne nøkkelen og opprett en ny.",
       "acknowledge": "Jeg har kopiert API-nøkkelen min og forstår at den ikke kan vises igjen.",
@@ -676,6 +730,37 @@
       "deleting": "Sletter…",
       "errFailed": "Kunne ikke slette konto. Prøv igjen.",
       "networkError": "Nettverksfeil. Sjekk tilkoblingen din og prøv igjen."
+    },
+    "morningBrief": {
+      "title": "Morgenoversikt",
+      "sub": "En daglig oversikt over ny e-post, VIP-avsendere, oppfølginger og planlagte sendinger, lagt i en av innboksene dine.",
+      "enable": "Legg en morgenoversikt i innboksen min hver dag",
+      "hour": "Klokkeslett",
+      "timezone": "Tidssone",
+      "inbox": "Lever til",
+      "inboxPlaceholder": "Velg en innboks",
+      "vip": "VIP-avsendere",
+      "vipPlaceholder": "sjefen@example.com\nexample.com",
+      "help": "Én adresse eller ett domene per linje. E-post fra VIP-er vises først. Oversikten legges rett i innboksen, den sendes ikke som e-post, og dager uten noe nytt hoppes over.",
+      "save": "Lagre",
+      "saved": "Lagret. Neste oversikt følger disse innstillingene.",
+      "loading": "Laster...",
+      "proOnly": "Morgenoversikten er en del av Pro.",
+      "upgrade": "Se planer",
+      "roleNote": "Bare eiere og administratorer av arbeidsområdet kan endre morgenoversikten.",
+      "lastSent": "Siste oversikt: {when}",
+      "paused": "Satt på pause etter gjentatte feil. Sjekk tilkoblingen til innboksen, og lagre for å fortsette.",
+      "errors": {
+        "load": "Kunne ikke laste innstillingene for morgenoversikten.",
+        "save": "Kunne ikke lagre. Prøv igjen.",
+        "unavailable": "Morgenoversikten er ikke tilgjengelig ennå.",
+        "pro_feature_required": "Morgenoversikten er en del av Pro.",
+        "invalid_vip": "Ikke en adresse eller et domene: {detail}",
+        "too_many_vips": "Opptil {max} VIP-avsendere.",
+        "inbox_required": "Velg en innboks oversikten skal leveres til.",
+        "invalid_inbox": "Den innboksen hører ikke til dette arbeidsområdet.",
+        "invalid_timezone": "Velg en tidssone fra listen."
+      }
     }
   },
   "billing": {
@@ -720,6 +805,9 @@
       "invalid_plan": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
       "invalid_interval": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
       "plan_change_failed": "Kunne ikke endre planen din. Ingenting ble belastet. Prøv igjen.",
+      "pass_unavailable": "Personal-passet for 3 måneder er ikke tilgjengelig akkurat nå.",
+      "already_subscribed": "Du har allerede et abonnement, som inkluderer alt passet gir.",
+      "pass_already_queued": "Du har allerede 3 måneder til planlagt etter dette passet.",
       "plan_change_pending": "Det er bestilt en pause eller et bytte av abonnement. Bruk Fortsett tidligere eller Behold på denne siden først, og endre deretter abonnementet."
     },
     "plans": {
@@ -779,6 +867,25 @@
     "proInboxesKept": "Pro-abonnementet ditt beholder ubegrenset antall tilkoblede innbokser.",
     "businessMailboxRate": "10 postkasser inkludert på tvers av alle arbeidsområdene dine. Hver ekstra postkasse faktureres med abonnementet: 3 dollar i måneden eller 28,80 dollar i året.",
     "confirmExtraMailboxes": "Inkluderer {count, plural, one {# ekstra postkasse} other {# ekstra postkasser}} utover de 10 som er inkludert.",
+    "pass": {
+      "offerLine": "Eller Personal i 3 måneder, betalt én gang, {price}. Ingenting fornyes.",
+      "offerUntil": "Kjøpt i dag varer det til {date}, så går dette arbeidsområdet tilbake til Free.",
+      "offerCta": "3 måneder for {price}",
+      "returnTitle": "Personal: 3 tilkoblede innbokser, ingen månedlig handlingsgrense",
+      "subscribeMonthly": "Abonner månedlig, {price} i måneden",
+      "subscribeYearly": "Årlig, {price} i året",
+      "subscribeMonthlyFrom": "Abonner månedlig, {price} i måneden, første trekk {date}",
+      "subscribeYearlyFrom": "Årlig, {price} i året, første trekk {date}",
+      "until": "Personal til {date}",
+      "queued": "Deretter 3 måneder til, til {date}.",
+      "after": "Betalt én gang, ingenting fornyes. Etter {date} går dette arbeidsområdet tilbake til Free: {cap} e-posthandlinger i måneden og én innboks for nye tilkoblinger. Innboksene, utkastene og innstillingene dine blir værende.",
+      "endingTitle": "Personal-passet ditt slutter {date}.",
+      "another": "3 måneder til, {price}, betalt én gang.",
+      "anotherUntil": "Kjøpt nå varer Personal til {date}.",
+      "seeOptions": "Se valgene",
+      "close": "Lukk",
+      "started": "Betaling mottatt. Personal-passet ditt for 3 måneder vises her om et øyeblikk."
+  },
     "planChange": {
       "title": "Endre eller sett abonnementet på pause",
       "sub": "Sett et månedsabonnement på pause i opptil 3 måneder, eller bytt til et mindre abonnement når den nåværende perioden er over.",

@@ -12,6 +12,7 @@ import {
   PRO_FEATURE_ERROR_CODE,
   PRO_FEATURE_META_KEY,
   PRO_FEATURE_TOOLS,
+  PRO_FEATURES,
   type ProFeature,
   proFeatureForCall,
   proFeatureRefusalResult,
@@ -44,10 +45,16 @@ Deno.test("decideProFeatureAccess: an unknown plan is never allowed, and the clo
   assertEquals(decideProFeatureAccess(CLOSED_PRO_GATE), { visible: false, allowed: false, plan: null });
 });
 
-Deno.test("the shipped registry is empty: the gate makes no read and changes no listing yet", () => {
-  assertEquals(Object.keys(PRO_FEATURE_TOOLS).length + Object.keys(PRO_FEATURE_ARGS).length, 0);
-  assertEquals(hasProFeatureSurface(), false);
+Deno.test("the shipped registry names known features only, and ordinary calls touch none", () => {
+  for (const feature of Object.values(PRO_FEATURE_TOOLS)) assert(PRO_FEATURES.includes(feature));
+  for (const args of Object.values(PRO_FEATURE_ARGS)) {
+    for (const feature of Object.values(args)) assert(PRO_FEATURES.includes(feature));
+  }
   assertEquals(proFeatureForCall("inbox_list", { inbox_id: "x" }), null);
+  // An existing send tool is only Pro when the Pro argument is passed.
+  assertEquals(proFeatureForCall("email_compose", { action: "send", to: ["a@b.example"] }), null);
+  assertEquals(proFeatureForCall("email_compose", { action: "send", follow_up_days: 3 }), "reminders");
+  assertEquals(proFeatureForCall("reminder_list", {}), "reminders");
 });
 
 const TOOLS: Record<string, ProFeature> = { reminder_list: "reminders" };

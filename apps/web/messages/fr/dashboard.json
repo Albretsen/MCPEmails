@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro en couvre jusqu'à 10.",
     "multiInboxCompact": "Vous gérez aussi info@, ventes@ ou factures@ ? Connectez-les : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation.",
     "multiInboxCompactUpgrade": "Vous gérez aussi info@, ventes@ ou factures@ ? Votre agent peut gérer toutes les boîtes de l'entreprise depuis une seule conversation. Une deuxième boîte nécessite une offre payante.",
-    "multiInboxCta": "Ajouter une boîte"
+    "multiInboxCta": "Ajouter une boîte",
+    "waitingTitle": "En attente de votre premier appel",
+    "waitingDesc": "Votre boîte mail est connectée. Connectez votre app d'IA et posez-lui une question. Cette page se met à jour dès que le premier appel arrive.",
+    "connectAppTitle": "Connecter votre app d'IA",
+    "connectAppDesc": "Collez cette URL dans votre app d'IA, puis choisissez-la ci-dessous pour voir les étapes.",
+    "connectAppDone": "Votre app d'IA est connectée à MCPEmails.",
+    "askTitle": "Posez-lui une question",
+    "askDesc": "Ouvrez une nouvelle conversation et collez l'une de ces phrases.",
+    "copyPrompt": "Copier le prompt",
+    "prompts": {
+      "unread": "Résume mes e-mails non lus d'aujourd'hui",
+      "bank": "Trouve le dernier e-mail de ma banque et dis-moi ce qu'il contient",
+      "draftReply": "Rédige une réponse à mon e-mail le plus récent, mais ne l'envoie pas"
+    },
+    "clientToggle": {
+      "claude": "Dans Claude, cliquez sur + dans la zone de message, ouvrez Connecteurs et vérifiez que MCPEmails est activé pour la conversation. Sinon, Claude répond sans vos e-mails.",
+      "chatgpt": "Dans ChatGPT, cliquez sur + dans chaque nouvelle conversation, choisissez le mode développeur et sélectionnez l'app MCPEmails. Sinon, ChatGPT ne voit pas vos e-mails."
+    },
+    "itWorksTitle": "Ça marche",
+    "itWorksDesc": "Votre app d'IA vient de faire son premier appel à MCPEmails. Continuez dans la même conversation.",
+    "waitingLive": "Cette page se met à jour toute seule dès que le premier appel arrive.",
+    "waitingStopped": "Toujours aucun appel. Rechargez cette page après avoir essayé un prompt."
   },
   "firstWeek": {
     "title": "Votre première semaine",
@@ -189,6 +210,19 @@
     "statusError": "Erreur",
     "statusParked": "En veille",
     "parkedNote": "En veille, car votre offre comprend moins de boîtes. Elle revient dès que vous passez à une offre supérieure. Rien n'a été supprimé.",
+    "makeActive": "Activer",
+    "swapDialog": {
+      "title": "Activer {label}",
+      "pickLead": "Choisissez la boîte qui passe en veille à sa place. Rien n'est supprimé.",
+      "freeSlot": "Elle prend la place libre de votre offre.",
+      "pickLabel": "Boîte à mettre en veille",
+      "onceADay": "Vous pouvez échanger une boîte en veille par jour.",
+      "cancel": "Annuler",
+      "confirm": "Activer",
+      "swapping": "Échange en cours…",
+      "errorLimit": "Vous avez déjà échangé une boîte aujourd'hui. Réessayez après {time}.",
+      "errorFailed": "L'échange n'a pas abouti. Réessayez."
+    },
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
     "viewerActionsNote": "Les lecteurs de l’espace de travail peuvent voir cette boîte, mais pas la vérifier, la reconnecter, la déconnecter ni la modifier.",
@@ -360,13 +394,34 @@
           "unreachable": "Impossible de joindre le serveur {server} avec ces réglages. Rien n'a été modifié.",
           "save": "Impossible d'enregistrer. Réessayez."
         }
+      },
+      "instructions": {
+        "title": "Instructions pour votre IA",
+        "help": "Chaque client IA qui utilise cette boîte les voit, par exemple sous quel nom signer ou quels e-mails laisser de côté.",
+        "placeholder": "Ceci est la boîte du support. Signez « L'équipe Support ». Ne répondez jamais aux factures ; déplacez-les vers Comptabilité.",
+        "loading": "Chargement…",
+        "count": "{count} sur {max} caractères",
+        "save": "Enregistrer",
+        "saved": "Enregistré. Les clients IA voient désormais ces instructions.",
+        "cleared": "Enregistré. Cette boîte n'a aucune instruction.",
+        "proOnly": "Les instructions pour votre IA font partie de l'offre Pro.",
+        "upgrade": "Voir les offres",
+        "errors": {
+          "load": "Impossible de charger les instructions. Réessayez.",
+          "save": "Impossible d'enregistrer. Réessayez.",
+          "too_long": "Utilisez au plus {max} caractères.",
+          "unavailable": "Les instructions ne sont pas encore disponibles.",
+          "pro_feature_required": "Les instructions pour votre IA nécessitent l'offre Pro."
+        }
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",
     "emptyViewKeys": "Obtenir votre URL MCP et votre clé d’API",
     "emptyReadDocs": "Lire les guides de configuration",
     "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
-    "capCtaBusiness": "Passer à Business, 39 $/mois"
+    "capCtaBusiness": "Passer à Business, 39 $/mois",
+    "capBodyProCapFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
+    "capCtaBusinessFounder": "Passer à Business, {price} $/mois"
   },
   "apiKeys": {
     "title": "Clés API",
@@ -457,7 +512,6 @@
       "nextStep1": "Dans claude.ai ou Claude Desktop, ouvrez Paramètres → Connecteurs → Ajouter un connecteur personnalisé.",
       "nextStep2": "Collez l'URL ci-dessus. Les clients OAuth se connectent en un clic.",
       "nextStep3": "Demandez ensuite à Claude :",
-      "nextPrompt": "Résume mes e-mails non lus d'aujourd'hui.",
       "nextGuide": "Guide étape par étape",
       "warning": "Conservez cette clé en lieu sûr. Elle ne peut plus être affichée. Si vous la perdez, révoquez-la et créez-en une nouvelle.",
       "acknowledge": "J'ai copié ma clé API et je comprends qu'elle ne peut plus être affichée.",
@@ -676,6 +730,37 @@
       "deleting": "Suppression…",
       "errFailed": "Échec de la suppression du compte. Veuillez réessayer.",
       "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer."
+    },
+    "morningBrief": {
+      "title": "Brief du matin",
+      "sub": "Un résumé quotidien des nouveaux e-mails, des expéditeurs VIP, des relances et des envois programmés, déposé dans l'une de vos boîtes de réception.",
+      "enable": "Déposer un brief du matin dans ma boîte de réception chaque jour",
+      "hour": "Heure",
+      "timezone": "Fuseau horaire",
+      "inbox": "Déposer dans",
+      "inboxPlaceholder": "Choisir une boîte de réception",
+      "vip": "Expéditeurs VIP",
+      "vipPlaceholder": "patron@example.com\nexample.com",
+      "help": "Une adresse ou un domaine par ligne. Les e-mails des VIP apparaissent en premier. Le brief est ajouté directement à la boîte de réception, il n'est pas envoyé par e-mail, et les jours sans nouveauté sont ignorés.",
+      "save": "Enregistrer",
+      "saved": "Enregistré. Le prochain brief suivra ces réglages.",
+      "loading": "Chargement...",
+      "proOnly": "Le brief du matin fait partie de Pro.",
+      "upgrade": "Voir les offres",
+      "roleNote": "Seuls les propriétaires et les administrateurs de l'espace de travail peuvent modifier le brief du matin.",
+      "lastSent": "Dernier brief : {when}",
+      "paused": "En pause après plusieurs échecs. Vérifiez la connexion de la boîte de réception, puis enregistrez pour reprendre.",
+      "errors": {
+        "load": "Impossible de charger les réglages du brief du matin.",
+        "save": "Impossible d'enregistrer. Réessayez.",
+        "unavailable": "Le brief du matin n'est pas encore disponible.",
+        "pro_feature_required": "Le brief du matin fait partie de Pro.",
+        "invalid_vip": "Ce n'est ni une adresse ni un domaine : {detail}",
+        "too_many_vips": "Jusqu'à {max} expéditeurs VIP.",
+        "inbox_required": "Choisissez la boîte de réception où déposer le brief.",
+        "invalid_inbox": "Cette boîte de réception n'appartient pas à cet espace de travail.",
+        "invalid_timezone": "Choisissez un fuseau horaire dans la liste."
+      }
     }
   },
   "billing": {
@@ -720,6 +805,9 @@
       "invalid_plan": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
       "invalid_interval": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
       "plan_change_failed": "Impossible de changer votre offre. Rien n'a été débité. Veuillez réessayer.",
+      "pass_unavailable": "Le pass Personal de 3 mois n'est pas disponible pour le moment.",
+      "already_subscribed": "Vous avez déjà un abonnement, qui comprend tout ce que le pass offre.",
+      "pass_already_queued": "Vous avez déjà 3 mois de plus prévus après ce pass.",
       "plan_change_pending": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule."
     },
     "plans": {
@@ -779,6 +867,25 @@
     "proInboxesKept": "Votre formule Pro conserve des boîtes connectées illimitées.",
     "businessMailboxRate": "10 boîtes incluses sur l'ensemble de vos espaces de travail. Chaque boîte supplémentaire est facturée avec votre formule : 3 $ par mois ou 28,80 $ par an.",
     "confirmExtraMailboxes": "Comprend {count, plural, one {# boîte supplémentaire} other {# boîtes supplémentaires}} en plus des 10 incluses.",
+    "pass": {
+      "offerLine": "Ou Personal pendant 3 mois, payé une seule fois, {price}. Rien ne se renouvelle.",
+      "offerUntil": "Acheté aujourd'hui, il court jusqu'au {date}, puis cet espace de travail repasse en Free.",
+      "offerCta": "3 mois pour {price}",
+      "returnTitle": "Personal : 3 boîtes connectées, pas de plafond mensuel d'actions",
+      "subscribeMonthly": "S'abonner au mois, {price} par mois",
+      "subscribeYearly": "À l'année, {price} par an",
+      "subscribeMonthlyFrom": "S'abonner au mois, {price} par mois, premier prélèvement le {date}",
+      "subscribeYearlyFrom": "À l'année, {price} par an, premier prélèvement le {date}",
+      "until": "Personal jusqu'au {date}",
+      "queued": "Puis 3 mois de plus, jusqu'au {date}.",
+      "after": "Payé une seule fois, rien ne se renouvelle. Après le {date}, cet espace de travail repasse en Free : {cap} actions e-mail par mois et une boîte pour les nouvelles connexions. Vos boîtes, brouillons et réglages restent.",
+      "endingTitle": "Votre pass Personal se termine le {date}.",
+      "another": "3 mois de plus, {price}, payés une seule fois.",
+      "anotherUntil": "Acheté maintenant, Personal court jusqu'au {date}.",
+      "seeOptions": "Voir les options",
+      "close": "Fermer",
+      "started": "Paiement reçu. Votre pass Personal de 3 mois apparaît ici dans un instant."
+  },
     "planChange": {
       "title": "Modifier ou mettre en pause votre abonnement",
       "sub": "Mettez un abonnement mensuel en pause jusqu'à 3 mois, ou passez à une formule plus petite à la fin de la période en cours.",

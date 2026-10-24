@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Verbinden Sie info@, sales@, invoices@ und die übrigen Adressen. Ihr Agent bearbeitet dann jedes Firmenpostfach in einer Unterhaltung und antwortet von der richtigen Adresse. Free umfasst ein Postfach, Pro bis zu 10.",
     "multiInboxCompact": "Betreiben Sie auch info@, sales@ oder invoices@? Verbinden Sie diese Postfächer, und Ihr Agent bearbeitet jedes Firmenpostfach in einer Unterhaltung.",
     "multiInboxCompactUpgrade": "Betreiben Sie auch info@, sales@ oder invoices@? Ihr Agent kann jedes Firmenpostfach in einer Unterhaltung bearbeiten. Ein zweites Postfach erfordert einen kostenpflichtigen Plan.",
-    "multiInboxCta": "Postfach hinzufügen"
+    "multiInboxCta": "Postfach hinzufügen",
+    "waitingTitle": "Warten auf Ihren ersten Aufruf",
+    "waitingDesc": "Ihr Postfach ist verbunden. Verbinden Sie Ihre KI-App und stellen Sie ihr eine Frage. Diese Seite aktualisiert sich, sobald der erste Aufruf ankommt.",
+    "connectAppTitle": "KI-App verbinden",
+    "connectAppDesc": "Fügen Sie diese URL in Ihre KI-App ein und wählen Sie die App unten aus, um die Schritte zu sehen.",
+    "connectAppDone": "Ihre KI-App ist mit MCPEmails verbunden.",
+    "askTitle": "Stellen Sie eine Frage",
+    "askDesc": "Starten Sie einen neuen Chat und fügen Sie einen dieser Sätze ein.",
+    "copyPrompt": "Prompt kopieren",
+    "prompts": {
+      "unread": "Fasse meine ungelesenen E-Mails von heute zusammen",
+      "bank": "Finde die letzte E-Mail von meiner Bank und sag mir, was drinsteht",
+      "draftReply": "Entwirf eine Antwort auf meine neueste E-Mail, aber schick sie nicht ab"
+    },
+    "clientToggle": {
+      "claude": "Klicken Sie in Claude im Eingabefeld auf +, öffnen Sie Konnektoren und prüfen Sie, ob MCPEmails für den Chat eingeschaltet ist. Sonst antwortet Claude ohne Ihre E-Mails.",
+      "chatgpt": "Klicken Sie in ChatGPT in jedem neuen Chat auf +, wählen Sie Entwicklermodus und dann die App MCPEmails. Sonst sieht ChatGPT Ihre E-Mails nicht."
+    },
+    "itWorksTitle": "Es funktioniert",
+    "itWorksDesc": "Ihre KI-App hat gerade ihren ersten Aufruf an MCPEmails gemacht. Machen Sie im selben Chat weiter.",
+    "waitingLive": "Diese Seite aktualisiert sich von selbst, sobald der erste Aufruf ankommt.",
+    "waitingStopped": "Noch kein Aufruf. Laden Sie die Seite neu, nachdem Sie einen Prompt ausprobiert haben."
   },
   "firstWeek": {
     "title": "Ihre erste Woche",
@@ -189,6 +210,19 @@
     "statusError": "Fehler",
     "statusParked": "Geparkt",
     "parkedNote": "Geparkt, weil Ihr Tarif weniger Postfächer umfasst. Es kommt zurück, sobald Sie upgraden. Nichts wurde gelöscht.",
+    "makeActive": "Aktivieren",
+    "swapDialog": {
+      "title": "{label} aktivieren",
+      "pickLead": "Wählen Sie das Postfach, das stattdessen geparkt wird. Nichts wird gelöscht.",
+      "freeSlot": "Es belegt den freien Platz in Ihrem Tarif.",
+      "pickLabel": "Zu parkendes Postfach",
+      "onceADay": "Sie können ein geparktes Postfach pro Tag tauschen.",
+      "cancel": "Abbrechen",
+      "confirm": "Aktivieren",
+      "swapping": "Wird getauscht…",
+      "errorLimit": "Sie haben heute schon ein Postfach getauscht. Versuchen Sie es nach {time} erneut.",
+      "errorFailed": "Der Tausch hat nicht geklappt. Versuchen Sie es erneut."
+    },
     "reconnect": "Neu verbinden",
     "checkConnection": "Verbindung prüfen",
     "viewerActionsNote": "Betrachter des Workspace sehen dieses Postfach, können es aber nicht prüfen, neu verbinden, trennen oder bearbeiten.",
@@ -360,13 +394,34 @@
           "unreachable": "Keine Verbindung zum {server}-Server mit diesen Einstellungen. Es wurde nichts geändert.",
           "save": "Speichern fehlgeschlagen. Bitte erneut versuchen."
         }
+      },
+      "instructions": {
+        "title": "Anweisungen für Ihre KI",
+        "help": "Jeder KI-Client, der dieses Postfach nutzt, sieht sie, zum Beispiel mit welchem Namen unterschrieben wird oder welche E-Mails unberührt bleiben.",
+        "placeholder": "Dies ist das Support-Postfach. Unterschreibe als Support-Team. Antworte nie auf Rechnungen; verschiebe sie nach Buchhaltung.",
+        "loading": "Wird geladen…",
+        "count": "{count} von {max} Zeichen",
+        "save": "Speichern",
+        "saved": "Gespeichert. KI-Clients sehen diese Anweisungen ab jetzt.",
+        "cleared": "Gespeichert. Dieses Postfach hat keine Anweisungen.",
+        "proOnly": "Anweisungen für Ihre KI sind Teil des Pro-Tarifs.",
+        "upgrade": "Tarife ansehen",
+        "errors": {
+          "load": "Die Anweisungen konnten nicht geladen werden. Bitte erneut versuchen.",
+          "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+          "too_long": "Bitte höchstens {max} Zeichen verwenden.",
+          "unavailable": "Anweisungen sind noch nicht verfügbar.",
+          "pro_feature_required": "Anweisungen für Ihre KI erfordern den Pro-Tarif."
+        }
       }
     },
     "emptyAltLead": "Noch nicht bereit, ein Postfach zu verbinden?",
     "emptyViewKeys": "MCP-URL und API-Schlüssel abrufen",
     "emptyReadDocs": "Anleitungen zur Client-Einrichtung lesen",
     "capBodyProCap": "Pro verbindet 10 Postfächer. Business enthält 10 für $39 pro Monat, jedes weitere Postfach kostet $3 pro Monat, und Mitglieder sind unbegrenzt ohne Aufpreis.",
-    "capCtaBusiness": "Upgrade auf Business, $39/Monat"
+    "capCtaBusiness": "Upgrade auf Business, $39/Monat",
+    "capBodyProCapFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
+    "capCtaBusinessFounder": "Upgrade auf Business, ${price}/Monat"
   },
   "apiKeys": {
     "title": "API-Schlüssel",
@@ -457,7 +512,6 @@
       "nextStep1": "Öffnen Sie in claude.ai oder Claude Desktop „Einstellungen“ → „Konnektoren“ → „Benutzerdefinierten Konnektor hinzufügen“.",
       "nextStep2": "Fügen Sie die obige URL ein. OAuth-Clients verbinden sich mit einem Klick.",
       "nextStep3": "Dann fragen Sie Claude einfach:",
-      "nextPrompt": "Fasse meine ungelesenen E-Mails von heute zusammen.",
       "nextGuide": "Schritt-für-Schritt-Anleitung",
       "warning": "Bewahren Sie diesen Schlüssel sicher auf. Er kann nicht erneut angezeigt werden. Wenn Sie ihn verlieren, widerrufen Sie ihn und erstellen Sie einen neuen.",
       "acknowledge": "Ich habe meinen API-Schlüssel kopiert und verstehe, dass er nicht erneut angezeigt werden kann.",
@@ -676,6 +730,37 @@
       "deleting": "Wird gelöscht…",
       "errFailed": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
       "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+    },
+    "morningBrief": {
+      "title": "Morgenübersicht",
+      "sub": "Eine tägliche Übersicht über neue E-Mails, VIP-Absender, Nachfassaktionen und geplante Sendungen, abgelegt in einem Ihrer Posteingänge.",
+      "enable": "Jeden Tag eine Morgenübersicht in meinen Posteingang legen",
+      "hour": "Uhrzeit",
+      "timezone": "Zeitzone",
+      "inbox": "Zustellen an",
+      "inboxPlaceholder": "Posteingang wählen",
+      "vip": "VIP-Absender",
+      "vipPlaceholder": "chefin@example.com\nexample.com",
+      "help": "Eine Adresse oder Domain pro Zeile. E-Mails von VIPs stehen oben. Die Übersicht wird direkt in den Posteingang gelegt, nicht als E-Mail versendet, und Tage ohne Neues werden übersprungen.",
+      "save": "Speichern",
+      "saved": "Gespeichert. Die nächste Übersicht folgt diesen Einstellungen.",
+      "loading": "Wird geladen...",
+      "proOnly": "Die Morgenübersicht ist Teil von Pro.",
+      "upgrade": "Tarife ansehen",
+      "roleNote": "Nur Eigentümer und Administratoren des Arbeitsbereichs können die Morgenübersicht ändern.",
+      "lastSent": "Letzte Übersicht: {when}",
+      "paused": "Nach wiederholten Fehlern pausiert. Prüfen Sie die Verbindung des Posteingangs und speichern Sie, um fortzufahren.",
+      "errors": {
+        "load": "Die Einstellungen der Morgenübersicht konnten nicht geladen werden.",
+        "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "unavailable": "Die Morgenübersicht ist noch nicht verfügbar.",
+        "pro_feature_required": "Die Morgenübersicht ist Teil von Pro.",
+        "invalid_vip": "Keine Adresse oder Domain: {detail}",
+        "too_many_vips": "Bis zu {max} VIP-Absender.",
+        "inbox_required": "Wählen Sie den Posteingang, in den die Übersicht gelegt wird.",
+        "invalid_inbox": "Dieser Posteingang gehört nicht zu diesem Arbeitsbereich.",
+        "invalid_timezone": "Wählen Sie eine Zeitzone aus der Liste."
+      }
     }
   },
   "billing": {
@@ -720,6 +805,9 @@
       "invalid_plan": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
       "invalid_interval": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
       "plan_change_failed": "Ihr Tarif konnte nicht geändert werden. Es wurde nichts berechnet. Bitte versuchen Sie es erneut.",
+      "pass_unavailable": "Der 3-Monats-Pass für Personal ist gerade nicht verfügbar.",
+      "already_subscribed": "Sie haben bereits ein Abonnement, das alles enthält, was der Pass bietet.",
+      "pass_already_queued": "Nach diesem Pass sind bereits weitere 3 Monate eingeplant.",
       "plan_change_pending": "Für Ihr Abonnement ist eine Pause oder ein Tarifwechsel gebucht. Nutzen Sie zuerst „Früher fortsetzen“ oder „Behalten“ auf dieser Seite und ändern Sie dann den Tarif."
     },
     "plans": {
@@ -779,6 +867,25 @@
     "proInboxesKept": "Ihr Pro-Tarif behält unbegrenzt viele verbundene Postfächer.",
     "businessMailboxRate": "10 Postfächer inklusive, über alle Ihre Workspaces hinweg. Jedes weitere Postfach wird mit Ihrem Tarif abgerechnet: $3 pro Monat oder $28.80 pro Jahr.",
     "confirmExtraMailboxes": "Enthält {count, plural, one {# zusätzliches Postfach} other {# zusätzliche Postfächer}} über die 10 inklusiven hinaus.",
+    "pass": {
+      "offerLine": "Oder Personal für 3 Monate, einmal bezahlt, {price}. Es verlängert sich nichts.",
+      "offerUntil": "Heute gekauft, läuft es bis zum {date}, danach ist dieser Workspace wieder auf Free.",
+      "offerCta": "3 Monate für {price}",
+      "returnTitle": "Personal: 3 verbundene Postfächer, kein monatliches Aktionslimit",
+      "subscribeMonthly": "Monatlich abonnieren, {price} pro Monat",
+      "subscribeYearly": "Jährlich, {price} pro Jahr",
+      "subscribeMonthlyFrom": "Monatlich abonnieren, {price} pro Monat, erste Abbuchung am {date}",
+      "subscribeYearlyFrom": "Jährlich, {price} pro Jahr, erste Abbuchung am {date}",
+      "until": "Personal bis zum {date}",
+      "queued": "Danach weitere 3 Monate, bis zum {date}.",
+      "after": "Einmal bezahlt, es verlängert sich nichts. Nach dem {date} ist dieser Workspace wieder auf Free: {cap} E-Mail-Aktionen pro Monat und ein Postfach für neue Verbindungen. Ihre Postfächer, Entwürfe und Einstellungen bleiben.",
+      "endingTitle": "Ihr Personal-Pass endet am {date}.",
+      "another": "Weitere 3 Monate, {price}, einmal bezahlt.",
+      "anotherUntil": "Jetzt gekauft, läuft Personal bis zum {date}.",
+      "seeOptions": "Optionen ansehen",
+      "close": "Schließen",
+      "started": "Zahlung erhalten. Ihr 3-Monats-Pass für Personal erscheint hier in einem Moment."
+  },
     "planChange": {
       "title": "Tarif ändern oder pausieren",
       "sub": "Pausieren Sie einen Monatstarif für bis zu 3 Monate oder wechseln Sie zum Ende des laufenden Zeitraums in einen kleineren Tarif.",

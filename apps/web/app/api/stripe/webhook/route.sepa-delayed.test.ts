@@ -147,6 +147,35 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
     recordCheckoutCompleted: async (_ws: string, target: string) => {
       funnelRows.push(target);
     },
+    // src/lib/billing/pass.ts imports it; no pass is bought on these paths.
+    recordPassEvent: async () => {},
+  },
+});
+
+/** No buyer here holds a 3-month pass, so applyUserPlan projects as before. */
+nodeMock.module('@/lib/billing/pass', {
+  namedExports: {
+    getActivePass: async () => null,
+    // Everything else the route's imports read from the module, inert.
+    personalPassMode: () => 'off',
+    passCheckoutOpen: () => false,
+    passEndsAt: (d: Date) => d,
+    passSubscriptionStart: () => null,
+    activeFromLive: () => null,
+    canQueueAnotherPass: () => true,
+    planPassWindow: () => null,
+    ENTITLED_SUBSCRIPTION_STATUSES: ['active', 'trialing', 'past_due', 'unpaid'],
+    hasEntitledSubscription: (b: { subscription_status?: string | null } | null | undefined) =>
+      ['active', 'trialing', 'past_due', 'unpaid'].includes(b?.subscription_status ?? ''),
+    passEligibility: () => ({ eligible: false }),
+    effectivePlan: (input: { subscriptionPlan?: string }) => input.subscriptionPlan ?? 'free',
+    reprojectUserPlan: async () => null,
+    passNoticesFor: () => [],
+    sweepPassExpiry: async () => ({ expired: 0, started: 0 }),
+    recordPassPurchase: async () => {
+      throw new Error('no pass is bought in the SEPA tests');
+    },
+    refundPass: async () => ({ kind: 'not_a_pass' }),
   },
 });
 

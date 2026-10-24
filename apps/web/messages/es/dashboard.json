@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre hasta 10.",
     "multiInboxCompact": "¿También gestionas info@, ventas@ o facturas@? Conéctalos y tu agente trabaja con todos los buzones de la empresa desde una sola conversación.",
     "multiInboxCompactUpgrade": "¿También gestionas info@, ventas@ o facturas@? Tu agente puede trabajar con todos los buzones de la empresa desde una sola conversación. Un segundo buzón requiere un plan de pago.",
-    "multiInboxCta": "Añadir un buzón"
+    "multiInboxCta": "Añadir un buzón",
+    "waitingTitle": "Esperando tu primera llamada",
+    "waitingDesc": "Tu bandeja está conectada. Conecta tu app de IA y hazle una pregunta. Esta página se actualiza cuando llega la primera llamada.",
+    "connectAppTitle": "Conecta tu app de IA",
+    "connectAppDesc": "Pega esta URL en tu app de IA y elígela abajo para ver los pasos.",
+    "connectAppDone": "Tu app de IA está conectada a MCPEmails.",
+    "askTitle": "Pregúntale algo",
+    "askDesc": "Abre un chat nuevo y pega una de estas frases.",
+    "copyPrompt": "Copiar prompt",
+    "prompts": {
+      "unread": "Resume mis correos sin leer de hoy",
+      "bank": "Busca el último correo de mi banco y dime qué dice",
+      "draftReply": "Redacta una respuesta a mi correo más reciente, pero no la envíes"
+    },
+    "clientToggle": {
+      "claude": "En Claude, haz clic en + en el cuadro de mensaje, abre Conectores y comprueba que MCPEmails está activado en el chat. Si no, Claude responde sin tu correo.",
+      "chatgpt": "En ChatGPT, haz clic en + en cada chat nuevo, elige modo de desarrollador y selecciona la app de MCPEmails. Si no, ChatGPT no puede ver tu correo."
+    },
+    "itWorksTitle": "Funciona",
+    "itWorksDesc": "Tu app de IA acaba de hacer su primera llamada a MCPEmails. Sigue en el mismo chat.",
+    "waitingLive": "Esta página se actualiza sola cuando llega la primera llamada.",
+    "waitingStopped": "Todavía no hay ninguna llamada. Recarga esta página después de probar un prompt."
   },
   "firstWeek": {
     "title": "Tu primera semana",
@@ -189,6 +210,19 @@
     "statusError": "Error",
     "statusParked": "En espera",
     "parkedNote": "En espera porque tu plan incluye menos bandejas. Vuelve cuando mejores tu plan. No se ha eliminado nada.",
+    "makeActive": "Activar",
+    "swapDialog": {
+      "title": "Activar {label}",
+      "pickLead": "Elige la bandeja que queda en espera en su lugar. No se elimina nada.",
+      "freeSlot": "Ocupa el hueco libre de tu plan.",
+      "pickLabel": "Bandeja que queda en espera",
+      "onceADay": "Puedes intercambiar una bandeja en espera al día.",
+      "cancel": "Cancelar",
+      "confirm": "Activar",
+      "swapping": "Intercambiando…",
+      "errorLimit": "Ya has intercambiado una bandeja hoy. Vuelve a intentarlo después de {time}.",
+      "errorFailed": "No se pudo hacer el intercambio. Inténtalo de nuevo."
+    },
     "reconnect": "Reconectar",
     "checkConnection": "Comprobar conexión",
     "viewerActionsNote": "Los lectores del espacio de trabajo pueden ver este buzón, pero no comprobarlo, reconectarlo, desconectarlo ni editarlo.",
@@ -360,13 +394,34 @@
           "unreachable": "No se pudo conectar con el servidor {server} con estos ajustes. No se cambió nada.",
           "save": "No se pudo guardar. Inténtalo de nuevo."
         }
+      },
+      "instructions": {
+        "title": "Instrucciones para tu IA",
+        "help": "Todos los clientes de IA que usan esta bandeja las ven, por ejemplo con qué nombre firmar o qué correos no tocar.",
+        "placeholder": "Esta es la bandeja de soporte. Firma como el Equipo de Soporte. Nunca respondas a facturas; muévelas a Finanzas.",
+        "loading": "Cargando…",
+        "count": "{count} de {max} caracteres",
+        "save": "Guardar",
+        "saved": "Guardado. Los clientes de IA ven estas instrucciones desde ahora.",
+        "cleared": "Guardado. Esta bandeja no tiene instrucciones.",
+        "proOnly": "Las instrucciones para tu IA forman parte del plan Pro.",
+        "upgrade": "Ver planes",
+        "errors": {
+          "load": "No se pudieron cargar las instrucciones. Inténtalo de nuevo.",
+          "save": "No se pudo guardar. Inténtalo de nuevo.",
+          "too_long": "Usa como máximo {max} caracteres.",
+          "unavailable": "Las instrucciones aún no están disponibles.",
+          "pro_feature_required": "Las instrucciones para tu IA requieren el plan Pro."
+        }
       }
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",
     "emptyViewKeys": "Obtén tu URL de MCP y tu clave de API",
     "emptyReadDocs": "Lee las guías de configuración",
     "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
-    "capCtaBusiness": "Mejorar a Business, 39 $/mes"
+    "capCtaBusiness": "Mejorar a Business, 39 $/mes",
+    "capBodyProCapFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
+    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes"
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -457,7 +512,6 @@
       "nextStep1": "En claude.ai o Claude Desktop, abre Ajustes → Conectores → Añadir conector personalizado.",
       "nextStep2": "Pega la URL de arriba. Los clientes con OAuth se conectan con un clic.",
       "nextStep3": "Luego solo pide a Claude:",
-      "nextPrompt": "Resume mis correos sin leer de hoy.",
       "nextGuide": "Guía paso a paso",
       "warning": "Guarda esta clave en un lugar seguro. No se puede mostrar de nuevo. Si la pierdes, revoca esta clave y crea una nueva.",
       "acknowledge": "He copiado mi clave de API y entiendo que no se puede mostrar de nuevo.",
@@ -676,6 +730,37 @@
       "deleting": "Eliminando…",
       "errFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
       "networkError": "Error de red. Comprueba tu conexión e inténtalo de nuevo."
+    },
+    "morningBrief": {
+      "title": "Resumen matinal",
+      "sub": "Un resumen diario del correo nuevo, los remitentes VIP, los seguimientos y los envíos programados, en una de tus bandejas de entrada.",
+      "enable": "Dejar un resumen matinal en mi bandeja de entrada cada día",
+      "hour": "Hora",
+      "timezone": "Zona horaria",
+      "inbox": "Entregar en",
+      "inboxPlaceholder": "Elige una bandeja de entrada",
+      "vip": "Remitentes VIP",
+      "vipPlaceholder": "jefa@example.com\nexample.com",
+      "help": "Una dirección o un dominio por línea. El correo de los VIP aparece primero. El resumen se añade directamente a la bandeja de entrada, no se envía como correo, y los días sin novedades se omiten.",
+      "save": "Guardar",
+      "saved": "Guardado. El próximo resumen seguirá estos ajustes.",
+      "loading": "Cargando...",
+      "proOnly": "El resumen matinal forma parte de Pro.",
+      "upgrade": "Ver planes",
+      "roleNote": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el resumen matinal.",
+      "lastSent": "Último resumen: {when}",
+      "paused": "En pausa tras varios fallos. Revisa la conexión de la bandeja de entrada y guarda para reanudar.",
+      "errors": {
+        "load": "No se pudieron cargar los ajustes del resumen matinal.",
+        "save": "No se pudo guardar. Inténtalo de nuevo.",
+        "unavailable": "El resumen matinal aún no está disponible.",
+        "pro_feature_required": "El resumen matinal forma parte de Pro.",
+        "invalid_vip": "No es una dirección ni un dominio: {detail}",
+        "too_many_vips": "Hasta {max} remitentes VIP.",
+        "inbox_required": "Elige la bandeja de entrada donde dejar el resumen.",
+        "invalid_inbox": "Esa bandeja de entrada no pertenece a este espacio de trabajo.",
+        "invalid_timezone": "Elige una zona horaria de la lista."
+      }
     }
   },
   "billing": {
@@ -720,6 +805,9 @@
       "invalid_plan": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
       "invalid_interval": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
       "plan_change_failed": "No hemos podido cambiar tu plan. No se ha cobrado nada. Inténtalo de nuevo.",
+      "pass_unavailable": "El pase Personal de 3 meses no está disponible ahora mismo.",
+      "already_subscribed": "Ya tienes una suscripción, que incluye todo lo que ofrece el pase.",
+      "pass_already_queued": "Ya tienes otros 3 meses programados después de este pase.",
       "plan_change_pending": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
     },
     "plans": {
@@ -779,6 +867,25 @@
     "proInboxesKept": "Tu plan Pro conserva las bandejas conectadas ilimitadas.",
     "businessMailboxRate": "10 buzones incluidos entre todos tus espacios de trabajo. Cada buzón adicional se factura con tu plan: 3 $ al mes o 28,80 $ al año.",
     "confirmExtraMailboxes": "Incluye {count, plural, one {# buzón adicional} other {# buzones adicionales}} además de los 10 incluidos.",
+    "pass": {
+      "offerLine": "O Personal durante 3 meses, un solo pago, {price}. No se renueva nada.",
+      "offerUntil": "Si lo compras hoy, dura hasta el {date} y después este espacio de trabajo vuelve a Free.",
+      "offerCta": "3 meses por {price}",
+      "returnTitle": "Personal: 3 bandejas conectadas, sin límite mensual de acciones",
+      "subscribeMonthly": "Suscripción mensual, {price} al mes",
+      "subscribeYearly": "Anual, {price} al año",
+      "subscribeMonthlyFrom": "Suscripción mensual, {price} al mes, primer cargo el {date}",
+      "subscribeYearlyFrom": "Anual, {price} al año, primer cargo el {date}",
+      "until": "Personal hasta el {date}",
+      "queued": "Después, otros 3 meses, hasta el {date}.",
+      "after": "Un solo pago, no se renueva nada. Después del {date} este espacio de trabajo vuelve a Free: {cap} acciones de correo al mes y una bandeja para nuevas conexiones. Tus bandejas, borradores y ajustes se mantienen.",
+      "endingTitle": "Tu pase Personal termina el {date}.",
+      "another": "Otros 3 meses, {price}, un solo pago.",
+      "anotherUntil": "Si lo compras ahora, Personal dura hasta el {date}.",
+      "seeOptions": "Ver las opciones",
+      "close": "Cerrar",
+      "started": "Pago recibido. Tu pase Personal de 3 meses aparecerá aquí en un momento."
+  },
     "planChange": {
       "title": "Cambiar o pausar tu plan",
       "sub": "Pausa un plan mensual hasta 3 meses o cambia a un plan más pequeño cuando termine tu periodo actual.",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -12,6 +12,7 @@ import { ConnectModal } from './ConnectModal';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
+import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
@@ -19,6 +20,8 @@ import { ToastProvider, useToast } from './Toast';
 import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
+import { pricesWithFounder } from '@/lib/stripe/founder-offer';
+import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
 import {
   connectIntentStorage,
@@ -138,10 +141,18 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
+  // The Business founder price, when the server attached it: priced in here,
+  // once, for the viewer's language (zh keeps the normal price), so every
+  // surface below quotes what checkout charges.
+  const { locale: appLocale } = useAppLocale();
+  const stripePrices = useMemo(
+    () => pricesWithFounder(serverStripePrices, appLocale),
+    [serverStripePrices, appLocale],
+  );
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
   const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
@@ -289,6 +300,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // the first-run effect below) and dropped when the modal closes, so every
   // later opening of the modal is the ordinary one.
   const [connectPreselect, setConnectPreselect] = useState(null);
+  // A notice the connect modal opens with, e.g. 'outlook_cancelled'.
+  const [connectNotice, setConnectNotice] = useState(null);
   // undefined = not looked at yet, null = nothing (or already spent).
   const connectIntentSlug = useRef(undefined);
   // Servers carried from /tools/email-settings-lookup (intent-carry.mjs).
@@ -304,6 +317,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // The "what stopped you?" card shown on return from a cancelled checkout.
   const [checkoutCancelled, setCheckoutCancelled] = useState(false);
   const dismissCheckoutCancelled = useCallback(() => setCheckoutCancelled(false), []);
+  // Which plan the abandoned checkout was for. Only a Personal one can show the
+  // 3-month pass card (treatment arm only; see PersonalPass.jsx).
+  const [cancelledPlan, setCancelledPlan] = useState(null);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
 
@@ -551,6 +567,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // completes a connect flow. Read-only members cannot attach a mailbox.
       toast({ message: tr('app.insufficientRole'), variant: 'error' });
       setRouteState('inboxes');
+    } else if (errorParam === 'outlook_cancelled') {
+      // Declined on Microsoft's consent screen. Reopen the connect modal on
+      // the Outlook card with a panel that says so and retries in place,
+      // rather than a four-second toast.
+      setConnectNotice('outlook_cancelled');
+      openConnect('other');
+      setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
@@ -602,6 +625,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // starts appending it, the panel picks it up and shows price and
         // renewal date; until then it renders without those two rows.
         const intervalParam = readQuery(searchParams, 'interval');
+        // A Business founder purchase (checkout-core adds offer=founder). The
+        // panel may only quote a price when the founder amounts are on this
+        // page; once the plan has landed they are not, and the price rows are
+        // left out rather than showing the $39 nobody was charged.
+        const founderPurchase = readQuery(searchParams, 'offer') === 'founder';
+        const priceKnown =
+          !founderPurchase ||
+          Boolean(stripePrices?.pro?.founder) ||
+          stripePrices?.pro?.founderSubscriber === true;
         // The return URL is a one-shot signal that only exists on the client,
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that
@@ -612,7 +644,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCheckoutSuccess({
           planId: planParam,
-          interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+          interval:
+            priceKnown && (intervalParam === 'month' || intervalParam === 'year') ? intervalParam : null,
           currency: currencyParam === 'eur' ? 'eur' : 'usd',
         });
         rememberCheckoutAcknowledged(planParam);
@@ -626,6 +659,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // One-shot signal from the return URL, client only: same reasoning as
       // the success panel above.
       setCheckoutCancelled(true);
+      setCancelledPlan(readQuery(searchParams, 'plan'));
     }
     // Clean up the query params from the URL without a reload, so a refresh
     // does not replay the confirmation.
@@ -634,6 +668,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
       url.searchParams.delete('interval');
+      url.searchParams.delete('offer');
       url.searchParams.delete('currency');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }
@@ -697,6 +732,35 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Re-throw so the confirmation dialog knows to stay open.
       throw err;
     }
+  };
+
+  /**
+   * "Make active" on a parked inbox: POST /api/inboxes/swap-parked. The
+   * parked inbox comes back and `activeInboxId` (when given) is parked in its
+   * place, at most once a day per workspace. Resolves { ok, error,
+   * nextSwapAt } for the dialog, which shows a failure as one line; on
+   * success local state takes the server's active/parked lists.
+   */
+  const onSwapParkedInbox = async (parkedInboxId, activeInboxId) => {
+    let data = {};
+    try {
+      const res = await fetch('/api/inboxes/swap-parked', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ parkedInboxId, activeInboxId: activeInboxId ?? null }),
+      });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) return { ok: false, error: data?.error ?? 'swap_failed', nextSwapAt: data?.next_swap_at ?? null };
+    } catch {
+      return { ok: false, error: 'swap_failed', nextSwapAt: null };
+    }
+    const active = new Set(Array.isArray(data.active) ? data.active : []);
+    const parked = new Set(Array.isArray(data.parked) ? data.parked : []);
+    setInboxes(xs => xs.map(x => (
+      active.has(x.id) ? { ...x, parked: false } : parked.has(x.id) ? { ...x, parked: true } : x
+    )));
+    refreshServerData();
+    return { ok: true, error: null, nextSwapAt: data.next_swap_at ?? null };
   };
 
   /**
@@ -979,7 +1043,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * @param {object|null} [transport] - Present only when the route reports that
    *   the settings it connected on are not the ones that were submitted.
    */
-  const onConnect = ({ label, provider, address, connectionMethod, transport }) => {
+  const onConnect = ({ label, provider, address, connectionMethod, transport, keepOpen = false }) => {
     // This used to say 'app_password' unconditionally, which is wrong for the
     // generic IMAP connector: 'imap' is the largest provider bucket on this
     // event, so the connection-method split was wrong for most of the rows it
@@ -1003,9 +1067,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       return [...xs, next];
     });
     setReconnectInbox(null);
-    setShowConnect(false);
-    setConnectEntry(null);
-    setConnectPreselect(null);
+    // `keepOpen`: a first inbox, and the modal moves on to its "Now connect
+    // your AI app" screen; it closes from there (onOpenClientGuide or Later).
+    if (!keepOpen) {
+      setShowConnect(false);
+      setConnectEntry(null);
+      setConnectPreselect(null);
+      setConnectNotice(null);
+    }
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
     // store what worked, and they have always reported it back; nothing read
@@ -1041,7 +1110,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } else {
       toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
     }
-    if (firstrun || onboardingClient) {
+    if (!keepOpen && (firstrun || onboardingClient)) {
       // Continue the chosen-client guide instead of dropping every provider
       // into a generic API-key screen.
       setGuideResumeKey(value => value + 1);
@@ -1230,20 +1299,30 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
           lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
         />
+        {cancelledPlan === 'personal' && (
+          <CheckoutReturnPassCard
+            workspaceId={workspace?.id}
+            stripePrices={stripePrices}
+            onDismiss={() => setCancelledPlan(null)}
+          />
+        )}
+        {route !== "settings" && (
+          <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
+        )}
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
-        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
+        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} inboxes={inboxes} proFeatures={workspace?.proFeatures ?? null} stripePrices={stripePrices} passState={passState} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
       </div>
 
@@ -1258,7 +1337,21 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); setConnectNotice(null); }}
+          returnNotice={reconnectInbox == null ? connectNotice : null}
+          showNextStepAfterConnect={reconnectInbox == null && inboxes.length === 0}
+          onboardingClient={onboardingClient}
+          onOpenClientGuide={(client) => {
+            setShowConnect(false);
+            setConnectEntry(null);
+            setConnectPreselect(null);
+            setConnectNotice(null);
+            if (client) setOnboardingClient(client);
+            // Remounts the Overview guide, which opens ClientGuideModal for
+            // `onboardingClient` when one is set.
+            setGuideResumeKey(value => value + 1);
+            setRoute('overview');
+          }}
           entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}

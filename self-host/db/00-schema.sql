@@ -215,6 +215,8 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
   ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
+  ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024235300)
+  ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
   ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
@@ -250,6 +252,25 @@ BEGIN
     ALTER TABLE public.inboxes
       ADD CONSTRAINT inboxes_folder_overrides_check
       CHECK (public.inbox_folder_overrides_valid(folder_overrides));
+  END IF;
+END
+$$;
+-- The rule for ai_instructions, as in the hosted migration 20261024235300:
+-- trimmed, 1 to 2000 characters, or NULL.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_ai_instructions_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_ai_instructions_check
+      CHECK (
+        ai_instructions IS NULL
+        OR (char_length(ai_instructions) BETWEEN 1 AND 2000
+            AND ai_instructions = btrim(ai_instructions, E' \t\r\n'))
+      );
   END IF;
 END
 $$;
@@ -2070,6 +2091,95 @@ AS $$
 $$;
 
 -- ============================================================
+-- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
+-- 20261024235200). message_ref and summary are AES-256-GCM wrappers
+-- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
+-- /reminders-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
+-- =====================================================
+
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.reminders (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  kind                 text NOT NULL CHECK (kind IN ('follow_up', 'snooze')),
+  status               text NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'due', 'replied', 'returned', 'done', 'cancelled', 'failed')),
+  condition            text NOT NULL DEFAULT 'always' CHECK (condition IN ('always', 'no_reply')),
+  due_at               timestamptz NOT NULL,
+  next_check_at        timestamptz,
+  message_digest       text NOT NULL,
+  message_ref          jsonb NOT NULL,
+  summary              jsonb,
+  folder               text,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  last_error_code      text,
+  last_checked_at      timestamptz,
+  replied_at           timestamptz,
+  returned_at          timestamptz,
+  completed_at         timestamptz,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
+  WHERE status IN ('pending', 'due') AND claimed_at IS NULL AND next_check_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS reminders_inbox_open_idx ON public.reminders (inbox_id, next_check_at)
+  WHERE status IN ('pending', 'due');
+CREATE INDEX IF NOT EXISTS reminders_workspace_status_idx ON public.reminders (workspace_id, status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS reminders_open_message_uniq ON public.reminders (inbox_id, kind, message_digest)
+  WHERE status IN ('pending', 'due', 'failed');
+CREATE OR REPLACE TRIGGER reminders_updated_at
+  BEFORE UPDATE ON public.reminders
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+-- ── Re-arm on reconnect ─────────────────────────────────────────────────────
+-- A snooze never goes 'failed' on an auth, inbox or transport error: it backs
+-- off (5 min, 15 min, 1 h, 4 h, then daily) and keeps trying, because giving up
+-- would leave the message hidden. When the user reconnects or re-authorises the
+-- inbox, every backed-off reminder of it is due again at once, so a snoozed
+-- message comes back within a minute of the fix rather than at the next daily
+-- retry. Snoozes only once their own time has come; open follow-ups always.
+-- Fires on the inbox becoming active, or on a new password / refresh token
+-- while active. Harmless when nothing has failed (no row matches).
+CREATE OR REPLACE FUNCTION public.reminders_rearm_on_reconnect()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.reminders
+     SET next_check_at = now()
+   WHERE inbox_id = NEW.id
+     AND status IN ('pending', 'due')
+     AND consecutive_failures > 0
+     AND claimed_at IS NULL
+     AND next_check_at > now()
+     AND (kind = 'follow_up' OR due_at <= now());
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.reminders_rearm_on_reconnect() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS reminders_rearm_on_reconnect ON public.inboxes;
+CREATE TRIGGER reminders_rearm_on_reconnect
+  AFTER UPDATE OF status, imap_password, oauth_refresh_token ON public.inboxes
+  FOR EACH ROW
+  WHEN (
+    NEW.status = 'active' AND (
+      OLD.status IS DISTINCT FROM NEW.status
+      OR OLD.imap_password IS DISTINCT FROM NEW.imap_password
+      OR OLD.oauth_refresh_token IS DISTINCT FROM NEW.oauth_refresh_token
+    )
+  )
+  EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
+-- ============================================================
 -- Checkout link in the Free-cap refusal (hosted migrations
 -- 20260903120000_experiments and 20261024180000_chat_checkout_links).
 --
@@ -2201,6 +2311,39 @@ BEGIN
 END;
 $$;
 REVOKE ALL ON FUNCTION public.checkout_link_issue(uuid, bytea, uuid, uuid, text, text, text, int) FROM PUBLIC, anon, authenticated;
+
+-- ============================================================
+-- TABLE: morning_briefs  (Pro daily brief settings and schedule; hosted
+-- migration 20261024235400). The hosted pg_cron job that drives
+-- /morning-brief-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every 5 minutes).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.morning_briefs (
+  workspace_id         uuid PRIMARY KEY REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  enabled              boolean NOT NULL DEFAULT false,
+  hour                 smallint NOT NULL DEFAULT 7 CHECK (hour BETWEEN 0 AND 23),
+  timezone             text NOT NULL DEFAULT 'UTC',
+  locale               text NOT NULL DEFAULT 'en' CHECK (locale IN ('en', 'nb', 'fr', 'es', 'de')),
+  inbox_id             uuid REFERENCES public.inboxes(id) ON DELETE SET NULL,
+  vip_senders          text[] NOT NULL DEFAULT '{}',
+  next_due_at          timestamptz,
+  last_local_date      date,
+  last_sent_at         timestamptz,
+  last_run_at          timestamptz,
+  last_outcome         text,
+  last_error_code      text,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  paused_at            timestamptz,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS morning_briefs_due_idx ON public.morning_briefs (next_due_at NULLS FIRST)
+  WHERE enabled AND paused_at IS NULL AND claimed_at IS NULL;
+CREATE OR REPLACE TRIGGER morning_briefs_updated_at
+  BEFORE UPDATE ON public.morning_briefs
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============================================================
 -- Grants, service_role bypasses RLS and owns the data plane.

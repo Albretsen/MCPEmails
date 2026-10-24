@@ -3,6 +3,8 @@ import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pricingJsonLd } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
+import { attachFounder, founderDisplayFor } from '@/lib/stripe/founder-display';
+import { FOUNDER_VALID_UNTIL, pricesWithFounder } from '@/lib/stripe/founder-offer';
 import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
@@ -38,7 +40,12 @@ export default async function PricingPage({ params }) {
   const { locale } = await params;
   requireLocale(locale);
   setRequestLocale(locale);
-  const stripePrices = await fetchStripePrices();
+  // The Business founder price, while it is open (src/lib/stripe/founder-offer.ts).
+  // Null outside the window, with the flag off, when every place is taken,
+  // when the count cannot be read, and always in zh. Read per request; the
+  // flag and the place count are each cached 60 s (founder-offer-server.ts).
+  const founder = await founderDisplayFor({ locale });
+  const stripePrices = pricesWithFounder(attachFounder(await fetchStripePrices(), founder), locale);
   // STRIPE_EUR_PRICES, read when this page renders and handed to the client,
   // which decides per visitor (EU or not) without making the page dynamic.
   // Off by default, and off means the page renders exactly as before.
@@ -51,7 +58,14 @@ export default async function PricingPage({ params }) {
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   // Emits the real plan catalogue as Product + Offers, so an assistant asked
   // what MCPEmails costs reads the same four tiers a visitor sees.
-  const jsonLd = pricingJsonLd(locale, { title, description }, { eur: eurEnabled });
+  const jsonLd = pricingJsonLd(
+    locale,
+    { title, description },
+    {
+      eur: eurEnabled,
+      founder: founder ? { monthlyCents: founder.monthlyCents, validUntil: FOUNDER_VALID_UNTIL } : null,
+    },
+  );
 
   return (
     <>

@@ -800,6 +800,27 @@ test('the cancellation email confirms the cancel, the paid-up date and that noth
   assert.match(email.htmlBody, /31 October 2026, which you have already paid for/);
 });
 
+test('D3: with a park count above one, the confirmation says the extra inboxes are parked, not deleted', () => {
+  const sentence =
+    'When your plan ends, one inbox stays active on Free and the others are parked, not deleted. They come back if you subscribe again.';
+  const email = cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 4 });
+  const lines = email.body.split('\n');
+  assert.equal(lines[1], sentence, 'right after the confirmation, before the withdrawal line');
+  assert.ok(email.htmlBody.includes(sentence));
+  assert.ok(!/delete your|will lose|warning/i.test(sentence), 'no threat language');
+});
+
+test('D3: no parking sentence without the marker, with one inbox, or for a grandfathered owner', () => {
+  const marker = /parked, not deleted/;
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500 }).body), 'rows queued without the marker');
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 1 }).body), 'one inbox');
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 0 }).body), 'nothing to park');
+  assert.ok(
+    !marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 3, grandfathered: true }).htmlBody),
+    'grandfathered owners keep every inbox',
+  );
+});
+
 test('without a period end it still says the plan runs to the end of what was paid', () => {
   const email = composeBillingEmail('cancel_ask', payload({ periodEnd: null }));
   assert.ok(email);

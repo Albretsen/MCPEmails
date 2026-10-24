@@ -46,8 +46,11 @@
  *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
+ *   STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY=price_...  (Business founder, $29/mo)
+ *   STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY=price_...   (Business founder, $278.40/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
+ *   STRIPE_PRICE_PERSONAL_PASS_3M=price_...   (3-month Personal pass, $29 once)
  *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
  *                                             (USD tax-inclusive twins of the
  *                                              prices EU subscribers were on,
@@ -522,6 +525,14 @@ export const PLANS: Record<PlanId, Plan> = {
         process.env.STRIPE_PRICE_PRO_MONTHLY,
         process.env.STRIPE_PRICE_PRO_YEARLY,
       ),
+      // The founder price ($29 / $278.40), sold from 2026-11-09 to the first
+      // 20 Business subscriptions (src/lib/stripe/founder-offer.ts). Kept here
+      // forever: a founder keeps the price for as long as the subscription
+      // lives, so its renewals must always resolve to Business.
+      ...legacyPricePair(
+        process.env.STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY,
+        process.env.STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY,
+      ),
     ],
     // Only what works today, each checked against the code on 2026-10-19:
     // members and roles (invite + members routes, teamRolesEnabled), admins
@@ -540,6 +551,50 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: false,
   },
 } as const;
+
+// ---------------------------------------------------------------------------
+// The 3-month Personal pass (2026-10-24): one payment, Personal for exactly
+// three calendar months, nothing renews.
+//
+// DELIBERATELY NOT IN PLANS. It is not a plan: it grants the `personal` plan
+// for a fixed window, and its price is a ONE-TIME price that never sits on a
+// subscription. Keeping it out of PLANS means getPlanByStripePriceId can never
+// map it, TIER_ORDER and planCommitmentRank do not see it, and every reader
+// that walks PLANS (pricing page, paywall copy, checkout allow-list) is
+// unchanged. Entitlement, stacking and the kill switch live in
+// src/lib/billing/pass.ts.
+//
+//   STRIPE_PRICE_PERSONAL_PASS_3M=price_...  (one-time, $29)
+//
+// $29, not $27: three monthly payments are $27, so the pass stays the dearer
+// way to buy the same three months and is never a discount on monthly.
+// ---------------------------------------------------------------------------
+export interface PassProduct {
+  /** Stored in user_passes.product and in Checkout metadata. */
+  id: 'personal_pass_3m';
+  /** The plan the pass grants while it runs. */
+  plan: 'personal';
+  /** Calendar months one pass lasts. */
+  months: number;
+  /** One-time price in USD cents. */
+  priceCents: number;
+}
+
+export const PERSONAL_PASS_3M: PassProduct = {
+  id: 'personal_pass_3m',
+  plan: 'personal',
+  months: 3,
+  priceCents: 2900,
+};
+
+/**
+ * The one-time Stripe price id for the pass, or null when unset. Read at call
+ * time, like mailboxAddonPriceId, so a test can set it after import and an env
+ * change takes effect without a redeploy of cached modules.
+ */
+export function personalPassPriceId(): string | null {
+  return process.env.STRIPE_PRICE_PERSONAL_PASS_3M?.trim() || null;
+}
 
 // ---------------------------------------------------------------------------
 // Helper: look up limits for a plan name stored in DB.
@@ -640,6 +695,10 @@ function planByCatalogueId(
       return { plan, interval: 'year' };
     }
   }
+  // The founder pair, read at call time as well as through the legacy list
+  // above, so a renewal maps even when the variables were set after load.
+  const founderInterval = founderPriceInterval(priceId);
+  if (founderInterval) return { plan: PLANS.pro, interval: founderInterval };
   for (const plan of Object.values(PLANS)) {
     const idx = plan.legacyStripePriceIds.indexOf(priceId);
     if (idx !== -1) {
@@ -765,6 +824,36 @@ export function mailboxAddonPriceId(interval: BillingInterval): string | null {
       ? process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY
       : process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
   return raw?.trim() || null;
+}
+
+// ---------------------------------------------------------------------------
+// The Business founder price.
+//
+// Two separate Stripe prices on the Business product rather than a coupon, so
+// the invoice shows $29 as the price and the lock lives in the price id. Who
+// may buy it is decided in founder-offer.ts; these helpers only name the ids.
+// Read at call time, like the add-on ids, so a test can set them after import.
+// ---------------------------------------------------------------------------
+export function founderPriceIdFor(interval: BillingInterval): string | null {
+  const raw =
+    interval === 'year'
+      ? process.env.STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY
+      : process.env.STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY;
+  return raw?.trim() || null;
+}
+
+/** The interval of a founder price id, or null when the id is not one. */
+export function founderPriceInterval(
+  priceId: string | null | undefined,
+): BillingInterval | null {
+  if (!priceId) return null;
+  if (priceId === founderPriceIdFor('month')) return 'month';
+  if (priceId === founderPriceIdFor('year')) return 'year';
+  return null;
+}
+
+export function isFounderPriceId(priceId: string | null | undefined): boolean {
+  return founderPriceInterval(priceId) !== null;
 }
 
 /** The interval of an add-on price id, or null when the id is not one. */

@@ -21,7 +21,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { primaryWorkspaceId, recordCancelReasonSubmitted } from '@/lib/analytics/billing-funnel';
 import { submitCancellationFeedback } from '@/lib/billing/cancellation-feedback';
-import { createFeedbackServiceClient, upsertCancellationFeedback } from '@/lib/billing/feedback-db';
+import { upsertCancellationFeedback } from '@/lib/billing/feedback-db';
 import { supportJson, supportMethodNotAllowed } from '@/lib/support/http';
 import { clientIp, hashSupportIp } from '@/lib/support/ip';
 
@@ -46,10 +46,8 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   let service;
-  let feedbackDb;
   try {
     service = createServiceRoleClient();
-    feedbackDb = createFeedbackServiceClient();
   } catch (err) {
     console.error('[billing-feedback] service client unavailable:', err instanceof Error ? err.message : String(err));
     return supportJson({ ok: false, error: 'server_error' }, 500);
@@ -90,7 +88,7 @@ export async function POST(request: Request): Promise<Response> {
       if (error) console.error('[billing-feedback] customer lookup failed', { message: error.message });
       return data?.user_id ?? null;
     },
-    upsert: (row) => upsertCancellationFeedback(feedbackDb, row),
+    upsert: (row) => upsertCancellationFeedback(service, row),
     async recordFunnel(userId, reason) {
       try {
         await recordCancelReasonSubmitted(await primaryWorkspaceId(service, userId), reason);

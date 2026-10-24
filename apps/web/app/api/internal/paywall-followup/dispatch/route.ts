@@ -39,6 +39,7 @@ import {
   type Sender,
 } from '@/lib/email/paywall-followup';
 import { SupabasePaywallFollowupStore } from '@/lib/email/paywall-followup-store';
+import { paywallEmailPassLine, recordPassOfferShownOnce } from '@/lib/billing/pass-offer';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -111,6 +112,11 @@ export async function POST(request: Request): Promise<Response> {
       send: mode === 'send' ? resendSender : undefined,
       maxSends: paywallFollowupMaxPerRun(),
       outOfTime: () => budgetExhausted(started, Date.now()),
+      // The 3-month pass line on step 3, for the pass arm only (pass-offer.ts).
+      passOffer: (workspaceId, now) => paywallEmailPassLine(workspaceId, now),
+      onPassOfferShown: async (workspaceId) => {
+        await recordPassOfferShownOnce(createServiceRoleClient(), workspaceId, 'paywall_email_3');
+      },
     });
     const body = {
       ok: true,
