@@ -107,6 +107,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/fastmail-app-password/route.ts': 60,
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
+  'app/api/internal/first-30-days/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/internal/pro-price-notice/dispatch/route.ts': 60,
   'app/api/stripe/webhook/route.ts': 30,
@@ -156,6 +157,7 @@ export const ROUTES = [
   ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
   ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],
+  ['app/admin/growth/first-30-days/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/[key]/update/route.ts', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/create/route.ts', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/override/route.ts', 'arn1', '2+', '-'],
@@ -199,6 +201,7 @@ export const ROUTES = [
   ['app/api/inboxes/fastmail-app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
+  ['app/api/internal/first-30-days/dispatch/route.ts', 'arn1', '2+', 'Resend per email; one IMAP APPEND per stuck-note draft; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/pro-price-notice/dispatch/route.ts', 'arn1', '~6', 'Resend per email, one run on one day; caller is the scheduler'],
