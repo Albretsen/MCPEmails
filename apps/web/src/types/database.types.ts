@@ -2340,6 +2340,8 @@ export type Database = {
       }
       inboxes: {
         Row: {
+          ai_instructions: string | null
+          ai_instructions_updated_at: string | null
           bulk_review_mode: string
           created_at: string
           deleted_at: string | null
@@ -2382,6 +2384,8 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          ai_instructions?: string | null
+          ai_instructions_updated_at?: string | null
           bulk_review_mode?: string
           created_at?: string
           deleted_at?: string | null
@@ -2424,6 +2428,8 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          ai_instructions?: string | null
+          ai_instructions_updated_at?: string | null
           bulk_review_mode?: string
           created_at?: string
           deleted_at?: string | null
