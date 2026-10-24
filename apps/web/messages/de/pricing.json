@@ -240,11 +240,16 @@
     "title": "Bereit, Ihrem Agenten ein Postfach zu geben?",
     "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
     "ctaPrimary": "Kostenlos starten",
-    "ctaSecondary": "Zur Doku"
+    "ctaSecondary": "Zur Doku",
+    "subFounder": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 zum Gründerpreis oben, mit $3 pro Monat für jedes weitere."
   },
   "seasonal": {
     "badge": "Black Week",
     "line": "Black Week: ${firstYear} im ersten Jahr, danach ${renewal} pro Jahr. Sie sparen ${saving}.",
     "ends": "Endet am {date} um {time} Uhr (Osloer Zeit)."
+  },
+  "founder": {
+    "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",
+    "places": "Noch {left} von {total} Plätzen frei"
   }
 }

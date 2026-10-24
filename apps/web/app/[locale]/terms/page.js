@@ -3,6 +3,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { founderTermsVisible } from '@/lib/stripe/founder-offer-server';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -61,6 +62,7 @@ export default async function TermsPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('terms');
+  const showFounderClause = await founderTermsVisible({ locale });
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     privacy: (c) => <Link href="/privacy">{c}</Link>,
@@ -204,6 +206,16 @@ export default async function TermsPage({ params }) {
               {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
               <h4>{t('plansAndPayment.h59')}</h4>
               <p>{t('plansAndPayment.p59')}</p>
+
+              {/* 5.10 The Business founder price clause: only once the offer
+                  has started or a founder subscription exists, never in zh,
+                  and hidden when the check cannot be made. */}
+              {showFounderClause && (
+                <>
+                  <h4>{t('plansAndPayment.h510')}</h4>
+                  <p>{t('plansAndPayment.p510')}</p>
+                </>
+              )}
             </LegalSection>
 
             {/* 6 - Intellectual property */}

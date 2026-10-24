@@ -469,7 +469,9 @@
         "openGuide": "Show me how",
         "later": "Later"
       }
-    }
+    },
+    "businessCapBodyFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
+    "businessCapCtaFounder": "Upgrade to Business, ${price}/mo"
   },
   "commandPalette": {
     "pageOverview": "Overview",
@@ -559,5 +561,10 @@
     "switchCta": "Switch to annual",
     "switchBusy": "Preparing...",
     "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
+  },
+  "founder": {
+    "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
+    "places": "{left} of {total} places left",
+    "priceChanged": "The price changed before you confirmed, so nothing was charged. The amounts above are the price that applies now."
   }
 }

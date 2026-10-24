@@ -102,11 +102,26 @@ export const OG_LOCALE: Record<string, string> = {
  * discount on the same subscription rather than a separate product, and
  * publishing both as sibling Offers reads as two competing prices.
  */
-function planOffers(url: string, { eur = false }: { eur?: boolean } = {}) {
+/**
+ * `founder` is the Business founder offer while it is open on /pricing: the
+ * Business Offer then carries the founder monthly price, valid until its last
+ * day, in USD and (same digits, like every EUR price) in EUR. Absent, every
+ * price is the catalogue's.
+ */
+function planOffers(
+  url: string,
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
+) {
   const usd = (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const price = (plan.monthlyPriceCents / 100).toString();
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
     return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
@@ -130,8 +145,11 @@ function planOffers(url: string, { eur = false }: { eur?: boolean } = {}) {
   // The USD offers above stay exactly as they were.
   const eurOffers = (['personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const price = (plan.monthlyPriceCents / 100).toString();
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
     return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
@@ -383,7 +401,10 @@ export function developersJsonLd(
 export function pricingJsonLd(
   locale: string,
   { title, description }: { title: string; description: string },
-  { eur = false }: { eur?: boolean } = {},
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -404,7 +425,7 @@ export function pricingJsonLd(
           name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url, { eur }),
+        offers: planOffers(url, { eur, founder }),
       },
     ],
   };

@@ -469,7 +469,9 @@
         "openGuide": "Zeigen Sie mir, wie",
         "later": "Später"
       }
-    }
+    },
+    "businessCapBodyFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
+    "businessCapCtaFounder": "Auf Business upgraden, ${price}/Monat"
   },
   "commandPalette": {
     "pageOverview": "Übersicht",
@@ -559,5 +561,10 @@
     "switchCta": "Zur jährlichen Abrechnung wechseln",
     "switchBusy": "Wird vorbereitet...",
     "ended": "Das Black-Week-Angebot ist vorbei, daher wurde nichts abgebucht. Die Beträge oben sind der reguläre Preis."
+  },
+  "founder": {
+    "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",
+    "places": "Noch {left} von {total} Plätzen frei",
+    "priceChanged": "Der Preis hat sich geändert, bevor Sie bestätigt haben, daher wurde nichts berechnet. Die Beträge oben sind der Preis, der jetzt gilt."
   }
 }

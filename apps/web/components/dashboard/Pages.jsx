@@ -44,6 +44,8 @@ import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
+import FounderPriceNote from './FounderPriceNote';
 import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
 import {
   usageCapCheckoutHref,
@@ -1733,6 +1735,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
         const offer = inboxCapOffer(maxInboxes, { businessShaped });
+        // Founder keys for Business while the founder price is open.
+        const capCopy = founderCapCopy(offer, stripePrices);
         // Null when annual cannot be sold for this plan, in which case the
         // notice keeps the monthly-only shape it has always had.
         const annual = annualOfferForPlan(stripePrices, offer.plan);
@@ -1768,9 +1772,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 color: 'var(--fg-3)',
                 lineHeight: 1.5,
               }}>
-                {t(offer.noticeBodyKey)}
+                {t(capCopy.noticeBodyKey)}
               </div>
               <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
+              <FounderPriceNote founder={capCopy.founder} size="sm" />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (
@@ -1855,7 +1860,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   key={o.plan}
                   plan={o.plan}
                   planName={planDisplayName(o.plan)}
-                  monthlyLabel={t(o.noticeCtaKey)}
+                  monthlyLabel={
+                    capCopy.founder && o.plan === 'pro'
+                      ? t(capCopy.noticeCtaKey, { price: formatAmountCents(capCopy.founder.monthlyCents) })
+                      : t(o.noticeCtaKey)
+                  }
                   annualOffer={annualByPlan[o.plan]}
                   interval={capInterval}
                   variant={offer.dual && !o.recommended ? 'secondary' : 'primary'}
@@ -6257,6 +6266,7 @@ function BillingSection({
           planName: data.plan,
           interval: data.interval ?? checkoutInterval,
           preview: data.preview ?? null,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6295,6 +6305,9 @@ function BillingSection({
           ...(pendingChange.preview?.seasonalOffer?.offerId
             ? { offer: pendingChange.preview.seasonalOffer.offerId }
             : {}),
+          // The plan price this quote was priced with. If a different price
+          // applies by now, the server charges nothing and quotes again.
+          ...(pendingChange.quotedPriceId ? { quotedPriceId: pendingChange.quotedPriceId } : {}),
         }),
       });
 
@@ -6352,6 +6365,8 @@ function BillingSection({
           interval: data.interval ?? pendingChange.interval,
           preview: data.preview ?? null,
           offerEnded: data.seasonal_offer_ended === true,
+          priceChanged: data.price_changed === true,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6932,6 +6947,9 @@ function BillingSection({
                           <SeasonalOfferNote offer={stripePrices[plan.id].seasonalOffer} size="sm" />
                         </div>
                       )}
+                      {plan.id === 'pro' && (
+                        <FounderPriceNote founder={stripePrices?.pro?.founder} size="sm" />
+                      )}
                     </div>
 
                     {/* Feature list */}
@@ -7207,6 +7225,17 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
               lineHeight: 1.5,
             }}>
               {trc('seasonal.ended')}
+            </p>
+          )}
+          {change.priceChanged && !change.offerEnded && (
+            <p data-price-changed="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('founder.priceChanged')}
             </p>
           )}
 
