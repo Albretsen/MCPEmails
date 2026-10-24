@@ -3,7 +3,7 @@
 // the follow-up, with every dependency injected (an in-memory store, fake
 // provider calls). Addresses are example.com only.
 
-import { assert, assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import type { ListHeaderRecord } from "./list-unsubscribe.ts";
 import type { OneClickResult } from "./one-click-post.ts";
 import {
@@ -459,7 +459,7 @@ Deno.test("cleanup: rejects a sender key that is not in the plan, before anythin
 Deno.test("cleanup: an expired plan is refused with state expired", async () => {
   const h = harness();
   const { planId } = await scanPlan(h);
-  h.setNow(T0 + 16 * 60_000);
+  h.setNow(T0 + 61 * 60_000);
   const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: ["list:news.example.com"] });
   assertEquals(out.result.isError, true);
   assertEquals(out.result.structuredContent!.state, "expired");
@@ -626,7 +626,10 @@ Deno.test("cleanup: a run killed mid-POST is in progress, then recoverable after
   const { planId } = await scanPlan(h);
   h.deps.postOneClick = () => Promise.reject(new Error("isolate killed"));
   const args = { plan_id: planId, sender_keys: ["list:news.example.com", "from:deals@shop.example.com"], backlog: "keep" };
-  await assertRejects(() => runSubscriptionsCleanup(h.deps, CALLER, args));
+  // A throw is caught (a tool error, not an unhandled -32603); the ledger row stays pending.
+  const killed = await runSubscriptionsCleanup(h.deps, CALLER, args);
+  assertEquals(killed.result.isError, true);
+  assertEquals(killed.logErrorCode, "subscription_internal_error");
   const news = [...h.store.requests.values()].find((r) => r.sender_key === "list:news.example.com")!;
   assertEquals(news.status, "pending");
 
@@ -890,4 +893,125 @@ Deno.test("definitions: strict inputs, loose outputs, honest annotations", () =>
   // The card's continue call sends an empty list: no minItems.
   assertEquals("minItems" in (cleanup.inputSchema.properties as any).sender_keys, false);
   assert(cleanup.description.includes("nothing is ever sent"));
+});
+
+// ── 2026-10-24 fixes ────────────────────────────────────────────────────────
+
+Deno.test("scan: a throw after the provider scan is a tool error with a stable code, not an unhandled -32603", async () => {
+  const h = harness();
+  h.deps.encrypt = () => Promise.reject(new RangeError("Maximum call stack size exceeded"));
+  const out = await runSubscriptionsScan(h.deps, CALLER, {});
+  assertEquals(out.result.isError, true);
+  assertEquals(out.logErrorCode, "scan_postprocess_failed");
+  assertEquals((out.result._meta as any).error_code, "scan_postprocess_failed");
+  assert(out.result.content[0].text.includes("Nothing was changed"));
+  assertEquals(h.store.plans.size, 0);
+
+  const h2 = harness();
+  h2.store.insertPlan = () => Promise.reject(new Error("connection reset"));
+  const out2 = await runSubscriptionsScan(h2.deps, CALLER, {});
+  assertEquals(out2.logErrorCode, "scan_postprocess_failed");
+});
+
+Deno.test("scan and cleanup: any other throw is subscription_internal_error", async () => {
+  const h = harness();
+  h.deps.workspaceEnabled = () => Promise.reject(new Error("boom"));
+  const scan = await runSubscriptionsScan(h.deps, CALLER, {});
+  assertEquals(scan.result.isError, true);
+  assertEquals(scan.logErrorCode, "subscription_internal_error");
+  const cleanup = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: WS, sender_keys: ["list:x"] });
+  assertEquals(cleanup.logErrorCode, "subscription_internal_error");
+});
+
+Deno.test("plan TTL: 60 minutes, and the text says so", async () => {
+  const h = harness();
+  const { out, subs, planId } = await scanPlan(h);
+  assertEquals(subs.expires_at, new Date(T0 + 60 * 60_000).toISOString());
+  assert(out.result.content[0].text.includes("60 minutes after the scan"));
+  assert(SUBSCRIPTION_TOOL_DEFINITIONS[0].description.includes("expires after 60 minutes"));
+  // Still runnable at 59 minutes.
+  h.setNow(T0 + 59 * 60_000);
+  const run = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: ["list:news.example.com"] });
+  assertEquals(run.result.isError, false);
+});
+
+Deno.test("scan text: names every pre-selected sender with its quoted key, and says the card's selection is what runs", async () => {
+  const h = harness();
+  const { out, subs } = await scanPlan(h);
+  const text = out.result.content[0].text;
+  const preselected = subs.senders.filter((s: any) => s.suggested).map((s: any) => s.sender_key);
+  assertEquals(preselected.sort(), ["from:deals@shop.example.com", "list:news.example.com"]);
+  assert(text.includes(`Pre-selected on the card (${preselected.length})`), text);
+  for (const key of preselected) assert(text.includes(`- ${JSON.stringify(key)}: `), key);
+  // Senders that are not pre-selected are not in that block.
+  const block = text.slice(text.indexOf("Pre-selected on the card"), text.indexOf("Whatever is ticked"));
+  const blockKeys = [...block.matchAll(/^- "([^"]+)": /gm)].map((m) => m[1]).sort();
+  assertEquals(blockKeys, preselected, block);
+  assert(text.includes("Whatever is ticked on the card when the user presses its button is what gets unsubscribed"));
+  assert(text.includes("do not say it was left out"));
+  // Keys in the sender list are quoted, so each reads as one token.
+  assert(text.includes(`- "list:news.example.com": "Example News", 4 message(s)`), text);
+});
+
+Deno.test("scan text: says so when nothing is pre-selected", async () => {
+  const h = harness({
+    records: () => [rec({ fromAddress: "a@example.com", listUnsubscribe: "<https://example.com/u>" })],
+  });
+  const { out } = await scanPlan(h);
+  assert(out.result.content[0].text.includes("Pre-selected on the card: none."));
+});
+
+Deno.test("cleanup: an unknown key is refused with the keys it most likely meant and the valid ones", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, {
+    plan_id: planId,
+    sender_keys: ["news.example.com", "Shop Deals", "digest@blog.example.com", "LIST:NEWS.EXAMPLE.COM", "nobody"],
+  });
+  assertEquals(out.result.isError, true);
+  assertEquals(out.logErrorCode, "unknown_sender_keys");
+  const text = out.result.content[0].text;
+  assert(text.includes(`"news.example.com" (did you mean "list:news.example.com"?)`), text);
+  assert(text.includes(`"Shop Deals" (did you mean "from:deals@shop.example.com"?)`), text);
+  assert(text.includes(`"digest@blog.example.com" (did you mean "from:digest@blog.example.com"?)`), text);
+  assert(text.includes(`"LIST:NEWS.EXAMPLE.COM" (did you mean "list:news.example.com"?)`), text);
+  assert(text.includes(`"nobody"`) && !text.includes(`"nobody" (did you mean`), text);
+  assert(text.includes("The senders pre-selected on the card are: ["), text);
+  // A hint, never an alias: nothing ran and the plan is untouched.
+  assertEquals(h.posts.length, 0);
+  assertEquals(h.store.requests.size, 0);
+  assertEquals([...h.store.plans.values()][0].used_at, null);
+});
+
+Deno.test("cleanup: an empty sender_keys without continue names the pre-selected keys and runs nothing", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: [] });
+  assertEquals(out.result.isError, true);
+  assertEquals(out.logErrorCode, "invalid_arguments");
+  const text = out.result.content[0].text;
+  assert(text.includes("sender_keys is empty"), text);
+  assert(text.includes(`"list:news.example.com"`) && text.includes(`"from:deals@shop.example.com"`), text);
+  assert(text.includes("the card runs the cleanup itself"), text);
+  assertEquals(h.posts.length, 0);
+  assertEquals([...h.store.plans.values()][0].used_at, null);
+});
+
+Deno.test("cleanup: a malformed sender_keys says what was wrong and what shape is expected", async () => {
+  const h = harness();
+  const notList = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: WS, sender_keys: { a: 1 } });
+  assertEquals(notList.logErrorCode, "invalid_arguments");
+  assert(notList.result.content[0].text.includes("not an object"));
+  assert(notList.result.content[0].text.includes(`["list:news.example.com", "from:deals@example.com"]`));
+  const badItem = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: WS, sender_keys: ["list:a", { sender_key: "x" }] });
+  assert(badItem.result.content[0].text.includes("sender_keys[1] is an object"), badItem.result.content[0].text);
+});
+
+Deno.test("definitions: sender_keys says where keys come from, without loosening the schema", () => {
+  const cleanup = SUBSCRIPTION_TOOL_DEFINITIONS[1];
+  const keys = (cleanup.inputSchema.properties as any).sender_keys;
+  assertEquals(keys.type, "array");
+  assertEquals(keys.items, { type: "string" });
+  assert(keys.description.includes("copied exactly"));
+  assert(cleanup.description.includes("on the card"));
 });
