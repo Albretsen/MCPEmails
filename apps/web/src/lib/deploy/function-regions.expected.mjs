@@ -209,6 +209,7 @@ export const ROUTES = [
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
   ['app/api/inboxes/[id]/connection/route.ts', 'iad1', '4', 'IMAP or SMTP login probe to the mail host when a half is added'],
   ['app/api/inboxes/[id]/folders/route.ts', 'iad1', '5', 'IMAP login + LIST to the mail host'],
+  ['app/api/inboxes/[id]/instructions/route.ts', 'arn1', '5', '-'],
   ['app/api/inboxes/[id]/route.ts', 'iad1', '8', 'Google / Microsoft token revoke on delete'],
   ['app/api/inboxes/[id]/send-as/route.ts', 'arn1', '4-8', 'Resend (one verification mail on add / resend)'],
   ['app/api/inboxes/[id]/signature/image/route.ts', 'arn1', '4', '-'],
