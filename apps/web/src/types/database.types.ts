@@ -2148,6 +2148,54 @@ export type Database = {
         }
         Relationships: []
       }
+      first30_dry_run_log: {
+        Row: {
+          decision: string
+          detail: Json | null
+          error: string | null
+          first_paid_at: string | null
+          id: number
+          owner_internal: boolean | null
+          reason: string | null
+          recipient_matches_owner: boolean | null
+          run_at: string
+          run_id: string
+          subscription_active: boolean | null
+          template: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          decision: string
+          detail?: Json | null
+          error?: string | null
+          first_paid_at?: string | null
+          id?: never
+          owner_internal?: boolean | null
+          reason?: string | null
+          recipient_matches_owner?: boolean | null
+          run_at?: string
+          run_id: string
+          subscription_active?: boolean | null
+          template?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          decision?: string
+          detail?: Json | null
+          error?: string | null
+          first_paid_at?: string | null
+          id?: never
+          owner_internal?: boolean | null
+          reason?: string | null
+          recipient_matches_owner?: boolean | null
+          run_at?: string
+          run_id?: string
+          subscription_active?: boolean | null
+          template?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       inbox_grandfather_revocations_20260901: {
         Row: {
           distinct_addresses_ever: number
@@ -3580,6 +3628,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      retention_switches: {
+        Row: {
+          auto_go_live_at: string | null
+          decided_at: string | null
+          decision: string | null
+          decision_detail: Json | null
+          key: string
+          last_probe_at: string | null
+          mode: string
+          updated_at: string
+        }
+        Insert: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key?: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       referral_codes: {
         Row: {
