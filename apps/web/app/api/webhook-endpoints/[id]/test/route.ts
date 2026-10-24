@@ -4,7 +4,6 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptToken } from '@/lib/crypto';
 import { resolveWebhookAccess, PLAN_REQUIRED_BODY, isUuid } from '@/lib/webhooks/access';
-import { webhookDb } from '@/lib/webhooks/db';
 import { postWebhook } from '@/lib/webhooks/send';
 import { EVENT_ID_HEADER, EVENT_TYPE_HEADER, SIGNATURE_HEADER, newEventId, signatureHeader } from '@/lib/webhooks/sign';
 
@@ -37,7 +36,7 @@ export async function POST(_request: NextRequest, { params }: Params): Promise<N
     return NextResponse.json({ error: 'Too many test events. Try again in a few minutes.' }, { status: 429 });
   }
 
-  const hooks = webhookDb(createServiceRoleClient());
+  const hooks = createServiceRoleClient();
   const { data: endpoint, error } = await hooks
     .from('webhook_endpoints')
     .select('id, workspace_id, url, secret_ciphertext')

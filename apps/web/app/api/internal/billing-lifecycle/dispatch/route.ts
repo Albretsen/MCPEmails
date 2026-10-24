@@ -65,6 +65,7 @@ import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   composeBillingEmail,
   isUsageTemplate,
+  payloadForQueueRow,
   sendBillingLifecycleEmail,
   sendInputForQueueRow,
   type BillingTemplate,
@@ -273,7 +274,7 @@ export async function POST(request: Request): Promise<Response> {
       // anyway, so the subject line in the report is the one that would have
       // been used and a template that cannot compose shows up here rather than
       // on the day the switch is flipped.
-      const composed = composeBillingEmail(row.template, row.payload ?? {});
+      const composed = composeBillingEmail(row.template, payloadForQueueRow(row));
       wouldSend.push({
         id: row.id,
         template: row.template,

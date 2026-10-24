@@ -5,6 +5,7 @@ import type { Database } from '@/types/database.types';
 type Db = SupabaseClient<Database>;
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
+import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 
 /**
@@ -52,6 +53,8 @@ export type BillingTargetCategory =
   | 'personal_month' | 'personal_year' | 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
 /** The plan a user was on when a paywall / portal event fired. */
 export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
+/** Which retention option a `retention_option_clicked` row is about. */
+export type RetentionOptionCategory = 'pause' | 'downgrade';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
 /** pause_resumed: who ended it. retention_option_clicked: which option. */
@@ -85,6 +88,11 @@ export type ProductFunnelEvent = {
     | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'
     | 'downgrade_scheduled' | 'downgrade_undone'
     | 'inbox_parked' | 'inbox_unparked'
+    // Why a subscriber cancelled, answered after the cancel was done
+    // (/billing/feedback). category = the reason.
+    | 'cancel_reason_submitted'
+    // A pause or downgrade option was clicked (billing card or post-cancel
+    // email). category = 'pause' | 'downgrade'.
     | 'retention_option_clicked'
     // The failed-payment banner's button (/api/stripe/payment-fix). success =
     // sent on to Stripe, failure = bounced to settings.
@@ -95,7 +103,7 @@ export type ProductFunnelEvent = {
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory
-    | PlanChangeCategory;
+    | PlanChangeCategory | CancelReason | RetentionOptionCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
