@@ -613,6 +613,7 @@ import {
   firstUseAlreadyRecorded,
   settleAfterResponse,
 } from "./request-pipeline.ts";
+import { kickBillingDispatch } from "./billing-dispatch-kick.ts";
 import {
   GATE_RPC,
   gateParams,
@@ -4072,6 +4073,12 @@ async function queueUsageEmail(input: UsageEmailInput): Promise<void> {
         workspace_id: input.workspaceId, template: input.template,
         error: error.message, error_code: error.code,
       });
+    }
+    // Queued just now (not a 23505 replay) and due now: ask the web
+    // dispatcher to send it instead of waiting for the five-minute cron.
+    // Fire and forget; see billing-dispatch-kick.ts.
+    if (!error) {
+      kickBillingDispatch({ secret: Deno.env.get("DISPATCH_SECRET"), appUrl: APP_URL });
     }
   } catch (error) {
     console.error("[mcp-server] usage_email_queue_threw", {

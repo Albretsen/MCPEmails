@@ -22,6 +22,11 @@
  * on a later retry, inserts nothing the second time. That is the layer that
  * catches what the event-id ledger cannot: two DIFFERENT event ids describing
  * the same failed invoice.
+ *
+ * SENT RIGHT AWAY. A row due now (the cancellation question, the pause
+ * receipt, the first dunning email, a card-expiry warning) is dispatched
+ * after the current response by dispatch-kick.ts, by id; the five-minute cron
+ * sends the scheduled rows and is the fallback for anything the kick missed.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -33,6 +38,7 @@ import {
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
 import { scheduledToStop } from '@/lib/analytics/revenue-math';
+import { dueIds, kickDueRows } from '@/lib/billing/dispatch-kick';
 import type { Database } from '@/types/database.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -68,7 +74,7 @@ async function insertRows(
         onConflict: 'stripe_customer_id,template,scope_key',
         ignoreDuplicates: true,
       })
-      .select('id');
+      .select('id, send_after');
 
     if (error) {
       console.error(`[lifecycle-queue] ${label}: insert failed: ${error.message}`);
@@ -78,6 +84,9 @@ async function insertRows(
     console.log(
       `[lifecycle-queue] ${label}: queued ${queued} of ${rows.length} (the rest were already queued)`,
     );
+    // Only rows THIS call inserted (ON CONFLICT DO NOTHING returns none for a
+    // replay) and only those due now; a 3-day reminder waits for the cron.
+    await kickDueRows(dueIds(data), label);
     return queued;
   } catch (err) {
     console.error(`[lifecycle-queue] ${label}: unexpected failure, swallowed:`, {
@@ -172,9 +181,9 @@ export async function isGrandfathered(
  * one silently-deduplicated one. That is correct: they are two separate
  * failures and the second one deserves to be told.
  *
- * The first row is due immediately, which the dispatcher's five-minute cadence
- * turns into "within an hour of the decline" with about eleven cycles to spare.
- * That timing is the single highest-leverage thing in the sequence: the
+ * The first row is due immediately and is sent right after the webhook
+ * responds (dispatch-kick.ts), with the five-minute cron as the fallback. That
+ * timing is the single highest-leverage thing in the sequence: the
  * customer's own bank notification is still on their phone, so the email
  * explains a thing they are already looking at instead of introducing one.
  */
@@ -477,8 +486,8 @@ export async function cancelOpenSequence(options: {
  * is true at exactly the moment Stripe closes the subscription, and that moment
  * is this event. Cancelling it, which is what this function used to do, deleted
  * the one email in the sequence written for precisely this and left the
- * customer with no final word at all. Its `send_after` is moved to now so the
- * next dispatcher tick picks it up.
+ * customer with no final word at all. Its `send_after` is moved to now and it
+ * is dispatched right after the response (the cron is the fallback).
  *
  * The dispatcher still re-reads the invoice before sending it, so a
  * subscription that was deleted because the customer cancelled while an unpaid
@@ -497,17 +506,20 @@ export async function cancelDunningForCustomer(
   });
 
   try {
-    const { error } = await db
+    const { data, error } = await db
       .from('billing_email_sends')
       .update({ send_after: new Date().toISOString() })
       .eq('stripe_customer_id', stripeCustomerId)
       .eq('template', 'dunning_14')
       .is('sent_at', null)
-      .is('cancelled_at', null);
+      .is('cancelled_at', null)
+      .select('id, send_after');
     if (error) {
       console.error(
         `[lifecycle-queue] could not bring dunning_14 forward for ${stripeCustomerId}: ${error.message}`,
       );
+    } else {
+      await kickDueRows(dueIds(data), `dunning_14 brought forward ${stripeCustomerId}`);
     }
   } catch (err) {
     console.error('[lifecycle-queue] bringing dunning_14 forward failed, swallowed:', {
