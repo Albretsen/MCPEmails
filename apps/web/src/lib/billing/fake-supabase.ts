@@ -156,6 +156,10 @@ class Query implements PromiseLike<Result> {
     this.pending.filters.push({ op: 'notIs', column, value });
     return this;
   }
+  lte(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'lte', column, value });
+    return this;
+  }
   limit(n: number): this {
     this.pending.limit = n;
     return this;
