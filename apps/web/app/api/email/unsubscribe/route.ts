@@ -94,7 +94,20 @@ async function optOut(
       .update({ unsubscribed_categories: [...existing, category] })
       .eq('id', user.id);
 
-    return { ok: !error, category };
+    if (error) {
+      // The category could not be stored (for example a category the
+      // database CHECK does not know yet, such as activity_summary before
+      // 20261024170000_first_30_days.sql is applied). Fall back to the global
+      // opt-out: the person asked to stop, and stopping more is the only safe
+      // direction to be wrong in.
+      const { error: globalError } = await supabase
+        .from('users')
+        .update({ unsubscribed_at: new Date().toISOString() })
+        .eq('id', user.id);
+      return { ok: !globalError, category: globalError ? category : 'all' };
+    }
+
+    return { ok: true, category };
   } catch {
     return { ok: false, category };
   }
