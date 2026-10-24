@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker opptil 10.",
     "multiInboxCompact": "Har du også post@, salg@ eller faktura@? Koble dem til, så jobber agenten med alle firmaets postkasser fra én samtale.",
     "multiInboxCompactUpgrade": "Har du også post@, salg@ eller faktura@? Agenten kan jobbe med alle firmaets postkasser fra én samtale. Postkasse nummer to krever en betalt plan.",
-    "multiInboxCta": "Legg til en postkasse"
+    "multiInboxCta": "Legg til en postkasse",
+    "waitingTitle": "Venter på første kall",
+    "waitingDesc": "Innboksen er koblet til. Koble til AI-appen din og spør den om noe. Siden oppdateres når det første kallet kommer.",
+    "connectAppTitle": "Koble til AI-appen din",
+    "connectAppDesc": "Lim inn denne URL-en i AI-appen din, og velg den nedenfor for å se stegene.",
+    "connectAppDone": "AI-appen din er koblet til MCPEmails.",
+    "askTitle": "Spør den om noe",
+    "askDesc": "Start en ny samtale og lim inn en av disse.",
+    "copyPrompt": "Kopier forespørsel",
+    "prompts": {
+      "unread": "Oppsummer de uleste e-postene mine fra i dag",
+      "bank": "Finn den siste e-posten fra banken min og fortell meg hva den sier",
+      "draftReply": "Skriv et utkast til svar på den nyeste e-posten min, men ikke send det"
+    },
+    "clientToggle": {
+      "claude": "I Claude klikker du + i meldingsfeltet, åpner Connectors og sjekker at MCPEmails er slått på for samtalen. Ellers svarer Claude uten e-posten din.",
+      "chatgpt": "I ChatGPT klikker du + i hver nye samtale, velger Developer mode og så MCPEmails-appen. Ellers ser ikke ChatGPT e-posten din."
+    },
+    "itWorksTitle": "Det virker",
+    "itWorksDesc": "AI-appen din gjorde nettopp sitt første kall til MCPEmails. Fortsett i samme samtale.",
+    "waitingLive": "Siden oppdateres av seg selv når det første kallet kommer.",
+    "waitingStopped": "Fortsatt ingen kall. Last inn siden på nytt etter at du har prøvd en forespørsel."
   },
   "overview": {
     "title": "Oversikt",
@@ -431,7 +452,6 @@
       "nextStep1": "I claude.ai eller Claude Desktop, åpne Innstillinger → Koblinger → Legg til egendefinert kobling.",
       "nextStep2": "Lim inn URL-en over. OAuth-klienter kobler til med ett klikk.",
       "nextStep3": "Spør deretter Claude:",
-      "nextPrompt": "Oppsummer mine uleste e-poster fra i dag.",
       "nextGuide": "Trinn-for-trinn-guide",
       "warning": "Lagre denne nøkkelen et trygt sted. Den kan ikke vises igjen. Hvis du mister den, opphev denne nøkkelen og opprett en ny.",
       "acknowledge": "Jeg har kopiert API-nøkkelen min og forstår at den ikke kan vises igjen.",
