@@ -64,7 +64,11 @@ export type ProductFunnelEvent = {
     | 'multi_inbox_prompt'
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
-    | 'paywall_clicked';
+    | 'paywall_clicked'
+    // Activation rescue, written from the dashboard through
+    // /api/analytics/activation-event (lib/analytics/activation-events.ts).
+    | 'connect_fix_shown' | 'connect_fix_link_clicked'
+    | 'first_call_prompt_copied' | 'waiting_state_shown';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
