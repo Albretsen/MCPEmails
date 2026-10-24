@@ -215,6 +215,8 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
   ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
+  ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024235300)
+  ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
   ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
@@ -250,6 +252,25 @@ BEGIN
     ALTER TABLE public.inboxes
       ADD CONSTRAINT inboxes_folder_overrides_check
       CHECK (public.inbox_folder_overrides_valid(folder_overrides));
+  END IF;
+END
+$$;
+-- The rule for ai_instructions, as in the hosted migration 20261024235300:
+-- trimmed, 1 to 2000 characters, or NULL.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_ai_instructions_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_ai_instructions_check
+      CHECK (
+        ai_instructions IS NULL
+        OR (char_length(ai_instructions) BETWEEN 1 AND 2000
+            AND ai_instructions = btrim(ai_instructions, E' \t\r\n'))
+      );
   END IF;
 END
 $$;

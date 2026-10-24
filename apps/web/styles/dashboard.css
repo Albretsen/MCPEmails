@@ -1249,6 +1249,11 @@ body { background: var(--bg-page); }
 .inbox-advanced-details summary span:only-child { color: var(--fg-1); font-size: 13px; font-weight: 600; }
 .inbox-advanced-details [data-folder-overrides] { padding: 0 0 12px; }
 .inbox-advanced-details [data-connection-type] { padding: 0 0 14px; }
+.inbox-advanced-details [data-inbox-instructions] { padding: 0 0 14px; }
+.inbox-instructions-text { font: 13px/1.5 var(--font-sans); min-height: 96px; padding: 8px; resize: vertical; }
+.inbox-instructions-actions { align-items: center; display: flex; gap: 10px; justify-content: space-between; margin-top: 6px; }
+.inbox-instructions-count { font: 12px var(--font-sans); }
+.inbox-instructions-upsell a { color: var(--fg-1); text-decoration: underline; }
 .folder-override-control input.input { flex: 1 1 200px; height: 32px; max-width: 100%; min-width: 0; padding: 0 8px; }
 .folder-overrides-title { margin: 0 0 2px; color: var(--fg-1); font: 600 13.5px var(--font-sans); }
 .folder-overrides-help { margin: 0 0 10px; color: var(--fg-2); font: 12.5px/1.5 var(--font-sans); }

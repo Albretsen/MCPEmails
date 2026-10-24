@@ -146,6 +146,8 @@ function answerDb(w: World, method: string, target: string, wantsObject: boolean
     return json(w.dbRows[target]);
   }
   if (method === "GET") return wantsObject ? json(null) : json(w.dbRows[target] ?? []);
+  // An RPC answers the rows a test put under "rpc/<name>"; otherwise nothing.
+  if (method === "POST" && target.startsWith("rpc/") && w.dbRows[target]) return json(w.dbRows[target]);
   return new Response(null, { status: 204 });
 }
 

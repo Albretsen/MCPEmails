@@ -3,6 +3,7 @@ import { after } from 'next/server';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { decideProFeatureAccess, PRO_FEATURES_PUBLIC_SWITCH } from '@/lib/plans/pro-features';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
@@ -796,8 +797,12 @@ export default async function DashboardPage({ params }) {
   // case the Overview shows a plain call count and no bar, as it did before
   // the allowance existed.
   let actionAllowance = null;
+  // The Pro feature gate's two switches (lib/plans/pro-features.ts). Each in
+  // its own query, never in the shared workspace select above: before the
+  // gate's migration lands a missing column only closes the gate. Fails closed.
+  let proGateSwitches = { rolloutEnabled: false, publicLaunch: false };
   if (workspace) {
-    const [{ data: memberRow }, { data: effectivePlanRows }, allowance] = await Promise.all([
+    const [{ data: memberRow }, { data: effectivePlanRows }, allowance, proRollout, proLaunch] = await Promise.all([
       supabase
         .from('workspace_members')
         .select('role')
@@ -813,7 +818,14 @@ export default async function DashboardPage({ params }) {
       // user_billing row) is not used for it. The viewer's membership is
       // established by the RLS-filtered workspace list above.
       fetchWorkspaceActionAllowance(createServiceRoleClient(), workspace.id),
+      supabase.from('workspaces').select('pro_features_enabled').eq('id', workspace.id).maybeSingle(),
+      // Server-owned switch (no grant to authenticated), so the service role.
+      createServiceRoleClient().from('pricing_switches').select('enabled').eq('key', PRO_FEATURES_PUBLIC_SWITCH).maybeSingle(),
     ]);
+    proGateSwitches = {
+      rolloutEnabled: !proRollout.error && proRollout.data?.pro_features_enabled === true,
+      publicLaunch: !proLaunch.error && proLaunch.data?.enabled === true,
+    };
     userRole = memberRow?.role ?? 'member';
     effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
     actionAllowance = allowance;
@@ -847,6 +859,13 @@ export default async function DashboardPage({ params }) {
   // Read here for the same reason as the grandfather above.
   const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
+  // Pro features (lib/plans/pro-features.ts): visible = rollout flag OR launch
+  // switch, allowed = visible AND Pro or Business. Only the effective plan the
+  // RPC resolved counts; an unresolved plan stays closed.
+  const proFeatureAccess = decideProFeatureAccess({
+    plan: effectiveWorkspacePlan?.plan ?? null,
+    ...proGateSwitches,
+  });
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -1022,6 +1041,8 @@ export default async function DashboardPage({ params }) {
         // The referral program: OUR rollout gate, internal only for now.
         // Without it there is no Invite entry, tile or code field.
         referralEnabled,
+        // The Pro feature gate for this workspace: { visible, allowed }.
+        proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,

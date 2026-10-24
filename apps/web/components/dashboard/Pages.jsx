@@ -36,6 +36,7 @@ import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
+import { InboxInstructionsEditor } from './InboxInstructionsEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
@@ -1588,7 +1589,7 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -2161,6 +2162,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           draftEditorRolledOut={draftEditorRolledOut}
           chatConfirmRolledOut={chatConfirmRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
+          proFeatures={proFeatures}
           canManageInbox={userRole !== 'viewer'}
           // The review gate is owner/admin-only (lib/workspace/roles.ts).
           canManageReview={userRole !== 'viewer' && userRole !== 'member'}
@@ -3317,9 +3319,19 @@ export function folderChoiceAvailable(inbox) {
     && inbox.status !== 'pending';
 }
 
+/**
+ * "Instructions for your AI" (Pro feature inbox_instructions) shows only when
+ * the feature is VISIBLE for the workspace (internal rollout or the launch
+ * switch, lib/plans/pro-features.ts), for any connected inbox. Before launch a
+ * customer gets nothing new here, not even a request.
+ */
+export function inboxInstructionsAvailable(inbox, proFeatures) {
+  return proFeatures?.visible === true && inbox.status !== 'pending';
+}
+
 /** Whether the inbox detail has anything to show under Advanced. */
-export function inboxAdvancedAvailable(inbox) {
-  return folderChoiceAvailable(inbox) || connectionTypeAvailable(inbox);
+export function inboxAdvancedAvailable(inbox, proFeatures = null) {
+  return folderChoiceAvailable(inbox) || connectionTypeAvailable(inbox) || inboxInstructionsAvailable(inbox, proFeatures);
 }
 
 /**
@@ -3327,18 +3339,21 @@ export function inboxAdvancedAvailable(inbox) {
  * generic IMAP/SMTP inbox, then folder choice. Its contents mount only while
  * it is open, so opening an inbox never dials its mail server.
  */
-export function InboxAdvancedSection({ inbox, t, onConnectionChanged }) {
+export function InboxAdvancedSection({ inbox, t, onConnectionChanged, proFeatures = null }) {
   const [open, setOpen] = useState(false);
   return (
     <details className="inbox-sending-details inbox-advanced-details" onToggle={e => setOpen(e.currentTarget.open)}>
       <summary><span>{t('inboxes.detail.advanced')}</span></summary>
       {open && connectionTypeAvailable(inbox) && <ConnectionTypeEditor inbox={inbox} t={t} onChanged={onConnectionChanged} />}
       {open && folderChoiceAvailable(inbox) && <FolderOverridesEditor inbox={inbox} t={t} />}
+      {open && inboxInstructionsAvailable(inbox, proFeatures) && (
+        <InboxInstructionsEditor inbox={inbox} t={t} allowed={proFeatures?.allowed === true} />
+      )}
     </details>
   );
 }
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -3478,7 +3493,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             </details>
           )}
 
-          {canManageInbox && inboxAdvancedAvailable(inbox) && <InboxAdvancedSection inbox={inbox} t={t} onConnectionChanged={onConnectionChanged} />}
+          {canManageInbox && inboxAdvancedAvailable(inbox, proFeatures) && <InboxAdvancedSection inbox={inbox} t={t} onConnectionChanged={onConnectionChanged} proFeatures={proFeatures} />}
 
           {!canManageInbox ? (
             <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>

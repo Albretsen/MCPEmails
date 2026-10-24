@@ -381,6 +381,25 @@
           "unreachable": "Could not connect to the {server} server with these settings. Nothing was changed.",
           "save": "Could not save. Try again."
         }
+      },
+      "instructions": {
+        "title": "Instructions for your AI",
+        "help": "Every AI client that uses this inbox sees these, for example who to sign as or which mail to leave alone.",
+        "placeholder": "This is the support inbox. Sign as the Support Team. Never reply to invoices; move them to Finance.",
+        "loading": "Loading…",
+        "count": "{count} of {max} characters",
+        "save": "Save",
+        "saved": "Saved. AI clients see these instructions from now on.",
+        "cleared": "Saved. This inbox has no instructions.",
+        "proOnly": "Instructions for your AI are part of the Pro plan.",
+        "upgrade": "See plans",
+        "errors": {
+          "load": "Could not load the instructions. Try again.",
+          "save": "Could not save. Try again.",
+          "too_long": "Use at most {max} characters.",
+          "unavailable": "Instructions are not available yet.",
+          "pro_feature_required": "Instructions for your AI need the Pro plan."
+        }
       }
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",
