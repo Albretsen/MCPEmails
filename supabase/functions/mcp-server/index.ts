@@ -516,6 +516,7 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import type { ListHeaderScanContext } from "./subscription-scan.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -19817,6 +19818,60 @@ function searchMessagesForProvider(
         .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     default:
       return Promise.reject(new Error("unsupported_provider"));
+  }
+}
+
+/**
+ * The provider context `fetchListHeaderRecords` (subscription-scan.ts) scans
+ * with: subscription cleanup's read of List-Unsubscribe headers. Nothing on
+ * the request path calls it yet; the `subscriptions_scan` tool will.
+ *
+ * IMAP needs the caller's session (the caller owns and closes it) and resolves
+ * the Junk/Spam mailbox on it with a strict resolve (no `forRead`: that only
+ * unlocks the archive fallback, and imap-folder-target.test.ts pins its call
+ * sites); an account without one scans the inbox alone. Gmail and Outlook get an
+ * authorized fetch with a token refreshed once for the scan. The budget is the
+ * caller's, so the scan and whatever the tool does after it spend one pot.
+ */
+async function subscriptionScanContextFor(
+  inbox: InboxRow,
+  budget: WorkBudget,
+  session: ImapSession<ImapClient> | null,
+): Promise<ListHeaderScanContext> {
+  switch (inbox.provider) {
+    case "gmail": {
+      const accessToken = await withFreshGmailToken(inbox);
+      return {
+        provider: "gmail",
+        budget,
+        fetch: (path) =>
+          fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+      };
+    }
+    case "outlook": {
+      const accessToken = await withFreshOutlookToken(inbox);
+      return { provider: "outlook", budget, fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl) };
+    }
+    default: {
+      if (!session) throw new Error("subscription scan: an IMAP inbox needs a session");
+      let junkFolder: string | null = null;
+      try {
+        junkFolder = await resolveFolderId(inbox, "junk", { strict: true, session });
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        // No Junk mailbox (or an ambiguous one): scan the inbox alone.
+        junkFolder = null;
+      }
+      return {
+        provider: "imap",
+        budget,
+        inboxFolder: "INBOX",
+        junkFolder,
+        select: (folder) => session.select(imapMailboxForServerFolder(folder)),
+      };
+    }
   }
 }
 
