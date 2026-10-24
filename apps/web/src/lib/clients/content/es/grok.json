@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Grok: conector MCP personalizado",
+    "description": "Añade una bandeja real a Grok como conector MCP personalizado. Pega una URL en grok.com, inicia sesión con OAuth y lee, busca, envía y programa correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Grok + correo",
+    "titleLine1": "Conecta tu bandeja a Grok",
+    "titleLine2": "como conector MCP personalizado",
+    "lead": "Añade una URL en Connectors de grok.com y Grok podrá leer, buscar, enviar, responder, reenviar, programar y organizar correo en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Ve a grok.com/connectors, haz clic en New Connector, elige Custom, pega https://mcpemails.com/api/mcp como URL del servidor MCP, inicia sesión en MCPEmails cuando Grok te lo pida y aprueba los permisos. En Grok Business y Enterprise, primero un administrador del equipo añade el servidor en la consola de xAI."
+  },
+  "method": {
+    "title": "Cómo se conecta Grok: OAuth, sin clave de API",
+    "body": "Grok ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre Connectors en grok.com",
+      "p": "Ve a <code>grok.com/connectors</code> con tu sesión de Grok iniciada."
+    },
+    {
+      "h": "Añade un conector personalizado",
+      "p": "Haz clic en <b>New Connector</b> y elige <b>Custom</b>. Pega <code>https://mcpemails.com/api/mcp</code> como URL del servidor MCP."
+    },
+    {
+      "h": "Inicia sesión y aprueba",
+      "p": "Completa la autenticación que te pide Grok: te redirige a MCPEmails, donde inicias sesión y apruebas los permisos que quieres que tenga Grok. Después Grok descubre las herramientas que expone el servidor."
+    },
+    {
+      "h": "Pregunta por tu correo",
+      "p": "Abre un chat y pregunta algo como \"¿qué bandejas tengo?\" o \"resume mi correo sin leer\". Grok usa las herramientas de un conector cuando tu pregunta tiene que ver con él."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En Business y Enterprise, primero lo añade un administrador",
+      "p": "En los planes Grok Business y Enterprise, los miembros no pueden añadir el servidor por su cuenta hasta que un administrador del equipo lo habilite. El administrador inicia sesión en <code>console.x.ai</code>, elige el equipo, abre <b>Grok Business</b>, <b>Connectors</b>, hace clic en <b>+ Add Connector</b>, elige <b>Other</b> e introduce <code>https://mcpemails.com/api/mcp</code>. Para ello necesita permisos Team Read-Write. Después, cada miembro conecta su propia cuenta de MCPEmails en <code>grok.com/connectors</code>."
+    },
+    {
+      "h": "Configúralo en la web",
+      "p": "xAI solo documenta cómo añadir un conector personalizado en <code>grok.com/connectors</code>, sin pasos para las apps de iOS o Android. Añade el conector desde un navegador."
+    },
+    {
+      "h": "Solo lectura es una opción válida, y a menudo la mejor para empezar",
+      "p": "La pantalla de consentimiento te permite darle a Grok únicamente <code>read:email</code> y <code>search:email</code>. Con eso basta para clasificar, resumir y encontrar cosas, y deja fuera cualquier acción irreversible mientras decides hasta dónde quieres llegar. Si concedes <code>send:email</code>, el propietario de una bandeja puede activar la aprobación humana para que cada envío espere a una persona."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Grok?",
+      "a": "Ve a grok.com/connectors, haz clic en New Connector, elige Custom, pega https://mcpemails.com/api/mcp, inicia sesión en MCPEmails y aprueba los permisos. A partir de ahí Grok tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Necesito una clave de API para Grok?",
+      "a": "No. Grok ejecuta el flujo OAuth cuando añades el conector, así que no pegas nada secreto en Grok. Hay una clave bearer disponible para otros clientes que no pueden hacerlo."
+    },
+    {
+      "q": "¿Es lo mismo que el conector de Gmail integrado en Grok?",
+      "a": "No. Los conectores integrados de Gmail y Outlook de Grok solo dan acceso a esos dos proveedores. MCPEmails es un conector personalizado que da acceso a Outlook, Microsoft 365, Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP con una sola conexión, con los permisos que tú eliges y aprobación humana opcional de los envíos."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Grok de esta forma?",
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. Grok los ve todos a través de la misma conexión: primero llama a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Grok enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Grok tu bandeja real",
+    "sub": "Una URL, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -73,6 +73,22 @@ async function _fetchStripePrices(): Promise<StripePricesMap> {
         }
       }
 
+      // The static cents are a fallback, which also means a wrong price id in
+      // an env var can hide behind them: the page would show the catalogue
+      // amount while checkout charges whatever that id really costs. Say so
+      // loudly when the two disagree. (Retrieve failures stay silent: those
+      // happen at build time without network and are expected.)
+      for (const [label, live, expected] of [
+        ['monthly', monthlyCents, plan.monthlyPriceCents],
+        ['yearly', yearlyCents, plan.yearlyPriceCents],
+      ] as const) {
+        if (live != null && expected != null && live !== expected) {
+          console.error(
+            `[stripe-prices] amount mismatch for ${plan.id} ${label}: Stripe ${live}, catalogue ${expected}`,
+          );
+        }
+      }
+
       result[plan.id] = {
         monthlyCents,
         yearlyCents,

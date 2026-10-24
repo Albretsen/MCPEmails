@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "E-Mail mit Perplexity verbinden: Custom-MCP-Connector einrichten",
+    "description": "Fügen Sie Perplexity per Custom Remote Connector ein echtes Postfach hinzu. Eine URL einfügen, OAuth wählen und anmelden. Kein API-Schlüssel. Pro, Max und Enterprise."
+  },
+  "hero": {
+    "eyebrow": "Perplexity + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Perplexity",
+    "titleLine2": "als Custom Connector",
+    "lead": "Fragen Sie Perplexity nach Ihren eigenen E-Mails, gleich neben der Websuche. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie in einem Perplexity-Tarif Pro, Max oder Enterprise die Seite Plugins, wählen Sie Add custom, dann Connector und Add MCP connector. Wählen Sie Remote, fügen Sie https://mcpemails.com/api/mcp als MCP Server URL ein, wählen Sie unter Authentication OAuth, klicken Sie auf Add und dann auf die Connector-Karte, um sich bei MCPEmails anzumelden."
+  },
+  "method": {
+    "title": "So verbindet sich Perplexity: OAuth, kein API-Schlüssel",
+    "body": "Die Custom Remote Connectors von Perplexity unterstützen OAuth 2.0 mit Discovery, und MCPEmails veröffentlicht seine Endpunkte unter <code>/.well-known/oauth-authorization-server</code>. Perplexity registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also weder Client ID noch Client Secret anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Add custom in Perplexity öffnen",
+      "p": "Öffnen Sie auf perplexity.ai in der Seitenleiste <b>Plugins</b> und wählen Sie <b>Add custom</b>, dann <b>Connector</b> und dann <b>Add MCP connector</b>. Sehen Sie noch das ältere Menü, gehen Sie stattdessen zu <b>Customize</b>, <b>Connectors</b>."
+    },
+    {
+      "h": "Server eintragen",
+      "p": "Wählen Sie <b>Remote</b>, geben Sie unter <b>Name</b> etwa MCPEmails ein und fügen Sie <code>https://mcpemails.com/api/mcp</code> als <b>MCP Server URL</b> ein. Setzen Sie <b>Authentication</b> auf <b>OAuth</b> und <b>Transport</b> auf <b>Streamable HTTP</b>. Perplexity erkennt unsere OAuth-Endpunkte und registriert sich selbst, Sie müssen also weder Client ID noch Client Secret ausfüllen."
+    },
+    {
+      "h": "Hinzufügen und anmelden",
+      "p": "Setzen Sie das Häkchen bei der Bestätigung und klicken Sie auf <b>Add</b>. Klicken Sie dann auf die Connector-Karte, um die Authentifizierung zu starten, melden Sie sich bei MCPEmails an und geben Sie die Scopes frei, die Perplexity erhalten soll."
+    },
+    {
+      "h": "Für Ihre Frage auswählen",
+      "p": "Starten Sie eine neue Anfrage und tippen Sie <code>@MCPEmails</code>, oder klicken Sie im Suchfeld auf das Symbol <b>+</b>, öffnen Sie <b>Connectors and sources</b> und wählen Sie MCPEmails. Fragen Sie dann nach Ihren E-Mails, zum Beispiel welche Nachrichten heute eingegangen sind."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Kostenlose Konten erhalten keine Custom Connectors",
+      "p": "Eigene MCP-Server sind bei Perplexity in den Tarifen Pro, Max und Enterprise verfügbar. Bei Enterprise können Mitglieder eigene Custom Connectors erst hinzufügen, wenn ein Admin <b>Allow members to add custom connectors</b> aktiviert, was standardmäßig deaktiviert ist. Ein Admin kann MCPEmails auch einmal für die ganze Organisation hinzufügen."
+    },
+    {
+      "h": "Hinzufügen ist nicht dasselbe wie Verwenden",
+      "p": "Manche Oberflächen rufen einen Connector nur auf, wenn Sie ihn für diesen Chat auswählen, über die Connector-Auswahl oder eine @-Erwähnung. Steht Sources oder Focus nur auf Web, Academic oder Social, ruft Perplexity keine verbundenen Apps auf, antwortet aus dem Web und wirkt so, als könne es Ihr Postfach nicht sehen. Prüfen Sie beides, bevor Sie einen Fehler in der Verbindung vermuten."
+    },
+    {
+      "h": "Richten Sie den Connector im Web ein, nicht mobil",
+      "p": "Perplexity weist darauf hin, dass ein Connector im Web verfügbar sein kann, mobil aber noch nicht. Fügen Sie MCPEmails im Browser auf perplexity.ai hinzu. Wird die Autorisierung nicht abgeschlossen, erlauben Sie Pop-ups und websiteübergreifende Cookies für perplexity.ai, denn ein Werbeblocker kann das OAuth-Fenster blockieren."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Perplexity?",
+      "a": "Öffnen Sie Plugins, wählen Sie Add custom, dann Connector und Add MCP connector. Wählen Sie Remote, fügen Sie https://mcpemails.com/api/mcp als MCP Server URL ein, setzen Sie Authentication auf OAuth, klicken Sie auf Add, dann auf die Connector-Karte, und melden Sie sich bei MCPEmails an. Tippen Sie in einer Anfrage @MCPEmails oder wählen Sie es unter Connectors and sources."
+    },
+    {
+      "q": "Welchen Perplexity-Tarif brauche ich?",
+      "a": "Custom MCP Connectors gibt es in den Tarifen Pro, Max und Enterprise. Bei Enterprise fügt ein Admin den Connector entweder für die Organisation hinzu oder erlaubt Mitgliedern, eigene hinzuzufügen."
+    },
+    {
+      "q": "Brauche ich für Perplexity einen API-Schlüssel?",
+      "a": "Nein. Perplexity durchläuft den OAuth-Ablauf, wenn Sie auf die Connector-Karte klicken, und MCPEmails unterstützt dynamische Client-Registrierung. Sie müssen also weder Client ID noch Client Secret noch einen Schlüssel einfügen. Für andere Clients, die kein OAuth beherrschen, gibt es einen Bearer-Schlüssel."
+    },
+    {
+      "q": "Welche Postfächer erreicht Perplexity auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Perplexity sieht alle über dieselbe Verbindung: Es ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Perplexity E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Durchsuchen Sie Ihr Postfach wie das Web",
+    "sub": "Ein Connector, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}
