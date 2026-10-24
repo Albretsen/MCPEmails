@@ -49,8 +49,17 @@ export const INBOX_INSTRUCTIONS_NOTE_TOOLS: ReadonlySet<string> = new Set([
 
 // Trim only whitespace a person would not mean (spaces, tabs, line breaks);
 // the database CHECK trims the same set.
+// A plain scan, not a regex: `[ \t\r\n]+$` backtracks polynomially on long
+// whitespace runs (CodeQL js/polynomial-redos).
+function isTrimmable(code: number): boolean {
+  return code === 0x20 || code === 0x09 || code === 0x0d || code === 0x0a;
+}
 function trimInstructions(text: string): string {
-  return text.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+  let start = 0;
+  let end = text.length;
+  while (start < end && isTrimmable(text.charCodeAt(start))) start++;
+  while (end > start && isTrimmable(text.charCodeAt(end - 1))) end--;
+  return text.slice(start, end);
 }
 
 /**
