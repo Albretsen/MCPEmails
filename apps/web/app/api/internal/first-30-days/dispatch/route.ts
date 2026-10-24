@@ -8,12 +8,17 @@
  * Called hourly by pg_cron through public.dispatch_first_30_days()
  * (20261024170000_first_30_days.sql).
  *
- * OFF BY DEFAULT, TWICE.
+ * MODE (src/lib/retention/first-30-days-go-live.ts):
  *   FIRST30_ENABLED   unless `on`, return immediately. No DB access.
- *   FIRST30_DRY_RUN   unless `false`, decide and render only: nothing is
- *                     claimed, assigned, drafted or sent.
+ *   FIRST30_DRY_RUN   `false` forces live, any other value forces dry run.
+ *                     Unset: retention_switches('first30').mode decides, and
+ *                     an unreadable row means dry run.
  *   ?dry_run=1        forces a dry run for one call. A query string can only
  *                     make the route quieter, never louder.
+ *
+ * Dry runs log every decision to first30_dry_run_log and probe the draft
+ * mailbox once a day. On the first run at or after auto_go_live_at the route
+ * evaluates the go-live criteria once and switches itself live or holds.
  *
  * AUTH. `X-Dispatch-Secret`, constant-time compared against DISPATCH_SECRET,
  * like the paywall follow-up dispatcher. No body is read.
@@ -33,15 +38,17 @@ import {
   first30MaxPerRun,
   first30Mode,
   first30StartAt,
-  runFirst30,
   type Sender,
 } from '@/lib/retention/first-30-days';
 import { SupabaseFirst30Store } from '@/lib/retention/first-30-days-store';
 import {
+  createDraftMailboxProbe,
   createImapDraftWriter,
   createInternalNoticeWriter,
   firstThatWorks,
 } from '@/lib/retention/first-30-days-draft';
+import { dispatchFirst30 } from '@/lib/retention/first-30-days-go-live';
+import { SupabaseGoLiveStore } from '@/lib/retention/first-30-days-go-live-store';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -91,37 +98,52 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const configured = first30Mode();
-  if (configured === 'off') {
+  if (first30Mode() === 'off') {
     return Response.json({ skipped: 'FIRST30_ENABLED is not on' }, { status: 200 });
   }
-  const forceDry = new URL(request.url).searchParams.get('dry_run') === '1';
-  const mode = forceDry ? 'dry_run' : configured;
+  const forceDryRun = new URL(request.url).searchParams.get('dry_run') === '1';
 
   const started = Date.now();
   const db = createServiceRoleClient();
-  const store = new SupabaseFirst30Store(db);
   const mailbox = first30DraftMailbox();
 
   try {
-    const report = await runFirst30({
-      store,
-      mode,
-      send: mode === 'send' ? resendSender : undefined,
-      writeDraft:
-        mode === 'send'
-          ? firstThatWorks(createImapDraftWriter(db, mailbox), createInternalNoticeWriter(resendSender, mailbox))
-          : undefined,
+    const result = await dispatchFirst30({
+      env: process.env,
+      store: new SupabaseFirst30Store(db),
+      goLive: new SupabaseGoLiveStore(db),
+      liveSenders: () => ({
+        send: resendSender,
+        writeDraft: firstThatWorks(createImapDraftWriter(db, mailbox), createInternalNoticeWriter(resendSender, mailbox)),
+      }),
+      notify: resendSender,
+      notifyTo: mailbox,
+      probe: createDraftMailboxProbe(db, mailbox),
       startAt: first30StartAt(),
       maxActions: first30MaxPerRun(),
       outOfTime: () => budgetExhausted(started, Date.now()),
+      forceDryRun,
     });
+    const report = result.report;
     const body = {
-      ok: true,
-      ...report,
-      entries: mode === 'dry_run' ? report.entries.slice(0, 200) : undefined,
+      ...(report ?? {}),
+      ok: !result.error,
+      mode: result.mode,
+      source: result.source,
+      runId: result.runId,
+      probe: result.probe,
+      decision: result.decision
+        ? { outcome: result.decision.outcome, notified: result.decision.notified, failed: result.decision.result.criteria.filter((c) => !c.pass).map((c) => c.id) }
+        : null,
+      logError: result.logError,
+      error: result.error,
+      entries: result.mode === 'dry_run' && report ? report.entries.slice(0, 200) : undefined,
     };
     console.log('[first-30-days]', JSON.stringify({ ...body, entries: undefined }));
+    if (result.error) {
+      console.error('[first-30-days] run failed:', result.error);
+      return Response.json({ ...body, error: 'run_failed' }, { status: 500 });
+    }
     return Response.json(body, { status: 200 });
   } catch (err) {
     console.error('[first-30-days] run failed:', err instanceof Error ? err.message : String(err));
