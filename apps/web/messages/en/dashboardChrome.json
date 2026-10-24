@@ -353,7 +353,123 @@
     "businessFeatureInboxes": "10 mailboxes included, $3 a month for each extra",
     "businessFeatureMembers": "Unlimited members with roles, at no extra cost",
     "businessFeatureApprovals": "Admins approve held sends",
-    "businessFeatureWorkspaces": "Several workspaces on one subscription"
+    "businessFeatureWorkspaces": "Several workspaces on one subscription",
+    "fix": {
+      "heading": "How to fix it",
+      "testAgain": "Test again",
+      "useOutlook": "Use Microsoft sign-in",
+      "receiveOnly": "Connect for reading only",
+      "useSuggestedHost": "Use {host}",
+      "progressLogin": "Checking login...",
+      "progressSending": "Checking sending...",
+      "progressSlow": "Still checking. Some mail servers take up to a minute to answer.",
+      "gmail": {
+        "twoStep": "Turn on 2-Step Verification for your Google account.",
+        "create": "Create an app password at myaccount.google.com/apppasswords and name it MCPEmails.",
+        "paste": "Paste the 16 letters into the password field. Spaces are fine.",
+        "workspace": "On a work or school account the app password option can be missing because your admin turned it off. If so, ask your admin to allow app passwords.",
+        "imapDisabled": "Your Google Workspace admin has turned off IMAP for your account, so no password can work.",
+        "imapDisabledAdmin": "Send this to your IT admin: please turn on IMAP access for my account in the Google Admin console, under Apps, Google Workspace, Gmail, End User Access."
+      },
+      "appPassword": {
+        "normalRejected": "Your normal {provider} password is rejected here. Only an app password works.",
+        "paste": "Paste it into the password field and press Test again."
+      },
+      "yahoo": {
+        "create": "On Yahoo's Account Security page, under External connections, choose Create app password, name it MCPEmails and generate it."
+      },
+      "aol": {
+        "create": "On AOL's Account Security page, generate an app password and name it MCPEmails. If the option is missing, turn on 2-Step Verification first."
+      },
+      "icloud": {
+        "create": "At account.apple.com, open Sign-In and Security, then App-Specific Passwords, and create one named MCPEmails. Two-factor authentication must be on."
+      },
+      "ionos": {
+        "password": "IONOS wants the password of this email address, not the one you use to sign in to IONOS."
+      },
+      "fullAddress": "Use your full email address as the login.",
+      "tOnline": {
+        "password": "Telekom accepts only your Passwort für E-Mail-Programme here, not your Telekom Login password.",
+        "where": "Set it in the E-Mail Center under Einstellungen, then Passwörter, then Passwort für E-Mail-Programme."
+      },
+      "mailRu": {
+        "create": "In Mail.ru, open Settings, All settings, Security, then Passwords for external applications, and create one with full Mail access."
+      },
+      "qq": {
+        "service": "In QQ Mail, open 设置 (Settings), then 账号与安全 (Account and security), and turn on the POP3/IMAP/SMTP service.",
+        "code": "Generate an authorization code (授权码) and paste it into the password field. Your QQ password will not work."
+      },
+      "mailCom": {
+        "imap": "Turn on IMAP at mail.com: Email, Settings, POP3 and IMAP, then tick Enable access to this account via POP3 and IMAP. IMAP needs a mail.com Premium plan.",
+        "twoFactor": "With two-factor authentication on, create an application-specific password under Security Options and use that."
+      },
+      "infomaniak": {
+        "password": "Infomaniak does not accept your Manager password here. In the Manager, open Mail Service, your address, then Devices, and add a device to get a device password."
+      },
+      "orange": {
+        "imap": "Turn on POP/IMAP in your Orange mailbox: the cog, tous les paramètres, Sécurité, Protocoles POP ou IMAP, then Activer POP/IMAP.",
+        "password": "Then use the mot de passe dédié from your Espace client, under Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "If two-factor authentication (dvoufázové ověření) is on, your Seznam password stops working here. Set a Heslo pro aplikace under Zabezpečení účtu and use that."
+      },
+      "gmx": {
+        "imap": "{provider} switches POP3 and IMAP access off by default. Turn it on under E-Mail-Einstellungen, then POP3/IMAP.",
+        "twoFactor": "With two-factor authentication on, use an app password instead of your normal password."
+      },
+      "zoho": {
+        "imap": "Turn on IMAP access in Zoho Mail under Settings, Mail Accounts, IMAP Access.",
+        "twoFactor": "With two-factor authentication, federated sign-in or SAML, generate an application-specific password and use that."
+      },
+      "yandex": {
+        "create": "At id.yandex.com, open Security, then App passwords, and create one of type Mail.",
+        "imap": "In Yandex Mail settings, open Email clients and turn on both IMAP access and App passwords and OAuth tokens."
+      },
+      "office365": {
+        "useOutlook": "Microsoft 365 work and school mailboxes do not accept passwords from mail apps. Connect it with Microsoft sign-in instead."
+      },
+      "smtp": {
+        "readingOk": "Your server accepted the login for reading mail but refused it for sending.",
+        "username": "If your provider gives you a separate login for sending, enter it under Advanced settings, Username.",
+        "readOnly": "Or connect for reading only now and add sending later in the inbox settings."
+      },
+      "unreachable": {
+        "tried": "We tried {host} and the server did not answer.",
+        "notFound": "We could not find a mail server called {host}.",
+        "suggest": "Your address is at {provider}, whose server is {host}.",
+        "check": "Check the server name on your provider's settings page, then test again.",
+        "blocked": "Your mail server does not accept connections from our servers. This is common with school and company mail servers.",
+        "blockedNext": "Ask your IT team to allow access from outside, or connect a different address."
+      },
+      "tls": {
+        "tried": "We tried port {tlsPort} with TLS and port {starttlsPort} with STARTTLS, and the secure connection failed on both.",
+        "next": "If your provider lists a different port or security setting, change it here and test again."
+      },
+      "link": {
+        "twoStep": "Open 2-Step Verification",
+        "appPasswords": "Open the {provider} app password page",
+        "imapSetting": "How to turn on IMAP at {provider}",
+        "providerHelp": "{provider} help page",
+        "adminGuide": "Google's guide for your admin"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft will show a consent screen listing what MCPEmails may do: read and change mail, send mail, and stay connected.",
+        "line2": "Accept it to connect. You type your Microsoft password only on Microsoft's page.",
+        "line3": "A work account may ask for admin approval instead. If it does, come back here and get the link for your admin."
+      },
+      "outlookCancelled": {
+        "title": "You cancelled on Microsoft's page",
+        "body": "Nothing was connected. To connect your Outlook inbox, accept the consent screen when Microsoft shows it.",
+        "tryAgain": "Try again"
+      },
+      "done": {
+        "title": "Inbox connected",
+        "body": "Now connect your AI app so it can use this inbox.",
+        "bodyClient": "Now connect {client} so it can use this inbox.",
+        "openGuide": "Show me how",
+        "later": "Later"
+      }
+    }
   },
   "commandPalette": {
     "pageOverview": "Overview",

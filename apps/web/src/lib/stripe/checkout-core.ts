@@ -175,6 +175,11 @@ export type CheckoutReason =
   | 'pass_unavailable'
   | 'already_subscribed'
   | 'pass_already_queued'
+  // A pause or a switch to Personal is booked on the subscription. Swapping
+  // its price in place now would charge a proration for a period already paid
+  // at the old plan, or silently undo the booked change. The customer uses
+  // Resume / Keep Pro on the billing card first.
+  | 'plan_change_pending'
   // Only reachable through `runCheckoutForIdentity` (the chat checkout link,
   // app/u/[token]/route.ts). That caller may open a hosted page and nothing
   // else, so an owner who already holds an entitled subscription is refused
@@ -229,6 +234,27 @@ export interface PlanChangePreview {
    * the normal renewal price, because the coupon applies to the first year only.
    */
   seasonalOffer: SeasonalOffer | null;
+}
+
+/** Machine-readable error codes the JSON caller passes through as `error_code`. */
+export type CheckoutErrorCode = 'subscription_not_self_service' | 'plan_change_pending';
+
+/** The message for `plan_change_pending`; the dashboard shows its own translation. */
+const PLAN_CHANGE_PENDING_MESSAGE =
+  'A pause or a plan switch is already booked on your subscription. Resume or keep your plan from the billing page first.';
+
+/**
+ * True when the subscription carries a pause (scheduled or running) or a
+ * switch to Personal that has not landed yet. See src/lib/billing/pause.ts and
+ * src/lib/billing/downgrade.ts for the metadata.
+ */
+export function hasPendingPlanChange(subscription: {
+  pause_collection?: { behavior?: string | null } | null;
+  metadata?: Record<string, string> | null;
+}, nowSeconds: number = Math.floor(Date.now() / 1000)): boolean {
+  if (subscription.pause_collection?.behavior) return true;
+  const effective = Number(subscription.metadata?.mcpe_downgrade_effective_at ?? '');
+  return Number.isFinite(effective) && effective > nowSeconds;
 }
 
 export type CheckoutOutcome =
@@ -294,7 +320,7 @@ export type CheckoutOutcome =
       reason: CheckoutReason;
       status: number;
       message: string;
-      errorCode?: 'subscription_not_self_service';
+      errorCode?: CheckoutErrorCode;
     };
 
 /**
@@ -502,7 +528,7 @@ function fail(
   reason: CheckoutReason,
   status: number,
   message: string,
-  errorCode?: 'subscription_not_self_service',
+  errorCode?: CheckoutErrorCode,
 ): CheckoutOutcome {
   return { kind: 'error', reason, status, message, errorCode };
 }
@@ -896,6 +922,13 @@ async function checkoutFor(
   // Personal really would be less than they already hold for free.
 
   const entitledStatuses = ['active', 'trialing', 'past_due', 'unpaid'];
+  // A paused subscriber is on Free (status 'paused', our own value) but still
+  // has a live subscription. Without this a click on any plan would open a
+  // SECOND subscription next to the paused one.
+  if (billing?.subscription_status === 'paused' && billing.stripe_subscription_id) {
+    return fail('plan_change_pending', 409, PLAN_CHANGE_PENDING_MESSAGE, 'plan_change_pending');
+  }
+
   const hasEntitledSubscription =
     billing != null &&
     billing.plan !== 'free' &&
@@ -997,6 +1030,10 @@ async function checkoutFor(
       const resolvedFrom = getPlanByStripePriceId(currentItem.price.id);
       if (resolvedFrom) {
         fromPrice = { planId: resolvedFrom.plan.id, interval: resolvedFrom.interval };
+      }
+
+      if (hasPendingPlanChange(subscription)) {
+        return fail('plan_change_pending', 409, PLAN_CHANGE_PENDING_MESSAGE, 'plan_change_pending');
       }
 
       // The same no-op reached through a RETIRED price. A subscriber still

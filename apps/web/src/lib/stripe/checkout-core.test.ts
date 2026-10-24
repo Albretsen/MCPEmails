@@ -2549,3 +2549,49 @@ test('passSubscriptionStart: anchor inside the first period, trial_end past it, 
     proration_behavior: 'none',
   });
 });
+
+// ── A pause or a switch to Personal is booked ─────────────────────────────
+//
+// Swapping the price in place while a switch to Personal is pending would
+// charge a Personal-to-Pro proration for a period already paid at Pro, and
+// re-pricing a paused subscription would undo the pause. Both are refused
+// with one code the dashboard translates into "use Resume / Keep first".
+
+test('an in-place change is refused while a switch to Personal is pending', async () => {
+  currentMetadata = { mcpe_downgrade_effective_at: String(Math.floor(Date.now() / 1000) + 86_400) };
+  try {
+    const { outcome, subscriptionsUpdated } = await checkout({
+      planId: 'pro',
+      entitlement: null,
+      billing: PERSONAL_SUBSCRIBER,
+      confirmChange: true,
+    });
+    assert.equal(outcome.kind, 'error');
+    assert.equal(outcome.kind === 'error' && outcome.reason, 'plan_change_pending');
+    assert.equal(outcome.kind === 'error' && outcome.errorCode, 'plan_change_pending');
+    assert.equal(outcome.kind === 'error' && outcome.status, 409);
+    assert.equal(subscriptionsUpdated.length, 0);
+  } finally {
+    currentMetadata = {};
+  }
+});
+
+test('a switch whose date has passed no longer blocks a change', async () => {
+  currentMetadata = { mcpe_downgrade_effective_at: String(Math.floor(Date.now() / 1000) - 60) };
+  try {
+    const { outcome } = await checkout({ planId: 'solo', entitlement: null, billing: PERSONAL_SUBSCRIBER });
+    assert.equal(outcome.kind, 'confirmation_required');
+  } finally {
+    currentMetadata = {};
+  }
+});
+
+test('a paused subscriber cannot open a second subscription', async () => {
+  const { outcome, sessionsCreated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: { plan: 'free', subscription_status: 'paused', stripe_subscription_id: 'sub_test_paused' },
+  });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'plan_change_pending');
+  assert.equal(sessionsCreated.length, 0);
+});

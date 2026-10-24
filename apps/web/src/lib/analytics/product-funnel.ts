@@ -5,6 +5,7 @@ import type { Database } from '@/types/database.types';
 type Db = SupabaseClient<Database>;
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
+import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 
 /**
@@ -52,6 +53,8 @@ export type BillingTargetCategory =
   | 'personal_month' | 'personal_year' | 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
 /** The plan a user was on when a paywall / portal event fired. */
 export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
+/** Which retention option a `retention_option_clicked` row is about. */
+export type RetentionOptionCategory = 'pause' | 'downgrade';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
 /**
@@ -62,6 +65,9 @@ export type PassFunnelCategory =
   | 'personal_pass_3m'
   | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
   | 'pass';
+
+/** pause_resumed: who ended it. retention_option_clicked: which option. */
+export type PlanChangeCategory = 'early' | 'auto' | 'pause' | 'downgrade';
 
 export type ProductFunnelEvent = {
   workspaceId: string;
@@ -85,6 +91,22 @@ export type ProductFunnelEvent = {
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
     | 'paywall_clicked'
+    // Activation rescue, written from the dashboard through
+    // /api/analytics/activation-event (lib/analytics/activation-events.ts).
+    | 'connect_fix_shown' | 'connect_fix_link_clicked'
+    | 'first_call_prompt_copied' | 'waiting_state_shown'
+    // Pause and switch to Personal (migration 20261024233000). Category is the
+    // plan the customer was on, except pause_resumed (early | auto) and
+    // retention_option_clicked (pause | downgrade).
+    | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'
+    | 'downgrade_scheduled' | 'downgrade_undone'
+    | 'inbox_parked' | 'inbox_unparked'
+    // Why a subscriber cancelled, answered after the cancel was done
+    // (/billing/feedback). category = the reason.
+    | 'cancel_reason_submitted'
+    // A pause or downgrade option was clicked (billing card or post-cancel
+    // email). category = 'pause' | 'downgrade'.
+    | 'retention_option_clicked'
     // The failed-payment banner's button (/api/stripe/payment-fix). success =
     // sent on to Stripe, failure = bounced to settings.
     | 'payment_fix_clicked'
@@ -98,7 +120,8 @@ export type ProductFunnelEvent = {
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
-    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory;
+    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
+    | PlanChangeCategory | CancelReason | RetentionOptionCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
