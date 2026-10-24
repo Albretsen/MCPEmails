@@ -664,6 +664,7 @@ async function checkoutFor(
     confirmChange?: unknown;
     locale?: unknown;
     recoveredFrom?: unknown;
+    quotedOffer?: unknown;
   },
   options: CheckoutOptions & { allowPlanChange: boolean },
 ): Promise<CheckoutOutcome> {
