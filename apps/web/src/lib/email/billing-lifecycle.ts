@@ -151,7 +151,7 @@ export function isUsageTemplate(template: string): template is UsageTemplate {
 
 /**
  * The two service notices of a 3-month Personal pass (migration
- * 20261024230100, src/lib/billing/pass-notices.ts). Keyed on the Stripe
+ * 20261025010100, src/lib/billing/pass-notices.ts). Keyed on the Stripe
  * customer with scope_key = the user_passes id. Transactional: they are about
  * the end of a contract the customer bought, so no consent and no unsubscribe.
  */
@@ -307,8 +307,19 @@ const DECLINE_COPY: Record<string, DeclineCopy> = {
  * under a heading that promises a reason is worse than printing no heading, so
  * the composer omits the whole block instead.
  */
-export function declineCopy(code: string | null | undefined): DeclineCopy | null {
+export function declineCopy(
+  code: string | null | undefined,
+  currency?: string | null,
+): DeclineCopy | null {
   if (!code) return null;
+  // The one decline that names a currency names the one actually charged: a
+  // EUR subscription is not refused "in US dollars".
+  if (code === 'currency_not_supported' && (currency ?? 'usd').toLowerCase() === 'eur') {
+    return {
+      reason: 'the card cannot be charged in euros',
+      fix: 'A card that accepts EUR will work. Most do, but some regional cards do not.',
+    };
+  }
   return DECLINE_COPY[code] ?? null;
 }
 
@@ -359,6 +370,12 @@ export type LifecyclePayload = {
   currency?: string | null;
   /** Stripe decline code from the failed payment intent, when there was one. */
   declineCode?: string | null;
+  /**
+   * The payment method on the failed attempt (a Stripe pm_ id), when known.
+   * Never printed in an email: the webhook compares it with the method that
+   * finally paid, to tell a customer fix from a silent retry (recovered_by).
+   */
+  failedPaymentMethodId?: string | null;
   /** Stripe hosted invoice page: lets them pay the exact invoice in one click. */
   hostedInvoiceUrl?: string | null;
   /** ISO date the paid period ends (cancellation) or ended (win-back). */
@@ -555,6 +572,8 @@ function usageFacts(payload: LifecyclePayload): UsageFacts | null {
  * stale number in an email. Whole dollars when the price is whole, otherwise
  * the usual two decimals.
  */
+// USD on purpose: these go to Free workspaces, which have never been charged,
+// so there is no charged currency to follow.
 function personalMonthlyPrice(): string {
   const cents = PLANS.personal.monthlyPriceCents;
   return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
@@ -950,7 +969,7 @@ export function composeBillingEmail(
   const name = planName(payload.planId);
   const yourPlan = yourPlanPhrase(name);
   const amount = amountLabel(payload);
-  const decline = declineCopy(payload.declineCode);
+  const decline = declineCopy(payload.declineCode, payload.currency);
   const consequence = consequenceLine(payload);
   const endsOn = longDate(payload.periodEnd);
 

@@ -55,7 +55,7 @@ export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
 /**
- * The 3-month Personal pass (20261024230000): the product itself, the surfaces
+ * The 3-month Personal pass (20261025010000): the product itself, the surfaces
  * its offer can be shown on, and `pass` for a renewal that bought another pass.
  */
 export type PassFunnelCategory =
@@ -85,6 +85,9 @@ export type ProductFunnelEvent = {
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
     | 'paywall_clicked'
+    // The failed-payment banner's button (/api/stripe/payment-fix). success =
+    // sent on to Stripe, failure = bounced to settings.
+    | 'payment_fix_clicked'
     // The 3-month Personal pass. A pass NEVER writes `checkout_started` or
     // `checkout_completed`, for the same reason a plan change does not: those
     // stages are the subscription conversion every read-out is built on.

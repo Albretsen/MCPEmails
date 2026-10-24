@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCheckout, runPassCheckout } from '@/lib/stripe/checkout-core';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
  * POST /api/stripe/checkout
@@ -89,6 +90,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
   }
 
+  // Vercel's geolocation of this request, for the EUR currency choice and VAT
+  // evidence (see `country` on runCheckout). Absent locally and in tests.
+  const country = countryFromHeaders(request.headers);
+
   const outcome =
     product === PERSONAL_PASS_3M.id
       ? await runPassCheckout({ locale, experimentArm: arm, surface })
@@ -97,6 +102,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           interval,
           confirmChange: confirm,
           locale,
+          ...(country ? { country } : {}),
           ...(offer !== undefined ? { quotedOffer: offer } : {}),
         });
 

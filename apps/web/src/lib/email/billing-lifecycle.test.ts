@@ -252,6 +252,18 @@ test('an uninformative decline code produces no reason block at all', () => {
   }
 });
 
+test('a EUR renewal is quoted in EUR, and a currency decline names the euro', () => {
+  const email = composeBillingEmail(
+    'dunning_1',
+    payload({ amountCents: 900, currency: 'eur', declineCode: 'currency_not_supported' }),
+  );
+  assert.ok(email);
+  assert.match(email.body, /€9\.00/);
+  assert.match(email.body, /cannot be charged in euros/);
+  assert.ok(!/US dollars|\$\d/.test(email.body));
+  assert.match(declineCopy('currency_not_supported')!.reason, /US dollars/);
+});
+
 test('a lost or stolen card is never described as lost or stolen', () => {
   for (const code of ['lost_card', 'stolen_card', 'pickup_card', 'fraudulent']) {
     const copy = declineCopy(code);

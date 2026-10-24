@@ -178,8 +178,10 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden', 'signature_embed_images'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
+        'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+      // `parked_at` (20261024173000) degrades like the two preferences above:
+      // without it every inbox reads as active, which is the pre-parking truth.
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -233,6 +235,9 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         ? row.service
         : row.provider,
     status: row.status,
+    // Parked above a lower plan's inbox cap (src/lib/billing/parking.ts):
+    // connected and kept, but no tool or automation can use it.
+    parked: !!row.parked_at,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
     // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
@@ -655,7 +660,7 @@ export default async function DashboardPage({ params }) {
   const cookieStore = await cookies();
   const preferredWorkspaceId = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
 
-  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }] = await Promise.all([
+  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }, { data: ownBilling }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
@@ -672,6 +677,14 @@ export default async function DashboardPage({ params }) {
     supabase
       .from('user_usage_entitlements')
       .select('kind, expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    // The viewer's OWN billing row (RLS: select own). Feeds the failed-payment
+    // banner, which only the owner of the active workspace sees. A read error
+    // leaves it null, and null shows no banner.
+    supabase
+      .from('user_billing')
+      .select('subscription_status, last_decline_code')
       .eq('user_id', user.id)
       .maybeSingle(),
   ]);
@@ -961,6 +974,10 @@ export default async function DashboardPage({ params }) {
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,
+        // Failed-payment banner (components/dashboard/PaymentIssueBanner.jsx).
+        // The owner's own subscription only: a member never sees who pays.
+        subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,
+        lastDeclineCode: workspace?.owner_id === user.id ? ownBilling?.last_decline_code ?? null : null,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

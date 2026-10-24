@@ -39,10 +39,10 @@ Du lager én i **Dashboard → API Keys**:
 2. Velg scopene: \`read:email\`, \`send:email\`, eller begge.
 3. Kopier den. Den vises **én gang** og aldri igjen. Mister du den, lager du en ny.
 
-Nøkkelen ser slik ut: \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, og du sender den med hver forespørsel:
+Nøkkelen ser slik ut: \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, og du sender den med hver forespørsel:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Et rått JSON-RPC-kall for å liste innboksene dine ser slik ut:
@@ -76,7 +76,7 @@ Klienten din er claude.ai, Claude Desktop eller Cursor. Du vil ha null hemmeligh
 
 Klienten din har ingen OAuth-støtte — Cline, JetBrains, OpenAI-stil-verktøykjørerne, eller din egen kode. Du skripter mot endepunktet med cURL eller et lite program. Du trenger en stabil legitimasjon som en hodeløs prosess kan bruke uten at et menneske klikker seg gjennom en samtykkeskjerm. En scopet nøkkel er akkurat riktig her, og det finnes en full gjennomgang for [Cursor-, Cline- og VS Code-klientene](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Én ting til som er sant uansett hva du velger: rategrenser. Hver API-nøkkel er begrenset til 100 requests/minute, 1 000/hour og 10 000/day, og hvert arbeidsområde har et burst-tak per plan (60/min på [Free](/pricing), opptil 1 000/min på Business). Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt, for da kommer du til å sende dobbelt.
+Én ting til som er sant uansett hva du velger: rategrenser. Hvert arbeidsområde har et tak per minutt satt av planen (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt, for da kommer du til å sende dobbelt.
 
 ## Konklusjonen
 

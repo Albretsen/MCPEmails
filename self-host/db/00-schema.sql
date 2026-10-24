@@ -118,6 +118,9 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
+  ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
   ADD COLUMN IF NOT EXISTS chat_checkout_link_enabled         boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
@@ -210,7 +213,9 @@ ALTER TABLE public.inboxes
     CONSTRAINT inboxes_bulk_review_mode_check CHECK (bulk_review_mode IN ('off', 'plan')),
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
-  ADD COLUMN IF NOT EXISTS folder_overrides       jsonb;  -- per-role IMAP folder picked by the user; NULL = automatic (20261020230000)
+  ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
+  ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
+  ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
 -- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
 -- never INBOX, never one folder for two roles.
@@ -244,6 +249,24 @@ BEGIN
     ALTER TABLE public.inboxes
       ADD CONSTRAINT inboxes_folder_overrides_check
       CHECK (public.inbox_folder_overrides_valid(folder_overrides));
+  END IF;
+END
+$$;
+-- Parking, as in the hosted migration 20261024173000: both NULL, or both set
+-- with a known reason.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_parked_reason_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_parked_reason_check
+      CHECK (
+        (parked_at IS NULL AND parked_reason IS NULL)
+        OR (parked_at IS NOT NULL AND parked_reason IS NOT NULL AND parked_reason IN ('plan_limit'))
+      );
   END IF;
 END
 $$;
@@ -679,6 +702,8 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_billing_stripe_customer_id ON public.user_billing (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL);
+ALTER TABLE public.user_billing
+  ADD COLUMN IF NOT EXISTS last_decline_code text;
 
 CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     user_id uuid NOT NULL,
@@ -1200,6 +1225,7 @@ CREATE TABLE IF NOT EXISTS public.triage_rules (
     deleted_at timestamp with time zone,
     paused_reason text,
     paused_until timestamp with time zone,
+    CONSTRAINT triage_rules_paused_reason_check CHECK (((paused_reason IS NULL) OR (paused_reason = ANY (ARRAY['plan_limit'::text, 'inbox_parked'::text])))),
     CONSTRAINT triage_rules_interval_minutes_check CHECK ((interval_minutes = ANY (ARRAY[15, 30, 60, 180, 360, 720, 1440]))),
     CONSTRAINT triage_rules_interval_required_check CHECK ((interval_minutes IS NOT NULL)),
     CONSTRAINT triage_rules_max_messages_check CHECK (((max_messages_per_run >= 1) AND (max_messages_per_run <= 200))),

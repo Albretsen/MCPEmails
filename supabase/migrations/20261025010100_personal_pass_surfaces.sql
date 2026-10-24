@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Personal 3-month pass, PR 2: the two service notices and the holdout test.
 --
--- Builds on 20261024230000_personal_pass.sql (user_passes, funnel vocabulary).
+-- Builds on 20261025010000_personal_pass.sql (user_passes, funnel vocabulary).
 --
 --   1. billing_email_sends.template gains 'pass_ending_7d' and 'pass_ended',
 --      appended to whatever the live CHECK already allows.

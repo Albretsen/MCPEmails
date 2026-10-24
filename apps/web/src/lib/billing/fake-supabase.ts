@@ -262,6 +262,26 @@ export class FakeSupabase {
     this.failCounts.set(table, count);
   }
 
+  /**
+   * RPC answers by function name: a function of the call's arguments. An RPC
+   * with no handler throws, like an unimplemented query shape.
+   */
+  readonly rpcHandlers = new Map<string, (args: Record<string, unknown>) => { data: unknown; error: { message: string; code?: string } | null }>();
+
+  /** Answer `rpc(name, ...)` with `handler`. */
+  onRpc(
+    name: string,
+    handler: (args: Record<string, unknown>) => { data: unknown; error: { message: string; code?: string } | null },
+  ): void {
+    this.rpcHandlers.set(name, handler);
+  }
+
+  async rpc(name: string, args: Record<string, unknown> = {}) {
+    const handler = this.rpcHandlers.get(name);
+    if (!handler) throw new Error(`FakeSupabase: rpc('${name}') has no handler`);
+    return handler(args);
+  }
+
   from(table: string) {
     return {
       select: (columns?: string) =>

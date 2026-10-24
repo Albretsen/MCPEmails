@@ -100,7 +100,7 @@ Sea como sea, revocas cualquier conexión desde el panel con un solo clic. Coge 
 
 Respuesta corta: sí, y el artículo [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) expone el caso completo. El modelo sostiene capacidades con scope, no tu contraseña; las credenciales están cifradas; nada se almacena; el envío se queda en tu proveedor; el acceso se revoca con un solo clic.
 
-En cuanto a los límites de tasa, cada clave de API está limitada a 100 peticiones/min, 1.000/hora y 10.000/día en todos los planes. También hay un techo de ráfaga por workspace que escala con tu plan: 60/min en Gratis, 120/min en Personal, 300/min en Pro, 1.000/min en Business. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
+En cuanto a los límites de tasa, cada workspace tiene un tope por minuto que escala con tu plan (consulta [precios](/pricing)), y cada clave de API recibe ventanas por minuto, por hora y por día dimensionadas según ese plan, así que una sola clave puede usar todo el tope y varias claves lo comparten. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
 
 ## Precios
 

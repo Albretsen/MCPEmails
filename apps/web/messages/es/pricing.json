@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/para siempre",
     "perMonth": "/mes",
-    "billedYearly": "Facturado ${total}/año"
+    "billedYearly": "Facturado ${total}/año",
+    "inclVat": "IVA incluido"
   },
   "plans": {
     "free": {
@@ -57,7 +58,8 @@
         "Todo lo de Personal",
         "10 bandejas conectadas",
         "Límite de ráfaga 5x más alto",
-        "Más historial de analíticas"
+        "Más historial de analíticas",
+        "Webhooks para el correo nuevo"
       ]
     },
     "pro": {
@@ -69,7 +71,8 @@
         "10 buzones incluidos, $3 al mes por cada buzón extra",
         "Miembros ilimitados con roles, sin coste adicional",
         "Los administradores aprueban los envíos en espera",
-        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente"
+        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente",
+        "Webhooks para el correo nuevo"
       ]
     }
   },
@@ -96,6 +99,7 @@
           "inboxes": "Bandejas conectadas",
           "actions": "Acciones de correo al mes",
           "keys": "Claves de API",
+          "webhooks": "Webhooks para el correo nuevo",
           "members": "Personas con acceso",
           "burst": "Límite de ráfaga",
           "approvals": "Aprobación antes de enviar"

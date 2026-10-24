@@ -3,8 +3,10 @@
  * store, then send.
  *
  * WHY IT EXISTS. Two rules ask for the same thing. §312k BGB requires a
- * "cancel contracts here" button that reaches a form without a login, a
- * confirm step, and a confirmation the customer can keep. Directive (EU)
+ * "cancel contracts here" button that reaches a form without a login, one
+ * page with the details and a "cancel now" button, and a confirmation the
+ * customer can keep. The customer may name the date an ordinary cancellation
+ * takes effect (§312k(2) Nr. 1), so `effectiveDate` is optional. Directive (EU)
  * 2023/2673 (in force for distance contracts from 2026-06-19) adds the same
  * shape for the right of withdrawal. A customer must be able to end the
  * contract with nothing but their name, the account address and two clicks.
@@ -57,6 +59,10 @@ export const CONTRACT_REQUEST_LIMITS = {
   reason: 2000,
 } as const;
 
+/** How far ahead an effective date may be, in days (about five years). */
+export const EFFECTIVE_DATE_MAX_DAYS = 5 * 366;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export type ContractRequestErrorCode =
   | 'invalid_json'
   | 'invalid_form_token'
@@ -67,7 +73,8 @@ export type ContractRequestErrorCode =
   | 'contract_too_long'
   | 'invalid_cancel_type'
   | 'reason_required'
-  | 'reason_too_long';
+  | 'reason_too_long'
+  | 'invalid_effective_date';
 
 export interface ValidContractRequest {
   kind: ContractRequestKind;
@@ -78,6 +85,11 @@ export interface ValidContractRequest {
   cancelType: CancelType | null;
   /** Only for an extraordinary cancellation. */
   reason: string | null;
+  /**
+   * YYYY-MM-DD the customer asked an ordinary cancellation to take effect on.
+   * Null means the earliest possible date, and for every other kind.
+   */
+  effectiveDate: string | null;
   locale: string;
 }
 
@@ -94,6 +106,22 @@ function cleanText(value: string): string {
 /** One line of visitor text, or '' when absent. */
 function cleanLine(value: unknown): string {
   return typeof value === 'string' ? oneLine(cleanText(value)) : '';
+}
+
+/**
+ * An optional YYYY-MM-DD from today (in the visitor's time zone, so one day of
+ * slack behind UTC) to about five years out. Returns null when absent, false
+ * when present but invalid.
+ */
+export function parseEffectiveDate(value: unknown, nowMs: number): string | null | false {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  if (Number.isNaN(ms) || new Date(ms).toISOString().slice(0, 10) !== value) return false;
+  const todayUtc = Date.parse(`${new Date(nowMs).toISOString().slice(0, 10)}T00:00:00Z`);
+  if (ms < todayUtc - DAY_MS) return false;
+  if (ms > todayUtc + EFFECTIVE_DATE_MAX_DAYS * DAY_MS) return false;
+  return value;
 }
 
 /**
@@ -127,6 +155,7 @@ export function validateContractRequest(raw: unknown, opts: { nowMs: number }): 
 
   let cancelType: CancelType | null = null;
   let reason: string | null = null;
+  let effectiveDate: string | null = null;
   if (kind === 'cancel') {
     const type = body.cancelType;
     if (typeof type !== 'string' || !(CANCEL_TYPES as readonly string[]).includes(type)) {
@@ -137,6 +166,12 @@ export function validateContractRequest(raw: unknown, opts: { nowMs: number }): 
       reason = typeof body.reason === 'string' ? cleanText(body.reason) : '';
       if (!reason) return { kind: 'error', error: 'reason_required' };
       if (reason.length > CONTRACT_REQUEST_LIMITS.reason) return { kind: 'error', error: 'reason_too_long' };
+    } else {
+      // A date sent with a withdrawal or an extraordinary cancellation is
+      // ignored: both take effect immediately.
+      const date = parseEffectiveDate(body.effectiveDate, opts.nowMs);
+      if (date === false) return { kind: 'error', error: 'invalid_effective_date' };
+      effectiveDate = date;
     }
   }
 
@@ -152,6 +187,7 @@ export function validateContractRequest(raw: unknown, opts: { nowMs: number }): 
       contract: contract || null,
       cancelType,
       reason,
+      effectiveDate,
       locale,
     },
   };
@@ -190,6 +226,9 @@ function requestLabel(r: ValidContractRequest): string {
 
 function effectiveLabel(r: ValidContractRequest): string {
   if (r.kind === 'cancel' && r.cancelType === 'ordinary') {
+    if (r.effectiveDate) {
+      return `${r.effectiveDate}, or the end of the period you have already paid for if that is later`;
+    }
     return 'At the earliest possible date: the end of the period you have already paid for';
   }
   return 'Immediately';
@@ -265,7 +304,9 @@ export function buildContractNoticeEmail(r: ValidContractRequest, ref: string, r
       ? 'To do: refund the first charge in full and cancel the subscription now, within 14 days of the received time.'
       : r.cancelType === 'extraordinary'
         ? 'To do: read the reason, end the subscription now if it holds, and reply to the customer.'
-        : 'To do: set cancel_at to the end of the paid period in Stripe, then reply to the customer.';
+        : r.effectiveDate
+          ? `To do: set cancel_at in Stripe to ${r.effectiveDate} or the end of the paid period, whichever is later, then reply to the customer.`
+          : 'To do: set cancel_at to the end of the paid period in Stripe, then reply to the customer.';
   const lines = [
     todo,
     '',
@@ -356,6 +397,7 @@ export async function submitContractRequest(
         contract_request: {
           kind: r.kind,
           cancel_type: r.cancelType,
+          effective_date: r.effectiveDate,
           name: r.name,
           contract: r.contract,
           locale: r.locale,

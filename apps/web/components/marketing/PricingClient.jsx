@@ -19,6 +19,8 @@ import {
 } from '@/lib/billing/seasonal-offer-view.mjs';
 import ProPriceNotice, { useProPriceNoticeVisible } from '../ProPriceNotice';
 import { proPriceNoticeCopy } from '@/lib/stripe/pro-price-notice-copy.mjs';
+import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
+import { useDisplayCurrency } from './useDisplayCurrency';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
@@ -92,6 +94,9 @@ const TABLE_SECTIONS = [
       // print a number: they have no monthly cap, subject to fair use.
       { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
+      // `webhooksEnabled` in src/lib/stripe/plans.ts, enforced by the
+      // /api/webhook-endpoints routes and by webhooks_plan_allowed() in SQL.
+      { key: 'webhooks', free: false, personal: false, solo: true, pro: true },
       // Personal and Pro are deliberately single-seat: other people signing in
       // is what Business is for, at no per-person price. The value is a count,
       // not "Just you": the old wording was true about logins and read as "not
@@ -284,9 +289,13 @@ function SeasonalOfferLine({ offer, planKey }) {
 /**
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
-function PlanCards({ annual, stripePrices, user, highlightPlan, seasonalOffers = null }) {
+function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd', seasonalOffers = null }) {
   const t = useTranslations('pricing');
   const locale = useLocale();
+  // EUR (an EU visitor, STRIPE_EUR_PRICES on): same digits, euro sign in the
+  // reader's format, VAT included. USD keeps today's rendering exactly.
+  const eur = currency === 'eur';
+  const money = (text) => (eur ? euroizeAmounts(text, locale) : text);
   // No entitlement is read here any more. The Personal CTA used to become a
   // non-interactive status line for a visitor holding `unlimited_inboxes`,
   // matching a 409 in checkout-core. Both are gone: the grant lifts only
@@ -315,18 +324,34 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, seasonalOffers =
 
         // Formatted, never rounded to whole dollars: Personal's $86.40 a year
         // is $7.20 a month, and Math.round would print a $7 nobody is charged.
-        const priceDisplay =
-          monthlyCents === 0
-            ? '$0'
-            : annual && yearlyCents
-            ? formatPriceCents(Math.round(yearlyCents / 12))
-            : formatPriceCents(monthlyCents);
+        let priceDisplay;
+        if (eur) {
+          // Stripe's EUR currency option, else the same digits as USD.
+          const eurMonthly = eurCentsFor(stripePrices?.[plan.key]?.eurMonthlyCents, monthlyCents);
+          const eurYearly = eurCentsFor(stripePrices?.[plan.key]?.eurYearlyCents, yearlyCents);
+          priceDisplay =
+            monthlyCents === 0
+              ? formatMoneyCents(0, 'eur', locale)
+              : annual && eurYearly
+              ? formatMoneyCents(Math.round(eurYearly / 12), 'eur', locale)
+              : formatMoneyCents(eurMonthly, 'eur', locale);
+        } else {
+          priceDisplay =
+            monthlyCents === 0
+              ? '$0'
+              : annual && yearlyCents
+              ? formatPriceCents(Math.round(yearlyCents / 12))
+              : formatPriceCents(monthlyCents);
+        }
 
-        // The message writes its own currency sign, so it gets the bare amount.
-        const liveAnnualTotal = yearlyCents ? formatAmountCents(yearlyCents, locale) : null;
+        // The message writes its own currency sign, so it gets the bare amount
+        // (and `money` swaps that sign for the euro when EUR is shown).
+        const eurYearlyTotal = eur ? eurCentsFor(stripePrices?.[plan.key]?.eurYearlyCents, yearlyCents) : null;
+        const annualTotalCents = eur ? eurYearlyTotal : yearlyCents;
+        const liveAnnualTotal = annualTotalCents ? formatAmountCents(annualTotalCents, locale) : null;
 
         const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
-        const features = t.raw(`plans.${plan.key}.features`);
+        const features = t.raw(`plans.${plan.key}.features`).map(money);
 
         // The card the visitor was quoted at an in-product paywall, if they
         // arrived from one. It gets the ring .featured already uses and NOT the
@@ -352,8 +377,11 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, seasonalOffers =
                 {priceDisplay}
                 {perDisplay && <small> {perDisplay}</small>}
               </div>
+              {eur && liveMonthly > 0 && (
+                <p className="price-annual-note">{t('card.inclVat')}</p>
+              )}
               {annual && liveMonthly > 0 && (
-                <p className="price-annual-note">{t('card.billedYearly', { total: liveAnnualTotal })}</p>
+                <p className="price-annual-note">{money(t('card.billedYearly', { total: liveAnnualTotal }))}</p>
               )}
               {/* Annual Personal and Pro only, inside the window only.
                   Business and monthly never get one: the offer map has no
@@ -412,11 +440,17 @@ function TableCell({ value }) {
   return <td className="tbl-val">{value}</td>;
 }
 
-function ComparisonTable() {
+function ComparisonTable({ currency = 'usd' }) {
   const t = useTranslations('pricing');
+  const locale = useLocale();
   // String cell values are stored as message keys (e.g. "values.unlimited");
   // booleans render as check/dash. Translate keys, pass booleans through.
-  const cell = (v) => (typeof v === 'string' ? t(`comparison.${v}`) : v);
+  // "then $3 a month each" follows the visitor's currency like the cards do.
+  const cell = (v) => {
+    if (typeof v !== 'string') return v;
+    const text = t(`comparison.${v}`);
+    return currency === 'eur' ? euroizeAmounts(text, locale) : text;
+  };
 
   return (
     <div className="comparison-wrap">
@@ -478,9 +512,16 @@ function FaqItem({ q, a }) {
 /* ─── Page ───────────────────────────────────────────────────── */
 
 /**
- * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * @param {{
+ *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   eurEnabled?: boolean,
+ * }} props
+ *
+ * `eurEnabled` is STRIPE_EUR_PRICES as the server read it. Off (the default),
+ * the page never asks for the visitor's country and renders USD exactly as
+ * before. On, an EU visitor sees the same digits in EUR with "incl. VAT".
  */
-export default function PricingClient({ stripePrices }) {
+export default function PricingClient({ stripePrices, eurEnabled = false }) {
   // Annual is the default selection, not just an available option. Which
   // interval is preselected swings the annual mix far more than the size of
   // the discount does, and annual prepay is the cheapest working capital a
@@ -507,12 +548,20 @@ export default function PricingClient({ stripePrices }) {
   }, []);
   const t = useTranslations('pricing');
   const locale = useLocale();
+  const currency = useDisplayCurrency(eurEnabled);
+  // Prices inside sentences follow the cards: the same digits, in EUR, for an
+  // EU visitor while the switch is on. Identity for everyone else.
+  const money = (text) => (currency === 'eur' ? euroizeAmounts(text, locale) : text);
   // The dated Pro price question joins the FAQ only while the notice above
   // the cards is up, so the two can never disagree about whether it applies.
   const proPriceNotice = useProPriceNoticeVisible();
-  const faqItems = proPriceNotice
+  const rawFaqItems = proPriceNotice
     ? [proPriceNoticeCopy(locale).faq, ...t.raw('faq.items')]
     : t.raw('faq.items');
+  const faqItems =
+    currency === 'eur'
+      ? rawFaqItems.map((item) => ({ ...item, a: money(item.a) }))
+      : rawFaqItems;
 
   // Billing funnel. The endpoint ignores anonymous callers, so this records
   // only signed-in users revisiting /pricing, which is the population whose
@@ -572,10 +621,10 @@ export default function PricingClient({ stripePrices }) {
               rather than a per-month figure stripped of its commitment. */}
           <h1 className="pricing-page-h1">
             {t('hero.titleLine1')}<br />
-            {annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2')}
+            {money(annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2'))}
           </h1>
           <p className="pricing-page-lead">
-            {t('hero.lead')}
+            {money(t('hero.lead'))}
           </p>
           <BillingToggle annual={annual} onChange={setAnnual} />
         </div>
@@ -590,7 +639,7 @@ export default function PricingClient({ stripePrices }) {
             className="pricing-footnote"
             style={{ textAlign: 'center', margin: '0 auto 24px', maxWidth: 720, color: 'var(--fg-2)' }}
           />
-          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} seasonalOffers={seasonalOffers} />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} currency={currency} seasonalOffers={seasonalOffers} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
@@ -620,7 +669,7 @@ export default function PricingClient({ stripePrices }) {
             <div className="eye-label">{t('comparison.eyebrow')}</div>
             <h2 style={{ fontSize: 36 }}>{t('comparison.title')}</h2>
           </div>
-          <ComparisonTable />
+          <ComparisonTable currency={currency} />
         </div>
       </section>
 
@@ -644,7 +693,7 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">
-            {t('ctaBand.sub')}
+            {money(t('ctaBand.sub'))}
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>

@@ -172,6 +172,8 @@ const SIGN_OFF = ['Asgeir', 'MCPEmails'];
 // Plan facts, from the catalogue
 // ---------------------------------------------------------------------------
 
+// USD on purpose, also after EUR prices launch: a Free workspace has never
+// been charged, so its currency is unknown. The digits are the EUR price too.
 function monthly(plan: Plan): string {
   return formatPriceCents(plan.monthlyPriceCents);
 }

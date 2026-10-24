@@ -168,7 +168,7 @@ test('house style: no em dashes anywhere in the customer copy', () => {
         currency: 'usd',
       });
       const combined = `${email.subject}\n${email.body}\n${email.htmlBody}`;
-      assert.ok(!combined.includes('—'), `${planId}/${interval}: em dash found`);
+      assert.ok(!combined.includes('\u2014'), `${planId}/${interval}: em dash found`);
     }
   }
 });
@@ -207,7 +207,7 @@ test('a local-currency charge (Adaptive Pricing) is shown next to the USD price'
   assert.match(email.body, /You paid in EUR\. Each renewal is the USD price above/);
   assert.match(email.htmlBody, /Charged today/);
   assert.match(email.htmlBody, /€8\.62/);
-  assert.ok(!email.body.includes('—') && !email.htmlBody.includes('—'));
+  assert.ok(!email.body.includes('\u2014') && !email.htmlBody.includes('\u2014'));
 });
 
 test('no local-currency row when the buyer paid in USD or Stripe sent nothing', () => {
@@ -222,6 +222,55 @@ test('no local-currency row when the buyer paid in USD or Stripe sent nothing', 
     assert.ok(!email.body.includes('Charged today'), JSON.stringify(presentment));
     assert.ok(!email.htmlBody.includes('Charged today'), JSON.stringify(presentment));
   }
+});
+
+test('an EUR purchase is stated in EUR, extra mailbox price included', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'pro',
+    interval: 'month',
+    amountTotalCents: 3900,
+    currency: 'eur',
+  });
+  assert.match(email.body, /Price: €39\.00 per month/);
+  assert.match(email.body, /Each extra mailbox is €3 a month\./);
+  assert.match(email.htmlBody, /Each extra mailbox is €3 a month\./);
+  assert.ok(!/\$\d/.test(email.body), 'no dollar amount in an EUR purchase');
+  assert.ok(!/\$\d/.test(email.htmlBody), 'no dollar amount in an EUR purchase');
+});
+
+test('a USD Business purchase still quotes the extra mailbox as $3', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'pro',
+    interval: 'month',
+    amountTotalCents: 3900,
+    currency: 'usd',
+  });
+  assert.match(email.body, /Each extra mailbox is \$3 a month\./);
+});
+
+test('a SEPA debit still processing is not described as a payment received', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 900,
+    currency: 'eur',
+    paymentStatus: 'unpaid',
+  });
+  for (const text of [email.body, email.htmlBody]) {
+    assert.match(text, /bank debit is processing/);
+    assert.match(text, /full access in the meantime/);
+    assert.ok(!text.includes('nothing to wait for'));
+    assert.ok(!text.includes('\u2014'));
+  }
+  const paid = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 900,
+    currency: 'eur',
+    paymentStatus: 'paid',
+  });
+  assert.ok(paid.body.includes('nothing to wait for'));
+  assert.ok(!paid.body.includes('bank debit'));
 });
 
 // ---------------------------------------------------------------------------

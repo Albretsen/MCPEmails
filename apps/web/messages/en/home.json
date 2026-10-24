@@ -154,6 +154,7 @@
     "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects up to 10 for one person running a business. Business includes 10 mailboxes, adds $3 a month for each extra, and has room for your whole team.",
     "perForever": "/forever",
     "perMonth": "/month",
+    "inclVat": "incl. VAT",
     "tiers": {
       "free": {
         "name": "Free",
@@ -273,10 +274,11 @@
     "linkOauth": "OAuth connection",
     "linkProviders": "Provider support",
     "linkReadOnly": "Read-only access",
+    "linkApiGuide": "Developer guide",
     "linkClients": "MCP client setup",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
-    "linkWithdrawal": "Right of withdrawal",
+    "linkWithdrawal": "Withdraw from contract here",
     "linkCancel": "Cancel contracts here",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -293,7 +295,8 @@
     "linkHelp": "Help & support",
     "linkSelfHost": "Self-hosting",
     "linkFounders": "For founders",
-    "linkBusiness": "For business"
+    "linkBusiness": "For business",
+    "linkDevelopers": "Developers"
   },
   "languageSwitcher": {
     "label": "Language",

@@ -154,6 +154,7 @@
     "sub": "Free verbindet ein Postfach mit 150 E-Mail-Aktionen pro Monat. Personal verbindet drei. Pro verbindet bis zu 10 für eine Person, die ein Unternehmen führt. Business enthält 10 Postfächer, jedes weitere kostet $3 pro Monat, und Platz für Ihr ganzes Team ist auch dabei.",
     "perForever": "/dauerhaft",
     "perMonth": "/Monat",
+    "inclVat": "inkl. MwSt.",
     "tiers": {
       "free": {
         "name": "Free",
@@ -273,10 +274,11 @@
     "linkOauth": "OAuth-Verbindung",
     "linkProviders": "Unterstützte Anbieter",
     "linkReadOnly": "Nur-Lese-Zugriff",
+    "linkApiGuide": "Entwicklerhandbuch",
     "linkClients": "MCP-Clients einrichten",
     "linkPrivacy": "Datenschutz",
     "linkTerms": "Nutzungsbedingungen",
-    "linkWithdrawal": "Widerrufsrecht",
+    "linkWithdrawal": "Vertrag hier widerrufen",
     "linkCancel": "Verträge hier kündigen",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -293,7 +295,8 @@
     "linkHelp": "Hilfe & Support",
     "linkSelfHost": "Self-Hosting",
     "linkFounders": "Für Gründer",
-    "linkBusiness": "Für Unternehmen"
+    "linkBusiness": "Für Unternehmen",
+    "linkDevelopers": "Entwickler"
   },
   "languageSwitcher": {
     "label": "Sprache",

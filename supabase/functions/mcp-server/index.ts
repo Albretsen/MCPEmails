@@ -302,6 +302,18 @@ import {
   reviewCardOptInsFromRows,
 } from "./reachable-inbox.ts";
 import {
+  findParkedInbox,
+  inboxIsParked,
+  listParkedInboxes,
+  PARKED_INBOX_ERROR_CODE,
+  PARKED_INBOX_STATUS,
+  type ParkedInboxMatch,
+  parkedInboxErrorText,
+  parkedInboxHint,
+  SCHEDULED_SEND_PARKED_DETAIL,
+  scheduledSendBlockedByParking,
+} from "./parked-inbox.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -472,6 +484,7 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
   buildUsageLimitText,
@@ -554,6 +567,7 @@ import {
   type SubscriptionDeps,
   supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
+import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -1468,6 +1482,11 @@ interface RequestContext {
    * on the per-query path; stampCardDiagnostics then reads it itself.
    */
   cardDiagnostics?: boolean;
+  /**
+   * The failed-payment markers off the workspace row the plan check read
+   * (payment-notice.ts). Absent when that read failed open: no notice then.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 // ---------------------------------------------------------------------------
@@ -2860,6 +2879,11 @@ interface PlanQuotaResult {
   firstUse?: FirstUseMarkers;
   /** True only when the window count itself succeeded (not a fail-open answer). */
   counted?: boolean;
+  /**
+   * The failed-payment markers off the same row, for the once-a-day billing
+   * notice (payment-notice.ts). Absent when the workspace lookup failed open.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 /**
@@ -2924,12 +2948,14 @@ async function checkPlanQuota(
     );
 
   // 1. Look up workspace plan. The two activation columns ride along for
-  // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
+  // markFirstProductUse (see PlanQuotaResult.firstUse), and the three payment
+  // columns for the billing notice (PlanQuotaResult.paymentIssue); nothing
+  // here reads them.
   const { data: workspace, error: wsError } = preloaded
     ? { data: preloaded.workspace, error: null }
     : await supabase
       .from("workspaces")
-      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at, payment_issue_since, payment_issue_kind, payment_notice_shown_on")
       .eq("id", workspaceId)
       .maybeSingle();
 
@@ -2986,6 +3012,12 @@ async function checkPlanQuota(
     analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
     onboarding_value_activated_at: workspace.onboarding_value_activated_at,
   };
+  // Undefined on a gate RPC that predates the columns: then there is no notice.
+  const paymentIssue: PaymentIssueMarkers = {
+    payment_issue_since: workspace.payment_issue_since ?? null,
+    payment_issue_kind: workspace.payment_issue_kind ?? null,
+    payment_notice_shown_on: workspace.payment_notice_shown_on ?? null,
+  };
 
   // 2. Count the workspace's calls in the trailing 60s window (issued above).
   const { count, error: countError } = await windowCount;
@@ -3003,6 +3035,7 @@ async function checkPlanQuota(
       usedThisMinute: 0,
       retryAfterSeconds: 0,
       firstUse,
+      paymentIssue,
     };
   }
 
@@ -3018,6 +3051,7 @@ async function checkPlanQuota(
       retryAfterSeconds: 0,
       firstUse,
       counted: true,
+      paymentIssue,
     };
   }
 
@@ -10784,110 +10818,8 @@ function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   };
 }
 
-/**
- * Decrypts an AES-256-GCM ciphertext produced by
- * `apps/web/src/lib/crypto.ts#encryptToken` using the Web Crypto API.
- *
- * Ciphertext layout (base64url-encoded):
- *   bytes  0–11 : 12-byte random IV
- *   bytes 12–N  : encrypted payload
- *   bytes N–N+15: 16-byte GCM authentication tag
- *
- * Web Crypto's `decrypt()` for AES-GCM expects: payload || authTag
- * concatenated in one Uint8Array with the IV passed separately, so
- * `raw.slice(12)` is the exact input needed.
- *
- * ENCRYPTION_KEY must be a 64-character lowercase hex string (32 bytes)
- * that matches the key used to encrypt the stored token.
- *
- * @throws if ENCRYPTION_KEY is misconfigured or if decryption fails.
- */
-async function decryptStoredToken(encrypted: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY");
-  if (!keyHex || keyHex.length !== 64) {
-    throw new Error(
-      "ENCRYPTION_KEY env var is not set or is not 64 hex characters.",
-    );
-  }
-
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-
-  // base64url → Uint8Array
-  const b64 = encrypted.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  const binaryStr = atob(padded);
-  const raw = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    raw[i] = binaryStr.charCodeAt(i);
-  }
-
-  if (raw.length < 12 + 16) {
-    throw new Error("Encrypted token is too short to be valid.");
-  }
-
-  const iv = raw.slice(0, 12);
-  // raw.slice(12) = ciphertext || authTag — exactly what Web Crypto AES-GCM needs.
-  const ciphertextWithTag = raw.slice(12);
-
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    ciphertextWithTag,
-  );
-
-  return new TextDecoder().decode(decrypted);
-}
-
-/**
- * Encrypts a plaintext string using AES-256-GCM and returns the ciphertext
- * encoded as base64url. Mirror of `apps/web/src/lib/crypto.ts#encryptToken`.
- *
- * Layout: IV(12) || ciphertext || authTag(16), base64url-encoded.
- * Used to persist refreshed OAuth access tokens back to the database.
- */
-async function encryptForStorage(plaintext: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY")!;
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"],
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    new TextEncoder().encode(plaintext),
-  );
-
-  // IV || ciphertext || authTag (Web Crypto appends the tag automatically)
-  const combined = new Uint8Array(12 + encrypted.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encrypted), 12);
-
-  return btoa(String.fromCharCode(...combined))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
+// decryptStoredToken / encryptForStorage live in storage-crypto.ts (testable,
+// chunked base64: a whole-buffer spread overflowed the stack on large plans).
 
 /**
  * inbox_list — returns all inboxes the API key may access.
@@ -10931,9 +10863,13 @@ async function executeListInboxes(
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
 
+  // Parked inboxes (parked-inbox.ts) are fetched in the same query and listed
+  // after the active ones with `status: "parked"`, so an assistant can explain
+  // why a mailbox the user knows about cannot be used instead of calling it
+  // missing. Only active entries get sender identities and capabilities.
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host")
+    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host, parked_at")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -10977,15 +10913,27 @@ async function executeListInboxes(
     service: string | null;
     imap_host: string | null;
     smtp_host: string | null;
+    parked_at?: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
-  const matchedRows = allRows.filter((row) => matchesInboxFilter(row, filter));
+  const matchedRows = allRows.filter((row) => !inboxIsParked(row) && matchesInboxFilter(row, filter));
+  const parkedEntries = allRows
+    .filter((row) => inboxIsParked(row) && matchesInboxFilter(row, filter))
+    .map((row) => ({
+      inbox_id: row.id,
+      email_address: row.email_address,
+      display_name: row.display_name ?? row.email_address,
+      provider: row.provider,
+      service: row.service ?? null,
+      status: PARKED_INBOX_STATUS,
+      hint: parkedInboxHint(APP_URL),
+    }));
 
   // Only the matched rows are expanded. The Gmail sender-identity lookup below
   // is a network call per row, so narrowing first is also why filtering in
   // memory is no more expensive than the predicate it replaced.
-  const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
+  const activeEntries = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
@@ -11048,6 +10996,9 @@ async function executeListInboxes(
         : {}),
     };
   }));
+
+  // Active first, then parked, each in connection order.
+  const inboxes: Array<Record<string, unknown>> = [...activeEntries, ...parkedEntries];
 
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
@@ -11122,7 +11073,8 @@ async function executeListInboxes(
  * Checks (in order):
  *   1. `inbox_id` matches a UUID format (fast pre-check).
  *   2. If `apiKey.inbox_ids` is non-null, the inbox ID must be in that list.
- *   3. Row exists in `inboxes` with matching `workspace_id` and no `deleted_at`.
+ *   3. Row exists in `inboxes` with matching `workspace_id`, no `deleted_at`
+ *      and no `parked_at` (parked-inbox.ts).
  *   4. `inbox.status` is 'active'.
  *
  * Returns the InboxRow on success, or null on any failure.
@@ -11146,7 +11098,10 @@ async function resolveInbox(
   // undefined there and the query below runs exactly as before.
   const firstParty = firstPartyContext.getStore();
   const cached = firstParty?.inboxRow?.(inboxId, apiKey.workspace_id) as InboxRow | null | undefined;
-  if (cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active") {
+  if (
+    cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active" &&
+    !inboxIsParked(cached as { parked_at?: unknown })
+  ) {
     return cached;
   }
 
@@ -11156,6 +11111,8 @@ async function resolveInbox(
     .eq("id", inboxId)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is outside the plan's inbox cap.
+    .is("parked_at", null)
     .maybeSingle();
 
   if (error || !data) return null;
@@ -11179,9 +11136,11 @@ type InboxResolution =
   | { ok: true; inbox: InboxRow }
   | {
       ok: false;
-      reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
       inboxes?: InboxRow[];
       conflict?: InboxSelectorConflict;
+      /** reason "parked": the parked inbox(es) the call named or could have used. */
+      parked?: ParkedInboxMatch[];
     };
 
 /**
@@ -11208,6 +11167,15 @@ async function resolveInboxArg(
   apiKey: ApiKeyRow,
 ): Promise<InboxResolution> {
   const resolved = await resolveInboxArgInner(args, apiKey);
+  // A selector that named a parked inbox gets told so, not "No inbox matches".
+  // Asked only after the ordinary lookup failed, so the hot path is unchanged.
+  if (!resolved.ok && resolved.reason === "not_found" && hasInboxSelector(args)) {
+    const parked = await findParkedInbox(supabase, apiKey, {
+      inboxId: typeof args["inbox_id"] === "string" ? args["inbox_id"] : null,
+      email: typeof args["inbox"] === "string" ? args["inbox"] : null,
+    });
+    if (parked) return { ok: false, reason: "parked", parked: [parked] };
+  }
   // Record the inbox this request actually resolved so the tools/call dispatcher
   // can log it (the raw arguments alone don't reveal an alias- or auto-resolved
   // inbox). No-op when called outside an activity-log async context.
@@ -11288,6 +11256,7 @@ async function resolveInboxArgInner(
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
+      .is("parked_at", null)
       .eq("status", "active")
       .ilike("email_address", pattern);
 
@@ -11351,11 +11320,14 @@ async function resolveInboxArgInner(
   }
 
   // Neither provided — auto-resolve only when exactly one inbox is accessible.
+  // Parked inboxes are not accessible: one active inbox beside parked ones
+  // still auto-resolves to the active one.
   let query = supabase
     .from("inboxes")
     .select(INBOX_SELECT_COLUMNS)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    .is("parked_at", null)
     .eq("status", "active")
     .order("created_at", { ascending: true });
 
@@ -11368,7 +11340,12 @@ async function resolveInboxArgInner(
 
   const rows = (data ?? []) as unknown as InboxRow[];
   if (rows.length === 1) return { ok: true, inbox: rows[0] };
-  if (rows.length === 0) return { ok: false, reason: "none" };
+  if (rows.length === 0) {
+    // Nothing active, but parked inboxes exist: "no mailbox is connected"
+    // would be false, and would send the user to connect one they already have.
+    const parked = await listParkedInboxes(supabase, apiKey);
+    return parked.length > 0 ? { ok: false, reason: "parked", parked } : { ok: false, reason: "none" };
+  }
   // Carry the accessible inboxes back so the error can name them inline, sparing
   // the caller a separate inbox_list round-trip (which some MCP clients fail to
   // surface on demand — see inboxResolutionError).
@@ -11383,9 +11360,10 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
   _toolName: string,
 ): ToolErrorResult {
@@ -11452,6 +11430,18 @@ function inboxResolutionError(
         };
       }
       errorCode = "inbox_selector_conflict";
+      break;
+    }
+    case "parked": {
+      // The call named a parked inbox, or every inbox the key can see is
+      // parked. Not "not found": the mailbox exists and the user knows it.
+      const parked = failure.parked ?? [];
+      text = parkedInboxErrorText(parked.map((ib) => ib.email_address), APP_URL);
+      structuredContent = {
+        error: PARKED_INBOX_ERROR_CODE,
+        inboxes: parked.map((ib) => ({ inbox_id: ib.id, email_address: ib.email_address, status: PARKED_INBOX_STATUS })),
+      };
+      errorCode = PARKED_INBOX_ERROR_CODE;
       break;
     }
     case "none":
@@ -25339,6 +25329,8 @@ async function keyReviewCardGates(
     .select(reachableInboxSelect("bulk_review_mode", "send_approval_required"))
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is as unreachable as a revoked one.
+    .is("parked_at", null)
     .eq("status", "active")
     .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
@@ -25504,6 +25496,8 @@ async function executeBulkPlanRequest(
     // projection surviving a later edit: a soft-deleted row never arrives at
     // all, whatever the predicate below can or cannot see.
     .is("deleted_at", null)
+    // A plan reviewed before the inbox was parked does not run after it.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) {
     return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_not_found" };
@@ -28845,7 +28839,10 @@ async function allReachableInboxesHideDraftEditor(
       .from("inboxes")
       .select(reachableInboxSelect("draft_editor_hidden"))
       .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      // A parked inbox is outside the plan and no call can land on it; its
+      // stale default must not decide the rollup any more than a deleted one's.
+      .is("parked_at", null);
     if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
     const { data, error } = await query;
     if (error) {
@@ -31500,6 +31497,8 @@ async function executeSearchContacts(
   } else if (inboxId) {
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -31517,6 +31516,7 @@ async function executeSearchContacts(
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
+      .is("parked_at", null)
       .eq("status", "active")
       .order("created_at", { ascending: true });
     if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
@@ -31954,6 +31954,8 @@ async function executeListScheduled(
     // If inbox_id provided, validate accessibility.
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -34183,6 +34185,22 @@ async function handleToolsCall(
     ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
+  // The once-a-day billing notice, while the owner's renewal payment is
+  // failing (payment-notice.ts). Successful results only, at most once per
+  // workspace per UTC day (claimed in the database), and it never fails the
+  // call. After the audit log and the idempotency snapshot, like the card
+  // stamp below, so a replay does not repeat it. No query unless an issue is
+  // recorded and today's notice is still unclaimed.
+  await maybeAttachPaymentNotice({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    markers: ctx.paymentIssue,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
   // Last thing before the result leaves: if this is one of our own
   // workspaces AND this result carries a card, let that card show its
   // protocol diagnostics line. Deliberately after the audit log and the
@@ -34545,7 +34563,9 @@ async function handleScheduledDispatch(
         // for are one list by construction. Hand-writing the projection is the
         // drift that turns the predicate into a constant true: an ABSENT
         // column is not decisive.
-        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
+        // `parked_at` rides along for the parking rule below; it is not a SQL
+        // filter, because a send scheduled before parking still goes out.
+        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(","), "parked_at"))
         .eq("id", row.inbox_id)
         // The row's own workspace, never just the id: a row whose inbox_id
         // names another tenant's mailbox must not resolve it. (Until
@@ -34581,6 +34601,17 @@ async function handleScheduledDispatch(
           `The mailbox this message was scheduled from is no longer connected ` +
             `(status: ${status}). Reconnect it, then schedule the message again.`,
         );
+      }
+      // PARKED (parked-inbox.ts). A send scheduled while the inbox was active
+      // is delivered: the customer scheduled it while the plan covered the
+      // inbox (plan decision D4). One created after parking is failed with a
+      // detail that says so; no resolver path should be able to create it.
+      if (scheduledSendBlockedByParking(row, inboxData as { parked_at?: unknown })) {
+        console.error("[dispatch] scheduled_send_inbox_parked", {
+          scheduled_send_id: row.id,
+          inbox_id: row.inbox_id,
+        });
+        throw new Error(SCHEDULED_SEND_PARKED_DETAIL);
       }
       const inbox = inboxData as unknown as InboxRow;
       // A receive-only inbox has no SMTP server. One that was switched to
@@ -35061,6 +35092,9 @@ async function loadInboxRowForTriage(
     // Soft-delete stays in SQL, as on every other inboxes read: the row never
     // arrives at all, whatever the projection later drifts to.
     .is("deleted_at", null)
+    // A parked inbox's rules are paused ('inbox_parked') before it is parked,
+    // so a rule only gets here if that write failed. Refusing is the backstop.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) return null;
   if (!inboxIsReachable(data as InboxReachabilityRow)) {
@@ -35584,12 +35618,18 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  */
 function automationInboxFailureMessage(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
 ): string {
   switch (failure.reason) {
+    case "parked": {
+      // Lower-case first word: the caller prefixes "automation <action>: ".
+      const text = parkedInboxErrorText((failure.parked ?? []).map((ib) => ib.email_address), APP_URL);
+      return text.charAt(0).toLowerCase() + text.slice(1);
+    }
     case "ambiguous": {
       const listed = (failure.inboxes ?? [])
         .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
@@ -35731,6 +35771,8 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     .select(INBOX_SELECT_COLUMNS)
     .eq("id", inboxId)
     .eq("workspace_id", workspaceId)
+    // A parked inbox is not opened for a preview either (parked-inbox.ts).
+    .is("parked_at", null)
     .maybeSingle<InboxRow>();
   if (!inboxRow) return json({ error: "inbox_not_found" }, 404);
 
@@ -36564,6 +36606,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
+  if ("paymentIssue" in quotaResult) ctx.paymentIssue = quotaResult.paymentIssue;
 
   // ── RateLimit-* headers on an answered tools/call ────────────────────────
   // So a client can pace itself before it meets a 429. Built from what the
