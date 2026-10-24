@@ -50,6 +50,13 @@ export const CROSS_INBOX_WINDOW = 100;
 /** A slow inbox is reported as timed out after this, and the rest still answer. */
 export const CROSS_INBOX_TIMEOUT_MS = 25_000;
 
+/**
+ * The whole fan-out answers within this, well inside the edge function's wall
+ * clock: inboxes not started by then are reported as not searched, and the
+ * partial result is returned.
+ */
+export const CROSS_INBOX_DEADLINE_MS = 75_000;
+
 /** Inboxes worked on at once, across providers. */
 export const CROSS_INBOX_CONCURRENCY = 6;
 
@@ -136,11 +143,18 @@ export function crossInboxBuckets(inbox: { provider: string; imap_host?: string 
 
 export type FanOutOutcome<R> =
   | { ok: true; value: R }
-  | { ok: false; error: unknown; timedOut: boolean };
+  | { ok: false; error: unknown; timedOut: boolean; skipped?: boolean };
 
 export interface FanOutOptions<T> {
   concurrency: number;
+  /** Per item: its outcome becomes a timeout after this long. */
   timeoutMs: number;
+  /**
+   * Whole call: once this has passed, items not yet started are reported as
+   * skipped, running ones as timed out, and the outcomes are returned. Keeps a
+   * fan-out over many slow inboxes inside the edge function's wall clock.
+   */
+  deadlineMs?: number;
   buckets: (item: T) => FanOutBucket[];
   /** Injected for tests. */
   setTimer?: (fn: () => void, ms: number) => unknown;
@@ -155,6 +169,14 @@ export class FanOutTimeoutError extends Error {
   }
 }
 
+/** The outcome of an item the call deadline left unstarted. */
+export class FanOutSkippedError extends Error {
+  constructor() {
+    super("not started before the call deadline");
+    this.name = "FanOutSkippedError";
+  }
+}
+
 /**
  * Runs `task` over every item, never more than `concurrency` at once and never
  * more than a bucket's limit inside that bucket. Outcomes come back in item
@@ -163,7 +185,12 @@ export class FanOutTimeoutError extends Error {
  * partial answer is the point).
  *
  * A timed-out task is not cancelled (the executors own their connections and
- * release them on their own timeouts); its slot is freed so the queue moves on.
+ * release them on their own timeouts). Its outcome is recorded at once, but
+ * its slot, global and bucket, stays held until the task really settles: a
+ * slow IMAP host is exactly when a second connection to it must not open.
+ *
+ * Resolves when every item has an outcome, or at the call deadline, whichever
+ * is first; it never waits for a timed-out task to finish.
  */
 export async function runFanOut<T, R>(
   items: readonly T[],
@@ -181,13 +208,29 @@ export async function runFanOut<T, R>(
   let running = 0;
 
   return await new Promise<FanOutOutcome<R>[]>((resolve) => {
-    let settled = 0;
+    let recorded = 0;
+    let closed = false;
+    const timers = new Set<unknown>();
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      for (const t of timers) clearTimer(t);
+      timers.clear();
+      resolve(outcomes);
+    };
+    const record = (index: number, outcome: FanOutOutcome<R>) => {
+      if (closed || outcomes[index] !== undefined) return;
+      outcomes[index] = outcome;
+      recorded++;
+      if (recorded === items.length) close();
+    };
     const fits = (index: number) =>
       bucketsOf[index].every((b) => (inBucket.get(b.key) ?? 0) < Math.max(1, b.limit));
     const occupy = (index: number, delta: number) => {
       for (const b of bucketsOf[index]) inBucket.set(b.key, (inBucket.get(b.key) ?? 0) + delta);
     };
     const pump = () => {
+      if (closed) return;
       for (let p = 0; p < pending.length && running < concurrency;) {
         const index = pending[p];
         if (!fits(index)) {
@@ -201,22 +244,20 @@ export async function runFanOut<T, R>(
     const start = (index: number) => {
       running++;
       occupy(index, 1);
-      let done = false;
-      const finish = (outcome: FanOutOutcome<R>) => {
-        if (done) return;
-        done = true;
+      const timer = setTimer(() => {
+        timers.delete(timer);
+        record(index, { ok: false, error: new FanOutTimeoutError(options.timeoutMs), timedOut: true });
+      }, options.timeoutMs);
+      timers.add(timer);
+      // The slot is released only here, when the task itself has settled.
+      const release = (outcome: FanOutOutcome<R>) => {
         clearTimer(timer);
-        outcomes[index] = outcome;
+        timers.delete(timer);
+        record(index, outcome);
         running--;
         occupy(index, -1);
-        settled++;
-        if (settled === items.length) resolve(outcomes);
-        else pump();
+        pump();
       };
-      const timer = setTimer(
-        () => finish({ ok: false, error: new FanOutTimeoutError(options.timeoutMs), timedOut: true }),
-        options.timeoutMs,
-      );
       let promise: Promise<R>;
       try {
         promise = task(items[index], index);
@@ -224,10 +265,28 @@ export async function runFanOut<T, R>(
         promise = Promise.reject(error);
       }
       promise.then(
-        (value) => finish({ ok: true, value }),
-        (error) => finish({ ok: false, error, timedOut: false }),
+        (value) => release({ ok: true, value }),
+        (error) => release({ ok: false, error, timedOut: false }),
       );
     };
+    if (typeof options.deadlineMs === "number" && Number.isFinite(options.deadlineMs)) {
+      const deadline = setTimer(() => {
+        timers.delete(deadline);
+        for (let i = 0; i < items.length; i++) {
+          if (outcomes[i] !== undefined) continue;
+          const unstarted = pending.includes(i);
+          record(
+            i,
+            unstarted
+              ? { ok: false, error: new FanOutSkippedError(), timedOut: false, skipped: true }
+              : { ok: false, error: new FanOutTimeoutError(options.deadlineMs!), timedOut: true },
+          );
+        }
+        pending.length = 0;
+        close();
+      }, options.deadlineMs);
+      timers.add(deadline);
+    }
     pump();
   });
 }

@@ -159,6 +159,100 @@ Deno.test("fan-out: a failure and a timeout are their items' outcomes; the rest 
   assertEquals(outcomes[3], { ok: true, value: "ok2" });
 });
 
+/** Timers a test fires by hand, by their duration. */
+function manualTimers() {
+  const live = new Map<number, { fn: () => void; ms: number }>();
+  let next = 0;
+  return {
+    setTimer: (fn: () => void, ms: number) => {
+      live.set(next, { fn, ms });
+      return next++;
+    },
+    clearTimer: (h: unknown) => void live.delete(h as number),
+    fire(ms: number) {
+      for (const [h, t] of [...live]) {
+        if (t.ms !== ms) continue;
+        live.delete(h);
+        t.fn();
+      }
+    },
+  };
+}
+
+Deno.test("fan-out: a timed-out leg is reported at once but keeps its slot until it settles", async () => {
+  const timers = manualTimers();
+  const started: string[] = [];
+  let releaseSlow: (v: string) => void = () => {};
+  let resolved = false;
+  const run = runFanOut(
+    ["slow", "next", "last"],
+    { concurrency: 5, timeoutMs: 1000, buckets: () => [{ key: "imap_host:slow.example", limit: 1 }], ...timers },
+    (item) => {
+      started.push(item);
+      if (item === "slow") return new Promise<string>((r) => (releaseSlow = r));
+      return Promise.resolve(item);
+    },
+  ).then((o) => {
+    resolved = true;
+    return o;
+  });
+  await tick();
+  timers.fire(1000);
+  await tick();
+  // Timed out, but the host's one connection is still open: nothing else starts.
+  assertEquals(started, ["slow"]);
+  assertEquals(resolved, false);
+  releaseSlow("late");
+  await tick();
+  await tick();
+  assertEquals(started, ["slow", "next", "last"]);
+  const outcomes = await run;
+  // The late answer does not replace the timeout already reported.
+  assertEquals(outcomes[0].ok, false);
+  assertEquals((outcomes[0] as { timedOut: boolean }).timedOut, true);
+  assertEquals(outcomes[1], { ok: true, value: "next" });
+  assertEquals(outcomes[2], { ok: true, value: "last" });
+});
+
+Deno.test("fan-out: at the call deadline, unstarted legs are skipped and the outcomes return", async () => {
+  const timers = manualTimers();
+  const started: number[] = [];
+  const run = runFanOut(
+    [0, 1, 2, 3],
+    { concurrency: 5, timeoutMs: 1000, deadlineMs: 5000, buckets: () => [{ key: "imap_host:one.example", limit: 1 }], ...timers },
+    (item) => {
+      started.push(item);
+      return new Promise<number>(() => {});
+    },
+  );
+  await tick();
+  timers.fire(1000);
+  await tick();
+  timers.fire(5000);
+  const outcomes = await run;
+  assertEquals(started, [0]);
+  assertEquals((outcomes[0] as { timedOut: boolean }).timedOut, true);
+  for (const i of [1, 2, 3]) {
+    assertEquals(outcomes[i].ok, false);
+    assertEquals((outcomes[i] as { skipped?: boolean }).skipped, true, String(i));
+  }
+});
+
+Deno.test("fan-out: the deadline also closes a leg still running past it", async () => {
+  const timers = manualTimers();
+  const run = runFanOut(
+    ["a", "b"],
+    { concurrency: 5, timeoutMs: 9000, deadlineMs: 5000, buckets: () => [], ...timers },
+    (item) => item === "a" ? Promise.resolve("a") : new Promise<string>(() => {}),
+  );
+  await tick();
+  timers.fire(5000);
+  const outcomes = await run;
+  assertEquals(outcomes[0], { ok: true, value: "a" });
+  assertEquals((outcomes[1] as { timedOut: boolean; skipped?: boolean }).timedOut, true);
+  assertEquals((outcomes[1] as { skipped?: boolean }).skipped, undefined);
+});
+
 Deno.test("fan-out over nothing answers at once", async () => {
   assertEquals(await runFanOut([], { concurrency: 3, timeoutMs: 10, buckets: () => [] }, () => Promise.resolve(1)), []);
 });

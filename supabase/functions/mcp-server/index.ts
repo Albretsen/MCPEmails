@@ -494,6 +494,7 @@ import {
 import {
   advertiseCrossInboxSearch,
   CROSS_INBOX_CONCURRENCY,
+  CROSS_INBOX_DEADLINE_MS,
   CROSS_INBOX_MAX_INBOXES,
   CROSS_INBOX_TIMEOUT_MS,
   CROSS_INBOX_WINDOW,
@@ -31508,6 +31509,7 @@ async function executeCrossInbox(
     {
       concurrency: CROSS_INBOX_CONCURRENCY,
       timeoutMs: CROSS_INBOX_TIMEOUT_MS,
+      deadlineMs: CROSS_INBOX_DEADLINE_MS,
       buckets: (inbox) => crossInboxBuckets(inbox),
     },
     (inbox) =>
@@ -31529,14 +31531,17 @@ async function executeCrossInbox(
       provider: inbox.provider,
       dispatch_name: dispatchName,
       timed_out: outcome.timedOut,
+      skipped: outcome.skipped === true,
       error: outcome.error instanceof Error ? outcome.error.message : String(outcome.error),
     });
     legs.push({
       ok: false,
       target,
-      errorCode: outcome.timedOut ? "timeout" : "internal_error",
-      message: outcome.timedOut
-        ? `This inbox did not answer within ${Math.round(CROSS_INBOX_TIMEOUT_MS / 1000)} seconds.`
+      errorCode: outcome.skipped ? "not_searched" : outcome.timedOut ? "timeout" : "internal_error",
+      message: outcome.skipped
+        ? "Not searched: the call reached its time limit before this inbox's turn. Name its inbox_id to read it."
+        : outcome.timedOut
+        ? "This inbox did not answer in time."
         : "This inbox could not be read just now.",
     });
   }
