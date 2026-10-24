@@ -24,6 +24,8 @@
     "app/signup/**": { "regions": ["arn1"] },
     "app/r/**": { "regions": ["arn1"] },
     "app/(auth)/**": { "regions": ["arn1"] },
+    "app/u/**": { "regions": ["arn1"] },
+    "app/upgrade/done/**": { "regions": ["arn1"] },
     "app/**": { "regions": ["iad1"] }
   },
   "rewrites": [

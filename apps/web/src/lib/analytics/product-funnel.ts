@@ -15,6 +15,18 @@ export type ConnectEntryPoint =
   | 'header' | 'inboxes_page' | 'guide' | 'multi_inbox_overview' | 'multi_inbox_inboxes'
   | 'post_checkout' | 'first_run' | 'provider_intent' | 'reconnect' | 'command_palette' | 'other';
 
+/**
+ * Every value the `entry_point` column takes: the connect-modal openers above,
+ * plus `chat_link`, the checkout link in the in-chat Free-cap refusal
+ * (app/u/[token]/route.ts).
+ *
+ * `chat_link` is deliberately NOT in connect-entry-point.mjs. That list is what
+ * the browser's beacon is narrowed against, and a link opened from a chat
+ * transcript is only ever recorded by the server; leaving it off the browser's
+ * list means no client can forge a chat-link row.
+ */
+export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link';
+
 /** Narrow an untrusted value to the closed list; anything else is null. */
 export function connectEntryPoint(value: unknown): ConnectEntryPoint | null {
   return parseConnectEntryPoint(value) as ConnectEntryPoint | null;
@@ -106,7 +118,7 @@ export type ProductFunnelEvent = {
    * (`paywall_reached` from the inbox cap, `provider_selected`). Null on every
    * other row, and for a value the server did not recognise.
    */
-  entryPoint?: ConnectEntryPoint | null;
+  entryPoint?: FunnelEntryPoint | null;
 };
 
 export async function recordProductFunnelEvent(db: Db, event: ProductFunnelEvent): Promise<void> {
