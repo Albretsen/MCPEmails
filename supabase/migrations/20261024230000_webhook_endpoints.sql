@@ -1,10 +1,10 @@
 -- ===========================================================================
 -- Webhooks for new mail (`message.received`), Pro and Business.
--- 20261024180000_webhook_endpoints
+-- 20261024230000_webhook_endpoints
 --
--- Version 20261024180000, not ...120000: that version is already taken by
--- 20261024120000_abandoned_checkout_recovery, and two files with one version
--- break `supabase db start` and `migration repair`.
+-- Version 20261024230000: 120000, 130000 and 180000 were taken on main by
+-- other migrations of the same day, and two files with one version break
+-- `supabase db start` and `migration repair`.
 --
 -- Webhooks are a second consumer of the new-mail watcher built for web push
 -- (20261005100000 .. 20261005100200, supabase/functions/client-api/push/).
@@ -43,7 +43,7 @@
 --
 -- WHO MAY DO WHAT
 -- ---------------
---   members (any role)  SELECT their workspace's endpoints (minus the secret)
+--   members (any role)  SELECT their workspace's endpoints (minus the secret and the URL)
 --                       and deliveries.
 --   owner / admin       create, edit, re-enable and delete, through the web
 --                       routes (apps/web/app/api/webhook-endpoints), which run
@@ -66,10 +66,11 @@
 --   1. webhooks_plan_allowed(workspace)
 --   2. webhook_endpoints
 --   3. webhook_deliveries
---   4. RLS and grants
---   5. sync_inbox_watch_state(): an enabled endpoint watches its inboxes
---   6. the dispatcher's functions: webhook_enqueue_event,
---      lease_webhook_deliveries, record_webhook_attempt
+--   4. RLS and grants; 4b. the 10-endpoint cap as a trigger
+--   5. webhook_capped_inboxes(): at most 25 watched inboxes per workspace;
+--      5b. sync_inbox_watch_state(): webhooks watch those inboxes
+--   6. the dispatcher's functions: webhook_has_targets,
+--      webhook_enqueue_event, lease_webhook_deliveries, record_webhook_attempt
 --   7. dispatch_inbox_watch(): also wakes the dispatcher for due retries
 --   8. 30-day retention for deliveries
 --
@@ -241,9 +242,12 @@ CREATE POLICY "webhook_deliveries_select_members"
 REVOKE ALL ON public.webhook_endpoints  FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON public.webhook_deliveries FROM PUBLIC, anon, authenticated;
 
--- Every column but the secret.
+-- Every column but the secret and the URL. A webhook path often carries the
+-- receiver's own token, so browser sessions never read `url`: the list route
+-- reads it as the service role and shows it whole to owners and admins only,
+-- masked (scheme and host) to everyone else.
 GRANT SELECT (
-  id, workspace_id, url, secret_prefix, inbox_ids, events, payload_mode, created_by,
+  id, workspace_id, secret_prefix, inbox_ids, events, payload_mode, created_by,
   created_at, updated_at, disabled_at, disabled_reason, consecutive_failures,
   failing_since, last_success_at
 ) ON public.webhook_endpoints TO authenticated;
@@ -259,14 +263,95 @@ GRANT ALL ON public.webhook_deliveries TO service_role;
 
 
 -- ---------------------------------------------------------------------------
--- 5. sync_inbox_watch_state(): webhooks watch inboxes too.
+-- 4b. At most 10 endpoints per workspace, enforced in the database.
 --
--- Current definition: 20261005100100. The push branch is unchanged. Added: a
--- live, active inbox is also watched when an ENABLED endpoint of its
--- workspace covers it (inbox_ids NULL or containing it) and the workspace's
--- plan allows webhooks. web_client_enabled is not required for this branch:
--- webhooks do not involve the web client. A paused (downgraded) or disabled
--- endpoint watches nothing.
+-- The route checks the count first for a clear error, but two concurrent
+-- creates could both pass that check. This trigger takes a per-workspace
+-- transaction lock and counts again, so the cap holds under any concurrency.
+-- The error message is the code the route maps to 409 endpoint_limit.
+-- Mirrors MAX_WEBHOOK_ENDPOINTS in apps/web/src/lib/webhooks/db.ts.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.webhook_endpoints_enforce_limit()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('webhook_endpoints:' || NEW.workspace_id::text, 0));
+  IF (SELECT count(*) FROM public.webhook_endpoints e WHERE e.workspace_id = NEW.workspace_id) >= 10 THEN
+    RAISE EXCEPTION 'webhook_endpoint_limit' USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END;
+$fn$;
+
+REVOKE EXECUTE ON FUNCTION public.webhook_endpoints_enforce_limit() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS webhook_endpoints_limit ON public.webhook_endpoints;
+CREATE TRIGGER webhook_endpoints_limit
+  BEFORE INSERT ON public.webhook_endpoints
+  FOR EACH ROW EXECUTE FUNCTION public.webhook_endpoints_enforce_limit();
+
+
+-- ---------------------------------------------------------------------------
+-- 5. Which inboxes webhooks may watch: webhook_capped_inboxes(workspace)
+--
+-- CAPACITY. Every watched inbox costs a probe every one or two minutes in the
+-- shared 20-row passes (BATCH_SIZE / c_batch, unchanged). So the inboxes a
+-- workspace's webhooks add to the watcher are capped at 25. Which 25: the
+-- covered, live, active inboxes in ORDER OF CONNECTION, OLDEST FIRST
+-- (inboxes.created_at, then id). Deterministic, and connecting a new inbox
+-- never pushes an existing, working one out; the newest beyond the cap are
+-- the ones not watched for webhooks. Mirrors MAX_WEBHOOK_WATCHED_INBOXES in
+-- apps/web/src/lib/webhooks/access.ts. An inbox outside the cap gets no
+-- webhook events even when web push watches it (has_targets and enqueue use
+-- this same function).
+--
+-- p_workspace_id NULL = every plan-allowed workspace (the watch-set sync).
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.webhook_capped_inboxes(p_workspace_id uuid DEFAULT NULL)
+RETURNS TABLE (inbox_id uuid, workspace_id uuid)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+  SELECT ranked.id, ranked.workspace_id
+    FROM (
+      SELECT i.id, i.workspace_id,
+             row_number() OVER (PARTITION BY i.workspace_id ORDER BY i.created_at, i.id) AS rn
+        FROM public.inboxes i
+       WHERE (p_workspace_id IS NULL OR i.workspace_id = p_workspace_id)
+         AND i.deleted_at IS NULL
+         AND i.status = 'active'
+         AND EXISTS (
+               SELECT 1
+                 FROM public.webhook_endpoints e
+                WHERE e.workspace_id = i.workspace_id
+                  AND e.disabled_at IS NULL
+                  AND 'message.received' = ANY(e.events)
+                  AND (e.inbox_ids IS NULL OR i.id = ANY(e.inbox_ids))
+             )
+         AND public.webhooks_plan_allowed(i.workspace_id)
+    ) ranked
+   WHERE ranked.rn <= 25;
+$fn$;
+
+COMMENT ON FUNCTION public.webhook_capped_inboxes(uuid) IS
+  'The inboxes webhooks may watch: live, active inboxes covered by an enabled endpoint of a plan-allowed workspace, at most 25 per workspace, oldest connected first (created_at, id). Service-role only.';
+
+REVOKE EXECUTE ON FUNCTION public.webhook_capped_inboxes(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.webhook_capped_inboxes(uuid) TO service_role;
+
+
+-- ---------------------------------------------------------------------------
+-- 5b. sync_inbox_watch_state(): webhooks watch inboxes too.
+--
+-- Current definition: 20261005100100. The push branch is unchanged. Added:
+-- the inboxes of webhook_capped_inboxes(). web_client_enabled is not required
+-- for this branch: webhooks do not involve the web client. A paused
+-- (downgraded) or disabled endpoint watches nothing.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.sync_inbox_watch_state()
 RETURNS void
@@ -280,39 +365,27 @@ AS $fn$
       JOIN public.workspaces w
         ON w.id = i.workspace_id
        AND w.deleted_at IS NULL
+       AND w.web_client_enabled
      WHERE i.deleted_at IS NULL
        AND i.status = 'active'
-       AND (
-             (
-               w.web_client_enabled
-               AND EXISTS (
-                     SELECT 1
-                       FROM public.push_subscriptions s
-                       JOIN public.workspace_members m
-                         ON m.workspace_id = s.workspace_id
-                        AND m.user_id = s.user_id
-                      WHERE s.workspace_id = i.workspace_id
-                        AND s.disabled_at IS NULL
-                        AND NOT EXISTS (
-                              SELECT 1
-                                FROM public.push_preferences p
-                               WHERE p.user_id = s.user_id
-                                 AND p.inbox_id = i.id
-                                 AND p.enabled = false
-                            )
-                   )
-             )
-             OR (
-               EXISTS (
-                 SELECT 1
-                   FROM public.webhook_endpoints e
-                  WHERE e.workspace_id = i.workspace_id
-                    AND e.disabled_at IS NULL
-                    AND (e.inbox_ids IS NULL OR i.id = ANY(e.inbox_ids))
-               )
-               AND public.webhooks_plan_allowed(i.workspace_id)
-             )
+       AND EXISTS (
+             SELECT 1
+               FROM public.push_subscriptions s
+               JOIN public.workspace_members m
+                 ON m.workspace_id = s.workspace_id
+                AND m.user_id = s.user_id
+              WHERE s.workspace_id = i.workspace_id
+                AND s.disabled_at IS NULL
+                AND NOT EXISTS (
+                      SELECT 1
+                        FROM public.push_preferences p
+                       WHERE p.user_id = s.user_id
+                         AND p.inbox_id = i.id
+                         AND p.enabled = false
+                    )
            )
+    UNION
+    SELECT c.inbox_id FROM public.webhook_capped_inboxes(NULL) c
   ),
   removed AS (
     DELETE FROM public.inbox_watch_state s
@@ -325,16 +398,16 @@ AS $fn$
 $fn$;
 
 COMMENT ON FUNCTION public.sync_inbox_watch_state() IS
-  'Makes inbox_watch_state equal to the set of watched mailboxes: live, active inboxes that either (a) are in a web-client-enabled workspace with an active push subscription of a current member who has not switched that mailbox off, or (b) are covered by an enabled webhook endpoint of a workspace whose plan allows webhooks. New rows start with an empty cursor. Called by dispatch_inbox_watch() and lease_inbox_watches().';
+  'Makes inbox_watch_state equal to the set of watched mailboxes: live, active inboxes that either (a) are in a web-client-enabled workspace with an active push subscription of a current member who has not switched that mailbox off, or (b) are returned by webhook_capped_inboxes() (covered by an enabled webhook endpoint of a plan-allowed workspace, at most 25 per workspace). New rows start with an empty cursor. Called by dispatch_inbox_watch() and lease_inbox_watches().';
 
 
 -- ---------------------------------------------------------------------------
 -- 6. The dispatcher's functions
 -- ---------------------------------------------------------------------------
 
--- webhook_has_targets: does any enabled, plan-allowed endpoint cover this
--- inbox? Asked on an arrival before the mailbox is read for message ids, so a
--- mailbox watched only for (private) push is not read for webhooks.
+-- webhook_has_targets: is this inbox one webhooks may watch? Asked on an
+-- arrival before the mailbox is read for message ids, so a mailbox watched
+-- only for (private) push is not read for webhooks.
 CREATE OR REPLACE FUNCTION public.webhook_has_targets(p_inbox_id uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -344,95 +417,78 @@ SET search_path = public
 AS $fn$
   SELECT EXISTS (
     SELECT 1
-      FROM public.inboxes i
-      JOIN public.webhook_endpoints e
-        ON e.workspace_id = i.workspace_id
-       AND e.disabled_at IS NULL
-       AND (e.inbox_ids IS NULL OR i.id = ANY(e.inbox_ids))
-     WHERE i.id = p_inbox_id
-       AND i.deleted_at IS NULL
-       AND i.status = 'active'
-       AND 'message.received' = ANY(e.events)
-  ) AND public.webhooks_plan_allowed((SELECT workspace_id FROM public.inboxes WHERE id = p_inbox_id));
+      FROM public.webhook_capped_inboxes((SELECT i.workspace_id FROM public.inboxes i WHERE i.id = p_inbox_id)) c
+     WHERE c.inbox_id = p_inbox_id
+  );
 $fn$;
 
 COMMENT ON FUNCTION public.webhook_has_targets(uuid) IS
-  'True when an enabled endpoint of a plan-allowed workspace covers the inbox. Service-role only.';
+  'True when the inbox is within webhook_capped_inboxes() for its workspace. Service-role only.';
 
 REVOKE EXECUTE ON FUNCTION public.webhook_has_targets(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.webhook_has_targets(uuid) TO service_role;
 
--- webhook_enqueue_event: one row per enabled, plan-allowed endpoint that
--- covers the inbox, created already LEASED to the caller (which makes the
--- first attempt in the same request), and returned with what that attempt
--- needs. ON CONFLICT DO NOTHING on (endpoint, event): a repeated call with
--- the same event id enqueues nothing twice.
+-- webhook_enqueue_event: one PENDING row per enabled, plan-allowed endpoint
+-- that covers the inbox (within the cap), due now and not leased: the sender
+-- step of the same pass makes the first attempt. The event id is derived by
+-- the caller from the inbox and the two cursors (deliver.ts), so an arrival
+-- detected twice (the pass died before the cursor was stored) inserts
+-- nothing the second time: ON CONFLICT (endpoint_id, event_id) DO NOTHING.
 CREATE OR REPLACE FUNCTION public.webhook_enqueue_event(
   p_inbox_id      uuid,
   p_event_id      text,
   p_message_ids   text[],
-  p_message_count integer,
-  p_lease_seconds integer DEFAULT 120
+  p_message_count integer
 )
-RETURNS TABLE (
-  delivery_id       uuid,
-  lease_id          uuid,
-  endpoint_id       uuid,
-  workspace_id      uuid,
-  url               text,
-  secret_ciphertext text,
-  payload_mode      text,
-  created_at        timestamptz
-)
+RETURNS integer
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $fn$
 #variable_conflict use_column
 DECLARE
-  v_lease interval := make_interval(secs => least(greatest(coalesce(p_lease_seconds, 120), 30), 600));
-  v_lease_id uuid := gen_random_uuid();
+  v_count integer;
 BEGIN
-  RETURN QUERY
   WITH targets AS (
-    SELECT e.id, e.workspace_id, e.url, e.secret_ciphertext, e.payload_mode
+    SELECT e.id, e.workspace_id
       FROM public.inboxes i
       JOIN public.webhook_endpoints e
         ON e.workspace_id = i.workspace_id
        AND e.disabled_at IS NULL
        AND (e.inbox_ids IS NULL OR i.id = ANY(e.inbox_ids))
      WHERE i.id = p_inbox_id
-       AND i.deleted_at IS NULL
-       AND i.status = 'active'
        AND 'message.received' = ANY(e.events)
-       AND public.webhooks_plan_allowed(i.workspace_id)
+       AND EXISTS (
+             SELECT 1 FROM public.webhook_capped_inboxes(i.workspace_id) c WHERE c.inbox_id = i.id
+           )
      ORDER BY e.created_at, e.id
      LIMIT 50
   ),
   inserted AS (
     INSERT INTO public.webhook_deliveries AS d
       (endpoint_id, workspace_id, event_id, event_type, inbox_id, message_ids, message_count,
-       status, next_attempt_at, lease_id, leased_until)
+       status, next_attempt_at)
     SELECT t.id, t.workspace_id, p_event_id, 'message.received', p_inbox_id,
            (p_message_ids)[1:20], greatest(coalesce(p_message_count, 0), 0),
-           'pending', now(), v_lease_id, now() + v_lease
+           'pending', now()
       FROM targets t
     ON CONFLICT (endpoint_id, event_id) DO NOTHING
-    RETURNING d.id, d.lease_id, d.endpoint_id, d.created_at
+    RETURNING 1
   )
-  SELECT x.id, x.lease_id, t.id, t.workspace_id, t.url, t.secret_ciphertext, t.payload_mode, x.created_at
-    FROM inserted x
-    JOIN targets t ON t.id = x.endpoint_id;
+  SELECT count(*)::integer INTO v_count FROM inserted;
+  RETURN v_count;
 END;
 $fn$;
 
-COMMENT ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer, integer) IS
-  'Enqueues one message.received delivery per enabled, plan-allowed endpoint covering the inbox, leased to the caller for its first attempt, and returns the endpoint URL, encrypted secret and payload mode. Idempotent per (endpoint, event id). Service-role only.';
+COMMENT ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer) IS
+  'Enqueues one pending, unleased message.received delivery per enabled endpoint covering the inbox (within webhook_capped_inboxes), due now. Idempotent per (endpoint, event id). Returns how many rows were inserted. Service-role only.';
 
--- lease_webhook_deliveries: due retries, FOR UPDATE SKIP LOCKED, with what a
--- retry needs. A delivery whose endpoint is disabled or whose workspace may
--- no longer deliver comes back with plan_allowed / endpoint_enabled false and
--- is abandoned by the caller.
+-- lease_webhook_deliveries: first ABANDONS due deliveries whose inbox was
+-- deleted, disconnected or is no longer active (nothing to deliver about),
+-- then claims due ones, FOR UPDATE SKIP LOCKED, first attempts before
+-- retries, with what an attempt needs: the endpoint, whether it and the plan
+-- still allow delivery, and the inbox's watch state (provider, mail host,
+-- backoff, refused-login marker) so a headers read can be skipped or capped.
 CREATE OR REPLACE FUNCTION public.lease_webhook_deliveries(
   p_limit         integer DEFAULT 20,
   p_lease_seconds integer DEFAULT 120
@@ -445,6 +501,9 @@ RETURNS TABLE (
   event_id          text,
   inbox_id          uuid,
   provider          text,
+  mail_host         text,
+  inbox_last_error  text,
+  backoff_until     timestamptz,
   message_ids       text[],
   message_count     integer,
   attempt           integer,
@@ -464,6 +523,17 @@ DECLARE
   v_limit integer := least(greatest(coalesce(p_limit, 20), 1), 50);
   v_lease interval := make_interval(secs => least(greatest(coalesce(p_lease_seconds, 120), 30), 600));
 BEGIN
+  UPDATE public.webhook_deliveries d
+     SET status = 'abandoned', error_code = 'inbox_inactive', message_ids = NULL,
+         next_attempt_at = NULL, lease_id = NULL, leased_until = NULL
+   WHERE d.status = 'pending'
+     AND d.next_attempt_at <= now()
+     AND (d.leased_until IS NULL OR d.leased_until <= now())
+     AND NOT EXISTS (
+           SELECT 1 FROM public.inboxes i
+            WHERE i.id = d.inbox_id AND i.deleted_at IS NULL AND i.status = 'active'
+         );
+
   RETURN QUERY
   WITH due AS (
     SELECT d.id
@@ -471,7 +541,7 @@ BEGIN
      WHERE d.status = 'pending'
        AND d.next_attempt_at <= now()
        AND (d.leased_until IS NULL OR d.leased_until <= now())
-     ORDER BY d.next_attempt_at
+     ORDER BY (d.attempt > 0), d.next_attempt_at
      LIMIT v_limit
        FOR UPDATE SKIP LOCKED
   ),
@@ -485,18 +555,21 @@ BEGIN
               d.message_ids, d.message_count, d.attempt, d.created_at
   )
   SELECT c.id, c.lease_id, c.endpoint_id, c.workspace_id, c.event_id, c.inbox_id,
-         i.provider, c.message_ids, c.message_count, c.attempt, c.created_at,
+         i.provider, i.imap_host, i.last_error, s.backoff_until,
+         c.message_ids, c.message_count, c.attempt, c.created_at,
          e.url, e.secret_ciphertext, e.payload_mode,
          e.disabled_at IS NULL,
          public.webhooks_plan_allowed(c.workspace_id)
     FROM claimed c
     JOIN public.webhook_endpoints e ON e.id = c.endpoint_id
-    LEFT JOIN public.inboxes i ON i.id = c.inbox_id;
+    LEFT JOIN public.inboxes i ON i.id = c.inbox_id
+    LEFT JOIN public.inbox_watch_state s ON s.inbox_id = c.inbox_id
+   ORDER BY (c.attempt > 0), c.created_at;
 END;
 $fn$;
 
 COMMENT ON FUNCTION public.lease_webhook_deliveries(integer, integer) IS
-  'Claims up to p_limit due pending webhook deliveries (FOR UPDATE SKIP LOCKED, a lease id the caller must present to record the attempt) with the endpoint URL, encrypted secret, payload mode, and whether the endpoint is enabled and the plan still allows delivery. Service-role only.';
+  'Abandons due webhook deliveries whose inbox is deleted or not active, then claims up to p_limit due pending deliveries (FOR UPDATE SKIP LOCKED; first attempts before retries) with the endpoint URL, encrypted secret, payload mode, whether the endpoint is enabled and the plan still allows delivery, and the inbox''s provider, mail host, last_error and watch backoff. Service-role only.';
 
 -- record_webhook_attempt: the result of one attempt, applied atomically to
 -- the delivery and its endpoint. The retry schedule and the disable
@@ -595,10 +668,10 @@ $fn$;
 COMMENT ON FUNCTION public.record_webhook_attempt(uuid, uuid, boolean, integer, text, timestamptz, integer, integer, text) IS
   'Records one webhook attempt (or abandons the delivery) for a delivery the lease still holds, updates the endpoint''s failure counters atomically, disables the endpoint at the caller''s thresholds and abandons its pending deliveries. Returns whether this call disabled it. Service-role only.';
 
-REVOKE EXECUTE ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer, integer) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.lease_webhook_deliveries(integer, integer) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.record_webhook_attempt(uuid, uuid, boolean, integer, text, timestamptz, integer, integer, text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer, integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.webhook_enqueue_event(uuid, text, text[], integer) TO service_role;
 GRANT EXECUTE ON FUNCTION public.lease_webhook_deliveries(integer, integer) TO service_role;
 GRANT EXECUTE ON FUNCTION public.record_webhook_attempt(uuid, uuid, boolean, integer, text, timestamptz, integer, integer, text) TO service_role;
 

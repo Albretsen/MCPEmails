@@ -203,6 +203,16 @@ test('a Free workspace gets the upgrade prompt with the display name, never the 
   assert.ok(view.container.querySelector('[data-testid="webhook-row-ep-old"]').textContent.includes(W.statusPaused));
 });
 
+test('when webhooks cover more inboxes than the watcher takes, the panel says how many are left out', async (t) => {
+  const view = await render(t, { list: { ...PRO([endpoint('ep-1')]), maxWatchedInboxes: 25, coveredInboxes: 27 } });
+  const note = view.container.querySelector('[data-testid="webhooks-inbox-cap"]');
+  assert.ok(note);
+  assert.ok(note.textContent.includes('25'));
+  assert.ok(note.textContent.includes('2 inboxes'));
+  const under = await render(t, { list: { ...PRO([endpoint('ep-2')]), maxWatchedInboxes: 25, coveredInboxes: 3 } });
+  assert.equal(under.container.querySelectorAll('[data-testid="webhooks-inbox-cap"]').length, 0);
+});
+
 test('a Personal workspace prompt names the plan by its display name and never prints an internal id', async (t) => {
   const view = await render(t, { list: { endpoints: [], webhooksEnabled: false, plan: 'personal', canManage: true, maxEndpoints: 10 } });
   const prompt = view.container.querySelector('[data-testid="webhooks-upgrade"]');

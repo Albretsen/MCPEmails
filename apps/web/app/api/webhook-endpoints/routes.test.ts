@@ -41,6 +41,8 @@ const world = {
   writes: [] as string[],
   posts: [] as Array<{ url: string; headers: Record<string, string>; body: string }>,
   postAnswer: { kind: 'response', status: 204 } as { kind: 'response'; status: number } | { kind: 'error'; code: string },
+  /** Simulates two creates racing past the route's own count. */
+  staleCount: false,
 };
 
 function endpointRow(id: string, workspaceId: string, extra: Row = {}): Row {
@@ -74,8 +76,8 @@ function seed() {
       { workspace_id: OTHER_WS, user_id: OUTSIDER, role: 'owner', joined_at: '2026-01-01' },
     ],
     inboxes: [
-      { id: INBOX_1, workspace_id: WS, deleted_at: null },
-      { id: INBOX_FOREIGN, workspace_id: OTHER_WS, deleted_at: null },
+      { id: INBOX_1, workspace_id: WS, deleted_at: null, status: 'active' },
+      { id: INBOX_FOREIGN, workspace_id: OTHER_WS, deleted_at: null, status: 'active' },
     ],
     webhook_endpoints: [endpointRow(EP_MINE, WS), endpointRow(EP_FOREIGN, OTHER_WS)],
     webhook_deliveries: [
@@ -128,8 +130,12 @@ function fakeClient(kind: 'user' | 'service') {
             return { data: null, error: { code: '42501', message: `permission denied for table ${table}` } };
           }
         }
-        if (op === 'select' && kind === 'user' && table === 'webhook_endpoints' && /secret_ciphertext|\*/.test(columns)) {
+        if (op === 'select' && kind === 'user' && table === 'webhook_endpoints' && /secret_ciphertext|\burl\b|\*/.test(columns)) {
           return { data: null, error: { code: '42501', message: 'permission denied for column secret_ciphertext' } };
+        }
+        // The webhook_endpoints_limit trigger.
+        if (op === 'insert' && table === 'webhook_endpoints' && rows().filter((r) => r.workspace_id === payload?.workspace_id).length >= 10) {
+          return { data: null, error: { code: 'P0001', message: 'webhook_endpoint_limit' } };
         }
         if (op === 'insert') {
           const row = { id: `00000000-0000-4000-8000-${String(nextId++).padStart(12, '0')}`, created_at: '2026-10-24T12:00:00.000Z', updated_at: '2026-10-24T12:00:00.000Z', disabled_at: null, disabled_reason: null, consecutive_failures: 0, failing_since: null, last_success_at: null, events: ['message.received'], ...payload };
@@ -150,7 +156,7 @@ function fakeClient(kind: 'user' | 'service') {
           return { data: returning ? hit.map((r) => ({ id: r.id })) : null, error: null };
         }
         let out = matching().map((r) => ({ ...r }));
-        if (head) return { data: null, error: null, count: out.length };
+        if (head) return { data: null, error: null, count: world.staleCount ? 0 : out.length };
         if (limit != null) out = out.slice(0, limit);
         return { data: out, error: null, count: out.length };
       };
@@ -223,6 +229,7 @@ beforeEach(() => {
   world.rateLimited = false;
   world.writes = [];
   world.posts = [];
+  world.staleCount = false;
   world.postAnswer = { kind: 'response', status: 204 };
 });
 
@@ -261,6 +268,36 @@ test('GET lists the active workspace\'s endpoints for any member, without the se
   assert.equal(body.webhooksEnabled, true);
   assert.equal(body.maxEndpoints, 10);
   assert.ok(!JSON.stringify(body).includes('ciphertext'));
+  // A member sees scheme and host only: a path can carry the receiver's token.
+  assert.equal(body.endpoints[0].url, 'https://93.184.216.34/…');
+  assert.equal(body.maxWatchedInboxes, 25);
+  assert.equal(body.coveredInboxes, 1);
+});
+
+test('GET shows owners and admins the whole URL', async () => {
+  as(ADMIN);
+  const body = await (await listRoute.GET()).json();
+  assert.equal(body.endpoints[0].url, 'https://93.184.216.34/hooks');
+  assert.equal(body.canManage, true);
+});
+
+test('POST: more than 25 chosen inboxes is refused with inbox_cap', async () => {
+  as(OWNER);
+  const ids = Array.from({ length: 26 }, (_, n) => `1b000000-0000-4000-8000-${String(100 + n).padStart(12, '0')}`);
+  const res = await create({ url: 'https://93.184.216.34/a', inboxIds: ids });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.equal(body.error_code, 'inbox_cap');
+  assert.match(body.error, /25 inboxes/);
+});
+
+test('POST: the database trigger holds the 10-endpoint cap when two creates race past the count', async () => {
+  as(OWNER);
+  for (let n = 0; n < 9; n++) world.db.webhook_endpoints.push(endpointRow(`2c000000-0000-4000-8000-2000000000${String(n).padStart(2, '0')}`, WS));
+  world.staleCount = true;
+  const res = await create({ url: 'https://93.184.216.34/a' });
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).error_code, 'endpoint_limit');
 });
 
 test('GET on a Free workspace still lists (paused) endpoints and says webhooks are off', async () => {

@@ -527,6 +527,7 @@
     "pausedNote": "These webhooks are paused and start again when the workspace is on Pro or Business.",
     "loadFailed": "Could not load webhooks.",
     "saveFailed": "Could not save the webhook.",
+    "inboxCapNote": "Webhooks watch up to {cap} inboxes per workspace, the ones connected first. {extra, plural, one {# inbox covered by a webhook is} other {# inboxes covered by webhooks are}} not watched.",
     "errors": {
       "url_invalid": "Enter a valid https URL",
       "url_not_https": "The URL must start with https://",
@@ -539,7 +540,8 @@
       "tls_failed": "the TLS certificate was not accepted",
       "redirect": "the endpoint answered with a redirect, which is not followed",
       "http_status": "the endpoint did not answer with a 2xx status",
-      "generic": "something went wrong"
+      "generic": "something went wrong",
+      "inbox_cap": "Choose fewer inboxes: webhooks watch up to 25 inboxes per workspace"
     }
   },
   "usage": {

@@ -49,6 +49,8 @@ export interface StreamConn {
   write(bytes: Uint8Array): Promise<number>;
   read(buffer: Uint8Array): Promise<number | null>;
   close(): void;
+  /** Deno.TlsConn: completes the TLS handshake (certificate check) explicitly. */
+  handshake?(): Promise<unknown>;
 }
 
 export interface PinnedTransportOptions {
@@ -57,13 +59,6 @@ export interface PinnedTransportOptions {
   connect?: (options: { hostname: string; port: number }) => Promise<{ conn: StreamConn; peer: string }>;
   /** Tests: stands in for Deno.startTls. */
   startTls?: (conn: StreamConn, hostname: string) => Promise<StreamConn>;
-}
-
-class Deadline extends Error {
-  constructor() {
-    super("webhook_deadline");
-    this.name = "TimeoutError";
-  }
 }
 
 /** `HTTP/1.1 204 No Content` -> 204. */
@@ -92,17 +87,25 @@ export function encodeRequest(hostHeader: string, path: string, headers: Record<
   return out;
 }
 
-async function readStatus(conn: StreamConn): Promise<number | null> {
+async function readStatus(conn: StreamConn, onBytes: () => void = () => {}): Promise<number | null> {
   const buffer = new Uint8Array(1024);
   let text = "";
   while (text.length < MAX_STATUS_BYTES) {
     const n = await conn.read(buffer);
     if (n === null) break;
+    onBytes();
     text += new TextDecoder().decode(buffer.subarray(0, n));
     const end = text.indexOf("\r\n");
     if (end >= 0) return parseStatusLine(text.slice(0, end));
   }
   return text.length > 0 && !text.includes("\r\n") ? parseStatusLine(text) : null;
+}
+
+/** Does this error come from the TLS layer (certificate, handshake, alert) rather than the socket? */
+export function isTlsError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === "InvalidData") return true;
+  return /certificate|handshake|tls|ssl|alert|peer sent|unknown ca|not valid for name/i.test(error.message);
 }
 
 export function createPinnedTransport(options: PinnedTransportOptions = {}): WebhookTransport {
@@ -116,69 +119,96 @@ export function createPinnedTransport(options: PinnedTransportOptions = {}): Web
   return {
     async post(request) {
       const timeoutMs = request.timeoutMs ?? SEND_TIMEOUT_MS;
-      let open: StreamConn | null = null;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const deadline = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => {
+      // Set when the deadline fires. Every step re-checks it after its await,
+      // and whatever was opened late (a connect or an upgrade that completed
+      // after the deadline) is closed at once instead of being used.
+      let aborted = false;
+      const opened = new Set<StreamConn>();
+      const closeAll = () => {
+        for (const conn of opened) {
           try {
-            open?.close();
+            conn.close();
           } catch {
             // already closed
           }
-          reject(new Deadline());
+        }
+        opened.clear();
+      };
+      const track = (conn: StreamConn): StreamConn => {
+        opened.add(conn);
+        if (aborted) closeAll();
+        return conn;
+      };
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<WebhookResponse>((resolve) => {
+        timer = setTimeout(() => {
+          aborted = true;
+          closeAll();
+          resolve({ kind: "error", code: "timeout" });
         }, timeoutMs);
       });
+      const timedOut = (): WebhookResponse => ({ kind: "error", code: "timeout" });
+
       const attempt = (async (): Promise<WebhookResponse> => {
         const verdict = await guardWebhookUrl(request.url, { lookup: options.lookup });
+        if (aborted) return timedOut();
         if (!verdict.ok) return { kind: "error", code: verdict.code };
+
         let tcp: { conn: StreamConn; peer: string };
         try {
           tcp = await connect({ hostname: verdict.address, port: verdict.url.port });
         } catch {
-          return { kind: "error", code: "connect_failed" };
+          return aborted ? timedOut() : { kind: "error", code: "connect_failed" };
         }
-        open = tcp.conn;
+        track(tcp.conn);
+        if (aborted) return timedOut();
         if (!isAllowedAddress(tcp.peer)) {
-          tcp.conn.close();
-          open = null;
+          closeAll();
           return { kind: "error", code: "host_not_allowed" };
         }
+
         let tls: StreamConn;
         try {
-          tls = await startTls(tcp.conn, verdict.url.host);
+          tls = track(await startTls(tcp.conn, verdict.url.host));
+          if (aborted) return timedOut();
+          // Deno upgrades lazily: without this the certificate is checked on
+          // the first write, and its failure would look like a socket error.
+          if (tls.handshake) await tls.handshake();
         } catch {
-          try {
-            tcp.conn.close();
-          } catch {
-            // nothing written yet
-          }
-          open = null;
-          return { kind: "error", code: "tls_failed" };
+          closeAll();
+          return aborted ? timedOut() : { kind: "error", code: "tls_failed" };
         }
-        open = tls;
+        if (aborted) return timedOut();
+
+        let wroteAll = false;
+        let readAny = false;
         try {
           const bytes = encodeRequest(verdict.url.hostHeader, verdict.url.path, request.headers, request.body);
           let written = 0;
-          while (written < bytes.length) written += await tls.write(bytes.subarray(written));
-          const status = await readStatus(tls);
+          while (written < bytes.length) {
+            written += await tls.write(bytes.subarray(written));
+            if (aborted) return timedOut();
+          }
+          wroteAll = true;
+          const status = await readStatus(tls, () => {
+            readAny = true;
+          });
+          if (aborted) return timedOut();
           return status === null ? { kind: "error", code: "protocol_error" } : { kind: "response", status };
         } catch (error) {
-          if (error instanceof Deadline) throw error;
+          if (aborted) return timedOut();
+          // A handshake that fails lazily surfaces on the first write or read.
+          if ((!wroteAll || !readAny) && isTlsError(error)) return { kind: "error", code: "tls_failed" };
           return { kind: "error", code: "connect_failed" };
         } finally {
-          try {
-            tls.close();
-          } catch {
-            // already closed
-          }
-          open = null;
+          closeAll();
         }
       })();
       attempt.catch(() => {});
       try {
         return await Promise.race([attempt, deadline]);
       } catch {
-        return { kind: "error", code: "timeout" };
+        return timedOut();
       } finally {
         clearTimeout(timer);
       }

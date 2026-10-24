@@ -189,7 +189,7 @@ export interface PlanLimits {
   /**
    * Webhooks for new mail (`message.received`). Enforced by the
    * /api/webhook-endpoints routes and, for delivery, by the SQL function
-   * `webhooks_plan_allowed` (migration 20261024180000), which mirrors this
+   * `webhooks_plan_allowed` (migration 20261024230000), which mirrors this
    * flag: Pro and Business, and comped workspaces (they resolve to Business).
    * A workspace that moves to Free or Personal keeps its endpoints, paused.
    */
@@ -462,7 +462,8 @@ export const PLANS: Record<PlanId, Plan> = {
       'Longer analytics history',
       // webhooksEnabled. No numbers here on purpose (no endpoint count, no
       // retry schedule, no tool count): this list is the purchase email.
-      'Webhooks for new mail and scoped API keys for your own agents',
+      // Scoped API keys are on every plan, so they are not sold here.
+      'Webhooks for new mail',
     ],
     highlighted: true,
   },
@@ -529,7 +530,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited members with roles, at no extra cost',
       'Admins approve held sends',
       'Several workspaces on one subscription',
-      'Webhooks for new mail and scoped API keys for your own agents',
+      'Webhooks for new mail',
     ],
     highlighted: false,
   },

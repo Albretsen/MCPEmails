@@ -26,6 +26,25 @@ test('known vector, identical to the edge test', () => {
   assert.ok(!verifySignature(`t=${T},v1=${EXPECTED}`, SECRET, `${BODY} `, T));
 });
 
+test('a member sees a webhook URL as scheme and host only', async () => {
+  const { maskWebhookUrl, coveredInboxCount } = await import('./access.ts');
+  assert.equal(maskWebhookUrl('https://hooks.example.com:8443/in/tok_123?k=s'), 'https://hooks.example.com:8443/…');
+  assert.equal(maskWebhookUrl('https://hooks.example.com/'), 'https://hooks.example.com/');
+  assert.equal(coveredInboxCount(['a', 'b', 'c'], [{ inbox_ids: ['a'], disabled_at: null }, { inbox_ids: ['b', 'x'], disabled_at: null }]), 2);
+  assert.equal(coveredInboxCount(['a', 'b', 'c'], [{ inbox_ids: null, disabled_at: '2026-10-01' }, { inbox_ids: ['a'], disabled_at: null }]), 1);
+  assert.equal(coveredInboxCount(['a', 'b', 'c'], [{ inbox_ids: null, disabled_at: null }]), 3);
+});
+
+test('Pro and Business sell webhooks; scoped keys are not sold as a paid feature (they are on every plan)', async () => {
+  const { PLANS } = await import('../stripe/plans.ts');
+  assert.ok(PLANS.solo.features.includes('Webhooks for new mail'));
+  assert.ok(PLANS.pro.features.includes('Webhooks for new mail'));
+  for (const plan of [PLANS.free, PLANS.personal]) assert.ok(!plan.features.some((f) => /webhook/i.test(f)));
+  for (const plan of [PLANS.solo, PLANS.pro]) assert.ok(!plan.features.some((f) => /scoped/i.test(f)));
+  assert.equal(PLANS.solo.limits.webhooksEnabled && PLANS.pro.limits.webhooksEnabled, true);
+  assert.equal(PLANS.free.limits.webhooksEnabled || PLANS.personal.limits.webhooksEnabled, false);
+});
+
 test('secrets are whsec_ + 64 hex with a 12-character prefix; event ids are evt_ + 32 hex', () => {
   const a = generateWebhookSecret();
   assert.match(a.secret, /^whsec_[0-9a-f]{64}$/);

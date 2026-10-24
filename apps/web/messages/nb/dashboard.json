@@ -527,6 +527,7 @@
     "pausedNote": "Disse webhookene er satt på pause og starter igjen når arbeidsområdet bruker Pro eller Business.",
     "loadFailed": "Kunne ikke laste webhooks.",
     "saveFailed": "Kunne ikke lagre webhooken.",
+    "inboxCapNote": "Webhooks overvåker opptil {cap} innbokser per arbeidsområde, de som ble koblet til først. {extra, plural, one {# innboks som en webhook dekker, blir} other {# innbokser som webhooks dekker, blir}} ikke overvåket.",
     "errors": {
       "url_invalid": "Skriv inn en gyldig https-URL",
       "url_not_https": "URL-en må begynne med https://",
@@ -539,7 +540,8 @@
       "tls_failed": "TLS-sertifikatet ble ikke godtatt",
       "redirect": "endepunktet svarte med en videresending, som ikke blir fulgt",
       "http_status": "endepunktet svarte ikke med en 2xx-status",
-      "generic": "noe gikk galt"
+      "generic": "noe gikk galt",
+      "inbox_cap": "Velg færre innbokser: webhooks overvåker opptil 25 innbokser per arbeidsområde"
     }
   },
   "usage": {

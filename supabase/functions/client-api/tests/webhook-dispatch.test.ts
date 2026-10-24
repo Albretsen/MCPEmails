@@ -6,7 +6,7 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { type DispatchDeps, runDispatch } from "../push/dispatch.ts";
-import type { WebhookDeps } from "../webhooks/deliver.ts";
+import { eventIdFor, type WebhookDeps } from "../webhooks/deliver.ts";
 import { EVENT_ID_HEADER, SIGNATURE_HEADER, verifySignature } from "../webhooks/sign.ts";
 import { fakeMail, fakePushStore, fakeSender, imapCursor } from "./push-fakes.ts";
 import { fakeDecrypt, fakeTransport, fakeWebhookStore } from "./webhook-fakes.ts";
@@ -225,4 +225,37 @@ Deno.test("BATCH_SIZE is c_batch in the newest dispatch_inbox_watch() definition
   assert(latest, "a migration defines dispatch_inbox_watch()");
   const match = /c_batch\s+constant integer := (\d+);/.exec(latest);
   assertEquals(Number(match?.[1]), BATCH_SIZE);
+});
+
+Deno.test("the cursor is stored before any POST: a slow receiver never holds the check", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep-all", workspace_id: WS });
+  let releasedBeforePost: boolean | null = null;
+  r.transport.answer = () => {
+    releasedBeforePost = r.store.releases.some((x) => x.inbox_id === INBOX && x.applied && x.result.folders["inbox"]?.fingerprint === imapCursor(102, 42, 5).fingerprint);
+    return { kind: "response", status: 204 };
+  };
+  await arrive(r);
+  assertEquals(releasedBeforePost, true);
+});
+
+Deno.test("the event id is derived from the inbox and both cursors: a re-detected arrival enqueues nothing new", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep-all", workspace_id: WS });
+  r.transport.answer = () => ({ kind: "response", status: 500 });
+  await arrive(r);
+  assertEquals(r.hooks.deliveries.length, 1);
+  const expected = await eventIdFor(INBOX, imapCursor(100, 40, 3).fingerprint, imapCursor(102, 42, 5).fingerprint);
+  assertEquals(r.hooks.deliveries[0].event_id, expected);
+  // The pass died before the cursor was stored: the old cursor is back and the same mail is seen again.
+  const row = r.store.watches.find((w) => w.inbox_id === INBOX)!;
+  row.folders = { inbox: imapCursor(100, 40, 3) };
+  row.next_check_at = new Date(r.now()).toISOString();
+  r.advance(120_000);
+  row.next_check_at = new Date(r.now()).toISOString();
+  const again = await runDispatch(r.deps);
+  assertEquals(again.arrivals, 1);
+  assertEquals(again.webhooks_enqueued, 0);
+  assertEquals(r.hooks.deliveries.length, 1, "no second delivery for the same arrival");
+  assertEquals(await eventIdFor(INBOX, "a", "b") === await eventIdFor(INBOX, "a", "c"), false);
 });

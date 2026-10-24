@@ -45,7 +45,7 @@ import {
 } from "./notify.ts";
 import type { FolderCursor, LeasedWatch, PushResults, PushStore, Recipient, WatchResult } from "./store.ts";
 import type { PushOutcome, PushSender } from "./webpush.ts";
-import { deliverArrival, runRetries, type WebhookDeps } from "../webhooks/deliver.ts";
+import { enqueueArrival, eventIdFor, type RowsCache, runSends, SEND_BUDGET_MS, type WebhookDeps } from "../webhooks/deliver.ts";
 
 /** Mailboxes one pass leases. Keep in step with c_batch in migration 20261005100200. */
 export const BATCH_SIZE = 20;
@@ -91,8 +91,9 @@ export interface DispatchDeps {
   /** null when the VAPID secrets are not set: mailboxes are still checked, nothing is sent. */
   sender: PushSender | null;
   /**
-   * Webhooks (../webhooks/deliver.ts): the second consumer of an arrival, and
-   * the retries sent from the same pass. Absent: no webhook is delivered.
+   * Webhooks (../webhooks/deliver.ts): an arrival is ENQUEUED inside the
+   * check; the POSTs (first attempts and retries) are made by the send step
+   * after the checks of the pass. Absent: no webhook is enqueued or sent.
    */
   webhooks?: WebhookDeps | null;
   now?: () => number;
@@ -117,13 +118,13 @@ export interface DispatchSummary {
   skipped_reconnect: number;
   /** Leased but not reached inside the budget; handed back untouched. */
   deferred: number;
-  /** Webhook deliveries created for arrivals in this pass (first attempts). */
+  /** Webhook deliveries created for arrivals in this pass. */
   webhooks_enqueued: number;
-  /** Webhook attempts (first or retry) the receiver answered 2xx. */
+  /** Due deliveries (first attempts and retries) the send step leased. */
+  webhook_attempts: number;
+  /** Attempts the receiver answered 2xx. */
   webhooks_delivered: number;
   webhooks_failed: number;
-  /** Due retries leased by this pass. */
-  webhook_retries: number;
   webhooks_abandoned: number;
   /** Endpoints this pass disabled after 24 h or 50 failures. */
   webhooks_disabled: number;
@@ -147,7 +148,8 @@ interface CheckReport {
   sent: number;
   failed: number;
   gone: number;
-  webhooks: { enqueued: number; delivered: number; failed: number; disabled: number };
+  /** Webhook deliveries enqueued for this arrival. */
+  webhooks: number;
 }
 
 function providerKey(provider: string): string {
@@ -274,7 +276,11 @@ async function notify(
  * point: polling calls it for every leased row; a provider push would call it
  * for the one mailbox the provider named. Never throws.
  */
-export async function checkWatch(deps: DispatchDeps, watch: LeasedWatch): Promise<CheckReport> {
+export async function checkWatch(
+  deps: DispatchDeps,
+  watch: LeasedWatch,
+  pass: { rowsCache?: RowsCache } = {},
+): Promise<CheckReport> {
   const now = deps.now ?? (() => Date.now());
   const startedAt = now();
   const iso = (ms: number) => new Date(ms).toISOString();
@@ -284,7 +290,7 @@ export async function checkWatch(deps: DispatchDeps, watch: LeasedWatch): Promis
     sent: 0,
     failed: 0,
     gone: 0,
-    webhooks: { enqueued: 0, delivered: 0, failed: 0, disabled: 0 },
+    webhooks: 0,
   };
   const release = (result: WatchResult) => deps.store.releaseWatch(watch.inbox_id, watch.lease_id, result).catch(() => {});
 
@@ -345,9 +351,9 @@ export async function checkWatch(deps: DispatchDeps, watch: LeasedWatch): Promis
           arrival = counterArrival(previous, probe.cursor);
         }
       }
-      return { probe, arrival, addedIds };
+      return { probe, arrival, addedIds, previous };
     })();
-    const { probe, arrival, addedIds } = await withTimeout(work, deps.checkTimeoutMs ?? CHECK_TIMEOUT_MS);
+    const { probe, arrival, addedIds, previous } = await withTimeout(work, deps.checkTimeoutMs ?? CHECK_TIMEOUT_MS);
 
     let notifiedAt: string | undefined;
     if (arrival.kind === "new") {
@@ -356,13 +362,18 @@ export async function checkWatch(deps: DispatchDeps, watch: LeasedWatch): Promis
       const sent = await notify(deps, watch, probe, arrival.count, addedIds, startedAt, newest);
       Object.assign(report, sent);
       if (sent.sent > 0) notifiedAt = iso(now());
-      if (deps.webhooks) {
-        report.webhooks = await deliverArrival(deps.webhooks, {
+      // Enqueue only (one RPC, no HTTP request), BEFORE the cursor is stored:
+      // a pass that dies in between re-detects this arrival, derives the same
+      // event id from the same two cursors, and the insert is a no-op.
+      if (deps.webhooks && previous) {
+        report.webhooks = await enqueueArrival(deps.webhooks, {
           watch,
+          eventId: await eventIdFor(watch.inbox_id, previous.fingerprint, probe.cursor.fingerprint),
           count: arrival.count,
           addedIds,
           newRows: newest,
           pick: (rows, max) => pickNew(rows, arrival.count, addedIds, max),
+          rowsCache: pass.rowsCache,
         });
       }
     } else {
@@ -419,9 +430,9 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
     skipped_reconnect: 0,
     deferred: 0,
     webhooks_enqueued: 0,
+    webhook_attempts: 0,
     webhooks_delivered: 0,
     webhooks_failed: 0,
-    webhook_retries: 0,
     webhooks_abandoned: 0,
     webhooks_disabled: 0,
     ms: 0,
@@ -437,12 +448,8 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
   }
   summary.leased = watches.length;
 
-  // Webhook retries run beside the checks, from the same pass and inside the
-  // same budget: no new retry starts after it, and each send has its own
-  // 10 s deadline, so the pass still ends well inside LEASE_SECONDS.
-  const retries = deps.webhooks
-    ? runRetries(deps.webhooks, deps.mail, { deadlineMs: startedAt + budget }).catch(() => null)
-    : Promise.resolve(null);
+  // Rows the checks read for webhook arrivals, reused by the send step below.
+  const rowsCache: RowsCache = new Map();
 
   const pending = [...watches];
   const perProvider = new Map<string, number>();
@@ -487,7 +494,7 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
         const [watch] = pending.splice(index, 1);
         bump(watch, 1);
         const checkStarted = now();
-        void checkWatch(deps, watch).then((report) => {
+        void checkWatch(deps, watch, { rowsCache }).then((report) => {
           summary.checked++;
           if (report.outcome === "new_mail") summary.arrivals++;
           if (report.outcome === "failed") summary.failed++;
@@ -496,10 +503,7 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
           summary.pushes_sent += report.sent;
           summary.pushes_failed += report.failed;
           summary.subscriptions_gone += report.gone;
-          summary.webhooks_enqueued += report.webhooks.enqueued;
-          summary.webhooks_delivered += report.webhooks.delivered;
-          summary.webhooks_failed += report.webhooks.failed;
-          summary.webhooks_disabled += report.webhooks.disabled;
+          summary.webhooks_enqueued += report.webhooks;
           if (report.outcome === "new_mail" || report.outcome === "failed") {
             log("push_watch", {
               inbox_id: watch.inbox_id,
@@ -511,7 +515,7 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
               pushes_sent: report.sent,
               pushes_failed: report.failed,
               subscriptions_gone: report.gone,
-              ...(report.webhooks.enqueued > 0 ? { webhooks: report.webhooks.enqueued } : {}),
+              ...(report.webhooks > 0 ? { webhooks: report.webhooks } : {}),
               ms: now() - checkStarted,
             });
           }
@@ -525,20 +529,30 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
     pump();
   });
 
-  const retried = await retries;
-  if (retried) {
-    summary.webhook_retries = retried.leased;
-    summary.webhooks_delivered += retried.delivered;
-    summary.webhooks_failed += retried.failed;
-    summary.webhooks_abandoned = retried.abandoned;
-    summary.webhooks_disabled += retried.disabled;
+  // THE SEND STEP: every POST of the pass (first attempts of what the checks
+  // just enqueued, then due retries), after the checks and with its own
+  // budget, so a slow receiver never holds a mailbox check or its lease.
+  if (deps.webhooks) {
+    const sent = await runSends(deps.webhooks, deps.mail, {
+      deadlineMs: now() + SEND_BUDGET_MS,
+      rowsCache,
+      limits: { providerConcurrency: PROVIDER_CONCURRENCY, hostConcurrency: HOST_CONCURRENCY, providerKey },
+    }).catch(() => null);
+    if (sent) {
+      summary.webhook_attempts = sent.leased;
+      summary.webhooks_delivered = sent.delivered;
+      summary.webhooks_failed = sent.failed;
+      summary.webhooks_abandoned = sent.abandoned;
+      summary.webhooks_disabled = sent.disabled;
+    }
   }
+  rowsCache.clear();
 
   await deps.mail.close().catch(() => {});
   summary.ms = now() - startedAt;
   log("push_dispatch", { ...summary });
   // CAPACITY MEASUREMENT. Webhooks add watched inboxes to the same 20-row
-  // passes (up to 4 a minute, migration 20261005100200 / 20261024180000).
+  // passes (up to 4 a minute, migration 20261005100200 / 20261024230000).
   // This line is what decides whether a second, offset dispatch per minute or
   // a bigger batch is needed: a pass that keeps leaving mailboxes unreached,
   // or keeps running into its budget, is out of capacity. BATCH_SIZE and the
@@ -550,7 +564,7 @@ export async function runDispatch(deps: DispatchDeps): Promise<DispatchSummary> 
     leased: summary.leased,
     checked: summary.checked,
     unreached: summary.deferred,
-    webhook_retries: summary.webhook_retries,
+    webhook_attempts: summary.webhook_attempts,
   });
   return summary;
 }

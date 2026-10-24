@@ -58,7 +58,7 @@
         "10 verbundene Postfächer",
         "5x höheres Burst-Ratenlimit",
         "Längerer Analyseverlauf",
-        "Webhooks für neue E-Mails und eingeschränkte API-Schlüssel für Ihre eigenen Agenten"
+        "Webhooks für neue E-Mails"
       ]
     },
     "pro": {
@@ -71,7 +71,7 @@
         "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
         "Admins geben zurückgehaltene Sendungen frei",
         "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde",
-        "Webhooks für neue E-Mails und eingeschränkte API-Schlüssel für Ihre eigenen Agenten"
+        "Webhooks für neue E-Mails"
       ]
     }
   },

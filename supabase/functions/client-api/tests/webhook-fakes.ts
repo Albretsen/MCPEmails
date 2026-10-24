@@ -1,7 +1,7 @@
 // In-memory stand-ins for the webhook tests: the store (what the SQL
-// functions in 20261024180000 do, in a few lines) and the transport.
+// functions in 20261024230000 do, in a few lines) and the transport.
 
-import type { AttemptRecord, EnqueuedDelivery, LeasedDelivery, WebhookPayloadMode, WebhookStore } from "../webhooks/store.ts";
+import type { AttemptRecord, LeasedDelivery, WebhookPayloadMode, WebhookStore } from "../webhooks/store.ts";
 import type { WebhookRequest, WebhookResponse, WebhookTransport } from "../webhooks/transport.ts";
 
 export interface FakeEndpoint {
@@ -41,8 +41,8 @@ export interface FakeWebhookStore extends WebhookStore {
   deliveries: FakeDelivery[];
   /** Workspaces whose plan allows webhooks. */
   allowed: Set<string>;
-  /** inbox id -> workspace id, and provider, of live inboxes. */
-  inboxes: Map<string, { workspace_id: string; provider: string }>;
+  /** inbox id -> workspace id, provider and watch state, of live inboxes. */
+  inboxes: Map<string, { workspace_id: string; provider: string; mail_host?: string | null; last_error?: string | null; backoff_until?: string | null }>;
   hasTargetsCalls: number;
   endpoint(row: Partial<FakeEndpoint> & { id: string; workspace_id: string }): FakeEndpoint;
 }
@@ -81,11 +81,10 @@ export function fakeWebhookStore(now: () => number): FakeWebhookStore {
       return Promise.resolve(store.endpoints.some((e) => covers(e, inboxId)));
     },
     enqueue(input) {
-      const lease = crypto.randomUUID();
-      const out: EnqueuedDelivery[] = [];
+      let inserted = 0;
       for (const e of store.endpoints.filter((x) => covers(x, input.inboxId))) {
         if (store.deliveries.some((d) => d.endpoint_id === e.id && d.event_id === input.eventId)) continue;
-        const d: FakeDelivery = {
+        store.deliveries.push({
           id: `dlv-${++seq}`,
           endpoint_id: e.id,
           workspace_id: e.workspace_id,
@@ -98,30 +97,20 @@ export function fakeWebhookStore(now: () => number): FakeWebhookStore {
           response_code: null,
           error_code: null,
           next_attempt_at: now(),
-          lease_id: lease,
-          leased_until: now() + input.leaseSeconds * 1000,
+          lease_id: null,
+          leased_until: null,
           created_at: new Date(now()).toISOString(),
-        };
-        store.deliveries.push(d);
-        out.push({
-          delivery_id: d.id,
-          lease_id: lease,
-          endpoint_id: e.id,
-          workspace_id: e.workspace_id,
-          url: e.url,
-          secret_ciphertext: e.secret_ciphertext,
-          payload_mode: e.payload_mode,
-          created_at: d.created_at,
         });
+        inserted++;
       }
-      return Promise.resolve(out);
+      return Promise.resolve(inserted);
     },
     leaseDue(limit, leaseSeconds) {
       const at = now();
       const due = store.deliveries
         .filter((d) => d.status === "pending" && d.next_attempt_at !== null && d.next_attempt_at <= at &&
           (d.leased_until === null || d.leased_until <= at))
-        .sort((a, b) => a.next_attempt_at! - b.next_attempt_at!)
+        .sort((a, b) => Number(a.attempt > 0) - Number(b.attempt > 0) || a.next_attempt_at! - b.next_attempt_at!)
         .slice(0, limit);
       return Promise.resolve(due.map((d): LeasedDelivery => {
         d.lease_id = crypto.randomUUID();
@@ -135,6 +124,9 @@ export function fakeWebhookStore(now: () => number): FakeWebhookStore {
           event_id: d.event_id,
           inbox_id: d.inbox_id,
           provider: d.inbox_id ? store.inboxes.get(d.inbox_id)?.provider ?? null : null,
+          mail_host: d.inbox_id ? store.inboxes.get(d.inbox_id)?.mail_host ?? null : null,
+          inbox_last_error: d.inbox_id ? store.inboxes.get(d.inbox_id)?.last_error ?? null : null,
+          backoff_until: d.inbox_id ? store.inboxes.get(d.inbox_id)?.backoff_until ?? null : null,
           message_ids: d.message_ids ? [...d.message_ids] : null,
           message_count: d.message_count,
           attempt: d.attempt,

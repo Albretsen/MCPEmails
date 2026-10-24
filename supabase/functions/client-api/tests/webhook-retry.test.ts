@@ -4,22 +4,29 @@
 // and the time budget. In-memory fakes; no network.
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { type DispatchDeps, runDispatch } from "../push/dispatch.ts";
+import { type DispatchDeps, HOST_CONCURRENCY, PROVIDER_CONCURRENCY, runDispatch } from "../push/dispatch.ts";
 import {
   DISABLE_AFTER_FAILURES,
   MAX_ATTEMPTS,
   nextAttemptAt,
   RETRY_DELAYS_MS,
-  runRetries,
+  runSends,
   type WebhookDeps,
 } from "../webhooks/deliver.ts";
+import { loginRefusedMarker } from "../mail/health.ts";
 import { fakeMail, fakePushStore, fakeSender } from "./push-fakes.ts";
+import type { NewestRow, WatchMail } from "../push/mail.ts";
 import { type FakeDelivery, fakeDecrypt, fakeTransport, fakeWebhookStore } from "./webhook-fakes.ts";
 
 const WS = "11111111-1111-4111-8111-111111111111";
 const INBOX = "22222222-2222-4222-8222-000000000001";
 const MIN = 60_000;
 const HOUR = 60 * MIN;
+const LIMITS = {
+  providerConcurrency: PROVIDER_CONCURRENCY,
+  hostConcurrency: HOST_CONCURRENCY,
+  providerKey: (p: string) => (p === "gmail" || p === "outlook" ? p : "imap"),
+};
 
 function rig() {
   let clock = Date.UTC(2026, 9, 24, 12, 0, 0);
@@ -74,7 +81,7 @@ function rig() {
     now,
     pending,
     advance: (ms: number) => void (clock += ms),
-    retry: () => runRetries(deps, mail, { deadlineMs: clock + 40_000 }),
+    retry: () => runSends(deps, mail, { deadlineMs: clock + 40_000, limits: LIMITS }),
   };
 }
 
@@ -182,7 +189,7 @@ Deno.test("no retry starts after the deadline", async () => {
   const r = rig();
   r.hooks.endpoint({ id: "ep", workspace_id: WS });
   r.pending("d1");
-  const report = await runRetries(r.deps, r.mail, { deadlineMs: r.now() });
+  const report = await runSends(r.deps, r.mail, { deadlineMs: r.now(), limits: LIMITS });
   assertEquals(report.leased, 0);
   assertEquals(r.transport.sent.length, 0);
 });
@@ -199,6 +206,65 @@ Deno.test("retries are sent from the per-minute dispatch pass even when no mailb
     now: r.now,
   };
   const summary = await runDispatch(deps);
-  assertEquals([summary.leased, summary.webhook_retries, summary.webhooks_delivered], [0, 1, 1]);
+  assertEquals([summary.leased, summary.webhook_attempts, summary.webhooks_delivered], [0, 1, 1]);
   assertEquals(d.status, "delivered");
+});
+
+Deno.test("a headers retry does not read a mailbox whose watch is backing off: ids only, flagged", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep", workspace_id: WS, payload_mode: "headers" });
+  r.hooks.inboxes.set(INBOX, { workspace_id: WS, provider: "imap", mail_host: "imap.h.example", backoff_until: new Date(r.now() + HOUR).toISOString() });
+  r.pending("d1");
+  await r.retry();
+  const event = JSON.parse(r.transport.sent[0].body);
+  assertEquals(event.headers_omitted, true);
+  assertEquals(event.messages, undefined);
+  assertEquals(event.message_ids, ["INBOX:7"]);
+  assertEquals(r.mail.calls.filter((c) => c.op === "newest").length, 0);
+});
+
+Deno.test("a headers retry does not read a mailbox whose login was just refused", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep", workspace_id: WS, payload_mode: "headers" });
+  r.hooks.inboxes.set(INBOX, { workspace_id: WS, provider: "imap", mail_host: "imap.h.example", last_error: loginRefusedMarker(r.now() - MIN) });
+  r.pending("d1");
+  await r.retry();
+  assertEquals(JSON.parse(r.transport.sent[0].body).headers_omitted, true);
+  assertEquals(r.mail.calls.filter((c) => c.op === "newest").length, 0);
+});
+
+Deno.test("headers reads in the send step respect the per-host cap", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep", workspace_id: WS, payload_mode: "headers" });
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const slowMail: WatchMail = {
+    probe: () => Promise.reject(new Error("unused")),
+    gmailAdded: () => Promise.resolve(null),
+    async newest() {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight--;
+      return [] as NewestRow[];
+    },
+    close: () => Promise.resolve(),
+  };
+  for (let n = 1; n <= 4; n++) {
+    const inbox = `22222222-2222-4222-8222-00000000010${n}`;
+    r.hooks.inboxes.set(inbox, { workspace_id: WS, provider: "imap", mail_host: "imap.same-host.example" });
+    r.pending(`d${n}`, { inbox_id: inbox });
+  }
+  await runSends(r.deps, slowMail, { deadlineMs: r.now() + 40_000, limits: LIMITS });
+  assertEquals(r.transport.sent.length, 4);
+  assert(maxInFlight <= HOST_CONCURRENCY, `max ${maxInFlight} reads on one host`);
+});
+
+Deno.test("first attempts are sent before retries", async () => {
+  const r = rig();
+  r.hooks.endpoint({ id: "ep", workspace_id: WS });
+  r.pending("d1", { attempt: 3, next_attempt_at: r.now() - HOUR });
+  r.pending("d2", { attempt: 0, next_attempt_at: r.now() });
+  await r.retry();
+  assertEquals(r.transport.sent.map((s) => JSON.parse(s.body).id), [`evt_${"a".repeat(31)}2`, `evt_${"a".repeat(31)}1`]);
 });

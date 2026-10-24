@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
 // The webhook dispatcher's database access, behind one interface (the same
 // split as ../push/store.ts). Tables and functions: migration
-// 20261024180000_webhook_endpoints. Service role only.
+// 20261024230000_webhook_endpoints. Service role only.
 // ---------------------------------------------------------------------------
 
 export type WebhookPayloadMode = "ids" | "headers";
 
-/** A delivery created for this pass's first attempt, already leased to it. */
+/** What one attempt needs about a leased delivery and its endpoint. */
 export interface EnqueuedDelivery {
   delivery_id: string;
   lease_id: string;
@@ -23,6 +23,12 @@ export interface LeasedDelivery extends EnqueuedDelivery {
   event_id: string;
   inbox_id: string | null;
   provider: string | null;
+  /** IMAP host, for the per-host cap on a headers read. Never logged. */
+  mail_host: string | null;
+  /** The inbox's last_error: read for the refused-login marker only. Never logged. */
+  inbox_last_error: string | null;
+  /** The inbox's watch backoff: no headers read while it runs. */
+  backoff_until: string | null;
   message_ids: string[] | null;
   message_count: number;
   /** Attempts made BEFORE this one. */
@@ -48,13 +54,13 @@ export interface AttemptRecord {
 export interface WebhookStore {
   /** Does any enabled, plan-allowed endpoint cover this inbox? Decides whether the mailbox is read at all. */
   hasTargets(inboxId: string): Promise<boolean>;
+  /** Pending, unleased rows, due now. Returns how many were inserted (0 for a repeated event id). */
   enqueue(input: {
     inboxId: string;
     eventId: string;
     messageIds: string[];
     messageCount: number;
-    leaseSeconds: number;
-  }): Promise<EnqueuedDelivery[]>;
+  }): Promise<number>;
   leaseDue(limit: number, leaseSeconds: number): Promise<LeasedDelivery[]>;
   /** Null when the lease no longer held the row (nothing was written). */
   recordAttempt(record: AttemptRecord): Promise<{ endpointId: string; endpointDisabled: boolean } | null>;
@@ -81,10 +87,9 @@ export function supabaseWebhookStore(db: Db): WebhookStore {
         p_event_id: input.eventId,
         p_message_ids: input.messageIds,
         p_message_count: input.messageCount,
-        p_lease_seconds: input.leaseSeconds,
       });
       if (error) fail("webhook_enqueue_failed", error);
-      return (data ?? []) as EnqueuedDelivery[];
+      return typeof data === "number" ? data : 0;
     },
 
     async leaseDue(limit, leaseSeconds) {

@@ -195,3 +195,45 @@ Deno.test("header injection: CR and LF never reach the wire", () => {
   assertEquals(parseStatusLine("HTTP/1.0 404"), 404);
   assertEquals(parseStatusLine("HTTP/2 200"), null);
 });
+
+Deno.test("the deadline aborts an attempt still connecting, and a connection that opens late is closed unused", async () => {
+  const late = fakeStream("HTTP/1.1 200 OK\r\n\r\n");
+  let finishConnect: (() => void) | null = null;
+  const transport = createPinnedTransport({
+    lookup: publicLookup(),
+    connect: (o) =>
+      new Promise((resolve) => {
+        finishConnect = () => resolve({ conn: late.conn, peer: o.hostname });
+      }),
+    startTls: (conn) => Promise.resolve(conn),
+  });
+  const answer = await transport.post({ url: "https://hooks.example.com/", headers: {}, body: "{}", timeoutMs: 15 });
+  assertEquals(answer, { kind: "error", code: "timeout" });
+  finishConnect!();
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert(late.closed(), "the late connection was closed");
+  assertEquals(late.written(), "", "and nothing was written to it");
+});
+
+Deno.test("a TLS handshake failure is tls_failed, whether it surfaces in handshake() or on the first write", async () => {
+  const explicit = createPinnedTransport({
+    lookup: publicLookup(),
+    connect: (o) => Promise.resolve({ conn: fakeStream("").conn, peer: o.hostname }),
+    startTls: (conn) => Promise.resolve({ ...conn, handshake: () => Promise.reject(new Error("invalid peer certificate: UnknownIssuer")) }),
+  });
+  assertEquals(await explicit.post({ url: "https://hooks.example.com/", headers: {}, body: "{}" }), { kind: "error", code: "tls_failed" });
+
+  const lazy = createPinnedTransport({
+    lookup: publicLookup(),
+    connect: (o) => Promise.resolve({ conn: fakeStream("").conn, peer: o.hostname }),
+    startTls: (conn) => Promise.resolve({ ...conn, write: () => Promise.reject(new Error("received fatal alert: HandshakeFailure")) }),
+  });
+  assertEquals(await lazy.post({ url: "https://hooks.example.com/", headers: {}, body: "{}" }), { kind: "error", code: "tls_failed" });
+
+  const reset = createPinnedTransport({
+    lookup: publicLookup(),
+    connect: (o) => Promise.resolve({ conn: fakeStream("").conn, peer: o.hostname }),
+    startTls: (conn) => Promise.resolve({ ...conn, write: () => Promise.reject(new Error("connection reset")) }),
+  });
+  assertEquals(await reset.post({ url: "https://hooks.example.com/", headers: {}, body: "{}" }), { kind: "error", code: "connect_failed" });
+});

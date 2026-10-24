@@ -58,7 +58,7 @@
         "10 bandejas conectadas",
         "Límite de ráfaga 5x más alto",
         "Más historial de analíticas",
-        "Webhooks para el correo nuevo y claves de API con permisos limitados para tus propios agentes"
+        "Webhooks para el correo nuevo"
       ]
     },
     "pro": {
@@ -71,7 +71,7 @@
         "Miembros ilimitados con roles, sin coste adicional",
         "Los administradores aprueban los envíos en espera",
         "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente",
-        "Webhooks para el correo nuevo y claves de API con permisos limitados para tus propios agentes"
+        "Webhooks para el correo nuevo"
       ]
     }
   },

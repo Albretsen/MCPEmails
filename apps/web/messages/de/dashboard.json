@@ -527,6 +527,7 @@
     "pausedNote": "Diese Webhooks sind pausiert und laufen wieder, sobald der Workspace Pro oder Business nutzt.",
     "loadFailed": "Webhooks konnten nicht geladen werden.",
     "saveFailed": "Der Webhook konnte nicht gespeichert werden.",
+    "inboxCapNote": "Webhooks überwachen bis zu {cap} Postfächer pro Workspace, die zuerst verbundenen. {extra, plural, one {# Postfach mit Webhook wird} other {# Postfächer mit Webhooks werden}} nicht überwacht.",
     "errors": {
       "url_invalid": "Geben Sie eine gültige https-URL ein",
       "url_not_https": "Die URL muss mit https:// beginnen",
@@ -539,7 +540,8 @@
       "tls_failed": "das TLS-Zertifikat wurde nicht akzeptiert",
       "redirect": "der Endpunkt hat mit einer Weiterleitung geantwortet, der nicht gefolgt wird",
       "http_status": "der Endpunkt hat nicht mit einem 2xx-Status geantwortet",
-      "generic": "etwas ist schiefgelaufen"
+      "generic": "etwas ist schiefgelaufen",
+      "inbox_cap": "Wählen Sie weniger Postfächer: Webhooks überwachen bis zu 25 Postfächer pro Workspace"
     }
   },
   "usage": {

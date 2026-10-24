@@ -527,6 +527,7 @@
     "pausedNote": "Ces webhooks sont en pause et reprennent quand l'espace de travail repasse sur Pro ou Business.",
     "loadFailed": "Impossible de charger les webhooks.",
     "saveFailed": "Impossible d'enregistrer le webhook.",
+    "inboxCapNote": "Les webhooks surveillent jusqu'à {cap} boîtes par espace de travail, celles connectées en premier. {extra, plural, one {# boîte couverte par un webhook n'est pas surveillée} other {# boîtes couvertes par des webhooks ne sont pas surveillées}}.",
     "errors": {
       "url_invalid": "Saisissez une URL https valide",
       "url_not_https": "L'URL doit commencer par https://",
@@ -539,7 +540,8 @@
       "tls_failed": "le certificat TLS n'a pas été accepté",
       "redirect": "l'endpoint a répondu par une redirection, qui n'est pas suivie",
       "http_status": "l'endpoint n'a pas répondu avec un statut 2xx",
-      "generic": "une erreur s'est produite"
+      "generic": "une erreur s'est produite",
+      "inbox_cap": "Choisissez moins de boîtes : les webhooks surveillent jusqu'à 25 boîtes par espace de travail"
     }
   },
   "usage": {

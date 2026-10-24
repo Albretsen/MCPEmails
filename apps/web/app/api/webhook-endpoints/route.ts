@@ -3,7 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { encryptToken } from '@/lib/crypto';
-import { resolveWebhookAccess, PLAN_REQUIRED_BODY, validateInboxIds } from '@/lib/webhooks/access';
+import {
+  MAX_WEBHOOK_WATCHED_INBOXES,
+  PLAN_REQUIRED_BODY,
+  coveredInboxCount,
+  maskWebhookUrl,
+  resolveWebhookAccess,
+  validateInboxIds,
+} from '@/lib/webhooks/access';
 import { ENDPOINT_PUBLIC_COLUMNS, MAX_WEBHOOK_ENDPOINTS, endpointJson, webhookDb } from '@/lib/webhooks/db';
 import { generateWebhookSecret } from '@/lib/webhooks/sign';
 import { validateWebhookUrl } from '@/lib/webhooks/url';
@@ -14,7 +21,7 @@ import { validateWebhookUrl } from '@/lib/webhooks/url';
  *
  * Webhooks deliver `message.received` when the new-mail watcher sees mail
  * arrive in an inbox (supabase/functions/client-api/webhooks). See migration
- * 20261024180000 for what is stored.
+ * 20261024230000 for what is stored.
  *
  * POST body: { url, inboxIds?: string[] | null, payloadMode?: 'ids' | 'headers' }
  *
@@ -32,23 +39,41 @@ export async function GET(): Promise<NextResponse> {
   const access = await resolveWebhookAccess(supabase, { manage: false });
   if (!access.ok) return NextResponse.json(access.body, { status: access.status });
 
-  const { data, error } = await webhookDb(supabase)
-    .from('webhook_endpoints')
-    .select(ENDPOINT_PUBLIC_COLUMNS)
-    .eq('workspace_id', access.workspaceId)
-    .order('created_at', { ascending: true })
-    .order('id', { ascending: true })
-    .limit(50);
+  // Service role, scoped to the membership-checked workspace: browser
+  // sessions hold no grant on `url` (a path can carry the receiver's token),
+  // so owners and admins get it whole here and everyone else masked.
+  const service = createServiceRoleClient();
+  const [{ data, error }, { data: inboxes }] = await Promise.all([
+    webhookDb(service)
+      .from('webhook_endpoints')
+      .select(ENDPOINT_PUBLIC_COLUMNS)
+      .eq('workspace_id', access.workspaceId)
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(50),
+    service
+      .from('inboxes')
+      .select('id')
+      .eq('workspace_id', access.workspaceId)
+      .is('deleted_at', null)
+      .eq('status', 'active'),
+  ]);
   if (error) {
     console.error('[webhook-endpoints] list failed:', error.code);
     return NextResponse.json({ error: 'Could not load webhooks.' }, { status: 500 });
   }
+  const rows = data ?? [];
   return NextResponse.json({
-    endpoints: (data ?? []).map(endpointJson),
+    endpoints: rows.map((row) => {
+      const json = endpointJson(row);
+      return access.canManage ? json : { ...json, url: maskWebhookUrl(json.url) };
+    }),
     webhooksEnabled: access.webhooksEnabled,
     plan: access.plan,
     canManage: access.canManage,
     maxEndpoints: MAX_WEBHOOK_ENDPOINTS,
+    maxWatchedInboxes: MAX_WEBHOOK_WATCHED_INBOXES,
+    coveredInboxes: coveredInboxCount((inboxes ?? []).map((i) => i.id), rows),
   });
 }
 
@@ -97,7 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!verdict.ok) return NextResponse.json({ error: verdict.message, error_code: verdict.code }, { status: 400 });
 
   const inboxes = await validateInboxIds(service, access.workspaceId, inboxIds);
-  if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: 'inbox_invalid' }, { status: 400 });
+  if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: inboxes.code }, { status: 400 });
 
   // The plaintext exists in this function and in the response only.
   const { secret, prefix } = generateWebhookSecret();
@@ -122,6 +147,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
     .select(ENDPOINT_PUBLIC_COLUMNS)
     .single();
+  // The trigger webhook_endpoints_limit re-counts under a per-workspace lock,
+  // so two concurrent creates cannot both pass the check above.
+  if (error && /webhook_endpoint_limit/.test(error.message ?? '')) {
+    return NextResponse.json(
+      { error: `A workspace can have ${MAX_WEBHOOK_ENDPOINTS} webhooks. Delete one first.`, error_code: 'endpoint_limit' },
+      { status: 409 },
+    );
+  }
   if (error || !row) {
     console.error('[webhook-endpoints] insert failed:', error?.code);
     return NextResponse.json({ error: 'Could not create the webhook.' }, { status: 500 });

@@ -19,7 +19,7 @@ import { Link } from '@/i18n/navigation';
 
 const ERROR_CODES = new Set([
   'url_invalid', 'url_not_https', 'url_credentials', 'port_not_allowed', 'host_not_allowed', 'host_not_found',
-  'timeout', 'connect_failed', 'tls_failed', 'redirect', 'http_status',
+  'timeout', 'connect_failed', 'tls_failed', 'redirect', 'http_status', 'inbox_cap',
 ]);
 
 function formatTime(iso) {
@@ -217,6 +217,11 @@ export function WebhooksPanel({ inboxes = [], planName = (id) => id ?? '' }) {
 
         {data && enabledPlan && !canManage && <div style={muted}>{t('webhooks.readOnly')}</div>}
         {data && enabledPlan && canManage && atLimit && <div style={muted}>{t('webhooks.limitReached')}</div>}
+        {data && enabledPlan && data.coveredInboxes > data.maxWatchedInboxes && (
+          <div style={muted} data-testid="webhooks-inbox-cap">
+            {t('webhooks.inboxCapNote', { cap: data.maxWatchedInboxes, extra: data.coveredInboxes - data.maxWatchedInboxes })}
+          </div>
+        )}
 
         {formOpen && (
           <form onSubmit={create} data-testid="webhook-form" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

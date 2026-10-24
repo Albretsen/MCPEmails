@@ -669,7 +669,7 @@ Deno.test("no mail content in the log or the store: not a sender, a subject, an 
     "inbox_id", "workspace_id", "provider", "outcome", "error_code", "recipients", "pushes_sent", "pushes_failed",
     "subscriptions_gone", "ms", "leased", "checked", "arrivals", "notified", "failed", "skipped_reconnect", "deferred",
     // Webhook counts and the capacity line (webhook-dispatch.test.ts covers their privacy).
-    "webhooks_enqueued", "webhooks_delivered", "webhooks_failed", "webhook_retries", "webhooks_abandoned",
+    "webhooks_enqueued", "webhooks_delivered", "webhooks_failed", "webhook_attempts", "webhooks_abandoned",
     "webhooks_disabled", "webhooks", "budget_ms", "batch_size", "unreached",
   ]);
   for (const line of r.logs) {

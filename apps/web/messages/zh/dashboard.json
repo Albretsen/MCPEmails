@@ -457,6 +457,7 @@
     "pausedNote": "这些 Webhook 已暂停，工作区重新使用 Pro 或 Business 后会恢复。",
     "loadFailed": "无法加载 Webhook。",
     "saveFailed": "无法保存 Webhook。",
+    "inboxCapNote": "每个工作区的 Webhook 最多监控 {cap} 个收件箱，按连接先后顺序计算。有 {extra} 个 Webhook 覆盖的收件箱未被监控。",
     "errors": {
       "url_invalid": "请输入有效的 https URL",
       "url_not_https": "URL 必须以 https:// 开头",
@@ -469,7 +470,8 @@
       "tls_failed": "TLS 证书未被接受",
       "redirect": "端点返回了重定向，不会跟随",
       "http_status": "端点没有返回 2xx 状态",
-      "generic": "出现了问题"
+      "generic": "出现了问题",
+      "inbox_cap": "请少选一些收件箱：每个工作区的 Webhook 最多监控 25 个收件箱"
     }
   },
   "usage": {

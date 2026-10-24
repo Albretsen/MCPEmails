@@ -1,7 +1,7 @@
 -- ============================================================
 -- Webhooks: RLS, grants, the watch set, enqueue, lease and attempts
 -- ============================================================
--- Covers migration 20261024180000_webhook_endpoints:
+-- Covers migration 20261024230000_webhook_endpoints:
 --   - a member reads their workspace's endpoints and deliveries, never the
 --     secret column or the pending message ids, and cannot write at all;
 --   - an admin cannot write directly either (writes go through the routes);
@@ -9,14 +9,17 @@
 --   - the dispatcher functions are not callable from a browser session;
 --   - an enabled endpoint on Pro/Business watches its inboxes, a paused
 --     (Free) or disabled one does not;
---   - enqueue / lease / record_webhook_attempt / auto-disable.
+--   - enqueue (idempotent per event id, unleased) / lease (first attempts,
+--     inactive inboxes abandoned) / record_webhook_attempt / auto-disable;
+--   - at most 25 watched inboxes per workspace, oldest connected first;
+--   - at most 10 endpoints per workspace, enforced by a trigger.
 --
 -- Run with: supabase test db
 -- ============================================================
 
 BEGIN;
 
-SELECT plan(24);
+SELECT plan(34);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -85,37 +88,46 @@ UPDATE public.webhook_endpoints SET disabled_at = NULL, disabled_reason = NULL
 -- ------------------------------------------------------------
 -- 2. Enqueue, lease, attempts, auto-disable
 -- ------------------------------------------------------------
-CREATE TEMP TABLE hook_test_enq AS
-  SELECT * FROM public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000a1',
-    'evt_00000000000000000000000000000001', ARRAY['INBOX:7'], 1, 120);
-SELECT is((SELECT count(*) FROM hook_test_enq), 1::bigint, 'one delivery per matching endpoint');
 SELECT is(
-  (SELECT count(*) FROM public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000a1',
-    'evt_00000000000000000000000000000001', ARRAY['INBOX:7'], 1, 120)),
-  0::bigint, 'the same event id is not enqueued twice');
+  public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000a1',
+    'evt_00000000000000000000000000000001', ARRAY['INBOX:7'], 1),
+  1, 'one delivery per matching endpoint');
 SELECT is(
-  (SELECT count(*) FROM public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000f1',
-    'evt_00000000000000000000000000000002', ARRAY['INBOX:1'], 1, 120)),
-  0::bigint, 'a paused workspace enqueues nothing');
+  public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000a1',
+    'evt_00000000000000000000000000000001', ARRAY['INBOX:7'], 1),
+  0, 'the same event id (a re-detected arrival) is not enqueued twice');
+SELECT is(
+  public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000f1',
+    'evt_00000000000000000000000000000002', ARRAY['INBOX:1'], 1),
+  0, 'a paused workspace enqueues nothing');
+SELECT ok(
+  (SELECT lease_id IS NULL AND status = 'pending' AND next_attempt_at <= now()
+     FROM public.webhook_deliveries WHERE event_id = 'evt_00000000000000000000000000000001'),
+  'an enqueued delivery is pending, due now and not leased: the send step makes the first attempt');
+
+CREATE TEMP TABLE hook_test_first AS
+  SELECT * FROM public.lease_webhook_deliveries(20, 120) WHERE endpoint_id::text LIKE 'e5000000-%';
+SELECT ok(
+  (SELECT count(*) = 1 AND bool_and(attempt = 0 AND endpoint_enabled AND plan_allowed AND provider = 'imap'
+            AND mail_host = 'imap.hook-test.invalid' AND message_ids = ARRAY['INBOX:7']) FROM hook_test_first),
+  'the send step leases the first attempt with the endpoint, plan and watch state');
 SELECT is(
   (SELECT count(*) FROM public.lease_webhook_deliveries(20, 120) WHERE endpoint_id::text LIKE 'e5000000-%'),
-  0::bigint, 'a delivery leased for its first attempt is not due to anybody else');
+  0::bigint, 'a leased delivery is not due to anybody else');
 
 SELECT is(
   (SELECT endpoint_disabled FROM public.record_webhook_attempt(
-     (SELECT delivery_id FROM hook_test_enq), (SELECT lease_id FROM hook_test_enq),
+     (SELECT delivery_id FROM hook_test_first), (SELECT lease_id FROM hook_test_first),
      false, 503, 'http_status', now() - interval '1 second', 50, 86400)),
   false, 'a first failure does not disable');
 SELECT ok(
   (SELECT status = 'pending' AND attempt = 1 AND message_ids = ARRAY['INBOX:7'] AND response_code = 503
-     FROM public.webhook_deliveries WHERE id = (SELECT delivery_id FROM hook_test_enq)),
+     FROM public.webhook_deliveries WHERE id = (SELECT delivery_id FROM hook_test_first)),
   'the failed delivery stays pending, keeps its ids, records the code');
 
 CREATE TEMP TABLE hook_test_lease AS
   SELECT * FROM public.lease_webhook_deliveries(20, 120) WHERE endpoint_id::text LIKE 'e5000000-%';
-SELECT ok(
-  (SELECT count(*) = 1 AND bool_and(endpoint_enabled AND plan_allowed AND message_ids = ARRAY['INBOX:7']) FROM hook_test_lease),
-  'a due retry is leased with what it needs');
+SELECT is((SELECT count(*) FROM hook_test_lease), 1::bigint, 'the due retry is leased');
 
 UPDATE public.webhook_endpoints SET consecutive_failures = 49 WHERE id = 'e5000000-0000-0000-0000-0000000000a1';
 SELECT is(
@@ -129,8 +141,55 @@ SELECT ok(
   'disabled for failing');
 SELECT ok(
   (SELECT status = 'abandoned' AND message_ids IS NULL FROM public.webhook_deliveries
-    WHERE id = (SELECT delivery_id FROM hook_test_enq)),
+    WHERE id = (SELECT delivery_id FROM hook_test_first)),
   'its pending delivery is abandoned and its ids cleared');
+UPDATE public.webhook_endpoints SET disabled_at = NULL, disabled_reason = NULL, consecutive_failures = 0, failing_since = NULL
+ WHERE id = 'e5000000-0000-0000-0000-0000000000a1';
+
+-- A delivery for an inbox that was disconnected meanwhile is abandoned at lease time.
+SELECT is(
+  public.webhook_enqueue_event('e0000000-0000-0000-0000-0000000000a1',
+    'evt_00000000000000000000000000000003', ARRAY['INBOX:8'], 1),
+  1, 'enqueued while the inbox is active');
+UPDATE public.inboxes SET status = 'error' WHERE id = 'e0000000-0000-0000-0000-0000000000a1';
+SELECT is(
+  (SELECT count(*) FROM public.lease_webhook_deliveries(20, 120) WHERE endpoint_id::text LIKE 'e5000000-%'),
+  0::bigint, 'a delivery for an inbox that is no longer active is not leased');
+SELECT ok(
+  (SELECT status = 'abandoned' AND error_code = 'inbox_inactive' AND message_ids IS NULL
+     FROM public.webhook_deliveries WHERE event_id = 'evt_00000000000000000000000000000003'),
+  'it is abandoned as inbox_inactive');
+UPDATE public.inboxes SET status = 'active' WHERE id = 'e0000000-0000-0000-0000-0000000000a1';
+
+-- ------------------------------------------------------------
+-- 2b. At most 25 watched inboxes per workspace, oldest connected first
+-- ------------------------------------------------------------
+INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status, imap_host, created_at)
+SELECT ('e0000000-0000-0000-0000-0000000001' || lpad(n::text, 2, '0'))::uuid,
+       'ea000000-0000-0000-0000-00000000000a', 'imap', 'many' || n || '@hook-test.invalid', 'active',
+       'imap.hook-test.invalid', now() + make_interval(secs => n)
+  FROM generate_series(1, 30) AS n;
+UPDATE public.webhook_endpoints SET inbox_ids = NULL WHERE id = 'e5000000-0000-0000-0000-0000000000a1';
+SELECT public.sync_inbox_watch_state();
+SELECT is((SELECT count(*) FROM hook_test_watch), 25::bigint, 'a workspace''s webhooks add at most 25 inboxes to the watcher');
+SELECT ok(
+  (SELECT bool_and(inbox_id::text IN (SELECT inbox_id::text FROM hook_test_watch))
+     FROM (VALUES ('e0000000-0000-0000-0000-0000000000a1'::uuid), ('e0000000-0000-0000-0000-0000000000a2'::uuid)) v(inbox_id)),
+  'the inboxes connected first are the ones watched');
+SELECT ok(NOT public.webhook_has_targets('e0000000-0000-0000-0000-000000000130'),
+  'the newest inbox beyond the cap gets no webhook events');
+
+-- ------------------------------------------------------------
+-- 2c. At most 10 endpoints, enforced by the trigger
+-- ------------------------------------------------------------
+INSERT INTO public.webhook_endpoints (workspace_id, url, secret_ciphertext, secret_prefix)
+SELECT 'ea000000-0000-0000-0000-00000000000a', 'https://hooks.hook-test.invalid/n' || n, repeat('c', 60), 'whsec_nnnnnn'
+  FROM generate_series(1, 9) AS n;
+SELECT throws_ok(
+  $$INSERT INTO public.webhook_endpoints (workspace_id, url, secret_ciphertext, secret_prefix)
+    VALUES ('ea000000-0000-0000-0000-00000000000a', 'https://hooks.hook-test.invalid/eleven', repeat('c', 60), 'whsec_eeeeee')$$,
+  'P0001', 'webhook_endpoint_limit', 'the 11th endpoint of a workspace is refused by the database');
+DELETE FROM public.webhook_endpoints WHERE url LIKE 'https://hooks.hook-test.invalid/n%';
 
 -- ------------------------------------------------------------
 -- 3. RLS and grants, as the member
@@ -145,6 +204,9 @@ SELECT is(
 SELECT throws_ok(
   $$SELECT secret_ciphertext FROM public.webhook_endpoints$$,
   '42501', NULL, 'the secret column is not readable from a browser session');
+SELECT throws_ok(
+  $$SELECT url FROM public.webhook_endpoints$$,
+  '42501', NULL, 'nor the URL (a path can carry the receiver''s token; the route masks it for members)');
 SELECT throws_ok(
   $$SELECT message_ids FROM public.webhook_deliveries$$,
   '42501', NULL, 'nor are the pending message ids');

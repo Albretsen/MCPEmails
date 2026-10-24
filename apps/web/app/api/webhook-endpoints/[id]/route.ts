@@ -61,7 +61,7 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
   }
   if (Object.hasOwn(input, 'inboxIds')) {
     const inboxes = await validateInboxIds(service, access.workspaceId, input.inboxIds);
-    if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: 'inbox_invalid' }, { status: 400 });
+    if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: inboxes.code }, { status: 400 });
     update.inbox_ids = inboxes.value;
   }
   if (input.payloadMode !== undefined) {

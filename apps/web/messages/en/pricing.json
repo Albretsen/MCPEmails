@@ -58,7 +58,7 @@
         "10 connected inboxes",
         "5x higher burst rate limit",
         "Longer analytics history",
-        "Webhooks for new mail and scoped API keys for your own agents"
+        "Webhooks for new mail"
       ]
     },
     "pro": {
@@ -71,7 +71,7 @@
         "Unlimited members with roles, at no extra cost",
         "Admins approve sends held for review",
         "Several workspaces on one subscription, one per company or client",
-        "Webhooks for new mail and scoped API keys for your own agents"
+        "Webhooks for new mail"
       ]
     }
   },
