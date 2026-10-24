@@ -120,6 +120,7 @@
     "test:lifecycle-queue": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/lifecycle-queue.test.ts",
     "test:sca-dunning": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/stripe/webhook/route.sca-dunning.test.ts",
     "test:lifecycle-dispatch": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/deleted-account.test.ts app/api/internal/billing-lifecycle/dispatch/route.test.ts app/api/internal/billing-lifecycle/dispatch/route.card-sweep.test.ts",
+    "test:personal-pass": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/pass.test.ts app/api/stripe/webhook/route.personal-pass.test.ts",
     "test:plan-change": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/pause.test.ts src/lib/billing/downgrade.test.ts src/lib/billing/pause-lifecycle.test.ts",
     "test:plan-change-routes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/billing/plan-change-routes.test.ts app/api/stripe/webhook/route.pause.test.ts app/api/stripe/webhook/route.downgrade.test.ts",
     "test:plan-change-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/plan-change-ui.test.mjs",
