@@ -11,6 +11,7 @@ import {
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
 import { SupportHelpLink } from '../support/SupportHelpLink';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { routing } from '@/i18n/routing';
@@ -1111,11 +1112,21 @@ export function Quote() {
 
 /* ============== PRICING ============== */
 /**
- * @param {{ onGetStarted?: () => void, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * @param {{
+ *   onGetStarted?: () => void,
+ *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   currency?: 'usd' | 'eur',
+ * }} props
+ *
+ * `currency` comes from useDisplayCurrency in HomeClient: 'eur' only for an EU
+ * visitor while STRIPE_EUR_PRICES is on, and then every amount here is the
+ * same digits in EUR with "incl. VAT". 'usd' renders exactly as before.
  */
-export function Pricing({ onGetStarted, stripePrices }) {
+export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
   const t = useTranslations('home');
   const locale = useLocale();
+  const eur = currency === 'eur';
+  const money = (text) => (eur ? euroizeAmounts(text, locale) : text);
   // Static, non-translated attributes per tier. `msgKey` indexes the message
   // bundle; `priceKey` indexes the live Stripe prices map (Business is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
@@ -1150,19 +1161,26 @@ export function Pricing({ onGetStarted, stripePrices }) {
         <div className="section-head">
           <div className="eye-label">{t('pricing.eyebrow')}</div>
           <h2>{t('pricing.title')}</h2>
-          <p className="sub">{t('pricing.sub')}</p>
+          <p className="sub">{money(t('pricing.sub'))}</p>
         </div>
         <div className="price-grid">
           {tiers.map((tier) => {
             const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
             // Stripe's live price, else the catalogue in stripe/plans.ts. No
             // price is written in this file (it once still said Pro was $29).
-            const livePrice = formatPriceCents(
+            const monthlyCents =
               liveMonthlyCents != null && liveMonthlyCents > 0
                 ? liveMonthlyCents
-                : CATALOGUE[tier.priceKey].monthlyPriceCents,
-            );
-            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`);
+                : CATALOGUE[tier.priceKey].monthlyPriceCents;
+            // EUR: Stripe's EUR currency option, else the same digits.
+            const livePrice = eur
+              ? formatMoneyCents(
+                  eurCentsFor(stripePrices?.[tier.priceKey]?.eurMonthlyCents, monthlyCents) ?? monthlyCents,
+                  'eur',
+                  locale,
+                )
+              : formatPriceCents(monthlyCents);
+            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
 
             return (
               <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
@@ -1172,6 +1190,9 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     {livePrice}
                     {tier.per && <small> {tier.per}</small>}
                   </div>
+                  {eur && monthlyCents > 0 && (
+                    <p className="price-annual-note">{t('pricing.inclVat')}</p>
+                  )}
                   <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>
@@ -1239,9 +1260,16 @@ function FaqItem({ q, a }) {
  * same copy is emitted as FAQPage JSON-LD in app/[locale]/page.tsx, so it must
  * stay in sync with `home.faq.items`.
  */
-export function Faq() {
+export function Faq({ currency = 'usd' }) {
   const t = useTranslations('home');
-  const items = t.raw('faq.items');
+  const locale = useLocale();
+  // The visible answers follow the price cards' currency (see Pricing). The
+  // FAQPage JSON-LD stays USD, next to the USD offers it sits beside.
+  const raw = t.raw('faq.items');
+  const items =
+    currency === 'eur' && Array.isArray(raw)
+      ? raw.map((item) => ({ ...item, a: euroizeAmounts(item.a, locale) }))
+      : raw;
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
     <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>

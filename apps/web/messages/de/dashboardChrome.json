@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "Sie nutzen jetzt {plan}",
       "subtitle": "Zahlung erhalten. Eine Quittung ist per E-Mail unterwegs.",
+      "subtitleEur": "Ihr Tarif ist aktiv. Wenn Sie per Lastschrift bezahlt haben, kann die Abbuchung einige Werktage dauern. Bis dahin haben Sie vollen Zugriff.",
+      "subtitleProcessing": "Ihre Lastschrift wird noch bearbeitet, das kann einige Werktage dauern. Bis dahin haben Sie vollen Zugriff.",
       "close": "Schließen",
       "planLabel": "Tarif",
       "priceLabel": "Preis",
@@ -51,6 +53,7 @@
       "activatingTitle": "Gleich geschafft",
       "activating": "Ihr Abonnement wird aktiviert. Das dauert ein paar Sekunden, die Seite aktualisiert sich von selbst.",
       "activatingSlow": "Ihre Zahlung ist eingegangen. Die Aktivierung des Tarifs dauert länger als üblich. Laden Sie die Seite gleich neu, falls sich nichts geändert hat.",
+      "activatingSlowNeutral": "Die Aktivierung des Tarifs dauert länger als üblich. Laden Sie die Seite gleich neu, falls sich nichts geändert hat.",
       "billingDetailsNote": "Preis und Verlängerungsdatum finden Sie unter Abrechnung.",
       "connectCta": "Weiteres Postfach verbinden",
       "billingCta": "Abrechnung ansehen"

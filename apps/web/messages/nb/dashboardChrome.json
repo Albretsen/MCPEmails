@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "Du er nå på {plan}",
       "subtitle": "Betalingen er mottatt. Kvitteringen er på vei til e-posten din.",
+      "subtitleEur": "Abonnementet er aktivt. Hvis du betalte med bankbelastning, kan det ta noen virkedager før den er gjennomført, og du har full tilgang i mellomtiden.",
+      "subtitleProcessing": "Bankbelastningen behandles, og det kan ta noen virkedager. Du har full tilgang i mellomtiden.",
       "close": "Lukk",
       "planLabel": "Abonnement",
       "priceLabel": "Pris",
@@ -51,6 +53,7 @@
       "activatingTitle": "Nesten i mål",
       "activating": "Abonnementet aktiveres nå. Det tar noen sekunder, og siden oppdateres av seg selv.",
       "activatingSlow": "Betalingen gikk gjennom. Aktiveringen tar lengre tid enn vanlig. Last inn siden på nytt om litt hvis den fortsatt ser uendret ut.",
+      "activatingSlowNeutral": "Aktiveringen tar lengre tid enn vanlig. Last inn siden på nytt om litt hvis den fortsatt ser uendret ut.",
       "billingDetailsNote": "Pris og fornyelsesdato finner du under Fakturering.",
       "connectCta": "Koble til en innboks til",
       "billingCta": "Gå til fakturering"

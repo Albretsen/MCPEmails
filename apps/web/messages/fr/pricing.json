@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/pour toujours",
     "perMonth": "/mois",
-    "billedYearly": "Facturé {total} $/an"
+    "billedYearly": "Facturé {total} $/an",
+    "inclVat": "TVA incluse"
   },
   "plans": {
     "free": {
