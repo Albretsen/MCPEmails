@@ -178,6 +178,9 @@ const TRANSPORTS_BY_TOOL: Record<string, readonly MissingTransport[]> = {
   email_reply: ["imap", "smtp"],
   email_forward: ["imap", "smtp"],
   draft_send: ["imap", "smtp"],
+  // Reminders (Pro): both read the mailbox (reply checks), a snooze moves mail.
+  reminder_follow_up: ["imap"],
+  reminder_snooze: ["imap"],
 };
 
 /**

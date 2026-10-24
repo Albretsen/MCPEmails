@@ -272,6 +272,7 @@ export const ROUTES = [
   ['app/api/webhooks/resend/route.ts', 'arn1', '2-3', 'caller is Resend (US)'],
   ['app/api/workflows/runs/route.ts', 'arn1', '3', '-'],
   ['app/api/workspaces/[id]/leave/route.ts', 'arn1', '1', '-'],
+  ['app/api/workspaces/[id]/morning-brief/route.ts', 'arn1', '6', '-'],
   ['app/api/workspaces/[id]/route.ts', 'arn1', '15', '-'],
   ['app/api/workspaces/active/route.ts', 'arn1', '2', '-'],
   ['app/api/workspaces/invite-cancel/[id]/route.ts', 'arn1', '3', '-'],

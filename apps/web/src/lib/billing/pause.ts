@@ -46,6 +46,15 @@ export const RESUME_LEAD_SECONDS = 3600;
 /** Plans that may pause. Business is out of v1 (decision D6). */
 export const PAUSABLE_PLANS: readonly PlanId[] = ['personal', 'solo'];
 
+/**
+ * A comped grant (Stripe metadata `comp`, set when we give a plan away). It is
+ * not a purchase, so none of pause, switch to Personal or switch to Free
+ * applies: switching would end the grant, not save the customer money.
+ */
+export function isCompedSubscription(subscription: Pick<PausableSubscription, 'metadata'>): boolean {
+  return Boolean(subscription.metadata?.comp);
+}
+
 // ── Shapes ───────────────────────────────────────────────────────────────────
 
 /** The subset of a Stripe subscription this module reads. */
@@ -293,6 +302,7 @@ function downgradePending(subscription: PausableSubscription, now: Date): boolea
 
 function commonRefusal(subscription: PausableSubscription, facts: PauseFacts, now: Date): PauseRefusal | null {
   if (!facts.planId || !PAUSABLE_PLANS.includes(facts.planId)) return 'plan_not_eligible';
+  if (isCompedSubscription(subscription)) return 'plan_not_eligible';
   if (facts.interval !== 'month') return 'not_monthly';
   if (subscription.status === 'past_due' || subscription.status === 'unpaid') return 'past_due';
   if (subscription.status !== 'active') return 'not_active';
@@ -326,7 +336,9 @@ export function pauseEligibility(subscription: PausableSubscription, now: Date =
 export function extendEligibility(subscription: PausableSubscription, now: Date = new Date()): PauseEligibility {
   const facts = pauseFacts(subscription, now);
   if (facts.pause.state === 'none') return { eligible: false, reason: 'not_paused', lengths: [] };
-  if (!facts.planId || !PAUSABLE_PLANS.includes(facts.planId)) return { eligible: false, reason: 'plan_not_eligible', lengths: [] };
+  if (!facts.planId || !PAUSABLE_PLANS.includes(facts.planId) || isCompedSubscription(subscription)) {
+    return { eligible: false, reason: 'plan_not_eligible', lengths: [] };
+  }
   const from = facts.pause.pausedFrom!;
   const others = pausedMonthsInWindow(facts.history, from, from);
   const room = Math.max(0, MAX_PAUSED_MONTHS_PER_YEAR - others - facts.pause.months);

@@ -29,7 +29,7 @@ import {
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
-import type { PausableSubscription } from '@/lib/billing/pause';
+import { PAUSABLE_PLANS, isCompedSubscription, type PausableSubscription } from '@/lib/billing/pause';
 
 export const DOWNGRADE_FROM_KEY = 'mcpe_downgrade_from';
 export const DOWNGRADE_FROM_PRICE_KEY = 'mcpe_downgrade_from_price';
@@ -125,7 +125,9 @@ export function downgradeEligibility(
   const item = basePlanItem(subscription.items.data);
   const resolved = item ? getPlanByStripePriceId(item.price.id) : null;
   const toPlan = resolved ? DOWNGRADE_PATHS[resolved.plan.id] : undefined;
-  if (!item || !resolved || !toPlan) return { eligible: false, reason: 'plan_not_eligible' };
+  if (!item || !resolved || !toPlan || isCompedSubscription(subscription)) {
+    return { eligible: false, reason: 'plan_not_eligible' };
+  }
   if (subscription.status === 'past_due' || subscription.status === 'unpaid') {
     return { eligible: false, reason: 'past_due' };
   }
@@ -228,12 +230,16 @@ export type SwitchFreeRefusal = 'not_active' | 'cancel_scheduled' | 'paused' | '
 /**
  * "Switch to Free" is a cancel at period end: the same field the portal sets,
  * so cancellationAction() and the existing cancel queue see it. Allowed for
- * any self-service paid subscription that is not already stopping or paused.
+ * a paid Personal or Pro subscription that is not already stopping or paused.
+ * Business is out of v1 (decision D6), and a comped grant never qualifies:
+ * "switching" it would only end the grant.
  */
 export function switchFreeEligibility(subscription: PausableSubscription): { eligible: boolean; reason: SwitchFreeRefusal | null } {
   const item = basePlanItem(subscription.items.data);
   const resolved = item ? getPlanByStripePriceId(item.price.id) : null;
-  if (!resolved) return { eligible: false, reason: 'plan_not_eligible' };
+  if (!resolved || !PAUSABLE_PLANS.includes(resolved.plan.id) || isCompedSubscription(subscription)) {
+    return { eligible: false, reason: 'plan_not_eligible' };
+  }
   if (!['active', 'trialing', 'past_due', 'unpaid'].includes(subscription.status)) {
     return { eligible: false, reason: 'not_active' };
   }
