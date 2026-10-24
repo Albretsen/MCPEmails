@@ -2179,7 +2179,7 @@ CREATE TRIGGER reminders_rearm_on_reconnect
     )
   )
   EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
-=======
+-- ============================================================
 -- Checkout link in the Free-cap refusal (hosted migrations
 -- 20260903120000_experiments and 20261024180000_chat_checkout_links).
 --
