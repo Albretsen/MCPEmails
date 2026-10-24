@@ -36,8 +36,8 @@ import type { StripePricesMap } from '@/lib/stripe/getPrices';
 /** Places on offer. Public copy says "the first 20 companies". */
 export const FOUNDER_PLACES = 20;
 
-/** 2026-11-09 00:00 Europe/Oslo (CET, UTC+1). */
-export const FOUNDER_WINDOW_START = new Date('2026-11-08T23:00:00Z');
+/** 2026-10-25 00:00 Europe/Oslo (CEST, UTC+2). Moved from 2026-11-09 on 2026-10-24 when the offer opened early. */
+export const FOUNDER_WINDOW_START = new Date('2026-10-24T22:00:00Z');
 
 /**
  * 2026-12-31 23:59:59 Europe/Oslo, inclusive. The offer is still open at this
