@@ -484,6 +484,12 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import {
+  carriesInboxInstructionsNote,
+  inboxInstructionsNote,
+  instructionsByInbox,
+  withOwnerInstructions,
+} from "./inbox-instructions.ts";
 import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
@@ -11430,7 +11436,23 @@ async function executeListInboxes(
     return null;
   });
 
-  const [{ data, error }, imapAliases] = await Promise.all([query, aliasesPromise]);
+  // Per-inbox instructions (Pro feature inbox_instructions), read BESIDE the
+  // roster like the aliases above. Only an ALLOWED workspace reads the column;
+  // every other one gets null and an untouched listing. Never fails the call.
+  const instructionsPromise: Promise<Map<string, string> | null> = proFeatureAccess(apiKey).then((access) =>
+    access.allowed
+      ? readInboxInstructions(
+        apiKey.workspace_id,
+        apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 ? apiKey.inbox_ids : null,
+      )
+      : null
+  );
+
+  const [{ data, error }, imapAliases, ownerInstructions] = await Promise.all([
+    query,
+    aliasesPromise,
+    instructionsPromise,
+  ]);
 
   if (error) {
     console.error("[mcp-server] inbox_list: db_error", { error: error.message });
@@ -11534,7 +11556,7 @@ async function executeListInboxes(
   }));
 
   // Active first, then parked, each in connection order.
-  const inboxes: Array<Record<string, unknown>> = [...activeEntries, ...parkedEntries];
+  const inboxes: Array<Record<string, unknown> & { inbox_id: string }> = [...activeEntries, ...parkedEntries];
 
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
@@ -11597,10 +11619,65 @@ async function executeListInboxes(
   }
 
   return {
-    result: jsonOk({ inboxes }),
+    result: jsonOk({ inboxes: withOwnerInstructions(inboxes, ownerInstructions) }),
     logStatus: "success",
     logErrorCode: null,
   };
+}
+
+/**
+ * inboxes.ai_instructions for a workspace (optionally only some inbox ids), as
+ * a map of inbox id to the served text. Its own query, so before the migration
+ * lands (42703) or on any error this answers null and only the feature is off.
+ * Call it only when the Pro gate allows inbox_instructions.
+ */
+async function readInboxInstructions(
+  workspaceId: string,
+  inboxIds: string[] | null,
+): Promise<Map<string, string> | null> {
+  try {
+    let query = supabase
+      .from("inboxes")
+      .select("id, ai_instructions")
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null)
+      .not("ai_instructions", "is", null);
+    if (inboxIds) query = query.in("id", inboxIds);
+    const { data, error } = await query;
+    if (error) {
+      console.warn("[mcp-server] inbox_instructions_read_failed", { workspace_id: workspaceId, error: error.message });
+      return null;
+    }
+    return instructionsByInbox(data as Array<{ id?: unknown; ai_instructions?: unknown }> | null);
+  } catch (err) {
+    console.warn("[mcp-server] inbox_instructions_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+/**
+ * Append "Inbox instructions from the owner:" to a successful drafting or
+ * sending result, when the Pro gate allows inbox_instructions and the inbox
+ * has instructions. Anything else (not visible, not allowed, no inbox, no
+ * text, a failed read) leaves the result exactly as it was. Never throws.
+ */
+async function attachInboxInstructionsNote(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  dispatchName: string,
+  apiKey: ApiKeyRow,
+  inboxId: string | null,
+): Promise<void> {
+  if (!inboxId || !carriesInboxInstructionsNote(dispatchName)) return;
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return;
+  if ((response.result as { isError?: unknown }).isError === true) return;
+  const access = await proFeatureAccess(apiKey);
+  if (!access.allowed) return;
+  const instructions = await readInboxInstructions(apiKey.workspace_id, [inboxId]);
+  const text = instructions?.get(inboxId);
+  if (text) appendResultNote(response, inboxInstructionsNote(text));
 }
 
 /**
@@ -34724,6 +34801,9 @@ async function handleToolsCall(
   // idempotency claim has been settled, so a replayed or rejected outbound
   // request never holds a slot it will not use.
   const byteHeavySlot = acquireByteHeavySlot(dispatchName, apiKey.id);
+  // A drafting/sending call may end with the inbox's instructions note: start
+  // the (memoised) Pro gate read now so it runs beside the dispatch, not after.
+  if (carriesInboxInstructionsNote(dispatchName)) void proFeatureAccess(apiKey);
   if (!byteHeavySlot.granted) {
     console.warn("[mcp-server] tools/call: byte_heavy_concurrency_limit", {
       key_id: apiKey.id,
@@ -34876,6 +34956,12 @@ async function handleToolsCall(
   // Notes the provider layer raised during dispatch (a Sent copy that was not
   // saved). Successful results only, like every other note.
   attachResultNotes(toolResult, logCtx.resultNotes);
+
+  // The inbox's standing instructions (Pro feature inbox_instructions), on a
+  // successful draft create/reply or email_compose result only. HERE, on the
+  // MCP path, not in dispatchExecutor: the web client's executors are for a
+  // human, not a model.
+  await attachInboxInstructionsNote(toolResult, dispatchName, apiKey, logCtx.inboxId ?? null);
 
   // Disclose any argument leniency dropped. This is not optional bookkeeping:
   // dropping a filter instead of refusing the call is only defensible because
@@ -39162,6 +39248,10 @@ export { draftEnvelopeRecipients, formatAddressEntry };
 // against the same fakes, so the forwarded-message fix is pinned on the tool
 // result of `email_read` as well as of `email_read_batch`.
 export { executeReadEmail };
+
+// For inbox-instructions-serving.test.ts: the drafting/sending note step that
+// handleToolsCall runs after dispatch, driven on a built result.
+export { attachInboxInstructionsNote };
 
 // ---------------------------------------------------------------------------
 // Exported for `client-api` (supabase/functions/client-api), the web mail

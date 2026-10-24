@@ -53,6 +53,20 @@ export const ENTRIES = [
   },
   {
     date: '2026-10-24',
+    kind: 'improved',
+    title: 'Ready-made first prompts once your inbox is connected',
+    body:
+      'After you connect an inbox, the dashboard overview now suggests three things to ask your AI app, each with a copy button, and reminds you how to switch MCPEmails on inside a Claude or ChatGPT chat. The step turns to "It works" by itself when your app makes its first call.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'A failed inbox connection tells you exactly what to do',
+    body:
+      'When an inbox does not connect, the form now shows the steps for your provider, such as creating a Yahoo, AOL, Gmail or iCloud app password or turning on IMAP, with a link to the right settings page and a Test again button that keeps what you typed. After your first inbox connects, it takes you straight to connecting your AI app.',
+  },
+  {
+    date: '2026-10-24',
     kind: 'added',
     title: 'A first week checklist on your dashboard',
     body:
