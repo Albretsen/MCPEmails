@@ -39,7 +39,8 @@ export type CardKind =
   | "outbound_review"
   | "bulk_plan"
   | "receipt"
-  | "draft_editor";
+  | "draft_editor"
+  | "subscription_plan";
 
 export type CardState =
   | "pending"
@@ -303,6 +304,80 @@ export interface DraftEditorData {
   can_send?: boolean;
 }
 
+/**
+ * §9 `subscription_plan` (internal only, `workspaces.subscription_cleanup_enabled`).
+ * A scan of newsletter and list senders; the card ticks some and calls
+ * `subscriptions_cleanup`. Display names, addresses and `detail` are hostile
+ * text. The plan carries hosts only, never a URL; `results[].link` is the one
+ * raw URL, present only for `needs_user`.
+ */
+export type SubscriptionMethod = "one_click" | "mailto" | "link" | "none";
+
+export interface SubscriptionSender {
+  sender_key: string;
+  display_name: string;
+  from_address: string;
+  domain: string;
+  list_id: string | null;
+  message_count: number;
+  unread_count: number;
+  read_share: number;
+  last_received_at: string;
+  method: SubscriptionMethod;
+  safe: boolean;
+  unsafe_reason: string | null;
+  url_host: string | null;
+  suggested: boolean;
+}
+
+export type SubscriptionStatus =
+  | "requested"
+  | "failed"
+  | "draft_ready"
+  | "needs_user"
+  | "filtered"
+  | "skipped_unsafe"
+  | "already_done";
+
+export interface SubscriptionResult {
+  sender_key: string;
+  display_name: string;
+  status: SubscriptionStatus;
+  method: SubscriptionMethod;
+  detail: string | null;
+  draft_id: string | null;
+  link: string | null;
+}
+
+export interface SubscriptionBacklog {
+  action: "archive" | "keep";
+  destination: string | null;
+  moved: number;
+  remaining: number;
+  has_more: boolean;
+}
+
+export interface Subscriptions {
+  plan_id: string;
+  expires_at: string;
+  inbox: { inbox_id: string; email_address: string; provider: string };
+  window_days: number;
+  scanned: number;
+  truncated: boolean;
+  summary: {
+    senders: number;
+    one_click: number;
+    mailto: number;
+    link: number;
+    none: number;
+    unsafe: number;
+  };
+  senders: SubscriptionSender[];
+  /** Present once executed. */
+  results?: SubscriptionResult[];
+  backlog?: SubscriptionBacklog | null;
+}
+
 export interface Receipt {
   outcome:
     | "sent"
@@ -381,6 +456,8 @@ export interface Envelope {
   diagnostics?: boolean;
   outbound?: Outbound;
   plan?: Plan;
+  /** §9, on a `subscription_plan` card. */
+  subscriptions?: Subscriptions;
   /**
    * §8's draft payload on a `draft_editor` card.
    *

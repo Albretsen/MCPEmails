@@ -183,7 +183,11 @@ import {
 type ProviderErrorAuditDetails =
   | ProviderCallAuditDetails
   | FolderResolveAuditDetails
-  | HandlerValidationAuditDetails;
+  | HandlerValidationAuditDetails
+  // Subscription cleanup's method mix and outcome counts, written on SUCCESS
+  // too (subscription-cleanup.ts#SubscriptionAuditDetails): the only way to
+  // measure the one-click/mailto split. Counts and `https://host` only.
+  | SubscriptionAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -516,7 +520,19 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
-import type { ListHeaderScanContext } from "./subscription-scan.ts";
+import { fetchListHeaderRecords, type ListHeaderScanContext } from "./subscription-scan.ts";
+import { postOneClick } from "./one-click-post.ts";
+import {
+  isSubscriptionToolName,
+  runSubscriptionFollowUp,
+  runSubscriptionTool,
+  type SubInbox,
+  SUBSCRIPTION_TOOL_DEFINITIONS,
+  SUBSCRIPTION_TOOL_NAMES,
+  type SubscriptionAuditDetails,
+  type SubscriptionDeps,
+  supabaseSubscriptionStore,
+} from "./subscription-cleanup.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -9319,6 +9335,22 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // and must stay that way — mcp-app-drafts.test.ts pins it.
 // ---------------------------------------------------------------------------
 for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition });
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup (`subscriptions_scan`, `subscriptions_cleanup`).
+//
+// Registered with NO `_meta`: the card metadata is attached per key in
+// `handleToolsList` (mcp-app-resources.ts#SUBSCRIPTION_CARD_TOOL_NAMES), and
+// both tools are DROPPED from the listing for a workspace without
+// `subscription_cleanup_enabled` (see subscriptionToolsVisible). Their handlers
+// refuse in such a workspace too, so a cached listing cannot reach them.
+// Not in BILLABLE_TOOL_NAMES (spec D2); rate limits and activity_log apply as
+// for every tool. Being registry tools, they are on the per-operation surface
+// below unchanged.
+// ---------------------------------------------------------------------------
+for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
   TOOL_REGISTRY.push({ ...definition });
 }
 
@@ -19872,6 +19904,166 @@ async function subscriptionScanContextFor(
         select: (folder) => session.select(imapMailboxForServerFolder(folder)),
       };
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup: the index.ts half (wiring only). The handlers, the
+// ladder and the follow-up live in subscription-cleanup.ts.
+// ---------------------------------------------------------------------------
+
+/**
+ * `workspaces.subscription_cleanup_enabled`: OUR rollout gate (seeded by
+ * 20261024150000). Fails to "off" on any error, and is always off in
+ * introspection mode, which has no database.
+ */
+async function workspaceSubscriptionCleanupEnabled(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("subscription_cleanup_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] subscription_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { subscription_cleanup_enabled?: unknown } | null)?.subscription_cleanup_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] subscription_rollout_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** The listing without the subscription tools unless the workspace is rolled out. */
+function subscriptionToolsVisible<T extends { name: string }>(tools: T[], enabled: boolean): T[] {
+  if (enabled) return tools;
+  return tools.filter((tool) => !(SUBSCRIPTION_TOOL_NAMES as readonly string[]).includes(tool.name));
+}
+
+/** Provider error to a sentinel the module can put in its refusal. */
+function subscriptionErrorSentinel(err: unknown): Error {
+  if (err instanceof ImapAuthError) return new Error("imap_auth_failed");
+  const message = err instanceof Error ? err.message : String(err);
+  return new Error(/^[a-z][a-z0-9_]{2,63}$/.test(message) ? message : "provider_error");
+}
+
+function subscriptionDepsFor(apiKey: ApiKeyRow): SubscriptionDeps {
+  // The module carries the inbox as a SubInbox; it is always the InboxRow that
+  // resolveInboxArg returned, so the cast back is exact.
+  const rowOf = (inbox: SubInbox) => inbox as unknown as InboxRow;
+  return {
+    store: supabaseSubscriptionStore(supabase),
+    encrypt: encryptForStorage,
+    decrypt: decryptStoredToken,
+    digest: idempotencyDigest,
+    appUrl: APP_URL,
+    workspaceEnabled: workspaceSubscriptionCleanupEnabled,
+    async resolveInbox(args) {
+      const resolved = await resolveInboxArg(args, apiKey);
+      if (!resolved.ok) {
+        const refusal = inboxResolutionError(resolved, "subscriptions");
+        return {
+          ok: false,
+          result: { result: refusal.result as never, logStatus: "error", logErrorCode: refusal.logErrorCode },
+        };
+      }
+      return { ok: true, inbox: resolved.inbox };
+    },
+    async scan(inbox, opts, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        const ctx = await subscriptionScanContextFor(row, budget, session);
+        return await fetchListHeaderRecords(ctx, opts);
+      } catch (err) {
+        throw subscriptionErrorSentinel(err);
+      } finally {
+        await session?.close();
+      }
+    },
+    // D3: straight from the edge function, behind the https host guard.
+    postOneClick: (url, opts) => postOneClick(url, { timeoutMs: opts.timeoutMs }),
+    async createDraft(inbox, draft) {
+      // D6: a draft, never a send. The provider create paths are the same
+      // ones draft_create uses; no signature (an unsubscribe note is not
+      // correspondence) and no card envelope (the result is the cleanup card).
+      const row = rowOf(inbox);
+      if (!getProviderCapabilities(row.provider).drafts) return { ok: false, error_code: "drafts_unsupported" };
+      if (!isValidEmailAddress(draft.to)) return { ok: false, error_code: "invalid_recipient" };
+      const params: DraftParams = { to: [draft.to], cc: [], bcc: [], subject: draft.subject, body: draft.body };
+      try {
+        const created = row.provider === "gmail"
+          ? await gmailCreateDraft(row, params)
+          : row.provider === "outlook"
+          ? await outlookCreateDraft(row, params)
+          : await imapCreateDraft(row, params);
+        return { ok: true, draft_id: created.draft_id };
+      } catch (err) {
+        return { ok: false, error_code: subscriptionErrorSentinel(err).message };
+      }
+    },
+    async archive(inbox, ids, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        // Gmail archive is "remove INBOX" (an empty destination in the shared
+        // relocation plan, exactly as email_archive does it); Outlook and IMAP
+        // resolve the archive role the way a move to "archive" does, which on
+        // IMAP creates the mailbox when the account has none.
+        const destination = row.provider === "gmail" ? "" : await resolveFolderId(row, "archive", { session });
+        const result = await runBulkMoveOnIds(row, ids, destination, null, {
+          session: session ?? undefined,
+          budget,
+        });
+        return {
+          destination: "Archive",
+          moved: result.succeeded,
+          // Only a message that is gone counts as done. Any other failure (auth,
+          // outage) leaves the id for `continue: true`.
+          failed: result.failed.filter((f) => f.error === MESSAGE_NOT_FOUND).map((f) => f.id),
+        };
+      } finally {
+        await session?.close();
+      }
+    },
+  };
+}
+
+/** POST /subscription-followup (pg_cron, hourly). */
+async function handleSubscriptionFollowUp(): Promise<Response> {
+  try {
+    const summary = await runSubscriptionFollowUp({
+      store: supabaseSubscriptionStore(supabase),
+      async search(inboxId, fromAddress, sinceIso) {
+        const row = await loadInboxRowForTriage(inboxId);
+        if (!row) throw new Error("inbox_unavailable");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const result = await Promise.race([
+            searchMessagesForProvider(row, { from: fromAddress, since: sinceIso }, 1, 0, []),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS);
+            }),
+          ]);
+          return result.messages.length > 0;
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+    });
+    console.log("[subscriptions] follow_up", summary);
+    return new Response(JSON.stringify({ ok: true, ...summary }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[subscriptions] follow_up_failed", { error: err instanceof Error ? err.message : String(err) });
+    return new Response(JSON.stringify({ ok: false }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -31956,10 +32148,12 @@ async function handleToolsList(
   // which is a frontend change.
   // Both reads below are independent pure reads, so they share one round trip:
   // `perOperation` is started here and only taken further down.
-  const [uiGates, perOperation] = await Promise.all([
+  const [baseGates, perOperation, subscriptions] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
+    workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
   ]);
+  const uiGates = { ...baseGates, subscriptions };
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -31982,7 +32176,7 @@ async function handleToolsList(
   // is what its plugin review requires; see PER_OPERATION_LISTING. Read
   // alongside the card gates above.
   const visibleTools = withListingCardMeta(
-    toolsForListing(apiKey, perOperation),
+    subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions),
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -32497,6 +32691,18 @@ async function runExecutor(
       rawArgs,
     )!;
     return { result, logStatus, logErrorCode };
+  }
+  if (isSubscriptionToolName(dispatchName)) {
+    // Subscription cleanup. The workspace flag, the plan's workspace and inbox
+    // allowlist, its expiry and the sender keys are all re-checked inside the
+    // handler; see subscription-cleanup.ts. `logDetails` carries counts only.
+    const { result, logStatus, logErrorCode, logDetails } = await runSubscriptionTool(
+      dispatchName,
+      subscriptionDepsFor(apiKey),
+      bulkCallerFor(apiKey),
+      rawArgs,
+    )!;
+    return { result, logStatus, logErrorCode, logErrorDetails: logDetails ?? null };
   }
   if (isBulkToolName(dispatchName)) {
     // MCP Apps bulk-plan tools. As with the approval tools, the scope check
@@ -35339,6 +35545,29 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       );
     }
     return handleTriageDispatch(triageDeps());
+  }
+
+  // ── Subscription cleanup follow-up route ──────────────────────────────────
+  // Called hourly by pg_cron (dispatch_subscription_followup, migration
+  // 20261024150100), same guard and secret as /triage-dispatch. The body is
+  // ignored: which rows are due, the leases and the budget live in
+  // runSubscriptionFollowUp.
+  if (reqUrl.pathname.endsWith("/subscription-followup")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (!dispatchSecret || !providedSecret || providedSecret !== dispatchSecret) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return await handleSubscriptionFollowUp();
   }
 
   // ── Automations preview route ─────────────────────────────────────────────

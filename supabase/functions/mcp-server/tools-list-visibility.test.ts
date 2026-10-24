@@ -134,6 +134,9 @@ Deno.test("a dashboard key is still filtered to exactly the tools its scopes all
     "folder",
     "signature_get",
     "contact_search",
+    // In the scope-filtered registry list; tools/list then drops it for a
+    // workspace without subscription_cleanup_enabled (handleToolsList).
+    "subscriptions_scan",
   ]);
   for (const forbidden of ["email_compose", "email_delete", "draft", "schedule", "automation"]) {
     assert(!listed.includes(forbidden), `a read-only dashboard key must not see ${forbidden}`);
@@ -482,6 +485,12 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     // Same scope as the two above: it changes how a draft is DISPLAYED, which
     // cannot sensibly be harder to do than rewriting the draft's whole body.
     "draft_editor_hide": ["manage:drafts"],
+    // Subscription cleanup (2026-10-24). The scan only reads; the cleanup
+    // moves mail (the backlog step), so it takes the move scope. Drafting a
+    // mailto unsubscribe additionally needs manage:drafts, checked inside the
+    // handler (a key without it gets the mailto link back instead).
+    "subscriptions_scan": ["read:email"],
+    "subscriptions_cleanup": ["manage:folders"],
   };
   const actual: Record<string, string[]> = {};
   for (const tool of TOOL_REGISTRY) {

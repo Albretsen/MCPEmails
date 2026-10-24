@@ -116,6 +116,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS draft_editor_hidden                boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
@@ -385,6 +386,7 @@ $$;
 --   send review      send_approvals, outbound_idempotency
 --   drafts           draft_lineage, draft_card_activity
 --   bulk operations  bulk_plans, bulk_runs
+--   subscriptions    subscription_plans, unsubscribe_requests
 --   automations      triage_rules, triage_runs, triage_run_items,
 --                    triage_seen_messages
 --   clients          mcp_client_capabilities, workspace_members
@@ -1068,6 +1070,60 @@ CREATE TABLE IF NOT EXISTS public.inbox_sender_aliases (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS inbox_sender_aliases_inbox_address_key
   ON public.inbox_sender_aliases (inbox_id, lower(email_address));
+
+-- Subscription cleanup (20261024150000). senders and progress are ciphertext.
+CREATE TABLE IF NOT EXISTS public.subscription_plans (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  senders              jsonb NOT NULL,
+  senders_encrypted    boolean NOT NULL DEFAULT true,
+  sender_count         integer NOT NULL CHECK (sender_count >= 0),
+  summary              jsonb NOT NULL DEFAULT '{}'::jsonb,
+  window_days          integer NOT NULL CHECK (window_days BETWEEN 1 AND 365),
+  scanned              integer NOT NULL DEFAULT 0 CHECK (scanned >= 0),
+  truncated            boolean NOT NULL DEFAULT false,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  expires_at           timestamptz NOT NULL,
+  used_at              timestamptz,
+  used_by_api_key_id   uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  progress             jsonb,
+  backlog_action       text CHECK (backlog_action IS NULL OR backlog_action IN ('archive', 'keep')),
+  backlog_moved        integer NOT NULL DEFAULT 0 CHECK (backlog_moved >= 0),
+  backlog_remaining    integer NOT NULL DEFAULT 0 CHECK (backlog_remaining >= 0),
+  backlog_leased_until timestamptz
+);
+CREATE INDEX IF NOT EXISTS subscription_plans_workspace_created_idx
+  ON public.subscription_plans (workspace_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id     uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id         uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  plan_id          uuid REFERENCES public.subscription_plans(id) ON DELETE SET NULL,
+  api_key_id       uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  sender_key       text NOT NULL,
+  sender_domain    text,
+  display_name     text,
+  from_address     text,
+  method           text NOT NULL CHECK (method IN ('one_click', 'mailto', 'link', 'none')),
+  status           text NOT NULL CHECK (status IN ('pending', 'requested', 'failed', 'draft_ready', 'needs_user', 'filtered', 'skipped_unsafe', 'stopped', 'still_sending')),
+  http_status      integer,
+  error            text,
+  url_host         text,
+  draft_id         text,
+  idempotency_key  text NOT NULL UNIQUE,
+  requested_at     timestamptz,
+  check_after      timestamptz,
+  checked_at       timestamptz,
+  check_leased_at  timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS unsubscribe_requests_follow_up_idx
+  ON public.unsubscribe_requests (check_after)
+  WHERE checked_at IS NULL AND check_after IS NOT NULL;
 
 
 CREATE OR REPLACE TRIGGER billing_email_sends_updated_at
