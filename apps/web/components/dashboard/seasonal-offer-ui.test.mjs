@@ -64,11 +64,16 @@ async function renderDashboard(t, {
   addresses = [],
   maxInboxes = 1,
   userEmail = 'ada@gmail.com',
+  checkoutResponses = null,
 } = {}) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
     requests.push({ url: String(url), method: init.method ?? 'GET', body: init.body ?? null });
+    if (String(url) === '/api/stripe/checkout' && checkoutResponses?.length) {
+      const next = checkoutResponses.shift();
+      return { ok: true, status: 200, json: async () => next };
+    }
     if (String(url) === '/api/stripe/checkout') {
       return { ok: true, status: 200, json: async () => ({ confirmation_required: true, plan: 'Personal', plan_id: 'personal', interval: 'year', preview: null }) };
     }
@@ -179,6 +184,43 @@ test('switch card: a monthly Personal owner sees it, and its button only asks fo
   assert.equal(body.interval, 'year');
   assert.equal(body.confirm, undefined, 'the first request never confirms');
   assert.ok(view.container.querySelector('[role="dialog"]'), 'the quote dialog opens');
+});
+
+test('switch card: an offer that ends between quote and confirm is re-quoted, not charged', async (t) => {
+  const quoted = {
+    currency: 'usd', amountDueNowCents: 5441, creditCents: 459, recurringCents: 8640,
+    extraMailboxes: 0, nextRenewalAt: null, discountCents: 2740, seasonalOffer: offer('personal', 5900, 8640),
+  };
+  const fresh = { ...quoted, amountDueNowCents: 8181, discountCents: 0, seasonalOffer: null };
+  const view = await renderDashboard(t, {
+    plan: 'personal',
+    seasonalSwitch: offer('personal', 5900, 8640),
+    checkoutResponses: [
+      { confirmation_required: true, plan: 'Personal', plan_id: 'personal', interval: 'year', preview: quoted },
+      { confirmation_required: true, plan: 'Personal', plan_id: 'personal', interval: 'year', preview: fresh, seasonal_offer_ended: true },
+    ],
+  });
+  const card = view.switchCard();
+  const button = [...card.querySelectorAll('button')].find((b) => b.textContent === chrome.seasonal.switchCta);
+  await flush(async () => { button.click(); await new Promise((r) => setTimeout(r, 5)); });
+  const dialog = () => view.container.querySelector('[role="dialog"]');
+  assert.ok(dialog());
+  assert.equal(dialog().querySelector('[data-seasonal-ended]') === null, true, 'no ended note on the first quote');
+
+  const confirm = [...dialog().querySelectorAll('button')].at(-1);
+  assert.match(confirm.textContent, /54\.41/);
+  await flush(async () => { confirm.click(); await new Promise((r) => setTimeout(r, 5)); });
+
+  const posts = view.requests.filter((r) => r.url === '/api/stripe/checkout');
+  assert.equal(posts.length, 2);
+  const body = JSON.parse(posts[1].body);
+  assert.equal(body.confirm, true);
+  assert.equal(body.offer, 'bw2026', 'the confirm says which offer it was quoted with');
+
+  assert.ok(dialog(), 'the dialog stays open with the new quote');
+  const ended = dialog().querySelector('[data-seasonal-ended]');
+  assert.equal(ended?.textContent ?? null, chrome.seasonal.ended);
+  assert.match([...dialog().querySelectorAll('button')].at(-1).textContent, /81\.81/);
 });
 
 test('switch card: hidden for annual subscribers (the server sends no switch offer)', async (t) => {

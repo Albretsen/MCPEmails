@@ -16,9 +16,13 @@
 -- in Stripe. So the cron line only has to be "often enough on the day": the
 -- first run sends what fits in its time budget, later runs finish the rest,
 -- and every run after that finds everyone already in lifecycle_email_sends
--- (primary key user_id, template, trigger_key) and sends nothing. In 2027 and
--- later the same cron line fires on 27 November and the route answers
--- window_closed; drop the job whenever convenient.
+-- (primary key user_id, template, trigger_key) and sends nothing.
+--
+-- THE JOB REMOVES ITSELF. The last slot of the day (20:50 UTC on 27 Nov 2026)
+-- posts once more and then unschedules the job, so the cron line never fires
+-- in November 2027. Should it survive anyway (the job was re-created, or the
+-- 20:50 run was missed), any call from 2 December 2026 on posts nothing and
+-- unschedules it. The route also refuses to send outside the 2026 window.
 --
 -- No new table: the send ledger is the existing lifecycle_email_sends
 -- (RLS enabled, no policies, service role only), template 'black_week_2026',
@@ -39,6 +43,14 @@ DECLARE
   v_url    text := 'https://mcpemails.com/api/internal/black-week-email/dispatch';
   v_secret text;
 BEGIN
+  -- Past the campaign: never post again, and take the job down.
+  IF now() >= timestamptz '2026-12-02 00:00:00+00' THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'dispatch-black-week-email') THEN
+      PERFORM cron.unschedule('dispatch-black-week-email');
+    END IF;
+    RETURN;
+  END IF;
+
   BEGIN
     SELECT decrypted_secret
       INTO v_secret
@@ -66,11 +78,20 @@ BEGIN
     -- net._http_response row meaningful.
     timeout_milliseconds := 60000
   );
+
+  -- The last scheduled slot of 27 Nov 2026 (20:50 UTC): after this post the
+  -- job has no further work, so it unschedules itself. pg_net sends the
+  -- request after this transaction commits, which unscheduling does not stop.
+  IF now() >= timestamptz '2026-11-27 20:50:00+00' THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'dispatch-black-week-email') THEN
+      PERFORM cron.unschedule('dispatch-black-week-email');
+    END IF;
+  END IF;
 END;
 $fn$;
 
 COMMENT ON FUNCTION public.dispatch_black_week_email() IS
-  'Called by pg_cron on 27 Nov. Posts to the Next.js Black Week 2026 email dispatcher, which gates on time, on the live Stripe coupons and on lifecycle_email_sends itself. Secret from Vault (name=''dispatch_secret''), shared with the other dispatchers. Empty body.';
+  'Called by pg_cron on 27 Nov 2026; unschedules its job after the 20:50 UTC run and refuses to post from 2026-12-02. Posts to the Next.js Black Week 2026 email dispatcher, which gates on time, on the live Stripe coupons and on lifecycle_email_sends itself. Secret from Vault (name=''dispatch_secret''), shared with the other dispatchers. Empty body.';
 
 REVOKE EXECUTE ON FUNCTION public.dispatch_black_week_email() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.dispatch_black_week_email() TO service_role;

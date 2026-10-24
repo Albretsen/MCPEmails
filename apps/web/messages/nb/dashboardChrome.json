@@ -434,6 +434,7 @@
     "ctaAnnual": "Oppgrader til {plan} årlig",
     "switchBody": "Black Week: bytt til årlig for ${firstYear} det første året, deretter ${renewal} i året. Ubrukte dager i inneværende måned trekkes fra, så du betaler litt mindre enn det i dag.",
     "switchCta": "Bytt til årlig",
-    "switchBusy": "Klargjør..."
+    "switchBusy": "Klargjør...",
+    "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
   }
 }

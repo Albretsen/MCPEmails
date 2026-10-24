@@ -434,6 +434,7 @@
     "ctaAnnual": "Passer à {plan} en annuel",
     "switchBody": "Black Week : passez à l'annuel pour {firstYear} $ la première année, puis {renewal} $ par an. Les jours non utilisés de votre mois en cours sont déduits, vous payez donc un peu moins aujourd'hui.",
     "switchCta": "Passer à l'annuel",
-    "switchBusy": "Préparation..."
+    "switchBusy": "Préparation...",
+    "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
   }
 }

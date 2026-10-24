@@ -434,6 +434,7 @@
     "ctaAnnual": "Auf {plan} jährlich upgraden",
     "switchBody": "Black Week: Wechseln Sie zur jährlichen Abrechnung für ${firstYear} im ersten Jahr, danach ${renewal} pro Jahr. Die ungenutzten Tage Ihres aktuellen Monats werden abgezogen, deshalb zahlen Sie heute etwas weniger.",
     "switchCta": "Zur jährlichen Abrechnung wechseln",
-    "switchBusy": "Wird vorbereitet..."
+    "switchBusy": "Wird vorbereitet...",
+    "ended": "Das Black-Week-Angebot ist vorbei, daher wurde nichts abgebucht. Die Beträge oben sind der reguläre Preis."
   }
 }

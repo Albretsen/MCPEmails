@@ -434,6 +434,7 @@
     "ctaAnnual": "Upgrade to {plan}, annual",
     "switchBody": "Black Week: switch to annual for ${firstYear} your first year, then ${renewal} a year. The unused days of your current month are taken off, so you pay a bit less than that today.",
     "switchCta": "Switch to annual",
-    "switchBusy": "Preparing..."
+    "switchBusy": "Preparing...",
+    "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
   }
 }

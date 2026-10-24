@@ -362,13 +362,16 @@ test('every version: amounts from the live offer, renewal price beside it, end d
     assert.equal(email.headers['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click');
     assert.doesNotMatch(email.subject, /—/);
     assert.match(email.subject, /^Black Week: /);
+    // A first-year price never stands alone in a subject (no room for the
+    // renewal price beside it); a saving is fine.
+    assert.doesNotMatch(email.subject, /for \$\d/);
     assert.ok(email.text.includes('MCPEmails'));
   }
 });
 
 test('Free version: both plans, the switch sentence verbatim, link to annual pricing', () => {
   const email = tpl.composeBlackWeekEmail({ segment: 'free', offers: liveOffers(), unsubscribeToken: 't' })!;
-  assert.equal(email.subject, 'Black Week: MCPEmails annual for $59 your first year');
+  assert.equal(email.subject, 'Black Week: a lower first year on MCPEmails annual plans');
   assert.ok(email.text.includes('Personal annual is $59 for your first year, then $86.40 a year. You save $27.40.'));
   assert.ok(email.text.includes('Pro annual is $99 for your first year, then $144 a year. You save $45.'));
   assert.ok(email.text.includes(tpl.SWITCH_SENTENCE));

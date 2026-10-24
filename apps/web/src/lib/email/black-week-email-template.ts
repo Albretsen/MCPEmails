@@ -95,7 +95,9 @@ export function composeBlackWeekEmail(input: BlackWeekEmailInput): ComposedBlack
 
   switch (input.segment) {
     case 'free': {
-      subject = `Black Week: MCPEmails annual for ${money(personal.firstYearCents)} your first year`;
+      // No first-year price in a subject line: it could not carry the renewal
+      // price next to it. The monthly versions name the saving instead.
+      subject = 'Black Week: a lower first year on MCPEmails annual plans';
       title = 'Black Week: a lower first year on annual plans';
       paragraphs = [
         'For Black Week, the annual MCPEmails plans cost less for your first year.',
@@ -111,7 +113,7 @@ export function composeBlackWeekEmail(input: BlackWeekEmailInput): ComposedBlack
       break;
     }
     case 'monthly_personal': {
-      subject = `Black Week: switch ${personalName} to annual for ${money(personal.firstYearCents)} your first year`;
+      subject = `Black Week: switch ${personalName} to annual and save ${money(personal.savingCents)} on your first year`;
       title = `Switch ${personalName} to annual for less`;
       paragraphs = [
         `You pay for ${personalName} monthly. For Black Week, you can switch to ${personalName} annual for ${money(personal.firstYearCents)} for your first year, then ${money(personal.normalYearlyCents)} a year. You save ${money(personal.savingCents)}.`,
@@ -126,7 +128,7 @@ export function composeBlackWeekEmail(input: BlackWeekEmailInput): ComposedBlack
       break;
     }
     case 'monthly_pro': {
-      subject = `Black Week: switch ${proName} to annual for ${money(pro.firstYearCents)} your first year`;
+      subject = `Black Week: switch ${proName} to annual and save ${money(pro.savingCents)} on your first year`;
       title = `Switch ${proName} to annual for less`;
       paragraphs = [
         `You pay for ${proName} monthly. For Black Week, you can switch to ${proName} annual for ${money(pro.firstYearCents)} for your first year, then ${money(pro.normalYearlyCents)} a year. You save ${money(pro.savingCents)}.`,

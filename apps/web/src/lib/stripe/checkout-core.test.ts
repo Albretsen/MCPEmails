@@ -386,6 +386,8 @@ async function checkout(opts: {
   locale?: unknown;
   /** The expired session an abandoned-checkout reminder linked from. */
   recoveredFrom?: unknown;
+  /** The seasonal offer id the confirmed quote carried. */
+  quotedOffer?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -411,6 +413,7 @@ async function checkout(opts: {
     confirmChange: opts.confirmChange,
     ...('locale' in opts ? { locale: opts.locale } : {}),
     ...('recoveredFrom' in opts ? { recoveredFrom: opts.recoveredFrom } : {}),
+    ...('quotedOffer' in opts ? { quotedOffer: opts.quotedOffer } : {}),
   });
   return {
     outcome,
@@ -1727,6 +1730,62 @@ test('offer: the confirmed switch applies the coupon and tags the subscription',
   assert.deepEqual(update.metadata, { offer: 'bw2026' });
   assert.equal(update.payment_behavior, 'pending_if_incomplete');
   assert.equal(update.proration_behavior, 'always_invoice');
+});
+
+test('offer: a quote WITH the offer confirmed after it ended charges nothing and re-quotes', async () => {
+  // Quoted at 23:58 on 1 December, clicked at 00:01: the offer is gone.
+  const run = await withOffers({ offers: {} }, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+      quotedOffer: 'bw2026',
+    }),
+  );
+  assert.equal(run.subscriptionsUpdated.length, 0, 'no swap, no charge');
+  assert.equal(run.outcome.kind, 'confirmation_required');
+  assert.ok(run.outcome.kind === 'confirmation_required');
+  assert.equal(run.outcome.offerEnded, true);
+  assert.equal(run.outcome.preview?.seasonalOffer, null);
+  assert.equal(run.outcome.preview?.discountCents, 0);
+  assert.equal(run.previewsRequested[0].discounts, undefined);
+  assert.equal(run.planChangeRows.length, 0, 'a re-quote is not a completed decision');
+});
+
+test('offer: a quote WITH the offer confirmed while it is live still swaps', async () => {
+  const run = await withOffers({}, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+      quotedOffer: 'bw2026',
+    }),
+  );
+  assert.equal(run.outcome.kind, 'changed');
+  assert.deepEqual((run.subscriptionsUpdated[0] as OfferParams).discounts, [
+    { coupon: 'BW2026_PERSONAL_Y1' },
+  ]);
+});
+
+test('offer: a confirm without a quoted offer is unaffected when no offer is live', async () => {
+  const run = await withOffers({ offers: {} }, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+    }),
+  );
+  assert.equal(run.outcome.kind, 'changed');
+  assert.equal((run.subscriptionsUpdated[0] as OfferParams).discounts, undefined);
 });
 
 test('offer: monthly Personal to annual Pro gets the Pro coupon', async () => {

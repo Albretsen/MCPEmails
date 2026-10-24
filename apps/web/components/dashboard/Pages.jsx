@@ -5925,6 +5925,11 @@ function BillingSection({
           planId: pendingChange.planId,
           interval: pendingChange.interval,
           confirm: true,
+          // The offer this quote was priced with. If it has ended by now the
+          // server charges nothing and sends a fresh quote (handled below).
+          ...(pendingChange.preview?.seasonalOffer?.offerId
+            ? { offer: pendingChange.preview.seasonalOffer.offerId }
+            : {}),
         }),
       });
 
@@ -5969,6 +5974,16 @@ function BillingSection({
         setPaymentRequired({
           planName: data.plan,
           invoiceUrl: typeof data.invoice_url === 'string' ? data.invoice_url : null,
+        });
+      } else if (data?.confirmation_required === true) {
+        // The quoted seasonal offer ended between the quote and the click.
+        // Nothing was charged; show the new quote and let them decide again.
+        setPendingChange({
+          planId: data.plan_id ?? pendingChange.planId,
+          planName: data.plan ?? pendingChange.planName,
+          interval: data.interval ?? pendingChange.interval,
+          preview: data.preview ?? null,
+          offerEnded: data.seasonal_offer_ended === true,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6668,6 +6683,7 @@ function SummaryRow({ label, value, strong = false }) {
 
 function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy, onConfirm, onCancel }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   const { preview } = change;
 
   // Compared by id, not by display name: the names are translated in one place
@@ -6781,6 +6797,17 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
           {/* Black Week 2026: the quote already includes the first-year
               price (checkout-core prices the swap with the coupon). */}
           {preview?.seasonalOffer && <SeasonalOfferNote offer={preview.seasonalOffer} />}
+          {change.offerEnded && !preview?.seasonalOffer && (
+            <p data-seasonal-ended="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('seasonal.ended')}
+            </p>
+          )}
 
           <p style={{
             margin: 0,

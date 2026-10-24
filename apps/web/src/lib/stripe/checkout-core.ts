@@ -207,6 +207,13 @@ export type CheckoutOutcome =
       planName: string;
       interval: BillingInterval;
       preview: PlanChangePreview | null;
+      /**
+       * True when the caller confirmed a quote that carried a seasonal offer
+       * and the offer is no longer available (window closed, coupon killed,
+       * redeemed elsewhere). Nothing was charged; `preview` is the fresh quote
+       * at the price that now applies.
+       */
+      offerEnded?: boolean;
     }
   /**
    * An existing subscriber's price was swapped in place and the proration was
@@ -476,6 +483,11 @@ function fail(
  * reminder linked from (see src/lib/email/abandoned-checkout.ts). It only lands
  * in the new session's metadata, after a format check, so the completed
  * purchase can be credited to the reminder.
+ *
+ * `quotedOffer` is the seasonal offer id the confirmed quote carried (the
+ * dashboard echoes `preview.seasonalOffer.offerId`). On the confirmed pass of a
+ * plan change, an offer that was quoted but is no longer available stops the
+ * swap and returns a fresh quote, so nobody is charged a price they did not see.
  */
 export async function runCheckout(input: {
   planId: unknown;
@@ -483,6 +495,7 @@ export async function runCheckout(input: {
   confirmChange?: unknown;
   locale?: unknown;
   recoveredFrom?: unknown;
+  quotedOffer?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -908,7 +921,10 @@ export async function runCheckout(input: {
         fromPrice.interval === 'month' &&
         isSeasonalPlanId(fromPrice.planId) &&
         currentItem.price.id === PLANS[fromPrice.planId].stripePriceIdMonthly;
-      if (fromCurrentMonthly && interval === 'year') {
+      // Only on the price the offer was checked against: the offer reader
+      // vetted the SOLD yearly price, so a retained-generation swap (Pro price
+      // change, see retainedPriceGenerationId) never carries the coupon.
+      if (fromCurrentMonthly && interval === 'year' && swapPriceId === priceId) {
         offer = await liveOfferFor(planId, interval);
         if (offer) {
           const customerId =
@@ -936,12 +952,19 @@ export async function runCheckout(input: {
       // Nothing is recorded here: the funnel counts attempts, and asking the
       // price is not one. The row is written below, on the confirmed pass,
       // exactly once per completed decision.
-      if (!confirmChange) {
+      // The quote the customer confirmed carried the offer, and it is gone
+      // now (typically: shown at 23:58 on 1 December, clicked at 00:01). Do
+      // not charge the full price they never saw; quote again instead.
+      const offerEnded =
+        Boolean(confirmChange) && input.quotedOffer === BLACK_WEEK_2026.id && offer === null;
+
+      if (!confirmChange || offerEnded) {
         return {
           kind: 'confirmation_required',
           planId,
           planName: plan.name,
           interval,
+          ...(offerEnded ? { offerEnded: true } : {}),
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
