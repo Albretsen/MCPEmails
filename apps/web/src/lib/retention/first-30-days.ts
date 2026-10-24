@@ -381,6 +381,53 @@ export interface RunOptions {
   startAt?: Date;
   maxActions?: number;
   outOfTime?: () => boolean;
+  /**
+   * Dry run only: called once per candidate decision, after it is final.
+   * Never called in mode 'send'. Carries no email address, only whether the
+   * would-be recipient still matches the workspace owner.
+   */
+  onDecision?: (record: DecisionRecord) => void;
+}
+
+export type LoggedDecision = 'would_draft' | 'would_send' | 'would_holdout' | 'wait' | 'done' | 'stop';
+
+/** One dry-run decision, as first30_dry_run_log stores it. No address, no copy. */
+export interface DecisionRecord {
+  workspaceId: string;
+  template: RetentionTemplate;
+  decision: LoggedDecision;
+  reason: string | null;
+  firstPaidAt: string;
+  /** would_* only: the recipient equals the workspace owner's address on a fresh read. */
+  recipientMatchesOwner: boolean | null;
+  /** would_* only: on that fresh read. */
+  ownerInternal: boolean | null;
+  /** would_* only: on that fresh read, active or trialing. */
+  subscriptionActive: boolean | null;
+}
+
+type Verified = Pick<DecisionRecord, 'recipientMatchesOwner' | 'ownerInternal' | 'subscriptionActive'>;
+
+/**
+ * For a would-draft / would-send: re-read the workspace, as send mode does
+ * right before acting, and compare the would-be recipient with the owner's
+ * current address. Returns booleans only.
+ */
+async function verifyRecipient(store: First30Store, ctx: CandidateContext, to: string): Promise<Verified> {
+  const [fresh] = await store.loadContexts([{ workspaceId: ctx.workspaceId, firstPaidAt: ctx.firstPaidAt }]);
+  if (!fresh || !fresh.workspace || !fresh.owner) {
+    return { recipientMatchesOwner: false, ownerInternal: null, subscriptionActive: false };
+  }
+  const freshEmail = (fresh.owner.email ?? '').trim().toLowerCase();
+  return {
+    recipientMatchesOwner:
+      fresh.owner.id === fresh.workspace.ownerId &&
+      fresh.owner.id === ctx.owner?.id &&
+      freshEmail !== '' &&
+      freshEmail === to.trim().toLowerCase(),
+    ownerInternal: fresh.internal,
+    subscriptionActive: !!fresh.subscriptionStatus && ACTIVE_STATUSES.has(fresh.subscriptionStatus),
+  };
 }
 
 export type Message = 'stuck_note' | 'week1_summary';
@@ -488,6 +535,7 @@ export async function runFirst30(options: RunOptions): Promise<RunReport> {
         decision = decideFor(ctx);
       }
 
+      let verified: Verified = { recipientMatchesOwner: null, ownerInternal: null, subscriptionActive: null };
       const entry: RunEntry = {
         workspace: ctx.workspaceId,
         message,
@@ -499,47 +547,157 @@ export async function runFirst30(options: RunOptions): Promise<RunReport> {
         outcome: 'none',
       };
 
-      if (decision.kind === 'wait') {
-        report.waiting += 1;
-        report.entries.push(entry);
-        continue;
-      }
-      if (decision.kind === 'done') {
-        report.done += 1;
-        report.entries.push(entry);
-        continue;
-      }
-      if (decision.kind === 'stop') {
-        // Not-stuck and before-go-live are the normal state of nearly every
-        // workspace on nearly every tick: counted, not listed.
-        report.stopped[decision.reason] = (report.stopped[decision.reason] ?? 0) + 1;
-        if (decision.reason !== 'not_stuck' && decision.reason !== 'before_go_live') report.entries.push(entry);
-        continue;
-      }
-      report.entries.push(entry);
-
-      if (mode === 'send' && actions() >= maxActions) {
-        report.truncated = true;
-        break outer;
-      }
-
-      const owner = ctx.owner!;
-      const to = owner.email!.trim();
-      const firstName = firstNameFrom(owner.displayName);
-
-      // ---- M2 ------------------------------------------------------------
-      if (message === 'stuck_note') {
-        const details = await store.loadStuckDetails(ctx);
-        const note = composeStuckNote({ firstName, paidAt: ctx.firstPaidAt, ...details });
-        if (mode === 'dry_run') {
-          report.wouldDraft += 1;
-          entry.outcome = 'would_draft';
+      try {
+        if (decision.kind === 'wait') {
+          report.waiting += 1;
+          report.entries.push(entry);
           continue;
         }
+        if (decision.kind === 'done') {
+          report.done += 1;
+          report.entries.push(entry);
+          continue;
+        }
+        if (decision.kind === 'stop') {
+          // Not-stuck and before-go-live are the normal state of nearly every
+          // workspace on nearly every tick: counted, not listed.
+          report.stopped[decision.reason] = (report.stopped[decision.reason] ?? 0) + 1;
+          if (decision.reason !== 'not_stuck' && decision.reason !== 'before_go_live') report.entries.push(entry);
+          continue;
+        }
+        report.entries.push(entry);
+
+        if (mode === 'send' && actions() >= maxActions) {
+          report.truncated = true;
+          break outer;
+        }
+
+        const owner = ctx.owner!;
+        const to = owner.email!.trim();
+        const firstName = firstNameFrom(owner.displayName);
+
+        // ---- M2 ------------------------------------------------------------
+        if (message === 'stuck_note') {
+          const details = await store.loadStuckDetails(ctx);
+          const note = composeStuckNote({ firstName, paidAt: ctx.firstPaidAt, ...details });
+          if (mode === 'dry_run') {
+            report.wouldDraft += 1;
+            entry.outcome = 'would_draft';
+            if (options.onDecision) verified = await verifyRecipient(store, ctx, to);
+            continue;
+          }
+          const won = await store.claim({
+            userId: owner.id,
+            workspaceId: ctx.workspaceId,
+            template: TEMPLATE_STUCK,
+            email: to,
+            status: 'claimed',
+            detail: null,
+          });
+          if (!won) {
+            report.lostClaims += 1;
+            entry.outcome = 'lost_claim';
+            continue;
+          }
+          let result: DraftResult;
+          try {
+            result = await options.writeDraft!({
+              to,
+              note,
+              workspaceId: ctx.workspaceId,
+              idempotencyKey: `${TEMPLATE_STUCK}-${ctx.workspaceId}`,
+            });
+          } catch (err) {
+            result = { ok: false, reason: err instanceof Error ? err.message.slice(0, 200) : 'unexpected_error' };
+          }
+          const key = { userId: owner.id, workspaceId: ctx.workspaceId, template: TEMPLATE_STUCK } as const;
+          if (result.ok) {
+            await store.finish(key, { status: 'sent', providerId: result.id, detail: result.via });
+            report.drafted += 1;
+            entry.outcome = 'drafted';
+          } else {
+            await store.finish(key, { status: 'failed', detail: result.reason });
+            report.failed += 1;
+            entry.outcome = 'failed';
+          }
+          continue;
+        }
+
+        // ---- M3 ------------------------------------------------------------
+        const stats = await store.loadWeek1Stats(ctx);
+        const gate = week1Gate(stats);
+        if (gate) {
+          stop(entry, gate);
+          continue;
+        }
+        entry.tip = week1Tip({ totalCalls: stats.totalSuccess, activeDays: stats.activeDays, hasAutomation: stats.hasAutomation });
+
+        const paidMs = ms(ctx.firstPaidAt);
+        const composed = composeWeek1Summary({
+          firstName,
+          from: ctx.firstPaidAt,
+          to: new Date(paidMs + WEEK1_LENGTH_MS - 1).toISOString(),
+          counts: stats.counts,
+          automationsSorted: stats.automationsSorted,
+          inboxAddresses: stats.inboxAddresses,
+          totalCalls: stats.totalSuccess,
+          activeDays: stats.activeDays,
+          hasAutomation: stats.hasAutomation,
+          unsubscribeToken: owner.unsubscribeToken,
+        });
+
+        const proposed = proposedVariant(ctx.workspaceId);
+        if (mode === 'dry_run') {
+          entry.variant = proposed;
+          if (!composed) {
+            stop(entry, 'not_composable');
+          } else if (proposed === VARIANT_HOLDOUT) {
+            report.wouldHoldout += 1;
+            entry.outcome = 'would_holdout';
+          } else {
+            report.wouldSend += 1;
+            entry.outcome = 'would_send';
+          }
+          if (composed && options.onDecision) verified = await verifyRecipient(store, ctx, to);
+          continue;
+        }
+
+        if (!composed) {
+          stop(entry, 'not_composable');
+          continue;
+        }
+
+        const variant = await store.assignVariant(ctx.workspaceId, proposed);
+        entry.variant = variant;
+        if (variant === null) {
+          stop(entry, 'experiment_unavailable');
+          continue;
+        }
+
+        if (variant !== VARIANT_SUMMARY) {
+          // The holdout gets nothing, and that is recorded once.
+          const won = await store.claim({
+            userId: owner.id,
+            workspaceId: ctx.workspaceId,
+            template: TEMPLATE_WEEK1,
+            email: to,
+            status: 'skipped',
+            detail: 'holdout',
+          });
+          if (won) {
+            report.holdout += 1;
+            entry.outcome = 'holdout_recorded';
+          } else {
+            report.lostClaims += 1;
+            entry.outcome = 'lost_claim';
+          }
+          continue;
+        }
+
         const won = await store.claim({
           userId: owner.id,
           workspaceId: ctx.workspaceId,
-          template: TEMPLATE_STUCK,
+          template: TEMPLATE_WEEK1,
           email: to,
           status: 'claimed',
           detail: null,
@@ -549,136 +707,46 @@ export async function runFirst30(options: RunOptions): Promise<RunReport> {
           entry.outcome = 'lost_claim';
           continue;
         }
-        let result: DraftResult;
+
+        let result: SendResult;
         try {
-          result = await options.writeDraft!({
+          result = await options.send!({
             to,
-            note,
-            workspaceId: ctx.workspaceId,
-            idempotencyKey: `${TEMPLATE_STUCK}-${ctx.workspaceId}`,
+            subject: composed.subject,
+            text: composed.text,
+            html: composed.html,
+            headers: composed.headers,
+            idempotencyKey: `${TEMPLATE_WEEK1}-${ctx.workspaceId}`,
           });
         } catch (err) {
           result = { ok: false, reason: err instanceof Error ? err.message.slice(0, 200) : 'unexpected_error' };
         }
-        const key = { userId: owner.id, workspaceId: ctx.workspaceId, template: TEMPLATE_STUCK } as const;
+        const key = { userId: owner.id, workspaceId: ctx.workspaceId, template: TEMPLATE_WEEK1 } as const;
         if (result.ok) {
-          await store.finish(key, { status: 'sent', providerId: result.id, detail: result.via });
-          report.drafted += 1;
-          entry.outcome = 'drafted';
+          await store.finish(key, { status: 'sent', providerId: result.id, detail: null });
+          report.sent += 1;
+          entry.outcome = 'sent';
         } else {
           await store.finish(key, { status: 'failed', detail: result.reason });
           report.failed += 1;
           entry.outcome = 'failed';
         }
-        continue;
-      }
-
-      // ---- M3 ------------------------------------------------------------
-      const stats = await store.loadWeek1Stats(ctx);
-      const gate = week1Gate(stats);
-      if (gate) {
-        stop(entry, gate);
-        continue;
-      }
-      entry.tip = week1Tip({ totalCalls: stats.totalSuccess, activeDays: stats.activeDays, hasAutomation: stats.hasAutomation });
-
-      const paidMs = ms(ctx.firstPaidAt);
-      const composed = composeWeek1Summary({
-        firstName,
-        from: ctx.firstPaidAt,
-        to: new Date(paidMs + WEEK1_LENGTH_MS - 1).toISOString(),
-        counts: stats.counts,
-        automationsSorted: stats.automationsSorted,
-        inboxAddresses: stats.inboxAddresses,
-        totalCalls: stats.totalSuccess,
-        activeDays: stats.activeDays,
-        hasAutomation: stats.hasAutomation,
-        unsubscribeToken: owner.unsubscribeToken,
-      });
-
-      const proposed = proposedVariant(ctx.workspaceId);
-      if (mode === 'dry_run') {
-        entry.variant = proposed;
-        if (!composed) {
-          stop(entry, 'not_composable');
-        } else if (proposed === VARIANT_HOLDOUT) {
-          report.wouldHoldout += 1;
-          entry.outcome = 'would_holdout';
-        } else {
-          report.wouldSend += 1;
-          entry.outcome = 'would_send';
+      } finally {
+        if (mode === 'dry_run' && options.onDecision) {
+          const logged: LoggedDecision = entry.outcome.startsWith('would_')
+            ? (entry.outcome as LoggedDecision)
+            : entry.decision === 'send'
+              ? 'stop'
+              : entry.decision;
+          options.onDecision({
+            workspaceId: ctx.workspaceId,
+            template: message === 'stuck_note' ? TEMPLATE_STUCK : TEMPLATE_WEEK1,
+            decision: logged,
+            reason: entry.reason,
+            firstPaidAt: ctx.firstPaidAt,
+            ...verified,
+          });
         }
-        continue;
-      }
-
-      if (!composed) {
-        stop(entry, 'not_composable');
-        continue;
-      }
-
-      const variant = await store.assignVariant(ctx.workspaceId, proposed);
-      entry.variant = variant;
-      if (variant === null) {
-        stop(entry, 'experiment_unavailable');
-        continue;
-      }
-
-      if (variant !== VARIANT_SUMMARY) {
-        // The holdout gets nothing, and that is recorded once.
-        const won = await store.claim({
-          userId: owner.id,
-          workspaceId: ctx.workspaceId,
-          template: TEMPLATE_WEEK1,
-          email: to,
-          status: 'skipped',
-          detail: 'holdout',
-        });
-        if (won) {
-          report.holdout += 1;
-          entry.outcome = 'holdout_recorded';
-        } else {
-          report.lostClaims += 1;
-          entry.outcome = 'lost_claim';
-        }
-        continue;
-      }
-
-      const won = await store.claim({
-        userId: owner.id,
-        workspaceId: ctx.workspaceId,
-        template: TEMPLATE_WEEK1,
-        email: to,
-        status: 'claimed',
-        detail: null,
-      });
-      if (!won) {
-        report.lostClaims += 1;
-        entry.outcome = 'lost_claim';
-        continue;
-      }
-
-      let result: SendResult;
-      try {
-        result = await options.send!({
-          to,
-          subject: composed.subject,
-          text: composed.text,
-          html: composed.html,
-          headers: composed.headers,
-          idempotencyKey: `${TEMPLATE_WEEK1}-${ctx.workspaceId}`,
-        });
-      } catch (err) {
-        result = { ok: false, reason: err instanceof Error ? err.message.slice(0, 200) : 'unexpected_error' };
-      }
-      const key = { userId: owner.id, workspaceId: ctx.workspaceId, template: TEMPLATE_WEEK1 } as const;
-      if (result.ok) {
-        await store.finish(key, { status: 'sent', providerId: result.id, detail: null });
-        report.sent += 1;
-        entry.outcome = 'sent';
-      } else {
-        await store.finish(key, { status: 'failed', detail: result.reason });
-        report.failed += 1;
-        entry.outcome = 'failed';
       }
     }
   }

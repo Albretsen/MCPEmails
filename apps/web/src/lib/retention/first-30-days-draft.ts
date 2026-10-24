@@ -34,6 +34,7 @@ import { refreshLearnedRelayHosts } from '@/lib/email/relay-fallback';
 import { matchesInternal } from '@/lib/email/paywall-followup-store';
 import { mailtoFor } from '@/lib/retention/first-30-days-templates';
 import type { DraftResult, DraftWriter, Sender, StuckDraft } from '@/lib/retention/first-30-days';
+import type { MailboxProbe } from '@/lib/retention/first-30-days-go-live';
 
 type Db = SupabaseClient<Database>;
 
@@ -188,6 +189,41 @@ export function createImapDraftWriter(db: Db, mailboxAddress: string): DraftWrit
       const mailbox = pickDraftsMailbox(await session.list('', '*'));
       await session.append(mailbox, message, ['\\Draft', '\\Seen']);
       return { ok: true, via: 'imap_draft', id: messageId };
+    } finally {
+      await session.logout().catch(() => {});
+    }
+  };
+}
+
+/**
+ * The dry run's daily check that the draft path would work: the same inbox
+ * lookup (internal owner only), host guard and login as the writer, then
+ * LIST, SELECT the Drafts folder and LOGOUT. Never APPENDs. The SELECT runs
+ * through a UID SEARCH for UID 1, which reads nothing back and changes no flag.
+ */
+export function createDraftMailboxProbe(db: Db, mailboxAddress: string): MailboxProbe {
+  return async () => {
+    const row = await findDraftInbox(db, mailboxAddress);
+    if (!row) return { ok: false, reason: 'draft_inbox_not_found' };
+
+    if (mailRelayConfigFromEnv()) await refreshLearnedRelayHosts(db);
+    const port = row.imap_port ?? 993;
+    const guard = await guardMailHost(row.imap_host, { protocol: 'imap', port });
+    if (!guard.ok) return { ok: false, reason: `draft_host_${guard.code}` };
+
+    const session = await openImapSession({
+      host: row.imap_host,
+      pinnedAddress: guard.address,
+      port,
+      email: row.email_address,
+      username: row.imap_username || undefined,
+      authMethod: 'PLAIN',
+      appPassword: decryptToken(row.imap_password),
+    });
+    try {
+      const mailbox = pickDraftsMailbox(await session.list('', '*'));
+      await session.search(mailbox, 'UID 1');
+      return { ok: true, mailbox };
     } finally {
       await session.logout().catch(() => {});
     }
