@@ -1,7 +1,7 @@
 -- ============================================================
 -- Personal 3-month pass: storage, RLS, helper, cron entry point, funnel
 -- ============================================================
--- Covers migration 20261024230000_personal_pass.sql:
+-- Covers migration 20261025010000_personal_pass.sql:
 --   - RLS: an owner reads only their own passes and writes none; anon reads
 --     nothing
 --   - user_active_pass(): the end of the current cover, stacked pass included;

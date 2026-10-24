@@ -1,7 +1,7 @@
 /**
  * The 3-month Personal pass: one payment, Personal for exactly three calendar
  * months, nothing renews. Plan: Documents/plans/three-month-pass-20261024.md
- * (owner's checkout, not in git). Schema: 20261024230000_personal_pass.sql.
+ * (owner's checkout, not in git). Schema: 20261025010000_personal_pass.sql.
  *
  * EXPORTED API (the dashboard, emails and checkout build on these):
  *
@@ -145,7 +145,7 @@ export interface ActivePass {
 }
 
 /**
- * `public.user_passes` exactly as 20261024230000_personal_pass.sql declares it,
+ * `public.user_passes` exactly as 20261025010000_personal_pass.sql declares it,
  * in the generator's shape. Merged into the generated public schema below, so
  * every other table keeps its generated types and this one is checked against
  * this declaration until the regenerated types carry it (the two then agree).
@@ -214,7 +214,7 @@ function logMissingTableOnce(): void {
   if (missingTableLogged) return;
   missingTableLogged = true;
   console.error(
-    '[pass] public.user_passes does not exist yet (migration 20261024230000 not applied); treating every user as holding no pass.',
+    '[pass] public.user_passes does not exist yet (migration 20261025010000 not applied); treating every user as holding no pass.',
   );
 }
 

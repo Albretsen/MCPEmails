@@ -100,7 +100,7 @@ Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau d
 
 Réponse courte : oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
 
-Côté limites de débit, chaque clé API est plafonnée à 100 requêtes/min, 1 000/heure et 10 000/jour sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait : 60/min sur Gratuit, 120/min sur Personal, 300/min sur Pro, 1 000/min sur Business. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` : vous enverriez des doublons.
+Côté limites de débit, chaque espace de travail a un plafond par minute qui évolue avec votre forfait (voir [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` : vous enverriez des doublons.
 
 ## Tarifs
 

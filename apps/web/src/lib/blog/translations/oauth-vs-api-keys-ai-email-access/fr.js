@@ -39,10 +39,10 @@ Vous en créez une dans **Dashboard → API Keys** :
 2. Choisissez ses scopes : \`read:email\`, \`send:email\`, ou les deux.
 3. Copiez-la. Elle est affichée **une seule fois** et jamais plus. Si vous la perdez, vous en créez une nouvelle.
 
-La clé ressemble à \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, et vous la passez à chaque requête :
+La clé ressemble à \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, et vous la passez à chaque requête :
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Un appel JSON-RPC brut pour lister vos boîtes de réception ressemble à ceci :
@@ -76,7 +76,7 @@ Votre client est claude.ai, Claude Desktop ou Cursor. Vous ne voulez aucun secre
 
 Votre client n’a pas de support OAuth — Cline, JetBrains, les exécuteurs d’outils façon OpenAI, ou votre propre code. Vous scriptez contre le point de terminaison avec cURL ou un petit programme. Vous avez besoin d’un identifiant stable qu’un processus sans interface peut utiliser sans qu’un humain ait à cliquer sur un écran de consentement. Une clé restreinte est exactement ce qu’il faut ici, et il existe un guide complet pour les [clients Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque clé API est plafonnée à 100 requêtes/minute, 1 000/heure et 10 000/jour, et chaque espace de travail dispose d’un plafond de pointe selon le plan (60/min sur [Free](/pricing), jusqu’à 1 000/min sur Business). Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` : vous enverriez le message deux fois.
+Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque espace de travail dispose d’un plafond par minute fixé par son plan (voir les [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce plan : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` : vous enverriez le message deux fois.
 
 ## Le bilan
 

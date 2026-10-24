@@ -55,7 +55,7 @@ export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
 /**
- * The 3-month Personal pass (20261024230000): the product itself, the surfaces
+ * The 3-month Personal pass (20261025010000): the product itself, the surfaces
  * its offer can be shown on, and `pass` for a renewal that bought another pass.
  */
 export type PassFunnelCategory =

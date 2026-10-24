@@ -56,11 +56,11 @@
     },
     {
       "h": "Det finnes ingen push, i noen retning",
-      "p": "Ingen webhooks, ingen hendelser startet av serveren, ingen callback-URL å registrere. Å reagere på ny e-post betyr polling, for eksempel <code>email_read</code> med <code>action: \"list\"</code> og bare uleste, med det intervallet arbeidsflyten din trenger. Grensene er 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel."
+      "p": "Ingen webhooks, ingen hendelser startet av serveren, ingen callback-URL å registrere. Å reagere på ny e-post betyr polling, for eksempel <code>email_read</code> med <code>action: \"list\"</code> og bare uleste, med det intervallet arbeidsflyten din trenger. Grensene gjelder per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din."
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En 429 har Retry-After. Planens tak for fakturerbare handlinger gjelder i tillegg.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],
@@ -79,7 +79,7 @@
     },
     {
       "q": "Hva er grensene for antall forespørsler?",
-      "a": "100 forespørsler per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger. Mislykkede kall og inbox_list faktureres ikke."
+      "a": "Minutt-, time- og døgnvinduer per nøkkel, dimensjonert etter planen din: én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. Vellykkede tools/call-svar har RateLimit-Limit, RateLimit-Remaining og RateLimit-Reset. Planens tak for fakturerbare handlinger gjelder i tillegg, og mislykkede kall og inbox_list faktureres ikke."
     },
     {
       "q": "Lagres e-posten min på serverne deres?",
