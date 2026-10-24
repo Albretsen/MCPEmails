@@ -37,8 +37,11 @@
  *   STRIPE_PRICE_PERSONAL_YEARLY_V2=price_...  (Personal yearly, $86.40)
  *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...    (RETIRED Personal $5, still billing)
  *   STRIPE_PRICE_PERSONAL_YEARLY=price_...     (RETIRED Personal $48, still billing)
- *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly)
- *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly)
+ *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly, $15)
+ *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly, $144)
+ *   STRIPE_PRICE_SOLO_MONTHLY_V2=price_...    (Pro monthly, $19, sold once
+ *                                              PRO_PRICE_CHANGE.priceLive)
+ *   STRIPE_PRICE_SOLO_YEARLY_V2=price_...     (Pro yearly, $182.40, same)
  *   STRIPE_PRICE_BUSINESS_MONTHLY=price_...          (Business monthly, $39)
  *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
@@ -85,6 +88,15 @@
  * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
  * workspace they create later. It is resolved through `resolvePlanLimits`.
  *
+ * PRO $15 -> $19 FOR NEW CUSTOMERS (announced, behind a switch). See
+ * pro-price-change.ts. Same shape as the Personal _V2 change: while
+ * `priceLive` is off Pro sells the unsuffixed pair and the _V2 ids are read as
+ * legacy (nobody can buy them, and a rollback after the cutover keeps every $19
+ * subscription mapped); once it is on, Pro sells _V2 and the unsuffixed $15 /
+ * $144 pair becomes the legacy pair. Every Pro subscriber at the cutover keeps
+ * their price for as long as the subscription stays active, including across
+ * a monthly / yearly switch (`retainedPriceGenerationId`).
+ *
  * PRO CAPPED AT 10, TEAM REPLACED BY BUSINESS (2026-10-19). Pro sold unlimited
  * mailboxes for $15, which made it the right plan for the heaviest operators
  * and left Team ($79, priced per person) with nothing to sell: the business
@@ -102,6 +114,8 @@
  *   - The retired $79 / $756 Team prices stay resolvable as Business legacy
  *     ids, so a stray subscription on them still maps.
  */
+
+import { PRO_PRICE_CHANGE, proSoldAmounts } from './pro-price-change.ts';
 
 // ---------------------------------------------------------------------------
 // Plan identifiers: must match the `plan` column values in `workspaces`.
@@ -250,6 +264,28 @@ function legacyPricePair(
 }
 
 // ---------------------------------------------------------------------------
+// Pro's two price generations: [monthly, yearly] each.
+//
+// `PRO_SOLD_PAIR` is what checkout sells; `PRO_RETAINED_PAIR` is the generation
+// that stopped being sold at the cutover and that every subscriber on it keeps.
+// Before the cutover the retained pair is the not-yet-sold _V2 pair: mapping
+// it is harmless and keeps a rollback safe. No fallback from _V2 to the
+// unsuffixed variables once live: an unset _V2 must fail as
+// `price_not_configured`, never sell $15 under copy that says $19.
+// ---------------------------------------------------------------------------
+const PRO_CURRENT_PAIR = legacyPricePair(
+  process.env.STRIPE_PRICE_SOLO_MONTHLY,
+  process.env.STRIPE_PRICE_SOLO_YEARLY,
+);
+const PRO_NEXT_PAIR = legacyPricePair(
+  process.env.STRIPE_PRICE_SOLO_MONTHLY_V2,
+  process.env.STRIPE_PRICE_SOLO_YEARLY_V2,
+);
+const PRO_SOLD_PAIR = PRO_PRICE_CHANGE.priceLive ? PRO_NEXT_PAIR : PRO_CURRENT_PAIR;
+const PRO_RETAINED_PAIR = PRO_PRICE_CHANGE.priceLive ? PRO_CURRENT_PAIR : PRO_NEXT_PAIR;
+const PRO_SOLD = proSoldAmounts();
+
+// ---------------------------------------------------------------------------
 // Plan catalogue
 // ---------------------------------------------------------------------------
 export const PLANS: Record<PlanId, Plan> = {
@@ -390,15 +426,19 @@ export const PLANS: Record<PlanId, Plan> = {
       auditLogEnabled: false,
       supportTier: 'email',
     },
-    monthlyPriceCents: 1500,
-    yearlyPriceCents: 14400,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
+    // $15 / $144 until PRO_PRICE_CHANGE.priceLive, then $19 / $182.40.
+    monthlyPriceCents: PRO_SOLD.monthlyCents,
+    yearlyPriceCents: PRO_SOLD.yearlyCents,
+    stripePriceIdMonthly: PRO_SOLD_PAIR[0] || null,
+    stripePriceIdYearly: PRO_SOLD_PAIR[1] || null,
     legacyStripePriceIds: [
       'price_1TcQBDARrgumc6cqy1Z9AAEw', // Agent monthly, $12
       'price_1TcQBEARrgumc6cq6MGFktzy', // Agent yearly, $120
       'price_1U69IuARrgumc6cqLGFI2FLR', // Pro monthly, $29 (retired 2026-09-01)
       'price_1U69J5ARrgumc6cqmIIP8DAw', // Pro yearly, $276 (retired 2026-09-01)
+      // The generation not sold right now: $19 / $182.40 before the cutover,
+      // $15 / $144 after it. A pair, so it keeps the monthly-then-yearly order.
+      ...PRO_RETAINED_PAIR,
     ],
     features: [
       'Everything in Personal',
@@ -579,6 +619,32 @@ export function getPlanByStripePriceId(
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: the price an in-place Pro interval switch should move to, for a
+// subscriber who keeps a price Pro no longer sells.
+//
+// The Pro price change promises everyone subscribed before the cutover that
+// they keep $15 / $144 for as long as the subscription stays active, including
+// across a monthly / yearly switch. Checkout would otherwise quote the sold
+// $182.40 to a $15 monthly subscriber moving to yearly. So: when the current
+// price is one half of the retained pair and the target is Pro, the target is
+// the other half of that same pair.
+//
+// Null in every other case (another plan, a sold price, an unset half), which
+// leaves checkout on the sold price exactly as before.
+// ---------------------------------------------------------------------------
+export function retainedPriceGenerationId(
+  currentPriceId: string | null | undefined,
+  targetPlanId: PlanId,
+  targetInterval: BillingInterval,
+  retainedPair: readonly string[] = PRO_PRICE_CHANGE.priceLive ? PRO_RETAINED_PAIR : [],
+): string | null {
+  if (targetPlanId !== 'solo' || !currentPriceId) return null;
+  if (!retainedPair.includes(currentPriceId)) return null;
+  const target = retainedPair[targetInterval === 'year' ? 1 : 0];
+  return target || null;
 }
 
 // ---------------------------------------------------------------------------
