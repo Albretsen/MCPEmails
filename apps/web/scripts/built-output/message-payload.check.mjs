@@ -53,10 +53,11 @@ const ABSENT = {
   '/authorize': MARKETING,
   '/forgot-password': MARKETING,
   '/this-page-does-not-exist': MARKETING,
-  // Not a locale, so app/[locale]/pricing and docs 404 (src/i18n/require-locale.ts)
-  // without rendering their metadata or body into the 404 document.
+  // Not a locale, so these 404 (src/i18n/require-locale.ts) without the page's
+  // metadata or body, or the namespaces its section layout hands down.
   '/xyz/pricing': MARKETING,
   '/xyz/docs': MARKETING,
+  '/xyz/blog': MARKETING,
   '/blog/this-post-does-not-exist': MARKETING.filter((n) => !['home', 'compare', 'blog'].includes(n)),
   '/': MARKETING.filter((n) => !['home', 'compare'].includes(n)),
   '/pricing': MARKETING.filter((n) => !['home', 'compare', 'pricing'].includes(n)),

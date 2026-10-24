@@ -1,4 +1,5 @@
 import ClientMessages from '../../../../components/i18n/ClientMessages';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The docs index (/docs) and the provider matrix (/docs/providers) are the only
@@ -11,6 +12,8 @@ import ClientMessages from '../../../../components/i18n/ClientMessages';
  * A nested provider replaces the one above it, so `home` and `compare` are
  * listed again. See components/i18n/ClientMessages.jsx.
  */
-export default function Layout({ children }) {
+export default async function Layout({ children, params }) {
+  const { locale } = await params;
+  requireLocale(locale);
   return <ClientMessages namespaces={['home', 'compare', 'docs']}>{children}</ClientMessages>;
 }
