@@ -359,15 +359,15 @@ const errorConcentrationRule: Rule = ({ errors, windowDays }) => {
  * Two separate ways that happens, reported as one line because the action is
  * the same: stop quoting the number as a total. `truncated` means Stripe held
  * more objects than the read's ceiling; `otherCurrencies` means live
- * subscriptions exist that the MRR figure does not add up, deliberately,
- * rather than converting francs into dollars and calling the result revenue.
+ * subscriptions exist in a currency fx.ts has no rate for, so the MRR figure
+ * leaves them out rather than adding francs to dollars as if they were one.
  */
 const floorRule: Rule = ({ revenue, cash }) => {
   if (!revenue || !cash) return BLOCKED;
   const reasons: string[] = [];
   if (cash.truncated) reasons.push('the charge history hit its read ceiling');
   if (revenue.otherCurrencies.length > 0) {
-    reasons.push(`live subscriptions exist in ${revenue.otherCurrencies.join(', ').toUpperCase()}`);
+    reasons.push(`live subscriptions exist in ${revenue.otherCurrencies.join(', ').toUpperCase()} with no exchange rate`);
   }
   if (reasons.length === 0) return null;
   return {

@@ -30,8 +30,17 @@ import type Stripe from 'stripe';
 import { basePlanItem, getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
-import { monthlyFromInterval, netMonthlyMinor, scheduledToStop, type SubscriptionFacts } from '@/lib/analytics/revenue-math';
+import {
+  monthlyFromInterval,
+  netMonthlyMinor,
+  scheduledToStop,
+  taxInclusiveRatio,
+  type CurrencyOptions,
+  type SubscriptionFacts,
+} from '@/lib/analytics/revenue-math';
 import { rollUpCash, stripeMode, type CashMonth } from '@/lib/analytics/cash-math';
+import { chargesInUsd, monthOf, toUsdMinor } from '@/lib/analytics/fx';
+import { SUBSCRIPTION_EXPAND, couponAmountOff, loadCurrencyOptions, pricedItems } from '@/lib/analytics/kiosk-revenue';
 
 // Re-exported because this is where the page looks for them.
 export { rollUpCash, stripeMode };
@@ -58,13 +67,19 @@ export type RevenueCustomerRow = {
   planLabel: string;
   /** Raw Stripe status, rendered as-is. An unknown one must not become "active". */
   status: string;
+  /** The currency the amounts on this row are in, as billed. */
   currency: string;
   /** What one interval costs after coupons, in minor units. */
   netPerIntervalMinor: number;
   /** 'month' | 'year' | whatever Stripe reported. */
   interval: string;
-  /** Net normalised to a month, the figure that feeds MRR. */
+  /** Net normalised to a month, the figure that feeds MRR. Net of any VAT. */
   monthlyMinor: number;
+  /**
+   * `monthlyMinor` in USD at the rate of the month it was last billing in,
+   * the figure the MRR card sums. Null when fx.ts has no rate.
+   */
+  monthlyUsdMinor: number | null;
   /**
    * Coupon reductions, unformatted. Deliberately not a ready-made string: the
    * page's one money formatter lives in `components/admin/charts/format.ts`,
@@ -91,6 +106,7 @@ export type RevenueDetail = {
    * must say so: a test-mode figure that looks like revenue is worse than none.
    */
   mode: 'live' | 'test' | 'unknown';
+  /** Currency of the cash figures: always 'usd', converted per charge. */
   currency: string;
   /** Every subscription Stripe returned, newest first, live and dead. */
   customers: RevenueCustomerRow[];
@@ -100,6 +116,8 @@ export type RevenueDetail = {
   cashAllTimeMinor: number;
   /** True when Stripe had more objects than the ceiling, so totals are floors. */
   truncated: boolean;
+  /** Charge currencies left out of the cash figures for want of a rate. */
+  otherCurrencies: string[];
 };
 
 /**
@@ -118,36 +136,34 @@ export async function fetchRevenueDetail(): Promise<GrowthResult<RevenueDetail>>
         .list({
           status: 'all',
           limit: 100,
-          expand: ['data.customer', 'data.discounts.source.coupon'],
+          expand: SUBSCRIPTION_EXPAND,
         })
         .autoPagingToArray({ limit: MAX_SUBSCRIPTIONS }),
       stripe.charges.list({ limit: 100, created: { gte: since } }),
     ]);
+    const options = await loadCurrencyOptions(stripe, subscriptions);
+    const now = Math.floor(Date.now() / 1000);
 
     const customers = subscriptions
-      .map((subscription) => toCustomerRow(subscription))
+      .map((subscription) => toCustomerRow(subscription, options, now))
       .sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''));
 
     // A charge from one of our own accounts is not income. Same rule as
     // everywhere else on the page; it matters here because the live 100% off
     // test purchases would otherwise show up as cash that never arrived.
-    const cashCharges = charges.data
-      .filter((charge) => charge.status === 'succeeded')
-      .filter((charge) => !isInternalAccount(chargeEmail(charge)))
-      .map((charge) => ({
-        grossMinor: charge.amount,
-        refundedMinor: charge.amount_refunded ?? 0,
-        at: new Date(charge.created * 1000).toISOString(),
-      }));
+    // Converted to USD per charge, at the month it landed in (fx.ts).
+    const { rows: cashCharges, otherCurrencies } = chargesInUsd(
+      charges.data
+        .filter((charge) => charge.status === 'succeeded')
+        .filter((charge) => !isInternalAccount(chargeEmail(charge))),
+    );
 
     const cash = rollUpCash(cashCharges);
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
     return {
       mode: stripeMode(process.env.STRIPE_SECRET_KEY),
-      currency: customers.find((row) => row.monthlyMinor > 0)?.currency
-        ?? charges.data[0]?.currency
-        ?? 'usd',
+      currency: 'usd',
       customers,
       cash,
       cashLast30Minor: cashCharges
@@ -155,36 +171,46 @@ export async function fetchRevenueDetail(): Promise<GrowthResult<RevenueDetail>>
         .reduce((total, charge) => total + charge.grossMinor - charge.refundedMinor, 0),
       cashAllTimeMinor: cash.reduce((total, month) => total + month.netMinor, 0),
       truncated: subscriptions.length >= MAX_SUBSCRIPTIONS || charges.has_more,
+      otherCurrencies,
     };
   });
 }
 
 /** Reduce one Stripe subscription to the named row the table renders. */
-export function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
+export function toCustomerRow(
+  subscription: Stripe.Subscription,
+  currencyOptions?: Map<string, CurrencyOptions>,
+  nowSeconds = Math.floor(Date.now() / 1000),
+): RevenueCustomerRow {
   const items = subscription.items.data;
   // The plan's own item, not whichever comes first: a Business subscription
   // also carries the per-mailbox add-on, which is not a plan.
   const price = basePlanItem(items)?.price;
   const interval = price?.recurring?.interval ?? 'month';
   const intervalCount = price?.recurring?.interval_count ?? 1;
+  // Amounts in the subscription's own currency, the same resolution
+  // subscriptionFacts uses, so a EUR row is never priced at the USD figure.
+  const priced = pricedItems(subscription, currencyOptions);
+  const currency = priced.currency;
 
   // Summed across items so an add-on is priced whole, matching subscriptionFacts.
-  const grossPerIntervalMinor = items.reduce(
-    (total, item) => total + (item.price.unit_amount ?? 0) * (item.quantity ?? 1),
+  const grossPerIntervalMinor = priced.items.reduce(
+    (total, { item, unitAmount }) => total + unitAmount * (item.quantity ?? 1),
     0,
   );
-  const grossMonthlyMinor = items.reduce(
-    (total, item) =>
+  const grossMonthlyMinor = priced.items.reduce(
+    (total, { item, unitAmount }) =>
       total
       + monthlyFromInterval(
-        (item.price.unit_amount ?? 0) * (item.quantity ?? 1),
+        unitAmount * (item.quantity ?? 1),
         item.price.recurring?.interval ?? interval,
         item.price.recurring?.interval_count ?? intervalCount,
       ),
     0,
   );
 
-  const { percentOff, amountOffMinor, amountOffMonthlyMinor } = discountOf(subscription, interval, intervalCount);
+  const { percentOff, amountOffMinor, amountOffMonthlyMinor } = discountOf(subscription, interval, intervalCount, currency);
+  const ratio = taxInclusiveRatio(priced.taxInclusive, subscription.latest_invoice);
   const facts: SubscriptionFacts = {
     id: subscription.id,
     status: subscription.status,
@@ -192,13 +218,18 @@ export function toCustomerRow(subscription: Stripe.Subscription): RevenueCustome
     endedAt: subscription.ended_at,
     cancelAtPeriodEnd: scheduledToStop(subscription),
     canceledAt: subscription.canceled_at,
-    currency: subscription.currency,
+    currency,
     grossMonthlyMinor,
     discount: { percentOff, amountOffMonthlyMinor },
+    ...(ratio === undefined ? {} : { taxInclusiveRatio: ratio }),
     planLabel: planLabel(price),
     internal: false,
   };
   const monthlyMinor = netMonthlyMinor(facts);
+
+  const monthlyUsdMinor = monthlyMinor === 0
+    ? 0
+    : toUsdMinor(monthlyMinor, currency, monthOf(subscription.ended_at ?? nowSeconds));
 
   // Per-interval net, derived from the monthly net so the table's amount and
   // the MRR card can never round in different directions.
@@ -212,10 +243,11 @@ export function toCustomerRow(subscription: Stripe.Subscription): RevenueCustome
     email,
     planLabel: facts.planLabel,
     status: subscription.status,
-    currency: subscription.currency,
+    currency,
     netPerIntervalMinor,
     interval,
     monthlyMinor,
+    monthlyUsdMinor: monthlyUsdMinor === null ? null : Math.round(monthlyUsdMinor),
     discountPercentOff: percentOff,
     discountAmountMinor: amountOffMinor,
     isComped: monthlyMinor <= 0,
@@ -258,6 +290,7 @@ function discountOf(
   subscription: Stripe.Subscription,
   interval: string,
   intervalCount: number,
+  currency: string,
 ): { percentOff: number; amountOffMinor: number; amountOffMonthlyMinor: number } {
   let percentOff = 0;
   let amountOffMinor = 0;
@@ -267,9 +300,11 @@ function discountOf(
     const coupon = discount.source?.coupon;
     if (!coupon || typeof coupon === 'string') continue;
     if (coupon.percent_off) percentOff += coupon.percent_off;
-    if (coupon.amount_off) {
-      amountOffMinor += coupon.amount_off;
-      amountOffMonthlyMinor += monthlyFromInterval(coupon.amount_off, interval, intervalCount);
+    // In the row's currency, or not at all, as kiosk-revenue.ts values it.
+    const amountOff = couponAmountOff(coupon, currency);
+    if (amountOff) {
+      amountOffMinor += amountOff;
+      amountOffMonthlyMinor += monthlyFromInterval(amountOff, interval, intervalCount);
     }
   }
   return { percentOff, amountOffMinor, amountOffMonthlyMinor };

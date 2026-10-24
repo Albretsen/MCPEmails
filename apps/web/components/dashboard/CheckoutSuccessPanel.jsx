@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Icon, Btn } from '../Primitives';
 import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { planDisplayName } from './Pages';
+import { eurCentsFor } from '@/lib/stripe/eur-prices';
 
 /**
  * CheckoutSuccessPanel: the confirmation a customer sees on return from Stripe.
@@ -42,7 +43,11 @@ import { planDisplayName } from './Pages';
  *                 purchase until the webhook lands.
  *   maxInboxes    inbox allowance of the LIVE plan. null means unlimited.
  *   inboxCount    inboxes connected right now.
- *   stripePrices  { [planId]: { monthlyCents, yearlyCents } } from Stripe.
+ *   stripePrices  { [planId]: { monthlyCents, yearlyCents, eur*Cents } } from Stripe.
+ *   currency      'usd' | 'eur', from the return URL's `currency` param when
+ *                 checkout sold EUR. Anything else is USD, as before.
+ *   paymentProcessing  true when the first payment is a bank debit that is
+ *                 still clearing (SEPA): the plan is live, the money is not in.
  *   onConnectInbox / onViewBilling / onDismiss  parent actions.
  *   onRefreshPlan stable callback that refetches server data.
  */
@@ -55,17 +60,18 @@ import { planDisplayName } from './Pages';
 const REFRESH_DELAYS_MS = [1500, 3000, 6000, 10000];
 
 /** Format integer cents as currency, hiding ".00" on whole amounts. */
-function formatMoney(cents, locale) {
+function formatMoney(cents, locale, currency = 'usd') {
   if (typeof cents !== 'number' || !Number.isFinite(cents)) return null;
   try {
     return new Intl.NumberFormat(locale || 'en', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency === 'eur' ? 'EUR' : 'USD',
       minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
       maximumFractionDigits: 2,
     }).format(cents / 100);
   } catch {
-    return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+    const amount = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+    return currency === 'eur' ? `€${amount}` : `$${amount}`;
   }
 }
 
@@ -117,6 +123,8 @@ export function CheckoutSuccessPanel({
   maxInboxes = null,
   inboxCount = 0,
   stripePrices = null,
+  currency = 'usd',
+  paymentProcessing = false,
   onConnectInbox,
   onViewBilling,
   onRefreshPlan,
@@ -154,12 +162,33 @@ export function CheckoutSuccessPanel({
   const planName = planDisplayName(planId);
 
   const priced = interval === 'month' || interval === 'year';
-  const cents = priced
+  const eur = currency === 'eur';
+  const usdCents = priced
     ? (interval === 'year'
         ? stripePrices?.[planId]?.yearlyCents
         : stripePrices?.[planId]?.monthlyCents)
     : null;
-  const price = formatMoney(cents, locale);
+  // EUR: Stripe's EUR currency option, else the same digits as USD.
+  const cents = eur && priced
+    ? eurCentsFor(
+        interval === 'year' ? stripePrices?.[planId]?.eurYearlyCents : stripePrices?.[planId]?.eurMonthlyCents,
+        usdCents,
+      )
+    : usdCents;
+  const price = formatMoney(cents, locale, eur ? 'eur' : 'usd');
+
+  // A card payment is final when Stripe redirects here; a bank debit is not.
+  // A known processing debit says so. A EUR checkout whose method we cannot
+  // see from the URL gets wording that is true for card and debit alike,
+  // rather than "Payment received" for money that may still be clearing.
+  const subtitle = paymentProcessing
+    ? tr('app.checkoutPanel.subtitleProcessing')
+    : eur
+      ? tr('app.checkoutPanel.subtitleEur')
+      : tr('app.checkoutPanel.subtitle');
+  const slowNote = paymentProcessing || eur
+    ? tr('app.checkoutPanel.activatingSlowNeutral')
+    : tr('app.checkoutPanel.activatingSlow');
 
   // The first renewal of a subscription created seconds ago is exactly one
   // interval from today. Computed in the browser only; this panel never
@@ -214,7 +243,7 @@ export function CheckoutSuccessPanel({
             <h2 id="checkout-success-title">
               {tr('app.checkoutPanel.title', { plan: planName })}
             </h2>
-            <div className="sub">{tr('app.checkoutPanel.subtitle')}</div>
+            <div className="sub">{subtitle}</div>
           </div>
           <button
             type="button"
@@ -265,9 +294,10 @@ export function CheckoutSuccessPanel({
             )}
           </div>
 
-          {/* The payment is never in doubt here: Stripe only redirects to this
-              URL after it has taken the money. Only the entitlement is still
-              settling, so say that and nothing more alarming. */}
+          {/* For a card the payment is never in doubt here: Stripe only
+              redirects to this URL after it has taken the money. Only the
+              entitlement is still settling, so say that and nothing more
+              alarming. (A bank debit can still be clearing; see `subtitle`.) */}
           {activating && (
             <div
               role="status"
@@ -282,7 +312,7 @@ export function CheckoutSuccessPanel({
               }}
             >
               {exhausted
-                ? tr('app.checkoutPanel.activatingSlow')
+                ? slowNote
                 : tr('app.checkoutPanel.activating')}
             </div>
           )}

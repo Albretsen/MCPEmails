@@ -68,6 +68,8 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { withdrawalLine, WITHDRAWAL_PATH } from '@/lib/email/legal';
+import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { euroizeAmounts } from '@/lib/stripe/eur-prices';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -101,6 +103,13 @@ export interface PurchaseConfirmationInput {
    * way; this is only shown when its currency differs from that one.
    */
   presentment?: { amountCents: number; currency: string } | null;
+  /**
+   * The Checkout session's `payment_status`. 'unpaid' means a delayed method
+   * (SEPA Direct Debit) is still processing: the plan is already granted, but
+   * no money has arrived, so the email must not say it has. Anything else,
+   * including absent, keeps the paid wording.
+   */
+  paymentStatus?: string | null;
 }
 
 export interface ComposedEmail {
@@ -175,14 +184,15 @@ function localCharge(input: PurchaseConfirmationInput): { amount: string; note: 
  * Inboxes are what they are paying for, so the jump from Free is stated
  * explicitly rather than left for them to work out.
  */
-function inboxHeadline(planId: Exclude<PlanId, 'free'>): string {
+function inboxHeadline(planId: Exclude<PlanId, 'free'>, currency: string | null): string {
   const max = PLANS[planId].limits.maxInboxes;
   const free = PLANS.free.limits.maxInboxes;
   // Business is uncapped because it bills past the included mailboxes, not
   // because they are free. "Unlimited" here would contradict the invoice.
   if (planId === 'pro') {
     return `${BUSINESS_INCLUDED_INBOXES} connected inboxes included, up from ${free} on Free. ` +
-      `Each extra mailbox is $${BUSINESS_EXTRA_INBOX_MONTHLY_CENTS / 100} a month.`;
+      // In the currency they bought in: EUR 3 next to a EUR 39 plan, not $3.
+      `Each extra mailbox is ${formatPriceCents(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS, 'en-US', currency ?? 'usd')} a month.`;
   }
   const now = Number.isFinite(max) ? `${max} connected inboxes` : 'Unlimited connected inboxes';
   return `${now}, up from ${free} on Free.`;
@@ -207,6 +217,18 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
   const cents = input.amountTotalCents ?? catalogueCents;
   const price = `${formatAmount(cents, input.currency ?? 'usd')} per ${interval === 'year' ? 'year' : 'month'}`;
   const charged = localCharge(input);
+  // SEPA Direct Debit: the session completes before the money moves. The
+  // plan is live either way (provisional access, see sepa-entitlement.ts), but
+  // "Charged today" and "nothing to wait for" would describe a payment that
+  // has not happened yet.
+  const processing = input.paymentStatus === 'unpaid';
+  const lead = processing
+    ? `Thanks for subscribing. Your ${name} plan is active now. Your bank debit is processing, which can take a few business days, and you have full access in the meantime.`
+    : `Thanks for subscribing. Your ${name} plan is active now, so there is nothing to wait for.`;
+  const htmlLead = processing
+    ? 'Thanks for subscribing. It is live on your account now. Your bank debit is processing, which can take a few business days, and you have full access in the meantime.'
+    : 'Thanks for subscribing. It is live on your account now, so there is nothing to wait for.';
+  const chargedLabel = processing ? 'Being debited' : 'Charged today';
 
   const base = appUrl();
   const inboxesUrl = `${base}/dashboard/inboxes`;
@@ -214,18 +236,22 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
 
   const subject = `Your MCPEmails ${name} subscription is active`;
 
-  const features = plan.features;
+  // plans.ts writes the per-mailbox price in USD; a EUR buyer reads it in
+  // EUR, same digits (src/lib/stripe/eur-prices.ts).
+  const features = (input.currency ?? 'usd').toLowerCase() === 'eur'
+    ? plan.features.map((feature) => euroizeAmounts(feature, 'en-US'))
+    : plan.features;
 
   const body = [
-    `Thanks for subscribing. Your ${name} plan is active now, so there is nothing to wait for.`,
+    lead,
     '',
     'WHAT YOU BOUGHT',
     `Plan: ${name}`,
     `Price: ${price}`,
-    ...(charged ? [`Charged today: ${charged.amount}`, charged.note] : []),
+    ...(charged ? [`${chargedLabel}: ${charged.amount}`, charged.note] : []),
     '',
     'WHAT YOU GET',
-    inboxHeadline(planId),
+    inboxHeadline(planId, input.currency),
     ...features.map((feature) => `- ${feature}`),
     '',
     'CONNECT YOUR NEXT INBOX',
@@ -277,7 +303,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                 Your ${escapeHtml(name)} plan is active
               </p>
               <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.5;">
-                Thanks for subscribing. It is live on your account now, so there is nothing to wait for.
+                ${escapeHtml(htmlLead)}
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 24px;">
                 <tr>
@@ -289,7 +315,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                   <td style="padding:0 18px 14px;font-size:14px;color:#0f172a;font-weight:600;" align="right">${escapeHtml(price)}</td>
                 </tr>${charged ? `
                 <tr>
-                  <td style="padding:0 18px 14px;font-size:14px;color:#64748b;">Charged today</td>
+                  <td style="padding:0 18px 14px;font-size:14px;color:#64748b;">${chargedLabel}</td>
                   <td style="padding:0 18px 14px;font-size:14px;color:#0f172a;font-weight:600;" align="right">${escapeHtml(charged.amount)}</td>
                 </tr>
                 <tr>
@@ -298,7 +324,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
               </table>
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">What you get</p>
               <p style="margin:0 0 10px;font-size:15px;color:#0f172a;line-height:1.5;font-weight:600;">
-                ${escapeHtml(inboxHeadline(planId))}
+                ${escapeHtml(inboxHeadline(planId, input.currency))}
               </p>
               <ul style="margin:0 0 26px;padding:0 0 0 20px;">${featureItems}</ul>
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Connect your next inbox</p>
