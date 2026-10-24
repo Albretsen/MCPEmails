@@ -5063,6 +5063,7 @@ export type Database = {
           payment_issue_since: string | null
           payment_notice_shown_on: string | null
           plan: string
+          pro_features_enabled: boolean
           pro_unlimited_inboxes_exempt: boolean
           sends_frozen_at: string | null
           slug: string
@@ -5119,6 +5120,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           sends_frozen_at?: string | null
           slug: string
@@ -5175,6 +5177,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           sends_frozen_at?: string | null
           slug?: string
