@@ -10,6 +10,7 @@ import { useAppLocale } from '../i18n/LocaleCore';
 import { buysAnnual, sharedIntervalChoice } from '@/lib/billing/inbox-cap-offer.mjs';
 import { reportInboxPaywallClick } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { liveSeasonalOffer, seasonalOfferValues } from '@/lib/billing/seasonal-offer-view.mjs';
+import ProPriceNotice from '../ProPriceNotice';
 
 /**
  * The monthly / annual choice on the in-product upsell surfaces.
@@ -420,5 +421,32 @@ export function PlanCheckoutLink({
         monthlyLabel,
       })}
     </a>
+  );
+}
+
+/**
+ * The dated Pro price notice on a dashboard upgrade surface, in the reader's
+ * app language. Renders nothing unless one of `plans` is Pro and the notice is
+ * on (see components/ProPriceNotice.jsx), so it can sit under any offer.
+ *
+ * @param {{ plans: string[], style?: object }} props
+ */
+export function ProPriceAppNotice({ plans, style }) {
+  const { locale } = useAppLocale();
+  if (!plans.includes('solo')) return null;
+  return (
+    <ProPriceNotice
+      locale={locale}
+      where="app"
+      plan="solo"
+      style={{
+        margin: 0,
+        fontFamily: 'var(--font-sans)',
+        fontSize: 11.5,
+        color: 'var(--fg-3)',
+        lineHeight: 1.4,
+        ...style,
+      }}
+    />
   );
 }

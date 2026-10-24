@@ -17,6 +17,9 @@
  *   customer.subscription.deleted     : sub fully cancelled; revert to free
  *   invoice.payment_failed            : a renewal was declined; start dunning
  *   invoice.payment_succeeded         : a charge landed; STOP any dunning
+ *   checkout.session.expired          : a checkout was left unpaid; one
+ *                                       reminder email (or a holdout row), see
+ *                                       src/lib/email/abandoned-checkout.ts
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
@@ -98,6 +101,10 @@ import {
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
+import {
+  creditAbandonedCheckout,
+  remindAbandonedCheckout,
+} from '@/lib/email/abandoned-checkout-send';
 import {
   cancelDunningForCustomer,
   cancelOpenSequence,
@@ -364,8 +371,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // stale and return here, and the dunning sequence would never be queued at
   // all. Exempting them is safe because neither one changes plan state: they
   // only start and stop email sequences, both keyed on the invoice id.
+  //
+  // `checkout.session.expired` changes no plan state either; it only decides
+  // whether one reminder email goes out.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
     'checkout.session.completed',
+    'checkout.session.expired',
     'invoice.payment_failed',
     'invoice.payment_succeeded',
   ]);
@@ -396,6 +407,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           event.data.object as Stripe.Checkout.Session,
         );
         break;
+
+      case 'checkout.session.expired': {
+        // Post-response and never throws: a reminder email can neither delay
+        // the ack nor roll back the ledger row.
+        const expired = event.data.object as Stripe.Checkout.Session;
+        after(() => remindAbandonedCheckout(expired));
+        break;
+      }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
@@ -628,6 +647,10 @@ async function handleCheckoutSessionCompleted(
   // Stripe. It cannot delay the response into a Stripe timeout, it cannot roll
   // the ledger row back, and `sendPurchaseConfirmationEmail` is written never to
   // throw, so a bounced or failed email can never cost a customer their plan.
+  // Credit an abandoned-checkout reminder (or its holdout row) with this
+  // purchase, for the holdout comparison. Post-response, never throws.
+  after(() => creditAbandonedCheckout(session));
+
   const recipient = session.customer_details?.email ?? session.customer_email ?? null;
   if (recipient) {
     after(() =>

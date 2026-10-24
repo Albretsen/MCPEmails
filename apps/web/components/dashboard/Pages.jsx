@@ -47,6 +47,7 @@ import UpgradeIntervalChoice, {
   IntervalToggle,
   SeasonalOfferNote,
   PlanCheckoutLink,
+  ProPriceAppNotice,
   SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
@@ -1548,6 +1549,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               }}>
                 {t(offer.noticeBodyKey)}
               </div>
+              <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (

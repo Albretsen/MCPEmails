@@ -17,6 +17,8 @@ import {
   seasonalOfferValues,
   shouldFetchSeasonalOffers,
 } from '@/lib/billing/seasonal-offer-view.mjs';
+import ProPriceNotice, { useProPriceNoticeVisible } from '../ProPriceNotice';
+import { proPriceNoticeCopy } from '@/lib/stripe/pro-price-notice-copy.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
@@ -505,7 +507,12 @@ export default function PricingClient({ stripePrices }) {
   }, []);
   const t = useTranslations('pricing');
   const locale = useLocale();
-  const faqItems = t.raw('faq.items');
+  // The dated Pro price question joins the FAQ only while the notice above
+  // the cards is up, so the two can never disagree about whether it applies.
+  const proPriceNotice = useProPriceNoticeVisible();
+  const faqItems = proPriceNotice
+    ? [proPriceNoticeCopy(locale).faq, ...t.raw('faq.items')]
+    : t.raw('faq.items');
 
   // Billing funnel. The endpoint ignores anonymous callers, so this records
   // only signed-in users revisiting /pricing, which is the population whose
@@ -577,6 +584,12 @@ export default function PricingClient({ stripePrices }) {
       {/* Plan cards */}
       <section className="pricing-page-cards">
         <div className="container">
+          <ProPriceNotice
+            locale={locale}
+            where="pricing"
+            className="pricing-footnote"
+            style={{ textAlign: 'center', margin: '0 auto 24px', maxWidth: 720, color: 'var(--fg-2)' }}
+          />
           <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} seasonalOffers={seasonalOffers} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
