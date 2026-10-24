@@ -1227,6 +1227,8 @@
     "codeEntryApply": "Aplicar",
     "codeEntryApplied": "Código añadido. Tu segundo mes de pago es gratis.",
     "codeEntryError": "Este código no se puede usar en esta cuenta.",
-    "codeEntryNetwork": "No se pudo comprobar el código. Inténtalo de nuevo."
+    "codeEntryNetwork": "No se pudo comprobar el código. Inténtalo de nuevo.",
+    "billingCredit": "Crédito por recomendación: {amount}, se aplica en tu próxima factura.",
+    "billingCreditLink": "Invita a un amigo"
   }
 }

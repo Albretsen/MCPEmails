@@ -12,7 +12,9 @@
 //   - credit renders as USD and the reward count against the cap;
 //   - the code field POSTs the code, confirms on 200, and shows one line on
 //     a refusal and another on a network failure;
-//   - the tile's eligibility rule, and that a dismissal is remembered.
+//   - the tile's eligibility rule, and that a dismissal is remembered;
+//   - the Billing credit line shows only for a positive credit, and its link
+//     opens the Invite section.
 // ---------------------------------------------------------------------------
 
 import test from 'node:test';
@@ -26,7 +28,7 @@ globalThis.self ??= globalThis.window;
 
 const { default: AppLocaleProvider } = await import('../i18n/AppLocaleProvider.jsx');
 const {
-  InvitePanel, ReferralTile, ReferralCodeEntry, referralTileEligible, TILE_DISMISSED_KEY,
+  InvitePanel, ReferralTile, ReferralCodeEntry, BillingReferralCredit, referralTileEligible, TILE_DISMISSED_KEY,
 } = await import('./InvitePanel.jsx');
 const en = (await import('../../messages/en/dashboard.json', { with: { type: 'json' } })).default;
 const R = en.referral;
@@ -225,3 +227,32 @@ test('tile: opens the Invite page, and a dismissal is remembered', async (t) => 
   await flush();
   assert.equal(again.container.querySelectorAll('[data-referral-tile]').length, 0);
 });
+
+test('Billing credit line: the amount and an Invite link, only when credit is above zero', async (t) => {
+  stubFetch(t, { get: summary({ creditBalanceCents: 1500 }) });
+  let opened = 0;
+  const view = await render(t, createElement(BillingReferralCredit, { onOpenInvite: () => { opened += 1; } }));
+  await waitFor(() => view.container.querySelector('[data-billing-referral-credit]'), { message: 'credit line' });
+  const line = view.container.querySelector('[data-billing-referral-credit]').textContent;
+  assert.ok(line.includes(R.billingCredit.replace('{amount}', '$15.00')), line);
+  const link = view.container.querySelector('[data-billing-referral-link]');
+  assert.equal(link.getAttribute('href'), '/dashboard/invite');
+  assert.equal(link.textContent, R.billingCreditLink);
+  await flush(async () => { link.click(); });
+  assert.equal(opened, 1);
+});
+
+for (const [name, get] of [
+  ['no credit', summary({ creditBalanceCents: 0 })],
+  ['a failed balance read', summary({ creditBalanceCents: null })],
+  ['the program off', { enabled: false }],
+]) {
+  test(`Billing credit line: nothing for ${name}`, async (t) => {
+    const requests = stubFetch(t, { get });
+    const view = await render(t, createElement(BillingReferralCredit));
+    await waitFor(() => requests.some((r) => r.url === '/api/referrals'), { message: 'summary requested' });
+    await flush(async () => {});
+    assert.equal(view.container.querySelector('[data-billing-referral-credit]'), null);
+    assert.equal(view.container.textContent, '');
+  });
+}

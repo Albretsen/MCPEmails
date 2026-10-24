@@ -1227,6 +1227,8 @@
     "codeEntryApply": "Einlösen",
     "codeEntryApplied": "Code hinzugefügt. Ihr zweiter bezahlter Monat ist gratis.",
     "codeEntryError": "Dieser Code kann für dieses Konto nicht verwendet werden.",
-    "codeEntryNetwork": "Der Code konnte nicht geprüft werden. Bitte versuchen Sie es erneut."
+    "codeEntryNetwork": "Der Code konnte nicht geprüft werden. Bitte versuchen Sie es erneut.",
+    "billingCredit": "Empfehlungsguthaben: {amount}, wird mit Ihrer nächsten Rechnung verrechnet.",
+    "billingCreditLink": "Freunde einladen"
   }
 }

@@ -23,3 +23,15 @@ Deno.test("an ended month, a paid plan, another kind or no row never lifts", () 
   ];
   for (const c of cases) assertEquals(referralPersonalActive({ ...c, now: NOW }), false);
 });
+
+Deno.test("referral_personal_until lifts an older 'standard' row, never a comped one", () => {
+  const standard = { kind: "standard", expires_at: null, referral_personal_until: LATER };
+  assertEquals(referralPersonalActive({ storedPlan: "free", entitlement: standard, now: NOW }), true);
+  const cases = [
+    { storedPlan: "free", entitlement: { ...standard, referral_personal_until: EARLIER } },
+    { storedPlan: "free", entitlement: { ...standard, referral_personal_until: null } },
+    { storedPlan: "personal", entitlement: standard },
+    { storedPlan: "free", entitlement: { ...standard, kind: "comped_scale" } },
+  ];
+  for (const c of cases) assertEquals(referralPersonalActive({ ...c, now: NOW }), false);
+});

@@ -1227,6 +1227,8 @@
     "codeEntryApply": "Appliquer",
     "codeEntryApplied": "Code ajouté. Votre deuxième mois payant est offert.",
     "codeEntryError": "Ce code ne peut pas être utilisé pour ce compte.",
-    "codeEntryNetwork": "Impossible de vérifier le code. Réessayez."
+    "codeEntryNetwork": "Impossible de vérifier le code. Réessayez.",
+    "billingCredit": "Crédit de parrainage : {amount}, déduit de votre prochaine facture.",
+    "billingCreditLink": "Inviter un ami"
   }
 }

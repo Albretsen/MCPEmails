@@ -318,6 +318,40 @@ export function ReferralTile({ onOpen }) {
 }
 
 /**
+ * Settings > Billing: the referral credit still waiting on the Stripe
+ * customer, with a link to the Invite page. Shows only while the API says the
+ * program is on for this workspace and the credit is above zero; a failed
+ * balance read (null) shows nothing. `onOpenInvite` switches the section in
+ * place; without it the link is a plain navigation.
+ */
+export function BillingReferralCredit({ onOpenInvite }) {
+  const t = useTranslations('dashboard');
+  const { locale } = useAppLocale();
+  const { status, data } = useReferralSummary(true);
+  const cents = Number(data?.creditBalanceCents);
+  if (status !== 'ready' || !data?.enabled || !(cents > 0)) return null;
+  const open = (event) => {
+    if (!onOpenInvite) return;
+    event.preventDefault();
+    onOpenInvite();
+  };
+  return (
+    <div
+      data-billing-referral-credit=""
+      style={{
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8,
+        padding: '0 2px', margin: '0 0 16px',
+        fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)',
+      }}
+    >
+      <Icon name="gift" size={14} color="var(--fg-3)" />
+      <span>{t('referral.billingCredit', { amount: formatUsd(cents, locale) })}</span>
+      <a href="/dashboard/invite" onClick={open} data-billing-referral-link="">{t('referral.billingCreditLink')}</a>
+    </div>
+  );
+}
+
+/**
  * "Have a referral code?": one line, shown while the API says a code can
  * still be entered (before the first paid charge and within the entry
  * window). Any refusal reads as the same one line, so the field cannot be used

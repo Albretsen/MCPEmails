@@ -1157,6 +1157,8 @@
     "codeEntryApply": "使用",
     "codeEntryApplied": "推荐码已添加。你的第二个付费月免费。",
     "codeEntryError": "此推荐码不能用于该账户。",
-    "codeEntryNetwork": "无法验证推荐码，请重试。"
+    "codeEntryNetwork": "无法验证推荐码，请重试。",
+    "billingCredit": "推荐抵扣额：{amount}，将用于你的下一张账单。",
+    "billingCreditLink": "邀请好友"
   }
 }

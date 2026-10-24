@@ -2896,7 +2896,7 @@ async function checkPlanQuota(
     ? { data: preloaded.entitlement, error: null }
     : await supabase
       .from("user_usage_entitlements")
-      .select("kind, expires_at")
+      .select("kind, expires_at, referral_personal_until")
       .eq("user_id", workspace.owner_id)
       .maybeSingle();
   if (entitlementError) {

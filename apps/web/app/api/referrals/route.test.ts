@@ -116,7 +116,7 @@ test('GET creates the code once and returns the summary', async () => {
   const second = await (await GET()).json();
   assert.equal(second.code, first.code);
   assert.equal(db.table('referral_codes').filter((r) => r.user_id === ME).length, 1);
-  assert.equal(db.table('product_funnel_events').filter((e) => e.stage === 'referral_link_viewed').length, 2);
+  assert.equal(db.table('product_funnel_events').filter((e) => e.stage === 'referral_link_viewed').length, 0);
 });
 
 test('GET reports the credit as positive cents, and null when Stripe fails', async () => {

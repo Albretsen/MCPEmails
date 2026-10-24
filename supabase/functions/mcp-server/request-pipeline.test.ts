@@ -884,6 +884,11 @@ const PARITY_WORLDS: Array<[string, () => World]> = [
     entitlement: { kind: "referral_personal", expires_at: "2099-01-01T00:00:00.000Z" },
     workspaceCount: 60,
   })],
+  ["an older standard row in a referral month at 60", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  })],
   ["a missing workspace row", () => world({ workspaceMissing: true, workspaceCount: 10_000 })],
   ["a capped workspace", () => world({
     workspace: activatedWorkspace({ plan: "free" }),
@@ -966,7 +971,12 @@ Deno.test("a referral month bursts at Personal's ceiling on both paths; plain Fr
     entitlement: { kind: "referral_personal", expires_at: "2020-01-01T00:00:00.000Z" },
     workspaceCount: 60,
   });
-  for (const w of [referral(), perQuery(referral())]) {
+  const standardRow = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  for (const w of [referral(), perQuery(referral()), standardRow(), perQuery(standardRow())]) {
     assertEquals((await run(w, rpcRequest("tools/call", SIGNATURE_GET))).status, 200);
   }
   for (const w of [ended(), perQuery(ended())]) {

@@ -1227,6 +1227,8 @@
     "codeEntryApply": "Bruk",
     "codeEntryApplied": "Koden er lagt til. Din andre betalte måned er gratis.",
     "codeEntryError": "Denne koden kan ikke brukes for denne kontoen.",
-    "codeEntryNetwork": "Kunne ikke sjekke koden. Prøv igjen."
+    "codeEntryNetwork": "Kunne ikke sjekke koden. Prøv igjen.",
+    "billingCredit": "Vervekreditt: {amount}, trekkes fra neste faktura.",
+    "billingCreditLink": "Inviter en venn"
   }
 }

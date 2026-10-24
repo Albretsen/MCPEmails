@@ -22,7 +22,7 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
-import { InvitePanel, OverviewReferral, referralTileEligible } from './InvitePanel';
+import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
@@ -7427,7 +7427,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate, onGoToInvite }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7469,6 +7469,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
       />
+      {/* Referral credit waiting for the next invoice, while
+          workspaces.referral_enabled is on (InvitePanel.jsx). */}
+      {workspace?.referralEnabled === true && <BillingReferralCredit onOpenInvite={onGoToInvite} />}
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>

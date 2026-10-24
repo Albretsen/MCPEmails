@@ -147,7 +147,8 @@ export async function GET(): Promise<NextResponse> {
     (alreadyReferred.data ?? []).length === 0 &&
     !billingShowsPaidHistory(billing);
 
-  await recordReferralEvent(db, s.workspaceId, 'referral_link_viewed', { plan: s.plan });
+  // referral_link_viewed is the Invite page's beacon (/api/analytics/referral),
+  // not this GET: the Overview field and the Billing credit line read it too.
 
   return NextResponse.json({
     enabled: true,

@@ -1227,6 +1227,8 @@
     "codeEntryApply": "Apply",
     "codeEntryApplied": "Code added. Your second paid month is free.",
     "codeEntryError": "This code can't be used for this account.",
-    "codeEntryNetwork": "Could not check the code. Try again."
+    "codeEntryNetwork": "Could not check the code. Try again.",
+    "billingCredit": "Referral credit: {amount}, used on your next invoice.",
+    "billingCreditLink": "Invite a friend"
   }
 }
