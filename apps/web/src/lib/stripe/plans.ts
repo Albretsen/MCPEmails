@@ -468,8 +468,8 @@ export const PLANS: Record<PlanId, Plan> = {
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
       'Longer analytics history',
-      // The Pro features (2026-10, owner headline "Your agent keeps working
-      // when the chat is closed"). Each is gated in code to Pro and Business
+      // The Pro features (2026-10, headline "Set it up in chat. It keeps
+      // running after you close it."). Each is gated in code to Pro and Business
       // (pro-features.ts in mcp-server and apps/web/src/lib/plans): every one
       // is NEW, nothing Free or Personal had moved here. Business inherits
       // them through "Everything in Pro". No counts, hours or day numbers:

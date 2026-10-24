@@ -52,7 +52,7 @@
     },
     "solo": {
       "name": "Pro",
-      "tagline": "Votre agent continue de travailler quand la conversation est fermée.",
+      "tagline": "Configurez-le dans la conversation. Il continue de tourner une fois celle-ci fermée.",
       "desc": "Pour une personne qui gère une entreprise : jusqu'à 10 boîtes sur un seul agent, de la finance et des ventes au support et à la vôtre.",
       "cta": "Choisir Pro",
       "features": [
