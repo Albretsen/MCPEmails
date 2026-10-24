@@ -1318,7 +1318,7 @@ CREATE OR REPLACE TRIGGER user_usage_entitlements_updated_at
 -- emit_system_event differs (see its comment).
 -- ============================================================
 
--- Pro feature gate inputs (hosted: 20261024160000_pro_features_gate.sql).
+-- Pro feature gate inputs (hosted: 20261024210000_pro_features_gate.sql).
 CREATE OR REPLACE FUNCTION public.workspace_pro_features(p_workspace_id uuid) RETURNS TABLE(plan text, comped_scale boolean, rollout_enabled boolean, public_launch boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
