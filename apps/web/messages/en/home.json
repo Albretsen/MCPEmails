@@ -273,6 +273,7 @@
     "linkOauth": "OAuth connection",
     "linkProviders": "Provider support",
     "linkReadOnly": "Read-only access",
+    "linkApiGuide": "Developer guide",
     "linkClients": "MCP client setup",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
@@ -293,7 +294,8 @@
     "linkHelp": "Help & support",
     "linkSelfHost": "Self-hosting",
     "linkFounders": "For founders",
-    "linkBusiness": "For business"
+    "linkBusiness": "For business",
+    "linkDevelopers": "Developers"
   },
   "languageSwitcher": {
     "label": "Language",

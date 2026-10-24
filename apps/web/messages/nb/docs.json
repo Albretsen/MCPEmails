@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Verktøyreferanse",
     "ctaSafety": "Sikkerhetsmodell",
-    "ctaProviders": "Leverandørstøtte"
+    "ctaProviders": "Leverandørstøtte",
+    "ctaApi": "Utviklerguide"
   },
   "quickstart": {
     "eyebrow": "Hurtigstart",

@@ -172,7 +172,7 @@ https://mcpemails.com/api/mcp`,
   "mcpServers": {
     "mcpemails": {
       "url": "https://mcpemails.com/api/mcp",
-      "auth": { "type": "bearer", "token": "mcpe_live_••••" }
+      "auth": { "type": "bearer", "token": "mcpe_••••" }
     }
   }
 }`,
@@ -181,7 +181,7 @@ https://mcpemails.com/api/mcp`,
     "servers": {
       "mcpemails": {
         "url": "https://mcpemails.com/api/mcp",
-        "bearer": "mcpe_live_••••"
+        "bearer": "mcpe_••••"
       }
     }
   }
@@ -189,7 +189,7 @@ https://mcpemails.com/api/mcp`,
     n8n: `# n8n MCP node
 URL:    https://mcpemails.com/api/mcp
 Auth:   Bearer
-Token:  mcpe_live_••••`,
+Token:  mcpe_••••`,
   };
   const paths = {
     oauth:  "claude.ai · Claude Desktop · Cursor · OAuth",
@@ -1387,6 +1387,7 @@ export function Footer({ locales } = {}) {
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
             <Link href="/for/founders">{t('footer.linkFounders')}</Link>
             <Link href="/for/business">{t('footer.linkBusiness')}</Link>
+            <Link href="/developers">{t('footer.linkDevelopers')}</Link>
           </div>
           <div>
             <p className="footer-heading">{t('footer.resourcesHeading')}</p>
@@ -1395,6 +1396,7 @@ export function Footer({ locales } = {}) {
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
             <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
+            <Link href="/docs/api">{t('footer.linkApiGuide')}</Link>
             <Link href="/docs/clients">{t('footer.linkClients')}</Link>
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>

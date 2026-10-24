@@ -1478,6 +1478,41 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 }
 .read-only-list li { margin: 0 0 10px; }
 .read-only-list a { color: var(--fg-1); }
+
+/* /docs/api and /developers: prose, tables and a jump list. */
+.dev-h3 {
+  font-family: var(--font-sans); font-size: 18px; font-weight: 600;
+  color: var(--fg-1); margin: 28px 0 0;
+}
+.dev-p {
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.65;
+  color: var(--fg-2); margin: 12px 0 0;
+}
+.dev-p a { color: var(--fg-1); }
+.dev-code { margin-top: 16px; }
+.dev-table-wrap { margin-top: 16px; overflow-x: auto; }
+.dev-table {
+  width: 100%; min-width: 520px; border-collapse: collapse;
+  font-family: var(--font-sans); font-size: 14.5px; line-height: 1.55; color: var(--fg-2);
+}
+.dev-table th {
+  text-align: left; font-weight: 600; color: var(--fg-1);
+  padding: 10px 12px; border-bottom: 1px solid var(--border-1);
+}
+.dev-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-1); vertical-align: top; }
+.dev-toc { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 24px; }
+.dev-toc a { font-family: var(--font-sans); font-size: 14.5px; color: var(--fg-2); }
+.dev-toc a:hover { color: var(--fg-1); text-decoration: underline; }
+.dev-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px; margin-top: 24px;
+}
+.dev-card {
+  background: var(--bg-surface); border: 1px solid var(--border-1);
+  border-radius: 12px; padding: 20px;
+}
+.dev-card h3 { font-family: var(--font-sans); font-size: 16.5px; font-weight: 600; color: var(--fg-1); margin: 0 0 6px; }
+.dev-card p { font-family: var(--font-sans); font-size: 15px; line-height: 1.6; color: var(--fg-2); margin: 0; }
 .providers-h2 {
   font-family: var(--font-sans); font-size: clamp(22px, 3vw, 28px);
   line-height: 1.2; letter-spacing: -0.02em; font-weight: 600;

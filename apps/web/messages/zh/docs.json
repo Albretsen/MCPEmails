@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth（claude.ai）",
     "ctaTools": "工具参考",
     "ctaSafety": "安全模型",
-    "ctaProviders": "服务商支持"
+    "ctaProviders": "服务商支持",
+    "ctaApi": "开发者指南"
   },
   "quickstart": {
     "eyebrow": "快速开始",

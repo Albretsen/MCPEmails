@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Référence des outils",
     "ctaSafety": "Modèle de sécurité",
-    "ctaProviders": "Fournisseurs pris en charge"
+    "ctaProviders": "Fournisseurs pris en charge",
+    "ctaApi": "Guide du développeur"
   },
   "quickstart": {
     "eyebrow": "Démarrage rapide",

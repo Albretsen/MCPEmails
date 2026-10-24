@@ -280,6 +280,58 @@ export function homeJsonLd(
 }
 
 /**
+ * Structured data for /developers: the product as a `SoftwareApplication`
+ * described for developers, plus WebPage + BreadcrumbList.
+ *
+ * The offers are the same catalogue as the home page's (planOffers), so the
+ * developer page can never quote a different price. The brand is inline, as on
+ * /pricing, because the Organization node exists only in the home page graph.
+ */
+export function developersJsonLd(
+  locale: string,
+  { title, description, featureList }: { title: string; description: string; featureList: string[] },
+) {
+  const url = localePath(locale, '/developers');
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': url,
+        url,
+        name: title,
+        description,
+        inLanguage: locale,
+        isPartOf: { '@id': `${APP_URL}/#website` },
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+        mainEntity: { '@id': `${url}#software` },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        name: 'MCPEmails',
+        '@id': `${url}#software`,
+        url,
+        description,
+        applicationCategory: 'DeveloperApplication',
+        applicationSubCategory: 'Email API',
+        operatingSystem: 'Web',
+        brand: { '@type': 'Brand', name: 'MCPEmails' },
+        featureList,
+        offers: planOffers(localePath(locale, '/pricing')),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 2, name: title },
+        ],
+      },
+    ],
+  };
+}
+
+/**
  * Structured data for /pricing: the plan catalogue as a `Product` with one
  * `Offer` per tier, plus the standard WebPage + BreadcrumbList.
  *
