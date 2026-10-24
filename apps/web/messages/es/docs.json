@@ -332,6 +332,33 @@
         "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."
       }
     },
+    "reminder_list": {
+      "title": "Lista de recordatorios",
+      "desc": "Lista los seguimientos y los correos pospuestos que sigue el servidor. show 'due' (por defecto) devuelve los seguimientos vencidos sin respuesta, y los que fallaron; 'upcoming' devuelve los pendientes, los más próximos primero; 'all' devuelve todo, incluidos los terminados. Los asuntos y las direcciones vienen del correo, así que el resultado va marcado como untrusted_content. Pasa un id devuelto a la herramienta reminder para marcarlo como hecho o cancelarlo. Solo lectura, sin argumento action. Una función de Pro y Business: en otros planes, una llamada devuelve una nota que nombra el plan. Necesita read:email.",
+      "params": {
+        "inbox_id": "UUID de una bandeja por la que filtrar. Opcional; omítelo para listar los recordatorios de todas las bandejas de la clave.",
+        "inbox": "El mismo filtro por dirección de correo. Opcional; se ignora si se da inbox_id.",
+        "show": "'due' (por defecto), 'upcoming' o 'all'.",
+        "kind": "Opcional: solo 'follow_up' o solo 'snooze'.",
+        "limit": "Número máximo de resultados. Por defecto 25, máximo 100."
+      }
+    },
+    "reminder": {
+      "title": "Recordatorios",
+      "desc": "Seguimientos y correos pospuestos que funcionan en el servidor con el chat cerrado, sin ningún modelo de por medio. Indica action: 'follow_up' (message_id de un correo enviado más days o due_at; aparece como vencido en reminder_list si nadie ha respondido para entonces, y una respuesta lo borra), 'snooze' (message_id y until; el correo sale de la bandeja de entrada y el servidor lo devuelve a esa hora, opcionalmente solo si nadie respondió), 'done' (id; detiene un recordatorio y deja un correo pospuesto donde está) o 'cancel' (id; lo detiene y devuelve ya un correo pospuesto). Un envío puede iniciar un seguimiento en la misma llamada con follow_up_days en email_compose o en draft (action 'send'). Nada de esto envía correo. Una función de Pro y Business: en otros planes, una llamada devuelve una nota que nombra el plan. Necesita manage:automations; snooze, y cancelar un correo pospuesto, también necesitan manage:folders.",
+      "params": {
+        "action": "Qué operación realizar: \"follow_up\", \"snooze\", \"done\" o \"cancel\". La lista es la herramienta aparte reminder_list.",
+        "inbox_id": "UUID de la bandeja en la que está el correo. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja que usar, como alternativa más sencilla a inbox_id. Opcional; se ignora si se da inbox_id.",
+        "message_id": "El correo que seguir o posponer (acciones 'follow_up' y 'snooze'), con el id que devolvió un envío o email_read.",
+        "days": "El seguimiento vence dentro de este número de días enteros, de 1 a 365 (action 'follow_up'). Pasa esto o due_at.",
+        "due_at": "El seguimiento vence en esta hora ISO 8601 con zona horaria (action 'follow_up'). Pasa esto o days.",
+        "until": "Cuándo vuelve el correo pospuesto, en ISO 8601 con zona horaria, en el futuro (action 'snooze').",
+        "condition": "'always' (por defecto) o 'no_reply': devolver el correo solo si nadie respondió mientras tanto (action 'snooze').",
+        "folder": "Carpeta o etiqueta existente en la que espera el correo pospuesto, por nombre o id (action 'snooze'). Opcional. Por defecto \"MCPEmails Snoozed\", que se crea si falta.",
+        "id": "Id del recordatorio de reminder_list (acciones 'done' y 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Leer firma",
       "desc": "Lee la firma configurada de una bandeja: su texto plano y su HTML, si está habilitada, el modo de respuesta/reenvío, su origen ('manual', 'gmail_import' o null cuando no hay ninguna) y sender_name, el nombre que los destinatarios ven en la cabecera From. La firma se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Solo lectura, sin argumento action. Necesita read:email.",

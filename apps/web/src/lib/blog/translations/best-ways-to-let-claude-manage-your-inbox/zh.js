@@ -19,7 +19,7 @@ const translation = {
 
 ## 方案一：托管式 MCP 邮件服务器
 
-这就是 [Model Context Protocol](https://modelcontextprotocol.io) 的思路，只不过由别人替你运行。你在控制台里把收件箱连接一次，把一个端点 URL 粘贴进 Claude，智能体就获得了一套干净的邮件工具。Claude 像调用任何其他工具一样调用它们：\`inbox_list\` 查看你的账户，\`email_read\` 列出、读取或搜索邮件，\`email_compose\` 发送、回复或转发，外加 \`email_organize\`、\`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\` 用于标记、文件夹、草稿、定时和联系人。它们是全部 19 个工具中的核心，其中大多数都用一个 \`action\` 参数来选择具体操作。
+这就是 [Model Context Protocol](https://modelcontextprotocol.io) 的思路，只不过由别人替你运行。你在控制台里把收件箱连接一次，把一个端点 URL 粘贴进 Claude，智能体就获得了一套干净的邮件工具。Claude 像调用任何其他工具一样调用它们：\`inbox_list\` 查看你的账户，\`email_read\` 列出、读取或搜索邮件，\`email_compose\` 发送、回复或转发，外加 \`email_organize\`、\`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\` 用于标记、文件夹、草稿、定时和联系人。它们是全部 21 个工具中的核心，其中大多数都用一个 \`action\` 参数来选择具体操作。
 
 MCPEmails 是我自己做的产品，所以这条推荐请你带着这一点来看，但它对大多数人胜出的原因是架构，而不是营销。每一次工具调用都会实时打到你的服务商（Gmail 和大多数服务商走 IMAP/SMTP，Outlook 走 Microsoft Graph），把邮件交给 Claude，然后丢弃。**邮件正文从不被存储。** 每个收件箱唯一持久化的东西，是一个加密的 OAuth 令牌或应用专用密码，以 AES-256-GCM 在静态时加密，只在请求需要时才在我们的服务器上解密，并且从不发送给 Claude。如果你想看看为什么这一点很重要的详细版本，读读[为什么“邮件从不存储”很重要](/blog/why-email-never-stored-matters)。
 

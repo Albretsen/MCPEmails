@@ -332,6 +332,33 @@
         "idempotency_key": "Optional opaque key for one scheduled-send creation. Reuse it only to retry the exact same create request within 24 hours."
       }
     },
+    "reminder_list": {
+      "title": "Reminder List",
+      "desc": "List the follow-ups and snoozes the server tracks. show 'due' (default) returns follow-ups past due with no reply, and any that failed; 'upcoming' returns pending ones, soonest first; 'all' returns everything, finished included. Subjects and addresses come from mail, so the result is marked untrusted_content. Pass a returned id to the reminder tool to mark it done or cancel it. Read-only, with no action argument. A Pro and Business feature: on other plans a call returns a note naming the plan. Needs read:email.",
+      "params": {
+        "inbox_id": "UUID of an inbox to filter by. Optional; omit it to list the reminders of every inbox on the key.",
+        "inbox": "The same filter by email address. Optional; ignored if inbox_id is given.",
+        "show": "'due' (default), 'upcoming' or 'all'.",
+        "kind": "Optional: only 'follow_up' or only 'snooze'.",
+        "limit": "Maximum number of results. Default 25, max 100."
+      }
+    },
+    "reminder": {
+      "title": "Reminders",
+      "desc": "Follow-ups and snoozes that run on the server while the chat is closed, with no model in the loop. Set action: 'follow_up' (message_id of a sent message plus days or due_at; it shows as due in reminder_list when nobody has replied by then, and a reply clears it), 'snooze' (message_id and until; the message leaves the inbox and the server moves it back at that time, optionally only if nobody replied), 'done' (id; stops a reminder and leaves a snoozed message where it is) or 'cancel' (id; stops it and brings a snoozed message back now). A send can start a follow-up in the same call with follow_up_days on email_compose or on draft (action 'send'). Nothing here sends mail. A Pro and Business feature: on other plans a call returns a note naming the plan. Needs manage:automations; snooze, and cancelling a snooze, also need manage:folders.",
+      "params": {
+        "action": "Which operation to perform: \"follow_up\", \"snooze\", \"done\" or \"cancel\". Listing is the separate reminder_list tool.",
+        "inbox_id": "UUID of the inbox the message is in. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
+        "message_id": "The message to track or snooze (actions 'follow_up' and 'snooze'), as a send result or email_read returned its id.",
+        "days": "Follow-up due this many whole days from now, 1 to 365 (action 'follow_up'). Pass this or due_at.",
+        "due_at": "Follow-up due at this ISO 8601 time with a timezone (action 'follow_up'). Pass this or days.",
+        "until": "When a snoozed message comes back, ISO 8601 with a timezone, in the future (action 'snooze').",
+        "condition": "'always' (default) or 'no_reply': bring the message back only if nobody replied meanwhile (action 'snooze').",
+        "folder": "Optional existing folder or label the snoozed message waits in, by name or id (action 'snooze'). Default \"MCPEmails Snoozed\", created when missing.",
+        "id": "Reminder id from reminder_list (actions 'done' and 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Signature Get",
       "desc": "Read the signature configured for one inbox: its plain text and HTML, whether it is enabled, the reply/forward mode, its source ('manual', 'gmail_import', or null when none is set), and sender_name, the display name recipients see in the From header. The signature is appended server-side on every send, reply, forward, draft and scheduled message. Read-only, with no action argument. Needs read:email.",

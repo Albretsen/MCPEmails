@@ -65,7 +65,7 @@
     "items": {
       "0": {
         "tag": "Scope",
-        "h": "Nineteen focused tools. The essentials, covered.",
+        "h": "Twenty-one focused tools. The essentials, covered.",
         "p": "Tools cover the everyday work: <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply), plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, signatures, and unattended automations. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
@@ -183,12 +183,18 @@
       },
       "solo": {
         "name": "Pro",
+        "tagline": "Your agent keeps working when the chat is closed.",
         "desc": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
         "features": [
           "Everything in Personal",
           "10 connected inboxes",
           "5x higher burst rate limit",
-          "Longer analytics history"
+          "Longer analytics history",
+          "Follow-up reminders when nobody replies to mail you sent",
+          "Snooze: mail leaves the inbox and comes back when you choose",
+          "A daily morning brief, placed straight in your inbox",
+          "Search every connected inbox at once",
+          "Instructions for your AI, per inbox"
         ],
         "cta": "Get Pro"
       },
@@ -243,11 +249,11 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
+        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent can read, search, send, reply, schedule and organise in it. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
       },
       {
         "q": "What can the AI actually do with my inbox?",
-        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Nineteen action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Twenty-one action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
       },
       {
         "q": "How do I connect an inbox?",

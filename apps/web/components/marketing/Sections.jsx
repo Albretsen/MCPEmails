@@ -1172,6 +1172,9 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     {livePrice}
                     {tier.per && <small> {tier.per}</small>}
                   </div>
+                  {t.has(`pricing.tiers.${tier.msgKey}.tagline`) && (
+                    <p className="price-tagline">{t(`pricing.tiers.${tier.msgKey}.tagline`)}</p>
+                  )}
                   <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>

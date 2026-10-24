@@ -408,6 +408,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .price h4 { margin: 0; font-family: var(--font-sans); font-size: 14px; font-weight: 500; color: var(--fg-3); letter-spacing: 0.04em; text-transform: uppercase; }
 .price .num { font-family: var(--font-sans); font-size: 42px; font-weight: 600; letter-spacing: -0.03em; color: var(--fg-1); margin: 4px 0 0; }
 .price .num small { font-size: 14px; font-weight: 400; color: var(--fg-3); letter-spacing: 0; }
+.price .price-tagline { margin: 8px 0 0; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--fg-1); line-height: 1.4; }
 .price .price-desc { margin: 8px 0 0; font-family: var(--font-sans); font-size: 13.5px; color: var(--fg-3); line-height: 1.5; }
 .price .price-annual-note { margin: 2px 0 0; font-family: var(--font-sans); font-size: 12px; color: var(--fg-4); }
 /* Black Week 2026 first-year price, rendered after mount from

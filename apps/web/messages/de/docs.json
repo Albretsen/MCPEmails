@@ -332,6 +332,33 @@
         "idempotency_key": "Optionaler, frei wählbarer Schlüssel für das Anlegen einer geplanten Sendung. Verwenden Sie ihn nur erneut, um genau dieselbe create-Anfrage innerhalb von 24 Stunden zu wiederholen."
       }
     },
+    "reminder_list": {
+      "title": "Erinnerungen auflisten",
+      "desc": "Listet die Nachfass-Erinnerungen und zurückgestellten E-Mails, die der Server verfolgt. show 'due' (Standard) liefert überfällige Erinnerungen ohne Antwort und fehlgeschlagene; 'upcoming' liefert ausstehende, die nächsten zuerst; 'all' liefert alles, auch abgeschlossene. Betreffzeilen und Adressen stammen aus E-Mails, daher ist das Ergebnis als untrusted_content markiert. Übergeben Sie eine zurückgegebene id an das Tool reminder, um sie als erledigt zu markieren oder abzubrechen. Nur lesend, ohne action-Argument. Eine Funktion von Pro und Business: in anderen Tarifen liefert ein Aufruf einen Hinweis, der den Tarif nennt. Braucht read:email.",
+      "params": {
+        "inbox_id": "UUID eines Postfachs zum Filtern. Optional; weglassen, um die Erinnerungen aller Postfächer des Schlüssels aufzulisten.",
+        "inbox": "Derselbe Filter per E-Mail-Adresse. Optional; wird ignoriert, wenn inbox_id angegeben ist.",
+        "show": "'due' (Standard), 'upcoming' oder 'all'.",
+        "kind": "Optional: nur 'follow_up' oder nur 'snooze'.",
+        "limit": "Maximale Anzahl Ergebnisse. Standard 25, höchstens 100."
+      }
+    },
+    "reminder": {
+      "title": "Erinnerungen",
+      "desc": "Nachfass-Erinnerungen und zurückgestellte E-Mails, die bei geschlossenem Chat auf dem Server laufen, ohne Modell dazwischen. Setzen Sie action: 'follow_up' (message_id einer gesendeten E-Mail plus days oder due_at; sie erscheint in reminder_list als fällig, wenn bis dahin niemand geantwortet hat, und eine Antwort löscht sie), 'snooze' (message_id und until; die E-Mail verlässt den Posteingang und der Server legt sie zu dieser Zeit zurück, wahlweise nur, wenn niemand geantwortet hat), 'done' (id; beendet eine Erinnerung und lässt eine zurückgestellte E-Mail, wo sie ist) oder 'cancel' (id; beendet sie und holt eine zurückgestellte E-Mail sofort zurück). Ein Versand kann im selben Aufruf eine Erinnerung starten, mit follow_up_days bei email_compose oder bei draft (Aktion 'send'). Nichts hier sendet E-Mails. Eine Funktion von Pro und Business: in anderen Tarifen liefert ein Aufruf einen Hinweis, der den Tarif nennt. Braucht manage:automations; snooze und das Abbrechen einer Zurückstellung brauchen zusätzlich manage:folders.",
+      "params": {
+        "action": "Welche Operation ausgeführt wird: \"follow_up\", \"snooze\", \"done\" oder \"cancel\". Das Auflisten ist das separate Tool reminder_list.",
+        "inbox_id": "UUID des Postfachs, in dem die E-Mail liegt. Optional: wird automatisch ermittelt, wenn der Schlüssel genau ein Postfach hat; andernfalls dies oder inbox übergeben. Rufen Sie inbox_list auf, um verfügbare Postfach-IDs zu erhalten.",
+        "inbox": "E-Mail-Adresse des Postfachs, als einfachere Alternative zu inbox_id. Optional; wird ignoriert, wenn inbox_id angegeben ist.",
+        "message_id": "Die E-Mail, die verfolgt oder zurückgestellt wird (Aktionen 'follow_up' und 'snooze'), mit der id aus einem Versandergebnis oder aus email_read.",
+        "days": "Die Erinnerung ist in so vielen ganzen Tagen fällig, 1 bis 365 (Aktion 'follow_up'). Dies oder due_at übergeben.",
+        "due_at": "Die Erinnerung ist zu dieser ISO-8601-Zeit mit Zeitzone fällig (Aktion 'follow_up'). Dies oder days übergeben.",
+        "until": "Wann die zurückgestellte E-Mail zurückkommt, ISO 8601 mit Zeitzone, in der Zukunft (Aktion 'snooze').",
+        "condition": "'always' (Standard) oder 'no_reply': die E-Mail nur zurückholen, wenn inzwischen niemand geantwortet hat (Aktion 'snooze').",
+        "folder": "Optional ein vorhandener Ordner oder ein Label, in dem die E-Mail wartet, per Name oder id (Aktion 'snooze'). Standard ist \"MCPEmails Snoozed\", wird bei Bedarf angelegt.",
+        "id": "Erinnerungs-id aus reminder_list (Aktionen 'done' und 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Signatur lesen",
       "desc": "Liest die für ein Postfach konfigurierte Signatur: ihren Klartext und ihr HTML, ob sie aktiviert ist, den Modus für Antworten und Weiterleitungen, ihre Quelle ('manual', 'gmail_import' oder null, wenn keine gesetzt ist) und sender_name, den Anzeigenamen, den Empfänger im From-Header sehen. Die Signatur wird serverseitig an jede gesendete Nachricht, Antwort, Weiterleitung, jeden Entwurf und jede geplante Nachricht angefügt. Nur lesend, ohne action-Argument. Braucht read:email.",

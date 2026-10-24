@@ -703,6 +703,8 @@
       "soloFeature1": "10 connected inboxes",
       "soloFeature2": "300 requests / minute (5× burst)",
       "soloFeature3": "Longer analytics history",
+      "soloFeatureChatClosed": "Follow-ups, snooze and a morning brief while the chat is closed",
+      "soloFeatureAllInboxes": "Search all inboxes at once, with instructions per inbox",
       "soloFeature4": "Email support",
       "businessFeature1": "Everything in Pro",
       "businessFeature2": "10 mailboxes included, $3 a month for each extra",
