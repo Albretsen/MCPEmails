@@ -346,7 +346,123 @@
     "businessFeatureInboxes": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
     "businessFeatureMembers": "Membres illimités avec rôles, sans surcoût",
     "businessFeatureApprovals": "Les administrateurs approuvent les envois en attente",
-    "businessFeatureWorkspaces": "Plusieurs espaces de travail sur un seul abonnement"
+    "businessFeatureWorkspaces": "Plusieurs espaces de travail sur un seul abonnement",
+    "fix": {
+      "heading": "Comment résoudre le problème",
+      "testAgain": "Tester à nouveau",
+      "useOutlook": "Utiliser la connexion Microsoft",
+      "receiveOnly": "Connecter en lecture seule",
+      "useSuggestedHost": "Utiliser {host}",
+      "progressLogin": "Vérification de la connexion...",
+      "progressSending": "Vérification de l’envoi...",
+      "progressSlow": "Vérification en cours. Certains serveurs de messagerie mettent jusqu’à une minute à répondre.",
+      "gmail": {
+        "twoStep": "Activez la validation en deux étapes de votre compte Google.",
+        "create": "Créez un mot de passe d’application sur myaccount.google.com/apppasswords et nommez-le MCPEmails.",
+        "paste": "Collez les 16 lettres dans le champ du mot de passe. Les espaces ne posent pas de problème.",
+        "workspace": "Sur un compte professionnel ou scolaire, l’option des mots de passe d’application peut manquer si votre administrateur l’a désactivée. Dans ce cas, demandez-lui d’autoriser les mots de passe d’application.",
+        "imapDisabled": "L’administrateur de votre Google Workspace a désactivé IMAP pour votre compte, aucun mot de passe ne peut donc fonctionner.",
+        "imapDisabledAdmin": "Envoyez ceci à votre service informatique : merci d’activer l’accès IMAP pour mon compte dans la console d’administration Google, sous Applications, Google Workspace, Gmail, Accès des utilisateurs finaux."
+      },
+      "appPassword": {
+        "normalRejected": "Votre mot de passe {provider} habituel est refusé ici. Seul un mot de passe d’application fonctionne.",
+        "paste": "Collez-le dans le champ du mot de passe et cliquez sur Tester à nouveau."
+      },
+      "yahoo": {
+        "create": "Sur la page Sécurité du compte de Yahoo, sous Connexions externes, choisissez Créer un mot de passe d’application, nommez-le MCPEmails et générez-le."
+      },
+      "aol": {
+        "create": "Sur la page Sécurité du compte d’AOL, générez un mot de passe d’application et nommez-le MCPEmails. Si l’option manque, activez d’abord la validation en deux étapes."
+      },
+      "icloud": {
+        "create": "Sur account.apple.com, ouvrez Connexion et sécurité, puis Mots de passe pour app, et créez-en un nommé MCPEmails. L’identification à deux facteurs doit être activée."
+      },
+      "ionos": {
+        "password": "IONOS attend le mot de passe de cette adresse e-mail, pas celui qui sert à vous connecter à IONOS."
+      },
+      "fullAddress": "Utilisez votre adresse e-mail complète comme identifiant.",
+      "tOnline": {
+        "password": "Telekom n’accepte ici que votre Passwort für E-Mail-Programme, pas votre mot de passe Telekom Login.",
+        "where": "Définissez-le dans l’E-Mail Center sous Einstellungen, puis Passwörter, puis Passwort für E-Mail-Programme."
+      },
+      "mailRu": {
+        "create": "Dans Mail.ru, ouvrez Paramètres, Tous les paramètres, Sécurité, puis Mots de passe pour applications externes, et créez-en un avec un accès complet au courrier."
+      },
+      "qq": {
+        "service": "Dans QQ Mail, ouvrez 设置 (Paramètres), puis 账号与安全 (Compte et sécurité), et activez le service POP3/IMAP/SMTP.",
+        "code": "Générez un code d’autorisation (授权码) et collez-le dans le champ du mot de passe. Votre mot de passe QQ ne fonctionne pas."
+      },
+      "mailCom": {
+        "imap": "Activez IMAP sur mail.com : Email, Settings, POP3 and IMAP, puis cochez Enable access to this account via POP3 and IMAP. IMAP nécessite une offre mail.com Premium.",
+        "twoFactor": "Si l’authentification à deux facteurs est activée, créez un mot de passe spécifique à l’application dans Security Options et utilisez-le."
+      },
+      "infomaniak": {
+        "password": "Infomaniak n’accepte pas ici votre mot de passe du Manager. Dans le Manager, ouvrez Service Mail, votre adresse, puis Appareils, et ajoutez un appareil pour obtenir un mot de passe d’appareil."
+      },
+      "orange": {
+        "imap": "Activez POP/IMAP dans votre boîte Orange : la roue crantée, tous les paramètres, Sécurité, Protocoles POP ou IMAP, puis Activer POP/IMAP.",
+        "password": "Utilisez ensuite le mot de passe dédié de votre Espace client, rubrique Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "Si l’authentification à deux facteurs (dvoufázové ověření) est activée, votre mot de passe Seznam ne fonctionne plus ici. Définissez un Heslo pro aplikace sous Zabezpečení účtu et utilisez-le."
+      },
+      "gmx": {
+        "imap": "{provider} désactive par défaut l’accès POP3 et IMAP. Activez-le sous E-Mail-Einstellungen, puis POP3/IMAP.",
+        "twoFactor": "Si l’authentification à deux facteurs est activée, utilisez un mot de passe d’application au lieu de votre mot de passe habituel."
+      },
+      "zoho": {
+        "imap": "Activez l’accès IMAP dans Zoho Mail sous Paramètres, Comptes de messagerie, Accès IMAP.",
+        "twoFactor": "Avec l’authentification à deux facteurs, une connexion fédérée ou SAML, générez un mot de passe spécifique à l’application et utilisez-le."
+      },
+      "yandex": {
+        "create": "Sur id.yandex.com, ouvrez Sécurité, puis Mots de passe d’application, et créez-en un de type Mail.",
+        "imap": "Dans les paramètres de Yandex Mail, ouvrez Clients de messagerie et activez à la fois l’accès IMAP et les mots de passe d’application et jetons OAuth."
+      },
+      "office365": {
+        "useOutlook": "Les boîtes Microsoft 365 professionnelles et scolaires n’acceptent pas les mots de passe venant d’applications de messagerie. Connectez-la plutôt avec la connexion Microsoft."
+      },
+      "smtp": {
+        "readingOk": "Votre serveur a accepté la connexion pour lire le courrier mais l’a refusée pour l’envoi.",
+        "username": "Si votre fournisseur vous donne un identifiant distinct pour l’envoi, saisissez-le dans Paramètres avancés, Nom d’utilisateur.",
+        "readOnly": "Ou connectez-vous maintenant en lecture seule et ajoutez l’envoi plus tard dans les paramètres de la boîte."
+      },
+      "unreachable": {
+        "tried": "Nous avons essayé {host} et le serveur n’a pas répondu.",
+        "notFound": "Nous n’avons trouvé aucun serveur de messagerie nommé {host}.",
+        "suggest": "Votre adresse est chez {provider}, dont le serveur est {host}.",
+        "check": "Vérifiez le nom du serveur sur la page de paramètres de votre fournisseur, puis testez à nouveau.",
+        "blocked": "Votre serveur de messagerie n’accepte pas les connexions venant de nos serveurs. C’est fréquent avec les serveurs des écoles et des entreprises.",
+        "blockedNext": "Demandez à votre service informatique d’autoriser l’accès depuis l’extérieur, ou connectez une autre adresse."
+      },
+      "tls": {
+        "tried": "Nous avons essayé le port {tlsPort} en TLS et le port {starttlsPort} en STARTTLS, et la connexion sécurisée a échoué sur les deux.",
+        "next": "Si votre fournisseur indique un autre port ou un autre réglage de sécurité, modifiez-le ici et testez à nouveau."
+      },
+      "link": {
+        "twoStep": "Ouvrir la validation en deux étapes",
+        "appPasswords": "Ouvrir la page des mots de passe d’application de {provider}",
+        "imapSetting": "Comment activer IMAP chez {provider}",
+        "providerHelp": "Page d’aide de {provider}",
+        "adminGuide": "Le guide de Google pour votre administrateur"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft affichera un écran de consentement indiquant ce que MCPEmails peut faire : lire et modifier le courrier, envoyer du courrier et rester connecté.",
+        "line2": "Acceptez-le pour vous connecter. Vous saisissez votre mot de passe Microsoft uniquement sur la page de Microsoft.",
+        "line3": "Un compte professionnel peut demander l’approbation d’un administrateur. Dans ce cas, revenez ici pour obtenir le lien à envoyer à votre administrateur."
+      },
+      "outlookCancelled": {
+        "title": "Vous avez annulé sur la page de Microsoft",
+        "body": "Rien n’a été connecté. Pour connecter votre boîte Outlook, acceptez l’écran de consentement quand Microsoft l’affiche.",
+        "tryAgain": "Réessayer"
+      },
+      "done": {
+        "title": "Boîte connectée",
+        "body": "Connectez maintenant votre application d’IA pour qu’elle puisse utiliser cette boîte.",
+        "bodyClient": "Connectez maintenant {client} pour qu’il puisse utiliser cette boîte.",
+        "openGuide": "Montrez-moi comment",
+        "later": "Plus tard"
+      }
+    }
   },
   "commandPalette": {
     "pageOverview": "Aperçu",
