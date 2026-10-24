@@ -187,6 +187,8 @@
     "statusConnected": "已连接",
     "statusPending": "待处理",
     "statusError": "错误",
+    "statusParked": "已停用",
+    "parkedNote": "因你的套餐包含的收件箱较少而停用。升级后即可恢复。没有删除任何内容。",
     "reconnect": "重新连接",
     "checkConnection": "检查连接",
     "viewerActionsNote": "工作区查看者可以查看此邮箱，但无法检查、重新连接、断开或编辑它。",

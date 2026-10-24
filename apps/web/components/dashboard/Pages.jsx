@@ -1381,11 +1381,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error").length;
+  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
+  // hold a slot under the cap: the same count the server's checkInboxLimit uses.
+  const activeCount = inboxes.filter(ib => !ib.parked).length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
-  const atInboxLimit = maxInboxes !== null && inboxes.length >= maxInboxes;
+  const atInboxLimit = maxInboxes !== null && activeCount >= maxInboxes;
   // MONTHLY by default, and the notice buys monthly for anyone who does not
   // touch the choice: exactly what this CTA did before the choice existed.
   // Hoisted to the component body rather than kept inside the notice, because
@@ -1465,7 +1468,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // with exactly one mailbox is invited, under the list, to add the others.
   // Counted off the live `inboxes` array, like the cap above.
   // Never for a viewer, who cannot connect one.
-  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit }) : null;
+  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: activeCount, atInboxLimit }) : null;
 
   return (
     <div className="page">
@@ -1474,8 +1477,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         sub={
           maxInboxes !== null
             ? (maxInboxes === 1
-                ? t('inboxes.subWithCountSingular', { count: inboxes.length, max: maxInboxes })
-                : t('inboxes.subWithCount', { count: inboxes.length, max: maxInboxes }))
+                ? t('inboxes.subWithCountSingular', { count: activeCount, max: maxInboxes })
+                : t('inboxes.subWithCount', { count: activeCount, max: maxInboxes }))
             : t('inboxes.sub')
         }
         action={connectAction}
@@ -1680,13 +1683,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           }}>
             <div style={{
               height: '100%',
-              width: `${Math.min(100, (inboxes.length / maxInboxes) * 100)}%`,
-              background: inboxes.length / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
+              width: `${Math.min(100, (activeCount / maxInboxes) * 100)}%`,
+              background: activeCount / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
               borderRadius: 2,
               transition: 'width 0.3s',
             }} />
           </div>
-          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: inboxes.length, max: maxInboxes }) : t('inboxes.usedPlural', { count: inboxes.length, max: maxInboxes })}</span>
+          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: activeCount, max: maxInboxes }) : t('inboxes.usedPlural', { count: activeCount, max: maxInboxes })}</span>
         </div>
       )}
 
@@ -1745,6 +1748,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                  className={ib.parked ? 'inbox-row-parked' : undefined}
                 >
                   <td><strong style={{ fontWeight: 600 }}>{ib.label}</strong></td>
                   <td className="mono">{ib.address}</td>
@@ -1755,9 +1759,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     </span>
                   </td>
                   <td>
-                    {ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
-                    {ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {ib.status === "error"   ? (
+                    {ib.parked ? (
+                      <div>
+                        <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                        <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)", maxWidth: 220, lineHeight: 1.4 }}>
+                          {t('inboxes.parkedNote')}
+                        </div>
+                      </div>
+                    ) : null}
+                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
+                    {!ib.parked && ib.status === "error"   ? (
                       <div>
                         <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
@@ -1823,13 +1835,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
               const canReconnect = needsReconnect(ib.status);
-              const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
+              const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                 : <Badge tone="neutral">{ib.status}</Badge>;
               return (
                 <article
-                  className="inbox-mobile-card"
+                  className={ib.parked ? 'inbox-mobile-card inbox-row-parked' : 'inbox-mobile-card'}
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
                   onMouseEnter={warmSignatureEditor}
@@ -1850,7 +1863,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span><ProviderLogo kind={ib.provider} size={16} /> {PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
-                  {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {canReconnect ? (
@@ -3116,12 +3130,14 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const compatibility = compatibilityForInbox(inbox.provider);
 
   const statusLabel =
+    inbox.parked               ? t('inboxes.statusParked')    :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
     inbox.status;
 
   const statusBadge =
+    inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :

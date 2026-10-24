@@ -187,6 +187,8 @@
     "statusConnected": "Verbunden",
     "statusPending": "Ausstehend",
     "statusError": "Fehler",
+    "statusParked": "Geparkt",
+    "parkedNote": "Geparkt, weil Ihr Tarif weniger Postfächer umfasst. Es kommt zurück, sobald Sie upgraden. Nichts wurde gelöscht.",
     "reconnect": "Neu verbinden",
     "checkConnection": "Verbindung prüfen",
     "viewerActionsNote": "Betrachter des Workspace sehen dieses Postfach, können es aber nicht prüfen, neu verbinden, trennen oder bearbeiten.",
