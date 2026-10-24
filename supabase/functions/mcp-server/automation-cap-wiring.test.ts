@@ -257,6 +257,10 @@ function answer(w: World, call: Call, wantsObject: boolean): Response {
       onboarding_value_activated_at: "2026-09-02T00:05:00.000Z",
     });
   }
+  // ── The checkout link (checkout-link.ts), refused branch only ────────────
+  if (target === "rpc/checkout_link_issue") {
+    return json([{ id: body?.p_id, expires_at: new Date(Date.now() + 30 * 60_000).toISOString(), reused: false }]);
+  }
   if (target.startsWith("rpc/")) return new Response(null, { status: 204 });
   if (method === "POST") {
     (w.inserted[target] ??= []).push(body ?? {});
@@ -591,4 +595,59 @@ Deno.test("the kill switch covers the unattended path: no pause, no event, no em
   const call = await toolCall(w, { USAGE_ENFORCEMENT_DISABLED: "true" });
   assert(!refused(call), "the tool call is not refused either");
   assertEquals(count(w, "RPC record_usage_limit_event"), 0);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The checkout link costs a successful call nothing
+//
+// checkout-link.ts is reached from the refused branch of actionLimitResponse
+// and nowhere else. These run the real handleRequest with the rollout fully on
+// and prove it from the query log: a call that is allowed asks for exactly
+// what it asked for with the rollout off, and only a refused one reads the
+// owner, mints the link and prints it.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CHECKOUT_ON = { CHAT_CHECKOUT_LINK: "on", CHECKOUT_LINK_SECRET: "k".repeat(40) };
+const CHECKOUT_OFF = { CHAT_CHECKOUT_LINK: null, CHECKOUT_LINK_SECRET: null };
+const CHECKOUT_QUERIES = ["RPC checkout_link_issue", "GET experiments", "RPC experiment_assign"];
+
+Deno.test("checkout link: an allowed call makes the same queries with the rollout on as with it off", async () => {
+  const off = world({ allowance: freeAllowance({ used: 10, remaining: 140 }) });
+  const on = world({ allowance: freeAllowance({ used: 10, remaining: 140 }) });
+  const offBody = await toolCall(off, CHECKOUT_OFF);
+  const onBody = await toolCall(on, CHECKOUT_ON);
+  assert(!refused(offBody) && !refused(onBody), "neither call is refused");
+  assertEquals([...labels(on)].sort(), [...labels(off)].sort(), "not one query added to an allowed call");
+  for (const label of CHECKOUT_QUERIES) assertEquals(count(on, label), 0, label);
+  assert(!JSON.stringify(onBody).includes("/u/"), "nothing appended to a successful result");
+});
+
+Deno.test("checkout link: a refused Free call by the owner carries the link in the text and _meta", async () => {
+  const w = world();
+  // deno-lint-ignore no-explicit-any
+  const body = await toolCall(w, CHECKOUT_ON) as any;
+  assert(refused(body));
+  assertEquals(count(w, "RPC checkout_link_issue"), 1);
+  const issued = w.calls.find((call) => call.label === "RPC checkout_link_issue")!.body!;
+  assertEquals(issued.p_workspace_id, WORKSPACE);
+  assertEquals(issued.p_owner_user_id, OWNER);
+  assertEquals(issued.p_blocked_tool, "signature_get", "the resolved billable tool name");
+  assertEquals(issued.p_variant, "on");
+  const meta = body.result._meta["com.mcpemails/usage_limit"];
+  const text: string = body.result.content[0].text;
+  assert(typeof meta.checkout_url === "string" && /\/u\/[A-Za-z0-9_-]{43}$/.test(meta.checkout_url), "checkout_url");
+  assert(typeof meta.checkout_expires_at === "string", "checkout_expires_at");
+  assert(typeof meta.upgrade_url === "string", "upgrade_url is kept");
+  assert(text.includes(meta.checkout_url) && text.includes("for the next 30 minutes"), "the text prints the same link");
+});
+
+Deno.test("checkout link: with the rollout off a refused call is exactly today's, with no checkout query", async () => {
+  const w = world();
+  // deno-lint-ignore no-explicit-any
+  const body = await toolCall(w, CHECKOUT_OFF) as any;
+  assert(refused(body));
+  for (const label of CHECKOUT_QUERIES) assertEquals(count(w, label), 0, label);
+  const meta = body.result._meta["com.mcpemails/usage_limit"];
+  assertEquals(meta.checkout_url, undefined);
+  assert(!body.result.content[0].text.includes("/u/"));
 });

@@ -308,9 +308,16 @@ export const config = {
      *                                    the consent POST reads the session.
      *      .well-known/*                 static discovery documents
      *      sitemap.xml, robots.txt, opengraph-image
+     *      u/<token>                     the chat checkout link
+     *                                    (app/u/[token]/route.ts). It must
+     *                                    never set a cookie, and this proxy
+     *                                    would add the visitor-id cookie and
+     *                                    could refresh a Supabase session on
+     *                                    the way out. It renders no HTML, so
+     *                                    it needs no nonce either.
      *    None of these is a protected path in updateSession, so the dashboard
      *    guard is untouched by this list.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|u/[^/]+/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
   ],
 };
