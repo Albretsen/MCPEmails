@@ -5,6 +5,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
+import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
+import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
   PLANS,
   basePlanItem,
@@ -386,12 +388,18 @@ function fail(
  * or the page's language on a marketing CTA). It only chooses the language of
  * the hosted page, never what is sold or charged, and is allow-listed by
  * `checkoutLocale` before Stripe sees it.
+ *
+ * `recoveredFrom` is the expired Checkout session an abandoned-checkout
+ * reminder linked from (see src/lib/email/abandoned-checkout.ts). It only lands
+ * in the new session's metadata, after a format check, so the completed
+ * purchase can be credited to the reminder.
  */
 export async function runCheckout(input: {
   planId: unknown;
   interval: unknown;
   confirmChange?: unknown;
   locale?: unknown;
+  recoveredFrom?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -1015,6 +1023,9 @@ export async function runCheckout(input: {
 
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
   const locale = checkoutLocale(input.locale);
+  const lang = reminderLocale(input.locale);
+  const reminderLang = lang === 'en' ? null : lang;
+  const recoveredFrom = checkoutSessionIdOrNull(input.recoveredFrom);
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -1073,6 +1084,10 @@ export async function runCheckout(input: {
         user_id: user.id,
         plan_id: planId,
         interval,
+        // The buyer's app language, so an abandoned-checkout reminder for this
+        // session can be written in it. Allow-listed; English adds nothing.
+        ...(reminderLang ? { lang: reminderLang } : {}),
+        ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
       },
       // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
       //

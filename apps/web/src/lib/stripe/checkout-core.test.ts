@@ -359,6 +359,8 @@ async function checkout(opts: {
   inboxes?: number;
   /** The buyer's language, as a caller hands it over. Omitted when undefined. */
   locale?: unknown;
+  /** The expired session an abandoned-checkout reminder linked from. */
+  recoveredFrom?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -383,6 +385,7 @@ async function checkout(opts: {
     interval: opts.interval ?? 'month',
     confirmChange: opts.confirmChange,
     ...('locale' in opts ? { locale: opts.locale } : {}),
+    ...('recoveredFrom' in opts ? { recoveredFrom: opts.recoveredFrom } : {}),
   });
   return {
     outcome,
@@ -1480,8 +1483,10 @@ test('the language changes nothing about what is sold', async () => {
   const en = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
   const de = await checkout({ planId: 'solo', interval: 'year', entitlement: null, locale: 'de' });
   const strip = (params: Record<string, unknown>) => {
-    const { locale: _locale, custom_text: _text, ...rest } = params;
-    return rest;
+    const { locale: _locale, custom_text: _text, metadata, ...rest } = params;
+    // metadata.lang only records the language, for the reminder email.
+    const { lang: _lang, ...meta } = metadata as Record<string, unknown>;
+    return { ...rest, metadata: meta };
   };
   assert.deepEqual(strip(de.sessionsCreated[0]), strip(en.sessionsCreated[0]));
   assert.deepEqual(de.funnelRows, en.funnelRows);
@@ -1518,4 +1523,33 @@ test('a German subscriber asking for a plan change still only gets a quote', asy
   assert.equal(outcome.kind, 'confirmation_required');
   assert.equal(sessionsCreated.length, 0);
   assert.equal(subscriptionsUpdated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Abandoned-checkout reminder metadata: the buyer's language and the expired
+// session a reminder linked from. Neither changes what is sold.
+// ---------------------------------------------------------------------------
+
+test('metadata records the app language for the reminder, English adds nothing', async () => {
+  for (const [locale, expected] of [['fr', 'fr'], ['nb', 'nb'], ['de', 'de'], ['es', 'es'], ['en', undefined], ['zh', undefined], ['xx', undefined], [undefined, undefined]] as const) {
+    const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
+    const meta = sessionsCreated[0].metadata as Record<string, unknown>;
+    assert.equal(meta.lang, expected, String(locale));
+  }
+});
+
+test('a valid recovered_from lands in metadata, anything else is dropped', async () => {
+  const ok = await checkout({ planId: 'solo', interval: 'year', entitlement: null, recoveredFrom: 'cs_live_a1B2c3D4e5F6g7H8' });
+  assert.equal((ok.sessionsCreated[0].metadata as Record<string, unknown>).recovered_from, 'cs_live_a1B2c3D4e5F6g7H8');
+  for (const bad of ['', 'cs_live_<x>', 'pi_123', 42, ['cs_live_a1B2c3D4e5F6g7H8']]) {
+    const { sessionsCreated } = await checkout({ planId: 'solo', entitlement: null, recoveredFrom: bad });
+    assert.equal('recovered_from' in (sessionsCreated[0].metadata as Record<string, unknown>), false, JSON.stringify(bad));
+  }
+  const plain = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
+  const strip = (params: Record<string, unknown>) => {
+    const { metadata, ...rest } = params;
+    const { recovered_from: _r, ...meta } = metadata as Record<string, unknown>;
+    return { ...rest, metadata: meta };
+  };
+  assert.deepEqual(strip(ok.sessionsCreated[0]), strip(plain.sessionsCreated[0]));
 });
