@@ -1,6 +1,6 @@
 -- ============================================================
 -- MCPEmails - cron for the one Black Week 2026 email
--- 20261024150000_schedule_black_week_email
+-- 20261024160000_schedule_black_week_email
 -- ============================================================
 --
 -- One job, 'dispatch-black-week-email': every 10 minutes from 07:00 to 20:59
