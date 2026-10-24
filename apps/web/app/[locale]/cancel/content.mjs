@@ -14,9 +14,14 @@
 // An ordinary cancellation may name the date it takes effect (§312k(2)
 // Nr. 1): `when*` and `effectiveOnDate`.
 //
+// Three choices: cancel a subscription, withdraw from a subscription, or
+// withdraw from the non-renewing 3-month Personal pass (a one-off payment
+// with no subscription behind it, so a pass buyer can use this page too).
+//
 // The facts promised on the done screen (two business days for a
-// cancellation, a full first-charge refund within 14 days for a withdrawal,
-// the effective date) are repeated in the receipt email,
+// cancellation, a full first-charge refund within 14 days for a subscription
+// withdrawal, a full refund of the pass payment within 14 days for a pass
+// withdrawal, the effective date) are repeated in the receipt email,
 // src/lib/legal/contract-request.ts. Change both together.
 //
 // Tokens, filled by the form: {ref} {time} {email} {support} {date}.
@@ -25,19 +30,21 @@ const en = {
   meta: {
     title: 'Cancel contracts here',
     description:
-      'Cancel your MCPEmails subscription, or withdraw from it within 14 days, without logging in. You get a confirmation by email.',
+      'Cancel your MCPEmails subscription, or withdraw from a subscription or a 3-month pass within 14 days, without logging in. You get a confirmation by email.',
   },
   eyebrow: 'Legal',
   title: 'Cancel contracts here',
   lead:
-    'Cancel your MCPEmails subscription, or withdraw from it within 14 days of buying. No login needed, and you get a confirmation by email. Signed in? You can also cancel from your dashboard.',
+    'Cancel your MCPEmails subscription, or withdraw from a subscription or a 3-month pass within 14 days of buying. No login needed, and you get a confirmation by email. Signed in? You can also cancel from your dashboard.',
   withdrawalLink: 'How the right of withdrawal works',
   form: {
     kindLegend: 'What do you want to do?',
     kindCancel: 'Cancel my subscription',
     kindCancelHint: 'Stops the next renewal. Your plan stays active until the end of the period you have paid for.',
-    kindWithdraw: 'Withdraw from my contract',
+    kindWithdraw: 'Withdraw from my subscription',
     kindWithdrawHint: 'Within 14 days of buying. We refund the first charge in full.',
+    kindWithdrawPass: 'Withdraw from my 3-month pass',
+    kindWithdrawPassHint: 'Within 14 days of buying. We refund the pass in full. It does not renew, so there is nothing else to cancel.',
     name: 'Your name',
     email: 'Email address of your MCPEmails account',
     contract: 'Plan or invoice number (optional)',
@@ -61,6 +68,7 @@ const en = {
     },
     kindValueCancel: 'Cancellation',
     kindValueWithdraw: 'Withdrawal',
+    kindValueWithdrawPass: 'Withdrawal from 3-month pass',
     typeValueOrdinary: 'Ordinary cancellation',
     typeValueExtraordinary: 'Extraordinary cancellation',
     effectiveOrdinary: 'At the earliest possible date: the end of the period you have already paid for',
@@ -76,6 +84,7 @@ const en = {
     doneEmail: 'We sent a copy of this confirmation to {email}. If it has not arrived within an hour, write to {support}.',
     doneNextCancel: 'We stop your subscription in our billing system within two business days and email you when that is done.',
     doneNextWithdraw: 'We refund the first charge in full within 14 days, to the card you paid with, and email you when it is done.',
+    doneNextWithdrawPass: 'We refund the payment for your pass in full within 14 days, to the card you paid with, and email you when it is done.',
     doneNoRef: 'We received your request.',
     print: 'Print or save this confirmation',
   },
@@ -99,19 +108,21 @@ const nb = {
   meta: {
     title: 'Si opp avtaler her',
     description:
-      'Si opp MCPEmails-abonnementet, eller gå fra det innen 14 dager, uten å logge inn. Du får en bekreftelse på e-post.',
+      'Si opp MCPEmails-abonnementet, eller gå fra et abonnement eller et 3-månederspass innen 14 dager, uten å logge inn. Du får en bekreftelse på e-post.',
   },
   eyebrow: 'Juridisk',
   title: 'Si opp avtaler her',
   lead:
-    'Si opp MCPEmails-abonnementet, eller gå fra det innen 14 dager etter kjøpet. Du trenger ikke logge inn, og du får en bekreftelse på e-post. Er du logget inn, kan du også si opp fra dashbordet.',
+    'Si opp MCPEmails-abonnementet, eller gå fra et abonnement eller et 3-månederspass innen 14 dager etter kjøpet. Du trenger ikke logge inn, og du får en bekreftelse på e-post. Er du logget inn, kan du også si opp fra dashbordet.',
   withdrawalLink: 'Slik fungerer angreretten',
   form: {
     kindLegend: 'Hva vil du gjøre?',
     kindCancel: 'Si opp abonnementet',
     kindCancelHint: 'Stopper neste fornyelse. Planen er aktiv ut perioden du har betalt for.',
-    kindWithdraw: 'Gå fra avtalen (angrerett)',
+    kindWithdraw: 'Gå fra abonnementet (angrerett)',
     kindWithdrawHint: 'Innen 14 dager etter kjøpet. Vi betaler tilbake hele den første belastningen.',
+    kindWithdrawPass: 'Gå fra 3-månederspasset (angrerett)',
+    kindWithdrawPassHint: 'Innen 14 dager etter kjøpet. Vi betaler tilbake hele passet. Det fornyes ikke, så det er ikke noe annet å si opp.',
     name: 'Navnet ditt',
     email: 'E-postadressen til MCPEmails-kontoen din',
     contract: 'Plan eller fakturanummer (valgfritt)',
@@ -135,6 +146,7 @@ const nb = {
     },
     kindValueCancel: 'Oppsigelse',
     kindValueWithdraw: 'Angrerett',
+    kindValueWithdrawPass: 'Angrerett, 3-månederspass',
     typeValueOrdinary: 'Ordinær oppsigelse',
     typeValueExtraordinary: 'Ekstraordinær oppsigelse',
     effectiveOrdinary: 'Så tidlig som mulig: slutten av perioden du allerede har betalt for',
@@ -150,6 +162,7 @@ const nb = {
     doneEmail: 'Vi har sendt en kopi av denne bekreftelsen til {email}. Har den ikke kommet innen en time, skriv til {support}.',
     doneNextCancel: 'Vi stopper abonnementet i betalingssystemet innen to virkedager og sender deg en e-post når det er gjort.',
     doneNextWithdraw: 'Vi betaler tilbake hele den første belastningen innen 14 dager, til kortet du betalte med, og sender deg en e-post når det er gjort.',
+    doneNextWithdrawPass: 'Vi betaler tilbake hele beløpet for passet innen 14 dager, til kortet du betalte med, og sender deg en e-post når det er gjort.',
     doneNoRef: 'Vi har mottatt henvendelsen din.',
     print: 'Skriv ut eller lagre bekreftelsen',
   },
@@ -173,19 +186,21 @@ const es = {
   meta: {
     title: 'Cancelar contratos aquí',
     description:
-      'Cancela tu suscripción a MCPEmails, o desiste de ella en un plazo de 14 días, sin iniciar sesión. Recibirás una confirmación por correo electrónico.',
+      'Cancela tu suscripción a MCPEmails, o desiste de una suscripción o de un pase de 3 meses en un plazo de 14 días, sin iniciar sesión. Recibirás una confirmación por correo electrónico.',
   },
   eyebrow: 'Legal',
   title: 'Cancelar contratos aquí',
   lead:
-    'Cancela tu suscripción a MCPEmails, o desiste de ella en los 14 días siguientes a la compra. No necesitas iniciar sesión y recibirás una confirmación por correo. Si has iniciado sesión, también puedes cancelar desde tu panel.',
+    'Cancela tu suscripción a MCPEmails, o desiste de una suscripción o de un pase de 3 meses en los 14 días siguientes a la compra. No necesitas iniciar sesión y recibirás una confirmación por correo. Si has iniciado sesión, también puedes cancelar desde tu panel.',
   withdrawalLink: 'Cómo funciona el derecho de desistimiento',
   form: {
     kindLegend: '¿Qué quieres hacer?',
     kindCancel: 'Cancelar mi suscripción',
     kindCancelHint: 'Detiene la próxima renovación. Tu plan sigue activo hasta el final del periodo que ya has pagado.',
-    kindWithdraw: 'Desistir de mi contrato',
+    kindWithdraw: 'Desistir de mi suscripción',
     kindWithdrawHint: 'En los 14 días siguientes a la compra. Reembolsamos el primer cargo completo.',
+    kindWithdrawPass: 'Desistir de mi pase de 3 meses',
+    kindWithdrawPassHint: 'En los 14 días siguientes a la compra. Reembolsamos el pase completo. No se renueva, así que no hay nada más que cancelar.',
     name: 'Tu nombre',
     email: 'Correo electrónico de tu cuenta de MCPEmails',
     contract: 'Plan o número de factura (opcional)',
@@ -209,6 +224,7 @@ const es = {
     },
     kindValueCancel: 'Cancelación',
     kindValueWithdraw: 'Desistimiento',
+    kindValueWithdrawPass: 'Desistimiento del pase de 3 meses',
     typeValueOrdinary: 'Cancelación ordinaria',
     typeValueExtraordinary: 'Cancelación extraordinaria',
     effectiveOrdinary: 'En la fecha más temprana posible: el final del periodo que ya has pagado',
@@ -224,6 +240,7 @@ const es = {
     doneEmail: 'Hemos enviado una copia de esta confirmación a {email}. Si no llega en una hora, escribe a {support}.',
     doneNextCancel: 'Detenemos tu suscripción en nuestro sistema de facturación en un plazo de dos días hábiles y te enviamos un correo cuando esté hecho.',
     doneNextWithdraw: 'Reembolsamos el primer cargo completo en un plazo de 14 días, a la tarjeta con la que pagaste, y te enviamos un correo cuando esté hecho.',
+    doneNextWithdrawPass: 'Reembolsamos el importe completo del pase en un plazo de 14 días, a la tarjeta con la que pagaste, y te enviamos un correo cuando esté hecho.',
     doneNoRef: 'Hemos recibido tu solicitud.',
     print: 'Imprimir o guardar esta confirmación',
   },
@@ -247,19 +264,21 @@ const fr = {
   meta: {
     title: 'Résilier des contrats ici',
     description:
-      'Résiliez votre abonnement MCPEmails, ou rétractez-vous sous 14 jours, sans vous connecter. Vous recevez une confirmation par e-mail.',
+      "Résiliez votre abonnement MCPEmails, ou rétractez-vous d'un abonnement ou d'un pass de 3 mois sous 14 jours, sans vous connecter. Vous recevez une confirmation par e-mail.",
   },
   eyebrow: 'Juridique',
   title: 'Résilier des contrats ici',
   lead:
-    "Résiliez votre abonnement MCPEmails, ou rétractez-vous dans les 14 jours suivant l'achat. Pas besoin de vous connecter, et vous recevez une confirmation par e-mail. Si vous êtes connecté, vous pouvez aussi résilier depuis votre tableau de bord.",
+    "Résiliez votre abonnement MCPEmails, ou rétractez-vous d'un abonnement ou d'un pass de 3 mois dans les 14 jours suivant l'achat. Pas besoin de vous connecter, et vous recevez une confirmation par e-mail. Si vous êtes connecté, vous pouvez aussi résilier depuis votre tableau de bord.",
   withdrawalLink: 'Comment fonctionne le droit de rétractation',
   form: {
     kindLegend: 'Que souhaitez-vous faire ?',
     kindCancel: 'Résilier mon abonnement',
     kindCancelHint: "Arrête le prochain renouvellement. Votre formule reste active jusqu'à la fin de la période déjà payée.",
-    kindWithdraw: 'Me rétracter du contrat',
+    kindWithdraw: 'Me rétracter de mon abonnement',
     kindWithdrawHint: "Dans les 14 jours suivant l'achat. Nous remboursons l'intégralité du premier prélèvement.",
+    kindWithdrawPass: 'Me rétracter de mon pass de 3 mois',
+    kindWithdrawPassHint: "Dans les 14 jours suivant l'achat. Nous remboursons l'intégralité du pass. Il ne se renouvelle pas, il n'y a donc rien d'autre à résilier.",
     name: 'Votre nom',
     email: 'Adresse e-mail de votre compte MCPEmails',
     contract: 'Formule ou numéro de facture (facultatif)',
@@ -283,6 +302,7 @@ const fr = {
     },
     kindValueCancel: 'Résiliation',
     kindValueWithdraw: 'Rétractation',
+    kindValueWithdrawPass: 'Rétractation du pass de 3 mois',
     typeValueOrdinary: 'Résiliation ordinaire',
     typeValueExtraordinary: 'Résiliation extraordinaire',
     effectiveOrdinary: 'À la date la plus proche possible : la fin de la période déjà payée',
@@ -298,6 +318,7 @@ const fr = {
     doneEmail: "Nous avons envoyé une copie de cette confirmation à {email}. Si elle n'est pas arrivée d'ici une heure, écrivez à {support}.",
     doneNextCancel: "Nous arrêtons votre abonnement dans notre système de facturation sous deux jours ouvrés et vous envoyons un e-mail une fois que c'est fait.",
     doneNextWithdraw: "Nous remboursons l'intégralité du premier prélèvement sous 14 jours, sur la carte utilisée pour payer, et vous envoyons un e-mail une fois que c'est fait.",
+    doneNextWithdrawPass: "Nous remboursons l'intégralité du pass sous 14 jours, sur la carte utilisée pour payer, et vous envoyons un e-mail une fois que c'est fait.",
     doneNoRef: 'Nous avons bien reçu votre demande.',
     print: 'Imprimer ou enregistrer cette confirmation',
   },
@@ -320,18 +341,20 @@ const fr = {
 const zh = {
   meta: {
     title: '在此取消合同',
-    description: '无需登录即可取消你的 MCPEmails 订阅，或在 14 天内撤回。你会收到电子邮件确认。',
+    description: '无需登录即可取消你的 MCPEmails 订阅，或在 14 天内撤回订阅或 3 个月通行证。你会收到电子邮件确认。',
   },
   eyebrow: '法律',
   title: '在此取消合同',
-  lead: '取消你的 MCPEmails 订阅，或在购买后 14 天内撤回合同。无需登录，你会收到电子邮件确认。如果你已登录，也可以在控制台中取消。',
+  lead: '取消你的 MCPEmails 订阅，或在购买后 14 天内撤回订阅或 3 个月通行证。无需登录，你会收到电子邮件确认。如果你已登录，也可以在控制台中取消。',
   withdrawalLink: '撤回权如何运作',
   form: {
     kindLegend: '你想做什么？',
     kindCancel: '取消我的订阅',
     kindCancelHint: '停止下一次续订。你的套餐在已付费期间结束前保持有效。',
-    kindWithdraw: '撤回我的合同',
+    kindWithdraw: '撤回我的订阅',
     kindWithdrawHint: '购买后 14 天内。我们全额退还首笔费用。',
+    kindWithdrawPass: '撤回我的 3 个月通行证',
+    kindWithdrawPassHint: '购买后 14 天内。我们全额退还通行证费用。通行证不会续订，因此无需再取消任何内容。',
     name: '你的姓名',
     email: '你的 MCPEmails 账户的电子邮件地址',
     contract: '套餐或发票号（可选）',
@@ -355,6 +378,7 @@ const zh = {
     },
     kindValueCancel: '取消',
     kindValueWithdraw: '撤回',
+    kindValueWithdrawPass: '撤回 3 个月通行证',
     typeValueOrdinary: '普通取消',
     typeValueExtraordinary: '特别取消',
     effectiveOrdinary: '最早可能的日期：你已付费期间的结束日',
@@ -370,6 +394,7 @@ const zh = {
     doneEmail: '我们已将此确认的副本发送至 {email}。如果一小时内没有收到，请写信至 {support}。',
     doneNextCancel: '我们会在两个工作日内在计费系统中停止你的订阅，完成后会发邮件通知你。',
     doneNextWithdraw: '我们会在 14 天内将首笔费用全额退还到你付款所用的银行卡，完成后会发邮件通知你。',
+    doneNextWithdrawPass: '我们会在 14 天内将通行证费用全额退还到你付款所用的银行卡，完成后会发邮件通知你。',
     doneNoRef: '我们已收到你的请求。',
     print: '打印或保存此确认',
   },
@@ -393,19 +418,21 @@ const de = {
   meta: {
     title: 'Verträge hier kündigen',
     description:
-      'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie es innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
+      'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie ein Abonnement oder einen 3-Monats-Pass innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
   },
   eyebrow: 'Rechtliches',
   title: 'Verträge hier kündigen',
   lead:
-    'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie es innerhalb von 14 Tagen nach dem Kauf. Eine Anmeldung ist nicht nötig, und Sie erhalten eine Bestätigung per E-Mail. Wenn Sie angemeldet sind, können Sie auch im Dashboard kündigen.',
+    'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie ein Abonnement oder einen 3-Monats-Pass innerhalb von 14 Tagen nach dem Kauf. Eine Anmeldung ist nicht nötig, und Sie erhalten eine Bestätigung per E-Mail. Wenn Sie angemeldet sind, können Sie auch im Dashboard kündigen.',
   withdrawalLink: 'So funktioniert das Widerrufsrecht',
   form: {
     kindLegend: 'Was möchten Sie tun?',
     kindCancel: 'Mein Abonnement kündigen',
     kindCancelHint: 'Beendet die nächste Verlängerung. Ihr Tarif bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv.',
-    kindWithdraw: 'Meinen Vertrag widerrufen',
+    kindWithdraw: 'Mein Abonnement widerrufen',
     kindWithdrawHint: 'Innerhalb von 14 Tagen nach dem Kauf. Wir erstatten die erste Zahlung vollständig.',
+    kindWithdrawPass: 'Meinen 3-Monats-Pass widerrufen',
+    kindWithdrawPassHint: 'Innerhalb von 14 Tagen nach dem Kauf. Wir erstatten den Pass vollständig. Er verlängert sich nicht, es gibt also nichts weiter zu kündigen.',
     name: 'Ihr Name',
     email: 'E-Mail-Adresse Ihres Kontos bei MCPEmails',
     contract: 'Tarif oder Rechnungsnummer (optional)',
@@ -429,6 +456,7 @@ const de = {
     },
     kindValueCancel: 'Kündigung',
     kindValueWithdraw: 'Widerruf',
+    kindValueWithdrawPass: 'Widerruf des 3-Monats-Passes',
     typeValueOrdinary: 'Ordentliche Kündigung',
     typeValueExtraordinary: 'Außerordentliche Kündigung',
     effectiveOrdinary: 'Zum nächstmöglichen Zeitpunkt: zum Ende des bereits bezahlten Zeitraums',
@@ -444,6 +472,7 @@ const de = {
     doneEmail: 'Wir haben eine Kopie dieser Bestätigung an {email} gesendet. Falls sie nicht innerhalb einer Stunde ankommt, schreiben Sie an {support}.',
     doneNextCancel: 'Wir beenden Ihr Abonnement in unserem Abrechnungssystem innerhalb von zwei Werktagen und informieren Sie per E-Mail, sobald das erledigt ist.',
     doneNextWithdraw: 'Wir erstatten die erste Zahlung innerhalb von 14 Tagen vollständig auf die Karte, mit der Sie bezahlt haben, und informieren Sie per E-Mail, sobald das erledigt ist.',
+    doneNextWithdrawPass: 'Wir erstatten den Betrag für den Pass innerhalb von 14 Tagen vollständig auf die Karte, mit der Sie bezahlt haben, und informieren Sie per E-Mail, sobald das erledigt ist.',
     doneNoRef: 'Ihr Anliegen ist bei uns eingegangen.',
     print: 'Diese Bestätigung drucken oder speichern',
   },
