@@ -119,6 +119,10 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
+  ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
+  ADD COLUMN IF NOT EXISTS chat_checkout_link_enabled         boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
@@ -679,6 +683,8 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_billing_stripe_customer_id ON public.user_billing (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL);
+ALTER TABLE public.user_billing
+  ADD COLUMN IF NOT EXISTS last_decline_code text;
 
 CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     user_id uuid NOT NULL,
@@ -2032,6 +2038,8 @@ $$;
 -- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
 -- /reminders-dispatch is not part of self-host: POST that route with
 -- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
+-- =====================================================
+
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.reminders (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -2113,6 +2121,139 @@ CREATE TRIGGER reminders_rearm_on_reconnect
     )
   )
   EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
+=======
+-- Checkout link in the Free-cap refusal (hosted migrations
+-- 20260903120000_experiments and 20261024180000_chat_checkout_links).
+--
+-- The seeded workspace is exempt from the Free cap, so a self-host install
+-- never refuses for it and never reaches these. They are here because the
+-- server names them (self-host-schema.test.ts holds every .from/.rpc to this
+-- file), and so an operator who sets CHAT_CHECKOUT_LINK by mistake gets a
+-- quiet "no link" instead of a PostgREST error on every refusal. Only the
+-- columns and functions the server uses; the hosted read-out and redeem RPCs
+-- belong to the web app and are not copied.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.experiments (
+  key                   text PRIMARY KEY CHECK (key ~ '^[a-z0-9_]{2,64}$'),
+  name                  text NOT NULL,
+  description           text,
+  status                text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'running', 'concluded')),
+  variants              jsonb NOT NULL,
+  winner_variant_id     text,
+  retention_goal        text NOT NULL DEFAULT 'mailbox_activity',
+  retention_window_days int NOT NULL DEFAULT 7,
+  created_at            timestamptz NOT NULL DEFAULT now(),
+  updated_at            timestamptz NOT NULL DEFAULT now(),
+  started_at            timestamptz,
+  concluded_at          timestamptz
+);
+ALTER TABLE public.experiments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.experiments FROM anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.experiment_assignments (
+  experiment_key    text NOT NULL REFERENCES public.experiments(key) ON DELETE CASCADE,
+  subject_id        text NOT NULL CHECK (subject_id ~ '^[a-f0-9]{32}$'),
+  variant_id        text NOT NULL,
+  first_assigned_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (experiment_key, subject_id)
+);
+ALTER TABLE public.experiment_assignments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.experiment_assignments FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.experiment_assign(p_key text, p_subject_id text, p_variant_id text)
+RETURNS text
+LANGUAGE plpgsql
+VOLATILE
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_stored text;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.experiments e, jsonb_array_elements(e.variants) AS v(value)
+    WHERE e.key = p_key AND v.value ->> 'id' = p_variant_id
+  ) THEN
+    RAISE EXCEPTION 'variant % is not part of experiment %', p_variant_id, p_key
+      USING ERRCODE = 'check_violation';
+  END IF;
+  INSERT INTO public.experiment_assignments (experiment_key, subject_id, variant_id)
+  VALUES (p_key, p_subject_id, p_variant_id)
+  ON CONFLICT (experiment_key, subject_id) DO NOTHING;
+  SELECT a.variant_id INTO v_stored FROM public.experiment_assignments a
+  WHERE a.experiment_key = p_key AND a.subject_id = p_subject_id;
+  RETURN v_stored;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.experiment_assign(text, text, text) FROM PUBLIC, anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.checkout_links (
+  id                        uuid PRIMARY KEY,
+  token_hash                bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
+  workspace_id              uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  owner_user_id             uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  plan_id                   text NOT NULL DEFAULT 'personal' CHECK (plan_id IN ('personal')),
+  billing_interval          text NOT NULL DEFAULT 'month' CHECK (billing_interval IN ('month')),
+  client_label              text NOT NULL DEFAULT 'unknown' CHECK (client_label ~ '^[a-z0-9_.-]{1,40}$'),
+  blocked_tool              text CHECK (blocked_tool IS NULL OR blocked_tool ~ '^[a-z0-9_]{1,64}$'),
+  variant                   text NOT NULL DEFAULT 'link' CHECK (variant ~ '^[a-z0-9_]{1,32}$'),
+  created_at                timestamptz NOT NULL DEFAULT now(),
+  expires_at                timestamptz NOT NULL,
+  first_opened_at           timestamptz,
+  open_count                int NOT NULL DEFAULT 0,
+  stripe_session_id         text,
+  stripe_session_expires_at timestamptz,
+  completed_at              timestamptz
+);
+CREATE INDEX IF NOT EXISTS checkout_links_workspace_live_idx ON public.checkout_links (workspace_id, expires_at DESC);
+ALTER TABLE public.checkout_links ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.checkout_links FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.checkout_link_issue(
+  p_id uuid,
+  p_token_hash bytea,
+  p_workspace_id uuid,
+  p_owner_user_id uuid,
+  p_client_label text,
+  p_blocked_tool text,
+  p_variant text,
+  p_ttl_minutes int DEFAULT 30
+)
+RETURNS TABLE (id uuid, expires_at timestamptz, reused boolean)
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_id uuid;
+  v_expires timestamptz;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('checkout_link:' || p_workspace_id::text, 0));
+  SELECT l.id, l.expires_at INTO v_id, v_expires
+  FROM public.checkout_links l
+  WHERE l.workspace_id = p_workspace_id
+    AND l.owner_user_id = p_owner_user_id
+    AND l.completed_at IS NULL
+    AND l.expires_at > now() + interval '2 minutes'
+  ORDER BY l.expires_at DESC
+  LIMIT 1;
+  IF v_id IS NOT NULL THEN
+    RETURN QUERY SELECT v_id, v_expires, true;
+    RETURN;
+  END IF;
+  INSERT INTO public.checkout_links
+    (id, token_hash, workspace_id, owner_user_id, client_label, blocked_tool, variant, expires_at)
+  VALUES
+    (p_id, p_token_hash, p_workspace_id, p_owner_user_id,
+     coalesce(nullif(p_client_label, ''), 'unknown'), p_blocked_tool,
+     coalesce(nullif(p_variant, ''), 'link'),
+     now() + make_interval(mins => greatest(5, least(p_ttl_minutes, 60))))
+  RETURNING checkout_links.expires_at INTO v_expires;
+  RETURN QUERY SELECT p_id, v_expires, false;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.checkout_link_issue(uuid, bytea, uuid, uuid, text, text, text, int) FROM PUBLIC, anon, authenticated;
+
 -- ============================================================
 -- Grants, service_role bypasses RLS and owns the data plane.
 -- ============================================================
