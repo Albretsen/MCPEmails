@@ -22,17 +22,17 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
- *   charge.refunded                   : a full refund of a 3-month pass ends it
+ *   charge.refunded                   : a full refund of a 3-month pass ends it.
+ *                                       Also referral: void a referral before
+ *                                       its reward, claw the credit back after
+ *                                       (src/lib/referrals/webhook.ts);
+ *                                       charge.dispute.created does the same
  *   checkout.session.async_payment_succeeded : a delayed first payment (SEPA
  *                                       Direct Debit) cleared; re-sync the plan
  *   checkout.session.async_payment_failed    : a delayed first payment failed;
  *                                       revoke the provisional access
  *   charge.dispute.created            : a SEPA debit was disputed; log only.
  *                                       Also referral: see charge.refunded
- *   charge.refunded                   : referral program only: void a referral
- *                                       before its reward, claw the credit back
- *                                       after (src/lib/referrals/webhook.ts);
- *                                       charge.dispute.created does the same
  *
  * 3-month Personal pass (added 2026-10-24, src/lib/billing/pass.ts):
  *   A pass is a payment-mode Checkout (metadata.product = 'personal_pass_3m').
@@ -487,8 +487,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // `charge.dispute.created` carries no customer id, so the guard never runs
   // for it; listed for the reader, and because it only logs.
   //
-  // `charge.refunded` is referral-only and changes no plan state. A refund is
-  // commonly issued alongside a cancellation, whose subscription event can
+  // The referral work on `charge.refunded` needs the same exemption: a refund
+  // is commonly issued alongside a cancellation, whose subscription event can
   // land a second later; read as stale, the refund would never void the
   // referral it belongs to. A dispute does the same referral work.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
@@ -584,7 +584,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         break;
 
       case 'charge.refunded': {
+        // Two independent jobs: a full refund of a 3-month pass ends it, and a
+        // refund of a referred friend's first charge voids or claws back the
+        // referral. The pass runs first; when it throws, Stripe retries the
+        // event and the referral work, which is idempotent, runs then.
         const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
         await reverseReferralCharge(supabase, stripe, {
           chargeId: charge.id,
           kind: 'refund',
@@ -615,10 +620,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         break;
       }
-
-      case 'charge.refunded':
-        await handleChargeRefunded(event.data.object as Stripe.Charge);
-        break;
 
       default:
         // Unhandled event types are acknowledged but not processed.
