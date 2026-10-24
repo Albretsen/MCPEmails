@@ -23,7 +23,8 @@ import {
   gmailThreadHasReply,
   graphConversationFilter,
   graphConversationHasReply,
-  imapReplySearchCriteria,
+  headersReferenceMessageId,
+  imapReplyCandidateCriteria,
   imapSinceDate,
   INBOX_BATCH_HORIZON_MS,
   isEncryptedWrapper,
@@ -171,15 +172,24 @@ Deno.test("failures back off, then mark the reminder failed", () => {
 
 const OWN = new Set(["me@example.com"]);
 
-Deno.test("IMAP: one SEARCH naming the id in In-Reply-To or References, since the send, not from us", () => {
-  const criteria = imapReplySearchCriteria("<abc@mcpemails.com>", NOW, ["Me@Example.com"]);
-  assertEquals(
-    criteria,
-    `SINCE ${imapSinceDate(NOW)} OR HEADER In-Reply-To "abc@mcpemails.com" HEADER References "abc@mcpemails.com" NOT FROM "me@example.com"`,
-  );
+Deno.test("IMAP: candidates are a cheap SEARCH since the send, not from us, with no HEADER key", () => {
+  const criteria = imapReplyCandidateCriteria(NOW, ["Me@Example.com", "Name <alias@example.com>"]);
+  assertEquals(criteria, `SINCE ${imapSinceDate(NOW)} NOT FROM "me@example.com" NOT FROM "alias@example.com"`);
   assertEquals(imapSinceDate(NOW), "23-Oct-2026");
-  assertEquals(imapReplySearchCriteria(null, NOW, []), null);
-  assertEquals(imapReplySearchCriteria('<x"y@z>', NOW, []), null, "never builds an injectable string");
+  assert(!criteria.includes("HEADER"), "a HEADER key makes Gmail scan the whole INBOX");
+  assertEquals(imapReplyCandidateCriteria(NOW, []), `SINCE ${imapSinceDate(NOW)}`);
+});
+
+Deno.test("IMAP: a candidate is a reply when In-Reply-To or References names the tracked id", () => {
+  const id = "<abc@mcpemails.com>";
+  assert(headersReferenceMessageId("In-Reply-To: <abc@mcpemails.com>\r\n", id));
+  assert(headersReferenceMessageId("References: <x@y.z>\r\n <abc@mcpemails.com>\r\n", id), "folded References");
+  assert(headersReferenceMessageId("References: <abc@mcpemails.com>", "abc@mcpemails.com"), "bare stored id");
+  assert(!headersReferenceMessageId("In-Reply-To: <abc@mcpemails.com.evil>\r\n", id), "exact id only");
+  assert(!headersReferenceMessageId("In-Reply-To: <ABC@mcpemails.com>\r\n", id), "Message-IDs are case-sensitive");
+  assert(!headersReferenceMessageId("", id));
+  assert(!headersReferenceMessageId("In-Reply-To: <abc@mcpemails.com>", null));
+  assert(!headersReferenceMessageId('In-Reply-To: <x"y@z>', '<x"y@z>'), "an unsafe id never matches");
 });
 
 Deno.test("Gmail: a newer message from someone else in the thread is a reply; ours are not", () => {

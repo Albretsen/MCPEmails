@@ -22,6 +22,11 @@
  * on a later retry, inserts nothing the second time. That is the layer that
  * catches what the event-id ledger cannot: two DIFFERENT event ids describing
  * the same failed invoice.
+ *
+ * SENT RIGHT AWAY. A row due now (the cancellation question, the pause
+ * receipt, the first dunning email, a card-expiry warning) is dispatched
+ * after the current response by dispatch-kick.ts, by id; the five-minute cron
+ * sends the scheduled rows and is the fallback for anything the kick missed.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -33,6 +38,7 @@ import {
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
 import { scheduledToStop } from '@/lib/analytics/revenue-math';
+import { dueIds, kickDueRows } from '@/lib/billing/dispatch-kick';
 import type { Database } from '@/types/database.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -68,7 +74,7 @@ async function insertRows(
         onConflict: 'stripe_customer_id,template,scope_key',
         ignoreDuplicates: true,
       })
-      .select('id');
+      .select('id, send_after');
 
     if (error) {
       console.error(`[lifecycle-queue] ${label}: insert failed: ${error.message}`);
@@ -78,6 +84,9 @@ async function insertRows(
     console.log(
       `[lifecycle-queue] ${label}: queued ${queued} of ${rows.length} (the rest were already queued)`,
     );
+    // Only rows THIS call inserted (ON CONFLICT DO NOTHING returns none for a
+    // replay) and only those due now; a 3-day reminder waits for the cron.
+    await kickDueRows(dueIds(data), label);
     return queued;
   } catch (err) {
     console.error(`[lifecycle-queue] ${label}: unexpected failure, swallowed:`, {
@@ -172,9 +181,9 @@ export async function isGrandfathered(
  * one silently-deduplicated one. That is correct: they are two separate
  * failures and the second one deserves to be told.
  *
- * The first row is due immediately, which the dispatcher's five-minute cadence
- * turns into "within an hour of the decline" with about eleven cycles to spare.
- * That timing is the single highest-leverage thing in the sequence: the
+ * The first row is due immediately and is sent right after the webhook
+ * responds (dispatch-kick.ts), with the five-minute cron as the fallback. That
+ * timing is the single highest-leverage thing in the sequence: the
  * customer's own bank notification is still on their phone, so the email
  * explains a thing they are already looking at instead of introducing one.
  */
@@ -477,8 +486,8 @@ export async function cancelOpenSequence(options: {
  * is true at exactly the moment Stripe closes the subscription, and that moment
  * is this event. Cancelling it, which is what this function used to do, deleted
  * the one email in the sequence written for precisely this and left the
- * customer with no final word at all. Its `send_after` is moved to now so the
- * next dispatcher tick picks it up.
+ * customer with no final word at all. Its `send_after` is moved to now and it
+ * is dispatched right after the response (the cron is the fallback).
  *
  * The dispatcher still re-reads the invoice before sending it, so a
  * subscription that was deleted because the customer cancelled while an unpaid
@@ -497,17 +506,20 @@ export async function cancelDunningForCustomer(
   });
 
   try {
-    const { error } = await db
+    const { data, error } = await db
       .from('billing_email_sends')
       .update({ send_after: new Date().toISOString() })
       .eq('stripe_customer_id', stripeCustomerId)
       .eq('template', 'dunning_14')
       .is('sent_at', null)
-      .is('cancelled_at', null);
+      .is('cancelled_at', null)
+      .select('id, send_after');
     if (error) {
       console.error(
         `[lifecycle-queue] could not bring dunning_14 forward for ${stripeCustomerId}: ${error.message}`,
       );
+    } else {
+      await kickDueRows(dueIds(data), `dunning_14 brought forward ${stripeCustomerId}`);
     }
   } catch (err) {
     console.error('[lifecycle-queue] bringing dunning_14 forward failed, swallowed:', {
@@ -531,6 +543,55 @@ export function pauseScopeKey(subscriptionId: string, seconds: number): string {
 }
 
 /**
+ * Insert one row, or revive the unsent row a change cancelled earlier.
+ *
+ * The identity index (customer, template, scope_key) also covers cancelled
+ * rows, so a customer who pauses, resumes early and pauses again with the same
+ * dates would get no receipt and, worse, no reminder before billing restarts
+ * (found in the 2026-10-24 production test). A row that was SENT is never
+ * revived: a replay still sends nothing twice. Never throws.
+ */
+async function insertOrRevive(db: SupabaseClient<Database>, row: QueueRow, label: string): Promise<number> {
+  const inserted = await insertRows(db, [row], label);
+  if (inserted > 0) return inserted;
+  try {
+    const { data, error } = await db
+      .from('billing_email_sends')
+      .update({
+        cancelled_at: null,
+        cancel_reason: null,
+        send_after: row.send_after,
+        payload: row.payload,
+        recipient: row.recipient,
+        attempts: 0,
+        claimed_at: null,
+        last_error: null,
+      })
+      .eq('stripe_customer_id', row.stripe_customer_id)
+      .eq('template', row.template)
+      .eq('scope_key', row.scope_key)
+      .is('sent_at', null)
+      .not('cancelled_at', 'is', null)
+      .select('id, send_after');
+    if (error) {
+      console.error(`[lifecycle-queue] ${label}: revive failed: ${error.message}`);
+      return 0;
+    }
+    const revived = data?.length ?? 0;
+    if (revived > 0) {
+      console.log(`[lifecycle-queue] ${label}: revived ${revived} cancelled row(s)`);
+      await kickDueRows(dueIds(data), label);
+    }
+    return revived;
+  } catch (err) {
+    console.error(`[lifecycle-queue] ${label}: revive threw, swallowed:`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
+}
+
+/**
  * Queue `pause_ending_3` for the renewal at `billsAtSeconds`, after cancelling
  * any reminder still open for this customer (an extension or an early resume
  * moves the date, and the old one must never go out). Skipped when the
@@ -549,26 +610,34 @@ export async function queuePauseReminder(options: {
   await cancelPauseReminders(db, target.stripeCustomerId, 'pause_changed');
   const sendAfter = billsAtSeconds * 1000 - PAUSE_REMINDER_DAYS * DAY_MS;
   if (sendAfter <= now.getTime()) return 0;
-  return insertRows(
+  return insertOrRevive(
     db,
-    [
-      {
-        stripe_customer_id: target.stripeCustomerId,
-        user_id: target.userId,
-        recipient: target.recipient,
-        template: 'pause_ending_3',
-        scope_key: pauseScopeKey(subscriptionId, billsAtSeconds),
-        send_after: new Date(sendAfter).toISOString(),
-        payload,
-      },
-    ],
+    {
+      stripe_customer_id: target.stripeCustomerId,
+      user_id: target.userId,
+      recipient: target.recipient,
+      template: 'pause_ending_3',
+      scope_key: pauseScopeKey(subscriptionId, billsAtSeconds),
+      send_after: new Date(sendAfter).toISOString(),
+      payload,
+    },
     `pause reminder ${subscriptionId}`,
   );
 }
 
 /**
- * The pause receipt (now) and the reminder. One receipt per pause start:
- * scope `${sub}:${pausedFrom}`, so a replay inserts nothing.
+ * scope_key of the pause receipt: the pause start AND the date billing
+ * resumes, so an extension that replaces an unsent receipt can queue a new one
+ * (the unique index would refuse a second row on the start alone), while a
+ * replay of the same pause still inserts nothing.
+ */
+export function pauseReceiptScopeKey(subscriptionId: string, pausedFromSeconds: number, billsAtSeconds: number): string {
+  return `${pauseScopeKey(subscriptionId, pausedFromSeconds)}:${Math.floor(billsAtSeconds)}`;
+}
+
+/**
+ * The pause receipt (now) and the reminder. One receipt per pause start and
+ * resume date (pauseReceiptScopeKey), so a replay inserts nothing.
  */
 export async function queuePauseEmails(options: {
   db: SupabaseClient<Database>;
@@ -581,23 +650,36 @@ export async function queuePauseEmails(options: {
 }): Promise<number> {
   const { db, target, subscriptionId, pausedFromSeconds, payload } = options;
   const now = options.now ?? new Date();
-  const receipt = await insertRows(
+  const receipt = await insertOrRevive(
     db,
-    [
-      {
-        stripe_customer_id: target.stripeCustomerId,
-        user_id: target.userId,
-        recipient: target.recipient,
-        template: 'pause_started',
-        scope_key: pauseScopeKey(subscriptionId, pausedFromSeconds),
-        send_after: now.toISOString(),
-        payload,
-      },
-    ],
+    {
+      stripe_customer_id: target.stripeCustomerId,
+      user_id: target.userId,
+      recipient: target.recipient,
+      template: 'pause_started',
+      scope_key: pauseReceiptScopeKey(subscriptionId, pausedFromSeconds, options.billsAtSeconds),
+      send_after: now.toISOString(),
+      payload,
+    },
     `pause receipt ${subscriptionId}`,
   );
   const reminder = await queuePauseReminder({ ...options, now });
   return receipt + reminder;
+}
+
+/**
+ * Cancel an unsent pause receipt. A pause that is removed or extended before
+ * the dispatcher picked the receipt up must not announce the old dates (seen
+ * in the 2026-10-24 internal test: "paused" arrived after the resume). Returns
+ * how many it cancelled, so an extension knows to queue a fresh receipt.
+ * Never throws.
+ */
+export async function cancelUnsentPauseReceipt(
+  db: SupabaseClient<Database>,
+  stripeCustomerId: string,
+  reason: CancelReason,
+): Promise<number> {
+  return cancelOpenSequence({ db, stripeCustomerId, templates: ['pause_started'], reason });
 }
 
 /** Cancel every unsent pause reminder for this customer. Never throws. */

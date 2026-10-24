@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Self-Hosting oder gehostet",
-    "intro": "Der vollständige MCP-Server und alle 19 Tools sind in beiden enthalten. Self-Hosting tauscht verwalteten Komfort gegen volle Kontrolle.",
+    "intro": "Der vollständige MCP-Server und seine E-Mail-Tools sind in beiden enthalten. Self-Hosting tauscht verwalteten Komfort gegen volle Kontrolle.",
     "thFeature": "",
     "thSelf": "Self-Hosting",
     "thHosted": "Gehostet",
@@ -31,7 +31,7 @@
         "hosted": "Kostenlos, $9, $15 oder $39"
       },
       {
-        "feature": "Der MCP-Server und alle 19 Tools",
+        "feature": "Der MCP-Server und seine E-Mail-Tools",
         "self": "Ja",
         "hosted": "Ja"
       },

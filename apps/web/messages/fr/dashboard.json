@@ -808,6 +808,7 @@
       "pass_unavailable": "Le pass Personal de 3 mois n'est pas disponible pour le moment.",
       "already_subscribed": "Vous avez déjà un abonnement, qui comprend tout ce que le pass offre.",
       "pass_already_queued": "Vous avez déjà 3 mois de plus prévus après ce pass.",
+      "pass_monthly_not_yet": "La facturation mensuelle peut commencer pendant le dernier mois de votre pass. L'annuel est disponible dès maintenant.",
       "plan_change_pending": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule."
     },
     "plans": {
@@ -818,6 +819,8 @@
       "soloFeature1": "10 boîtes connectées",
       "soloFeature2": "300 requêtes / minute (5× en pointe)",
       "soloFeature3": "Historique d'analytique plus long",
+      "soloFeatureChatClosed": "Relances, mise en attente et récapitulatif du matin, même conversation fermée",
+      "soloFeatureAllInboxes": "Recherche dans toutes les boîtes à la fois, avec des instructions par boîte",
       "soloFeature4": "Support par e-mail",
       "businessFeature1": "Tout ce qu'inclut Pro",
       "businessFeature2": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
@@ -876,6 +879,7 @@
       "subscribeYearly": "À l'année, {price} par an",
       "subscribeMonthlyFrom": "S'abonner au mois, {price} par mois, premier prélèvement le {date}",
       "subscribeYearlyFrom": "À l'année, {price} par an, premier prélèvement le {date}",
+      "monthlyFrom": "L'abonnement mensuel est disponible à partir du {date}.",
       "until": "Personal jusqu'au {date}",
       "queued": "Puis 3 mois de plus, jusqu'au {date}.",
       "after": "Payé une seule fois, rien ne se renouvelle. Après le {date}, cet espace de travail repasse en Free : {cap} actions e-mail par mois et une boîte pour les nouvelles connexions. Vos boîtes, brouillons et réglages restent.",

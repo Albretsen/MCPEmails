@@ -327,7 +327,7 @@ export function buildContractNoticeEmail(r: ValidContractRequest, ref: string, r
   const subject = oneLine(`[${ref}] ${label}: ${r.name} <${r.email}>`).slice(0, 200);
   const todo =
     r.kind === 'withdraw_pass'
-      ? 'To do: refund the 3-month pass payment in full in Stripe, within 14 days of the received time. The refund ends the pass; there is no subscription to cancel. If the account also has a subscription, ask the customer which one they meant.'
+      ? 'To do: refund the 3-month pass payment in full in Stripe, within 14 days of the received time. The refund ends the pass. The customer may also have a Personal subscription bought during the pass that starts charging at the pass end: the refund webhook moves that first charge to today (or to the end of a queued pass), so check the customer in Stripe afterwards. If the account has a subscription, ask the customer which one they meant.'
       : r.kind === 'withdraw'
         ? 'To do: refund the first charge in full and cancel the subscription now, within 14 days of the received time.'
         : r.cancelType === 'extraordinary'

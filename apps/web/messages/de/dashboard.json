@@ -808,6 +808,7 @@
       "pass_unavailable": "Der 3-Monats-Pass für Personal ist gerade nicht verfügbar.",
       "already_subscribed": "Sie haben bereits ein Abonnement, das alles enthält, was der Pass bietet.",
       "pass_already_queued": "Nach diesem Pass sind bereits weitere 3 Monate eingeplant.",
+      "pass_monthly_not_yet": "Die monatliche Abrechnung kann im letzten Monat Ihres Passes beginnen. Jährlich ist schon jetzt verfügbar.",
       "plan_change_pending": "Für Ihr Abonnement ist eine Pause oder ein Tarifwechsel gebucht. Nutzen Sie zuerst „Früher fortsetzen“ oder „Behalten“ auf dieser Seite und ändern Sie dann den Tarif."
     },
     "plans": {
@@ -818,6 +819,8 @@
       "soloFeature1": "10 verbundene Postfächer",
       "soloFeature2": "300 Anfragen/Minute (5× Burst)",
       "soloFeature3": "Längerer Analyseverlauf",
+      "soloFeatureChatClosed": "Nachfassen, Zurückstellen und Morgen-Briefing bei geschlossenem Chat",
+      "soloFeatureAllInboxes": "Alle Postfächer auf einmal durchsuchen, mit Anweisungen pro Postfach",
       "soloFeature4": "E-Mail-Support",
       "businessFeature1": "Alles aus Pro",
       "businessFeature2": "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
@@ -876,6 +879,7 @@
       "subscribeYearly": "Jährlich, {price} pro Jahr",
       "subscribeMonthlyFrom": "Monatlich abonnieren, {price} pro Monat, erste Abbuchung am {date}",
       "subscribeYearlyFrom": "Jährlich, {price} pro Jahr, erste Abbuchung am {date}",
+      "monthlyFrom": "Monatlich ist ab dem {date} verfügbar.",
       "until": "Personal bis zum {date}",
       "queued": "Danach weitere 3 Monate, bis zum {date}.",
       "after": "Einmal bezahlt, es verlängert sich nichts. Nach dem {date} ist dieser Workspace wieder auf Free: {cap} E-Mail-Aktionen pro Monat und ein Postfach für neue Verbindungen. Ihre Postfächer, Entwürfe und Einstellungen bleiben.",

@@ -45,16 +45,16 @@ function offerAt(now: Date, overrides: Partial<Parameters<typeof founderOfferFor
 // ── The window, in UTC ─────────────────────────────────────────────────────
 
 test('window constants are the Oslo instants in UTC', () => {
-  assert.equal(FOUNDER_WINDOW_START.toISOString(), '2026-11-08T23:00:00.000Z');
+  assert.equal(FOUNDER_WINDOW_START.toISOString(), '2026-10-24T22:00:00.000Z');
   assert.equal(FOUNDER_WINDOW_END.toISOString(), '2026-12-31T22:59:59.000Z');
   assert.equal(FOUNDER_WINDOW_CLOSED.toISOString(), '2026-12-31T23:00:00.000Z');
   assert.equal(FOUNDER_PLACES, 20);
 });
 
-test('closed one millisecond before 2026-11-09 00:00 Oslo, open at it', () => {
-  assert.equal(offerAt(new Date('2026-11-08T22:59:59.999Z')), null);
-  assert.equal(inFounderWindow(new Date('2026-11-08T22:59:59.999Z')), false);
-  assert.ok(offerAt(new Date('2026-11-08T23:00:00.000Z')));
+test('closed one millisecond before 2026-10-25 00:00 Oslo, open at it', () => {
+  assert.equal(offerAt(new Date('2026-10-24T21:59:59.999Z')), null);
+  assert.equal(inFounderWindow(new Date('2026-10-24T21:59:59.999Z')), false);
+  assert.ok(offerAt(new Date('2026-10-24T22:00:00.000Z')));
 });
 
 test('still open at 2026-12-31 23:59:59 Oslo, closed from 2027-01-01 00:00 Oslo', () => {
@@ -74,8 +74,8 @@ test('terms clause: started offer or an existing founder, never zh', () => {
   const at = (now: string, flagOn: boolean | null, placesTaken: number | null, locale = 'en') =>
     founderTermsVisibleFor({ locale, now: new Date(now), flagOn, placesTaken });
   assert.equal(at('2026-11-20T00:00:00Z', false, 0), false, 'flag off, no rows');
-  assert.equal(at('2026-11-08T22:59:59Z', true, 0), false, 'flag on before the start');
-  assert.equal(at('2026-11-08T23:00:00Z', true, 0), true, 'flag on at the start');
+  assert.equal(at('2026-10-24T21:59:59Z', true, 0), false, 'flag on before the start');
+  assert.equal(at('2026-10-24T22:00:00Z', true, 0), true, 'flag on at the start');
   assert.equal(at('2027-03-01T00:00:00Z', false, 1), true, 'rows after the window');
   assert.equal(at('2026-11-20T00:00:00Z', true, 5, 'zh'), false, 'never zh');
   assert.equal(at('2026-11-20T00:00:00Z', null, null), false, 'failed reads');

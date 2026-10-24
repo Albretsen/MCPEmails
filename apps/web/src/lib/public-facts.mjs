@@ -11,7 +11,7 @@
 // ---------------------------------------------------------------------------
 
 /** Tools the model is shown in `tools/list` (docs/LISTINGS.md "Tools"). */
-export const MODEL_VISIBLE_TOOL_COUNT = 19;
+export const MODEL_VISIBLE_TOOL_COUNT = 21;
 
 /** Card plumbing listed with `visibility: ["app"]`: approval_*, bulk_*, draft_editor_save. */
 export const APP_ONLY_TOOL_COUNT = 7;

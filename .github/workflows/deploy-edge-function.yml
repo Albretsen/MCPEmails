@@ -66,11 +66,32 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.118.0
+      # SIZE CAP (2026-10-24). --use-api uploads the raw sources and the API
+      # refuses anything over 5 MB with a 413. client-api imports the whole
+      # mcp-server tool layer and crossed it on 2026-10-24; mcp-server is not
+      # far behind (scripts/edge-function-size.mjs prints both, CI warns).
+      # The API path stays first because it needs no Docker and has been the
+      # reliable one here. On a 413 only, retry with the CLI's Docker bundler,
+      # which uploads a compressed eszip instead (client-api: 2.7 MB). The
+      # ubuntu runner has Docker. Any other failure still fails the job.
       - name: Deploy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FN: ${{ inputs.function }}
         run: |
-          supabase functions deploy "${{ inputs.function }}" \
+          set -o pipefail
+          log=$(mktemp)
+          if supabase functions deploy "$FN" \
+              --project-ref swvaxorwumispmjaaszb \
+              --no-verify-jwt \
+              --use-api 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          if ! grep -qiE '413|exceeds the maximum deployment size' "$log"; then
+            echo "::error::Deploy of $FN failed (not a size error). See the log above."
+            exit 1
+          fi
+          echo "::warning::$FN is over the 5 MB --use-api source cap. Retrying with the Docker bundler."
+          supabase functions deploy "$FN" \
             --project-ref swvaxorwumispmjaaszb \
-            --no-verify-jwt \
-            --use-api
+            --no-verify-jwt

@@ -65,7 +65,7 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Diecinueve herramientas enfocadas. Lo esencial, cubierto.",
+        "h": "Veintiuna herramientas enfocadas. Lo esencial, cubierto.",
         "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos, firmas y automatizaciones desatendidas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
@@ -184,12 +184,18 @@
       },
       "solo": {
         "name": "Pro",
+        "tagline": "Configúralo en el chat. Sigue funcionando cuando lo cierras.",
         "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
         "features": [
           "Todo lo de Personal",
           "10 bandejas conectadas",
           "Límite de ráfaga 5x más alto",
-          "Más historial de analíticas"
+          "Más historial de analíticas",
+          "Recordatorios cuando nadie responde a un correo que enviaste",
+          "Posponer: el correo sale de la bandeja de entrada y vuelve cuando tú elijas",
+          "Un resumen cada mañana, directamente en tu bandeja de entrada",
+          "Busca en todas tus bandejas conectadas a la vez",
+          "Instrucciones para tu IA, por bandeja"
         ],
         "cta": "Obtener Pro"
       },
@@ -244,11 +250,11 @@
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro cubre hasta 10 por $15, y Business es para más buzones o para cuando otras personas necesiten acceso."
+        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente puede leer, buscar, enviar, responder, programar y organizar en ella. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro cubre hasta 10 por $15, y Business es para más buzones o para cuando otras personas necesiten acceso."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Diecinueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Veintiuna herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",

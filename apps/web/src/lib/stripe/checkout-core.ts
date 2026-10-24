@@ -59,6 +59,7 @@ import {
 } from '@/lib/analytics/billing-funnel';
 import {
   getActivePass,
+  passSubscriptionOpensAt,
   passEligibility,
   passEndsAt,
   passSubscriptionStart,
@@ -178,6 +179,12 @@ export type CheckoutReason =
   | 'pass_unavailable'
   | 'already_subscribed'
   | 'pass_already_queued'
+  // A pass holder asked for MONTHLY Personal more than a month before the
+  // pass ends. Stripe only anchors a monthly subscription inside its first
+  // period, and the only other way to start it at the pass end (trial_end) is
+  // shown by Stripe as a free trial. Yearly is open; monthly opens in the
+  // pass's last month (passSubscriptionOpensAt).
+  | 'pass_monthly_not_yet'
   // A pause or a switch to Personal is booked on the subscription. Swapping
   // its price in place now would charge a proration for a period already paid
   // at the old plan, or silently undo the booked change. The customer uses
@@ -240,7 +247,14 @@ export interface PlanChangePreview {
 }
 
 /** Machine-readable error codes the JSON caller passes through as `error_code`. */
-export type CheckoutErrorCode = 'subscription_not_self_service' | 'plan_change_pending';
+export type CheckoutErrorCode =
+  | 'subscription_not_self_service'
+  | 'plan_change_pending'
+  // The pass refusals, so the dashboard can word them in the buyer's language.
+  | 'pass_unavailable'
+  | 'already_subscribed'
+  | 'pass_already_queued'
+  | 'pass_monthly_not_yet';
 
 /** The message for `plan_change_pending`; the dashboard shows its own translation. */
 const PLAN_CHANGE_PENDING_MESSAGE =
@@ -1403,12 +1417,22 @@ async function checkoutFor(
   // twice for the same days. Higher tiers are charged from today: they give
   // more than the pass does from the first minute. Tolerant read: a failure
   // here only means no anchor, never a refused checkout.
-  const passStart =
-    planId === 'personal'
-      ? await getActivePass(supabase, user.id).then((active) =>
-          active ? passSubscriptionStart(active.coveredUntil, interval) : null,
-        )
-      : null;
+  //
+  // Monthly is refused until the pass's last month (pass_monthly_not_yet):
+  // only then does Stripe take the anchor, and the trial_end alternative is
+  // shown to the buyer as a free trial. The Billing panel says from when.
+  const passCover =
+    planId === 'personal' ? await getActivePass(supabase, user.id).then((active) => active?.coveredUntil ?? null) : null;
+  if (passCover && passSubscriptionOpensAt(passCover, interval)) {
+    await recordAttempt('conflict');
+    return fail(
+      'pass_monthly_not_yet',
+      409,
+      'Monthly billing can start in the last month of your pass. Yearly is available now.',
+      'pass_monthly_not_yet',
+    );
+  }
+  const passStart = passCover ? passSubscriptionStart(passCover, interval) : null;
 
   // ── 5. Get or create the single Stripe Customer for this user ─────────────
   const ownerEmail = user.email ?? '';
@@ -1722,7 +1746,7 @@ export async function runPassCheckout(input: {
   if (personalPassMode() === 'off') {
     // Not recorded: with the switch off no surface offers the pass, so an
     // attempt here is a stale link, not a buyer turned away.
-    return fail('pass_unavailable', 404, 'The 3-month Personal pass is not available.');
+    return fail('pass_unavailable', 404, 'The 3-month Personal pass is not available.', 'pass_unavailable');
   }
 
   const { data: workspace, error: wsError } = await supabase
@@ -1793,10 +1817,22 @@ export async function runPassCheckout(input: {
         'already_subscribed',
         409,
         'You already have a subscription, which includes everything the pass does.',
+        'already_subscribed',
       );
     }
+    if (eligibility.reason === 'subscription_paused') {
+      // A paused subscription resumes and charges again: a pass beside it
+      // would pay twice for the same months.
+      await record('subscription_exists');
+      return fail('plan_change_pending', 409, PLAN_CHANGE_PENDING_MESSAGE, 'plan_change_pending');
+    }
     await record('conflict');
-    return fail('pass_already_queued', 409, 'You already have another 3-month pass queued after this one.');
+    return fail(
+      'pass_already_queued',
+      409,
+      'You already have another 3-month pass queued after this one.',
+      'pass_already_queued',
+    );
   }
 
   let customerId: string;
@@ -1840,6 +1876,12 @@ export async function runPassCheckout(input: {
       cancel_url: `${appUrl}/dashboard/settings?pass=cancelled`,
       // Never discounted: the pass is priced above three months of monthly.
       allow_promotion_codes: false,
+      // Cards only (wallets such as Apple Pay ride on the card type). A
+      // delayed method (SEPA Direct Debit, bank transfer) completes the
+      // session 'unpaid' and pays days later; a one-off pass is paid when it
+      // starts. stripe-node 23 dropped `payment_method_types`; this is its
+      // filter on the account's enabled methods.
+      allowed_payment_method_types: ['card'],
       billing_address_collection: 'auto',
       adaptive_pricing: adaptivePricingParam(),
       locale,

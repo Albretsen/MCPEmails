@@ -58,7 +58,9 @@ import {
 import type { TriageAllowanceCheck, TriagePlanLimit } from "./triage-engine.ts";
 
 /** The three notices the edge function can queue. Composed and sent by the
- * web app's billing-lifecycle dispatcher; this side only writes the row. */
+ * web app's billing-lifecycle dispatcher; this side writes the row and kicks
+ * the dispatcher to send it now (billing-dispatch-kick.ts), with the
+ * five-minute cron as the fallback. */
 export type UsageEmailTemplate = "usage_warning_80" | "usage_limit_reached" | "automation_paused_limit";
 
 /** One row for `billing_email_sends`, before the recipient is resolved. */

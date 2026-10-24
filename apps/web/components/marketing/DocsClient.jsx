@@ -685,6 +685,95 @@ const TOOLS = [
 }`,
     },
   },
+  // The Pro feature tools (pro-features.ts PRO_FEATURE_TOOLS). Every key is
+  // listed them; a plan without Pro gets an isError result naming Pro.
+  {
+    name: 'reminder_list',
+    scopes: ['read:email'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'show',     type: 'enum',          required: false },
+      { name: 'kind',     type: 'enum',          required: false },
+      { name: 'limit',    type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 32, "method": "tools/call",
+  "params": {
+    "name": "reminder_list",
+    "arguments": {
+      "show": "due"
+    }
+  }
+}`,
+      response: `{
+  "show": "due",
+  "total": 1,
+  "reminders": [
+    {
+      "id": "5b1e7c2d-9a40-4f3e-8d61-0c7a2e9f4b18",
+      "kind": "follow_up",
+      "status": "due",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "due_at": "2026-06-05T09:00:00Z",
+      "message_id": "4821",
+      "subject": "Proposal for June",
+      "to": ["carol@example.com"],
+      "folder": null,
+      "created_at": "2026-06-02T09:00:00Z"
+    }
+  ],
+  "untrusted_content": true
+}`,
+    },
+  },
+  {
+    name: 'reminder',
+    scopes: ['manage:automations', 'manage:folders'],
+    params: [
+      { name: 'action',     type: 'enum',              required: true },
+      { name: 'inbox_id',   type: 'string (uuid)',     required: false },
+      { name: 'inbox',      type: 'string',            required: false },
+      { name: 'message_id', type: 'string',            required: false },
+      { name: 'days',       type: 'integer',           required: false },
+      { name: 'due_at',     type: 'string (ISO 8601)', required: false },
+      { name: 'until',      type: 'string (ISO 8601)', required: false },
+      { name: 'condition',  type: 'enum',              required: false },
+      { name: 'folder',     type: 'string',            required: false },
+      { name: 'id',         type: 'string (uuid)',     required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "params": {
+    "name": "reminder",
+    "arguments": {
+      "action": "follow_up",
+      "message_id": "4821",
+      "days": 3
+    }
+  }
+}`,
+      response: `{
+  "created": true,
+  "already_tracked": false,
+  "reminder": {
+    "id": "5b1e7c2d-9a40-4f3e-8d61-0c7a2e9f4b18",
+    "kind": "follow_up",
+    "status": "pending",
+    "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+    "due_at": "2026-06-05T09:00:00Z",
+    "message_id": "4821",
+    "subject": "Proposal for June",
+    "to": ["carol@example.com"],
+    "folder": null,
+    "created_at": "2026-06-02T09:00:00Z"
+  },
+  "untrusted_content": true
+}`,
+    },
+  },
   {
     name: 'signature_get',
     scopes: ['read:email'],

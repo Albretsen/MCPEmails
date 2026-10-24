@@ -52,6 +52,7 @@
     },
     "solo": {
       "name": "Pro",
+      "tagline": "Im Chat einrichten. Es läuft weiter, wenn Sie ihn schließen.",
       "desc": "Für eine Person, die ein Unternehmen führt: bis zu 10 Postfächer in einem Agenten, von Buchhaltung und Vertrieb bis Support und Ihrem eigenen.",
       "cta": "Pro wählen",
       "features": [
@@ -59,6 +60,11 @@
         "10 verbundene Postfächer",
         "5x höheres Burst-Ratenlimit",
         "Längerer Analyseverlauf",
+        "Erinnerungen, wenn niemand auf Ihre gesendete E-Mail antwortet",
+        "Zurückstellen: Die E-Mail verlässt den Posteingang und kommt zur gewählten Zeit zurück",
+        "Ein tägliches Morgen-Briefing, direkt in Ihrem Posteingang",
+        "Alle verbundenen Postfächer auf einmal durchsuchen",
+        "Anweisungen für Ihre KI, pro Postfach",
         "Webhooks für neue E-Mails"
       ]
     },
@@ -118,6 +124,16 @@
       "mcpTools": {
         "label": "MCP-Tools"
       },
+      "chatClosed": {
+        "label": "Wenn der Chat geschlossen ist",
+        "rows": {
+          "followUps": "Nachfass-Erinnerungen für gesendete E-Mails",
+          "snooze": "E-Mails bis zu einem gewählten Zeitpunkt zurückstellen",
+          "brief": "Morgen-Briefing im Posteingang",
+          "searchAll": "Alle Postfächer auf einmal durchsuchen",
+          "instructions": "Anweisungen für Ihre KI, pro Postfach"
+        }
+      },
       "analytics": {
         "label": "Analyse & Sicherheit",
         "rows": {
@@ -168,11 +184,11 @@
     "items": [
       {
         "q": "Was bekomme ich im Free-Tarif?",
-        "a": "Ein verbundenes Postfach, dauerhaft, ohne Kreditkarte, und 150 E-Mail-Aktionen pro Kalendermonat. Die ersten 3 Tage nach der Registrierung zählen nicht, sodass Sie Ihren Agenten einrichten und alles ausprobieren können, bevor gezählt wird. Ihr Agent bekommt für dieses Postfach jedes MCP-Tool, das wir anbieten: lesen, suchen, organisieren, labeln, entwerfen, planen und senden, dazu die Versandprüfung und Freigabe pro Postfach. Wenn Sie ein zweites oder drittes Postfach oder kein monatliches Aktionslimit möchten, ist das Personal, für $9 pro Monat."
+        "a": "Ein verbundenes Postfach, dauerhaft, ohne Kreditkarte, und 150 E-Mail-Aktionen pro Kalendermonat. Die ersten 3 Tage nach der Registrierung zählen nicht, sodass Sie Ihren Agenten einrichten und alles ausprobieren können, bevor gezählt wird. Ihr Agent kann in diesem Postfach lesen, suchen, organisieren, labeln, entwerfen, planen und senden, und die Versandprüfung und Freigabe pro Postfach sind inklusive. Wenn Sie ein zweites oder drittes Postfach oder kein monatliches Aktionslimit möchten, ist das Personal, für $9 pro Monat."
       },
       {
         "q": "Was bietet Personal zusätzlich zu Free?",
-        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles andere ist schon in Free enthalten: jedes MCP-Tool einschließlich geplanter Sendungen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Wir halten in Free keine Funktionen zurück, nur damit die bezahlten Tarife größer wirken."
+        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles, was Sie täglich nutzen, ist auch in Free enthalten: lesen, suchen, organisieren, entwerfen, senden und Sendungen planen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Die Funktionen, die bei geschlossenem Chat weiterarbeiten, etwa Nachfass-Erinnerungen, Zurückstellen und das Morgen-Briefing, gehören zu Pro."
       },
       {
         "q": "Was zählt als E-Mail-Aktion?",
@@ -188,7 +204,7 @@
       },
       {
         "q": "Was ist der Unterschied zwischen Personal, Pro und Business?",
-        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, zwei Jahre statt 90 Tage Analyseverlauf und E-Mail-Support. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute."
+        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, zwei Jahre statt 90 Tage Analyseverlauf und E-Mail-Support. Pro arbeitet außerdem weiter, wenn der Chat geschlossen ist: Nachfass-Erinnerungen für gesendete E-Mails, Zurückstellen, ein tägliches Morgen-Briefing im Posteingang, eine Suche über alle verbundenen Postfächer und Anweisungen für Ihre KI pro Postfach. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute. Alles aus Pro ist enthalten."
       },
       {
         "q": "Wir sind ein Unternehmen mit mehreren Postfächern. Welchen Tarif brauchen wir?",

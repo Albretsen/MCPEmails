@@ -808,6 +808,7 @@
       "pass_unavailable": "Personal-passet for 3 måneder er ikke tilgjengelig akkurat nå.",
       "already_subscribed": "Du har allerede et abonnement, som inkluderer alt passet gir.",
       "pass_already_queued": "Du har allerede 3 måneder til planlagt etter dette passet.",
+      "pass_monthly_not_yet": "Månedlig betaling kan starte i den siste måneden av passet ditt. Årlig kan velges nå.",
       "plan_change_pending": "Det er bestilt en pause eller et bytte av abonnement. Bruk Fortsett tidligere eller Behold på denne siden først, og endre deretter abonnementet."
     },
     "plans": {
@@ -818,6 +819,8 @@
       "soloFeature1": "10 tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
       "soloFeature3": "Lengre analysehistorikk",
+      "soloFeatureChatClosed": "Oppfølging, utsettelse og morgenoppsummering mens chatten er lukket",
+      "soloFeatureAllInboxes": "Søk i alle innbokser samtidig, med instruksjoner per innboks",
       "soloFeature4": "E-poststøtte",
       "businessFeature1": "Alt i Pro",
       "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
@@ -876,6 +879,7 @@
       "subscribeYearly": "Årlig, {price} i året",
       "subscribeMonthlyFrom": "Abonner månedlig, {price} i måneden, første trekk {date}",
       "subscribeYearlyFrom": "Årlig, {price} i året, første trekk {date}",
+      "monthlyFrom": "Månedlig kan velges fra {date}.",
       "until": "Personal til {date}",
       "queued": "Deretter 3 måneder til, til {date}.",
       "after": "Betalt én gang, ingenting fornyes. Etter {date} går dette arbeidsområdet tilbake til Free: {cap} e-posthandlinger i måneden og én innboks for nye tilkoblinger. Innboksene, utkastene og innstillingene dine blir værende.",
