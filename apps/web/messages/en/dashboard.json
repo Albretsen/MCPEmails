@@ -717,6 +717,37 @@
       "deleting": "Deleting…",
       "errFailed": "Failed to delete account. Please try again.",
       "networkError": "Network error. Please check your connection and try again."
+    },
+    "morningBrief": {
+      "title": "Morning brief",
+      "sub": "A daily summary of new mail, VIP senders, follow-ups and scheduled sends, put into one of your inboxes.",
+      "enable": "Put a morning brief in my inbox every day",
+      "hour": "Time",
+      "timezone": "Time zone",
+      "inbox": "Deliver to",
+      "inboxPlaceholder": "Choose an inbox",
+      "vip": "VIP senders",
+      "vipPlaceholder": "boss@example.com\nexample.com",
+      "help": "One address or domain per line. VIP mail is listed first. The brief is added to the inbox directly, it is not sent as an email, and days with nothing new are skipped.",
+      "save": "Save",
+      "saved": "Saved. The next brief follows these settings.",
+      "loading": "Loading...",
+      "proOnly": "The morning brief is part of Pro.",
+      "upgrade": "See plans",
+      "roleNote": "Only workspace owners and admins can change the morning brief.",
+      "lastSent": "Last brief: {when}",
+      "paused": "Paused after repeated failures. Check the inbox connection, then save to resume.",
+      "errors": {
+        "load": "Could not load the morning brief settings.",
+        "save": "Could not save. Try again.",
+        "unavailable": "The morning brief is not available yet.",
+        "pro_feature_required": "The morning brief is part of Pro.",
+        "invalid_vip": "Not an address or domain: {detail}",
+        "too_many_vips": "Up to {max} VIP senders.",
+        "inbox_required": "Choose an inbox to deliver the brief to.",
+        "invalid_inbox": "That inbox is not in this workspace.",
+        "invalid_timezone": "Choose a time zone from the list."
+      }
     }
   },
   "billing": {
@@ -761,6 +792,9 @@
       "invalid_plan": "That upgrade link is not valid. Pick a plan below.",
       "invalid_interval": "That upgrade link is not valid. Pick a plan below.",
       "plan_change_failed": "Could not change your plan. Nothing was charged. Please try again.",
+      "pass_unavailable": "The 3-month Personal pass is not available right now.",
+      "already_subscribed": "You already have a subscription, which includes everything the pass does.",
+      "pass_already_queued": "You already have another 3 months queued after this pass.",
       "plan_change_pending": "A pause or a plan switch is booked on your subscription. Use Resume early or Keep on this page first, then change plans."
     },
     "plans": {
@@ -820,6 +854,25 @@
     "proInboxesKept": "Your Pro plan keeps unlimited connected inboxes.",
     "businessMailboxRate": "10 mailboxes included across all your workspaces. Each extra mailbox is billed with your plan: $3 a month, or $28.80 a year.",
     "confirmExtraMailboxes": "Includes {count, plural, one {# extra mailbox} other {# extra mailboxes}} above the 10 included.",
+    "pass": {
+      "offerLine": "Or Personal, 3 months, paid once, {price}. Nothing renews.",
+      "offerUntil": "Bought today, it runs until {date}, then this workspace goes back to Free.",
+      "offerCta": "Get 3 months for {price}",
+      "returnTitle": "Personal: 3 connected inboxes, no monthly action cap",
+      "subscribeMonthly": "Subscribe monthly, {price} a month",
+      "subscribeYearly": "Yearly, {price} a year",
+      "subscribeMonthlyFrom": "Subscribe monthly, {price} a month, first charge on {date}",
+      "subscribeYearlyFrom": "Yearly, {price} a year, first charge on {date}",
+      "until": "Personal until {date}",
+      "queued": "Then another 3 months, until {date}.",
+      "after": "Paid once, nothing renews. After {date} this workspace goes back to Free: {cap} email actions a month and one inbox for new connections. Your inboxes, drafts and settings stay.",
+      "endingTitle": "Your Personal pass ends on {date}.",
+      "another": "Another 3 months, {price}, paid once.",
+      "anotherUntil": "Bought now, Personal runs until {date}.",
+      "seeOptions": "See the options",
+      "close": "Close",
+      "started": "Payment received. Your 3-month Personal pass shows here in a moment."
+  },
     "planChange": {
       "title": "Change or pause your plan",
       "sub": "Pause a monthly plan for up to 3 months, or move to a smaller plan when your current period ends.",

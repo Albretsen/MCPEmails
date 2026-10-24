@@ -25,15 +25,16 @@
  * with the same Vault secret on the database side. The body is ignored, so
  * even a caller holding the secret cannot steer which passes end.
  *
- * NOTICES. The `pass_ended` email belongs to the surfaces PR: it passes a
- * PassNoticeSink to sweepPassExpiry here. Until then no sink is given and no
- * email is queued.
+ * NOTICES. Both pass notices are queued at purchase (pass-notices.ts). The
+ * sweep hands its pass_ended notice to the same sink as a backfill; the
+ * (customer, template, pass id) unique key makes that a no-op when queued.
  */
 
 import { timingSafeEqual } from 'node:crypto';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { sweepPassExpiry } from '@/lib/billing/pass';
+import { passNoticeSink } from '@/lib/billing/pass-notices';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const result = await sweepPassExpiry(createServiceRoleClient());
+    const db = createServiceRoleClient();
+    // The pass_ended notice was queued at purchase; this is the backfill for a
+    // pass bought while lifecycle queueing was off. Same unique key, so a pass
+    // already queued gets nothing new.
+    const result = await sweepPassExpiry(db, { notices: passNoticeSink(db) });
     console.log('[pass-expiry] sweep:', result);
     return Response.json({ ok: result.failed === 0, ...result }, { status: result.failed === 0 ? 200 : 500 });
   } catch (err) {

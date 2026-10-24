@@ -64,6 +64,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   composeBillingEmail,
+  isPassTemplate,
   isUsageTemplate,
   payloadForQueueRow,
   sendBillingLifecycleEmail,
@@ -79,6 +80,8 @@ import {
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
 import { ACCOUNT_DELETED_REASON, accountState } from '@/lib/billing/deleted-account';
+import { checkPassNoticeFreshness } from '@/lib/billing/pass-notice-freshness';
+import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-funnel';
 import { isSuppressed } from '@/lib/email/lifecycle';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
 import { reprojectDuePlanChanges } from '@/lib/billing/plan-change-reproject';
@@ -258,9 +261,15 @@ export async function POST(request: Request): Promise<Response> {
     // suppression branch above is never entered for them either: their
     // GENERATED category is transactional, so an owner cannot opt out of being
     // told their own service is about to stop.
+    //
+    // The pass notices have nothing in Stripe to check either: their question
+    // is whether the pass still ends as the row says (not refunded, no
+    // subscription since, no second pass after it), asked of user_passes.
     const fresh = isUsageTemplate(row.template)
       ? await checkAllowanceFreshness(db, row)
-      : await checkFreshness(stripe, row);
+      : isPassTemplate(row.template)
+        ? await checkPassNoticeFreshness(db, row)
+        : await checkFreshness(stripe, row);
     if (!fresh.send) {
       if (fresh.reason === RETRY_REASON) continue; // leave it; lease expires
       await finish(db, row.id, { cancelled: fresh.reason });
@@ -299,6 +308,14 @@ export async function POST(request: Request): Promise<Response> {
     if (send.ok) {
       await finish(db, row.id, { sent: send.resendId });
       result.sent += 1;
+      if (isPassTemplate(row.template) && row.user_id) {
+        // Best-effort and never throws: the email is already gone.
+        await recordPassEvent({
+          workspaceId: await primaryWorkspaceId(db, row.user_id),
+          stage: 'pass_reminder_sent',
+          category: 'pass_reminder',
+        });
+      }
     } else if (send.reason === 'unusable_recipient' || send.reason === 'not_composable') {
       // Permanent. Retrying cannot help, so stop rather than burn five attempts.
       await finish(db, row.id, { cancelled: 'undeliverable', error: send.reason });

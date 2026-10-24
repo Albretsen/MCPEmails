@@ -717,6 +717,37 @@
       "deleting": "Wird gelöscht…",
       "errFailed": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
       "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+    },
+    "morningBrief": {
+      "title": "Morgenübersicht",
+      "sub": "Eine tägliche Übersicht über neue E-Mails, VIP-Absender, Nachfassaktionen und geplante Sendungen, abgelegt in einem Ihrer Posteingänge.",
+      "enable": "Jeden Tag eine Morgenübersicht in meinen Posteingang legen",
+      "hour": "Uhrzeit",
+      "timezone": "Zeitzone",
+      "inbox": "Zustellen an",
+      "inboxPlaceholder": "Posteingang wählen",
+      "vip": "VIP-Absender",
+      "vipPlaceholder": "chefin@example.com\nexample.com",
+      "help": "Eine Adresse oder Domain pro Zeile. E-Mails von VIPs stehen oben. Die Übersicht wird direkt in den Posteingang gelegt, nicht als E-Mail versendet, und Tage ohne Neues werden übersprungen.",
+      "save": "Speichern",
+      "saved": "Gespeichert. Die nächste Übersicht folgt diesen Einstellungen.",
+      "loading": "Wird geladen...",
+      "proOnly": "Die Morgenübersicht ist Teil von Pro.",
+      "upgrade": "Tarife ansehen",
+      "roleNote": "Nur Eigentümer und Administratoren des Arbeitsbereichs können die Morgenübersicht ändern.",
+      "lastSent": "Letzte Übersicht: {when}",
+      "paused": "Nach wiederholten Fehlern pausiert. Prüfen Sie die Verbindung des Posteingangs und speichern Sie, um fortzufahren.",
+      "errors": {
+        "load": "Die Einstellungen der Morgenübersicht konnten nicht geladen werden.",
+        "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "unavailable": "Die Morgenübersicht ist noch nicht verfügbar.",
+        "pro_feature_required": "Die Morgenübersicht ist Teil von Pro.",
+        "invalid_vip": "Keine Adresse oder Domain: {detail}",
+        "too_many_vips": "Bis zu {max} VIP-Absender.",
+        "inbox_required": "Wählen Sie den Posteingang, in den die Übersicht gelegt wird.",
+        "invalid_inbox": "Dieser Posteingang gehört nicht zu diesem Arbeitsbereich.",
+        "invalid_timezone": "Wählen Sie eine Zeitzone aus der Liste."
+      }
     }
   },
   "billing": {
@@ -761,6 +792,9 @@
       "invalid_plan": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
       "invalid_interval": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
       "plan_change_failed": "Ihr Tarif konnte nicht geändert werden. Es wurde nichts berechnet. Bitte versuchen Sie es erneut.",
+      "pass_unavailable": "Der 3-Monats-Pass für Personal ist gerade nicht verfügbar.",
+      "already_subscribed": "Sie haben bereits ein Abonnement, das alles enthält, was der Pass bietet.",
+      "pass_already_queued": "Nach diesem Pass sind bereits weitere 3 Monate eingeplant.",
       "plan_change_pending": "Für Ihr Abonnement ist eine Pause oder ein Tarifwechsel gebucht. Nutzen Sie zuerst „Früher fortsetzen“ oder „Behalten“ auf dieser Seite und ändern Sie dann den Tarif."
     },
     "plans": {
@@ -820,6 +854,25 @@
     "proInboxesKept": "Ihr Pro-Tarif behält unbegrenzt viele verbundene Postfächer.",
     "businessMailboxRate": "10 Postfächer inklusive, über alle Ihre Workspaces hinweg. Jedes weitere Postfach wird mit Ihrem Tarif abgerechnet: $3 pro Monat oder $28.80 pro Jahr.",
     "confirmExtraMailboxes": "Enthält {count, plural, one {# zusätzliches Postfach} other {# zusätzliche Postfächer}} über die 10 inklusiven hinaus.",
+    "pass": {
+      "offerLine": "Oder Personal für 3 Monate, einmal bezahlt, {price}. Es verlängert sich nichts.",
+      "offerUntil": "Heute gekauft, läuft es bis zum {date}, danach ist dieser Workspace wieder auf Free.",
+      "offerCta": "3 Monate für {price}",
+      "returnTitle": "Personal: 3 verbundene Postfächer, kein monatliches Aktionslimit",
+      "subscribeMonthly": "Monatlich abonnieren, {price} pro Monat",
+      "subscribeYearly": "Jährlich, {price} pro Jahr",
+      "subscribeMonthlyFrom": "Monatlich abonnieren, {price} pro Monat, erste Abbuchung am {date}",
+      "subscribeYearlyFrom": "Jährlich, {price} pro Jahr, erste Abbuchung am {date}",
+      "until": "Personal bis zum {date}",
+      "queued": "Danach weitere 3 Monate, bis zum {date}.",
+      "after": "Einmal bezahlt, es verlängert sich nichts. Nach dem {date} ist dieser Workspace wieder auf Free: {cap} E-Mail-Aktionen pro Monat und ein Postfach für neue Verbindungen. Ihre Postfächer, Entwürfe und Einstellungen bleiben.",
+      "endingTitle": "Ihr Personal-Pass endet am {date}.",
+      "another": "Weitere 3 Monate, {price}, einmal bezahlt.",
+      "anotherUntil": "Jetzt gekauft, läuft Personal bis zum {date}.",
+      "seeOptions": "Optionen ansehen",
+      "close": "Schließen",
+      "started": "Zahlung erhalten. Ihr 3-Monats-Pass für Personal erscheint hier in einem Moment."
+  },
     "planChange": {
       "title": "Tarif ändern oder pausieren",
       "sub": "Pausieren Sie einen Monatstarif für bis zu 3 Monate oder wechseln Sie zum Ende des laufenden Zeitraums in einen kleineren Tarif.",

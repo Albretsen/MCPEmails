@@ -13,7 +13,8 @@ import { PRICES, sec, setPlanChangeTestPrices, subscriptionFixture } from '@/lib
 setPlanChangeTestPrices();
 const dg = await import('@/lib/billing/downgrade');
 const sync = await import('@/lib/billing/plan-change-sync');
-const { pauseResumesAt } = await import('@/lib/billing/pause');
+const pause = await import('@/lib/billing/pause');
+const { pauseResumesAt } = pause;
 
 const NOW = new Date('2026-10-24T09:00:00Z');
 const END = sec('2026-11-10T12:00:00Z');
@@ -99,6 +100,18 @@ test('switch to Free is offered unless already stopping or paused', () => {
   assert.equal(dg.switchFreeEligibility(subscriptionFixture()).eligible, true);
   assert.equal(dg.switchFreeEligibility(subscriptionFixture({ cancelAt: END })).reason, 'cancel_scheduled');
   assert.equal(dg.switchFreeEligibility(subscriptionFixture({ pauseResumesAt: END + 10 })).reason, 'paused');
+});
+
+test('a comped grant and Business are never offered a plan change', () => {
+  const comped = subscriptionFixture({ metadata: { comp: 'owner' } });
+  assert.equal(dg.switchFreeEligibility(comped).reason, 'plan_not_eligible');
+  assert.equal(dg.downgradeEligibility(comped, NOW).eligible, false);
+  assert.equal(pause.pauseEligibility(comped, NOW).eligible, false);
+  const business = subscriptionFixture({ price: PRICES.businessMonth, amount: 3900 });
+  assert.equal(dg.switchFreeEligibility(business).reason, 'plan_not_eligible');
+  assert.equal(pause.pauseEligibility(business, NOW).eligible, false);
+  const personal = subscriptionFixture({ price: PRICES.personalMonth, amount: 900 });
+  assert.equal(dg.switchFreeEligibility(personal).eligible, true);
 });
 
 test('projection: paused is Free and parks; scheduled keeps the plan; resumed unparks', () => {

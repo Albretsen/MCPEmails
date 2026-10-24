@@ -61,6 +61,7 @@ import {
   getActivePass,
   passEligibility,
   passEndsAt,
+  passSubscriptionStart,
   personalPassMode,
 } from '@/lib/billing/pass';
 
@@ -1448,7 +1449,9 @@ async function checkoutFor(
     options.successUrl ??
     `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}` +
       (sold.founder ? '&offer=founder' : '');
-  const cancelUrl = options.cancelUrl ?? `${appUrl}/dashboard?checkout=cancelled`;
+  // `plan` lets the dashboard tell an abandoned Personal checkout (the one
+  // post-decline surface of the 3-month pass) from any other.
+  const cancelUrl = options.cancelUrl ?? `${appUrl}/dashboard?checkout=cancelled&plan=${planId}`;
 
   // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
   // Annual Personal or Pro inside the window, coupon live, price unchanged,
@@ -1625,47 +1628,9 @@ async function checkoutFor(
 // The 3-month Personal pass
 // ---------------------------------------------------------------------------
 
-const HOUR_SECONDS = 60 * 60;
-
-/**
- * How a Personal subscription bought during a pass starts, or null for "from
- * today".
- *
- * Preferred: `billing_cycle_anchor` at the pass's end with `proration_behavior:
- * 'none'`. The hosted page shows nothing due today and the first full charge on
- * that date, and the subscription is `active` from the start. Stripe only
- * accepts an anchor up to the first natural billing date, so it covers a yearly
- * subscription always and a monthly one only in the pass's last month.
- *
- * Otherwise `trial_end` at the pass's end, which Checkout accepts up to two
- * years out but only from 48 hours ahead. Stripe labels those days a trial on
- * its own page; the subscription is `trialing`, which every entitlement check
- * here already treats as entitled.
- */
-export function passSubscriptionStart(
-  coveredUntil: Date,
-  interval: BillingInterval,
-  now: Date = new Date(),
-):
-  | { billing_cycle_anchor: number; proration_behavior: 'none' }
-  | { trial_end: number }
-  | null {
-  const nowSeconds = Math.floor(now.getTime() / 1000);
-  const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
-  // Within the hour: not worth a different first invoice.
-  if (endSeconds <= nowSeconds + HOUR_SECONDS) return null;
-
-  const naturalBilling = Math.floor(
-    passEndsAt(now, interval === 'year' ? 12 : 1).getTime() / 1000,
-  );
-  if (endSeconds < naturalBilling - HOUR_SECONDS) {
-    return { billing_cycle_anchor: endSeconds, proration_behavior: 'none' };
-  }
-  if (endSeconds >= nowSeconds + 48 * HOUR_SECONDS) {
-    return { trial_end: endSeconds };
-  }
-  return null;
-}
+// passSubscriptionStart lives in src/lib/billing/pass.ts (pure, so the
+// dashboard can show the same first-charge date without importing Stripe).
+export { passSubscriptionStart };
 
 /** "3 Feb 2027" / "3. Februar 2027", always in UTC like the pass itself. */
 export function passEndDateLabel(date: Date, locale: CheckoutLocale): string {

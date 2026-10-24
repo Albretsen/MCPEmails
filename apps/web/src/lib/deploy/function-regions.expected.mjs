@@ -201,6 +201,7 @@ export const ROUTES = [
   ['app/api/automations/[id]/runs/route.ts', 'arn1', '6', '-'],
   ['app/api/automations/preview/route.ts', 'iad1', '3', 'Supabase edge function triage-preview (opens the IMAP session)'],
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
+  ['app/api/billing/pass-offer/route.ts', 'arn1', '~8', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
   // Reads one request header and the STRIPE_EUR_PRICES switch; no database,
   // no third party. The app/api/** default is as good as any.
@@ -266,6 +267,7 @@ export const ROUTES = [
   ['app/api/webhooks/resend/route.ts', 'arn1', '2-3', 'caller is Resend (US)'],
   ['app/api/workflows/runs/route.ts', 'arn1', '3', '-'],
   ['app/api/workspaces/[id]/leave/route.ts', 'arn1', '1', '-'],
+  ['app/api/workspaces/[id]/morning-brief/route.ts', 'arn1', '6', '-'],
   ['app/api/workspaces/[id]/route.ts', 'arn1', '15', '-'],
   ['app/api/workspaces/active/route.ts', 'arn1', '2', '-'],
   ['app/api/workspaces/invite-cancel/[id]/route.ts', 'arn1', '3', '-'],

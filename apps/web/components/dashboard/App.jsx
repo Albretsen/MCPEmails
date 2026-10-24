@@ -12,6 +12,7 @@ import { ConnectModal } from './ConnectModal';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
+import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
@@ -140,7 +141,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -316,6 +317,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // The "what stopped you?" card shown on return from a cancelled checkout.
   const [checkoutCancelled, setCheckoutCancelled] = useState(false);
   const dismissCheckoutCancelled = useCallback(() => setCheckoutCancelled(false), []);
+  // Which plan the abandoned checkout was for. Only a Personal one can show the
+  // 3-month pass card (treatment arm only; see PersonalPass.jsx).
+  const [cancelledPlan, setCancelledPlan] = useState(null);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
 
@@ -655,6 +659,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // One-shot signal from the return URL, client only: same reasoning as
       // the success panel above.
       setCheckoutCancelled(true);
+      setCancelledPlan(readQuery(searchParams, 'plan'));
     }
     // Clean up the query params from the URL without a reload, so a refresh
     // does not replay the confirmation.
@@ -1265,6 +1270,16 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
           lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
         />
+        {cancelledPlan === 'personal' && (
+          <CheckoutReturnPassCard
+            workspaceId={workspace?.id}
+            stripePrices={stripePrices}
+            onDismiss={() => setCancelledPlan(null)}
+          />
+        )}
+        {route !== "settings" && (
+          <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
+        )}
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
@@ -1274,11 +1289,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
-        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
+        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} inboxes={inboxes} proFeatures={workspace?.proFeatures ?? null} stripePrices={stripePrices} passState={passState} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
       </div>
 

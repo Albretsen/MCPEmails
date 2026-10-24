@@ -2209,7 +2209,7 @@ test('the cookie path is unchanged: dashboard URLs, Stripe default expiry, no li
   const { sessionsCreated, funnelRows: rows } = await checkout({ planId: 'personal', entitlement: null });
   const params = sessionsCreated[0];
   assert.equal(params.success_url, 'http://localhost:3000/dashboard?checkout=success&plan=personal&interval=month');
-  assert.equal(params.cancel_url, 'http://localhost:3000/dashboard?checkout=cancelled');
+  assert.equal(params.cancel_url, 'http://localhost:3000/dashboard?checkout=cancelled&plan=personal');
   assert.equal('expires_at' in params, false);
   assert.deepEqual(params.metadata, { user_id: USER_ID, plan_id: 'personal', interval: 'month' });
   assert.equal(rows.length, 1);
