@@ -2,7 +2,7 @@
 // reminders-engine.ts - the Pro "reminders" feature: one state machine for
 // follow-ups and snoozes, and the unattended dispatcher that drives it.
 //
-// Two kinds, one table (public.reminders, migration 20261024211000):
+// Two kinds, one table (public.reminders, migration 20261024235200):
 //
 //   follow_up  "tell me if nobody replies to this within N days". The server
 //              looks for a reply on a cadence. A reply marks it `replied`; past

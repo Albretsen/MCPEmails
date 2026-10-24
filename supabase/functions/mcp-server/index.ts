@@ -36126,7 +36126,7 @@ function triageDeps(): TriageDeps {
 // Entry point: POST /reminders-dispatch (path suffix), called every minute by
 // pg_cron -> dispatch_reminders() -> net.http_post, guarded by
 // X-Dispatch-Secret exactly like /dispatch and /triage-dispatch. Migration
-// 20261024211000_reminders.sql.
+// 20261024235200_reminders.sql.
 //
 // Gating: the tools are in PRO_FEATURE_TOOLS and follow_up_days is in
 // PRO_FEATURE_ARGS, so handleToolsCall hides and refuses them before any of
@@ -37175,7 +37175,7 @@ const remindersStore: RemindersStore = {
     return Array.isArray(data) ? data.length : 0;
   },
   async listDue(nowIso, limit) {
-    // The predicate of dispatch_reminders() (20261024211000). Keep in step.
+    // The predicate of dispatch_reminders() (20261024235200). Keep in step.
     const { data, error } = await supabase
       .from("reminders")
       .select(REMINDER_DISPATCH_COLUMNS)
@@ -37391,7 +37391,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // two routes above. The body is ignored: selection, leasing and the budget
   // live in reminders-engine.ts. "/reminders-dispatch" does not end in
   // "/dispatch" (hyphen, not slash), so the scheduled-send branch cannot take it.
-  // See migration 20261024211000_reminders.sql.
+  // See migration 20261024235200_reminders.sql.
   if (reqUrl.pathname.endsWith("/reminders-dispatch")) {
     if (req.method !== "POST") {
       return new Response(

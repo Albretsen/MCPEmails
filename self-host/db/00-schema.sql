@@ -1970,7 +1970,7 @@ $$;
 
 -- ============================================================
 -- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
--- 20261024211000). message_ref and summary are AES-256-GCM wrappers
+-- 20261024235200). message_ref and summary are AES-256-GCM wrappers
 -- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
 -- /reminders-dispatch is not part of self-host: POST that route with
 -- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
