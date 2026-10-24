@@ -19914,7 +19914,7 @@ async function subscriptionScanContextFor(
 
 /**
  * `workspaces.subscription_cleanup_enabled`: OUR rollout gate (seeded by
- * 20261024150000). Fails to "off" on any error, and is always off in
+ * 20261024210000). Fails to "off" on any error, and is always off in
  * introspection mode, which has no database.
  */
 async function workspaceSubscriptionCleanupEnabled(workspaceId: string): Promise<boolean> {
@@ -35549,7 +35549,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
 
   // ── Subscription cleanup follow-up route ──────────────────────────────────
   // Called hourly by pg_cron (dispatch_subscription_followup, migration
-  // 20261024150100), same guard and secret as /triage-dispatch. The body is
+  // 20261024210100), same guard and secret as /triage-dispatch. The body is
   // ignored: which rows are due, the leases and the budget live in
   // runSubscriptionFollowUp.
   if (reqUrl.pathname.endsWith("/subscription-followup")) {

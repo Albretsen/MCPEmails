@@ -1071,7 +1071,7 @@ CREATE TABLE IF NOT EXISTS public.inbox_sender_aliases (
 CREATE UNIQUE INDEX IF NOT EXISTS inbox_sender_aliases_inbox_address_key
   ON public.inbox_sender_aliases (inbox_id, lower(email_address));
 
--- Subscription cleanup (20261024150000). senders and progress are ciphertext.
+-- Subscription cleanup (20261024210000). senders and progress are ciphertext.
 CREATE TABLE IF NOT EXISTS public.subscription_plans (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,

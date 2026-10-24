@@ -1,8 +1,8 @@
 -- ============================================================
 -- Subscription cleanup (mcp-server subscriptions_scan / subscriptions_cleanup)
 -- ============================================================
--- Covers migrations 20261024150000_subscription_cleanup and
--- 20261024150100_schedule_subscription_followup:
+-- Covers migrations 20261024210000_subscription_cleanup and
+-- 20261024210100_schedule_subscription_followup:
 --   - the rollout flag exists and defaults to false
 --   - the ledger's idempotency key is unique (the replay guard)
 --   - status / method constraints

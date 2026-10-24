@@ -2,7 +2,7 @@
 -- Subscription cleanup: the hourly follow-up dispatcher and plan retention.
 -- ============================================================================
 --
--- APPLY AFTER 20261024150000 and after mcp-server is deployed with the
+-- APPLY AFTER 20261024210000 and after mcp-server is deployed with the
 -- /subscription-followup route. Before that the posts are answered 401 or
 -- routed nowhere useful, which is harmless but noisy.
 --

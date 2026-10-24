@@ -8,7 +8,7 @@
 -- runs the method ladder for the senders the user picked (one-click POST,
 -- a draft for a mailto address, or a link handed back to the user) and writes
 -- one ledger row per sender, so a replay never sends a second request. A cron
--- job (20261024150100) checks 72 hours later whether the sender stopped.
+-- job (20261024210100) checks 72 hours later whether the sender stopped.
 --
 -- Related: supabase/functions/mcp-server/subscription-cleanup.ts (handlers),
 -- list-unsubscribe.ts and subscription-scan.ts (Phase 1),
