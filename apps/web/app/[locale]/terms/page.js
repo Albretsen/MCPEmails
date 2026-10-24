@@ -206,6 +206,10 @@ export default async function TermsPage({ params }) {
                   /cancel cite both. Change them together. */}
               <h4>{t('plansAndPayment.h58')}</h4>
               <p>{t.rich('plansAndPayment.p58', richTags)}</p>
+
+              {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
+              <h4>{t('plansAndPayment.h59')}</h4>
+              <p>{t('plansAndPayment.p59')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}

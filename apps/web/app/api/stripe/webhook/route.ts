@@ -139,6 +139,7 @@ import {
   cancelDunningForCustomer,
   cancelOpenSequence,
   cancellationAction,
+  cancellationSource,
   hasCancellationSeries,
   isGrandfathered,
   queueCancellationSequence,
@@ -168,6 +169,18 @@ import {
   recordCheckoutCompleted,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
+import {
+  PAUSED_STATUS,
+  parkOwner,
+  projectSubscription,
+  readPlanChangeRow,
+  unparkOwner,
+  writePlanChangeColumns,
+  type PlanChangeProjection,
+  type PlanChangeRow,
+} from '@/lib/billing/plan-change-sync';
+import { PAUSE_EARLY_KEY } from '@/lib/billing/pause';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { expireGrowthCache } from '@/lib/analytics/growth-queries';
 
 // ---------------------------------------------------------------------------
@@ -522,6 +535,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
+      case 'invoice.voided':
+        // A paused subscription's renewal is finalized, then voided (Stripe
+        // test T6). The void is the moment the paid period has rolled into
+        // the pause, so it re-projects the subscription like the period-roll
+        // subscription.updated does. Either event alone is enough.
+        await handleInvoiceVoided(event.data.object as Stripe.Invoice);
+        break;
+
       case 'customer.subscription.deleted': {
         const deleted = event.data.object as Stripe.Subscription;
         await handleSubscriptionDeleted(deleted);
@@ -563,6 +584,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 /** Stripe events that move a number on the growth board or the kiosk. */
 const GROWTH_EVENT_TYPES = new Set([
+  'invoice.voided',
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
   'checkout.session.async_payment_failed',
@@ -1010,17 +1032,39 @@ async function handleSubscriptionUpserted(
     return;
   }
 
+  // ── Pause and pending downgrade ──────────────────────────────────────────
+  //
+  // `status` stays 'active' through a Stripe pause, so the price alone would
+  // keep a paused customer on the paid plan for free. projectSubscription
+  // decides the entitlement first: paused = Free; a downgrade booked for the
+  // period end = the plan it came from until then. The stored row is read
+  // BEFORE the write, so the transitions (resumed, downgrade landed) are
+  // visible. See src/lib/billing/plan-change-sync.ts.
+  const projection = projectSubscription(subscription, resolved.plan.id);
+  const planChangeDb = createServiceRoleClient();
+  const ownerId = await resolveUserId(planChangeDb, customerId, userId);
+  const before = ownerId ? await readPlanChangeRow(planChangeDb, ownerId) : null;
+
   await applyUserPlan({
     userId,
     customerId,
     subscriptionId: subscription.id,
-    newPlan: resolved.plan.id,
-    subscriptionStatus: status,
+    newPlan: projection.grantPlan,
+    subscriptionStatus: projection.status,
     currentPeriodStart: basePlanItem(subscription.items.data)?.current_period_start ?? null,
     currentPeriodEnd: basePlanItem(subscription.items.data)?.current_period_end ?? null,
-    source: 'customer.subscription.upserted',
+    source:
+      projection.status === PAUSED_STATUS
+        ? 'customer.subscription.upserted (paused)'
+        : projection.downgrade.state === 'pending'
+          ? 'customer.subscription.upserted (downgrade pending)'
+          : 'customer.subscription.upserted',
     offer: subscription.metadata?.offer ?? null,
   });
+
+  if (ownerId) {
+    await syncPlanChange(ownerId, subscription, projection, before);
+  }
 
   // Business bills mailboxes past ten as a second item. Re-sync it on every
   // Business subscription event: it covers a mailbox connected while a plan
@@ -1129,6 +1173,9 @@ async function maybeQueueCancellation(
       currency: subscription.currency ?? null,
       periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
       grandfathered: await isGrandfathered(db, userId),
+      // "Switch to Free" on the billing card: the cancel email leaves out the
+      // "switch to a cheaper plan" line for it.
+      source: cancellationSource(subscription.metadata, periodEnd),
     };
 
     await queueCancellationSequence({
@@ -1169,6 +1216,8 @@ async function handleSubscriptionDeleted(
     subscriptionStatus: 'canceled',
     source: 'customer.subscription.deleted',
   });
+
+  await clearPlanChangeOnDelete(subscription, customerId, userId);
 
   // The subscription is gone, so any dunning still queued for it is now a lie:
   // "update your card and this carries on" is not true once there is nothing
@@ -1361,6 +1410,14 @@ async function queueDunningForInvoice(
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
   if (!customerId || !invoice.id) return;
 
+  // A paused subscription's renewals are voided, never dunned (Stripe T6:
+  // finalized, then voided, no charge attempt). Guarded anyway: a "your
+  // payment failed" email to someone who paused is the worst outcome here.
+  if (invoice.status === 'void') {
+    console.log(`[stripe-webhook] invoice.payment_failed ${invoice.id}: invoice is void; no dunning.`);
+    return;
+  }
+
   const reason = invoice.billing_reason;
   if (reason !== 'subscription_cycle' && reason !== 'subscription_update') {
     console.log('[stripe-webhook] %s %s: billing_reason=%s; not a renewal, no dunning.', ...tag, reason);
@@ -1513,6 +1570,164 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+/**
+ * The pause / downgrade half of a subscription event, after the plan write.
+ *
+ * Writes the user_billing pause and downgrade columns, parks inboxes when the
+ * plan has just dropped (pause running, downgrade landed), unparks them when
+ * it comes back, and records the transitions. The column write and the
+ * transition rows are skipped before migration 20261024233000 is applied
+ * (`before` is null); parking for a running pause still happens, because it
+ * only needs the parking columns.
+ *
+ * CANNOT THROW (every call below is non-throwing and the body is guarded): it
+ * runs after applyUserPlan, and a throw would roll back the ledger row and
+ * make Stripe re-deliver a plan write that already happened. Same pattern as
+ * liftPlanLimitPauses.
+ */
+async function syncPlanChange(
+  ownerId: string,
+  subscription: Stripe.Subscription,
+  projection: PlanChangeProjection,
+  before: PlanChangeRow | null,
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const involved =
+      projection.pause.state !== 'none' ||
+      projection.downgrade.state !== 'none' ||
+      Boolean(before?.paused_from) ||
+      Boolean(before?.pending_plan) ||
+      before?.subscription_status === PAUSED_STATUS;
+    const keepOrder = before?.inbox_keep_order ?? null;
+    const label = `webhook ${subscription.id}`;
+
+    if (before && involved) {
+      await writePlanChangeColumns(db, ownerId, projection.columns);
+    }
+
+    if (projection.parkTo) {
+      await parkOwner(db, ownerId, projection.parkTo, keepOrder, label);
+    } else if (
+      projection.unpark &&
+      (involved || (before !== null && planRankOf(projection.grantPlan) > planRankOf(before.plan)))
+    ) {
+      await unparkOwner(db, ownerId, projection.grantPlan, keepOrder, label);
+    }
+
+    if (!before) return;
+    const workspaceId = await primaryWorkspaceId(db, ownerId);
+    if (!workspaceId) return;
+
+    // The pause ended by itself (Stripe cleared pause_collection). A resume
+    // the customer asked for early is recorded by the route instead.
+    if (
+      before.subscription_status === PAUSED_STATUS &&
+      projection.status !== PAUSED_STATUS &&
+      subscription.metadata?.[PAUSE_EARLY_KEY] !== '1'
+    ) {
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'pause_resumed', outcome: 'success', category: 'auto' });
+    }
+
+    // The downgrade landed: the closing row of the plan_downgraded that the
+    // route opened as `started` at confirm time.
+    if (before.pending_plan && projection.downgrade.state === 'effective') {
+      const interval: BillingInterval =
+        basePlanItem(subscription.items.data)?.price?.recurring?.interval === 'year' ? 'year' : 'month';
+      const target = projection.grantPlan;
+      if (target !== 'free') {
+        // The same row recordPlanChange writes, through the writer itself:
+        // this file's other billing-funnel imports are all it needs from there.
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: 'plan_downgraded',
+          outcome: 'success',
+          category: billingTarget(target, interval),
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] syncPlanChange failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/** Ladder position for "did the plan go up". Unknown and free are 0. */
+function planRankOf(plan: string | null | undefined): number {
+  return plan === 'personal' ? 1 : plan === 'solo' ? 2 : plan === 'pro' ? 3 : 0;
+}
+
+/**
+ * A subscription ended. If it was paused or had a downgrade pending, the
+ * columns are cleared, and a pause that ended in a cancel is recorded as such
+ * (a pause is not churn; a pause that ends in a cancel is, at this moment).
+ * Inboxes parked by the pause stay parked: the owner is on Free now.
+ * Cannot throw, for the same reason as syncPlanChange.
+ */
+async function clearPlanChangeOnDelete(
+  subscription: Stripe.Subscription,
+  customerId: string | null,
+  metadataUserId: string | null,
+): Promise<void> {
+  try {
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    const ownerId = await resolveUserId(db, customerId, metadataUserId);
+    if (!ownerId) return;
+    const before = await readPlanChangeRow(db, ownerId);
+    if (!before || (!before.paused_from && !before.pending_plan)) return;
+    await writePlanChangeColumns(db, ownerId, {
+      paused_from: null,
+      pause_resumes_at: null,
+      pending_plan: null,
+      pending_plan_effective_at: null,
+    });
+    if (before.paused_from) {
+      const workspaceId = await primaryWorkspaceId(db, ownerId);
+      const item = basePlanItem(subscription.items.data);
+      const plan = item?.price?.id ? getPlanByStripePriceId(item.price.id)?.plan.id ?? null : null;
+      if (workspaceId) {
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: 'pause_ended_cancelled',
+          outcome: 'success',
+          category: plan ?? 'unknown',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] clearPlanChangeOnDelete failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * invoice.voided: re-project the subscription when it carries a pause or a
+ * pending downgrade. Any other voided invoice changes nothing. The invoice's
+ * subscription id sits in `parent.subscription_details` on current API
+ * versions and at the top level on older ones; the endpoint is pinned older
+ * than the SDK, so both are read.
+ */
+async function handleInvoiceVoided(invoice: Stripe.Invoice): Promise<void> {
+  const shape = invoice as unknown as {
+    subscription?: string | { id: string } | null;
+    parent?: { subscription_details?: { subscription?: string | { id: string } | null } | null } | null;
+  };
+  const raw = shape.parent?.subscription_details?.subscription ?? shape.subscription ?? null;
+  const subscriptionId = typeof raw === 'string' ? raw : raw?.id ?? null;
+  if (!subscriptionId) return;
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const meta = subscription.metadata ?? {};
+  const relevant =
+    Boolean(subscription.pause_collection?.behavior) ||
+    Boolean(meta.mcpe_pause_from) ||
+    Boolean(meta.mcpe_downgrade_effective_at);
+  if (!relevant) return;
+  await handleSubscriptionUpserted(subscription);
 }
 
 // ---------------------------------------------------------------------------
