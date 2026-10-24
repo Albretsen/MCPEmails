@@ -451,6 +451,14 @@ export type LifecyclePayload = {
   /** ISO time of the subscription's first charge, when known (withdrawal window). */
   firstChargeAt?: string | null;
   /**
+   * Decision D3 (src/lib/billing/park-on-cancel.ts). Set at queue time only
+   * when this subscription's end will park inboxes: the largest number of
+   * active inboxes in one workspace above Free's cap. Above 1, the
+   * confirmation adds one factual sentence about parking. Absent on every row
+   * queued before D3, and for anyone the marker does not cover.
+   */
+  parkInboxCount?: number | null;
+  /**
    * The cancellation's identity for the signed /billing/feedback links. Not
    * stored in the queued payload: sendInputForQueueRow fills them from the
    * row's stripe_customer_id and scope_key (`${subscriptionId}:${periodEnd}`).
@@ -634,6 +642,15 @@ function usageUpgradeUrl(base: string): string {
 /** Nothing is ever deleted on a downgrade, and saying so removes real anxiety. */
 const NOTHING_DELETED =
   'Nothing is deleted either way. Your inbox connections, API keys and settings stay exactly where they are, and reconnecting is one click if you come back.';
+
+/** Decision D3: the one sentence about parking, stated as a fact. */
+export const CANCEL_PARKING_SENTENCE =
+  'When your plan ends, one inbox stays active on Free and the others are parked, not deleted. They come back if you subscribe again.';
+
+/** True when the cancel confirmation carries the parking sentence. */
+function cancelMentionsParking(payload: LifecyclePayload): boolean {
+  return typeof payload.parkInboxCount === 'number' && payload.parkInboxCount > 1 && payload.grandfathered !== true;
+}
 
 // ---------------------------------------------------------------------------
 // Pass notice helpers
@@ -1415,6 +1432,7 @@ export function composeBillingEmail(
         ? `It stays active until ${endsOn}, which you have already paid for.`
         : 'It stays active until the end of the period you have already paid for.';
       const lead = `You cancelled ${yourPlan}. ${until}`;
+      const parking = cancelMentionsParking(payload) ? CANCEL_PARKING_SENTENCE : null;
 
       const withdrawalUrl = `${base}${WITHDRAWAL_PATH}`;
       const withdrawalText = cancelWithdrawalSentence(payload, Date.now());
@@ -1429,6 +1447,7 @@ export function composeBillingEmail(
 
       const body = [
         lead,
+        ...(parking ? [parking] : []),
         NOTHING_DELETED,
         '',
         ...(withdrawalText ? [`${withdrawalText}: ${withdrawalUrl}`, ''] : []),
@@ -1465,6 +1484,7 @@ export function composeBillingEmail(
           title: 'Your cancellation is confirmed',
           html:
             p(lead) +
+            (parking ? p(parking) : '') +
             p(NOTHING_DELETED) +
             (withdrawalText ? pLink(`${withdrawalText}.`, withdrawalUrl) : '') +
             reasonHtml +

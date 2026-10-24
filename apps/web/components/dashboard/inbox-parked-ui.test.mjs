@@ -14,7 +14,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
-import { installDom, mount } from '../../scripts/test-dom.mjs';
+import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 
 installDom();
 // See inbox-cap-offer-ui.test.mjs: next/link needs these two globals in jsdom.
@@ -53,9 +53,9 @@ function inbox(address, parked) {
   };
 }
 
-async function renderInboxes(t, { active = [], parked = [], maxInboxes = 1 }) {
+async function renderInboxes(t, { active = [], parked = [], maxInboxes = 1, userRole = 'owner', fetchImpl = null }) {
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({}) });
+  globalThis.fetch = fetchImpl ?? (async () => ({ ok: true, status: 200, json: async () => ({}) }));
   const view = await mount(createElement(AppLocaleProvider, null,
     createElement(DashboardApp, {
       initialRoute: 'inboxes',
@@ -73,7 +73,7 @@ async function renderInboxes(t, { active = [], parked = [], maxInboxes = 1 }) {
       workspaces: [],
       activeWorkspaceId: WORKSPACE_ID,
       mcpUrl: 'https://mcpemails.com/api/mcp',
-      userRole: 'owner',
+      userRole,
       planLimits: { maxInboxes, historyDays: 30 },
       stripePrices: null,
       overviewStats: {},
@@ -124,4 +124,69 @@ test('no parked inbox, no parked line', async (t) => {
   const view = await renderInboxes(t, { active: ['one@example.com'] });
   assert.equal(view.container.querySelectorAll('.inbox-row-parked').length, 0);
   assert.equal(count(text(view), dashboard.inboxes.parkedNote), 0);
+});
+
+// ── "Make active": the one swap a day ────────────────────────────────────────
+
+const makeActiveButtons = view =>
+  [...view.container.querySelectorAll('button')].filter(b => b.textContent.trim() === dashboard.inboxes.makeActive);
+
+test('owners see Make active on parked rows only; members and viewers do not', async (t) => {
+  const owner = await renderInboxes(t, { active: ['one@example.com'], parked: ['two@example.com'] });
+  assert.equal(makeActiveButtons(owner).length, 2, 'desktop row and mobile card');
+  await owner.unmount();
+  for (const userRole of ['member', 'viewer']) {
+    const view = await renderInboxes(t, { active: ['one@example.com'], parked: ['two@example.com'], userRole });
+    assert.equal(makeActiveButtons(view).length, 0, userRole);
+    await view.unmount();
+  }
+});
+
+test('at the cap the dialog asks which inbox to park, posts the pair, and the rows swap', async (t) => {
+  const calls = [];
+  let activeId = null;
+  let parkedId = null;
+  const fetchImpl = async (url, init) => {
+    if (url === '/api/inboxes/swap-parked') {
+      const body = JSON.parse(init.body);
+      calls.push(body);
+      return { ok: true, status: 200, json: async () => ({ active: [body.parkedInboxId], parked: [body.activeInboxId], next_swap_at: '2026-10-25T10:00:00.000Z' }) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const view = await renderInboxes(t, { active: ['one@example.com'], parked: ['two@example.com'], fetchImpl });
+  await flush(() => makeActiveButtons(view)[0].click());
+  const select = view.container.querySelector('[data-testid="swap-pick"]');
+  assert.ok(select, 'the pick is shown at the cap');
+  activeId = select.value;
+  const confirm = [...view.container.querySelectorAll('.modal button')].find(b => b.textContent.trim() === dashboard.inboxes.swapDialog.confirm);
+  await flush(() => confirm.click());
+  await waitFor(() => calls.length === 1, { message: 'the swap request' });
+  parkedId = calls[0].parkedInboxId;
+  assert.equal(calls[0].activeInboxId, activeId);
+  assert.notEqual(parkedId, activeId);
+  await waitFor(() => !view.container.querySelector('.modal'), { message: 'the dialog to close' });
+  const parkedRows = [...view.container.querySelectorAll('.inbox-row-parked')].map(row => row.textContent);
+  assert.ok(parkedRows.every(row => row.includes('one@example.com')), 'one@ is parked now');
+  assert.ok(parkedRows.length > 0);
+});
+
+test('a second swap the same day shows one line and keeps the dialog open', async (t) => {
+  const fetchImpl = async (url) => (url === '/api/inboxes/swap-parked'
+    ? { ok: false, status: 429, json: async () => ({ error: 'swap_limit', next_swap_at: '2026-10-25T10:00:00.000Z' }) }
+    : { ok: true, status: 200, json: async () => ({}) });
+  const view = await renderInboxes(t, { active: ['one@example.com'], parked: ['two@example.com'], fetchImpl });
+  await flush(() => makeActiveButtons(view)[0].click());
+  const confirm = [...view.container.querySelectorAll('.modal button')].find(b => b.textContent.trim() === dashboard.inboxes.swapDialog.confirm);
+  await flush(() => confirm.click());
+  const error = await waitFor(() => view.container.querySelector('[data-testid="swap-error"]'), { message: 'the error line' });
+  assert.ok(error.textContent.startsWith(dashboard.inboxes.swapDialog.errorLimit.split('{time}')[0]));
+  assert.ok(view.container.querySelector('.modal'), 'still open');
+});
+
+test('with a free slot there is nothing to pick', async (t) => {
+  const view = await renderInboxes(t, { active: ['one@example.com'], parked: ['two@example.com'], maxInboxes: 3 });
+  await flush(() => makeActiveButtons(view)[0].click());
+  assert.ok(view.container.querySelector('.modal'));
+  assert.equal(view.container.querySelectorAll('[data-testid="swap-pick"]').length, 0);
 });

@@ -214,6 +214,7 @@ export const ROUTES = [
   ['app/api/inboxes/[id]/send-as/route.ts', 'arn1', '4-8', 'Resend (one verification mail on add / resend)'],
   ['app/api/inboxes/[id]/signature/image/route.ts', 'arn1', '4', '-'],
   ['app/api/inboxes/app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
+  ['app/api/inboxes/swap-parked/route.ts', 'arn1', '~15', '-'],
   ['app/api/inboxes/autodiscover/route.ts', 'arn1', '2', 'DNS SRV/MX + autoconfig fetch to the mailbox domain'],
   ['app/api/inboxes/fastmail-app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
