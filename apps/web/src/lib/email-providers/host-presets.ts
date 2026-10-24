@@ -424,6 +424,129 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     requiresAppPassword: true,
     appPasswordHelpUrl: 'https://id.yandex.com/security/app-passwords',
   },
+  // ── Providers whose fix steps the connect panel names (CONNECT_FIX_PROVIDERS
+  // in lib/email/auth-failure-help.ts). Hosts are the registry's verified
+  // values (src/lib/connect/providers.mjs); the app-password flags and links
+  // agree with the panel, which a test checks. Each is a host people typed
+  // into the generic form and then failed on with the account password.
+  {
+    // AOL runs on Yahoo's platform but issues its own app passwords.
+    id: 'aol',
+    label: 'AOL Mail',
+    domains: ['aol.com', 'aim.com'],
+    hostSuffixes: ['imap.aol.com', 'smtp.aol.com'],
+    imapHost: 'imap.aol.com',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.aol.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://login.aol.com/myaccount/security/app-password',
+  },
+  {
+    // The website password is refused by mail clients; a "password for
+    // external applications" is required (help.mail.ru, mail clients page).
+    id: 'mail-ru',
+    label: 'Mail.ru',
+    domains: ['mail.ru', 'bk.ru', 'list.ru', 'inbox.ru'],
+    hostSuffixes: ['imap.mail.ru', 'smtp.mail.ru'],
+    imapHost: 'imap.mail.ru',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.mail.ru',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://help.mail.ru/mail/login/mailer/',
+  },
+  {
+    // Tencent issues a 16-character authorization code once IMAP is on.
+    id: 'qq',
+    label: 'QQ Mail',
+    domains: ['qq.com', 'foxmail.com'],
+    hostSuffixes: ['imap.qq.com', 'smtp.qq.com'],
+    imapHost: 'imap.qq.com',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.qq.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://help.mail.qq.com/detail/106/985',
+  },
+  {
+    // Only the "Passwort für E-Mail-Programme" authenticates, never the
+    // Telekom Login password. Telekom's help articles sit behind a sign-in
+    // check that could not be verified, so the link is the help root.
+    id: 't-online',
+    label: 'T-Online',
+    domains: ['t-online.de', 'magenta.de'],
+    hostSuffixes: ['secureimap.t-online.de', 'securesmtp.t-online.de'],
+    imapHost: 'secureimap.t-online.de',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'securesmtp.t-online.de',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://www.telekom.de/hilfe',
+  },
+  {
+    // Each address issues its own device passwords; the Manager login is refused.
+    id: 'infomaniak',
+    label: 'Infomaniak',
+    domains: ['ik.me'],
+    hostSuffixes: ['mail.infomaniak.com'],
+    imapHost: 'mail.infomaniak.com',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'mail.infomaniak.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-a-mail-password-from-the-mail-service',
+  },
+  {
+    // POP/IMAP is off by default; the "mot de passe dédié" is recommended, but
+    // the account password is not refused outright, so no flag.
+    id: 'orange',
+    label: 'Orange',
+    domains: ['orange.fr', 'wanadoo.fr'],
+    hostSuffixes: ['imap.orange.fr', 'smtp.orange.fr'],
+    imapHost: 'imap.orange.fr',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.orange.fr',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // The account password works until two-factor is on; then an app password.
+    id: 'seznam',
+    label: 'Seznam',
+    domains: ['seznam.cz', 'email.cz'],
+    hostSuffixes: ['imap.seznam.cz', 'smtp.seznam.cz'],
+    imapHost: 'imap.seznam.cz',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.seznam.cz',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Same house rule as GMX: POP3/IMAP access starts switched off.
+    id: 'web-de',
+    label: 'WEB.DE',
+    domains: ['web.de'],
+    hostSuffixes: ['imap.web.de', 'smtp.web.de'],
+    imapHost: 'imap.web.de',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.web.de',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
 ];
 
 /** Lower-cased, trimmed, and with a trailing dot (a valid FQDN) removed. */
