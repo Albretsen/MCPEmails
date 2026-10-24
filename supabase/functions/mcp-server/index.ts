@@ -406,6 +406,7 @@ import {
   type ExtraArgumentReview,
   neutralDefaultOf,
   normalizeMessageIdShape,
+  normalizeSearchFolderScope,
   reviewExtraArguments,
   withOwningActions,
 } from "./consolidated-arguments.ts";
@@ -32789,6 +32790,13 @@ async function handleToolsCall(
       // takes one: the same message either way, so it is rewritten before the
       // review below can call it misplaced. See normalizeMessageIdShape.
       normalizeMessageIdShape(argumentIndex.allowedByAction[selectedAction] ?? [], argsObj);
+      // `folder: X` on a search means `include_folders: [X]`, and was being
+      // dropped as list-only. See normalizeSearchFolderScope.
+      // Read-only actions only: on search_and_move or a delete sweep the
+      // refusal stays, for the reason LENIENT_ACTIONS gives.
+      if (allowsLenientArguments(toolName, selectedAction)) {
+        normalizeSearchFolderScope(argumentIndex.allowedByAction[selectedAction] ?? [], argsObj);
+      }
       // Keyed on the RESOLVED action. The selector as sent ("Read", "email_list")
       // names no row in the index, which made every argument of a resolved
       // call look misplaced.
@@ -32836,6 +32844,19 @@ async function handleToolsCall(
       if (!(exposedKey in standaloneArgs)) continue;
       if (!(legacyKey in standaloneArgs)) standaloneArgs[legacyKey] = standaloneArgs[exposedKey];
       delete standaloneArgs[exposedKey];
+    }
+    // The per-operation email_search refused `folder`; it scopes the search
+    // the same way it does on email_read. See normalizeSearchFolderScope.
+    // Read-only operations only, as on the consolidated path.
+    const parentActionName = parent
+      ? Object.entries(CONSOLIDATED_SPECS[parent.tool]?.actions ?? {})
+        .find(([, spec]) => spec === parent.action)?.[0]
+      : undefined;
+    if (parent && parentActionName && allowsLenientArguments(parent.tool, parentActionName)) {
+      normalizeSearchFolderScope(
+        Object.keys((tool.inputSchema.properties ?? {}) as Record<string, unknown>),
+        standaloneArgs,
+      );
     }
     const droppedAction = dropRedundantAction(
       toolName,
