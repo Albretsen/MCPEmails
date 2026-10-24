@@ -18,6 +18,8 @@ import {
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
+import { businessPriceFor, FOUNDER_OFFER_TAG } from '@/lib/stripe/founder-offer';
+import { currentFounderOffer } from '@/lib/stripe/founder-offer-server';
 import {
   countOwnedInboxes,
   mailboxAddonItemChanges,
@@ -836,6 +838,24 @@ export async function runCheckout(input: {
         fromPrice = { planId: resolvedFrom.plan.id, interval: resolvedFrom.interval };
       }
 
+      // The Business founder price (founder-offer.ts). An upgrade from
+      // Personal or Pro to Business takes it while the offer is open; a
+      // founder switching monthly <-> yearly keeps the founder pair, offer or
+      // no offer; an existing $39 Business subscriber is not moved. Every
+      // other plan resolves to `priceId` unchanged.
+      const founderOffer =
+        planId === 'pro' && fromPrice?.planId !== 'pro'
+          ? await currentFounderOffer({ ownerId: user.id })
+          : null;
+      const targetPriceId = businessPriceFor({
+        planId,
+        interval,
+        normalPriceId: priceId,
+        offer: founderOffer,
+        currentPriceId: currentItem.price.id,
+        currentPlanId: fromPrice?.planId ?? null,
+      }).priceId;
+
       // The same no-op reached through a RETIRED price. A subscriber still
       // billing on Personal's $5 (or any legacy id) who asks for the same plan
       // at the same interval is asking for what they already have; comparing
@@ -848,9 +868,10 @@ export async function runCheckout(input: {
       // A Pro subscriber who kept $15 / $144 at the Pro price change keeps
       // that generation when switching interval: monthly $15 goes to yearly
       // $144, not to the $182.40 Pro now sells. Null for everyone else, who
-      // move to the sold price as before. See retainedPriceGenerationId.
+      // move to the sold price as before (the founder price above included).
+      // See retainedPriceGenerationId.
       const swapPriceId =
-        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? priceId;
+        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? targetPriceId;
 
       if (currentItem.price.id === swapPriceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
@@ -1116,8 +1137,17 @@ export async function runCheckout(input: {
   // line and its quantity are shown before they pay. The per-mailbox price must
   // be configured for EVERY Business checkout, not only one with extras today:
   // the next connect past ten would otherwise have nothing to bill against.
+  //
+  // A new Business subscription takes the founder price while the offer is
+  // open to this owner (founder-offer.ts); otherwise `priceId` as resolved.
+  const sold = businessPriceFor({
+    planId,
+    interval,
+    normalPriceId: priceId,
+    offer: planId === 'pro' ? await currentFounderOffer({ ownerId: user.id }) : null,
+  });
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-    { price: priceId, quantity: 1 },
+    { price: sold.priceId, quantity: 1 },
   ];
   if (planId === 'pro') {
     const addonPriceId = mailboxAddonPriceId(interval);
@@ -1169,8 +1199,11 @@ export async function runCheckout(input: {
   // query string. The panel treats a missing `interval` as "price unknown" and
   // simply omits those two rows, which is what any session created before this
   // shipped will still do when its buyer returns.
+  // `offer=founder` tells the panel the buyer paid the founder price, so it
+  // never quotes the $39 list price back to them.
   const successUrl =
-    `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}`;
+    `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}` +
+    (sold.founder ? '&offer=founder' : '');
   const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
 
   // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
@@ -1196,10 +1229,14 @@ export async function runCheckout(input: {
       cancel_url: cancelUrl,
       // `discounts` and `allow_promotion_codes` cannot be combined in one
       // session, so an offer session applies the coupon server side and
-      // shows no promotion-code field.
+      // shows no promotion-code field. The Business founder price takes
+      // neither: nothing stacks on it. (The seasonal offer is Personal and
+      // Pro only, so the two never meet in one session.)
       ...(offer
         ? { discounts: [{ coupon: offer.couponId }] }
-        : { allow_promotion_codes: true }),
+        : sold.founder
+          ? {}
+          : { allow_promotion_codes: true }),
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
       // Local-currency checkout for buyers outside the US. Prices stay USD and
@@ -1245,6 +1282,10 @@ export async function runCheckout(input: {
         metadata: {
           user_id: user.id,
           ...offerMetadata,
+          // The founder cohort tag, on the same `offer` key. The webhook also
+          // sets it after an in-place upgrade, which cannot carry metadata
+          // (pending updates refuse it).
+          ...(sold.founder ? { offer: FOUNDER_OFFER_TAG } : {}),
         },
       },
       metadata: {
@@ -1256,6 +1297,7 @@ export async function runCheckout(input: {
         // session can be written in it. Allow-listed; English adds nothing.
         ...(reminderLang ? { lang: reminderLang } : {}),
         ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
+        ...(sold.founder ? { offer: FOUNDER_OFFER_TAG } : {}),
       },
       // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
       //

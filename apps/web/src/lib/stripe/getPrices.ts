@@ -10,7 +10,7 @@
 
 import { unstable_cache } from 'next/cache';
 import { stripe } from '@/lib/stripe/client';
-import { PLANS } from '@/lib/stripe/plans';
+import { PLANS, founderPriceIdFor } from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,6 +35,22 @@ export interface StripePlanPrices {
    */
   monthlyPriceConfigured: boolean;
   yearlyPriceConfigured: boolean;
+  /**
+   * Business only, and only while the founder offer is open to the viewer:
+   * the amounts above are then the founder pair, and this carries what the
+   * founder line prints. Absent everywhere else. Set by `withFounderPrices`.
+   */
+  founder?: FounderDisplay;
+}
+
+/** What a surface needs to print the founder line. */
+export interface FounderDisplay {
+  monthlyCents: number;
+  yearlyCents: number;
+  /** The normal per-mailbox price above the included ten, per month. */
+  addonMonthlyCents: number;
+  placesLeft: number;
+  placesTotal: number;
 }
 
 export type StripePricesMap = Record<string, StripePlanPrices>;
@@ -129,3 +145,45 @@ export const fetchStripePrices: () => Promise<StripePricesMap> = unstable_cache(
   ['stripe-prices', 'v2', priceIdFingerprint],
   { revalidate: 3600 },
 );
+
+// ---------------------------------------------------------------------------
+// The Business founder pair ($29 / $278.40), fetched the same way.
+//
+// Null when either founder price id is not configured: no surface may show a
+// founder amount that checkout could not charge. The static fallback is only
+// for a Stripe outage, never for a missing id.
+// ---------------------------------------------------------------------------
+
+/** Static fallback for the founder pair, in USD cents. */
+export const FOUNDER_MONTHLY_FALLBACK_CENTS = 2900;
+export const FOUNDER_YEARLY_FALLBACK_CENTS = 27840;
+
+async function _fetchFounderPrices(
+  monthlyId: string,
+  yearlyId: string,
+): Promise<StripePlanPrices> {
+  const amount = async (id: string, fallback: number): Promise<number> => {
+    try {
+      const price = await stripe.prices.retrieve(id);
+      return price.unit_amount ?? fallback;
+    } catch {
+      return fallback;
+    }
+  };
+  const [monthlyCents, yearlyCents] = await Promise.all([
+    amount(monthlyId, FOUNDER_MONTHLY_FALLBACK_CENTS),
+    amount(yearlyId, FOUNDER_YEARLY_FALLBACK_CENTS),
+  ]);
+  return { monthlyCents, yearlyCents, monthlyPriceConfigured: true, yearlyPriceConfigured: true };
+}
+
+export async function fetchFounderPrices(): Promise<StripePlanPrices | null> {
+  const monthlyId = founderPriceIdFor('month');
+  const yearlyId = founderPriceIdFor('year');
+  if (!monthlyId || !yearlyId) return null;
+  return unstable_cache(
+    () => _fetchFounderPrices(monthlyId, yearlyId),
+    ['stripe-founder-prices', 'v1', monthlyId, yearlyId],
+    { revalidate: 3600 },
+  )();
+}

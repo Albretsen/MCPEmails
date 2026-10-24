@@ -220,11 +220,16 @@
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
     "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
-    "ctaSecondary": "Lee la documentación"
+    "ctaSecondary": "Lee la documentación",
+    "subFounder": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por ${price} con el precio fundador, con $3 al mes por cada uno adicional."
   },
   "seasonal": {
     "badge": "Black Week",
     "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
     "ends": "Termina el {date} a las {time}, hora de Oslo."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}"
   }
 }

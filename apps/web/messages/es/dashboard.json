@@ -364,7 +364,9 @@
     "emptyViewKeys": "Obtén tu URL de MCP y tu clave de API",
     "emptyReadDocs": "Lee las guías de configuración",
     "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
-    "capCtaBusiness": "Mejorar a Business, 39 $/mes"
+    "capCtaBusiness": "Mejorar a Business, 39 $/mes",
+    "capBodyProCapFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
+    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes"
   },
   "apiKeys": {
     "title": "Claves de API",

@@ -46,6 +46,8 @@
  *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
+ *   STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY=price_...  (Business founder, $29/mo)
+ *   STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY=price_...   (Business founder, $278.40/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
  *
@@ -501,6 +503,14 @@ export const PLANS: Record<PlanId, Plan> = {
         process.env.STRIPE_PRICE_PRO_MONTHLY,
         process.env.STRIPE_PRICE_PRO_YEARLY,
       ),
+      // The founder price ($29 / $278.40), sold from 2026-11-09 to the first
+      // 20 Business subscriptions (src/lib/stripe/founder-offer.ts). Kept here
+      // forever: a founder keeps the price for as long as the subscription
+      // lives, so its renewals must always resolve to Business.
+      ...legacyPricePair(
+        process.env.STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY,
+        process.env.STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY,
+      ),
     ],
     // Only what works today, each checked against the code on 2026-10-19:
     // members and roles (invite + members routes, teamRolesEnabled), admins
@@ -611,6 +621,10 @@ export function getPlanByStripePriceId(
       return { plan, interval: 'year' };
     }
   }
+  // The founder pair, read at call time as well as through the legacy list
+  // above, so a renewal maps even when the variables were set after load.
+  const founderInterval = founderPriceInterval(priceId);
+  if (founderInterval) return { plan: PLANS.pro, interval: founderInterval };
   for (const plan of Object.values(PLANS)) {
     const idx = plan.legacyStripePriceIds.indexOf(priceId);
     if (idx !== -1) {
@@ -667,6 +681,36 @@ export function mailboxAddonPriceId(interval: BillingInterval): string | null {
       ? process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY
       : process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
   return raw?.trim() || null;
+}
+
+// ---------------------------------------------------------------------------
+// The Business founder price.
+//
+// Two separate Stripe prices on the Business product rather than a coupon, so
+// the invoice shows $29 as the price and the lock lives in the price id. Who
+// may buy it is decided in founder-offer.ts; these helpers only name the ids.
+// Read at call time, like the add-on ids, so a test can set them after import.
+// ---------------------------------------------------------------------------
+export function founderPriceIdFor(interval: BillingInterval): string | null {
+  const raw =
+    interval === 'year'
+      ? process.env.STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY
+      : process.env.STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY;
+  return raw?.trim() || null;
+}
+
+/** The interval of a founder price id, or null when the id is not one. */
+export function founderPriceInterval(
+  priceId: string | null | undefined,
+): BillingInterval | null {
+  if (!priceId) return null;
+  if (priceId === founderPriceIdFor('month')) return 'month';
+  if (priceId === founderPriceIdFor('year')) return 'year';
+  return null;
+}
+
+export function isFounderPriceId(priceId: string | null | undefined): boolean {
+  return founderPriceInterval(priceId) !== null;
 }
 
 /** The interval of an add-on price id, or null when the id is not one. */

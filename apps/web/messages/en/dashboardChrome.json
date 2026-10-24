@@ -346,7 +346,9 @@
     "businessFeatureInboxes": "10 mailboxes included, $3 a month for each extra",
     "businessFeatureMembers": "Unlimited members with roles, at no extra cost",
     "businessFeatureApprovals": "Admins approve held sends",
-    "businessFeatureWorkspaces": "Several workspaces on one subscription"
+    "businessFeatureWorkspaces": "Several workspaces on one subscription",
+    "businessCapBodyFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
+    "businessCapCtaFounder": "Upgrade to Business, ${price}/mo"
   },
   "commandPalette": {
     "pageOverview": "Overview",
@@ -436,5 +438,9 @@
     "switchCta": "Switch to annual",
     "switchBusy": "Preparing...",
     "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
+  },
+  "founder": {
+    "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
+    "places": "{left} of {total} places left"
   }
 }

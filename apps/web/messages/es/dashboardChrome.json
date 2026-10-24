@@ -346,7 +346,9 @@
     "businessFeatureInboxes": "10 buzones incluidos, $3 al mes por cada uno adicional",
     "businessFeatureMembers": "Miembros ilimitados con roles, sin coste extra",
     "businessFeatureApprovals": "Los administradores aprueban los envíos retenidos",
-    "businessFeatureWorkspaces": "Varios espacios de trabajo con una sola suscripción"
+    "businessFeatureWorkspaces": "Varios espacios de trabajo con una sola suscripción",
+    "businessCapBodyFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
+    "businessCapCtaFounder": "Mejorar a Business, ${price}/mes"
   },
   "commandPalette": {
     "pageOverview": "Resumen",
@@ -436,5 +438,9 @@
     "switchCta": "Cambiar a anual",
     "switchBusy": "Preparando...",
     "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}"
   }
 }

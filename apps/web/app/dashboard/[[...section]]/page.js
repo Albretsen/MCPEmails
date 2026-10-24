@@ -21,6 +21,7 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import { attachFounder, founderDisplayFor } from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
@@ -924,7 +925,16 @@ export default async function DashboardPage({ params }) {
   // else (annual, Business, legacy, comped) would be quoted a price that
   // checkout-core does not apply to their swap, so they are shown none.
   const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
-  const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
+  //
+  // The Business founder line rides on the Business entry, for an owner who is
+  // not on Business already (src/lib/stripe/founder-offer.ts). The client
+  // swaps the founder amounts in for its language (zh keeps the normal price).
+  // The seasonal offer never touches Business, so the two do not meet.
+  const founder =
+    workspace?.owner_id === user.id && plan !== 'pro' && !compedScale
+      ? await founderDisplayFor({ ownerId: user.id })
+      : null;
+  const stripePrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
 
   return (
     <DashboardApp

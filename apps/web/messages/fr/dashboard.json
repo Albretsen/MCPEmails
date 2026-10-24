@@ -364,7 +364,9 @@
     "emptyViewKeys": "Obtenir votre URL MCP et votre clé d’API",
     "emptyReadDocs": "Lire les guides de configuration",
     "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
-    "capCtaBusiness": "Passer à Business, 39 $/mois"
+    "capCtaBusiness": "Passer à Business, 39 $/mois",
+    "capBodyProCapFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
+    "capCtaBusinessFounder": "Passer à Business, {price} $/mois"
   },
   "apiKeys": {
     "title": "Clés API",

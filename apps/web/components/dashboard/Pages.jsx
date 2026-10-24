@@ -32,6 +32,8 @@ import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
+import FounderPriceNote from './FounderPriceNote';
 import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
 import {
   usageCapCheckoutHref,
@@ -1525,6 +1527,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
         const offer = inboxCapOffer(maxInboxes, { businessShaped });
+        // Founder keys for Business while the founder price is open.
+        const capCopy = founderCapCopy(offer, stripePrices);
         // Null when annual cannot be sold for this plan, in which case the
         // notice keeps the monthly-only shape it has always had.
         const annual = annualOfferForPlan(stripePrices, offer.plan);
@@ -1560,9 +1564,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 color: 'var(--fg-3)',
                 lineHeight: 1.5,
               }}>
-                {t(offer.noticeBodyKey)}
+                {t(capCopy.noticeBodyKey)}
               </div>
               <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
+              <FounderPriceNote founder={capCopy.founder} size="sm" />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (
@@ -1647,7 +1652,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   key={o.plan}
                   plan={o.plan}
                   planName={planDisplayName(o.plan)}
-                  monthlyLabel={t(o.noticeCtaKey)}
+                  monthlyLabel={
+                    capCopy.founder && o.plan === 'pro'
+                      ? t(capCopy.noticeCtaKey, { price: formatAmountCents(capCopy.founder.monthlyCents) })
+                      : t(o.noticeCtaKey)
+                  }
                   annualOffer={annualByPlan[o.plan]}
                   interval={capInterval}
                   variant={offer.dual && !o.recommended ? 'secondary' : 'primary'}
@@ -6548,6 +6557,9 @@ function BillingSection({
                         <div style={{ marginTop: 8 }}>
                           <SeasonalOfferNote offer={stripePrices[plan.id].seasonalOffer} size="sm" />
                         </div>
+                      )}
+                      {plan.id === 'pro' && (
+                        <FounderPriceNote founder={stripePrices?.pro?.founder} size="sm" />
                       )}
                     </div>
 

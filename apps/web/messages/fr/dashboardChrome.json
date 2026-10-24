@@ -346,7 +346,9 @@
     "businessFeatureInboxes": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
     "businessFeatureMembers": "Membres illimités avec rôles, sans surcoût",
     "businessFeatureApprovals": "Les administrateurs approuvent les envois en attente",
-    "businessFeatureWorkspaces": "Plusieurs espaces de travail sur un seul abonnement"
+    "businessFeatureWorkspaces": "Plusieurs espaces de travail sur un seul abonnement",
+    "businessCapBodyFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
+    "businessCapCtaFounder": "Passer à Business, {price} $/mois"
   },
   "commandPalette": {
     "pageOverview": "Aperçu",
@@ -436,5 +438,9 @@
     "switchCta": "Passer à l'annuel",
     "switchBusy": "Préparation...",
     "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
+  },
+  "founder": {
+    "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
+    "places": "Places restantes : {left} sur {total}"
   }
 }

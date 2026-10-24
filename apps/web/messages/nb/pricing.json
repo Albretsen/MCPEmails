@@ -220,11 +220,16 @@
     "title": "Klar til å gi agenten din en innboks?",
     "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
-    "ctaSecondary": "Les dokumentasjonen"
+    "ctaSecondary": "Les dokumentasjonen",
+    "subFounder": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for ${price} med grunnleggerprisen, med $3 i måneden for hver ekstra."
   },
   "seasonal": {
     "badge": "Black Week",
     "line": "Black Week: ${firstYear} det første året, deretter ${renewal} i året. Du sparer ${saving}.",
     "ends": "Slutter {date} kl. {time} norsk tid."
+  },
+  "founder": {
+    "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",
+    "places": "{left} av {total} plasser igjen"
   }
 }

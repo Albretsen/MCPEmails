@@ -220,11 +220,16 @@
     "title": "Ready to give your agent an inbox?",
     "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
-    "ctaSecondary": "Read the docs"
+    "ctaSecondary": "Read the docs",
+    "subFounder": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for ${price} at the founder price, with $3 a month for each one after that."
   },
   "seasonal": {
     "badge": "Black Week",
     "line": "Black Week: ${firstYear} for your first year, then ${renewal} a year. You save ${saving}.",
     "ends": "Ends {date}, {time} Oslo time."
+  },
+  "founder": {
+    "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
+    "places": "{left} of {total} places left"
   }
 }

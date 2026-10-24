@@ -364,7 +364,9 @@
     "emptyViewKeys": "Get your MCP URL and API key",
     "emptyReadDocs": "Read the client setup guides",
     "capBodyProCap": "Pro connects 10 mailboxes. Business includes 10 for $39 a month and adds each extra mailbox for $3 a month, with unlimited members at no extra cost.",
-    "capCtaBusiness": "Upgrade to Business, $39/mo"
+    "capCtaBusiness": "Upgrade to Business, $39/mo",
+    "capBodyProCapFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
+    "capCtaBusinessFounder": "Upgrade to Business, ${price}/mo"
   },
   "apiKeys": {
     "title": "API keys",

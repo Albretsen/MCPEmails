@@ -101,11 +101,22 @@ export const OG_LOCALE: Record<string, string> = {
  * discount on the same subscription rather than a separate product, and
  * publishing both as sibling Offers reads as two competing prices.
  */
-function planOffers(url: string) {
+/**
+ * `founder` is the Business founder offer while it is open on /pricing: the
+ * Business Offer then carries the founder monthly price, valid until its last
+ * day. Absent, every price is the catalogue's.
+ */
+function planOffers(
+  url: string,
+  founder?: { monthlyCents: number; validUntil: string } | null,
+) {
   return (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const price = (plan.monthlyPriceCents / 100).toString();
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
     return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
@@ -301,7 +312,8 @@ export function homeJsonLd(
  */
 export function pricingJsonLd(
   locale: string,
-  { title, description }: { title: string; description: string }
+  { title, description }: { title: string; description: string },
+  founder?: { monthlyCents: number; validUntil: string } | null,
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -322,7 +334,7 @@ export function pricingJsonLd(
           name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url),
+        offers: planOffers(url, founder),
       },
     ],
   };

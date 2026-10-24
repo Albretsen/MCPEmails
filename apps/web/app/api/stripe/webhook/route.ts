@@ -105,6 +105,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { recordFounderPlace } from '@/lib/stripe/founder-places';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
   creditAbandonedCheckout,
@@ -781,6 +782,14 @@ async function handleSubscriptionUpserted(
     after(async () => {
       const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
       if (owner) await syncMailboxAddon(owner);
+      // A paid subscription on the founder price takes its place in the
+      // counter and gets the cohort tag. No-op for any other price.
+      await recordFounderPlace({
+        db: createServiceRoleClient(),
+        subscription,
+        ownerId: owner,
+        tagSubscription: (id, metadata) => stripe.subscriptions.update(id, { metadata }),
+      });
     });
   }
 

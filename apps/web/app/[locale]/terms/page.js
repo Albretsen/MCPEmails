@@ -200,6 +200,9 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h57')}</h4>
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
+
+              <h4>{t('plansAndPayment.h58')}</h4>
+              <p>{t('plansAndPayment.p58')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}
