@@ -34,6 +34,39 @@
       "minimum": 0,
       "description": "Frame index for the .jpg poster. Defaults to 1s into scene 2."
     },
+    "format": {
+      "type": "string",
+      "enum": ["landscape", "vertical"],
+      "default": "landscape",
+      "description": "vertical = the 1080x1920 short (TikTok, Reels, Shorts). Sets width and height; text stays out of the bottom 20% and the right-hand rail. Requires post."
+    },
+    "automated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Written by a routine with nobody watching. Refuses capture scenes, which need a human-signed-in session."
+    },
+    "timer": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "description": "Stopwatch overlay from the start of scene `from` to the answer (or the end) of scene `to`. Counts video time, not server latency.",
+      "properties": {
+        "from": { "type": "integer", "minimum": 0 },
+        "to": { "type": "integer", "minimum": 0 },
+        "label": { "type": "string" }
+      }
+    },
+    "post": {
+      "type": "object",
+      "required": ["caption"],
+      "additionalProperties": false,
+      "description": "Copy for out/<id>.post.json, which verify writes on a pass. Nothing is posted.",
+      "properties": {
+        "caption": { "type": "string", "maxLength": 2200 },
+        "hashtags": { "type": "array", "maxItems": 8, "items": { "type": "string", "pattern": "^#?[A-Za-z0-9_]{2,40}$" } },
+        "sourceUrl": { "type": "string", "pattern": "^https://" }
+      }
+    },
     "scenes": {
       "type": "array",
       "minItems": 1,
@@ -42,7 +75,7 @@
         "type": "object",
         "required": ["type"],
         "properties": {
-          "type": { "type": "string", "enum": ["title", "capture", "chat", "terminal", "outro"] }
+          "type": { "type": "string", "enum": ["title", "capture", "chat", "terminal", "outro", "clip", "query"] }
         },
         "allOf": [
           {
@@ -151,6 +184,36 @@
                 "durationInSeconds": { "type": "number", "minimum": 1.5 },
                 "cta": { "type": "string", "description": "One CTA. No em dashes." },
                 "sub": { "type": "string", "description": "No em dashes." }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "clip" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "durationInSeconds", "src"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "clip" },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "src": { "type": "string", "pattern": "^assets/clips/[A-Za-z0-9._-]+\\.mp4$", "description": "A generated hook clip. Always drawn with an AI-generated badge." },
+                "from": { "type": "number", "minimum": 0, "default": 0 },
+                "caption": { "type": "string" },
+                "muted": { "type": "boolean", "default": true }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "query" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "durationInSeconds", "question", "platform", "sourceUrl"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "query" },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "question": { "type": "string", "maxLength": 160, "description": "Paraphrased. No handles, addresses or links." },
+                "platform": { "type": "string", "enum": ["reddit", "x", "hacker-news", "stack-overflow", "github", "discord", "forum", "quora"] },
+                "sourceUrl": { "type": "string", "pattern": "^https://", "description": "Never drawn. Goes to post.json." },
+                "lead": { "type": "string", "description": "Replaces 'Someone asked on <platform>'." }
               }
             }
           }
