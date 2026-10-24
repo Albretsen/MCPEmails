@@ -88,13 +88,15 @@ export async function kickDueRows(ids: number[], label: string): Promise<void> {
       try {
         await runner(batch);
       } catch (err) {
-        console.error(`[dispatch-kick] ${label}: dispatch failed; the cron will retry:`, {
+        console.error('[dispatch-kick] dispatch failed; the cron will retry:', {
+          label,
           error: err instanceof Error ? err.message : String(err),
         });
       }
     });
   } catch (err) {
-    console.warn(`[dispatch-kick] ${label}: not scheduled (no request scope?); the cron will send it:`, {
+    console.warn('[dispatch-kick] not scheduled (no request scope?); the cron will send it:', {
+      label,
       error: err instanceof Error ? err.message : String(err),
     });
   }
