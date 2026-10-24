@@ -52,10 +52,12 @@
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
  *   STRIPE_PRICE_PERSONAL_PASS_3M=price_...   (3-month Personal pass, $29 once)
  *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
- *                                             (USD tax-inclusive twins of the
- *                                              prices EU subscribers were on,
- *                                              EUR launch 2026-12-07; see
- *                                              priceTwinMap below)
+ *                                             (optional: USD tax-inclusive
+ *                                              twins of the prices EU
+ *                                              subscribers were on, EUR launch
+ *                                              2026-12-07; a twin's own
+ *                                              metadata.twin_of works without
+ *                                              it, see priceTwinMap below)
  *
  * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
  *
@@ -686,8 +688,12 @@ export function resolvePlanLimits(
 // throwing) so the webhook can log-and-continue without crashing.
 // ---------------------------------------------------------------------------
 export function getPlanByStripePriceId(
-  priceId: string | null | undefined,
+  price: string | PriceWithMetadata | null | undefined,
 ): { plan: Plan; interval: BillingInterval } | null {
+  // A price object (a subscription item's `price`) also teaches the twin map
+  // its metadata.twin_of, so a twin resolves even with no STRIPE_PRICE_TWINS.
+  if (price && typeof price === 'object') notePriceTwin(price);
+  const priceId = price && typeof price === 'object' ? price.id : price;
   if (!priceId || typeof priceId !== 'string') {
     return null;
   }
@@ -730,18 +736,67 @@ function planByCatalogueId(
 // a new plan. It must resolve exactly like its original, everywhere a price id
 // is read, or a renewal on a twin would look like an unknown price.
 //
-// One env var holds every twin, STRIPE_PRICE_TWINS = {"twinId":"originalId"},
-// so adding a twin never needs a new variable. Read at call time (tests set it
-// after import) and parsed once per distinct value. A malformed value maps
-// nothing and logs once: failing loud at module load would take checkout down
-// with it.
+// TWO SOURCES, MERGED.
+//
+//   1. STRIPE_PRICE_TWINS = {"twinId":"originalId"}: one env var for every
+//      twin, read at call time (tests set it after import) and parsed once
+//      per distinct value. A malformed value maps nothing and logs once:
+//      failing loud at module load would take checkout down with it.
+//   2. The twin's own `metadata.twin_of`, learned from any price OBJECT this
+//      process sees (notePriceTwin, called by basePlanItem, mailboxAddonItem
+//      and getPlanByStripePriceId when handed an object). The EUR launch
+//      dispatcher creates the twins by itself on 2026-12-07, and nothing can
+//      set a Vercel variable from there, so without this every twin would be
+//      an unknown price until somebody pasted the mapping in. Every reader of
+//      a subscription holds its items' price objects, and Stripe always
+//      includes a price's metadata, so learning there covers the webhook,
+//      plan changes and the mailbox add-on. A learned twin must point at a
+//      catalogue price (a plan price or the add-on); anything else is ignored,
+//      so stray metadata on some other product line's price changes nothing.
+//
+// The env map wins where both name the same twin. It is still worth setting
+// once the twins exist: a cold process that has only an id in hand (no price
+// object yet) resolves through it alone.
 // ---------------------------------------------------------------------------
-let twinCache: { raw: string; map: Map<string, string> } | null = null;
+let twinCache: { raw: string; learned: number; map: Map<string, string> } | null = null;
+
+export interface PriceWithMetadata {
+  id?: string | null;
+  metadata?: Record<string, string> | null;
+}
+
+const learnedTwins = new Map<string, string>();
+let learnedVersion = 0;
+
+/**
+ * Learn `price` as a twin when its metadata says `twin_of` a catalogue price.
+ * Idempotent and cheap; safe to call on every item of every subscription.
+ */
+export function notePriceTwin(price: PriceWithMetadata | null | undefined): void {
+  const id = price?.id;
+  const original = price?.metadata?.twin_of;
+  if (typeof id !== 'string' || typeof original !== 'string') return;
+  if (!id.startsWith('price_') || !original.startsWith('price_') || id === original) return;
+  if (learnedTwins.get(id) === original) return;
+  if (!planByCatalogueId(original) && !isCatalogueAddonId(original)) return;
+  learnedTwins.set(id, original);
+  learnedVersion += 1;
+}
+
+/** Test seam: forget every learned twin. */
+export function resetLearnedTwins(): void {
+  learnedTwins.clear();
+  learnedVersion += 1;
+}
+
+function isCatalogueAddonId(priceId: string): boolean {
+  return priceId === mailboxAddonPriceId('month') || priceId === mailboxAddonPriceId('year');
+}
 
 export function priceTwinMap(): ReadonlyMap<string, string> {
   const raw = process.env.STRIPE_PRICE_TWINS?.trim() ?? '';
-  if (twinCache && twinCache.raw === raw) return twinCache.map;
-  const map = new Map<string, string>();
+  if (twinCache && twinCache.raw === raw && twinCache.learned === learnedVersion) return twinCache.map;
+  const map = new Map<string, string>(learnedTwins);
   if (raw) {
     try {
       const parsed: unknown = JSON.parse(raw);
@@ -763,7 +818,7 @@ export function priceTwinMap(): ReadonlyMap<string, string> {
   for (const [twin, original] of map) {
     if (map.has(original)) map.delete(twin);
   }
-  twinCache = { raw, map };
+  twinCache = { raw, learned: learnedVersion, map };
   return map;
 }
 
@@ -894,10 +949,11 @@ export function extraMailboxQuantity(connectedInboxes: number): number {
  * else the first item. The fallbacks keep an unmapped legacy price behaving
  * exactly as `items[0]` did before the add-on existed.
  */
-export function basePlanItem<T extends { price?: { id?: string | null } | null }>(
+export function basePlanItem<T extends { price?: PriceWithMetadata | null }>(
   items: readonly T[] | null | undefined,
 ): T | undefined {
   const list = items ?? [];
+  for (const item of list) notePriceTwin(item.price);
   return (
     list.find((item) => getPlanByStripePriceId(item.price?.id ?? null) !== null) ??
     list.find((item) => !isMailboxAddonPriceId(item.price?.id ?? null)) ??
@@ -906,9 +962,10 @@ export function basePlanItem<T extends { price?: { id?: string | null } | null }
 }
 
 /** The add-on item, when the subscription has one. */
-export function mailboxAddonItem<T extends { price?: { id?: string | null } | null }>(
+export function mailboxAddonItem<T extends { price?: PriceWithMetadata | null }>(
   items: readonly T[] | null | undefined,
 ): T | undefined {
+  for (const item of items ?? []) notePriceTwin(item.price);
   return (items ?? []).find((item) => isMailboxAddonPriceId(item.price?.id ?? null));
 }
 

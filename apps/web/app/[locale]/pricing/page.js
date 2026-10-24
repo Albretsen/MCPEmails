@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
+import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pricingJsonLd } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
 import { attachFounder, founderDisplayFor } from '@/lib/stripe/founder-display';
@@ -43,10 +43,14 @@ export default async function PricingPage({ params }) {
   // flag and the place count are each cached 60 s (founder-offer-server.ts).
   const founder = await founderDisplayFor({ locale });
   const stripePrices = pricesWithFounder(attachFounder(await fetchStripePrices(), founder), locale);
-  // STRIPE_EUR_PRICES, read when this page renders and handed to the client,
+  // EUR on or off, read when this page renders and handed to the client,
   // which decides per visitor (EU or not) without making the page dynamic.
-  // Off by default, and off means the page renders exactly as before.
-  const eurEnabled = eurPricesEnabled();
+  // On means STRIPE_EUR_PRICES, or the automatic launch once it completed
+  // (src/lib/stripe/eur-launch.ts), never under STRIPE_FORCE_USD. Off by
+  // default, and off means the page renders exactly as before. A copy of this
+  // page built before the launch still asks /api/geo from the launch date on
+  // (useDisplayCurrency), so a deploy is not needed for visitors to see EUR.
+  const eurEnabled = await eurDisplayEnabled();
 
   const t = await getTranslations({ locale, namespace: 'pricing' });
   const title = t.has('meta.title') ? t('meta.title') : 'Pricing';

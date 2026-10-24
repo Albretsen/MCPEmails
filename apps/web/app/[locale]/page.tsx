@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
+import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
 import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
@@ -85,8 +85,9 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* STRIPE_EUR_PRICES as read at render; off renders exactly as before. */}
-      <HomeClient stripePrices={stripePrices} eurEnabled={eurPricesEnabled()} />
+      {/* EUR on (env switch or the completed launch, eur-launch.ts) as read at
+          render; off renders exactly as before. */}
+      <HomeClient stripePrices={stripePrices} eurEnabled={await eurDisplayEnabled()} />
     </>
   );
 }
