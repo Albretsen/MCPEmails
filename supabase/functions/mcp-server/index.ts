@@ -492,6 +492,7 @@ import {
   type ProGateInputs,
 } from "./pro-features.ts";
 import {
+  addressOf as reminderAddressOf,
   cleanRfcMessageId,
   type EncryptedWrapper,
   followUpDueAt,
@@ -36263,31 +36264,109 @@ interface ReminderMessageFacts {
   summary: ReminderSummary;
 }
 
-async function readReminderMessage(inbox: InboxRow, messageId: string, sinceIso: string): Promise<ReminderMessageFacts> {
-  // The IMAP send path hands back the RFC Message-ID itself as message_id.
-  // There is no IMAP id to read by, and nothing more to learn: the reply search
-  // needs exactly that id.
-  if (inbox.provider !== "gmail" && inbox.provider !== "outlook" && looksLikeRfcMessageId(messageId)) {
+/**
+ * The facts a reminder needs about one message: its Message-ID, thread,
+ * subject and addresses. One metadata request per provider (Gmail
+ * format=metadata, one Graph $select, one IMAP ENVELOPE fetch on the run's own
+ * session); never marks it read and never downloads a body. Deliberately not
+ * through the first-party context, which no MCP path may open
+ * (client-api/tests/mcp-neutral.test.ts).
+ */
+async function readReminderMessage(
+  run: ReminderRunSession,
+  messageId: string,
+  sinceIso: string,
+): Promise<ReminderMessageFacts> {
+  const inbox = run.inboxRow;
+  if (inbox.provider === "gmail") {
+    const token = await withFreshGmailToken(inbox);
+    const params = new URLSearchParams({ format: "metadata" });
+    for (const h of ["Message-ID", "Subject", "From", "To", "Cc"]) params.append("metadataHeaders", h);
+    const resp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?${params}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (resp.status === 404 || resp.status === 400) throw new Error("message_not_found");
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (!resp.ok) throw new Error(`Gmail messages.get error ${resp.status}`);
+    const msg = (await resp.json()) as { threadId?: string; payload?: { headers?: { name: string; value: string }[] } };
+    const header = (name: string) =>
+      msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
+    return {
+      ref: {
+        provider_message_id: messageId,
+        thread_id: msg.threadId ?? null,
+        rfc_message_id: cleanRfcMessageId(header("Message-ID")),
+        since: sinceIso,
+      },
+      summary: {
+        subject: header("Subject"),
+        to: [...parseAddressHeader(header("To")), ...parseAddressHeader(header("Cc"))]
+          .map((a) => a.email).filter(Boolean).slice(0, 50),
+        from: reminderAddressOf(header("From")),
+      },
+    };
+  }
+  if (inbox.provider === "outlook") {
+    const token = await withFreshOutlookToken(inbox);
+    const resp = await graphFetch(
+      token,
+      `/me/messages/${encodeURIComponent(messageId)}` +
+        "?$select=internetMessageId,conversationId,subject,from,toRecipients,ccRecipients",
+    );
+    if (resp.status === 404 || resp.status === 400) throw new Error("message_not_found");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (!resp.ok) throw new Error(`Outlook message error ${resp.status}`);
+    type GraphAddress = { emailAddress?: { address?: string } };
+    const msg = (await resp.json()) as {
+      internetMessageId?: string;
+      conversationId?: string;
+      subject?: string;
+      from?: GraphAddress;
+      toRecipients?: GraphAddress[];
+      ccRecipients?: GraphAddress[];
+    };
+    return {
+      ref: {
+        provider_message_id: messageId,
+        thread_id: msg.conversationId ?? null,
+        rfc_message_id: cleanRfcMessageId(msg.internetMessageId ?? null),
+        since: sinceIso,
+      },
+      summary: {
+        subject: msg.subject ?? "",
+        to: [...(msg.toRecipients ?? []), ...(msg.ccRecipients ?? [])]
+          .map((r) => r.emailAddress?.address ?? "").filter(Boolean).slice(0, 50),
+        from: msg.from?.emailAddress?.address ?? null,
+      },
+    };
+  }
+  // IMAP. The send path hands back the RFC Message-ID itself as message_id:
+  // nothing to read, and the reply search needs exactly that id.
+  if (looksLikeRfcMessageId(messageId)) {
     return {
       ref: { provider_message_id: messageId, thread_id: null, rfc_message_id: cleanRfcMessageId(messageId), since: sinceIso },
       summary: { subject: "", to: [], from: null },
     };
   }
-  // threadHeaders adds message_id_header to the read at no extra round trip;
-  // nothing else in the first-party context is set, so the read is otherwise
-  // exactly what an MCP email_read does (metadata only, never marks it read).
-  const read = await firstPartyContext.run({ threadHeaders: true }, () => readMessageForSummary(inbox, messageId));
+  if (!run.imap) throw new Error("imap_auth_failed");
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+  const client = await run.imap.select(imapMailboxForServerFolder(folder));
+  const [summary] = await client.fetchSummaries([uid], { includeCc: true });
+  if (!summary) throw new Error("message_not_found");
+  const env = summary.envelope;
   return {
     ref: {
       provider_message_id: messageId,
-      thread_id: inbox.provider === "gmail" || inbox.provider === "outlook" ? (read.thread_id || null) : null,
-      rfc_message_id: cleanRfcMessageId(read.message_id_header ?? null),
+      thread_id: null,
+      rfc_message_id: cleanRfcMessageId(env.messageId),
       since: sinceIso,
     },
     summary: {
-      subject: read.subject ?? "",
-      to: [...(read.to ?? []), ...(read.cc ?? [])].map((a) => a.email).filter(Boolean).slice(0, 50),
-      from: read.from?.email ?? null,
+      subject: decodeEnvelopeSubject(env.subject ?? ""),
+      to: [...(env.to ?? []), ...(env.cc ?? [])].map((a) => a.email).filter(Boolean).slice(0, 50),
+      from: env.from?.[0]?.email ?? null,
     },
   };
 }
@@ -36383,10 +36462,13 @@ async function executeReminderFollowUp(rawArgs: unknown, apiKey: ApiKeyRow): Pro
   if (room) return room;
 
   let facts: ReminderMessageFacts;
+  const run = reminderSessionFor(inbox);
   try {
-    facts = await readReminderMessage(inbox, messageId, new Date().toISOString());
+    facts = await readReminderMessage(run, messageId, new Date().toISOString());
   } catch (error) {
     return reminderReadFailure(tool, inbox, error);
+  } finally {
+    if (run.imap) await run.imap.close().catch(() => {});
   }
   if (inbox.provider !== "gmail" && inbox.provider !== "outlook" && !facts.ref.rfc_message_id) {
     return reminderFailure(
@@ -36425,14 +36507,15 @@ function reminderSessionFor(inboxRow: InboxRow): ReminderRunSession {
 async function resolveSnoozeFolder(
   inbox: InboxRow,
   requested: string | null,
+  session: ImapSession<ImapClient> | null = null,
 ): Promise<{ id: string; name: string }> {
   if (requested) {
-    const id = await resolveFolderId(inbox, requested, { strict: true });
+    const id = await resolveFolderId(inbox, requested, { strict: true, session });
     return { id, name: requested };
   }
   const name = SNOOZE_FOLDER_NAME;
   try {
-    return { id: await resolveFolderId(inbox, name, { strict: true }), name };
+    return { id: await resolveFolderId(inbox, name, { strict: true, session }), name };
   } catch (error) {
     if (!(error instanceof FolderTargetError) || error.logErrorCode !== "folder_not_found") throw error;
   }
@@ -36535,7 +36618,7 @@ async function reminderReturnSnoozed(
     return { ref: { ...ref, snoozed_message_id: current } };
   }
 
-  const inboxFolder = await resolveFolderId(inbox, "INBOX");
+  const inboxFolder = await resolveFolderId(inbox, "INBOX", { session: run.imap });
   const first = await reminderMoveMessage(run, current, inboxFolder, ref.rfc_message_id);
   if (first.moved) return { ref: { ...ref, snoozed_message_id: first.newId } };
   if (inbox.provider === "outlook") {
@@ -36619,9 +36702,13 @@ async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promi
   if (room) return room;
 
   const nowIso = new Date().toISOString();
+  // One IMAP session for the whole call: the read, the folder LIST, the move
+  // and any Message-ID lookup after it.
+  const run = reminderSessionFor(inbox);
+  try {
   let facts: ReminderMessageFacts;
   try {
-    facts = await readReminderMessage(inbox, messageId, nowIso);
+    facts = await readReminderMessage(run, messageId, nowIso);
   } catch (error) {
     return reminderReadFailure(tool, inbox, error);
   }
@@ -36647,18 +36734,19 @@ async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promi
     };
   }
 
-  const run = reminderSessionFor(inbox);
-  try {
     let folder: { id: string; name: string };
     try {
-      folder = await resolveSnoozeFolder(inbox, requestedFolder);
+      folder = await resolveSnoozeFolder(inbox, requestedFolder, run.imap);
     } catch (error) {
       if (error instanceof FolderTargetError) {
         return reminderFailure(tool, `${error.message} Nothing was moved.`, error.logErrorCode);
       }
       return reminderFailure(tool, "could not find or create the snooze folder. Nothing was moved.", providerErrorCode(error));
     }
-    if (folder.id.toUpperCase() === "INBOX" || folder.id === (await resolveFolderId(inbox, "INBOX").catch(() => ""))) {
+    if (
+      folder.id.toUpperCase() === "INBOX" ||
+      folder.id === (await resolveFolderId(inbox, "INBOX", { session: run.imap }).catch(() => ""))
+    ) {
       return reminderFailure(tool, "the snooze folder cannot be the inbox itself. Nothing was moved.", "-32602");
     }
 
@@ -37032,7 +37120,10 @@ async function runSendWithFollowUp(dispatchName: string, rawArgs: unknown, apiKe
     if (!facts.ref.rfc_message_id || !facts.ref.thread_id && (inbox.provider === "gmail" || inbox.provider === "outlook")) {
       // One metadata read of the sent copy for the Message-ID and thread.
       try {
-        const read = await readReminderMessage(inbox, messageId, sentAt);
+        const readRun = reminderSessionFor(inbox);
+        const read = await readReminderMessage(readRun, messageId, sentAt).finally(async () => {
+          if (readRun.imap) await readRun.imap.close().catch(() => {});
+        });
         facts = {
           ref: {
             ...facts.ref,
