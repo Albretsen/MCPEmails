@@ -183,7 +183,11 @@ import {
 type ProviderErrorAuditDetails =
   | ProviderCallAuditDetails
   | FolderResolveAuditDetails
-  | HandlerValidationAuditDetails;
+  | HandlerValidationAuditDetails
+  // Subscription cleanup's method mix and outcome counts, written on SUCCESS
+  // too (subscription-cleanup.ts#SubscriptionAuditDetails): the only way to
+  // measure the one-click/mailto split. Counts and `https://host` only.
+  | SubscriptionAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -542,6 +546,23 @@ import {
   type MorningBriefUpdate,
   runMorningBriefDispatch,
 } from "./morning-brief-engine.ts";
+  advertiseCrossInboxSearch,
+  CROSS_INBOX_CONCURRENCY,
+  CROSS_INBOX_DEADLINE_MS,
+  CROSS_INBOX_MAX_INBOXES,
+  CROSS_INBOX_TIMEOUT_MS,
+  CROSS_INBOX_WINDOW,
+  crossInboxBuckets,
+  crossInboxFetchLimit,
+  crossInboxLegArgs,
+  crossInboxValidationArgs,
+  type CrossInboxLeg,
+  isCrossInboxAll,
+  isCrossInboxCall,
+  legFromToolResult,
+  mergeCrossInboxPages,
+  runFanOut,
+} from "./cross-inbox.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
   type ActionReservationRow,
@@ -593,6 +614,20 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import { fetchListHeaderRecords, type ListHeaderScanContext } from "./subscription-scan.ts";
+import { authservTrustFor } from "./list-unsubscribe.ts";
+import { postOneClick } from "./one-click-post.ts";
+import {
+  isSubscriptionToolName,
+  runSubscriptionFollowUp,
+  runSubscriptionTool,
+  type SubInbox,
+  SUBSCRIPTION_TOOL_DEFINITIONS,
+  SUBSCRIPTION_TOOL_NAMES,
+  type SubscriptionAuditDetails,
+  type SubscriptionDeps,
+  supabaseSubscriptionStore,
+} from "./subscription-cleanup.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -3092,7 +3127,7 @@ async function checkPlanQuota(
 // ---------------------------------------------------------------------------
 // Pro feature gate (pro-features.ts holds the rule; this is its one read)
 //
-// workspace_pro_features() (migration 20261024210000) returns the effective
+// workspace_pro_features() (migration 20261024235100) returns the effective
 // plan, workspaces.pro_features_enabled and the pro_features_public switch in
 // one round trip. It is read at most once per request: memoised on the
 // ApiKeyRow object, which handleRequest creates per request and threads to
@@ -9943,6 +9978,22 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // and must stay that way — mcp-app-drafts.test.ts pins it.
 // ---------------------------------------------------------------------------
 for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition });
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup (`subscriptions_scan`, `subscriptions_cleanup`).
+//
+// Registered with NO `_meta`: the card metadata is attached per key in
+// `handleToolsList` (mcp-app-resources.ts#SUBSCRIPTION_CARD_TOOL_NAMES), and
+// both tools are DROPPED from the listing for a workspace without
+// `subscription_cleanup_enabled` (see subscriptionToolsVisible). Their handlers
+// refuse in such a workspace too, so a cached listing cannot reach them.
+// Not in BILLABLE_TOOL_NAMES (spec D2); rate limits and activity_log apply as
+// for every tool. Being registry tools, they are on the per-operation surface
+// below unchanged.
+// ---------------------------------------------------------------------------
+for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
   TOOL_REGISTRY.push({ ...definition });
 }
 
@@ -20586,6 +20637,229 @@ function searchMessagesForProvider(
 }
 
 /**
+ * The provider context `fetchListHeaderRecords` (subscription-scan.ts) scans
+ * with: subscription cleanup's read of List-Unsubscribe headers. Nothing on
+ * the request path calls it yet; the `subscriptions_scan` tool will.
+ *
+ * IMAP needs the caller's session (the caller owns and closes it) and resolves
+ * the Junk/Spam mailbox on it with a strict resolve (no `forRead`: that only
+ * unlocks the archive fallback, and imap-folder-target.test.ts pins its call
+ * sites); an account without one scans the inbox alone. Gmail and Outlook get an
+ * authorized fetch with a token refreshed once for the scan. The budget is the
+ * caller's, so the scan and whatever the tool does after it spend one pot.
+ */
+async function subscriptionScanContextFor(
+  inbox: InboxRow,
+  budget: WorkBudget,
+  session: ImapSession<ImapClient> | null,
+): Promise<ListHeaderScanContext> {
+  switch (inbox.provider) {
+    case "gmail": {
+      const accessToken = await withFreshGmailToken(inbox);
+      return {
+        provider: "gmail",
+        budget,
+        trust: authservTrustFor("gmail"),
+        fetch: (path) =>
+          fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+      };
+    }
+    case "outlook": {
+      const accessToken = await withFreshOutlookToken(inbox);
+      return {
+        provider: "outlook",
+        budget,
+        trust: authservTrustFor("outlook"),
+        fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl),
+      };
+    }
+    default: {
+      if (!session) throw new Error("subscription scan: an IMAP inbox needs a session");
+      let junkFolder: string | null = null;
+      try {
+        junkFolder = await resolveFolderId(inbox, "junk", { strict: true, session });
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        // No Junk mailbox (or an ambiguous one): scan the inbox alone.
+        junkFolder = null;
+      }
+      return {
+        provider: "imap",
+        budget,
+        // Only Authentication-Results written by this host (or a known
+        // provider behind it) count; see list-unsubscribe.ts.
+        trust: authservTrustFor("imap", inbox.imap_host),
+        inboxFolder: "INBOX",
+        junkFolder,
+        select: (folder) => session.select(imapMailboxForServerFolder(folder)),
+      };
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup: the index.ts half (wiring only). The handlers, the
+// ladder and the follow-up live in subscription-cleanup.ts.
+// ---------------------------------------------------------------------------
+
+/**
+ * `workspaces.subscription_cleanup_enabled`: OUR rollout gate (seeded by
+ * 20261024210000). Fails to "off" on any error, and is always off in
+ * introspection mode, which has no database.
+ */
+async function workspaceSubscriptionCleanupEnabled(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("subscription_cleanup_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] subscription_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { subscription_cleanup_enabled?: unknown } | null)?.subscription_cleanup_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] subscription_rollout_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** The listing without the subscription tools unless the workspace is rolled out. */
+function subscriptionToolsVisible<T extends { name: string }>(tools: T[], enabled: boolean): T[] {
+  if (enabled) return tools;
+  return tools.filter((tool) => !(SUBSCRIPTION_TOOL_NAMES as readonly string[]).includes(tool.name));
+}
+
+/** Provider error to a sentinel the module can put in its refusal. */
+function subscriptionErrorSentinel(err: unknown): Error {
+  if (err instanceof ImapAuthError) return new Error("imap_auth_failed");
+  const message = err instanceof Error ? err.message : String(err);
+  return new Error(/^[a-z][a-z0-9_]{2,63}$/.test(message) ? message : "provider_error");
+}
+
+function subscriptionDepsFor(apiKey: ApiKeyRow): SubscriptionDeps {
+  // The module carries the inbox as a SubInbox; it is always the InboxRow that
+  // resolveInboxArg returned, so the cast back is exact.
+  const rowOf = (inbox: SubInbox) => inbox as unknown as InboxRow;
+  return {
+    store: supabaseSubscriptionStore(supabase),
+    encrypt: encryptForStorage,
+    decrypt: decryptStoredToken,
+    digest: idempotencyDigest,
+    appUrl: APP_URL,
+    workspaceEnabled: workspaceSubscriptionCleanupEnabled,
+    async resolveInbox(args) {
+      const resolved = await resolveInboxArg(args, apiKey);
+      if (!resolved.ok) {
+        const refusal = inboxResolutionError(resolved, "subscriptions");
+        return {
+          ok: false,
+          result: { result: refusal.result as never, logStatus: "error", logErrorCode: refusal.logErrorCode },
+        };
+      }
+      return { ok: true, inbox: resolved.inbox };
+    },
+    async scan(inbox, opts, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        const ctx = await subscriptionScanContextFor(row, budget, session);
+        return await fetchListHeaderRecords(ctx, opts);
+      } catch (err) {
+        throw subscriptionErrorSentinel(err);
+      } finally {
+        await session?.close();
+      }
+    },
+    // D3: straight from the edge function, behind the https host guard.
+    postOneClick: (url, opts) => postOneClick(url, { timeoutMs: opts.timeoutMs }),
+    async createDraft(inbox, draft) {
+      // D6: a draft, never a send. The provider create paths are the same
+      // ones draft_create uses; no signature (an unsubscribe note is not
+      // correspondence) and no card envelope (the result is the cleanup card).
+      const row = rowOf(inbox);
+      if (!getProviderCapabilities(row.provider).drafts) return { ok: false, error_code: "drafts_unsupported" };
+      if (!isValidEmailAddress(draft.to)) return { ok: false, error_code: "invalid_recipient" };
+      const params: DraftParams = { to: [draft.to], cc: [], bcc: [], subject: draft.subject, body: draft.body };
+      try {
+        const created = row.provider === "gmail"
+          ? await gmailCreateDraft(row, params)
+          : row.provider === "outlook"
+          ? await outlookCreateDraft(row, params)
+          : await imapCreateDraft(row, params);
+        return { ok: true, draft_id: created.draft_id };
+      } catch (err) {
+        return { ok: false, error_code: subscriptionErrorSentinel(err).message };
+      }
+    },
+    async archive(inbox, ids, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        // Gmail archive is "remove INBOX" (an empty destination in the shared
+        // relocation plan, exactly as email_archive does it); Outlook and IMAP
+        // resolve the archive role the way a move to "archive" does, which on
+        // IMAP creates the mailbox when the account has none.
+        const destination = row.provider === "gmail" ? "" : await resolveFolderId(row, "archive", { session });
+        const result = await runBulkMoveOnIds(row, ids, destination, null, {
+          session: session ?? undefined,
+          budget,
+        });
+        return {
+          destination: "Archive",
+          moved: result.succeeded,
+          // Only a message that is gone counts as done. Any other failure (auth,
+          // outage) leaves the id for `continue: true`.
+          failed: result.failed.filter((f) => f.error === MESSAGE_NOT_FOUND).map((f) => f.id),
+        };
+      } finally {
+        await session?.close();
+      }
+    },
+  };
+}
+
+/** POST /subscription-followup (pg_cron, hourly). */
+async function handleSubscriptionFollowUp(): Promise<Response> {
+  try {
+    const summary = await runSubscriptionFollowUp({
+      store: supabaseSubscriptionStore(supabase),
+      async search(inboxId, fromAddress, sinceIso) {
+        const row = await loadInboxRowForTriage(inboxId);
+        if (!row) throw new Error("inbox_unavailable");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const result = await Promise.race([
+            searchMessagesForProvider(row, { from: fromAddress, since: sinceIso }, 1, 0, []),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS);
+            }),
+          ]);
+          return result.messages.length > 0;
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+    });
+    console.log("[subscriptions] follow_up", summary);
+    return new Response(JSON.stringify({ ok: true, ...summary }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[subscriptions] follow_up_failed", { error: err instanceof Error ? err.message : String(err) });
+    return new Response(JSON.stringify({ ok: false }), { status: 500, headers: { "Content-Type": "application/json" } });
+  }
+}
+
+/**
  * Record, on the search result itself, any criterion the provider could not
  * apply — so a narrow-looking result set says out loud that it is not narrow.
  *
@@ -31196,6 +31470,29 @@ interface ContactScan {
   capped: boolean;
 }
 
+/**
+ * Every active inbox this key may see, oldest first, with the full
+ * credentialed row (INBOX_SELECT_COLUMNS). Shared by the tools that fan out
+ * over a workspace: contact_search without an inbox, and the cross-inbox
+ * email_list / email_search (`inbox_id: "all"`).
+ */
+async function accessibleActiveInboxes(
+  apiKey: ApiKeyRow,
+): Promise<{ data: InboxRow[] | null; error: { message: string } | null }> {
+  let q = supabase
+    .from("inboxes")
+    .select(INBOX_SELECT_COLUMNS)
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    q = q.in("id", apiKey.inbox_ids);
+  }
+  const { data, error } = await q;
+  return { data: (data ?? null) as unknown as InboxRow[] | null, error: error ? { message: error.message } : null };
+}
+
 /** Max inboxes scanned per call when inbox_id is omitted (bounds fan-out cost). */
 const CONTACT_SEARCH_MAX_INBOXES = 10;
 /** Max messages inspected per inbox (bounds the per-provider scan window). */
@@ -31605,17 +31902,7 @@ async function executeSearchContacts(
     if (store) store.inboxId = inbox.id;
     targets = [inbox];
   } else {
-    let q = supabase
-      .from("inboxes")
-      .select(INBOX_SELECT_COLUMNS)
-      .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null)
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
-    if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
-      q = q.in("id", apiKey.inbox_ids);
-    }
-    const { data, error } = await q;
+    const { data, error } = await accessibleActiveInboxes(apiKey);
     if (error) {
       console.error("[mcp-server] contact_search: inbox_enumeration_failed", {
         workspace_id: apiKey.workspace_id,
@@ -31741,6 +32028,168 @@ async function executeSearchContacts(
       }) as unknown as Record<string, unknown>,
     ),
     logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Cross-inbox email_list / email_search (`inbox_id: "all"`, Pro feature
+// `cross_inbox_search`). The rules (scheduling, merge, paging window, listing)
+// live in cross-inbox.ts; this is the I/O around them.
+// ---------------------------------------------------------------------------
+
+/**
+ * `email_list` / `email_search` over every inbox the key may see.
+ *
+ * Returns null when the feature is not visible to this workspace: the caller
+ * then runs the ordinary executor, which answers "all" exactly as it always
+ * did. Visible but not on Pro or Business: the standard Pro refusal.
+ *
+ * Inboxes come from the same enumeration contact_search uses, then are held
+ * to resolveInbox's own allowlist rule, so "all" is never wider than what the
+ * key could name one by one. Each inbox runs the unchanged single-inbox
+ * executor in its own activity context (so one inbox's resolution notes and
+ * transport checks stay its own), under the per-provider and per-IMAP-host
+ * limits in cross-inbox.ts, with a per-inbox timeout. One failing inbox is an
+ * entry in `inbox_errors`; only when every inbox fails is the call an error.
+ *
+ * Billing: one call, one action, like contact_search's fan-out.
+ */
+async function executeCrossInbox(
+  dispatchName: string,
+  rawArgs: Record<string, unknown>,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const access = await proFeatureAccess(apiKey);
+  if (!access.visible) return null;
+  if (!access.allowed) {
+    return {
+      result: await proFeatureRefusalToolResult(apiKey, "cross_inbox_search", access),
+      logStatus: "error",
+      logErrorCode: PRO_FEATURE_ERROR_CODE,
+    };
+  }
+
+  const toolError = (text: string, code = "-32602"): ExecutorOutcome => ({
+    result: { content: [{ type: "text", text }], isError: true },
+    logStatus: "error",
+    logErrorCode: code,
+  });
+
+  if (typeof rawArgs["inbox"] === "string" && rawArgs["inbox"].trim() !== "") {
+    return toolError(
+      `${dispatchName}: inbox_id "all" already covers every inbox, so inbox cannot be given with it. ` +
+        "Pass inbox_id \"all\" alone, or name one inbox.",
+    );
+  }
+  const paginationError = invalidPaginationArgument(rawArgs);
+  if (paginationError) return paginationError;
+  const limit = typeof rawArgs["limit"] === "number" ? rawArgs["limit"] : 20;
+  const offset = typeof rawArgs["offset"] === "number" ? rawArgs["offset"] : 0;
+  if (offset >= CROSS_INBOX_WINDOW) {
+    return toolError(
+      `${dispatchName}: across all inboxes, offset can reach the newest ${CROSS_INBOX_WINDOW} ` +
+        "results of each inbox. Narrow the request (since, before, from) or pass one inbox_id to page further.",
+    );
+  }
+  // Refused once here rather than once per inbox.
+  if (dispatchName === "email_search") {
+    const built = buildNormalizedSearch(rawArgs);
+    if (!built.ok) return invalidSearchDateError(built.badDate, "email_search");
+    if (built.empty) return noSearchCriterionError("email_search");
+  }
+
+  const { data, error } = await accessibleActiveInboxes(apiKey);
+  if (error) {
+    console.error("[mcp-server] cross_inbox: inbox_enumeration_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return toolError(`${dispatchName}: failed to enumerate inboxes.`, "db_error");
+  }
+  const allowed = (data ?? []).filter((inbox) =>
+    apiKey.inbox_ids === null || apiKey.inbox_ids.includes(inbox.id)
+  );
+
+  const legs: CrossInboxLeg[] = [];
+  const runnable: InboxRow[] = [];
+  for (const inbox of allowed) {
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    if (transportBlockingTool(dispatchName, inbox)) {
+      legs.push({
+        ok: false,
+        target,
+        errorCode: "transport_not_configured",
+        message: "This inbox is connected for sending only, so it has no mail to read.",
+      });
+      continue;
+    }
+    runnable.push(inbox);
+  }
+  const covered = runnable.slice(0, CROSS_INBOX_MAX_INBOXES);
+  const skippedInboxes = runnable.length - covered.length;
+  const fetchLimit = crossInboxFetchLimit(offset, limit);
+
+  const outcomes = await runFanOut(
+    covered,
+    {
+      concurrency: CROSS_INBOX_CONCURRENCY,
+      timeoutMs: CROSS_INBOX_TIMEOUT_MS,
+      deadlineMs: CROSS_INBOX_DEADLINE_MS,
+      buckets: (inbox) => crossInboxBuckets(inbox),
+    },
+    (inbox) =>
+      activityInboxStore.run({ inboxId: null, dispatchName }, () =>
+        runExecutor(dispatchName, crossInboxLegArgs(rawArgs, inbox.id, fetchLimit), apiKey)
+      ),
+  );
+  for (let i = 0; i < covered.length; i++) {
+    const inbox = covered[i];
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    const outcome = outcomes[i];
+    if (outcome.ok) {
+      legs.push(legFromToolResult(target, outcome.value as Parameters<typeof legFromToolResult>[1]));
+      continue;
+    }
+    console.error("[mcp-server] cross_inbox: inbox_failed", {
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      dispatch_name: dispatchName,
+      timed_out: outcome.timedOut,
+      skipped: outcome.skipped === true,
+      error: outcome.error instanceof Error ? outcome.error.message : String(outcome.error),
+    });
+    legs.push({
+      ok: false,
+      target,
+      errorCode: outcome.skipped ? "not_searched" : outcome.timedOut ? "timeout" : "internal_error",
+      message: outcome.skipped
+        ? "Not searched: the call reached its time limit before this inbox's turn. Name its inbox_id to read it."
+        : outcome.timedOut
+        ? "This inbox did not answer in time."
+        : "This inbox could not be read just now.",
+    });
+  }
+  // Inboxes in enumeration order, whatever order the legs were built in.
+  const order = new Map(allowed.map((inbox, i) => [inbox.id, i]));
+  legs.sort((a, b) => (order.get(a.target.inbox_id) ?? 0) - (order.get(b.target.inbox_id) ?? 0));
+
+  const page = mergeCrossInboxPages({ legs, offset, limit, skippedInboxes });
+  const failures = legs.filter((leg) => !leg.ok);
+  if (legs.length > 0 && failures.length === legs.length) {
+    const lines = page.inbox_errors.map((e) => `  - ${e.inbox_address}: ${e.message}`).join("\n");
+    return toolError(
+      `${dispatchName}: no inbox could be read for inbox_id "all". Nothing was changed.\n${lines}`,
+      page.inbox_errors[0]?.error_code ?? "provider_error",
+    );
+  }
+  return {
+    result: {
+      ...jsonOk(markUntrusted(page as unknown as Record<string, unknown>)),
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
   };
 }
 
@@ -32685,11 +33134,15 @@ async function handleToolsList(
   // `perOperation` is started here and only taken further down.
   // The Pro gate joins them only when some Pro tool or argument exists to hide;
   // until then tools/list makes no extra read.
-  const [uiGates, perOperation, proAccess] = await Promise.all([
+  const [baseGates, perOperation, subscriptions, proAccess] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
-    hasProFeatureSurface() ? proFeatureAccess(apiKey) : null,
+    workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
+    // Always read since cross-inbox search (a Pro VALUE, inbox_id "all") has
+    // listing changes of its own; memoised, so one read per request.
+    proFeatureAccess(apiKey),
   ]);
+  const uiGates = { ...baseGates, subscriptions };
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -32714,9 +33167,12 @@ async function handleToolsList(
   //
   // New Pro tools and arguments are left out until the features are visible to
   // this workspace (pro-features.ts), so customers see no change before launch.
-  const listed = toolsForListing(apiKey, perOperation);
+  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions);
   const visibleTools = withListingCardMeta(
-    proAccess ? hideProFeaturesFromListing(listed, proAccess) : listed,
+    advertiseCrossInboxSearch(
+      hasProFeatureSurface() ? hideProFeaturesFromListing(listed, proAccess) : listed,
+      proAccess,
+    ),
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -33148,6 +33604,11 @@ async function runExecutor(
   rawArgs: unknown,
   apiKey: ApiKeyRow,
 ): Promise<ExecutorOutcome | null> {
+  // `inbox_id: "all"` (Pro): null when not visible, and the call runs as before.
+  if (isCrossInboxCall(dispatchName, rawArgs)) {
+    const crossInbox = await executeCrossInbox(dispatchName, rawArgs as Record<string, unknown>, apiKey);
+    if (crossInbox) return crossInbox;
+  }
   // follow_up_days (Pro reminders) wraps the send: the send handlers never see it.
   if (FOLLOW_UP_SEND_TOOLS.has(dispatchName) && hasFollowUpDaysArg(rawArgs)) {
     return await runSendWithFollowUp(dispatchName, rawArgs, apiKey);
@@ -33259,6 +33720,18 @@ async function runExecutor(
     )!;
     return { result, logStatus, logErrorCode };
   }
+  if (isSubscriptionToolName(dispatchName)) {
+    // Subscription cleanup. The workspace flag, the plan's workspace and inbox
+    // allowlist, its expiry and the sender keys are all re-checked inside the
+    // handler; see subscription-cleanup.ts. `logDetails` carries counts only.
+    const { result, logStatus, logErrorCode, logDetails } = await runSubscriptionTool(
+      dispatchName,
+      subscriptionDepsFor(apiKey),
+      bulkCallerFor(apiKey),
+      rawArgs,
+    )!;
+    return { result, logStatus, logErrorCode, logErrorDetails: logDetails ?? null };
+  }
   if (isBulkToolName(dispatchName)) {
     // MCP Apps bulk-plan tools. As with the approval tools, the scope check
     // above is necessary and nowhere near sufficient: a plan_id supplied by
@@ -33335,7 +33808,9 @@ async function handleToolsCall(
     rawArgs !== null &&
     typeof rawArgs === "object" &&
     !Array.isArray(rawArgs) &&
-    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string"
+    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string" &&
+      // `"all"` (cross-inbox, Pro) names no one inbox; activity_log.inbox_id is a uuid.
+      !isCrossInboxAll((rawArgs as Record<string, unknown>)["inbox_id"])
       ? (rawArgs as Record<string, unknown>)["inbox_id"] as string
       : null;
 
@@ -33411,13 +33886,17 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: (hasProFeatureSurface()
-          ? hideProFeaturesFromListing(
+        //
+        // That includes the subscription rollout filter: a workspace without
+        // subscription_cleanup_enabled is never told those tools exist. The
+        // same goes for Pro tools before they are visible (pro-features.ts).
+        available_tools: await (async () => {
+          const listed = subscriptionToolsVisible(
             toolsForListing(apiKey, await isOpenAiClientKey(apiKey)),
-            await proFeatureAccess(apiKey),
-          )
-          : toolsForListing(apiKey, await isOpenAiClientKey(apiKey)))
-          .map((t) => t.name),
+            await workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
+          );
+          return hasProFeatureSurface() ? hideProFeaturesFromListing(listed, await proFeatureAccess(apiKey)) : listed;
+        })().then((tools) => tools.map((t) => t.name)),
       },
     );
   }
@@ -33825,9 +34304,15 @@ async function handleToolsCall(
   // Validate at the server boundary.  The schema is part of our public MCP
   // contract, but clients may skip validation entirely; continuing here would
   // let permissive handlers silently coerce malformed optional fields.
+  // `inbox_id: "all"` (cross-inbox, Pro) cannot meet inbox_id's uuid format.
+  // Only where the feature is visible is inbox_id left out of the check (every
+  // other argument is still validated); elsewhere "all" is refused as before.
+  const validationArgs = isCrossInboxCall(dispatchName, rawArgs) && (await proFeatureAccess(apiKey)).visible
+    ? crossInboxValidationArgs(rawArgs as Record<string, unknown>)
+    : rawArgs;
   const argumentErrors = validateInputSchema(
     tool.inputSchema,
-    schemaValidationArguments(tool.inputSchema, rawArgs),
+    schemaValidationArguments(tool.inputSchema, validationArgs),
   );
   if (argumentErrors.length > 0) {
     const rejectedAction = consolidated
@@ -33932,7 +34417,9 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
-      inboxId: typeof cappedArgs?.["inbox_id"] === "string" ? cappedArgs["inbox_id"] as string : null,
+      inboxId: typeof cappedArgs?.["inbox_id"] === "string" && !isCrossInboxAll(cappedArgs["inbox_id"])
+        ? cappedArgs["inbox_id"] as string
+        : null,
       toolName: dispatchName,
       status: "rate_limited",
       errorCode: "usage_limit_reached",
@@ -37762,6 +38249,29 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       );
     }
     return handleMorningBriefDispatch();
+  }
+
+  // ── Subscription cleanup follow-up route ──────────────────────────────────
+  // Called hourly by pg_cron (dispatch_subscription_followup, migration
+  // 20261024210100), same guard and secret as /triage-dispatch. The body is
+  // ignored: which rows are due, the leases and the budget live in
+  // runSubscriptionFollowUp.
+  if (reqUrl.pathname.endsWith("/subscription-followup")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (!dispatchSecret || !providedSecret || providedSecret !== dispatchSecret) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return await handleSubscriptionFollowUp();
   }
 
   // ── Automations preview route ─────────────────────────────────────────────

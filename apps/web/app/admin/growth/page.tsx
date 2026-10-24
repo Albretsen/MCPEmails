@@ -200,6 +200,7 @@ export default async function GrowthBoardPage({
             <a className="gb-link" href="/admin/growth/experiments">Experiments</a>
             <a className="gb-link" href="/admin/growth/dunning">Dunning</a>
             <a className="gb-link" href="/admin/growth/usage-cap">Usage cap</a>
+            <a className="gb-link" href="/admin/growth/first-30-days">First 30 days</a>
             {/* A route handler rather than a Server Action: the action-ID lookup
                 failed on every submission in production (verified live
                 2026-08-30), and a URL is not a build-generated hash. */}

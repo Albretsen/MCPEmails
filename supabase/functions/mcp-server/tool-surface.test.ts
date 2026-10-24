@@ -140,6 +140,10 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft_read",
       "draft_editor_save",
       "draft_editor_hide",
+      // Subscription cleanup. In the registry for every client; tools/list
+      // drops both for a workspace without subscription_cleanup_enabled.
+      "subscriptions_scan",
+      "subscriptions_cleanup",
     ],
   );
 });
@@ -325,7 +329,9 @@ Deno.test("the tools split out of a mixed one keep the right write annotations",
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Tools that can reach a party outside the connected mailbox. */
-const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation"];
+// `subscriptions_cleanup` sends an RFC 8058 one-click POST to the sender's
+// server, which is outside the account.
+const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation", "subscriptions_cleanup"];
 
 Deno.test("openWorldHint is true only where the tool can reach outside the account", () => {
   for (const tool of advertisedTools()) {

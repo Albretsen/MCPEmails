@@ -454,3 +454,27 @@ export function bulkExecuteContextLine(plan: Plan, answer: Envelope | null): str
 export function bulkCancelContextLine(plan: Plan): string {
   return `The user cancelled ${planShape(plan)} in the MCPEmails card. Nothing was changed.`;
 }
+
+/**
+ * After the card ran `subscriptions_cleanup` (§9). Counts only: sender names
+ * and addresses come from email and never go into the conversation.
+ */
+export function subscriptionCleanupContextLine(answer: Envelope | null): string | null {
+  const head = "The user confirmed a subscription cleanup in the MCPEmails card.";
+  const s = answer?.subscriptions;
+  if (answer?.card === "subscription_plan" && s && answer.state === "executed") {
+    const n: Record<string, number> = {};
+    for (const r of s.results ?? []) n[r.status] = (n[r.status] ?? 0) + 1;
+    const c = (k: string) => n[k] ?? 0;
+    const parts = `Requested ${c("requested")}, drafts saved for the user to send (not sent) ${c("draft_ready")}, links for the user to open ${c("needs_user")}, failed ${c("failed")}, other ${(s.results?.length ?? 0) - c("requested") - c("draft_ready") - c("needs_user") - c("failed")}`;
+    const b = s.backlog;
+    const tail = b && b.action === "archive"
+      ? ` ${b.moved} existing messages archived${b.has_more ? `, ${b.remaining} left` : ""}.`
+      : "";
+    return `${head} ${parts}.${tail}`;
+  }
+  if (answer?.receipt) {
+    return `${head} The server reported: ${quoted(failureText(null, answer.receipt), SERVER_TEXT_MAX)}.`;
+  }
+  return null;
+}
