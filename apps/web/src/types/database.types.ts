@@ -2118,6 +2118,52 @@ export type Database = {
           },
         ]
       }
+      inbox_send_brakes: {
+        Row: {
+          fanout_hold_until: string | null
+          inbox_id: string
+          refusal_pause_until: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          fanout_hold_until?: string | null
+          inbox_id: string
+          refusal_pause_until?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          fanout_hold_until?: string | null
+          inbox_id?: string
+          refusal_pause_until?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_send_brakes_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: true
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_send_brakes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_send_brakes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_sender_aliases: {
         Row: {
           code_attempts: number
@@ -2270,6 +2316,8 @@ export type Database = {
           oauth_refresh_token: string | null
           oauth_scope: string | null
           oauth_token_expires_at: string | null
+          parked_at: string | null
+          parked_reason: string | null
           provider: string
           send_approval_required: boolean
           send_review_mode: string
@@ -2310,6 +2358,8 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          parked_at?: string | null
+          parked_reason?: string | null
           provider: string
           send_approval_required?: boolean
           send_review_mode?: string
@@ -2350,6 +2400,8 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          parked_at?: string | null
+          parked_reason?: string | null
           provider?: string
           send_approval_required?: boolean
           send_review_mode?: string
@@ -2990,6 +3042,61 @@ export type Database = {
             columns: ["approval_id"]
             isOneToOne: false
             referencedRelation: "send_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outbound_send_events: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          id: number
+          inbox_id: string
+          kind: string
+          messages: number
+          recipient_hash: string | null
+          workspace_id: string
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          id?: never
+          inbox_id: string
+          kind: string
+          messages?: number
+          recipient_hash?: string | null
+          workspace_id: string
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          id?: never
+          inbox_id?: string
+          kind?: string
+          messages?: number
+          recipient_hash?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outbound_send_events_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_send_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "outbound_send_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -4674,6 +4781,7 @@ export type Database = {
           plan: string
           pro_unlimited_inboxes_exempt: boolean
           referral_enabled: boolean
+          sends_frozen_at: string | null
           slug: string
           stripe_customer_id: string | null
           updated_at: string
@@ -4729,6 +4837,7 @@ export type Database = {
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           referral_enabled?: boolean
+          sends_frozen_at?: string | null
           slug: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4784,6 +4893,7 @@ export type Database = {
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           referral_enabled?: boolean
+          sends_frozen_at?: string | null
           slug?: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4830,6 +4940,15 @@ export type Database = {
           role: string
           workspace_id: string
           workspace_slug: string
+        }[]
+      }
+      activation_segments: {
+        Args: { days?: number }
+        Returns: {
+          segment: string
+          segment_index: number
+          total_workspaces: number
+          workspaces: number
         }[]
       }
       activity_log_retention_preview: {
@@ -4965,8 +5084,11 @@ export type Database = {
         Args: { p_mode?: string }
         Returns: undefined
       }
+      dispatch_black_week_email: { Args: never; Returns: undefined }
+      dispatch_first_30_days: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_paywall_followup: { Args: never; Returns: undefined }
+      dispatch_pro_price_notice: { Args: never; Returns: undefined }
       dispatch_referrals: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
@@ -5705,11 +5827,37 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      outbound_send_gate: {
+        Args: {
+          p_commit: boolean
+          p_content_hash: string
+          p_daily_limit: number
+          p_fanout_limit: number
+          p_fanout_window_ms: number
+          p_human_approved: boolean
+          p_inbox_id: string
+          p_messages: number
+          p_recipient_hashes: string[]
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      outbound_send_refusal: {
+        Args: {
+          p_inbox_id: string
+          p_pause_ms: number
+          p_threshold: number
+          p_window_ms: number
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       purge_activity_log_batch: {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
       }
       purge_operational_history: { Args: never; Returns: Json }
+      purge_outbound_send_events: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {

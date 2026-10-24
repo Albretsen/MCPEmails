@@ -187,6 +187,8 @@
     "statusConnected": "Connected",
     "statusPending": "Pending",
     "statusError": "Error",
+    "statusParked": "Parked",
+    "parkedNote": "Parked because your plan includes fewer inboxes. It comes back when you upgrade. Nothing was deleted.",
     "reconnect": "Reconnect",
     "checkConnection": "Check connection",
     "viewerActionsNote": "Workspace viewers can see this inbox but cannot check, reconnect, disconnect or edit it.",
