@@ -81,6 +81,8 @@ export async function GET(): Promise<NextResponse> {
       .select('created_at')
       .eq('workspace_id', workspaceId)
       .eq('status', 'success')
+      // Automation runs log triage_* rows; they are not the assistant being used.
+      .not('tool_name', 'like', 'triage_%')
       .gte('created_at', fromIso)
       .order('created_at', { ascending: true })
       .limit(1)
@@ -94,6 +96,7 @@ export async function GET(): Promise<NextResponse> {
       .from('activity_log')
       .select('error_code, inbox_id, status')
       .eq('workspace_id', workspaceId)
+      .not('tool_name', 'like', 'triage_%')
       .gte('created_at', paidAt)
       .order('created_at', { ascending: false })
       .limit(RECENT_CALL_WINDOW),

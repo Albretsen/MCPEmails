@@ -43,6 +43,12 @@ function query(table: string) {
   };
   b.is = (c: string, v: unknown) => { filters.push((r) => (r[c] ?? null) === v); return b; };
   b.gte = (c: string, v: string) => { filters.push((r) => String(r[c]) >= v); return b; };
+  b.not = (c: string, op: string, v: string) => {
+    assert.equal(op, 'like');
+    const prefix = v.replace(/%$/, '');
+    filters.push((r) => !String(r[c] ?? '').startsWith(prefix));
+    return b;
+  };
   b.order = (col: string, o: { ascending: boolean }) => { order = { col, asc: o.ascending }; return b; };
   b.limit = (n: number) => { limit = n; return b; };
   b.maybeSingle = async () => ({ data: rows()[0] ?? null, error: null });
@@ -115,6 +121,18 @@ test('GET: the owner gets counts since the first payment, scoped to their worksp
   assert.equal(body.counts.troubleInboxId, 'ib-1');
   assert.equal(body.counts.automationCount, 1, 'deleted rules and other workspaces do not count');
   assert.equal(queriedWorkspaceIds.every((id) => id === 'ws-own'), true, 'never queries another workspace');
+});
+
+test('GET: automation runs (triage_* rows) do not count as the assistant being used', async () => {
+  reset();
+  tables.activity_log = [
+    { workspace_id: 'ws-own', tool_name: 'triage_move', status: 'success', error_code: null, inbox_id: 'ib-1', created_at: ago(2, 1) },
+    { workspace_id: 'ws-own', tool_name: 'triage_move', status: 'success', error_code: null, inbox_id: 'ib-1', created_at: ago(0, 1) },
+  ];
+  const body = await (await GET()).json();
+  assert.equal(body.eligible, true);
+  assert.equal(body.counts.successDays, 0);
+  assert.deepEqual(body.counts.recentErrorCodes, []);
 });
 
 test('GET: a member of a workspace they do not own is not eligible, and nothing else is read', async () => {
