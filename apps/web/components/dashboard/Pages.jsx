@@ -15,6 +15,14 @@ import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
 import { startVisiblePoll } from '@/lib/polling/visible-poll';
+import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+import {
+  FIRST_CALL_POLL_MAX_MS,
+  FIRST_CALL_POLL_MS,
+  FIRST_CALL_PROMPT_KEYS,
+  clientToggleKey,
+  guideStep2Mode,
+} from '@/lib/onboarding/first-call-prompts.mjs';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -576,25 +584,196 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, c
   );
 }
 
+/** MCP_CLIENTS uses 'api' for the curl tile; onboarding state calls it 'curl'. */
+function onboardingClientOf(c) {
+  return c.k === 'api' ? 'curl' : c.k;
+}
+
+/** Small marker for a sub-step of guide step 2: a check when done, a dot otherwise. */
+function SubStepDot({ done }) {
+  return (
+    <div style={{
+      width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+      background: done ? 'var(--live-soft)' : 'var(--bg-surface)',
+      border: `1px solid ${done ? 'rgba(31,203,139,0.28)' : 'var(--border-1)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {done ? <Icon name="check" size={10} color="var(--mint-600)" /> : null}
+    </div>
+  );
+}
+
+/**
+ * One suggested first prompt with a copy button. Copying records
+ * `first_call_prompt_copied` with the client the guide is pointed at.
+ */
+function FirstCallPrompt({ text, client }) {
+  const t = useTranslations('dashboard');
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    recordActivationEvent('first_call_prompt_copied', { client: client ?? 'unknown' });
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+  return (
+    <li data-first-call-prompt style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 8px 12px',
+      background: 'var(--bg-surface)', border: '1px solid var(--border-1)', borderRadius: 8,
+    }}>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}>{text}</span>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        title={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+      >
+        <Icon name={copied ? 'check' : 'copy'} size={14} color={copied ? 'var(--mint-600)' : 'var(--fg-3)'} />
+      </button>
+    </li>
+  );
+}
+
 /**
  * Getting-started guide shown on the Overview page until the workspace has
  * connected an inbox AND a client has made its first MCP call. Two steps:
- * connect an inbox, then connect an MCP client (the URL is highlighted and a
- * per-client guide opens on click).
+ * connect an inbox, then connect an MCP client.
+ *
+ * Step 2 has three versions (lib/onboarding/first-call-prompts.mjs,
+ * guideStep2Mode):
+ *   setup    the MCP URL and a client picker that opens a per-client guide.
+ *   waiting  once an inbox exists and no tool call has ever been made:
+ *            (a) connect your AI app, done when a credential exists (an API
+ *            key row, which OAuth grants create too), and (b) ask it
+ *            something, three copyable prompts plus the in-chat switch the
+ *            chosen app needs. GET /api/onboarding is polled every 10 s while
+ *            the tab is visible, for at most 15 minutes, so the step flips by
+ *            itself when the first call lands.
+ *   works    the first call landed while the page was open.
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, canCheckConnection = true }) {
+export function GettingStartedGuide({
+  inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys,
+  initialClient = null, onClientSelected, canCheckConnection = true,
+  apiKeys = [], firstToolUsed = false,
+  pollMs = FIRST_CALL_POLL_MS, pollMaxMs = FIRST_CALL_POLL_MAX_MS,
+}) {
   const t = useTranslations('dashboard');
-  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
+  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => onboardingClientOf(c) === initialClient) ?? null);
   // The second-work-mailbox invitation used to be the last row of this guide.
   // It is not here any more: see MultiInboxInvite, below, for where it went
   // and why. This guide is the two numbered steps and nothing else.
 
+  // The client this workspace said it uses: picked here, or stored on the
+  // workspace (onboarding_client, read back by the poll below).
+  const [pickedClient, setPickedClient] = useState(initialClient);
+  const [savedClient, setSavedClient] = useState(null);
+  const [credentialLive, setCredentialLive] = useState(false);
+  const [activatedLive, setActivatedLive] = useState(false);
+  const [pollStopped, setPollStopped] = useState(false);
+  const [loadedAt] = useState(() => Date.now());
+
+  const mode = guideStep2Mode({ inboxCount, firstToolUsed, activatedLive });
+  const waiting = mode === 'waiting';
+  const client = pickedClient ?? savedClient ?? null;
+  const hasCredential = (apiKeys?.length ?? 0) > 0 || credentialLive;
+
   const step1Done = inboxCount > 0;
-  const step2Done = callsThisMonth > 0;
+  const step2Done = callsThisMonth > 0 || activatedLive;
   const allDone   = step1Done && step2Done;
 
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const started = Date.now();
+    let loop = null;
+    const poll = async () => {
+      if (Date.now() - started >= pollMaxMs) {
+        loop?.stop();
+        setPollStopped(true);
+        return;
+      }
+      const response = await fetch('/api/onboarding', { cache: 'no-store' });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => null);
+      if (!data) return;
+      if (typeof data.onboarding_client === 'string' && data.onboarding_client !== 'unknown') setSavedClient(data.onboarding_client);
+      // Only a credential issued after this page loaded is news: one issued
+      // earlier and since revoked is already reflected in `apiKeys`.
+      const issued = Date.parse(data.onboarding_credential_issued_at ?? '');
+      if (Number.isFinite(issued) && issued >= loadedAt - 60_000) setCredentialLive(true);
+      // Set by the MCP server on the workspace's first tool call, in the same
+      // update as analytics_first_tool_used_at.
+      if (data.onboarding_technical_activated_at) setActivatedLive(true);
+    };
+    loop = startVisiblePoll({ poll, intervalMs: () => pollMs, immediate: true });
+    return () => loop.stop();
+  }, [waiting, pollMs, pollMaxMs, loadedAt]);
+
+  const shownRecorded = useRef(false);
+  useEffect(() => {
+    if (!waiting || shownRecorded.current) return;
+    shownRecorded.current = true;
+    recordActivationEvent('waiting_state_shown', { client: initialClient ?? 'unknown' });
+  }, [waiting, initialClient]);
+
+  const pickClient = (c) => {
+    const picked = onboardingClientOf(c);
+    trackProductEvent('mcp_connection_started', { client: picked });
+    onClientSelected?.(picked);
+    setPickedClient(picked);
+    setActiveClient(c);
+  };
+
+  const clientPicker = (
+    <>
+      <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+      <div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
+          {t('guide.chooseClient')}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          {MCP_CLIENTS.map((c) => {
+            const selected = waiting && onboardingClientOf(c) === client;
+            return (
+              <button
+                key={c.k}
+                data-client-tile={onboardingClientOf(c)}
+                aria-pressed={waiting ? selected : undefined}
+                onClick={() => pickClient(c)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                  background: 'var(--bg-surface)', border: `1px solid ${selected ? 'var(--brand)' : 'var(--border-1)'}`,
+                  borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                  transition: 'border-color var(--dur-1) var(--ease-out)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                onMouseLeave={e => { if (!selected) e.currentTarget.style.borderColor = 'var(--border-1)'; }}
+              >
+                <ClientLogo color={c.color} logo={c.logo} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
+  const toggleKey = clientToggleKey(client);
+  const subTitle = (done) => ({ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: done ? 'var(--fg-3)' : 'var(--fg-1)' });
+  const subDesc = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 };
+
+  let step2Title = t('guide.step2Title');
+  let step2Desc = t('guide.step2Desc');
+  if (mode === 'waiting') { step2Title = t('guide.waitingTitle'); step2Desc = t('guide.waitingDesc'); }
+  if (mode === 'works') { step2Title = t('guide.itWorksTitle'); step2Desc = t('guide.itWorksDesc'); }
+
   return (
-    <div className="card" style={{ marginTop: 16 }}>
+    <div className="card" style={{ marginTop: 16 }} data-guide-step2={mode}>
       <div className="card-h">
         <div>
           <div className="title">{t('guide.title')}</div>
@@ -631,7 +810,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           ) : null}
         </div>
 
-        {/* Step 2: connect an MCP client */}
+        {/* Step 2: connect an MCP client, then make the first call */}
         <div style={{
           display: 'flex', flexDirection: 'column', gap: 14, padding: '16px',
           background: 'var(--bg-sunken)', borderRadius: 10, border: '1px solid var(--border-1)',
@@ -639,44 +818,58 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <StepDot num={2} done={step2Done} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                {t('guide.step2Title')}
+              <div data-guide-step2-title style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+                {step2Title}
               </div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                {t('guide.step2Desc')}
+                {step2Desc}
               </div>
             </div>
           </div>
 
-          <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+          {mode === 'setup' ? clientPicker : null}
 
-          <div>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
-              {t('guide.chooseClient')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-              {MCP_CLIENTS.map((c) => (
-                <button
-                  key={c.k}
-                  onClick={() => { const client = c.k === 'api' ? 'curl' : c.k; trackProductEvent('mcp_connection_started', { client }); onClientSelected?.(client); setActiveClient(c); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                    background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
-                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                    transition: 'border-color var(--dur-1) var(--ease-out)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-1)'; }}
-                >
-                  <ClientLogo color={c.color} logo={c.logo} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+          {mode === 'waiting' ? (
+            <>
+              {/* (a) connect your AI app */}
+              <div data-guide-substep="connect" data-done={hasCredential ? 'true' : 'false'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={hasCredential} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <div style={subTitle(hasCredential)}>{t('guide.connectAppTitle')}</div>
+                    <div style={subDesc}>{hasCredential ? t('guide.connectAppDone') : t('guide.connectAppDesc')}</div>
                   </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                  {!hasCredential ? clientPicker : null}
+                </div>
+              </div>
+
+              {/* (b) ask it something */}
+              <div data-guide-substep="ask" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={false} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <div style={subTitle(false)}>{t('guide.askTitle')}</div>
+                    <div style={subDesc}>{t('guide.askDesc')}</div>
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {FIRST_CALL_PROMPT_KEYS.map((k) => (
+                      <FirstCallPrompt key={k} text={t(k)} client={client} />
+                    ))}
+                  </ul>
+                  {toggleKey ? (
+                    <div data-client-toggle={client} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                      <Icon name="zap" size={13} color="var(--brand)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{t(toggleKey)}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div role="status" data-guide-poll={pollStopped ? 'stopped' : 'live'} style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                {pollStopped ? t('guide.waitingStopped') : t('guide.waitingLive')}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -861,7 +1054,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -1076,6 +1269,8 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           onConnect={onConnect}
           onGoToKeys={onGoToKeys}
           initialClient={onboardingClient}
+          apiKeys={apiKeys}
+          firstToolUsed={firstToolUsed}
           onClientSelected={onClientSelected}
         />
       ) : (
@@ -4128,7 +4323,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, scopes, onDone }) {
                 {t('apiKeys.revealModal.nextStep3')}{' '}
                 <span style={{
                   fontStyle: 'italic', color: 'var(--fg-1)',
-                }}>&ldquo;{t('apiKeys.revealModal.nextPrompt')}&rdquo;</span>
+                }}>&ldquo;{t(FIRST_CALL_PROMPT_KEYS[0])}&rdquo;</span>
               </li>
             </ol>
             <a
