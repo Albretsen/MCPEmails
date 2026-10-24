@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Business",
-    "description": "Gratis kobler til én innboks. Personal kobler til tre for $9. Pro kobler til opptil 10 for $15. Business har 10 postkasser inkludert og så mange folk du vil for $39."
+    "description": "Gratis kobler til én innboks. Personal kobler til tre for $9. Pro kobler til opptil 10 for $19. Business har 10 postkasser inkludert og så mange folk du vil for $39."
   },
   "hero": {
     "eyebrow": "Priser",
@@ -192,7 +192,7 @@
       },
       {
         "q": "Hva om jeg trenger en fjerde innboks?",
-        "a": "Personal dekker tre tilkoblede innbokser. En fjerde tar deg over på Pro til $15 i måneden, som dekker opptil 10 postkasser på én agent og én innlogging. Over 10 har Business 10 inkludert og koster $3 i måneden for hver ekstra. Ligger du så vidt over tre, og det ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
+        "a": "Personal dekker tre tilkoblede innbokser. En fjerde tar deg over på Pro til $19 i måneden, som dekker opptil 10 postkasser på én agent og én innlogging. Over 10 har Business 10 inkludert og koster $3 i måneden for hver ekstra. Ligger du så vidt over tre, og det ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
@@ -200,7 +200,7 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $86,40 i året ($7,20 i måneden), Pro koster $144 i året ($12 i måneden) og Business koster $374,40 i året ($31,20 i måneden), med hver ekstra postkasse til $28,80 i året ($2,40 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $86,40 i året ($7,20 i måneden), Pro koster $182,40 i året ($15,20 i måneden) og Business koster $374,40 i året ($31,20 i måneden), med hver ekstra postkasse til $28,80 i året ($2,40 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -218,7 +218,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
+    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $19 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

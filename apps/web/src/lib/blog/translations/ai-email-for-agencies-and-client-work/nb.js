@@ -16,7 +16,7 @@ Arbeidsområdet er enheten som skiller. Postkasser, medlemmer, API-nøkler og ak
 
 Mer enn ett arbeidsområde er en **Business**-funksjon ($39/md., $374,40/år), som også gir ubegrenset antall medlemmer med roller uten ekstra kostnad, og 10 postkasser inkludert med $3 i måneden for hver ekstra. Abonnementet henger på kontoen din og ikke på ett arbeidsområde, så ett Business-abonnement dekker alle kundearbeidsområdene du oppretter. Gi hvert av dem kundens navn, koble bare den kundens postkasser inn i det, og bytt mellom dem i sidemenyen i dashbordet.
 
-Under Business er planene for én person i ett arbeidsområde: **Pro** ($15/md., $144/år) kobler til opptil 10 postkasser, **Personal** ($9/md.) tre, **Free** én. Billigere, og alle postkassene deler samme skadeomfang. Se [priser](/pricing) og [leverandørmatrisen](/docs/providers).
+Under Business er planene for én person i ett arbeidsområde: **Pro** ($19/md., $182,40/år) kobler til opptil 10 postkasser, **Personal** ($9/md.) tre, **Free** én. Billigere, og alle postkassene deler samme skadeomfang. Se [priser](/pricing) og [leverandørmatrisen](/docs/providers).
 
 ## Medlemmer og roller
 

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Preise für den KI-E-Mail-MCP-Server: Free, Personal, Pro und Business",
-    "description": "Free verbindet ein Postfach. Personal verbindet drei für $9 pro Monat. Pro verbindet bis zu 10 für $15. Business enthält 10 Postfächer und beliebig viele Personen für $39."
+    "description": "Free verbindet ein Postfach. Personal verbindet drei für $9 pro Monat. Pro verbindet bis zu 10 für $19. Business enthält 10 Postfächer und beliebig viele Personen für $39."
   },
   "hero": {
     "eyebrow": "Preise",
@@ -192,7 +192,7 @@
       },
       {
         "q": "Was, wenn ich ein viertes Postfach brauche?",
-        "a": "Personal umfasst drei verbundene Postfächer. Mit einem vierten wechseln Sie zu Pro für $15 pro Monat, das bis zu 10 Postfächer in einem Agenten und mit einem Login abdeckt. Ab 10 enthält Business 10 Postfächer und berechnet $3 pro Monat für jedes weitere. Wenn Sie knapp über drei liegen und das für Sie nicht passt, schreiben Sie uns an hello@mcpemails.com."
+        "a": "Personal umfasst drei verbundene Postfächer. Mit einem vierten wechseln Sie zu Pro für $19 pro Monat, das bis zu 10 Postfächer in einem Agenten und mit einem Login abdeckt. Ab 10 enthält Business 10 Postfächer und berechnet $3 pro Monat für jedes weitere. Wenn Sie knapp über drei liegen und das für Sie nicht passt, schreiben Sie uns an hello@mcpemails.com."
       },
       {
         "q": "Kann ich meinen Tarif ändern oder kündigen?",
@@ -200,7 +200,7 @@
       },
       {
         "q": "Wie funktioniert der Jahresrabatt?",
-        "a": "Bei jährlicher Zahlung sparen Sie rund 20 % gegenüber monatlich: Personal kostet $86.40 pro Jahr ($7.20 pro Monat), Pro $144 pro Jahr ($12 pro Monat) und Business $374.40 pro Jahr ($31.20 pro Monat), jedes weitere Postfach $28.80 pro Jahr ($2.40 pro Monat). Sie zahlen einmal im Voraus für 12 Monate. Eine Kündigung stoppt die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Rückerstattung bei einer ersten Zahlung erstatten wir die restlichen Monate nicht."
+        "a": "Bei jährlicher Zahlung sparen Sie rund 20 % gegenüber monatlich: Personal kostet $86.40 pro Jahr ($7.20 pro Monat), Pro $182.40 pro Jahr ($15.20 pro Monat) und Business $374.40 pro Jahr ($31.20 pro Monat), jedes weitere Postfach $28.80 pro Jahr ($2.40 pro Monat). Sie zahlen einmal im Voraus für 12 Monate. Eine Kündigung stoppt die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Rückerstattung bei einer ersten Zahlung erstatten wir die restlichen Monate nicht."
       },
       {
         "q": "Welche E-Mail-Anbieter werden unterstützt?",
@@ -218,7 +218,7 @@
   },
   "ctaBand": {
     "title": "Bereit, Ihrem Agenten ein Postfach zu geben?",
-    "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
+    "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $19, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
     "ctaPrimary": "Kostenlos starten",
     "ctaSecondary": "Zur Doku"
   }

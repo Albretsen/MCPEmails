@@ -37,11 +37,11 @@
  *   STRIPE_PRICE_PERSONAL_YEARLY_V2=price_...  (Personal yearly, $86.40)
  *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...    (RETIRED Personal $5, still billing)
  *   STRIPE_PRICE_PERSONAL_YEARLY=price_...     (RETIRED Personal $48, still billing)
- *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly, $15)
- *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly, $144)
- *   STRIPE_PRICE_SOLO_MONTHLY_V2=price_...    (Pro monthly, $19, sold once
+ *   STRIPE_PRICE_SOLO_MONTHLY_V2=price_...    (Pro monthly, $19, sold since
  *                                              PRO_PRICE_CHANGE.priceLive)
  *   STRIPE_PRICE_SOLO_YEARLY_V2=price_...     (Pro yearly, $182.40, same)
+ *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (RETIRED Pro $15, still billing)
+ *   STRIPE_PRICE_SOLO_YEARLY=price_...        (RETIRED Pro $144, still billing)
  *   STRIPE_PRICE_BUSINESS_MONTHLY=price_...          (Business monthly, $39)
  *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
@@ -50,6 +50,8 @@
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
  *
  * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
+ * PRO REPRICED 2026-12-08: $15 -> $19/mo, $144 -> $182.40/yr, new customers
+ * only; see pro-price-change.ts.
  *
  * Pro at $29 had generated exactly ONE Stripe checkout session in its entire
  * life (created 2026-08-27, expired unpaid); that same workspace bought
@@ -88,7 +90,7 @@
  * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
  * workspace they create later. It is resolved through `resolvePlanLimits`.
  *
- * PRO $15 -> $19 FOR NEW CUSTOMERS (announced, behind a switch). See
+ * PRO $15 -> $19 FOR NEW CUSTOMERS (live since 2026-12-08). See
  * pro-price-change.ts. Same shape as the Personal _V2 change: while
  * `priceLive` is off Pro sells the unsuffixed pair and the _V2 ids are read as
  * legacy (nobody can buy them, and a rollback after the cutover keeps every $19

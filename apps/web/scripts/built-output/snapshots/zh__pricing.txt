@@ -1,10 +1,10 @@
 AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐 · MCPEmails
-[meta description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $15 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
+[meta description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $19 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
 [meta og:title] AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐 · MCPEmails
-[meta og:description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $15 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
+[meta og:description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $19 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
 [meta og:locale] zh_CN
 [meta twitter:title] AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐 · MCPEmails
-[meta twitter:description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $15 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
+[meta twitter:description] 免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $19 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。
 [alt] MCPEmails
 [alt] MCPEmails
 [aria-label] Primary navigation
@@ -50,9 +50,9 @@ $7.20
 邮件支持
 获取 Personal
 Pro
-$12
+$15.20
 /月
-按 $144/年 计费
+按 $182.40/年 计费
 适合独自经营一家企业的人：一个智能体最多连接 10 个邮箱，从财务、销售到客服，还有你自己的。
 包含 Personal 的全部功能
 最多连接 10 个收件箱
@@ -169,7 +169,7 @@ Personal、Pro 和 Business 有什么区别？
 有退款政策吗？
 我可以自托管来代替付费吗？
 准备好为你的智能体配备一个收件箱了吗？
-从免费版开始：一个收件箱，无需信用卡。三个邮箱在 Personal 上每月 $9，最多 10 个邮箱在 Pro 上每月 $15，Business 每月 $39 含 10 个邮箱，之后每个每月 $3。
+从免费版开始：一个收件箱，无需信用卡。三个邮箱在 Personal 上每月 $9，最多 10 个邮箱在 Pro 上每月 $19，Business 每月 $39 含 10 个邮箱，之后每个每月 $3。
 免费开始使用
 阅读文档
 [alt] MCPEmails
@@ -229,4 +229,4 @@ Impressum
 © 2026 MCPEmails.
 邮件实时获取，从不存储 · 凭据静态加密
 MCPEmails 由 Albretsen AS 运营，组织机构号 938 702 373，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/zh/pricing","url":"https://mcpemails.com/zh/pricing","name":"AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐","description":"免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $15 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。","inLanguage":"zh","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/zh/pricing#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/zh/pricing#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com/zh"},{"@type":"ListItem","position":2,"name":"AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐"}]},{"@type":"Product","@id":"https://mcpemails.com/zh/pricing#plans","name":"MCPEmails","description":"免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $15 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。","url":"https://mcpemails.com/zh/pricing","image":["https://mcpemails.com/opengraph-image"],"brand":{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"MCPEmails","url":"https://mcpemails.com"},"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/zh/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/zh/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.","url":"https://mcpemails.com/zh/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Business","description":"For a business with many mailboxes or several people: 10 mailboxes included, more at a fixed price each.","url":"https://mcpemails.com/zh/pricing","price":"39","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"39","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}]}]}
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/zh/pricing","url":"https://mcpemails.com/zh/pricing","name":"AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐","description":"免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $19 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。","inLanguage":"zh","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/zh/pricing#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/zh/pricing#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com/zh"},{"@type":"ListItem","position":2,"name":"AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐"}]},{"@type":"Product","@id":"https://mcpemails.com/zh/pricing#plans","name":"MCPEmails","description":"免费版连接 1 个收件箱。Personal 每月 $9 连接 3 个。Pro 每月 $19 最多连接 10 个。Business 每月 $39，含 10 个邮箱，成员人数不限。","url":"https://mcpemails.com/zh/pricing","image":["https://mcpemails.com/opengraph-image"],"brand":{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"MCPEmails","url":"https://mcpemails.com"},"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/zh/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/zh/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.","url":"https://mcpemails.com/zh/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Business","description":"For a business with many mailboxes or several people: 10 mailboxes included, more at a fixed price each.","url":"https://mcpemails.com/zh/pricing","price":"39","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"39","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}]}]}

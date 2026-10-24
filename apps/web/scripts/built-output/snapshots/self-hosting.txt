@@ -38,7 +38,7 @@ Self-host
 Hosted
 Price
 Free, you run it
-Free, $9, $15, or $39
+Free, $9, $19, or $39
 The MCP server and all 19 tools
 Yes
 Yes

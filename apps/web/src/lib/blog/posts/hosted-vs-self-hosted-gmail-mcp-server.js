@@ -30,7 +30,7 @@ The code runs on your hardware. No third party ever sits between your agent and 
 
 ### It's free in dollars
 
-No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $9/month (or $15/month once you need more than three inboxes), the math favors rolling your own.
+No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $9/month (or $19/month once you need more than three inboxes), the math favors rolling your own.
 
 ### You can bend it to anything
 
@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 90-day analytics, email support), Pro is $15/month (up to 10 connected inboxes, 300 req/min, 2-year analytics), and Business is $39/month (10 mailboxes included plus $3/month for each extra, members with roles, a separate workspace per client). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 90-day analytics, email support), Pro is $19/month (up to 10 connected inboxes, 300 req/min, 2-year analytics), and Business is $39/month (10 mailboxes included plus $3/month for each extra, members with roles, a separate workspace per client). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

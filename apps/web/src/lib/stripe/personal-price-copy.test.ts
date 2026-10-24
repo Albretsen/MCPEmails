@@ -239,7 +239,7 @@ test('the annual discount the copy advertises is the one the catalogue charges',
   // "Save ~20%" is prose in every locale. It stays true only while every
   // yearly price rounds to 20% off twelve monthlies, computed the way the
   // upgrade dialogs compute it (Team's $756 is 20.25%, Personal's $86.40 and
-  // Pro's $144 are exact).
+  // Pro's $182.40 are exact).
   for (const plan of Object.values(PLANS)) {
     if (!plan.monthlyPriceCents || plan.yearlyPriceCents == null) continue;
     const offer = annualOffer({

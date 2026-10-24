@@ -181,7 +181,7 @@ The value metric is **connected inboxes**. Free connects one mailbox, Personal c
 
 | | **Free** | **Personal** | **Pro** | **Business** |
 | --- | --- | --- | --- | --- |
-| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $39/mo · $374.40/yr ($31.20/mo) |
+| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $19/mo · $182.40/yr ($15.20/mo) | $39/mo · $374.40/yr ($31.20/mo) |
 | Connected inboxes | 1 | 3 | 10 | 10 included, then $3/mo each ($28.80/yr) |
 | Email actions / month | 150 (first 3 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
 | API keys | Unlimited | Unlimited | Unlimited | Unlimited |

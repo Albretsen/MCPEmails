@@ -39,6 +39,11 @@ process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2 = 'price_personal_month';
 process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 = 'price_personal_year';
 process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_month_500';
 process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_year_4800';
+// Pro is sold on the _V2 variables since the 2026-12-08 price change
+// (PRO_PRICE_CHANGE.priceLive); the unsuffixed pair holds the retained
+// $15 / $144 prices every earlier Pro subscriber keeps.
+process.env.STRIPE_PRICE_SOLO_MONTHLY_V2 = 'price_solo_month_1900';
+process.env.STRIPE_PRICE_SOLO_YEARLY_V2 = 'price_solo_year_18240';
 process.env.STRIPE_PRICE_SOLO_MONTHLY = 'price_solo_month';
 process.env.STRIPE_PRICE_SOLO_YEARLY = 'price_solo_year';
 // Every tier needs a price here: the unconfigured-price check runs BEFORE the
@@ -781,7 +786,7 @@ test('the confirmed upgrade records an upgrade, not a failed checkout', async ()
   assert.equal(outcome.kind, 'changed');
   assert.equal(subscriptionsUpdated.length, 1);
   assert.deepEqual(subscriptionsUpdated[0].items, [
-    { id: 'si_test_item', price: 'price_solo_month' },
+    { id: 'si_test_item', price: 'price_solo_month_1900' },
   ]);
 
   // THE REGRESSION GUARD. Not "no failure row" but no checkout row at all: a
@@ -1353,7 +1358,7 @@ test('Business to Pro removes the add-on and swaps the PLAN item, not the add-on
   });
   assert.equal(confirmed.outcome.kind, 'changed');
   assert.deepEqual(confirmed.subscriptionsUpdated[0].items, [
-    { id: 'si_test_item', price: 'price_solo_month' },
+    { id: 'si_test_item', price: 'price_solo_month_1900' },
     { id: 'si_addon', deleted: true },
   ]);
 });
@@ -1518,4 +1523,50 @@ test('a German subscriber asking for a plan change still only gets a quote', asy
   assert.equal(outcome.kind, 'confirmation_required');
   assert.equal(sessionsCreated.length, 0);
   assert.equal(subscriptionsUpdated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// The Pro price change (2026-12-08): $15 / $144 -> $19 / $182.40 for new
+// customers. Everyone subscribed before keeps their generation, including
+// across a monthly / yearly switch (retainedPriceGenerationId).
+// ---------------------------------------------------------------------------
+
+test('a retained $15 Pro monthly subscriber moving to yearly is swapped to $144, not $182.40', async () => {
+  const quote = await checkout({
+    planId: 'solo',
+    interval: 'year',
+    entitlement: null,
+    billing: ACTIVE_PRO,
+    currentPrice: 'price_solo_month',
+  });
+  assert.equal(quote.outcome.kind, 'confirmation_required');
+  assert.match(JSON.stringify(quote.previewsRequested[0]), /"price_solo_year"/);
+  assert.doesNotMatch(JSON.stringify(quote.previewsRequested[0]), /price_solo_year_18240/);
+
+  const confirmed = await checkout({
+    planId: 'solo',
+    interval: 'year',
+    entitlement: null,
+    billing: ACTIVE_PRO,
+    currentPrice: 'price_solo_month',
+    confirmChange: true,
+  });
+  assert.equal(confirmed.outcome.kind, 'changed');
+  assert.deepEqual(confirmed.subscriptionsUpdated[0].items, [
+    { id: 'si_test_item', price: 'price_solo_year' },
+  ]);
+});
+
+test('a new Pro yearly purchase from Personal is sold the $182.40 price', async () => {
+  const { outcome, subscriptionsUpdated } = await checkout({
+    planId: 'solo',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    confirmChange: true,
+  });
+  assert.equal(outcome.kind, 'changed');
+  assert.deepEqual(subscriptionsUpdated[0].items, [
+    { id: 'si_test_item', price: 'price_solo_year_18240' },
+  ]);
 });

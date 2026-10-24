@@ -98,7 +98,7 @@ Free: one mailbox
 Start with the busiest address. 150 email actions a month, the first 3 days uncounted, no card required.
 Personal, $9 a month: up to three
 For a company with two or three addresses. No monthly action cap, a higher burst rate limit and email support.
-Pro, $15 a month: four to ten
+Pro, $19 a month: four to ten
 Up to 10 mailboxes, still on one login. The plan for one person running a business with an address per department.
 Business, at $39 a month, includes 10 mailboxes and charges $3 a month for each one after that. Members with roles cost nothing extra, and you can run a separate workspace per company or client.
 Compare all plans

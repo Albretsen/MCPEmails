@@ -56,7 +56,7 @@ const WORKSPACE_ID = 'ws-0001';
 
 const PRICES = {
   personal: { monthlyCents: 500, yearlyCents: 4800, yearlyPriceConfigured: true },
-  solo: { monthlyCents: 1500, yearlyCents: 14400, yearlyPriceConfigured: true },
+  solo: { monthlyCents: 1900, yearlyCents: 18240, yearlyPriceConfigured: true },
   pro: { monthlyCents: 7900, yearlyCents: 75600, yearlyPriceConfigured: true },
 };
 
@@ -268,7 +268,7 @@ test('page: ONE interval choice moves BOTH buy buttons, label and href together'
   // The label quotes what the card is charged: the annual total, per plan.
   assert.ok(buttons[1].label.includes('$48'), buttons[1].label);
   assert.ok(buttons[1].label.includes('Personal'), buttons[1].label);
-  assert.ok(buttons[0].label.includes('$144'), buttons[0].label);
+  assert.ok(buttons[0].label.includes('$182.40'), buttons[0].label);
   assert.ok(buttons[0].label.includes('Pro'), buttons[0].label);
 
   // And back again.
@@ -284,7 +284,7 @@ test('page: no annual toggle when EITHER plan has no yearly price, and both stay
     addresses: ['info@acme.example'],
     stripePrices: {
       ...PRICES,
-      solo: { monthlyCents: 1500, yearlyCents: 14400, yearlyPriceConfigured: false },
+      solo: { monthlyCents: 1900, yearlyCents: 18240, yearlyPriceConfigured: false },
     },
   });
   assert.equal(intervalButton(view.container, chrome.connect.intervalAnnual) === undefined, true);
@@ -378,11 +378,11 @@ test('modal: ONE interval choice moves BOTH cards, and the default is monthly', 
     checkoutHref('personal', 'year'),
   ]);
   assert.ok(buttons[1].label.includes('$48'), buttons[1].label);
-  assert.ok(buttons[0].label.includes('$144'), buttons[0].label);
+  assert.ok(buttons[0].label.includes('$182.40'), buttons[0].label);
   // Each card states its own annual charge before the click.
   const text = modalOf(view).textContent;
   assert.ok(text.includes('Billed $48 once a year.'));
-  assert.ok(text.includes('Billed $144 once a year.'));
+  assert.ok(text.includes('Billed $182.40 once a year.'));
 });
 
 test('modal: the interval picked in the modal does not leak into the page notice', async (t) => {

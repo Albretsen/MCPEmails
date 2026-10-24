@@ -47,8 +47,8 @@ test('the value metric is inboxes, and the tiers are named the way they are sold
 });
 
 test('prices match the published repricing', () => {
-  assert.equal(PLANS.solo.monthlyPriceCents, 1500);
-  assert.equal(PLANS.solo.yearlyPriceCents, 14400);
+  assert.equal(PLANS.solo.monthlyPriceCents, 1900);
+  assert.equal(PLANS.solo.yearlyPriceCents, 18240);
   assert.equal(PLANS.pro.monthlyPriceCents, 3900);
   assert.equal(PLANS.pro.yearlyPriceCents, 37440);
   assert.equal(PLANS.free.monthlyPriceCents, 0);
@@ -259,8 +259,8 @@ test('Personal ships at the numbers it was signed off at', () => {
 
   // Nothing else moved. Inserting a tier must not reprice the ones already sold.
   assert.equal(PLANS.free.limits.maxInboxes, 1);
-  assert.equal(PLANS.solo.monthlyPriceCents, 1500);
-  assert.equal(PLANS.solo.yearlyPriceCents, 14400);
+  assert.equal(PLANS.solo.monthlyPriceCents, 1900);
+  assert.equal(PLANS.solo.yearlyPriceCents, 18240);
   assert.equal(PLANS.pro.monthlyPriceCents, 3900);
   assert.equal(PLANS.pro.yearlyPriceCents, 37440);
 });
@@ -272,7 +272,7 @@ test('the ladder is ordered Free, Personal, Pro, Business', () => {
   assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
 
   const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
-  assert.deepEqual(monthly, [0, 900, 1500, 3900]);
+  assert.deepEqual(monthly, [0, 900, 1900, 3900]);
   for (let i = 1; i < monthly.length; i += 1) {
     assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
   }

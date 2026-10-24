@@ -17,14 +17,16 @@ import { PLANS, getPlanByStripePriceId, retainedPriceGenerationId } from './plan
 const SWITCH_AT = Date.parse(PRO_PRICE_CHANGE.switchAt);
 const DAY = 24 * 60 * 60 * 1000;
 
-test('both switches ship off, so merging this changes nothing a customer sees', () => {
-  assert.equal(PRO_PRICE_CHANGE.priceLive, false);
-  assert.equal(PRO_PRICE_CHANGE.announce, false);
+test('the price is live: Pro sells $19 / $182.40 and the notice is down', () => {
+  assert.equal(PRO_PRICE_CHANGE.priceLive, true);
+  // With the new price live there is nothing left to announce, whatever
+  // `announce` says.
   assert.equal(proPriceNoticeVisible(SWITCH_AT - DAY), false);
-  // Pro still sells $15 / $144 from the unsuffixed variables.
-  assert.deepEqual(proSoldAmounts(), PRO_PRICE_CHANGE.current);
-  assert.equal(PLANS.solo.monthlyPriceCents, 1500);
-  assert.equal(PLANS.solo.yearlyPriceCents, 14400);
+  // Pro sells $19 / $182.40 from the _V2 variables; the unsuffixed $15 / $144
+  // pair is the legacy pair every earlier subscriber keeps.
+  assert.deepEqual(proSoldAmounts(), PRO_PRICE_CHANGE.next);
+  assert.equal(PLANS.solo.monthlyPriceCents, 1900);
+  assert.equal(PLANS.solo.yearlyPriceCents, 18240);
 });
 
 test('the amounts are the announced ones, and yearly is 12 months less exactly 20%', () => {
@@ -111,12 +113,12 @@ test('a retained Pro subscriber switching interval stays on their own generation
   assert.equal(retainedPriceGenerationId(null, 'solo', 'year', retained), null);
   // An unset half is never returned as a price.
   assert.equal(retainedPriceGenerationId('price_old_month', 'solo', 'year', ['price_old_month', '']), null);
-  // Before the cutover nobody is on a retained generation.
+  // An id that is not on the retained pair gets the sold price.
   assert.equal(retainedPriceGenerationId('anything', 'solo', 'year'), null);
 });
 
-test('before the cutover the not-yet-sold ids still resolve to Pro, so a rollback never orphans one', () => {
-  // The _V2 pair occupies the last two legacy slots, monthly then yearly.
+test('after the cutover the retained $15 / $144 ids still resolve to Pro, so every earlier subscriber stays mapped', () => {
+  // The retained pair occupies the last two legacy slots, monthly then yearly.
   const legacy = PLANS.solo.legacyStripePriceIds;
   assert.equal(legacy.length % 2, 0);
   const [m, y] = legacy.slice(-2);

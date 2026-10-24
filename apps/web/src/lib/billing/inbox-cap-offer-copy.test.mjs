@@ -129,8 +129,9 @@ test('no ICU syntax: these strings take no arguments, and escapes render literal
 
 test('the prices quoted are the prices in plans.ts, in every locale', () => {
   // Personal repriced $5 -> $9 for new customers on 2026-09-29.
+  // Pro repriced $15 -> $19 for new customers on 2026-12-08.
   assert.equal(PERSONAL_PRICE, '9');
-  assert.equal(PRO_PRICE, '15');
+  assert.equal(PRO_PRICE, '19');
   for (const locale of LOCALES) {
     const chrome = readMessages(locale, 'dashboardChrome.json');
     const dashboard = readMessages(locale, 'dashboard.json');

@@ -32,11 +32,12 @@ function sellable(monthlyPriceCents: number, yearlyPriceCents: number) {
 }
 
 test('the saving is computed from the two prices, never written down', () => {
-  // Personal: $5/mo vs $48/yr. Pro (internal id `solo`): $15/mo vs $144/yr.
-  // Both are 20% today, and both have been repriced before, which is exactly
-  // why neither number may be typed into copy.
+  // Personal: $5/mo vs $48/yr. Pro (internal id `solo`): $19/mo vs $182.40/yr
+  // (retained subscribers: $15/mo vs $144/yr). All are 20%, and both plans have
+  // been repriced before, which is exactly why no number may be typed into copy.
   assert.equal(annualOffer({ ...sellable(500, 4800) })!.savingPercent, 20);
   assert.equal(annualOffer({ ...sellable(1500, 14400) })!.savingPercent, 20);
+  assert.equal(annualOffer({ ...sellable(1900, 18240) })!.savingPercent, 20);
 
   // Team: $79/mo vs $756/yr rounds to 20 as well, from 20.25.
   assert.equal(annualOffer({ ...sellable(7900, 75600) })!.savingPercent, 20);
@@ -174,11 +175,11 @@ test('choosing annual reaches Stripe as yearly and the funnel as <plan>_year', (
 });
 
 test('the annual price the CTA quotes is the price the interval buys', () => {
-  // The label reads "Upgrade to Pro, $144 a year" only because this amount and
-  // the yearly price ID come from the same catalogue entry. A CTA that said
-  // "$15/mo" while opening a $144 charge is the dark pattern this avoids.
+  // The label reads "Upgrade to Pro, $182.40 a year" only because this amount
+  // and the yearly price ID come from the same catalogue entry. A CTA that said
+  // "$19/mo" while opening a $182.40 charge is the dark pattern this avoids.
   const solo = annualOffer({ ...sellable(PLANS.solo.monthlyPriceCents, PLANS.solo.yearlyPriceCents!) })!;
-  assert.equal(formatPriceCents(solo.yearlyPriceCents), '$144');
+  assert.equal(formatPriceCents(solo.yearlyPriceCents), '$182.40');
   const personal = annualOffer({
     ...sellable(PLANS.personal.monthlyPriceCents, PLANS.personal.yearlyPriceCents!),
   })!;

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Tarifs du serveur MCP e-mail pour l'IA : Gratuit, Personal, Pro et Business",
-    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 9 $ par mois. Pro jusqu'à 10 pour 15 $. Business inclut 10 boîtes et autant de personnes que nécessaire pour 39 $."
+    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 9 $ par mois. Pro jusqu'à 10 pour 19 $. Business inclut 10 boîtes et autant de personnes que nécessaire pour 39 $."
   },
   "hero": {
     "eyebrow": "Tarifs",
@@ -192,7 +192,7 @@
       },
       {
         "q": "Et s'il me faut une quatrième boîte ?",
-        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 15 $ par mois, qui couvre jusqu'à 10 boîtes sur un seul agent et avec une seule connexion. Au-delà de 10, Business en inclut 10 et facture 3 $ par mois chaque boîte en plus. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
+        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 19 $ par mois, qui couvre jusqu'à 10 boîtes sur un seul agent et avec une seule connexion. Au-delà de 10, Business en inclut 10 et facture 3 $ par mois chaque boîte en plus. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
       },
       {
         "q": "Puis-je changer ou annuler ma formule ?",
@@ -200,7 +200,7 @@
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 86,40 $ par an (7,20 $ par mois), Pro à 144 $ par an (12 $ par mois) et Business à 374,40 $ par an (31,20 $ par mois), chaque boîte en plus étant à 28,80 $ par an (2,40 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
+        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 86,40 $ par an (7,20 $ par mois), Pro à 182,40 $ par an (15,20 $ par mois) et Business à 374,40 $ par an (31,20 $ par mois), chaque boîte en plus étant à 28,80 $ par an (2,40 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
@@ -218,7 +218,7 @@
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
+    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 19 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

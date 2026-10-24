@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Business",
-    "description": "Gratis conecta una bandeja. Personal, tres por $9 al mes. Pro, hasta 10 por $15. Business incluye 10 buzones y todas las personas que quieras por $39."
+    "description": "Gratis conecta una bandeja. Personal, tres por $9 al mes. Pro, hasta 10 por $19. Business incluye 10 buzones y todas las personas que quieras por $39."
   },
   "hero": {
     "eyebrow": "Precios",
@@ -192,7 +192,7 @@
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",
-        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, que cubre hasta 10 buzones en un solo agente y con un solo inicio de sesión. A partir de 10, Business incluye 10 y cobra $3 al mes por cada uno adicional. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
+        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $19 al mes, que cubre hasta 10 buzones en un solo agente y con un solo inicio de sesión. A partir de 10, Business incluye 10 y cobra $3 al mes por cada uno adicional. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
@@ -200,7 +200,7 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $86,40 al año ($7,20 al mes), Pro cuesta $144 al año ($12 al mes) y Business cuesta $374,40 al año ($31,20 al mes), con cada buzón extra a $28,80 al año ($2,40 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $86,40 al año ($7,20 al mes), Pro cuesta $182,40 al año ($15,20 al mes) y Business cuesta $374,40 al año ($31,20 al mes), con cada buzón extra a $28,80 al año ($2,40 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -218,7 +218,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $19 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }

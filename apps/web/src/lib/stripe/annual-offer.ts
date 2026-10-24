@@ -124,8 +124,8 @@ export function annualOfferFromPlan(plan: Plan): AnnualOffer | null {
 /**
  * Render a cent amount as the price the copy around it already speaks.
  *
- * Whole dollars print as "$48", not "$48.00": every price on these surfaces is
- * whole today ($5, $15, $48, $144) and the neighbouring sentences write them
+ * Whole dollars print as "$48", not "$48.00": every monthly price on these
+ * surfaces is whole ($9, $19, $39) and the neighbouring sentences write them
  * that way. A fractional amount keeps its cents rather than being rounded into
  * a number nobody is charged.
  */

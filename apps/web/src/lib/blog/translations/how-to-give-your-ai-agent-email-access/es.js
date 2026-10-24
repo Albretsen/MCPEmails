@@ -108,7 +108,7 @@ Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas e
 
 - **Gratis, 0 $ para siempre.** Sin tarjeta. Una bandeja conectada, 60 req/min, analíticas de 30 días, soporte de la comunidad.
 - **Personal, 9 $/mes** (o 86,40 $/año, 7,20 $/mes). Hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte por correo.
-- **Pro, 15 $/mes** (o 144 $/año, 12 $/mes). Hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años, soporte por correo.
+- **Pro, 19 $/mes** (o 182,40 $/año, 15,20 $/mes). Hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años, soporte por correo.
 - **Business, 39 $/mes** (o 374,40 $/año, 31,20 $/mes). Todo lo de Pro, además de 10 buzones incluidos y 3 $/mes por cada uno extra, miembros ilimitados con roles, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio, 1.000 req/min.
 
 Desglose completo en la [página de precios](/pricing).

@@ -108,7 +108,7 @@ Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på 
 
 - **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 30-dagers analyser, fellesskapsstøtte.
 - **Personal, $9 per måned** (eller $86,40 per år, $7,20 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyser, e-poststøtte.
-- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyser, e-poststøtte.
+- **Pro, $19 per måned** (eller $182,40 per år, $15,20 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyser, e-poststøtte.
 - **Business, $39 per måned** (eller $374,40 per år, $31,20 per måned). Alt i Pro, pluss 10 postkasser inkludert og $3 per måned for hver ekstra, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet, 1 000 req/min.
 
 Full oversikt på [prissiden](/pricing).

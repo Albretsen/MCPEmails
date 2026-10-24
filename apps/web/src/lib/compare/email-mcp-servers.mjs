@@ -185,7 +185,7 @@ export const entries = [
     href: '/signup',
     verdict:
       'Puts several mailboxes from different providers behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail on our server until a person approves it.',
-    price: 'Free: 1 inbox, 150 email actions a month, first 3 days uncounted. Personal is $9 a month for 3 inboxes ($86.40 a year), Pro is $15 a month for up to 10 ($144 a year), and Business is $39 a month with 10 included and $3 a month for each extra. Paid plans bill monthly or yearly.',
+    price: 'Free: 1 inbox, 150 email actions a month, first 3 days uncounted. Personal is $9 a month for 3 inboxes ($86.40 a year), Pro is $19 a month for up to 10 ($182.40 a year), and Business is $39 a month with 10 included and $3 a month for each extra. Paid plans bill monthly or yearly.',
     pros: [
       'Outlook and Microsoft 365 over Microsoft Graph with Sign in with Microsoft; Gmail with a Google app password; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
       'OAuth 2.1 with dynamic client registration, S256 PKCE and 9 permission scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.',
@@ -529,7 +529,7 @@ export const faq = {
     },
     {
       q: 'anymailmcp and MailMCP are cheaper. Why would I pay more?',
-      a: 'For some mailbox counts they are, and we say so above. anymailmcp is EUR 4.99 a month for up to five mailboxes, and MailMCP is EUR 1.99 a month for one mailbox if you commit for 24 months. Ours is $9 a month for three, or $15 a month for up to ten. What the price buys here is Microsoft sign-in for Outlook and Microsoft 365, an approval hold on our server, and open source code you can run yourself. If you need none of those, buy theirs.',
+      a: 'For some mailbox counts they are, and we say so above. anymailmcp is EUR 4.99 a month for up to five mailboxes, and MailMCP is EUR 1.99 a month for one mailbox if you commit for 24 months. Ours is $9 a month for three, or $19 a month for up to ten. What the price buys here is Microsoft sign-in for Outlook and Microsoft 365, an approval hold on our server, and open source code you can run yourself. If you need none of those, buy theirs.',
     },
     {
       q: 'Does my provider have its own MCP server?',

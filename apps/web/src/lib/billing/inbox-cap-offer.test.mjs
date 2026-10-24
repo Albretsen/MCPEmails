@@ -22,7 +22,7 @@ function lookup(messages, dottedKey) {
 }
 
 test('a Free cap of one inbox is cleared by Personal, not by Pro', () => {
-  // Sending someone to $15 to add a SECOND mailbox prices the upgrade far
+  // Sending someone to $19 to add a SECOND mailbox prices the upgrade far
   // above the problem they actually have.
   const offer = inboxCapOffer(1);
   assert.equal(offer.plan, 'personal');
@@ -88,7 +88,7 @@ test('both offers name a plan the checkout route will accept', () => {
 
 test('the modal and the page notice cannot drift, because there is one rule', () => {
   // Both surfaces call this with the same cap and must get the same plan: a
-  // user who reads $5 in the modal, closes it, and sees $15 on the page behind
+  // user who reads $5 in the modal, closes it, and sees $19 on the page behind
   // has been given two prices for one block, and neither is now trustworthy.
   for (const cap of [1, 3, 10, null]) {
     assert.deepEqual(inboxCapOffer(cap), inboxCapOffer(cap));
@@ -101,7 +101,7 @@ test('the modal and the page notice cannot drift, because there is one rule', ()
 
 test('a CONSUMER Free workspace still gets Personal alone, exactly as before', () => {
   // The whole point of scoping the change to a segment: the person adding a
-  // second personal mailbox must not start being shown a $15 plan.
+  // second personal mailbox must not start being shown a $19 plan.
   for (const context of [undefined, {}, CONSUMER, { businessShaped: undefined }]) {
     const offer = inboxCapOffer(1, context);
     assert.equal(offer.dual, false);

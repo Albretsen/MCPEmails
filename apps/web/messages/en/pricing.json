@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Business Plans",
-    "description": "Free connects one inbox. Personal connects three for $9 a month. Pro connects up to 10 for $15. Business includes 10 mailboxes and any number of people for $39."
+    "description": "Free connects one inbox. Personal connects three for $9 a month. Pro connects up to 10 for $19. Business includes 10 mailboxes and any number of people for $39."
   },
   "hero": {
     "eyebrow": "Pricing",
@@ -192,7 +192,7 @@
       },
       {
         "q": "What if I need a fourth inbox?",
-        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, which covers up to 10 mailboxes on one agent and one login. Past 10, Business includes 10 and charges $3 a month for each one after that. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
+        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $19 a month, which covers up to 10 mailboxes on one agent and one login. Past 10, Business includes 10 and charges $3 a month for each one after that. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
       },
       {
         "q": "Can I change or cancel my plan?",
@@ -200,7 +200,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 20% versus monthly: Personal is $86.40 a year ($7.20 a month), Pro is $144 a year ($12 a month) and Business is $374.40 a year ($31.20 a month), with each extra mailbox at $28.80 a year ($2.40 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+        "a": "Paying annually saves about 20% versus monthly: Personal is $86.40 a year ($7.20 a month), Pro is $182.40 a year ($15.20 a month) and Business is $374.40 a year ($31.20 a month), with each extra mailbox at $28.80 a year ($2.40 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
       },
       {
         "q": "What email providers are supported?",
@@ -218,7 +218,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $19, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

@@ -3,7 +3,7 @@
  * for NEW subscriptions, with the current price kept by everyone subscribed
  * before the switch, for as long as their subscription stays active.
  *
- * TWO SWITCHES, BOTH CONSTANTS, BOTH OFF.
+ * TWO SWITCHES, BOTH CONSTANTS. priceLive is ON since the 2026-12-08 cutover.
  *
  *   priceLive  Pro sells the `STRIPE_PRICE_SOLO_*_V2` prices at the NEXT
  *              amounts, and the current pair becomes Pro's legacy pair. Flipped
@@ -35,8 +35,8 @@ export interface ProPriceAmounts {
 }
 
 export const PRO_PRICE_CHANGE = {
-  /** SWITCH 1. Sell the new price. Off until the cutover PR. */
-  priceLive: false,
+  /** SWITCH 1. Sell the new price. On since the cutover PR (2026-12-08). */
+  priceLive: true,
   /** SWITCH 2. Show the dated notice. Off until the announcement PR. */
   announce: false,
   /**
@@ -49,7 +49,7 @@ export const PRO_PRICE_CHANGE = {
   lastLockInDate: '2026-12-07',
   /** The first day of the new price, in Oslo. */
   switchDate: '2026-12-08',
-  /** $15 / $144: what Pro sells today and what every subscriber keeps. */
+  /** $15 / $144: what Pro sold before the cutover and what every earlier subscriber keeps. */
   current: { monthlyCents: 1500, yearlyCents: 14400 } as ProPriceAmounts,
   /** $19 / $182.40: 12 x $19 less exactly the 20% every annual price carries. */
   next: { monthlyCents: 1900, yearlyCents: 18240 } as ProPriceAmounts,

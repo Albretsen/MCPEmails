@@ -16,7 +16,7 @@ L'espace de travail est l'unité de séparation. Les boîtes, les membres, les c
 
 Avoir plusieurs espaces de travail est une fonction **Business** (39 $/mois, 374,40 $/an), qui apporte aussi des membres illimités avec des rôles sans surcoût, et 10 boîtes incluses avec 3 $ par mois pour chaque boîte en plus. L'abonnement est rattaché à votre compte et non à un espace, donc un seul abonnement Business couvre tous les espaces clients que vous créez. Nommez chacun d'après le client, n'y connectez que les boîtes de ce client, et passez de l'un à l'autre depuis la barre latérale du tableau de bord.
 
-En dessous de Business, les formules sont pour une personne dans un seul espace : **Pro** (15 $/mois, 144 $/an) connecte jusqu'à 10 boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
+En dessous de Business, les formules sont pour une personne dans un seul espace : **Pro** (19 $/mois, 182,40 $/an) connecte jusqu'à 10 boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
 
 ## Membres et rôles
 

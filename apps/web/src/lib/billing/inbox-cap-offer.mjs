@@ -7,12 +7,12 @@
  * offer. It is not fine now that the offer also has to survive the modal being
  * closed (see the cap notice on the Inboxes page), because two surfaces quoting
  * two different plans for the same block is worse than either surface alone: a
- * user reads $5 in the modal, closes it, sees $15 on the page behind, and now
+ * user reads $5 in the modal, closes it, sees $19 on the page behind, and now
  * neither number is trustworthy.
  *
  * THE RULE: the cheapest plan that actually clears the cap that was just hit.
  * Free stops at one inbox, so Personal (three, $5) clears it, and sending
- * someone to $15 Pro to add a second mailbox prices the upgrade far above the
+ * someone to $19 Pro to add a second mailbox prices the upgrade far above the
  * problem. Personal itself stops at three, so from there Pro (ten) is the
  * way forward, and offering Personal to a Personal subscriber would sell them
  * the plan they are already on. Pro stops at ten for customers who bought

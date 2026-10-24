@@ -7,7 +7,7 @@ import { checkoutStartHref, pricingCompareHref } from './upgrade-intent.mjs';
  * meet: 150 email actions a month (docs/PLAN-free-action-cap-150.md). Same
  * rule, the cheapest plan that clears the cap that was just hit. Free is the
  * only tier with a public action cap, so the answer is always Personal ($5):
- * it removes the monthly cap, and sending someone to $15 Pro to keep reading
+ * it removes the monthly cap, and sending someone to $19 Pro to keep reading
  * their mail prices the upgrade far above the problem.
  *
  * Every surface that mentions the cap (the Usage page banner, the refusal text

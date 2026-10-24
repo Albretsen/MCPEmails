@@ -21,7 +21,9 @@ import assert from 'node:assert/strict';
 // Both names: the Personal yearly id moved to a _V2 variable in the $9 reprice.
 process.env.STRIPE_PRICE_PERSONAL_YEARLY ??= 'price_test_personal_yearly';
 process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 ??= 'price_test_personal_yearly';
+// Both names for Pro too: the yearly id moved to _V2 at the 2026-12-08 change.
 process.env.STRIPE_PRICE_SOLO_YEARLY ??= 'price_test_solo_yearly';
+process.env.STRIPE_PRICE_SOLO_YEARLY_V2 ??= 'price_test_solo_yearly';
 process.env.NEXT_PUBLIC_APP_URL = 'https://mcpemails.test';
 delete process.env.RESEND_API_KEY;
 

@@ -18,7 +18,7 @@ function lookup(messages, key) {
 }
 
 test('the action cap is cleared by Personal, never by Pro', () => {
-  // $5 removes the monthly cap. Quoting $15 to someone who only wants to keep
+  // $5 removes the monthly cap. Quoting $19 to someone who only wants to keep
   // reading their mail prices the upgrade far above the problem.
   assert.equal(usageCapOffer().plan, 'personal');
   assert.equal(usageCapOffer({ reached: true }).plan, 'personal');
