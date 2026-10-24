@@ -432,6 +432,9 @@ async function finish(
  * The two windows do not overlap: a card with five days left gets the seven-day
  * warning only, never both on the same morning.
  */
+/** Upper bound on one sweep, so a runaway pager cannot loop forever. */
+const CARD_SWEEP_MAX_SCANNED = 5000;
+
 async function sweepExpiringCards(): Promise<Response> {
   if (lifecycleMode() === 'off') {
     return Response.json({ skipped: 'BILLING_LIFECYCLE_EMAILS=off' }, { status: 200 });
@@ -441,13 +444,22 @@ async function sweepExpiringCards(): Promise<Response> {
   const result = { scanned: 0, queued30: 0, queued7: 0, skipped: 0 };
 
   try {
-    const subs = await stripe.subscriptions.list({
+    // Auto-pagination: one list call returns only its first page (100), and
+    // there are more active subscriptions than that. The iterator fetches the
+    // next page as the loop reaches it.
+    const subscriptions = stripe.subscriptions.list({
       status: 'active',
       limit: 100,
       expand: ['data.default_payment_method'],
     });
 
-    for (const subscription of subs.data) {
+    for await (const subscription of subscriptions) {
+      if (result.scanned >= CARD_SWEEP_MAX_SCANNED) {
+        console.warn('[lifecycle-dispatch] card sweep stopped at the scan cap', {
+          cap: CARD_SWEEP_MAX_SCANNED,
+        });
+        break;
+      }
       result.scanned += 1;
 
       const card = await resolveCard(subscription);
