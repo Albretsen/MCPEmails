@@ -1746,7 +1746,10 @@ export function App(props: { bridge: HostBridge }) {
   // call) must keep rendering nothing, or every successful delete on an
   // opted-out inbox grows a stray line of protocol trivia underneath it.
   if (body === null) return null;
-  if (!diagnosticsEnabled(envelope)) return body;
+  // Not under the subscription list: the line measures the draft card's host
+  // handshake, and on this card it read as stray debug text under a list a
+  // person is choosing from, even for our own opted-in workspaces.
+  if (!diagnosticsEnabled(envelope) || envelope?.card === "subscription_plan") return body;
   return (
     <>
       {body}
