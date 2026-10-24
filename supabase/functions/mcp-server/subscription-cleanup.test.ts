@@ -945,7 +945,8 @@ Deno.test("scan text: names every pre-selected sender with its quoted key, and s
   for (const key of preselected) assert(text.includes(`- ${JSON.stringify(key)}: `), key);
   // Senders that are not pre-selected are not in that block.
   const block = text.slice(text.indexOf("Pre-selected on the card"), text.indexOf("Whatever is ticked"));
-  assert(!block.includes("digest@blog.example.com") && !block.includes("junk.example.com"), block);
+  const blockKeys = [...block.matchAll(/^- "([^"]+)": /gm)].map((m) => m[1]).sort();
+  assertEquals(blockKeys, preselected, block);
   assert(text.includes("Whatever is ticked on the card when the user presses its button is what gets unsubscribed"));
   assert(text.includes("do not say it was left out"));
   // Keys in the sender list are quoted, so each reads as one token.
