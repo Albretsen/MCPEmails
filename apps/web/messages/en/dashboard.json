@@ -790,6 +790,9 @@
       "invalid_plan": "That upgrade link is not valid. Pick a plan below.",
       "invalid_interval": "That upgrade link is not valid. Pick a plan below.",
       "plan_change_failed": "Could not change your plan. Nothing was charged. Please try again.",
+      "pass_unavailable": "The 3-month Personal pass is not available right now.",
+      "already_subscribed": "You already have a subscription, which includes everything the pass does.",
+      "pass_already_queued": "You already have another 3 months queued after this pass.",
       "plan_change_pending": "A pause or a plan switch is booked on your subscription. Use Resume early or Keep on this page first, then change plans."
     },
     "plans": {
@@ -849,6 +852,25 @@
     "proInboxesKept": "Your Pro plan keeps unlimited connected inboxes.",
     "businessMailboxRate": "10 mailboxes included across all your workspaces. Each extra mailbox is billed with your plan: $3 a month, or $28.80 a year.",
     "confirmExtraMailboxes": "Includes {count, plural, one {# extra mailbox} other {# extra mailboxes}} above the 10 included.",
+    "pass": {
+      "offerLine": "Or Personal, 3 months, paid once, {price}. Nothing renews.",
+      "offerUntil": "Bought today, it runs until {date}, then this workspace goes back to Free.",
+      "offerCta": "Get 3 months for {price}",
+      "returnTitle": "Personal: 3 connected inboxes, no monthly action cap",
+      "subscribeMonthly": "Subscribe monthly, {price} a month",
+      "subscribeYearly": "Yearly, {price} a year",
+      "subscribeMonthlyFrom": "Subscribe monthly, {price} a month, first charge on {date}",
+      "subscribeYearlyFrom": "Yearly, {price} a year, first charge on {date}",
+      "until": "Personal until {date}",
+      "queued": "Then another 3 months, until {date}.",
+      "after": "Paid once, nothing renews. After {date} this workspace goes back to Free: {cap} email actions a month and one inbox for new connections. Your inboxes, drafts and settings stay.",
+      "endingTitle": "Your Personal pass ends on {date}.",
+      "another": "Another 3 months, {price}, paid once.",
+      "anotherUntil": "Bought now, Personal runs until {date}.",
+      "seeOptions": "See the options",
+      "close": "Close",
+      "started": "Payment received. Your 3-month Personal pass shows here in a moment."
+  },
     "planChange": {
       "title": "Change or pause your plan",
       "sub": "Pause a monthly plan for up to 3 months, or move to a smaller plan when your current period ends.",

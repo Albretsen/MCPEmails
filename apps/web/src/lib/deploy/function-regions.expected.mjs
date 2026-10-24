@@ -205,6 +205,7 @@ export const ROUTES = [
   ['app/api/automations/[id]/runs/route.ts', 'arn1', '6', '-'],
   ['app/api/automations/preview/route.ts', 'iad1', '3', 'Supabase edge function triage-preview (opens the IMAP session)'],
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
+  ['app/api/billing/pass-offer/route.ts', 'arn1', '~8', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
   // Reads one request header and the STRIPE_EUR_PRICES switch; no database,
   // no third party. The app/api/** default is as good as any.
