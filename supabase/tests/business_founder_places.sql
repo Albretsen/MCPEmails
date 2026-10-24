@@ -1,7 +1,7 @@
 -- ============================================================
 -- public.business_founder_places: the founder-price place counter
 -- ============================================================
--- Covers 20261024220000_business_founder_places.sql.
+-- Covers 20261025000000_business_founder_places.sql.
 --
 --   - RLS is on and neither anon nor authenticated can read or write it
 --   - service_role may SELECT and INSERT, never UPDATE or DELETE

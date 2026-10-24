@@ -193,6 +193,14 @@ export interface PlanLimits {
   auditLogEnabled: boolean;
   /** Support tier. */
   supportTier: SupportTier;
+  /**
+   * Webhooks for new mail (`message.received`). Enforced by the
+   * /api/webhook-endpoints routes and, for delivery, by the SQL function
+   * `webhooks_plan_allowed` (migration 20261024230000), which mirrors this
+   * flag: Pro and Business, and comped workspaces (they resolve to Business).
+   * A workspace that moves to Free or Personal keeps its endpoints, paused.
+   */
+  webhooksEnabled: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,6 +331,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'community',
+      webhooksEnabled: false,
     },
     monthlyPriceCents: 0,
     yearlyPriceCents: 0,
@@ -370,6 +379,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: false,
     },
     // THE Personal price. Every surface that quotes it (pricing page, paywall,
     // upgrade dialogs, JSON-LD, emails, translated copy) derives from these two
@@ -432,6 +442,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: true,
     },
     // $15 / $144 until PRO_PRICE_CHANGE.priceLive, then $19 / $182.40.
     monthlyPriceCents: PRO_SOLD.monthlyCents,
@@ -456,6 +467,10 @@ export const PLANS: Record<PlanId, Plan> = {
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
       'Longer analytics history',
+      // webhooksEnabled. No numbers here on purpose (no endpoint count, no
+      // retry schedule, no tool count): this list is the purchase email.
+      // Scoped API keys are on every plan, so they are not sold here.
+      'Webhooks for new mail',
     ],
     highlighted: true,
   },
@@ -490,6 +505,7 @@ export const PLANS: Record<PlanId, Plan> = {
       // There is no priority queue behind "priority"; email support is what
       // every paid plan actually gets.
       supportTier: 'email',
+      webhooksEnabled: true,
     },
     monthlyPriceCents: 3900,
     yearlyPriceCents: 37440,
@@ -529,6 +545,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited members with roles, at no extra cost',
       'Admins approve held sends',
       'Several workspaces on one subscription',
+      'Webhooks for new mail',
     ],
     highlighted: false,
   },

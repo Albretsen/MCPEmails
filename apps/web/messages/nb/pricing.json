@@ -58,7 +58,8 @@
         "Alt i Personal",
         "10 tilkoblede innbokser",
         "5x høyere burst-grense",
-        "Lengre analysehistorikk"
+        "Lengre analysehistorikk",
+        "Webhooks for ny e-post"
       ]
     },
     "pro": {
@@ -70,7 +71,8 @@
         "10 postkasser inkludert, $3 i måneden for hver ekstra",
         "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
         "Administratorer godkjenner sendinger som venter",
-        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde"
+        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde",
+        "Webhooks for ny e-post"
       ]
     }
   },
@@ -97,6 +99,7 @@
           "inboxes": "Tilkoblede innbokser",
           "actions": "E-posthandlinger per måned",
           "keys": "API-nøkler",
+          "webhooks": "Webhooks for ny e-post",
           "members": "Personer som kan logge inn",
           "burst": "Burst-grense",
           "approvals": "Godkjenning før sending"

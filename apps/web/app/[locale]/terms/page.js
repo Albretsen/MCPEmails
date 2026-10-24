@@ -203,13 +203,17 @@ export default async function TermsPage({ params }) {
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
 
-              {/* The Business founder price clause: only once the offer has
-                  started or a founder subscription exists, never in zh, and
-                  hidden when the check cannot be made. */}
+              {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
+              <h4>{t('plansAndPayment.h59')}</h4>
+              <p>{t('plansAndPayment.p59')}</p>
+
+              {/* 5.10 The Business founder price clause: only once the offer
+                  has started or a founder subscription exists, never in zh,
+                  and hidden when the check cannot be made. */}
               {showFounderClause && (
                 <>
-                  <h4>{t('plansAndPayment.h58')}</h4>
-                  <p>{t('plansAndPayment.p58')}</p>
+                  <h4>{t('plansAndPayment.h510')}</h4>
+                  <p>{t('plansAndPayment.p510')}</p>
                 </>
               )}
             </LegalSection>

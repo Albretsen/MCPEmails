@@ -57,7 +57,7 @@
     }
   ],
   "limits": [
-    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "Las solicitudes se limitan por clave en ventanas por minuto, por hora y por día dimensionadas según tu plan, así que una sola clave puede usar todo el tope por minuto del plan y varias claves lo comparten. Un 429 lleva Retry-After. El tope de acciones facturables de tu plan también se aplica.",
     "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
     "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato.",
     "El flujo OAuth necesita un navegador una vez. En una máquina sin interfaz gráfica, añade el servidor con una clave de API en un encabezado Authorization y sáltate el flujo por completo. Si ahí sí quieres OAuth, <code>--callback-port</code> fija el callback en un puerto que puedas redirigir."

@@ -1,6 +1,6 @@
 -- ===========================================================================
 -- Business founder price: the place counter and its runtime flag.
--- 20261024220000_business_founder_places
+-- 20261025000000_business_founder_places
 --
 -- Business is sold at a founder price ($29 a month, $278.40 a year) to the
 -- first 20 Business subscriptions, from 2026-11-09 to 2026-12-31 23:59 Oslo.
