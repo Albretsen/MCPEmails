@@ -1215,6 +1215,9 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
                   {eur && monthlyCents > 0 && (
                     <p className="price-annual-note">{t('pricing.inclVat')}</p>
                   )}
+                  {t.has(`pricing.tiers.${tier.msgKey}.tagline`) && (
+                    <p className="price-tagline">{t(`pricing.tiers.${tier.msgKey}.tagline`)}</p>
+                  )}
                   <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>

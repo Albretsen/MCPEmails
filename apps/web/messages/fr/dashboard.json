@@ -818,6 +818,8 @@
       "soloFeature1": "10 boîtes connectées",
       "soloFeature2": "300 requêtes / minute (5× en pointe)",
       "soloFeature3": "Historique d'analytique plus long",
+      "soloFeatureChatClosed": "Relances, mise en attente et récapitulatif du matin, même conversation fermée",
+      "soloFeatureAllInboxes": "Recherche dans toutes les boîtes à la fois, avec des instructions par boîte",
       "soloFeature4": "Support par e-mail",
       "businessFeature1": "Tout ce qu'inclut Pro",
       "businessFeature2": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",

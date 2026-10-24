@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Selvhosting vs. hostet",
-    "intro": "Hele MCP-serveren og alle 19 verktøyene finnes i begge. Selvhosting bytter administrert bekvemmelighet mot full kontroll.",
+    "intro": "Hele MCP-serveren og e-postverktøyene finnes i begge. Selvhosting bytter administrert bekvemmelighet mot full kontroll.",
     "thFeature": "",
     "thSelf": "Selvhostet",
     "thHosted": "Hostet",
@@ -31,7 +31,7 @@
         "hosted": "Gratis, $9, $15 eller $39"
       },
       {
-        "feature": "MCP-serveren og alle 19 verktøyene",
+        "feature": "MCP-serveren og e-postverktøyene",
         "self": "Ja",
         "hosted": "Ja"
       },

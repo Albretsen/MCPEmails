@@ -818,6 +818,8 @@
       "soloFeature1": "10 tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
       "soloFeature3": "Lengre analysehistorikk",
+      "soloFeatureChatClosed": "Oppfølging, utsettelse og morgenoppsummering mens chatten er lukket",
+      "soloFeatureAllInboxes": "Søk i alle innbokser samtidig, med instruksjoner per innboks",
       "soloFeature4": "E-poststøtte",
       "businessFeature1": "Alt i Pro",
       "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
