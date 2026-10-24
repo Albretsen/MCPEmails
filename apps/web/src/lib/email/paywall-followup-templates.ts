@@ -339,3 +339,11 @@ export function composePaywallFollowup(input: PaywallFollowupInput): ComposedPay
     },
   };
 }
+
+/**
+ * The same HTML shell and paragraph helper, for other one-off lifecycle
+ * campaigns (black-week-email-template.ts) so every marketing email shares one
+ * look and one footer.
+ */
+export { shell as lifecycleShell, p as lifecycleParagraph };
+export type { ShellOptions as LifecycleShellOptions };

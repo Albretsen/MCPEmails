@@ -1555,6 +1555,16 @@ test('a German subscriber asking for a plan change still only gets a quote', asy
 // Business get nothing.
 // ---------------------------------------------------------------------------
 
+/** The fields the offer tests read off a session or update call. */
+type OfferParams = {
+  discounts?: unknown;
+  allow_promotion_codes?: unknown;
+  metadata: Record<string, string | undefined>;
+  subscription_data: { metadata: Record<string, string | undefined> };
+  payment_behavior?: unknown;
+  proration_behavior?: unknown;
+};
+
 const PERSONAL_OFFER = {
   offerId: 'bw2026',
   planId: 'personal',
@@ -1611,7 +1621,7 @@ test('offer: a new annual Personal checkout carries the coupon and the cohort ta
     checkout({ planId: 'personal', interval: 'year', entitlement: null }),
   );
   assert.equal(run.outcome.kind, 'checkout');
-  const params = run.sessionsCreated[0] as Record<string, any>;
+  const params = run.sessionsCreated[0] as OfferParams;
   assert.deepEqual(params.discounts, [{ coupon: 'BW2026_PERSONAL_Y1' }]);
   assert.equal('allow_promotion_codes' in params, false);
   assert.equal(params.metadata.offer, 'bw2026');
@@ -1623,7 +1633,7 @@ test('offer: a new annual Pro checkout uses the Pro coupon', async () => {
   const run = await withOffers({}, () =>
     checkout({ planId: 'solo', interval: 'year', entitlement: null }),
   );
-  const params = run.sessionsCreated[0] as Record<string, any>;
+  const params = run.sessionsCreated[0] as OfferParams;
   assert.deepEqual(params.discounts, [{ coupon: 'BW2026_PRO_Y1' }]);
 });
 
@@ -1634,7 +1644,7 @@ test('offer: monthly and Business checkouts are untouched', async () => {
     ['pro', 'year'],
   ]) {
     const run = await withOffers({}, () => checkout({ planId, interval, entitlement: null }));
-    const params = run.sessionsCreated[0] as Record<string, any>;
+    const params = run.sessionsCreated[0] as OfferParams;
     assert.equal(params.discounts, undefined, `${planId}/${interval}`);
     assert.equal(params.allow_promotion_codes, true);
     assert.equal(params.metadata.offer, undefined);
@@ -1646,7 +1656,7 @@ test('offer: no live offer (window closed or coupon killed) keeps the old sessio
   const run = await withOffers({ offers: {} }, () =>
     checkout({ planId: 'personal', interval: 'year', entitlement: null }),
   );
-  const params = run.sessionsCreated[0] as Record<string, any>;
+  const params = run.sessionsCreated[0] as OfferParams;
   assert.equal(params.discounts, undefined);
   assert.equal(params.allow_promotion_codes, true);
 });
@@ -1655,7 +1665,7 @@ test('offer: one redemption per customer', async () => {
   const run = await withOffers({ customerSubs: [{ metadata: { offer: 'bw2026' } }] }, () =>
     checkout({ planId: 'personal', interval: 'year', entitlement: null }),
   );
-  const params = run.sessionsCreated[0] as Record<string, any>;
+  const params = run.sessionsCreated[0] as OfferParams;
   assert.equal(params.discounts, undefined);
   assert.equal(params.allow_promotion_codes, true);
   assert.equal(params.metadata.offer, undefined);
@@ -1668,7 +1678,7 @@ test('offer: a failed redemption check fails closed (normal price, never a surpr
     ),
   );
   assert.equal(run.outcome.kind, 'checkout');
-  const params = run.sessionsCreated[0] as Record<string, any>;
+  const params = run.sessionsCreated[0] as OfferParams;
   assert.equal(params.discounts, undefined);
 });
 
@@ -1684,8 +1694,9 @@ test('offer: a monthly Personal subscriber switching to annual is quoted WITH th
   );
   assert.equal(run.outcome.kind, 'confirmation_required');
   assert.equal(run.subscriptionsUpdated.length, 0, 'the quote changes nothing');
-  const preview = (run.outcome as any).preview;
-  assert.equal(preview.seasonalOffer.couponId, 'BW2026_PERSONAL_Y1');
+  assert.ok(run.outcome.kind === 'confirmation_required');
+  const preview = run.outcome.preview!;
+  assert.equal(preview.seasonalOffer?.couponId, 'BW2026_PERSONAL_Y1');
   assert.equal(preview.discountCents, 2740);
   assert.equal(preview.amountDueNowCents, 5441);
   assert.deepEqual(run.previewsRequested[0].discounts, [
@@ -1706,7 +1717,7 @@ test('offer: the confirmed switch applies the coupon and tags the subscription',
     }),
   );
   assert.equal(run.outcome.kind, 'changed');
-  const update = run.subscriptionsUpdated[0] as Record<string, any>;
+  const update = run.subscriptionsUpdated[0] as OfferParams;
   assert.deepEqual(update.discounts, [{ coupon: 'BW2026_PERSONAL_Y1' }]);
   assert.deepEqual(update.metadata, { offer: 'bw2026' });
   assert.equal(update.payment_behavior, 'pending_if_incomplete');
@@ -1724,7 +1735,7 @@ test('offer: monthly Personal to annual Pro gets the Pro coupon', async () => {
       confirmChange: true,
     }),
   );
-  const update = run.subscriptionsUpdated[0] as Record<string, any>;
+  const update = run.subscriptionsUpdated[0] as OfferParams;
   assert.deepEqual(update.discounts, [{ coupon: 'BW2026_PRO_Y1' }]);
 });
 
@@ -1759,7 +1770,7 @@ test('offer: no coupon for annual subscribers, retired prices, Business, or a re
         confirmChange: true,
       }),
     );
-    const update = run.subscriptionsUpdated[0] as Record<string, any> | undefined;
+    const update = run.subscriptionsUpdated[0] as OfferParams | undefined;
     assert.ok(update, c.label);
     assert.equal(update.discounts, undefined, c.label);
     assert.equal(update.metadata, undefined, c.label);
@@ -1777,6 +1788,6 @@ test('offer: a switch to MONTHLY never carries the coupon', async () => {
       confirmChange: true,
     }),
   );
-  const update = run.subscriptionsUpdated[0] as Record<string, any>;
+  const update = run.subscriptionsUpdated[0] as OfferParams;
   assert.equal(update.discounts, undefined);
 });
