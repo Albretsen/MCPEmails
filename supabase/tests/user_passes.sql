@@ -1,7 +1,7 @@
 -- ============================================================
 -- Personal 3-month pass: storage, RLS, helper, cron entry point, funnel
 -- ============================================================
--- Covers migration 20261024170000_personal_pass.sql:
+-- Covers migration 20261024230000_personal_pass.sql:
 --   - RLS: an owner reads only their own passes and writes none; anon reads
 --     nothing
 --   - user_active_pass(): the end of the current cover, stacked pass included;
@@ -10,7 +10,7 @@
 --   - the status, product and window constraints
 --   - dispatch_pass_expiry(): no HTTP request when nothing is due, a skip
 --     without the Vault secret, one request when a pass has ended
---   - product_funnel_events accepts the pass stages and categories
+--   - product_funnel_events accepts the pass stages, and still the old ones
 --
 -- Run with: supabase test db
 -- ============================================================
@@ -183,19 +183,24 @@ SELECT is(
 -- ------------------------------------------------------------
 -- 5. Funnel vocabulary
 -- ------------------------------------------------------------
+-- Stages only: the migration appends to the stage CHECK and leaves category
+-- alone (production has no category CHECK), so the rows here use a category
+-- every schema accepts.
 SELECT lives_ok(
   $$INSERT INTO public.product_funnel_events (workspace_id, stage, outcome, category)
-    VALUES ('ea000000-0000-0000-0000-00000000000a', 'pass_checkout_completed', 'success', 'personal_pass_3m'),
-           ('ea000000-0000-0000-0000-00000000000a', 'pass_offer_shown', 'started', 'cap_banner'),
-           ('ea000000-0000-0000-0000-00000000000a', 'pass_renewed', 'success', 'pass'),
-           ('ea000000-0000-0000-0000-00000000000a', 'pass_expired', 'success', 'personal_pass_3m'),
-           ('ea000000-0000-0000-0000-00000000000a', 'pass_refunded', 'success', 'personal_pass_3m')$$,
-  'the pass stages and categories are accepted');
+    VALUES ('ea000000-0000-0000-0000-00000000000a', 'pass_checkout_completed', 'success', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_offer_shown', 'started', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_renewed', 'success', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_expired', 'success', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_refunded', 'success', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_reminder_sent', 'success', 'personal'),
+           ('ea000000-0000-0000-0000-00000000000a', 'pass_checkout_started', 'started', 'personal')$$,
+  'the pass stages are accepted');
 SELECT lives_ok(
   $$INSERT INTO public.product_funnel_events (workspace_id, stage, outcome, category)
     VALUES ('ea000000-0000-0000-0000-00000000000a', 'paywall_clicked', 'success', 'personal_month'),
            ('ea000000-0000-0000-0000-00000000000a', 'checkout_completed', 'success', 'pro_year')$$,
-  'the existing stages and categories are still accepted');
+  'the existing stages are still accepted');
 
 SELECT * FROM finish();
 ROLLBACK;

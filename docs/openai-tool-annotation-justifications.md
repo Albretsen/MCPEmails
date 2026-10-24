@@ -1142,3 +1142,42 @@ openWorld stays false. `draft_update` ADDS files and keeps the stored ones.
 > a fix on 2026-09-16, along with the `draft_editor_hidden` error code and the
 > owner/admin check at workspace grain. All three are in the server this revision
 > was written against and are described above.
+
+## subscriptions_scan (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It reads mail headers (List-Unsubscribe, List-Id, sender) from the connected mailbox and changes nothing in it. It stores a short-lived plan of the result for the follow-up call.
+- **destructiveHint:** Nothing in the mailbox is changed, moved or sent. The only write is a 15-minute plan row in the caller's own workspace, which expires on its own.
+- **openWorldHint:** It reads one connected mailbox. It contacts no sender and fetches no link from the mail it reads.
+
+**Reasoning.**
+
+- **readOnly true:** the scan reads headers only and never sets a flag. The plan
+  row it writes is bookkeeping for `subscriptions_cleanup`, the same kind of
+  write `bulk_plans` makes for a bulk preview.
+- **Internal rollout (2026-10-24):** listed only for workspaces with
+  `subscription_cleanup_enabled`.
+
+## subscriptions_cleanup (readOnly: false, destructive: true, openWorld: true)
+
+**Submitted text.**
+
+- **readOnlyHint:** It unsubscribes from senders the user picked, saves unsubscribe emails as drafts, and can archive the mail those senders already sent.
+- **destructiveHint:** An unsubscribe request cannot be taken back from our side, and the optional archive step moves mail in bulk. It never deletes mail and never sends email: a by-email unsubscribe becomes a draft.
+- **openWorldHint:** For senders that support one-click unsubscribe (RFC 8058) it sends one HTTPS request to the sender's own unsubscribe address, which is a party outside the account.
+
+**Reasoning.**
+
+- **destructive true:** an RFC 8058 one-click POST asks the sender to stop, and
+  there is no undo for that from this server. The backlog step is a bulk move,
+  which this server's convention marks destructive (compare
+  `email_search_and_move`).
+- **openWorld true:** the one-click POST goes to the sender's server. It is sent
+  only for a sender whose DKIM signature covers both list headers and aligns
+  with the From domain, only to https on port 443, never to a private address,
+  with redirects refused.
+- **No email is sent.** A mailto-only sender gets a draft the user sends
+  themselves; a link-only sender is returned as a link. Only sender keys from
+  the plan are accepted, and a ledger keyed per inbox, sender and target stops a
+  replay from sending a second request.

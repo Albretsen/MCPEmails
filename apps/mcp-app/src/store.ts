@@ -648,6 +648,8 @@ export function isRenderable(env: Envelope | null | undefined): boolean {
       return !!env.outbound;
     case "bulk_plan":
       return !!env.plan;
+    case "subscription_plan":
+      return !!env.subscriptions;
     case "receipt":
       return !!env.receipt;
     default:
@@ -827,6 +829,8 @@ export function mergeEnvelope(
         return { ...next, outbound: current.outbound };
       case "bulk_plan":
         return { ...next, plan: current.plan };
+      case "subscription_plan":
+        return { ...next, subscriptions: current.subscriptions };
       case "receipt":
         return { ...next, receipt: current.receipt };
     }
@@ -1322,6 +1326,9 @@ function envelopeSubject(env: Envelope | null | undefined): Subject | null {
     return { kind: "approval", id: env.outbound.approval_id, scope: null };
   }
   if (env.plan?.plan_id) return { kind: "plan", id: env.plan.plan_id, scope: null };
+  if (env.subscriptions?.plan_id) {
+    return { kind: "plan", id: env.subscriptions.plan_id, scope: null };
+  }
   if (env.receipt) return receiptSubject(env);
   return null;
 }
