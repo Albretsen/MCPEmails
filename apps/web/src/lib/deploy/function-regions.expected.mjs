@@ -195,6 +195,9 @@ export const ROUTES = [
   ['app/api/automations/preview/route.ts', 'iad1', '3', 'Supabase edge function triage-preview (opens the IMAP session)'],
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
+  // Reads one request header and the STRIPE_EUR_PRICES switch; no database,
+  // no third party. The app/api/** default is as good as any.
+  ['app/api/geo/route.ts', 'arn1', '0', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
   ['app/api/inboxes/[id]/connection/route.ts', 'iad1', '4', 'IMAP or SMTP login probe to the mail host when a half is added'],
   ['app/api/inboxes/[id]/folders/route.ts', 'iad1', '5', 'IMAP login + LIST to the mail host'],
@@ -232,6 +235,7 @@ export const ROUTES = [
   ['app/api/stripe/checkout/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/checkout/start/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/portal/route.ts', 'arn1', '6', 'Stripe API x1-2'],
+  ['app/api/stripe/payment-fix/route.ts', 'arn1', '3', 'Stripe API x2-3'],
   ['app/api/stripe/webhook/route.ts', 'arn1', '7+', 'Stripe API, Resend; caller is Stripe (US)'],
   ['app/api/support/preview/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/support/tickets/route.ts', 'arn1', '4-8', 'Resend x2'],

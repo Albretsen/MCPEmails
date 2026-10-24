@@ -1,7 +1,7 @@
 /**
  * Stripe Adaptive Pricing for Checkout.
  *
- * Our prices are defined once, in USD. With Adaptive Pricing, Stripe shows a
+ * Our prices are defined in USD. With Adaptive Pricing, Stripe shows a
  * buyer outside the US the price converted into their local currency and
  * charges them in it, so a card that would refuse or mark up a USD charge can
  * pay in EUR, CHF, NOK and so on. Stripe adds a 2-4% conversion fee to the
@@ -20,6 +20,15 @@
  * subscription is cancelled; each renewal is converted at that billing date's
  * rate, and prorations and refunds reuse the rate of the original payment.
  * Existing subscriptions are untouched.
+ *
+ * AFTER THE EUR LAUNCH (planned 2026-12-07). Each sold price also carries a
+ * `currency_options[eur]` amount. Stripe then charges EU buyers that EUR
+ * amount natively (euro-area buyers by its own localization, the six non-euro
+ * EU countries because checkout-core forces `currency: 'eur'`, see
+ * currency.ts), and Adaptive Pricing only converts for everyone else. For
+ * those EUR sessions the paragraph above no longer holds: the session,
+ * subscription and invoice amounts are in EUR, and every reader of amounts has
+ * to keep each currency apart rather than sum it as USD.
  *
  * WHY THE PARAMETER IS ALWAYS SENT. Without it Stripe falls back to the
  * account's Dashboard setting, which this repo cannot see or review. Sending

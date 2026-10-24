@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
+import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
 import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
@@ -69,7 +70,8 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient stripePrices={stripePrices} />
+      {/* STRIPE_EUR_PRICES as read at render; off renders exactly as before. */}
+      <HomeClient stripePrices={stripePrices} eurEnabled={eurPricesEnabled()} />
     </>
   );
 }

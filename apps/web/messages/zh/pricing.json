@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/永久",
     "perMonth": "/月",
-    "billedYearly": "按 ${total}/年 计费"
+    "billedYearly": "按 ${total}/年 计费",
+    "inclVat": "含增值税"
   },
   "plans": {
     "free": {

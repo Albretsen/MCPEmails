@@ -1,5 +1,6 @@
 import { routing } from './routing';
 import { PLANS } from '@/lib/stripe/plans';
+import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
 
 export const APP_URL = (
@@ -101,8 +102,8 @@ export const OG_LOCALE: Record<string, string> = {
  * discount on the same subscription rather than a separate product, and
  * publishing both as sibling Offers reads as two competing prices.
  */
-function planOffers(url: string) {
-  return (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
+function planOffers(url: string, { eur = false }: { eur?: boolean } = {}) {
+  const usd = (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
     const price = (plan.monthlyPriceCents / 100).toString();
     return {
@@ -123,6 +124,34 @@ function planOffers(url: string) {
       },
     };
   });
+  if (!eur) return usd;
+  // EU visitors pay the same digits in EUR, VAT included
+  // (src/lib/stripe/eur-prices.ts). Paid tiers only: Free has no currency.
+  // The USD offers above stay exactly as they were.
+  const eurOffers = (['personal', 'solo', 'pro'] as const).map((id) => {
+    const plan = PLANS[id];
+    const price = (plan.monthlyPriceCents / 100).toString();
+    return {
+      '@type': 'Offer',
+      name: plan.name,
+      description: plan.description,
+      url,
+      price,
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      eligibleRegion: EU_COUNTRIES.map((code) => ({ '@type': 'Country', name: code })),
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price,
+        priceCurrency: 'EUR',
+        valueAddedTaxIncluded: true,
+        unitText: 'MONTH',
+        billingDuration: 1,
+        billingIncrement: 1,
+      },
+    };
+  });
+  return [...usd, ...eurOffers];
 }
 
 /**
@@ -301,7 +330,8 @@ export function homeJsonLd(
  */
 export function pricingJsonLd(
   locale: string,
-  { title, description }: { title: string; description: string }
+  { title, description }: { title: string; description: string },
+  { eur = false }: { eur?: boolean } = {},
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -322,7 +352,7 @@ export function pricingJsonLd(
           name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url),
+        offers: planOffers(url, { eur }),
       },
     ],
   };
