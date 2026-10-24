@@ -19,8 +19,8 @@
  *      A token that was sent and refused also gets `error="invalid_token"`.
  *   3. The old route's CORS headers, byte for byte, on every answer, and its
  *      204 preflight. Other methods get its bare 405, plus `Allow`.
- *   4. The answer is rebuilt with only Content-Type, WWW-Authenticate and
- *      CORS from this function. That is all this code can control: Supabase's
+ *   4. The answer is rebuilt with only Content-Type, WWW-Authenticate, the
+ *      RateLimit-* and Retry-After headers, and CORS from this function. That is all this code can control: Supabase's
  *      gateway and Cloudflare add their own headers after it (sb-project-ref,
  *      sb-request-id, x-sb-edge-region, x-deno-execution-id, a `__cf_bm`
  *      cookie scoped to supabase.co) and Vercel passes them on. None carries
@@ -59,8 +59,16 @@ export const WEB_CORS_HEADERS: Readonly<Record<string, string>> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Authorization, Content-Type, MCP-Protocol-Version, Accept",
-  "Access-Control-Expose-Headers": "WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id",
+  // The old route's three, plus the RateLimit-* headers a tools/call answer
+  // carries (2026-10-24) and Retry-After on a 429, so a browser client can
+  // pace itself.
+  "Access-Control-Expose-Headers":
+    "WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id, " +
+    "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Retry-After",
 };
+
+/** Headers the server sets that the rebuilt answer passes through unchanged. */
+const PASSED_THROUGH_HEADERS = ["RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset", "Retry-After"];
 
 /** The scope a first-time connection consents to. See the long note that
  * lived on FIRST_CONSENT_SCOPE in the removed apps/web route: every read-only
@@ -263,6 +271,10 @@ function dress(upstream: Response, challenge: string): Response {
     ...WEB_CORS_HEADERS,
     "Content-Type": upstream.headers.get("content-type") ?? "application/json",
   };
+  for (const name of PASSED_THROUGH_HEADERS) {
+    const value = upstream.headers.get(name);
+    if (value !== null) headers[name] = value;
+  }
   const own = upstream.headers.get("www-authenticate");
   if (own) headers["WWW-Authenticate"] = own;
   else if (upstream.status === 401) headers["WWW-Authenticate"] = challenge;

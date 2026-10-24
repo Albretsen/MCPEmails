@@ -359,6 +359,29 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
   // records disabled_reason and the system_events row is still written, but
   // the operator email was noise (one per rule, so a dead mailbox with 48
   // rules sent 48 of them) and nobody acted on it.
+  if (eventType === "outbound.brake_tripped") {
+    // An outbound abuse brake in mcp-server (outbound-brakes.ts) just tripped
+    // for an inbox. Ids only: the payload never carries content or addresses.
+    const text = (value: unknown) => (typeof value === "string" && value.length > 0 ? value : "unknown");
+    const brake = text(payload.brake);
+    const what = brake === "fanout_hold"
+      ? "one message went to more than 25 recipients within an hour, so further sends from this inbox are held for approval in the dashboard"
+      : brake === "provider_refusal_pause"
+      ? "the mail provider refused 3 messages as spam or policy within an hour, so sends from this inbox are paused"
+      : `brake ${brake} tripped`;
+    return {
+      subject: `Send brake: ${brake}`,
+      body: [
+        `An outbound send brake tripped: ${what}.`,
+        "",
+        `workspace_id: ${text(payload.workspace_id)}`,
+        `inbox_id: ${text(payload.inbox_id)}`,
+        `until: ${text(payload.until)}`,
+        "",
+        "To stop every send from the workspace, set workspaces.sends_frozen_at.",
+      ].join("\n"),
+    };
+  }
   if (eventType === "checkout.feedback") {
     // Someone answered the "what held you back?" card after abandoning a
     // Stripe checkout. Wording lives in ./checkout-feedback.ts, which is pure
