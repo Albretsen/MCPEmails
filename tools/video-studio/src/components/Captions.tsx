@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { getTheme, type ThemeName } from '../theme';
+import { useLayout } from '../layout';
 
 /**
  * Burned-in captions, read from the same word-level timing file that produces
@@ -22,6 +23,8 @@ interface Word {
 /** Words are grouped into short phrases. A caption that changes on every word
  *  is unreadable, and one that holds a full sentence covers the frame. */
 const MAX_CHARS = 42;
+/** A 1080-wide frame fits fewer characters at the larger vertical size. */
+const MAX_CHARS_VERTICAL = 28;
 const MAX_GAP_MS = 500;
 
 /**
@@ -138,7 +141,10 @@ function joinWords(words: Word[]): string {
     .trim();
 }
 
-function groupIntoPhrases(rawWords: Word[]): { text: string; startMs: number; endMs: number }[] {
+function groupIntoPhrases(
+  rawWords: Word[],
+  maxChars: number,
+): { text: string; startMs: number; endMs: number }[] {
   // Before grouping, not inside joinWords: "mcpemails.com" arrives as six
   // fragments and would otherwise be split across two cues.
   const words = applySpellings(rawWords);
@@ -158,7 +164,7 @@ function groupIntoPhrases(rawWords: Word[]): { text: string; startMs: number; en
   for (const w of words) {
     const wouldBe = joinWords([...current, w]).length;
     const gap = current.length ? w.startMs - current[current.length - 1].endMs : 0;
-    if (current.length && (wouldBe > MAX_CHARS || gap > MAX_GAP_MS)) flush();
+    if (current.length && (wouldBe > maxChars || gap > MAX_GAP_MS)) flush();
     current.push(w);
     if (/[.!?]$/.test(w.text)) flush();
   }
@@ -173,6 +179,7 @@ export const BurnedInCaptions: React.FC<{ storyboardId: string; themeName: Theme
   const theme = getTheme(themeName);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const layout = useLayout();
   const [words, setWords] = React.useState<Word[] | null>(null);
   const [handle] = React.useState(() => delayRender(`captions:${storyboardId}`));
 
@@ -199,24 +206,34 @@ export const BurnedInCaptions: React.FC<{ storyboardId: string; themeName: Theme
   if (!words || words.length === 0) return null;
 
   const nowMs = (frame / fps) * 1000;
-  const phrases = groupIntoPhrases(words);
+  const phrases = groupIntoPhrases(words, layout.vertical ? MAX_CHARS_VERTICAL : MAX_CHARS);
   const active = phrases.find((p) => nowMs >= p.startMs && nowMs <= p.endMs + 120);
   if (!active) return null;
 
   return (
-    <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 76 }}>
+    <AbsoluteFill
+      style={{
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingBottom: layout.captionBand.bottom,
+        // Vertical: centred on the safe column, not the canvas, so a long cue
+        // never runs under the button rail.
+        paddingLeft: layout.safe.left,
+        paddingRight: layout.safe.right,
+      }}
+    >
       <div
         style={{
           background: 'rgba(11,16,32,0.82)',
           color: '#FFFFFF',
           fontFamily: theme.fontSans,
           fontWeight: 500,
-          fontSize: 38,
+          fontSize: layout.type.caption,
           lineHeight: 1.3,
           letterSpacing: '-0.01em',
           padding: '14px 28px',
           borderRadius: 12,
-          maxWidth: '76%',
+          maxWidth: layout.vertical ? '100%' : '76%',
           textAlign: 'center',
           textShadow: '0 1px 3px rgba(0,0,0,0.6)',
         }}

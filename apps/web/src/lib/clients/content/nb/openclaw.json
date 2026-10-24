@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared limits and FAQ copy)",
+    "https://docs.openclaw.ai/tools/mcp",
+    "https://docs.openclaw.ai/cli/mcp",
+    "https://docs.openclaw.ai/cli/mcp/registry",
+    "https://docs.openclaw.ai/cli/mcp/transports",
+    "https://docs.openclaw.ai/cli/mcp/control-ui",
+    "https://docs.openclaw.ai/cli/gateway/service",
+    "https://docs.openclaw.ai/gateway/configuration",
+    "https://github.com/openclaw/openclaw",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-provider.ts",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-store.mutations.ts",
+    "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
+  ],
+  "meta": {
+    "title": "Koble e-post til OpenClaw: oppsett av ekstern MCP-server",
+    "description": "Gi OpenClaw-agenten din en ekte innboks. Legg til én Streamable HTTP MCP-server med OAuth, logg inn én gang, og les, søk i, skriv utkast til og send e-post."
+  },
+  "hero": {
+    "eyebrow": "OpenClaw + e-post",
+    "titleLine1": "Koble innboksen din til OpenClaw",
+    "titleLine2": "som ekstern MCP-server",
+    "lead": "La den personlige agenten du allerede sender meldinger til lese, søke i, skrive utkast til, sende, svare på, videresende og arkivere e-post på tvers av alle innboksene du har koblet til, gjennom ett MCP-endepunkt og én innlogging.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Stopp Gateway med openclaw gateway stop, kjør openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth, deretter openclaw mcp login mcpemails, og godkjenn i nettleseren. Start Gateway igjen med openclaw gateway start."
+  },
+  "method": {
+    "title": "Slik kobler OpenClaw seg til: OAuth, ingen API-nøkkel",
+    "body": "Den innebygde MCP-klienten i OpenClaw kjører standard MCP OAuth-flyt for en HTTP-server som er lagret med <code>auth: \"oauth\"</code>. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår, varer i én time og fornyes automatisk. OpenClaw lagrer det på Gateway, og det vises under Dashboard, API Keys som <code>OAuth: OpenClaw MCP</code>, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Lagre serveren med OAuth",
+      "p": "På maskinen som kjører Gateway, kjører du <code>openclaw gateway stop</code> og deretter <code>openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth</code>. Det skriver oppføringen under <code>mcp.servers</code> i <code>~/.openclaw/openclaw.json</code>. OpenClaw nekter å endre lagrede servere mens Gateway kjører."
+    },
+    {
+      "h": "Logg inn fra terminalen",
+      "p": "Mens Gateway fortsatt er stoppet, kjører du <code>openclaw mcp login mcpemails</code>. Åpne autorisasjons-URL-en som skrives ut, og godkjenn tilgangene du vil at OpenClaw skal ha. OpenClaw fanger opp callbacken fra nettleseren og lagrer legitimasjonen. Kjør deretter <code>openclaw gateway start</code>."
+    },
+    {
+      "h": "Eller logg inn fra Control UI",
+      "p": "I stedet for innlogging i terminalen kan du starte Gateway og åpne Control UI på dens egen loopback-adresse eller en offentlig HTTPS-adresse, og så gå til <b>Settings → MCP</b>. Som administrator velger du <b>Sign in</b> for <code>mcpemails</code>-serveren, godkjenner tilgangen i nettleseren og går tilbake til Settings. På en privat adresse eller en adresse som bare nås over Tailscale, bruker du innloggingen i terminalen i stedet."
+    },
+    {
+      "h": "Sjekk tilkoblingen",
+      "p": "Kjør <code>openclaw mcp status --verbose</code>, som fungerer mens Gateway kjører. Melder den <code>authorization-required</code>, logger du inn på nytt. Be deretter agenten din i en hvilken som helst kanal om å vise innboksene dine."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Angi transport, ellers faller den tilbake til SSE",
+      "p": "Når <code>transport</code> mangler i en HTTP-oppføring, bruker OpenClaw <code>sse</code>. Denne serveren bruker Streamable HTTP, så angi alltid <code>--transport streamable-http</code>, eller velg <b>Streamable HTTP</b> i Settings. I konfigurasjon skrevet for hånd er <code>transport: \"streamable-http\"</code> skrivemåten OpenClaw leser; en <code>type: \"http\"</code> i CLI-stil godtas bare via <code>openclaw mcp set</code> eller rettes av <code>openclaw doctor --fix</code>."
+    },
+    {
+      "h": "Endringer fra CLI-en krever at Gateway er stoppet",
+      "p": "<code>openclaw mcp add</code>, <code>login</code>, <code>probe</code> og <code>doctor --probe</code> nekter å kjøre mens en lokal Gateway eier tilstanden til OpenClaw, så stopp den først og start den igjen etterpå. Kjører Gateway på en server og nettleseren din er et annet sted, når ikke loopback-callbacken frem: kopier koden fra nettleseren og fullfør med kommandoen <code>openclaw mcp login mcpemails --code</code> som skrives ut."
+    },
+    {
+      "h": "Delt innlogging betyr delt postkasse",
+      "p": "Som standard er OAuth-legitimasjonen delt og styrt av operatøren: alle agenter på den Gateway bruker den samme innloggingen, så alle som kan sende meldinger til agenten din, kan be den lese e-posten din. Begrens den til kanaler bare du bruker, la <code>send:email</code> være ute på samtykkeskjermen hvis agenten bare skal lese, eller slå på menneskelig godkjenning for innboksen slik at hver sending venter på en person. OpenClaw tilbyr også innlogging per avsender, der hver avsender kobler til sin egen konto; det krever at <code>gateway.publicOrigin</code> er satt til den offentlige HTTPS-adressen til Gateway."
+    },
+    {
+      "h": "En lagret server er ikke det samme som en fungerende server",
+      "p": "OpenClaw lagrer en definisjon uten å sjekke at den virker, og en server som fortsatt trenger innlogging blir rett og slett utelatt fra agentens verktøy i stedet for at hele svaret feiler. Sier agenten at den ikke har noen e-postverktøy, kjører du <code>openclaw mcp status --verbose</code>: <code>authorization-required</code> betyr at du må kjøre innloggingssteget på nytt."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til OpenClaw?",
+      "a": "På Gateway-maskinen stopper du Gateway, kjører openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth, logger deretter inn med openclaw mcp login mcpemails og starter Gateway igjen. Du kan også logge inn fra Settings, MCP i Control UI. Da har agenten din verktøy for å lese, søke, skrive utkast, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for OpenClaw?",
+      "a": "Nei. OpenClaw kjører MCP OAuth-flyten selv og lagrer tokenet på Gateway. HTTP-oppføringene godtar også et statisk headers-oppsett, så en avgrenset nøkkel sendt som en Authorization Bearer-header fungerer også, men OpenClaw ignorerer statiske Authorization-headere på en oppføring satt til auth oauth, så bruk det ene eller det andre."
+    },
+    {
+      "q": "Kan jeg vise agenten bare noen av e-postverktøyene?",
+      "a": "Ja. Legg til --include med en kommaseparert liste over verktøynavn, eller et mønster som 'email_*', når du kjører openclaw mcp add, eller sett toolFilter under serveren i konfigurasjonen. Det snevrer inn hva agenten ser. Hva den faktisk har lov til, bestemmes fortsatt av tilgangene du godkjente på samtykkeskjermen."
+    },
+    {
+      "q": "Hvilke postkasser kan OpenClaw nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan OpenClaw sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom. For en agent som kjører uten tilsyn på tvers av chattekanaler, er begge deler verdt å bruke."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til agenten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi OpenClaw-agenten din en ekte innboks",
+    "sub": "Én server, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://support.google.com/gemini/answer/17209137?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://support.google.com/gemini/answer/17094507?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://blog.google/innovation-and-ai/products/gemini-app/gemini-spark-updates-june-2026/"
+  ],
+  "meta": {
+    "title": "Connect Email to the Gemini App: Custom MCP App Setup",
+    "description": "Add a real inbox to the Gemini app as a custom app. Paste one MCP server URL in Connected Apps and sign in. No API key. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Gemini + email",
+    "titleLine1": "Connect your inbox to the Gemini app",
+    "titleLine2": "as a custom connected app",
+    "lead": "Add one URL under Connected Apps on gemini.google.com and Gemini can read, search, send, reply, forward, schedule and organize your real mail, on the web and in the mobile app.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "On gemini.google.com, open Settings, Connected Apps, and under Custom apps add a custom app with the MCP server URL https://mcpemails.com/api/mcp. Click Next and follow the on-screen sign-in to authorize with MCPEmails. Google currently offers custom apps to users 18 and over in the US, signed in with a personal Google Account, with Keep Activity on, in English."
+  },
+  "method": {
+    "title": "How the Gemini app connects: OAuth, no API key",
+    "body": "Google's setup form expects an MCP server that supports <b>Dynamic Client Registration</b>, and this one does: the Gemini app registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create and nothing to enter under Advanced features. It then authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open Connected Apps on the web",
+      "p": "On your computer, go to gemini.google.com. At the bottom, click <b>Settings</b>, then <b>Connected Apps</b>. Custom apps can only be added in the web app."
+    },
+    {
+      "h": "Add a custom app",
+      "p": "Under <b>Custom apps</b>, use the <b>Add a custom app link to get started</b> field, or click <b>Add a custom app</b> if you already have one. Enter <code>https://mcpemails.com/api/mcp</code> as the MCP server URL and leave Advanced features closed."
+    },
+    {
+      "h": "Click Next and authorize",
+      "p": "Click <b>Next</b> and follow the on-screen instructions. You are sent to MCPEmails to sign in and approve the scopes you want Gemini to hold."
+    },
+    {
+      "h": "Call it with @",
+      "p": "In a chat, type <b>@</b> and select the MCPEmails app to make sure Gemini uses it for that prompt. Once connected it is also available in the Gemini mobile app."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Custom apps are US, personal accounts and English only for now",
+      "p": "Google lists the requirements as being 18 or over and in the US, signed in with a personal Google Account, and having Keep Activity on. Work and school Google Accounts cannot add a custom app yet, and the feature is English only. If Custom apps does not appear under Connected Apps, check those first. Google's help page names no paid plan for custom apps."
+    },
+    {
+      "h": "Do not fill in Advanced features",
+      "p": "The form offers a place for credentials behind <b>Show more</b> next to Advanced features. That is for servers without Dynamic Client Registration. This server supports it, so leave it empty and let Gemini register itself. There is no client ID or secret to create on the MCPEmails side."
+    },
+    {
+      "h": "Gemini confirms writes, and you can narrow the scopes too",
+      "p": "Google says Gemini currently asks for manual confirmation before any write action. On top of that, the consent screen lets you hand Gemini <code>read:email</code> and <code>search:email</code> alone, which is enough for triage and finding things, or you can turn on human approval in the dashboard so every send waits for a person."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to the Gemini app?",
+      "a": "On gemini.google.com, open Settings, Connected Apps, and under Custom apps add a custom app with the URL https://mcpemails.com/api/mcp. Click Next, sign in to MCPEmails and approve the scopes. Gemini then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail, on the web and in the mobile app."
+    },
+    {
+      "q": "Do I need an API key for Gemini?",
+      "a": "No. The Gemini app registers itself through Dynamic Client Registration and signs you in with OAuth, so nothing secret is typed into the form. A bearer key is available for other clients that cannot do that."
+    },
+    {
+      "q": "Why don't I see Custom apps in Connected Apps?",
+      "a": "Google currently offers custom apps only to users 18 and over in the US, signed in with a personal Google Account, with Keep Activity on, in English. Work and school accounts are not supported yet. Custom apps are added in the web app at gemini.google.com, not in the mobile app."
+    },
+    {
+      "q": "Which mailboxes can Gemini reach this way?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Gemini send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all, and Google says Gemini asks you to confirm write actions. An inbox owner can also require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Revoking the OAuth entry in Dashboard, API Keys, or deleting the inbox, ends the connection at once. In Gemini, More details, Remove app also unlinks the server from your Google Account."
+    }
+  ],
+  "ctaBand": {
+    "title": "Put your inbox in the Gemini app",
+    "sub": "One URL, one sign-in. One inbox free forever, no card required."
+  }
+}

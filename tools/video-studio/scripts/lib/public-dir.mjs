@@ -19,6 +19,7 @@ import { paths, ROOT } from './common.mjs';
 const LINKS = [
   { name: 'captures', target: paths.captures },
   { name: 'vo', target: paths.vo },
+  { name: 'clips', target: paths.clips },
 ];
 
 export const PUBLIC_DIR = resolve(ROOT, 'public');

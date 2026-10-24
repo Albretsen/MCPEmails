@@ -15,6 +15,8 @@ import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
   PlanCheckoutLink,
+  ProPriceAppNotice,
+  SeasonalOfferNote,
   SharedIntervalChoice,
 } from './UpgradeIntervalChoice';
 import { planDisplayName } from './Pages';
@@ -2644,6 +2646,9 @@ export function ConnectModal({
                   }}>
                     {tr(upgradeCopy.bodyKey)}
                   </div>
+                  {!upgradeCopy.dual && (
+                    <ProPriceAppNotice plans={[upgradeCopy.plan]} style={{ marginTop: 6 }} />
+                  )}
                 </div>
               </div>
 
@@ -2748,9 +2753,13 @@ export function ConnectModal({
                               when one pitch wraps to more lines than the
                               other. */}
                           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+                            <ProPriceAppNotice plans={[o.plan]} />
                             {/* What the annual button actually charges, said
                                 before the click, per plan. */}
-                            {upgradeInterval === 'year' && planAnnual && (
+                            {upgradeInterval === 'year' && planAnnual?.firstYear && (
+                              <SeasonalOfferNote offer={planAnnual.firstYear} size="sm" />
+                            )}
+                            {upgradeInterval === 'year' && planAnnual && !planAnnual.firstYear && (
                               <div style={{
                                 fontFamily: 'var(--font-sans)',
                                 fontSize: 11.5,
