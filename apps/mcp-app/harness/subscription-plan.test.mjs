@@ -385,6 +385,45 @@ async function main() {
     c.done();
   }
 
+  group("7. order, names, expiry label and no diagnostics line");
+  {
+    // Server order is volume only: a busy unsuggested sender comes first.
+    const c = await card(planEnvelope({}, {
+      senders: [
+        sender({ sender_key: "from:busy@example.com", display_name: "Busy Unsuggested", suggested: false, message_count: 60 }),
+        sender({ sender_key: "from:s1@example.com", display_name: "Suggested Small", suggested: true, message_count: 5 }),
+        sender({ sender_key: "from:quiet@example.com", display_name: "Quiet Unsuggested", suggested: false, message_count: 2 }),
+        sender({ sender_key: "from:s2@example.com", display_name: "Suggested Big", suggested: true, message_count: 40 }),
+      ],
+    }));
+    const names = [...c.root.querySelectorAll("ul.subs .sub-name")].map((n) => n.textContent);
+    expectJson("suggested first, each group by volume", names, ["Suggested Big", "Suggested Small", "Busy Unsuggested", "Quiet Unsuggested"]);
+    expectJson("ticks follow the rows", c.boxes().map((b) => b.checked), [true, true, false, false]);
+    c.done();
+  }
+  {
+    const long = "A very long sender display name that will not fit on one line of the card at all";
+    const c = await card(planEnvelope({}, { senders: [sender({ display_name: long })] }));
+    expect("full name in the title", c.root.querySelector("ul.subs .sub-name")?.getAttribute("title"), long);
+    expect("full name in the text", c.root.querySelector("ul.subs .sub-name")?.textContent, long);
+    c.done();
+  }
+  {
+    const c = await card(planEnvelope({}, { expires_at: new Date(Date.now() + 60 * 60_000 - 1000).toISOString() }));
+    expect("60-minute plan reads 1h", /expires in 1h(?! \d)/.test(c.text()), true);
+    c.done();
+  }
+  {
+    const c = await card(planEnvelope({}, { expires_at: new Date(Date.now() + 45 * 60_000 - 1000).toISOString() }));
+    expect("45-minute plan reads 45 min", /expires in 45 min/.test(c.text()), true);
+    c.done();
+  }
+  {
+    const c = await card(planEnvelope({ diagnostics: true }));
+    expect("no diagnostics line even when the workspace has it on", c.root.querySelector(".diag"), null);
+    c.done();
+  }
+
   let failed = 0;
   for (const g of groups) {
     const bad = g.checks.filter((x) => !x.ok);

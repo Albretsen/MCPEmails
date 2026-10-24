@@ -302,6 +302,18 @@ import {
   reviewCardOptInsFromRows,
 } from "./reachable-inbox.ts";
 import {
+  findParkedInbox,
+  inboxIsParked,
+  listParkedInboxes,
+  PARKED_INBOX_ERROR_CODE,
+  PARKED_INBOX_STATUS,
+  type ParkedInboxMatch,
+  parkedInboxErrorText,
+  parkedInboxHint,
+  SCHEDULED_SEND_PARKED_DETAIL,
+  scheduledSendBlockedByParking,
+} from "./parked-inbox.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -472,6 +484,12 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import {
+  carriesInboxInstructionsNote,
+  inboxInstructionsNote,
+  instructionsByInbox,
+  withOwnerInstructions,
+} from "./inbox-instructions.ts";
 import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
@@ -553,6 +571,24 @@ import {
   type MorningBriefUpdate,
   runMorningBriefDispatch,
 } from "./morning-brief-engine.ts";
+import {
+  advertiseCrossInboxSearch,
+  CROSS_INBOX_CONCURRENCY,
+  CROSS_INBOX_DEADLINE_MS,
+  CROSS_INBOX_MAX_INBOXES,
+  CROSS_INBOX_TIMEOUT_MS,
+  CROSS_INBOX_WINDOW,
+  crossInboxBuckets,
+  crossInboxFetchLimit,
+  crossInboxLegArgs,
+  crossInboxValidationArgs,
+  type CrossInboxLeg,
+  isCrossInboxAll,
+  isCrossInboxCall,
+  legFromToolResult,
+  mergeCrossInboxPages,
+  runFanOut,
+} from "./cross-inbox.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
   type CheckoutLinkIo,
@@ -625,6 +661,7 @@ import {
   type SubscriptionDeps,
   supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
+import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -11340,110 +11377,8 @@ function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   };
 }
 
-/**
- * Decrypts an AES-256-GCM ciphertext produced by
- * `apps/web/src/lib/crypto.ts#encryptToken` using the Web Crypto API.
- *
- * Ciphertext layout (base64url-encoded):
- *   bytes  0–11 : 12-byte random IV
- *   bytes 12–N  : encrypted payload
- *   bytes N–N+15: 16-byte GCM authentication tag
- *
- * Web Crypto's `decrypt()` for AES-GCM expects: payload || authTag
- * concatenated in one Uint8Array with the IV passed separately, so
- * `raw.slice(12)` is the exact input needed.
- *
- * ENCRYPTION_KEY must be a 64-character lowercase hex string (32 bytes)
- * that matches the key used to encrypt the stored token.
- *
- * @throws if ENCRYPTION_KEY is misconfigured or if decryption fails.
- */
-async function decryptStoredToken(encrypted: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY");
-  if (!keyHex || keyHex.length !== 64) {
-    throw new Error(
-      "ENCRYPTION_KEY env var is not set or is not 64 hex characters.",
-    );
-  }
-
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-
-  // base64url → Uint8Array
-  const b64 = encrypted.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  const binaryStr = atob(padded);
-  const raw = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    raw[i] = binaryStr.charCodeAt(i);
-  }
-
-  if (raw.length < 12 + 16) {
-    throw new Error("Encrypted token is too short to be valid.");
-  }
-
-  const iv = raw.slice(0, 12);
-  // raw.slice(12) = ciphertext || authTag — exactly what Web Crypto AES-GCM needs.
-  const ciphertextWithTag = raw.slice(12);
-
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    ciphertextWithTag,
-  );
-
-  return new TextDecoder().decode(decrypted);
-}
-
-/**
- * Encrypts a plaintext string using AES-256-GCM and returns the ciphertext
- * encoded as base64url. Mirror of `apps/web/src/lib/crypto.ts#encryptToken`.
- *
- * Layout: IV(12) || ciphertext || authTag(16), base64url-encoded.
- * Used to persist refreshed OAuth access tokens back to the database.
- */
-async function encryptForStorage(plaintext: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY")!;
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"],
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    new TextEncoder().encode(plaintext),
-  );
-
-  // IV || ciphertext || authTag (Web Crypto appends the tag automatically)
-  const combined = new Uint8Array(12 + encrypted.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encrypted), 12);
-
-  return btoa(String.fromCharCode(...combined))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
+// decryptStoredToken / encryptForStorage live in storage-crypto.ts (testable,
+// chunked base64: a whole-buffer spread overflowed the stack on large plans).
 
 /**
  * inbox_list — returns all inboxes the API key may access.
@@ -11487,9 +11422,13 @@ async function executeListInboxes(
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
 
+  // Parked inboxes (parked-inbox.ts) are fetched in the same query and listed
+  // after the active ones with `status: "parked"`, so an assistant can explain
+  // why a mailbox the user knows about cannot be used instead of calling it
+  // missing. Only active entries get sender identities and capabilities.
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host")
+    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host, parked_at")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -11514,7 +11453,23 @@ async function executeListInboxes(
     return null;
   });
 
-  const [{ data, error }, imapAliases] = await Promise.all([query, aliasesPromise]);
+  // Per-inbox instructions (Pro feature inbox_instructions), read BESIDE the
+  // roster like the aliases above. Only an ALLOWED workspace reads the column;
+  // every other one gets null and an untouched listing. Never fails the call.
+  const instructionsPromise: Promise<Map<string, string> | null> = proFeatureAccess(apiKey).then((access) =>
+    access.allowed
+      ? readInboxInstructions(
+        apiKey.workspace_id,
+        apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 ? apiKey.inbox_ids : null,
+      )
+      : null
+  );
+
+  const [{ data, error }, imapAliases, ownerInstructions] = await Promise.all([
+    query,
+    aliasesPromise,
+    instructionsPromise,
+  ]);
 
   if (error) {
     console.error("[mcp-server] inbox_list: db_error", { error: error.message });
@@ -11533,15 +11488,27 @@ async function executeListInboxes(
     service: string | null;
     imap_host: string | null;
     smtp_host: string | null;
+    parked_at?: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
-  const matchedRows = allRows.filter((row) => matchesInboxFilter(row, filter));
+  const matchedRows = allRows.filter((row) => !inboxIsParked(row) && matchesInboxFilter(row, filter));
+  const parkedEntries = allRows
+    .filter((row) => inboxIsParked(row) && matchesInboxFilter(row, filter))
+    .map((row) => ({
+      inbox_id: row.id,
+      email_address: row.email_address,
+      display_name: row.display_name ?? row.email_address,
+      provider: row.provider,
+      service: row.service ?? null,
+      status: PARKED_INBOX_STATUS,
+      hint: parkedInboxHint(APP_URL),
+    }));
 
   // Only the matched rows are expanded. The Gmail sender-identity lookup below
   // is a network call per row, so narrowing first is also why filtering in
   // memory is no more expensive than the predicate it replaced.
-  const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
+  const activeEntries = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
@@ -11605,6 +11572,9 @@ async function executeListInboxes(
     };
   }));
 
+  // Active first, then parked, each in connection order.
+  const inboxes: Array<Record<string, unknown> & { inbox_id: string }> = [...activeEntries, ...parkedEntries];
+
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
   // defect found on 2026-09-20: `inbox_list {provider: "gmail"}` on a key with
@@ -11666,10 +11636,65 @@ async function executeListInboxes(
   }
 
   return {
-    result: jsonOk({ inboxes }),
+    result: jsonOk({ inboxes: withOwnerInstructions(inboxes, ownerInstructions) }),
     logStatus: "success",
     logErrorCode: null,
   };
+}
+
+/**
+ * inboxes.ai_instructions for a workspace (optionally only some inbox ids), as
+ * a map of inbox id to the served text. Its own query, so before the migration
+ * lands (42703) or on any error this answers null and only the feature is off.
+ * Call it only when the Pro gate allows inbox_instructions.
+ */
+async function readInboxInstructions(
+  workspaceId: string,
+  inboxIds: string[] | null,
+): Promise<Map<string, string> | null> {
+  try {
+    let query = supabase
+      .from("inboxes")
+      .select("id, ai_instructions")
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null)
+      .not("ai_instructions", "is", null);
+    if (inboxIds) query = query.in("id", inboxIds);
+    const { data, error } = await query;
+    if (error) {
+      console.warn("[mcp-server] inbox_instructions_read_failed", { workspace_id: workspaceId, error: error.message });
+      return null;
+    }
+    return instructionsByInbox(data as Array<{ id?: unknown; ai_instructions?: unknown }> | null);
+  } catch (err) {
+    console.warn("[mcp-server] inbox_instructions_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+/**
+ * Append "Inbox instructions from the owner:" to a successful drafting or
+ * sending result, when the Pro gate allows inbox_instructions and the inbox
+ * has instructions. Anything else (not visible, not allowed, no inbox, no
+ * text, a failed read) leaves the result exactly as it was. Never throws.
+ */
+async function attachInboxInstructionsNote(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  dispatchName: string,
+  apiKey: ApiKeyRow,
+  inboxId: string | null,
+): Promise<void> {
+  if (!inboxId || !carriesInboxInstructionsNote(dispatchName)) return;
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return;
+  if ((response.result as { isError?: unknown }).isError === true) return;
+  const access = await proFeatureAccess(apiKey);
+  if (!access.allowed) return;
+  const instructions = await readInboxInstructions(apiKey.workspace_id, [inboxId]);
+  const text = instructions?.get(inboxId);
+  if (text) appendResultNote(response, inboxInstructionsNote(text));
 }
 
 /**
@@ -11678,7 +11703,8 @@ async function executeListInboxes(
  * Checks (in order):
  *   1. `inbox_id` matches a UUID format (fast pre-check).
  *   2. If `apiKey.inbox_ids` is non-null, the inbox ID must be in that list.
- *   3. Row exists in `inboxes` with matching `workspace_id` and no `deleted_at`.
+ *   3. Row exists in `inboxes` with matching `workspace_id`, no `deleted_at`
+ *      and no `parked_at` (parked-inbox.ts).
  *   4. `inbox.status` is 'active'.
  *
  * Returns the InboxRow on success, or null on any failure.
@@ -11702,7 +11728,10 @@ async function resolveInbox(
   // undefined there and the query below runs exactly as before.
   const firstParty = firstPartyContext.getStore();
   const cached = firstParty?.inboxRow?.(inboxId, apiKey.workspace_id) as InboxRow | null | undefined;
-  if (cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active") {
+  if (
+    cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active" &&
+    !inboxIsParked(cached as { parked_at?: unknown })
+  ) {
     return cached;
   }
 
@@ -11712,6 +11741,8 @@ async function resolveInbox(
     .eq("id", inboxId)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is outside the plan's inbox cap.
+    .is("parked_at", null)
     .maybeSingle();
 
   if (error || !data) return null;
@@ -11735,9 +11766,11 @@ type InboxResolution =
   | { ok: true; inbox: InboxRow }
   | {
       ok: false;
-      reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
       inboxes?: InboxRow[];
       conflict?: InboxSelectorConflict;
+      /** reason "parked": the parked inbox(es) the call named or could have used. */
+      parked?: ParkedInboxMatch[];
     };
 
 /**
@@ -11764,6 +11797,15 @@ async function resolveInboxArg(
   apiKey: ApiKeyRow,
 ): Promise<InboxResolution> {
   const resolved = await resolveInboxArgInner(args, apiKey);
+  // A selector that named a parked inbox gets told so, not "No inbox matches".
+  // Asked only after the ordinary lookup failed, so the hot path is unchanged.
+  if (!resolved.ok && resolved.reason === "not_found" && hasInboxSelector(args)) {
+    const parked = await findParkedInbox(supabase, apiKey, {
+      inboxId: typeof args["inbox_id"] === "string" ? args["inbox_id"] : null,
+      email: typeof args["inbox"] === "string" ? args["inbox"] : null,
+    });
+    if (parked) return { ok: false, reason: "parked", parked: [parked] };
+  }
   // Record the inbox this request actually resolved so the tools/call dispatcher
   // can log it (the raw arguments alone don't reveal an alias- or auto-resolved
   // inbox). No-op when called outside an activity-log async context.
@@ -11844,6 +11886,7 @@ async function resolveInboxArgInner(
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
+      .is("parked_at", null)
       .eq("status", "active")
       .ilike("email_address", pattern);
 
@@ -11907,11 +11950,14 @@ async function resolveInboxArgInner(
   }
 
   // Neither provided — auto-resolve only when exactly one inbox is accessible.
+  // Parked inboxes are not accessible: one active inbox beside parked ones
+  // still auto-resolves to the active one.
   let query = supabase
     .from("inboxes")
     .select(INBOX_SELECT_COLUMNS)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    .is("parked_at", null)
     .eq("status", "active")
     .order("created_at", { ascending: true });
 
@@ -11924,7 +11970,12 @@ async function resolveInboxArgInner(
 
   const rows = (data ?? []) as unknown as InboxRow[];
   if (rows.length === 1) return { ok: true, inbox: rows[0] };
-  if (rows.length === 0) return { ok: false, reason: "none" };
+  if (rows.length === 0) {
+    // Nothing active, but parked inboxes exist: "no mailbox is connected"
+    // would be false, and would send the user to connect one they already have.
+    const parked = await listParkedInboxes(supabase, apiKey);
+    return parked.length > 0 ? { ok: false, reason: "parked", parked } : { ok: false, reason: "none" };
+  }
   // Carry the accessible inboxes back so the error can name them inline, sparing
   // the caller a separate inbox_list round-trip (which some MCP clients fail to
   // surface on demand — see inboxResolutionError).
@@ -11939,9 +11990,10 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
   _toolName: string,
 ): ToolErrorResult {
@@ -12008,6 +12060,18 @@ function inboxResolutionError(
         };
       }
       errorCode = "inbox_selector_conflict";
+      break;
+    }
+    case "parked": {
+      // The call named a parked inbox, or every inbox the key can see is
+      // parked. Not "not found": the mailbox exists and the user knows it.
+      const parked = failure.parked ?? [];
+      text = parkedInboxErrorText(parked.map((ib) => ib.email_address), APP_URL);
+      structuredContent = {
+        error: PARKED_INBOX_ERROR_CODE,
+        inboxes: parked.map((ib) => ({ inbox_id: ib.id, email_address: ib.email_address, status: PARKED_INBOX_STATUS })),
+      };
+      errorCode = PARKED_INBOX_ERROR_CODE;
       break;
     }
     case "none":
@@ -25895,6 +25959,8 @@ async function keyReviewCardGates(
     .select(reachableInboxSelect("bulk_review_mode", "send_approval_required"))
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is as unreachable as a revoked one.
+    .is("parked_at", null)
     .eq("status", "active")
     .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
@@ -26060,6 +26126,8 @@ async function executeBulkPlanRequest(
     // projection surviving a later edit: a soft-deleted row never arrives at
     // all, whatever the predicate below can or cannot see.
     .is("deleted_at", null)
+    // A plan reviewed before the inbox was parked does not run after it.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) {
     return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_not_found" };
@@ -29401,7 +29469,10 @@ async function allReachableInboxesHideDraftEditor(
       .from("inboxes")
       .select(reachableInboxSelect("draft_editor_hidden"))
       .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      // A parked inbox is outside the plan and no call can land on it; its
+      // stale default must not decide the rollup any more than a deleted one's.
+      .is("parked_at", null);
     if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
     const { data, error } = await query;
     if (error) {
@@ -31659,6 +31730,30 @@ interface ContactScan {
   capped: boolean;
 }
 
+/**
+ * Every active inbox this key may see, oldest first, with the full
+ * credentialed row (INBOX_SELECT_COLUMNS). Shared by the tools that fan out
+ * over a workspace: contact_search without an inbox, and the cross-inbox
+ * email_list / email_search (`inbox_id: "all"`).
+ */
+async function accessibleActiveInboxes(
+  apiKey: ApiKeyRow,
+): Promise<{ data: InboxRow[] | null; error: { message: string } | null }> {
+  let q = supabase
+    .from("inboxes")
+    .select(INBOX_SELECT_COLUMNS)
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .is("parked_at", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    q = q.in("id", apiKey.inbox_ids);
+  }
+  const { data, error } = await q;
+  return { data: (data ?? null) as unknown as InboxRow[] | null, error: error ? { message: error.message } : null };
+}
+
 /** Max inboxes scanned per call when inbox_id is omitted (bounds fan-out cost). */
 const CONTACT_SEARCH_MAX_INBOXES = 10;
 /** Max messages inspected per inbox (bounds the per-provider scan window). */
@@ -32056,6 +32151,8 @@ async function executeSearchContacts(
   } else if (inboxId) {
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -32068,17 +32165,7 @@ async function executeSearchContacts(
     if (store) store.inboxId = inbox.id;
     targets = [inbox];
   } else {
-    let q = supabase
-      .from("inboxes")
-      .select(INBOX_SELECT_COLUMNS)
-      .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null)
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
-    if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
-      q = q.in("id", apiKey.inbox_ids);
-    }
-    const { data, error } = await q;
+    const { data, error } = await accessibleActiveInboxes(apiKey);
     if (error) {
       console.error("[mcp-server] contact_search: inbox_enumeration_failed", {
         workspace_id: apiKey.workspace_id,
@@ -32204,6 +32291,168 @@ async function executeSearchContacts(
       }) as unknown as Record<string, unknown>,
     ),
     logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Cross-inbox email_list / email_search (`inbox_id: "all"`, Pro feature
+// `cross_inbox_search`). The rules (scheduling, merge, paging window, listing)
+// live in cross-inbox.ts; this is the I/O around them.
+// ---------------------------------------------------------------------------
+
+/**
+ * `email_list` / `email_search` over every inbox the key may see.
+ *
+ * Returns null when the feature is not visible to this workspace: the caller
+ * then runs the ordinary executor, which answers "all" exactly as it always
+ * did. Visible but not on Pro or Business: the standard Pro refusal.
+ *
+ * Inboxes come from the same enumeration contact_search uses, then are held
+ * to resolveInbox's own allowlist rule, so "all" is never wider than what the
+ * key could name one by one. Each inbox runs the unchanged single-inbox
+ * executor in its own activity context (so one inbox's resolution notes and
+ * transport checks stay its own), under the per-provider and per-IMAP-host
+ * limits in cross-inbox.ts, with a per-inbox timeout. One failing inbox is an
+ * entry in `inbox_errors`; only when every inbox fails is the call an error.
+ *
+ * Billing: one call, one action, like contact_search's fan-out.
+ */
+async function executeCrossInbox(
+  dispatchName: string,
+  rawArgs: Record<string, unknown>,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const access = await proFeatureAccess(apiKey);
+  if (!access.visible) return null;
+  if (!access.allowed) {
+    return {
+      result: await proFeatureRefusalToolResult(apiKey, "cross_inbox_search", access),
+      logStatus: "error",
+      logErrorCode: PRO_FEATURE_ERROR_CODE,
+    };
+  }
+
+  const toolError = (text: string, code = "-32602"): ExecutorOutcome => ({
+    result: { content: [{ type: "text", text }], isError: true },
+    logStatus: "error",
+    logErrorCode: code,
+  });
+
+  if (typeof rawArgs["inbox"] === "string" && rawArgs["inbox"].trim() !== "") {
+    return toolError(
+      `${dispatchName}: inbox_id "all" already covers every inbox, so inbox cannot be given with it. ` +
+        "Pass inbox_id \"all\" alone, or name one inbox.",
+    );
+  }
+  const paginationError = invalidPaginationArgument(rawArgs);
+  if (paginationError) return paginationError;
+  const limit = typeof rawArgs["limit"] === "number" ? rawArgs["limit"] : 20;
+  const offset = typeof rawArgs["offset"] === "number" ? rawArgs["offset"] : 0;
+  if (offset >= CROSS_INBOX_WINDOW) {
+    return toolError(
+      `${dispatchName}: across all inboxes, offset can reach the newest ${CROSS_INBOX_WINDOW} ` +
+        "results of each inbox. Narrow the request (since, before, from) or pass one inbox_id to page further.",
+    );
+  }
+  // Refused once here rather than once per inbox.
+  if (dispatchName === "email_search") {
+    const built = buildNormalizedSearch(rawArgs);
+    if (!built.ok) return invalidSearchDateError(built.badDate, "email_search");
+    if (built.empty) return noSearchCriterionError("email_search");
+  }
+
+  const { data, error } = await accessibleActiveInboxes(apiKey);
+  if (error) {
+    console.error("[mcp-server] cross_inbox: inbox_enumeration_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return toolError(`${dispatchName}: failed to enumerate inboxes.`, "db_error");
+  }
+  const allowed = (data ?? []).filter((inbox) =>
+    apiKey.inbox_ids === null || apiKey.inbox_ids.includes(inbox.id)
+  );
+
+  const legs: CrossInboxLeg[] = [];
+  const runnable: InboxRow[] = [];
+  for (const inbox of allowed) {
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    if (transportBlockingTool(dispatchName, inbox)) {
+      legs.push({
+        ok: false,
+        target,
+        errorCode: "transport_not_configured",
+        message: "This inbox is connected for sending only, so it has no mail to read.",
+      });
+      continue;
+    }
+    runnable.push(inbox);
+  }
+  const covered = runnable.slice(0, CROSS_INBOX_MAX_INBOXES);
+  const skippedInboxes = runnable.length - covered.length;
+  const fetchLimit = crossInboxFetchLimit(offset, limit);
+
+  const outcomes = await runFanOut(
+    covered,
+    {
+      concurrency: CROSS_INBOX_CONCURRENCY,
+      timeoutMs: CROSS_INBOX_TIMEOUT_MS,
+      deadlineMs: CROSS_INBOX_DEADLINE_MS,
+      buckets: (inbox) => crossInboxBuckets(inbox),
+    },
+    (inbox) =>
+      activityInboxStore.run({ inboxId: null, dispatchName }, () =>
+        runExecutor(dispatchName, crossInboxLegArgs(rawArgs, inbox.id, fetchLimit), apiKey)
+      ),
+  );
+  for (let i = 0; i < covered.length; i++) {
+    const inbox = covered[i];
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    const outcome = outcomes[i];
+    if (outcome.ok) {
+      legs.push(legFromToolResult(target, outcome.value as Parameters<typeof legFromToolResult>[1]));
+      continue;
+    }
+    console.error("[mcp-server] cross_inbox: inbox_failed", {
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      dispatch_name: dispatchName,
+      timed_out: outcome.timedOut,
+      skipped: outcome.skipped === true,
+      error: outcome.error instanceof Error ? outcome.error.message : String(outcome.error),
+    });
+    legs.push({
+      ok: false,
+      target,
+      errorCode: outcome.skipped ? "not_searched" : outcome.timedOut ? "timeout" : "internal_error",
+      message: outcome.skipped
+        ? "Not searched: the call reached its time limit before this inbox's turn. Name its inbox_id to read it."
+        : outcome.timedOut
+        ? "This inbox did not answer in time."
+        : "This inbox could not be read just now.",
+    });
+  }
+  // Inboxes in enumeration order, whatever order the legs were built in.
+  const order = new Map(allowed.map((inbox, i) => [inbox.id, i]));
+  legs.sort((a, b) => (order.get(a.target.inbox_id) ?? 0) - (order.get(b.target.inbox_id) ?? 0));
+
+  const page = mergeCrossInboxPages({ legs, offset, limit, skippedInboxes });
+  const failures = legs.filter((leg) => !leg.ok);
+  if (legs.length > 0 && failures.length === legs.length) {
+    const lines = page.inbox_errors.map((e) => `  - ${e.inbox_address}: ${e.message}`).join("\n");
+    return toolError(
+      `${dispatchName}: no inbox could be read for inbox_id "all". Nothing was changed.\n${lines}`,
+      page.inbox_errors[0]?.error_code ?? "provider_error",
+    );
+  }
+  return {
+    result: {
+      ...jsonOk(markUntrusted(page as unknown as Record<string, unknown>)),
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
   };
 }
 
@@ -32510,6 +32759,8 @@ async function executeListScheduled(
     // If inbox_id provided, validate accessibility.
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -33152,7 +33403,9 @@ async function handleToolsList(
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
     workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
-    hasProFeatureSurface() ? proFeatureAccess(apiKey) : null,
+    // Always read since cross-inbox search (a Pro VALUE, inbox_id "all") has
+    // listing changes of its own; memoised, so one read per request.
+    proFeatureAccess(apiKey),
   ]);
   const uiGates = { ...baseGates, subscriptions };
 
@@ -33181,7 +33434,10 @@ async function handleToolsList(
   // this workspace (pro-features.ts), so customers see no change before launch.
   const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions);
   const visibleTools = withListingCardMeta(
-    proAccess ? withProArgumentsListed(hideProFeaturesFromListing(listed, proAccess), proAccess) : listed,
+    advertiseCrossInboxSearch(
+      withProArgumentsListed(hideProFeaturesFromListing(listed, proAccess), proAccess),
+      proAccess,
+    ),
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -33629,6 +33885,11 @@ async function runExecutor(
     store.proArguments = undefined;
     return await runSendWithFollowUp(dispatchName, followUpDays, rawArgs, apiKey);
   }
+  // `inbox_id: "all"` (Pro): null when not visible, and the call runs as before.
+  if (isCrossInboxCall(dispatchName, rawArgs)) {
+    const crossInbox = await executeCrossInbox(dispatchName, rawArgs as Record<string, unknown>, apiKey);
+    if (crossInbox) return crossInbox;
+  }
   if (dispatchName === "inbox_list") return await executeListInboxes(rawArgs, apiKey);
   if (dispatchName === "email_list") return await executeListInbox(rawArgs, apiKey);
   if (dispatchName === "email_read") return await executeReadEmail(rawArgs, apiKey);
@@ -33824,7 +34085,9 @@ async function handleToolsCall(
     rawArgs !== null &&
     typeof rawArgs === "object" &&
     !Array.isArray(rawArgs) &&
-    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string"
+    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string" &&
+      // `"all"` (cross-inbox, Pro) names no one inbox; activity_log.inbox_id is a uuid.
+      !isCrossInboxAll((rawArgs as Record<string, unknown>)["inbox_id"])
       ? (rawArgs as Record<string, unknown>)["inbox_id"] as string
       : null;
 
@@ -34326,9 +34589,15 @@ async function handleToolsCall(
   // Validate at the server boundary.  The schema is part of our public MCP
   // contract, but clients may skip validation entirely; continuing here would
   // let permissive handlers silently coerce malformed optional fields.
+  // `inbox_id: "all"` (cross-inbox, Pro) cannot meet inbox_id's uuid format.
+  // Only where the feature is visible is inbox_id left out of the check (every
+  // other argument is still validated); elsewhere "all" is refused as before.
+  const validationArgs = isCrossInboxCall(dispatchName, rawArgs) && (await proFeatureAccess(apiKey)).visible
+    ? crossInboxValidationArgs(rawArgs as Record<string, unknown>)
+    : rawArgs;
   const argumentErrors = validateInputSchema(
     tool.inputSchema,
-    schemaValidationArguments(tool.inputSchema, rawArgs),
+    schemaValidationArguments(tool.inputSchema, validationArgs),
   );
   if (argumentErrors.length > 0) {
     const rejectedAction = consolidated
@@ -34433,7 +34702,9 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
-      inboxId: typeof cappedArgs?.["inbox_id"] === "string" ? cappedArgs["inbox_id"] as string : null,
+      inboxId: typeof cappedArgs?.["inbox_id"] === "string" && !isCrossInboxAll(cappedArgs["inbox_id"])
+        ? cappedArgs["inbox_id"] as string
+        : null,
       toolName: dispatchName,
       status: "rate_limited",
       errorCode: "usage_limit_reached",
@@ -34547,6 +34818,9 @@ async function handleToolsCall(
   // idempotency claim has been settled, so a replayed or rejected outbound
   // request never holds a slot it will not use.
   const byteHeavySlot = acquireByteHeavySlot(dispatchName, apiKey.id);
+  // A drafting/sending call may end with the inbox's instructions note: start
+  // the (memoised) Pro gate read now so it runs beside the dispatch, not after.
+  if (carriesInboxInstructionsNote(dispatchName)) void proFeatureAccess(apiKey);
   if (!byteHeavySlot.granted) {
     console.warn("[mcp-server] tools/call: byte_heavy_concurrency_limit", {
       key_id: apiKey.id,
@@ -34699,6 +34973,12 @@ async function handleToolsCall(
   // Notes the provider layer raised during dispatch (a Sent copy that was not
   // saved). Successful results only, like every other note.
   attachResultNotes(toolResult, logCtx.resultNotes);
+
+  // The inbox's standing instructions (Pro feature inbox_instructions), on a
+  // successful draft create/reply or email_compose result only. HERE, on the
+  // MCP path, not in dispatchExecutor: the web client's executors are for a
+  // human, not a model.
+  await attachInboxInstructionsNote(toolResult, dispatchName, apiKey, logCtx.inboxId ?? null);
 
   // Disclose any argument leniency dropped. This is not optional bookkeeping:
   // dropping a filter instead of refusing the call is only defensible because
@@ -35205,7 +35485,9 @@ async function handleScheduledDispatch(
         // for are one list by construction. Hand-writing the projection is the
         // drift that turns the predicate into a constant true: an ABSENT
         // column is not decisive.
-        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
+        // `parked_at` rides along for the parking rule below; it is not a SQL
+        // filter, because a send scheduled before parking still goes out.
+        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(","), "parked_at"))
         .eq("id", row.inbox_id)
         // The row's own workspace, never just the id: a row whose inbox_id
         // names another tenant's mailbox must not resolve it. (Until
@@ -35241,6 +35523,17 @@ async function handleScheduledDispatch(
           `The mailbox this message was scheduled from is no longer connected ` +
             `(status: ${status}). Reconnect it, then schedule the message again.`,
         );
+      }
+      // PARKED (parked-inbox.ts). A send scheduled while the inbox was active
+      // is delivered: the customer scheduled it while the plan covered the
+      // inbox (plan decision D4). One created after parking is failed with a
+      // detail that says so; no resolver path should be able to create it.
+      if (scheduledSendBlockedByParking(row, inboxData as { parked_at?: unknown })) {
+        console.error("[dispatch] scheduled_send_inbox_parked", {
+          scheduled_send_id: row.id,
+          inbox_id: row.inbox_id,
+        });
+        throw new Error(SCHEDULED_SEND_PARKED_DETAIL);
       }
       const inbox = inboxData as unknown as InboxRow;
       // A receive-only inbox has no SMTP server. One that was switched to
@@ -35721,6 +36014,9 @@ async function loadInboxRowForTriage(
     // Soft-delete stays in SQL, as on every other inboxes read: the row never
     // arrives at all, whatever the projection later drifts to.
     .is("deleted_at", null)
+    // A parked inbox's rules are paused ('inbox_parked') before it is parked,
+    // so a rule only gets here if that write failed. Refusing is the backstop.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) return null;
   if (!inboxIsReachable(data as InboxReachabilityRow)) {
@@ -36244,12 +36540,18 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  */
 function automationInboxFailureMessage(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
 ): string {
   switch (failure.reason) {
+    case "parked": {
+      // Lower-case first word: the caller prefixes "automation <action>: ".
+      const text = parkedInboxErrorText((failure.parked ?? []).map((ib) => ib.email_address), APP_URL);
+      return text.charAt(0).toLowerCase() + text.slice(1);
+    }
     case "ambiguous": {
       const listed = (failure.inboxes ?? [])
         .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
@@ -36391,6 +36693,8 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     .select(INBOX_SELECT_COLUMNS)
     .eq("id", inboxId)
     .eq("workspace_id", workspaceId)
+    // A parked inbox is not opened for a preview either (parked-inbox.ts).
+    .is("parked_at", null)
     .maybeSingle<InboxRow>();
   if (!inboxRow) return json({ error: "inbox_not_found" }, 404);
 
@@ -39298,6 +39602,10 @@ export { draftEnvelopeRecipients, formatAddressEntry };
 // against the same fakes, so the forwarded-message fix is pinned on the tool
 // result of `email_read` as well as of `email_read_batch`.
 export { executeReadEmail };
+
+// For inbox-instructions-serving.test.ts: the drafting/sending note step that
+// handleToolsCall runs after dispatch, driven on a built result.
+export { attachInboxInstructionsNote };
 
 // ---------------------------------------------------------------------------
 // Exported for `client-api` (supabase/functions/client-api), the web mail

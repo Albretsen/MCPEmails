@@ -128,10 +128,26 @@ function answerDb(w: World, method: string, target: string, wantsObject: boolean
     // Several inboxes: a list returns them all, a single-row read the one
     // whose id the query names (the first when it names none).
     const all = [w.inbox, ...w.extraInboxes];
-    const id = new URLSearchParams(query).get("id")?.replace(/^eq\./, "");
-    return wantsObject ? json(all.find((row) => row.id === id) ?? w.inbox) : json(all);
+    const idFilter = new URLSearchParams(query).get("id");
+    const id = idFilter?.replace(/^eq\./, "");
+    if (wantsObject) return json(all.find((row) => row.id === id) ?? w.inbox);
+    // A list honours an `id=eq.` or `id=in.(...)` filter, as PostgREST would
+    // (maybeSingle reads a list and refuses more than one row).
+    if (idFilter?.startsWith("eq.")) return json(all.filter((row) => row.id === id));
+    if (idFilter?.startsWith("in.(")) {
+      const ids = idFilter.slice(4, -1).split(",").map((s) => s.replace(/^"|"$/g, ""));
+      return json(all.filter((row) => ids.includes(String(row.id))));
+    }
+    return json(all);
+  }
+  // An RPC a test gave rows for (e.g. "rpc/workspace_pro_features"); any
+  // other RPC keeps its empty 204.
+  if (method === "POST" && target.startsWith("rpc/") && Object.hasOwn(w.dbRows, target)) {
+    return json(w.dbRows[target]);
   }
   if (method === "GET") return wantsObject ? json(null) : json(w.dbRows[target] ?? []);
+  // An RPC answers the rows a test put under "rpc/<name>"; otherwise nothing.
+  if (method === "POST" && target.startsWith("rpc/") && w.dbRows[target]) return json(w.dbRows[target]);
   return new Response(null, { status: 204 });
 }
 

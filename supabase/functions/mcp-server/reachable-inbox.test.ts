@@ -262,6 +262,8 @@ interface FakeInboxRow {
   workspace_id: string;
   status: string;
   deleted_at: string | null;
+  /** Parking (parked-inbox.ts). Production rows carry NULL. */
+  parked_at?: string | null;
   draft_editor_hidden?: boolean;
   bulk_review_mode?: string;
   send_approval_required?: boolean;
@@ -461,7 +463,7 @@ async function driveGates(
 }
 
 function activeRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
-  return { id, workspace_id: WORKSPACE, status: "active", deleted_at: null, ...extra };
+  return { id, workspace_id: WORKSPACE, status: "active", deleted_at: null, parked_at: null, ...extra };
 }
 
 function revokedRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
@@ -471,6 +473,7 @@ function revokedRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow
     workspace_id: WORKSPACE,
     status: "revoked",
     deleted_at: "2026-09-01T00:00:00Z",
+    parked_at: null,
     ...extra,
   };
 }
@@ -657,7 +660,7 @@ Deno.test("a reachable opted-in inbox still opens exactly its own gate", async (
 function erroredRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
   // Live but broken: an expired OAuth token, a rejected app password. NOT
   // deleted — in production on 2026-09-16, 4 rows were exactly this.
-  return { id, workspace_id: WORKSPACE, status: "error", deleted_at: null, ...extra };
+  return { id, workspace_id: WORKSPACE, status: "error", deleted_at: null, parked_at: null, ...extra };
 }
 
 Deno.test("a status='error' inbox opens nothing either", async () => {

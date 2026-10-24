@@ -65,6 +65,7 @@ import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   composeBillingEmail,
   isUsageTemplate,
+  payloadForQueueRow,
   sendBillingLifecycleEmail,
   sendInputForQueueRow,
   type BillingTemplate,
@@ -80,6 +81,7 @@ import {
 import { ACCOUNT_DELETED_REASON, accountState } from '@/lib/billing/deleted-account';
 import { isSuppressed } from '@/lib/email/lifecycle';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
+import { reprojectDuePlanChanges } from '@/lib/billing/plan-change-reproject';
 import {
   BATCH_SIZE,
   RETRY_REASON,
@@ -139,12 +141,17 @@ export async function POST(request: Request): Promise<Response> {
   const mode = new URL(request.url).searchParams.get('mode');
   if (mode === 'sweep') return sweepExpiringCards();
 
+  // The pause / downgrade fallback, before the email kill switch on purpose:
+  // it moves entitlement, not mail, and must run with lifecycle email off.
+  // Never throws. See src/lib/billing/plan-change-reproject.ts.
+  const planChanges = await reprojectDuePlanChanges(createServiceRoleClient(), stripe);
+
   // Read at call time, never captured at module load: a warm lambda would
   // otherwise keep the value it booted with and the kill switch would need a
   // redeploy to take effect. See src/lib/billing/lifecycle-mode.ts.
   const lifecycle = lifecycleMode();
   if (lifecycle === 'off') {
-    return Response.json({ skipped: 'BILLING_LIFECYCLE_EMAILS=off' }, { status: 200 });
+    return Response.json({ skipped: 'BILLING_LIFECYCLE_EMAILS=off', planChanges }, { status: 200 });
   }
 
   const started = Date.now();
@@ -267,7 +274,7 @@ export async function POST(request: Request): Promise<Response> {
       // anyway, so the subject line in the report is the one that would have
       // been used and a template that cannot compose shows up here rather than
       // on the day the switch is flipped.
-      const composed = composeBillingEmail(row.template, row.payload ?? {});
+      const composed = composeBillingEmail(row.template, payloadForQueueRow(row));
       wouldSend.push({
         id: row.id,
         template: row.template,

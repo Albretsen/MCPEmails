@@ -25,7 +25,7 @@ Start enkelt. Dette er den jeg kjører de fleste dager. Lim den inn i Claude (el
 
 > Se på hovedinnboksen min. Hent alt som er ulest, og gi meg så en oppsummering gruppert i tre bøtter: må besvares i dag, til orientering / kan vente, og sannsynligvis støy. For hvert element i de to første bøttene, gi meg én linje: hvem det er fra og hva de vil ha. Ikke åpne noe jeg ikke trenger — skum emnefelt og avsendere først, les bare meldingsteksten når emnet er tvetydig.
 
-Legg merke til hva den prompten gjør. Den ber agenten lene seg på metadataene fra \`email_read\` (action list) (avsender, emne, utdrag) og kalle \`email_read\` med \`action: read\` sparsomt. Det holder økta rask og godt under fartsgrensene — 100 forespørsler per minutt per API-nøkkel, og et tak per arbeidsområde som starter på 60/min på Free-planen. En ulest kø på 40 meldinger sortert på denne måten er kanskje et dusin verktøykall, ikke førti.
+Legg merke til hva den prompten gjør. Den ber agenten lene seg på metadataene fra \`email_read\` (action list) (avsender, emne, utdrag) og kalle \`email_read\` med \`action: read\` sparsomt. Det holder økta rask og godt under fartsgrensene: hver API-nøkkel får vinduer dimensjonert etter planens tak per minutt, og flere nøkler deler det taket (se [priser](/pricing)). En ulest kø på 40 meldinger sortert på denne måten er kanskje et dusin verktøykall, ikke førti.
 
 Et godt svar ser slik ut:
 

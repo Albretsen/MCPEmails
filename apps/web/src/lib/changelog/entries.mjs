@@ -44,6 +44,28 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    // Date must be the day this lands on main.
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'Webhooks for new mail',
+    body:
+      'Add a webhook under API keys in the dashboard and MCPEmails sends a signed POST to your URL when new mail arrives in an inbox, with message IDs your agent can open with email_read. Each webhook has a test button and a delivery log.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Ready-made first prompts once your inbox is connected',
+    body:
+      'After you connect an inbox, the dashboard overview now suggests three things to ask your AI app, each with a copy button, and reminds you how to switch MCPEmails on inside a Claude or ChatGPT chat. The step turns to "It works" by itself when your app makes its first call.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'A failed inbox connection tells you exactly what to do',
+    body:
+      'When an inbox does not connect, the form now shows the steps for your provider, such as creating a Yahoo, AOL, Gmail or iCloud app password or turning on IMAP, with a link to the right settings page and a Test again button that keeps what you typed. After your first inbox connects, it takes you straight to connecting your AI app.',
+  },
+  {
     date: '2026-10-24',
     kind: 'added',
     title: 'A first week checklist on your dashboard',
@@ -56,6 +78,13 @@ export const ENTRIES = [
     title: 'Searching one folder searches that folder',
     body:
       'When your AI app searches a single named folder, the search now looks in that folder only. Before, a search that named the folder this way looked in the inbox instead.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Pick the date your cancellation takes effect',
+    body:
+      'On the cancel contracts page you can now choose the date your cancellation takes effect and send it with one button. The footer link "Withdraw from contract here" opens the same form with withdrawal selected.',
   },
   {
     date: '2026-10-23',
