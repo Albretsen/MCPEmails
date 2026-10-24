@@ -579,7 +579,7 @@ const Callouts: React.FC<{
   theme: ReturnType<typeof getTheme>;
   vw: number;
   vh: number;
-}> = ({ scene, anchors, sceneSeconds, theme }) => (
+}> = ({ scene, anchors, sceneSeconds, theme, vh }) => (
   <>
     {scene.callouts.map((c, i) => {
       const local = sceneSeconds - c.at;
@@ -596,7 +596,7 @@ const Callouts: React.FC<{
         return Math.abs(a.t - c.at) < Math.abs(best.t - c.at) ? a : best;
       }, null);
 
-      const anchorY = nearest ? (nearest.rect.y + nearest.rect.height / 2) / 1080 : 0.5;
+      const anchorY = nearest ? (nearest.rect.y + nearest.rect.height / 2) / vh : 0.5;
       const side = c.anchor ?? (anchorY > 0.5 ? 'above' : 'below');
 
       return (

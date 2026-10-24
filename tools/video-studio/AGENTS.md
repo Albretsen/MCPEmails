@@ -39,7 +39,9 @@ npm run render     -- --storyboard add-inbox-then-chat
 npm run verify     -- --storyboard add-inbox-then-chat
 ```
 
-Supporting commands: `npm run auth` (once, a human signs in), `npm run whoami`
+Supporting commands: `npm run seed -- --yes` (put the video fixture mail back,
+before every transcript), `npm run voice -- --storyboard <id>` (voiceover mp3
+from `vo/<id>.txt`), `npm run auth` (once, a human signs in), `npm run whoami`
 (read-only: prints the account, workspace id and connected inboxes as .env
 lines), `npm run reset -- --yes` (empty the demo workspace), `npm run studio`
 (Remotion Studio, which hot-reloads storyboard JSON and scene code in ~150ms
@@ -58,6 +60,28 @@ because it is the one that deletes things.
 
 Every script prints one line of JSON to stdout beginning `VIDEO_STUDIO_RESULT`.
 Parse that. The human-readable log goes to stderr.
+
+## An automated vertical short, end to end
+
+No human step from storyboard to verified mp4. Publishing is NOT part of it:
+`verify` writes `out/<id>.post.json` and a person posts by hand.
+
+```bash
+npm run seed -- --yes                                   # fixture mail, dated today
+npm run transcript -- --storyboard <id>                 # runs transcripts/<id>.plan.json
+npm run voice -- --storyboard <id>                      # vo/<id>.txt -> assets/vo/<id>.mp3
+npm run render -- --storyboard <id>
+npm run verify -- --storyboard <id>                     # exit 0 = passed, post.json written
+```
+
+`storyboards/query-speedrun-sample.json` is the working example: `"format":
+"vertical"`, `"automated": true`, a `query` card, a `chat` scene under a
+`timer`, an outro. An automated storyboard may use only `title`, `query`,
+`chat`, `terminal`, `clip` and `outro`: captures need a human-signed-in
+browser, and the validator refuses them when `automated` is true.
+
+Every step exits non-zero on failure and prints its `VIDEO_STUDIO_RESULT` line.
+A routine stops at the first non-zero exit.
 
 ## Making a new video
 
@@ -85,7 +109,26 @@ Writing React is for genuinely new scene types only.
 | `voiceover` | no | | path from this directory, e.g. `assets/vo/x.mp3` |
 | `captions` | no | `false` | requires `voiceover` |
 | `posterFrame` | no | first frame of scene 2 + 1s | integer frame index |
+| `format` | no | `"landscape"` | `"vertical"` is 1080x1920 and sets the size itself: leave `width`/`height` out |
+| `automated` | no | `false` | `true` refuses capture scenes |
+| `timer` | no | | `{ "from": 2, "to": 2, "label": "Speedrun" }`, scene indexes. See below |
+| `post` | vertical: yes | | `{ "caption", "hashtags": [...], "sourceUrl"? }` for `out/<id>.post.json` |
 | `scenes` | yes | | at least one |
+
+On-screen text, the voiceover script, the post caption and hashtags all pass
+`src/copy-lint.mjs`: no em dash, the product is "MCPEmails" one word, no SOC 2,
+no prices, plans, caps, "upgrade" or "30 days". The validator refuses a
+storyboard that breaks one.
+
+### Vertical layout
+
+`src/layout.tsx` is the single source. In a vertical cut every scene lays its
+text out inside the platforms' shared safe zone: not in the bottom 20% (384px:
+caption, handle, sound), not in the right 162px (the button rail), not in the
+top 134px (tab bar). Captions sit just above the bottom zone, the timer just
+below the top one, and scene content gets what is left. Type is larger than in
+landscape because it is read on a phone. `verify` draws the safe rectangle in
+red on every frame of the contact sheet: text outside it is a bug.
 
 Durations are in **seconds**. Frames are computed for you. No scene may be
 shorter than 1.5s.
@@ -184,6 +227,55 @@ everything else is output and appears whole.
 | `title` | no | `"Terminal"` |
 | `cps` | no | `28` characters per second |
 
+### `query`
+
+A paraphrased real question and where it was asked. Types in, then holds.
+
+```json
+{ "type": "query", "durationInSeconds": 4.5,
+  "question": "Can my AI tell me which emails I actually have to pay?",
+  "platform": "reddit", "sourceUrl": "https://www.reddit.com/r/.../comments/..." }
+```
+
+| Prop | Required | Default |
+|---|---|---|
+| `durationInSeconds` | yes | |
+| `question` | yes | 160 characters max. Paraphrased: no handles, addresses or links (refused) |
+| `platform` | yes | `reddit`, `x`, `hacker-news`, `stack-overflow`, `github`, `discord`, `forum`, `quora` |
+| `sourceUrl` | yes | https. NEVER drawn (it can carry a username); goes to `post.json` |
+| `lead` | no | `"Someone asked on <platform>"` |
+
+The card always says "Paraphrased". Platform names are text, never logos.
+
+### `clip`
+
+An external mp4 filling the frame, typically a generated hook.
+
+```json
+{ "type": "clip", "src": "assets/clips/hook.mp4", "durationInSeconds": 3,
+  "from": 0, "caption": "Which email do I have to pay?" }
+```
+
+| Prop | Required | Default |
+|---|---|---|
+| `src` | yes | an mp4 directly in `assets/clips/` (gitignored) |
+| `durationInSeconds` | yes | render refuses if the file is shorter than `from` + this |
+| `from` | no | `0`, seconds into the file |
+| `caption` | no | large text over the clip |
+| `muted` | no | `true` |
+
+Every frame carries an "AI-generated" badge. There is no key to turn it off,
+on purpose. A clip scene also sets `is_aigc: true` in `post.json`.
+
+### `timer` (an overlay, not a scene)
+
+A stopwatch drawn over a run of scenes, top-centre in vertical. It starts at
+the first frame of scene `from` and stops on the frame the answer finishes
+arriving in scene `to` (a chat), or at the end of `to` otherwise, then turns
+green. It counts VIDEO time. It is not the server's latency, so a caption must
+not quote it as one. The real round trip of every call is recorded as `ms` on
+each tool turn of the transcript; quote that instead.
+
 ### `outro`
 
 ```json
@@ -196,6 +288,57 @@ everything else is output and appears whole.
 | `durationInSeconds` | yes | |
 | `cta` | yes | |
 | `sub` | no | none |
+
+## Transcript plans as JSON
+
+`transcripts/<id>.plan.json` declares a chat scene's calls as data, so a
+routine can write one without code. It wins over a `.plan.mjs` of the same id.
+The full reference is the header of `scripts/lib/plan.mjs`; in short:
+
+```json
+{ "turns": [
+  { "role": "user", "text": "Is there anything in here I actually have to pay?" },
+  { "role": "tool", "as": "demo", "name": "email_read",
+    "args": { "action": "list", "folder": "Demo" },
+    "summary": "{{demo.messages | count}} messages" },
+  { "role": "tool", "as": "bill", "name": "email_read",
+    "args": { "action": "read",
+              "message_id": "{{demo.messages | where:subject~/overdue/i | first | get:id}}" },
+    "summary": "opened \"{{bill.subject}}\"" },
+  { "role": "assistant", "requires": "demo.messages | where:subject~/overdue/i | count",
+    "text": "Found it: \"{{bill.subject}}\", from {{bill.from.name}}.",
+    "otherwise": "Nothing in here is overdue." }
+] }
+```
+
+`as` names a result; later strings use `{{name.path | pipe | ...}}`. Pipes:
+`count`, `first`, `last`, `take:N`, `get:path`, `pluck:path`,
+`where:path~/re/i`, `where:path!~/re/`, `where:path=value`, `join:sep`,
+`lower`, `upper`, `default:text`. A string that is exactly one `{{...}}` keeps
+the raw value (an array of ids stays an array). A reference that resolves to
+nothing FAILS the turn and render refuses the transcript, so a plan written
+against last week's mail cannot film a call that did nothing. References can
+only point backwards, checked before any call is made.
+
+Any tool not in `READ_ONLY_TOOLS` (plan.mjs) is mutating whatever the plan
+says, runs only with `--write`, and only on messages named by id that an
+earlier result showed coming FROM a video fixture sender. See the demo mailbox
+below for why.
+
+`email_read` with `action: "search"` currently ignores `folder` on this
+mailbox and searches INBOX. Read the Demo folder with `action: "list"` and
+filter with `where`.
+
+## Voiceover
+
+`vo/<id>.txt` (tracked) is the script, written as it must READ: "MCPEmails",
+one word. `npm run voice` sends it to OpenAI `gpt-4o-mini-tts` with ONE pinned
+voice (`cedar`; see `scripts/voice.mjs`), spelling the brand phonetically in
+the request only, and writes the storyboard's `voiceover` path plus a
+`.voice.json` provenance sidecar. It fails if the audio is longer than the
+video. Unchanged script, voice and model reuse the existing mp3. Needs
+`OPENAI_API_KEY` in `.env`. Changing the voice means rechecking the homophone
+entries in `SPELLINGS`.
 
 ## Shots
 
@@ -221,6 +364,17 @@ them with `npm run whoami` before trusting them.
   two seconds of the `add-inbox` shot. Marketing says not to show Outlook at
   all. No clip, zoom or framing removes it without faking the UI or cutting the
   provider-choice beat, so it is an open decision, not an oversight.
+- **`demo@mcpemails.com` is ALSO the OpenAI reviewer mailbox.** INBOX (13
+  messages, 5 unread), Archive (3) and Sent (3) hold the reviewer corpus,
+  including a deliberate prompt-injection fixture, and the review test cases
+  check those counts. Video fixture mail therefore lives in its own `Demo`
+  folder. `npm run seed` deletes only mail FROM the senders in
+  `fixtures/inbox.json` (in any folder) and appends fresh copies to `Demo`; it
+  refuses a fixture sender that overlaps the reviewer corpus. Never seed or
+  archive into INBOX.
+- **Migadu's `SEARCH HEADER` silently returns nothing**, and searches are rate
+  limited to 60 a minute. `seed` clears by one OR-ed `FROM` search per folder
+  for that reason. Do not "improve" it to a marker header.
 - **`DEMO_SAFE_INBOX_DOMAINS` must include `mcpemails.com`**, or `reset` refuses
   to touch the only mailbox there. `.env.example` suggests `demo.mcpemails.com`,
   which no mailbox uses. A mailbox cannot live on a `.example` domain at all;
@@ -307,9 +461,13 @@ hold (the assistant's answer sitting still to be read) does not trip the 3s
 frozen-segment check as long as caption cues keep changing. That is what lets
 the chat answer arrive fast and then wait.
 
-**`verify` can pass against a STALE mp4.** If `render` fails, the previous
-`out/<id>.mp4` is still on disk and `verify` will happily check it. Always
-confirm `render` printed its result line before trusting a green verify.
+**`verify` used to pass against a STALE mp4.** A failed render left the
+previous `out/<id>.mp4` on disk and verify checked it. Now `render` deletes
+the storyboard's outputs before it starts and encodes to `<id>.partial.mp4`,
+renaming only on success, and `verify` fails unless the mp4's hash matches the
+manifest and every input (storyboard, transcripts, voiceover, clips) still
+hashes as it did at render time. `post.json` is deleted at the start of every
+verify and written only on a pass.
 
 **A capture scene's `clip.from` is subtracted exactly ONCE.** Cut time is
 `sceneStart + (recorded - clip.from) / speed`. Subtracting it again while
@@ -338,6 +496,12 @@ These are prohibitions, not preferences.
   to get a render through. Re-run `npm run transcript`.
 - **Never write outside `out/`.** Publishing to the marketing site is a separate
   human step. This tool does not touch `apps/web`.
+- **Never post.** No step here uploads to TikTok, Reels, Shorts or any
+  scheduler. `post.json` is a sheet for the person who publishes, with
+  `is_aigc` set from what the cut contains (a clip scene or a synthetic
+  voiceover). Adding a posting step needs Asgeir's explicit approval first.
+- **Never quote a stranger.** A `query` card is a paraphrase with no handle,
+  link or address on screen; the source URL stays in `post.json`.
 - **Never run a bare `npx` in this directory.**
 - **Never type a password into a login form from a script.** `npm run auth`
   opens a headed browser and waits for a person. There is no
@@ -345,7 +509,8 @@ These are prohibitions, not preferences.
 
 ## What `verify` proves, and what it does not
 
-It proves, mechanically: the streams, codec (`h264`), pixel format
+It proves, mechanically: that the mp4 and every input are the ones rendered
+(hashes), the streams, codec (`h264`), pixel format
 (`yuv420p`), dimensions, duration against the storyboard, no scene under 1.5s,
 no unexpected black segments, no capture scene opening on an unpainted frame,
 nothing frozen for 3s or more, captions present

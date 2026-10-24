@@ -5,6 +5,7 @@ out/
 .auth/
 .remotion/
 assets/vo/
+assets/clips/
 .whisper/
 
 # public/ holds only symlinks into captures/ and assets/vo/, created by
