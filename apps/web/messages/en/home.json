@@ -274,10 +274,11 @@
     "linkOauth": "OAuth connection",
     "linkProviders": "Provider support",
     "linkReadOnly": "Read-only access",
+    "linkApiGuide": "Developer guide",
     "linkClients": "MCP client setup",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
-    "linkWithdrawal": "Right of withdrawal",
+    "linkWithdrawal": "Withdraw from contract here",
     "linkCancel": "Cancel contracts here",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -294,7 +295,8 @@
     "linkHelp": "Help & support",
     "linkSelfHost": "Self-hosting",
     "linkFounders": "For founders",
-    "linkBusiness": "For business"
+    "linkBusiness": "For business",
+    "linkDevelopers": "Developers"
   },
   "languageSwitcher": {
     "label": "Language",

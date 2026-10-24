@@ -30,10 +30,10 @@ In the dashboard, go to **API Keys**, create a key, and grant it the scopes you 
 - \`read:email\` — to poll, list, and read messages with \`email_read\`.
 - \`send:email\` — to call \`email_compose\` (action \`reply\`).
 
-The key is shown once. Copy it. It looks like \`mcpe_live_...\` and you pass it on every request:
+The key is shown once. Copy it. It looks like \`mcpe_9f86d081...\` and you pass it on every request:
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 The MCP endpoint is a single URL:
@@ -94,7 +94,7 @@ If you want a message to stop showing up as unread once you've replied, read it 
 
 ## Rate limits, and why you never blind-retry a send
 
-Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, regardless of plan. Your workspace also has a burst ceiling by tier: **60 req/min on Free, 120 on Personal, 300 on Pro, 1,000 on Business** (see [pricing](/pricing)). A polite poll-and-reply loop lives well inside that, but a misbehaving one can trip it.
+Your workspace has a per-minute ceiling set by its plan (see [pricing](/pricing)), and every API key gets per-minute, hourly and daily windows sized to that plan, so one key can use the whole ceiling and several keys share it. A polite poll-and-reply loop lives well inside that, but a misbehaving one can trip it.
 
 When you hit a rate limit, the server returns a retryable error (code \`-32003\`) carrying \`data.retry_after\` in seconds. Honor it. Sleep for that long, then continue.
 

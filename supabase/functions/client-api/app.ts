@@ -285,7 +285,12 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     if (hit && now() - hit.at < INBOX_LIST_TTL_MS) return hit.inboxes;
     const outcome = await runExecutor(env, { tool: "inbox_list", args: {} }, { inboxId: null, flow: {}, timings });
     const body = resultJson(outcome.result) as { inboxes?: Inbox[] };
-    const inboxes = Array.isArray(body.inboxes) ? body.inboxes : [];
+    // `inbox_list` also lists parked inboxes (status "parked", outside the
+    // plan's inbox cap, see mcp-server/parked-inbox.ts) so an assistant can
+    // explain them. The web client cannot use one, so it never sees one.
+    const inboxes = Array.isArray(body.inboxes)
+      ? body.inboxes.filter((inbox) => (inbox as { status?: unknown }).status !== "parked")
+      : [];
     if (outcome.logStatus === "success") {
       if (inboxLists.size > 2000) inboxLists.clear();
       inboxLists.set(workspaceId, { inboxes, at: now() });

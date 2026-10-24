@@ -75,6 +75,11 @@ export type SubscriptionFacts = {
   planLabel: string;
   /** One of our own accounts rather than a customer's. */
   internal: boolean;
+  /**
+   * Live but paused (Stripe pause_collection, and the paid period has ended):
+   * not MRR, not churn. Its own level on the board. See `pausedNow`.
+   */
+  paused?: boolean;
 };
 
 /** One rail row: how many customers, and their net monthly money. */
@@ -132,6 +137,27 @@ export function scheduledToStop(subscription: {
   return subscription.cancel_at_period_end === true || subscription.cancel_at != null;
 }
 
+/**
+ * True while a pause is running: pause_collection is set, the paid period it
+ * starts after (metadata mcpe_pause_from) has ended, and Stripe has not
+ * resumed collection yet. A pause that is only scheduled is still MRR: that
+ * month is paid. Mirrors pauseState in src/lib/billing/pause.ts, kept here so
+ * the money math has no billing imports.
+ */
+export function pausedNow(
+  subscription: {
+    pause_collection?: { behavior?: string | null; resumes_at?: number | null } | null;
+    metadata?: Record<string, string> | null;
+  },
+  nowSeconds: number,
+): boolean {
+  const pc = subscription.pause_collection;
+  if (!pc?.behavior) return false;
+  if (pc.resumes_at != null && nowSeconds >= pc.resumes_at) return false;
+  const from = Number(subscription.metadata?.mcpe_pause_from ?? '');
+  return !Number.isFinite(from) || from === 0 || from <= nowSeconds;
+}
+
 /** Statuses where the money is live but not arriving. */
 const AT_RISK_STATUSES = new Set(['past_due', 'unpaid']);
 
@@ -168,6 +194,12 @@ export type RevenueSummary = {
   /** Live, paying, and already set to stop at the end of the period. */
   leavingMinor: number;
   leavingCustomers: number;
+  /**
+   * Live but paused: not in MRR or paying customers, and not churn. The
+   * figure is what they pay per month once billing resumes.
+   */
+  pausedCustomers: number;
+  pausedMinor: number;
   /** Subscriptions that started inside the window, and what they were worth. */
   newMrrMinor: number;
   newCustomers: number;
@@ -362,7 +394,11 @@ export function summarizeSubscriptions(
 
   const livePriced = live.map(price);
   const otherCurrencies = [...new Set(livePriced.filter((row) => row.monthly === null).map((row) => row.sub.currency))].sort();
-  const priced = converted(livePriced);
+  const pricedAll = converted(livePriced);
+  // A paused subscription is live (Stripe keeps it `active`) but bills
+  // nothing until it resumes, so it is not MRR and not a paying customer.
+  const paused = pricedAll.filter((row) => row.sub.paused === true);
+  const priced = pricedAll.filter((row) => row.sub.paused !== true);
   const paying = priced.filter((row) => row.monthly > 0);
 
   const mrrMinor = Math.round(sum(paying.map((row) => row.monthly)));
@@ -417,6 +453,8 @@ export function summarizeSubscriptions(
     atRiskCustomers: atRisk.length,
     leavingMinor: Math.round(sum(leaving.map((row) => row.monthly))),
     leavingCustomers: leaving.length,
+    pausedCustomers: paused.length,
+    pausedMinor: Math.round(sum(paused.map((row) => row.monthly))),
     newMrrMinor,
     newCustomers: fresh.length,
     churnedMrrMinor,

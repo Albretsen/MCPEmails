@@ -107,7 +107,7 @@ Either way, you revoke any connection from the dashboard in one click. Grab the 
 
 Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
-On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan: 60/min on Free, 120/min on Personal, 300/min on Pro, 1,000/min on Business. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
+On rate limits, each workspace has a per-minute ceiling that scales with your plan (see [pricing](/pricing)), and each API key gets per-minute, hourly and daily windows sized to that plan, so one key can use the whole ceiling and several keys share it. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
 
 ## Pricing
 

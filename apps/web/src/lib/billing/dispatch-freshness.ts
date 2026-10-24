@@ -50,6 +50,7 @@ export interface FreshnessStripe {
       status?: string | null;
       cancel_at_period_end?: boolean | null;
       cancel_at?: number | null;
+      pause_collection?: { resumes_at?: number | null } | null;
     }>;
   };
   paymentMethods: {
@@ -107,6 +108,28 @@ export async function checkFreshness(
       // successful charge.
       if (subscription.status === 'active' || subscription.status === 'trialing') {
         return { send: false, reason: 'subscription_reactivated' };
+      }
+      return { send: true };
+    }
+
+    // ── Pause: is the subscription still paused to that date? ──────────────
+    // scope_key is "sub_xxx:<unix seconds>": the pause start for the receipt,
+    // the renewal that bills again for the reminder. An extension or an early
+    // resume re-queues the reminder under a new date and cancels the old row,
+    // so this check is the backstop for an event we never saw.
+    if (row.template === 'pause_started' || row.template === 'pause_ending_3') {
+      const [subscriptionId, secondsPart] = row.scope_key.split(':');
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+        return { send: false, reason: 'subscription_deleted' };
+      }
+      if (row.template === 'pause_started') return { send: true };
+      const billsAt = Number(secondsPart);
+      const resumesAt = subscription.pause_collection?.resumes_at ?? null;
+      if (resumesAt == null || resumesAt + 3600 !== billsAt) return { send: false, reason: 'no_longer_due' };
+      // A cancel that lands on or before that renewal means nothing resumes.
+      if (subscription.cancel_at != null && subscription.cancel_at <= billsAt) {
+        return { send: false, reason: 'no_longer_due' };
       }
       return { send: true };
     }

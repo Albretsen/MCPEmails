@@ -39,10 +39,10 @@ OAuth 是免密钥的那条路。不是由你生成一个凭据再把它粘贴�
 2. 选择它的权限范围：\`read:email\`、\`send:email\`，或两者。
 3. 复制它。它只会显示**一次**，之后再也不显示。如果丢了，就重新创建一个。
 
-密钥长得像 \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`，你在每次请求时都要带上它：
+密钥长得像 \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`，你在每次请求时都要带上它：
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 一个用来列出你收件箱的原始 JSON-RPC 调用长这样：
@@ -76,7 +76,7 @@ API 密钥要求你做、而 OAuth 不要求的唯一一件事：把密钥当成
 
 你的客户端不支持 OAuth——Cline、JetBrains、OpenAI 风格的工具运行器，或者你自己的代码。你正在用 cURL 或一个小程序对着端点写脚本。你需要一个稳定的凭据，好让一个无人值守的进程在没有人去点同意页的情况下也能用。受限的密钥在这里恰到好处，而且有一份针对 [Cursor、Cline 和 VS Code 客户端](/blog/email-for-ai-agents-cursor-cline-vscode)的完整操作指南。
 
-还有一件事无论你选哪个都成立：速率限制。每个 API 密钥的上限是 100 requests/minute、1,000/hour 和 10,000/day，每个工作区还按套餐有一个突发上限（[免费版](/pricing) 为 60/min，Business 最高 1,000/min）。当你触及限制时，服务器会返回一个以秒为单位的 \`retry_after\` 值。请遵守它，而且绝不要盲目重试 \`email_compose\` 发送，那样你会重复发送。
+还有一件事无论你选哪个都成立：速率限制。每个工作区都有一个由套餐决定的每分钟上限（见[定价](/pricing)），每个 API 密钥会得到按该套餐确定大小的每分钟、每小时和每天窗口，所以单个密钥就能用满整个上限，多个密钥则共享它。当你触及限制时，服务器会返回一个以秒为单位的 \`retry_after\` 值。请遵守它，而且绝不要盲目重试 \`email_compose\` 发送，那样你会重复发送。
 
 ## 结论
 

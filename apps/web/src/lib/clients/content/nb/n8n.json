@@ -65,7 +65,7 @@
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel. En arbeidsflyt som går i løkke over mange elementer, bør dosere kallene eller fordele arbeidet på flere nøkler.",
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En arbeidsflyt som går i løkke over mange elementer, bør respektere Retry-After og dosere kallene.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post starter aldri en arbeidsflyt av seg selv. Vil du reagere på innkommende e-post, starter du arbeidsflyten med en Schedule Trigger og lar agenten se etter uleste meldinger.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],
