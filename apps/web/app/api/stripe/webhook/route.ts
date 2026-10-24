@@ -150,6 +150,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
 import { hasPaidInvoice, neverPaidSepa } from '@/lib/stripe/sepa-entitlement';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
@@ -180,7 +181,7 @@ import {
   PAYMENT_ISSUE_STATUSES,
   recordPaymentIssue,
 } from '@/lib/billing/payment-issue';
-import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
+import { invoiceLinePriceId, invoiceSubscriptionId } from '@/lib/billing/invoice-shape';
 import {
   liftPlanLimitPauses,
   workspacesEnteringPaidPlan,
@@ -512,6 +513,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'invoice.payment_failed',
     'invoice.payment_action_required',
     'invoice.payment_succeeded',
+    // Only retries the idempotent founder-place insert; no plan state.
+    'invoice.paid',
     'charge.refunded',
   ]);
 
@@ -593,6 +596,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         await recordReferralChargeSafely(event.data.object as Stripe.Invoice);
+        retryFounderPlace(event.data.object as Stripe.Invoice);
+        break;
+
+      // Only the founder-place retry listens to this one; the lifecycle
+      // handlers stay on invoice.payment_succeeded. Both are idempotent.
+      case 'invoice.paid':
+        retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
 
       case 'charge.refunded': {
@@ -1321,6 +1331,14 @@ async function handleSubscriptionUpserted(
     after(async () => {
       const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
       if (owner) await syncMailboxAddon(owner);
+      // A paid subscription on the founder price takes its place in the
+      // counter and gets the cohort tag. No-op for any other price.
+      await recordFounderPlace({
+        db: createServiceRoleClient(),
+        subscription,
+        ownerId: owner,
+        tagSubscription: (id, metadata) => stripe.subscriptions.update(id, { metadata }),
+      });
     });
   }
 
@@ -1764,8 +1782,25 @@ async function queueDunningForInvoice(
 
   // The plan the failing invoice was for. Resolved from the price on the line
   // item, exactly as the subscription handlers do, so a legacy price still maps.
-  const priceId = invoiceLinePriceId(invoice);
-  const resolved = priceId ? getPlanByStripePriceId(priceId) : null;
+  // invoiceLinePriceId prefers the charged line over an upgrade's credit line
+  // on the old price. When no line maps to a plan, the subscription's own plan
+  // item is the fallback.
+  let priceId = invoiceLinePriceId(invoice);
+  let resolved = priceId ? getPlanByStripePriceId(priceId) : null;
+  const invoiceSubscription = resolved ? null : invoiceSubscriptionId(invoice);
+  if (invoiceSubscription) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(invoiceSubscription);
+      const basePriceId = basePlanItem(subscription.items.data)?.price?.id ?? null;
+      const fromBase = basePriceId ? getPlanByStripePriceId(basePriceId) : null;
+      if (fromBase) {
+        priceId = basePriceId;
+        resolved = fromBase;
+      }
+    } catch {
+      // Logged below as unresolved; the sequence still goes out.
+    }
+  }
   if (!resolved) {
     // Not fatal: the sequence is still worth sending, and the composer omits the
     // consequence sentence rather than guessing. Loud, though, because an
@@ -1816,6 +1851,28 @@ async function queueDunningForInvoice(
  * they are a paying customer again, whatever the subscription record said when
  * the sequence was queued.
  */
+/**
+ * A paid invoice on the Business founder price records its place again (an
+ * idempotent no-op once the row exists), so a place whose first insert failed
+ * after a subscription event is recovered on the next payment. After the
+ * response, and it cannot throw.
+ */
+function retryFounderPlace(invoice: Stripe.Invoice): void {
+  after(() =>
+    recordFounderPlaceFromInvoice({
+      db: createServiceRoleClient(),
+      invoice,
+      retrieveSubscription: (id) => stripe.subscriptions.retrieve(id),
+      resolveOwner: async (subscription) => {
+        const customerId =
+          typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
+        return resolveUserId(createServiceRoleClient(), customerId, subscription.metadata?.user_id ?? null);
+      },
+      tagSubscription: (id, metadata) => stripe.subscriptions.update(id, { metadata }),
+    }),
+  );
+}
+
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
   const customerId =
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;

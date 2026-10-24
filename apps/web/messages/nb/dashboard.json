@@ -419,7 +419,9 @@
     "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
     "emptyReadDocs": "Les oppsettsveiledningene",
     "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
-    "capCtaBusiness": "Oppgrader til Business, 39 $/md"
+    "capCtaBusiness": "Oppgrader til Business, 39 $/md",
+    "capBodyProCapFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md"
   },
   "apiKeys": {
     "title": "API-nøkler",

@@ -84,7 +84,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm, locale, offer, product, arm, surface } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale, offer, quotedPriceId, product, arm, surface } =
+    body as Record<string, unknown>;
 
   if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
     return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           locale,
           ...(country ? { country } : {}),
           ...(offer !== undefined ? { quotedOffer: offer } : {}),
+          ...(quotedPriceId !== undefined ? { quotedPriceId } : {}),
         });
 
   if (outcome.kind === 'checkout') {
@@ -122,6 +124,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         interval: outcome.interval,
         preview: outcome.preview,
         ...(outcome.offerEnded ? { seasonal_offer_ended: true } : {}),
+        // Sent back as `quotedPriceId` on confirm; see runCheckout.
+        quoted_price_id: outcome.quotedPriceId,
+        ...(outcome.priceChanged ? { price_changed: true } : {}),
       },
       { status: 200 },
     );

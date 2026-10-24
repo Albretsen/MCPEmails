@@ -470,7 +470,9 @@
         "openGuide": "Montrez-moi comment",
         "later": "Plus tard"
       }
-    }
+    },
+    "businessCapBodyFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
+    "businessCapCtaFounder": "Passer à Business, {price} $/mois"
   },
   "commandPalette": {
     "pageOverview": "Aperçu",
@@ -560,5 +562,10 @@
     "switchCta": "Passer à l'annuel",
     "switchBusy": "Préparation...",
     "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
+  },
+  "founder": {
+    "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
+    "places": "Places restantes : {left} sur {total}",
+    "priceChanged": "Le prix a changé avant votre confirmation, rien n'a donc été facturé. Les montants ci-dessus sont le prix qui s'applique maintenant."
   }
 }

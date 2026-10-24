@@ -22,6 +22,12 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import {
+  attachFounder,
+  founderDisplayFor,
+  ownerIsOnFounderPrice,
+  withFounderSubscriberPrices,
+} from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
@@ -1012,7 +1018,23 @@ export default async function DashboardPage({ params }) {
   // else (annual, Business, legacy, comped) would be quoted a price that
   // checkout-core does not apply to their swap, so they are shown none.
   const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
-  const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
+  //
+  // The Business founder line rides on the Business entry, for an owner who is
+  // not on Business already (src/lib/stripe/founder-offer.ts). The client
+  // swaps the founder amounts in for its language (zh keeps the normal price).
+  // The seasonal offer never touches Business, so the two do not meet.
+  const founder =
+    workspace?.owner_id === user.id && plan !== 'pro' && !compedScale
+      ? await founderDisplayFor({ ownerId: user.id })
+      : null;
+  const offeredPrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
+  // An owner who already pays the founder price sees Business at that price
+  // ($29 / $278.40), not the $39 list price, on every surface that prices it.
+  const stripePrices =
+    workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&
+    (await ownerIsOnFounderPrice(user.id))
+      ? await withFounderSubscriberPrices(offeredPrices)
+      : offeredPrices;
 
   // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
   // until {date}" and the ways to keep it. Null for everyone else, and for a

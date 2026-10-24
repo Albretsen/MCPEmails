@@ -419,7 +419,9 @@
     "emptyViewKeys": "MCP-URL und API-Schlüssel abrufen",
     "emptyReadDocs": "Anleitungen zur Client-Einrichtung lesen",
     "capBodyProCap": "Pro verbindet 10 Postfächer. Business enthält 10 für $39 pro Monat, jedes weitere Postfach kostet $3 pro Monat, und Mitglieder sind unbegrenzt ohne Aufpreis.",
-    "capCtaBusiness": "Upgrade auf Business, $39/Monat"
+    "capCtaBusiness": "Upgrade auf Business, $39/Monat",
+    "capBodyProCapFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
+    "capCtaBusinessFounder": "Upgrade auf Business, ${price}/Monat"
   },
   "apiKeys": {
     "title": "API-Schlüssel",

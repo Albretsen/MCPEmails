@@ -470,7 +470,9 @@
         "openGuide": "Muéstrame cómo",
         "later": "Más tarde"
       }
-    }
+    },
+    "businessCapBodyFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
+    "businessCapCtaFounder": "Mejorar a Business, ${price}/mes"
   },
   "commandPalette": {
     "pageOverview": "Resumen",
@@ -560,5 +562,10 @@
     "switchCta": "Cambiar a anual",
     "switchBusy": "Preparando...",
     "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}",
+    "priceChanged": "El precio cambió antes de que confirmaras, así que no se cobró nada. Los importes de arriba son el precio que se aplica ahora."
   }
 }
