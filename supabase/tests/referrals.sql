@@ -16,7 +16,7 @@
 
 BEGIN;
 
-SELECT plan(44);
+SELECT plan(46);
 
 -- Referrer (Free), friend, second referrer, second friend, an early user with
 -- a 'standard' row, and a comped user. Signing up through auth.users runs
@@ -194,6 +194,16 @@ SELECT lives_ok(
   'a referral funnel stage is accepted');
 SELECT is((SELECT schedule FROM cron.job WHERE jobname = 'dispatch-referrals'), '15 10 * * *',
   'the dispatcher runs daily');
+
+-- The stage list is re-pinned whole: no stage an earlier migration added may
+-- be lost (payment_fix_clicked, 20261024225000).
+SELECT ok(pg_get_constraintdef((SELECT oid FROM pg_constraint WHERE conname = 'product_funnel_events_stage_check'))
+            LIKE '%payment_fix_clicked%',
+  'the stage list keeps payment_fix_clicked');
+-- The tools/call gate hands back the referral month for the burst ceiling.
+SELECT ok(pg_get_functiondef('public.mcp_tools_call_gate(text,timestamptz[],timestamptz,boolean,text,integer)'::regprocedure)
+            LIKE '%payment_notice_shown_on%referral_personal_until%',
+  'mcp_tools_call_gate returns referral_personal_until and keeps the payment columns');
 
 SELECT * FROM finish();
 ROLLBACK;

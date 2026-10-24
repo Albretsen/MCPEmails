@@ -657,8 +657,9 @@ GRANT EXECUTE ON FUNCTION public.effective_workspace_plan(uuid) TO authenticated
 -- ---------------------------------------------------------------------------
 -- 5. product_funnel_events stages for the referral analytics events.
 --
--- Current definition is 20261019150000, reproduced verbatim with the ten
--- referral stages added. Each event is one row with the stage named after it;
+-- Current definition is 20261019150000 plus 'payment_fix_clicked', which
+-- 20261024225000_dunning_measurement appends in place. Reproduced with the ten
+-- referral stages added; keep every stage a later migration adds. Each event is one row with the stage named after it;
 -- outcome 'success', or 'failure' for referral_attach_refused and
 -- referral_voided.
 -- ---------------------------------------------------------------------------
@@ -681,6 +682,8 @@ ALTER TABLE public.product_funnel_events
     -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
     -- the paywall_reached row with connection_type = 'first_connect'.
     'paywall_clicked',
+    -- The failed-payment banner's button (20261024225000).
+    'payment_fix_clicked',
     -- Referral program (20261025090000).
     'referral_link_viewed', 'referral_link_copied', 'referral_click',
     'referral_attached', 'referral_attach_refused', 'referral_charged',

@@ -77,6 +77,9 @@ export type ProductFunnelEvent = {
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
     | 'paywall_clicked'
+    // The failed-payment banner's button (/api/stripe/payment-fix). success =
+    // sent on to Stripe, failure = bounced to settings.
+    | 'payment_fix_clicked'
     // Referral program (20261025090000). `category` is the workspace's plan.
     // `referral_click` has no workspace and is never written here.
     | 'referral_link_viewed' | 'referral_link_copied' | 'referral_attached'
