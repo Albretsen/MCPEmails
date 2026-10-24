@@ -18,10 +18,12 @@ import '../../../styles/contract-forms.css';
  * posts to /api/legal/contract-request, which records the request as a
  * support ticket, emails the customer a receipt and notifies us.
  *
- * `?type=withdraw` preselects the withdrawal; /withdrawal and the footer's
- * "Withdraw from contract here" link come here with it, and the footer's
- * "Cancel contracts here" link without it. The header is the logo only and
- * the page carries no offer, pause or "are you sure" step.
+ * `?type=withdraw` preselects the subscription withdrawal and
+ * `?type=withdraw_pass` the 3-month pass withdrawal. /withdrawal and the
+ * footer's "Withdraw from contract here" link come here with
+ * `?type=withdraw`, and the footer's "Cancel contracts here" link without
+ * it. The header is the logo only and the page carries no offer, pause or
+ * "are you sure" step.
  */
 const PATH = '/cancel';
 const SUPPORT_EMAIL = 'support@mcpemails.com';
@@ -54,7 +56,7 @@ export default async function CancelPage({ params, searchParams }) {
   const c = cancelCopy(locale);
   const sp = await searchParams;
   const type = Array.isArray(sp?.type) ? sp.type[0] : sp?.type;
-  const initialKind = type === 'withdraw' ? 'withdraw' : 'cancel';
+  const initialKind = type === 'withdraw' || type === 'withdraw_pass' ? type : 'cancel';
 
   return (
     <div>
