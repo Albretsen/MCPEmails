@@ -23,10 +23,10 @@ const translation = {
 - \`read:email\`——用于通过 \`email_read\` 轮询、列出和读取消息。
 - \`send:email\`——用于调用 \`email_compose\`（动作 \`reply\`）。
 
-密钥只显示一次。把它复制下来。它看起来像 \`mcpe_live_...\`，你要在每次请求时带上它：
+密钥只显示一次。把它复制下来。它看起来像 \`mcpe_9f86d081...\`，你要在每次请求时带上它：
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 MCP 端点是一个单独的 URL：

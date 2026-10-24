@@ -39,10 +39,10 @@ Vous en créez une dans **Dashboard → API Keys** :
 2. Choisissez ses scopes : \`read:email\`, \`send:email\`, ou les deux.
 3. Copiez-la. Elle est affichée **une seule fois** et jamais plus. Si vous la perdez, vous en créez une nouvelle.
 
-La clé ressemble à \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, et vous la passez à chaque requête :
+La clé ressemble à \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, et vous la passez à chaque requête :
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Un appel JSON-RPC brut pour lister vos boîtes de réception ressemble à ceci :

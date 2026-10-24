@@ -23,10 +23,10 @@ Dans le tableau de bord, allez dans **API Keys**, créez une clé, et accordez-l
 - \`read:email\` — pour interroger, lister et lire les messages avec \`email_read\`.
 - \`send:email\` — pour appeler \`email_compose\` (action \`reply\`).
 
-La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_live_...\` et vous la transmettez à chaque requête :
+La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_9f86d081...\` et vous la transmettez à chaque requête :
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Le point de terminaison MCP est une URL unique :

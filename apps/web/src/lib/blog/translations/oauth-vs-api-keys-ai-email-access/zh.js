@@ -39,10 +39,10 @@ OAuth 是免密钥的那条路。不是由你生成一个凭据再把它粘贴�
 2. 选择它的权限范围：\`read:email\`、\`send:email\`，或两者。
 3. 复制它。它只会显示**一次**，之后再也不显示。如果丢了，就重新创建一个。
 
-密钥长得像 \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`，你在每次请求时都要带上它：
+密钥长得像 \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`，你在每次请求时都要带上它：
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 一个用来列出你收件箱的原始 JSON-RPC 调用长这样：

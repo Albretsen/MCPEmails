@@ -46,10 +46,10 @@ You make one in **Dashboard → API Keys**:
 2. Choose its scopes: \`read:email\`, \`send:email\`, or both.
 3. Copy it. It's shown **once** and never again. If you lose it, you make a new one.
 
-The key looks like \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, and you pass it on every request:
+The key looks like \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, and you pass it on every request:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 A raw JSON-RPC call to list your inboxes looks like this:

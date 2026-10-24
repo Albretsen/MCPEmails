@@ -39,10 +39,10 @@ Du lager én i **Dashboard → API Keys**:
 2. Velg scopene: \`read:email\`, \`send:email\`, eller begge.
 3. Kopier den. Den vises **én gang** og aldri igjen. Mister du den, lager du en ny.
 
-Nøkkelen ser slik ut: \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, og du sender den med hver forespørsel:
+Nøkkelen ser slik ut: \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, og du sender den med hver forespørsel:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Et rått JSON-RPC-kall for å liste innboksene dine ser slik ut:

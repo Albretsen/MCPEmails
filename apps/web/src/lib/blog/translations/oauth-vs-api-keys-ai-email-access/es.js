@@ -39,10 +39,10 @@ Creas una en **Dashboard → API Keys**:
 2. Elige sus alcances: \`read:email\`, \`send:email\`, o ambos.
 3. Cópiala. Se muestra **una sola vez** y nunca más. Si la pierdes, creas una nueva.
 
-La clave tiene este aspecto, \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, y la pasas en cada petición:
+La clave tiene este aspecto, \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, y la pasas en cada petición:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Una llamada JSON-RPC en crudo para listar tus bandejas tiene este aspecto:

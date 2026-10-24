@@ -23,10 +23,10 @@ I dashbordet går du til **API Keys**, oppretter en nøkkel og gir den scopene d
 - \`read:email\` — for å polle, liste og lese meldinger med \`email_read\`.
 - \`send:email\` — for å kalle \`email_compose\` (action \`reply\`).
 
-Nøkkelen vises bare én gang. Kopier den. Den ser ut som \`mcpe_live_...\` og du sender den med på hver forespørsel:
+Nøkkelen vises bare én gang. Kopier den. Den ser ut som \`mcpe_9f86d081...\` og du sender den med på hver forespørsel:
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 MCP-endepunktet er én enkelt URL:

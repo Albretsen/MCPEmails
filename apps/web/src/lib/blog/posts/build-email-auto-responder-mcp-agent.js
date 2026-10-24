@@ -30,10 +30,10 @@ In the dashboard, go to **API Keys**, create a key, and grant it the scopes you 
 - \`read:email\` — to poll, list, and read messages with \`email_read\`.
 - \`send:email\` — to call \`email_compose\` (action \`reply\`).
 
-The key is shown once. Copy it. It looks like \`mcpe_live_...\` and you pass it on every request:
+The key is shown once. Copy it. It looks like \`mcpe_9f86d081...\` and you pass it on every request:
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 The MCP endpoint is a single URL:
