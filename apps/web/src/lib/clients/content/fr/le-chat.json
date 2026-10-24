@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors",
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors",
+    "https://mistral.ai/news/le-chat-mcp-connectors-memories/",
+    "https://mistral.ai/products/vibe/",
+    "https://docs.mistral.ai/vibe/work/connectors/mcp-connectors",
+    "https://docs.mistral.ai/vibe/work/safety-and-approvals",
+    "https://docs.mistral.ai/vibe/choose-chat-work-code",
+    "https://help.mistral.ai/en/articles/393572-configuring-a-custom-connector",
+    "https://developers.make.com/mcp-server/connect-using-oauth/usage-with-mistral-ai (third party: Authentication Method dropdown, OAuth2.1)",
+    "https://docs.bko.finologee.com/docs/mcp-mistral (third party: empty client secret makes Le Chat use dynamic client registration)",
+    "https://docs.qonto.com/mcp/install/mistral (third party: workspace Admin adds custom connectors)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail au Chat de Mistral : connecteur MCP",
+    "description": "Ajoutez une vraie boîte au Chat de Mistral avec un Custom MCP Connector. Collez une URL et connectez-vous. Sans clé API. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Le Chat + e-mail",
+    "titleLine1": "Connectez votre boîte au Chat",
+    "titleLine2": "avec un Custom MCP Connector",
+    "lead": "Interrogez l'assistant de Mistral sur votre courrier et laissez-le agir. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails dans toutes les boîtes que vous avez connectées.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Dans Le Chat, ouvrez Connectors, cliquez sur + Add Connector, choisissez l'onglet Custom MCP Connector, collez https://mcpemails.com/api/mcp comme Server URL, cliquez sur Connect et connectez-vous à MCPEmails."
+  },
+  "method": {
+    "title": "Comment Le Chat se connecte : OAuth, sans clé API",
+    "body": "Quand vous saisissez la Server URL, Le Chat détecte la façon dont le serveur s'authentifie. Mistral demande aux serveurs OAuth de répondre à une requête non authentifiée par un <b>401</b> et un en-tête <code>WWW-Authenticate</code>, et c'est ce que fait ce serveur, en pointant vers ses métadonnées OAuth : Le Chat exécute donc OAuth 2.1 au lieu de demander un jeton bearer. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et obtient son autorisation via le flux <b>code d'autorisation avec PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez Add Connector",
+      "p": "Sur chat.mistral.ai, ouvrez la page <b>Connectors</b> depuis la barre latérale, cliquez sur <b>+ Add Connector</b> et sélectionnez l'onglet <b>Custom MCP Connector</b>. L'ajout est réservé aux administrateurs ; sur un plan Free, Pro ou Student, le titulaire du compte est l'administrateur."
+    },
+    {
+      "h": "Saisissez le serveur",
+      "p": "Renseignez <b>Connector name</b> avec un nom unique sans espaces ni caractères spéciaux (par exemple MCPEmails), collez <code>https://mcpemails.com/api/mcp</code> dans <b>Server URL</b> et ajoutez si vous le souhaitez une <b>Description</b>."
+    },
+    {
+      "h": "Lancez la connexion et identifiez-vous",
+      "p": "Cliquez sur <b>Connect</b>. Le Chat détecte OAuth et ouvre la connexion MCPEmails ; approuvez les autorisations que vous lui accordez. Si un champ <b>Authentication Method</b> apparaît, choisissez OAuth 2.1 et laissez vides les champs client ID et secret."
+    },
+    {
+      "h": "Activez-le dans une conversation",
+      "p": "Dans une conversation, cliquez sur l'icône <b>+</b> ou tapez <code>/</code>, sélectionnez <b>Tools</b> et activez le connecteur MCPEmails. Demandez-lui ensuite de lister vos boîtes."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le Chat s'appelle désormais Vibe",
+      "p": "Mistral a renommé Le Chat en Vibe, et sa documentation range les connecteurs sous Work. L'adresse reste chat.mistral.ai, et la page Connectors comme ses libellés sont inchangés : les étapes ci-dessus s'appliquent quel que soit le nom affiché."
+    },
+    {
+      "h": "Sur un plan Team ou Enterprise, c'est un administrateur qui l'ajoute",
+      "p": "Les Custom MCP Connectors sont réservés aux administrateurs. Sur les plans Free, Pro et Student, le titulaire du compte est l'administrateur : vous pouvez donc l'ajouter vous-même. Dans un espace de travail Team ou Enterprise, demandez à un administrateur de l'ajouter ; il apparaît alors dans la liste de l'organisation, et chaque membre l'active dans ses propres conversations. Les administrateurs de l'organisation peuvent aussi désactiver les MCP Connectors pour un espace de travail."
+    },
+    {
+      "h": "Gardez l'envoi en validation manuelle",
+      "p": "Le Chat demande confirmation avant qu'un connecteur agisse, avec <b>Continue</b>, <b>Always allow</b> et <b>Decline</b>. Pour autoriser une fonction une bonne fois pour toutes, ouvrez Connectors, My Connectors, la fiche du connecteur, Functions, et activez son interrupteur <b>Always allow</b>. Autoriser les outils de lecture vous épargne des clics. Laissez les outils d'envoi, de réponse et de transfert en validation manuelle, ou n'accordez pas du tout <code>send:email</code> à cette connexion."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail au Chat ?",
+      "a": "Ouvrez Connectors dans Le Chat, cliquez sur + Add Connector, choisissez l'onglet Custom MCP Connector, collez https://mcpemails.com/api/mcp comme Server URL et cliquez sur Connect. Connectez-vous à MCPEmails, puis activez le connecteur dans une conversation depuis le menu +, sous Tools."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Le Chat ?",
+      "a": "Non. Le Chat exécute le flux OAuth avec enregistrement dynamique de client, donc rien de secret n'est saisi dans le formulaire du connecteur. Une clé bearer est disponible pour les autres clients qui ne prennent pas en charge ce flux."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec le plan gratuit du Chat ?",
+      "a": "Selon Mistral, les connecteurs sont disponibles pour tous les utilisateurs du Chat. Sur les plans Free, Pro et Student, le titulaire du compte est l'administrateur qui peut ajouter un Custom MCP Connector. Sur les plans Team et Enterprise, un administrateur de l'espace de travail l'ajoute pour l'organisation."
+    },
+    {
+      "q": "Quelles boîtes Le Chat peut-il atteindre ainsi ?",
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte compatible IMAP et SMTP sur les ports standard. Votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, vous n'avez donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Le Chat peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : un jeton sans cette autorisation ne peut rien envoyer du tout, et Le Chat demande une confirmation avant qu'un connecteur agisse, sauf si vous avez choisi Always allow pour cette fonction. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez votre boîte au Chat",
+    "sub": "Un connecteur, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

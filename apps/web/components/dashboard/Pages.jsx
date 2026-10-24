@@ -262,7 +262,7 @@ function ClientLogo({ color, logo, size = 34 }) {
     }}>
       {g ? (
         <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
-          <path d={g.d} />
+          <path d={g.d} fillRule={g.fillRule} />
         </svg>
       ) : null}
     </div>
