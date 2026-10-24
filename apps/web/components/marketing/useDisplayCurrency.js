@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { eurLaunchDatePassed } from '@/lib/stripe/eur-launch-date';
+
 /**
  * The currency a marketing page shows its prices in: 'usd' or 'eur'.
  *
@@ -11,10 +13,17 @@ import { useEffect, useState } from 'react';
  * server page serialises from STRIPE_EUR_PRICES, and the route's own answer,
  * which re-reads the switch per request and adds the visitor's country.
  *
- * With the switch off this hook never fetches anything and always returns
- * 'usd', so the page renders exactly as it did before EUR prices existed. A
- * failed or slow request also leaves USD in place: the fallback is the price
- * every visitor saw until now, never a blank.
+ * THE LAUNCH DATE. From 2026-12-07 (EUR_LAUNCH_AT) the hook also asks when
+ * the server rendered `eurEnabled` false, because the launch turns itself on
+ * that day (src/lib/stripe/eur-launch.ts) and a copy of the page built before
+ * it would otherwise show USD to everyone until the next deploy. The route
+ * answers from the real launch state, so until the launch has actually
+ * completed it says USD and nothing changes on screen.
+ *
+ * With the switch off and before the date this hook never fetches anything
+ * and always returns 'usd', so the page renders exactly as it did before EUR
+ * prices existed. A failed or slow request also leaves USD in place: the
+ * fallback is the price every visitor saw until now, never a blank.
  */
 let geoRequest = null;
 
@@ -30,7 +39,7 @@ function requestGeo() {
 export function useDisplayCurrency(eurEnabled) {
   const [currency, setCurrency] = useState('usd');
   useEffect(() => {
-    if (eurEnabled !== true) return undefined;
+    if (eurEnabled !== true && !eurLaunchDatePassed()) return undefined;
     let cancelled = false;
     requestGeo().then((geo) => {
       if (!cancelled && geo && geo.eur === true) setCurrency('eur');

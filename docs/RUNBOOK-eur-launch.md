@@ -12,6 +12,104 @@ This covers the Stripe configuration only. The code switches
 where they are read. Nothing here was run against live with `--apply` by the
 PR that added it.
 
+## Automatic launch (the default path)
+
+Nobody has to do anything on 2026-12-07. A dispatcher turns the launch on by
+itself once Stripe is ready, and stays off, with an email, while it is not.
+
+- **Who runs it.** pg_cron (migration `20261025120000_eur_launch_cron`) calls
+  `POST /api/internal/eur-launch/dispatch` every hour from 2026-12-07 00:00
+  Oslo for 14 days, so an OSS registration that only lands by its 2026-12-10
+  deadline still launches within the hour. A cleanup job removes the cron
+  jobs on 2026-12-21.
+- **Before the date** the route returns `outside_window` and reads nothing.
+- **Preflight, read-only, every run until it passes:**
+  1. `tax_registrations`: an active `oss_non_union` registration AND an
+     active Norway registration.
+  2. `webhook_events`: at least one enabled webhook endpoint receives
+     `checkout.session.async_payment_succeeded`,
+     `checkout.session.async_payment_failed` and `charge.dispute.created`
+     (or `*`). Every enabled endpoint counts, because the live one may be an
+     ingress proxy that forwards to us.
+  3. `payment_methods`: the payment method configuration Checkout uses
+     (`STRIPE_PMC_ID`, else the account default) offers `sepa_debit`.
+  4. `prices`: every sold price id is set in Vercel and is the USD price the
+     catalogue says, and either already has `currency_options.eur` inclusive
+     at the same digits or has no EUR option yet. This includes the Pro V2
+     prices (`STRIPE_PRICE_SOLO_MONTHLY_V2`, `STRIPE_PRICE_SOLO_YEARLY_V2`),
+     because Pro sells them from 2026-12-08: an unset V2 variable fails the
+     check. `STRIPE_PRICE_JAPAN_ROUTE_YEARLY` is checked and given EUR 108
+     only if it is set in Vercel.
+
+  Any failure: nothing is written anywhere, and the owner gets ONE email a
+  day (system-notify, event `billing.eur_launch`) listing each failed check
+  and what to do. Checkout keeps selling USD without Stripe Tax.
+- **Launch, when all four pass:** the same work as
+  `eur-currency-options.mjs --apply` (EUR options, missing USD
+  `tax_behavior=exclusive`, product tax codes), then the `eur_launch_live`
+  row in `public.pricing_switches` is set true, then the "EUR launch live"
+  email. Checkout, `/api/geo` and the pricing pages read that row (cached
+  60 s, `src/lib/stripe/eur-launch.ts`) and treat `STRIPE_EUR_PRICES` and
+  `STRIPE_AUTOMATIC_TAX` as on. No redeploy: a page built before the launch
+  re-reads the clock in the browser and asks `/api/geo`.
+- **Legacy EU swap,** in the same dispatcher, only once the flag is true:
+  EU subscribers move to a USD inclusive twin (created when missing, with
+  `metadata.twin_of`) with `automatic_tax` on, at most 25 per run, then the
+  next run continues. `plans.ts` resolves a twin from its own
+  `metadata.twin_of`, so `STRIPE_PRICE_TWINS` is no longer required; it still
+  works and still wins, and setting it later helps a cold process that sees a
+  bare price id. A failed swap emails once a day and never turns the launch
+  off. When a run finds nothing left, it sets `eur_launch_swap_done`.
+
+The same checks by hand, read-only, any day (no `--apply` exists for it):
+
+```bash
+cd apps/web
+node scripts/stripe-eur/eur-launch-preflight.mjs --prices ../../Documents/stripe-eur/prices.live.json --live
+```
+
+Result on 2026-10-24 (live): `payment_methods` passes; `tax_registrations`
+(no registration yet), `webhook_events` (the three SEPA events are not on the
+endpoint) and `prices` (Pro V2 ids not set yet) fail. All three are expected
+to be fixed before 2026-12-07; until they are, the launch stays off.
+
+**Force it on early (manual override).** Set `STRIPE_EUR_PRICES=true` and
+`STRIPE_AUTOMATIC_TAX=true` in Vercel (Production) and redeploy, AFTER the EUR
+options exist (step 2 of the manual order below). The env switches work on
+any date and do not need the flag. Never write `eur_launch_live` by hand: it
+means "the preflight passed", and before the date it is ignored anyway.
+
+**Roll back.** `STRIPE_FORCE_USD=true` in Vercel (Production) and redeploy.
+It beats the env switches and the flag: every session is USD with no Stripe
+Tax, and the pages show USD. Leave the flag as it is.
+
+**Re-run the dispatcher by hand** (for example right after fixing a failed
+check, instead of waiting for the next hour). Take the secret from the
+`DISPATCH_SECRET` variable in Vercel; never paste it into a file or a commit:
+
+```bash
+curl -s -X POST https://mcpemails.com/api/internal/eur-launch/dispatch \
+  -H "X-Dispatch-Secret: $DISPATCH_SECRET"
+# preflight only, any date, writes nothing:
+curl -s -X POST 'https://mcpemails.com/api/internal/eur-launch/dispatch?dry_run=1' \
+  -H "X-Dispatch-Secret: $DISPATCH_SECRET"
+```
+
+The answer's `mode` is one of `outside_window`, `preflight_failed` (with
+`failed` and `checks`), `launch_failed`, `launched`, `already_live` (with the
+swap counts) or `dry_run`.
+
+**Follow-ups the dispatcher cannot do.** The Free-cap upgrade line in the MCP
+server (`FREE_CAP_UPGRADE_PRICE` in
+`supabase/functions/mcp-server/usage-limit-message.ts`) still says "$9 per
+month". It cannot follow a database flag cheaply and stays correct for USD
+buyers; reword it in a later edge-function deploy. The changelog has no
+future-dated entries, so the "pay by SEPA Direct Debit or iDEAL" entry is
+added on or after the launch day by whoever sweeps the changelog.
+
+The manual order below still works and is the fallback if the dispatcher is
+ever unavailable.
+
 ## Scripts
 
 All in `apps/web/scripts/stripe-eur/`, run from `apps/web`. Each one is a
@@ -84,7 +182,7 @@ price itself. A currency option cannot be removed or changed later, so a
 wrong EUR amount means a new price, not an edit. If one slips through, the
 rollback is the same as above: `STRIPE_FORCE_USD=true`.
 
-## Order on launch day
+## Order on launch day (manual fallback)
 
 1. **Before:** Stripe Tax registrations exist (`oss_non_union` at least; plan
    section 4.6 steps 1 to 3). Check:

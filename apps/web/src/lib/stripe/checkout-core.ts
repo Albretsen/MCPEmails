@@ -18,6 +18,7 @@ import {
   checkoutTaxParams,
   paymentMethodConfigurationId,
 } from '@/lib/stripe/tax-switch';
+import { effectiveStripeEnv } from '@/lib/stripe/eur-launch';
 import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
 import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
 import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
@@ -1499,15 +1500,22 @@ async function checkoutFor(
   // to USD and drops Stripe Tax with it, because the tax setup assumes the
   // VAT-inclusive EUR amounts. The payment method configuration stays, since
   // it is about how a buyer pays, not in what currency.
+  //
+  // `switchEnv` is the environment with the EUR launch applied: from
+  // 2026-12-07, once the launch dispatcher has passed its preflight and set
+  // the `eur_launch_live` flag, STRIPE_EUR_PRICES and STRIPE_AUTOMATIC_TAX
+  // read as on here without anyone touching Vercel (eur-launch.ts). Before
+  // the date it is process.env itself and costs no read.
   const country = sanitizedCountry(input.country);
-  const forceUsd = forceUsdEnabled();
-  const taxOn = !forceUsd && automaticTaxEnabled();
-  const currency = checkoutCurrencyFor(country);
-  const paymentMethodConfiguration = paymentMethodConfigurationId();
+  const switchEnv = await effectiveStripeEnv();
+  const forceUsd = forceUsdEnabled(switchEnv);
+  const taxOn = !forceUsd && automaticTaxEnabled(switchEnv);
+  const currency = checkoutCurrencyFor(country, switchEnv);
+  const paymentMethodConfiguration = paymentMethodConfigurationId(switchEnv);
   // The confirmation panel (components/dashboard/App.jsx) reads
   // `currency=eur` to word the amount in EUR. Only added when the page will
   // really be in EUR, so with every switch off the URL is unchanged.
-  const checkoutSuccessUrl = checkoutPresentsEur(country)
+  const checkoutSuccessUrl = checkoutPresentsEur(country, switchEnv)
     ? `${successUrl}&currency=eur`
     : successUrl;
   try {
@@ -1625,7 +1633,7 @@ async function checkoutFor(
       // added on top of a USD amount where a registration applies.
       //
       // Switch off, this spreads nothing and the session is unchanged.
-      ...(taxOn ? checkoutTaxParams() : {}),
+      ...(taxOn ? checkoutTaxParams(switchEnv) : {}),
     });
 
     if (!session.url) {

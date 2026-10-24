@@ -113,6 +113,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/internal/activation-help/dispatch/route.ts': 60,
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/black-week-email/dispatch/route.ts': 60,
+  'app/api/internal/eur-launch/dispatch/route.ts': 60,
   'app/api/internal/first-30-days/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/internal/pro-price-notice/dispatch/route.ts': 60,
@@ -207,9 +208,10 @@ export const ROUTES = [
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
   ['app/api/billing/pass-offer/route.ts', 'arn1', '~8', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
-  // Reads one request header and the STRIPE_EUR_PRICES switch; no database,
-  // no third party. The app/api/** default is as good as any.
-  ['app/api/geo/route.ts', 'arn1', '0', '-'],
+  // Reads one request header and the EUR switch. From the launch date that
+  // switch includes the launch flag, one pricing_switches read cached 60 s
+  // (src/lib/stripe/eur-launch.ts); before it, no database at all.
+  ['app/api/geo/route.ts', 'arn1', '0-1', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
   ['app/api/inboxes/[id]/connection/route.ts', 'iad1', '4', 'IMAP or SMTP login probe to the mail host when a half is added'],
   ['app/api/inboxes/[id]/folders/route.ts', 'iad1', '5', 'IMAP login + LIST to the mail host'],
@@ -225,6 +227,7 @@ export const ROUTES = [
   ['app/api/internal/activation-help/dispatch/route.ts', 'arn1', '~8', 'Resend per email; auth admin read per send; caller is the scheduler'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/black-week-email/dispatch/route.ts', 'arn1', '5+', 'paged user reads, Stripe API + Resend batches; caller is the scheduler'],
+  ['app/api/internal/eur-launch/dispatch/route.ts', 'arn1', '2-4', 'Stripe API (preflight reads; on launch day the catalogue writes and the capped legacy swap); caller is the scheduler'],
   ['app/api/internal/first-30-days/dispatch/route.ts', 'arn1', '2+', 'Resend per email; one IMAP APPEND per stuck-note draft; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/webhook-disabled/route.ts', 'arn1', '3', 'Resend (one email to the owner); caller is the client-api edge function'],
