@@ -57,7 +57,8 @@
         "Alles aus Personal",
         "10 verbundene Postfächer",
         "5x höheres Burst-Ratenlimit",
-        "Längerer Analyseverlauf"
+        "Längerer Analyseverlauf",
+        "Webhooks für neue E-Mails und eingeschränkte API-Schlüssel für Ihre eigenen Agenten"
       ]
     },
     "pro": {
@@ -69,7 +70,8 @@
         "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
         "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
         "Admins geben zurückgehaltene Sendungen frei",
-        "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde"
+        "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde",
+        "Webhooks für neue E-Mails und eingeschränkte API-Schlüssel für Ihre eigenen Agenten"
       ]
     }
   },
@@ -96,6 +98,7 @@
           "inboxes": "Verbundene Postfächer",
           "actions": "E-Mail-Aktionen pro Monat",
           "keys": "API-Schlüssel",
+          "webhooks": "Webhooks für neue E-Mails",
           "members": "Personen mit eigenem Login",
           "burst": "Burst-Ratenlimit",
           "approvals": "Versandprüfung und Freigabe"

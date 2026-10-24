@@ -86,6 +86,9 @@ const TABLE_SECTIONS = [
       // print a number: they have no monthly cap, subject to fair use.
       { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
+      // `webhooksEnabled` in src/lib/stripe/plans.ts, enforced by the
+      // /api/webhook-endpoints routes and by webhooks_plan_allowed() in SQL.
+      { key: 'webhooks', free: false, personal: false, solo: true, pro: true },
       // Personal and Pro are deliberately single-seat: other people signing in
       // is what Business is for, at no per-person price. The value is a count,
       // not "Just you": the old wording was true about logins and read as "not

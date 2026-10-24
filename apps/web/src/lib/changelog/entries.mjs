@@ -44,6 +44,14 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    // Date must be the day this lands on main.
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'Webhooks for new mail',
+    body:
+      'Add a webhook under API keys in the dashboard and MCPEmails sends a signed POST to your URL when new mail arrives in an inbox, with message IDs your agent can open with email_read. Each webhook has a test button and a delivery log.',
+  },
+  {
     date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',
