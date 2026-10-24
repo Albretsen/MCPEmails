@@ -1426,6 +1426,7 @@ export type Database = {
           payload: Json
           period_start: string | null
           recipient: string
+          recovered_by: string | null
           resend_id: string | null
           scope_key: string
           send_after: string
@@ -1448,6 +1449,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key: string
           send_after: string
@@ -1470,6 +1472,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient?: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key?: string
           send_after?: string
@@ -1744,6 +1747,78 @@ export type Database = {
           },
           {
             foreignKeyName: "checkout_cancel_feedback_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_links: {
+        Row: {
+          billing_interval: string
+          blocked_tool: string | null
+          client_label: string
+          completed_at: string | null
+          created_at: string
+          expires_at: string
+          first_opened_at: string | null
+          id: string
+          open_count: number
+          owner_user_id: string
+          plan_id: string
+          stripe_session_expires_at: string | null
+          stripe_session_id: string | null
+          token_hash: string
+          variant: string
+          workspace_id: string
+        }
+        Insert: {
+          billing_interval?: string
+          blocked_tool?: string | null
+          client_label?: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at: string
+          first_opened_at?: string | null
+          id: string
+          open_count?: number
+          owner_user_id: string
+          plan_id?: string
+          stripe_session_expires_at?: string | null
+          stripe_session_id?: string | null
+          token_hash: string
+          variant?: string
+          workspace_id: string
+        }
+        Update: {
+          billing_interval?: string
+          blocked_tool?: string | null
+          client_label?: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          first_opened_at?: string | null
+          id?: string
+          open_count?: number
+          owner_user_id?: string
+          plan_id?: string
+          stripe_session_expires_at?: string | null
+          stripe_session_id?: string | null
+          token_hash?: string
+          variant?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_links_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "checkout_links_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -3496,6 +3571,7 @@ export type Database = {
       }
       stripe_webhook_events: {
         Row: {
+          cancellation_reason: string | null
           event_created: string | null
           event_id: string
           event_type: string | null
@@ -3503,6 +3579,7 @@ export type Database = {
           stripe_customer_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id: string
           event_type?: string | null
@@ -3510,6 +3587,7 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id?: string
           event_type?: string | null
@@ -4055,6 +4133,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          last_decline_code: string | null
           plan: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -4066,6 +4145,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          last_decline_code?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -4077,6 +4157,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          last_decline_code?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -4413,6 +4494,7 @@ export type Database = {
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
           card_diagnostics: boolean
+          chat_checkout_link_enabled: boolean
           chat_send_confirm_enabled: boolean
           created_at: string
           deleted_at: string | null
@@ -4433,6 +4515,9 @@ export type Database = {
           onboarding_technical_activated_at: string | null
           onboarding_value_activated_at: string | null
           owner_id: string
+          payment_issue_kind: string | null
+          payment_issue_since: string | null
+          payment_notice_shown_on: string | null
           plan: string
           pro_unlimited_inboxes_exempt: boolean
           slug: string
@@ -4463,6 +4548,7 @@ export type Database = {
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
           card_diagnostics?: boolean
+          chat_checkout_link_enabled?: boolean
           chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
@@ -4483,6 +4569,9 @@ export type Database = {
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
           owner_id: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           slug: string
@@ -4513,6 +4602,7 @@ export type Database = {
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
           card_diagnostics?: boolean
+          chat_checkout_link_enabled?: boolean
           chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
@@ -4533,6 +4623,9 @@ export type Database = {
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
           owner_id?: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           slug?: string
@@ -4617,6 +4710,60 @@ export type Database = {
       auth_token_refusal: {
         Args: { p_authentication_method: string; p_user_id: string }
         Returns: string
+      }
+      checkout_link_attach_session: {
+        Args: {
+          p_id: string
+          p_session_expires_at: string
+          p_session_id: string
+        }
+        Returns: string
+      }
+      checkout_link_complete: { Args: { p_id: string }; Returns: undefined }
+      checkout_link_issue: {
+        Args: {
+          p_blocked_tool: string
+          p_client_label: string
+          p_id: string
+          p_owner_user_id: string
+          p_token_hash: string
+          p_ttl_minutes?: number
+          p_variant: string
+          p_workspace_id: string
+        }
+        Returns: {
+          expires_at: string
+          id: string
+          reused: boolean
+        }[]
+      }
+      checkout_link_open: {
+        Args: { p_token_hash: string }
+        Returns: {
+          billing_interval: string
+          client_label: string
+          completed_at: string
+          expires_at: string
+          first_open: boolean
+          id: string
+          owner_user_id: string
+          plan_id: string
+          stripe_session_expires_at: string
+          stripe_session_id: string
+          workspace_id: string
+        }[]
+      }
+      checkout_link_readout: {
+        Args: { p_since?: string }
+        Returns: {
+          checkout_sessions: number
+          client_label: string
+          completed: number
+          links: number
+          opened: number
+          resumed: number
+          variant: string
+        }[]
       }
       claim_billing_emails: {
         Args: { p_limit?: number }

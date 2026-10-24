@@ -11,8 +11,12 @@
 //
 // So this does not test a list of known sentences. It extracts EVERY currency
 // amount from those surfaces, in every locale's format ($9, 9 $, 86,40 $,
-// 9 美元, 9 dollar, 9 USD), and requires each one to be a price the catalogue
-// currently sells: some tier's monthly, yearly, or yearly-per-month amount.
+// 9 美元, 9 dollar, 9 USD, and the euro forms €9, 9 €, 86,40 €, EUR 9, 9 euro),
+// and requires each one to be a price the catalogue currently sells: some
+// tier's monthly, yearly, or yearly-per-month amount. EUR prices carry the
+// SAME digits as USD by decision (src/lib/stripe/eur-prices.ts), so one sold
+// set covers both currencies, and a euro amount the catalogue does not sell
+// fails exactly like a stale dollar amount.
 // Reprice a plan in plans.ts and every stale mention of the old number fails
 // here, by file and line, until the copy follows.
 //
@@ -29,6 +33,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { annualOffer } from './annual-offer.ts';
+import { euroizeAmounts } from './eur-prices.ts';
 import {
   BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
   BUSINESS_EXTRA_INBOX_YEARLY_CENTS,
@@ -64,9 +69,10 @@ const NOT_A_PRICE: Record<string, number[]> = {
   'terms.json': [10000],
 };
 
-// $9  $ 9  $86.40  |  9 $  86,40 $  9 美元  9 dollar  9 USD
+// $9  $ 9  $86.40  €9  EUR 9  |  9 $  86,40 $  9 美元  9 dollar  9 USD  9 €  9 EUR  9 euros
+// Intl writes "9 €" with a no-break space (U+00A0 or U+202F), hence [\s\u202f].
 const AMOUNT =
-  /\$\s?(\d+(?:[.,]\d{1,2})?)(?!\d)|(?<![\w.,])(\d+(?:[.,]\d{1,2})?)\s?(?:\$|美元|dollars?\b|USD\b)/g;
+  /(?:\$|€|\bEUR)[\s\u202f]?(\d+(?:[.,]\d{1,2})?)(?!\d)|(?<![\w.,])(\d+(?:[.,]\d{1,2})?)[\s\u202f]?(?:\$|€|美元|欧元|dollars?\b|USD\b|EUR\b|euros?\b)/g;
 
 function toCents(raw: string): number {
   return Math.round(Number(raw.replace(',', '.')) * 100);
@@ -81,6 +87,17 @@ function amountsIn(text: string, where: string): Hit[] {
   }
   return hits;
 }
+
+test('the extractor reads euro amounts as well as dollar ones', () => {
+  const read = (text: string) => amountsIn(text, '').map((hit) => hit.cents);
+  assert.deepEqual(read('€9 a month, €86.40 a year'), [900, 8640]);
+  assert.deepEqual(read('9\u00a0€ pro Monat, 86,40\u202f€ im Jahr'), [900, 8640]);
+  assert.deepEqual(read('EUR 39, 374.40 EUR, 3 euros'), [3900, 37440, 300]);
+  assert.deepEqual(read('$9, 9 $, 9 USD'), [900, 900, 900]);
+  // A euro amount nobody sells is caught like a dollar one.
+  assert.deepEqual(read('€11 a month'), [1100]);
+  assert.equal(SOLD_CENTS.has(1100), false, 'the probe amount must be one nobody sells');
+});
 
 function exempt(fileKey: string, cents: number): boolean {
   const fileName = path.basename(fileKey);
@@ -149,6 +166,30 @@ test('every amount in every message bundle is a price the catalogue sells', () =
   }
   assert.ok(hits.length > 100, 'the extractor found the prices at all');
   assertAllSold(hits, (where) => where.split(':')[0]);
+});
+
+test('an EU visitor reads the same sold amounts in EUR, in every locale', () => {
+  // The pricing surfaces rewrite their USD amounts as EUR for an EU visitor
+  // (euroizeAmounts). Every rewritten amount must still be a sold one, and the
+  // rewrite must find as many amounts as the dollar sweep did: a sentence that
+  // loses a price on the way to EUR would otherwise pass unnoticed.
+  for (const locale of LOCALES) {
+    for (const file of ['pricing.json', 'home.json']) {
+      walkStrings(messages(locale, file), '', (text, keyPath) => {
+        const usd = amountsIn(text, '');
+        if (usd.length === 0) return;
+        const euro = euroizeAmounts(text, locale);
+        assert.ok(!/\$/.test(euro), `messages/${locale}/${file}:${keyPath} keeps a dollar sign in EUR: "${euro}"`);
+        const eur = amountsIn(euro, `messages/${locale}/${file}:${keyPath} (EUR)`);
+        assert.deepEqual(
+          eur.map((hit) => hit.cents),
+          usd.map((hit) => hit.cents),
+          `messages/${locale}/${file}:${keyPath}: "${euro}"`,
+        );
+        assertAllSold(eur, (where) => where.split(':')[0]);
+      });
+    }
+  }
 });
 
 test('every amount in the blog, llms.txt and the README is a price the catalogue sells', () => {
