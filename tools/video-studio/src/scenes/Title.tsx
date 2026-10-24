@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { easings } from '../components/snap-cn';
 import { getTheme, type ThemeName } from '../theme';
+import { useLayout } from '../layout';
 import type { TitleScene } from '../storyboard-types';
 
 /**
@@ -16,6 +17,8 @@ export const Title: React.FC<{ scene: TitleScene; themeName: ThemeName }> = ({
   const theme = getTheme(themeName);
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  const layout = useLayout();
+  const { content } = layout;
 
   const words = scene.headline.split(' ');
   const outStart = durationInFrames - Math.round(fps * 0.5);
@@ -46,7 +49,9 @@ export const Title: React.FC<{ scene: TitleScene; themeName: ThemeName }> = ({
         background: theme.bgPage,
         alignItems: scene.align === 'left' ? 'flex-start' : 'center',
         justifyContent: 'center',
-        padding: '0 160px',
+        padding: layout.vertical
+          ? `${content.top}px ${content.right}px ${content.bottom}px ${content.left}px`
+          : '0 160px',
         textAlign: scene.align === 'left' ? 'left' : 'center',
       }}
     >
@@ -66,7 +71,7 @@ export const Title: React.FC<{ scene: TitleScene; themeName: ThemeName }> = ({
             margin: 0,
             fontFamily: theme.fontSans,
             fontWeight: 600,
-            fontSize: 96,
+            fontSize: layout.type.headline,
             lineHeight: 1.06,
             letterSpacing: '-0.03em',
             color: theme.fg1,
@@ -120,8 +125,8 @@ export const Title: React.FC<{ scene: TitleScene; themeName: ThemeName }> = ({
               margin: '34px 0 0',
               fontFamily: theme.fontSans,
               fontWeight: 400,
-              fontSize: 34,
-              lineHeight: 1.45,
+              fontSize: layout.type.sub,
+              lineHeight: 1.4,
               color: theme.fg3,
               opacity: subOpacity,
               maxWidth: 1100,
