@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared limits and FAQ copy)",
+    "https://docs.openclaw.ai/tools/mcp",
+    "https://docs.openclaw.ai/cli/mcp",
+    "https://docs.openclaw.ai/cli/mcp/registry",
+    "https://docs.openclaw.ai/cli/mcp/transports",
+    "https://docs.openclaw.ai/cli/mcp/control-ui",
+    "https://docs.openclaw.ai/cli/gateway/service",
+    "https://docs.openclaw.ai/gateway/configuration",
+    "https://github.com/openclaw/openclaw",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-provider.ts",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-store.mutations.ts",
+    "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
+  ],
+  "meta": {
+    "title": "Conecta el correo a OpenClaw: servidor MCP remoto",
+    "description": "Dale a tu agente de OpenClaw una bandeja real. Añade un servidor MCP Streamable HTTP con OAuth, inicia sesión una vez y lee, busca, redacta y envía correo."
+  },
+  "hero": {
+    "eyebrow": "OpenClaw + correo",
+    "titleLine1": "Conecta tu bandeja a OpenClaw",
+    "titleLine2": "como servidor MCP remoto",
+    "lead": "Deja que el agente personal al que ya escribes lea, busque, redacte, envíe, responda, reenvíe y archive correo en todas las bandejas que tengas conectadas, a través de un único endpoint MCP y un solo inicio de sesión.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Detén el Gateway con openclaw gateway stop, ejecuta openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth luego openclaw mcp login mcpemails y aprueba el acceso en el navegador. Vuelve a iniciar el Gateway con openclaw gateway start."
+  },
+  "method": {
+    "title": "Cómo se conecta OpenClaw: OAuth, sin clave de API",
+    "body": "El cliente MCP integrado de OpenClaw ejecuta el flujo OAuth estándar de MCP para un servidor HTTP guardado con <code>auth: \"oauth\"</code>. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. El token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento, dura una hora y se renueva solo. OpenClaw lo guarda en el Gateway, y aparece en Dashboard, API Keys como <code>OAuth: OpenClaw MCP</code>, que es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Guarda el servidor con OAuth",
+      "p": "En la máquina donde se ejecuta tu Gateway, ejecuta <code>openclaw gateway stop</code> y luego <code>openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth</code>. Eso escribe la entrada en <code>mcp.servers</code> dentro de <code>~/.openclaw/openclaw.json</code>. OpenClaw se niega a modificar los servidores guardados mientras el Gateway está en marcha."
+    },
+    {
+      "h": "Inicia sesión desde la terminal",
+      "p": "Con el Gateway todavía detenido, ejecuta <code>openclaw mcp login mcpemails</code>. Abre la URL de autorización que aparece y aprueba los permisos que quieres que tenga OpenClaw. OpenClaw captura la redirección del navegador y guarda las credenciales; después ejecuta <code>openclaw gateway start</code>."
+    },
+    {
+      "h": "O inicia sesión desde la Control UI",
+      "p": "En lugar del inicio de sesión por terminal, inicia el Gateway y abre la Control UI en su propia dirección de loopback o en una dirección HTTPS pública, y ve a <b>Settings → MCP</b>. Como administrador, elige <b>Sign in</b> para el servidor <code>mcpemails</code>, aprueba el acceso en el navegador y vuelve a Settings. En una dirección privada o solo de Tailscale, usa el inicio de sesión por terminal."
+    },
+    {
+      "h": "Comprueba la conexión",
+      "p": "Ejecuta <code>openclaw mcp status --verbose</code>, que funciona con el Gateway en marcha. Si indica <code>authorization-required</code>, vuelve a iniciar sesión. Después pídele a tu agente, en cualquier canal, que liste tus bandejas."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Indica el transporte, o se usará SSE",
+      "p": "Si una entrada HTTP no incluye <code>transport</code>, OpenClaw usa <code>sse</code>. Este servidor habla Streamable HTTP, así que pasa siempre <code>--transport streamable-http</code>, o elige <b>Streamable HTTP</b> en Settings. En una configuración escrita a mano, <code>transport: \"streamable-http\"</code> es la forma que lee OpenClaw; un <code>type: \"http\"</code> al estilo de la CLI solo se acepta a través de <code>openclaw mcp set</code> o se corrige con <code>openclaw doctor --fix</code>."
+    },
+    {
+      "h": "Los cambios por CLI requieren el Gateway detenido",
+      "p": "<code>openclaw mcp add</code>, <code>login</code>, <code>probe</code> y <code>doctor --probe</code> se niegan a ejecutarse mientras un Gateway local controla el estado de OpenClaw, así que detenlo primero y vuelve a iniciarlo después. Si el Gateway se ejecuta en un servidor y tu navegador está en otra máquina, la redirección a la dirección de loopback no puede llegar a él: copia el código desde el navegador y termina con el comando <code>openclaw mcp login mcpemails --code</code> que aparece en pantalla."
+    },
+    {
+      "h": "Inicio de sesión compartido, buzón compartido",
+      "p": "Por defecto, la credencial OAuth es compartida y la gestiona el operador: todos los agentes de ese Gateway usan el mismo inicio de sesión, así que cualquiera que pueda escribir a tu agente puede pedirle que lea tu correo. Limítalo a canales que solo uses tú, deja <code>send:email</code> sin marcar en la pantalla de consentimiento si el agente solo debe leer, o activa la aprobación humana para la bandeja para que cada envío espere a una persona. OpenClaw también ofrece inicio de sesión por solicitante, en el que cada remitente conecta su propia cuenta; requiere configurar <code>gateway.publicOrigin</code> con la dirección HTTPS pública del Gateway."
+    },
+    {
+      "h": "Guardar un servidor no garantiza que funcione",
+      "p": "OpenClaw guarda una definición sin comprobar que funcione, y un servidor que aún necesita inicio de sesión simplemente se queda fuera de las herramientas del agente, sin que falle el turno. Si el agente dice que no tiene herramientas de correo, ejecuta <code>openclaw mcp status --verbose</code>: <code>authorization-required</code> significa que debes repetir el paso de inicio de sesión."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a OpenClaw?",
+      "a": "En la máquina del Gateway, detén el Gateway, ejecuta openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth, inicia sesión con openclaw mcp login mcpemails y vuelve a iniciar el Gateway. También puedes iniciar sesión desde Settings, MCP en la Control UI. A partir de ahí tu agente tiene herramientas para leer, buscar, redactar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Necesito una clave de API para OpenClaw?",
+      "a": "No. OpenClaw ejecuta el flujo OAuth de MCP por sí mismo y guarda el token en el Gateway. Sus entradas HTTP también aceptan un mapa estático de cabeceras, así que una clave con permisos enviada como cabecera Authorization Bearer también funciona, pero OpenClaw ignora las cabeceras Authorization estáticas en una entrada configurada con auth oauth, así que usa una cosa o la otra."
+    },
+    {
+      "q": "¿Puedo mostrarle a mi agente solo algunas de las herramientas de correo?",
+      "a": "Sí. Añade --include con una lista de nombres de herramientas separados por comas, o un patrón como 'email_*', al ejecutar openclaw mcp add, o configura toolFilter bajo el servidor en la configuración. Eso reduce lo que ve el agente. Lo que realmente puede hacer sigue dependiendo de los permisos que aprobaste en la pantalla de consentimiento."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar OpenClaw de esta forma?",
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. Tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede OpenClaw enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera. Para un agente que funciona sin supervisión en varios canales de chat, conviene usar las dos cosas."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu agente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu agente de OpenClaw una bandeja real",
+    "sub": "Un servidor, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}
