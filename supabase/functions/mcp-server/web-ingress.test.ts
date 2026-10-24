@@ -30,7 +30,10 @@ const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, OPTIONS",
   "access-control-allow-headers": "Authorization, Content-Type, MCP-Protocol-Version, Accept",
-  "access-control-expose-headers": "WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id",
+  // The old route's three, plus the rate-limit headers (2026-10-24).
+  "access-control-expose-headers":
+    "WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id, " +
+    "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Retry-After",
 };
 
 function headersOf(res: Response): Record<string, string> {
@@ -385,15 +388,18 @@ Deno.test({
   assertEquals(get.status, 405);
   assertEquals(get.headers.get("allow"), "POST, OPTIONS");
   // The bare URL keeps the server's own preflight (its wider header list and
-  // Max-Age, no Expose-Headers).
+  // Max-Age, and its own Expose-Headers: the rate-limit set).
   const barePre = await handleRequest(
     new Request("https://x.supabase.co/functions/v1/mcp-server", { method: "OPTIONS" }),
   );
   assertEquals(barePre.headers.get("access-control-max-age"), "86400");
-  assertEquals(barePre.headers.get("access-control-expose-headers"), null);
+  assert(
+    (barePre.headers.get("access-control-expose-headers") ?? "").includes("RateLimit-Remaining"),
+    "the bare URL exposes the RateLimit-* headers",
+  );
 });
 
-Deno.test("WEB_CORS_HEADERS is exactly the old route's set", () => {
+Deno.test("WEB_CORS_HEADERS is the old route's set plus the rate-limit headers", () => {
   assertEquals(
     Object.fromEntries(Object.entries(WEB_CORS_HEADERS).map(([k, v]) => [k.toLowerCase(), v])),
     CORS,
