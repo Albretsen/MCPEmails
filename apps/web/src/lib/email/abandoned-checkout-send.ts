@@ -71,9 +71,9 @@ export async function remindAbandonedCheckout(session: Stripe.Checkout.Session):
       store: new SupabaseReminderStore(createServiceRoleClient()),
       send: resendSender,
     });
-    console.log(`[abandoned-checkout] ${session.id}: ${outcome}`);
+    console.log('[abandoned-checkout] %s: %s', session.id, outcome);
   } catch (err) {
-    console.error(`[abandoned-checkout] ${session.id}: failed, swallowed:`, err instanceof Error ? err.message : String(err));
+    console.error('[abandoned-checkout] %s: failed, swallowed: %s', session.id, err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -88,8 +88,8 @@ export async function creditAbandonedCheckout(session: Stripe.Checkout.Session):
       recoveredFrom: checkoutSessionIdOrNull(session.metadata?.recovered_from),
       store: new SupabaseReminderStore(createServiceRoleClient()),
     });
-    if (result === 'recovered') console.log(`[abandoned-checkout] ${session.id}: recovery recorded`);
+    if (result === 'recovered') console.log('[abandoned-checkout] %s: recovery recorded', session.id);
   } catch (err) {
-    console.error(`[abandoned-checkout] ${session.id}: recovery write failed, swallowed:`, err instanceof Error ? err.message : String(err));
+    console.error('[abandoned-checkout] %s: recovery write failed, swallowed: %s', session.id, err instanceof Error ? err.message : String(err));
   }
 }
