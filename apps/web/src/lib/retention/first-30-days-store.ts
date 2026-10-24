@@ -305,7 +305,8 @@ export class SupabaseFirst30Store implements First30Store {
       .eq('status', 'success')
       .gte('created_at', ctx.firstPaidAt)
       .lt('created_at', endIso);
-    if (tools) query = query.in('tool_name', [...tools]);
+    // Automation runs log triage_* rows; week-1 use means the assistant, not the runner.
+    query = tools ? query.in('tool_name', [...tools]) : query.not('tool_name', 'like', 'triage_%');
     const { count, error } = await query;
     if (error) throw new Error(`activity count failed: ${error.message}`);
     return count ?? 0;
@@ -329,6 +330,7 @@ export class SupabaseFirst30Store implements First30Store {
       .select('created_at')
       .eq('workspace_id', ctx.workspaceId)
       .eq('status', 'success')
+      .not('tool_name', 'like', 'triage_%')
       .gte('created_at', ctx.firstPaidAt)
       .lt('created_at', endIso)
       .order('created_at', { ascending: true })
