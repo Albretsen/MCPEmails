@@ -543,6 +543,55 @@ export function pauseScopeKey(subscriptionId: string, seconds: number): string {
 }
 
 /**
+ * Insert one row, or revive the unsent row a change cancelled earlier.
+ *
+ * The identity index (customer, template, scope_key) also covers cancelled
+ * rows, so a customer who pauses, resumes early and pauses again with the same
+ * dates would get no receipt and, worse, no reminder before billing restarts
+ * (found in the 2026-10-24 production test). A row that was SENT is never
+ * revived: a replay still sends nothing twice. Never throws.
+ */
+async function insertOrRevive(db: SupabaseClient<Database>, row: QueueRow, label: string): Promise<number> {
+  const inserted = await insertRows(db, [row], label);
+  if (inserted > 0) return inserted;
+  try {
+    const { data, error } = await db
+      .from('billing_email_sends')
+      .update({
+        cancelled_at: null,
+        cancel_reason: null,
+        send_after: row.send_after,
+        payload: row.payload,
+        recipient: row.recipient,
+        attempts: 0,
+        claimed_at: null,
+        last_error: null,
+      })
+      .eq('stripe_customer_id', row.stripe_customer_id)
+      .eq('template', row.template)
+      .eq('scope_key', row.scope_key)
+      .is('sent_at', null)
+      .not('cancelled_at', 'is', null)
+      .select('id, send_after');
+    if (error) {
+      console.error(`[lifecycle-queue] ${label}: revive failed: ${error.message}`);
+      return 0;
+    }
+    const revived = data?.length ?? 0;
+    if (revived > 0) {
+      console.log(`[lifecycle-queue] ${label}: revived ${revived} cancelled row(s)`);
+      await kickDueRows(dueIds(data), label);
+    }
+    return revived;
+  } catch (err) {
+    console.error(`[lifecycle-queue] ${label}: revive threw, swallowed:`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
+}
+
+/**
  * Queue `pause_ending_3` for the renewal at `billsAtSeconds`, after cancelling
  * any reminder still open for this customer (an extension or an early resume
  * moves the date, and the old one must never go out). Skipped when the
@@ -561,19 +610,17 @@ export async function queuePauseReminder(options: {
   await cancelPauseReminders(db, target.stripeCustomerId, 'pause_changed');
   const sendAfter = billsAtSeconds * 1000 - PAUSE_REMINDER_DAYS * DAY_MS;
   if (sendAfter <= now.getTime()) return 0;
-  return insertRows(
+  return insertOrRevive(
     db,
-    [
-      {
-        stripe_customer_id: target.stripeCustomerId,
-        user_id: target.userId,
-        recipient: target.recipient,
-        template: 'pause_ending_3',
-        scope_key: pauseScopeKey(subscriptionId, billsAtSeconds),
-        send_after: new Date(sendAfter).toISOString(),
-        payload,
-      },
-    ],
+    {
+      stripe_customer_id: target.stripeCustomerId,
+      user_id: target.userId,
+      recipient: target.recipient,
+      template: 'pause_ending_3',
+      scope_key: pauseScopeKey(subscriptionId, billsAtSeconds),
+      send_after: new Date(sendAfter).toISOString(),
+      payload,
+    },
     `pause reminder ${subscriptionId}`,
   );
 }
@@ -603,19 +650,17 @@ export async function queuePauseEmails(options: {
 }): Promise<number> {
   const { db, target, subscriptionId, pausedFromSeconds, payload } = options;
   const now = options.now ?? new Date();
-  const receipt = await insertRows(
+  const receipt = await insertOrRevive(
     db,
-    [
-      {
-        stripe_customer_id: target.stripeCustomerId,
-        user_id: target.userId,
-        recipient: target.recipient,
-        template: 'pause_started',
-        scope_key: pauseReceiptScopeKey(subscriptionId, pausedFromSeconds, options.billsAtSeconds),
-        send_after: now.toISOString(),
-        payload,
-      },
-    ],
+    {
+      stripe_customer_id: target.stripeCustomerId,
+      user_id: target.userId,
+      recipient: target.recipient,
+      template: 'pause_started',
+      scope_key: pauseReceiptScopeKey(subscriptionId, pausedFromSeconds, options.billsAtSeconds),
+      send_after: now.toISOString(),
+      payload,
+    },
     `pause receipt ${subscriptionId}`,
   );
   const reminder = await queuePauseReminder({ ...options, now });

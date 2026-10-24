@@ -117,6 +117,29 @@ test('an unsent receipt is cancelled on a change, and an extension can queue a f
   assert.equal(await queue.cancelUnsentPauseReceipt(asClient(db), 'cus_q', 'pause_changed'), 0);
 });
 
+test('pausing again with the same dates after a resume revives the cancelled emails', async () => {
+  const db = new FakeSupabase();
+  const now = new Date('2026-10-24T09:00:00Z');
+  const args = {
+    db: asClient(db), target: TARGET, subscriptionId: 'sub_q', pausedFromSeconds: sec('2026-11-10T12:00:00Z'),
+    billsAtSeconds: sec('2026-12-10T12:00:00Z'), payload: PAYLOAD, now,
+  };
+  await queue.queuePauseEmails(args);
+  await queue.cancelUnsentPauseReceipt(asClient(db), 'cus_q', 'pause_changed');
+  await queue.cancelPauseReminders(asClient(db), 'cus_q', 'pause_changed');
+  assert.equal(db.table('billing_email_sends').filter((r) => !r.cancelled_at).length, 0);
+
+  assert.equal(await queue.queuePauseEmails(args), 2);
+  const rows = db.table('billing_email_sends');
+  assert.equal(rows.length, 2, 'revived in place, no new rows');
+  assert.equal(rows.filter((r) => !r.cancelled_at && !r.sent_at).length, 2);
+
+  // A receipt that was already SENT is never revived.
+  rows.find((r) => r.template === 'pause_started')!.sent_at = now.toISOString();
+  await queue.cancelPauseReminders(asClient(db), 'cus_q', 'pause_changed');
+  assert.equal(await queue.queuePauseEmails(args), 1, 'only the reminder comes back');
+});
+
 test('an extension re-queues the reminder and cancels the old one; a resume cancels it', async () => {
   const db = new FakeSupabase();
   const now = new Date('2026-10-24T09:00:00Z');
