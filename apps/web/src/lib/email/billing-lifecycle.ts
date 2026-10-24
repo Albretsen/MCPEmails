@@ -91,10 +91,10 @@
 
 import { Resend } from 'resend';
 
-import { PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
+import { FREE_ACTION_ALLOWANCE, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
-import { POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
+import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -125,6 +125,8 @@ export const BILLING_TEMPLATES = [
   'usage_warning_80',
   'usage_limit_reached',
   'automation_paused_limit',
+  'pause_started',
+  'pause_ending_3',
 ] as const;
 
 export type BillingTemplate = (typeof BILLING_TEMPLATES)[number];
@@ -383,6 +385,22 @@ export type LifecyclePayload = {
   /** The triage rule that was paused (automation_paused_limit only). */
   rule_id?: string | null;
   rule_name?: string | null;
+
+  // ── Pause ────────────────────────────────────────────────────────────────
+
+  /** ISO: when the paid plan stops and the pause begins. */
+  pauseStartsAt?: string | null;
+  /** ISO: the renewal that bills again (pause_collection.resumes_at + 1h). */
+  billingResumesAt?: string | null;
+  /** True when the pause replaced a scheduled cancellation. */
+  replacedCancel?: boolean;
+
+  /**
+   * Where a cancellation came from. 'billing_switch_free' = the billing card's
+   * "Switch to Free", so the cancel email can leave out the "switch to a
+   * cheaper plan" line. Same field and shape as the cancel-email work.
+   */
+  source?: 'billing_switch_free' | null;
 };
 
 export interface ComposedLifecycleEmail {
@@ -1064,6 +1082,152 @@ export function composeBillingEmail(
               withdrawalUrl,
             ),
           footerNote: escapeHtml(CANCEL_FOOTER),
+        }),
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Pause. Both transactional: they are about money on a contract that is
+    // still running. The receipt says what stays active and when billing
+    // comes back; the reminder 3 days before says it again, with the cancel
+    // route, so nobody is charged by surprise after a quiet few months.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'pause_started': {
+      const startsOn = longDate(payload.pauseStartsAt);
+      const resumesOn = longDate(payload.billingResumesAt);
+      const subject = startsOn
+        ? `Your MCPEmails plan is paused from ${startsOn}`
+        : 'Your MCPEmails plan is paused';
+      const lead = `You paused ${yourPlan}. Here is what that means.`;
+      const replaced = payload.replacedCancel
+        ? 'This pause replaces the cancellation you had scheduled, so your subscription continues after it.'
+        : null;
+      const untilStart = startsOn
+        ? `Until ${startsOn} nothing changes: you keep the plan you have already paid for.`
+        : 'Until the end of the period you have already paid for, nothing changes.';
+      const whileHeading = 'While the plan is paused';
+      const whileLines = [
+        payload.grandfathered
+          ? null
+          : 'One inbox stays active, the one you picked. Any others are parked, not deleted, and come back when billing resumes.',
+        `You have the Free allowance of ${FREE_ACTION_ALLOWANCE} email actions a month, counted from the day the pause starts.`,
+        'Scheduled sends you booked before the pause still go out as planned.',
+        'Your API keys, connections and settings stay exactly as they are.',
+      ].filter((line): line is string => line !== null);
+      const resumes =
+        resumesOn && amount
+          ? `Billing resumes automatically on ${resumesOn} at ${amount}. We will email you 3 days before.`
+          : resumesOn
+            ? `Billing resumes automatically on ${resumesOn}. We will email you 3 days before.`
+            : 'Billing resumes automatically at the end of the pause. We will email you 3 days before.';
+      const options = `You can resume early, extend the pause or cancel at any time from your billing page: ${billingUrl}`;
+      const cancelLine = `You can also cancel without signing in: ${base}${CANCEL_PATH}`;
+
+      const factRows: Array<[string, string]> = [];
+      if (name) factRows.push(['Plan', name]);
+      if (startsOn) factRows.push(['Pause starts', startsOn]);
+      if (resumesOn) factRows.push(['Billing resumes', resumesOn]);
+      if (amount) factRows.push(['Then billed', amount]);
+
+      const body = [
+        lead,
+        '',
+        ...factRows.map(([label, value]) => `${label}: ${value}`),
+        '',
+        ...(replaced ? [replaced, ''] : []),
+        untilStart,
+        '',
+        `${whileHeading}:`,
+        ...whileLines.map((line) => `- ${line}`),
+        '',
+        resumes,
+        '',
+        options,
+        cancelLine,
+        '',
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: 'Your plan is paused',
+          html:
+            p(lead) +
+            (factRows.length > 0 ? facts(factRows) : '') +
+            (replaced ? p(replaced) : '') +
+            p(untilStart) +
+            h(whileHeading) +
+            whileLines.map((line) => p(line)).join('') +
+            p(resumes) +
+            pLink('You can resume early, extend the pause or cancel at any time from your billing page:', billingUrl) +
+            pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
+          ctaUrl: billingUrl,
+          ctaLabel: 'Open billing',
+          footerNote: SUPPORT_FOOTER,
+        }),
+      };
+    }
+
+    case 'pause_ending_3': {
+      const resumesOn = longDate(payload.billingResumesAt);
+      const subject = resumesOn
+        ? `Your MCPEmails plan resumes on ${resumesOn}`
+        : 'Your MCPEmails plan resumes soon';
+      const lead =
+        resumesOn && amount
+          ? `Your pause ends soon. Billing for ${yourPlan} resumes on ${resumesOn} at ${amount}.`
+          : resumesOn
+            ? `Your pause ends soon. Billing for ${yourPlan} resumes on ${resumesOn}.`
+            : `Your pause ends soon, and billing for ${yourPlan} resumes at the end of it.`;
+      const nothing =
+        'There is nothing to do if you want to continue: your plan and any parked inboxes come back on their own.';
+      const options = `If you would rather not continue yet, you can extend the pause or cancel before that date from your billing page: ${billingUrl}`;
+      const cancelLine = `You can also cancel without signing in: ${base}${CANCEL_PATH}`;
+
+      const factRows: Array<[string, string]> = [];
+      if (name) factRows.push(['Plan', name]);
+      if (resumesOn) factRows.push(['Billing resumes', resumesOn]);
+      if (amount) factRows.push(['Amount', amount]);
+
+      const body = [
+        lead,
+        '',
+        nothing,
+        '',
+        options,
+        cancelLine,
+        '',
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: 'Your plan resumes soon',
+          html:
+            p(lead) +
+            (factRows.length > 0 ? facts(factRows) : '') +
+            p(nothing) +
+            pLink('If you would rather not continue yet, you can extend the pause or cancel before that date from your billing page:', billingUrl) +
+            pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
+          ctaUrl: billingUrl,
+          ctaLabel: 'Open billing',
+          footerNote: SUPPORT_FOOTER,
         }),
       };
     }

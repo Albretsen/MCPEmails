@@ -29,6 +29,7 @@ import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/g
 import {
   DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
+  pausedNow,
   scheduledToStop,
   summarizeSubscriptions,
   type DiscountFacts,
@@ -117,6 +118,7 @@ export function subscriptionFacts(subscription: Stripe.Subscription): Subscripti
     discount: discountFacts(subscription, interval, intervalCount),
     planLabel: planLabel(first),
     internal: isInternalAccount(customerEmail(subscription.customer)),
+    paused: pausedNow(subscription, Math.floor(Date.now() / 1000)),
   };
 }
 
