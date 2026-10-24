@@ -18,6 +18,9 @@ import { retentionDays } from '../../../src/lib/analytics/retention';
 import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
+import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
+import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
@@ -883,7 +886,46 @@ export default async function DashboardPage({ params }) {
 
   // Live plan prices from Stripe (ISR-cached 1h), so the billing UI never
   // displays hardcoded amounts. Falls back to static cents in plans.ts.
-  const stripePrices = await fetchStripePrices();
+  //
+  // The seasonal first-year offer (Black Week 2026) rides on the same map as
+  // `seasonalOffer` on the Personal and Pro entries, so every upgrade surface
+  // that already receives `stripePrices` can show it. Outside the window, or
+  // with the coupon killed in Stripe, `offers` is {} and the map is unchanged.
+  const [livePrices, seasonalOffers] = await Promise.all([
+    fetchStripePrices(),
+    getActiveSeasonalOffers(),
+  ]);
+  // The billing page's "switch to annual" card, for an owner on monthly
+  // Personal or Pro. The interval is only written down on the Stripe
+  // subscription, so this reads Stripe, but only when an offer exists and the
+  // account could take it (no call at all for the rest of the year).
+  const switchInput = {
+    offers: seasonalOffers,
+    plan,
+    isOwner: workspace?.owner_id === user.id,
+    compedScale,
+  };
+  let seasonalSwitch = null;
+  if (mayOfferSeasonalSwitch(switchInput)) {
+    const { data: billingRow } = await createServiceRoleClient()
+      .from('user_billing')
+      .select('stripe_customer_id, stripe_subscription_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    seasonalSwitch = await getSeasonalSwitchOffer({
+      ...switchInput,
+      stripeCustomerId: billingRow?.stripe_customer_id ?? null,
+      stripeSubscriptionId: billingRow?.stripe_subscription_id ?? null,
+    });
+  }
+  // Which accounts the upgrade surfaces may quote the first-year price to:
+  // a Free workspace (a new subscription through Stripe Checkout), and a paid
+  // one only when it qualifies for the switch, i.e. it is on the CURRENT
+  // monthly Personal or Pro price and has never redeemed the offer. Anyone
+  // else (annual, Business, legacy, comped) would be quoted a price that
+  // checkout-core does not apply to their swap, so they are shown none.
+  const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
+  const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
 
   // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
   // until {date}" and the ways to keep it. Null for everyone else, and for a
@@ -916,6 +958,9 @@ export default async function DashboardPage({ params }) {
         // "Confirm in chat" send review: OUR rollout gate, internal only for
         // now. Without it the option is not offered (the API refuses it too).
         chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
+        // Black Week 2026: the offer for the billing page's switch card, or
+        // null (see src/lib/stripe/seasonal-switch.ts).
+        seasonalSwitch,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

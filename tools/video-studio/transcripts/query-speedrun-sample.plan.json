@@ -1,0 +1,29 @@
+{
+  "note": "Sample JSON plan. Reads the Demo folder that `npm run seed` fills, picks the overdue bill out of the real list, then opens it by the id the list returned. Read-only.",
+  "turns": [
+    { "role": "user", "text": "Is there anything in here I actually have to pay?" },
+    {
+      "role": "tool",
+      "as": "demo",
+      "name": "email_read",
+      "args": { "action": "list", "folder": "Demo" },
+      "summary": "{{demo.messages | count}} messages"
+    },
+    {
+      "role": "tool",
+      "as": "bill",
+      "name": "email_read",
+      "args": {
+        "action": "read",
+        "message_id": "{{demo.messages | where:subject~/overdue|unpaid|past due/i | first | get:id}}"
+      },
+      "summary": "opened \"{{bill.subject}}\""
+    },
+    {
+      "role": "assistant",
+      "requires": "demo.messages | where:subject~/overdue|unpaid|past due/i | count",
+      "text": "Found it: \"{{bill.subject}}\", from {{bill.from.name}}. Start there, the rest can wait.",
+      "otherwise": "Nothing in here is overdue. You can leave it all for later."
+    }
+  ]
+}

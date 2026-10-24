@@ -46,12 +46,14 @@ import {
 import { PassBillingPanel, PassOfferLine } from './PersonalPass';
 import UpgradeIntervalChoice, {
   IntervalToggle,
+  SeasonalOfferNote,
   PlanCheckoutLink,
   ProPriceAppNotice,
   SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
 } from './UpgradeIntervalChoice';
+import { liveSeasonalOffer, seasonalOfferValues } from '@/lib/billing/seasonal-offer-view.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -1573,6 +1575,20 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     onChange={setCapInterval}
                     size="sm"
                   />
+                </div>
+              )}
+              {/* Black Week: the buttons carry no amount on annual, so each
+                  plan's first-year and renewal price is stated here. */}
+              {offer.dual && capInterval === 'year' && offer.offers.some(o => annualByPlan[o.plan]?.firstYear) && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {offer.offers.filter(o => annualByPlan[o.plan]?.firstYear).map(o => (
+                    <div key={o.plan}>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', marginBottom: 2 }}>
+                        {planDisplayName(o.plan)}
+                      </div>
+                      <SeasonalOfferNote offer={annualByPlan[o.plan]?.firstYear} size="sm" />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -5776,8 +5792,10 @@ function BillingSection({
   businessShaped = false,
   passState = null,
   workspaceId = null,
+  seasonalSwitch = null,
 }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   // Matches the pricing page, where annual is preselected. An upgrade intent
   // arriving from /pricing overrides this with whatever the visitor actually
   // chose there.
@@ -5914,6 +5932,11 @@ function BillingSection({
           planId: pendingChange.planId,
           interval: pendingChange.interval,
           confirm: true,
+          // The offer this quote was priced with. If it has ended by now the
+          // server charges nothing and sends a fresh quote (handled below).
+          ...(pendingChange.preview?.seasonalOffer?.offerId
+            ? { offer: pendingChange.preview.seasonalOffer.offerId }
+            : {}),
         }),
       });
 
@@ -5958,6 +5981,16 @@ function BillingSection({
         setPaymentRequired({
           planName: data.plan,
           invoiceUrl: typeof data.invoice_url === 'string' ? data.invoice_url : null,
+        });
+      } else if (data?.confirmation_required === true) {
+        // The quoted seasonal offer ended between the quote and the click.
+        // Nothing was charged; show the new quote and let them decide again.
+        setPendingChange({
+          planId: data.plan_id ?? pendingChange.planId,
+          planName: data.plan ?? pendingChange.planName,
+          interval: data.interval ?? pendingChange.interval,
+          preview: data.preview ?? null,
+          offerEnded: data.seasonal_offer_ended === true,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6032,6 +6065,15 @@ function BillingSection({
     isOnPaidPlan && !compedScale
       ? (offeredPlans.find(plan => plan.id === currentPlan)?.id ?? null)
       : null;
+
+  // The Black Week switch card. Only for the plan this account pays for, on
+  // the same self-service path as any interval switch, and only while live.
+  const switchOffer =
+    intervalSwitchPlanId !== null &&
+    seasonalSwitch?.planId === intervalSwitchPlanId
+      ? liveSeasonalOffer(seasonalSwitch)
+      : null;
+  const switchValues = switchOffer ? seasonalOfferValues(switchOffer, locale) : null;
 
   // A paid-plan CTA on the pricing page is a direct request to begin Stripe
   // Checkout. The URL carries only a validated plan and interval; remove it
@@ -6369,6 +6411,45 @@ function BillingSection({
           </div>
         )}
 
+        {/* Black Week 2026: monthly Personal or Pro owners only. The server
+            decided eligibility from the live subscription (current monthly
+            price, never redeemed, see src/lib/stripe/seasonal-switch.ts);
+            this only re-checks the plan and that the window has not closed
+            on this clock. The button goes through the same two-step quote as
+            every other plan change, so nothing is charged from this card. */}
+        {switchOffer && switchValues && !passState && (
+          <div
+            data-seasonal-switch={switchOffer.planId}
+            style={{
+              padding: '14px 16px',
+              background: 'var(--brand-soft)',
+              border: '1px solid rgba(37,71,229,0.18)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-1)', lineHeight: 1.5 }}>
+                {trc('seasonal.switchBody', switchValues)}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--fg-3)', marginTop: 4 }}>
+                {trc('seasonal.ends', { date: switchValues.date, time: switchValues.time })}
+              </div>
+            </div>
+            <Btn
+              variant="primary"
+              onClick={() => handleUpgrade(switchOffer.planId, 'year')}
+              disabled={upgrading !== null}
+            >
+              {upgrading === switchOffer.planId ? trc('seasonal.switchBusy') : trc('seasonal.switchCta')}
+            </Btn>
+          </div>
+        )}
+
         {upgradablePlans.length > 0 && (
           /* Anything left above this account on the ladder gets a card.
              For a free account that is the whole ladder, exactly as before. For
@@ -6477,6 +6558,12 @@ function BillingSection({
                       {!isCustom && interval === 'year' && (
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 2 }}>
                           {t('billing.billedYearly', { total: yearlyAnnualTotal })}
+                        </div>
+                      )}
+                      {/* Black Week 2026: annual Personal and Pro only. */}
+                      {!isCustom && interval === 'year' && liveSeasonalOffer(stripePrices?.[plan.id]?.seasonalOffer) && (
+                        <div style={{ marginTop: 8 }}>
+                          <SeasonalOfferNote offer={stripePrices[plan.id].seasonalOffer} size="sm" />
                         </div>
                       )}
                     </div>
@@ -6631,6 +6718,7 @@ function SummaryRow({ label, value, strong = false }) {
 
 function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy, onConfirm, onCancel }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   const { preview } = change;
 
   // Compared by id, not by display name: the names are translated in one place
@@ -6740,6 +6828,21 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
               <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />
             )}
           </div>
+
+          {/* Black Week 2026: the quote already includes the first-year
+              price (checkout-core prices the swap with the coupon). */}
+          {preview?.seasonalOffer && <SeasonalOfferNote offer={preview.seasonalOffer} />}
+          {change.offerEnded && !preview?.seasonalOffer && (
+            <p data-seasonal-ended="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('seasonal.ended')}
+            </p>
+          )}
 
           <p style={{
             margin: 0,
@@ -7482,6 +7585,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         businessShaped={businessShaped}
         passState={passState}
         workspaceId={workspace?.id ?? null}
+        seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}

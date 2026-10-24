@@ -1,0 +1,19 @@
+Give your AI agent access to your inbox. Works with Gmail, iCloud, Fastmail, or the IMAP mailbox you already have.
+
+It takes about one minute, and it looks like this.
+
+I'm picking my provider. I'll go with plain IMAP.
+
+Then the address, the two host names, and a password that's encrypted before it's stored.
+
+Now it's connecting straight to my mail server, live.
+
+So now my agent can reach my inbox. Claude, ChatGPT, or an example agent like this one.
+
+I ask it what actually needs me today.
+
+It goes through the inbox and finds one invoice that's overdue. The rest can wait.
+
+No emails are stored anywhere. It reads from your provider every time.
+
+That's MCPEmails. Give your AI agent an inbox.

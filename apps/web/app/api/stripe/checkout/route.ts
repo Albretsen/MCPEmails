@@ -23,11 +23,22 @@ import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
  *              the first returns the quote, the second performs it.
  *   locale   : the buyer's app-realm language. Only 'de' changes anything (a
  *              German hosted page); any other value, or none, is English.
- *   product  : optional. 'personal_pass_3m' buys the 3-month Personal pass (one
- *              payment, runPassCheckout) and ignores planId, interval and
- *              confirm. Any other value is a 400.
- *   arm      : pass only. The experiment arm, passed to Stripe metadata.
- *   surface  : pass only. The surface that showed the offer, likewise.
+  const { planId, interval, confirm, locale, offer, product, arm, surface } = body as Record<string, unknown>;
+
+  if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
+    return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
+  }
+
+  const outcome =
+    product === PERSONAL_PASS_3M.id
+      ? await runPassCheckout({ locale, experimentArm: arm, surface })
+      : await runCheckout({
+          planId,
+          interval,
+          confirmChange: confirm,
+          locale,
+          ...(offer !== undefined ? { quotedOffer: offer } : {}),
+        });
  *
  * Response (200):
  *   { url: string }        : the Stripe Checkout hosted page URL to redirect to
@@ -72,7 +83,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm, locale, product, arm, surface } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale, offer, product, arm, surface } = body as Record<string, unknown>;
 
   if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
     return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
@@ -81,7 +92,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const outcome =
     product === PERSONAL_PASS_3M.id
       ? await runPassCheckout({ locale, experimentArm: arm, surface })
-      : await runCheckout({ planId, interval, confirmChange: confirm, locale });
+      : await runCheckout({
+          planId,
+          interval,
+          confirmChange: confirm,
+          locale,
+          ...(offer !== undefined ? { quotedOffer: offer } : {}),
+        });
 
   if (outcome.kind === 'checkout') {
     return NextResponse.json({ url: outcome.url }, { status: 200 });
@@ -98,6 +115,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         plan: outcome.planName,
         interval: outcome.interval,
         preview: outcome.preview,
+        ...(outcome.offerEnded ? { seasonal_offer_ended: true } : {}),
       },
       { status: 200 },
     );

@@ -1,0 +1,9 @@
+Can your AI tell you which emails you actually have to pay?
+
+Let's time it.
+
+It lists the folder, finds the one that's overdue, and opens it.
+
+One bill, overdue. Everything else can wait.
+
+That's MCPEmails. Give your AI agent an inbox.
