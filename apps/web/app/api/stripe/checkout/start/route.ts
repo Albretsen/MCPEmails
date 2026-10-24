@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
  * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>][&recovered_from=<cs_...>]
@@ -87,12 +88,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const locale = request.nextUrl.searchParams.get('lang');
   // Set only by the abandoned-checkout reminder's link; validated in the core.
   const recoveredFrom = request.nextUrl.searchParams.get('recovered_from');
+  // Vercel's geolocation of this request, for the EUR currency choice and VAT
+  // evidence (see `country` on runCheckout). Absent locally and in tests.
+  const country = countryFromHeaders(request.headers);
 
   const outcome = await runCheckout({
     planId,
     interval,
     locale,
     ...(recoveredFrom ? { recoveredFrom } : {}),
+    ...(country ? { country } : {}),
   });
 
   if (outcome.kind === 'checkout') {

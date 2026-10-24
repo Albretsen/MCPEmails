@@ -1,5 +1,5 @@
 -- ============================================================
--- Pause and downgrade state (migration 20261024190000)
+-- Pause and downgrade state (migration 20261024220000)
 -- ============================================================
 -- Pins: the user_billing pair CHECKs; that an owner cannot write the pause
 -- columns (no user write policy, so a customer cannot widen their own Free

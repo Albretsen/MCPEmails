@@ -117,7 +117,7 @@ single object with a discriminator. The card switches on `card`.
 ```jsonc
 {
   "schema_version": "review-card-v1",
-  "card": "outbound_review" | "bulk_plan" | "receipt",
+  "card": "outbound_review" | "bulk_plan" | "receipt" | "draft_editor" | "subscription_plan",
   "dashboard_url": "https://mcpemails.com/dashboard/approvals",  // absolute, always present
   "state": "pending" | "sent" | "scheduled" | "rejected" | "expired" | "decided_elsewhere"
          | "executed" | "cancelled" | "error",
@@ -1543,3 +1543,102 @@ message read-only in place (`components/SentMessage.tsx`, the same view a send h
   a frame; the receipt is now held for as long as `priorReceipt` is.
 
 Pinned by `apps/mcp-app/harness/draft-ended.test.mjs`.
+
+---
+
+## 9. `subscription_plan`: newsletter senders to unsubscribe from (internal only)
+
+Added 2026-10-24 (subscription cleanup, Phase 3). The server half is `subscriptions_scan` and
+`subscriptions_cleanup` in `supabase/functions/mcp-server`; the card half is
+`apps/mcp-app/src/components/SubscriptionPlan.tsx`.
+
+### Gate
+
+`workspaces.subscription_cleanup_enabled boolean not null default false`, seeded true for the internal
+workspaces only. When false both tools are absent from `tools/list` and refused with `isError` if called.
+Neither tool is in `BILLABLE_TOOL_NAMES`. Both are model-visible: a client without cards uses them in chat.
+
+### Envelope
+
+The §1 envelope with `card: "subscription_plan"`, `state: "pending" | "executed" | "expired" | "error"`,
+`actor { can_decide, reason }`, and:
+
+```jsonc
+"subscriptions": {
+  "plan_id": "uuid", "expires_at": "ISO",            // server-held, 15 min TTL
+  "inbox": { "inbox_id": "uuid", "email_address": "you@example.com", "provider": "gmail" },
+  "window_days": 90, "scanned": 1840, "truncated": false,
+  "summary": { "senders": 41, "one_click": 20, "mailto": 9, "link": 5, "none": 7, "unsafe": 4 },
+  "senders": [ { "sender_key": "list:news.example.com", "display_name": "Example News",
+                 "from_address": "news@example.com", "domain": "example.com", "list_id": "news.example.com" | null,
+                 "message_count": 212, "unread_count": 208, "read_share": 0.02, "last_received_at": "ISO",
+                 "method": "one_click" | "mailto" | "link" | "none", "safe": true,
+                 "unsafe_reason": null | "in_junk" | "dkim_fail" | "mixed_sender_domains" | "auth_unverified",
+                 "url_host": "example.com" | null, "suggested": true } ],   // at most 200
+  // state "executed" only:
+  "results": [ { "sender_key": "...", "display_name": "...",
+                 "status": "requested" | "failed" | "draft_ready" | "needs_user" | "filtered"
+                         | "skipped_unsafe" | "already_done",
+                 "method": "...", "detail": "short server-written reason" | null,
+                 "draft_id": "id" | null, "link": "https://..." | null,      // link only on needs_user, https only
+                 "mailto_address": "leave@example.com" | null } ],           // mailto sender on needs_user (no draft)
+  "backlog": { "action": "archive" | "keep", "destination": "Archive" | null,
+               "moved": 306, "remaining": 0, "has_more": false } | null
+}
+```
+
+`subscriptions_scan` returns it in `structuredContent` with `_meta.ui` pointing at the §0 resource, the same
+mechanism as a bulk plan.
+
+### The tool the card calls
+
+| Tool | Arguments | Returns |
+| --- | --- | --- |
+| `subscriptions_cleanup` | `{ plan_id, sender_keys: string[], backlog: "archive" \| "keep" }` | the envelope, `state: "executed"`, with `results` and `backlog` |
+| `subscriptions_cleanup` (continue) | `{ plan_id, sender_keys: [], backlog: "archive", continue: true }` | the same, with the backlog moved further |
+
+* Confirm sends the ticked keys only, in plan order, and the backlog choice (Archive existing mail, the
+  default, or Keep existing mail). The card has no `folder` option.
+* Continue sends **no** sender keys: with `continue: true` the unsubscribe part never re-runs and the
+  results are replayed from the ledger, so the keys would mean nothing. The server must accept an empty
+  `sender_keys` when `continue` is true.
+* A failure may come back as this envelope with `state: "expired" | "error"` (the card renders the plan
+  with a notice and everything off) or as a §4 failed receipt (the card shows the receipt, as for a bulk
+  plan).
+
+### Security
+
+* The card only ever sends `plan_id` and sender keys that were in the plan it rendered. The server
+  rejects any key not in the plan, whoever calls it (§6: the model can call this tool too).
+* Display names, addresses and `detail` come from email: hostile text. The card renders them as text
+  only, never as HTML, and they are neutralised at the boundary like every other string (`store.ts`).
+* The plan carries hosts, never URLs. The one raw URL is `results[].link` on `needs_user`, and it is
+  always https; the card shows its host and opens it with `ui/open-link`, never as a rendered anchor.
+* A mailto-only sender that could not get a draft (the key lacks `manage:drafts`, or the run ran out of
+  time) comes back `needs_user` with `link: null` and `mailto_address`: the plain address, already
+  checked to be one mailbox. The card shows "Email <address> to unsubscribe" as selectable text (no
+  link, no button) and `detail` tells the model the same: email that address with the word unsubscribe.
+* Nothing is sent from the user's address. A mailto-only sender gets a draft; the card says so.
+
+### Card behaviour (as built)
+
+* One real `<input type="checkbox">` with a `<label>` per sender, pre-ticked when `suggested`. An unsafe
+  sender (`safe: false`) shows "Archive only" and its reason: it cannot be unsubscribed, and ticking it
+  only archives its backlog. The exception is `unsafe_reason: "auth_unverified"` (the user's provider
+  wrote no Authentication-Results header the server trusts): it keeps its method pill and says "sender
+  not verified", because the server still runs the draft or link rung for it, never the one-click
+  POST. Select all / Select none, and "N of M selected".
+* The list scrolls inside the card inline (up to 200 rows; the one exception to "no nested scrolling")
+  and not in fullscreen.
+* "Clean up N senders" is off at 0, when `actor.can_decide` is false, and when the state is not
+  `pending` or the plan has expired. It has a fixed width at the right edge so its label can change
+  without moving it, and one call is in flight at a time (a ref in App.tsx, since `busy` is state and a
+  double click lands before the re-render).
+* The results view: one line per sender (Requested, Draft ready with "Draft saved in your Drafts folder",
+  Open link to finish with an "Open <host>" link only when an https link exists, "Email to unsubscribe"
+  with "Email <address> to unsubscribe" as selectable text for `mailto_address`, Failed with the
+  detail, Skipped (not safe to unsubscribe), Already done), the backlog line, "Continue archiving (N left)" when `has_more`, and
+  "Senders usually stop within 2 days. We check again in 3 days."
+* Model context after a cleanup: counts per status and messages archived. Never a sender name.
+* A remount keeps only the card kind and state (`persist.ts`): there is no reader for a plan, so it
+  shows the one line with the dashboard link, like a bulk plan.

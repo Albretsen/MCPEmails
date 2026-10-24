@@ -30,8 +30,11 @@ import {
   DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
   pausedNow,
+  priceInCurrency,
   scheduledToStop,
   summarizeSubscriptions,
+  taxInclusiveRatio,
+  type CurrencyOptions,
   type DiscountFacts,
   type RevenueSummary,
   type SubscriptionFacts,
@@ -41,6 +44,7 @@ import {
 // that compute the same figure independently eventually disagree about it in
 // public.
 import { rollUpCash, stripeMode, type CashMonth } from '@/lib/analytics/cash-math';
+import { chargesInUsd } from '@/lib/analytics/fx';
 
 /**
  * Hard ceiling on subscriptions pulled from Stripe.
@@ -75,37 +79,127 @@ export async function fetchRecurringRevenue(windowDays: number): Promise<GrowthR
         status: 'all',
         limit: 100,
         // The customer carries the email the internal check runs on; the
-        // discounts carry the coupons that make a comp worth nothing.
-        expand: ['data.customer', 'data.discounts.source.coupon'],
+        // discounts carry the coupons that make a comp worth nothing; the
+        // latest invoice carries the VAT share of an inclusive price.
+        expand: SUBSCRIPTION_EXPAND,
       })
       .autoPagingToArray({ limit: MAX_SUBSCRIPTIONS });
-    return summarizeSubscriptions(subscriptions.map(subscriptionFacts), {
+    const options = await loadCurrencyOptions(stripe, subscriptions);
+    return summarizeSubscriptions(subscriptions.map((subscription) => subscriptionFacts(subscription, options)), {
       nowSeconds: Math.floor(Date.now() / 1000),
       windowDays,
     });
   });
 }
 
+/**
+ * The expansions every subscription read asks for. Shared with
+ * operator-revenue.ts so the two pages price a subscription from the same
+ * objects. `data.latest_invoice` costs no extra request: it rides on the same
+ * paged list call, and is what `taxInclusiveRatio` reads.
+ */
+export const SUBSCRIPTION_EXPAND = ['data.customer', 'data.discounts.source.coupon', 'data.latest_invoice'];
+
+/** Matches MAX_SUBSCRIPTIONS: the catalogue holds a few dozen prices. */
+const MAX_PRICES = 500;
+
+/**
+ * `currency_options` for every price a subscription bills in a currency other
+ * than the price's own, keyed by price id.
+ *
+ * A subscription item's price never carries `currency_options` (Stripe only
+ * returns it on request, and the expansion is too deep to ask for on a
+ * subscription list), so a EUR subscriber on a multi-currency USD price would
+ * otherwise be priced at the USD figure. One paged price list fills the gap,
+ * and only when such a subscription exists: an all-USD account makes no extra
+ * call at all. A failure here degrades to pricing those subscriptions in the
+ * price's own currency rather than taking the tile down.
+ */
+export async function loadCurrencyOptions(
+  stripe: Stripe,
+  subscriptions: Stripe.Subscription[],
+): Promise<Map<string, CurrencyOptions>> {
+  const options = new Map<string, CurrencyOptions>();
+  const needed = subscriptions.some((subscription) =>
+    subscription.items.data.some((item) => item.price.currency !== subscription.currency));
+  if (!needed) return options;
+  try {
+    const prices = await stripe.prices
+      .list({ limit: 100, expand: ['data.currency_options'] })
+      .autoPagingToArray({ limit: MAX_PRICES });
+    for (const price of prices) {
+      if (price.currency_options) options.set(price.id, price.currency_options as CurrencyOptions);
+    }
+  } catch (error) {
+    console.warn('[kiosk-revenue] price currency_options read failed', error);
+  }
+  return options;
+}
+
+/**
+ * Each item's unit amount in the currency the subscription is billed in, and
+ * whether the plan's own price includes VAT.
+ *
+ * When any item has no amount in the subscription's currency (its options
+ * were not readable), the whole subscription is priced in the price's own
+ * currency instead, so an amount is never paired with the wrong currency.
+ */
+export function pricedItems(
+  subscription: Stripe.Subscription,
+  currencyOptions?: Map<string, CurrencyOptions>,
+): {
+  currency: string;
+  items: { item: Stripe.SubscriptionItem; unitAmount: number }[];
+  taxInclusive: boolean;
+} {
+  const items = subscription.items.data;
+  const resolve = (price: Stripe.Price) =>
+    priceInCurrency(
+      price,
+      subscription.currency,
+      (price.currency_options as CurrencyOptions | undefined) ?? currencyOptions?.get(price.id),
+    );
+  const resolved = items.map((item) => ({ item, inCurrency: resolve(item.price) }));
+  const base = basePlanItem(items);
+  if (resolved.every((row) => row.inCurrency !== null)) {
+    const baseRow = resolved.find((row) => row.item === base);
+    return {
+      currency: subscription.currency,
+      items: resolved.map((row) => ({ item: row.item, unitAmount: row.inCurrency?.unitAmount ?? 0 })),
+      taxInclusive: baseRow?.inCurrency?.taxBehavior === 'inclusive',
+    };
+  }
+  return {
+    currency: base?.price.currency ?? items[0]?.price.currency ?? subscription.currency,
+    items: items.map((item) => ({ item, unitAmount: item.price.unit_amount ?? 0 })),
+    taxInclusive: base?.price.tax_behavior === 'inclusive',
+  };
+}
+
 /** Reduce a Stripe subscription to the facts revenue-math.ts works on. */
-export function subscriptionFacts(subscription: Stripe.Subscription): SubscriptionFacts {
+export function subscriptionFacts(
+  subscription: Stripe.Subscription,
+  currencyOptions?: Map<string, CurrencyOptions>,
+): SubscriptionFacts {
   const items = subscription.items.data;
   // The plan's own item, not whichever comes first: a Business subscription
   // also carries the per-mailbox add-on, which is not a plan.
   const first = basePlanItem(items)?.price;
   const interval = first?.recurring?.interval ?? 'month';
   const intervalCount = first?.recurring?.interval_count ?? 1;
+  const priced = pricedItems(subscription, currencyOptions);
 
   // Summed across items so a subscription with an add-on is priced whole.
   // A price with no `unit_amount` is tiered or metered and contributes nothing
   // here; we sell neither, and inventing a figure for one would be worse than
   // understating it.
-  const grossMonthlyMinor = items.reduce((total, item) => {
+  const grossMonthlyMinor = priced.items.reduce((total, { item, unitAmount }) => {
     const price = item.price;
-    const amount = price.unit_amount ?? 0;
     const quantity = item.quantity ?? 1;
-    return total + monthlyFromInterval(amount * quantity, price.recurring?.interval ?? interval, price.recurring?.interval_count ?? intervalCount);
+    return total + monthlyFromInterval(unitAmount * quantity, price.recurring?.interval ?? interval, price.recurring?.interval_count ?? intervalCount);
   }, 0);
 
+  const ratio = taxInclusiveRatio(priced.taxInclusive, subscription.latest_invoice);
   return {
     id: subscription.id,
     status: subscription.status,
@@ -113,9 +207,10 @@ export function subscriptionFacts(subscription: Stripe.Subscription): Subscripti
     endedAt: subscription.ended_at,
     cancelAtPeriodEnd: scheduledToStop(subscription),
     canceledAt: subscription.canceled_at,
-    currency: subscription.currency,
+    currency: priced.currency,
     grossMonthlyMinor,
-    discount: discountFacts(subscription, interval, intervalCount),
+    discount: discountFacts(subscription, interval, intervalCount, priced.currency),
+    ...(ratio === undefined ? {} : { taxInclusiveRatio: ratio }),
     planLabel: planLabel(first),
     internal: isInternalAccount(customerEmail(subscription.customer)),
     paused: pausedNow(subscription, Math.floor(Date.now() / 1000)),
@@ -132,12 +227,15 @@ export function subscriptionFacts(subscription: Stripe.Subscription): Subscripti
  *
  * An unresolved coupon (a bare id) cannot be valued. It is ignored rather than
  * guessed, which overstates revenue slightly; we always ask for the expansion,
- * so this is a guard rather than a path.
+ * so this is a guard rather than a path. The same goes for a flat coupon in
+ * another currency with no option for this one: dollars off a euro price are
+ * not a figure we can subtract.
  */
 function discountFacts(
   subscription: Stripe.Subscription,
   interval: string,
   intervalCount: number,
+  currency: string,
 ): DiscountFacts {
   let percentOff = 0;
   let amountOffMonthlyMinor = 0;
@@ -149,9 +247,17 @@ function discountFacts(
     const coupon = discount.source?.coupon;
     if (!coupon || typeof coupon === 'string') continue;
     if (coupon.percent_off) percentOff += coupon.percent_off;
-    if (coupon.amount_off) amountOffMonthlyMinor += monthlyFromInterval(coupon.amount_off, interval, intervalCount);
+    const amountOff = couponAmountOff(coupon, currency);
+    if (amountOff) amountOffMonthlyMinor += monthlyFromInterval(amountOff, interval, intervalCount);
   }
   return { percentOff, amountOffMonthlyMinor };
+}
+
+/** A flat coupon's amount in `currency`, or null when it has none in it. */
+export function couponAmountOff(coupon: Stripe.Coupon, currency: string): number | null {
+  if (!coupon.amount_off) return null;
+  if (!coupon.currency || coupon.currency === currency) return coupon.amount_off;
+  return coupon.currency_options?.[currency]?.amount_off ?? null;
 }
 
 /**
@@ -418,6 +524,7 @@ async function loadWorkspaces(): Promise<WorkspaceRow[]> {
  * nothing older than the account, so today the two are the same thing.
  */
 export type CashCollected = {
+  /** Always 'usd': charges in other currencies are converted (fx.ts). */
   currency: string;
   /** Net of refunds, across the whole history read. */
   allTimeMinor: number;
@@ -432,6 +539,8 @@ export type CashCollected = {
   truncated: boolean;
   /** `test` means these are not real dollars. The tile must say so. */
   mode: 'live' | 'test' | 'unknown';
+  /** Currencies of charges left out because fx.ts has no rate for them. */
+  otherCurrencies: string[];
 };
 
 /** Two years covers the account's entire life and costs one paged request. */
@@ -450,22 +559,21 @@ export async function fetchCashCollected(): Promise<GrowthResult<CashCollected>>
       .list({ limit: 100, created: { gte: since }, expand: ['data.customer'] })
       .autoPagingToArray({ limit: MAX_CHARGES });
 
-    const counted = charges
-      .filter((charge) => charge.status === 'succeeded')
-      .filter((charge) => !isInternalAccount(chargeEmail(charge)))
-      .map((charge) => ({
-        grossMinor: charge.amount,
-        refundedMinor: charge.amount_refunded ?? 0,
-        at: new Date(charge.created * 1000).toISOString(),
-      }));
+    // Each charge in USD at the rate of the month it landed in. Charges list
+    // newest first, and the conversion keeps that order.
+    const { rows: counted, otherCurrencies } = chargesInUsd(
+      charges
+        .filter((charge) => charge.status === 'succeeded')
+        .filter((charge) => !isInternalAccount(chargeEmail(charge))),
+    );
 
     const months = rollUpCash(counted);
     const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
 
     return {
-      // Whichever currency the money actually arrived in, not the
-      // subscriptions' reporting currency: cash is cash.
-      currency: charges.find((charge) => charge.status === 'succeeded')?.currency ?? 'usd',
+      // Converted, not "whichever currency the first charge was in": that
+      // rule summed euros as dollars once a second currency arrived.
+      currency: 'usd',
       allTimeMinor: months.reduce((total, month) => total + month.netMinor, 0),
       last30Minor: counted
         .filter((charge) => Date.parse(charge.at) >= thirtyDaysAgo)
@@ -475,6 +583,7 @@ export async function fetchCashCollected(): Promise<GrowthResult<CashCollected>>
       since: counted[counted.length - 1]?.at ?? counted[0]?.at ?? null,
       truncated: charges.length >= MAX_CHARGES,
       mode: stripeMode(process.env.STRIPE_SECRET_KEY),
+      otherCurrencies,
     };
   });
 }

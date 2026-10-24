@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Pause and switch-to-Personal at period end: state columns, funnel stages,
 -- the two pause emails, and the Free allowance window during a pause.
--- 20261024190000_pause_downgrade
+-- 20261024220000_pause_downgrade
 -- ============================================================================
 --
 -- WHY. Documents/plans/pause-downgrade-20261024.md (section 12 overrides the
@@ -124,7 +124,7 @@ ALTER TABLE public.product_funnel_events
     -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
     -- the paywall_reached row with connection_type = 'first_connect'.
     'paywall_clicked',
-    -- Pause and switch to Personal (20261024190000). Category is the plan the
+    -- Pause and switch to Personal (20261024220000). Category is the plan the
     -- customer was on, except pause_resumed (early | auto) and
     -- retention_option_clicked (pause | downgrade).
     'pause_started', 'pause_extended', 'pause_resumed', 'pause_ended_cancelled',
@@ -301,7 +301,7 @@ BEGIN
     -- empty (period_start = period_end, used = 0), next month's starts on
     -- the 5th.
     --
-    -- A paused subscriber (20261024190000) is on Free from paused_from, and
+    -- A paused subscriber (20261024220000) is on Free from paused_from, and
     -- the window opens no earlier than that, so the paid month before the
     -- pause is not counted against the Free allowance. Only a pause that has
     -- started counts; GREATEST ignores the NULL of everyone else.

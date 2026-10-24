@@ -51,7 +51,7 @@ interface DueRow {
 
 type DbError = { message: string; code?: string } | null;
 
-/** The narrow facade over the 20261024190000 columns (see plan-change-sync.ts). */
+/** The narrow facade over the 20261024220000 columns (see plan-change-sync.ts). */
 interface DueTable {
   select(columns: string): {
     not(column: 'paused_from' | 'pending_plan', operator: 'is', value: null): {

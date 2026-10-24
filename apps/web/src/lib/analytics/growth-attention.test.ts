@@ -52,6 +52,7 @@ const revenue: RevenueSummary = {
   netNewMrrMinor: 500,
   byPlan: [],
   internalCustomers: 1,
+  byCurrency: [],
   otherCurrencies: [],
 };
 
@@ -80,6 +81,7 @@ function calm(): AttentionInput {
       since: '2026-08-15T00:00:00Z',
       truncated: false,
       mode: 'live',
+      otherCurrencies: [],
     },
     lifecycle: {
       value_activated: 169,
