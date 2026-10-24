@@ -113,6 +113,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
   creditAbandonedCheckout,
@@ -690,6 +691,12 @@ async function handleCheckoutSessionCompleted(
   // Credit an abandoned-checkout reminder (or its holdout row) with this
   // purchase, for the holdout comparison. Post-response, never throws.
   after(() => creditAbandonedCheckout(session));
+  // The chat checkout link this session came from, if any: stamp it paid for
+  // the experiment read-out. Post-response and never throws, so it cannot cost
+  // anyone the plan that was just granted above.
+  if (session.metadata?.checkout_link_id) {
+    after(() => markCheckoutLinkComplete(session.metadata?.checkout_link_id));
+  }
 
   const recipient = session.customer_details?.email ?? session.customer_email ?? null;
   if (recipient) {

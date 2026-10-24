@@ -39,6 +39,7 @@ import {
   modelAndAppReviewCardToolMeta,
   modelAndAppUnmountedToolMeta,
   DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES,
+  SUBSCRIPTION_CARD_TOOL_NAMES,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -1227,5 +1228,32 @@ Deno.test("the listing on the wire still goes through serializeToolForList", asy
     for (const key of Object.keys(tool)) {
       assert(allowed.has(key), `${tool.name} leaks ${key} onto the tools/list wire`);
     }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup (contract §9): gated per workspace, model-and-app.
+// ---------------------------------------------------------------------------
+
+Deno.test("subscription tools carry the card, model-and-app, only with the subscriptions gate open", () => {
+  const shut = { outbound: true, bulk: true, drafts: true };
+  for (const name of SUBSCRIPTION_CARD_TOOL_NAMES) {
+    for (const surface of ["consolidated", "per_operation"] as const) {
+      assertEquals(reviewCardMetaForListing(name, shut, surface), undefined, `${name} ${surface} shut`);
+      assertEquals(
+        reviewCardMetaForListing(name, { ...shut, subscriptions: true }, surface),
+        modelAndAppReviewCardToolMeta(),
+        `${name} ${surface} open`,
+      );
+    }
+    assert(isCardBearingToolName(name), `${name} is card-bearing`);
+  }
+});
+
+Deno.test("the tools/list on the wire drops the subscription tools when the workspace flag is off", async () => {
+  // Introspection mode has no database, so the workspace flag reads as off.
+  const tools = await realToolsListResponse();
+  for (const name of SUBSCRIPTION_CARD_TOOL_NAMES) {
+    assert(!tools.some((tool) => tool.name === name), `${name} is hidden with the flag off`);
   }
 });
