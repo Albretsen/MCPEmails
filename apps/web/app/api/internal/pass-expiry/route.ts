@@ -2,7 +2,7 @@
  * POST /api/internal/pass-expiry
  *
  * Ends 3-month Personal passes on their date. Called by pg_cron through
- * public.dispatch_pass_expiry() (20261024120000_personal_pass.sql) every 15
+ * public.dispatch_pass_expiry() (20261024170000_personal_pass.sql) every 15
  * minutes, and only when a pass has ended or a stacked pass has started, so
  * on almost every tick nothing reaches this route at all.
  *

@@ -106,7 +106,7 @@ export async function recordCheckoutCompleted(
 }
 
 /**
- * A 3-month Personal pass event (20261024120000). Kept apart from the
+ * A 3-month Personal pass event (20261024170000). Kept apart from the
  * subscription stages on purpose: a pass never writes `checkout_started` or
  * `checkout_completed`, so the subscription conversion and the experiment
  * read-out built on `paid_at` are not inflated by one-time payments.

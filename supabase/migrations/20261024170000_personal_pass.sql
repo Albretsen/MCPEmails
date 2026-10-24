@@ -214,7 +214,7 @@ ALTER TABLE public.product_funnel_events
     -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
     -- the paywall_reached row with connection_type = 'first_connect'.
     'paywall_clicked',
-    -- The 3-month Personal pass (20261024120000).
+    -- The 3-month Personal pass (20261024170000).
     'pass_offer_shown', 'pass_checkout_started', 'pass_checkout_completed',
     'pass_reminder_sent', 'pass_expired', 'pass_refunded', 'pass_renewed'
   ));
