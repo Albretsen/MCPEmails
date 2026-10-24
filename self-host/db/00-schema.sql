@@ -698,6 +698,15 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     current_period_start timestamp with time zone,
+    -- Pause / downgrade state (20261024233000). Hosted-only in practice (a
+    -- self-host stack has no Stripe), mirrored because
+    -- workspace_action_allowance() reads paused_from.
+    paused_from timestamp with time zone,
+    pause_resumes_at timestamp with time zone,
+    pending_plan text,
+    pending_plan_effective_at timestamp with time zone,
+    inbox_keep_order jsonb,
+    pause_history jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT user_billing_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_billing_stripe_customer_id_key UNIQUE (stripe_customer_id),
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
@@ -1463,6 +1472,7 @@ DECLARE
   v_remaining       integer;
   v_ub_start        timestamptz;
   v_ub_end          timestamptz;
+  v_paused_from     timestamptz;
 BEGIN
   -- (a) The workspace. deleted_at is irrelevant: a soft-deleted workspace
   -- cannot make tool calls, and if it is restored its allowance must not have
@@ -1550,7 +1560,13 @@ BEGIN
     v_grace_ends_at := v_created_at + c_grace;
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
-    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at), v_month_end);
+    -- A paused subscriber's window opens no earlier than paused_from
+    -- (20261024233000). Always NULL on a self-host stack.
+    SELECT ub.paused_from INTO v_paused_from
+    FROM public.user_billing ub
+    WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
+    LIMIT 1;
+    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at, v_paused_from), v_month_end);
     v_cap := c_free_cap;
   END IF;
 

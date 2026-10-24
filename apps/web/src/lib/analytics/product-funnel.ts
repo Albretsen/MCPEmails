@@ -57,6 +57,8 @@ export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 export type RetentionOptionCategory = 'pause' | 'downgrade';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
+/** pause_resumed: who ended it. retention_option_clicked: which option. */
+export type PlanChangeCategory = 'early' | 'auto' | 'pause' | 'downgrade';
 
 export type ProductFunnelEvent = {
   workspaceId: string;
@@ -80,6 +82,12 @@ export type ProductFunnelEvent = {
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
     | 'paywall_clicked'
+    // Pause and switch to Personal (migration 20261024233000). Category is the
+    // plan the customer was on, except pause_resumed (early | auto) and
+    // retention_option_clicked (pause | downgrade).
+    | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'
+    | 'downgrade_scheduled' | 'downgrade_undone'
+    | 'inbox_parked' | 'inbox_unparked'
     // Why a subscriber cancelled, answered after the cancel was done
     // (/billing/feedback). category = the reason.
     | 'cancel_reason_submitted'
@@ -95,7 +103,7 @@ export type ProductFunnelEvent = {
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory
-    | CancelReason | RetentionOptionCategory;
+    | PlanChangeCategory | CancelReason | RetentionOptionCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
