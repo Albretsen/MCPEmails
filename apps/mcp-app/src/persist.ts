@@ -580,6 +580,9 @@ const CARD_KINDS: readonly string[] = [
   "bulk_plan",
   "receipt",
   "draft_editor",
+  // Kept as a bare kind and state, like bulk_plan: nothing to re-request, so a
+  // remount shows the one line with the dashboard link.
+  "subscription_plan",
 ];
 const CARD_STATES: readonly string[] = [
   "pending",

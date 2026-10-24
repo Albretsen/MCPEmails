@@ -1,4 +1,7 @@
 import type Stripe from 'stripe';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
+import type { FunnelEntryPoint } from '@/lib/analytics/product-funnel';
 
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
@@ -70,6 +73,10 @@ import {
  * about who is allowed to be charged, and the comped guard below is the only
  * thing standing between a comped account and a bill for access it already has
  * for nothing.
+ *
+ * A third caller, the chat checkout link (GET /u/[token]), has no cookie
+ * session and enters through `runCheckoutForIdentity` instead. It skips only
+ * the cookie lookup; everything below that is the same function.
  *
  * The callers own only presentation: JSON body vs redirect target. Every
  * decision (validation, entitlement guards, price resolution, funnel recording,
@@ -149,7 +156,13 @@ export type CheckoutReason =
   | 'already_on_plan_interval'
   | 'stripe_customer_failed'
   | 'plan_change_failed'
-  | 'stripe_session_failed';
+  | 'stripe_session_failed'
+  // Only reachable through `runCheckoutForIdentity` (the chat checkout link,
+  // app/u/[token]/route.ts). That caller may open a hosted page and nothing
+  // else, so an owner who already holds an entitled subscription is refused
+  // here instead of being quoted the in-place swap. The two cookie entry points
+  // never see it: they still reach the swap and its consent gate as before.
+  | 'subscription_exists';
 
 /**
  * What an in-place plan change will cost, quoted BEFORE anything is changed.
@@ -201,8 +214,12 @@ export interface PlanChangePreview {
 }
 
 export type CheckoutOutcome =
-  /** A hosted Stripe Checkout page is waiting at `url`. */
-  | { kind: 'checkout'; url: string }
+  /**
+   * A hosted Stripe Checkout page is waiting at `url`. `sessionId` is only read
+   * by the chat checkout link, which stores it so a second open of the same
+   * link lands on the same session instead of creating another.
+   */
+  | { kind: 'checkout'; url: string; sessionId: string }
   /**
    * An existing subscriber asked for a different plan. NOTHING has been
    * changed and nothing has been charged: this is the quote, and the caller
@@ -574,6 +591,106 @@ export async function runCheckout(input: {
     .limit(1)
     .single();
 
+  return checkoutFor(
+    { supabase, user: { id: user.id, email: user.email }, workspace, wsError },
+    input,
+    { allowPlanChange: true },
+  );
+}
+
+/**
+ * Who a checkout is for, when the caller has no cookie session to read it from.
+ *
+ * Built by the chat checkout link (app/u/[token]/route.ts) from its
+ * `checkout_links` row with the service-role client: the owner's id and email
+ * from auth, and the workspace the refusal happened in. The subscription is
+ * still tied to the USER, exactly as on the cookie path; the workspace only
+ * labels the Stripe customer and carries the funnel rows.
+ */
+export interface CheckoutIdentity {
+  userId: string;
+  email: string;
+  workspaceId: string;
+  displayName: string;
+}
+
+/**
+ * Presentation the identity caller may change. Nothing here can widen what is
+ * sold or to whom: the plan, interval and every guard are decided in
+ * `checkoutFor`, the same as for the two cookie entry points.
+ */
+export interface CheckoutOptions {
+  /** Defaults to the dashboard's ?checkout=success page. */
+  successUrl?: string;
+  /** Defaults to the dashboard's ?checkout=cancelled page. */
+  cancelUrl?: string;
+  /** Stored on the `checkout_started` row, so the funnel can tell the link apart. */
+  entryPoint?: FunnelEntryPoint;
+  /** Extra session metadata. Can never replace user_id, plan_id or interval. */
+  extraMetadata?: Record<string, string>;
+  /** Stripe `expires_at`, unix seconds. Stripe's minimum is 30 minutes ahead. */
+  sessionExpiresAt?: number;
+}
+
+/**
+ * The service-role entry point: a checkout for an identity resolved without a
+ * cookie session (the chat checkout link).
+ *
+ * It runs the same `checkoutFor` as `runCheckout`, so the purchasable
+ * allowlist, the comped guard, price resolution and the `checkout_started` row
+ * are not repeated anywhere. What it can NOT do is reach the in-place price
+ * swap: `allowPlanChange: false` turns an entitled subscriber into a
+ * `subscription_exists` refusal before the subscription is even read, and
+ * `confirmChange` is pinned to false on top of that. A bearer link in a chat
+ * transcript must never be able to touch a card on file.
+ */
+export async function runCheckoutForIdentity(
+  identity: CheckoutIdentity,
+  input: { planId: unknown; interval: unknown; locale?: unknown },
+  options: CheckoutOptions = {},
+): Promise<CheckoutOutcome> {
+  return checkoutFor(
+    {
+      supabase: createServiceRoleClient(),
+      user: { id: identity.userId, email: identity.email },
+      workspace: { id: identity.workspaceId, display_name: identity.displayName },
+      wsError: null,
+    },
+    { planId: input.planId, interval: input.interval, locale: input.locale, confirmChange: false },
+    { ...options, allowPlanChange: false },
+  );
+}
+
+/**
+ * Everything after "who is buying" is known. Shared verbatim by `runCheckout`
+ * (cookie session) and `runCheckoutForIdentity` (service role).
+ *
+ * `supabase` is whichever client resolved the identity. The reads below are
+ * all keyed on `user.id`, so the cookie client (RLS: the caller's own rows)
+ * and the service-role client (the link's owner, resolved server side from
+ * the token) read the same rows for the same user.
+ */
+async function checkoutFor(
+  ctx: {
+    supabase: Pick<SupabaseClient<Database>, 'from'>;
+    user: { id: string; email?: string | null };
+    workspace: { id: string; display_name: string } | null;
+    wsError: { code?: string; message: string } | null;
+  },
+  input: {
+    planId: unknown;
+    interval: unknown;
+    confirmChange?: unknown;
+    locale?: unknown;
+    recoveredFrom?: unknown;
+    quotedOffer?: unknown;
+    /** Visitor country from x-vercel-ip-country; see runCheckout. */
+    country?: unknown;
+  },
+  options: CheckoutOptions & { allowPlanChange: boolean },
+): Promise<CheckoutOutcome> {
+  const { supabase, user, workspace, wsError } = ctx;
+
   // The one and only `checkout_started` writer for this request.
   //
   // What this GUARANTEES: every exit below it that the funnel is able to
@@ -613,7 +730,7 @@ export async function runCheckout(input: {
     // able to fail a payment) and no-ops on a null workspace id. That null case
     // is what makes it safe to call from the validation refusals below, which
     // deliberately run before `wsError` has been acted on.
-    await recordCheckoutStarted(workspace?.id ?? null, target, failure);
+    await recordCheckoutStarted(workspace?.id ?? null, target, failure, options.entryPoint);
   };
 
   // ── 3. Validate the requested plan and interval ────────────────────────────
@@ -766,6 +883,15 @@ export async function runCheckout(input: {
     billing.plan !== 'free' &&
     (billing.subscription_status == null ||
       entitledStatuses.includes(billing.subscription_status));
+
+  if (hasEntitledSubscription && !options.allowPlanChange) {
+    // The chat checkout link. It opens a hosted page or nothing: the swap below
+    // charges a card on file without one, and must stay out of reach of a
+    // bearer link. Recorded like the other "somebody wanted to pay and was
+    // turned away" refusals.
+    await recordAttempt('subscription_exists');
+    return fail('subscription_exists', 409, 'This account already has a paid plan.');
+  }
 
   if (hasEntitledSubscription) {
     // Different paid plan OR a different interval of the same plan: change the
@@ -1189,8 +1315,9 @@ export async function runCheckout(input: {
   // simply omits those two rows, which is what any session created before this
   // shipped will still do when its buyer returns.
   const successUrl =
+    options.successUrl ??
     `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}`;
-  const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
+  const cancelUrl = options.cancelUrl ?? `${appUrl}/dashboard?checkout=cancelled`;
 
   // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
   // Annual Personal or Pro inside the window, coupon live, price unchanged,
@@ -1294,7 +1421,14 @@ export async function runCheckout(input: {
           ...offerMetadata,
         },
       },
+      // Unset unless the caller asks (the chat link's 31 minutes). Every other
+      // session keeps Stripe's 24-hour default, which the abandoned-checkout
+      // reminder is timed around.
+      ...(options.sessionExpiresAt ? { expires_at: options.sessionExpiresAt } : {}),
       metadata: {
+        // Spread FIRST, so a caller's extra key can never replace the three
+        // the webhook trusts.
+        ...(options.extraMetadata ?? {}),
         user_id: user.id,
         plan_id: planId,
         interval,
@@ -1332,7 +1466,7 @@ export async function runCheckout(input: {
     // The user is now on Stripe's hosted page. A `checkout_completed` event
     // that never follows this one is the abandonment signal.
     await recordAttempt();
-    return { kind: 'checkout', url: session.url };
+    return { kind: 'checkout', url: session.url, sessionId: session.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[checkout] stripe.checkout.sessions.create failed:', message);
