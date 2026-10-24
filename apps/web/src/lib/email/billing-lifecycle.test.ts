@@ -780,7 +780,10 @@ test('an SCA renewal never asks for a new card or promises a retry', () => {
         }
         assert.match(email.htmlBody, />\s*Confirm the payment\s*</, `${template} CTA label`);
         assert.ok(email.htmlBody.includes(`href="${HOSTED_INVOICE}"`), `${template} CTA goes to the hosted invoice`);
-        assert.ok(email.body.includes(HOSTED_INVOICE), `${template} text part carries the hosted invoice`);
+        assert.ok(
+          email.body.split('\n').some((line) => line.trim() === HOSTED_INVOICE),
+          `${template} text part carries the hosted invoice on its own line`,
+        );
         assert.match(email.body, /approve/i, `${template} says to approve it with the bank`);
         assert.match(email.htmlBody, /approve/i, `${template} html says to approve it with the bank`);
       }
