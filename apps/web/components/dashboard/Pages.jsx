@@ -6052,7 +6052,9 @@ const BILLING_PLANS = [
   {
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
-    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
+    // soloFeatureChatClosed / soloFeatureAllInboxes: the Pro features, new at
+    // launch and gated to Pro and Business (see PLANS.solo.features).
+    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeatureChatClosed', 'billing.plans.soloFeatureAllInboxes', 'billing.plans.soloFeature4'],
     // Pro is the highlighted plan: ten mailboxes for one person running a
     // business is the upgrade nearly everyone here actually wants. Business
     // pays off past ten mailboxes or once other people need in.

@@ -468,6 +468,17 @@ export const PLANS: Record<PlanId, Plan> = {
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
       'Longer analytics history',
+      // The Pro features (2026-10, owner headline "Your agent keeps working
+      // when the chat is closed"). Each is gated in code to Pro and Business
+      // (pro-features.ts in mcp-server and apps/web/src/lib/plans): every one
+      // is NEW, nothing Free or Personal had moved here. Business inherits
+      // them through "Everything in Pro". No counts, hours or day numbers:
+      // this array ships in the purchase confirmation email.
+      'Follow-up reminders when nobody replies to mail you sent',
+      'Snooze: mail leaves the inbox and comes back when you choose',
+      'A daily morning brief, placed straight in your inbox',
+      'Search every connected inbox at once',
+      'Instructions for your AI, per inbox',
       // webhooksEnabled. No numbers here on purpose (no endpoint count, no
       // retry schedule, no tool count): this list is the purchase email.
       // Scoped API keys are on every plan, so they are not sold here.

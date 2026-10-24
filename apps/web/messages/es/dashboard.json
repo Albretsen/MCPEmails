@@ -818,6 +818,8 @@
       "soloFeature1": "10 bandejas conectadas",
       "soloFeature2": "300 peticiones / minuto (ráfaga 5×)",
       "soloFeature3": "Más historial de analíticas",
+      "soloFeatureChatClosed": "Seguimientos, posponer y resumen matinal con el chat cerrado",
+      "soloFeatureAllInboxes": "Búsqueda en todas las bandejas a la vez, con instrucciones por bandeja",
       "soloFeature4": "Soporte por correo",
       "businessFeature1": "Todo lo de Pro",
       "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",

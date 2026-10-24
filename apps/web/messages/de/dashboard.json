@@ -818,6 +818,8 @@
       "soloFeature1": "10 verbundene Postfächer",
       "soloFeature2": "300 Anfragen/Minute (5× Burst)",
       "soloFeature3": "Längerer Analyseverlauf",
+      "soloFeatureChatClosed": "Nachfassen, Zurückstellen und Morgen-Briefing bei geschlossenem Chat",
+      "soloFeatureAllInboxes": "Alle Postfächer auf einmal durchsuchen, mit Anweisungen pro Postfach",
       "soloFeature4": "E-Mail-Support",
       "businessFeature1": "Alles aus Pro",
       "businessFeature2": "10 Postfächer inklusive, $3 pro Monat für jedes weitere",

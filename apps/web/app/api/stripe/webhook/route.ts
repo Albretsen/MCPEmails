@@ -216,7 +216,7 @@ import {
   isPassRenewal,
   passNoticeSink,
   passesForRenewal,
-  restorePassNotices,
+  resyncPassNotices,
 } from '@/lib/billing/pass-notices';
 import { endPassFreeStart } from '@/lib/billing/pass-refund-subscription';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
@@ -1226,9 +1226,12 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
       refundedEndsAt: result.pass.ends_at,
       source: 'charge.refunded',
     });
-    // The pass that still runs (the stacked one, maybe started early) owes
-    // its two notices with its current dates. Never throws.
-    await restorePassNotices(db, { userId: result.pass.user_id, stripeCustomerId: customerId });
+    // The pass that now ends the cover may have moved (a stacked pass started
+    // today) or ends again (its follower was refunded): re-date its notices.
+    await resyncPassNotices(db, {
+      userId: result.pass.user_id,
+      stripeCustomerId: customerId,
+    });
   } else if (result.kind === 'partial') {
     console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
   }
@@ -1539,7 +1542,7 @@ async function handleSubscriptionDeleted(
 
   // A pass still running: its notices were cancelled when the subscription
   // started, and are true again now that it is gone. Never throws.
-  await restorePassNoticesAfterSubscription(customerId, userId);
+  await resyncPassNoticesAfterSubscription(customerId, userId);
 
   // The subscription is gone, so any dunning still queued for it is now a lie:
   // "update your card and this carries on" is not true once there is nothing
@@ -1572,12 +1575,12 @@ async function handleSubscriptionDeleted(
   }
 }
 
-/** restorePassNotices for the owner of a deleted subscription. Never throws. */
-async function restorePassNoticesAfterSubscription(customerId: string, userId: string | null): Promise<void> {
+/** resyncPassNotices for the owner of a deleted subscription. Never throws. */
+async function resyncPassNoticesAfterSubscription(customerId: string, userId: string | null): Promise<void> {
   try {
     const db = createServiceRoleClient();
     const ownerId = await resolveUserId(db, customerId, userId);
-    if (ownerId) await restorePassNotices(db, { userId: ownerId, stripeCustomerId: customerId });
+    if (ownerId) await resyncPassNotices(db, { userId: ownerId, stripeCustomerId: customerId });
   } catch (err) {
     console.error('[stripe-webhook] pass notice restore after subscription end failed, swallowed:', {
       error: err instanceof Error ? err.message : String(err),

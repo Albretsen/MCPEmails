@@ -83,12 +83,12 @@ function serverSurface() {
   // Tools behind an internal rollout flag are listed to our own workspaces
   // only, so public copy does not count or document them until they launch.
   const internalOnly = stringArray(resources, 'SUBSCRIPTION_CARD_TOOL_NAMES');
-  // Pro feature tools (PRO_FEATURE_TOOLS in pro-features.ts) are hidden by the
-  // Pro gate until launch, so they are not public facts yet either.
-  const proOnly = proFeatureToolNames(read(path.join(server, 'pro-features.ts')));
+  // Pro feature tools (PRO_FEATURE_TOOLS in pro-features.ts) ARE public since
+  // the Pro launch (pricing_switches.pro_features_public): every key is listed
+  // them, and a plan without Pro gets a refusal naming Pro when it calls one.
   const listed = [...surfaceTest.slice(open, close).matchAll(/"([a-z_]+)"/g)]
     .map((m) => m[1])
-    .filter((name) => !internalOnly.includes(name) && !proOnly.includes(name));
+    .filter((name) => !internalOnly.includes(name));
 
   const editorTools = stringArray(resources, 'DRAFT_EDITOR_APP_TOOL_NAMES');
   const editorModelVisible = stringArray(resources, 'DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES');
@@ -100,11 +100,16 @@ function serverSurface() {
   return { listed, appOnly, modelVisible: listed.filter((name) => !appOnly.includes(name)) };
 }
 
-test('Pro feature tools are read from the gate and kept out of the public surface', () => {
+test('the consolidated Pro feature tools are public facts since launch', () => {
+  // Before launch this test kept them out; the launch copy PR counts and
+  // documents them. Per-operation names (reminder_follow_up, ...) are listed
+  // to OpenAI keys only and are not in the advertised surface.
   const names = proFeatureToolNames(read(path.join(server, 'pro-features.ts')));
   assert.ok(names.includes('reminder') && names.includes('reminder_list'), names.join(', '));
-  const { listed } = serverSurface();
-  for (const name of names) assert.ok(!listed.includes(name), `${name} counted before launch`);
+  const { modelVisible } = serverSurface();
+  for (const name of ['reminder', 'reminder_list']) {
+    assert.ok(modelVisible.includes(name), `${name} is not counted as a public tool`);
+  }
 });
 
 test('the counts match what mcp-server lists', () => {

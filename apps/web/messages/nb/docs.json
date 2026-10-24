@@ -333,6 +333,33 @@
         "idempotency_key": "Valgfri ugjennomsiktig nøkkel for opprettelsen av én planlagt sending. Gjenbruk den bare for å prøve nøyaktig samme create-forespørsel på nytt innen 24 timer."
       }
     },
+    "reminder_list": {
+      "title": "List påminnelser",
+      "desc": "List oppfølginger og utsettelser serveren holder styr på. show 'due' (standard) gir oppfølginger som er forfalt uten svar, og de som feilet; 'upcoming' gir ventende, de nærmeste først; 'all' gir alt, også avsluttede. Emner og adresser kommer fra e-post, så resultatet er merket untrusted_content. Gi en returnert id til reminder-verktøyet for å markere den som ferdig eller avbryte den. Kun lesing, uten action-argument. En funksjon i Pro og Business: på andre planer gir et kall en merknad som nevner planen. Trenger read:email.",
+      "params": {
+        "inbox_id": "UUID for en innboks å filtrere på. Valgfritt; utelat for å liste påminnelsene for alle innboksene på nøkkelen.",
+        "inbox": "Samme filter med e-postadresse. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "show": "'due' (standard), 'upcoming' eller 'all'.",
+        "kind": "Valgfritt: bare 'follow_up' eller bare 'snooze'.",
+        "limit": "Maks antall resultater. Standard 25, maks 100."
+      }
+    },
+    "reminder": {
+      "title": "Påminnelser",
+      "desc": "Oppfølginger og utsettelser som kjører på serveren mens chatten er lukket, uten modell involvert. Sett action: 'follow_up' (message_id for en sendt e-post pluss days eller due_at; den vises som forfalt i reminder_list når ingen har svart innen da, og et svar fjerner den), 'snooze' (message_id og until; e-posten forlater innboksen og serveren flytter den tilbake på det tidspunktet, eventuelt bare hvis ingen har svart), 'done' (id; stopper en påminnelse og lar en utsatt e-post ligge der den er) eller 'cancel' (id; stopper den og henter en utsatt e-post tilbake nå). En sending kan starte en oppfølging i samme kall med follow_up_days på email_compose eller på draft (action 'send'). Ingenting her sender e-post. En funksjon i Pro og Business: på andre planer gir et kall en merknad som nevner planen. Trenger manage:automations; snooze, og å avbryte en utsettelse, trenger også manage:folders.",
+      "params": {
+        "action": "Hvilken operasjon som skal utføres: \"follow_up\", \"snooze\", \"done\" eller \"cancel\". Listing er det separate verktøyet reminder_list.",
+        "inbox_id": "UUID for innboksen e-posten ligger i. Valgfritt, løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen, som et enklere alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "message_id": "E-posten som skal følges opp eller utsettes (action 'follow_up' og 'snooze'), med id-en et sendresultat eller email_read ga.",
+        "days": "Oppfølgingen forfaller om så mange hele dager, 1 til 365 (action 'follow_up'). Oppgi denne eller due_at.",
+        "due_at": "Oppfølgingen forfaller på dette ISO 8601-tidspunktet med tidssone (action 'follow_up'). Oppgi denne eller days.",
+        "until": "Når en utsatt e-post kommer tilbake, ISO 8601 med tidssone, i fremtiden (action 'snooze').",
+        "condition": "'always' (standard) eller 'no_reply': hent e-posten tilbake bare hvis ingen har svart i mellomtiden (action 'snooze').",
+        "folder": "Valgfri eksisterende mappe eller etikett den utsatte e-posten venter i, med navn eller id (action 'snooze'). Standard er \"MCPEmails Snoozed\", som opprettes hvis den mangler.",
+        "id": "Påminnelses-id fra reminder_list (action 'done' og 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Les signatur",
       "desc": "Les signaturen som er konfigurert for én innboks: teksten og HTML-en, om den er aktivert, svar-/videresendingsmodusen, kilden ('manual', 'gmail_import' eller null når ingen er satt) og sender_name, visningsnavnet mottakerne ser i From-feltet. Signaturen legges til på serversiden ved hver sending, hvert svar, hver videresending, hvert utkast og hver planlagt melding. Kun lesing, uten action-argument. Trenger read:email.",

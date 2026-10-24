@@ -89,7 +89,7 @@ test('the receipt goes now and the reminder 3 days before billing resumes', asyn
   const receipt = rows.find((r) => r.template === 'pause_started')!;
   const reminder = rows.find((r) => r.template === 'pause_ending_3')!;
   assert.equal(receipt.send_after, now.toISOString());
-  assert.equal(receipt.scope_key, `sub_q:${sec('2026-11-10T12:00:00Z')}`);
+  assert.equal(receipt.scope_key, `sub_q:${sec('2026-11-10T12:00:00Z')}:${billsAt}`);
   assert.equal(reminder.send_after, '2027-01-07T12:00:00.000Z');
   assert.equal(reminder.scope_key, `sub_q:${billsAt}`);
 
@@ -99,6 +99,22 @@ test('the receipt goes now and the reminder 3 days before billing resumes', asyn
     billsAtSeconds: billsAt, payload: PAYLOAD, now,
   });
   assert.equal(db.table('billing_email_sends').filter((r) => r.template === 'pause_started').length, 1);
+});
+
+test('an unsent receipt is cancelled on a change, and an extension can queue a fresh one', async () => {
+  const db = new FakeSupabase();
+  const now = new Date('2026-10-24T09:00:00Z');
+  const from = sec('2026-11-10T12:00:00Z');
+  await queue.queuePauseEmails({ db: asClient(db), target: TARGET, subscriptionId: 'sub_q', pausedFromSeconds: from, billsAtSeconds: sec('2026-12-10T12:00:00Z'), payload: PAYLOAD, now });
+  assert.equal(await queue.cancelUnsentPauseReceipt(asClient(db), 'cus_q', 'pause_changed'), 1);
+  await queue.queuePauseEmails({ db: asClient(db), target: TARGET, subscriptionId: 'sub_q', pausedFromSeconds: from, billsAtSeconds: sec('2027-01-10T12:00:00Z'), payload: PAYLOAD, now });
+  const receipts = db.table('billing_email_sends').filter((r) => r.template === 'pause_started');
+  assert.equal(receipts.length, 2);
+  assert.equal(receipts.filter((r) => !r.cancelled_at).length, 1);
+
+  // A receipt that already went is never cancelled, so no second one follows.
+  receipts.find((r) => !r.cancelled_at)!.sent_at = now.toISOString();
+  assert.equal(await queue.cancelUnsentPauseReceipt(asClient(db), 'cus_q', 'pause_changed'), 0);
 });
 
 test('an extension re-queues the reminder and cancels the old one; a resume cancels it', async () => {
