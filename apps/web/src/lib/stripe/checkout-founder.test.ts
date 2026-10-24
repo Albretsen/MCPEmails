@@ -65,6 +65,8 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'free',
     recordCheckoutStarted: async () => {},
     recordPlanChange: async () => {},
+    primaryWorkspaceId: async () => WORKSPACE_ID,
+    recordPassEvent: async () => {},
   },
 });
 

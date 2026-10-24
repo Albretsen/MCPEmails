@@ -84,6 +84,8 @@ function fakeSupabase(opts: {
   signedIn?: boolean;
   /** false models an authenticated user who owns no workspace (PGRST116). */
   hasWorkspace?: boolean;
+  /** The caller's own `user_passes` rows, as RLS would return them. */
+  passes?: Array<Record<string, unknown>>;
 }) {
   const signedIn = opts.signedIn !== false;
   const hasWorkspace = opts.hasWorkspace !== false;
@@ -103,9 +105,15 @@ function fakeSupabase(opts: {
       Object.assign(builder, {
         select: chain,
         eq: chain,
+        in: chain,
         is: chain,
         order: chain,
         limit: chain,
+        // `user_passes` is the one read awaited as a list rather than through
+        // single/maybeSingle (getActivePass in src/lib/billing/pass.ts).
+        ...(table === 'user_passes'
+          ? { then: (resolve: (value: unknown) => unknown) => resolve({ data: opts.passes ?? [], error: null }) }
+          : {}),
         single: async () => {
           assert.equal(table, 'workspaces');
           if (!hasWorkspace) {
@@ -190,8 +198,17 @@ const SUBSCRIPTION_ID = 'sub_test_existing';
  */
 const previewsRequested: Array<Record<string, unknown>> = [];
 
+/** Every pass funnel row, kept apart from the subscription checkout rows. */
+const passRows: Array<{ stage: string; failure: string | undefined }> = [];
+
 nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
+    primaryWorkspaceId: async () => WORKSPACE_ID,
+    recordPassEvent: async (args: { workspaceId: string | null; stage: string; failure?: string }) => {
+      if (!args.workspaceId) return;
+      assert.equal(args.workspaceId, WORKSPACE_ID);
+      passRows.push({ stage: args.stage, failure: args.failure });
+    },
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
     planCategory: (plan: string | null | undefined) =>
       plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'free',
@@ -407,6 +424,8 @@ async function checkout(opts: {
   locale?: unknown;
   /** The expired session an abandoned-checkout reminder linked from. */
   recoveredFrom?: unknown;
+  /** The buyer's own 3-month pass rows. */
+  passes?: Array<Record<string, unknown>>;
   /** The visitor country a route read from x-vercel-ip-country. */
   country?: unknown;
   /** The seasonal offer id the confirmed quote carried. */
@@ -417,6 +436,7 @@ async function checkout(opts: {
     billing: opts.billing,
     signedIn: opts.signedIn,
     hasWorkspace: opts.hasWorkspace,
+    passes: opts.passes,
   });
   funnelRows.length = 0;
   funnelEntryPoints.length = 0;
@@ -2094,7 +2114,7 @@ test('STRIPE_FORCE_USD pins USD and drops the EUR and tax additions, whatever el
 });
 
 // ---------------------------------------------------------------------------
-// 7. The identity entry point: the chat checkout link (app/u/[token]).
+// 10. The identity entry point: the chat checkout link (app/u/[token]).
 //
 // `runCheckoutForIdentity` is the third caller of the one core. It has no
 // cookie session, so the owner arrives as an identity resolved with the
@@ -2270,6 +2290,264 @@ test('the purchasable allowlist still applies to a link', async () => {
   assert.equal(badInterval.outcome.kind, 'error');
   if (badInterval.outcome.kind === 'error') assert.equal(badInterval.outcome.reason, 'invalid_interval');
   assert.deepEqual(badInterval.sessionsCreated, []);
+});
+
+// ---------------------------------------------------------------------------
+// 11. The 3-month Personal pass (runPassCheckout), and a pass holder's
+//    subscription anchored to the pass end.
+// ---------------------------------------------------------------------------
+
+const { runPassCheckout, passSubscriptionStart } = await import('./checkout-core.ts');
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function livePass(id: string, startOffsetDays: number, endOffsetDays: number, status = 'active') {
+  const now = Date.now();
+  return {
+    id,
+    user_id: USER_ID,
+    product: 'personal_pass_3m',
+    plan: 'personal',
+    stripe_checkout_session_id: `cs_${id}`,
+    stripe_payment_intent_id: `pi_${id}`,
+    amount_minor: 2900,
+    currency: 'usd',
+    starts_at: new Date(now + startOffsetDays * DAY_MS).toISOString(),
+    ends_at: new Date(now + endOffsetDays * DAY_MS).toISOString(),
+    status,
+    reminder_queued_at: null,
+    expired_at: null,
+    refunded_at: null,
+  };
+}
+
+async function passCheckout(opts: {
+  mode?: string;
+  price?: string | null;
+  billing?: BillingRow;
+  entitlement?: EntitlementRow;
+  passes?: Array<Record<string, unknown>>;
+  locale?: unknown;
+  experimentArm?: unknown;
+  surface?: unknown;
+  signedIn?: boolean;
+}) {
+  const envBefore = {
+    mode: process.env.PERSONAL_PASS_ENABLED,
+    price: process.env.STRIPE_PRICE_PERSONAL_PASS_3M,
+  };
+  if (opts.mode === undefined) process.env.PERSONAL_PASS_ENABLED = 'on';
+  else process.env.PERSONAL_PASS_ENABLED = opts.mode;
+  if (opts.price === null) delete process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+  else process.env.STRIPE_PRICE_PERSONAL_PASS_3M = opts.price ?? 'price_pass_3m';
+  currentSupabase = fakeSupabase({
+    entitlement: opts.entitlement ?? null,
+    billing: opts.billing,
+    passes: opts.passes,
+    signedIn: opts.signedIn,
+  });
+  funnelRows.length = 0;
+  passRows.length = 0;
+  sessionsCreated.length = 0;
+  try {
+    const outcome = await runPassCheckout({
+      locale: opts.locale,
+      experimentArm: opts.experimentArm,
+      surface: opts.surface,
+    });
+    return {
+      outcome,
+      passRows: [...passRows],
+      funnelRows: [...funnelRows],
+      sessionsCreated: [...sessionsCreated],
+    };
+  } finally {
+    if (envBefore.mode === undefined) delete process.env.PERSONAL_PASS_ENABLED;
+    else process.env.PERSONAL_PASS_ENABLED = envBefore.mode;
+    if (envBefore.price === undefined) delete process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+    else process.env.STRIPE_PRICE_PERSONAL_PASS_3M = envBefore.price;
+  }
+}
+
+test('with the switch off (the default) a pass checkout is refused and nothing is recorded', async () => {
+  for (const mode of ['off', '', 'true']) {
+    const { outcome, sessionsCreated, passRows: rows } = await passCheckout({ mode });
+    assert.equal(outcome.kind, 'error');
+    assert.equal(outcome.kind === 'error' && outcome.reason, 'pass_unavailable', JSON.stringify(mode));
+    assert.equal(sessionsCreated.length, 0);
+    assert.equal(rows.length, 0);
+  }
+});
+
+test('a Free user gets a payment-mode Checkout for the one-time price, never discounted', async () => {
+  const { outcome, sessionsCreated, passRows: rows, funnelRows: subscriptionRows } = await passCheckout({
+    experimentArm: 'treatment',
+    surface: 'checkout_return',
+  });
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  const params = sessionsCreated[0];
+  assert.equal(params.mode, 'payment');
+  assert.deepEqual(params.line_items, [{ price: 'price_pass_3m', quantity: 1 }]);
+  assert.equal(params.allow_promotion_codes, false);
+  assert.equal(params.submit_type, 'pay');
+  assert.equal(params.client_reference_id, USER_ID);
+  assert.equal('subscription_data' in params, false);
+  const metadata = {
+    user_id: USER_ID,
+    workspace_id: WORKSPACE_ID,
+    product: 'personal_pass_3m',
+    plan_id: 'personal',
+    experiment_arm: 'treatment',
+    surface: 'checkout_return',
+  };
+  assert.deepEqual(params.metadata, metadata);
+  assert.deepEqual(params.payment_intent_data, { metadata });
+  assert.deepEqual(params.invoice_creation, { enabled: true, invoice_data: { metadata } });
+  assert.match(String(params.success_url), /\/dashboard\/settings\?pass=started$/);
+  assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: undefined }]);
+  assert.equal(subscriptionRows.length, 0, 'a pass never writes a checkout_started row');
+});
+
+test('the hosted page states the end date, that nothing renews, and the 14-day refund', async () => {
+  const { sessionsCreated } = await passCheckout({});
+  const text = sessionsCreated[0].custom_text as SubmitText;
+  assert.match(text.submit.message, /^Paid once\. Personal until /);
+  assert.ok(/Nothing renews/.test(text.submit.message));
+  assert.match(text.submit.message, /Full refund within 14 days: \[right of withdrawal\]\(http[^)]*\/withdrawal\)/);
+  assert.doesNotMatch(text.submit.message, /30 days|trial|save|deal/i);
+  assert.doesNotMatch(text.submit.message, /\u2014/);
+  // Three months out, in the en-GB short form, e.g. "24 Jan 2027".
+  assert.match(text.submit.message, /until \d{1,2} [A-Z][a-z]{2} \d{4}\./);
+
+  const de = (await passCheckout({ locale: 'de' })).sessionsCreated[0];
+  assert.equal(de.locale, 'de');
+  const deText = de.custom_text as SubmitText;
+  assert.match(deText.submit.message, /^Einmalige Zahlung\. Personal bis zum \d{1,2}\. [A-Z][a-zä]+ \d{4}\./);
+  assert.match(deText.submit.message, /14 Tagen: \[Widerrufsrecht\]\(http[^)]*\/de\/withdrawal\)/);
+});
+
+test('an entitled subscriber is refused with already_subscribed, in every entitled status', async () => {
+  for (const status of ['active', 'trialing', 'past_due', 'unpaid']) {
+    const { outcome, sessionsCreated, passRows: rows } = await passCheckout({
+      billing: { plan: 'personal', subscription_status: status, stripe_subscription_id: SUBSCRIPTION_ID },
+    });
+    assert.equal(outcome.kind === 'error' && outcome.reason, 'already_subscribed', status);
+    assert.equal(outcome.kind === 'error' && outcome.status, 409);
+    assert.equal(sessionsCreated.length, 0);
+    assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'subscription_exists' }]);
+  }
+});
+
+test('a lapsed subscriber can buy a pass', async () => {
+  const { outcome } = await passCheckout({
+    billing: { plan: 'free', subscription_status: 'canceled', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(outcome.kind, 'checkout');
+});
+
+test('a comped account is refused like every other checkout', async () => {
+  const { outcome, sessionsCreated } = await passCheckout({
+    entitlement: { kind: 'comped_scale', expires_at: null },
+  });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'comped');
+  assert.equal(sessionsCreated.length, 0);
+});
+
+test('a pass holder can stack one pass, and the page names the later end date', async () => {
+  const { outcome, sessionsCreated } = await passCheckout({ passes: [livePass('a', -10, 80)] });
+  assert.equal(outcome.kind, 'checkout');
+  const text = (sessionsCreated[0].custom_text as SubmitText).submit.message;
+  // The stacked pass starts in 80 days and runs three months from then, so its
+  // end is at least 160 days away: never the plain three months from today.
+  const shown = text.match(/until (\d{1,2} [A-Z][a-z]{2} \d{4})\./)?.[1];
+  assert.ok(shown);
+  assert.ok(new Date(`${shown} UTC`).getTime() > Date.now() + 160 * DAY_MS, shown);
+});
+
+test('a second queued pass is refused', async () => {
+  const { outcome, sessionsCreated, passRows: rows } = await passCheckout({
+    passes: [livePass('a', -10, 80), livePass('b', 80, 170, 'scheduled')],
+  });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'pass_already_queued');
+  assert.equal(sessionsCreated.length, 0);
+  assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'conflict' }]);
+});
+
+test('an unconfigured pass price is refused and recorded', async () => {
+  const { outcome, passRows: rows } = await passCheckout({ price: null });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'price_not_configured');
+  assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'price_not_configured' }]);
+});
+
+test('an arm or surface that is not a short token never reaches Stripe as given', async () => {
+  const { sessionsCreated } = await passCheckout({ experimentArm: 'x'.repeat(40), surface: '<script>' });
+  const metadata = sessionsCreated[0].metadata as Record<string, string>;
+  assert.equal(metadata.experiment_arm, 'unknown');
+  assert.equal(metadata.surface, 'unknown');
+});
+
+test('a pass holder subscribing to Personal yearly is anchored to the pass end, nothing due today', async () => {
+  const passes = [livePass('a', -10, 80)];
+  const { outcome, sessionsCreated } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    passes,
+  });
+  assert.equal(outcome.kind, 'checkout');
+  const data = sessionsCreated[0].subscription_data as Record<string, unknown>;
+  assert.equal(data.billing_cycle_anchor, Math.floor(Date.parse(passes[0].ends_at) / 1000));
+  assert.equal(data.proration_behavior, 'none');
+  assert.equal('trial_end' in data, false);
+  assert.deepEqual(data.metadata, { user_id: USER_ID });
+});
+
+test('a pass holder subscribing to Personal monthly far from the end starts after the pass instead', async () => {
+  const passes = [livePass('a', -10, 80)];
+  const { sessionsCreated } = await checkout({ planId: 'personal', interval: 'month', entitlement: null, passes });
+  const data = sessionsCreated[0].subscription_data as Record<string, unknown>;
+  assert.equal(data.trial_end, Math.floor(Date.parse(passes[0].ends_at) / 1000));
+  assert.equal('billing_cycle_anchor' in data, false);
+});
+
+test('a pass holder buying a higher tier is charged from today', async () => {
+  const { sessionsCreated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    passes: [livePass('a', -10, 80)],
+  });
+  const data = sessionsCreated[0].subscription_data as Record<string, unknown>;
+  assert.deepEqual(data, { metadata: { user_id: USER_ID } });
+});
+
+test('without a pass a Personal subscription is exactly what it was', async () => {
+  const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null });
+  assert.deepEqual(sessionsCreated[0].subscription_data, { metadata: { user_id: USER_ID } });
+});
+
+test('passSubscriptionStart: anchor inside the first period, trial_end past it, nothing for a pass about to end', () => {
+  const now = new Date('2027-01-01T00:00:00Z');
+  const in20Days = new Date('2027-01-21T00:00:00Z');
+  const in80Days = new Date('2027-03-22T00:00:00Z');
+  const in30Minutes = new Date('2027-01-01T00:30:00Z');
+  const in24Hours = new Date('2027-01-02T00:00:00Z');
+  const seconds = (date: Date) => Math.floor(date.getTime() / 1000);
+
+  assert.deepEqual(passSubscriptionStart(in20Days, 'month', now), {
+    billing_cycle_anchor: seconds(in20Days),
+    proration_behavior: 'none',
+  });
+  assert.deepEqual(passSubscriptionStart(in80Days, 'month', now), { trial_end: seconds(in80Days) });
+  assert.deepEqual(passSubscriptionStart(in80Days, 'year', now), {
+    billing_cycle_anchor: seconds(in80Days),
+    proration_behavior: 'none',
+  });
+  assert.equal(passSubscriptionStart(in30Minutes, 'month', now), null);
+  assert.deepEqual(passSubscriptionStart(in24Hours, 'month', now), {
+    billing_cycle_anchor: seconds(in24Hours),
+    proration_behavior: 'none',
+  });
 });
 
 // ── A pause or a switch to Personal is booked ─────────────────────────────
