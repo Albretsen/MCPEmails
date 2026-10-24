@@ -79,7 +79,7 @@ import {
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
 import { ACCOUNT_DELETED_REASON, accountState } from '@/lib/billing/deleted-account';
-import { checkPassNoticeFreshness } from '@/lib/billing/pass-notices';
+import { checkPassNoticeFreshness } from '@/lib/billing/pass-notice-freshness';
 import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-funnel';
 import { isSuppressed } from '@/lib/email/lifecycle';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';

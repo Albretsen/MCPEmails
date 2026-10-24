@@ -762,10 +762,7 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
-  // The passes held BEFORE this one: the renewal test and the earlier pass's
-  // notices (a pass that another pass follows does not end) are about them.
   const paidAt = new Date();
-  const heldBefore = await passesForRenewal(db, userId);
 
   const result = await recordPassPurchase(db, {
     userId,
@@ -795,6 +792,10 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
     `[stripe-webhook] pass ${result.pass.id} for ${userId}: ${result.pass.status} until ${result.pass.ends_at}; projected "${result.plan}".`,
   );
 
+  // The passes held besides this one: the renewal test and the earlier pass's
+  // notices (a pass that another pass follows does not end) are about them.
+  // Read after the purchase is stored, so a failed read cannot cost a retry.
+  const heldBefore = (await passesForRenewal(db, userId)).filter((p) => p.id !== result.pass.id);
   // A stacked pass: the earlier pass no longer ends, so its notices are untrue.
   for (const earlier of heldBefore) {
     if (earlier.status === 'active' || earlier.status === 'scheduled') {

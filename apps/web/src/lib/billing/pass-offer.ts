@@ -207,10 +207,10 @@ export interface PassBillingState {
   /**
    * When a subscription bought now would first charge, ISO, per interval: the
    * pass's end whether Stripe anchors the billing cycle there or has to fall
-   * back to trial_end, or now when the pass ends within the hour. Our UI only
-   * ever calls it the first charge date, never a trial.
+   * back to trial_end; null when it would charge today (the pass ends within
+   * the hour). Our UI only ever calls it the first charge date, never a trial.
    */
-  firstCharge: { month: string; year: string };
+  firstCharge: { month: string | null; year: string | null };
 }
 
 export function passBillingState(
@@ -219,8 +219,8 @@ export function passBillingState(
 ): PassBillingState {
   const now = options.now ?? new Date();
   const checkoutOpen = options.checkoutOpen ?? passCheckoutOpen();
-  const firstChargeAt = (interval: 'month' | 'year'): string =>
-    (passSubscriptionStart(active.coveredUntil, interval, now) ? active.coveredUntil : now).toISOString();
+  const firstChargeAt = (interval: 'month' | 'year'): string | null =>
+    passSubscriptionStart(active.coveredUntil, interval, now) ? active.coveredUntil.toISOString() : null;
   return {
     currentEndsAt: new Date(active.current.ends_at).toISOString(),
     queuedEndsAt: active.queued ? new Date(active.queued.ends_at).toISOString() : null,

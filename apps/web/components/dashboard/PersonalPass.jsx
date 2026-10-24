@@ -187,12 +187,11 @@ export function PassBillingPanel({ passState, stripePrices, onSubscribe, busy = 
   const t = useTranslations('dashboard');
   const { locale } = useAppLocale();
   const prices = personalPrices(stripePrices);
-  const now = Date.now();
   const chargeLabel = (interval, price) => {
+    // Null when the subscription would charge today (decided server-side).
     const at = passState.firstCharge?.[interval];
-    const later = at && Date.parse(at) - now > 60 * 60 * 1000;
     const key = interval === 'year' ? 'subscribeYearly' : 'subscribeMonthly';
-    return later
+    return at
       ? t(`billing.pass.${key}From`, { price, date: passDate(at, locale) })
       : t(`billing.pass.${key}`, { price });
   };
