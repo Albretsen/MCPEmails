@@ -567,8 +567,18 @@ export async function queuePauseReminder(options: {
 }
 
 /**
- * The pause receipt (now) and the reminder. One receipt per pause start:
- * scope `${sub}:${pausedFrom}`, so a replay inserts nothing.
+ * scope_key of the pause receipt: the pause start AND the date billing
+ * resumes, so an extension that replaces an unsent receipt can queue a new one
+ * (the unique index would refuse a second row on the start alone), while a
+ * replay of the same pause still inserts nothing.
+ */
+export function pauseReceiptScopeKey(subscriptionId: string, pausedFromSeconds: number, billsAtSeconds: number): string {
+  return `${pauseScopeKey(subscriptionId, pausedFromSeconds)}:${Math.floor(billsAtSeconds)}`;
+}
+
+/**
+ * The pause receipt (now) and the reminder. One receipt per pause start and
+ * resume date (pauseReceiptScopeKey), so a replay inserts nothing.
  */
 export async function queuePauseEmails(options: {
   db: SupabaseClient<Database>;
@@ -589,7 +599,7 @@ export async function queuePauseEmails(options: {
         user_id: target.userId,
         recipient: target.recipient,
         template: 'pause_started',
-        scope_key: pauseScopeKey(subscriptionId, pausedFromSeconds),
+        scope_key: pauseReceiptScopeKey(subscriptionId, pausedFromSeconds, options.billsAtSeconds),
         send_after: now.toISOString(),
         payload,
       },
@@ -598,6 +608,21 @@ export async function queuePauseEmails(options: {
   );
   const reminder = await queuePauseReminder({ ...options, now });
   return receipt + reminder;
+}
+
+/**
+ * Cancel an unsent pause receipt. A pause that is removed or extended before
+ * the dispatcher picked the receipt up must not announce the old dates (seen
+ * in the 2026-10-24 internal test: "paused" arrived after the resume). Returns
+ * how many it cancelled, so an extension knows to queue a fresh receipt.
+ * Never throws.
+ */
+export async function cancelUnsentPauseReceipt(
+  db: SupabaseClient<Database>,
+  stripeCustomerId: string,
+  reason: CancelReason,
+): Promise<number> {
+  return cancelOpenSequence({ db, stripeCustomerId, templates: ['pause_started'], reason });
 }
 
 /** Cancel every unsent pause reminder for this customer. Never throws. */

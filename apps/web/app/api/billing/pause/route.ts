@@ -53,6 +53,7 @@ import { sanitizeKeepOrder, writePlanChangeColumns } from '@/lib/billing/plan-ch
 import {
   cancelOpenSequence,
   cancelPauseReminders,
+  cancelUnsentPauseReceipt,
   isGrandfathered,
   queuePauseEmails,
   queuePauseReminder,
@@ -181,6 +182,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           reason: 'subscription_reactivated',
         });
       }
+      // An unsent receipt carries the old dates: drop it on any change. An
+      // extension then sends a fresh one, but only if the old one never went.
+      const receiptReplaced =
+        action === 'pause' ? 0 : await cancelUnsentPauseReceipt(db, customerId, 'pause_changed');
       if (action === 'resume_early') {
         await cancelPauseReminders(db, customerId, 'pause_changed');
       } else if (update.billsAt != null && update.pausedFrom != null) {
@@ -196,7 +201,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             grandfathered: await isGrandfathered(db, user.id),
           };
           const target = { stripeCustomerId: customerId, userId: user.id, recipient };
-          if (action === 'pause') {
+          if (action === 'pause' || receiptReplaced > 0) {
             await queuePauseEmails({ db, target, subscriptionId: subscription.id, pausedFromSeconds: update.pausedFrom, billsAtSeconds: update.billsAt, payload, now });
           } else {
             await queuePauseReminder({ db, target, subscriptionId: subscription.id, billsAtSeconds: update.billsAt, payload, now });
