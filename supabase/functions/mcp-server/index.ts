@@ -426,6 +426,18 @@ import {
   TargetUnresolvedError,
 } from "./send-stages.ts";
 import {
+  addressList,
+  type BrakeDb,
+  type BrakeDecision,
+  brakeRefusalResult,
+  brakeRefusalText,
+  brakeTrippedEvent,
+  checkOutboundBrakes,
+  OUTBOUND_BRAKE_ERROR_CODES,
+  recordProviderRefusal,
+} from "./outbound-brakes.ts";
+import { headroom, type RateLimitHeadroom, rateLimitHeaders, withRateLimitHeaders } from "./rate-limit-headers.ts";
+import {
   type AttachmentManifestEntry,
   type AttachmentReferenceInput,
   type AttachmentSpec,
@@ -1708,6 +1720,10 @@ const CORS_HEADERS: Record<string, string> = {
     "mcp-protocol-version, mcp-session-id, last-event-id",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
+  // A browser-hosted client can read these only if they are exposed.
+  "Access-Control-Expose-Headers":
+    "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Retry-After, " +
+    "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Window, X-Plan",
 };
 
 // ---------------------------------------------------------------------------
@@ -2081,7 +2097,12 @@ async function completeOutboundIdempotency(
   //
   // A "Confirm in chat" refusal is the same certainty (nothing was sent), and
   // its repeat with the user's yes must be able to send under the same key.
-  if (logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE || logErrorCode === CHAT_CONFIRM_ERROR_CODE) {
+  // So is an outbound brake refusal (outbound-brakes.ts): the same request
+  // must be able to go through under the same key once the limit lifts.
+  if (
+    logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE || logErrorCode === CHAT_CONFIRM_ERROR_CODE ||
+    (logErrorCode !== null && OUTBOUND_BRAKE_ERROR_CODES.has(logErrorCode))
+  ) {
     const { error: releaseError } = await supabase.from("outbound_idempotency")
       .delete()
       .eq("api_key_id", apiKeyId)
@@ -2750,7 +2771,8 @@ async function claimGateReservation(toolName: string, willReserve: boolean): Pro
  * is the only plan-based usage lever. It is enforced per WORKSPACE (aggregate
  * across all of the workspace's API keys), so adding keys does not multiply
  * throughput. The per-key rolling windows further below are a separate abuse
- * guard that applies regardless of plan.
+ * guard, lifted to this ceiling so one key can use the whole plan
+ * (perKeyWindows).
  *
  * `enterprise` is a legacy alias (the tier was removed) mapped to the Team
  * ceiling so any pre-existing enterprise workspace is not throttled.
@@ -2810,6 +2832,8 @@ interface PlanQuotaResult {
    * Absent when the workspace lookup failed open.
    */
   firstUse?: FirstUseMarkers;
+  /** True only when the window count itself succeeded (not a fail-open answer). */
+  counted?: boolean;
 }
 
 /**
@@ -2851,6 +2875,13 @@ interface PreloadedPlanQuotaReads {
 async function checkPlanQuota(
   workspaceId: string,
   preloaded?: PreloadedPlanQuotaReads,
+  /**
+   * Told the resolved per-minute ceiling as soon as it is known, before the
+   * window count is awaited, so the per-key limiter can scale its windows
+   * from the same plan read (perKeyWindows) without a round trip of its own.
+   * Called exactly once on every path, the fail-open ones included.
+   */
+  onCeiling?: (perMinuteLimit: number) => void,
 ): Promise<PlanQuotaResult> {
   // The window count (step 2) needs nothing from the workspace row, so it is
   // issued first and overlaps the two lookups below instead of queueing behind
@@ -2882,6 +2913,7 @@ async function checkPlanQuota(
       error: wsError?.message ?? "no row",
     });
     // Fail open.
+    onCeiling?.(DEFAULT_REQUESTS_PER_MINUTE);
     return {
       allowed: true,
       plan: "free",
@@ -2922,6 +2954,7 @@ async function checkPlanQuota(
   const legacyLimit = grandfathered ? LEGACY_REQUESTS_PER_MINUTE[plan] : undefined;
   const perMinuteLimit = legacyLimit ?? PLAN_REQUESTS_PER_MINUTE[plan] ??
     DEFAULT_REQUESTS_PER_MINUTE;
+  onCeiling?.(perMinuteLimit);
 
   const firstUse: FirstUseMarkers = {
     analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
@@ -2958,6 +2991,7 @@ async function checkPlanQuota(
       usedThisMinute,
       retryAfterSeconds: 0,
       firstUse,
+      counted: true,
     };
   }
 
@@ -3092,6 +3126,30 @@ const RATE_LIMIT_WINDOWS: WindowDefinition[] = [
 ];
 
 /**
+ * How far a plan lifts the per-key windows: the workspace's per-minute
+ * ceiling over the base per-minute window, never below 1.
+ *
+ * Until 2026-10-24 the per-key windows were plan-blind, so one Pro key (300
+ * a minute across the workspace) or one Personal key (120) stopped at 100,
+ * and the plan's burst was reachable only with three or more keys. The
+ * minute window is now max(100, plan ceiling), and the hour and day windows
+ * scale by the same factor, so a single key can use its whole plan. Free (60)
+ * stays at the base values: the windows never go below them.
+ */
+function perKeyPlanFactor(perMinuteCeiling: number): number {
+  return Math.max(1, perMinuteCeiling / RATE_LIMIT_WINDOWS[0].limit);
+}
+
+/** RATE_LIMIT_WINDOWS lifted for a workspace's per-minute ceiling (see perKeyPlanFactor). */
+function perKeyWindows(perMinuteCeiling: number): WindowDefinition[] {
+  const factor = perKeyPlanFactor(perMinuteCeiling);
+  return RATE_LIMIT_WINDOWS.map((window) => ({
+    ...window,
+    limit: Math.max(window.limit, Math.ceil(window.limit * factor)),
+  }));
+}
+
+/**
  * Outcome of a rate-limit check.
  *
  * When `allowed` is false, the caller must return a 429 response and MUST NOT
@@ -3107,6 +3165,12 @@ interface RateLimitResult {
   used: number;
   /** Seconds until the oldest entry in the window drops out, freeing a slot. */
   retryAfterSeconds: number;
+  /**
+   * On an allowed call, the window with the least room left, for the
+   * RateLimit-* response headers (see rateLimitHeaders). Absent when no
+   * window could be counted (every count failed open).
+   */
+  tightest?: RateLimitHeadroom;
 }
 
 /** Start of each RATE_LIMIT_WINDOWS window, in table order, as ISO timestamps. */
@@ -3145,6 +3209,13 @@ interface PreloadedRateLimitCounts {
 async function checkRateLimit(
   apiKeyId: string,
   preloaded?: PreloadedRateLimitCounts,
+  /**
+   * The workspace's per-minute ceiling as checkPlanQuota resolved it, which
+   * lifts the windows (perKeyWindows). A promise so the counts below are
+   * issued without waiting for the plan read; the plan is only needed to
+   * judge them. Defaults to the base windows.
+   */
+  perMinuteCeiling: number | Promise<number> = RATE_LIMIT_WINDOWS[0].limit,
 ): Promise<RateLimitResult> {
   const windowStarts = preloaded?.windowStarts ?? rateLimitWindowStarts();
   const windowCounts: WindowCountResult[] = preloaded?.counts ??
@@ -3155,8 +3226,10 @@ async function checkRateLimit(
         .eq("api_key_id", apiKeyId)
         .gte("created_at", windowStart)
     ));
+  const windows = perKeyWindows(await perMinuteCeiling);
+  let tightest: RateLimitHeadroom | undefined;
 
-  for (const [index, window] of RATE_LIMIT_WINDOWS.entries()) {
+  for (const [index, window] of windows.entries()) {
     const windowStart = windowStarts[index];
     const { count, error } = windowCounts[index];
 
@@ -3202,6 +3275,9 @@ async function checkRateLimit(
         retryAfterSeconds,
       };
     }
+
+    const room = headroom(window.limit, used, window.intervalMs);
+    if (tightest === undefined || room.remaining < tightest.remaining) tightest = room;
   }
 
   return {
@@ -3210,8 +3286,10 @@ async function checkRateLimit(
     limit: 0,
     used: 0,
     retryAfterSeconds: 0,
+    ...(tightest ? { tightest } : {}),
   };
 }
+
 
 /**
  * Sliding-window limits for the cheap methods — everything except
@@ -3231,6 +3309,10 @@ async function checkRateLimit(
  * pinned above the per-key `tools/call` limits (100/min, 1000/hr) times that
  * ratio, with headroom, so a session is throttled on `tools/call` first. A
  * runaway loop (2 req/s is 7,200/hr) still gets cheap 429s.
+ *
+ * Those are the BASE values. The per-key `tools/call` windows scale with the
+ * plan (perKeyWindows), so these scale by the same factor
+ * (checkCheapMethodRateLimit), which keeps the same ratio on every plan.
  *
  * Counted atomically per key via the `rate_limit_check` RPC against
  * `rate_limit_buckets`, independent of `activity_log`.
@@ -3262,7 +3344,8 @@ const DISCOVERY_RATE_LIMITS: SlidingWindowLimit[] = [
  * exhaust the discovery bucket long before the tool limiter noticed.
  *
  * These ceilings are therefore pinned above the per-key `tools/call` limits
- * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr) with headroom for the card's extra
+ * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr, scaled by plan like the discovery
+ * table, see checkCheapMethodRateLimit) with headroom for the card's extra
  * reads: a legitimate session cannot reach them, because it would have been
  * throttled on `tools/call` first. A runaway client looping `resources/read`
  * without calling any tool — the cheap-method hole this whole mechanism
@@ -3346,6 +3429,81 @@ async function checkDiscoveryRateLimit(
     used: 0,
     retryAfterSeconds: 0,
   };
+}
+
+// ── Plan-scaled cheap-method limits ─────────────────────────────────────────
+// DISCOVERY_RATE_LIMITS and RESOURCE_RATE_LIMITS are pinned above the per-key
+// tools/call windows (times ~2.2 for hosts that re-handshake around every
+// call). Those windows now scale with the plan (perKeyWindows), so these scale
+// by the same factor, or a Pro or Business session on such a host would be
+// throttled on discovery before it reached its tools/call budget: Pro
+// 300/min x 2.2 = 660 against a flat 250. Scaled, Pro gets 750/min and
+// 7,500/hr, Business 2,500/min and 25,000/hr; Free and Personal keep the base.
+//
+// The cheap methods authenticate without reading the workspace, so the plan
+// comes from a per-isolate cache that every tools/call fills from its own
+// plan read, at no cost. On a miss the base limits apply, and only a request
+// those REFUSE pays for one plan read (cached for five minutes), so a runaway
+// loop on a Free key still costs one bucket UPSERT per denied request.
+
+const PLAN_CEILING_CACHE_TTL_MS = 5 * 60_000;
+const PLAN_CEILING_CACHE_MAX = 5_000;
+const planCeilingCache = new Map<string, { ceiling: number; expiresAt: number }>();
+
+/** Remember a workspace's resolved per-minute ceiling for the cheap-method limits. */
+function rememberPlanCeiling(workspaceId: string, ceiling: number, nowMs = Date.now()): void {
+  if (planCeilingCache.size >= PLAN_CEILING_CACHE_MAX && !planCeilingCache.has(workspaceId)) {
+    planCeilingCache.clear();
+  }
+  planCeilingCache.set(workspaceId, { ceiling, expiresAt: nowMs + PLAN_CEILING_CACHE_TTL_MS });
+}
+
+function cachedPlanCeiling(workspaceId: string, nowMs = Date.now()): number | null {
+  const hit = planCeilingCache.get(workspaceId);
+  if (!hit) return null;
+  if (hit.expiresAt <= nowMs) {
+    planCeilingCache.delete(workspaceId);
+    return null;
+  }
+  return hit.ceiling;
+}
+
+/** A cheap-method limit table lifted by the same factor as the per-key windows. */
+function planScaledLimits(limits: SlidingWindowLimit[], perMinuteCeiling: number): SlidingWindowLimit[] {
+  const factor = perKeyPlanFactor(perMinuteCeiling);
+  return limits.map((w) => ({ ...w, max: Math.max(w.max, Math.ceil(w.max * factor)) }));
+}
+
+/**
+ * checkDiscoveryRateLimit with the table scaled to the key's plan. A refusal
+ * under the base table with no cached plan reads the plan once and, for a
+ * plan that lifts the table, asks again under the scaled one (that request is
+ * counted twice in the bucket, once per isolate per five minutes).
+ */
+async function checkCheapMethodRateLimit(apiKey: ApiKeyRow, isResourceMethod: boolean): Promise<RateLimitResult> {
+  const base = isResourceMethod ? RESOURCE_RATE_LIMITS : DISCOVERY_RATE_LIMITS;
+  const namespace = isResourceMethod ? "resources" : "discovery";
+  const cached = cachedPlanCeiling(apiKey.workspace_id);
+  const first = await checkDiscoveryRateLimit(
+    apiKey.id,
+    cached === null ? base : planScaledLimits(base, cached),
+    namespace,
+  );
+  if (first.allowed || cached !== null) return first;
+  let ceiling: number | null = null;
+  try {
+    const quota = await checkPlanQuota(apiKey.workspace_id);
+    // A failed workspace lookup answers the free default with no markers;
+    // that is not a plan, so it is neither cached nor used.
+    if (quota.firstUse !== undefined || !quota.allowed) {
+      ceiling = quota.perMinuteLimit;
+      rememberPlanCeiling(apiKey.workspace_id, ceiling);
+    }
+  } catch {
+    ceiling = null;
+  }
+  if (ceiling === null || perKeyPlanFactor(ceiling) <= 1) return first;
+  return await checkDiscoveryRateLimit(apiKey.id, planScaledLimits(base, ceiling), namespace);
 }
 
 /**
@@ -17693,13 +17851,28 @@ async function executeForwardEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts). A batch counts every message it
+  // forwards. The fan-out hash is the forwarded message ids plus the note:
+  // the original's content is not read here, and the same original sent to
+  // many people is exactly what the brake is for.
+  const brake = await outboundBrakeGate({
+    tool: "email_forward",
+    apiKey,
+    inbox: senderInbox,
+    messages: messageIds.length,
+    subject: `forward\n${[...messageIds].sort().join("\n")}`,
+    body: typeof body === "string" ? body : null,
+    recipients: [...addressList(to), ...addressList(cc), ...addressList(bcc)],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   // Approval is deliberately enforced after all caller-controlled input and
   // sender identity checks, but before reading/sending through the provider.
   // Preserve the original operation arguments so the approval dispatcher can
   // execute the same threaded forward once a human approves it.
   try {
     const approval = await queueSendApproval(
-      senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -17744,8 +17917,16 @@ async function executeForwardEmail(
   }
 
   /** One message, one provider call. Shared by the single and batch shapes. */
-  const forwardOne = (id: string): Promise<ForwardEmailResult> =>
-    forwardRelayMessage(senderInbox, id, fwdParams);
+  // A provider spam/policy refusal is counted against the inbox here, once per
+  // message, for the single and the batch shape alike, then rethrown untouched.
+  const forwardOne = async (id: string): Promise<ForwardEmailResult> => {
+    try {
+      return await forwardRelayMessage(senderInbox, id, fwdParams);
+    } catch (err) {
+      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+      throw err;
+    }
+  };
 
   if (targets.mode === "batch") {
     // The whole-call idempotency claim is skipped for a batch (see
@@ -18088,12 +18269,26 @@ async function executeReplyToEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts). A reply's recipients come from the
+  // original and are not known yet, so the thread being replied to stands in
+  // for its recipient: one body replied into many threads is the fan-out.
+  const brake = await outboundBrakeGate({
+    tool: "email_reply",
+    apiKey,
+    inbox: senderInbox,
+    messages: 1,
+    subject: "reply",
+    body: typeof body === "string" ? body : null,
+    recipients: [`thread:${String(messageId)}`, ...extraCc, ...extraBcc],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   // Do not contact the provider until an authorized dashboard user approves
   // this exact reply request. The original args retain the message id needed
   // to derive threading headers at approved-dispatch time.
   try {
     const approval = await queueSendApproval(
-      senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -18173,6 +18368,8 @@ async function executeReplyToEmail(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
 
     if (message === "message_not_found") {
       return {
@@ -18515,6 +18712,92 @@ function sendWillBeHeld(inbox: InboxRow, apiKey: ApiKeyRow): boolean {
  */
 function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
   return apiKey.internalApprovalDispatch === true || apiKey.firstPartyHuman === true;
+}
+
+// ── Outbound abuse brakes ──────────────────────────────────────────────────
+// outbound-brakes.ts owns the limits, the hashing and the wording; these are
+// the wiring into this server's send handlers. Every tool-initiated send
+// (email_send, email_reply, email_forward, draft_send, and the approved
+// re-runs of each) asks outboundBrakeGate after its chat-confirm gate and
+// before queueSendApproval, so a refused send has queued nothing, and a held
+// send is held in the ordinary approval flow. Scheduled sends are checked by
+// the dispatcher at send time (handleScheduledDispatch).
+
+/** What the brakes decided for one tool-initiated send. */
+type OutboundBrakeVerdict =
+  | { refusal: ReturnType<typeof brakeRefusalResult> }
+  | { hold: boolean };
+
+async function outboundBrakeGate(input: {
+  tool: string;
+  apiKey: ApiKeyRow;
+  /** The inbox that transmits (the sender identity's inbox). */
+  inbox: InboxRow;
+  messages: number;
+  subject?: string | null;
+  body?: string | null;
+  recipients: readonly string[];
+}): Promise<OutboundBrakeVerdict> {
+  if (INTROSPECTION_ONLY) return { hold: false };
+  // Held for a human anyway: the send is counted when the approved re-run is
+  // dispatched, which comes back through here as a human decision.
+  if (sendWillBeHeld(input.inbox, input.apiKey)) return { hold: false };
+  const decision: BrakeDecision = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
+    workspaceId: input.apiKey.workspace_id,
+    inboxId: input.inbox.id,
+    messages: input.messages,
+    subject: input.subject,
+    body: input.body,
+    recipients: input.recipients,
+    humanApproved: sendDecidedByHuman(input.apiKey),
+  });
+  if (decision.kind === "refuse") return { refusal: brakeRefusalResult(input.tool, decision) };
+  if (decision.kind === "hold") {
+    if (decision.newlyTripped) {
+      await notifyBrakeTripped({
+        workspaceId: input.apiKey.workspace_id,
+        inboxId: input.inbox.id,
+        brake: "fanout_hold",
+        retryAt: decision.retryAt,
+      });
+    }
+    return { hold: true };
+  }
+  return { hold: false };
+}
+
+/** The inbox as queueSendApproval must see it while the fan-out brake holds it. */
+function brakeHeldInbox(inbox: InboxRow): InboxRow {
+  return { ...inbox, send_approval_required: true };
+}
+
+/**
+ * Tell the operator a brake tripped, through the system-event pipeline
+ * (emit_system_event -> system-notify). Ids and the brake name only. Never
+ * throws: a notice that cannot be queued must not fail the send path.
+ */
+async function notifyBrakeTripped(input: Parameters<typeof brakeTrippedEvent>[0]): Promise<void> {
+  try {
+    const { error } = await supabase.rpc("emit_system_event", brakeTrippedEvent(input));
+    if (error) console.error("[mcp-server] outbound_brake_notify_failed", { error: error.message });
+  } catch (err) {
+    console.error("[mcp-server] outbound_brake_notify_threw", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Count a provider spam/policy refusal against the transmitting inbox (the
+ * third within an hour pauses it). Called from every send path's failure
+ * branch with the raw error; anything that is not a policy refusal is ignored.
+ */
+async function noteProviderRefusal(workspaceId: string, inboxId: string, err: unknown): Promise<void> {
+  if (INTROSPECTION_ONLY) return;
+  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, { workspaceId, inboxId, error: err });
+  if (outcome?.newlyTripped) {
+    await notifyBrakeTripped({ workspaceId, inboxId, brake: "provider_refusal_pause", retryAt: outcome.retryAt });
+  }
 }
 
 /**
@@ -19152,11 +19435,24 @@ async function executeSendEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts): freeze, provider-refusal pause, daily
+  // ceiling, and the fan-out hold, which reuses the approval queue below.
+  const brake = await outboundBrakeGate({
+    tool: "email_send",
+    apiKey,
+    inbox: senderInbox,
+    messages: 1,
+    subject: sendParams.subject,
+    body: sendParams.textBody,
+    recipients: [...sendParams.to, ...(sendParams.cc ?? []), ...(sendParams.bcc ?? [])],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   try {
     // `heldSendSnapshot` (not an object literal) because this payload carries a
     // load-bearing key that is invisible here: `include_signature: false`, which
     // records that the body above is FINAL. See that function.
-    const approval = await queueSendApproval(senderInbox, apiKey, heldSendSnapshot({
+    const approval = await queueSendApproval(brake.hold ? brakeHeldInbox(senderInbox) : senderInbox, apiKey, heldSendSnapshot({
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
       subject: sendParams.subject, textBody: sendParams.textBody,
@@ -19201,6 +19497,8 @@ async function executeSendEmail(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
 
     if (message === "quota_exceeded") {
       return {
@@ -30071,8 +30369,23 @@ async function executeSendDraft(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts): freeze, provider-refusal pause and the
+  // daily ceiling. No content is passed, so the fan-out brake does not apply
+  // here: the draft's content is held by the provider and is not read on this
+  // path, and a read per send would cost a provider round trip. A held fan-out
+  // (from email_send and the others) still holds a draft send from the inbox.
+  const brake = await outboundBrakeGate({
+    tool: "draft_send",
+    apiKey,
+    inbox,
+    messages: 1,
+    recipients: [],
+  });
+  if ("refusal" in brake) return brake.refusal;
+  const brakeHold = brake.hold;
+
   let approvalRecord: Record<string, unknown> = {};
-  if (sendWillBeHeld(inbox, apiKey)) {
+  if (sendWillBeHeld(brakeHold ? brakeHeldInbox(inbox) : inbox, apiKey)) {
     let read: DraftContent | null;
     try {
       read = await readDraftForApproval(inbox, draftId);
@@ -30092,7 +30405,7 @@ async function executeSendDraft(
   // without permitting an external MCP credential to bypass the gate.
   try {
     const approval = await queueSendApproval(
-      inbox,
+      brakeHold ? brakeHeldInbox(inbox) : inbox,
       apiKey,
       { ...approvalArgs, inbox_id: inbox.id, ...approvalRecord },
       undefined,
@@ -30138,6 +30451,8 @@ async function executeSendDraft(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err);
     if (message === "draft_not_found") {
       return {
         result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
@@ -33616,6 +33931,19 @@ interface ScheduledDispatchDeps {
     logErrorCode: string | null,
   ): Promise<void>;
   sendViaProvider(inbox: InboxRow, params: SendEmailParams): Promise<SendEmailResult>;
+  /**
+   * The outbound abuse brakes for a scheduled send (outbound-brakes.ts),
+   * asked just before sendViaProvider. Optional so a test's deps can leave
+   * it out; production always has it.
+   */
+  outboundBrake?(
+    workspaceId: string,
+    inbox: InboxRow,
+    params: SendEmailParams,
+    humanApproved: boolean,
+  ): Promise<BrakeDecision>;
+  /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
+  noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
 }
 
 const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
@@ -33633,6 +33961,22 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
     return executeSendEmail(original, internalKey);
   },
   completeApprovedIdempotency: completeApprovedOutboundIdempotency,
+  async outboundBrake(workspaceId, inbox, params, humanApproved) {
+    const decision = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
+      workspaceId,
+      inboxId: inbox.id,
+      messages: 1,
+      subject: params.subject,
+      body: params.textBody,
+      recipients: [...params.to, ...(params.cc ?? []), ...(params.bcc ?? [])],
+      humanApproved,
+    });
+    if (decision.kind === "hold" && decision.newlyTripped) {
+      await notifyBrakeTripped({ workspaceId, inboxId: inbox.id, brake: "fanout_hold", retryAt: decision.retryAt });
+    }
+    return decision;
+  },
+  noteRefusal: noteProviderRefusal,
   sendViaProvider(inbox, params) {
     switch (inbox.provider) {
       case "gmail":
@@ -33987,6 +34331,19 @@ async function handleScheduledDispatch(
             original,
             internalKey,
           );
+          // An abuse brake refused the approved send (outbound-brakes.ts):
+          // nothing was sent, and the approval must not be lost or settled as
+          // failed. Hold the row and try again on a later tick, once the
+          // freeze, the pause or the daily ceiling has lifted.
+          if (
+            dispatchedResult.logStatus !== "success" &&
+            dispatchedResult.logErrorCode !== null &&
+            OUTBOUND_BRAKE_ERROR_CODES.has(dispatchedResult.logErrorCode)
+          ) {
+            throw new ScheduledDispatchHeld(
+              `approved ${approval.operation} held by a send limit (${dispatchedResult.logErrorCode}); nothing was sent`,
+            );
+          }
           // The caller's idempotency record remains pending until this trusted
           // dispatcher has reached a terminal outcome. This makes replays after
           // approval accurately report delivery/failure instead of a stale
@@ -34056,9 +34413,37 @@ async function handleScheduledDispatch(
       // interactive send path.
       applySignature(sendParams, inbox);
 
+      // ── Abuse brakes (outbound-brakes.ts) ───────────────────────────────
+      // A refusal or a fan-out hold leaves the row pending, untouched, for a
+      // later tick: held, never dropped. An approved schedule is a human's
+      // decision, so it skips the fan-out brake and is still counted.
+      if (deps.outboundBrake) {
+        const brake = await deps.outboundBrake(
+          String(row.workspace_id),
+          inbox,
+          sendParams,
+          approvedScheduleId !== null,
+        );
+        if (brake.kind === "refuse") {
+          throw new ScheduledDispatchHeld(brakeRefusalText("scheduled send", brake.code, brake.retryAt));
+        }
+        if (brake.kind === "hold") {
+          throw new ScheduledDispatchHeld(
+            "scheduled send held: this inbox sent one message to many recipients within an hour, " +
+              "so its sends are paused until the end of the UTC day. Nothing was sent.",
+          );
+        }
+      }
+
       // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
       providerAttempted = true;
-      const sendResult: SendEmailResult = await deps.sendViaProvider(inbox, sendParams);
+      let sendResult: SendEmailResult;
+      try {
+        sendResult = await deps.sendViaProvider(inbox, sendParams);
+      } catch (sendErr) {
+        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr);
+        throw sendErr;
+      }
       if (approvedScheduleId !== null) {
         await deps.completeApprovedIdempotency(approvedScheduleId, "success", null);
       }
@@ -35550,9 +35935,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // paid by a runaway loop, while every initialize and tools/list saves the
   // round trips this used to put in front of the other gates.
   const cheapMethodPending = metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping"
-    ? (isResourceMethod
-      ? checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
-      : checkDiscoveryRateLimit(apiKey.id))
+    ? checkCheapMethodRateLimit(apiKey, isResourceMethod)
     : null;
   // Awaited below before anything else is; this only keeps a rejection that
   // lands first from counting as unhandled.
@@ -35593,11 +35976,28 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // response leaves (GateReservationSlot), so a rate-limited call still ends
   // with nothing reserved and no allowance consumed. On the per-query path the
   // reservation is made inside handleToolsCall, after both gates, as before.
+  // The per-key windows scale with the plan (perKeyWindows), so the per-key
+  // limiter is handed the ceiling the plan quota resolves, from the same
+  // read: no round trip of its own. Settled exactly once, on every path.
+  let settleKeyCeiling: (ceiling: number) => void = () => {};
+  const keyCeiling = new Promise<number>((resolve) => {
+    let settled = false;
+    settleKeyCeiling = (ceiling) => {
+      if (settled) return;
+      settled = true;
+      resolve(ceiling);
+    };
+  });
   const quotaPending = isResourceMethod || !metered
     ? null
-    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota);
-  // Never awaited on a denial, so a rejection must not go unhandled.
-  quotaPending?.catch(() => {});
+    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota, settleKeyCeiling);
+  // Never awaited on a denial, so a rejection must not go unhandled. A
+  // rejection leaves the per-key limiter on its base windows.
+  quotaPending?.catch(() => {}).finally(() => settleKeyCeiling(RATE_LIMIT_WINDOWS[0].limit));
+  // Fills the plan cache the cheap-method limits scale from, from this read.
+  quotaPending?.then((quota) => {
+    if (quota.firstUse !== undefined || !quota.allowed) rememberPlanCeiling(apiKey.workspace_id, quota.perMinuteLimit);
+  }, () => {});
   if (metered && callMayMeter) {
     ctx.allowance = preloaded && "allowance" in preloaded
       ? Promise.resolve(preloaded.allowance ?? null)
@@ -35606,7 +36006,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   }
   const rateLimitPending = isResourceMethod || !metered
     ? null
-    : checkRateLimit(apiKey.id, preloaded?.rateLimit);
+    : checkRateLimit(apiKey.id, preloaded?.rateLimit, keyCeiling);
   // Never awaited when the cheap-method bucket refuses first.
   rateLimitPending?.catch(() => {});
 
@@ -35728,6 +36128,18 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
+
+  // ── RateLimit-* headers on an answered tools/call ────────────────────────
+  // So a client can pace itself before it meets a 429. Built from what the
+  // two gates above already counted (rateLimitHeaders); no extra query.
+  const successRateLimitHeaders: Record<string, string> = rpcRequest.method === "tools/call"
+    ? rateLimitHeaders(
+      "tightest" in rateLimitResult ? rateLimitResult.tightest : undefined,
+      "counted" in quotaResult && quotaResult.counted === true
+        ? headroom(quotaResult.perMinuteLimit, quotaResult.usedThisMinute, PLAN_RPM_WINDOW_MS)
+        : undefined,
+    )
+    : {};
 
   // ── Route to method handler ───────────────────────────────────────────────
   // Every method result leaves through here, so the `_meta` guard sits here too
@@ -35860,12 +36272,16 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
         to_build: REVIEW_CARD_BUILD_ID,
         on_method: rpcRequest.method,
       });
-      return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+      return withRateLimitHeaders(
+        sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS),
+        response,
+        successRateLimitHeaders,
+      );
     }
     // A concurrent call on this same key delivered it. Sending a second
     // notification would make the client re-read a listing it is already
     // re-reading.
-    return jsonResponse(response);
+    return withRateLimitHeaders(jsonResponse(response), response, successRateLimitHeaders);
   }
 
   if (metered && notifyDecision.record !== null) {
@@ -35882,7 +36298,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     ).then(undefined, () => {});
   }
 
-  return jsonResponse(response);
+  return withRateLimitHeaders(jsonResponse(response), response, successRateLimitHeaders);
 }
 
 // ---------------------------------------------------------------------------
