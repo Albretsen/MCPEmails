@@ -57,6 +57,15 @@ export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 export type RetentionOptionCategory = 'pause' | 'downgrade';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
+/**
+ * The 3-month Personal pass (20261025010000): the product itself, the surfaces
+ * its offer can be shown on, and `pass` for a renewal that bought another pass.
+ */
+export type PassFunnelCategory =
+  | 'personal_pass_3m'
+  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
+  | 'pass';
+
 /** pause_resumed: who ended it. retention_option_clicked: which option. */
 export type PlanChangeCategory = 'early' | 'auto' | 'pause' | 'downgrade';
 
@@ -100,13 +109,18 @@ export type ProductFunnelEvent = {
     | 'retention_option_clicked'
     // The failed-payment banner's button (/api/stripe/payment-fix). success =
     // sent on to Stripe, failure = bounced to settings.
-    | 'payment_fix_clicked';
+    | 'payment_fix_clicked'
+    // The 3-month Personal pass. A pass NEVER writes `checkout_started` or
+    // `checkout_completed`, for the same reason a plan change does not: those
+    // stages are the subscription conversion every read-out is built on.
+    | 'pass_offer_shown' | 'pass_checkout_started' | 'pass_checkout_completed'
+    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
-    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory
+    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
     | PlanChangeCategory | CancelReason | RetentionOptionCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
