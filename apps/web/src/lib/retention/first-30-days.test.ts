@@ -650,7 +650,7 @@ test('M2 note with errors names them in plain language with a fix line', () => {
   assert.ok(note.text.startsWith('Hi Kari,'));
   assert.ok(note.text.includes('since you subscribed on 2 November 2026'));
   assert.ok(note.text.includes('The last attempts failed with: the mail server rejected the password; your mail provider returned an error.'));
-  assert.ok(note.text.includes('https://mcpemails.test/blog/what-is-an-app-password'));
+  assert.match(note.text, /(^|\s)https:\/\/mcpemails\.test\/blog\/what-is-an-app-password([\s.,)]|$)/m);
   assert.ok(note.text.includes('full refund within 14 days of your first payment'));
   assert.ok(note.text.trimEnd().endsWith('Asgeir'));
   assertCleanCopy(note.text);
