@@ -288,6 +288,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // the first-run effect below) and dropped when the modal closes, so every
   // later opening of the modal is the ordinary one.
   const [connectPreselect, setConnectPreselect] = useState(null);
+  // A notice the connect modal opens with, e.g. 'outlook_cancelled'.
+  const [connectNotice, setConnectNotice] = useState(null);
   // undefined = not looked at yet, null = nothing (or already spent).
   const connectIntentSlug = useRef(undefined);
   // Servers carried from /tools/email-settings-lookup (intent-carry.mjs).
@@ -549,6 +551,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // The provider OAuth callbacks redirect here when a workspace VIEWER
       // completes a connect flow. Read-only members cannot attach a mailbox.
       toast({ message: tr('app.insufficientRole'), variant: 'error' });
+      setRouteState('inboxes');
+    } else if (errorParam === 'outlook_cancelled') {
+      // Declined on Microsoft's consent screen. Reopen the connect modal on
+      // the Outlook card with a panel that says so and retries in place,
+      // rather than a four-second toast.
+      setConnectNotice('outlook_cancelled');
+      openConnect('other');
       setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
@@ -969,7 +978,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * @param {object|null} [transport] - Present only when the route reports that
    *   the settings it connected on are not the ones that were submitted.
    */
-  const onConnect = ({ label, provider, address, connectionMethod, transport }) => {
+  const onConnect = ({ label, provider, address, connectionMethod, transport, keepOpen = false }) => {
     // This used to say 'app_password' unconditionally, which is wrong for the
     // generic IMAP connector: 'imap' is the largest provider bucket on this
     // event, so the connection-method split was wrong for most of the rows it
@@ -993,9 +1002,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       return [...xs, next];
     });
     setReconnectInbox(null);
-    setShowConnect(false);
-    setConnectEntry(null);
-    setConnectPreselect(null);
+    // `keepOpen`: a first inbox, and the modal moves on to its "Now connect
+    // your AI app" screen; it closes from there (onOpenClientGuide or Later).
+    if (!keepOpen) {
+      setShowConnect(false);
+      setConnectEntry(null);
+      setConnectPreselect(null);
+      setConnectNotice(null);
+    }
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
     // store what worked, and they have always reported it back; nothing read
@@ -1031,7 +1045,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } else {
       toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
     }
-    if (firstrun || onboardingClient) {
+    if (!keepOpen && (firstrun || onboardingClient)) {
       // Continue the chosen-client guide instead of dropping every provider
       // into a generic API-key screen.
       setGuideResumeKey(value => value + 1);
@@ -1241,7 +1255,21 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); setConnectNotice(null); }}
+          returnNotice={reconnectInbox == null ? connectNotice : null}
+          showNextStepAfterConnect={reconnectInbox == null && inboxes.length === 0}
+          onboardingClient={onboardingClient}
+          onOpenClientGuide={(client) => {
+            setShowConnect(false);
+            setConnectEntry(null);
+            setConnectPreselect(null);
+            setConnectNotice(null);
+            if (client) setOnboardingClient(client);
+            // Remounts the Overview guide, which opens ClientGuideModal for
+            // `onboardingClient` when one is set.
+            setGuideResumeKey(value => value + 1);
+            setRoute('overview');
+          }}
           entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}

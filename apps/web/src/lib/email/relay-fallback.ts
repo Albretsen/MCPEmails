@@ -283,6 +283,13 @@ export interface RelayDetection<R> {
   detection: TransportAttemptOutcome<R>;
   /** How the winning (or reported) attempt was reached; null for a direct dial. */
   route: RelayRoute | null;
+  /**
+   * True when a relayed attempt also reached no usable answer from the host
+   * (the relay itself was up). The connect panel uses it to say plainly that
+   * the mail server does not accept connections from our servers. Never true
+   * for a relay that was down, or when the relay was never tried.
+   */
+  relayAlsoFailed?: boolean;
 }
 
 /**
@@ -355,7 +362,13 @@ export async function detectWithRelay<R extends DirectFailure & { ok: boolean }>
   const knownRoute = relay ? relayRouteForHost(host, protocol) : null;
   if (relay && knownRoute) {
     const relayed = await viaRelay(relay, knownRoute);
-    if (!relayed.relayDown || knownRoute === 'listed') return { detection: relayed.detection, route: knownRoute };
+    if (!relayed.relayDown || knownRoute === 'listed') {
+      const failedThere =
+        !relayed.relayDown &&
+        !relayed.detection.result.ok &&
+        String(relayed.detection.result.code).toUpperCase() !== 'AUTH_FAILED';
+      return { detection: relayed.detection, route: knownRoute, ...(failedThere ? { relayAlsoFailed: true } : {}) };
+    }
   }
 
   const direct = await detectTransport<R>(transportPlan(protocol, requested), (candidate, timeoutMs) =>
@@ -374,5 +387,5 @@ export async function detectWithRelay<R extends DirectFailure & { ok: boolean }>
   if (!retried.relayDown && String(retried.detection.result.code).toUpperCase() === 'AUTH_FAILED') {
     return { detection: retried.detection, route: 'fallback' };
   }
-  return { detection: direct, route: null };
+  return { detection: direct, route: null, ...(retried.relayDown ? {} : { relayAlsoFailed: true }) };
 }

@@ -208,7 +208,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (providerError === 'cancelled') {
     await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'provider_denied');
     await recordDeniedAuthorization(state);
-    return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=cancelled`);
+    // Its own code (not the shared `cancelled`) so the dashboard can reopen
+    // the connect modal on the Outlook card with a "you cancelled on
+    // Microsoft's page" panel, rather than a toast that is gone in four
+    // seconds. Not `?provider=`: that parameter is the landing-page connect
+    // intent. Gmail's cancel keeps the shared code and its toast.
+    return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=outlook_cancelled`);
   }
 
   if (providerError) {
