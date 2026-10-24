@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre hasta 10.",
     "multiInboxCompact": "¿También gestionas info@, ventas@ o facturas@? Conéctalos y tu agente trabaja con todos los buzones de la empresa desde una sola conversación.",
     "multiInboxCompactUpgrade": "¿También gestionas info@, ventas@ o facturas@? Tu agente puede trabajar con todos los buzones de la empresa desde una sola conversación. Un segundo buzón requiere un plan de pago.",
-    "multiInboxCta": "Añadir un buzón"
+    "multiInboxCta": "Añadir un buzón",
+    "waitingTitle": "Esperando tu primera llamada",
+    "waitingDesc": "Tu bandeja está conectada. Conecta tu app de IA y hazle una pregunta. Esta página se actualiza cuando llega la primera llamada.",
+    "connectAppTitle": "Conecta tu app de IA",
+    "connectAppDesc": "Pega esta URL en tu app de IA y elígela abajo para ver los pasos.",
+    "connectAppDone": "Tu app de IA está conectada a MCPEmails.",
+    "askTitle": "Pregúntale algo",
+    "askDesc": "Abre un chat nuevo y pega una de estas frases.",
+    "copyPrompt": "Copiar prompt",
+    "prompts": {
+      "unread": "Resume mis correos sin leer de hoy",
+      "bank": "Busca el último correo de mi banco y dime qué dice",
+      "draftReply": "Redacta una respuesta a mi correo más reciente, pero no la envíes"
+    },
+    "clientToggle": {
+      "claude": "En Claude, haz clic en + en el cuadro de mensaje, abre Conectores y comprueba que MCPEmails está activado en el chat. Si no, Claude responde sin tu correo.",
+      "chatgpt": "En ChatGPT, haz clic en + en cada chat nuevo, elige modo de desarrollador y selecciona la app de MCPEmails. Si no, ChatGPT no puede ver tu correo."
+    },
+    "itWorksTitle": "Funciona",
+    "itWorksDesc": "Tu app de IA acaba de hacer su primera llamada a MCPEmails. Sigue en el mismo chat.",
+    "waitingLive": "Esta página se actualiza sola cuando llega la primera llamada.",
+    "waitingStopped": "Todavía no hay ninguna llamada. Recarga esta página después de probar un prompt."
   },
   "firstWeek": {
     "title": "Tu primera semana",
@@ -459,7 +480,6 @@
       "nextStep1": "En claude.ai o Claude Desktop, abre Ajustes → Conectores → Añadir conector personalizado.",
       "nextStep2": "Pega la URL de arriba. Los clientes con OAuth se conectan con un clic.",
       "nextStep3": "Luego solo pide a Claude:",
-      "nextPrompt": "Resume mis correos sin leer de hoy.",
       "nextGuide": "Guía paso a paso",
       "warning": "Guarda esta clave en un lugar seguro. No se puede mostrar de nuevo. Si la pierdes, revoca esta clave y crea una nueva.",
       "acknowledge": "He copiado mi clave de API y entiendo que no se puede mostrar de nuevo.",
