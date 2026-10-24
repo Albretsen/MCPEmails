@@ -39,6 +39,7 @@ import {
 } from '@/lib/billing/pass';
 import { cancelOpenSequence, resolveRecipient, type CancelReason } from '@/lib/billing/lifecycle-queue';
 import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
+import { dueIds, kickDueRows } from '@/lib/billing/dispatch-kick';
 import { PASS_TEMPLATES, type LifecyclePayload } from '@/lib/email/billing-lifecycle';
 
 type Db = SupabaseClient<Database>;
@@ -102,12 +103,14 @@ export function passNoticeSink(
       const { data, error } = await db
         .from('billing_email_sends')
         .upsert(rows, { onConflict: 'stripe_customer_id,template,scope_key', ignoreDuplicates: true })
-        .select('id');
+        .select('id, send_after');
       if (error) {
         console.error(`[pass-notices] queue failed for ${userId}: ${error.message}`);
         return;
       }
       console.log(`[pass-notices] queued ${data?.length ?? 0} of ${rows.length} pass notice(s) for ${userId}`);
+      // A notice already due (a sweep that ran late) goes now, not next tick.
+      await kickDueRows(dueIds(data), `pass notices ${userId}`);
     } catch (err) {
       console.error('[pass-notices] sink failed, swallowed:', {
         error: err instanceof Error ? err.message : String(err),
