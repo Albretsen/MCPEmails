@@ -100,7 +100,7 @@ Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. He
 
 Kort svar: ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
 
-Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 forespørsler/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din: 60/min på Gratis, 120/min på Personal, 300/min på Pro, 1 000/min på Business. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\`: da sender du duplikater.
+Når det gjelder rate-grenser, har hvert arbeidsområde et tak per minutt som skalerer med planen din (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\`: da sender du duplikater.
 
 ## Priser
 

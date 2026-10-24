@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { verifyPortalCustomerOwnership } from '@/lib/stripe/portal-customer';
+import { recordPaymentFixClicked } from '@/lib/analytics/billing-funnel';
 
 /**
  * GET /api/stripe/payment-fix
@@ -47,14 +48,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirect(login, 303);
   }
 
+  // Every signed-in click is one `payment_fix_clicked` funnel row (the reach
+  // panel on /admin/growth/dunning). Best-effort; it never changes where the
+  // owner is sent.
   try {
     const customerId = await ownedCustomerId(supabase, user);
-    if (!customerId) return settings();
+    if (!customerId) {
+      await recordPaymentFixClicked(user.id, 'no_customer');
+      return settings();
+    }
 
     const invoices = await stripe.invoices.list({ customer: customerId, status: 'open', limit: 1 });
     const open = invoices.data[0];
     if (open?.hosted_invoice_url && customerOf(open) === customerId) {
-      return redirect(new URL(open.hosted_invoice_url), 302);
+      const hosted = new URL(open.hosted_invoice_url);
+      await recordPaymentFixClicked(user.id);
+      return redirect(hosted, 302);
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin;
@@ -64,9 +73,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return_url: `${appUrl}/dashboard/settings`,
       ...(portalConfiguration ? { configuration: portalConfiguration } : {}),
     });
-    return redirect(new URL(session.url), 302);
+    const portal = new URL(session.url);
+    await recordPaymentFixClicked(user.id);
+    return redirect(portal, 302);
   } catch (err) {
     console.error('[payment-fix] failed:', err instanceof Error ? err.message : String(err));
+    await recordPaymentFixClicked(user.id, 'stripe_error');
     return settings();
   }
 }

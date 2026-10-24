@@ -33,10 +33,19 @@ import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
 import {
   MIN_SEQUENCES_FOR_RATE,
   fetchDunningRows,
+  fetchFixClicks,
+  fetchSubscriptionDeletions,
   maskAddress,
+  summariseChurn,
   summariseDunning,
+  summariseFixClicks,
+  summariseOutcomes,
+  type ChurnMonth,
+  type DeletionRow,
   type DunningRow,
   type DunningSummary,
+  type FixClickSummary,
+  type OutcomeSummary,
 } from '@/lib/billing/dunning-stats';
 import { ChartFrame, NO_DATA, formatCount, formatMoney, formatPercent } from '../../../../components/admin/charts';
 import '../../../../styles/admin-board.css';
@@ -64,7 +73,7 @@ const TEMPLATE_WORDS: Record<string, string> = {
   dunning_14: 'Day 14, the last note',
   card_expiry_30: 'Card expires next month',
   card_expiry_7: 'Card expires next week',
-  cancel_ask: 'What stopped working for you?',
+  cancel_ask: 'Cancellation confirmed',
   winback_14: 'Win-back, 14 days after the period ended',
   winback_30: 'Win-back, the last email',
 };
@@ -86,11 +95,12 @@ function when(iso: string | null): string {
 export default async function DunningPage() {
   await requireAdmin();
 
+  const db = createServiceRoleClient();
   let rows: DunningRow[] = [];
   let loadError: string | null = null;
   let truncated = false;
   try {
-    const loaded = await fetchDunningRows(createServiceRoleClient());
+    const loaded = await fetchDunningRows(db);
     rows = loaded.rows;
     truncated = loaded.truncated;
   } catch (err) {
@@ -100,7 +110,29 @@ export default async function DunningPage() {
     loadError = err instanceof Error ? err.message : String(err);
   }
 
+  // The two side reads fail on their own panels, never the whole board.
+  let deletions: DeletionRow[] = [];
+  let reasonColumn = false;
+  let churnError: string | null = null;
+  try {
+    const loaded = await fetchSubscriptionDeletions(db);
+    deletions = loaded.rows;
+    reasonColumn = loaded.reasonColumn;
+  } catch (err) {
+    churnError = err instanceof Error ? err.message : String(err);
+  }
+
+  let clicks: FixClickSummary | null = null;
+  let clicksError: string | null = null;
+  try {
+    clicks = summariseFixClicks(await fetchFixClicks(db));
+  } catch (err) {
+    clicksError = err instanceof Error ? err.message : String(err);
+  }
+
   const summary = summariseDunning(rows);
+  const outcomes = summariseOutcomes(rows, deletions);
+  const churn = summariseChurn(deletions);
   const mode = lifecycleMode();
 
   return (
@@ -119,6 +151,18 @@ export default async function DunningPage() {
         <div className="bd-grid" style={{ marginTop: 14 }}>
           <div style={{ gridColumn: 'span 12' }}>
             <Recovery summary={summary} />
+          </div>
+          <div style={{ gridColumn: 'span 7' }}>
+            <ByDeclineCode outcomes={outcomes} />
+          </div>
+          <div style={{ gridColumn: 'span 5' }}>
+            <RecoveryRate outcomes={outcomes} />
+          </div>
+          <div style={{ gridColumn: 'span 7' }}>
+            <InvoluntaryChurn months={churn} reasonColumn={reasonColumn} error={churnError} />
+          </div>
+          <div style={{ gridColumn: 'span 5' }}>
+            <BannerReach clicks={clicks} error={clicksError} outcomes={outcomes} />
           </div>
           <div style={{ gridColumn: 'span 7' }}>
             <ByTemplate summary={summary} />
@@ -232,6 +276,219 @@ function Recovery({ summary }: { summary: DunningSummary }) {
         <p className="xp-note">
           {`Fewer than ${MIN_SEQUENCES_FOR_RATE} sequences have reached a send, so no rate is shown. Read the counts.`}
         </p>
+      ) : null}
+    </ChartFrame>
+  );
+}
+
+const DECLINE_WORDS: Record<string, string> = {
+  insufficient_funds: 'Not enough funds',
+  expired_card: 'Card expired',
+  card_declined: 'Declined, no reason given',
+  generic_decline: 'Declined, no reason given',
+  do_not_honor: 'Bank refused',
+  lost_card: 'Card reported lost',
+  stolen_card: 'Card reported stolen',
+  incorrect_cvc: 'Wrong CVC',
+  processing_error: 'Processing error',
+};
+
+/**
+ * Sequences by the decline code on the failed attempt. Counts only: a code
+ * holds a handful of sequences at most, and the point is to see which reasons
+ * get fixed at all. SCA (authentication_required) is its own labelled row
+ * because no retry can approve it; only the customer can.
+ */
+function ByDeclineCode({ outcomes }: { outcomes: OutcomeSummary }) {
+  const rows = outcomes.byDeclineCode;
+  return (
+    <ChartFrame
+      title="By decline code"
+      subtitle="One row per reason the bank gave: recovered, lost (subscription deleted) or still open."
+      footnote="Lost means the subscription was deleted after the sequence started: a row cancelled as subscription_deleted, or a deletion event for the same customer. Open sequences are still inside the retry window."
+    >
+      {rows.length === 0 ? (
+        <p className="xp-note">No dunning sequence has been queued yet.</p>
+      ) : (
+        <table className="ac-table xp-table">
+          <thead>
+            <tr>
+              <th scope="col">Decline code</th>
+              <th scope="col">Sequences</th>
+              <th scope="col">Recovered</th>
+              <th scope="col">Lost</th>
+              <th scope="col">Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.code ?? 'none'}>
+                <th scope="row">
+                  {row.sca ? 'Bank confirmation (SCA)' : row.code ?? 'no code'}
+                  <span className="xp-control-tag">
+                    {row.sca
+                      ? 'authentication_required: only the customer can approve it'
+                      : row.code
+                        ? DECLINE_WORDS[row.code] ?? ''
+                        : 'Stripe gave none'}
+                  </span>
+                </th>
+                <td>{formatCount(row.sequences)}</td>
+                <td>{formatCount(row.recovered)}</td>
+                <td>{formatCount(row.lost)}</td>
+                <td>{formatCount(row.open)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </ChartFrame>
+  );
+}
+
+function days(value: number | null): string {
+  if (value == null) return NO_DATA;
+  return value < 1 ? `${Math.round(value * 24)} h` : `${value.toFixed(1)} days`;
+}
+
+/**
+ * Recovered over closed (recovered + lost), the time it took, and who did it.
+ * The rate is withheld below MIN_SEQUENCES_FOR_RATE closed sequences.
+ */
+function RecoveryRate({ outcomes }: { outcomes: OutcomeSummary }) {
+  const by = outcomes.recoveredBy;
+  return (
+    <ChartFrame
+      title="Recovery rate"
+      subtitle="Of the sequences that have finished, how many got paid."
+      footnote="Time to recover runs from the queued sequence to the payment_recovered cancel. Customer = paid with a different payment method than the one that failed, or the paying charge ran 3-D Secure. Retry = same method, no 3-D Secure (a customer who topped up the account also reads as retry). Not recorded = recovered before this was measured."
+    >
+      <div className="xp-sum" style={{ margin: 0, fontSize: 13 }}>
+        <span>
+          Recovered <b>{formatCount(outcomes.recovered)}</b>
+          {outcomes.recoveryRate != null ? (
+            <span style={{ marginLeft: 6 }}>{`(${formatPercent(outcomes.recoveryRate)} of ${formatCount(outcomes.closed)} closed)`}</span>
+          ) : null}
+        </span>
+        <span>Lost <b>{formatCount(outcomes.lost)}</b></span>
+        <span>Still open <b>{formatCount(outcomes.open)}</b></span>
+        <span>
+          Median time to recover <b>{days(outcomes.medianDaysToRecover)}</b>
+          {outcomes.recoveredWithTiming > 0 ? (
+            <span style={{ marginLeft: 6 }}>{`(n=${formatCount(outcomes.recoveredWithTiming)})`}</span>
+          ) : null}
+        </span>
+      </div>
+      {outcomes.recoveryRate == null ? (
+        <p className="xp-note">
+          {`Fewer than ${MIN_SEQUENCES_FOR_RATE} sequences have closed, so no rate is shown. Read the counts.`}
+        </p>
+      ) : null}
+      <p className="xp-sum" style={{ fontSize: 13 }}>
+        <span>Customer fixed it <b>{formatCount(by.customer)}</b></span>
+        <span>Silent retry <b>{formatCount(by.retry)}</b></span>
+        <span>Unknown <b>{formatCount(by.unknown)}</b></span>
+        <span>Not recorded <b>{formatCount(by.not_recorded)}</b></span>
+      </p>
+    </ChartFrame>
+  );
+}
+
+/**
+ * Subscription deletions by month, split by Stripe's cancellation_details.reason.
+ * payment_failed is churn nobody chose: the card ran out of retries.
+ */
+function InvoluntaryChurn({
+  months,
+  reasonColumn,
+  error,
+}: {
+  months: ChurnMonth[];
+  reasonColumn: boolean;
+  error: string | null;
+}) {
+  return (
+    <ChartFrame
+      title="Involuntary share of churn"
+      subtitle="Subscriptions deleted each month (UTC), by why Stripe ended them."
+      footnote="The reason is recorded from 2026-10-24 on. Earlier deletions are counted but show as not recorded, and the share is taken over deletions with a recorded reason only. Other is payment_disputed or no reason at all."
+    >
+      {error ? (
+        <p className="xp-note xp-sum-bad">{`Deletions could not be read: ${error}`}</p>
+      ) : !reasonColumn ? (
+        <p className="xp-note xp-sum-bad">
+          Migration 20261024225000 has not been applied, so no reason has been recorded yet. Counting starts once it is.
+        </p>
+      ) : null}
+      {months.length === 0 ? (
+        error ? null : <p className="xp-note">No subscription has been deleted yet.</p>
+      ) : (
+        <>
+          <table className="ac-table xp-table">
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                <th scope="col">Payment failed</th>
+                <th scope="col">Cancelled</th>
+                <th scope="col">Other</th>
+                <th scope="col">Not recorded</th>
+                <th scope="col">Involuntary</th>
+              </tr>
+            </thead>
+            <tbody>
+              {months.map((m) => (
+                <tr key={m.month}>
+                  <th scope="row">{m.month}</th>
+                  <td>{formatCount(m.payment_failed)}</td>
+                  <td>{formatCount(m.cancellation_requested)}</td>
+                  <td>{formatCount(m.other)}</td>
+                  <td>{formatCount(m.not_recorded)}</td>
+                  <td>{m.involuntaryShare != null ? formatPercent(m.involuntaryShare) : NO_DATA}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="xp-hint">{`No share in a month with fewer than ${MIN_SEQUENCES_FOR_RATE} deletions that have a recorded reason.`}</p>
+        </>
+      )}
+    </ChartFrame>
+  );
+}
+
+/**
+ * Does the in-product surface do anything the email does not? Clicks on the
+ * failed-payment banner's button, next to the number of dunning sequences.
+ * The MCP chat notice is not counted: payment_notice_shown goes to the edge
+ * function logs only, and no table holds it.
+ */
+function BannerReach({
+  clicks,
+  error,
+  outcomes,
+}: {
+  clicks: FixClickSummary | null;
+  error: string | null;
+  outcomes: OutcomeSummary;
+}) {
+  return (
+    <ChartFrame
+      title="Banner reach"
+      subtitle="Clicks on the dashboard's failed-payment button (payment_fix_clicked)."
+      footnote="Sent on to Stripe = the open invoice page, or the billing portal when there was none. Bounced = no customer, or a Stripe error, so the owner landed on settings. The chat notice (payment_notice_shown) is logged to edge function logs only, so it is not counted here."
+    >
+      {error ? (
+        <p className="xp-note xp-sum-bad">{`Clicks could not be read: ${error}`}</p>
+      ) : clicks ? (
+        <div className="xp-sum" style={{ margin: 0, fontSize: 13 }}>
+          <span>Clicks <b>{formatCount(clicks.clicks)}</b></span>
+          <span>Sent on to Stripe <b>{formatCount(clicks.sentToStripe)}</b></span>
+          <span className={clicks.bounced > 0 ? 'xp-sum-bad' : undefined}>
+            Bounced <b>{formatCount(clicks.bounced)}</b>
+          </span>
+          <span>Workspaces <b>{formatCount(clicks.workspaces)}</b></span>
+          <span>Dunning sequences <b>{formatCount(outcomes.sequences)}</b></span>
+          <span><b>Last click:</b> {when(clicks.lastClickAt)}</span>
+        </div>
       ) : null}
     </ChartFrame>
   );
