@@ -103,6 +103,7 @@ const RESULTS = [
   { sender_key: "from:a@example.com", display_name: "A", status: "failed", method: "one_click", detail: "The sender answered 500.", draft_id: null, link: null },
   { sender_key: "from:promo@example.net", display_name: "Promo", status: "skipped_unsafe", method: "none", detail: null, draft_id: null, link: null },
   { sender_key: "from:b@example.com", display_name: "B", status: "already_done", method: "one_click", detail: null, draft_id: null, link: null },
+  { sender_key: "from:c@example.com", display_name: "C", status: "needs_user", method: "mailto", detail: "This connection cannot create drafts. To unsubscribe, email leave@example.com with the word unsubscribe.", draft_id: null, link: null, mailto_address: "leave@example.com" },
 ];
 
 function executedResult(backlog = { action: "archive", destination: "Archive", moved: 306, remaining: 0, has_more: false }) {
@@ -311,6 +312,11 @@ async function main() {
     expect("failed, with detail", /Failed\. The sender answered 500\./.test(row("failed")), true);
     expect("skipped", /Skipped \(not safe to unsubscribe\)/.test(row("skipped_unsafe")), true);
     expect("already done", /Already done/.test(row("already_done")), true);
+    const mailRow = c.root.querySelector('li[data-status="needs_user"]:last-child');
+    expect("mailto needs_user shows the address as text", /Email leave@example\.com to unsubscribe/.test(mailRow?.textContent ?? ""), true);
+    expect("the address is selectable text, not a link", mailRow?.querySelector(".sel")?.textContent, "leave@example.com");
+    expect("no Open button for a mailto row", /Open /.test(mailRow?.textContent ?? ""), false);
+    expect("no anchor anywhere in the results", c.root.querySelectorAll("a").length, 0);
     expect("backlog summary", /306 messages archived\./.test(c.text()), true);
     expect("follow-up note", /Senders usually stop within 2 days\. We check again in 3 days\./.test(c.text()), true);
     expect("no continue button when nothing is left", c.btn(/^Continue archiving/), null);
@@ -366,6 +372,16 @@ async function main() {
     const c = await card();
     expect("no element injected from a display name", c.root.querySelector("img"), null);
     expect("the name is shown as text", c.text().includes('<img src=x onerror="alert(1)">Deals'), true);
+    c.done();
+  }
+  {
+    // auth_unverified keeps its rung (a link here), not "Archive only".
+    const c = await card(planEnvelope({}, {
+      senders: [sender({ sender_key: "from:v@example.com", method: "link", safe: false, unsafe_reason: "auth_unverified", suggested: false })],
+    }));
+    const li = c.root.querySelector("ul.subs li");
+    expect("unverified sender keeps its method pill", li?.querySelector(".pill")?.textContent, "Link to open");
+    expect("and says it is not verified", /sender not verified/.test(li?.textContent ?? ""), true);
     c.done();
   }
 

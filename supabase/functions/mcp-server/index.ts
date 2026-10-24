@@ -521,6 +521,7 @@ import {
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
 import { fetchListHeaderRecords, type ListHeaderScanContext } from "./subscription-scan.ts";
+import { authservTrustFor } from "./list-unsubscribe.ts";
 import { postOneClick } from "./one-click-post.ts";
 import {
   isSubscriptionToolName,
@@ -19876,6 +19877,7 @@ async function subscriptionScanContextFor(
       return {
         provider: "gmail",
         budget,
+        trust: authservTrustFor("gmail"),
         fetch: (path) =>
           fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
@@ -19884,7 +19886,12 @@ async function subscriptionScanContextFor(
     }
     case "outlook": {
       const accessToken = await withFreshOutlookToken(inbox);
-      return { provider: "outlook", budget, fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl) };
+      return {
+        provider: "outlook",
+        budget,
+        trust: authservTrustFor("outlook"),
+        fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl),
+      };
     }
     default: {
       if (!session) throw new Error("subscription scan: an IMAP inbox needs a session");
@@ -19899,6 +19906,9 @@ async function subscriptionScanContextFor(
       return {
         provider: "imap",
         budget,
+        // Only Authentication-Results written by this host (or a known
+        // provider behind it) count; see list-unsubscribe.ts.
+        trust: authservTrustFor("imap", inbox.imap_host),
         inboxFolder: "INBOX",
         junkFolder,
         select: (folder) => session.select(imapMailboxForServerFolder(folder)),
@@ -32826,8 +32836,13 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: toolsForListing(apiKey, await isOpenAiClientKey(apiKey))
-          .map((t) => t.name),
+        //
+        // That includes the subscription rollout filter: a workspace without
+        // subscription_cleanup_enabled is never told those tools exist.
+        available_tools: subscriptionToolsVisible(
+          toolsForListing(apiKey, await isOpenAiClientKey(apiKey)),
+          await workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
+        ).map((t) => t.name),
       },
     );
   }

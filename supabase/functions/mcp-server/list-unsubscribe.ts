@@ -23,14 +23,22 @@
 // domain behind a list id). An unsafe sender keeps its method so a caller can
 // explain what was there, and the caller decides (skip or filter).
 //
-// ── Authentication-Results: only the topmost one counts ─────────────────────
-// Anyone can write an Authentication-Results header into a message they send.
-// Receiving servers prepend theirs, so the FIRST instance is the one the
-// user's own provider wrote, and later instances are whatever the message
-// arrived carrying. Reading only the first keeps a forged "dkim=pass" further
-// down from making a sender look safe. A message whose provider wrote none
-// (some small IMAP hosts) is simply not safe, which costs a fallback to the
-// draft or link rung, never an unwanted request.
+// ── Authentication-Results: only one the user's provider wrote counts ──────
+// Anyone can write an Authentication-Results header into a message they send,
+// including one that names a real provider. Position alone proves nothing: a
+// provider that writes no header of its own (some small IMAP hosts) leaves a
+// forged one on top. So the caller pins the authserv-ids it trusts for this
+// inbox (AuthservTrust: Gmail's, Microsoft's, the IMAP host's own domain and a
+// short list of known hosts), and the topmost header whose authserv-id is on
+// that list is the only one read. Forged headers below it are ignored, and so
+// are headers above it naming anyone else. With no trusted header the sender
+// is `auth_unverified`: never one-click, which costs a fallback to the draft
+// or link rung, never an unwanted request.
+//
+// Microsoft (Exchange Online, Outlook.com) writes its header with NO
+// authserv-id. `topmostWithoutId` trusts such a header only when it is the
+// topmost Authentication-Results: Microsoft prepends its own on delivery, so
+// one that arrived inside the message always sits below it.
 // ---------------------------------------------------------------------------
 
 import { decodeEncodedWords } from "./mime.ts";
@@ -85,7 +93,21 @@ export interface ListHeaderRecord {
 
 export type UnsubscribeMethod = "one_click" | "mailto" | "link" | "none";
 
-export type UnsafeReason = "in_junk" | "dkim_not_aligned" | "mixed_sender_domains";
+export type UnsafeReason = "in_junk" | "dkim_not_aligned" | "mixed_sender_domains" | "auth_unverified";
+
+/**
+ * Which Authentication-Results headers may be believed for one inbox (see the
+ * file header). `ids` are exact authserv-ids, or `*.domain` for that domain
+ * and any subdomain of it.
+ */
+export interface AuthservTrust {
+  ids: string[];
+  /** Trust a topmost header that carries no authserv-id (Microsoft's format). */
+  topmostWithoutId?: boolean;
+}
+
+/** Trusts nothing: every sender is auth_unverified. The fail-closed default. */
+export const NO_AUTHSERV_TRUST: AuthservTrust = { ids: [] };
 
 export interface SenderCandidate {
   senderKey: string;
@@ -314,13 +336,39 @@ export function dkimCoversListHeaders(dkimSignatureHeaders: string[]): { covered
 // it wrong in the strict direction only makes a sender not aligned.
 const COUNTRY_SECOND_LEVEL = new Set(["co", "com", "net", "org", "ac", "gov", "edu", "ne", "or", "go", "gob", "nic"]);
 
+// Shared hosting where every subdomain belongs to a different owner, so
+// a.github.io and b.github.io must not align (they are public suffixes in the
+// Public Suffix List's private section). Only hosts whose bare domain does not
+// itself send list mail: substack.com and wordpress.com are left out on
+// purpose, because their newsletters come From the bare domain (or a
+// subdomain) signed d= another subdomain, and treating them as suffixes would
+// break that alignment.
+const SHARED_HOSTING_SUFFIXES = new Set([
+  "github.io",
+  "herokuapp.com",
+  "vercel.app",
+  "netlify.app",
+  "pages.dev",
+  "workers.dev",
+  "blogspot.com",
+  "web.app",
+  "firebaseapp.com",
+  "appspot.com",
+  "azurewebsites.net",
+  "onrender.com",
+  "fly.dev",
+  "glitch.me",
+]);
+
 /** The organizational domain of a host name (relaxed alignment, RFC 7489 3.2). */
 export function organizationalDomain(domain: string): string {
   const labels = cleanDomain(domain).split(".").filter((l) => l.length > 0);
   if (labels.length <= 2) return labels.join(".");
   const tld = labels[labels.length - 1];
   const sld = labels[labels.length - 2];
-  const keep = tld.length === 2 && COUNTRY_SECOND_LEVEL.has(sld) ? 3 : 2;
+  const keep = SHARED_HOSTING_SUFFIXES.has(`${sld}.${tld}`) || (tld.length === 2 && COUNTRY_SECOND_LEVEL.has(sld))
+    ? 3
+    : 2;
   return labels.slice(-keep).join(".");
 }
 
@@ -361,12 +409,53 @@ function stripComments(value: string): string {
   return out;
 }
 
-/** The domains of every `dkim=pass` result in one Authentication-Results value. */
-export function dkimPassDomains(authResult: string): string[] {
-  const out: string[] = [];
+/**
+ * One Authentication-Results value split into its authserv-id and its result
+ * segments. `authservId` is null when the first segment is already a result
+ * (`spf=pass ...`), which is how Microsoft writes the header.
+ */
+export function parseAuthResults(authResult: string): { authservId: string | null; results: string[] } {
   const parts = stripComments(unfold(authResult)).split(";");
-  // parts[0] is the authserv-id (and version); results follow.
-  for (const part of parts.slice(1)) {
+  const first = (parts[0] ?? "").trim();
+  if (/^[a-z][a-z0-9-]*\s*=/i.test(first)) return { authservId: null, results: parts };
+  // authserv-id [CFWS authres-version]
+  const id = cleanDomain(first.split(/\s+/)[0] ?? "").replace(/^"|"$/g, "");
+  return { authservId: id || null, results: parts.slice(1) };
+}
+
+/** Is this authserv-id on the trusted list? */
+export function authservIdTrusted(authservId: string, trust: AuthservTrust): boolean {
+  const id = cleanDomain(authservId);
+  if (!id) return false;
+  return trust.ids.some((raw) => {
+    const t = cleanDomain(raw);
+    if (t.startsWith("*.")) {
+      const base = t.slice(2);
+      return base.length > 0 && (id === base || id.endsWith(`.${base}`));
+    }
+    return id === t;
+  });
+}
+
+/**
+ * The result segments of the topmost Authentication-Results header written by
+ * a trusted authserv-id, or null when there is none (see the file header).
+ */
+export function trustedAuthResults(authResults: string[], trust: AuthservTrust): string[] | null {
+  for (let i = 0; i < authResults.length; i++) {
+    const parsed = parseAuthResults(authResults[i]);
+    if (parsed.authservId === null) {
+      if (i === 0 && trust.topmostWithoutId) return parsed.results;
+      continue;
+    }
+    if (authservIdTrusted(parsed.authservId, trust)) return parsed.results;
+  }
+  return null;
+}
+
+function dkimPassDomainsOfResults(results: string[]): string[] {
+  const out: string[] = [];
+  for (const part of results) {
     const m = /^\s*dkim\s*=\s*([a-z]+)/i.exec(part);
     if (!m || m[1].toLowerCase() !== "pass") continue;
     const d = /\bheader\.d\s*=\s*"?([^\s";]+)"?/i.exec(part)?.[1];
@@ -378,19 +467,85 @@ export function dkimPassDomains(authResult: string): string[] {
 }
 
 /**
- * Did DKIM pass for a domain aligned (relaxed) with `fromDomain`, according to
- * the topmost Authentication-Results header (see the file header for why only
- * that one)? When `signingDomains` is non-empty the passing domain must also be
- * one of them, so "the signature covering the list headers passed" can be
- * asked by passing `dkimCoversListHeaders(...).domains`.
+ * The domains of every `dkim=pass` result in one Authentication-Results value
+ * that carries an authserv-id. The authserv-id segment is never read as a
+ * result.
  */
-export function dkimPassAligned(authResults: string[], fromDomain: string, signingDomains: string[]): boolean {
-  const top = authResults[0];
-  if (!top || !fromDomain) return false;
+export function dkimPassDomains(authResult: string): string[] {
+  const parsed = parseAuthResults(authResult);
+  return parsed.authservId === null ? [] : dkimPassDomainsOfResults(parsed.results);
+}
+
+/**
+ * Did DKIM pass for a domain aligned (relaxed) with `fromDomain`, according to
+ * the topmost TRUSTED Authentication-Results header (see the file header)?
+ * When `signingDomains` is non-empty the passing domain must also be one of
+ * them, so "the signature covering the list headers passed" can be asked by
+ * passing `dkimCoversListHeaders(...).domains`.
+ */
+export function dkimPassAligned(
+  authResults: string[],
+  fromDomain: string,
+  signingDomains: string[],
+  trust: AuthservTrust,
+): boolean {
+  const results = trustedAuthResults(authResults, trust);
+  if (!results || !fromDomain) return false;
   const allowed = new Set(signingDomains.map(cleanDomain));
-  return dkimPassDomains(top).some((d) =>
+  return dkimPassDomainsOfResults(results).some((d) =>
     domainsAligned(d, fromDomain) && (allowed.size === 0 || allowed.has(d))
   );
+}
+
+// ── Trusted authserv-ids per inbox ──────────────────────────────────────────
+
+const GOOGLE_TRUST: AuthservTrust = { ids: ["mx.google.com", "google.com"] };
+const MICROSOFT_TRUST: AuthservTrust = {
+  ids: ["*.outlook.com", "*.protection.outlook.com", "*.prod.outlook.com", "*.microsoft.com", "*.office365.com"],
+  topmostWithoutId: true,
+};
+
+// Well-known IMAP hosts (by the IMAP host's organizational domain, as in the
+// provider matrix) and the authserv-ids their mail servers write. Only the
+// entry for the inbox's own host applies: a forged "mx.google.com" header must
+// not be believed in a mailbox Google never handled.
+const IMAP_HOST_TRUST: Record<string, AuthservTrust> = {
+  "gmail.com": GOOGLE_TRUST,
+  "googlemail.com": GOOGLE_TRUST,
+  "office365.com": MICROSOFT_TRUST,
+  "outlook.com": MICROSOFT_TRUST,
+  "hotmail.com": MICROSOFT_TRUST,
+  "yahoo.com": { ids: ["*.yahoo.com", "*.yahoodns.net"] },
+  "aol.com": { ids: ["*.aol.com", "*.yahoo.com"] },
+  "me.com": { ids: ["*.icloud.com", "*.me.com", "*.apple.com"] },
+  "icloud.com": { ids: ["*.icloud.com", "*.me.com", "*.apple.com"] },
+  "fastmail.com": { ids: ["*.fastmail.com", "*.messagingengine.com"] },
+  "gmx.net": { ids: ["*.gmx.net", "*.gmx.com", "*.gmx.de"] },
+  "gmx.com": { ids: ["*.gmx.net", "*.gmx.com"] },
+  "web.de": { ids: ["*.web.de"] },
+  "mail.com": { ids: ["*.mail.com", "*.gmx.net"] },
+  "zoho.com": { ids: ["*.zoho.com", "*.zohomail.com"] },
+  "zoho.eu": { ids: ["*.zoho.eu", "*.zohomail.eu", "*.zoho.com"] },
+  "ovh.net": { ids: ["*.ovh.net"] },
+  "strato.de": { ids: ["*.strato.de", "*.rzone.de"] },
+};
+
+/**
+ * The authserv-ids to trust for an inbox: Gmail and Outlook API inboxes get
+ * their provider's, an IMAP inbox its host's organizational domain plus the
+ * known ids for that host. Anything unknown trusts nothing.
+ */
+export function authservTrustFor(provider: string, imapHost?: string | null): AuthservTrust {
+  if (provider === "gmail") return GOOGLE_TRUST;
+  if (provider === "outlook") return MICROSOFT_TRUST;
+  const host = cleanDomain(imapHost ?? "");
+  if (!host || !host.includes(".")) return NO_AUTHSERV_TRUST;
+  const org = organizationalDomain(host);
+  const known = IMAP_HOST_TRUST[org];
+  return {
+    ids: [...new Set([`*.${org}`, ...(known?.ids ?? [])])],
+    ...(known?.topmostWithoutId ? { topmostWithoutId: true } : {}),
+  };
 }
 
 // ── Grouping and classification ─────────────────────────────────────────────
@@ -416,10 +571,35 @@ export function normalizeListId(value: string | null | undefined): string | null
   return id.length > 0 ? id : null;
 }
 
-/** `list:<listId>` when the message has one, else `from:<lowercased address>`. */
+/**
+ * Longest sender key. The ledger allows 600 characters and the cleanup tool
+ * accepts keys up to 600; a longer List-Id or address is shortened (below)
+ * rather than made uncleanable.
+ */
+export const SENDER_KEY_MAX = 300;
+
+/** FNV-1a, twice with different seeds: a short, stable, synchronous digest. */
+function shortHash(value: string): string {
+  let a = 0x811c9dc5;
+  let b = 0x01000193 ^ 0x5bd1e995;
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i);
+    a = Math.imul(a ^ c, 0x01000193) >>> 0;
+    b = Math.imul(b ^ c, 0x01000193 ^ 0x2f) >>> 0;
+  }
+  return a.toString(16).padStart(8, "0") + b.toString(16).padStart(8, "0");
+}
+
+/**
+ * `list:<listId>` when the message has one, else `from:<lowercased address>`.
+ * A key over {@link SENDER_KEY_MAX} keeps its first part and ends in a hash of
+ * the whole, so it still groups every message of the sender and still fits.
+ */
 export function senderKeyOf(record: Pick<ListHeaderRecord, "listId" | "fromAddress">): string {
   const listId = normalizeListId(record.listId);
-  return listId ? `list:${listId}` : `from:${record.fromAddress.trim().toLowerCase()}`;
+  const key = listId ? `list:${listId}` : `from:${record.fromAddress.trim().toLowerCase()}`;
+  if (key.length <= SENDER_KEY_MAX) return key;
+  return `${key.slice(0, SENDER_KEY_MAX - 17)}~${shortHash(key)}`;
 }
 
 function domainOf(address: string): string {
@@ -478,7 +658,7 @@ function byNewest(a: ListHeaderRecord, b: ListHeaderRecord): number {
  * with a header at all, else the newest message. Mixing headers from several
  * messages would let one message's URL ride on another message's signature.
  */
-export function classifySender(records: ListHeaderRecord[]): SenderCandidate {
+export function classifySender(records: ListHeaderRecord[], trust: AuthservTrust = NO_AUTHSERV_TRUST): SenderCandidate {
   if (records.length === 0) throw new Error("classifySender: no records");
   const sorted = records.slice().sort(byNewest);
   const newest = sorted[0];
@@ -492,7 +672,8 @@ export function classifySender(records: ListHeaderRecord[]): SenderCandidate {
 
   const uris = parseListUnsubscribe(rep.listUnsubscribe);
   const signingDomains = dkimSigningDomains(rep.dkimSignatures);
-  const aligned = dkimPassAligned(rep.authResults, domain, signingDomains);
+  const verified = trustedAuthResults(rep.authResults, trust) !== null;
+  const aligned = verified && dkimPassAligned(rep.authResults, domain, signingDomains, trust);
   // A list id shared by senders of different organizations is not one sender:
   // a forged List-Id must not borrow a real list's name and history.
   const orgs = new Set(records.map((r) => organizationalDomain(domainOf(r.fromAddress))).filter((d) => d));
@@ -501,12 +682,13 @@ export function classifySender(records: ListHeaderRecord[]): SenderCandidate {
   let unsafeReason: UnsafeReason | undefined;
   if (rep.inJunk) unsafeReason = "in_junk";
   else if (mixed) unsafeReason = "mixed_sender_domains";
+  else if (!verified) unsafeReason = "auth_unverified";
   else if (!aligned) unsafeReason = "dkim_not_aligned";
   const safe = unsafeReason === undefined;
 
   const cover = dkimCoversListHeaders(rep.dkimSignatures);
   const oneClick = safe && uris.https.length > 0 && isOneClick(rep.listUnsubscribePost) && cover.covered &&
-    dkimPassAligned(rep.authResults, domain, cover.domains);
+    dkimPassAligned(rep.authResults, domain, cover.domains, trust);
 
   const method: UnsubscribeMethod = oneClick
     ? "one_click"
@@ -557,9 +739,15 @@ export function classifySender(records: ListHeaderRecord[]): SenderCandidate {
 /**
  * Group scanned records by sender key and classify each group, most messages
  * first (ties: most recent first). Records without a From address are
- * dropped: there is nobody to unsubscribe from.
+ * dropped: there is nobody to unsubscribe from. So is a group with neither a
+ * List-Id nor a List-Unsubscribe header on any of its messages: that is
+ * personal correspondence, not a subscription, and must never be listed.
+ * `trust` pins the Authentication-Results headers that count (file header).
  */
-export function groupSenders(records: ListHeaderRecord[], opts: { maxSenders?: number } = {}): SenderCandidate[] {
+export function groupSenders(
+  records: ListHeaderRecord[],
+  opts: { maxSenders?: number; trust?: AuthservTrust } = {},
+): SenderCandidate[] {
   const groups = new Map<string, ListHeaderRecord[]>();
   for (const record of records) {
     if (!record.fromAddress || !record.fromAddress.includes("@")) continue;
@@ -568,7 +756,12 @@ export function groupSenders(records: ListHeaderRecord[], opts: { maxSenders?: n
     if (group) group.push(record);
     else groups.set(key, [record]);
   }
-  const out = [...groups.values()].map(classifySender);
+  const trust = opts.trust ?? NO_AUTHSERV_TRUST;
+  const out = [...groups.values()]
+    .filter((group) =>
+      group.some((r) => normalizeListId(r.listId) !== null || (r.listUnsubscribe ?? "").trim().length > 0)
+    )
+    .map((group) => classifySender(group, trust));
   out.sort((a, b) => {
     if (b.messageCount !== a.messageCount) return b.messageCount - a.messageCount;
     const ta = Date.parse(a.lastReceivedAt);

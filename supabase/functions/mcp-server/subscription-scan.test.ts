@@ -13,7 +13,7 @@ import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { createWorkBudget, type WorkBudget } from "./bulk-budget.ts";
 import { ImapClient, parseHeaderFieldsFetchLine, parseInternalDate } from "./imap-client.ts";
 import { type ScriptedCommand, ScriptedWire } from "./imap-scripted-wire.ts";
-import { groupSenders } from "./list-unsubscribe.ts";
+import { authservTrustFor, groupSenders } from "./list-unsubscribe.ts";
 import {
   applyGraphHeaders,
   fetchListHeaderRecords,
@@ -147,6 +147,8 @@ function imapCtx(wire: ScriptedWire, junkFolder: string | null, b: WorkBudget = 
     provider: "imap" as const,
     budget: b,
     now: () => NOW,
+    // The fixture's provider writes its Authentication-Results as mx.example.net.
+    trust: authservTrustFor("imap", "imap.example.net"),
     junkFolder,
     select: async (folder: string) => {
       await client.selectMailbox(folder);
@@ -178,8 +180,10 @@ Deno.test("IMAP scan: inbox and junk, ids, flags, all header instances", async (
   assertEquals(r.receivedAt, "2026-10-20T08:00:00.000Z");
   const search = wire.commands.find((c) => c.text.startsWith("UID SEARCH"));
   assertEquals(search?.text, "UID SEARCH SINCE 26-Jul-2026");
+  // The context's trusted authserv-ids ride along on the result.
+  assertEquals(result.trust?.ids.includes("*.example.net"), true);
   // And the records classify end to end.
-  const [candidate] = groupSenders(result.records);
+  const [candidate] = groupSenders(result.records, { trust: result.trust });
   assertEquals(candidate.method, "one_click");
   assertEquals(candidate.messageCount, 3);
 });
@@ -392,7 +396,7 @@ Deno.test("Outlook scan: headers fetched once per sender, list id propagated", a
     junk: [{ id: "j1", from: "news@example.com", at: "2026-10-23T08:00:00Z" }],
   });
   const result = await fetchListHeaderRecords(
-    { provider: "outlook", budget: budget(), now: () => NOW, fetch: g.fetchFn },
+    { provider: "outlook", budget: budget(), now: () => NOW, fetch: g.fetchFn, trust: authservTrustFor("outlook") },
     { days: 90, limit: 2000 },
   );
   assertEquals(result.scanned, 5);
@@ -414,7 +418,8 @@ Deno.test("Outlook scan: headers fetched once per sender, list id propagated", a
   assertEquals(byId.get("n1")?.listUnsubscribe, null);
   assertEquals(byId.get("j1")?.inJunk, true);
   // Grouping keeps the news sender together under its list id.
-  const groups = groupSenders(result.records);
+  // Microsoft's own header (no authserv-id, topmost) is the one believed.
+  const groups = groupSenders(result.records, { trust: result.trust });
   const news = groups.find((c) => c.senderKey === "list:weekly.example.com");
   assert(news);
   assertEquals(news.messageCount, 4);

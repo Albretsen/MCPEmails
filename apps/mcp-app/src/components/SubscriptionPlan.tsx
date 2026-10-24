@@ -32,6 +32,7 @@ const UNSAFE: Record<string, string> = {
   in_junk: "in Junk",
   dkim_fail: "sender not verified",
   mixed_sender_domains: "mixed sender domains",
+  auth_unverified: "sender not verified",
 };
 
 const STATUS: Record<string, [string, string]> = {
@@ -147,7 +148,9 @@ function Picker(props: Props) {
       <ul class="subs" aria-label="Senders">
         {senders.map((s, i) => {
           const id = `sub-${i}`;
-          const unsafe = s.safe === false;
+          // auth_unverified still gets a draft or a link, never one-click.
+          const unverified = s.unsafe_reason === "auth_unverified";
+          const unsafe = s.safe === false && !unverified;
           const why = UNSAFE[s.unsafe_reason ?? ""] ?? "not verified";
           return (
             <li key={s.sender_key}>
@@ -164,7 +167,7 @@ function Picker(props: Props) {
                 <span class="sub-meta">
                   {fmt(s.message_count)} {plural(num(s.message_count), "message", "messages")},{" "}
                   {Math.round(num(s.read_share) * 100)}% read
-                  {unsafe ? `. Not safe to unsubscribe (${why}): archive only.` : ""}
+                  {unsafe ? `. Not safe to unsubscribe (${why}): archive only.` : unverified ? `. ${UNSAFE.auth_unverified}.` : ""}
                 </span>
               </label>
               <span class="pill" data-tone={unsafe ? "warning" : undefined}>
@@ -235,10 +238,10 @@ function Results(props: Props & { results: SubscriptionResult[] }) {
 
       <ul class="subs" aria-label="Results">
         {results.map((r) => {
-          const [tone, label] = STATUS[r.status] ?? ["neutral", "Done"];
           const host = r.status === "needs_user" ? httpsHost(r.link) : null;
-          const extra =
-            r.status === "draft_ready" ? "Draft saved in your Drafts folder." : r.detail || "";
+          const mail = r.status === "needs_user" && !host && typeof r.mailto_address === "string" ? r.mailto_address : null;
+          const [tone, label] = mail ? ["warning", "Email to unsubscribe"] : (STATUS[r.status] ?? ["neutral", "Done"]);
+          const extra = r.status === "draft_ready" ? "Draft saved in your Drafts folder." : mail ? "" : r.detail || "";
           return (
             <li key={r.sender_key} data-status={r.status}>
               <span class="dot" data-tone={tone} aria-hidden="true" />
@@ -248,6 +251,11 @@ function Results(props: Props & { results: SubscriptionResult[] }) {
                   {label}
                   {extra ? `. ${extra}` : ""}
                 </span>
+                {mail && (
+                  <span class="sub-meta sub-mail">
+                    Email <span class="sel">{mail}</span> to unsubscribe
+                  </span>
+                )}
               </span>
               {host && (
                 <TextLink title={`Opens ${host}`} onClick={() => actions.openLink(r.link as string)}>

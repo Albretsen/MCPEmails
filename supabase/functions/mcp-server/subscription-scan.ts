@@ -31,7 +31,7 @@
 import { parseMailbox } from "./address-header.ts";
 import type { WorkBudget } from "./bulk-budget.ts";
 import { type ImapHeaderFieldsRow, ImapMessageTooLargeError, ImapSelectRefusedError } from "./imap-client.ts";
-import { type ListHeaderRecord, normalizeListId } from "./list-unsubscribe.ts";
+import { type AuthservTrust, type ListHeaderRecord, normalizeListId } from "./list-unsubscribe.ts";
 import { getHeader, getHeaderAll, parseHeaders } from "./mime.ts";
 import { graphErrorFromResponse } from "./outlook-graph.ts";
 import { mapWithConcurrency } from "./provider-concurrency.ts";
@@ -76,6 +76,11 @@ export interface ScanResult {
   scanned: number;
   /** True when anything in the window was left unread: limit, budget or provider pushback. */
   truncated: boolean;
+  /**
+   * The context's trusted authserv-ids, handed through for groupSenders.
+   * Absent = trust nothing (every sender auth_unverified).
+   */
+  trust?: AuthservTrust;
 }
 
 /** The slice of ImapClient a scan uses; the real client satisfies it. */
@@ -90,6 +95,11 @@ export interface ScanImapClient {
 
 interface ScanContextBase {
   budget: WorkBudget;
+  /**
+   * Which Authentication-Results headers this inbox's provider writes
+   * (list-unsubscribe.ts authservTrustFor). Passed through on the result.
+   */
+  trust?: AuthservTrust;
   /** Clock for the `days` window; injectable for tests. */
   now?: () => number;
 }
@@ -128,14 +138,12 @@ export function fetchListHeaderRecords(ctx: ListHeaderScanContext, opts: ScanOpt
   const limit = Math.max(0, Math.floor(opts.limit));
   const days = Math.max(1, Math.floor(opts.days));
   const sinceMs = (ctx.now ?? Date.now)() - days * 86_400_000;
-  switch (ctx.provider) {
-    case "imap":
-      return scanImap(ctx, limit, sinceMs, opts.folders);
-    case "gmail":
-      return scanGmail(ctx, limit, sinceMs, opts.folders);
-    case "outlook":
-      return scanOutlook(ctx, limit, sinceMs, opts.folders);
-  }
+  const run = ctx.provider === "imap"
+    ? scanImap(ctx, limit, sinceMs, opts.folders)
+    : ctx.provider === "gmail"
+    ? scanGmail(ctx, limit, sinceMs, opts.folders)
+    : scanOutlook(ctx, limit, sinceMs, opts.folders);
+  return ctx.trust ? run.then((result) => ({ ...result, trust: ctx.trust })) : run;
 }
 
 // ── Shared ──────────────────────────────────────────────────────────────────

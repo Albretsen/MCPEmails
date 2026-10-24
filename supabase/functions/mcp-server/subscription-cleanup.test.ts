@@ -3,7 +3,7 @@
 // the follow-up, with every dependency injected (an in-memory store, fake
 // provider calls). Addresses are example.com only.
 
-import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assert, assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import type { ListHeaderRecord } from "./list-unsubscribe.ts";
 import type { OneClickResult } from "./one-click-post.ts";
 import {
@@ -20,6 +20,7 @@ import {
   SUBSCRIPTION_TOOL_DEFINITIONS,
   type SubscriptionDeps,
   type SubscriptionStore,
+  supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
@@ -145,13 +146,28 @@ class MemoryStore implements SubscriptionStore {
     row.backlog_leased_until = input.leaseUntilIso;
     return Promise.resolve(true);
   }
-  saveProgress(planId: string, update: { progress: { v: 1; data: string }; backlog_moved: number; backlog_remaining: number }) {
+  saveProgress(
+    planId: string,
+    update: { progress: { v: 1; data: string }; backlog_moved: number; backlog_remaining: number },
+    releaseLease = true,
+  ) {
     const row = this.plans.get(planId)!;
     row.progress = update.progress;
     row.backlog_moved = update.backlog_moved;
     row.backlog_remaining = update.backlog_remaining;
-    row.backlog_leased_until = null;
+    if (releaseLease) row.backlog_leased_until = null;
+    this.progressWrites.push(JSON.parse(update.progress.data.slice(4)));
     return Promise.resolve();
+  }
+  progressWrites: any[] = [];
+  reclaimPlan(input: { planId: string; workspaceId: string; previousUsedAtIso: string; nowIso: string; leaseUntilIso: string }) {
+    const row = this.plans.get(input.planId);
+    if (!row || row.workspace_id !== input.workspaceId || row.used_at !== input.previousUsedAtIso) {
+      return Promise.resolve(false);
+    }
+    row.used_at = input.nowIso;
+    row.backlog_leased_until = input.leaseUntilIso;
+    return Promise.resolve(true);
   }
   leaseBacklog(planId: string, nowIso: string, untilIso: string) {
     const row = this.plans.get(planId)!;
@@ -159,15 +175,22 @@ class MemoryStore implements SubscriptionStore {
     row.backlog_leased_until = untilIso;
     return Promise.resolve(true);
   }
-  claimRequest(row: NewRequestRow): Promise<ClaimRequestResult> {
+  /** Set to make every ledger insert fail. */
+  failClaims = false;
+  /** Set to make every finishRequest write fail. */
+  failFinishes = false;
+  claimRequest(row: NewRequestRow, staleBeforeIso: string): Promise<ClaimRequestResult> {
+    if (this.failClaims) return Promise.resolve({ claimed: false, write_failed: true });
     const existing = [...this.requests.values()].find((r) => r.idempotency_key === row.idempotency_key);
     if (!existing) {
       const id = this.id();
-      this.requests.set(id, { ...row, id, status: "pending", draft_id: null, checked_at: null });
+      this.requests.set(id, { ...row, id, status: "pending", draft_id: null, checked_at: null, check_attempts: 0 });
       return Promise.resolve({ claimed: true, id });
     }
-    if (["failed", "needs_user", "skipped_unsafe"].includes(existing.status as string)) {
+    const stalePending = existing.status === "pending" && (existing.claimed_at as string) < staleBeforeIso;
+    if (stalePending || ["failed", "needs_user", "skipped_unsafe"].includes(existing.status as string)) {
       existing.status = "pending";
+      existing.claimed_at = row.claimed_at;
       return Promise.resolve({ claimed: true, id: existing.id as string });
     }
     return Promise.resolve({
@@ -177,8 +200,9 @@ class MemoryStore implements SubscriptionStore {
     });
   }
   finishRequest(id: string, update: RequestUpdate) {
+    if (this.failFinishes) return Promise.resolve(false);
     Object.assign(this.requests.get(id)!, update);
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
   listDueFollowUps(nowIso: string, limit: number): Promise<FollowUpRow[]> {
     return Promise.resolve(
@@ -195,6 +219,7 @@ class MemoryStore implements SubscriptionStore {
           status: r.status as string,
           requested_at: r.requested_at as string | null,
           check_after: r.check_after as string | null,
+          check_attempts: (r.check_attempts as number | undefined) ?? 0,
         })),
     );
   }
@@ -204,15 +229,22 @@ class MemoryStore implements SubscriptionStore {
     r.check_leased_at = "x";
     return Promise.resolve(true);
   }
-  finishFollowUp(id: string, update: { status: string | null; checked_at: string }) {
+  finishFollowUp(id: string, update: { status: string | null; checked_at: string; error?: string | null }) {
     const r = this.requests.get(id)!;
     if (update.status) r.status = update.status;
+    if (update.error) r.error = update.error;
     r.checked_at = update.checked_at;
     r.check_leased_at = null;
     return Promise.resolve();
   }
   releaseFollowUp(id: string) {
     this.requests.get(id)!.check_leased_at = null;
+    return Promise.resolve();
+  }
+  deferFollowUp(id: string, update: { check_after: string; check_attempts: number }) {
+    const r = this.requests.get(id)!;
+    if (r.checked_at !== null) return Promise.resolve();
+    Object.assign(r, update, { check_leased_at: null });
     return Promise.resolve();
   }
 }
@@ -228,7 +260,7 @@ interface Harness {
 }
 
 function harness(opts: {
-  records?: ListHeaderRecord[];
+  records?: ListHeaderRecord[] | (() => ListHeaderRecord[]);
   post?: (url: string) => OneClickResult;
   archiveBatch?: number;
 } = {}): Harness {
@@ -247,7 +279,14 @@ function harness(opts: {
     now: () => now,
     workspaceEnabled: () => Promise.resolve(enabled.value),
     resolveInbox: () => Promise.resolve({ ok: true, inbox: INBOX }),
-    scan: () => Promise.resolve({ records: opts.records ?? records(), scanned: 9, truncated: false }),
+    scan: () =>
+      Promise.resolve({
+        records: typeof opts.records === "function" ? opts.records() : opts.records ?? records(),
+        scanned: 9,
+        truncated: false,
+        // The fixtures' Authentication-Results are written by mx.example.com.
+        trust: { ids: ["mx.example.com"] },
+      }),
     postOneClick: (url) => {
       posts.push(url);
       return Promise.resolve(opts.post ? opts.post(url) : { ok: true, status: 200, durationMs: 5 });
@@ -382,7 +421,7 @@ Deno.test("cleanup: a failing POST is failed, a redirect is not followed", async
   assertEquals(row.check_after, undefined);
 });
 
-Deno.test("cleanup: a key without manage:drafts gets the mailto link instead of a draft", async () => {
+Deno.test("cleanup: a key without manage:drafts gets the address to email, never a mailto link", async () => {
   const h = harness();
   const { planId } = await scanPlan(h);
   const out = await runSubscriptionsCleanup(
@@ -392,7 +431,11 @@ Deno.test("cleanup: a key without manage:drafts gets the mailto link instead of 
   );
   const r = (out.result.structuredContent!.subscriptions as any).results[0];
   assertEquals(r.status, "needs_user");
-  assert(String(r.link).startsWith("mailto:leave@shop.example.com"));
+  // The card opens https links only: a mailto URI there would be a dead end.
+  assertEquals(r.link, null);
+  assertEquals(r.mailto_address, "leave@shop.example.com");
+  assert(r.detail.includes("email leave@shop.example.com with the word unsubscribe"));
+  assert(out.result.content[0].text.includes("leave@shop.example.com"));
   assertEquals(h.drafts.length, 0);
 });
 
@@ -506,6 +549,177 @@ Deno.test("cleanup: a failed attempt may be retried from a new plan", async () =
   assertEquals(h.posts.length, 2);
 });
 
+Deno.test("cleanup: a second scan with a new per-message token returns already_done without a POST", async () => {
+  let token = "secret1";
+  const h = harness({
+    records: () =>
+      records().map((r) =>
+        r.listUnsubscribe?.includes("unsub.example.com") ? { ...r, listUnsubscribe: `<https://unsub.example.com/u?t=${token}>` } : r
+      ),
+  });
+  const first = await scanPlan(h);
+  await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: first.planId, sender_keys: ["list:news.example.com"] });
+  assertEquals(h.posts, ["https://unsub.example.com/u?t=secret1"]);
+  token = "fresh-token-2";
+  const second = await scanPlan(h);
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, {
+    plan_id: second.planId,
+    sender_keys: ["list:news.example.com", "from:deals@shop.example.com"],
+  });
+  const results = (out.result.structuredContent!.subscriptions as any).results;
+  assertEquals(results[0].status, "already_done");
+  assertEquals(h.posts.length, 1);
+  // mailto is keyed by the address: a third scan does not draft twice either.
+  const third = await scanPlan(h);
+  const again = await runSubscriptionsCleanup(h.deps, CALLER, {
+    plan_id: third.planId,
+    sender_keys: ["from:deals@shop.example.com"],
+  });
+  assertEquals((again.result.structuredContent!.subscriptions as any).results[0].status, "already_done");
+  assertEquals(h.drafts.length, 1);
+});
+
+Deno.test("cleanup: an unverifiable sender is never POSTed to; its link comes back instead", async () => {
+  const h = harness({
+    records: () =>
+      records().map((r) =>
+        r.fromAddress === "news@example.com"
+          ? { ...r, authResults: ["mx.example.net; dkim=pass header.d=example.com"] } // not a trusted authserv-id
+          : r
+      ),
+  });
+  const { subs, planId } = await scanPlan(h);
+  const news = subs.senders.find((s: any) => s.sender_key === "list:news.example.com");
+  assertEquals(news.safe, false);
+  assertEquals(news.unsafe_reason, "auth_unverified");
+  assertEquals(news.method, "link");
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: ["list:news.example.com"] });
+  const r = (out.result.structuredContent!.subscriptions as any).results[0];
+  assertEquals(r.status, "needs_user");
+  assertEquals(r.link, "https://unsub.example.com/u?t=secret1");
+  assertEquals(h.posts.length, 0);
+});
+
+// ── Crash recovery ──────────────────────────────────────────────────────────
+
+Deno.test("cleanup: progress is saved before the one-click POSTs start", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  let seenAtPost: any = null;
+  h.deps.postOneClick = (url) => {
+    seenAtPost = h.store.progressWrites.at(-1);
+    h.posts.push(url);
+    return Promise.resolve({ ok: true, status: 200, durationMs: 1 });
+  };
+  await runSubscriptionsCleanup(h.deps, CALLER, {
+    plan_id: planId,
+    sender_keys: ["list:news.example.com", "from:deals@shop.example.com"],
+  });
+  assertEquals(seenAtPost.complete, false);
+  assertEquals(seenAtPost.selected, ["list:news.example.com", "from:deals@shop.example.com"]);
+  assertEquals(seenAtPost.results.map((r: any) => r.status), ["draft_ready"]);
+  assertEquals(h.store.progressWrites.at(-1).complete, true);
+});
+
+Deno.test("cleanup: a run killed mid-POST is in progress, then recoverable after the lease", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  h.deps.postOneClick = () => Promise.reject(new Error("isolate killed"));
+  const args = { plan_id: planId, sender_keys: ["list:news.example.com", "from:deals@shop.example.com"], backlog: "keep" };
+  await assertRejects(() => runSubscriptionsCleanup(h.deps, CALLER, args));
+  const news = [...h.store.requests.values()].find((r) => r.sender_key === "list:news.example.com")!;
+  assertEquals(news.status, "pending");
+
+  // Inside the lease: in progress, nothing re-run.
+  h.setNow(T0 + 5 * 60_000);
+  const early = await runSubscriptionsCleanup(h.deps, CALLER, args);
+  assertEquals(early.logErrorCode, "plan_in_progress");
+
+  // A second scan inside the lease does not POST either: the pending row holds.
+  h.deps.postOneClick = (url) => {
+    h.posts.push(url);
+    return Promise.resolve({ ok: true, status: 200, durationMs: 1 });
+  };
+  const other = await scanPlan(h);
+  const blocked = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: other.planId, sender_keys: ["list:news.example.com"] });
+  assertEquals((blocked.result.structuredContent!.subscriptions as any).results[0].status, "already_done");
+  assertEquals(h.posts.length, 0);
+
+  // After the lease the replay (here, the card's continue call) recovers.
+  h.setNow(T0 + 12 * 60_000);
+  const late = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: [], backlog: "keep", continue: true });
+  assertEquals(late.result.isError, false);
+  const results = (late.result.structuredContent!.subscriptions as any).results;
+  assertEquals(results.map((r: any) => [r.sender_key, r.status]), [
+    ["list:news.example.com", "requested"],
+    ["from:deals@shop.example.com", "draft_ready"],
+  ]);
+  assertEquals(h.posts.length, 1);
+  // The draft from the dead run stands; it is not made twice.
+  assertEquals(h.drafts.length, 1);
+  assertEquals(news.status, "requested");
+  // And it is complete now: a replay just replays.
+  const replay = await runSubscriptionsCleanup(h.deps, CALLER, args);
+  assertEquals(replay.result.isError, false);
+  assertEquals(h.posts.length, 1);
+});
+
+Deno.test("cleanup: a lost ledger write leaves the row retryable after the lease, never pending forever", async () => {
+  const h = harness();
+  const first = await scanPlan(h);
+  h.store.failFinishes = true;
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: first.planId, sender_keys: ["list:news.example.com"] });
+  assertEquals((out.result.structuredContent!.subscriptions as any).results[0].status, "requested");
+  assertEquals([...h.store.requests.values()][0].status, "pending");
+  h.store.failFinishes = false;
+  h.setNow(T0 + 11 * 60_000);
+  const second = await scanPlan(h);
+  const retry = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: second.planId, sender_keys: ["list:news.example.com"] });
+  assertEquals((retry.result.structuredContent!.subscriptions as any).results[0].status, "requested");
+  assertEquals(h.posts.length, 2);
+  assertEquals([...h.store.requests.values()][0].status, "requested");
+});
+
+// ── Column limits ───────────────────────────────────────────────────────────
+
+Deno.test("cleanup: over-long header values are cut to the ledger's limits, and a long List-Id still cleans", async () => {
+  const longLocal = "a".repeat(330);
+  const longList = `${"l".repeat(700)}.example.com`;
+  const h = harness({
+    records: [0, 1, 2].map(() =>
+      rec({
+        fromAddress: `${longLocal}@example.com`,
+        fromName: "N".repeat(400),
+        listId: `<${longList}>`,
+        listUnsubscribe: "<https://unsub.example.com/u?t=x>",
+        listUnsubscribePost: "List-Unsubscribe=One-Click",
+      })
+    ),
+  });
+  const { subs, planId } = await scanPlan(h);
+  assertEquals(subs.senders.length, 1);
+  const key = subs.senders[0].sender_key as string;
+  assert(key.length <= 600, "the key fits the ledger and the tool's argument limit");
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: [key] });
+  assertEquals((out.result.structuredContent!.subscriptions as any).results[0].status, "requested");
+  const row = [...h.store.requests.values()][0];
+  assert((row.sender_key as string).length <= 600);
+  assert((row.from_address as string).length <= 320);
+  assert((row.display_name as string).length <= 200);
+  assert(((row.sender_domain as string) ?? "").length <= 255);
+});
+
+Deno.test("cleanup: a ledger insert that fails is reported as failed and sends nothing", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  h.store.failClaims = true;
+  const out = await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: ["list:news.example.com"] });
+  const r = (out.result.structuredContent!.subscriptions as any).results[0];
+  assertEquals(r.status, "failed");
+  assert(r.detail.includes("could not record the request"));
+  assertEquals(h.posts.length, 0);
+});
+
 // ── Backlog ─────────────────────────────────────────────────────────────────
 
 Deno.test("cleanup: backlog archive moves the senders' mail outside Junk and resumes with continue", async () => {
@@ -572,7 +786,7 @@ Deno.test("follow-up: due rows become stopped or still_sending, searched after t
       return Promise.resolve(from === "deals@shop.example.com");
     },
   });
-  assertEquals(summary, { due: 2, checked: 2, stopped: 1, still_sending: 1, errors: 0 });
+  assertEquals(summary, { due: 2, checked: 2, stopped: 1, still_sending: 1, errors: 0, deferred: 0, given_up: 0 });
   assertEquals(searches.every((s) => s.since === new Date(T0 + 24 * 3600_000).toISOString()), true);
   const statuses = Object.fromEntries([...h.store.requests.values()].map((r) => [r.sender_key, r.status]));
   assertEquals(statuses["list:news.example.com"], "stopped");
@@ -583,19 +797,80 @@ Deno.test("follow-up: due rows become stopped or still_sending, searched after t
   assertEquals(summary.due, 0);
 });
 
-Deno.test("follow-up: a search failure releases the row for the next run", async () => {
+Deno.test("follow-up: a search failure pushes the row back a day, and the rest of the inbox's batch", async () => {
+  const h = harness();
+  const { planId } = await scanPlan(h);
+  await runSubscriptionsCleanup(h.deps, CALLER, {
+    plan_id: planId,
+    sender_keys: ["list:news.example.com", "from:deals@shop.example.com"],
+  });
+  let searches = 0;
+  const at = T0 + 73 * 3600_000;
+  const summary = await runSubscriptionFollowUp({
+    store: h.store,
+    now: () => at,
+    search: () => {
+      searches++;
+      return Promise.reject(new Error("inbox_unavailable"));
+    },
+  });
+  assertEquals(searches, 1);
+  assertEquals(summary.errors, 1);
+  assertEquals(summary.deferred, 2);
+  for (const row of h.store.requests.values()) {
+    if (row.status !== "requested" && row.status !== "draft_ready") continue;
+    assertEquals(row.checked_at, null);
+    assertEquals(row.check_leased_at, null);
+    assertEquals(row.check_after, new Date(at + 24 * 3600_000).toISOString());
+    assertEquals(row.check_attempts, 1);
+  }
+  // Not due again until the day is over: the queue moves on.
+  const soon = await runSubscriptionFollowUp({ store: h.store, now: () => at + 3600_000, search: () => Promise.resolve(false) });
+  assertEquals(soon.due, 0);
+});
+
+Deno.test("follow-up: after three failed searches the row is closed without a verdict", async () => {
   const h = harness();
   const { planId } = await scanPlan(h);
   await runSubscriptionsCleanup(h.deps, CALLER, { plan_id: planId, sender_keys: ["list:news.example.com"] });
-  const summary = await runSubscriptionFollowUp({
-    store: h.store,
-    now: () => T0 + 73 * 3600_000,
-    search: () => Promise.reject(new Error("imap_auth_failed")),
-  });
-  assertEquals(summary.errors, 1);
+  let at = T0 + 73 * 3600_000;
+  const fail = () => Promise.reject(new Error("inbox_unavailable"));
+  const s1 = await runSubscriptionFollowUp({ store: h.store, now: () => at, search: fail });
+  at += 25 * 3600_000;
+  const s2 = await runSubscriptionFollowUp({ store: h.store, now: () => at, search: fail });
+  at += 25 * 3600_000;
+  const s3 = await runSubscriptionFollowUp({ store: h.store, now: () => at, search: fail });
+  assertEquals([s1.deferred, s2.deferred, s3.deferred, s3.given_up], [1, 1, 0, 1]);
   const row = [...h.store.requests.values()][0];
-  assertEquals(row.checked_at, null);
-  assertEquals(row.check_leased_at, null);
+  assertEquals(row.status, "requested");
+  assertEquals(row.error, "follow_up_unavailable");
+  assertEquals(row.checked_at, new Date(at).toISOString());
+  at += 25 * 3600_000;
+  assertEquals((await runSubscriptionFollowUp({ store: h.store, now: () => at, search: fail })).due, 0);
+});
+
+Deno.test("follow-up store: the due list skips soft-deleted and disconnected inboxes", async () => {
+  const calls: unknown[][] = [];
+  const builder: any = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === "then") {
+        return (resolve: (v: unknown) => void) =>
+          resolve({ data: [{ id: "r1", inbox_id: "i1", from_address: null, status: "requested", requested_at: null, check_after: null, check_attempts: 0, inboxes: { id: "i1" } }], error: null });
+      }
+      return (...args: unknown[]) => {
+        calls.push([prop, ...args]);
+        return builder;
+      };
+    },
+  });
+  const store = supabaseSubscriptionStore({ from: () => builder });
+  const rows = await store.listDueFollowUps(new Date(T0).toISOString(), 10);
+  assertEquals(rows.length, 1);
+  assertEquals("inboxes" in rows[0], false);
+  const select = calls.find((c) => c[0] === "select")!;
+  assert(String(select[1]).includes("inboxes!inner"));
+  assert(calls.some((c) => c[0] === "is" && c[1] === "inboxes.deleted_at" && c[2] === null));
+  assert(calls.some((c) => c[0] === "eq" && c[1] === "inboxes.status" && c[2] === "active"));
 });
 
 // ── Definitions ─────────────────────────────────────────────────────────────

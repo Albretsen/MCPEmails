@@ -309,7 +309,8 @@ export interface DraftEditorData {
  * A scan of newsletter and list senders; the card ticks some and calls
  * `subscriptions_cleanup`. Display names, addresses and `detail` are hostile
  * text. The plan carries hosts only, never a URL; `results[].link` is the one
- * raw URL, present only for `needs_user`.
+ * raw URL (https only), present only for `needs_user`; a mailto sender that
+ * could not get a draft has `mailto_address` instead.
  */
 export type SubscriptionMethod = "one_click" | "mailto" | "link" | "none";
 
@@ -346,7 +347,10 @@ export interface SubscriptionResult {
   method: SubscriptionMethod;
   detail: string | null;
   draft_id: string | null;
+  /** https only, on needs_user. */
   link: string | null;
+  /** A mailto sender on needs_user (no draft): the address to email. */
+  mailto_address?: string | null;
 }
 
 export interface SubscriptionBacklog {

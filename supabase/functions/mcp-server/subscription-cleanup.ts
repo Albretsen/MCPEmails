@@ -17,8 +17,10 @@
 //
 // ── The ladder, per approved sender (spec D6, "Method ladder") ──────────────
 //   unsafe (Junk, DKIM not aligned, mixed domains)  skipped_unsafe
+//   auth_unverified  no POST; the mailto or link rung below still runs
 //   one_click   server POST: requested on 2xx, failed otherwise
-//   mailto      a DRAFT to the mailto address: draft_ready. Never sent.
+//   mailto      a DRAFT to the mailto address: draft_ready. Never sent. With
+//               no draft possible: needs_user with `mailto_address`, no link.
 //   link        the raw https link handed back: needs_user. Never fetched.
 //   none        skipped_unsafe (nothing in the headers to act on)
 // A one-click sender past the per-call POST cap, or reached after the time
@@ -35,8 +37,10 @@
 // is not in the plan is refused before anything runs. The plan is
 // workspace-scoped, bound to the key's inbox allowlist, single use for the
 // unsubscribe part (an atomic `used_at IS NULL` claim) and lives 15 minutes.
-// The ledger's idempotency key means a replay finds its row instead of
-// sending a second POST.
+// The ledger's idempotency key (inbox, sender, URL host or mailto address)
+// means a replay or a second scan finds its row instead of sending a second
+// POST. A run killed half way is recoverable: ledger rows it left `pending`
+// go stale after REQUEST_CLAIM_LEASE_MS, and its plan after PLAN_RECOVERY_MS.
 //
 // ── Why a separate module ───────────────────────────────────────────────────
 // index.ts calls Deno.serve and builds a service-role client at module load,
@@ -118,6 +122,26 @@ export const FOLLOW_UP_BUDGET_MS = 40_000;
 export const FOLLOW_UP_BATCH = 100;
 export const FOLLOW_UP_MAX_PER_INBOX = 25;
 export const FOLLOW_UP_LEASE_MS = 10 * 60 * 1000;
+/** An inbox that could not be searched is tried again this much later. */
+export const FOLLOW_UP_RETRY_MS = 24 * 60 * 60 * 1000;
+/** After this many failed searches the row is closed without a verdict. */
+export const FOLLOW_UP_MAX_ATTEMPTS = 3;
+
+/**
+ * A `pending` ledger row claimed longer ago than this belongs to a run that
+ * died (an edge function killed mid-call). The next run may take it over.
+ */
+export const REQUEST_CLAIM_LEASE_MS = 10 * 60 * 1000;
+/**
+ * A plan claimed longer ago than this whose run never saved complete progress
+ * is recoverable: a replay re-runs what is left instead of answering "in
+ * progress" forever. A minute longer than the ledger lease, so the dead run's
+ * ledger rows (claimed in its first seconds) are stale by then too.
+ */
+export const PLAN_RECOVERY_MS = REQUEST_CLAIM_LEASE_MS + 60 * 1000;
+
+/** The ledger's CHECK limits (20261024210000). */
+const LEDGER_MAX = { sender_key: 600, sender_domain: 255, display_name: 200, from_address: 320, url_host: 255 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -179,8 +203,13 @@ export interface CleanupResult {
   method: SenderMethod;
   detail: string | null;
   draft_id: string | null;
-  /** Only for needs_user: the raw link for the user to open. */
+  /** Only for needs_user: the raw https link for the user to open. */
   link: string | null;
+  /**
+   * Only for a mailto sender that came back needs_user (no draft could be
+   * made): the plain address the user emails with the word unsubscribe.
+   */
+  mailto_address: string | null;
 }
 
 export interface BacklogProgress {
@@ -195,6 +224,14 @@ interface PlanProgress {
   v: 1;
   results: CleanupResult[];
   backlog: BacklogProgress;
+  /**
+   * False while the run is still going (checkpoints); a replay then answers
+   * "in progress" until PLAN_RECOVERY_MS, and recovers after that. Absent
+   * counts as complete.
+   */
+  complete?: boolean;
+  /** The sender keys the run was started for, in order (for recovery). */
+  selected?: string[];
 }
 
 export interface PlanRow {
@@ -242,6 +279,8 @@ export interface NewRequestRow {
   method: SenderMethod;
   url_host: string | null;
   idempotency_key: string;
+  /** When this run took the row; a stale claim may be taken over. */
+  claimed_at: string;
 }
 
 export interface RequestUpdate {
@@ -255,7 +294,9 @@ export interface RequestUpdate {
 
 export type ClaimRequestResult =
   | { claimed: true; id: string }
-  | { claimed: false; status: string; draft_id: string | null };
+  | { claimed: false; status: string; draft_id: string | null }
+  /** The ledger could not be written or read: nothing may be sent. */
+  | { claimed: false; write_failed: true };
 
 export interface FollowUpRow {
   id: string;
@@ -264,6 +305,8 @@ export interface FollowUpRow {
   status: string;
   requested_at: string | null;
   check_after: string | null;
+  /** Failed searches so far. */
+  check_attempts?: number;
 }
 
 /** Every database access this module makes. See `supabaseSubscriptionStore`. */
@@ -279,19 +322,47 @@ export interface SubscriptionStore {
     backlogAction: "archive" | "keep";
     leaseUntilIso: string;
   }): Promise<boolean>;
+  /**
+   * `releaseLease` false = a checkpoint mid-run: the backlog lease the claim
+   * took is kept.
+   */
   saveProgress(planId: string, update: {
     progress: { v: 1; data: string };
     backlog_moved: number;
     backlog_remaining: number;
-  }): Promise<void>;
+  }, releaseLease?: boolean): Promise<void>;
+  /**
+   * Take over a plan whose run died: conditional on `used_at` still being the
+   * value this call read, so two recoveries cannot both win.
+   */
+  reclaimPlan(input: {
+    planId: string;
+    workspaceId: string;
+    apiKeyId: string;
+    previousUsedAtIso: string;
+    nowIso: string;
+    leaseUntilIso: string;
+  }): Promise<boolean>;
   /** Take the backlog lease when it is free or stale. */
   leaseBacklog(planId: string, nowIso: string, untilIso: string): Promise<boolean>;
-  claimRequest(row: NewRequestRow): Promise<ClaimRequestResult>;
-  finishRequest(id: string, update: RequestUpdate): Promise<void>;
+  /**
+   * Insert the ledger row, or take over an existing one that is retryable
+   * (RETRYABLE_STATUSES) or `pending` with a claim older than `staleBeforeIso`.
+   */
+  claimRequest(row: NewRequestRow, staleBeforeIso: string): Promise<ClaimRequestResult>;
+  /** False when the write failed. */
+  finishRequest(id: string, update: RequestUpdate): Promise<boolean>;
+  /** Due rows of live inboxes only (not soft-deleted, status active). */
   listDueFollowUps(nowIso: string, limit: number): Promise<FollowUpRow[]>;
   claimFollowUp(id: string, nowIso: string, staleBeforeIso: string): Promise<boolean>;
-  finishFollowUp(id: string, update: { status: "stopped" | "still_sending" | null; checked_at: string }): Promise<void>;
+  finishFollowUp(id: string, update: {
+    status: "stopped" | "still_sending" | null;
+    checked_at: string;
+    error?: string | null;
+  }): Promise<void>;
   releaseFollowUp(id: string): Promise<void>;
+  /** Push an unchecked row back (the inbox could not be searched) and release it. */
+  deferFollowUp(id: string, update: { check_after: string; check_attempts: number }): Promise<void>;
 }
 
 /**
@@ -667,7 +738,9 @@ export async function runSubscriptionsScan(
     return scanErrorResult(error);
   }
 
-  const candidates = groupSenders(scan.records, { maxSenders: SCAN_MAX_SENDERS });
+  // Only Authentication-Results from the inbox's own provider count (the scan
+  // context pins them); none = every sender is auth_unverified.
+  const candidates = groupSenders(scan.records, { maxSenders: SCAN_MAX_SENDERS, trust: scan.trust });
   const senders = storedSendersOf(candidates, scan.records);
   const summary = summaryOf(senders);
   const at = nowMs(deps);
@@ -741,7 +814,7 @@ function scanText(
       (meta.truncated ? " (stopped early: not every message in the window was read)" : "") +
       `. Found ${summary.senders} sender(s) of list mail: ${summary.one_click} one-click, ` +
       `${summary.mailto} by email, ${summary.link} by link, ${summary.none} with no unsubscribe option; ` +
-      `${summary.unsafe} look unsafe and will be skipped.`,
+      `${summary.unsafe} look unsafe and are never unsubscribed by the server.`,
   );
   if (senders.length > 0) {
     lines.push("", "Top senders (sender_key: name, messages, read share, method):");
@@ -804,14 +877,26 @@ function parseCleanupArgs(rawArgs: unknown): CleanupArgs | string {
   };
 }
 
-/** HMAC(inbox, sender, target): the ledger's replay guard. */
+/**
+ * HMAC(inbox, sender, target): the ledger's replay guard. The target is the
+ * URL HOST for https and the ADDRESS for mailto, never the full URI: senders
+ * put a per-message token in the URL, so keying on it would let a second scan
+ * (newer message, new token) send a second POST for the same sender.
+ */
 export function idempotencyInput(inboxId: string, sender: StoredSender): string {
   const target = sender.method === "mailto"
-    ? sender.mailto?.raw ?? ""
+    ? `mailto:${(sender.mailto?.address ?? "").trim().toLowerCase()}`
     : sender.method === "one_click" || sender.method === "link"
-    ? sender.https_url ?? ""
+    ? `https:${(hostOf(sender.https_url) ?? "").toLowerCase()}`
     : "";
   return `unsubscribe:${inboxId}\n${sender.sender_key}\n${target}`;
+}
+
+/** A ledger text column cut to its CHECK limit; empty becomes null. */
+function ledgerText(value: string | null | undefined, max: number): string | null {
+  if (!value) return null;
+  const out = value.slice(0, max);
+  return out.length > 0 ? out : null;
 }
 
 export async function runSubscriptionsCleanup(
@@ -859,9 +944,11 @@ export async function runSubscriptionsCleanup(
   const at = nowMs(deps);
   const meta = { window_days: row.window_days, scanned: row.scanned, truncated: row.truncated };
 
-  if (parsed.continueBacklog) return await continueBacklog(deps, caller, row, inbox, senders, meta, at);
+  if (parsed.continueBacklog) {
+    return await continueBacklog(deps, caller, row, inbox, byKey, senders, meta, at, parsed);
+  }
 
-  if (row.used_at) return await replayExecuted(deps, row, inbox, senders, meta);
+  if (row.used_at) return await replayOrRecover(deps, caller, row, inbox, byKey, senders, meta, at, parsed);
 
   const expiresMs = Date.parse(row.expires_at);
   if (Number.isFinite(expiresMs) && expiresMs <= at) {
@@ -887,23 +974,65 @@ export async function runSubscriptionsCleanup(
     // Lost a race with a concurrent call (a double click). Its results are the
     // answer once it has written them.
     const fresh = await deps.store.loadPlan(row.id, caller.workspace_id);
-    return await replayExecuted(deps, fresh ?? row, inbox, senders, meta);
+    return await replayOrRecover(deps, caller, fresh ?? row, inbox, byKey, senders, meta, at, parsed);
   }
 
-  const budget = createWorkBudget(deps.budgetMs ?? CLEANUP_BUDGET_MS, deps.now ?? Date.now);
-  const results = await runLadder(deps, caller, row.id, inbox, selected, budget);
+  return await executeRun(deps, caller, row, inbox, senders, meta, selected, parsed.backlog, null);
+}
 
-  const archiveIds = parsed.backlog === "archive" ? [...new Set(selected.flatMap((s) => s.archive_ids))] : [];
-  let backlog: BacklogProgress = {
-    action: parsed.backlog,
+/**
+ * The unsubscribe part and the first backlog pass of a claimed plan. Progress
+ * is saved as soon as the plan is claimed, again before the one-click POSTs
+ * start, and in full at the end, so a run killed half way leaves a plan a
+ * replay can recover (replayOrRecover) rather than one stuck "in progress".
+ * `prior` is the dead run's checkpoint when recovering: its results stand and
+ * those senders are not run again.
+ */
+async function executeRun(
+  deps: SubscriptionDeps,
+  caller: SubCaller,
+  row: PlanRow,
+  inbox: SubInbox,
+  senders: StoredSender[],
+  meta: { window_days: number; scanned: number; truncated: boolean },
+  selected: StoredSender[],
+  backlogAction: "archive" | "keep",
+  prior: PlanProgress | null,
+): Promise<SubToolResult> {
+  const selectedKeys = selected.map((s) => s.sender_key);
+  const archiveIds = backlogAction === "archive" ? [...new Set(selected.flatMap((s) => s.archive_ids))] : [];
+  const startBacklog: BacklogProgress = prior?.backlog ?? {
+    action: backlogAction,
     destination: null,
     remaining_ids: archiveIds,
     moved: 0,
     failed: 0,
   };
-  if (parsed.backlog === "archive") backlog = await moveBacklog(deps, inbox, backlog, budget);
+  const earlier = new Map((prior?.results ?? []).map((r) => [r.sender_key, r]));
+  const inOrder = (fresh: CleanupResult[]) => {
+    const byKeyFresh = new Map(fresh.map((r) => [r.sender_key, r]));
+    return selectedKeys
+      .map((k) => earlier.get(k) ?? byKeyFresh.get(k))
+      .filter((r): r is CleanupResult => r !== undefined);
+  };
+  const checkpoint = (fresh: CleanupResult[]) =>
+    saveProgress(deps, row.id, {
+      v: 1,
+      complete: false,
+      selected: selectedKeys,
+      results: inOrder(fresh),
+      backlog: startBacklog,
+    }, false);
 
-  await saveProgress(deps, row.id, { v: 1, results, backlog });
+  await checkpoint([]);
+  const budget = createWorkBudget(deps.budgetMs ?? CLEANUP_BUDGET_MS, deps.now ?? Date.now);
+  const todo = selected.filter((s) => !earlier.has(s.sender_key));
+  const results = inOrder(await runLadder(deps, caller, row.id, inbox, todo, budget, checkpoint));
+
+  let backlog = startBacklog;
+  if (backlog.action === "archive") backlog = await moveBacklog(deps, inbox, backlog, budget);
+
+  await saveProgress(deps, row.id, { v: 1, complete: true, selected: selectedKeys, results, backlog }, true);
   return executedResult(deps, row, inbox, senders, meta, results, backlog, false);
 }
 
@@ -915,36 +1044,53 @@ async function runLadder(
   inbox: SubInbox,
   selected: StoredSender[],
   budget: WorkBudget,
+  checkpoint?: (partial: CleanupResult[]) => Promise<void>,
 ): Promise<CleanupResult[]> {
   const results = new Map<string, CleanupResult>();
   let posts = 0;
   const canDraft = caller.scopes.includes("manage:drafts");
+  const ordered = () =>
+    selected.map((s) => results.get(s.sender_key)).filter((r): r is CleanupResult => r !== undefined);
 
   // Claim every sender's ledger row first, so the order of the work below
   // cannot change which senders count as already done.
   const claims = new Map<string, string>();
   for (const sender of selected) {
+    const at = nowMs(deps);
     const claim = await deps.store.claimRequest({
       workspace_id: caller.workspace_id,
       inbox_id: inbox.id,
       plan_id: planId,
       api_key_id: caller.id,
-      sender_key: sender.sender_key,
-      sender_domain: sender.domain || null,
-      display_name: clean(sender.display_name) || null,
-      from_address: sender.from_address || null,
+      // Every text column cut to the migration's CHECK limits: an over-long
+      // value from a hostile header must not make the insert fail.
+      sender_key: sender.sender_key.slice(0, LEDGER_MAX.sender_key),
+      sender_domain: ledgerText(sender.domain, LEDGER_MAX.sender_domain),
+      display_name: ledgerText(clean(sender.display_name), LEDGER_MAX.display_name),
+      from_address: ledgerText(sender.from_address, LEDGER_MAX.from_address),
       method: sender.method,
-      url_host: sender.method === "mailto" ? domainOfAddress(sender.mailto?.address) : hostOf(sender.https_url),
+      url_host: ledgerText(
+        sender.method === "mailto" ? domainOfAddress(sender.mailto?.address) : hostOf(sender.https_url),
+        LEDGER_MAX.url_host,
+      ),
       idempotency_key: await deps.digest(idempotencyInput(inbox.id, sender)),
-    });
+      claimed_at: new Date(at).toISOString(),
+    }, new Date(at - REQUEST_CLAIM_LEASE_MS).toISOString());
     if (claim.claimed) {
       claims.set(sender.sender_key, claim.id);
+    } else if ("write_failed" in claim) {
+      // FAIL CLOSED: without a ledger row a replay could send a second POST.
+      results.set(sender.sender_key, {
+        ...baseResult(sender),
+        status: "failed",
+        detail: "Nothing was sent: the server could not record the request. Try again in a moment.",
+      });
     } else {
       results.set(sender.sender_key, {
         ...baseResult(sender),
         status: "already_done",
         detail: claim.status === "pending"
-          ? "An earlier request for this sender has not finished; it was not repeated."
+          ? "An earlier request for this sender has not finished; it was not repeated. If it never finishes, it can be retried after 10 minutes."
           : `Already handled earlier (${claim.status.replace(/_/g, " ")}); not repeated.`,
         draft_id: claim.draft_id,
       });
@@ -956,19 +1102,29 @@ async function runLadder(
     const id = claims.get(sender.sender_key)!;
     const nowIso = new Date(nowMs(deps)).toISOString();
     const followed = result.status === "requested" || result.status === "draft_ready";
-    await deps.store.finishRequest(id, {
+    const full: RequestUpdate = {
       status: result.status as RequestUpdate["status"],
       ...update,
       ...(followed
         ? { requested_at: nowIso, check_after: new Date(nowMs(deps) + FOLLOW_UP_DELAY_MS).toISOString() }
         : {}),
-    });
+    };
+    // One retry. If both fail the row stays `pending` with this run's
+    // claimed_at, so the next run takes it over after REQUEST_CLAIM_LEASE_MS
+    // (claimRequest): never pending forever.
+    if (!(await deps.store.finishRequest(id, full)) && !(await deps.store.finishRequest(id, full))) {
+      console.error("[subscriptions] request_finish_lost", { request_id: id, status: full.status });
+    }
   };
 
   const oneClick: StoredSender[] = [];
   for (const sender of selected) {
     if (!claims.has(sender.sender_key)) continue;
-    if (!sender.safe) {
+    // auth_unverified is the one unsafe reason that still gets a rung: the
+    // user's provider wrote no header we can believe, which rules out the
+    // server POST but not a draft or a link the user acts on (list-unsubscribe.ts).
+    const unverified = !sender.safe && sender.unsafe_reason === "auth_unverified";
+    if (!sender.safe && !unverified) {
       await finish(sender, {
         ...baseResult(sender),
         status: "skipped_unsafe",
@@ -976,7 +1132,10 @@ async function runLadder(
       });
       continue;
     }
-    switch (sender.method) {
+    // Never a POST for a sender that could not be verified: its one-click
+    // link is handed back like any other link.
+    const rung: SenderMethod = sender.method === "one_click" && unverified ? "link" : sender.method;
+    switch (rung) {
       case "one_click":
         oneClick.push(sender);
         break;
@@ -984,7 +1143,9 @@ async function runLadder(
         await finish(sender, {
           ...baseResult(sender),
           status: "needs_user",
-          detail: "This sender only offers an unsubscribe page. Open the link to finish.",
+          detail: unverified
+            ? "This sender could not be verified, so the server did not unsubscribe automatically. Open the link to finish."
+            : "This sender only offers an unsubscribe page. Open the link to finish.",
           link: sender.https_url,
         });
         break;
@@ -1000,6 +1161,10 @@ async function runLadder(
         break;
     }
   }
+
+  // Save what is known before any POST goes out: a run killed during the
+  // POSTs leaves a checkpoint, and its claimed ledger rows go stale.
+  if (oneClick.length > 0 && checkpoint) await checkpoint(ordered());
 
   // One request per host at a time: group by host, run up to
   // ONE_CLICK_HOST_CONCURRENCY groups at once, each group in sequence.
@@ -1049,7 +1214,7 @@ async function runLadder(
   await Promise.all(Array.from({ length: Math.min(ONE_CLICK_HOST_CONCURRENCY, queue.length) }, worker));
 
   // In the order the caller asked for them.
-  return selected.map((s) => results.get(s.sender_key)!).filter(Boolean);
+  return ordered();
 }
 
 function baseResult(sender: StoredSender): CleanupResult {
@@ -1061,6 +1226,7 @@ function baseResult(sender: StoredSender): CleanupResult {
     detail: null,
     draft_id: null,
     link: null,
+    mailto_address: null,
   };
 }
 
@@ -1072,6 +1238,8 @@ function unsafeDetail(reason: string | null): string {
       return "Skipped: several unrelated domains send under this list name, so it is not trusted.";
     case "dkim_not_aligned":
       return "Skipped: the sender's signature does not match its address, so its unsubscribe link is not trusted.";
+    case "auth_unverified":
+      return "Skipped: your mail provider's check of this sender could not be read, so it was not trusted.";
     default:
       return "Skipped: this sender could not be verified.";
   }
@@ -1103,13 +1271,15 @@ async function mailtoStep(
 ): Promise<[CleanupResult, Partial<RequestUpdate>]> {
   const mailto = sender.mailto!;
   if (!canDraft || budget.remainingMs() < DRAFT_MIN_REMAINING_MS) {
+    // No link: the card opens https links only. The plain address goes back
+    // instead, for the user to write to themselves.
+    const address = mailto.address.slice(0, 320);
     return [{
       ...baseResult(sender),
       status: "needs_user",
-      detail: canDraft
-        ? "Ran out of time for this run. Open the link to write the unsubscribe email yourself."
-        : "This connection cannot create drafts. Open the link to write the unsubscribe email yourself.",
-      link: mailto.raw,
+      detail: (canDraft ? "Ran out of time to save a draft. " : "This connection cannot create drafts. ") +
+        `To unsubscribe, email ${address} with the word unsubscribe.`,
+      mailto_address: address,
     }, {}];
   }
   // Both come from the sender's header: no control characters in a subject
@@ -1160,22 +1330,29 @@ async function moveBacklog(
   };
 }
 
-async function saveProgress(deps: SubscriptionDeps, planId: string, progress: PlanProgress): Promise<void> {
+async function saveProgress(
+  deps: SubscriptionDeps,
+  planId: string,
+  progress: PlanProgress,
+  releaseLease = true,
+): Promise<void> {
   await deps.store.saveProgress(planId, {
     progress: { v: 1, data: await deps.encrypt(JSON.stringify(progress)) },
     backlog_moved: progress.backlog.moved,
     backlog_remaining: progress.backlog.remaining_ids.length,
-  });
+  }, releaseLease);
 }
 
 async function continueBacklog(
   deps: SubscriptionDeps,
-  _caller: SubCaller,
+  caller: SubCaller,
   row: PlanRow,
   inbox: SubInbox,
+  byKey: Map<string, StoredSender>,
   senders: StoredSender[],
   meta: { window_days: number; scanned: number; truncated: boolean },
   at: number,
+  parsed: CleanupArgs,
 ): Promise<SubToolResult> {
   if (!row.used_at) {
     return envelopeFailure(
@@ -1190,18 +1367,14 @@ async function continueBacklog(
   }
   const createdMs = Date.parse(row.created_at);
   if (Number.isFinite(createdMs) && createdMs + BACKLOG_CONTINUE_WINDOW_MS <= at) {
-    return envelopeFailure(
-      deps,
-      "expired",
-      "plan_expired",
-      "This plan is too old to continue archiving. Run subscriptions_scan again; the senders already " +
-        "handled are remembered and will not be asked twice.",
-      row.id,
-      "expired",
-    );
+    return tooOldResult(deps, row.id);
   }
   const progress = await readProgress(deps, row);
-  if (!progress) return inFlight(deps, row.id);
+  // A run still going, or one that died before it finished: the same answer
+  // as a replay (in progress, or recovered once the lease is over).
+  if (!progress || progress.complete === false) {
+    return await replayOrRecover(deps, caller, row, inbox, byKey, senders, meta, at, parsed);
+  }
   if (progress.backlog.action !== "archive" || progress.backlog.remaining_ids.length === 0) {
     return executedResult(deps, row, inbox, senders, meta, progress.results, progress.backlog, true);
   }
@@ -1213,8 +1386,20 @@ async function continueBacklog(
   if (!leased) return inFlight(deps, row.id);
   const budget = createWorkBudget(deps.budgetMs ?? CLEANUP_BUDGET_MS, deps.now ?? Date.now);
   const backlog = await moveBacklog(deps, inbox, progress.backlog, budget);
-  await saveProgress(deps, row.id, { v: 1, results: progress.results, backlog });
+  await saveProgress(deps, row.id, { ...progress, backlog });
   return executedResult(deps, row, inbox, senders, meta, progress.results, backlog, true);
+}
+
+function tooOldResult(deps: SubscriptionDeps, planId: string): SubToolResult {
+  return envelopeFailure(
+    deps,
+    "expired",
+    "plan_expired",
+    "This plan is too old to continue. Run subscriptions_scan again; the senders already " +
+      "handled are remembered and will not be asked twice.",
+    planId,
+    "expired",
+  );
 }
 
 function inFlight(deps: SubscriptionDeps, planId: string): SubToolResult {
@@ -1228,16 +1413,60 @@ function inFlight(deps: SubscriptionDeps, planId: string): SubToolResult {
   );
 }
 
-async function replayExecuted(
+/**
+ * A plan that was already claimed. Complete progress is replayed. A run that
+ * is still inside PLAN_RECOVERY_MS answers "in progress". Past that, the run
+ * died (the edge function was killed), so this call takes the plan over
+ * (atomically on the old used_at) and runs what the dead run had not
+ * finished: the senders in its checkpoint keep their results, the rest go
+ * through the ladder again, guarded by the ledger as always.
+ */
+async function replayOrRecover(
   deps: SubscriptionDeps,
+  caller: SubCaller,
   row: PlanRow,
   inbox: SubInbox,
+  byKey: Map<string, StoredSender>,
   senders: StoredSender[],
   meta: { window_days: number; scanned: number; truncated: boolean },
+  at: number,
+  parsed: CleanupArgs,
 ): Promise<SubToolResult> {
   const progress = await readProgress(deps, row);
-  if (!progress) return inFlight(deps, row.id);
-  return executedResult(deps, row, inbox, senders, meta, progress.results, progress.backlog, true);
+  if (progress && progress.complete !== false) {
+    return executedResult(deps, row, inbox, senders, meta, progress.results, progress.backlog, true);
+  }
+  const usedMs = Date.parse(row.used_at ?? "");
+  if (!row.used_at || !Number.isFinite(usedMs) || usedMs + PLAN_RECOVERY_MS > at) return inFlight(deps, row.id);
+
+  const createdMs = Date.parse(row.created_at);
+  if (Number.isFinite(createdMs) && createdMs + BACKLOG_CONTINUE_WINDOW_MS <= at) return tooOldResult(deps, row.id);
+
+  const keys = progress?.selected ?? parsed.senderKeys;
+  const selected = keys.map((k) => byKey.get(k)).filter((s): s is StoredSender => s !== undefined);
+  if (selected.length === 0) {
+    return envelopeFailure(
+      deps,
+      "error",
+      "nothing_to_continue",
+      "The earlier run of this plan stopped before it recorded which senders were picked. Call " +
+        "subscriptions_cleanup again with the same plan_id and the sender_keys. Nothing else was changed.",
+      row.id,
+      "not_pending",
+    );
+  }
+  const reclaimed = await deps.store.reclaimPlan({
+    planId: row.id,
+    workspaceId: caller.workspace_id,
+    apiKeyId: caller.id,
+    previousUsedAtIso: row.used_at,
+    nowIso: new Date(at).toISOString(),
+    leaseUntilIso: new Date(at + BACKLOG_LEASE_MS).toISOString(),
+  });
+  if (!reclaimed) return inFlight(deps, row.id);
+  console.warn("[subscriptions] plan_recovered", { plan_id: row.id, checkpointed: progress !== null });
+  const backlogAction = progress?.backlog.action ?? (row.backlog_action === "archive" ? "archive" : parsed.backlog);
+  return await executeRun(deps, caller, row, inbox, senders, meta, selected, backlogAction, progress);
 }
 
 function backlogBlock(backlog: BacklogProgress): Record<string, unknown> {
@@ -1323,6 +1552,11 @@ function cleanupText(results: CleanupResult[], backlog: Record<string, unknown>,
     lines.push("", "Links for the user to open (untrusted, from the senders' mail headers):");
     for (const r of links) lines.push(`- ${JSON.stringify(clean(r.display_name, 80))}: ${r.link}`);
   }
+  const addresses = results.filter((r) => r.status === "needs_user" && r.mailto_address);
+  if (addresses.length > 0) {
+    lines.push("", "Addresses for the user to email with the word unsubscribe (untrusted, from the senders' mail headers):");
+    for (const r of addresses) lines.push(`- ${JSON.stringify(clean(r.display_name, 80))}: ${r.mailto_address}`);
+  }
   if (backlog.action === "archive") {
     lines.push(
       "",
@@ -1353,6 +1587,10 @@ export interface FollowUpSummary {
   stopped: number;
   still_sending: number;
   errors: number;
+  /** Rows pushed back FOLLOW_UP_RETRY_MS because their inbox could not be searched. */
+  deferred: number;
+  /** Rows closed without a verdict after FOLLOW_UP_MAX_ATTEMPTS failures. */
+  given_up: number;
 }
 
 /**
@@ -1364,7 +1602,37 @@ export interface FollowUpSummary {
 export async function runSubscriptionFollowUp(deps: FollowUpDeps): Promise<FollowUpSummary> {
   const budget = createWorkBudget(deps.budgetMs ?? FOLLOW_UP_BUDGET_MS, deps.now ?? Date.now);
   const at = nowMs(deps);
-  const summary: FollowUpSummary = { due: 0, checked: 0, stopped: 0, still_sending: 0, errors: 0 };
+  const summary: FollowUpSummary = {
+    due: 0,
+    checked: 0,
+    stopped: 0,
+    still_sending: 0,
+    errors: 0,
+    deferred: 0,
+    given_up: 0,
+  };
+  // An inbox that cannot be searched (deleted, disconnected, signed out, an
+  // outage) must not keep its rows at the head of the queue: they are pushed
+  // back a day, and closed after FOLLOW_UP_MAX_ATTEMPTS, so the oldest-first
+  // batch always moves on to rows that can be checked.
+  const defer = async (row: FollowUpRow) => {
+    const attempts = (row.check_attempts ?? 0) + 1;
+    const nowMsValue = nowMs(deps);
+    if (attempts >= FOLLOW_UP_MAX_ATTEMPTS) {
+      await deps.store.finishFollowUp(row.id, {
+        status: null,
+        checked_at: new Date(nowMsValue).toISOString(),
+        error: "follow_up_unavailable",
+      });
+      summary.given_up++;
+      return;
+    }
+    await deps.store.deferFollowUp(row.id, {
+      check_after: new Date(nowMsValue + FOLLOW_UP_RETRY_MS).toISOString(),
+      check_attempts: attempts,
+    });
+    summary.deferred++;
+  };
   const rows = await deps.store.listDueFollowUps(new Date(at).toISOString(), FOLLOW_UP_BATCH);
   summary.due = rows.length;
   const byInbox = new Map<string, FollowUpRow[]>();
@@ -1374,7 +1642,9 @@ export async function runSubscriptionFollowUp(deps: FollowUpDeps): Promise<Follo
     else byInbox.set(row.inbox_id, [row]);
   }
   for (const [inboxId, group] of byInbox) {
-    for (const row of group.slice(0, FOLLOW_UP_MAX_PER_INBOX)) {
+    const batch = group.slice(0, FOLLOW_UP_MAX_PER_INBOX);
+    for (let index = 0; index < batch.length; index++) {
+      const row = batch[index];
       if (budget.exhausted()) return summary;
       const nowIso = new Date(nowMs(deps)).toISOString();
       const staleIso = new Date(nowMs(deps) - FOLLOW_UP_LEASE_MS).toISOString();
@@ -1398,8 +1668,10 @@ export async function runSubscriptionFollowUp(deps: FollowUpDeps): Promise<Follo
           inbox_id: inboxId,
           error: error instanceof Error ? error.message : String(error),
         });
-        await deps.store.releaseFollowUp(row.id);
-        // One failure on an inbox (auth, outage) will be the next one too.
+        // One failure on an inbox (auth, outage, gone) will be the next one
+        // too: push back this row and the rest of the inbox's batch.
+        await defer(row);
+        for (const rest of batch.slice(index + 1)) await defer(rest);
         break;
       }
       await deps.store.finishFollowUp(row.id, {
@@ -1421,7 +1693,10 @@ const PLAN_COLUMNS =
   "created_at, expires_at, used_at, progress, backlog_action, backlog_moved, backlog_remaining, " +
   "backlog_leased_until";
 
-const FOLLOW_UP_COLUMNS = "id, inbox_id, from_address, status, requested_at, check_after";
+// The inner embed keeps only rows whose inbox matches the filters on it
+// (listDueFollowUps); its own column is not read.
+const FOLLOW_UP_SELECT =
+  "id, inbox_id, from_address, status, requested_at, check_after, check_attempts, inboxes!inner(id)";
 
 /**
  * The store over a service-role Supabase client. Every write goes through the
@@ -1472,12 +1747,31 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
       return Array.isArray(data) && data.length > 0;
     },
 
-    async saveProgress(planId, update) {
+    async saveProgress(planId, update, releaseLease = true) {
       const { error } = await db
         .from("subscription_plans")
-        .update({ ...update, backlog_leased_until: null })
+        .update(releaseLease ? { ...update, backlog_leased_until: null } : update)
         .eq("id", planId);
       if (error) console.error("[subscriptions] plan_progress_failed", { error: error.message });
+    },
+
+    async reclaimPlan(input) {
+      const { data, error } = await db
+        .from("subscription_plans")
+        .update({
+          used_at: input.nowIso,
+          used_by_api_key_id: input.apiKeyId,
+          backlog_leased_until: input.leaseUntilIso,
+        })
+        .eq("id", input.planId)
+        .eq("workspace_id", input.workspaceId)
+        .eq("used_at", input.previousUsedAtIso)
+        .select("id");
+      if (error) {
+        console.error("[subscriptions] plan_reclaim_failed", { error: error.message });
+        return false;
+      }
+      return Array.isArray(data) && data.length > 0;
     },
 
     async leaseBacklog(planId, nowIso, untilIso) {
@@ -1494,7 +1788,7 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
       return Array.isArray(data) && data.length > 0;
     },
 
-    async claimRequest(row) {
+    async claimRequest(row, staleBeforeIso) {
       // INSERT ... ON CONFLICT DO NOTHING; a row back means this call owns it.
       const { data, error } = await db
         .from("unsubscribe_requests")
@@ -1503,20 +1797,31 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
       if (error) {
         // FAIL CLOSED: without the ledger a POST could be sent twice.
         console.error("[subscriptions] request_claim_failed", { error: error.message });
-        return { claimed: false, status: "pending", draft_id: null };
+        return { claimed: false, write_failed: true };
       }
       if (Array.isArray(data) && data.length > 0) return { claimed: true, id: (data[0] as { id: string }).id };
       const existing = await db
         .from("unsubscribe_requests")
-        .select("id, status, draft_id")
+        .select("id, status, draft_id, claimed_at")
         .eq("idempotency_key", row.idempotency_key)
         .maybeSingle();
-      const found = existing.data as { id: string; status: string; draft_id: string | null } | null;
-      if (existing.error || !found) return { claimed: false, status: "pending", draft_id: null };
-      if ((RETRYABLE_STATUSES as readonly string[]).includes(found.status)) {
-        // A failed, link-only or skipped attempt may run again; the claim is
-        // conditional on the status, so two retries cannot both win it.
-        const retried = await db
+      const found = existing.data as
+        | { id: string; status: string; draft_id: string | null; claimed_at: string | null }
+        | null;
+      if (existing.error || !found) {
+        console.error("[subscriptions] request_lookup_failed", { error: existing.error?.message ?? "missing" });
+        return { claimed: false, write_failed: true };
+      }
+      const retryable = (RETRYABLE_STATUSES as readonly string[]).includes(found.status);
+      const claimedMs = Date.parse(found.claimed_at ?? "");
+      const stalePending = found.status === "pending" &&
+        (!Number.isFinite(claimedMs) || claimedMs < Date.parse(staleBeforeIso));
+      if (retryable || stalePending) {
+        // A failed, link-only or skipped attempt, or a pending one whose run
+        // died, may run again. The update is conditional on what was read
+        // (the status, and for pending the stale claim), so two retries cannot
+        // both win it.
+        let retry = db
           .from("unsubscribe_requests")
           .update({
             status: "pending",
@@ -1526,11 +1831,14 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
             url_host: row.url_host,
             http_status: null,
             error: null,
+            claimed_at: row.claimed_at,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", found.id)
-          .in("status", RETRYABLE_STATUSES as unknown as string[])
-          .select("id");
+          .eq("id", found.id);
+        retry = retryable
+          ? retry.in("status", RETRYABLE_STATUSES as unknown as string[])
+          : retry.eq("status", "pending").or(`claimed_at.is.null,claimed_at.lt.${staleBeforeIso}`);
+        const retried = await retry.select("id");
         if (!retried.error && Array.isArray(retried.data) && retried.data.length > 0) {
           return { claimed: true, id: found.id };
         }
@@ -1544,13 +1852,22 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
         .from("unsubscribe_requests")
         .update({ ...update, updated_at: new Date().toISOString() })
         .eq("id", id);
-      if (error) console.error("[subscriptions] request_finish_failed", { error: error.message });
+      if (error) {
+        console.error("[subscriptions] request_finish_failed", { error: error.message });
+        return false;
+      }
+      return true;
     },
 
     async listDueFollowUps(nowIso, limit) {
+      // Inner join on the inbox: a soft-deleted or disconnected inbox's rows
+      // never reach the batch, so they cannot hold up the live ones. They wait
+      // (unchecked) until the inbox is reconnected.
       const { data, error } = await db
         .from("unsubscribe_requests")
-        .select(FOLLOW_UP_COLUMNS)
+        .select(FOLLOW_UP_SELECT)
+        .is("inboxes.deleted_at", null)
+        .eq("inboxes.status", "active")
         .is("checked_at", null)
         .not("check_after", "is", null)
         .lte("check_after", nowIso)
@@ -1558,7 +1875,7 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
         .order("check_after", { ascending: true })
         .limit(limit);
       if (error) throw new Error(error.message);
-      return (data ?? []) as FollowUpRow[];
+      return ((data ?? []) as Array<FollowUpRow & { inboxes?: unknown }>).map(({ inboxes: _inbox, ...row }) => row);
     },
 
     async claimFollowUp(id, nowIso, staleBeforeIso) {
@@ -1578,6 +1895,7 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
         .from("unsubscribe_requests")
         .update({
           ...(update.status ? { status: update.status } : {}),
+          ...(update.error ? { error: update.error } : {}),
           checked_at: update.checked_at,
           check_leased_at: null,
           updated_at: new Date().toISOString(),
@@ -1588,6 +1906,15 @@ export function supabaseSubscriptionStore(db: { from(table: string): any }): Sub
 
     async releaseFollowUp(id) {
       await db.from("unsubscribe_requests").update({ check_leased_at: null }).eq("id", id);
+    },
+
+    async deferFollowUp(id, update) {
+      const { error } = await db
+        .from("unsubscribe_requests")
+        .update({ ...update, check_leased_at: null, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .is("checked_at", null);
+      if (error) console.error("[subscriptions] follow_up_defer_failed", { error: error.message });
     },
   };
 }
@@ -1670,6 +1997,12 @@ export const SUBSCRIPTION_TOOL_DEFINITIONS: SubscriptionToolDefinition[] = [
       "backlog \"archive\" also archives what those senders already sent. Only sender_keys from the plan " +
       "are accepted, and each sender is asked once. Use continue: true with the same plan_id to finish " +
       "archiving.",
+    // manage:folders covers the backlog step (it moves mail). The outbound
+    // part has no scope of its own on purpose: send:email is reserved for
+    // sending drafts (mcp-server CLAUDE.md) and an unsubscribe POST sends no
+    // mail; the draft rung re-checks manage:drafts inside the handler. What
+    // bounds the POST is the server-held plan, the user's pick of senders,
+    // the DKIM and authserv-id checks and the per-call cap.
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",

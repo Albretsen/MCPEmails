@@ -506,3 +506,35 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
   }
   assertEquals(actual, expected);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. The unknown-tool error does not leak rollout-gated tools
+//
+// `available_tools` on the -32602 answer is "the same list tools/list gave
+// this credential". That includes the subscription rollout filter: a
+// workspace without subscription_cleanup_enabled (every workspace in
+// introspection mode, which has no database) must not learn those names here.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("an unknown tool's available_tools omits the subscription tools when the workspace is not rolled out", async () => {
+  for (const key of [oauthToken(["read:email", "manage:folders"]), dashboardKey(["read:email", "manage:folders"])]) {
+    const response = await handleToolsCall(
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "no_such_tool_here", arguments: {} },
+      },
+      1,
+      key,
+      NO_REQUEST_CONTEXT,
+    ) as CallResponse;
+    assertEquals(response.error?.code, -32602);
+    const available = response.error?.data?.available_tools as string[];
+    assert(Array.isArray(available) && available.includes("inbox_list"), JSON.stringify(response));
+    assert(!available.includes("subscriptions_scan"), "subscriptions_scan leaked");
+    assert(!available.includes("subscriptions_cleanup"), "subscriptions_cleanup leaked");
+    // The listing without the filter would have named them.
+    assert(names(toolsForListing(key)).includes("subscriptions_scan"));
+  }
+});

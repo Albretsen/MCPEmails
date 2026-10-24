@@ -1055,6 +1055,7 @@ body {
 .subs input { margin: 0; flex: none; }
 .sub-name { color: var(--fg); font-weight: var(--w-medium); }
 .sub-meta { display: block; color: var(--fg-3); }
+.sel { user-select: all; color: var(--fg); }
 .pill {
   flex: none;
   font-size: var(--fs-xs);

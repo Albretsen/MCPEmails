@@ -10,13 +10,16 @@
 
 import { assert, assertEquals, assertThrows } from "jsr:@std/assert@1";
 import {
-  classifySender,
+  type AuthservTrust,
+  authservIdTrusted,
+  authservTrustFor,
+  classifySender as classifyWithTrust,
   dkimCoversListHeaders,
-  dkimPassAligned,
+  dkimPassAligned as dkimPassAlignedWithTrust,
   dkimPassDomains,
   dkimSigningDomains,
   domainsAligned,
-  groupSenders,
+  groupSenders as groupWithTrust,
   isOneClick,
   type ListHeaderRecord,
   looksLikeKeepReceiving,
@@ -24,8 +27,19 @@ import {
   organizationalDomain,
   parseListUnsubscribe,
   parseMailto,
+  SENDER_KEY_MAX,
   senderKeyOf,
+  trustedAuthResults,
 } from "./list-unsubscribe.ts";
+
+// The fixtures' Authentication-Results are written by mx.example.net, the
+// "user's provider" in these tests. The pinning itself is tested below.
+const TRUST: AuthservTrust = { ids: ["mx.example.net"] };
+const classifySender = (records: ListHeaderRecord[]) => classifyWithTrust(records, TRUST);
+const groupSenders = (records: ListHeaderRecord[], opts: { maxSenders?: number } = {}) =>
+  groupWithTrust(records, { ...opts, trust: TRUST });
+const dkimPassAligned = (authResults: string[], fromDomain: string, signingDomains: string[]) =>
+  dkimPassAlignedWithTrust(authResults, fromDomain, signingDomains, TRUST);
 
 // ── parseListUnsubscribe ────────────────────────────────────────────────────
 
@@ -248,11 +262,54 @@ Deno.test("dkimPassAligned: fail cases", () => {
   assert(!dkimPassAligned([AR_PASS], "", []));
 });
 
-Deno.test("dkimPassAligned: only the topmost Authentication-Results counts", () => {
-  const forged = "mx.example.com; dkim=pass header.d=example.com";
+Deno.test("dkimPassAligned: only the topmost TRUSTED Authentication-Results counts", () => {
   const real = "mx.example.net; dkim=fail header.d=example.com";
-  assert(!dkimPassAligned([real, forged], "example.com", []));
-  assert(dkimPassAligned([forged, real], "example.com", []));
+  const forgedSameId = "mx.example.net; dkim=pass header.d=example.com";
+  const forgedOtherId = "mx.example.com; dkim=pass header.d=example.com";
+  // A forged pass below the provider's own fail is ignored, whatever it names.
+  assert(!dkimPassAligned([real, forgedSameId], "example.com", []));
+  assert(!dkimPassAligned([real, forgedOtherId], "example.com", []));
+  // A forged pass ABOVE it (a provider that wrote none, or a header added on
+  // the way) is ignored when its authserv-id is not the trusted one.
+  assert(!dkimPassAligned([forgedOtherId, real], "example.com", []));
+  // The trusted header is found below untrusted ones.
+  assert(dkimPassAligned([forgedOtherId.replace("pass", "fail"), forgedSameId], "example.com", []));
+});
+
+Deno.test("dkimPassAligned: no trusted authserv-id means not aligned", () => {
+  assert(!dkimPassAlignedWithTrust([AR_PASS], "example.com", [], { ids: [] }));
+  assert(!dkimPassAlignedWithTrust([AR_PASS], "example.com", [], { ids: ["mx.example.org"] }));
+  assert(dkimPassAlignedWithTrust([AR_PASS], "example.com", [], { ids: ["*.example.net"] }));
+});
+
+Deno.test("authserv-id pinning: wildcards, exact ids and Microsoft's id-less header", () => {
+  assert(authservIdTrusted("mx.google.com", { ids: ["mx.google.com"] }));
+  assert(!authservIdTrusted("mx.google.com.example.org", { ids: ["mx.google.com"] }));
+  assert(authservIdTrusted("am6pr01mb1234.eurprd01.prod.outlook.com", { ids: ["*.outlook.com"] }));
+  assert(authservIdTrusted("outlook.com", { ids: ["*.outlook.com"] }));
+  assert(!authservIdTrusted("evil-outlook.com", { ids: ["*.outlook.com"] }));
+  const ms = "spf=pass (sender IP is 192.0.2.1) smtp.mailfrom=example.com; dkim=pass (signature was verified) header.d=example.com";
+  const microsoft = authservTrustFor("outlook");
+  // Topmost and id-less: Microsoft's own.
+  assert(dkimPassAlignedWithTrust([ms], "example.com", [], microsoft));
+  // Id-less but not topmost: something the message arrived carrying.
+  assertEquals(trustedAuthResults(["mx.example.org; dkim=none", ms], microsoft), null);
+  // A provider that does not write id-less headers never trusts one.
+  assertEquals(trustedAuthResults([ms], authservTrustFor("gmail")), null);
+});
+
+Deno.test("authservTrustFor: per provider, IMAP by host", () => {
+  assertEquals(authservTrustFor("gmail").ids.includes("mx.google.com"), true);
+  const yahoo = authservTrustFor("imap", "imap.mail.yahoo.com");
+  assert(authservIdTrusted("atlas-production.v2.mail.yahoo.com", yahoo));
+  assert(!authservIdTrusted("mx.google.com", yahoo));
+  const fastmail = authservTrustFor("imap", "imap.fastmail.com");
+  assert(authservIdTrusted("mx3.messagingengine.com", fastmail));
+  // An unknown host trusts its own organizational domain only.
+  const small = authservTrustFor("imap", "mail.example.org");
+  assert(authservIdTrusted("mx1.example.org", small));
+  assert(!authservIdTrusted("mx.google.com", small));
+  assertEquals(authservTrustFor("imap", null).ids, []);
 });
 
 // ── Grouping and classification ─────────────────────────────────────────────
@@ -365,8 +422,45 @@ Deno.test("classifySender: DKIM not aligned is unsafe", () => {
   assertEquals(c.safe, false);
   assertEquals(c.unsafeReason, "dkim_not_aligned");
   assertEquals(c.method, "mailto");
+});
+
+Deno.test("classifySender: no trusted Authentication-Results is auth_unverified, never one-click", () => {
   const none = classifySender([rec({ authResults: [] })]);
-  assertEquals(none.unsafeReason, "dkim_not_aligned");
+  assertEquals(none.unsafeReason, "auth_unverified");
+  assertEquals(none.safe, false);
+  // A forged pass from an untrusted authserv-id, alone or on top.
+  const forged = classifySender([rec({ authResults: ["mx.example.com; dkim=pass header.i=@news.example.com"] })]);
+  assertEquals(forged.unsafeReason, "auth_unverified");
+  assertEquals(forged.method, "mailto");
+  const linkOnly = classifySender([
+    rec({ authResults: ["mx.example.com; dkim=pass header.d=example.com"], listUnsubscribe: "<https://example.com/u/9>" }),
+  ]);
+  assertEquals(linkOnly.method, "link");
+  assertEquals(linkOnly.suggested, false);
+  // The same record under a trust that names that authserv-id is one-click.
+  const trusted = classifyWithTrust([rec({ authResults: ["mx.example.com; dkim=pass header.i=@news.example.com"] })], {
+    ids: ["mx.example.com"],
+  });
+  assertEquals(trusted.method, "one_click");
+});
+
+Deno.test("organizationalDomain: shared hosting suffixes are public", () => {
+  assertEquals(organizationalDomain("a.github.io"), "a.github.io");
+  assertEquals(organizationalDomain("mail.a.github.io"), "a.github.io");
+  assert(!domainsAligned("a.github.io", "b.github.io"));
+  assert(!domainsAligned("x.netlify.app", "y.netlify.app"));
+  assert(!domainsAligned("x.blogspot.com", "y.blogspot.com"));
+  assert(domainsAligned("mail.a.vercel.app", "a.vercel.app"));
+  // Substack newsletters come From the bare domain, signed by a subdomain.
+  assert(domainsAligned("substack.com", "mg.substack.com"));
+});
+
+Deno.test("classifySender: two shared-hosting tenants under one list id are mixed", () => {
+  const c = classifySender([
+    rec({ fromAddress: "news@a.github.io", authResults: ["mx.example.net; dkim=pass header.d=a.github.io"] }),
+    rec({ fromAddress: "news@b.github.io", authResults: ["mx.example.net; dkim=pass header.d=b.github.io"] }),
+  ]);
+  assertEquals(c.unsafeReason, "mixed_sender_domains");
 });
 
 Deno.test("classifySender: a list id shared across organizations is unsafe", () => {
@@ -447,6 +541,31 @@ Deno.test("groupSenders: by List-Id, else by From, sorted by count", () => {
   ]);
   assertEquals(groupSenders(records, { maxSenders: 1 }).length, 1);
   assertEquals(out[0].messageIds.length, 3);
+});
+
+Deno.test("groupSenders: personal correspondents (no List-Id, no List-Unsubscribe) are never listed", () => {
+  const out = groupSenders([
+    rec({ listId: null, listUnsubscribe: null, listUnsubscribePost: null, fromAddress: "friend@example.org" }),
+    rec({ listId: null, listUnsubscribe: null, listUnsubscribePost: null, fromAddress: "friend@example.org" }),
+    rec({ listId: null, listUnsubscribe: "  ", listUnsubscribePost: null, fromAddress: "blank@example.org" }),
+    rec({ listId: "only-id.example.com", listUnsubscribe: null, listUnsubscribePost: null }),
+    rec({ listId: null, fromAddress: "promo@example.com" }),
+  ]);
+  assertEquals(out.map((c) => c.senderKey).sort(), ["from:promo@example.com", "list:only-id.example.com"]);
+  // A List-Id alone still lists the sender, with nothing to run.
+  assertEquals(out.find((c) => c.listId === "only-id.example.com")?.method, "none");
+});
+
+Deno.test("senderKeyOf: an over-long List-Id is shortened stably and stays distinct", () => {
+  const a = `${"x".repeat(800)}.example.com`;
+  const b = `${"x".repeat(800)}.example.org`;
+  const ka = senderKeyOf({ listId: a, fromAddress: "n@example.com" });
+  assert(ka.length <= SENDER_KEY_MAX);
+  assertEquals(ka, senderKeyOf({ listId: `<${a}>`, fromAddress: "other@example.com" }));
+  assert(ka !== senderKeyOf({ listId: b, fromAddress: "n@example.com" }));
+  const out = groupSenders([rec({ listId: a }), rec({ listId: a })]);
+  assertEquals(out.length, 1);
+  assertEquals(out[0].senderKey, ka);
 });
 
 Deno.test("groupSenders: ties sort most recent first", () => {

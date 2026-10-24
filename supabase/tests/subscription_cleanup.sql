@@ -6,6 +6,7 @@
 --   - the rollout flag exists and defaults to false
 --   - the ledger's idempotency key is unique (the replay guard)
 --   - status / method constraints
+--   - the stale-claim and follow-up retry columns
 --   - RLS: members read their own workspace's rows, never another's, and
 --     never the plan ciphertext; no browser writes; anon sees nothing
 --   - the dispatcher function exists and is service-role only
@@ -15,7 +16,7 @@
 
 BEGIN;
 
-SELECT plan(18);
+SELECT plan(21);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -82,6 +83,16 @@ SELECT throws_ok(
             'from:x@example.com', 'get', 'requested', 'key-d')$$,
   '23514', NULL,
   'method is one of the four rungs');
+SELECT has_column('public', 'unsubscribe_requests', 'claimed_at',
+  'a pending row records when it was claimed (stale claims are retaken)');
+SELECT has_column('public', 'unsubscribe_requests', 'check_attempts',
+  'the follow-up counts its failed attempts');
+SELECT throws_ok(
+  $$INSERT INTO public.unsubscribe_requests (workspace_id, inbox_id, sender_key, method, status, idempotency_key, check_attempts)
+    VALUES ('fa000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-0000000000a1',
+            'from:x@example.com', 'one_click', 'requested', 'key-f', -1)$$,
+  '23514', NULL,
+  'check_attempts is never negative');
 SELECT is(
   (SELECT count(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'unsubscribe_requests'

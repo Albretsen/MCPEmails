@@ -116,14 +116,22 @@ COMMENT ON TABLE public.subscription_plans IS
 -- ---------------------------------------------------------------------------
 -- unsubscribe_requests: one row per (inbox, sender, target), the ledger.
 --
--- idempotency_key = HMAC(inbox, sender key, url or mailto), so the same
--- sender asked twice (a double click, a replayed call, a second scan) finds
--- its row instead of sending a second POST. No URL is stored: url_host is the
--- host alone (redactUnsubscribeUrl), and error is a fixed code.
+-- idempotency_key = HMAC(inbox, sender key, URL host or mailto address). Not
+-- the full URL: senders put a per-message token in it, so a second scan would
+-- otherwise mint a new key and send a second POST. The same sender asked twice
+-- (a double click, a replayed call, a second scan) finds its row instead. No
+-- URL is stored: url_host is the host alone (redactUnsubscribeUrl), and error
+-- is a fixed code.
+--
+-- claimed_at is when a run took the row (status `pending`). A `pending` row
+-- whose claim is older than 10 minutes belongs to a run that died, and the
+-- next run may take it over (atomically, on the old claimed_at).
 --
 -- check_after is requested_at + 72 h for `requested` and `draft_ready`; the
 -- follow-up job sets checked_at and moves the status to stopped or
--- still_sending.
+-- still_sending. When the inbox cannot be searched it pushes check_after back
+-- 24 h and counts check_attempts; after 3 it sets checked_at and leaves the
+-- status as it was, with error `follow_up_unavailable`.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -151,6 +159,8 @@ CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
   check_after      timestamptz,
   checked_at       timestamptz,
   check_leased_at  timestamptz,
+  check_attempts   integer NOT NULL DEFAULT 0 CHECK (check_attempts >= 0),
+  claimed_at       timestamptz,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT unsubscribe_requests_idempotency_key_key UNIQUE (idempotency_key)
@@ -173,7 +183,7 @@ REVOKE ALL ON TABLE public.unsubscribe_requests FROM anon, authenticated;
 
 GRANT SELECT (id, workspace_id, inbox_id, plan_id, api_key_id, sender_key, sender_domain,
               display_name, from_address, method, status, http_status, error, url_host,
-              draft_id, requested_at, check_after, checked_at, created_at, updated_at)
+              draft_id, requested_at, check_after, checked_at, check_attempts, created_at, updated_at)
   ON public.unsubscribe_requests TO authenticated;
 
 DROP POLICY IF EXISTS "unsubscribe_requests_select_members" ON public.unsubscribe_requests;
@@ -185,4 +195,4 @@ CREATE POLICY "unsubscribe_requests_select_members"
 GRANT ALL ON TABLE public.unsubscribe_requests TO service_role;
 
 COMMENT ON TABLE public.unsubscribe_requests IS
-  'One row per unsubscribe attempt per (inbox, sender, target), keyed by an HMAC idempotency key so a replay never sends a second request. Holds the URL host only, never the URL. Written only by mcp-server with the service role.';
+  'One row per unsubscribe attempt per (inbox, sender, target host or address), keyed by an HMAC idempotency key so a replay never sends a second request. Holds the URL host only, never the URL. Written only by mcp-server with the service role.';

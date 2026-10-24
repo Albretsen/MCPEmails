@@ -1118,6 +1118,8 @@ CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
   check_after      timestamptz,
   checked_at       timestamptz,
   check_leased_at  timestamptz,
+  check_attempts   integer NOT NULL DEFAULT 0,
+  claimed_at       timestamptz,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now()
 );
