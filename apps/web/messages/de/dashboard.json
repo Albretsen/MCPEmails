@@ -334,6 +334,25 @@
           "unreachable": "Keine Verbindung zum {server}-Server mit diesen Einstellungen. Es wurde nichts geändert.",
           "save": "Speichern fehlgeschlagen. Bitte erneut versuchen."
         }
+      },
+      "instructions": {
+        "title": "Anweisungen für Ihre KI",
+        "help": "Jeder KI-Client, der dieses Postfach nutzt, sieht sie, zum Beispiel mit welchem Namen unterschrieben wird oder welche E-Mails unberührt bleiben.",
+        "placeholder": "Dies ist das Support-Postfach. Unterschreibe als Support-Team. Antworte nie auf Rechnungen; verschiebe sie nach Buchhaltung.",
+        "loading": "Wird geladen…",
+        "count": "{count} von {max} Zeichen",
+        "save": "Speichern",
+        "saved": "Gespeichert. KI-Clients sehen diese Anweisungen ab jetzt.",
+        "cleared": "Gespeichert. Dieses Postfach hat keine Anweisungen.",
+        "proOnly": "Anweisungen für Ihre KI sind Teil des Pro-Tarifs.",
+        "upgrade": "Tarife ansehen",
+        "errors": {
+          "load": "Die Anweisungen konnten nicht geladen werden. Bitte erneut versuchen.",
+          "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+          "too_long": "Bitte höchstens {max} Zeichen verwenden.",
+          "unavailable": "Anweisungen sind noch nicht verfügbar.",
+          "pro_feature_required": "Anweisungen für Ihre KI erfordern den Pro-Tarif."
+        }
       }
     },
     "emptyAltLead": "Noch nicht bereit, ein Postfach zu verbinden?",

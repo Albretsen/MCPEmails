@@ -334,6 +334,25 @@
           "unreachable": "Impossible de joindre le serveur {server} avec ces réglages. Rien n'a été modifié.",
           "save": "Impossible d'enregistrer. Réessayez."
         }
+      },
+      "instructions": {
+        "title": "Instructions pour votre IA",
+        "help": "Chaque client IA qui utilise cette boîte les voit, par exemple sous quel nom signer ou quels e-mails laisser de côté.",
+        "placeholder": "Ceci est la boîte du support. Signez « L'équipe Support ». Ne répondez jamais aux factures ; déplacez-les vers Comptabilité.",
+        "loading": "Chargement…",
+        "count": "{count} sur {max} caractères",
+        "save": "Enregistrer",
+        "saved": "Enregistré. Les clients IA voient désormais ces instructions.",
+        "cleared": "Enregistré. Cette boîte n'a aucune instruction.",
+        "proOnly": "Les instructions pour votre IA font partie de l'offre Pro.",
+        "upgrade": "Voir les offres",
+        "errors": {
+          "load": "Impossible de charger les instructions. Réessayez.",
+          "save": "Impossible d'enregistrer. Réessayez.",
+          "too_long": "Utilisez au plus {max} caractères.",
+          "unavailable": "Les instructions ne sont pas encore disponibles.",
+          "pro_feature_required": "Les instructions pour votre IA nécessitent l'offre Pro."
+        }
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",

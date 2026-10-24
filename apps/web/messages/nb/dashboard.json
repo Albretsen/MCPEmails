@@ -334,6 +334,25 @@
           "unreachable": "Fikk ikke kontakt med {server}-serveren med disse innstillingene. Ingenting ble endret.",
           "save": "Kunne ikke lagre. Prøv igjen."
         }
+      },
+      "instructions": {
+        "title": "Instruksjoner til AI-en din",
+        "help": "Alle AI-klienter som bruker denne innboksen, ser disse, for eksempel hvem det skal signeres som eller hvilken e-post som skal stå i fred.",
+        "placeholder": "Dette er kundeservice-innboksen. Signer som Kundeservice. Svar aldri på fakturaer; flytt dem til Økonomi.",
+        "loading": "Laster inn…",
+        "count": "{count} av {max} tegn",
+        "save": "Lagre",
+        "saved": "Lagret. AI-klienter ser disse instruksjonene fra nå.",
+        "cleared": "Lagret. Denne innboksen har ingen instruksjoner.",
+        "proOnly": "Instruksjoner til AI-en din er en del av Pro-planen.",
+        "upgrade": "Se planer",
+        "errors": {
+          "load": "Kunne ikke laste inn instruksjonene. Prøv igjen.",
+          "save": "Kunne ikke lagre. Prøv igjen.",
+          "too_long": "Bruk høyst {max} tegn.",
+          "unavailable": "Instruksjoner er ikke tilgjengelige ennå.",
+          "pro_feature_required": "Instruksjoner til AI-en din krever Pro-planen."
+        }
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
