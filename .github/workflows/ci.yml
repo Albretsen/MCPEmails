@@ -345,6 +345,11 @@ jobs:
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
         run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/client-api/
+      # Heads-up only, never fails: warns when a function's local sources pass
+      # ~4.5 MB, near the 5 MB cap of `functions deploy --use-api`. The deploy
+      # workflow then falls back to the Docker bundler on its own.
+      - name: Edge function source size
+        run: node scripts/edge-function-size.mjs mcp-server client-api
       # The remaining functions with no other coverage (2026-10-15). Until now
       # nothing type-checked them, including system-notify, which carries the
       # email-mute logic (MUTED_EVENT_TYPES) and had no check at all. The first run of this step found a real error in
