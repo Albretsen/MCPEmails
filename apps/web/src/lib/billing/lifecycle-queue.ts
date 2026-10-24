@@ -393,7 +393,11 @@ export type CancelReason =
   | 'card_replaced'
   | 'no_longer_due'
   | 'undeliverable'
-  | 'manual';
+  | 'manual'
+  // 3-month pass notices (pass-notices.ts)
+  | 'pass_refunded'
+  | 'subscription_started'
+  | 'pass_renewed';
 
 /**
  * Stop the unsent remainder of a sequence.

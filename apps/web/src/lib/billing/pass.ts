@@ -8,6 +8,8 @@
  *   personalPassMode()                     'off' | 'holdout' | 'on' from PERSONAL_PASS_ENABLED (default off)
  *   passCheckoutOpen(mode?)                true when new pass checkouts are accepted (holdout or on)
  *   passEndsAt(paidAt, months?)            paidAt + 3 calendar months, UTC, clamped to month end
+ *   passSubscriptionStart(until, interval) how a subscription bought during a pass starts (anchor,
+ *                                          trial_end fallback, or null for today); re-exported by checkout-core
  *   planPassWindow(live, paidAt)           where a new pass goes: active now, or stacked after the cover
  *   getActivePass(db, userId, opts?)       the pass covering now (+ queued one), or null; tolerant of
  *                                          the table not existing yet; `strict` throws on other errors
@@ -44,7 +46,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
-import { PERSONAL_PASS_3M, type PlanId } from '@/lib/stripe/plans';
+import { PERSONAL_PASS_3M, type BillingInterval, type PlanId } from '@/lib/stripe/plans';
 import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-funnel';
 import { liftPlanLimitPauses, workspacesEnteringPaidPlan } from '@/lib/billing/plan-limit-pauses';
 
@@ -102,6 +104,52 @@ export function passEndsAt(paidAt: Date, months: number = PERSONAL_PASS_3M.month
       paidAt.getUTCMilliseconds(),
     ),
   );
+}
+
+// ---------------------------------------------------------------------------
+// A subscription bought during a pass
+// ---------------------------------------------------------------------------
+
+const HOUR_SECONDS = 60 * 60;
+
+/**
+ * How a Personal subscription bought during a pass starts, or null for "from
+ * today".
+ *
+ * Preferred: `billing_cycle_anchor` at the pass's end with `proration_behavior:
+ * 'none'`. The hosted page shows nothing due today and the first full charge on
+ * that date, and the subscription is `active` from the start. Stripe only
+ * accepts an anchor up to the first natural billing date, so it covers a yearly
+ * subscription always and a monthly one only in the pass's last month.
+ *
+ * Otherwise `trial_end` at the pass's end, which Checkout accepts up to two
+ * years out but only from 48 hours ahead. Stripe labels those days a trial on
+ * its own page; the subscription is `trialing`, which every entitlement check
+ * here already treats as entitled.
+ */
+export function passSubscriptionStart(
+  coveredUntil: Date,
+  interval: BillingInterval,
+  now: Date = new Date(),
+):
+  | { billing_cycle_anchor: number; proration_behavior: 'none' }
+  | { trial_end: number }
+  | null {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+  const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
+  // Within the hour: not worth a different first invoice.
+  if (endSeconds <= nowSeconds + HOUR_SECONDS) return null;
+
+  const naturalBilling = Math.floor(
+    passEndsAt(now, interval === 'year' ? 12 : 1).getTime() / 1000,
+  );
+  if (endSeconds < naturalBilling - HOUR_SECONDS) {
+    return { billing_cycle_anchor: endSeconds, proration_behavior: 'none' };
+  }
+  if (endSeconds >= nowSeconds + 48 * HOUR_SECONDS) {
+    return { trial_end: endSeconds };
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
