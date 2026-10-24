@@ -5,6 +5,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
+import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
+import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
   PLANS,
   basePlanItem,
@@ -12,6 +14,7 @@ import {
   mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  retainedPriceGenerationId,
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
@@ -386,12 +389,18 @@ function fail(
  * or the page's language on a marketing CTA). It only chooses the language of
  * the hosted page, never what is sold or charged, and is allow-listed by
  * `checkoutLocale` before Stripe sees it.
+ *
+ * `recoveredFrom` is the expired Checkout session an abandoned-checkout
+ * reminder linked from (see src/lib/email/abandoned-checkout.ts). It only lands
+ * in the new session's metadata, after a format check, so the completed
+ * purchase can be credited to the reminder.
  */
 export async function runCheckout(input: {
   planId: unknown;
   interval: unknown;
   confirmChange?: unknown;
   locale?: unknown;
+  recoveredFrom?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -741,7 +750,14 @@ export async function runCheckout(input: {
       const samePlanAndInterval =
         fromPrice?.planId === planId && fromPrice?.interval === interval;
 
-      if (currentItem.price.id === priceId || samePlanAndInterval) {
+      // A Pro subscriber who kept $15 / $144 at the Pro price change keeps
+      // that generation when switching interval: monthly $15 goes to yearly
+      // $144, not to the $182.40 Pro now sells. Null for everyone else, who
+      // move to the sold price as before. See retainedPriceGenerationId.
+      const swapPriceId =
+        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? priceId;
+
+      if (currentItem.price.id === swapPriceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
         // on 2026-09-14 (see the note at the top of this branch): the
         // subscription is already on the exact price being asked for.
@@ -820,7 +836,7 @@ export async function runCheckout(input: {
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
-            priceId,
+            priceId: swapPriceId,
             addonChanges,
             extraMailboxes,
             addonPriceId: mailboxAddonPriceId(interval),
@@ -867,7 +883,7 @@ export async function runCheckout(input: {
       // on the subscription from `subscription_data` at creation and survives
       // untouched, and the webhook resolves the plan from the price id.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: priceId }, ...addonChanges],
+        items: [{ id: currentItem.id, price: swapPriceId }, ...addonChanges],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
@@ -1015,6 +1031,9 @@ export async function runCheckout(input: {
 
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
   const locale = checkoutLocale(input.locale);
+  const lang = reminderLocale(input.locale);
+  const reminderLang = lang === 'en' ? null : lang;
+  const recoveredFrom = checkoutSessionIdOrNull(input.recoveredFrom);
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -1073,6 +1092,10 @@ export async function runCheckout(input: {
         user_id: user.id,
         plan_id: planId,
         interval,
+        // The buyer's app language, so an abandoned-checkout reminder for this
+        // session can be written in it. Allow-listed; English adds nothing.
+        ...(reminderLang ? { lang: reminderLang } : {}),
+        ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
       },
       // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
       //

@@ -2335,6 +2335,9 @@ export type Database = {
           email: string
           finished_at: string | null
           provider_message_id: string | null
+          recovered_at: string | null
+          recovered_session_id: string | null
+          recovered_via_link: boolean | null
           sent_at: string
           status: string
           template: string
@@ -2346,6 +2349,9 @@ export type Database = {
           email: string
           finished_at?: string | null
           provider_message_id?: string | null
+          recovered_at?: string | null
+          recovered_session_id?: string | null
+          recovered_via_link?: boolean | null
           sent_at?: string
           status?: string
           template: string
@@ -2357,6 +2363,9 @@ export type Database = {
           email?: string
           finished_at?: string | null
           provider_message_id?: string | null
+          recovered_at?: string | null
+          recovered_session_id?: string | null
+          recovered_via_link?: boolean | null
           sent_at?: string
           status?: string
           template?: string

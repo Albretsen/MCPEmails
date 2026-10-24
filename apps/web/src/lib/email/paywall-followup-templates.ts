@@ -339,3 +339,7 @@ export function composePaywallFollowup(input: PaywallFollowupInput): ComposedPay
     },
   };
 }
+
+// The same shell for the other one-off lifecycle emails (pro-price-notice.ts),
+// so every lifecycle email keeps one look and one footer.
+export { shell as lifecycleShell, p as lifecycleParagraph, UNSUBSCRIBE_REASON as LIFECYCLE_UNSUBSCRIBE_REASON };

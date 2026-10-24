@@ -46,6 +46,7 @@ import {
 import UpgradeIntervalChoice, {
   IntervalToggle,
   PlanCheckoutLink,
+  ProPriceAppNotice,
   SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
@@ -262,7 +263,7 @@ function ClientLogo({ color, logo, size = 34 }) {
     }}>
       {g ? (
         <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
-          <path d={g.d} />
+          <path d={g.d} fillRule={g.fillRule} />
         </svg>
       ) : null}
     </div>
@@ -1546,6 +1547,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               }}>
                 {t(offer.noticeBodyKey)}
               </div>
+              <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (

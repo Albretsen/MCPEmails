@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROVIDERS } from './providers.mjs';
-import { CLIENTS } from '../clients/clients.mjs';
+import { ALL_CLIENTS } from '../clients/clients.mjs';
 import { FULL_LOCALES, FROZEN_LOCALES, SCOPED_LOCALES } from '../../i18n/locale-policy.mjs';
 
 /**
@@ -24,7 +24,7 @@ import { FULL_LOCALES, FROZEN_LOCALES, SCOPED_LOCALES } from '../../i18n/locale-
 const here = dirname(fileURLToPath(import.meta.url));
 const SETS = [
   { name: 'connect', dir: join(here, 'content'), registry: PROVIDERS },
-  { name: 'clients', dir: join(here, '../clients/content'), registry: CLIENTS },
+  { name: 'clients', dir: join(here, '../clients/content'), registry: ALL_CLIENTS },
 ];
 const ALLOWED_TAG = /^<\/?(b|code)>$/;
 const VERBATIM = new Set(['_sources', 'auth.method', 'auth.status', 'auth.helpUrl', 'guide.href', 'persona.href', 'seeAlso.href']);

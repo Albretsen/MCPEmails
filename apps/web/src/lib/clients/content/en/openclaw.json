@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared limits and FAQ copy)",
+    "https://docs.openclaw.ai/tools/mcp",
+    "https://docs.openclaw.ai/cli/mcp",
+    "https://docs.openclaw.ai/cli/mcp/registry",
+    "https://docs.openclaw.ai/cli/mcp/transports",
+    "https://docs.openclaw.ai/cli/mcp/control-ui",
+    "https://docs.openclaw.ai/cli/gateway/service",
+    "https://docs.openclaw.ai/gateway/configuration",
+    "https://github.com/openclaw/openclaw",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-provider.ts",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-store.mutations.ts",
+    "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
+  ],
+  "meta": {
+    "title": "Connect Email to OpenClaw: Remote MCP Server Setup",
+    "description": "Give your OpenClaw agent a real inbox. Add one Streamable HTTP MCP server with OAuth, sign in once, and read, search, draft and send mail."
+  },
+  "hero": {
+    "eyebrow": "OpenClaw + email",
+    "titleLine1": "Connect your inbox to OpenClaw",
+    "titleLine2": "as a remote MCP server",
+    "lead": "Let the personal agent you already message read, search, draft, send, reply, forward and file mail across every inbox you have connected, through one MCP endpoint and one sign-in.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Stop the Gateway with openclaw gateway stop, run openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth, then openclaw mcp login mcpemails and approve in the browser. Start the Gateway again with openclaw gateway start."
+  },
+  "method": {
+    "title": "How OpenClaw connects: OAuth, no API key",
+    "body": "OpenClaw's built-in MCP client runs the standard MCP OAuth flow for an HTTP server saved with <code>auth: \"oauth\"</code>. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. The token carries only the scopes you approve on our consent screen, lasts an hour and refreshes itself. OpenClaw stores it on the Gateway, and it is listed in Dashboard, API Keys as <code>OAuth: OpenClaw MCP</code>, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Save the server with OAuth",
+      "p": "On the machine that runs your Gateway, run <code>openclaw gateway stop</code>, then <code>openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth</code>. That writes the entry under <code>mcp.servers</code> in <code>~/.openclaw/openclaw.json</code>. OpenClaw refuses to change saved servers while the Gateway is running."
+    },
+    {
+      "h": "Sign in from the terminal",
+      "p": "With the Gateway still stopped, run <code>openclaw mcp login mcpemails</code>. Follow the printed authorization URL and approve the scopes you want OpenClaw to hold. OpenClaw captures the browser callback and saves the credentials, then run <code>openclaw gateway start</code>."
+    },
+    {
+      "h": "Or sign in from the Control UI",
+      "p": "Instead of the terminal login, start the Gateway and open the Control UI on its own loopback address or a public HTTPS address, then go to <b>Settings → MCP</b>. As an administrator, select <b>Sign in</b> for the <code>mcpemails</code> server, approve access in the browser, then return to Settings. On a private or Tailscale-only address, use the terminal login instead."
+    },
+    {
+      "h": "Check the connection",
+      "p": "Run <code>openclaw mcp status --verbose</code>, which works while the Gateway runs. If it reports <code>authorization-required</code>, sign in again. Then ask your agent in any channel to list your inboxes."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Set the transport, or it falls back to SSE",
+      "p": "When <code>transport</code> is left out of an HTTP entry, OpenClaw uses <code>sse</code>. This server speaks Streamable HTTP, so always pass <code>--transport streamable-http</code>, or pick <b>Streamable HTTP</b> in Settings. In hand-written config, <code>transport: \"streamable-http\"</code> is the spelling OpenClaw reads; a CLI-style <code>type: \"http\"</code> is only accepted through <code>openclaw mcp set</code> or repaired by <code>openclaw doctor --fix</code>."
+    },
+    {
+      "h": "CLI changes need the Gateway stopped",
+      "p": "<code>openclaw mcp add</code>, <code>login</code>, <code>probe</code> and <code>doctor --probe</code> refuse to run while a local Gateway owns OpenClaw's state, so stop it first and start it again afterwards. If the Gateway runs on a server and your browser is elsewhere, the loopback callback cannot reach it: copy the code from the browser and finish with the printed <code>openclaw mcp login mcpemails --code</code> command."
+    },
+    {
+      "h": "Shared sign-in means shared mailbox",
+      "p": "By default the OAuth credential is shared and operator-managed: every agent on that Gateway uses the same sign-in, so anyone who can message your agent can ask it to read your mail. Keep it to channels only you use, leave <code>send:email</code> off the consent screen if the agent should only read, or turn on human approval for the inbox so every send waits for a person. OpenClaw also offers per-requester sign-in, where each sender connects their own account; it needs <code>gateway.publicOrigin</code> set to the Gateway's public HTTPS address."
+    },
+    {
+      "h": "A saved server is not a working server",
+      "p": "OpenClaw saves a definition without proving it works, and a server that still needs sign-in is simply left out of the agent's tools rather than failing the turn. If the agent says it has no email tools, run <code>openclaw mcp status --verbose</code>: <code>authorization-required</code> means run the sign-in step again."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to OpenClaw?",
+      "a": "On the Gateway machine, stop the Gateway, run openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth, then sign in with openclaw mcp login mcpemails and start the Gateway again. You can also sign in from Settings, MCP in the Control UI. Your agent then has tools for reading, searching, drafting, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Do I need an API key for OpenClaw?",
+      "a": "No. OpenClaw runs the MCP OAuth flow itself and stores the token on the Gateway. Its HTTP entries also accept a static headers map, so a scoped key sent as an Authorization Bearer header works too, but OpenClaw ignores static Authorization headers on an entry set to auth oauth, so use one or the other."
+    },
+    {
+      "q": "Can I show my agent only some of the email tools?",
+      "a": "Yes. Add --include with a comma-separated list of tool names, or a pattern such as 'email_*', when you run openclaw mcp add, or set toolFilter under the server in config. That narrows what the agent sees. What it may actually do is still set by the scopes you approved on the consent screen."
+    },
+    {
+      "q": "Which mailboxes can OpenClaw reach this way?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. Your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can OpenClaw send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it. For an agent that runs unattended across chat channels, both are worth using."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your agent. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your OpenClaw agent a real inbox",
+    "sub": "One server, one sign-in. One inbox free forever, no card required."
+  }
+}

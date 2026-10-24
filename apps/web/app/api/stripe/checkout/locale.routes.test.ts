@@ -91,6 +91,17 @@ test('GET without ?lang= hands the core no language, so it stays English', async
   assert.deepEqual(calls, [{ planId: 'solo', interval: 'month', locale: null }]);
 });
 
+test('GET hands the reminder link\'s recovered_from to the core, and keeps it through /login', async () => {
+  await GET(getRequest('?plan=solo&interval=year&lang=fr&recovered_from=cs_live_a1B2c3D4e5F6g7H8'));
+  assert.deepEqual(calls, [
+    { planId: 'solo', interval: 'year', locale: 'fr', recoveredFrom: 'cs_live_a1B2c3D4e5F6g7H8' },
+  ]);
+  nextOutcome = { kind: 'error', reason: 'unauthenticated', status: 401, message: 'Unauthorized' };
+  const res = await GET(getRequest('?plan=solo&interval=year&recovered_from=cs_live_a1B2c3D4e5F6g7H8'));
+  const login = new URL(res.headers.get('location') ?? '');
+  assert.match(login.searchParams.get('redirect') ?? '', /recovered_from=cs_live_a1B2c3D4e5F6g7H8/);
+});
+
 test('GET passes another language through as given: the core decides, not the route', async () => {
   await GET(getRequest('?plan=solo&interval=month&lang=nb'));
   assert.equal(calls[0].locale, 'nb');
