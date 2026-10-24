@@ -4,7 +4,8 @@
 .contract-choice input { margin-top: 4px; }
 .contract-choice-label { display: block; font-weight: 500; }
 .contract-choice-hint { display: block; margin: 2px 0 0; }
-.contract-review h2, .contract-done h2 { font-size: 22px; margin: 0 0 8px; }
+.contract-date { margin: 2px 0 0 24px; max-width: 220px; }
+.contract-done h2 { font-size: 22px; margin: 0 0 8px; }
 .contract-summary { margin: 16px 0; border: 1px solid var(--border-1); border-radius: 8px; background: var(--bg-surface); }
 .contract-summary-row { display: grid; grid-template-columns: minmax(120px, 34%) 1fr; gap: 12px; padding: 10px 14px; }
 .contract-summary-row + .contract-summary-row { border-top: 1px solid var(--border-1); }

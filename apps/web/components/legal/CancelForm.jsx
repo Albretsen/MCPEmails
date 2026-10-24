@@ -4,13 +4,18 @@ import { Fragment, useState } from 'react';
 import { Btn } from '../Primitives';
 
 /**
- * The /cancel form: fill in, check and confirm, then a confirmation to keep.
+ * The /cancel form: one page with the details and the final button, then a
+ * confirmation to keep.
  *
- * Three steps because the law asks for them (§312k BGB, and the withdrawal
- * function of Directive (EU) 2023/2673): the details, a separate confirm
- * button labelled "Cancel now" or "Confirm withdrawal", and a confirmation
- * showing what was received and when, which the customer can print or save.
- * Nothing is sent until the confirm button is pressed.
+ * The shape the law asks for (§312k(2) BGB, and the withdrawal function of
+ * Directive (EU) 2023/2673): the button in the footer leads straight to this
+ * page, which asks for the details and carries the button labelled "Cancel
+ * now" or "Confirm withdrawal". No step in between. The done screen shows what
+ * was received and when, which the customer can print or save. Nothing is
+ * sent until that button is pressed.
+ *
+ * An ordinary cancellation may name a later effective date (§312k(2) Nr. 1);
+ * the default is the earliest possible date.
  *
  * `website` is a honeypot and `formToken` the signed render timestamp, the
  * same pair the /help form uses. Every string comes from `copy`
@@ -22,6 +27,25 @@ export const LIMITS = { name: 100, email: 254, contract: 100, reason: 2000 };
 
 const ENDPOINT = '/api/legal/contract-request';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** Mirrors EFFECTIVE_DATE_MAX_DAYS in src/lib/legal/contract-request.ts. */
+const MAX_DAYS_AHEAD = 5 * 366;
+
+/** YYYY-MM-DD in the visitor's own time zone, `days` from today. */
+function localDate(days = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function formatDate(ymd, locale) {
+  try {
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${ymd}T00:00:00Z`));
+  } catch {
+    return ymd;
+  }
+}
 
 function fillNodes(template, values) {
   return String(template ?? '')
@@ -55,9 +79,11 @@ function Summary({ rows }) {
 
 export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel', formToken = '', supportEmail }) {
   const f = copy.form;
-  const [step, setStep] = useState('edit'); // 'edit' | 'review' | 'done'
+  const [step, setStep] = useState('edit'); // 'edit' | 'done'
   const [kind, setKind] = useState(initialKind === 'withdraw' ? 'withdraw' : 'cancel');
   const [cancelType, setCancelType] = useState('ordinary');
+  const [when, setWhen] = useState('earliest'); // 'earliest' | 'date'
+  const [effectiveDate, setEffectiveDate] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [contract, setContract] = useState('');
@@ -70,19 +96,20 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
   const support = <a href={`mailto:${supportEmail}`}>{supportEmail}</a>;
   const errorLine = (code) => fillNodes(copy.errors[code] ?? copy.errors.unknown, { support });
   const extraordinary = kind === 'cancel' && cancelType === 'extraordinary';
+  const ordinary = kind === 'cancel' && cancelType === 'ordinary';
+  const datedOrdinary = ordinary && when === 'date';
 
-  function onContinue(event) {
+  async function onSubmit(event) {
     event.preventDefault();
+    if (sending) return;
     // The server repeats every check; these only save a round trip.
     if (!name.trim()) return setError('name_required');
     if (!EMAIL_RE.test(email.trim())) return setError('invalid_email');
+    if (datedOrdinary && (!DATE_RE.test(effectiveDate) || effectiveDate < localDate() || effectiveDate > localDate(MAX_DAYS_AHEAD))) {
+      return setError('invalid_effective_date');
+    }
     if (extraordinary && !reason.trim()) return setError('reason_required');
-    setError(null);
-    setStep('review');
-  }
 
-  async function onConfirm() {
-    if (sending) return;
     const body = {
       kind,
       name: name.trim(),
@@ -94,6 +121,7 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
     };
     if (kind === 'cancel') body.cancelType = cancelType;
     if (extraordinary) body.reason = reason.trim();
+    if (datedOrdinary) body.effectiveDate = effectiveDate;
 
     setSending(true);
     setError(null);
@@ -122,8 +150,11 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
     }
   }
 
-  const effective =
-    kind === 'cancel' && cancelType === 'ordinary' ? f.effectiveOrdinary : f.effectiveImmediate;
+  const effective = !ordinary
+    ? f.effectiveImmediate
+    : datedOrdinary
+      ? f.effectiveOnDate.replace('{date}', formatDate(effectiveDate, locale))
+      : f.effectiveOrdinary;
   const summary = [
     [f.labels.kind, kind === 'withdraw' ? f.kindValueWithdraw : f.kindValueCancel],
     ...(kind === 'cancel'
@@ -157,25 +188,8 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
     );
   }
 
-  if (step === 'review') {
-    return (
-      <div className="contract-review">
-        <h2>{f.reviewHeading}</h2>
-        <p className="help-muted">{f.reviewLead}</p>
-        <Summary rows={summary} />
-        <div className="help-actions contract-actions">
-          <Btn variant="primary" onClick={onConfirm} busy={sending}>
-            {sending ? f.sending : kind === 'withdraw' ? f.submitWithdraw : f.submitCancel}
-          </Btn>
-          <Btn variant="ghost" onClick={() => setStep('edit')} disabled={sending}>{f.back}</Btn>
-        </div>
-        {error ? <p className="help-error" role="alert" data-error-code={error}>{errorLine(error)}</p> : null}
-      </div>
-    );
-  }
-
   return (
-    <form className="help-form" onSubmit={onContinue} noValidate>
+    <form className="help-form" onSubmit={onSubmit} noValidate>
       <fieldset className="contract-fieldset">
         <legend className="help-label">{f.kindLegend}</legend>
         {[
@@ -223,6 +237,36 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
         </fieldset>
       ) : null}
 
+      {ordinary ? (
+        <fieldset className="contract-fieldset">
+          <legend className="help-label">{f.whenLegend}</legend>
+          {[
+            ['earliest', f.whenEarliest],
+            ['date', f.whenLater],
+          ].map(([value, label]) => (
+            <label key={value} className="contract-choice">
+              <input type="radio" name="when" value={value} checked={when === value} onChange={() => setWhen(value)} />
+              <span className="contract-choice-label">{label}</span>
+            </label>
+          ))}
+          {when === 'date' ? (
+            <div className="help-field contract-date">
+              <label htmlFor="cancel-effective-date" className="help-label">{f.whenDate}</label>
+              <input
+                id="cancel-effective-date"
+                name="effectiveDate"
+                type="date"
+                className="help-input"
+                min={localDate()}
+                max={localDate(MAX_DAYS_AHEAD)}
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+              />
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
+
       {extraordinary ? (
         <div className="help-field">
           <label htmlFor="cancel-reason" className="help-label">{f.reason}</label>
@@ -235,8 +279,10 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
         <input id="cancel-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
 
-      <div className="help-actions">
-        <Btn type="submit" variant="primary">{f.continue}</Btn>
+      <div className="help-actions contract-actions">
+        <Btn type="submit" variant="primary" busy={sending}>
+          {sending ? f.sending : kind === 'withdraw' ? f.submitWithdraw : f.submitCancel}
+        </Btn>
       </div>
       {error ? <p className="help-error" role="alert" data-error-code={error}>{errorLine(error)}</p> : null}
     </form>
