@@ -4,6 +4,7 @@ import CancelReasonForm from '../../../../components/billing/CancelReasonForm';
 import { CANCEL_REASONS, isCancelReason } from '@/lib/billing/cancel-reasons';
 import { verifyFeedbackToken } from '@/lib/billing/feedback-token';
 import { feedbackCopy } from './content.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../../styles/help.css';
 import '../../../../styles/contract-forms.css';
 
@@ -23,6 +24,7 @@ import '../../../../styles/contract-forms.css';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const c = feedbackCopy(locale);
   return {
     title: c.meta.title,
@@ -36,6 +38,7 @@ function first(value) {
 
 export default async function BillingFeedbackPage({ params, searchParams }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const c = feedbackCopy(locale);
   const sp = await searchParams;

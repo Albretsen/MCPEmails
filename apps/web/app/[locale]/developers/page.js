@@ -7,6 +7,7 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 import { Inline, CodeBlock } from '../../../components/marketing/DevCopy';
 import { CODE } from '../docs/api/content.mjs';
 import { developersCopy } from './content.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The developer landing page: what MCPEmails is to someone wiring scripts,
@@ -24,6 +25,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const { meta } = developersCopy(locale);
   return {
     title: meta.title,
@@ -48,6 +50,7 @@ export async function generateMetadata({ params }) {
 
 export default async function DevelopersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const copy = developersCopy(locale);
   const jsonLd = developersJsonLd(locale, {

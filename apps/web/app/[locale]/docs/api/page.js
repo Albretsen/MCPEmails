@@ -7,6 +7,7 @@ import { PLANS } from '@/lib/stripe/plans';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { Inline, CodeBlock } from '../../../../components/marketing/DevCopy';
 import { CODE, developerDocsCopy } from './content.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The developer guide: how to call MCPEmails from a script, a workflow tool or
@@ -28,6 +29,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const { meta } = developerDocsCopy(locale);
   return {
     title: meta.title,
@@ -120,6 +122,7 @@ function Block({ block, copy, locale }) {
 
 export default async function DeveloperDocsPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const copy = developerDocsCopy(locale);
   const url = localePath(locale, PATH);
