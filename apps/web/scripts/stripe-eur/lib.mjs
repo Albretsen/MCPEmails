@@ -27,38 +27,46 @@ export const APPS_WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..', '
 export const REPO_ROOT = resolve(APPS_WEB, '..', '..');
 
 // ---------------------------------------------------------------------------
-// The sold prices, by the environment variable that holds each id.
-// `eurCents: 'same'` means "the same digits as the USD unit_amount" (owner
-// decision 2026-10-24). `usdCents` is what the catalogue says the USD price
-// must be; a price that differs is reported and never touched.
+// The sold-price list, the EU list and every pure planner live in
+// src/lib/stripe/eur-launch-plan.ts since the launch became automatic: the
+// dispatcher (app/api/internal/eur-launch/dispatch) runs the same rules on
+// its date, and a currency option is permanent, so there is one copy of
+// "what does this price need", not two. Re-exported here so these scripts
+// and lib.test.mjs keep their imports.
 // ---------------------------------------------------------------------------
-export const SOLD_PRICE_ENV = [
-  { env: 'STRIPE_PRICE_PERSONAL_MONTHLY_V2', usdCents: 900, interval: 'month' },
-  { env: 'STRIPE_PRICE_PERSONAL_YEARLY_V2', usdCents: 8640, interval: 'year' },
-  { env: 'STRIPE_PRICE_SOLO_MONTHLY', usdCents: 1500, interval: 'month' },
-  { env: 'STRIPE_PRICE_SOLO_YEARLY', usdCents: 14400, interval: 'year' },
-  // Pro $19 / $182.40 (PR #241). Optional until the V2 prices exist.
-  { env: 'STRIPE_PRICE_SOLO_MONTHLY_V2', usdCents: 1900, interval: 'month', optional: true },
-  { env: 'STRIPE_PRICE_SOLO_YEARLY_V2', usdCents: 18240, interval: 'year', optional: true },
-  { env: 'STRIPE_PRICE_BUSINESS_MONTHLY', usdCents: 3900, interval: 'month' },
-  { env: 'STRIPE_PRICE_BUSINESS_YEARLY', usdCents: 37440, interval: 'year' },
-  { env: 'STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY', usdCents: 300, interval: 'month' },
-  { env: 'STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY', usdCents: 2880, interval: 'year' },
-  // The Japan sending route is sold from the Dashboard, not from code, so this
-  // variable exists only for these scripts. EUR 108, not 120 (owner decision).
-  { env: 'STRIPE_PRICE_JAPAN_ROUTE_YEARLY', usdCents: 12000, eurCents: 10800, interval: 'year', optional: true },
-];
+import {
+  BILLING_STATUSES,
+  DEFAULT_TAX_CODE,
+  EU_COUNTRIES,
+  LEGACY_PRICE_ENV,
+  SOLD_PRICE_ENV,
+  coveredCountries,
+  customerCountry,
+  flattenParams,
+  isTwinOf,
+  listAll,
+  makeFetchTransport,
+  planPriceUpdate,
+  planProductUpdate,
+  planSwap,
+  priceIdsFromEnv,
+  twinCreateParams,
+} from '../../src/lib/stripe/eur-launch-plan.ts';
 
-export const DEFAULT_TAX_CODE = 'txcd_10000000';
-
-// EU member states (ISO 3166-1 alpha-2). Greece is GR here, as Stripe reports it.
-export const EU_COUNTRIES = new Set([
-  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE',
-  'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-]);
-
-/** Statuses that still bill and therefore need the right price. */
-export const BILLING_STATUSES = ['active', 'trialing', 'past_due', 'unpaid'];
+export {
+  BILLING_STATUSES,
+  DEFAULT_TAX_CODE,
+  EU_COUNTRIES,
+  SOLD_PRICE_ENV,
+  coveredCountries,
+  customerCountry,
+  isTwinOf,
+  listAll,
+  planPriceUpdate,
+  planProductUpdate,
+  planSwap,
+  twinCreateParams,
+};
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -85,13 +93,11 @@ export function parseArgs(argv) {
  */
 export function loadPriceEnv(pricesFile, env = process.env) {
   const fromFile = pricesFile ? JSON.parse(readFileSync(pricesFile, 'utf8')) : {};
-  const ids = {};
-  for (const name of [...SOLD_PRICE_ENV.map((p) => p.env), 'STRIPE_PRICE_PERSONAL_MONTHLY',
-    'STRIPE_PRICE_PERSONAL_YEARLY', 'STRIPE_PRICE_PRO_MONTHLY', 'STRIPE_PRICE_PRO_YEARLY']) {
-    const v = (fromFile[name] ?? env[name] ?? '').trim();
-    if (v) ids[name] = v;
+  const merged = {};
+  for (const name of [...SOLD_PRICE_ENV.map((p) => p.env), ...LEGACY_PRICE_ENV]) {
+    merged[name] = fromFile[name] ?? env[name];
   }
-  return ids;
+  return priceIdsFromEnv(merged);
 }
 
 /**
@@ -116,167 +122,16 @@ export async function loadCatalogueIds(ids) {
 }
 
 // ---------------------------------------------------------------------------
-// Pure planning
-// ---------------------------------------------------------------------------
-
-/**
- * What one sold price needs. Returns { problems, params } where params is the
- * form body for POST /v1/prices/:id, or null when nothing needs to change.
- * The price must be retrieved with expand[]=currency_options, or Stripe leaves
- * the field out and every price would look like it needs an EUR option.
- */
-export function planPriceUpdate(price, spec) {
-  const problems = [];
-  if (!price || price.object !== 'price') return { problems: ['not a Stripe price'], params: null };
-  if (price.currency !== 'usd') problems.push(`currency ${price.currency}, expected usd`);
-  if (price.unit_amount !== spec.usdCents) problems.push(`unit_amount ${price.unit_amount}, expected ${spec.usdCents}`);
-  if (price.recurring?.interval !== spec.interval) problems.push(`interval ${price.recurring?.interval}, expected ${spec.interval}`);
-  if (!price.active) problems.push('price is archived');
-  if (problems.length) return { problems, params: null };
-
-  const eurCents = spec.eurCents ?? price.unit_amount;
-  const params = {};
-  if (price.tax_behavior === 'unspecified') params.tax_behavior = 'exclusive';
-  else if (price.tax_behavior !== 'exclusive') problems.push(`USD tax_behavior is ${price.tax_behavior}; left as is`);
-
-  const eur = price.currency_options?.eur;
-  if (!eur) {
-    params['currency_options[eur][unit_amount]'] = String(eurCents);
-    params['currency_options[eur][tax_behavior]'] = 'inclusive';
-  } else if (eur.unit_amount !== eurCents || eur.tax_behavior !== 'inclusive') {
-    // An existing currency option is immutable (Stripe: "attempting to update
-    // an immutable field for an existing currency"). Report, never retry.
-    problems.push(`EUR option exists as ${eur.unit_amount} ${eur.tax_behavior}, wanted ${eurCents} inclusive; immutable, fix by hand`);
-  }
-  return { problems, params: Object.keys(params).length ? params : null };
-}
-
-/** POST /v1/products/:id params, or null when the product already has a code. */
-export function planProductUpdate(product, taxCode = DEFAULT_TAX_CODE) {
-  const current = typeof product.tax_code === 'string' ? product.tax_code : product.tax_code?.id;
-  return current ? null : { tax_code: taxCode };
-}
-
-/** Body for creating the inclusive USD twin of `price`. */
-export function twinCreateParams(price) {
-  const product = typeof price.product === 'string' ? price.product : price.product.id;
-  const label = price.nickname || `${price.unit_amount} ${price.currency} per ${price.recurring?.interval}`;
-  return {
-    currency: price.currency,
-    unit_amount: String(price.unit_amount),
-    product,
-    'recurring[interval]': price.recurring.interval,
-    'recurring[interval_count]': String(price.recurring.interval_count ?? 1),
-    'recurring[usage_type]': price.recurring.usage_type ?? 'licensed',
-    tax_behavior: 'inclusive',
-    nickname: `${label} (incl. VAT)`,
-    'metadata[twin_of]': price.id,
-  };
-}
-
-/** Is `candidate` a usable twin of `original`? */
-export function isTwinOf(candidate, original) {
-  return (
-    candidate.active === true &&
-    candidate.metadata?.twin_of === original.id &&
-    candidate.tax_behavior === 'inclusive' &&
-    candidate.currency === original.currency &&
-    candidate.unit_amount === original.unit_amount &&
-    candidate.recurring?.interval === original.recurring?.interval &&
-    (candidate.recurring?.interval_count ?? 1) === (original.recurring?.interval_count ?? 1)
-  );
-}
-
-/**
- * The buyer's country, in the order plan section 0 used: card country of the
- * latest succeeded charge, then that charge's billing address, then the
- * customer's address, then Stripe Tax's own location. Returns { country, source }.
- */
-export function customerCountry({ charge, customer }) {
-  const candidates = [
-    ['card', charge?.payment_method_details?.card?.country],
-    ['charge_billing', charge?.billing_details?.address?.country],
-    ['customer_address', customer?.address?.country],
-    ['tax_location', customer?.tax?.location?.country],
-  ];
-  for (const [source, value] of candidates) {
-    if (typeof value === 'string' && value.length === 2) return { country: value.toUpperCase(), source };
-  }
-  return { country: null, source: 'unknown' };
-}
-
-/**
- * Countries Stripe Tax collects in, from active registrations. A non-Union or
- * Union OSS registration covers every member state.
- */
-export function coveredCountries(registrations) {
-  const set = new Set();
-  for (const reg of registrations ?? []) {
-    if (reg.status && reg.status !== 'active') continue;
-    const options = Object.values(reg.country_options ?? {});
-    if (options.some((o) => typeof o?.type === 'string' && o.type.startsWith('oss'))) {
-      for (const c of EU_COUNTRIES) set.add(c);
-    }
-    if (reg.country) set.add(reg.country.toUpperCase());
-  }
-  return set;
-}
-
-/**
- * The swap for one subscription, given twin lookups. Returns
- * { action: 'swap'|'skip', reason?, items? } where items are
- * [{ id, price }] for POST /v1/subscriptions/:id.
- */
-export function planSwap(sub, { twinByOriginal, originalByTwin, catalogue }) {
-  if (sub.schedule) return { action: 'skip', reason: 'has_schedule' };
-  const items = sub.items?.data ?? [];
-  const mine = items.filter((it) => catalogue.has(it.price?.id) || originalByTwin.has(it.price?.id));
-  if (!mine.length) return { action: 'skip', reason: 'not_mcpemails' };
-  const changes = [];
-  for (const it of items) {
-    const id = it.price?.id;
-    if (originalByTwin.has(id)) continue;
-    const twin = twinByOriginal.get(id);
-    if (!twin) return { action: 'skip', reason: 'missing_twin' };
-    changes.push({ id: it.id, price: twin });
-  }
-  const taxOn = sub.automatic_tax?.enabled === true;
-  if (!changes.length && taxOn) return { action: 'skip', reason: 'already_done' };
-  return { action: 'swap', items: changes };
-}
-
-// ---------------------------------------------------------------------------
 // Stripe transport
 // ---------------------------------------------------------------------------
 export function makeStripe({ live, env = process.env }) {
   const key = env.STRIPE_SECRET_KEY?.trim();
-  if (key) {
-    const keyLive = key.includes('_live_');
-    if (keyLive !== live) {
-      throw new Error(keyLive
-        ? 'STRIPE_SECRET_KEY is a live key: pass --live to target live mode.'
-        : 'STRIPE_SECRET_KEY is a test key but --live was passed.');
-    }
-    return {
-      transport: 'fetch',
-      async request(method, path, params = {}, { idempotencyKey } = {}) {
-        const body = new URLSearchParams(flatten(params));
-        const url = method === 'GET' ? `https://api.stripe.com${path}?${body}` : `https://api.stripe.com${path}`;
-        const headers = { Authorization: `Bearer ${key}` };
-        if (method !== 'GET') headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-        const res = await fetch(url, { method, headers, body: method === 'GET' ? undefined : body });
-        const json = await res.json();
-        if (!res.ok) throw new Error(`${method} ${path}: ${json?.error?.message ?? res.status}`);
-        return json;
-      },
-    };
-  }
+  if (key) return makeFetchTransport({ key, live });
   return {
     transport: 'stripe-cli',
     async request(method, path, params = {}, { idempotencyKey } = {}) {
       const args = [method === 'GET' ? 'get' : 'post', path];
-      for (const [k, v] of flatten(params)) args.push('-d', `${k}=${v}`);
+      for (const [k, v] of flattenParams(params)) args.push('-d', `${k}=${v}`);
       if (idempotencyKey && method !== 'GET') args.push('-i', idempotencyKey);
       if (live) args.push('--live');
       const raw = execFileSync('stripe', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -287,29 +142,6 @@ export function makeStripe({ live, env = process.env }) {
       return json;
     },
   };
-}
-
-/** `{ a: [x, y] }` -> [['a[]', x], ['a[]', y]]; plain entries pass through. */
-function flatten(params) {
-  const out = [];
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === null) continue;
-    if (Array.isArray(v)) for (const x of v) out.push([`${k}[]`, String(x)]);
-    else out.push([k, String(v)]);
-  }
-  return out;
-}
-
-/** Every object of a list endpoint, following `starting_after`. */
-export async function listAll(stripe, path, params = {}) {
-  const all = [];
-  let startingAfter;
-  for (;;) {
-    const page = await stripe.request('GET', path, { limit: 100, ...params, starting_after: startingAfter });
-    all.push(...page.data);
-    if (!page.has_more || !page.data.length) return all;
-    startingAfter = page.data[page.data.length - 1].id;
-  }
 }
 
 /**

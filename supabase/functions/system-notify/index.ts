@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
+import { renderEurLaunchEmail } from "./eur-launch.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
@@ -390,6 +391,12 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     const workspaceId = typeof payload.workspace_id === "string" ? payload.workspace_id : "";
     const reason = typeof payload.reason === "string" ? payload.reason : null;
     return renderCheckoutFeedbackEmail(await fetchCheckoutFeedbackContext(supabase, feedbackId, workspaceId, reason));
+  }
+  if (eventType === "billing.eur_launch") {
+    // The EUR launch dispatcher on the web app: a failed preflight (once a
+    // day), a launch that stopped part way, the launch going live, or legacy
+    // swap failures. Wording comes from the dispatcher; see ./eur-launch.ts.
+    return renderEurLaunchEmail(payload);
   }
   return null;
 }
