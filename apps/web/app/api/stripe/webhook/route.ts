@@ -1152,7 +1152,8 @@ async function passPaymentState(
       refunded: charge.refunded === true || (charge.amount > 0 && charge.amount_refunded >= charge.amount),
     };
   } catch (err) {
-    console.error(`[stripe-webhook] pass payment ${paymentIntentId}: could not read the charge; recording as paid.`, {
+    console.error('[stripe-webhook] pass payment: could not read the charge; recording as paid.', {
+      paymentIntentId,
       error: err instanceof Error ? err.message : String(err),
     });
     return null;
