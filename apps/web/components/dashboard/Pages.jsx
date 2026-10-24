@@ -22,6 +22,8 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
+import { WebhooksPanel } from './WebhooksPanel';
+import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
@@ -45,11 +47,14 @@ import {
 } from '@/lib/usage/allowance-view.mjs';
 import UpgradeIntervalChoice, {
   IntervalToggle,
+  SeasonalOfferNote,
   PlanCheckoutLink,
+  ProPriceAppNotice,
   SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
 } from './UpgradeIntervalChoice';
+import { liveSeasonalOffer, seasonalOfferValues } from '@/lib/billing/seasonal-offer-view.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -262,7 +267,7 @@ function ClientLogo({ color, logo, size = 34 }) {
     }}>
       {g ? (
         <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
-          <path d={g.d} />
+          <path d={g.d} fillRule={g.fillRule} />
         </svg>
       ) : null}
     </div>
@@ -857,7 +862,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -941,6 +946,18 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       />
 
       {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
+
+      {/* First 14 days after the first payment, owner only. Renders nothing
+          otherwise; see lib/onboarding/first-week-checklist.ts. */}
+      <FirstWeekChecklist
+        inboxes={inboxes}
+        maxInboxes={planLimits?.maxInboxes ?? null}
+        userRole={userRole}
+        onReconnect={onReconnect}
+        onGoToInboxes={onGoToInboxes}
+        onGoToAutomations={onGoToAutomations}
+        onConnect={onConnect}
+      />
 
       <div className="stat-grid">
         <div className="stat">
@@ -1364,11 +1381,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error").length;
+  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
+  // hold a slot under the cap: the same count the server's checkInboxLimit uses.
+  const activeCount = inboxes.filter(ib => !ib.parked).length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
-  const atInboxLimit = maxInboxes !== null && inboxes.length >= maxInboxes;
+  const atInboxLimit = maxInboxes !== null && activeCount >= maxInboxes;
   // MONTHLY by default, and the notice buys monthly for anyone who does not
   // touch the choice: exactly what this CTA did before the choice existed.
   // Hoisted to the component body rather than kept inside the notice, because
@@ -1448,7 +1468,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // with exactly one mailbox is invited, under the list, to add the others.
   // Counted off the live `inboxes` array, like the cap above.
   // Never for a viewer, who cannot connect one.
-  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit }) : null;
+  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: activeCount, atInboxLimit }) : null;
 
   return (
     <div className="page">
@@ -1457,8 +1477,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         sub={
           maxInboxes !== null
             ? (maxInboxes === 1
-                ? t('inboxes.subWithCountSingular', { count: inboxes.length, max: maxInboxes })
-                : t('inboxes.subWithCount', { count: inboxes.length, max: maxInboxes }))
+                ? t('inboxes.subWithCountSingular', { count: activeCount, max: maxInboxes })
+                : t('inboxes.subWithCount', { count: activeCount, max: maxInboxes }))
             : t('inboxes.sub')
         }
         action={connectAction}
@@ -1546,6 +1566,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               }}>
                 {t(offer.noticeBodyKey)}
               </div>
+              <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (
@@ -1570,6 +1591,20 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     onChange={setCapInterval}
                     size="sm"
                   />
+                </div>
+              )}
+              {/* Black Week: the buttons carry no amount on annual, so each
+                  plan's first-year and renewal price is stated here. */}
+              {offer.dual && capInterval === 'year' && offer.offers.some(o => annualByPlan[o.plan]?.firstYear) && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {offer.offers.filter(o => annualByPlan[o.plan]?.firstYear).map(o => (
+                    <div key={o.plan}>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', marginBottom: 2 }}>
+                        {planDisplayName(o.plan)}
+                      </div>
+                      <SeasonalOfferNote offer={annualByPlan[o.plan]?.firstYear} size="sm" />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1648,13 +1683,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           }}>
             <div style={{
               height: '100%',
-              width: `${Math.min(100, (inboxes.length / maxInboxes) * 100)}%`,
-              background: inboxes.length / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
+              width: `${Math.min(100, (activeCount / maxInboxes) * 100)}%`,
+              background: activeCount / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
               borderRadius: 2,
               transition: 'width 0.3s',
             }} />
           </div>
-          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: inboxes.length, max: maxInboxes }) : t('inboxes.usedPlural', { count: inboxes.length, max: maxInboxes })}</span>
+          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: activeCount, max: maxInboxes }) : t('inboxes.usedPlural', { count: activeCount, max: maxInboxes })}</span>
         </div>
       )}
 
@@ -1713,6 +1748,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                  className={ib.parked ? 'inbox-row-parked' : undefined}
                 >
                   <td><strong style={{ fontWeight: 600 }}>{ib.label}</strong></td>
                   <td className="mono">{ib.address}</td>
@@ -1723,9 +1759,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     </span>
                   </td>
                   <td>
-                    {ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
-                    {ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {ib.status === "error"   ? (
+                    {ib.parked ? (
+                      <div>
+                        <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                        <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)", maxWidth: 220, lineHeight: 1.4 }}>
+                          {t('inboxes.parkedNote')}
+                        </div>
+                      </div>
+                    ) : null}
+                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
+                    {!ib.parked && ib.status === "error"   ? (
                       <div>
                         <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
@@ -1791,13 +1835,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
               const canReconnect = needsReconnect(ib.status);
-              const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
+              const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                 : <Badge tone="neutral">{ib.status}</Badge>;
               return (
                 <article
-                  className="inbox-mobile-card"
+                  className={ib.parked ? 'inbox-mobile-card inbox-row-parked' : 'inbox-mobile-card'}
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
                   onMouseEnter={warmSignatureEditor}
@@ -1818,7 +1863,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span><ProviderLogo kind={ib.provider} size={16} /> {PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
-                  {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {canReconnect ? (
@@ -3084,12 +3130,14 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const compatibility = compatibilityForInbox(inbox.provider);
 
   const statusLabel =
+    inbox.parked               ? t('inboxes.statusParked')    :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
     inbox.status;
 
   const statusBadge =
+    inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
@@ -4448,6 +4496,9 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
         </div>
       </div>
 
+      {/* Webhooks for new mail sit with the keys: both are how your own agents use MCPEmails. */}
+      <WebhooksPanel inboxes={inboxes} planName={planDisplayName} />
+
       {confirmKey && (
         <RevokeDialog
           apiKey={confirmKey}
@@ -5767,8 +5818,10 @@ function BillingSection({
   proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
+  seasonalSwitch = null,
 }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   // Matches the pricing page, where annual is preselected. An upgrade intent
   // arriving from /pricing overrides this with whatever the visitor actually
   // chose there.
@@ -5905,6 +5958,11 @@ function BillingSection({
           planId: pendingChange.planId,
           interval: pendingChange.interval,
           confirm: true,
+          // The offer this quote was priced with. If it has ended by now the
+          // server charges nothing and sends a fresh quote (handled below).
+          ...(pendingChange.preview?.seasonalOffer?.offerId
+            ? { offer: pendingChange.preview.seasonalOffer.offerId }
+            : {}),
         }),
       });
 
@@ -5949,6 +6007,16 @@ function BillingSection({
         setPaymentRequired({
           planName: data.plan,
           invoiceUrl: typeof data.invoice_url === 'string' ? data.invoice_url : null,
+        });
+      } else if (data?.confirmation_required === true) {
+        // The quoted seasonal offer ended between the quote and the click.
+        // Nothing was charged; show the new quote and let them decide again.
+        setPendingChange({
+          planId: data.plan_id ?? pendingChange.planId,
+          planName: data.plan ?? pendingChange.planName,
+          interval: data.interval ?? pendingChange.interval,
+          preview: data.preview ?? null,
+          offerEnded: data.seasonal_offer_ended === true,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6023,6 +6091,15 @@ function BillingSection({
     isOnPaidPlan && !compedScale
       ? (offeredPlans.find(plan => plan.id === currentPlan)?.id ?? null)
       : null;
+
+  // The Black Week switch card. Only for the plan this account pays for, on
+  // the same self-service path as any interval switch, and only while live.
+  const switchOffer =
+    intervalSwitchPlanId !== null &&
+    seasonalSwitch?.planId === intervalSwitchPlanId
+      ? liveSeasonalOffer(seasonalSwitch)
+      : null;
+  const switchValues = switchOffer ? seasonalOfferValues(switchOffer, locale) : null;
 
   // A paid-plan CTA on the pricing page is a direct request to begin Stripe
   // Checkout. The URL carries only a validated plan and interval; remove it
@@ -6337,6 +6414,45 @@ function BillingSection({
           </div>
         )}
 
+        {/* Black Week 2026: monthly Personal or Pro owners only. The server
+            decided eligibility from the live subscription (current monthly
+            price, never redeemed, see src/lib/stripe/seasonal-switch.ts);
+            this only re-checks the plan and that the window has not closed
+            on this clock. The button goes through the same two-step quote as
+            every other plan change, so nothing is charged from this card. */}
+        {switchOffer && switchValues && (
+          <div
+            data-seasonal-switch={switchOffer.planId}
+            style={{
+              padding: '14px 16px',
+              background: 'var(--brand-soft)',
+              border: '1px solid rgba(37,71,229,0.18)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-1)', lineHeight: 1.5 }}>
+                {trc('seasonal.switchBody', switchValues)}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--fg-3)', marginTop: 4 }}>
+                {trc('seasonal.ends', { date: switchValues.date, time: switchValues.time })}
+              </div>
+            </div>
+            <Btn
+              variant="primary"
+              onClick={() => handleUpgrade(switchOffer.planId, 'year')}
+              disabled={upgrading !== null}
+            >
+              {upgrading === switchOffer.planId ? trc('seasonal.switchBusy') : trc('seasonal.switchCta')}
+            </Btn>
+          </div>
+        )}
+
         {upgradablePlans.length > 0 && (
           /* Anything left above this account on the ladder gets a card.
              For a free account that is the whole ladder, exactly as before. For
@@ -6445,6 +6561,12 @@ function BillingSection({
                       {!isCustom && interval === 'year' && (
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 2 }}>
                           {t('billing.billedYearly', { total: yearlyAnnualTotal })}
+                        </div>
+                      )}
+                      {/* Black Week 2026: annual Personal and Pro only. */}
+                      {!isCustom && interval === 'year' && liveSeasonalOffer(stripePrices?.[plan.id]?.seasonalOffer) && (
+                        <div style={{ marginTop: 8 }}>
+                          <SeasonalOfferNote offer={stripePrices[plan.id].seasonalOffer} size="sm" />
                         </div>
                       )}
                     </div>
@@ -6594,6 +6716,7 @@ function SummaryRow({ label, value, strong = false }) {
 
 function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy, onConfirm, onCancel }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   const { preview } = change;
 
   // Compared by id, not by display name: the names are translated in one place
@@ -6703,6 +6826,21 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
               <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />
             )}
           </div>
+
+          {/* Black Week 2026: the quote already includes the first-year
+              price (checkout-core prices the swap with the coupon). */}
+          {preview?.seasonalOffer && <SeasonalOfferNote offer={preview.seasonalOffer} />}
+          {change.offerEnded && !preview?.seasonalOffer && (
+            <p data-seasonal-ended="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('seasonal.ended')}
+            </p>
+          )}
 
           <p style={{
             margin: 0,
@@ -7443,6 +7581,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
+        seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}

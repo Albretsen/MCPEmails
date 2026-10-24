@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "Vous êtes maintenant sur {plan}",
       "subtitle": "Paiement reçu. Un reçu part vers votre adresse e-mail.",
+      "subtitleEur": "Votre forfait est actif. Si vous avez payé par prélèvement bancaire, il peut prendre quelques jours ouvrés, et vous avez un accès complet en attendant.",
+      "subtitleProcessing": "Votre prélèvement bancaire est en cours de traitement, ce qui peut prendre quelques jours ouvrés. Vous avez un accès complet en attendant.",
       "close": "Fermer",
       "planLabel": "Formule",
       "priceLabel": "Prix",
@@ -51,6 +53,7 @@
       "activatingTitle": "Presque terminé",
       "activating": "Activation de votre abonnement en cours. Cela prend quelques secondes et la page se met à jour toute seule.",
       "activatingSlow": "Votre paiement a bien été effectué. L'activation prend plus de temps que d'habitude ; rechargez la page dans un instant si rien n'a changé.",
+      "activatingSlowNeutral": "L'activation prend plus de temps que d'habitude ; rechargez la page dans un instant si rien n'a changé.",
       "billingDetailsNote": "Votre prix et votre date de renouvellement se trouvent dans Facturation.",
       "connectCta": "Connecter une autre boîte",
       "billingCta": "Voir la facturation"
@@ -94,6 +97,10 @@
     "firstRunTitle": "Bienvenue sur MCPEmails",
     "firstRunBody": "Connectez votre première boîte pour obtenir un point de terminaison MCP fonctionnel en moins d'une minute.",
     "firstRunCta": "Connecter une boîte",
+    "paymentIssueDeclined": "Votre dernier paiement n'a pas abouti. Votre offre reste active pendant que nous réessayons.",
+    "paymentIssueDeclinedCta": "Mettre à jour le paiement",
+    "paymentIssueConfirm": "Votre banque vous demande de confirmer le dernier paiement. Votre offre reste active.",
+    "paymentIssueConfirmCta": "Confirmer le paiement",
     "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",
     "inviteResent": "Invitation renvoyée à {email}.",
     "inviteResendFailed": "Impossible de renvoyer l'invitation.",
@@ -426,5 +433,15 @@
     "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
     "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
     "openApp": "Ouvrir MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week : {firstYear} $ la première année, puis {renewal} $ par an. Vous économisez {saving} $.",
+    "ends": "Se termine le {date} à {time}, heure d'Oslo.",
+    "ctaAnnual": "Passer à {plan} en annuel",
+    "switchBody": "Black Week : passez à l'annuel pour {firstYear} $ la première année, puis {renewal} $ par an. Les jours non utilisés de votre mois en cours sont déduits, vous payez donc un peu moins aujourd'hui.",
+    "switchCta": "Passer à l'annuel",
+    "switchBusy": "Préparation...",
+    "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
   }
 }

@@ -18,6 +18,9 @@ import { retentionDays } from '../../../src/lib/analytics/retention';
 import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
+import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
+import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
@@ -174,8 +177,10 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden', 'signature_embed_images'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
+        'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+      // `parked_at` (20261024173000) degrades like the two preferences above:
+      // without it every inbox reads as active, which is the pre-parking truth.
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -229,6 +234,9 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         ? row.service
         : row.provider,
     status: row.status,
+    // Parked above a lower plan's inbox cap (src/lib/billing/parking.ts):
+    // connected and kept, but no tool or automation can use it.
+    parked: !!row.parked_at,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
     // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
@@ -651,7 +659,7 @@ export default async function DashboardPage({ params }) {
   const cookieStore = await cookies();
   const preferredWorkspaceId = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
 
-  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }] = await Promise.all([
+  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }, { data: ownBilling }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
@@ -668,6 +676,14 @@ export default async function DashboardPage({ params }) {
     supabase
       .from('user_usage_entitlements')
       .select('kind, expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    // The viewer's OWN billing row (RLS: select own). Feeds the failed-payment
+    // banner, which only the owner of the active workspace sees. A read error
+    // leaves it null, and null shows no banner.
+    supabase
+      .from('user_billing')
+      .select('subscription_status, last_decline_code')
       .eq('user_id', user.id)
       .maybeSingle(),
   ]);
@@ -882,7 +898,46 @@ export default async function DashboardPage({ params }) {
 
   // Live plan prices from Stripe (ISR-cached 1h), so the billing UI never
   // displays hardcoded amounts. Falls back to static cents in plans.ts.
-  const stripePrices = await fetchStripePrices();
+  //
+  // The seasonal first-year offer (Black Week 2026) rides on the same map as
+  // `seasonalOffer` on the Personal and Pro entries, so every upgrade surface
+  // that already receives `stripePrices` can show it. Outside the window, or
+  // with the coupon killed in Stripe, `offers` is {} and the map is unchanged.
+  const [livePrices, seasonalOffers] = await Promise.all([
+    fetchStripePrices(),
+    getActiveSeasonalOffers(),
+  ]);
+  // The billing page's "switch to annual" card, for an owner on monthly
+  // Personal or Pro. The interval is only written down on the Stripe
+  // subscription, so this reads Stripe, but only when an offer exists and the
+  // account could take it (no call at all for the rest of the year).
+  const switchInput = {
+    offers: seasonalOffers,
+    plan,
+    isOwner: workspace?.owner_id === user.id,
+    compedScale,
+  };
+  let seasonalSwitch = null;
+  if (mayOfferSeasonalSwitch(switchInput)) {
+    const { data: billingRow } = await createServiceRoleClient()
+      .from('user_billing')
+      .select('stripe_customer_id, stripe_subscription_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    seasonalSwitch = await getSeasonalSwitchOffer({
+      ...switchInput,
+      stripeCustomerId: billingRow?.stripe_customer_id ?? null,
+      stripeSubscriptionId: billingRow?.stripe_subscription_id ?? null,
+    });
+  }
+  // Which accounts the upgrade surfaces may quote the first-year price to:
+  // a Free workspace (a new subscription through Stripe Checkout), and a paid
+  // one only when it qualifies for the switch, i.e. it is on the CURRENT
+  // monthly Personal or Pro price and has never redeemed the offer. Anyone
+  // else (annual, Business, legacy, comped) would be quoted a price that
+  // checkout-core does not apply to their swap, so they are shown none.
+  const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
+  const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
 
   return (
     <DashboardApp
@@ -906,6 +961,13 @@ export default async function DashboardPage({ params }) {
         // "Confirm in chat" send review: OUR rollout gate, internal only for
         // now. Without it the option is not offered (the API refuses it too).
         chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
+        // Black Week 2026: the offer for the billing page's switch card, or
+        // null (see src/lib/stripe/seasonal-switch.ts).
+        seasonalSwitch,
+        // Failed-payment banner (components/dashboard/PaymentIssueBanner.jsx).
+        // The owner's own subscription only: a member never sees who pays.
+        subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,
+        lastDeclineCode: workspace?.owner_id === user.id ? ownBilling?.last_decline_code ?? null : null,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

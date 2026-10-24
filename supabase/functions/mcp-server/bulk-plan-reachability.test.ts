@@ -77,6 +77,8 @@ interface FakeInboxRow {
   workspace_id: string;
   status: string;
   deleted_at: string | null;
+  /** Parking (parked-inbox.ts). Production rows carry NULL. */
+  parked_at: string | null;
   provider: string;
   email_address: string;
 }
@@ -87,6 +89,7 @@ function inboxRow(overrides: Partial<FakeInboxRow> = {}): FakeInboxRow {
     workspace_id: WORKSPACE,
     status: "active",
     deleted_at: null,
+    parked_at: null,
     provider: "imap",
     email_address: "someone@example.com",
     ...overrides,

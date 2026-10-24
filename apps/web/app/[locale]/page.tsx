@@ -1,9 +1,23 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { hasLocale } from 'next-intl';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
+import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
 import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
+
+/**
+ * Any one-segment URL that is not a marketing path (/this-page-does-not-exist)
+ * reaches this route with the segment as its "locale". The layout's notFound()
+ * does not stop this page's metadata and body from rendering alongside it, so
+ * without the same check here the 404 document carried the home meta
+ * description and the FAQPage JSON-LD.
+ */
+function requireLocale(locale: string): void {
+  if (!hasLocale(routing.locales, locale)) notFound();
+}
 
 export async function generateMetadata({
   params,
@@ -11,6 +25,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'home.meta' });
 
   const title = t('title');
@@ -49,6 +64,7 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
 
@@ -69,7 +85,8 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient stripePrices={stripePrices} />
+      {/* STRIPE_EUR_PRICES as read at render; off renders exactly as before. */}
+      <HomeClient stripePrices={stripePrices} eurEnabled={eurPricesEnabled()} />
     </>
   );
 }

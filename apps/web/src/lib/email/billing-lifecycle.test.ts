@@ -22,6 +22,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 import {
   BILLING_TEMPLATES,
@@ -249,6 +250,18 @@ test('an uninformative decline code produces no reason block at all', () => {
     assert.ok(email);
     assert.ok(!/Your bank said/.test(email.body), `${code} must not print an empty reason`);
   }
+});
+
+test('a EUR renewal is quoted in EUR, and a currency decline names the euro', () => {
+  const email = composeBillingEmail(
+    'dunning_1',
+    payload({ amountCents: 900, currency: 'eur', declineCode: 'currency_not_supported' }),
+  );
+  assert.ok(email);
+  assert.match(email.body, /€9\.00/);
+  assert.match(email.body, /cannot be charged in euros/);
+  assert.ok(!/US dollars|\$\d/.test(email.body));
+  assert.match(declineCopy('currency_not_supported')!.reason, /US dollars/);
 });
 
 test('a lost or stolen card is never described as lost or stolen', () => {
@@ -750,4 +763,116 @@ test('the cancellation email points a customer inside 14 days at withdrawal', ()
   assert.match(email.body, /withdraw from the contract/);
   assert.match(email.body, /\/withdrawal\b/);
   assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
+});
+
+// ---------------------------------------------------------------------------
+// A renewal the bank wants approved (SCA / 3DS, decline code
+// authentication_required). The card is fine and Stripe's retries cannot
+// answer the challenge, so the usual "update the card" copy is wrong twice.
+// ---------------------------------------------------------------------------
+
+const HOSTED_INVOICE = 'https://invoice.stripe.com/i/acct_test/test_sca_invoice';
+const CONFIRM_TEMPLATES = ['dunning_1', 'dunning_3', 'dunning_7'] as const;
+
+test('an SCA renewal never asks for a new card or promises a retry', () => {
+  for (const template of CONFIRM_TEMPLATES) {
+    for (const amountCents of [500, null]) {
+      for (const planId of ['personal', null] as const) {
+        const email = composeBillingEmail(
+          template,
+          payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE, amountCents, planId }),
+        );
+        assert.ok(email, template);
+        for (const part of [email.subject, email.body, email.htmlBody]) {
+          assert.ok(!/update the card/i.test(part), `${template} must not say "update the card"`);
+          assert.ok(!/updating the card/i.test(part), `${template} must not say "updating the card"`);
+          assert.ok(!/card update/i.test(part), `${template} must not ask for a card update`);
+          assert.ok(!/picks it up/i.test(part), `${template} must not promise the retry fixes it`);
+          assert.ok(!/retried automatically/i.test(part), `${template} must not promise a retry`);
+        }
+        assert.match(email.htmlBody, />\s*Confirm the payment\s*</, `${template} CTA label`);
+        assert.ok(email.htmlBody.includes(`href="${HOSTED_INVOICE}"`), `${template} CTA goes to the hosted invoice`);
+        assert.ok(
+          email.body.split('\n').some((line) => line.trim() === HOSTED_INVOICE),
+          `${template} text part carries the hosted invoice on its own line`,
+        );
+        assert.match(email.body, /approve/i, `${template} says to approve it with the bank`);
+        assert.match(email.htmlBody, /approve/i, `${template} html says to approve it with the bank`);
+      }
+    }
+  }
+});
+
+test('the SCA first email leads with the bank approval and keeps the plan reassurance', () => {
+  const email = composeBillingEmail(
+    'dunning_1',
+    payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE, amountCents: 1500 }),
+  );
+  assert.ok(email);
+  assert.equal(email.subject, 'Confirm your MCPEmails payment with your bank');
+  assert.ok(
+    email.body.startsWith('Your bank asked you to approve the $15.00 renewal for '),
+    email.body.split('\n')[0],
+  );
+  assert.match(email.body, /Nothing is wrong with the card\./);
+  assert.match(email.body, /Automatic retries cannot confirm a payment for you/);
+  assert.match(email.htmlBody, /Automatic retries cannot confirm a payment for you/);
+  assert.match(email.body, /Your plan is still running/);
+  assert.match(email.htmlBody, /Your plan is still running/);
+  // The generic decline reason block would repeat the lead in other words.
+  assert.ok(!/Your bank said/.test(email.body));
+});
+
+test('an SCA email without a hosted invoice falls back to the billing page', () => {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  for (const template of CONFIRM_TEMPLATES) {
+    const email = composeBillingEmail(template, payload({ declineCode: 'authentication_required', hostedInvoiceUrl: null }));
+    assert.ok(email);
+    assert.match(email.htmlBody, /href="https:\/\/mcpemails\.com\/dashboard\/settings"/, template);
+    assert.match(email.body, /https:\/\/mcpemails\.com\/dashboard\/settings/, template);
+  }
+});
+
+test('the day-14 email is the same for an SCA renewal as for any decline', () => {
+  const sca = composeBillingEmail('dunning_14', payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE }));
+  const plain = composeBillingEmail('dunning_14', payload({ declineCode: null, hostedInvoiceUrl: HOSTED_INVOICE }));
+  assert.deepEqual(sca, plain);
+});
+
+test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branch', () => {
+  // A fingerprint of every dunning email over a matrix of decline codes, invoice
+  // links, amounts and plans, taken from the composer as it was before the
+  // confirm-the-payment variant was added. If you change dunning copy on
+  // purpose, recompute it; if you did not, something leaked across the branch.
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  const out: unknown[] = [];
+  for (const template of BILLING_TEMPLATES.filter((t) => t.startsWith('dunning_'))) {
+    for (const declineCode of [null, 'insufficient_funds', 'generic_decline', 'expired_card', 'do_not_honor']) {
+      for (const hostedInvoiceUrl of [null, 'https://invoice.stripe.com/i/acct_test/inv_test?s=ap']) {
+        for (const amountCents of [null, 1500]) {
+          for (const planId of [null, 'personal', 'solo'] as const) {
+            const p = {
+              planId,
+              amountCents,
+              currency: 'usd',
+              declineCode,
+              hostedInvoiceUrl,
+              periodEnd: '2026-09-29T21:55:00.000Z',
+              cardBrand: 'Visa',
+              cardLast4: '4242',
+              cardExpiry: '09/2026',
+              unsubscribeToken: TOKEN,
+              grandfathered: false,
+            } as LifecyclePayload;
+            out.push([template, p, composeBillingEmail(template, p)]);
+          }
+        }
+      }
+    }
+  }
+  assert.equal(out.length, 240);
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(out)).digest('hex'),
+    '1ff6cec493bd715f37316807c860cc1befba91a603cdc2a4e7cd5214768672e9',
+  );
 });

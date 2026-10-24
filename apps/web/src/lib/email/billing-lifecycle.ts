@@ -286,8 +286,19 @@ const DECLINE_COPY: Record<string, DeclineCopy> = {
  * under a heading that promises a reason is worse than printing no heading, so
  * the composer omits the whole block instead.
  */
-export function declineCopy(code: string | null | undefined): DeclineCopy | null {
+export function declineCopy(
+  code: string | null | undefined,
+  currency?: string | null,
+): DeclineCopy | null {
   if (!code) return null;
+  // The one decline that names a currency names the one actually charged: a
+  // EUR subscription is not refused "in US dollars".
+  if (code === 'currency_not_supported' && (currency ?? 'usd').toLowerCase() === 'eur') {
+    return {
+      reason: 'the card cannot be charged in euros',
+      fix: 'A card that accepts EUR will work. Most do, but some regional cards do not.',
+    };
+  }
   return DECLINE_COPY[code] ?? null;
 }
 
@@ -338,6 +349,12 @@ export type LifecyclePayload = {
   currency?: string | null;
   /** Stripe decline code from the failed payment intent, when there was one. */
   declineCode?: string | null;
+  /**
+   * The payment method on the failed attempt (a Stripe pm_ id), when known.
+   * Never printed in an email: the webhook compares it with the method that
+   * finally paid, to tell a customer fix from a silent retry (recovered_by).
+   */
+  failedPaymentMethodId?: string | null;
   /** Stripe hosted invoice page: lets them pay the exact invoice in one click. */
   hostedInvoiceUrl?: string | null;
   /** ISO date the paid period ends (cancellation) or ended (win-back). */
@@ -534,6 +551,8 @@ function usageFacts(payload: LifecyclePayload): UsageFacts | null {
  * stale number in an email. Whole dollars when the price is whole, otherwise
  * the usual two decimals.
  */
+// USD on purpose: these go to Free workspaces, which have never been charged,
+// so there is no charged currency to follow.
 function personalMonthlyPrice(): string {
   const cents = PLANS.personal.monthlyPriceCents;
   return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
@@ -687,6 +706,162 @@ const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply 
 const CANCEL_FOOTER = `Replies come straight to a person, not a ticket queue. Written by Asgeir, who builds MCPEmails.`;
 
 // ---------------------------------------------------------------------------
+// Confirm-the-payment variant (SCA / 3DS)
+// ---------------------------------------------------------------------------
+
+/**
+ * Stripe's code for a renewal the customer's bank wants them to approve in
+ * person (EU Strong Customer Authentication). Set either by the decline code
+ * on the failed payment intent or, forced, by `invoice.payment_action_required`.
+ */
+export const CONFIRM_PAYMENT_DECLINE_CODE = 'authentication_required';
+
+/** True when this dunning payload is a bank approval, not a declined card. */
+export function isConfirmPayment(payload: LifecyclePayload): boolean {
+  return payload.declineCode === CONFIRM_PAYMENT_DECLINE_CODE;
+}
+
+const CONFIRM_CTA = 'Confirm the payment';
+
+/**
+ * dunning_1/3/7 for a renewal the bank wants approved.
+ *
+ * The card works, so nothing here asks for a new one, and Stripe's automatic
+ * retries cannot answer a 3DS challenge, so nothing here promises a retry will
+ * fix it. The CTA is the hosted invoice page, which runs the challenge.
+ */
+function composeConfirmPayment(
+  template: 'dunning_1' | 'dunning_3' | 'dunning_7',
+  ctx: {
+    category: BillingCategory;
+    base: string;
+    payUrl: string;
+    yourPlan: string;
+    amount: string | null;
+    consequence: string | null;
+  },
+): ComposedLifecycleEmail {
+  const { category, base, payUrl, yourPlan, amount, consequence } = ctx;
+  const signOff = ['', SUPPORT_FOOTER_TEXT, '', 'MCPEmails', base, '', POSTAL_ADDRESS_LINE];
+  const collapse = (lines: string[]) =>
+    lines.filter((line, i, all) => !(line === '' && all[i - 1] === '')).join('\n');
+
+  if (template === 'dunning_1') {
+    const lead = amount
+      ? `Your bank asked you to approve the ${amount} renewal for ${yourPlan} before it goes through. Nothing is wrong with the card.`
+      : `Your bank asked you to approve the renewal for ${yourPlan} before it goes through. Nothing is wrong with the card.`;
+    const running =
+      'Your plan is still running and your agent has not lost anything. We keep paid access on while the payment waits for you, so there is no rush in the next hour.';
+    const why =
+      'Automatic retries cannot confirm a payment for you, so this one needs one tap from you. Your bank usually asks in their app or by SMS. If it is never confirmed, the subscription closes.';
+    const how = 'Open the payment here and approve it when your bank asks. You do not need to tell us:';
+    const stop =
+      'And if you meant to stop, you do not have to do anything or reply to this. Leave it and it closes itself.';
+
+    return {
+      subject: 'Confirm your MCPEmails payment with your bank',
+      category,
+      body: collapse([
+        lead,
+        '',
+        'NOTHING HAS STOPPED WORKING',
+        running,
+        '',
+        'WHY IT NEEDS YOU',
+        why,
+        consequence ?? '',
+        '',
+        'CONFIRM IT IN ABOUT A MINUTE',
+        how,
+        payUrl,
+        '',
+        stop,
+        ...signOff,
+      ]),
+      htmlBody: shell({
+        title: 'Confirm your payment with your bank',
+        html:
+          p(lead) +
+          h('Nothing has stopped working') +
+          p(running) +
+          h('Why it needs you') +
+          p(why) +
+          (consequence ? p(consequence) : '') +
+          h('Confirm it in about a minute') +
+          p('Open the payment and approve it when your bank asks. You do not need to tell us.') +
+          p(stop),
+        ctaUrl: payUrl,
+        ctaLabel: CONFIRM_CTA,
+        footerNote: SUPPORT_FOOTER,
+      }),
+    };
+  }
+
+  if (template === 'dunning_3') {
+    const lead = amount
+      ? `Three days on, the ${amount} for ${yourPlan} is still waiting for you to approve it with your bank.`
+      : `Three days on, the renewal for ${yourPlan} is still waiting for you to approve it with your bank.`;
+    const running =
+      'Your plan is still running. We do not cut access off while a payment is waiting, but the automatic retries cannot approve it for you.';
+    const stop =
+      'If you would rather stop paying for this, that is a completely fine answer and you can ignore this. It closes on its own.';
+
+    return {
+      subject: "Your MCPEmails payment still needs your bank's approval",
+      category,
+      body: collapse([
+        lead,
+        '',
+        running,
+        '',
+        'Approving it with your bank is the whole fix:',
+        payUrl,
+        '',
+        stop,
+        ...signOff,
+      ]),
+      htmlBody: shell({
+        title: 'Your payment still needs your approval',
+        html: p(lead) + p(running) + p(stop),
+        ctaUrl: payUrl,
+        ctaLabel: CONFIRM_CTA,
+        footerNote: SUPPORT_FOOTER,
+      }),
+    };
+  }
+
+  const lead = `It has been a week since your bank asked you to approve the renewal for ${yourPlan}. The automatic retries cannot approve it for you, and if it stays unconfirmed the subscription closes.`;
+  const running = 'Your plan is still running today. Nothing has been taken away yet.';
+  return {
+    subject: 'Your MCPEmails payment is still waiting for your approval',
+    category,
+    body: collapse([
+      lead,
+      '',
+      running,
+      '',
+      consequence ? 'WHEN IT CLOSES' : '',
+      consequence ?? '',
+      consequence ? NOTHING_DELETED : '',
+      consequence ? '' : '',
+      'One approval with your bank ends this:',
+      payUrl,
+      ...signOff,
+    ]),
+    htmlBody: shell({
+      title: 'Your payment is still waiting for you',
+      html:
+        p(lead) +
+        p(running) +
+        (consequence ? h('When it closes') + p(consequence) + p(NOTHING_DELETED) : ''),
+      ctaUrl: payUrl,
+      ctaLabel: CONFIRM_CTA,
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Composition
 // ---------------------------------------------------------------------------
 
@@ -727,9 +902,27 @@ export function composeBillingEmail(
   const name = planName(payload.planId);
   const yourPlan = yourPlanPhrase(name);
   const amount = amountLabel(payload);
-  const decline = declineCopy(payload.declineCode);
+  const decline = declineCopy(payload.declineCode, payload.currency);
   const consequence = consequenceLine(payload);
   const endsOn = longDate(payload.periodEnd);
+
+  // A renewal the bank wants approved (EU SCA / 3DS) gets its own copy for the
+  // first three dunning emails. The card is fine and Stripe's retries cannot
+  // answer a 3DS challenge, so "update the card" and "the retry picks it up"
+  // are both false here. dunning_14 is the same for every decline code.
+  if (
+    isConfirmPayment(payload) &&
+    (template === 'dunning_1' || template === 'dunning_3' || template === 'dunning_7')
+  ) {
+    return composeConfirmPayment(template, {
+      category,
+      base,
+      payUrl,
+      yourPlan,
+      amount,
+      consequence,
+    });
+  }
 
   switch (template) {
     // ─────────────────────────────────────────────────────────────────────

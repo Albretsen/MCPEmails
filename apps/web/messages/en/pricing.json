@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/forever",
     "perMonth": "/month",
-    "billedYearly": "Billed ${total}/year"
+    "billedYearly": "Billed ${total}/year",
+    "inclVat": "incl. VAT"
   },
   "plans": {
     "free": {
@@ -57,7 +58,8 @@
         "Everything in Personal",
         "10 connected inboxes",
         "5x higher burst rate limit",
-        "Longer analytics history"
+        "Longer analytics history",
+        "Webhooks for new mail"
       ]
     },
     "pro": {
@@ -69,7 +71,8 @@
         "10 mailboxes included, $3 a month for each extra",
         "Unlimited members with roles, at no extra cost",
         "Admins approve sends held for review",
-        "Several workspaces on one subscription, one per company or client"
+        "Several workspaces on one subscription, one per company or client",
+        "Webhooks for new mail"
       ]
     }
   },
@@ -96,6 +99,7 @@
           "inboxes": "Connected inboxes",
           "actions": "Email actions per month",
           "keys": "API keys",
+          "webhooks": "Webhooks for new mail",
           "members": "People who can sign in",
           "burst": "Burst rate limit",
           "approvals": "Send review and approval hold"
@@ -221,5 +225,10 @@
     "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} for your first year, then ${renewal} a year. You save ${saving}.",
+    "ends": "Ends {date}, {time} Oslo time."
   }
 }

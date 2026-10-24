@@ -4,10 +4,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import {
   basePlanItem,
+  canonicalPriceId,
   extraMailboxQuantity,
   getPlanByStripePriceId,
   mailboxAddonItem,
   mailboxAddonPriceId,
+  twinOfPriceId,
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
@@ -114,8 +116,17 @@ export function mailboxAddonItemChanges(args: {
   if (!priceId) throw new Error('addon_price_not_configured');
 
   if (addonItem) {
+    // An EU subscriber's add-on may sit on the inclusive twin of this price
+    // (plans.ts priceTwinMap). Keep the twin and change only the quantity, or
+    // a mailbox connect would quietly move them back to tax-exclusive.
+    if (addonItem.priceId !== priceId && canonicalPriceId(addonItem.priceId) === priceId) {
+      return addonItem.quantity === extra ? [] : [{ id: addonItem.id, quantity: extra }];
+    }
     if (addonItem.priceId === priceId && addonItem.quantity === extra) return [];
-    return [{ id: addonItem.id, price: priceId, quantity: extra }];
+    // An interval switch from a twin lands on the target interval's twin.
+    const onTwin = canonicalPriceId(addonItem.priceId) !== addonItem.priceId;
+    const target = (onTwin ? twinOfPriceId(priceId) : null) ?? priceId;
+    return [{ id: addonItem.id, price: target, quantity: extra }];
   }
   return extra > 0 ? [{ price: priceId, quantity: extra }] : [];
 }

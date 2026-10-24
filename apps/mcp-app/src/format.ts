@@ -98,6 +98,9 @@ export function relativeExpiry(iso: string | null | undefined): string {
   if (ms <= 0) return "expired";
   const min = Math.round(ms / 60000);
   if (min < 60) return `expires in ${min} min`;
+  // 60 to 119 min: rounding to whole hours would call 110 minutes "1h", and a
+  // 60-minute plan (subscriptions) spends its whole first hour in this band.
+  if (min < 120) return `expires in 1h${min > 60 ? ` ${min - 60} min` : ""}`;
   const hours = Math.round(min / 60);
   if (hours < 48) return `expires in ${hours}h`;
   return `expires ${formatDate(iso)}`;

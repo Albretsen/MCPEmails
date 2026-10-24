@@ -154,6 +154,63 @@ test('an ordinary cancellation is stored as a billing ticket and mails support a
   assert.equal(receipt.opts.idempotencyKey, 'contract-receipt-MCPE-1001');
 });
 
+function isoDay(offsetDays: number) {
+  return new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
+}
+
+test('an ordinary cancellation without a date stores a null effective date', async () => {
+  reset();
+  assert.equal((await post(body())).status, 201);
+  const ctx = tickets[0].context as Record<string, Record<string, unknown>>;
+  assert.equal(ctx.contract_request.effective_date, null);
+});
+
+test('an ordinary cancellation on a later date carries the date to the record and both emails', async () => {
+  reset();
+  const date = isoDay(40);
+  const res = await post(body({ effectiveDate: date }));
+  assert.equal(res.status, 201);
+  const ctx = tickets[0].context as Record<string, Record<string, unknown>>;
+  assert.equal(ctx.contract_request.effective_date, date);
+  assert.ok(String(tickets[0].message).includes(date), 'the stored record names the date');
+  const receipt = sends.find((s) => s.payload.to === 'kari@example.com');
+  const notice = sends.find((s) => s.payload.to === 'support@mcpemails.com');
+  assert.ok(
+    String(receipt?.payload.text).includes(
+      `Takes effect: ${date}, or the end of the period you have already paid for if that is later`,
+    ),
+  );
+  assert.ok(String(receipt?.payload.html).includes(date));
+  assert.match(String(notice?.payload.text), new RegExp(`set cancel_at in Stripe to ${date} or the end of the paid period, whichever is later`));
+});
+
+test('today is a valid effective date', async () => {
+  reset();
+  assert.equal((await post(body({ effectiveDate: isoDay(0) }))).status, 201);
+});
+
+test('an effective date in the past, too far out or malformed is refused', async () => {
+  reset();
+  for (const effectiveDate of [isoDay(-3), isoDay(5 * 366 + 2), '2026-02-30', '24.10.2026', '2026-1-5', 20261024]) {
+    const res = await post(body({ effectiveDate }));
+    assert.equal(res.status, 400, String(effectiveDate));
+    assert.equal((await res.json()).error, 'invalid_effective_date', String(effectiveDate));
+  }
+  assert.equal(tickets.length, 0);
+});
+
+test('a date sent with a withdrawal or an extraordinary cancellation is ignored', async () => {
+  reset();
+  const date = isoDay(40);
+  assert.equal((await post(body({ kind: 'withdraw', cancelType: undefined, effectiveDate: date }))).status, 201);
+  assert.equal((await post(body({ cancelType: 'extraordinary', reason: 'Service down', effectiveDate: 'nonsense' }))).status, 201);
+  for (const t of tickets) {
+    assert.equal((t.context as Record<string, Record<string, unknown>>).contract_request.effective_date, null);
+  }
+  const receipts = sends.filter((s) => s.payload.to === 'kari@example.com');
+  for (const r of receipts) assert.match(String(r.payload.text), /Takes effect: Immediately/);
+});
+
 test('a withdrawal says it refunds the first charge and takes effect immediately', async () => {
   reset();
   const res = await post(body({ kind: 'withdraw', cancelType: undefined }));

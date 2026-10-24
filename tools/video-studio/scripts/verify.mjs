@@ -22,7 +22,8 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { emit, fail, heading, log, parseArgs, paths, readJson, loadEnv } from './lib/common.mjs';
 import { TRANSCRIPT_MAX_AGE_DAYS } from './lib/inputs.mjs';
@@ -34,6 +35,10 @@ if (!id) fail('verify', 'Pass a storyboard: npm run verify -- --storyboard add-i
 
 const mp4 = resolve(paths.out, `${id}.mp4`);
 const manifestPath = resolve(paths.out, `${id}.json`);
+const postPath = resolve(paths.out, `${id}.post.json`);
+// post.json is the "this cut passed" artifact. Remove it before checking
+// anything, so a failing verify can never leave the last passing one behind.
+rmSync(postPath, { force: true });
 if (!existsSync(mp4)) fail('verify', `out/${id}.mp4 does not exist. Run: npm run render -- --storyboard ${id}`);
 if (!existsSync(manifestPath)) fail('verify', `out/${id}.json does not exist. Run: npm run render -- --storyboard ${id}`);
 
@@ -63,6 +68,34 @@ const ff = (bin, argv) => {
   return `${r.stdout ?? ''}${r.stderr ?? ''}`;
 };
 
+// --- Freshness -------------------------------------------------------------
+// The cut on disk must be the one the manifest describes, rendered from the
+// inputs as they are NOW. render clears old outputs before it starts, but a
+// storyboard or transcript edited after a render would otherwise sail through.
+
+heading('Freshness');
+
+const sha16 = (file) =>
+  existsSync(file) ? createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 16) : null;
+
+check(
+  'mp4 is the one the manifest describes',
+  sha16(mp4) === manifest.outputs?.mp4?.sha256,
+  sha16(mp4) === manifest.outputs?.mp4?.sha256 ? `sha256 ${sha16(mp4)}` : 'the file changed after render, or the manifest is from another render. Re-render.',
+);
+if (!manifest.inputs) {
+  check('manifest records its inputs', false, 'rendered by an older render.mjs. Re-render.');
+} else {
+  const changed = Object.entries(manifest.inputs)
+    .filter(([rel, hash]) => sha16(resolve(paths.root, rel)) !== hash)
+    .map(([rel]) => rel);
+  check(
+    'no input changed since the render',
+    changed.length === 0,
+    changed.length ? `${changed.join(', ')} changed after the render. Re-render.` : `${Object.keys(manifest.inputs).length} input file(s) unchanged`,
+  );
+}
+
 // --- Streams ---------------------------------------------------------------
 
 heading('Streams');
@@ -82,7 +115,7 @@ check('dimensions match the storyboard', video?.width === manifest.width && vide
 
 // A storyboard with a voiceover must carry audio; one without legitimately
 // does not, and an absent stream is then correct rather than a fault.
-const wantsAudio = Boolean(manifest.sources.transcripts.length >= 0 && manifest.outputs.captions);
+const wantsAudio = Boolean(manifest.voiceover || manifest.outputs.captions);
 if (wantsAudio) {
   check('audio stream present', Boolean(audio), audio ? `${audio.codec_name}` : 'none, but captions were generated so a voiceover was expected');
   check('audio codec is aac', audio?.codec_name === 'aac', audio?.codec_name ?? '');
@@ -195,8 +228,8 @@ for (const t of manifest.sources.transcripts) {
 
   if (existsSync(file)) {
     const doc = readJson(file);
-    const failedTurns = doc.turns.filter((x) => x.role === 'tool' && x.ok === false);
-    check(`${t.file} has no failed tool call`, failedTurns.length === 0, failedTurns.map((x) => x.name).join(', ') || `${t.toolCalls} tool call(s), all ok`);
+    const failedTurns = doc.turns.filter((x) => x.ok === false);
+    check(`${t.file} has no failed tool call`, failedTurns.length === 0, failedTurns.map((x) => x.name ?? x.role).join(', ') || `${t.toolCalls} tool call(s), all ok`);
   }
 }
 
@@ -314,9 +347,17 @@ for (const c of manifest.callouts) {
 }
 samples.sort((a, b) => a.t - b.t);
 
+// A vertical cut is checked against the platforms' safe zone: the red
+// rectangle is the area no app UI covers (src/layout.tsx), and any text
+// outside it on the sheet is a layout bug.
+const SAFE = { top: 134, right: 162, bottom: 384, left: 64 }; // = VERTICAL_SAFE in src/layout.tsx
+const safeBox =
+  manifest.format === 'vertical'
+    ? `drawbox=x=${SAFE.left}:y=${SAFE.top}:w=iw-${SAFE.left + SAFE.right}:h=ih-${SAFE.top + SAFE.bottom}:color=red@0.85:t=6,`
+    : '';
 samples.forEach((s, i) => {
   const t = Math.max(0, Math.min(durationSeconds - 0.02, s.t));
-  ff('ffmpeg', ['-y', '-ss', String(t), '-i', mp4, '-frames:v', '1', '-vf', 'scale=480:-1', resolve(sheetDir, `${String(i).padStart(3, '0')}.png`)]);
+  ff('ffmpeg', ['-y', '-ss', String(t), '-i', mp4, '-frames:v', '1', '-vf', `${safeBox}scale=480:-1`, resolve(sheetDir, `${String(i).padStart(3, '0')}.png`)]);
 });
 
 const cols = Math.min(5, Math.max(1, samples.length));
@@ -326,7 +367,7 @@ ff('ffmpeg', ['-y', '-framerate', '1', '-i', resolve(sheetDir, '%03d.png'), '-vf
 rmSync(sheetDir, { recursive: true, force: true });
 
 const sheetOk = existsSync(sheet) && statSync(sheet).size > 1000;
-check('contact sheet written', sheetOk, sheetOk ? `out/${id}.sheet.png, ${samples.length} frames in a ${cols}x${rows} grid` : 'ffmpeg produced nothing');
+check('contact sheet written', sheetOk, sheetOk ? `out/${id}.sheet.png, ${samples.length} frames in a ${cols}x${rows} grid${safeBox ? ', red box = platform safe zone' : ''}` : 'ffmpeg produced nothing');
 
 log('\n  Frames in the sheet, left to right, top to bottom:');
 samples.forEach((s, i) => log(`    ${String(i + 1).padStart(2)}. ${s.t.toFixed(2)}s  ${s.label}`));
@@ -348,6 +389,39 @@ if (hard.length) {
   for (const f of hard) log(`  - ${f.name}: ${f.detail}`);
 }
 
+// --- Post sheet ------------------------------------------------------------
+// Everything the person who publishes needs, written ONLY when every hard
+// check passed. This tool never posts: publishing is a human step.
+
+let postFile = null;
+if (hard.length === 0 && manifest.post) {
+  const tags = (manifest.post.hashtags ?? []).map((h) => (h.startsWith('#') ? h : `#${h}`));
+  const post = {
+    id,
+    verifiedAt: new Date().toISOString(),
+    mp4: `out/${id}.mp4`,
+    mp4Sha256: manifest.outputs.mp4.sha256,
+    poster: manifest.outputs.poster?.path ?? null,
+    captions: manifest.outputs.captions?.path ?? null,
+    durationSeconds: Number(durationSeconds.toFixed(3)),
+    caption: manifest.post.caption,
+    hashtags: tags,
+    // TikTok's "AI-generated content" switch, YouTube's "altered or synthetic
+    // content" and Meta's "AI info" label all key off this.
+    is_aigc: Boolean(manifest.aigc?.isAigc),
+    aigc_reasons: manifest.aigc?.reasons ?? [],
+    source_url: manifest.post.sourceUrl ?? null,
+    source_platform: manifest.post.sourcePlatform ?? null,
+    publish: 'manual',
+    note: 'Not posted. A person reviews the cut and publishes it by hand.',
+  };
+  writeFileSync(postPath, JSON.stringify(post, null, 2) + '\n');
+  postFile = `out/${id}.post.json`;
+  log(`\n  wrote ${postFile} (is_aigc: ${post.is_aigc})`);
+} else if (manifest.post) {
+  log('\n  out/' + id + '.post.json NOT written: verify failed.');
+}
+
 log('\nWhat this DID NOT check: motion. Pacing, easing, whether an entrance');
 log('lands, and continuity across a cut exist only across frames, and nothing');
 log('here samples them. Open out/' + id + '.sheet.png for layout, typography and');
@@ -359,6 +433,7 @@ emit({
   id,
   mp4: `out/${id}.mp4`,
   contactSheet: `out/${id}.sheet.png`,
+  post: postFile,
   durationSeconds: Number(durationSeconds.toFixed(3)),
   passed: findings.filter((f) => f.ok).length,
   warnings: warn.map((f) => ({ name: f.name, detail: f.detail })),

@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "Du er nå på {plan}",
       "subtitle": "Betalingen er mottatt. Kvitteringen er på vei til e-posten din.",
+      "subtitleEur": "Abonnementet er aktivt. Hvis du betalte med bankbelastning, kan det ta noen virkedager før den er gjennomført, og du har full tilgang i mellomtiden.",
+      "subtitleProcessing": "Bankbelastningen behandles, og det kan ta noen virkedager. Du har full tilgang i mellomtiden.",
       "close": "Lukk",
       "planLabel": "Abonnement",
       "priceLabel": "Pris",
@@ -51,6 +53,7 @@
       "activatingTitle": "Nesten i mål",
       "activating": "Abonnementet aktiveres nå. Det tar noen sekunder, og siden oppdateres av seg selv.",
       "activatingSlow": "Betalingen gikk gjennom. Aktiveringen tar lengre tid enn vanlig. Last inn siden på nytt om litt hvis den fortsatt ser uendret ut.",
+      "activatingSlowNeutral": "Aktiveringen tar lengre tid enn vanlig. Last inn siden på nytt om litt hvis den fortsatt ser uendret ut.",
       "billingDetailsNote": "Pris og fornyelsesdato finner du under Fakturering.",
       "connectCta": "Koble til en innboks til",
       "billingCta": "Gå til fakturering"
@@ -94,6 +97,10 @@
     "firstRunTitle": "Velkommen til MCPEmails",
     "firstRunBody": "Koble til din første innboks for å få et fungerende MCP-endepunkt på under ett minutt.",
     "firstRunCta": "Koble til innboks",
+    "paymentIssueDeclined": "Den siste betalingen din gikk ikke gjennom. Planen din er fortsatt aktiv mens vi prøver på nytt.",
+    "paymentIssueDeclinedCta": "Oppdater betaling",
+    "paymentIssueConfirm": "Banken din vil at du skal bekrefte den siste betalingen. Planen din er fortsatt aktiv.",
+    "paymentIssueConfirmCta": "Bekreft betaling",
     "inviteSentNotDelivered": "Invitasjonen til {email} ble opprettet, men e-posten kunne ikke sendes. Bruk Send på nytt på den ventende invitasjonen.",
     "inviteResent": "Invitasjonen ble sendt på nytt til {email}.",
     "inviteResendFailed": "Kunne ikke sende invitasjonen på nytt.",
@@ -426,5 +433,15 @@
     "unavailableBody": "Vi kunne ikke starte godkjenningen. Prøv igjen om noen minutter.",
     "closeHint": "Spørsmål? Skriv til hello@mcpemails.com.",
     "openApp": "Åpne MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} det første året, deretter ${renewal} i året. Du sparer ${saving}.",
+    "ends": "Slutter {date} kl. {time} norsk tid.",
+    "ctaAnnual": "Oppgrader til {plan} årlig",
+    "switchBody": "Black Week: bytt til årlig for ${firstYear} det første året, deretter ${renewal} i året. Ubrukte dager i inneværende måned trekkes fra, så du betaler litt mindre enn det i dag.",
+    "switchCta": "Bytt til årlig",
+    "switchBusy": "Klargjør...",
+    "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
   }
 }

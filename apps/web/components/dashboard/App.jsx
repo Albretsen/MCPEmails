@@ -12,6 +12,7 @@ import { ConnectModal } from './ConnectModal';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
+import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -605,10 +606,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that
         // shows a dialog, which is a hydration mismatch.
+        // `currency=eur` is an optional hint a EUR checkout can append to its
+        // return URL; allow-listed, anything else keeps the USD wording.
+        const currencyParam = readQuery(searchParams, 'currency');
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCheckoutSuccess({
           planId: planParam,
           interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+          currency: currencyParam === 'eur' ? 'eur' : 'usd',
         });
         rememberCheckoutAcknowledged(planParam);
       } else if (!isPaidPlan) {
@@ -629,6 +634,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
       url.searchParams.delete('interval');
+      url.searchParams.delete('currency');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -654,6 +660,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, [t.density]);
 
   const counts = { inboxes: inboxes.length, keys: keys.length, members: members.length };
+  // Inboxes that hold a slot under the plan's inbox cap. A parked inbox
+  // (src/lib/billing/parking.ts) is still listed but does not, matching the
+  // server's checkInboxLimit.
+  const activeInboxCount = inboxes.filter((ib) => !ib.parked).length;
 
   /**
    * Disconnects an inbox by calling DELETE /api/inboxes/[id].
@@ -1214,11 +1224,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       <div className="main-col">
         <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} sidebarOpen={sidebarOpen} />
 
+        {/* Owner only, while the renewal payment is failing. Not dismissible. */}
+        <PaymentIssueBanner
+          isOwner={serverWorkspace?.isOwner === true}
+          subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
+          lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
+        />
+
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
@@ -1226,7 +1243,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
       </div>
 
@@ -1245,9 +1262,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}
-          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
+          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && activeInboxCount >= planLimits.maxInboxes}
           planName={planDisplayName(workspace?.plan)}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
@@ -1270,8 +1287,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           interval={checkoutSuccess.interval}
           livePlan={serverWorkspace?.plan ?? null}
           maxInboxes={planLimits?.maxInboxes ?? null}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           stripePrices={stripePrices}
+          currency={checkoutSuccess.currency}
           onRefreshPlan={refreshServerData}
           onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}
           onViewBilling={() => { setCheckoutSuccess(null); setRoute('settings'); }}

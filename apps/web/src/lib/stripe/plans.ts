@@ -37,14 +37,22 @@
  *   STRIPE_PRICE_PERSONAL_YEARLY_V2=price_...  (Personal yearly, $86.40)
  *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...    (RETIRED Personal $5, still billing)
  *   STRIPE_PRICE_PERSONAL_YEARLY=price_...     (RETIRED Personal $48, still billing)
- *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly)
- *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly)
+ *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly, $15)
+ *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly, $144)
+ *   STRIPE_PRICE_SOLO_MONTHLY_V2=price_...    (Pro monthly, $19, sold once
+ *                                              PRO_PRICE_CHANGE.priceLive)
+ *   STRIPE_PRICE_SOLO_YEARLY_V2=price_...     (Pro yearly, $182.40, same)
  *   STRIPE_PRICE_BUSINESS_MONTHLY=price_...          (Business monthly, $39)
  *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
+ *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
+ *                                             (USD tax-inclusive twins of the
+ *                                              prices EU subscribers were on,
+ *                                              EUR launch 2026-12-07; see
+ *                                              priceTwinMap below)
  *
  * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
  *
@@ -85,6 +93,15 @@
  * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
  * workspace they create later. It is resolved through `resolvePlanLimits`.
  *
+ * PRO $15 -> $19 FOR NEW CUSTOMERS (announced, behind a switch). See
+ * pro-price-change.ts. Same shape as the Personal _V2 change: while
+ * `priceLive` is off Pro sells the unsuffixed pair and the _V2 ids are read as
+ * legacy (nobody can buy them, and a rollback after the cutover keeps every $19
+ * subscription mapped); once it is on, Pro sells _V2 and the unsuffixed $15 /
+ * $144 pair becomes the legacy pair. Every Pro subscriber at the cutover keeps
+ * their price for as long as the subscription stays active, including across
+ * a monthly / yearly switch (`retainedPriceGenerationId`).
+ *
  * PRO CAPPED AT 10, TEAM REPLACED BY BUSINESS (2026-10-19). Pro sold unlimited
  * mailboxes for $15, which made it the right plan for the heaviest operators
  * and left Team ($79, priced per person) with nothing to sell: the business
@@ -102,6 +119,8 @@
  *   - The retired $79 / $756 Team prices stay resolvable as Business legacy
  *     ids, so a stray subscription on them still maps.
  */
+
+import { PRO_PRICE_CHANGE, proSoldAmounts } from './pro-price-change.ts';
 
 // ---------------------------------------------------------------------------
 // Plan identifiers: must match the `plan` column values in `workspaces`.
@@ -172,6 +191,14 @@ export interface PlanLimits {
   auditLogEnabled: boolean;
   /** Support tier. */
   supportTier: SupportTier;
+  /**
+   * Webhooks for new mail (`message.received`). Enforced by the
+   * /api/webhook-endpoints routes and, for delivery, by the SQL function
+   * `webhooks_plan_allowed` (migration 20261024230000), which mirrors this
+   * flag: Pro and Business, and comped workspaces (they resolve to Business).
+   * A workspace that moves to Free or Personal keeps its endpoints, paused.
+   */
+  webhooksEnabled: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -250,6 +277,28 @@ function legacyPricePair(
 }
 
 // ---------------------------------------------------------------------------
+// Pro's two price generations: [monthly, yearly] each.
+//
+// `PRO_SOLD_PAIR` is what checkout sells; `PRO_RETAINED_PAIR` is the generation
+// that stopped being sold at the cutover and that every subscriber on it keeps.
+// Before the cutover the retained pair is the not-yet-sold _V2 pair: mapping
+// it is harmless and keeps a rollback safe. No fallback from _V2 to the
+// unsuffixed variables once live: an unset _V2 must fail as
+// `price_not_configured`, never sell $15 under copy that says $19.
+// ---------------------------------------------------------------------------
+const PRO_CURRENT_PAIR = legacyPricePair(
+  process.env.STRIPE_PRICE_SOLO_MONTHLY,
+  process.env.STRIPE_PRICE_SOLO_YEARLY,
+);
+const PRO_NEXT_PAIR = legacyPricePair(
+  process.env.STRIPE_PRICE_SOLO_MONTHLY_V2,
+  process.env.STRIPE_PRICE_SOLO_YEARLY_V2,
+);
+const PRO_SOLD_PAIR = PRO_PRICE_CHANGE.priceLive ? PRO_NEXT_PAIR : PRO_CURRENT_PAIR;
+const PRO_RETAINED_PAIR = PRO_PRICE_CHANGE.priceLive ? PRO_CURRENT_PAIR : PRO_NEXT_PAIR;
+const PRO_SOLD = proSoldAmounts();
+
+// ---------------------------------------------------------------------------
 // Plan catalogue
 // ---------------------------------------------------------------------------
 export const PLANS: Record<PlanId, Plan> = {
@@ -280,6 +329,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'community',
+      webhooksEnabled: false,
     },
     monthlyPriceCents: 0,
     yearlyPriceCents: 0,
@@ -327,6 +377,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: false,
     },
     // THE Personal price. Every surface that quotes it (pricing page, paywall,
     // upgrade dialogs, JSON-LD, emails, translated copy) derives from these two
@@ -389,16 +440,21 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: true,
     },
-    monthlyPriceCents: 1500,
-    yearlyPriceCents: 14400,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
+    // $15 / $144 until PRO_PRICE_CHANGE.priceLive, then $19 / $182.40.
+    monthlyPriceCents: PRO_SOLD.monthlyCents,
+    yearlyPriceCents: PRO_SOLD.yearlyCents,
+    stripePriceIdMonthly: PRO_SOLD_PAIR[0] || null,
+    stripePriceIdYearly: PRO_SOLD_PAIR[1] || null,
     legacyStripePriceIds: [
       'price_1TcQBDARrgumc6cqy1Z9AAEw', // Agent monthly, $12
       'price_1TcQBEARrgumc6cq6MGFktzy', // Agent yearly, $120
       'price_1U69IuARrgumc6cqLGFI2FLR', // Pro monthly, $29 (retired 2026-09-01)
       'price_1U69J5ARrgumc6cqmIIP8DAw', // Pro yearly, $276 (retired 2026-09-01)
+      // The generation not sold right now: $19 / $182.40 before the cutover,
+      // $15 / $144 after it. A pair, so it keeps the monthly-then-yearly order.
+      ...PRO_RETAINED_PAIR,
     ],
     features: [
       'Everything in Personal',
@@ -409,6 +465,10 @@ export const PLANS: Record<PlanId, Plan> = {
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
       'Longer analytics history',
+      // webhooksEnabled. No numbers here on purpose (no endpoint count, no
+      // retry schedule, no tool count): this list is the purchase email.
+      // Scoped API keys are on every plan, so they are not sold here.
+      'Webhooks for new mail',
     ],
     highlighted: true,
   },
@@ -443,6 +503,7 @@ export const PLANS: Record<PlanId, Plan> = {
       // There is no priority queue behind "priority"; email support is what
       // every paid plan actually gets.
       supportTier: 'email',
+      webhooksEnabled: true,
     },
     monthlyPriceCents: 3900,
     yearlyPriceCents: 37440,
@@ -474,6 +535,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited members with roles, at no extra cost',
       'Admins approve held sends',
       'Several workspaces on one subscription',
+      'Webhooks for new mail',
     ],
     highlighted: false,
   },
@@ -563,6 +625,13 @@ export function getPlanByStripePriceId(
   if (!priceId || typeof priceId !== 'string') {
     return null;
   }
+  return planByCatalogueId(priceId) ?? planByCatalogueId(priceTwinMap().get(priceId) ?? '');
+}
+
+function planByCatalogueId(
+  priceId: string,
+): { plan: Plan; interval: BillingInterval } | null {
+  if (!priceId) return null;
   for (const plan of Object.values(PLANS)) {
     if (plan.stripePriceIdMonthly && plan.stripePriceIdMonthly === priceId) {
       return { plan, interval: 'month' };
@@ -579,6 +648,101 @@ export function getPlanByStripePriceId(
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Tax-inclusive twins (EUR launch, 2026-12-07).
+//
+// EU subscribers who started on a USD price keep their amount: their
+// subscription items move to a USD twin with the same amount and interval and
+// tax_behavior `inclusive`, so Stripe Tax takes the VAT out of what they
+// already pay (scripts/stripe-eur/, docs/RUNBOOK-eur-launch.md). A twin is not
+// a new plan. It must resolve exactly like its original, everywhere a price id
+// is read, or a renewal on a twin would look like an unknown price.
+//
+// One env var holds every twin, STRIPE_PRICE_TWINS = {"twinId":"originalId"},
+// so adding a twin never needs a new variable. Read at call time (tests set it
+// after import) and parsed once per distinct value. A malformed value maps
+// nothing and logs once: failing loud at module load would take checkout down
+// with it.
+// ---------------------------------------------------------------------------
+let twinCache: { raw: string; map: Map<string, string> } | null = null;
+
+export function priceTwinMap(): ReadonlyMap<string, string> {
+  const raw = process.env.STRIPE_PRICE_TWINS?.trim() ?? '';
+  if (twinCache && twinCache.raw === raw) return twinCache.map;
+  const map = new Map<string, string>();
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        for (const [twin, original] of Object.entries(parsed as Record<string, unknown>)) {
+          // Only real ids, never a twin of itself, never a chain.
+          if (twin.startsWith('price_') && typeof original === 'string' &&
+            original.startsWith('price_') && original !== twin) {
+            map.set(twin, original);
+          }
+        }
+      } else {
+        console.error('[plans] STRIPE_PRICE_TWINS is not a JSON object; no twins mapped');
+      }
+    } catch {
+      console.error('[plans] STRIPE_PRICE_TWINS is not valid JSON; no twins mapped');
+    }
+  }
+  for (const [twin, original] of map) {
+    if (map.has(original)) map.delete(twin);
+  }
+  twinCache = { raw, map };
+  return map;
+}
+
+/** The catalogue price a twin stands in for; any other id comes back as is. */
+export function canonicalPriceId(priceId: string): string;
+export function canonicalPriceId(priceId: string | null | undefined): string | null;
+export function canonicalPriceId(priceId: string | null | undefined): string | null {
+  if (!priceId) return null;
+  return priceTwinMap().get(priceId) ?? priceId;
+}
+
+/** The inclusive twin of a catalogue price, or null when it has none. */
+export function twinOfPriceId(priceId: string | null | undefined): string | null {
+  if (!priceId) return null;
+  for (const [twin, original] of priceTwinMap()) {
+    if (original === priceId) return twin;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: the price an in-place Pro interval switch should move to, for a
+// subscriber who keeps a price Pro no longer sells.
+//
+// The Pro price change promises everyone subscribed before the cutover that
+// they keep $15 / $144 for as long as the subscription stays active, including
+// across a monthly / yearly switch. Checkout would otherwise quote the sold
+// $182.40 to a $15 monthly subscriber moving to yearly. So: when the current
+// price is one half of the retained pair and the target is Pro, the target is
+// the other half of that same pair.
+//
+// Null in every other case (another plan, a sold price, an unset half), which
+// leaves checkout on the sold price exactly as before.
+// ---------------------------------------------------------------------------
+export function retainedPriceGenerationId(
+  currentPriceId: string | null | undefined,
+  targetPlanId: PlanId,
+  targetInterval: BillingInterval,
+  retainedPair: readonly string[] = PRO_PRICE_CHANGE.priceLive ? PRO_RETAINED_PAIR : [],
+): string | null {
+  if (targetPlanId !== 'solo' || !currentPriceId) return null;
+  // A subscriber on an inclusive twin of the retained pair keeps both the
+  // amount and the tax treatment: the target is the other half's twin when it
+  // has one, else the other half itself.
+  const current = canonicalPriceId(currentPriceId);
+  if (!retainedPair.includes(current)) return null;
+  const target = retainedPair[targetInterval === 'year' ? 1 : 0];
+  if (!target) return null;
+  return (current !== currentPriceId ? twinOfPriceId(target) : null) ?? target;
 }
 
 // ---------------------------------------------------------------------------
@@ -608,6 +772,7 @@ export function mailboxAddonInterval(
   priceId: string | null | undefined,
 ): BillingInterval | null {
   if (!priceId) return null;
+  priceId = canonicalPriceId(priceId);
   if (priceId === mailboxAddonPriceId('month')) return 'month';
   if (priceId === mailboxAddonPriceId('year')) return 'year';
   return null;

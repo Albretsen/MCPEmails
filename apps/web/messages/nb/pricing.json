@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/for alltid",
     "perMonth": "/måned",
-    "billedYearly": "Faktureres ${total}/år"
+    "billedYearly": "Faktureres ${total}/år",
+    "inclVat": "inkl. mva."
   },
   "plans": {
     "free": {
@@ -57,7 +58,8 @@
         "Alt i Personal",
         "10 tilkoblede innbokser",
         "5x høyere burst-grense",
-        "Lengre analysehistorikk"
+        "Lengre analysehistorikk",
+        "Webhooks for ny e-post"
       ]
     },
     "pro": {
@@ -69,7 +71,8 @@
         "10 postkasser inkludert, $3 i måneden for hver ekstra",
         "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
         "Administratorer godkjenner sendinger som venter",
-        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde"
+        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde",
+        "Webhooks for ny e-post"
       ]
     }
   },
@@ -96,6 +99,7 @@
           "inboxes": "Tilkoblede innbokser",
           "actions": "E-posthandlinger per måned",
           "keys": "API-nøkler",
+          "webhooks": "Webhooks for ny e-post",
           "members": "Personer som kan logge inn",
           "burst": "Burst-grense",
           "approvals": "Godkjenning før sending"
@@ -221,5 +225,10 @@
     "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} det første året, deretter ${renewal} i året. Du sparer ${saving}.",
+    "ends": "Slutter {date} kl. {time} norsk tid."
   }
 }

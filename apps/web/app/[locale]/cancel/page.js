@@ -18,9 +18,12 @@ import '../../../styles/contract-forms.css';
  * posts to /api/legal/contract-request, which records the request as a
  * support ticket, emails the customer a receipt and notifies us.
  *
- * `?type=withdraw` preselects the subscription withdrawal (/withdrawal links
- * here with it) and `?type=withdraw_pass` the 3-month pass withdrawal.
- * Linked from the footer on every page.
+ * `?type=withdraw` preselects the subscription withdrawal and
+ * `?type=withdraw_pass` the 3-month pass withdrawal. /withdrawal and the
+ * footer's "Withdraw from contract here" link come here with
+ * `?type=withdraw`, and the footer's "Cancel contracts here" link without
+ * it. The header is the logo only and the page carries no offer, pause or
+ * "are you sure" step.
  */
 const PATH = '/cancel';
 const SUPPORT_EMAIL = 'support@mcpemails.com';
@@ -57,7 +60,8 @@ export default async function CancelPage({ params, searchParams }) {
 
   return (
     <div>
-      <Nav />
+      {/* Logo only: no sign-up, pricing or other calls to action on this page. */}
+      <Nav minimal />
 
       <section className="pricing-page-hero" style={{ paddingBottom: 24 }}>
         <div className="help-wrap">
@@ -71,6 +75,7 @@ export default async function CancelPage({ params, searchParams }) {
       <section className="help-section" style={{ paddingBottom: 80 }}>
         <div className="help-wrap">
           <CancelForm
+            key={initialKind}
             copy={c}
             locale={locale}
             initialKind={initialKind}

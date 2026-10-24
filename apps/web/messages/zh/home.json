@@ -154,6 +154,7 @@
     "sub": "免费版连接 1 个收件箱，每月含 150 次邮件操作。Personal 连接 3 个。Pro 面向独自经营企业的人，最多连接 10 个。Business 含 10 个邮箱，每多一个每月 $3，整个团队都能加入。",
     "perForever": "/永久",
     "perMonth": "/月",
+    "inclVat": "含增值税",
     "tiers": {
       "free": {
         "name": "免费",
@@ -276,7 +277,7 @@
     "linkClients": "MCP 客户端设置",
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
-    "linkWithdrawal": "撤回权",
+    "linkWithdrawal": "在此撤回合同",
     "linkCancel": "在此取消合同",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",

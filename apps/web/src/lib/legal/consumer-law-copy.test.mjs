@@ -139,3 +139,59 @@ test('the 3-month pass: withdrawal, /cancel and terms 5.8 cover it in every loca
   }
   assert.ok(!/trial|discount|save/i.test(messages('en', 'terms').plansAndPayment.p58));
 });
+
+// §312k BGB and Art. 11a CRD: the cancel page may not try to keep the customer.
+const RETENTION = {
+  en: /pause|downgrade|discount|are you sure/i,
+  nb: /pause|nedgrader|rabatt|er du sikker/i,
+  es: /pausa|pausar|rebaja|descuento|est[aá]s seguro/i,
+  fr: /pause|r[ée]trograd|remise|r[ée]duction|[êe]tes-vous s[ûu]r/i,
+  zh: /暂停|降级|折扣|优惠|确定吗/,
+  de: /pause|pausier|downgrade|herabstuf|rabatt|nachlass|sind sie sicher/i,
+};
+
+test('cancel: no locale offers a pause, a downgrade or a discount', () => {
+  for (const locale of LOCALES) {
+    for (const [path, value] of leaves(CANCEL_COPY[locale])) {
+      assert.ok(!RETENTION[locale].test(value), `cancel/${locale} ${path}: ${value}`);
+    }
+  }
+});
+
+test('cancel: the final buttons carry the statutory labels, with no step before them', () => {
+  assert.equal(CANCEL_COPY.de.form.submitCancel, 'Jetzt kündigen');
+  assert.equal(CANCEL_COPY.de.form.submitWithdraw, 'Widerruf bestätigen');
+  assert.equal(CANCEL_COPY.en.form.submitCancel, 'Cancel now');
+  assert.equal(CANCEL_COPY.en.form.submitWithdraw, 'Confirm withdrawal');
+  for (const locale of LOCALES) {
+    for (const key of ['continue', 'reviewHeading', 'reviewLead', 'back']) {
+      assert.ok(!(key in CANCEL_COPY[locale].form), `cancel/${locale} still has the review step key ${key}`);
+    }
+    assert.ok(CANCEL_COPY[locale].form.effectiveOnDate.includes('{date}'), `cancel/${locale} effectiveOnDate`);
+  }
+  const form = readFileSync(join(here, '../../../components/legal/CancelForm.jsx'), 'utf8');
+  assert.ok(!/setStep\('review'\)/.test(form), 'CancelForm still has a review step');
+});
+
+test('footer: the withdrawal link names the function and opens the form with withdrawal preselected', () => {
+  const expected = {
+    en: 'Withdraw from contract here',
+    de: 'Vertrag hier widerrufen',
+    nb: 'Gå fra avtalen her',
+    fr: 'Se rétracter du contrat ici',
+    es: 'Desistir del contrato aquí',
+    zh: '在此撤回合同',
+  };
+  for (const locale of LOCALES) {
+    assert.equal(messages(locale, 'home').footer.linkWithdrawal, expected[locale], locale);
+  }
+  const sections = readFileSync(join(here, '../../../components/marketing/Sections.jsx'), 'utf8');
+  const link = sections.match(/<Link href="([^"]+)">\{t\('footer\.linkWithdrawal'\)\}<\/Link>/);
+  assert.ok(link, 'footer withdrawal link not found');
+  assert.equal(link[1], '/cancel?type=withdraw');
+});
+
+test('cancel page: the header is the logo only', () => {
+  const page = readFileSync(join(here, '../../../app/[locale]/cancel/page.js'), 'utf8');
+  assert.match(page, /<Nav minimal \/>/);
+});

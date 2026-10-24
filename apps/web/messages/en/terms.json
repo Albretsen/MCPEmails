@@ -81,7 +81,7 @@
     "h55": "5.5 Late payment and suspension",
     "p55": "If a payment fails, we will retry the charge and notify you by email. If payment remains outstanding after 7 days, we may suspend access to paid features until the balance is settled. If payment remains outstanding after 30 days, we may terminate the account in accordance with Section 8.",
     "h56": "5.6 Price changes",
-    "p56": "We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date.",
+    "p56": "We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date. If you do not want to pay the new price, you can cancel before it takes effect and you will not be charged it.",
     "h57": "5.7 Fair use and service limits",
     "p57a": "To protect platform stability and ensure fair access for all customers, the Service applies a per-minute request rate limit to every plan (a “fair-use limit”), as described on our <pricing>Pricing page</pricing>. We may also apply reasonable technical measures to prevent abuse, automated scraping, or usage that materially degrades the Service for others.",
     "p57b": "The number of connected inboxes included with each plan is published on our Pricing page. Every workspace is additionally subject to a fair-use ceiling on automated activity and to Section 4 (Acceptable Use). That ceiling exists to stop a runaway or abusive agent, is set far above ordinary use, and is not a purchasable allowance. We may change fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace.",

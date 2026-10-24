@@ -153,6 +153,8 @@ const SIGN_OFF = ['Asgeir', 'MCPEmails'];
 // Plan facts, from the catalogue
 // ---------------------------------------------------------------------------
 
+// USD on purpose, also after EUR prices launch: a Free workspace has never
+// been charged, so its currency is unknown. The digits are the EUR price too.
 function monthly(plan: Plan): string {
   return formatPriceCents(plan.monthlyPriceCents);
 }
@@ -339,3 +341,9 @@ export function composePaywallFollowup(input: PaywallFollowupInput): ComposedPay
     },
   };
 }
+
+// The same HTML shell and paragraph helper for the other one-off lifecycle
+// emails (pro-price-notice.ts, black-week-email-template.ts), so every
+// lifecycle email keeps one look and one footer.
+export { shell as lifecycleShell, p as lifecycleParagraph, UNSUBSCRIBE_REASON as LIFECYCLE_UNSUBSCRIBE_REASON };
+export type { ShellOptions as LifecycleShellOptions };

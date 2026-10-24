@@ -1,4 +1,7 @@
 import type Stripe from 'stripe';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
+import type { FunnelEntryPoint } from '@/lib/analytics/product-funnel';
 
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
@@ -6,12 +9,26 @@ import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import {
+  checkoutCurrencyFor,
+  checkoutPresentsEur,
+  forceUsdEnabled,
+} from '@/lib/stripe/currency';
+import {
+  automaticTaxEnabled,
+  checkoutTaxParams,
+  paymentMethodConfigurationId,
+} from '@/lib/stripe/tax-switch';
+import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
+import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
+import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
+import {
   PLANS,
   basePlanItem,
   extraMailboxQuantity,
   mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  retainedPriceGenerationId,
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
@@ -21,6 +38,13 @@ import {
   readMailboxAddonState,
   type MailboxAddonItemChange,
 } from '@/lib/stripe/mailbox-addon';
+import { getActiveSeasonalOffers } from '@/lib/stripe/seasonal-offer-server';
+import {
+  BLACK_WEEK_2026,
+  SEASONAL_OFFER_METADATA_KEY,
+  isSeasonalPlanId,
+  type SeasonalOffer,
+} from '@/lib/stripe/seasonal-offer';
 import {
   billingTarget,
   planCategory,
@@ -49,6 +73,10 @@ import {
  * about who is allowed to be charged, and the comped guard below is the only
  * thing standing between a comped account and a bill for access it already has
  * for nothing.
+ *
+ * A third caller, the chat checkout link (GET /u/[token]), has no cookie
+ * session and enters through `runCheckoutForIdentity` instead. It skips only
+ * the cookie lookup; everything below that is the same function.
  *
  * The callers own only presentation: JSON body vs redirect target. Every
  * decision (validation, entitlement guards, price resolution, funnel recording,
@@ -128,7 +156,13 @@ export type CheckoutReason =
   | 'already_on_plan_interval'
   | 'stripe_customer_failed'
   | 'plan_change_failed'
-  | 'stripe_session_failed';
+  | 'stripe_session_failed'
+  // Only reachable through `runCheckoutForIdentity` (the chat checkout link,
+  // app/u/[token]/route.ts). That caller may open a hosted page and nothing
+  // else, so an owner who already holds an entitled subscription is refused
+  // here instead of being quoted the in-place swap. The two cookie entry points
+  // never see it: they still reach the swap and its consent gate as before.
+  | 'subscription_exists';
 
 /**
  * What an in-place plan change will cost, quoted BEFORE anything is changed.
@@ -166,11 +200,26 @@ export interface PlanChangePreview {
   extraMailboxes: number;
   /** Unix seconds. Null when Stripe reports no period on the subscription. */
   nextRenewalAt: number | null;
+  /**
+   * The seasonal first-year discount already included in `amountDueNowCents`,
+   * as Stripe priced it. Zero when no offer applies.
+   */
+  discountCents: number;
+  /**
+   * The seasonal offer this change is priced with (Black Week 2026), or null.
+   * When set, `amountDueNowCents` already includes it and `recurringCents` is
+   * the normal renewal price, because the coupon applies to the first year only.
+   */
+  seasonalOffer: SeasonalOffer | null;
 }
 
 export type CheckoutOutcome =
-  /** A hosted Stripe Checkout page is waiting at `url`. */
-  | { kind: 'checkout'; url: string }
+  /**
+   * A hosted Stripe Checkout page is waiting at `url`. `sessionId` is only read
+   * by the chat checkout link, which stores it so a second open of the same
+   * link lands on the same session instead of creating another.
+   */
+  | { kind: 'checkout'; url: string; sessionId: string }
   /**
    * An existing subscriber asked for a different plan. NOTHING has been
    * changed and nothing has been charged: this is the quote, and the caller
@@ -186,6 +235,13 @@ export type CheckoutOutcome =
       planName: string;
       interval: BillingInterval;
       preview: PlanChangePreview | null;
+      /**
+       * True when the caller confirmed a quote that carried a seasonal offer
+       * and the offer is no longer available (window closed, coupon killed,
+       * redeemed elsewhere). Nothing was charged; `preview` is the fresh quote
+       * at the price that now applies.
+       */
+      offerEnded?: boolean;
     }
   /**
    * An existing subscriber's price was swapped in place and the proration was
@@ -239,8 +295,10 @@ async function previewPlanChange(args: {
   addonChanges: MailboxAddonItemChange[];
   extraMailboxes: number;
   addonPriceId: string | null;
+  /** The seasonal offer the confirmed swap will apply, so the quote matches. */
+  offer: SeasonalOffer | null;
 }): Promise<PlanChangePreview | null> {
-  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId } = args;
+  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId, offer } = args;
 
   try {
     const customerId =
@@ -258,6 +316,10 @@ async function previewPlanChange(args: {
           items: [{ id: itemId, price: priceId }, ...addonChanges],
           proration_behavior: 'always_invoice',
         },
+        // The same discounts the confirmed swap sends. Top-level `discounts`
+        // replaces what the preview would inherit from the subscription, so
+        // the subscription's existing ones are passed through with it.
+        ...(offer ? { discounts: offerDiscounts(subscription, offer) } : {}),
       }),
       stripe.prices.retrieve(priceId),
       extraMailboxes > 0 && addonPriceId
@@ -282,6 +344,11 @@ async function previewPlanChange(args: {
         (price.unit_amount ?? 0) + (addonPrice?.unit_amount ?? 0) * extraMailboxes,
       extraMailboxes,
       nextRenewalAt: basePlanItem(subscription.items.data)?.current_period_end ?? null,
+      discountCents: (preview.total_discount_amounts ?? []).reduce(
+        (sum, d) => sum + (d.amount ?? 0),
+        0,
+      ),
+      seasonalOffer: offer,
     };
   } catch (err) {
     console.error(
@@ -360,6 +427,59 @@ function checkoutCustomText(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Seasonal offer (Black Week 2026) helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * The `discounts` list for a swap that adds the seasonal coupon: whatever the
+ * subscription already carries, then the coupon. Passing `discounts` replaces
+ * the list, so dropping the existing entries would silently remove a discount
+ * the customer already has.
+ */
+export function offerDiscounts(
+  subscription: Pick<Stripe.Subscription, 'discounts'>,
+  offer: SeasonalOffer,
+): Array<{ discount: string } | { coupon: string }> {
+  const existing = (subscription.discounts ?? [])
+    .map((d) => (typeof d === 'string' ? d : d?.id))
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    .map((id) => ({ discount: id }));
+  return [...existing, { coupon: offer.couponId }];
+}
+
+/**
+ * Has this Stripe customer ever had a subscription tagged with the offer?
+ * One redemption per person. FAILS CLOSED: if Stripe cannot answer, the offer
+ * is not applied, and the buyer sees the normal price on Stripe's own page
+ * (never a charge different from what that page states).
+ */
+export async function hasRedeemedSeasonalOffer(customerId: string): Promise<boolean> {
+  try {
+    const list = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
+    return list.data.some(
+      (sub) => sub.metadata?.[SEASONAL_OFFER_METADATA_KEY] === BLACK_WEEK_2026.id,
+    );
+  } catch (err) {
+    console.error(
+      '[checkout] seasonal offer redemption check failed, offer not applied:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return true;
+  }
+}
+
+/** The live offer for this plan and interval, or null. Never throws. */
+async function liveOfferFor(planId: string, interval: string): Promise<SeasonalOffer | null> {
+  if (interval !== 'year' || !isSeasonalPlanId(planId)) return null;
+  try {
+    const offers = await getActiveSeasonalOffers();
+    return offers[planId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function fail(
   reason: CheckoutReason,
   status: number,
@@ -386,12 +506,32 @@ function fail(
  * or the page's language on a marketing CTA). It only chooses the language of
  * the hosted page, never what is sold or charged, and is allow-listed by
  * `checkoutLocale` before Stripe sees it.
+ *
+ * `recoveredFrom` is the expired Checkout session an abandoned-checkout
+ * reminder linked from (see src/lib/email/abandoned-checkout.ts). It only lands
+ * in the new session's metadata, after a format check, so the completed
+ * purchase can be credited to the reminder.
+ *
+ * `country` is the country Vercel placed the request in (`x-vercel-ip-country`,
+ * read by the route with countryFromHeaders). Like `locale` it never changes
+ * what is sold: it can only choose EUR for an EU buyer outside the euro area
+ * (checkoutCurrencyFor in currency.ts) and, with Stripe Tax on, ride along in
+ * the session metadata as location evidence. It is sanitized again here, so a
+ * caller cannot put anything but two letters into Stripe.
+ *
+ * `quotedOffer` is the seasonal offer id the confirmed quote carried (the
+ * dashboard echoes `preview.seasonalOffer.offerId`). On the confirmed pass of a
+ * plan change, an offer that was quoted but is no longer available stops the
+ * swap and returns a fresh quote, so nobody is charged a price they did not see.
  */
 export async function runCheckout(input: {
   planId: unknown;
   interval: unknown;
   confirmChange?: unknown;
   locale?: unknown;
+  recoveredFrom?: unknown;
+  country?: unknown;
+  quotedOffer?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -451,6 +591,106 @@ export async function runCheckout(input: {
     .limit(1)
     .single();
 
+  return checkoutFor(
+    { supabase, user: { id: user.id, email: user.email }, workspace, wsError },
+    input,
+    { allowPlanChange: true },
+  );
+}
+
+/**
+ * Who a checkout is for, when the caller has no cookie session to read it from.
+ *
+ * Built by the chat checkout link (app/u/[token]/route.ts) from its
+ * `checkout_links` row with the service-role client: the owner's id and email
+ * from auth, and the workspace the refusal happened in. The subscription is
+ * still tied to the USER, exactly as on the cookie path; the workspace only
+ * labels the Stripe customer and carries the funnel rows.
+ */
+export interface CheckoutIdentity {
+  userId: string;
+  email: string;
+  workspaceId: string;
+  displayName: string;
+}
+
+/**
+ * Presentation the identity caller may change. Nothing here can widen what is
+ * sold or to whom: the plan, interval and every guard are decided in
+ * `checkoutFor`, the same as for the two cookie entry points.
+ */
+export interface CheckoutOptions {
+  /** Defaults to the dashboard's ?checkout=success page. */
+  successUrl?: string;
+  /** Defaults to the dashboard's ?checkout=cancelled page. */
+  cancelUrl?: string;
+  /** Stored on the `checkout_started` row, so the funnel can tell the link apart. */
+  entryPoint?: FunnelEntryPoint;
+  /** Extra session metadata. Can never replace user_id, plan_id or interval. */
+  extraMetadata?: Record<string, string>;
+  /** Stripe `expires_at`, unix seconds. Stripe's minimum is 30 minutes ahead. */
+  sessionExpiresAt?: number;
+}
+
+/**
+ * The service-role entry point: a checkout for an identity resolved without a
+ * cookie session (the chat checkout link).
+ *
+ * It runs the same `checkoutFor` as `runCheckout`, so the purchasable
+ * allowlist, the comped guard, price resolution and the `checkout_started` row
+ * are not repeated anywhere. What it can NOT do is reach the in-place price
+ * swap: `allowPlanChange: false` turns an entitled subscriber into a
+ * `subscription_exists` refusal before the subscription is even read, and
+ * `confirmChange` is pinned to false on top of that. A bearer link in a chat
+ * transcript must never be able to touch a card on file.
+ */
+export async function runCheckoutForIdentity(
+  identity: CheckoutIdentity,
+  input: { planId: unknown; interval: unknown; locale?: unknown },
+  options: CheckoutOptions = {},
+): Promise<CheckoutOutcome> {
+  return checkoutFor(
+    {
+      supabase: createServiceRoleClient(),
+      user: { id: identity.userId, email: identity.email },
+      workspace: { id: identity.workspaceId, display_name: identity.displayName },
+      wsError: null,
+    },
+    { planId: input.planId, interval: input.interval, locale: input.locale, confirmChange: false },
+    { ...options, allowPlanChange: false },
+  );
+}
+
+/**
+ * Everything after "who is buying" is known. Shared verbatim by `runCheckout`
+ * (cookie session) and `runCheckoutForIdentity` (service role).
+ *
+ * `supabase` is whichever client resolved the identity. The reads below are
+ * all keyed on `user.id`, so the cookie client (RLS: the caller's own rows)
+ * and the service-role client (the link's owner, resolved server side from
+ * the token) read the same rows for the same user.
+ */
+async function checkoutFor(
+  ctx: {
+    supabase: Pick<SupabaseClient<Database>, 'from'>;
+    user: { id: string; email?: string | null };
+    workspace: { id: string; display_name: string } | null;
+    wsError: { code?: string; message: string } | null;
+  },
+  input: {
+    planId: unknown;
+    interval: unknown;
+    confirmChange?: unknown;
+    locale?: unknown;
+    recoveredFrom?: unknown;
+    quotedOffer?: unknown;
+    /** Visitor country from x-vercel-ip-country; see runCheckout. */
+    country?: unknown;
+  },
+  options: CheckoutOptions & { allowPlanChange: boolean },
+): Promise<CheckoutOutcome> {
+  const { supabase, user, workspace, wsError } = ctx;
+
   // The one and only `checkout_started` writer for this request.
   //
   // What this GUARANTEES: every exit below it that the funnel is able to
@@ -490,7 +730,7 @@ export async function runCheckout(input: {
     // able to fail a payment) and no-ops on a null workspace id. That null case
     // is what makes it safe to call from the validation refusals below, which
     // deliberately run before `wsError` has been acted on.
-    await recordCheckoutStarted(workspace?.id ?? null, target, failure);
+    await recordCheckoutStarted(workspace?.id ?? null, target, failure, options.entryPoint);
   };
 
   // ── 3. Validate the requested plan and interval ────────────────────────────
@@ -644,6 +884,15 @@ export async function runCheckout(input: {
     (billing.subscription_status == null ||
       entitledStatuses.includes(billing.subscription_status));
 
+  if (hasEntitledSubscription && !options.allowPlanChange) {
+    // The chat checkout link. It opens a hosted page or nothing: the swap below
+    // charges a card on file without one, and must stay out of reach of a
+    // bearer link. Recorded like the other "somebody wanted to pay and was
+    // turned away" refusals.
+    await recordAttempt('subscription_exists');
+    return fail('subscription_exists', 409, 'This account already has a paid plan.');
+  }
+
   if (hasEntitledSubscription) {
     // Different paid plan OR a different interval of the same plan: change the
     // price on the existing subscription rather than opening a second one.
@@ -741,7 +990,14 @@ export async function runCheckout(input: {
       const samePlanAndInterval =
         fromPrice?.planId === planId && fromPrice?.interval === interval;
 
-      if (currentItem.price.id === priceId || samePlanAndInterval) {
+      // A Pro subscriber who kept $15 / $144 at the Pro price change keeps
+      // that generation when switching interval: monthly $15 goes to yearly
+      // $144, not to the $182.40 Pro now sells. Null for everyone else, who
+      // move to the sold price as before. See retainedPriceGenerationId.
+      const swapPriceId =
+        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? priceId;
+
+      if (currentItem.price.id === swapPriceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
         // on 2026-09-14 (see the note at the top of this branch): the
         // subscription is already on the exact price being asked for.
@@ -797,6 +1053,36 @@ export async function runCheckout(input: {
         );
       }
 
+      // ── The seasonal offer on a switch ───────────────────────────────────
+      //
+      // Black Week 2026: a MONTHLY Personal or Pro subscriber on the current
+      // monthly price who moves to annual Personal or Pro gets the first-year
+      // coupon on this swap. Existing annual subscribers, Business, legacy
+      // Team and the retired Personal $5 price get nothing. One redemption per
+      // customer (any subscription ever tagged offer=bw2026, this one included).
+      let offer: SeasonalOffer | null = null;
+      const fromCurrentMonthly =
+        fromPrice !== null &&
+        fromPrice.interval === 'month' &&
+        isSeasonalPlanId(fromPrice.planId) &&
+        currentItem.price.id === PLANS[fromPrice.planId].stripePriceIdMonthly;
+      // Only on the price the offer was checked against: the offer reader
+      // vetted the SOLD yearly price, so a retained-generation swap (Pro price
+      // change, see retainedPriceGenerationId) never carries the coupon.
+      if (fromCurrentMonthly && interval === 'year' && swapPriceId === priceId) {
+        offer = await liveOfferFor(planId, interval);
+        if (offer) {
+          const customerId =
+            typeof subscription.customer === 'string'
+              ? subscription.customer
+              : subscription.customer.id;
+          const redeemed =
+            subscription.metadata?.[SEASONAL_OFFER_METADATA_KEY] === BLACK_WEEK_2026.id ||
+            (await hasRedeemedSeasonalOffer(customerId));
+          if (redeemed) offer = null;
+        }
+      }
+
       // ── The consent gate ───────────────────────────────────────────────────
       //
       // Everything above this line is a read. Below it, a card gets charged.
@@ -811,19 +1097,27 @@ export async function runCheckout(input: {
       // Nothing is recorded here: the funnel counts attempts, and asking the
       // price is not one. The row is written below, on the confirmed pass,
       // exactly once per completed decision.
-      if (!confirmChange) {
+      // The quote the customer confirmed carried the offer, and it is gone
+      // now (typically: shown at 23:58 on 1 December, clicked at 00:01). Do
+      // not charge the full price they never saw; quote again instead.
+      const offerEnded =
+        Boolean(confirmChange) && input.quotedOffer === BLACK_WEEK_2026.id && offer === null;
+
+      if (!confirmChange || offerEnded) {
         return {
           kind: 'confirmation_required',
           planId,
           planName: plan.name,
           interval,
+          ...(offerEnded ? { offerEnded: true } : {}),
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
-            priceId,
+            priceId: swapPriceId,
             addonChanges,
             extraMailboxes,
             addonPriceId: mailboxAddonPriceId(interval),
+            offer,
           }),
         };
       }
@@ -866,11 +1160,22 @@ export async function runCheckout(input: {
       // this call used to write is gone. Nothing read it: `user_id` is already
       // on the subscription from `subscription_data` at creation and survives
       // untouched, and the webhook resolves the plan from the price id.
+      //
+      // A seasonal offer rides on the same call: `discounts` and `metadata`
+      // are both supported on a pending update (Stripe "Pending updates"
+      // reference), so an unpaid switch neither consumes the coupon on the
+      // monthly plan nor tags a subscription that did not move.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: priceId }, ...addonChanges],
+        items: [{ id: currentItem.id, price: swapPriceId }, ...addonChanges],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
+        ...(offer
+          ? {
+              discounts: offerDiscounts(subscription, offer),
+              metadata: { [SEASONAL_OFFER_METADATA_KEY]: offer.offerId },
+            }
+          : {}),
       });
 
       const latestInvoice =
@@ -1010,25 +1315,71 @@ export async function runCheckout(input: {
   // simply omits those two rows, which is what any session created before this
   // shipped will still do when its buyer returns.
   const successUrl =
+    options.successUrl ??
     `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}`;
-  const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
+  const cancelUrl = options.cancelUrl ?? `${appUrl}/dashboard?checkout=cancelled`;
+
+  // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
+  // Annual Personal or Pro inside the window, coupon live, price unchanged,
+  // and this customer has never had a subscription tagged with the offer.
+  let offer = await liveOfferFor(planId, interval);
+  if (offer && (await hasRedeemedSeasonalOffer(customerId))) offer = null;
+  const offerMetadata: Record<string, string> = offer
+    ? { [SEASONAL_OFFER_METADATA_KEY]: offer.offerId }
+    : {};
 
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
   const locale = checkoutLocale(input.locale);
+  const lang = reminderLocale(input.locale);
+  const reminderLang = lang === 'en' ? null : lang;
+  const recoveredFrom = checkoutSessionIdOrNull(input.recoveredFrom);
+  // The EUR launch switches (all default OFF; see tax-switch.ts and
+  // currency.ts). Each one only ADDS keys when it is on, so with every switch
+  // off the session below is byte for byte the one created before they existed.
+  //
+  // STRIPE_FORCE_USD is the rollback and beats the others: it pins the session
+  // to USD and drops Stripe Tax with it, because the tax setup assumes the
+  // VAT-inclusive EUR amounts. The payment method configuration stays, since
+  // it is about how a buyer pays, not in what currency.
+  const country = sanitizedCountry(input.country);
+  const forceUsd = forceUsdEnabled();
+  const taxOn = !forceUsd && automaticTaxEnabled();
+  const currency = checkoutCurrencyFor(country);
+  const paymentMethodConfiguration = paymentMethodConfigurationId();
+  // The confirmation panel (components/dashboard/App.jsx) reads
+  // `currency=eur` to word the amount in EUR. Only added when the page will
+  // really be in EUR, so with every switch off the URL is unchanged.
+  const checkoutSuccessUrl = checkoutPresentsEur(country)
+    ? `${successUrl}&currency=eur`
+    : successUrl;
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: lineItems,
-      success_url: successUrl,
+      success_url: checkoutSuccessUrl,
       cancel_url: cancelUrl,
-      allow_promotion_codes: true,
+      // `discounts` and `allow_promotion_codes` cannot be combined in one
+      // session, so an offer session applies the coupon server side and
+      // shows no promotion-code field.
+      ...(offer
+        ? { discounts: [{ coupon: offer.couponId }] }
+        : { allow_promotion_codes: true }),
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
-      // Local-currency checkout for buyers outside the US. Prices stay USD and
-      // every amount Stripe hands back to us stays USD; see adaptive-pricing.ts.
-      // It converts the amount only, so the language pin below is unaffected.
+      // Local-currency checkout for buyers outside the US and, once the EUR
+      // currency options exist, outside the EU. See adaptive-pricing.ts. It
+      // converts the amount only, so the language pin below is unaffected.
       adaptive_pricing: adaptivePricingParam(),
+      // EUR for an EU buyer outside the euro area, USD for everyone under
+      // STRIPE_FORCE_USD, and otherwise omitted so Stripe's own localization
+      // decides (currency.ts).
+      ...(currency ? { currency } : {}),
+      // The payment methods on offer, pinned in code once STRIPE_PMC_ID is set.
+      // Unset leaves the account's default configuration in charge.
+      ...(paymentMethodConfiguration
+        ? { payment_method_configuration: paymentMethodConfiguration }
+        : {}),
       // ── Presentation ────────────────────────────────────────────────────
       //
       // ENGLISH IS PINNED for everyone but German buyers, deliberately. Left
@@ -1067,26 +1418,45 @@ export async function runCheckout(input: {
       subscription_data: {
         metadata: {
           user_id: user.id,
+          ...offerMetadata,
         },
       },
+      // Unset unless the caller asks (the chat link's 31 minutes). Every other
+      // session keeps Stripe's 24-hour default, which the abandoned-checkout
+      // reminder is timed around.
+      ...(options.sessionExpiresAt ? { expires_at: options.sessionExpiresAt } : {}),
       metadata: {
+        // Spread FIRST, so a caller's extra key can never replace the three
+        // the webhook trusts.
+        ...(options.extraMetadata ?? {}),
         user_id: user.id,
         plan_id: planId,
         interval,
+        ...offerMetadata,
+        // The buyer's app language, so an abandoned-checkout reminder for this
+        // session can be written in it. Allow-listed; English adds nothing.
+        ...(reminderLang ? { lang: reminderLang } : {}),
+        ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
+        // Second piece of location evidence for EU VAT, beside the billing
+        // address Stripe Tax collects. Only while Stripe Tax is on: that is
+        // when a sale is taxed and the evidence has a use.
+        ...(taxOn && country ? { ip_country: country } : {}),
       },
-      // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
+      // Stripe Tax, behind STRIPE_AUTOMATIC_TAX (default OFF; tax-switch.ts).
       //
-      // Stripe Tax IS active on the account, but the account holds ZERO tax
-      // registrations. Stripe only calculates tax where you are registered, so
-      // enabling automatic_tax today would add a "Tax: $0.00" line to every
-      // checkout in every country and change nothing else. The prerequisite is
-      // registering for Norway MVA, EU Non-Union OSS and UK VAT; until those
-      // exist there is nothing for it to compute.
+      // Planned to go on at the EUR launch, 2026-12-07, once the account holds
+      // its registrations: EU non-Union OSS (one registration covering every
+      // EU consumer sale) and Norway MVA. Stripe only calculates tax where the
+      // account is registered; anywhere else the buyer sees no tax line.
       //
-      // Turning it on later needs no price migration: the prices created in the
-      // repricing already carry tax_behavior=exclusive, so the displayed amount
-      // stays the amount and tax is added on top the day registrations land.
-      // automatic_tax: { enabled: true },
+      // How the shown amount relates to the tax: the EUR amounts come from
+      // each price's currency_options with tax_behavior=inclusive, so an EU
+      // buyer pays exactly the EUR price on the page and Stripe extracts the
+      // VAT from it. The USD prices stay tax_behavior=exclusive, so tax is
+      // added on top of a USD amount where a registration applies.
+      //
+      // Switch off, this spreads nothing and the session is unchanged.
+      ...(taxOn ? checkoutTaxParams() : {}),
     });
 
     if (!session.url) {
@@ -1096,7 +1466,7 @@ export async function runCheckout(input: {
     // The user is now on Stripe's hosted page. A `checkout_completed` event
     // that never follows this one is the abandonment signal.
     await recordAttempt();
-    return { kind: 'checkout', url: session.url };
+    return { kind: 'checkout', url: session.url, sessionId: session.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[checkout] stripe.checkout.sessions.create failed:', message);

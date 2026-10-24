@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "You're on {plan}",
       "subtitle": "Payment received. A receipt is on its way to your email.",
+      "subtitleEur": "Your plan is active. If you paid by bank debit, it can take a few business days to clear, and you have full access in the meantime.",
+      "subtitleProcessing": "Your bank debit is processing, which can take a few business days. You have full access in the meantime.",
       "close": "Close",
       "planLabel": "Plan",
       "priceLabel": "Price",
@@ -51,6 +53,7 @@
       "activatingTitle": "Almost there",
       "activating": "Activating your subscription. This takes a few seconds and the page updates by itself.",
       "activatingSlow": "Your payment went through. The plan is taking longer than usual to activate; reload in a moment if it still looks unchanged.",
+      "activatingSlowNeutral": "The plan is taking longer than usual to activate. Reload in a moment if it still looks unchanged.",
       "billingDetailsNote": "Your price and renewal date are in billing.",
       "connectCta": "Connect another inbox",
       "billingCta": "View billing"
@@ -94,6 +97,10 @@
     "firstRunTitle": "Welcome to MCPEmails",
     "firstRunBody": "Connect your first inbox to get a working MCP endpoint in under a minute.",
     "firstRunCta": "Connect inbox",
+    "paymentIssueDeclined": "Your last payment did not go through. Your plan is still active while we retry.",
+    "paymentIssueDeclinedCta": "Update payment",
+    "paymentIssueConfirm": "Your bank wants you to confirm the last payment. Your plan is still active.",
+    "paymentIssueConfirmCta": "Confirm payment",
     "inviteSentNotDelivered": "Invite created for {email}, but the email could not be sent. Use Resend on the pending invite.",
     "inviteResent": "Invite resent to {email}.",
     "inviteResendFailed": "Failed to resend the invite.",
@@ -426,5 +433,15 @@
     "unavailableBody": "We could not start the approval. Please try again in a few minutes.",
     "closeHint": "Questions? Email hello@mcpemails.com.",
     "openApp": "Open MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} for your first year, then ${renewal} a year. You save ${saving}.",
+    "ends": "Ends {date}, {time} Oslo time.",
+    "ctaAnnual": "Upgrade to {plan}, annual",
+    "switchBody": "Black Week: switch to annual for ${firstYear} your first year, then ${renewal} a year. The unused days of your current month are taken off, so you pay a bit less than that today.",
+    "switchCta": "Switch to annual",
+    "switchBusy": "Preparing...",
+    "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
   }
 }

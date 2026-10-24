@@ -1684,6 +1684,7 @@ select.input:disabled {
   .inbox-mobile-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--fg-2); font: 12px var(--font-sans); }
   .inbox-mobile-meta span { display: inline-flex; align-items: center; gap: 5px; }
   .inbox-mobile-error { margin: 10px 0 0; color: var(--red-700); font: 12px/1.45 var(--font-sans); }
+  .inbox-mobile-parked { margin: 10px 0 0; color: var(--fg-3); font: 12px/1.45 var(--font-sans); }
   .inbox-mobile-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
   /* 44px, not the 36px this bump started at. It is more specific than the
      `.btn` minimum in the touch-target rules above, so leaving it at 36 would
@@ -2218,3 +2219,7 @@ select.input:disabled {
  * still governs phones, and the run tables scroll inside their own `.tbl-wrap`
  * rather than pushing the page sideways.
  */
+
+/* A parked inbox (over a lower plan's inbox cap, see src/lib/billing/parking.ts):
+   still listed and openable, visibly not in use. */
+.inbox-row-parked { opacity: 0.6; }

@@ -4,9 +4,15 @@
 // serialised into every marketing page, and this copy is only read here.
 //
 // The labels follow §312k BGB and the withdrawal function of Directive (EU)
-// 2023/2673: the entry point says "cancel contracts here", the final button
-// says "cancel now" or "confirm withdrawal", and nothing on the page argues
-// with the customer. Keep it that way: no retention offer, no "are you sure".
+// 2023/2673: the entry point says "cancel contracts here", the fields and the
+// final button ("cancel now" or "confirm withdrawal") sit on one page, and
+// nothing on the page argues with the customer. Keep it that way: no
+// retention offer, no pause, no downgrade, no discount, no "are you sure"
+// (src/lib/legal/consumer-law-copy.test.mjs checks the words). The page
+// header is the logo only (Nav `minimal`).
+//
+// An ordinary cancellation may name the date it takes effect (§312k(2)
+// Nr. 1): `when*` and `effectiveOnDate`.
 //
 // Three choices: cancel a subscription, withdraw from a subscription, or
 // withdraw from the non-renewing 3-month Personal pass (a one-off payment
@@ -15,10 +21,10 @@
 // The facts promised on the done screen (two business days for a
 // cancellation, a full first-charge refund within 14 days for a subscription
 // withdrawal, a full refund of the pass payment within 14 days for a pass
-// withdrawal) are repeated in the receipt email,
+// withdrawal, the effective date) are repeated in the receipt email,
 // src/lib/legal/contract-request.ts. Change both together.
 //
-// Tokens, filled by the form: {ref} {time} {email} {support}.
+// Tokens, filled by the form: {ref} {time} {email} {support} {date}.
 
 const en = {
   meta: {
@@ -44,12 +50,13 @@ const en = {
     contract: 'Plan or invoice number (optional)',
     contractHint: 'Helps us find the right subscription if you have more than one.',
     typeLegend: 'Type of cancellation',
-    typeOrdinary: 'Ordinary, at the earliest possible date',
+    typeOrdinary: 'Ordinary cancellation',
     typeExtraordinary: 'Extraordinary, immediately for good cause',
+    whenLegend: 'When should the cancellation take effect?',
+    whenEarliest: 'At the earliest possible date',
+    whenLater: 'On a later date',
+    whenDate: 'Date',
     reason: 'Reason for the extraordinary cancellation',
-    continue: 'Continue',
-    reviewHeading: 'Check and confirm',
-    reviewLead: 'Nothing has been sent yet. Check the details, then confirm.',
     labels: {
       kind: 'Request',
       name: 'Name',
@@ -65,9 +72,9 @@ const en = {
     typeValueOrdinary: 'Ordinary cancellation',
     typeValueExtraordinary: 'Extraordinary cancellation',
     effectiveOrdinary: 'At the earliest possible date: the end of the period you have already paid for',
+    effectiveOnDate: '{date}, or the end of the period you have already paid for if that is later',
     effectiveImmediate: 'Immediately',
     none: 'Not given',
-    back: 'Change details',
     submitCancel: 'Cancel now',
     submitWithdraw: 'Confirm withdrawal',
     sending: 'Sending…',
@@ -88,6 +95,7 @@ const en = {
     contract_too_long: 'The plan or invoice number can be at most 100 characters.',
     reason_required: 'Give a reason for the extraordinary cancellation.',
     reason_too_long: 'The reason can be at most 2000 characters.',
+    invalid_effective_date: 'Choose a date from today onwards, at most five years ahead.',
     invalid_form_token: 'This page has expired. Reload it and try again.',
     rate_limited: 'Too many requests from here. Try again in an hour, or email {support}.',
     server_error: 'Something went wrong on our side. Try again, or email {support}.',
@@ -120,12 +128,13 @@ const nb = {
     contract: 'Plan eller fakturanummer (valgfritt)',
     contractHint: 'Hjelper oss å finne riktig abonnement hvis du har flere.',
     typeLegend: 'Type oppsigelse',
-    typeOrdinary: 'Ordinær, så tidlig som mulig',
+    typeOrdinary: 'Ordinær oppsigelse',
     typeExtraordinary: 'Ekstraordinær, straks, av vesentlig grunn',
+    whenLegend: 'Når skal oppsigelsen gjelde fra?',
+    whenEarliest: 'Så tidlig som mulig',
+    whenLater: 'På en senere dato',
+    whenDate: 'Dato',
     reason: 'Grunnen til den ekstraordinære oppsigelsen',
-    continue: 'Fortsett',
-    reviewHeading: 'Kontroller og bekreft',
-    reviewLead: 'Ingenting er sendt ennå. Kontroller opplysningene, og bekreft.',
     labels: {
       kind: 'Henvendelse',
       name: 'Navn',
@@ -141,9 +150,9 @@ const nb = {
     typeValueOrdinary: 'Ordinær oppsigelse',
     typeValueExtraordinary: 'Ekstraordinær oppsigelse',
     effectiveOrdinary: 'Så tidlig som mulig: slutten av perioden du allerede har betalt for',
+    effectiveOnDate: '{date}, eller slutten av perioden du allerede har betalt for hvis den er senere',
     effectiveImmediate: 'Straks',
     none: 'Ikke oppgitt',
-    back: 'Endre opplysninger',
     submitCancel: 'Si opp nå',
     submitWithdraw: 'Bekreft at jeg går fra avtalen',
     sending: 'Sender…',
@@ -164,6 +173,7 @@ const nb = {
     contract_too_long: 'Plan eller fakturanummer kan være på høyst 100 tegn.',
     reason_required: 'Oppgi en grunn for den ekstraordinære oppsigelsen.',
     reason_too_long: 'Grunnen kan være på høyst 2000 tegn.',
+    invalid_effective_date: 'Velg en dato fra i dag og høyst fem år frem i tid.',
     invalid_form_token: 'Siden er utløpt. Last den inn på nytt og prøv igjen.',
     rate_limited: 'For mange henvendelser herfra. Prøv igjen om en time, eller send e-post til {support}.',
     server_error: 'Noe gikk galt hos oss. Prøv igjen, eller send e-post til {support}.',
@@ -196,12 +206,13 @@ const es = {
     contract: 'Plan o número de factura (opcional)',
     contractHint: 'Nos ayuda a encontrar la suscripción correcta si tienes más de una.',
     typeLegend: 'Tipo de cancelación',
-    typeOrdinary: 'Ordinaria, en la fecha más temprana posible',
+    typeOrdinary: 'Cancelación ordinaria',
     typeExtraordinary: 'Extraordinaria, de inmediato por causa justificada',
+    whenLegend: '¿Cuándo debe surtir efecto la cancelación?',
+    whenEarliest: 'En la fecha más temprana posible',
+    whenLater: 'En una fecha posterior',
+    whenDate: 'Fecha',
     reason: 'Motivo de la cancelación extraordinaria',
-    continue: 'Continuar',
-    reviewHeading: 'Revisa y confirma',
-    reviewLead: 'Todavía no se ha enviado nada. Revisa los datos y confirma.',
     labels: {
       kind: 'Solicitud',
       name: 'Nombre',
@@ -217,9 +228,9 @@ const es = {
     typeValueOrdinary: 'Cancelación ordinaria',
     typeValueExtraordinary: 'Cancelación extraordinaria',
     effectiveOrdinary: 'En la fecha más temprana posible: el final del periodo que ya has pagado',
+    effectiveOnDate: 'El {date}, o al final del periodo que ya has pagado si es posterior',
     effectiveImmediate: 'De inmediato',
     none: 'No indicado',
-    back: 'Cambiar datos',
     submitCancel: 'Cancelar ahora',
     submitWithdraw: 'Confirmar desistimiento',
     sending: 'Enviando…',
@@ -240,6 +251,7 @@ const es = {
     contract_too_long: 'El plan o número de factura puede tener como máximo 100 caracteres.',
     reason_required: 'Indica un motivo para la cancelación extraordinaria.',
     reason_too_long: 'El motivo puede tener como máximo 2000 caracteres.',
+    invalid_effective_date: 'Elige una fecha a partir de hoy, como máximo dentro de cinco años.',
     invalid_form_token: 'Esta página ha caducado. Vuelve a cargarla e inténtalo de nuevo.',
     rate_limited: 'Demasiadas solicitudes desde aquí. Inténtalo dentro de una hora o escribe a {support}.',
     server_error: 'Algo ha fallado por nuestra parte. Inténtalo de nuevo o escribe a {support}.',
@@ -272,12 +284,13 @@ const fr = {
     contract: 'Formule ou numéro de facture (facultatif)',
     contractHint: 'Nous aide à trouver le bon abonnement si vous en avez plusieurs.',
     typeLegend: 'Type de résiliation',
-    typeOrdinary: 'Ordinaire, à la date la plus proche possible',
+    typeOrdinary: 'Résiliation ordinaire',
     typeExtraordinary: 'Extraordinaire, immédiate pour motif grave',
+    whenLegend: 'Quand la résiliation doit-elle prendre effet ?',
+    whenEarliest: 'À la date la plus proche possible',
+    whenLater: 'À une date ultérieure',
+    whenDate: "Date de prise d'effet",
     reason: 'Motif de la résiliation extraordinaire',
-    continue: 'Continuer',
-    reviewHeading: 'Vérifier et confirmer',
-    reviewLead: "Rien n'a encore été envoyé. Vérifiez les informations, puis confirmez.",
     labels: {
       kind: 'Demande',
       name: 'Nom',
@@ -293,9 +306,9 @@ const fr = {
     typeValueOrdinary: 'Résiliation ordinaire',
     typeValueExtraordinary: 'Résiliation extraordinaire',
     effectiveOrdinary: 'À la date la plus proche possible : la fin de la période déjà payée',
+    effectiveOnDate: 'Le {date}, ou à la fin de la période déjà payée si elle est plus tardive',
     effectiveImmediate: 'Immédiatement',
     none: 'Non indiqué',
-    back: 'Modifier les informations',
     submitCancel: 'Résilier maintenant',
     submitWithdraw: 'Confirmer la rétractation',
     sending: 'Envoi…',
@@ -316,6 +329,7 @@ const fr = {
     contract_too_long: 'La formule ou le numéro de facture peut comporter au maximum 100 caractères.',
     reason_required: 'Indiquez un motif pour la résiliation extraordinaire.',
     reason_too_long: 'Le motif peut comporter au maximum 2000 caractères.',
+    invalid_effective_date: "Choisissez une date à partir d'aujourd'hui, au plus tard dans cinq ans.",
     invalid_form_token: 'Cette page a expiré. Rechargez-la et réessayez.',
     rate_limited: 'Trop de demandes depuis cet endroit. Réessayez dans une heure, ou écrivez à {support}.',
     server_error: 'Un problème est survenu de notre côté. Réessayez, ou écrivez à {support}.',
@@ -346,12 +360,13 @@ const zh = {
     contract: '套餐或发票号（可选）',
     contractHint: '如果你有多个订阅，这有助于我们找到正确的那个。',
     typeLegend: '取消类型',
-    typeOrdinary: '普通取消，在最早可能的日期生效',
+    typeOrdinary: '普通取消',
     typeExtraordinary: '特别取消，因正当理由立即生效',
+    whenLegend: '取消应在何时生效？',
+    whenEarliest: '在最早可能的日期',
+    whenLater: '在之后的某个日期',
+    whenDate: '日期',
     reason: '特别取消的理由',
-    continue: '继续',
-    reviewHeading: '检查并确认',
-    reviewLead: '尚未发送任何内容。请检查信息，然后确认。',
     labels: {
       kind: '请求',
       name: '姓名',
@@ -367,9 +382,9 @@ const zh = {
     typeValueOrdinary: '普通取消',
     typeValueExtraordinary: '特别取消',
     effectiveOrdinary: '最早可能的日期：你已付费期间的结束日',
+    effectiveOnDate: '{date}，如果你已付费期间的结束日更晚，则以该日为准',
     effectiveImmediate: '立即',
     none: '未填写',
-    back: '修改信息',
     submitCancel: '立即取消',
     submitWithdraw: '确认撤回',
     sending: '正在发送…',
@@ -390,6 +405,7 @@ const zh = {
     contract_too_long: '套餐或发票号最多 100 个字符。',
     reason_required: '请填写特别取消的理由。',
     reason_too_long: '理由最多 2000 个字符。',
+    invalid_effective_date: '请选择从今天起、五年以内的日期。',
     invalid_form_token: '此页面已过期。请重新加载后再试。',
     rate_limited: '来自此处的请求过多。请一小时后再试，或发送邮件至 {support}。',
     server_error: '我们这边出了问题。请重试，或发送邮件至 {support}。',
@@ -422,12 +438,13 @@ const de = {
     contract: 'Tarif oder Rechnungsnummer (optional)',
     contractHint: 'Hilft uns, das richtige Abonnement zu finden, wenn Sie mehrere haben.',
     typeLegend: 'Art der Kündigung',
-    typeOrdinary: 'Ordentliche Kündigung zum nächstmöglichen Zeitpunkt',
+    typeOrdinary: 'Ordentliche Kündigung',
     typeExtraordinary: 'Außerordentliche Kündigung, fristlos aus wichtigem Grund',
+    whenLegend: 'Wann soll die Kündigung wirksam werden?',
+    whenEarliest: 'Zum nächstmöglichen Zeitpunkt',
+    whenLater: 'Zu einem späteren Datum',
+    whenDate: 'Datum',
     reason: 'Grund für die außerordentliche Kündigung',
-    continue: 'Weiter',
-    reviewHeading: 'Prüfen und bestätigen',
-    reviewLead: 'Es wurde noch nichts gesendet. Prüfen Sie die Angaben und bestätigen Sie dann.',
     labels: {
       kind: 'Anliegen',
       name: 'Name',
@@ -443,9 +460,9 @@ const de = {
     typeValueOrdinary: 'Ordentliche Kündigung',
     typeValueExtraordinary: 'Außerordentliche Kündigung',
     effectiveOrdinary: 'Zum nächstmöglichen Zeitpunkt: zum Ende des bereits bezahlten Zeitraums',
+    effectiveOnDate: '{date} oder zum Ende des bereits bezahlten Zeitraums, falls dieses später liegt',
     effectiveImmediate: 'Sofort',
     none: 'Keine Angabe',
-    back: 'Angaben ändern',
     submitCancel: 'Jetzt kündigen',
     submitWithdraw: 'Widerruf bestätigen',
     sending: 'Wird gesendet…',
@@ -466,6 +483,7 @@ const de = {
     contract_too_long: 'Tarif oder Rechnungsnummer dürfen höchstens 100 Zeichen lang sein.',
     reason_required: 'Geben Sie einen Grund für die außerordentliche Kündigung an.',
     reason_too_long: 'Der Grund darf höchstens 2000 Zeichen lang sein.',
+    invalid_effective_date: 'Wählen Sie ein Datum ab heute, höchstens fünf Jahre im Voraus.',
     invalid_form_token: 'Diese Seite ist abgelaufen. Laden Sie sie neu und versuchen Sie es erneut.',
     rate_limited: 'Zu viele Anfragen von hier. Versuchen Sie es in einer Stunde erneut oder schreiben Sie an {support}.',
     server_error: 'Bei uns ist ein Fehler aufgetreten. Versuchen Sie es erneut oder schreiben Sie an {support}.',

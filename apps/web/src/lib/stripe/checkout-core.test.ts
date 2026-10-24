@@ -156,6 +156,13 @@ const nodeMock = mock as unknown as {
 const funnelRows: Array<{ target: string; failure: string | undefined }> = [];
 
 /**
+ * The `entryPoint` each `checkout_started` row was written with, kept apart
+ * from `funnelRows` so the older deepEqual assertions on that list stay as
+ * they are. Undefined for every cookie-path row; 'chat_link' for the link.
+ */
+const funnelEntryPoints: Array<string | undefined> = [];
+
+/**
  * The plan-change rows, kept apart from the checkout rows on purpose.
  *
  * They are a different stage in a different part of the funnel, and the whole
@@ -192,6 +199,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       workspaceId: string | null,
       target: string,
       failure?: string,
+      entryPoint?: string,
     ) => {
       // Mirrors the real helper, which no-ops on a null workspace id. Without
       // that, a test could "prove" a row was written for a user who has no
@@ -199,6 +207,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       if (!workspaceId) return;
       assert.equal(workspaceId, WORKSPACE_ID, 'a row must land on the buyer\'s own workspace');
       funnelRows.push({ target, failure });
+      funnelEntryPoints.push(entryPoint);
     },
     recordPlanChange: async (args: {
       workspaceId: string | null;
@@ -246,6 +255,30 @@ let ownedInboxes = 0;
 /** Every `subscriptions.update` call, so a test can prove the swap happened. */
 const subscriptionsUpdated: Array<Record<string, unknown>> = [];
 
+/**
+ * Black Week 2026. What `getActiveSeasonalOffers` answers (empty by default,
+ * so every older test runs exactly as before), the customer's subscriptions
+ * as `subscriptions.list` reports them (for the one-redemption rule), and the
+ * current subscription's metadata and discounts.
+ */
+let activeOffers: Record<string, unknown> = {};
+let customerSubscriptions: Array<{ metadata: Record<string, string> }> = [];
+let listThrows = false;
+let currentMetadata: Record<string, string> = {};
+let currentDiscounts: string[] = [];
+
+nodeMock.module('@/lib/stripe/seasonal-offer-server', {
+  namedExports: {
+    getActiveSeasonalOffers: async () => activeOffers,
+  },
+});
+
+/**
+ * Every `subscriptions.retrieve` call. The chat link must refuse an existing
+ * subscriber before the subscription is even read, which only this can show.
+ */
+const subscriptionsRetrieved: string[] = [];
+
 nodeMock.module('@/lib/stripe/client', {
   namedExports: {
     stripe: {
@@ -253,14 +286,20 @@ nodeMock.module('@/lib/stripe/client', {
         sessions: {
           create: async (params: Record<string, unknown>) => {
             sessionsCreated.push(params);
-            return { url: SESSION_URL };
+            return { url: SESSION_URL, id: 'cs_test_core_session' };
           },
         },
       },
       subscriptions: {
-        retrieve: async (id: string) => ({
+        list: async () => {
+          if (listThrows) throw new Error('stripe_list_down');
+          return { data: customerSubscriptions };
+        },
+        retrieve: async (id: string) => (subscriptionsRetrieved.push(id), {
           id,
           customer: 'cus_test_subscriber',
+          metadata: currentMetadata,
+          discounts: currentDiscounts,
           items: {
             data: [
               // The add-on FIRST when present: Stripe does not promise the
@@ -295,8 +334,9 @@ nodeMock.module('@/lib/stripe/client', {
           previewsRequested.push(params);
           return {
             currency: 'usd',
-            amount_due: 1041,
+            amount_due: params.discounts ? 5441 : 1041,
             lines: { data: [{ amount: -459 }] },
+            total_discount_amounts: params.discounts ? [{ amount: 2740, discount: 'di_bw' }] : [],
           };
         },
       },
@@ -324,6 +364,12 @@ nodeMock.module('@/lib/supabase/service', {
           select: chain,
           eq: chain,
           in: chain,
+          // The identity entry point (the chat checkout link) reads user_billing
+          // and user_usage_entitlements through the service-role client. Same
+          // fixtures as the cookie client, so both paths see the same buyer.
+          maybeSingle: () =>
+            (currentSupabase.from(table) as unknown as { maybeSingle: () => Promise<unknown> })
+              .maybeSingle(),
           is: () =>
             Promise.resolve(
               table === 'workspaces'
@@ -337,7 +383,7 @@ nodeMock.module('@/lib/supabase/service', {
   },
 });
 
-const { runCheckout } = await import('./checkout-core.ts');
+const { runCheckout, runCheckoutForIdentity } = await import('./checkout-core.ts');
 const { FREE_ACTION_ALLOWANCE, PLANS, resolvePlanLimits } = await import('./plans.ts');
 
 /** Run one checkout against a freshly stubbed database, and report what it did. */
@@ -359,6 +405,12 @@ async function checkout(opts: {
   inboxes?: number;
   /** The buyer's language, as a caller hands it over. Omitted when undefined. */
   locale?: unknown;
+  /** The expired session an abandoned-checkout reminder linked from. */
+  recoveredFrom?: unknown;
+  /** The visitor country a route read from x-vercel-ip-country. */
+  country?: unknown;
+  /** The seasonal offer id the confirmed quote carried. */
+  quotedOffer?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -367,6 +419,7 @@ async function checkout(opts: {
     hasWorkspace: opts.hasWorkspace,
   });
   funnelRows.length = 0;
+  funnelEntryPoints.length = 0;
   planChangeRows.length = 0;
   sessionsCreated.length = 0;
   subscriptionsUpdated.length = 0;
@@ -383,6 +436,9 @@ async function checkout(opts: {
     interval: opts.interval ?? 'month',
     confirmChange: opts.confirmChange,
     ...('locale' in opts ? { locale: opts.locale } : {}),
+    ...('recoveredFrom' in opts ? { recoveredFrom: opts.recoveredFrom } : {}),
+    ...('country' in opts ? { country: opts.country } : {}),
+    ...('quotedOffer' in opts ? { quotedOffer: opts.quotedOffer } : {}),
   });
   return {
     outcome,
@@ -1480,8 +1536,10 @@ test('the language changes nothing about what is sold', async () => {
   const en = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
   const de = await checkout({ planId: 'solo', interval: 'year', entitlement: null, locale: 'de' });
   const strip = (params: Record<string, unknown>) => {
-    const { locale: _locale, custom_text: _text, ...rest } = params;
-    return rest;
+    const { locale: _locale, custom_text: _text, metadata, ...rest } = params;
+    // metadata.lang only records the language, for the reminder email.
+    const { lang: _lang, ...meta } = metadata as Record<string, unknown>;
+    return { ...rest, metadata: meta };
   };
   assert.deepEqual(strip(de.sessionsCreated[0]), strip(en.sessionsCreated[0]));
   assert.deepEqual(de.funnelRows, en.funnelRows);
@@ -1518,4 +1576,698 @@ test('a German subscriber asking for a plan change still only gets a quote', asy
   assert.equal(outcome.kind, 'confirmation_required');
   assert.equal(sessionsCreated.length, 0);
   assert.equal(subscriptionsUpdated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// 9. Black Week 2026 first-year offer
+//
+// New annual checkouts get the coupon server side (no promotion-code field,
+// since Stripe refuses both together) and the cohort tag; a monthly Personal
+// or Pro subscriber switching to annual gets the coupon on the swap, quoted
+// first; anyone who already redeemed it, existing annual subscribers and
+// Business get nothing.
+// ---------------------------------------------------------------------------
+
+/** The fields the offer tests read off a session or update call. */
+type OfferParams = {
+  discounts?: unknown;
+  allow_promotion_codes?: unknown;
+  metadata: Record<string, string | undefined>;
+  subscription_data: { metadata: Record<string, string | undefined> };
+  payment_behavior?: unknown;
+  proration_behavior?: unknown;
+};
+
+const PERSONAL_OFFER = {
+  offerId: 'bw2026',
+  planId: 'personal',
+  interval: 'year',
+  couponId: 'BW2026_PERSONAL_Y1',
+  normalYearlyCents: 8640,
+  firstYearCents: 5900,
+  savingCents: 2740,
+  endsAt: '2026-12-01T22:59:59.000Z',
+};
+const PRO_OFFER = {
+  ...PERSONAL_OFFER,
+  planId: 'solo',
+  couponId: 'BW2026_PRO_Y1',
+  normalYearlyCents: 14400,
+  firstYearCents: 9900,
+  savingCents: 4500,
+};
+
+async function withOffers<T>(
+  setup: {
+    offers?: Record<string, unknown>;
+    customerSubs?: Array<{ metadata: Record<string, string> }>;
+    listThrows?: boolean;
+    metadata?: Record<string, string>;
+    discounts?: string[];
+  },
+  fn: () => Promise<T>,
+): Promise<T> {
+  activeOffers = setup.offers ?? { personal: PERSONAL_OFFER, solo: PRO_OFFER };
+  customerSubscriptions = setup.customerSubs ?? [];
+  listThrows = setup.listThrows ?? false;
+  currentMetadata = setup.metadata ?? {};
+  currentDiscounts = setup.discounts ?? [];
+  try {
+    return await fn();
+  } finally {
+    activeOffers = {};
+    customerSubscriptions = [];
+    listThrows = false;
+    currentMetadata = {};
+    currentDiscounts = [];
+  }
+}
+
+const MONTHLY_PERSONAL: BillingRow = {
+  plan: 'personal',
+  subscription_status: 'active',
+  stripe_subscription_id: SUBSCRIPTION_ID,
+};
+
+test('offer: a new annual Personal checkout carries the coupon and the cohort tag', async () => {
+  const run = await withOffers({}, () =>
+    checkout({ planId: 'personal', interval: 'year', entitlement: null }),
+  );
+  assert.equal(run.outcome.kind, 'checkout');
+  const params = run.sessionsCreated[0] as OfferParams;
+  assert.deepEqual(params.discounts, [{ coupon: 'BW2026_PERSONAL_Y1' }]);
+  assert.equal('allow_promotion_codes' in params, false);
+  assert.equal(params.metadata.offer, 'bw2026');
+  assert.equal(params.subscription_data.metadata.offer, 'bw2026');
+  assert.equal(params.subscription_data.metadata.user_id, USER_ID);
+});
+
+test('offer: a new annual Pro checkout uses the Pro coupon', async () => {
+  const run = await withOffers({}, () =>
+    checkout({ planId: 'solo', interval: 'year', entitlement: null }),
+  );
+  const params = run.sessionsCreated[0] as OfferParams;
+  assert.deepEqual(params.discounts, [{ coupon: 'BW2026_PRO_Y1' }]);
+});
+
+test('offer: monthly and Business checkouts are untouched', async () => {
+  for (const [planId, interval] of [
+    ['personal', 'month'],
+    ['solo', 'month'],
+    ['pro', 'year'],
+  ]) {
+    const run = await withOffers({}, () => checkout({ planId, interval, entitlement: null }));
+    const params = run.sessionsCreated[0] as OfferParams;
+    assert.equal(params.discounts, undefined, `${planId}/${interval}`);
+    assert.equal(params.allow_promotion_codes, true);
+    assert.equal(params.metadata.offer, undefined);
+    assert.equal(params.subscription_data.metadata.offer, undefined);
+  }
+});
+
+test('offer: no live offer (window closed or coupon killed) keeps the old session exactly', async () => {
+  const run = await withOffers({ offers: {} }, () =>
+    checkout({ planId: 'personal', interval: 'year', entitlement: null }),
+  );
+  const params = run.sessionsCreated[0] as OfferParams;
+  assert.equal(params.discounts, undefined);
+  assert.equal(params.allow_promotion_codes, true);
+});
+
+test('offer: one redemption per customer', async () => {
+  const run = await withOffers({ customerSubs: [{ metadata: { offer: 'bw2026' } }] }, () =>
+    checkout({ planId: 'personal', interval: 'year', entitlement: null }),
+  );
+  const params = run.sessionsCreated[0] as OfferParams;
+  assert.equal(params.discounts, undefined);
+  assert.equal(params.allow_promotion_codes, true);
+  assert.equal(params.metadata.offer, undefined);
+});
+
+test('offer: a failed redemption check fails closed (normal price, never a surprise)', async () => {
+  const { result: run } = await captureLogs(() =>
+    withOffers({ listThrows: true }, () =>
+      checkout({ planId: 'personal', interval: 'year', entitlement: null }),
+    ),
+  );
+  assert.equal(run.outcome.kind, 'checkout');
+  const params = run.sessionsCreated[0] as OfferParams;
+  assert.equal(params.discounts, undefined);
+});
+
+test('offer: a monthly Personal subscriber switching to annual is quoted WITH the coupon', async () => {
+  const run = await withOffers({ discounts: ['di_existing'] }, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+    }),
+  );
+  assert.equal(run.outcome.kind, 'confirmation_required');
+  assert.equal(run.subscriptionsUpdated.length, 0, 'the quote changes nothing');
+  assert.ok(run.outcome.kind === 'confirmation_required');
+  const preview = run.outcome.preview!;
+  assert.equal(preview.seasonalOffer?.couponId, 'BW2026_PERSONAL_Y1');
+  assert.equal(preview.discountCents, 2740);
+  assert.equal(preview.amountDueNowCents, 5441);
+  assert.deepEqual(run.previewsRequested[0].discounts, [
+    { discount: 'di_existing' },
+    { coupon: 'BW2026_PERSONAL_Y1' },
+  ]);
+});
+
+test('offer: the confirmed switch applies the coupon and tags the subscription', async () => {
+  const run = await withOffers({}, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+    }),
+  );
+  assert.equal(run.outcome.kind, 'changed');
+  const update = run.subscriptionsUpdated[0] as OfferParams;
+  assert.deepEqual(update.discounts, [{ coupon: 'BW2026_PERSONAL_Y1' }]);
+  assert.deepEqual(update.metadata, { offer: 'bw2026' });
+  assert.equal(update.payment_behavior, 'pending_if_incomplete');
+  assert.equal(update.proration_behavior, 'always_invoice');
+});
+
+test('offer: a quote WITH the offer confirmed after it ended charges nothing and re-quotes', async () => {
+  // Quoted at 23:58 on 1 December, clicked at 00:01: the offer is gone.
+  const run = await withOffers({ offers: {} }, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+      quotedOffer: 'bw2026',
+    }),
+  );
+  assert.equal(run.subscriptionsUpdated.length, 0, 'no swap, no charge');
+  assert.equal(run.outcome.kind, 'confirmation_required');
+  assert.ok(run.outcome.kind === 'confirmation_required');
+  assert.equal(run.outcome.offerEnded, true);
+  assert.equal(run.outcome.preview?.seasonalOffer, null);
+  assert.equal(run.outcome.preview?.discountCents, 0);
+  assert.equal(run.previewsRequested[0].discounts, undefined);
+  assert.equal(run.planChangeRows.length, 0, 'a re-quote is not a completed decision');
+});
+
+test('offer: a quote WITH the offer confirmed while it is live still swaps', async () => {
+  const run = await withOffers({}, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+      quotedOffer: 'bw2026',
+    }),
+  );
+  assert.equal(run.outcome.kind, 'changed');
+  assert.deepEqual((run.subscriptionsUpdated[0] as OfferParams).discounts, [
+    { coupon: 'BW2026_PERSONAL_Y1' },
+  ]);
+});
+
+test('offer: a confirm without a quoted offer is unaffected when no offer is live', async () => {
+  const run = await withOffers({ offers: {} }, () =>
+    checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+    }),
+  );
+  assert.equal(run.outcome.kind, 'changed');
+  assert.equal((run.subscriptionsUpdated[0] as OfferParams).discounts, undefined);
+});
+
+test('offer: monthly Personal to annual Pro gets the Pro coupon', async () => {
+  const run = await withOffers({}, () =>
+    checkout({
+      planId: 'solo',
+      interval: 'year',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+    }),
+  );
+  const update = run.subscriptionsUpdated[0] as OfferParams;
+  assert.deepEqual(update.discounts, [{ coupon: 'BW2026_PRO_Y1' }]);
+});
+
+test('offer: no coupon for annual subscribers, retired prices, Business, or a repeat', async () => {
+  const cases: Array<{ label: string; planId: string; currentPrice: string; plan: string; setup?: object }> = [
+    { label: 'annual Personal to annual Pro', planId: 'solo', currentPrice: 'price_personal_year', plan: 'personal' },
+    { label: 'retired $5 Personal', planId: 'personal', currentPrice: 'price_personal_month_500', plan: 'personal' },
+    { label: 'Business monthly to Pro annual', planId: 'solo', currentPrice: 'price_business_month', plan: 'pro' },
+    {
+      label: 'already tagged subscription',
+      planId: 'personal',
+      currentPrice: 'price_personal_month',
+      plan: 'personal',
+      setup: { metadata: { offer: 'bw2026' } },
+    },
+    {
+      label: 'redeemed on an earlier subscription',
+      planId: 'personal',
+      currentPrice: 'price_personal_month',
+      plan: 'personal',
+      setup: { customerSubs: [{ metadata: { offer: 'bw2026' } }] },
+    },
+  ];
+  for (const c of cases) {
+    const run = await withOffers(c.setup ?? {}, () =>
+      checkout({
+        planId: c.planId,
+        interval: 'year',
+        entitlement: null,
+        billing: { plan: c.plan, subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+        currentPrice: c.currentPrice,
+        confirmChange: true,
+      }),
+    );
+    const update = run.subscriptionsUpdated[0] as OfferParams | undefined;
+    assert.ok(update, c.label);
+    assert.equal(update.discounts, undefined, c.label);
+    assert.equal(update.metadata, undefined, c.label);
+  }
+});
+
+test('offer: a switch to MONTHLY never carries the coupon', async () => {
+  const run = await withOffers({}, () =>
+    checkout({
+      planId: 'solo',
+      interval: 'month',
+      entitlement: null,
+      billing: MONTHLY_PERSONAL,
+      currentPrice: 'price_personal_month',
+      confirmChange: true,
+    }),
+  );
+  const update = run.subscriptionsUpdated[0] as OfferParams;
+  assert.equal(update.discounts, undefined);
+});
+
+// ---------------------------------------------------------------------------
+// Abandoned-checkout reminder metadata: the buyer's language and the expired
+// session a reminder linked from. Neither changes what is sold.
+// ---------------------------------------------------------------------------
+
+test('metadata records the app language for the reminder, English adds nothing', async () => {
+  for (const [locale, expected] of [['fr', 'fr'], ['nb', 'nb'], ['de', 'de'], ['es', 'es'], ['en', undefined], ['zh', undefined], ['xx', undefined], [undefined, undefined]] as const) {
+    const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
+    const meta = sessionsCreated[0].metadata as Record<string, unknown>;
+    assert.equal(meta.lang, expected, String(locale));
+  }
+});
+
+test('a valid recovered_from lands in metadata, anything else is dropped', async () => {
+  const ok = await checkout({ planId: 'solo', interval: 'year', entitlement: null, recoveredFrom: 'cs_live_a1B2c3D4e5F6g7H8' });
+  assert.equal((ok.sessionsCreated[0].metadata as Record<string, unknown>).recovered_from, 'cs_live_a1B2c3D4e5F6g7H8');
+  for (const bad of ['', 'cs_live_<x>', 'pi_123', 42, ['cs_live_a1B2c3D4e5F6g7H8']]) {
+    const { sessionsCreated } = await checkout({ planId: 'solo', entitlement: null, recoveredFrom: bad });
+    assert.equal('recovered_from' in (sessionsCreated[0].metadata as Record<string, unknown>), false, JSON.stringify(bad));
+  }
+  const plain = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
+  const strip = (params: Record<string, unknown>) => {
+    const { metadata, ...rest } = params;
+    const { recovered_from: _r, ...meta } = metadata as Record<string, unknown>;
+    return { ...rest, metadata: meta };
+  };
+  assert.deepEqual(strip(ok.sessionsCreated[0]), strip(plain.sessionsCreated[0]));
+});
+
+// ---------------------------------------------------------------------------
+// The EUR launch switches (2026-10-24): Stripe Tax, EUR for the non-euro EU,
+// VAT location evidence, and the payment method configuration.
+//
+// All four default OFF. The first test is the one that matters before launch:
+// with every switch off, a session for a buyer in any country is exactly the
+// session created before this work, key for key. Then each switch on, per
+// country: DE (euro area, Stripe localizes), SE (EU, not euro, forced to EUR),
+// NO (outside the EU, no forcing) and US (home currency).
+// ---------------------------------------------------------------------------
+
+const EUR_SWITCHES = [
+  'STRIPE_AUTOMATIC_TAX',
+  'STRIPE_EUR_PRICES',
+  'STRIPE_PMC_ID',
+  'STRIPE_FORCE_USD',
+  'STRIPE_ADAPTIVE_PRICING',
+] as const;
+
+/** Run `fn` with exactly these switch values, every other one unset. */
+async function withSwitches<T>(
+  values: Partial<Record<(typeof EUR_SWITCHES)[number], string>>,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const previous = Object.fromEntries(EUR_SWITCHES.map((k) => [k, process.env[k]]));
+  for (const key of EUR_SWITCHES) {
+    if (values[key] === undefined) delete process.env[key];
+    else process.env[key] = values[key];
+  }
+  try {
+    return await fn();
+  } finally {
+    for (const key of EUR_SWITCHES) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+    }
+  }
+}
+
+/** The top-level keys a session carried before the EUR work, in no order. */
+const KEYS_BEFORE_EUR = [
+  'adaptive_pricing',
+  'allow_promotion_codes',
+  'billing_address_collection',
+  'cancel_url',
+  'custom_text',
+  'customer',
+  'line_items',
+  'locale',
+  'metadata',
+  'mode',
+  'subscription_data',
+  'success_url',
+].sort();
+
+const COUNTRIES = ['DE', 'SE', 'NO', 'US'] as const;
+
+async function sessionFor(country: string | undefined) {
+  const { outcome, sessionsCreated } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    ...(country ? { country } : {}),
+  });
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  return sessionsCreated[0];
+}
+
+test('switches off: every country gets the session from before the EUR work, key for key', async () => {
+  await withSwitches({}, async () => {
+    const baseline = await sessionFor(undefined);
+    assert.deepEqual(Object.keys(baseline).sort(), KEYS_BEFORE_EUR);
+    assert.deepEqual(Object.keys(baseline.metadata as object).sort(), ['interval', 'plan_id', 'user_id']);
+    for (const country of COUNTRIES) {
+      assert.deepEqual(await sessionFor(country), baseline, country);
+    }
+  });
+});
+
+test('Stripe Tax on: tax, tax id collection, customer_update and the IP country, per country', async () => {
+  await withSwitches({ STRIPE_AUTOMATIC_TAX: 'true' }, async () => {
+    for (const country of COUNTRIES) {
+      const params = await sessionFor(country);
+      assert.deepEqual(params.automatic_tax, { enabled: true }, country);
+      assert.deepEqual(params.tax_id_collection, { enabled: true }, country);
+      assert.deepEqual(params.customer_update, { name: 'auto', address: 'auto' }, country);
+      assert.equal((params.metadata as Record<string, unknown>).ip_country, country);
+      // Tax alone forces no currency: that is the EUR switch's job.
+      assert.equal('currency' in params, false, country);
+      assert.deepEqual(params.adaptive_pricing, { enabled: true }, 'Adaptive Pricing is unchanged');
+    }
+    const unknown = await sessionFor(undefined);
+    assert.equal('ip_country' in (unknown.metadata as object), false, 'no country, no evidence key');
+  });
+});
+
+test('EUR prices on: only Sweden (EU, not euro) is forced to EUR; tax stays off', async () => {
+  await withSwitches({ STRIPE_EUR_PRICES: 'on' }, async () => {
+    const expected: Record<string, string | undefined> = { DE: undefined, SE: 'eur', NO: undefined, US: undefined };
+    for (const country of COUNTRIES) {
+      const params = await sessionFor(country);
+      assert.equal(params.currency, expected[country], country);
+      assert.equal('automatic_tax' in params, false, country);
+      assert.equal('ip_country' in (params.metadata as object), false, 'evidence only rides with tax');
+    }
+  });
+});
+
+test('every switch on: Sweden gets EUR with tax, the others keep Stripe localizing', async () => {
+  await withSwitches(
+    { STRIPE_AUTOMATIC_TAX: '1', STRIPE_EUR_PRICES: 'yes', STRIPE_PMC_ID: 'pmc_test123' },
+    async () => {
+      for (const country of COUNTRIES) {
+        const params = await sessionFor(country);
+        assert.equal(params.payment_method_configuration, 'pmc_test123', country);
+        assert.equal(params.currency, country === 'SE' ? 'eur' : undefined, country);
+        assert.deepEqual(params.automatic_tax, { enabled: true }, country);
+        assert.deepEqual(
+          Object.keys(params).sort(),
+          [
+            ...KEYS_BEFORE_EUR,
+            'automatic_tax',
+            'customer_update',
+            'payment_method_configuration',
+            'tax_id_collection',
+            ...(country === 'SE' ? ['currency'] : []),
+          ].sort(),
+          country,
+        );
+      }
+    },
+  );
+});
+
+test('a country value that is not two letters is dropped before Stripe sees it', async () => {
+  await withSwitches({ STRIPE_AUTOMATIC_TAX: 'true', STRIPE_EUR_PRICES: 'true' }, async () => {
+    for (const bad of ['XX', 'EU', 'Sweden', 'S', 42, '<se>']) {
+      const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, country: bad });
+      assert.equal('ip_country' in (sessionsCreated[0].metadata as object), false, String(bad));
+      assert.equal('currency' in sessionsCreated[0], false, String(bad));
+    }
+    const lower = await sessionFor('se');
+    assert.equal(lower.currency, 'eur');
+    assert.equal((lower.metadata as Record<string, unknown>).ip_country, 'SE');
+  });
+});
+
+test('EUR on: the success URL tells the dashboard EUR for EU buyers only, and is unchanged when off', async () => {
+  const off = await withSwitches({}, () => sessionFor('SE'));
+  assert.doesNotMatch(String(off.success_url), /currency=/, 'switches off: URL unchanged');
+  await withSwitches({ STRIPE_EUR_PRICES: 'true' }, async () => {
+    for (const [country, eur] of [['SE', true], ['DE', true], ['BG', true], ['NO', false], ['US', false]] as const) {
+      const url = String((await sessionFor(country)).success_url);
+      assert.equal(url.endsWith('&currency=eur'), eur, country);
+      assert.equal(url.replace('&currency=eur', ''), String(off.success_url), `${country}: nothing else changes`);
+    }
+    assert.doesNotMatch(String((await sessionFor(undefined)).success_url), /currency=/, 'unknown country');
+  });
+});
+
+test('STRIPE_FORCE_USD pins USD and drops the EUR and tax additions, whatever else is on', async () => {
+  const baseline = await withSwitches({}, () => sessionFor('SE'));
+  await withSwitches(
+    { STRIPE_FORCE_USD: 'true', STRIPE_AUTOMATIC_TAX: 'true', STRIPE_EUR_PRICES: 'true' },
+    async () => {
+      for (const country of COUNTRIES) {
+        const params = await sessionFor(country);
+        assert.equal(params.currency, 'usd', country);
+        for (const key of ['automatic_tax', 'tax_id_collection', 'customer_update']) {
+          assert.equal(key in params, false, `${country}: ${key}`);
+        }
+        assert.equal('ip_country' in (params.metadata as object), false, country);
+        assert.doesNotMatch(String(params.success_url), /currency=/, country);
+        const { currency: _c, ...rest } = params;
+        assert.deepEqual(rest, baseline, `${country}: otherwise the pre-EUR session`);
+      }
+    },
+  );
+  await withSwitches({ STRIPE_FORCE_USD: 'true', STRIPE_PMC_ID: 'pmc_keep1' }, async () => {
+    assert.equal((await sessionFor('DE')).payment_method_configuration, 'pmc_keep1', 'payment methods are not a currency choice');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. The identity entry point: the chat checkout link (app/u/[token]).
+//
+// `runCheckoutForIdentity` is the third caller of the one core. It has no
+// cookie session, so the owner arrives as an identity resolved with the
+// service-role client from a checkout_links row. Two things are pinned here:
+// it runs every guard the cookie path runs (it is the same function past the
+// identity), and it can NEVER reach the in-place price swap, not even its
+// quote, because a bearer link in a chat transcript must not be able to touch
+// a card on file.
+// ---------------------------------------------------------------------------
+
+const LINK_ID = '11111111-2222-4333-8444-555555555555';
+
+async function linkCheckout(opts: {
+  entitlement: EntitlementRow;
+  billing?: BillingRow;
+  planId?: unknown;
+  interval?: unknown;
+  extraMetadata?: Record<string, string>;
+  /** Smuggled past the type, to prove the core ignores it. */
+  confirmChange?: unknown;
+}) {
+  currentSupabase = fakeSupabase({ entitlement: opts.entitlement, billing: opts.billing });
+  funnelRows.length = 0;
+  funnelEntryPoints.length = 0;
+  planChangeRows.length = 0;
+  sessionsCreated.length = 0;
+  subscriptionsUpdated.length = 0;
+  subscriptionsRetrieved.length = 0;
+  previewsRequested.length = 0;
+  swapBehaviour = 'applied';
+  currentSubscriptionPrice = 'price_solo_month';
+  currentAddon = null;
+  ownedInboxes = 0;
+  const input = {
+    planId: opts.planId ?? 'personal',
+    interval: opts.interval ?? 'month',
+    locale: 'en',
+    ...('confirmChange' in opts ? { confirmChange: opts.confirmChange } : {}),
+  };
+  const outcome = await runCheckoutForIdentity(
+    { userId: USER_ID, email: 'owner@example.com', workspaceId: WORKSPACE_ID, displayName: 'Test Workspace' },
+    input,
+    {
+      successUrl: 'https://mcpemails.test/upgrade/done?session_id={CHECKOUT_SESSION_ID}',
+      cancelUrl: 'https://mcpemails.test/pricing?from=chat_link',
+      entryPoint: 'chat_link',
+      extraMetadata: opts.extraMetadata ?? { checkout_link_id: LINK_ID },
+      sessionExpiresAt: 1_900_000_000,
+    },
+  );
+  return {
+    outcome,
+    funnelRows: [...funnelRows],
+    funnelEntryPoints: [...funnelEntryPoints],
+    planChangeRows: [...planChangeRows],
+    sessionsCreated: [...sessionsCreated],
+    subscriptionsUpdated: [...subscriptionsUpdated],
+    subscriptionsRetrieved: [...subscriptionsRetrieved],
+    previewsRequested: [...previewsRequested],
+  };
+}
+
+test('a link checkout for a Free owner opens Stripe with the link URLs, expiry and metadata', async () => {
+  const r = await linkCheckout({ entitlement: null });
+  assert.equal(r.outcome.kind, 'checkout');
+  if (r.outcome.kind !== 'checkout') return;
+  assert.equal(r.outcome.url, SESSION_URL);
+  assert.equal(r.outcome.sessionId, 'cs_test_core_session');
+  assert.equal(r.sessionsCreated.length, 1);
+  const params = r.sessionsCreated[0];
+  assert.equal(params.success_url, 'https://mcpemails.test/upgrade/done?session_id={CHECKOUT_SESSION_ID}');
+  assert.equal(params.cancel_url, 'https://mcpemails.test/pricing?from=chat_link');
+  assert.equal(params.expires_at, 1_900_000_000);
+  assert.equal(params.customer, 'cus_test_grandfathered');
+  assert.deepEqual(params.line_items, [{ price: 'price_personal_month', quantity: 1 }]);
+  assert.deepEqual(params.metadata, {
+    checkout_link_id: LINK_ID,
+    user_id: USER_ID,
+    plan_id: 'personal',
+    interval: 'month',
+  });
+  assert.deepEqual(params.subscription_data, { metadata: { user_id: USER_ID } });
+});
+
+test('a link checkout records exactly one checkout_started row, tagged chat_link', async () => {
+  const r = await linkCheckout({ entitlement: null });
+  assert.deepEqual(r.funnelRows, [{ target: 'personal_month', failure: undefined }]);
+  assert.deepEqual(r.funnelEntryPoints, ['chat_link']);
+});
+
+test('the cookie path is unchanged: dashboard URLs, Stripe default expiry, no link metadata or entry point', async () => {
+  const { sessionsCreated, funnelRows: rows } = await checkout({ planId: 'personal', entitlement: null });
+  const params = sessionsCreated[0];
+  assert.equal(params.success_url, 'http://localhost:3000/dashboard?checkout=success&plan=personal&interval=month');
+  assert.equal(params.cancel_url, 'http://localhost:3000/dashboard?checkout=cancelled');
+  assert.equal('expires_at' in params, false);
+  assert.deepEqual(params.metadata, { user_id: USER_ID, plan_id: 'personal', interval: 'month' });
+  assert.equal(rows.length, 1);
+  assert.deepEqual(funnelEntryPoints, [undefined]);
+});
+
+test('extra metadata can never replace the keys the webhook trusts', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    extraMetadata: { checkout_link_id: LINK_ID, user_id: 'attacker', plan_id: 'pro', interval: 'year' },
+  });
+  const meta = r.sessionsCreated[0].metadata as Record<string, unknown>;
+  assert.equal(meta.user_id, USER_ID);
+  assert.equal(meta.plan_id, 'personal');
+  assert.equal(meta.interval, 'month');
+});
+
+test('an existing subscriber is refused before the swap: no read, no quote, no change', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'solo', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(r.outcome.kind, 'error');
+  if (r.outcome.kind !== 'error') return;
+  assert.equal(r.outcome.reason, 'subscription_exists');
+  assert.equal(r.outcome.status, 409);
+  assert.deepEqual(r.subscriptionsRetrieved, []);
+  assert.deepEqual(r.previewsRequested, []);
+  assert.deepEqual(r.subscriptionsUpdated, []);
+  assert.deepEqual(r.sessionsCreated, []);
+  assert.deepEqual(r.planChangeRows, []);
+  assert.deepEqual(r.funnelRows, [{ target: 'personal_month', failure: 'subscription_exists' }]);
+});
+
+test('a smuggled confirmChange: true still cannot reach the swap from a link', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    confirmChange: true,
+  });
+  assert.equal(r.outcome.kind, 'error');
+  assert.deepEqual(r.subscriptionsUpdated, []);
+  assert.deepEqual(r.subscriptionsRetrieved, []);
+});
+
+test('the same subscriber on the cookie path still gets the quote, so the refusal is link-only', async () => {
+  const { outcome } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    billing: { plan: 'solo', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    currentPrice: 'price_solo_month',
+  });
+  assert.equal(outcome.kind, 'confirmation_required');
+});
+
+test('the comped guard refuses a link checkout too', async () => {
+  const r = await linkCheckout({ entitlement: { kind: 'comped_scale', expires_at: null } });
+  assert.equal(r.outcome.kind, 'error');
+  if (r.outcome.kind !== 'error') return;
+  assert.equal(r.outcome.reason, 'comped');
+  assert.deepEqual(r.sessionsCreated, []);
+});
+
+test('a lapsed subscription buys through Checkout from a link, like on the cookie path', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'canceled', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(r.outcome.kind, 'checkout');
+  assert.deepEqual(r.subscriptionsUpdated, []);
+});
+
+test('the purchasable allowlist still applies to a link', async () => {
+  const bad = await linkCheckout({ entitlement: null, planId: 'enterprise' });
+  assert.equal(bad.outcome.kind, 'error');
+  if (bad.outcome.kind === 'error') assert.equal(bad.outcome.reason, 'invalid_plan');
+  const badInterval = await linkCheckout({ entitlement: null, interval: 'week' });
+  assert.equal(badInterval.outcome.kind, 'error');
+  if (badInterval.outcome.kind === 'error') assert.equal(badInterval.outcome.reason, 'invalid_interval');
+  assert.deepEqual(badInterval.sessionsCreated, []);
 });

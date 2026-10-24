@@ -183,7 +183,11 @@ import {
 type ProviderErrorAuditDetails =
   | ProviderCallAuditDetails
   | FolderResolveAuditDetails
-  | HandlerValidationAuditDetails;
+  | HandlerValidationAuditDetails
+  // Subscription cleanup's method mix and outcome counts, written on SUCCESS
+  // too (subscription-cleanup.ts#SubscriptionAuditDetails): the only way to
+  // measure the one-click/mailto split. Counts and `https://host` only.
+  | SubscriptionAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -298,6 +302,18 @@ import {
   reviewCardOptInsFromRows,
 } from "./reachable-inbox.ts";
 import {
+  findParkedInbox,
+  inboxIsParked,
+  listParkedInboxes,
+  PARKED_INBOX_ERROR_CODE,
+  PARKED_INBOX_STATUS,
+  type ParkedInboxMatch,
+  parkedInboxErrorText,
+  parkedInboxHint,
+  SCHEDULED_SEND_PARKED_DETAIL,
+  scheduledSendBlockedByParking,
+} from "./parked-inbox.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -406,6 +422,7 @@ import {
   type ExtraArgumentReview,
   neutralDefaultOf,
   normalizeMessageIdShape,
+  normalizeSearchFolderScope,
   reviewExtraArguments,
   withOwningActions,
 } from "./consolidated-arguments.ts";
@@ -425,6 +442,18 @@ import {
   preTransmissionSync,
   TargetUnresolvedError,
 } from "./send-stages.ts";
+import {
+  addressList,
+  type BrakeDb,
+  type BrakeDecision,
+  brakeRefusalResult,
+  brakeRefusalText,
+  brakeTrippedEvent,
+  checkOutboundBrakes,
+  OUTBOUND_BRAKE_ERROR_CODES,
+  recordProviderRefusal,
+} from "./outbound-brakes.ts";
+import { headroom, type RateLimitHeadroom, rateLimitHeaders, withRateLimitHeaders } from "./rate-limit-headers.ts";
 import {
   type AttachmentManifestEntry,
   type AttachmentReferenceInput,
@@ -455,6 +484,7 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
   buildUsageLimitText,
@@ -466,6 +496,13 @@ import {
   USAGE_LIMIT_SUPPORT_EMAIL,
 } from "./usage-limit-message.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
+import {
+  type CheckoutLinkIo,
+  checkoutLinkMode,
+  type ExperimentRow,
+  type MintedCheckoutLink,
+  mintCheckoutLink,
+} from "./checkout-link.ts";
 import {
   type ActionReservationRow,
   type AllowanceGateIo,
@@ -516,6 +553,21 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import { fetchListHeaderRecords, type ListHeaderScanContext } from "./subscription-scan.ts";
+import { authservTrustFor } from "./list-unsubscribe.ts";
+import { postOneClick } from "./one-click-post.ts";
+import {
+  isSubscriptionToolName,
+  runSubscriptionFollowUp,
+  runSubscriptionTool,
+  type SubInbox,
+  SUBSCRIPTION_TOOL_DEFINITIONS,
+  SUBSCRIPTION_TOOL_NAMES,
+  type SubscriptionAuditDetails,
+  type SubscriptionDeps,
+  supabaseSubscriptionStore,
+} from "./subscription-cleanup.ts";
+import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -1430,6 +1482,11 @@ interface RequestContext {
    * on the per-query path; stampCardDiagnostics then reads it itself.
    */
   cardDiagnostics?: boolean;
+  /**
+   * The failed-payment markers off the workspace row the plan check read
+   * (payment-notice.ts). Absent when that read failed open: no notice then.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 // ---------------------------------------------------------------------------
@@ -1708,6 +1765,10 @@ const CORS_HEADERS: Record<string, string> = {
     "mcp-protocol-version, mcp-session-id, last-event-id",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
+  // A browser-hosted client can read these only if they are exposed.
+  "Access-Control-Expose-Headers":
+    "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Retry-After, " +
+    "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Window, X-Plan",
 };
 
 // ---------------------------------------------------------------------------
@@ -2081,7 +2142,12 @@ async function completeOutboundIdempotency(
   //
   // A "Confirm in chat" refusal is the same certainty (nothing was sent), and
   // its repeat with the user's yes must be able to send under the same key.
-  if (logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE || logErrorCode === CHAT_CONFIRM_ERROR_CODE) {
+  // So is an outbound brake refusal (outbound-brakes.ts): the same request
+  // must be able to go through under the same key once the limit lifts.
+  if (
+    logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE || logErrorCode === CHAT_CONFIRM_ERROR_CODE ||
+    (logErrorCode !== null && OUTBOUND_BRAKE_ERROR_CODES.has(logErrorCode))
+  ) {
     const { error: releaseError } = await supabase.from("outbound_idempotency")
       .delete()
       .eq("api_key_id", apiKeyId)
@@ -2750,7 +2816,8 @@ async function claimGateReservation(toolName: string, willReserve: boolean): Pro
  * is the only plan-based usage lever. It is enforced per WORKSPACE (aggregate
  * across all of the workspace's API keys), so adding keys does not multiply
  * throughput. The per-key rolling windows further below are a separate abuse
- * guard that applies regardless of plan.
+ * guard, lifted to this ceiling so one key can use the whole plan
+ * (perKeyWindows).
  *
  * `enterprise` is a legacy alias (the tier was removed) mapped to the Team
  * ceiling so any pre-existing enterprise workspace is not throttled.
@@ -2810,6 +2877,13 @@ interface PlanQuotaResult {
    * Absent when the workspace lookup failed open.
    */
   firstUse?: FirstUseMarkers;
+  /** True only when the window count itself succeeded (not a fail-open answer). */
+  counted?: boolean;
+  /**
+   * The failed-payment markers off the same row, for the once-a-day billing
+   * notice (payment-notice.ts). Absent when the workspace lookup failed open.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 /**
@@ -2851,6 +2925,13 @@ interface PreloadedPlanQuotaReads {
 async function checkPlanQuota(
   workspaceId: string,
   preloaded?: PreloadedPlanQuotaReads,
+  /**
+   * Told the resolved per-minute ceiling as soon as it is known, before the
+   * window count is awaited, so the per-key limiter can scale its windows
+   * from the same plan read (perKeyWindows) without a round trip of its own.
+   * Called exactly once on every path, the fail-open ones included.
+   */
+  onCeiling?: (perMinuteLimit: number) => void,
 ): Promise<PlanQuotaResult> {
   // The window count (step 2) needs nothing from the workspace row, so it is
   // issued first and overlaps the two lookups below instead of queueing behind
@@ -2867,12 +2948,14 @@ async function checkPlanQuota(
     );
 
   // 1. Look up workspace plan. The two activation columns ride along for
-  // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
+  // markFirstProductUse (see PlanQuotaResult.firstUse), and the three payment
+  // columns for the billing notice (PlanQuotaResult.paymentIssue); nothing
+  // here reads them.
   const { data: workspace, error: wsError } = preloaded
     ? { data: preloaded.workspace, error: null }
     : await supabase
       .from("workspaces")
-      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at, payment_issue_since, payment_issue_kind, payment_notice_shown_on")
       .eq("id", workspaceId)
       .maybeSingle();
 
@@ -2882,6 +2965,7 @@ async function checkPlanQuota(
       error: wsError?.message ?? "no row",
     });
     // Fail open.
+    onCeiling?.(DEFAULT_REQUESTS_PER_MINUTE);
     return {
       allowed: true,
       plan: "free",
@@ -2922,10 +3006,17 @@ async function checkPlanQuota(
   const legacyLimit = grandfathered ? LEGACY_REQUESTS_PER_MINUTE[plan] : undefined;
   const perMinuteLimit = legacyLimit ?? PLAN_REQUESTS_PER_MINUTE[plan] ??
     DEFAULT_REQUESTS_PER_MINUTE;
+  onCeiling?.(perMinuteLimit);
 
   const firstUse: FirstUseMarkers = {
     analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
     onboarding_value_activated_at: workspace.onboarding_value_activated_at,
+  };
+  // Undefined on a gate RPC that predates the columns: then there is no notice.
+  const paymentIssue: PaymentIssueMarkers = {
+    payment_issue_since: workspace.payment_issue_since ?? null,
+    payment_issue_kind: workspace.payment_issue_kind ?? null,
+    payment_notice_shown_on: workspace.payment_notice_shown_on ?? null,
   };
 
   // 2. Count the workspace's calls in the trailing 60s window (issued above).
@@ -2944,6 +3035,7 @@ async function checkPlanQuota(
       usedThisMinute: 0,
       retryAfterSeconds: 0,
       firstUse,
+      paymentIssue,
     };
   }
 
@@ -2958,6 +3050,8 @@ async function checkPlanQuota(
       usedThisMinute,
       retryAfterSeconds: 0,
       firstUse,
+      counted: true,
+      paymentIssue,
     };
   }
 
@@ -3092,6 +3186,30 @@ const RATE_LIMIT_WINDOWS: WindowDefinition[] = [
 ];
 
 /**
+ * How far a plan lifts the per-key windows: the workspace's per-minute
+ * ceiling over the base per-minute window, never below 1.
+ *
+ * Until 2026-10-24 the per-key windows were plan-blind, so one Pro key (300
+ * a minute across the workspace) or one Personal key (120) stopped at 100,
+ * and the plan's burst was reachable only with three or more keys. The
+ * minute window is now max(100, plan ceiling), and the hour and day windows
+ * scale by the same factor, so a single key can use its whole plan. Free (60)
+ * stays at the base values: the windows never go below them.
+ */
+function perKeyPlanFactor(perMinuteCeiling: number): number {
+  return Math.max(1, perMinuteCeiling / RATE_LIMIT_WINDOWS[0].limit);
+}
+
+/** RATE_LIMIT_WINDOWS lifted for a workspace's per-minute ceiling (see perKeyPlanFactor). */
+function perKeyWindows(perMinuteCeiling: number): WindowDefinition[] {
+  const factor = perKeyPlanFactor(perMinuteCeiling);
+  return RATE_LIMIT_WINDOWS.map((window) => ({
+    ...window,
+    limit: Math.max(window.limit, Math.ceil(window.limit * factor)),
+  }));
+}
+
+/**
  * Outcome of a rate-limit check.
  *
  * When `allowed` is false, the caller must return a 429 response and MUST NOT
@@ -3107,6 +3225,12 @@ interface RateLimitResult {
   used: number;
   /** Seconds until the oldest entry in the window drops out, freeing a slot. */
   retryAfterSeconds: number;
+  /**
+   * On an allowed call, the window with the least room left, for the
+   * RateLimit-* response headers (see rateLimitHeaders). Absent when no
+   * window could be counted (every count failed open).
+   */
+  tightest?: RateLimitHeadroom;
 }
 
 /** Start of each RATE_LIMIT_WINDOWS window, in table order, as ISO timestamps. */
@@ -3145,6 +3269,13 @@ interface PreloadedRateLimitCounts {
 async function checkRateLimit(
   apiKeyId: string,
   preloaded?: PreloadedRateLimitCounts,
+  /**
+   * The workspace's per-minute ceiling as checkPlanQuota resolved it, which
+   * lifts the windows (perKeyWindows). A promise so the counts below are
+   * issued without waiting for the plan read; the plan is only needed to
+   * judge them. Defaults to the base windows.
+   */
+  perMinuteCeiling: number | Promise<number> = RATE_LIMIT_WINDOWS[0].limit,
 ): Promise<RateLimitResult> {
   const windowStarts = preloaded?.windowStarts ?? rateLimitWindowStarts();
   const windowCounts: WindowCountResult[] = preloaded?.counts ??
@@ -3155,8 +3286,10 @@ async function checkRateLimit(
         .eq("api_key_id", apiKeyId)
         .gte("created_at", windowStart)
     ));
+  const windows = perKeyWindows(await perMinuteCeiling);
+  let tightest: RateLimitHeadroom | undefined;
 
-  for (const [index, window] of RATE_LIMIT_WINDOWS.entries()) {
+  for (const [index, window] of windows.entries()) {
     const windowStart = windowStarts[index];
     const { count, error } = windowCounts[index];
 
@@ -3202,6 +3335,9 @@ async function checkRateLimit(
         retryAfterSeconds,
       };
     }
+
+    const room = headroom(window.limit, used, window.intervalMs);
+    if (tightest === undefined || room.remaining < tightest.remaining) tightest = room;
   }
 
   return {
@@ -3210,8 +3346,10 @@ async function checkRateLimit(
     limit: 0,
     used: 0,
     retryAfterSeconds: 0,
+    ...(tightest ? { tightest } : {}),
   };
 }
+
 
 /**
  * Sliding-window limits for the cheap methods — everything except
@@ -3231,6 +3369,10 @@ async function checkRateLimit(
  * pinned above the per-key `tools/call` limits (100/min, 1000/hr) times that
  * ratio, with headroom, so a session is throttled on `tools/call` first. A
  * runaway loop (2 req/s is 7,200/hr) still gets cheap 429s.
+ *
+ * Those are the BASE values. The per-key `tools/call` windows scale with the
+ * plan (perKeyWindows), so these scale by the same factor
+ * (checkCheapMethodRateLimit), which keeps the same ratio on every plan.
  *
  * Counted atomically per key via the `rate_limit_check` RPC against
  * `rate_limit_buckets`, independent of `activity_log`.
@@ -3262,7 +3404,8 @@ const DISCOVERY_RATE_LIMITS: SlidingWindowLimit[] = [
  * exhaust the discovery bucket long before the tool limiter noticed.
  *
  * These ceilings are therefore pinned above the per-key `tools/call` limits
- * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr) with headroom for the card's extra
+ * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr, scaled by plan like the discovery
+ * table, see checkCheapMethodRateLimit) with headroom for the card's extra
  * reads: a legitimate session cannot reach them, because it would have been
  * throttled on `tools/call` first. A runaway client looping `resources/read`
  * without calling any tool — the cheap-method hole this whole mechanism
@@ -3346,6 +3489,81 @@ async function checkDiscoveryRateLimit(
     used: 0,
     retryAfterSeconds: 0,
   };
+}
+
+// ── Plan-scaled cheap-method limits ─────────────────────────────────────────
+// DISCOVERY_RATE_LIMITS and RESOURCE_RATE_LIMITS are pinned above the per-key
+// tools/call windows (times ~2.2 for hosts that re-handshake around every
+// call). Those windows now scale with the plan (perKeyWindows), so these scale
+// by the same factor, or a Pro or Business session on such a host would be
+// throttled on discovery before it reached its tools/call budget: Pro
+// 300/min x 2.2 = 660 against a flat 250. Scaled, Pro gets 750/min and
+// 7,500/hr, Business 2,500/min and 25,000/hr; Free and Personal keep the base.
+//
+// The cheap methods authenticate without reading the workspace, so the plan
+// comes from a per-isolate cache that every tools/call fills from its own
+// plan read, at no cost. On a miss the base limits apply, and only a request
+// those REFUSE pays for one plan read (cached for five minutes), so a runaway
+// loop on a Free key still costs one bucket UPSERT per denied request.
+
+const PLAN_CEILING_CACHE_TTL_MS = 5 * 60_000;
+const PLAN_CEILING_CACHE_MAX = 5_000;
+const planCeilingCache = new Map<string, { ceiling: number; expiresAt: number }>();
+
+/** Remember a workspace's resolved per-minute ceiling for the cheap-method limits. */
+function rememberPlanCeiling(workspaceId: string, ceiling: number, nowMs = Date.now()): void {
+  if (planCeilingCache.size >= PLAN_CEILING_CACHE_MAX && !planCeilingCache.has(workspaceId)) {
+    planCeilingCache.clear();
+  }
+  planCeilingCache.set(workspaceId, { ceiling, expiresAt: nowMs + PLAN_CEILING_CACHE_TTL_MS });
+}
+
+function cachedPlanCeiling(workspaceId: string, nowMs = Date.now()): number | null {
+  const hit = planCeilingCache.get(workspaceId);
+  if (!hit) return null;
+  if (hit.expiresAt <= nowMs) {
+    planCeilingCache.delete(workspaceId);
+    return null;
+  }
+  return hit.ceiling;
+}
+
+/** A cheap-method limit table lifted by the same factor as the per-key windows. */
+function planScaledLimits(limits: SlidingWindowLimit[], perMinuteCeiling: number): SlidingWindowLimit[] {
+  const factor = perKeyPlanFactor(perMinuteCeiling);
+  return limits.map((w) => ({ ...w, max: Math.max(w.max, Math.ceil(w.max * factor)) }));
+}
+
+/**
+ * checkDiscoveryRateLimit with the table scaled to the key's plan. A refusal
+ * under the base table with no cached plan reads the plan once and, for a
+ * plan that lifts the table, asks again under the scaled one (that request is
+ * counted twice in the bucket, once per isolate per five minutes).
+ */
+async function checkCheapMethodRateLimit(apiKey: ApiKeyRow, isResourceMethod: boolean): Promise<RateLimitResult> {
+  const base = isResourceMethod ? RESOURCE_RATE_LIMITS : DISCOVERY_RATE_LIMITS;
+  const namespace = isResourceMethod ? "resources" : "discovery";
+  const cached = cachedPlanCeiling(apiKey.workspace_id);
+  const first = await checkDiscoveryRateLimit(
+    apiKey.id,
+    cached === null ? base : planScaledLimits(base, cached),
+    namespace,
+  );
+  if (first.allowed || cached !== null) return first;
+  let ceiling: number | null = null;
+  try {
+    const quota = await checkPlanQuota(apiKey.workspace_id);
+    // A failed workspace lookup answers the free default with no markers;
+    // that is not a plan, so it is neither cached nor used.
+    if (quota.firstUse !== undefined || !quota.allowed) {
+      ceiling = quota.perMinuteLimit;
+      rememberPlanCeiling(apiKey.workspace_id, ceiling);
+    }
+  } catch {
+    ceiling = null;
+  }
+  if (ceiling === null || perKeyPlanFactor(ceiling) <= 1) return first;
+  return await checkDiscoveryRateLimit(apiKey.id, planScaledLimits(base, ceiling), namespace);
 }
 
 /**
@@ -3836,15 +4054,26 @@ function usageLimitResult(
   requestId: string | number | null,
   refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
   wording: PlanLimitWording = "standard",
+  checkout: MintedCheckoutLink | null = null,
 ): JsonRpcSuccessResponse {
   const { plan, usedActions, cap, periodEnd } = refusal;
+  // The link rides only with the wording that prints it, and only for Free.
+  const link = plan === "free" && wording === "checkout" ? checkout : null;
   return {
     jsonrpc: "2.0",
     id: requestId,
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL, wording),
+        text: buildUsageLimitText(
+          plan,
+          usedActions,
+          cap,
+          periodEnd,
+          APP_URL,
+          wording,
+          link ? { url: link.url, minutes: link.minutes } : null,
+        ),
       }],
       isError: true,
       _meta: {
@@ -3868,6 +4097,10 @@ function usageLimitResult(
               ...(wording === "directory"
                 ? { plans_url: plansInfoUrl(APP_URL) }
                 : { upgrade_url: freeCapUpgradeUrl(APP_URL) }),
+              // The checkout link, beside upgrade_url rather than instead of
+              // it: a client that already reads upgrade_url keeps working, and
+              // one that knows the new field can render the shorter path.
+              ...(link ? { checkout_url: link.url, checkout_expires_at: link.expiresAt } : {}),
             }
             // Paid: support, not pricing. A client rendering a pricing URL
             // here would offer to sell a bigger allowance, which no paid plan
@@ -3922,12 +4155,94 @@ async function actionLimitResponse(
       return { response: null, reservationId: null };
     case "reserved":
       return { response: null, reservationId: reservation.reservationId };
-    case "refused":
+    case "refused": {
+      const { wording, checkout } = await freeCapRefusalWording(apiKey, reservation, toolName);
       return {
-        response: usageLimitResult(requestId, reservation, await planLimitWording(apiKey)),
+        response: usageLimitResult(requestId, reservation, wording, checkout),
         reservationId: null,
       };
+    }
   }
+}
+
+/**
+ * The service-role binding of checkout-link.ts's database. Every method throws
+ * on an error so mintCheckoutLink can tell "no" from "could not ask" and log
+ * the second as checkout_link_mint_failed.
+ */
+const checkoutLinkIo: CheckoutLinkIo = {
+  async workspace(workspaceId) {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("owner_id, chat_checkout_link_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) throw new Error(`workspace read: ${error.message}`);
+    return data as { owner_id: string | null; chat_checkout_link_enabled: boolean | null } | null;
+  },
+  async experiment(key) {
+    const { data, error } = await supabase
+      .from("experiments")
+      .select("key, status, variants, winner_variant_id")
+      .eq("key", key)
+      .maybeSingle();
+    if (error) throw new Error(`experiment read: ${error.message}`);
+    return data as ExperimentRow | null;
+  },
+  async assign(key, subjectId, variantId) {
+    const { data, error } = await supabase.rpc("experiment_assign", {
+      p_key: key,
+      p_subject_id: subjectId,
+      p_variant_id: variantId,
+    });
+    if (error) throw new Error(`experiment_assign: ${error.message}`);
+    // The RPC returns the STORED variant, which wins over the proposed one.
+    return typeof data === "string" && data ? data : variantId;
+  },
+  async issue(args) {
+    const { data, error } = await supabase.rpc("checkout_link_issue", args);
+    if (error) throw new Error(`checkout_link_issue: ${error.message}`);
+    const row = Array.isArray(data) ? data[0] : data;
+    return (row ?? null) as { id: string; expires_at: string; reused: boolean } | null;
+  },
+};
+
+/**
+ * The wording, and the checkout link if there is one, for a call the allowance
+ * has ALREADY refused. Never called on a successful call, so nothing here costs
+ * a successful call anything.
+ *
+ * Anything that is not a Free refusal under an active rollout takes exactly
+ * today's path (planLimitWording). Otherwise the OpenAI test is made once,
+ * here, and its client name is handed on to the mint for the label, so the
+ * refusal does not ask mcp_client_capabilities twice. A failed client lookup
+ * renders `standard`, as planLimitWording would, and gets no link. Every mint
+ * failure is `standard` too; checkout-link.ts logs it.
+ */
+async function freeCapRefusalWording(
+  apiKey: ApiKeyRow,
+  refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
+  toolName: string,
+): Promise<{ wording: PlanLimitWording; checkout: MintedCheckoutLink | null }> {
+  const modeEnv = Deno.env.get("CHAT_CHECKOUT_LINK");
+  if (refusal.plan !== "free" || checkoutLinkMode(modeEnv) === "off" || INTROSPECTION_ONLY) {
+    return { wording: await planLimitWording(apiKey), checkout: null };
+  }
+  if (isOpenAiOAuthKeyName(apiKey.name)) return { wording: "directory", checkout: null };
+  const clientName = await latestInitializeClientName(apiKey);
+  if (isOpenAiClientName(clientName ?? null)) return { wording: "directory", checkout: null };
+  const checkout = await mintCheckoutLink(checkoutLinkIo, {
+    workspaceId: apiKey.workspace_id,
+    plan: refusal.plan,
+    keyName: apiKey.name,
+    keyCreatedBy: apiKey.created_by ?? null,
+    clientName,
+    blockedTool: toolName,
+    appOrigin: APP_URL,
+    modeEnv,
+    secretEnv: Deno.env.get("CHECKOUT_LINK_SECRET"),
+  });
+  return checkout ? { wording: "checkout", checkout } : { wording: "standard", checkout: null };
 }
 
 /** Records the first server-confirmed successful MCP tool call per workspace.
@@ -4102,8 +4417,21 @@ async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
   // The key's own name first: free, and set by our OAuth issuer from the
   // client's registration (`OAuth: ChatGPT`). See isOpenAiOAuthKeyName.
   if (isOpenAiOAuthKeyName(apiKey.name)) return true;
+  // A failed lookup (undefined) is "not OpenAI" here, as it always was.
+  return isOpenAiClientName((await latestInitializeClientName(apiKey)) ?? null);
+}
+
+/**
+ * The client name most recently recorded for this key at `initialize`
+ * (recordClientCapabilities): the name, null when the key has never sent one,
+ * or undefined when the lookup FAILED. The three are kept apart because the
+ * callers want different things from a failure: isOpenAiClientKey treats it as
+ * "not OpenAI" (it only picks a shape), while the checkout link treats it as
+ * "do not offer one" (see checkout-link.ts, condition 2).
+ */
+async function latestInitializeClientName(apiKey: ApiKeyRow): Promise<string | null | undefined> {
   // Introspection mode has no database to ask; see keyReviewCardGates.
-  if (INTROSPECTION_ONLY) return false;
+  if (INTROSPECTION_ONLY) return undefined;
   const apiKeyId = apiKey.id;
   try {
     const { data, error } = await supabase
@@ -4118,17 +4446,16 @@ async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
         key_id: apiKeyId,
         error: error.message,
       });
-      return false;
+      return undefined;
     }
-    return isOpenAiClientName(
-      (data as { client_name?: string } | null)?.client_name ?? null,
-    );
+    const name = (data as { client_name?: unknown } | null)?.client_name;
+    return typeof name === "string" ? name : null;
   } catch (err) {
     console.error("[mcp-server] client_identity_lookup_threw", {
       key_id: apiKeyId,
       error: err instanceof Error ? err.message : String(err),
     });
-    return false;
+    return undefined;
   }
 }
 
@@ -9322,6 +9649,22 @@ for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
 }
 
 // ---------------------------------------------------------------------------
+// Subscription cleanup (`subscriptions_scan`, `subscriptions_cleanup`).
+//
+// Registered with NO `_meta`: the card metadata is attached per key in
+// `handleToolsList` (mcp-app-resources.ts#SUBSCRIPTION_CARD_TOOL_NAMES), and
+// both tools are DROPPED from the listing for a workspace without
+// `subscription_cleanup_enabled` (see subscriptionToolsVisible). Their handlers
+// refuse in such a workspace too, so a cached listing cannot reach them.
+// Not in BILLABLE_TOOL_NAMES (spec D2); rate limits and activity_log apply as
+// for every tool. Being registry tools, they are on the per-operation surface
+// below unchanged.
+// ---------------------------------------------------------------------------
+for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition });
+}
+
+// ---------------------------------------------------------------------------
 // The per-operation surface: one tool per operation, for OpenAI clients.
 //
 // OpenAI's plugin scan (2026-10-13) flagged every consolidated tool, the
@@ -10475,110 +10818,8 @@ function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   };
 }
 
-/**
- * Decrypts an AES-256-GCM ciphertext produced by
- * `apps/web/src/lib/crypto.ts#encryptToken` using the Web Crypto API.
- *
- * Ciphertext layout (base64url-encoded):
- *   bytes  0–11 : 12-byte random IV
- *   bytes 12–N  : encrypted payload
- *   bytes N–N+15: 16-byte GCM authentication tag
- *
- * Web Crypto's `decrypt()` for AES-GCM expects: payload || authTag
- * concatenated in one Uint8Array with the IV passed separately, so
- * `raw.slice(12)` is the exact input needed.
- *
- * ENCRYPTION_KEY must be a 64-character lowercase hex string (32 bytes)
- * that matches the key used to encrypt the stored token.
- *
- * @throws if ENCRYPTION_KEY is misconfigured or if decryption fails.
- */
-async function decryptStoredToken(encrypted: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY");
-  if (!keyHex || keyHex.length !== 64) {
-    throw new Error(
-      "ENCRYPTION_KEY env var is not set or is not 64 hex characters.",
-    );
-  }
-
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-
-  // base64url → Uint8Array
-  const b64 = encrypted.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  const binaryStr = atob(padded);
-  const raw = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    raw[i] = binaryStr.charCodeAt(i);
-  }
-
-  if (raw.length < 12 + 16) {
-    throw new Error("Encrypted token is too short to be valid.");
-  }
-
-  const iv = raw.slice(0, 12);
-  // raw.slice(12) = ciphertext || authTag — exactly what Web Crypto AES-GCM needs.
-  const ciphertextWithTag = raw.slice(12);
-
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    ciphertextWithTag,
-  );
-
-  return new TextDecoder().decode(decrypted);
-}
-
-/**
- * Encrypts a plaintext string using AES-256-GCM and returns the ciphertext
- * encoded as base64url. Mirror of `apps/web/src/lib/crypto.ts#encryptToken`.
- *
- * Layout: IV(12) || ciphertext || authTag(16), base64url-encoded.
- * Used to persist refreshed OAuth access tokens back to the database.
- */
-async function encryptForStorage(plaintext: string): Promise<string> {
-  const keyHex = Deno.env.get("ENCRYPTION_KEY")!;
-  const keyBytes = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    keyBytes[i] = parseInt(keyHex.substring(i * 2, i * 2 + 2), 16);
-  }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"],
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    cryptoKey,
-    new TextEncoder().encode(plaintext),
-  );
-
-  // IV || ciphertext || authTag (Web Crypto appends the tag automatically)
-  const combined = new Uint8Array(12 + encrypted.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encrypted), 12);
-
-  return btoa(String.fromCharCode(...combined))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
+// decryptStoredToken / encryptForStorage live in storage-crypto.ts (testable,
+// chunked base64: a whole-buffer spread overflowed the stack on large plans).
 
 /**
  * inbox_list — returns all inboxes the API key may access.
@@ -10622,9 +10863,13 @@ async function executeListInboxes(
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
 
+  // Parked inboxes (parked-inbox.ts) are fetched in the same query and listed
+  // after the active ones with `status: "parked"`, so an assistant can explain
+  // why a mailbox the user knows about cannot be used instead of calling it
+  // missing. Only active entries get sender identities and capabilities.
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host")
+    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host, parked_at")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -10668,15 +10913,27 @@ async function executeListInboxes(
     service: string | null;
     imap_host: string | null;
     smtp_host: string | null;
+    parked_at?: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
-  const matchedRows = allRows.filter((row) => matchesInboxFilter(row, filter));
+  const matchedRows = allRows.filter((row) => !inboxIsParked(row) && matchesInboxFilter(row, filter));
+  const parkedEntries = allRows
+    .filter((row) => inboxIsParked(row) && matchesInboxFilter(row, filter))
+    .map((row) => ({
+      inbox_id: row.id,
+      email_address: row.email_address,
+      display_name: row.display_name ?? row.email_address,
+      provider: row.provider,
+      service: row.service ?? null,
+      status: PARKED_INBOX_STATUS,
+      hint: parkedInboxHint(APP_URL),
+    }));
 
   // Only the matched rows are expanded. The Gmail sender-identity lookup below
   // is a network call per row, so narrowing first is also why filtering in
   // memory is no more expensive than the predicate it replaced.
-  const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
+  const activeEntries = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
@@ -10739,6 +10996,9 @@ async function executeListInboxes(
         : {}),
     };
   }));
+
+  // Active first, then parked, each in connection order.
+  const inboxes: Array<Record<string, unknown>> = [...activeEntries, ...parkedEntries];
 
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
@@ -10813,7 +11073,8 @@ async function executeListInboxes(
  * Checks (in order):
  *   1. `inbox_id` matches a UUID format (fast pre-check).
  *   2. If `apiKey.inbox_ids` is non-null, the inbox ID must be in that list.
- *   3. Row exists in `inboxes` with matching `workspace_id` and no `deleted_at`.
+ *   3. Row exists in `inboxes` with matching `workspace_id`, no `deleted_at`
+ *      and no `parked_at` (parked-inbox.ts).
  *   4. `inbox.status` is 'active'.
  *
  * Returns the InboxRow on success, or null on any failure.
@@ -10837,7 +11098,10 @@ async function resolveInbox(
   // undefined there and the query below runs exactly as before.
   const firstParty = firstPartyContext.getStore();
   const cached = firstParty?.inboxRow?.(inboxId, apiKey.workspace_id) as InboxRow | null | undefined;
-  if (cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active") {
+  if (
+    cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active" &&
+    !inboxIsParked(cached as { parked_at?: unknown })
+  ) {
     return cached;
   }
 
@@ -10847,6 +11111,8 @@ async function resolveInbox(
     .eq("id", inboxId)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is outside the plan's inbox cap.
+    .is("parked_at", null)
     .maybeSingle();
 
   if (error || !data) return null;
@@ -10870,9 +11136,11 @@ type InboxResolution =
   | { ok: true; inbox: InboxRow }
   | {
       ok: false;
-      reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
       inboxes?: InboxRow[];
       conflict?: InboxSelectorConflict;
+      /** reason "parked": the parked inbox(es) the call named or could have used. */
+      parked?: ParkedInboxMatch[];
     };
 
 /**
@@ -10899,6 +11167,15 @@ async function resolveInboxArg(
   apiKey: ApiKeyRow,
 ): Promise<InboxResolution> {
   const resolved = await resolveInboxArgInner(args, apiKey);
+  // A selector that named a parked inbox gets told so, not "No inbox matches".
+  // Asked only after the ordinary lookup failed, so the hot path is unchanged.
+  if (!resolved.ok && resolved.reason === "not_found" && hasInboxSelector(args)) {
+    const parked = await findParkedInbox(supabase, apiKey, {
+      inboxId: typeof args["inbox_id"] === "string" ? args["inbox_id"] : null,
+      email: typeof args["inbox"] === "string" ? args["inbox"] : null,
+    });
+    if (parked) return { ok: false, reason: "parked", parked: [parked] };
+  }
   // Record the inbox this request actually resolved so the tools/call dispatcher
   // can log it (the raw arguments alone don't reveal an alias- or auto-resolved
   // inbox). No-op when called outside an activity-log async context.
@@ -10979,6 +11256,7 @@ async function resolveInboxArgInner(
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
+      .is("parked_at", null)
       .eq("status", "active")
       .ilike("email_address", pattern);
 
@@ -11042,11 +11320,14 @@ async function resolveInboxArgInner(
   }
 
   // Neither provided — auto-resolve only when exactly one inbox is accessible.
+  // Parked inboxes are not accessible: one active inbox beside parked ones
+  // still auto-resolves to the active one.
   let query = supabase
     .from("inboxes")
     .select(INBOX_SELECT_COLUMNS)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    .is("parked_at", null)
     .eq("status", "active")
     .order("created_at", { ascending: true });
 
@@ -11059,7 +11340,12 @@ async function resolveInboxArgInner(
 
   const rows = (data ?? []) as unknown as InboxRow[];
   if (rows.length === 1) return { ok: true, inbox: rows[0] };
-  if (rows.length === 0) return { ok: false, reason: "none" };
+  if (rows.length === 0) {
+    // Nothing active, but parked inboxes exist: "no mailbox is connected"
+    // would be false, and would send the user to connect one they already have.
+    const parked = await listParkedInboxes(supabase, apiKey);
+    return parked.length > 0 ? { ok: false, reason: "parked", parked } : { ok: false, reason: "none" };
+  }
   // Carry the accessible inboxes back so the error can name them inline, sparing
   // the caller a separate inbox_list round-trip (which some MCP clients fail to
   // surface on demand — see inboxResolutionError).
@@ -11074,9 +11360,10 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
   _toolName: string,
 ): ToolErrorResult {
@@ -11143,6 +11430,18 @@ function inboxResolutionError(
         };
       }
       errorCode = "inbox_selector_conflict";
+      break;
+    }
+    case "parked": {
+      // The call named a parked inbox, or every inbox the key can see is
+      // parked. Not "not found": the mailbox exists and the user knows it.
+      const parked = failure.parked ?? [];
+      text = parkedInboxErrorText(parked.map((ib) => ib.email_address), APP_URL);
+      structuredContent = {
+        error: PARKED_INBOX_ERROR_CODE,
+        inboxes: parked.map((ib) => ({ inbox_id: ib.id, email_address: ib.email_address, status: PARKED_INBOX_STATUS })),
+      };
+      errorCode = PARKED_INBOX_ERROR_CODE;
       break;
     }
     case "none":
@@ -17693,13 +17992,28 @@ async function executeForwardEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts). A batch counts every message it
+  // forwards. The fan-out hash is the forwarded message ids plus the note:
+  // the original's content is not read here, and the same original sent to
+  // many people is exactly what the brake is for.
+  const brake = await outboundBrakeGate({
+    tool: "email_forward",
+    apiKey,
+    inbox: senderInbox,
+    messages: messageIds.length,
+    subject: `forward\n${[...messageIds].sort().join("\n")}`,
+    body: typeof body === "string" ? body : null,
+    recipients: [...addressList(to), ...addressList(cc), ...addressList(bcc)],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   // Approval is deliberately enforced after all caller-controlled input and
   // sender identity checks, but before reading/sending through the provider.
   // Preserve the original operation arguments so the approval dispatcher can
   // execute the same threaded forward once a human approves it.
   try {
     const approval = await queueSendApproval(
-      senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -17744,8 +18058,16 @@ async function executeForwardEmail(
   }
 
   /** One message, one provider call. Shared by the single and batch shapes. */
-  const forwardOne = (id: string): Promise<ForwardEmailResult> =>
-    forwardRelayMessage(senderInbox, id, fwdParams);
+  // A provider spam/policy refusal is counted against the inbox here, once per
+  // message, for the single and the batch shape alike, then rethrown untouched.
+  const forwardOne = async (id: string): Promise<ForwardEmailResult> => {
+    try {
+      return await forwardRelayMessage(senderInbox, id, fwdParams);
+    } catch (err) {
+      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+      throw err;
+    }
+  };
 
   if (targets.mode === "batch") {
     // The whole-call idempotency claim is skipped for a batch (see
@@ -18088,12 +18410,26 @@ async function executeReplyToEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts). A reply's recipients come from the
+  // original and are not known yet, so the thread being replied to stands in
+  // for its recipient: one body replied into many threads is the fan-out.
+  const brake = await outboundBrakeGate({
+    tool: "email_reply",
+    apiKey,
+    inbox: senderInbox,
+    messages: 1,
+    subject: "reply",
+    body: typeof body === "string" ? body : null,
+    recipients: [`thread:${String(messageId)}`, ...extraCc, ...extraBcc],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   // Do not contact the provider until an authorized dashboard user approves
   // this exact reply request. The original args retain the message id needed
   // to derive threading headers at approved-dispatch time.
   try {
     const approval = await queueSendApproval(
-      senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -18173,6 +18509,8 @@ async function executeReplyToEmail(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
 
     if (message === "message_not_found") {
       return {
@@ -18515,6 +18853,92 @@ function sendWillBeHeld(inbox: InboxRow, apiKey: ApiKeyRow): boolean {
  */
 function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
   return apiKey.internalApprovalDispatch === true || apiKey.firstPartyHuman === true;
+}
+
+// ── Outbound abuse brakes ──────────────────────────────────────────────────
+// outbound-brakes.ts owns the limits, the hashing and the wording; these are
+// the wiring into this server's send handlers. Every tool-initiated send
+// (email_send, email_reply, email_forward, draft_send, and the approved
+// re-runs of each) asks outboundBrakeGate after its chat-confirm gate and
+// before queueSendApproval, so a refused send has queued nothing, and a held
+// send is held in the ordinary approval flow. Scheduled sends are checked by
+// the dispatcher at send time (handleScheduledDispatch).
+
+/** What the brakes decided for one tool-initiated send. */
+type OutboundBrakeVerdict =
+  | { refusal: ReturnType<typeof brakeRefusalResult> }
+  | { hold: boolean };
+
+async function outboundBrakeGate(input: {
+  tool: string;
+  apiKey: ApiKeyRow;
+  /** The inbox that transmits (the sender identity's inbox). */
+  inbox: InboxRow;
+  messages: number;
+  subject?: string | null;
+  body?: string | null;
+  recipients: readonly string[];
+}): Promise<OutboundBrakeVerdict> {
+  if (INTROSPECTION_ONLY) return { hold: false };
+  // Held for a human anyway: the send is counted when the approved re-run is
+  // dispatched, which comes back through here as a human decision.
+  if (sendWillBeHeld(input.inbox, input.apiKey)) return { hold: false };
+  const decision: BrakeDecision = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
+    workspaceId: input.apiKey.workspace_id,
+    inboxId: input.inbox.id,
+    messages: input.messages,
+    subject: input.subject,
+    body: input.body,
+    recipients: input.recipients,
+    humanApproved: sendDecidedByHuman(input.apiKey),
+  });
+  if (decision.kind === "refuse") return { refusal: brakeRefusalResult(input.tool, decision) };
+  if (decision.kind === "hold") {
+    if (decision.newlyTripped) {
+      await notifyBrakeTripped({
+        workspaceId: input.apiKey.workspace_id,
+        inboxId: input.inbox.id,
+        brake: "fanout_hold",
+        retryAt: decision.retryAt,
+      });
+    }
+    return { hold: true };
+  }
+  return { hold: false };
+}
+
+/** The inbox as queueSendApproval must see it while the fan-out brake holds it. */
+function brakeHeldInbox(inbox: InboxRow): InboxRow {
+  return { ...inbox, send_approval_required: true };
+}
+
+/**
+ * Tell the operator a brake tripped, through the system-event pipeline
+ * (emit_system_event -> system-notify). Ids and the brake name only. Never
+ * throws: a notice that cannot be queued must not fail the send path.
+ */
+async function notifyBrakeTripped(input: Parameters<typeof brakeTrippedEvent>[0]): Promise<void> {
+  try {
+    const { error } = await supabase.rpc("emit_system_event", brakeTrippedEvent(input));
+    if (error) console.error("[mcp-server] outbound_brake_notify_failed", { error: error.message });
+  } catch (err) {
+    console.error("[mcp-server] outbound_brake_notify_threw", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Count a provider spam/policy refusal against the transmitting inbox (the
+ * third within an hour pauses it). Called from every send path's failure
+ * branch with the raw error; anything that is not a policy refusal is ignored.
+ */
+async function noteProviderRefusal(workspaceId: string, inboxId: string, err: unknown): Promise<void> {
+  if (INTROSPECTION_ONLY) return;
+  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, { workspaceId, inboxId, error: err });
+  if (outcome?.newlyTripped) {
+    await notifyBrakeTripped({ workspaceId, inboxId, brake: "provider_refusal_pause", retryAt: outcome.retryAt });
+  }
 }
 
 /**
@@ -19152,11 +19576,24 @@ async function executeSendEmail(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts): freeze, provider-refusal pause, daily
+  // ceiling, and the fan-out hold, which reuses the approval queue below.
+  const brake = await outboundBrakeGate({
+    tool: "email_send",
+    apiKey,
+    inbox: senderInbox,
+    messages: 1,
+    subject: sendParams.subject,
+    body: sendParams.textBody,
+    recipients: [...sendParams.to, ...(sendParams.cc ?? []), ...(sendParams.bcc ?? [])],
+  });
+  if ("refusal" in brake) return brake.refusal;
+
   try {
     // `heldSendSnapshot` (not an object literal) because this payload carries a
     // load-bearing key that is invisible here: `include_signature: false`, which
     // records that the body above is FINAL. See that function.
-    const approval = await queueSendApproval(senderInbox, apiKey, heldSendSnapshot({
+    const approval = await queueSendApproval(brake.hold ? brakeHeldInbox(senderInbox) : senderInbox, apiKey, heldSendSnapshot({
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
       subject: sendParams.subject, textBody: sendParams.textBody,
@@ -19201,6 +19638,8 @@ async function executeSendEmail(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
 
     if (message === "quota_exceeded") {
       return {
@@ -19817,6 +20256,229 @@ function searchMessagesForProvider(
         .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     default:
       return Promise.reject(new Error("unsupported_provider"));
+  }
+}
+
+/**
+ * The provider context `fetchListHeaderRecords` (subscription-scan.ts) scans
+ * with: subscription cleanup's read of List-Unsubscribe headers. Nothing on
+ * the request path calls it yet; the `subscriptions_scan` tool will.
+ *
+ * IMAP needs the caller's session (the caller owns and closes it) and resolves
+ * the Junk/Spam mailbox on it with a strict resolve (no `forRead`: that only
+ * unlocks the archive fallback, and imap-folder-target.test.ts pins its call
+ * sites); an account without one scans the inbox alone. Gmail and Outlook get an
+ * authorized fetch with a token refreshed once for the scan. The budget is the
+ * caller's, so the scan and whatever the tool does after it spend one pot.
+ */
+async function subscriptionScanContextFor(
+  inbox: InboxRow,
+  budget: WorkBudget,
+  session: ImapSession<ImapClient> | null,
+): Promise<ListHeaderScanContext> {
+  switch (inbox.provider) {
+    case "gmail": {
+      const accessToken = await withFreshGmailToken(inbox);
+      return {
+        provider: "gmail",
+        budget,
+        trust: authservTrustFor("gmail"),
+        fetch: (path) =>
+          fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+      };
+    }
+    case "outlook": {
+      const accessToken = await withFreshOutlookToken(inbox);
+      return {
+        provider: "outlook",
+        budget,
+        trust: authservTrustFor("outlook"),
+        fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl),
+      };
+    }
+    default: {
+      if (!session) throw new Error("subscription scan: an IMAP inbox needs a session");
+      let junkFolder: string | null = null;
+      try {
+        junkFolder = await resolveFolderId(inbox, "junk", { strict: true, session });
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        // No Junk mailbox (or an ambiguous one): scan the inbox alone.
+        junkFolder = null;
+      }
+      return {
+        provider: "imap",
+        budget,
+        // Only Authentication-Results written by this host (or a known
+        // provider behind it) count; see list-unsubscribe.ts.
+        trust: authservTrustFor("imap", inbox.imap_host),
+        inboxFolder: "INBOX",
+        junkFolder,
+        select: (folder) => session.select(imapMailboxForServerFolder(folder)),
+      };
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup: the index.ts half (wiring only). The handlers, the
+// ladder and the follow-up live in subscription-cleanup.ts.
+// ---------------------------------------------------------------------------
+
+/**
+ * `workspaces.subscription_cleanup_enabled`: OUR rollout gate (seeded by
+ * 20261024210000). Fails to "off" on any error, and is always off in
+ * introspection mode, which has no database.
+ */
+async function workspaceSubscriptionCleanupEnabled(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("subscription_cleanup_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] subscription_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { subscription_cleanup_enabled?: unknown } | null)?.subscription_cleanup_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] subscription_rollout_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** The listing without the subscription tools unless the workspace is rolled out. */
+function subscriptionToolsVisible<T extends { name: string }>(tools: T[], enabled: boolean): T[] {
+  if (enabled) return tools;
+  return tools.filter((tool) => !(SUBSCRIPTION_TOOL_NAMES as readonly string[]).includes(tool.name));
+}
+
+/** Provider error to a sentinel the module can put in its refusal. */
+function subscriptionErrorSentinel(err: unknown): Error {
+  if (err instanceof ImapAuthError) return new Error("imap_auth_failed");
+  const message = err instanceof Error ? err.message : String(err);
+  return new Error(/^[a-z][a-z0-9_]{2,63}$/.test(message) ? message : "provider_error");
+}
+
+function subscriptionDepsFor(apiKey: ApiKeyRow): SubscriptionDeps {
+  // The module carries the inbox as a SubInbox; it is always the InboxRow that
+  // resolveInboxArg returned, so the cast back is exact.
+  const rowOf = (inbox: SubInbox) => inbox as unknown as InboxRow;
+  return {
+    store: supabaseSubscriptionStore(supabase),
+    encrypt: encryptForStorage,
+    decrypt: decryptStoredToken,
+    digest: idempotencyDigest,
+    appUrl: APP_URL,
+    workspaceEnabled: workspaceSubscriptionCleanupEnabled,
+    async resolveInbox(args) {
+      const resolved = await resolveInboxArg(args, apiKey);
+      if (!resolved.ok) {
+        const refusal = inboxResolutionError(resolved, "subscriptions");
+        return {
+          ok: false,
+          result: { result: refusal.result as never, logStatus: "error", logErrorCode: refusal.logErrorCode },
+        };
+      }
+      return { ok: true, inbox: resolved.inbox };
+    },
+    async scan(inbox, opts, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        const ctx = await subscriptionScanContextFor(row, budget, session);
+        return await fetchListHeaderRecords(ctx, opts);
+      } catch (err) {
+        throw subscriptionErrorSentinel(err);
+      } finally {
+        await session?.close();
+      }
+    },
+    // D3: straight from the edge function, behind the https host guard.
+    postOneClick: (url, opts) => postOneClick(url, { timeoutMs: opts.timeoutMs }),
+    async createDraft(inbox, draft) {
+      // D6: a draft, never a send. The provider create paths are the same
+      // ones draft_create uses; no signature (an unsubscribe note is not
+      // correspondence) and no card envelope (the result is the cleanup card).
+      const row = rowOf(inbox);
+      if (!getProviderCapabilities(row.provider).drafts) return { ok: false, error_code: "drafts_unsupported" };
+      if (!isValidEmailAddress(draft.to)) return { ok: false, error_code: "invalid_recipient" };
+      const params: DraftParams = { to: [draft.to], cc: [], bcc: [], subject: draft.subject, body: draft.body };
+      try {
+        const created = row.provider === "gmail"
+          ? await gmailCreateDraft(row, params)
+          : row.provider === "outlook"
+          ? await outlookCreateDraft(row, params)
+          : await imapCreateDraft(row, params);
+        return { ok: true, draft_id: created.draft_id };
+      } catch (err) {
+        return { ok: false, error_code: subscriptionErrorSentinel(err).message };
+      }
+    },
+    async archive(inbox, ids, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        // Gmail archive is "remove INBOX" (an empty destination in the shared
+        // relocation plan, exactly as email_archive does it); Outlook and IMAP
+        // resolve the archive role the way a move to "archive" does, which on
+        // IMAP creates the mailbox when the account has none.
+        const destination = row.provider === "gmail" ? "" : await resolveFolderId(row, "archive", { session });
+        const result = await runBulkMoveOnIds(row, ids, destination, null, {
+          session: session ?? undefined,
+          budget,
+        });
+        return {
+          destination: "Archive",
+          moved: result.succeeded,
+          // Only a message that is gone counts as done. Any other failure (auth,
+          // outage) leaves the id for `continue: true`.
+          failed: result.failed.filter((f) => f.error === MESSAGE_NOT_FOUND).map((f) => f.id),
+        };
+      } finally {
+        await session?.close();
+      }
+    },
+  };
+}
+
+/** POST /subscription-followup (pg_cron, hourly). */
+async function handleSubscriptionFollowUp(): Promise<Response> {
+  try {
+    const summary = await runSubscriptionFollowUp({
+      store: supabaseSubscriptionStore(supabase),
+      async search(inboxId, fromAddress, sinceIso) {
+        const row = await loadInboxRowForTriage(inboxId);
+        if (!row) throw new Error("inbox_unavailable");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const result = await Promise.race([
+            searchMessagesForProvider(row, { from: fromAddress, since: sinceIso }, 1, 0, []),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS);
+            }),
+          ]);
+          return result.messages.length > 0;
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+    });
+    console.log("[subscriptions] follow_up", summary);
+    return new Response(JSON.stringify({ ok: true, ...summary }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[subscriptions] follow_up_failed", { error: err instanceof Error ? err.message : String(err) });
+    return new Response(JSON.stringify({ ok: false }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -24667,6 +25329,8 @@ async function keyReviewCardGates(
     .select(reachableInboxSelect("bulk_review_mode", "send_approval_required"))
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
+    // A parked inbox (parked-inbox.ts) is as unreachable as a revoked one.
+    .is("parked_at", null)
     .eq("status", "active")
     .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
@@ -24832,6 +25496,8 @@ async function executeBulkPlanRequest(
     // projection surviving a later edit: a soft-deleted row never arrives at
     // all, whatever the predicate below can or cannot see.
     .is("deleted_at", null)
+    // A plan reviewed before the inbox was parked does not run after it.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) {
     return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_not_found" };
@@ -28173,7 +28839,10 @@ async function allReachableInboxesHideDraftEditor(
       .from("inboxes")
       .select(reachableInboxSelect("draft_editor_hidden"))
       .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      // A parked inbox is outside the plan and no call can land on it; its
+      // stale default must not decide the rollup any more than a deleted one's.
+      .is("parked_at", null);
     if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
     const { data, error } = await query;
     if (error) {
@@ -30071,8 +30740,23 @@ async function executeSendDraft(
   });
   if (chatRefusal) return chatRefusal;
 
+  // Abuse brakes (outbound-brakes.ts): freeze, provider-refusal pause and the
+  // daily ceiling. No content is passed, so the fan-out brake does not apply
+  // here: the draft's content is held by the provider and is not read on this
+  // path, and a read per send would cost a provider round trip. A held fan-out
+  // (from email_send and the others) still holds a draft send from the inbox.
+  const brake = await outboundBrakeGate({
+    tool: "draft_send",
+    apiKey,
+    inbox,
+    messages: 1,
+    recipients: [],
+  });
+  if ("refusal" in brake) return brake.refusal;
+  const brakeHold = brake.hold;
+
   let approvalRecord: Record<string, unknown> = {};
-  if (sendWillBeHeld(inbox, apiKey)) {
+  if (sendWillBeHeld(brakeHold ? brakeHeldInbox(inbox) : inbox, apiKey)) {
     let read: DraftContent | null;
     try {
       read = await readDraftForApproval(inbox, draftId);
@@ -30092,7 +30776,7 @@ async function executeSendDraft(
   // without permitting an external MCP credential to bypass the gate.
   try {
     const approval = await queueSendApproval(
-      inbox,
+      brakeHold ? brakeHeldInbox(inbox) : inbox,
       apiKey,
       { ...approvalArgs, inbox_id: inbox.id, ...approvalRecord },
       undefined,
@@ -30138,6 +30822,8 @@ async function executeSendDraft(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // Counted only when the provider refused it as spam or against policy.
+    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err);
     if (message === "draft_not_found") {
       return {
         result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
@@ -30811,6 +31497,8 @@ async function executeSearchContacts(
   } else if (inboxId) {
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -30828,6 +31516,7 @@ async function executeSearchContacts(
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
+      .is("parked_at", null)
       .eq("status", "active")
       .order("created_at", { ascending: true });
     if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
@@ -31265,6 +31954,8 @@ async function executeListScheduled(
     // If inbox_id provided, validate accessibility.
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
+      const parked = await findParkedInbox(supabase, apiKey, { inboxId });
+      if (parked) return inboxResolutionError({ reason: "parked", parked: [parked] }, "inbox_id");
       return {
         result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
         logStatus: "error", logErrorCode: "inbox_not_found",
@@ -31901,10 +32592,12 @@ async function handleToolsList(
   // which is a frontend change.
   // Both reads below are independent pure reads, so they share one round trip:
   // `perOperation` is started here and only taken further down.
-  const [uiGates, perOperation] = await Promise.all([
+  const [baseGates, perOperation, subscriptions] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
+    workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
   ]);
+  const uiGates = { ...baseGates, subscriptions };
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -31927,7 +32620,7 @@ async function handleToolsList(
   // is what its plugin review requires; see PER_OPERATION_LISTING. Read
   // alongside the card gates above.
   const visibleTools = withListingCardMeta(
-    toolsForListing(apiKey, perOperation),
+    subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions),
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -32443,6 +33136,18 @@ async function runExecutor(
     )!;
     return { result, logStatus, logErrorCode };
   }
+  if (isSubscriptionToolName(dispatchName)) {
+    // Subscription cleanup. The workspace flag, the plan's workspace and inbox
+    // allowlist, its expiry and the sender keys are all re-checked inside the
+    // handler; see subscription-cleanup.ts. `logDetails` carries counts only.
+    const { result, logStatus, logErrorCode, logDetails } = await runSubscriptionTool(
+      dispatchName,
+      subscriptionDepsFor(apiKey),
+      bulkCallerFor(apiKey),
+      rawArgs,
+    )!;
+    return { result, logStatus, logErrorCode, logErrorDetails: logDetails ?? null };
+  }
   if (isBulkToolName(dispatchName)) {
     // MCP Apps bulk-plan tools. As with the approval tools, the scope check
     // above is necessary and nowhere near sufficient: a plan_id supplied by
@@ -32565,8 +33270,13 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: toolsForListing(apiKey, await isOpenAiClientKey(apiKey))
-          .map((t) => t.name),
+        //
+        // That includes the subscription rollout filter: a workspace without
+        // subscription_cleanup_enabled is never told those tools exist.
+        available_tools: subscriptionToolsVisible(
+          toolsForListing(apiKey, await isOpenAiClientKey(apiKey)),
+          await workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
+        ).map((t) => t.name),
       },
     );
   }
@@ -32789,6 +33499,13 @@ async function handleToolsCall(
       // takes one: the same message either way, so it is rewritten before the
       // review below can call it misplaced. See normalizeMessageIdShape.
       normalizeMessageIdShape(argumentIndex.allowedByAction[selectedAction] ?? [], argsObj);
+      // `folder: X` on a search means `include_folders: [X]`, and was being
+      // dropped as list-only. See normalizeSearchFolderScope.
+      // Read-only actions only: on search_and_move or a delete sweep the
+      // refusal stays, for the reason LENIENT_ACTIONS gives.
+      if (allowsLenientArguments(toolName, selectedAction)) {
+        normalizeSearchFolderScope(argumentIndex.allowedByAction[selectedAction] ?? [], argsObj);
+      }
       // Keyed on the RESOLVED action. The selector as sent ("Read", "email_list")
       // names no row in the index, which made every argument of a resolved
       // call look misplaced.
@@ -32836,6 +33553,19 @@ async function handleToolsCall(
       if (!(exposedKey in standaloneArgs)) continue;
       if (!(legacyKey in standaloneArgs)) standaloneArgs[legacyKey] = standaloneArgs[exposedKey];
       delete standaloneArgs[exposedKey];
+    }
+    // The per-operation email_search refused `folder`; it scopes the search
+    // the same way it does on email_read. See normalizeSearchFolderScope.
+    // Read-only operations only, as on the consolidated path.
+    const parentActionName = parent
+      ? Object.entries(CONSOLIDATED_SPECS[parent.tool]?.actions ?? {})
+        .find(([, spec]) => spec === parent.action)?.[0]
+      : undefined;
+    if (parent && parentActionName && allowsLenientArguments(parent.tool, parentActionName)) {
+      normalizeSearchFolderScope(
+        Object.keys((tool.inputSchema.properties ?? {}) as Record<string, unknown>),
+        standaloneArgs,
+      );
     }
     const droppedAction = dropRedundantAction(
       toolName,
@@ -33455,6 +34185,22 @@ async function handleToolsCall(
     ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
+  // The once-a-day billing notice, while the owner's renewal payment is
+  // failing (payment-notice.ts). Successful results only, at most once per
+  // workspace per UTC day (claimed in the database), and it never fails the
+  // call. After the audit log and the idempotency snapshot, like the card
+  // stamp below, so a replay does not repeat it. No query unless an issue is
+  // recorded and today's notice is still unclaimed.
+  await maybeAttachPaymentNotice({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    markers: ctx.paymentIssue,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
   // Last thing before the result leaves: if this is one of our own
   // workspaces AND this result carries a card, let that card show its
   // protocol diagnostics line. Deliberately after the audit log and the
@@ -33616,6 +34362,19 @@ interface ScheduledDispatchDeps {
     logErrorCode: string | null,
   ): Promise<void>;
   sendViaProvider(inbox: InboxRow, params: SendEmailParams): Promise<SendEmailResult>;
+  /**
+   * The outbound abuse brakes for a scheduled send (outbound-brakes.ts),
+   * asked just before sendViaProvider. Optional so a test's deps can leave
+   * it out; production always has it.
+   */
+  outboundBrake?(
+    workspaceId: string,
+    inbox: InboxRow,
+    params: SendEmailParams,
+    humanApproved: boolean,
+  ): Promise<BrakeDecision>;
+  /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
+  noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
 }
 
 const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
@@ -33633,6 +34392,22 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
     return executeSendEmail(original, internalKey);
   },
   completeApprovedIdempotency: completeApprovedOutboundIdempotency,
+  async outboundBrake(workspaceId, inbox, params, humanApproved) {
+    const decision = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
+      workspaceId,
+      inboxId: inbox.id,
+      messages: 1,
+      subject: params.subject,
+      body: params.textBody,
+      recipients: [...params.to, ...(params.cc ?? []), ...(params.bcc ?? [])],
+      humanApproved,
+    });
+    if (decision.kind === "hold" && decision.newlyTripped) {
+      await notifyBrakeTripped({ workspaceId, inboxId: inbox.id, brake: "fanout_hold", retryAt: decision.retryAt });
+    }
+    return decision;
+  },
+  noteRefusal: noteProviderRefusal,
   sendViaProvider(inbox, params) {
     switch (inbox.provider) {
       case "gmail":
@@ -33788,7 +34563,9 @@ async function handleScheduledDispatch(
         // for are one list by construction. Hand-writing the projection is the
         // drift that turns the predicate into a constant true: an ABSENT
         // column is not decisive.
-        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
+        // `parked_at` rides along for the parking rule below; it is not a SQL
+        // filter, because a send scheduled before parking still goes out.
+        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(","), "parked_at"))
         .eq("id", row.inbox_id)
         // The row's own workspace, never just the id: a row whose inbox_id
         // names another tenant's mailbox must not resolve it. (Until
@@ -33824,6 +34601,17 @@ async function handleScheduledDispatch(
           `The mailbox this message was scheduled from is no longer connected ` +
             `(status: ${status}). Reconnect it, then schedule the message again.`,
         );
+      }
+      // PARKED (parked-inbox.ts). A send scheduled while the inbox was active
+      // is delivered: the customer scheduled it while the plan covered the
+      // inbox (plan decision D4). One created after parking is failed with a
+      // detail that says so; no resolver path should be able to create it.
+      if (scheduledSendBlockedByParking(row, inboxData as { parked_at?: unknown })) {
+        console.error("[dispatch] scheduled_send_inbox_parked", {
+          scheduled_send_id: row.id,
+          inbox_id: row.inbox_id,
+        });
+        throw new Error(SCHEDULED_SEND_PARKED_DETAIL);
       }
       const inbox = inboxData as unknown as InboxRow;
       // A receive-only inbox has no SMTP server. One that was switched to
@@ -33987,6 +34775,19 @@ async function handleScheduledDispatch(
             original,
             internalKey,
           );
+          // An abuse brake refused the approved send (outbound-brakes.ts):
+          // nothing was sent, and the approval must not be lost or settled as
+          // failed. Hold the row and try again on a later tick, once the
+          // freeze, the pause or the daily ceiling has lifted.
+          if (
+            dispatchedResult.logStatus !== "success" &&
+            dispatchedResult.logErrorCode !== null &&
+            OUTBOUND_BRAKE_ERROR_CODES.has(dispatchedResult.logErrorCode)
+          ) {
+            throw new ScheduledDispatchHeld(
+              `approved ${approval.operation} held by a send limit (${dispatchedResult.logErrorCode}); nothing was sent`,
+            );
+          }
           // The caller's idempotency record remains pending until this trusted
           // dispatcher has reached a terminal outcome. This makes replays after
           // approval accurately report delivery/failure instead of a stale
@@ -34056,9 +34857,37 @@ async function handleScheduledDispatch(
       // interactive send path.
       applySignature(sendParams, inbox);
 
+      // ── Abuse brakes (outbound-brakes.ts) ───────────────────────────────
+      // A refusal or a fan-out hold leaves the row pending, untouched, for a
+      // later tick: held, never dropped. An approved schedule is a human's
+      // decision, so it skips the fan-out brake and is still counted.
+      if (deps.outboundBrake) {
+        const brake = await deps.outboundBrake(
+          String(row.workspace_id),
+          inbox,
+          sendParams,
+          approvedScheduleId !== null,
+        );
+        if (brake.kind === "refuse") {
+          throw new ScheduledDispatchHeld(brakeRefusalText("scheduled send", brake.code, brake.retryAt));
+        }
+        if (brake.kind === "hold") {
+          throw new ScheduledDispatchHeld(
+            "scheduled send held: this inbox sent one message to many recipients within an hour, " +
+              "so its sends are paused until the end of the UTC day. Nothing was sent.",
+          );
+        }
+      }
+
       // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
       providerAttempted = true;
-      const sendResult: SendEmailResult = await deps.sendViaProvider(inbox, sendParams);
+      let sendResult: SendEmailResult;
+      try {
+        sendResult = await deps.sendViaProvider(inbox, sendParams);
+      } catch (sendErr) {
+        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr);
+        throw sendErr;
+      }
       if (approvedScheduleId !== null) {
         await deps.completeApprovedIdempotency(approvedScheduleId, "success", null);
       }
@@ -34263,6 +35092,9 @@ async function loadInboxRowForTriage(
     // Soft-delete stays in SQL, as on every other inboxes read: the row never
     // arrives at all, whatever the projection later drifts to.
     .is("deleted_at", null)
+    // A parked inbox's rules are paused ('inbox_parked') before it is parked,
+    // so a rule only gets here if that write failed. Refusing is the backstop.
+    .is("parked_at", null)
     .maybeSingle();
   if (error || !data) return null;
   if (!inboxIsReachable(data as InboxReachabilityRow)) {
@@ -34786,12 +35618,18 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  */
 function automationInboxFailureMessage(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
+    parked?: ParkedInboxMatch[];
   },
 ): string {
   switch (failure.reason) {
+    case "parked": {
+      // Lower-case first word: the caller prefixes "automation <action>: ".
+      const text = parkedInboxErrorText((failure.parked ?? []).map((ib) => ib.email_address), APP_URL);
+      return text.charAt(0).toLowerCase() + text.slice(1);
+    }
     case "ambiguous": {
       const listed = (failure.inboxes ?? [])
         .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
@@ -34933,6 +35771,8 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     .select(INBOX_SELECT_COLUMNS)
     .eq("id", inboxId)
     .eq("workspace_id", workspaceId)
+    // A parked inbox is not opened for a preview either (parked-inbox.ts).
+    .is("parked_at", null)
     .maybeSingle<InboxRow>();
   if (!inboxRow) return json({ error: "inbox_not_found" }, 404);
 
@@ -35286,6 +36126,29 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return handleTriageDispatch(triageDeps());
   }
 
+  // ── Subscription cleanup follow-up route ──────────────────────────────────
+  // Called hourly by pg_cron (dispatch_subscription_followup, migration
+  // 20261024210100), same guard and secret as /triage-dispatch. The body is
+  // ignored: which rows are due, the leases and the budget live in
+  // runSubscriptionFollowUp.
+  if (reqUrl.pathname.endsWith("/subscription-followup")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (!dispatchSecret || !providedSecret || providedSecret !== dispatchSecret) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return await handleSubscriptionFollowUp();
+  }
+
   // ── Automations preview route ─────────────────────────────────────────────
   // Called by the dashboard's server route, NOT by pg_cron, which is why it is
   // guarded by the service-role key rather than X-Dispatch-Secret. Read-only.
@@ -35550,9 +36413,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // paid by a runaway loop, while every initialize and tools/list saves the
   // round trips this used to put in front of the other gates.
   const cheapMethodPending = metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping"
-    ? (isResourceMethod
-      ? checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
-      : checkDiscoveryRateLimit(apiKey.id))
+    ? checkCheapMethodRateLimit(apiKey, isResourceMethod)
     : null;
   // Awaited below before anything else is; this only keeps a rejection that
   // lands first from counting as unhandled.
@@ -35593,11 +36454,28 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // response leaves (GateReservationSlot), so a rate-limited call still ends
   // with nothing reserved and no allowance consumed. On the per-query path the
   // reservation is made inside handleToolsCall, after both gates, as before.
+  // The per-key windows scale with the plan (perKeyWindows), so the per-key
+  // limiter is handed the ceiling the plan quota resolves, from the same
+  // read: no round trip of its own. Settled exactly once, on every path.
+  let settleKeyCeiling: (ceiling: number) => void = () => {};
+  const keyCeiling = new Promise<number>((resolve) => {
+    let settled = false;
+    settleKeyCeiling = (ceiling) => {
+      if (settled) return;
+      settled = true;
+      resolve(ceiling);
+    };
+  });
   const quotaPending = isResourceMethod || !metered
     ? null
-    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota);
-  // Never awaited on a denial, so a rejection must not go unhandled.
-  quotaPending?.catch(() => {});
+    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota, settleKeyCeiling);
+  // Never awaited on a denial, so a rejection must not go unhandled. A
+  // rejection leaves the per-key limiter on its base windows.
+  quotaPending?.catch(() => {}).finally(() => settleKeyCeiling(RATE_LIMIT_WINDOWS[0].limit));
+  // Fills the plan cache the cheap-method limits scale from, from this read.
+  quotaPending?.then((quota) => {
+    if (quota.firstUse !== undefined || !quota.allowed) rememberPlanCeiling(apiKey.workspace_id, quota.perMinuteLimit);
+  }, () => {});
   if (metered && callMayMeter) {
     ctx.allowance = preloaded && "allowance" in preloaded
       ? Promise.resolve(preloaded.allowance ?? null)
@@ -35606,7 +36484,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   }
   const rateLimitPending = isResourceMethod || !metered
     ? null
-    : checkRateLimit(apiKey.id, preloaded?.rateLimit);
+    : checkRateLimit(apiKey.id, preloaded?.rateLimit, keyCeiling);
   // Never awaited when the cheap-method bucket refuses first.
   rateLimitPending?.catch(() => {});
 
@@ -35728,6 +36606,19 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
+  if ("paymentIssue" in quotaResult) ctx.paymentIssue = quotaResult.paymentIssue;
+
+  // ── RateLimit-* headers on an answered tools/call ────────────────────────
+  // So a client can pace itself before it meets a 429. Built from what the
+  // two gates above already counted (rateLimitHeaders); no extra query.
+  const successRateLimitHeaders: Record<string, string> = rpcRequest.method === "tools/call"
+    ? rateLimitHeaders(
+      "tightest" in rateLimitResult ? rateLimitResult.tightest : undefined,
+      "counted" in quotaResult && quotaResult.counted === true
+        ? headroom(quotaResult.perMinuteLimit, quotaResult.usedThisMinute, PLAN_RPM_WINDOW_MS)
+        : undefined,
+    )
+    : {};
 
   // ── Route to method handler ───────────────────────────────────────────────
   // Every method result leaves through here, so the `_meta` guard sits here too
@@ -35860,12 +36751,16 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
         to_build: REVIEW_CARD_BUILD_ID,
         on_method: rpcRequest.method,
       });
-      return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+      return withRateLimitHeaders(
+        sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS),
+        response,
+        successRateLimitHeaders,
+      );
     }
     // A concurrent call on this same key delivered it. Sending a second
     // notification would make the client re-read a listing it is already
     // re-reading.
-    return jsonResponse(response);
+    return withRateLimitHeaders(jsonResponse(response), response, successRateLimitHeaders);
   }
 
   if (metered && notifyDecision.record !== null) {
@@ -35882,7 +36777,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     ).then(undefined, () => {});
   }
 
-  return jsonResponse(response);
+  return withRateLimitHeaders(jsonResponse(response), response, successRateLimitHeaders);
 }
 
 // ---------------------------------------------------------------------------
