@@ -44,14 +44,14 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-10-27',
+    date: '2026-10-24',
     kind: 'added',
     title: 'Follow-ups, snooze and a morning brief that work while the chat is closed',
     body:
       'Your AI app can now ask MCPEmails to remind you when nobody replies to mail you sent, and to snooze a message out of your inbox until a time you choose. A daily morning brief with new mail, VIP senders, follow-ups that are due and snoozed mail coming back is placed straight in your inbox at the hour you set, under Settings. All of it runs on our servers, so nothing waits for a chat to be open.',
   },
   {
-    date: '2026-10-27',
+    date: '2026-10-24',
     kind: 'added',
     title: 'Search every inbox at once, and give your AI instructions per inbox',
     body:
