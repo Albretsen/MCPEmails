@@ -125,7 +125,12 @@ test('GET reports the credit as positive cents, and null when Stripe fails', asy
   stripe.customer('cus_me', { balance: -1500 });
   let body = await (await GET()).json();
   assert.equal(body.creditBalanceCents, 1500);
+  assert.equal(body.creditCurrency, 'usd', 'a customer without a currency reads as USD');
   assert.equal(body.canEnterCode, false, 'a paying customer cannot enter a code');
+  stripe.customer('cus_me', { balance: -900, currency: 'eur' });
+  body = await (await GET()).json();
+  assert.equal(body.creditBalanceCents, 900);
+  assert.equal(body.creditCurrency, 'eur');
   stripe.failNext.add('customers.retrieve');
   body = await (await GET()).json();
   assert.equal(body.creditBalanceCents, null);

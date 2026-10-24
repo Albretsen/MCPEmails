@@ -16,7 +16,7 @@
 
 BEGIN;
 
-SELECT plan(46);
+SELECT plan(47);
 
 -- Referrer (Free), friend, second referrer, second friend, an early user with
 -- a 'standard' row, and a comped user. Signing up through auth.users runs
@@ -204,6 +204,11 @@ SELECT ok(pg_get_constraintdef((SELECT oid FROM pg_constraint WHERE conname = 'p
 SELECT ok(pg_get_functiondef('public.mcp_tools_call_gate(text,timestamptz[],timestamptz,boolean,text,integer)'::regprocedure)
             LIKE '%payment_notice_shown_on%referral_personal_until%',
   'mcp_tools_call_gate returns referral_personal_until and keeps the payment columns');
+
+SELECT ok((SELECT pg_get_constraintdef(c.oid) FROM pg_constraint c
+            WHERE c.conrelid = 'public.referral_rewards'::regclass AND c.contype = 'c'
+              AND pg_get_constraintdef(c.oid) LIKE '%currency%') LIKE '%usd%eur%',
+  'a reward is stored only in USD or EUR');
 
 SELECT * FROM finish();
 ROLLBACK;

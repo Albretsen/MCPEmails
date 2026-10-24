@@ -31,6 +31,12 @@
  * Personal. The friend gets one month of their own plan as credit while their
  * subscription is still active.
  *
+ * CURRENCY. A credit is written in the customer's billing currency (their
+ * subscription's, else the customer's) at that currency's list price, and the
+ * reward row stores it. A currency we do not price (anything but USD and EUR)
+ * issues nothing: the referral is held with reason 'currency' for a person,
+ * before either side is credited.
+ *
  * One row failing is logged and counted; the rest of the batch still runs.
  */
 
@@ -38,8 +44,15 @@ import type { ReferralEmailInput, ReferralEmailResult } from '@/lib/email/referr
 import type { Database } from '@/types/database.types';
 import { PERSONAL_MONTH_DAYS } from './constants.ts';
 import { decideQualification, type QualificationDecision } from './qualify.ts';
-import { issueReferralCredit, monthlyListPriceCents, type RewardSide } from './stripe-credit.ts';
 import {
+  creditCurrency,
+  issueReferralCredit,
+  monthlyListPriceCents,
+  type CreditCurrency,
+  type RewardSide,
+} from './stripe-credit.ts';
+import {
+  billingCurrency,
   billingRow,
   ENTITLED_STATUSES,
   recordReferralEvent,
@@ -184,21 +197,47 @@ async function reward(
   friendBilling: BillingRow | null,
   now: Date,
 ): Promise<RowOutcome> {
-  const { db } = deps;
+  const { db, stripe } = deps;
   const emails: ReferralEmailInput[] = [];
   const emailTo: string[] = [];
 
+  const referrerPlan = referrerBilling?.plan ?? 'free';
+  const referrerPaying =
+    decision.rewardReferrer &&
+    referrerBilling?.stripe_customer_id != null &&
+    referrerBilling.subscription_status != null &&
+    ENTITLED_STATUSES.has(referrerBilling.subscription_status) &&
+    monthlyListPriceCents(referrerPlan) != null;
+  const friendCredited =
+    decision.rewardFriend &&
+    friendBilling?.stripe_customer_id != null &&
+    monthlyListPriceCents(friendBilling.plan) != null;
+
+  // Both currencies are settled before anything is issued, so an unpriced
+  // currency on one side never leaves the other side half-rewarded.
+  const currencyFor = async (side: RewardSide, billing: BillingRow | null): Promise<CreditCurrency | null> => {
+    const claimed = creditCurrency((await readClaim(db, row.id, side))?.currency);
+    if (claimed) return claimed;
+    return creditCurrency(await billingCurrency(stripe, billing));
+  };
+  const referrerCurrency = referrerPaying ? await currencyFor('referrer', referrerBilling) : null;
+  const friendCurrency = friendCredited ? await currencyFor('friend', friendBilling) : null;
+  if ((referrerPaying && !referrerCurrency) || (friendCredited && !friendCurrency)) {
+    console.warn('[referral-dispatch] unpriced billing currency; held for manual handling', {
+      referral: row.id,
+      side: referrerPaying && !referrerCurrency ? 'referrer' : 'friend',
+    });
+    await setStatus(db, row, { status: 'held', hold_reason: 'currency' });
+    await recordReferralEvent(db, row.friend_workspace_id, 'referral_held');
+    return 'held';
+  }
+
   if (decision.rewardReferrer) {
-    const plan = referrerBilling?.plan ?? 'free';
-    const paying =
-      referrerBilling?.stripe_customer_id != null &&
-      referrerBilling.subscription_status != null &&
-      ENTITLED_STATUSES.has(referrerBilling.subscription_status) &&
-      monthlyListPriceCents(plan) != null;
-    if (paying) {
-      const issued = await creditOnce(deps, row.id, 'referrer', referrerBilling.stripe_customer_id as string, monthlyListPriceCents(plan) as number);
+    if (referrerPaying && referrerCurrency) {
+      const amount = monthlyListPriceCents(referrerPlan, referrerCurrency) as number;
+      const issued = await creditOnce(deps, row.id, 'referrer', referrerBilling?.stripe_customer_id as string, amount, referrerCurrency);
       if (issued) {
-        emails.push({ template: 'referral_referrer_credit', to: '', referralId: row.id, plan });
+        emails.push({ template: 'referral_referrer_credit', to: '', referralId: row.id, plan: referrerPlan });
         emailTo.push(row.referrer_user_id);
       }
     } else {
@@ -210,14 +249,12 @@ async function reward(
     }
   }
 
-  if (decision.rewardFriend && friendBilling?.stripe_customer_id) {
-    const amount = monthlyListPriceCents(friendBilling.plan);
-    if (amount != null) {
-      const issued = await creditOnce(deps, row.id, 'friend', friendBilling.stripe_customer_id, amount);
-      if (issued) {
-        emails.push({ template: 'referral_friend_credit', to: '', referralId: row.id, plan: friendBilling.plan });
-        emailTo.push(row.friend_user_id);
-      }
+  if (friendCredited && friendCurrency && friendBilling?.stripe_customer_id) {
+    const amount = monthlyListPriceCents(friendBilling.plan, friendCurrency) as number;
+    const issued = await creditOnce(deps, row.id, 'friend', friendBilling.stripe_customer_id, amount, friendCurrency);
+    if (issued) {
+      emails.push({ template: 'referral_friend_credit', to: '', referralId: row.id, plan: friendBilling.plan });
+      emailTo.push(row.friend_user_id);
     }
   }
 
@@ -250,6 +287,24 @@ async function setStatus(db: Db, row: DueRow, patch: ReferralUpdate): Promise<vo
   if (error) throw new Error(`referrals update failed: ${error.message}`);
 }
 
+interface RewardClaim {
+  stripe_balance_txn_id: string | null;
+  stripe_customer_id: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+}
+
+async function readClaim(db: Db, referralId: string, side: RewardSide): Promise<RewardClaim | null> {
+  const { data, error } = await db
+    .from('referral_rewards')
+    .select('stripe_balance_txn_id, stripe_customer_id, amount_cents, currency')
+    .eq('referral_id', referralId)
+    .eq('side', side)
+    .maybeSingle();
+  if (error) throw new Error(`referral_rewards read failed: ${error.message}`);
+  return data as RewardClaim | null;
+}
+
 /** True when this side's credit was issued by THIS run (so it gets the email). */
 async function creditOnce(
   deps: DispatchDeps,
@@ -257,20 +312,11 @@ async function creditOnce(
   side: RewardSide,
   customerId: string,
   amountCents: number,
+  currency: CreditCurrency,
 ): Promise<boolean> {
   const { db, stripe } = deps;
-  const read = async () => {
-    const { data, error } = await db
-      .from('referral_rewards')
-      .select('stripe_balance_txn_id, stripe_customer_id, amount_cents')
-      .eq('referral_id', referralId)
-      .eq('side', side)
-      .maybeSingle();
-    if (error) throw new Error(`referral_rewards read failed: ${error.message}`);
-    return data as { stripe_balance_txn_id: string | null; stripe_customer_id: string | null; amount_cents: number | null } | null;
-  };
 
-  let claim = await read();
+  let claim = await readClaim(db, referralId, side);
   if (claim?.stripe_balance_txn_id) return false;
   if (!claim) {
     const { error } = await db.from('referral_rewards').insert({
@@ -278,22 +324,25 @@ async function creditOnce(
       side,
       kind: 'stripe_credit',
       amount_cents: amountCents,
-      currency: 'usd',
+      currency,
       stripe_customer_id: customerId,
     });
     if (error && error.code !== '23505') throw new Error(`referral_rewards claim failed: ${error.message}`);
-    claim = await read();
+    claim = await readClaim(db, referralId, side);
     if (claim?.stripe_balance_txn_id) return false;
   }
-  // A claim from an earlier run keeps its own customer and amount.
+  // A claim from an earlier run keeps its own customer, amount and currency.
   const target = claim?.stripe_customer_id ?? customerId;
   const amount = claim?.amount_cents ?? amountCents;
+  const claimCurrency = creditCurrency(claim?.currency) ?? currency;
 
   const recent = await stripe.customers.listBalanceTransactions(target, { limit: 100 });
   const found = recent.data.find(
     (txn) => txn.metadata?.referral_id === referralId && txn.metadata?.side === side,
   );
-  const txnId = found?.id ?? (await issueReferralCredit(stripe, { customerId: target, referralId, side, amountCents: amount })).id;
+  const txnId =
+    found?.id ??
+    (await issueReferralCredit(stripe, { customerId: target, referralId, side, amountCents: amount, currency: claimCurrency })).id;
 
   const { error } = await db
     .from('referral_rewards')

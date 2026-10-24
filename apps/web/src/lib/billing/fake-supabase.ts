@@ -36,9 +36,16 @@ type Filter = {
 /** Mirrors the unique index in 20260902130000_billing_lifecycle_emails.sql. */
 const CONFLICT_COLUMNS = ['stripe_customer_id', 'template', 'scope_key'];
 
-function matches(row: Row, filters: Filter[]): boolean {
+/**
+ * A filter column's value. `<table>.<column>` is a filter on an `!inner`
+ * embed: the parent row is found through `<table minus s>_id` (referrals ->
+ * referral_id), which is the only foreign-key shape the tests embed.
+ */
+type Resolve = (row: Row, column: string) => unknown;
+
+function matches(row: Row, filters: Filter[], resolve: Resolve = (r, c) => r[c]): boolean {
   return filters.every((f) => {
-    const actual = row[f.column];
+    const actual = resolve(row, f.column);
     switch (f.op) {
       case 'eq':
         return actual === f.value;
@@ -207,7 +214,15 @@ class Query implements PromiseLike<Result> {
       return { data: out, error: null };
     }
 
-    let hits = table.filter((row) => matches(row, this.pending.filters));
+    const resolve: Resolve = (row, column) => {
+      const dot = column.indexOf('.');
+      if (dot < 0) return row[column];
+      const parentTable = column.slice(0, dot);
+      const fk = row[`${parentTable.replace(/s$/, '')}_id`];
+      const parent = (this.store.tables.get(parentTable) ?? []).find((p) => String(p.id) === String(fk));
+      return parent ? parent[column.slice(dot + 1)] : undefined;
+    };
+    let hits = table.filter((row) => matches(row, this.pending.filters, resolve));
     if (this.pending.order) {
       const { column, ascending } = this.pending.order;
       hits = [...hits].sort((a, b) => {
@@ -276,11 +291,20 @@ export class FakeSupabase {
     this.uniques.set(table, [...(this.uniques.get(table) ?? []), columns]);
   }
 
+  /**
+   * One rpc() for both registries: `rpcs` (handler gets the store too) and
+   * `onRpc` / `rpcHandlers`. An unregistered name throws.
+   */
   async rpc(fn: string, args: Record<string, unknown> = {}) {
     const handler = this.rpcs.get(fn);
-    if (!handler) throw new Error(`FakeSupabase: rpc('${fn}') is not registered`);
+    if (handler) {
+      this.rpcCalls.push({ fn, args });
+      return handler(args, this);
+    }
+    const simple = this.rpcHandlers.get(fn);
+    if (!simple) throw new Error(`FakeSupabase: rpc('${fn}') has no handler`);
     this.rpcCalls.push({ fn, args });
-    return handler(args, this);
+    return simple(args);
   }
 
   table(name: string): Row[] {
@@ -324,11 +348,6 @@ export class FakeSupabase {
     this.rpcHandlers.set(name, handler);
   }
 
-  async rpc(name: string, args: Record<string, unknown> = {}) {
-    const handler = this.rpcHandlers.get(name);
-    if (!handler) throw new Error(`FakeSupabase: rpc('${name}') has no handler`);
-    return handler(args);
-  }
 
   from(table: string) {
     return {

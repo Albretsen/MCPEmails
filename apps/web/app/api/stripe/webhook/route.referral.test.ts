@@ -193,13 +193,13 @@ test('a refund or a dispute before qualification voids the referral', async () =
   }
 });
 
-function rewarded() {
+function rewarded(currency = 'usd') {
   seed({ status: 'qualified' });
   fake.customer('cus_referrer', { balance: -1500 });
   fake.customer('cus_friend', { balance: -400 });
   db.seed('referral_rewards', [
-    { referral_id: 'ref-1', side: 'referrer', kind: 'stripe_credit', amount_cents: 1500, stripe_customer_id: 'cus_referrer', stripe_balance_txn_id: 'cbtxn_r' },
-    { referral_id: 'ref-1', side: 'friend', kind: 'stripe_credit', amount_cents: 900, stripe_customer_id: 'cus_friend', stripe_balance_txn_id: 'cbtxn_f' },
+    { referral_id: 'ref-1', side: 'referrer', kind: 'stripe_credit', amount_cents: 1500, currency, stripe_customer_id: 'cus_referrer', stripe_balance_txn_id: 'cbtxn_r' },
+    { referral_id: 'ref-1', side: 'friend', kind: 'stripe_credit', amount_cents: 900, currency, stripe_customer_id: 'cus_friend', stripe_balance_txn_id: 'cbtxn_f' },
   ]);
 }
 
@@ -229,6 +229,21 @@ test('a full refund after qualification claws back', async () => {
   rewarded();
   assert.equal(await deliver('charge.refunded', { id: 'ch_first', customer: 'cus_friend', amount: 900, amount_refunded: 900, refunded: true }), 200);
   assert.equal(fake.balances.get('cus_referrer'), 0);
+  assert.equal(referral().void_reason, 'refunded_after_reward');
+});
+
+test('a clawback is written in the currency its reward was issued in', async () => {
+  rewarded('eur');
+  assert.equal(await deliver('charge.refunded', { id: 'ch_first', customer: 'cus_friend', amount: 900, amount_refunded: 900, refunded: true }), 200);
+  assert.deepEqual(fake.txns.map((t) => t.currency), ['eur', 'eur']);
+  const clawbacks = db.table('referral_rewards').filter((r) => String(r.side).startsWith('clawback_'));
+  assert.deepEqual(clawbacks.map((r) => r.currency), ['eur', 'eur']);
+});
+
+test('a reward in a currency we do not credit in is left for a person, not clawed back', async () => {
+  rewarded('gbp');
+  assert.equal(await deliver('charge.refunded', { id: 'ch_first', customer: 'cus_friend', amount: 900, amount_refunded: 900, refunded: true }), 200);
+  assert.equal(fake.txns.length, 0);
   assert.equal(referral().void_reason, 'refunded_after_reward');
 });
 

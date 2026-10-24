@@ -34,6 +34,9 @@ function world(options: {
   friendSub?: string;
   charge?: Partial<{ amount: number; refunded: boolean; amount_refunded: number; disputed: boolean; fingerprint: string | null }>;
   referral?: Record<string, unknown>;
+  /** subscription.currency of each side ('usd' by default). */
+  referrerCurrency?: string;
+  friendCurrency?: string;
 } = {}): World {
   const db = new FakeSupabase();
   db.unique('referral_rewards', ['referral_id', 'side']);
@@ -55,6 +58,9 @@ function world(options: {
   stripe.customer('cus_referrer').customer('cus_friend');
   stripe.cardFingerprints.set('cus_referrer', ['fp_referrer']);
   stripe.subscriptions.set('sub_friend', options.friendSub ?? 'active');
+  stripe.subscriptions.set('sub_referrer', 'active');
+  stripe.subscriptionCurrencies.set('sub_referrer', options.referrerCurrency ?? 'usd');
+  stripe.subscriptionCurrencies.set('sub_friend', options.friendCurrency ?? 'usd');
   stripe.charges.set('ch_first', {
     id: 'ch_first', amount: 900, refunded: false, amount_refunded: 0, disputed: false, fingerprint: 'fp_friend',
     ...options.charge,
@@ -125,8 +131,8 @@ test('a second run issues nothing and sends nothing', async () => {
 
 test('a run that died after Stripe answered finds the credit instead of issuing it again', async () => {
   const w = world();
-  w.db.seed('referral_rewards', [{ referral_id: 'ref-1', side: 'referrer', kind: 'stripe_credit', amount_cents: 1500, stripe_customer_id: 'cus_referrer', stripe_balance_txn_id: null }]);
-  w.stripe.txns.push({ id: 'cbtxn_earlier', customer: 'cus_referrer', amount: -1500, metadata: { referral_id: 'ref-1', side: 'referrer', program: 'referral_v1' } });
+  w.db.seed('referral_rewards', [{ referral_id: 'ref-1', side: 'referrer', kind: 'stripe_credit', amount_cents: 1500, currency: 'usd', stripe_customer_id: 'cus_referrer', stripe_balance_txn_id: null }]);
+  w.stripe.txns.push({ id: 'cbtxn_earlier', customer: 'cus_referrer', amount: -1500, currency: 'usd', metadata: { referral_id: 'ref-1', side: 'referrer', program: 'referral_v1' } });
   await run(w);
   assert.equal(w.stripe.txns.filter((t) => t.customer === 'cus_referrer').length, 1);
   assert.equal(w.db.table('referral_rewards').find((r) => r.side === 'referrer')?.stripe_balance_txn_id, 'cbtxn_earlier');
@@ -259,4 +265,71 @@ test('a deleted account gets no email', async () => {
   w.deleted.add(REFERRER);
   await run(w);
   assert.deepEqual(w.outbox.map((e) => e.template), ['referral_friend_credit']);
+});
+
+// ── Billing currency ──────────────────────────────────────────────────────
+
+test('EUR customers are credited in EUR at the EUR list price, and the rows say so', async () => {
+  const w = world({ referrerCurrency: 'eur', friendCurrency: 'EUR' });
+  assert.equal((await run(w)).qualified, 1);
+  const credits = w.stripe.txns.map((t) => [t.customer, t.amount, t.currency]);
+  assert.deepEqual(credits, [
+    ['cus_referrer', -PLANS.solo.monthlyPriceCents, 'eur'],
+    ['cus_friend', -PLANS.personal.monthlyPriceCents, 'eur'],
+  ]);
+  assert.deepEqual(w.db.table('referral_rewards').map((r) => [r.side, r.currency]), [
+    ['referrer', 'eur'],
+    ['friend', 'eur'],
+  ]);
+});
+
+test('a cancelled subscription falls back to the customer currency', async () => {
+  const w = world({ friendSub: 'active' });
+  w.stripe.subscriptions.set('sub_referrer', 'canceled');
+  w.stripe.customer('cus_referrer', { currency: 'eur' });
+  // The referrer row still says active, so they are paid; Stripe's sub is gone.
+  assert.equal((await run(w)).qualified, 1);
+  assert.equal(w.stripe.txns.find((t) => t.customer === 'cus_referrer')?.currency, 'eur');
+});
+
+test('an unpriced currency on either side holds the referral and credits nobody', async () => {
+  for (const options of [{ referrerCurrency: 'gbp' }, { friendCurrency: 'sek' }]) {
+    const w = world(options);
+    const summary = await run(w);
+    assert.equal(summary.held, 1);
+    assert.equal(ref(w).status, 'held');
+    assert.equal(ref(w).hold_reason, 'currency');
+    assert.equal(w.stripe.txns.length, 0, 'nothing reaches Stripe');
+    assert.deepEqual(w.db.table('referral_rewards'), []);
+    assert.deepEqual(w.outbox, []);
+  }
+});
+
+test('the yearly cap is an exact count of referrer rewards in 365 days', async () => {
+  const w = world();
+  // Six earlier referrer rewards for other referrals of the same referrer,
+  // one older than a year and one friend-side row that must not count.
+  const others = Array.from({ length: 7 }, (_, i) => ({
+    id: `ref-old-${i}`, code: 'ABCD2345', referrer_user_id: REFERRER, friend_user_id: `friend-${i}`,
+    friend_workspace_id: null, status: 'qualified', first_charge_id: null, qualifies_at: DUE,
+  }));
+  w.db.seed('referrals', others);
+  w.db.seed('referral_rewards', [
+    ...others.slice(0, 6).map((r, i) => ({
+      referral_id: r.id, side: 'referrer', kind: 'stripe_credit', amount_cents: 900, currency: 'usd',
+      issued_at: i === 0 ? '2025-10-01T00:00:00.000Z' : '2026-10-01T00:00:00.000Z',
+    })),
+    { referral_id: others[6].id, side: 'friend', kind: 'stripe_credit', amount_cents: 900, currency: 'usd', issued_at: '2026-10-01T00:00:00.000Z' },
+  ]);
+  // Five in the window: under the cap of six, so this one still qualifies.
+  assert.equal((await run(w)).qualified, 1);
+
+  // A sixth in the window reaches the cap: the next one is capped.
+  const capped = world();
+  capped.db.seed('referrals', others);
+  capped.db.seed('referral_rewards', others.slice(0, 6).map((r) => ({
+    referral_id: r.id, side: 'referrer', kind: 'stripe_credit', amount_cents: 900, currency: 'usd',
+    issued_at: '2026-10-01T00:00:00.000Z',
+  })));
+  assert.equal((await run(capped)).capped, 1);
 });

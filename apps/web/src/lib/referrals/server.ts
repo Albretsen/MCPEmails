@@ -276,27 +276,48 @@ export async function usersShareWorkspace(db: Db, referrerId: string, friendId: 
 
 /** Referrer-side rewards issued in the trailing 365 days (the yearly cap). */
 export async function referrerRewardsLast365d(db: Db, referrerId: string, now: Date): Promise<number> {
-  const { data: refs, error } = await db
-    .from('referrals')
-    .select('id')
-    .eq('referrer_user_id', referrerId);
-  if (error) throw new Error(`referrals read failed: ${error.message}`);
-  const ids = (refs ?? []).map((r) => (r as { id: string }).id);
-  if (ids.length === 0) return 0;
-  const { count, error: countError } = await db
+  // One exact count, joined through the referral: no row fetch, so no
+  // 1000-row cap and no id list in the URL.
+  const { count, error } = await db
     .from('referral_rewards')
-    .select('id', { count: 'exact', head: true })
-    .in('referral_id', ids)
+    .select('id, referrals!inner(referrer_user_id)', { count: 'exact', head: true })
+    .eq('referrals.referrer_user_id', referrerId)
     .eq('side', 'referrer')
     .gte('issued_at', new Date(now.getTime() - 365 * DAY_MS).toISOString());
-  if (countError) throw new Error(`referral_rewards count failed: ${countError.message}`);
+  if (error) throw new Error(`referral_rewards count failed: ${error.message}`);
   return count ?? 0;
 }
 
-/** Remaining Stripe credit in cents (the negative part of the balance). */
-export async function creditBalanceCents(stripe: ReferralStripeApi, customerId: string): Promise<number> {
+/**
+ * Remaining Stripe credit in cents (the negative part of the balance), in the
+ * customer's balance currency. A customer that has never been billed has no
+ * currency yet and no credit; that reads as 0 USD.
+ */
+export async function creditBalance(
+  stripe: ReferralStripeApi,
+  customerId: string,
+): Promise<{ cents: number; currency: string }> {
   const customer = await stripe.customers.retrieve(customerId);
-  if ('deleted' in customer && customer.deleted) return 0;
+  if ('deleted' in customer && customer.deleted) return { cents: 0, currency: 'usd' };
   const balance = typeof customer.balance === 'number' ? customer.balance : 0;
-  return balance < 0 ? -balance : 0;
+  const currency = typeof customer.currency === 'string' && customer.currency ? customer.currency.toLowerCase() : 'usd';
+  return { cents: balance < 0 ? -balance : 0, currency };
+}
+
+/**
+ * The currency a customer is billed in: their entitled subscription's, else
+ * the customer's own (set by Stripe on the first invoice). Null when neither
+ * is known. Throws on a Stripe failure so the dispatcher retries the row.
+ */
+export async function billingCurrency(stripe: ReferralStripeApi, billing: BillingRow | null): Promise<string | null> {
+  if (!billing?.stripe_customer_id) return null;
+  if (billing.stripe_subscription_id) {
+    const sub = await stripe.subscriptions.retrieve(billing.stripe_subscription_id);
+    if (ENTITLED_STATUSES.has(sub.status) && typeof sub.currency === 'string' && sub.currency) {
+      return sub.currency.toLowerCase();
+    }
+  }
+  const customer = await stripe.customers.retrieve(billing.stripe_customer_id);
+  if ('deleted' in customer && customer.deleted) return null;
+  return typeof customer.currency === 'string' && customer.currency ? customer.currency.toLowerCase() : null;
 }

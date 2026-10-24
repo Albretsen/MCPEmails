@@ -10,7 +10,7 @@ import { attachReferral } from '@/lib/referrals/attach';
 import {
   billingRow,
   billingShowsPaidHistory,
-  creditBalanceCents,
+  creditBalance,
   recordReferralEvent,
   referralIpHash,
   referrerRewardsLast365d,
@@ -25,7 +25,8 @@ import {
  *   { enabled: false }                       the active workspace is not in the
  *                                            rollout (workspaces.referral_enabled)
  *   { enabled: true, code, link,             the code is created on first GET
- *     creditBalanceCents,                    remaining Stripe credit, 0 without a
+ *     creditBalanceCents, creditCurrency,    remaining Stripe credit and its
+ *                                            currency ('usd' or 'eur'), 0 without a
  *                                            customer, null when Stripe failed
  *     rewardsLast365d, cap,                  referrer rewards toward the cap
  *     canEnterCode,                          inside the code-entry window, not
@@ -131,10 +132,13 @@ export async function GET(): Promise<NextResponse> {
   ]);
 
   let credit: number | null = 0;
+  let creditCurrency = 'usd';
   if (billing?.stripe_customer_id) {
     try {
       const { stripe } = await import('@/lib/stripe/client');
-      credit = await creditBalanceCents(stripe, billing.stripe_customer_id);
+      const balance = await creditBalance(stripe, billing.stripe_customer_id);
+      credit = balance.cents;
+      creditCurrency = balance.currency;
     } catch (err) {
       console.error('[referrals] balance read failed', { error: err instanceof Error ? err.message : String(err) });
       credit = null;
@@ -155,6 +159,7 @@ export async function GET(): Promise<NextResponse> {
     code: code.code,
     link: code.disabled ? null : `${appUrl()}/r/${code.code}`,
     creditBalanceCents: credit,
+    creditCurrency,
     rewardsLast365d,
     cap: REWARD_CAP_PER_YEAR,
     canEnterCode,

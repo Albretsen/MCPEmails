@@ -24,12 +24,17 @@ export interface FakeBalanceTxn {
   id: string;
   customer: string;
   amount: number;
+  currency: string | null;
   metadata: Record<string, string>;
 }
 
 export class FakeStripe {
   readonly balances = new Map<string, number>();
   readonly emails = new Map<string, string>();
+  /** customer.currency; absent = never billed (null). */
+  readonly currencies = new Map<string, string>();
+  /** subscription.currency per subscription id; absent = 'usd'. */
+  readonly subscriptionCurrencies = new Map<string, string>();
   readonly txns: FakeBalanceTxn[] = [];
   readonly paidInvoices = new Map<string, number[]>();
   readonly charges = new Map<string, FakeCharge>();
@@ -50,9 +55,10 @@ export class FakeStripe {
     }
   }
 
-  customer(id: string, options: { balance?: number; email?: string } = {}): this {
+  customer(id: string, options: { balance?: number; email?: string; currency?: string } = {}): this {
     this.balances.set(id, options.balance ?? 0);
     if (options.email) this.emails.set(id, options.email);
+    if (options.currency) this.currencies.set(id, options.currency);
     return this;
   }
 
@@ -65,7 +71,12 @@ export class FakeStripe {
         async retrieve(id: string) {
           self.guard('customers.retrieve');
           if (!self.balances.has(id)) return { id, deleted: true };
-          return { id, balance: self.balances.get(id), email: self.emails.get(id) ?? null };
+          return {
+            id,
+            balance: self.balances.get(id),
+            email: self.emails.get(id) ?? null,
+            currency: self.currencies.get(id) ?? null,
+          };
         },
         async list(params: { email?: string }) {
           self.guard('customers.list');
@@ -76,7 +87,7 @@ export class FakeStripe {
         },
         async createBalanceTransaction(
           customer: string,
-          params: { amount: number; metadata?: Record<string, string> },
+          params: { amount: number; currency?: string; metadata?: Record<string, string> },
           options?: { idempotencyKey?: string },
         ) {
           self.guard('customers.createBalanceTransaction');
@@ -86,6 +97,7 @@ export class FakeStripe {
             id: `cbtxn_${self.seq++}`,
             customer,
             amount: params.amount,
+            currency: params.currency ?? null,
             metadata: params.metadata ?? {},
           };
           self.txns.push(txn);
@@ -142,7 +154,11 @@ export class FakeStripe {
       subscriptions: {
         async retrieve(id: string) {
           self.guard('subscriptions.retrieve');
-          return { id, status: self.subscriptions.get(id) ?? 'canceled' };
+          return {
+            id,
+            status: self.subscriptions.get(id) ?? 'canceled',
+            currency: self.subscriptionCurrencies.get(id) ?? 'usd',
+          };
         },
       },
     };

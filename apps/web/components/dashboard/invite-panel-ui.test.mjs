@@ -256,3 +256,15 @@ for (const [name, get] of [
     assert.equal(view.container.textContent, '');
   });
 }
+
+test('credit is shown in the currency the API returns', async (t) => {
+  const { view } = await renderPanel(t, summary({ creditBalanceCents: 900, creditCurrency: 'eur' }));
+  assert.equal(view.container.querySelector('[data-referral-credit]')?.textContent, '€9.00');
+});
+
+test('Billing credit line: a EUR credit reads in EUR', async (t) => {
+  stubFetch(t, { get: summary({ creditBalanceCents: 900, creditCurrency: 'eur' }) });
+  const view = await render(t, createElement(BillingReferralCredit));
+  await waitFor(() => view.container.querySelector('[data-billing-referral-credit]'), { message: 'credit line' });
+  assert.ok(view.container.textContent.includes('€9.00'), view.container.textContent);
+});

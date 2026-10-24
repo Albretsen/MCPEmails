@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   clawbackReferralCredit,
+  creditCurrency,
   issueReferralCredit,
   monthlyListPriceCents,
   type ReferralStripe,
@@ -51,6 +52,7 @@ test('issueReferralCredit writes a negative USD balance transaction once per sid
     referralId: 'ref_1',
     side: 'friend',
     amountCents: 900,
+    currency: 'usd',
   });
   assert.deepEqual(result, { id: 'cbtxn_1' });
   assert.equal(calls.length, 1);
@@ -70,7 +72,7 @@ test('issueReferralCredit refuses a non-positive or fractional amount', async ()
   const { stripe, calls } = fakeStripe(0);
   for (const amountCents of [0, -900, 9.5, Number.NaN]) {
     await assert.rejects(
-      issueReferralCredit(stripe, { customerId: 'cus_1', referralId: 'ref_1', side: 'referrer', amountCents }),
+      issueReferralCredit(stripe, { customerId: 'cus_1', referralId: 'ref_1', side: 'referrer', amountCents, currency: 'usd' }),
     );
   }
   assert.equal(calls.length, 0);
@@ -83,6 +85,7 @@ test('clawback takes back the full reward while the credit is unspent', async ()
     referralId: 'ref_2',
     side: 'referrer',
     maxCents: 900,
+    currency: 'usd',
   });
   assert.deepEqual(result, { id: 'cbtxn_1', amountCents: 900 });
   assert.deepEqual(calls[0].params, {
@@ -101,6 +104,7 @@ test('clawback is capped at the remaining credit', async () => {
     referralId: 'ref_3',
     side: 'friend',
     maxCents: 900,
+    currency: 'usd',
   });
   assert.deepEqual(result, { id: 'cbtxn_1', amountCents: 300 });
   assert.equal(calls[0].params.amount, 300);
@@ -115,20 +119,60 @@ test('clawback writes nothing when no credit is left', async () => {
       referralId: 'ref_4',
       side: 'referrer',
       maxCents: 900,
+      currency: 'usd',
     });
     assert.equal(result, null);
     assert.equal(calls.length, 0);
   }
   const deleted = fakeStripe(-900, { deleted: true });
   assert.equal(
-    await clawbackReferralCredit(deleted.stripe, { customerId: 'cus_5', referralId: 'ref_5', side: 'friend', maxCents: 900 }),
+    await clawbackReferralCredit(deleted.stripe, { customerId: 'cus_5', referralId: 'ref_5', side: 'friend', maxCents: 900, currency: 'usd' }),
     null,
   );
   assert.equal(deleted.calls.length, 0);
   const zero = fakeStripe(-900);
   assert.equal(
-    await clawbackReferralCredit(zero.stripe, { customerId: 'cus_6', referralId: 'ref_6', side: 'friend', maxCents: 0 }),
+    await clawbackReferralCredit(zero.stripe, { customerId: 'cus_6', referralId: 'ref_6', side: 'friend', maxCents: 0, currency: 'usd' }),
     null,
   );
   assert.deepEqual(zero.retrieved, []);
+});
+
+test('EUR: the same digits as USD, by decision; any other currency has no price', () => {
+  assert.equal(monthlyListPriceCents('personal', 'eur'), 900);
+  assert.equal(monthlyListPriceCents('pro', 'EUR'), 3900);
+  assert.equal(monthlyListPriceCents('solo', 'eur'), PLANS.solo.monthlyPriceCents);
+  assert.equal(monthlyListPriceCents('personal', 'gbp'), null);
+  assert.equal(monthlyListPriceCents('personal', ''), null);
+  assert.equal(monthlyListPriceCents('free', 'eur'), null);
+  assert.equal(creditCurrency(' EUR '), 'eur');
+  assert.equal(creditCurrency('usd'), 'usd');
+  assert.equal(creditCurrency('nok'), null);
+  assert.equal(creditCurrency(null), null);
+});
+
+test('a EUR credit and its clawback are written in EUR; an unpriced currency is refused before Stripe', async () => {
+  const issue = fakeStripe(0);
+  await issueReferralCredit(issue.stripe, { customerId: 'cus_e', referralId: 'ref_e', side: 'referrer', amountCents: 900, currency: 'eur' });
+  assert.equal(issue.calls[0].params.currency, 'eur');
+  assert.equal(issue.calls[0].params.amount, -900);
+
+  const back = fakeStripe(-900);
+  await clawbackReferralCredit(back.stripe, { customerId: 'cus_e', referralId: 'ref_e', side: 'referrer', maxCents: 900, currency: 'eur' });
+  assert.equal(back.calls[0].params.currency, 'eur');
+
+  const refused = fakeStripe(-900);
+  await assert.rejects(
+    issueReferralCredit(refused.stripe, {
+      customerId: 'cus_g', referralId: 'ref_g', side: 'friend', amountCents: 900,
+      currency: 'gbp' as unknown as 'usd',
+    }),
+  );
+  await assert.rejects(
+    clawbackReferralCredit(refused.stripe, {
+      customerId: 'cus_g', referralId: 'ref_g', side: 'friend', maxCents: 900,
+      currency: 'gbp' as unknown as 'usd',
+    }),
+  );
+  assert.equal(refused.calls.length, 0);
 });

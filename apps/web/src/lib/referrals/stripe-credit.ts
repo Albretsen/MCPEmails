@@ -2,9 +2,13 @@
  * Referral rewards as Stripe customer balance credit.
  *
  * A negative balance transaction is credit that Stripe applies to the
- * customer's next invoice by itself. It is a fixed USD amount (every price we
- * sell is USD, Adaptive Pricing included), it stacks, and it sits in Stripe's
- * ledger with our metadata for the bookkeeping export.
+ * customer's next invoice by itself. It is written in the customer's billing
+ * currency (a Stripe customer balance has exactly one), it stacks, and it sits
+ * in Stripe's ledger with our metadata for the bookkeeping export.
+ *
+ * CURRENCIES. USD, and EUR for customers who bought on the EUR prices
+ * (src/lib/stripe/eur-prices.ts). Anything else is not credited here: the
+ * dispatcher holds the referral with reason 'currency' for a person to handle.
  *
  * The Stripe client is a parameter so tests pass a fake; production passes
  * `stripe` from src/lib/stripe/client.ts. Both writes carry an idempotency key
@@ -14,6 +18,7 @@
 
 import type { stripe as stripeClient } from '../stripe/client.ts';
 import { PLANS, type PlanId } from '../stripe/plans.ts';
+import { eurCentsFor } from '../stripe/eur-prices.ts';
 
 type StripeClient = typeof stripeClient;
 
@@ -23,6 +28,16 @@ export interface ReferralStripe {
 }
 
 export type RewardSide = 'referrer' | 'friend';
+
+/** The billing currencies a referral credit can be issued in. */
+export type CreditCurrency = 'usd' | 'eur';
+
+/** A Stripe currency code narrowed to one we credit in, or null. */
+export function creditCurrency(value: unknown): CreditCurrency | null {
+  if (typeof value !== 'string') return null;
+  const code = value.trim().toLowerCase();
+  return code === 'usd' || code === 'eur' ? code : null;
+}
 
 export const REFERRAL_PROGRAM = 'referral_v1';
 export const REFERRAL_CREDIT_DESCRIPTION = 'Referral reward: one free month';
@@ -40,11 +55,23 @@ export const REFERRAL_CLAWBACK_DESCRIPTION = 'Referral reward reversed';
  * (`pro`) is the $39 base without extra mailboxes. A customer still billed on
  * a retired, cheaper price gets the current list price: the reward is "one
  * month of your plan as we sell it", not a refund of what they paid.
+ *
+ * EUR: the EUR price has the same digits as the USD one, VAT included, by
+ * decision (eur-prices.ts, eurCentsFor with no Stripe currency option). Any
+ * other currency: null, so nothing is credited.
  */
-export function monthlyListPriceCents(planSlug: string): number | null {
+export function monthlyListPriceCents(planSlug: string, currency: string = 'usd'): number | null {
   if (!Object.prototype.hasOwnProperty.call(PLANS, planSlug)) return null;
-  const cents = PLANS[planSlug as PlanId].monthlyPriceCents;
-  return cents > 0 ? cents : null;
+  const usd = PLANS[planSlug as PlanId].monthlyPriceCents;
+  if (!(usd > 0)) return null;
+  switch (creditCurrency(currency)) {
+    case 'usd':
+      return usd;
+    case 'eur':
+      return eurCentsFor(null, usd);
+    default:
+      return null;
+  }
 }
 
 function assertPositiveCents(amountCents: number, label: string): void {
@@ -55,14 +82,16 @@ function assertPositiveCents(amountCents: number, label: string): void {
 
 export async function issueReferralCredit(
   stripe: ReferralStripe,
-  input: { customerId: string; referralId: string; side: RewardSide; amountCents: number },
+  input: { customerId: string; referralId: string; side: RewardSide; amountCents: number; currency: CreditCurrency },
 ): Promise<{ id: string }> {
   assertPositiveCents(input.amountCents, 'issueReferralCredit');
+  const currency = creditCurrency(input.currency);
+  if (!currency) throw new Error(`issueReferralCredit: unsupported currency ${String(input.currency)}`);
   const txn = await stripe.customers.createBalanceTransaction(
     input.customerId,
     {
       amount: -input.amountCents,
-      currency: 'usd',
+      currency,
       description: REFERRAL_CREDIT_DESCRIPTION,
       metadata: { referral_id: input.referralId, side: input.side, program: REFERRAL_PROGRAM },
     },
@@ -79,9 +108,11 @@ export async function issueReferralCredit(
  */
 export async function clawbackReferralCredit(
   stripe: ReferralStripe,
-  input: { customerId: string; referralId: string; side: RewardSide; maxCents: number },
+  input: { customerId: string; referralId: string; side: RewardSide; maxCents: number; currency: CreditCurrency },
 ): Promise<{ id: string; amountCents: number } | null> {
   if (!Number.isFinite(input.maxCents) || input.maxCents <= 0) return null;
+  const currency = creditCurrency(input.currency);
+  if (!currency) throw new Error(`clawbackReferralCredit: unsupported currency ${String(input.currency)}`);
   const customer = await stripe.customers.retrieve(input.customerId);
   if ('deleted' in customer && customer.deleted) return null;
   const balance = typeof customer.balance === 'number' ? customer.balance : 0;
@@ -92,7 +123,7 @@ export async function clawbackReferralCredit(
     input.customerId,
     {
       amount: amountCents,
-      currency: 'usd',
+      currency,
       description: REFERRAL_CLAWBACK_DESCRIPTION,
       metadata: {
         referral_id: input.referralId,

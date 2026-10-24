@@ -145,7 +145,10 @@ CREATE TABLE IF NOT EXISTS public.referral_rewards (
   side                  text NOT NULL CHECK (side IN ('referrer', 'friend', 'clawback_referrer', 'clawback_friend')),
   kind                  text NOT NULL CHECK (kind IN ('stripe_credit', 'personal_month')),
   amount_cents          integer,
-  currency              text DEFAULT 'usd',
+  -- The credit's currency: the customer's billing currency when it was issued
+  -- (a clawback repeats its reward's). Only USD and EUR are priced; any other
+  -- currency is held for a person and never written here.
+  currency              text DEFAULT 'usd' CHECK (currency IN ('usd', 'eur')),
   stripe_customer_id    text,
   stripe_balance_txn_id text,
   entitlement_until     timestamptz,

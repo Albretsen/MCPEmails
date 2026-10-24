@@ -59,13 +59,18 @@ function formatDay(iso, locale) {
   }
 }
 
-/** USD cents as money in the viewer's language. Credit is always USD (stripe-credit.ts). */
-function formatUsd(cents, locale) {
+/**
+ * Cents as money in the viewer's language, in the credit's own currency
+ * (`creditCurrency` from GET /api/referrals: the customer's billing currency,
+ * USD or EUR). An unknown or missing code reads as USD.
+ */
+export function formatCredit(cents, currency, locale) {
   const value = Math.max(0, Number(cents) || 0) / 100;
+  const code = typeof currency === 'string' && /^[a-z]{3}$/i.test(currency) ? currency.toUpperCase() : 'USD';
   try {
-    return new Intl.NumberFormat(locale || 'en', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat(locale || 'en', { style: 'currency', currency: code }).format(value);
   } catch {
-    return `$${value.toFixed(2)}`;
+    return `${value.toFixed(2)} ${code}`;
   }
 }
 
@@ -228,7 +233,7 @@ export function InvitePanel() {
       <div className="stat-grid" style={{ marginTop: 16 }}>
         <div className="stat">
           <div className="label">{t('referral.creditLabel')}</div>
-          <div className="value" data-referral-credit="">{formatUsd(data.creditBalanceCents, locale)}</div>
+          <div className="value" data-referral-credit="">{formatCredit(data.creditBalanceCents, data.creditCurrency, locale)}</div>
         </div>
         <div className="stat">
           <div className="label">{t('referral.rewardsLabel')}</div>
@@ -345,7 +350,7 @@ export function BillingReferralCredit({ onOpenInvite }) {
       }}
     >
       <Icon name="gift" size={14} color="var(--fg-3)" />
-      <span>{t('referral.billingCredit', { amount: formatUsd(cents, locale) })}</span>
+      <span>{t('referral.billingCredit', { amount: formatCredit(cents, data.creditCurrency, locale) })}</span>
       <a href="/dashboard/invite" onClick={open} data-billing-referral-link="">{t('referral.billingCreditLink')}</a>
     </div>
   );

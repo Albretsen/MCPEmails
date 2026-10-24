@@ -23,7 +23,7 @@
 import type Stripe from 'stripe';
 
 import { MIN_CHARGE_CENTS, QUALIFY_DAYS } from './constants.ts';
-import { clawbackReferralCredit, type RewardSide } from './stripe-credit.ts';
+import { clawbackReferralCredit, creditCurrency, type RewardSide } from './stripe-credit.ts';
 import { recordReferralEvent, referralsEnabledForOwner, type Db, type ReferralStripeApi } from './server.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -153,7 +153,7 @@ export async function reverseReferralCharge(
 
   const { data: rewards, error: rewardsError } = await db
     .from('referral_rewards')
-    .select('side, kind, amount_cents, stripe_customer_id, stripe_balance_txn_id')
+    .select('side, kind, amount_cents, currency, stripe_customer_id, stripe_balance_txn_id')
     .eq('referral_id', referral.id);
   if (rewardsError) throw new Error(`referral_rewards read failed: ${rewardsError.message}`);
   const rows = rewards ?? [];
@@ -165,18 +165,28 @@ export async function reverseReferralCharge(
     const side = reward.side as RewardSide;
     if (done.has(`clawback_${side}`)) continue;
     if (!reward.stripe_customer_id || !reward.stripe_balance_txn_id || !reward.amount_cents) continue;
+    // The clawback is written in the currency the credit was issued in.
+    const currency = creditCurrency(reward.currency);
+    if (!currency) {
+      console.error('[referrals] clawback skipped: reward currency is not one we credit in; reverse it by hand', {
+        referral: referral.id,
+        side,
+      });
+      continue;
+    }
     const clawed = await clawbackReferralCredit(stripe, {
       customerId: reward.stripe_customer_id,
       referralId: referral.id,
       side,
       maxCents: reward.amount_cents,
+      currency,
     });
     const { error: insertError } = await db.from('referral_rewards').insert({
       referral_id: referral.id,
       side: `clawback_${side}`,
       kind: 'stripe_credit',
       amount_cents: clawed?.amountCents ?? 0,
-      currency: 'usd',
+      currency,
       stripe_customer_id: reward.stripe_customer_id,
       stripe_balance_txn_id: clawed?.id ?? null,
     });
