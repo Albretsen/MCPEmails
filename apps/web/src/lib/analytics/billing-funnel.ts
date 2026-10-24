@@ -6,6 +6,7 @@ import {
   type BillingPlanCategory,
   type BillingTargetCategory,
   type ConnectEntryPoint,
+  type FunnelEntryPoint,
   type PricingSurfaceCategory,
   type ProductFunnelEvent,
 } from '@/lib/analytics/product-funnel';
@@ -84,6 +85,9 @@ export async function recordCheckoutStarted(
   workspaceId: string | null,
   target: BillingTargetCategory | 'unknown',
   failure?: ProductFunnelEvent['errorCategory'],
+  // Set only by the chat checkout link; every other caller leaves it out and
+  // writes exactly the row it always has.
+  entryPoint?: FunnelEntryPoint,
 ): Promise<void> {
   if (!workspaceId) return;
   await record({
@@ -92,6 +96,7 @@ export async function recordCheckoutStarted(
     outcome: failure ? 'failure' : 'success',
     category: target,
     errorCategory: failure,
+    ...(entryPoint ? { entryPoint } : {}),
   });
 }
 
@@ -253,6 +258,27 @@ export async function recordInboxPaywallClicked(workspaceId: string | null): Pro
     outcome: 'success',
     category: planCategory(data?.plan),
     connectionType: 'first_connect',
+  });
+}
+
+/**
+ * A chat checkout link was opened for the first time (app/u/[token]/route.ts).
+ *
+ * The chat half of `recordInboxPaywallClicked`: the same `paywall_clicked`
+ * stage, told apart by `entry_point = 'chat_link'`. The category is the plan
+ * the link sells (always Personal), not the plan the workspace is on, because
+ * the link has exactly one offer and the click is a click on it. Once per
+ * link: the route only calls this on the open that set `first_opened_at`, so an
+ * unfurler or a second tab cannot inflate it.
+ */
+export async function recordChatLinkOpened(workspaceId: string | null): Promise<void> {
+  if (!workspaceId) return;
+  await record({
+    workspaceId,
+    stage: 'paywall_clicked',
+    outcome: 'success',
+    category: 'personal',
+    entryPoint: 'chat_link',
   });
 }
 

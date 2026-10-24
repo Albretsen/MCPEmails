@@ -21,6 +21,8 @@
  * WHO GETS IT. Every rule below must hold, checked when the event arrives:
  *   - a subscription-mode session with a purchasable plan_id, an interval and
  *     a user_id in its metadata (every session runCheckout creates has them)
+ *   - the session was not expired by us as a chat checkout link's racing
+ *     duplicate (CHECKOUT_LINK_SUPERSEDED_KEY in its metadata)
  *   - the session expired at most MAX_EVENT_AGE_MS ago (a queue replay after
  *     an outage does not send a reminder for a checkout days old)
  *   - the user exists, is not one of ours, has a usable address and a working
@@ -78,6 +80,13 @@ export const HOLDOUT_PERCENT = 20;
 export const DEDUPE_WINDOW_MS = 30 * 24 * 3_600_000;
 export const RECOVERY_WINDOW_MS = 30 * 24 * 3_600_000;
 export const MAX_EVENT_AGE_MS = 3 * 24 * 3_600_000;
+
+/**
+ * Session metadata set by the chat checkout link (app/u/[token]/route.ts) on a
+ * session it created and then expired at once because a racing open had
+ * already stored another one. Nobody abandoned it, so it never gets a reminder.
+ */
+export const CHECKOUT_LINK_SUPERSEDED_KEY = 'checkout_link_superseded';
 
 const PLAN_IDS: ReadonlySet<string> = new Set(['personal', 'solo', 'pro']);
 const SUBSCRIBED_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']);
@@ -171,7 +180,8 @@ export type SkipReason =
   | 'no_unsubscribe_token'
   | 'unusable_email'
   | 'paid_since'
-  | 'recent_reminder';
+  | 'recent_reminder'
+  | 'superseded';
 
 export interface Target {
   userId: string;
@@ -208,6 +218,7 @@ export function sessionTarget(session: ExpiredSession): Target | null {
 /** Pure. Everything that decides whether this expired session gets an email. */
 export function decide(session: ExpiredSession, ctx: ReminderContext, now: Date): Decision {
   if (session.mode !== 'subscription') return { kind: 'skip', reason: 'not_subscription' };
+  if (session.metadata?.[CHECKOUT_LINK_SUPERSEDED_KEY]) return { kind: 'skip', reason: 'superseded' };
   const target = sessionTarget(session);
   if (!target) return { kind: 'skip', reason: 'bad_metadata' };
 
@@ -342,6 +353,7 @@ export async function handleExpiredSession(options: {
 
   // The cheap checks first, so an event we would skip anyway costs no reads.
   if (session.mode !== 'subscription') return 'skipped:not_subscription';
+  if (session.metadata?.[CHECKOUT_LINK_SUPERSEDED_KEY]) return 'skipped:superseded';
   const early = sessionTarget(session);
   if (!early) return 'skipped:bad_metadata';
 

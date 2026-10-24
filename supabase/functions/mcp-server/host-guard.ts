@@ -877,3 +877,47 @@ export async function connectGuardedTcp(options: GuardedConnectOptions): Promise
 
   return conn;
 }
+
+/* ── HTTPS destinations ────────────────────────────────────────────────────
+ *
+ * Deno-only, and deliberately NOT part of the mirrored policy above: the web
+ * app never fetches an https URL a mail header handed it. This is the address
+ * policy of `guardMailHost` (every literal encoding understood, every resolved
+ * address public) applied to an https host on 443, for callers such as the
+ * RFC 8058 one-click unsubscribe POST.
+ *
+ * The mail port rule cannot apply, so the port is checked here (443 only) and
+ * the delegate is handed a constant mail port, the same pattern
+ * draft-attachments.ts and signature-images.ts already use. That keeps the
+ * mail-port behaviour of `guardMailHost` untouched and the address decision in
+ * one place.
+ *
+ * The verdict carries the approved address, but Deno's `fetch` cannot be
+ * pinned to it without giving up certificate validation, so a fetch caller
+ * re-resolves the name. See the KNOWN LIMIT note in signature-images.ts.
+ * Failure messages are the mail-worded HOST_GUARD_MESSAGES; https callers are
+ * expected to map the code to their own wording.
+ */
+export const HTTPS_PORT = 443;
+
+export interface HttpsHostGuardOptions {
+  /** Defaults to 443. Anything else is `port_not_allowed`. */
+  port?: number;
+  /** Test seam; defaults to the `Deno.resolveDns` lookup. */
+  lookup?: HostLookup;
+}
+
+export function guardHttpsHost(
+  rawHost: unknown,
+  options: HttpsHostGuardOptions = {},
+): Promise<HostGuardResult> {
+  const port = options.port ?? HTTPS_PORT;
+  if (port !== HTTPS_PORT) {
+    return Promise.resolve({ ok: false, code: "port_not_allowed", message: HOST_GUARD_MESSAGES.port_not_allowed });
+  }
+  return guardMailHost(rawHost, {
+    protocol: "imap",
+    port: 993,
+    ...(options.lookup ? { lookup: options.lookup } : {}),
+  });
+}

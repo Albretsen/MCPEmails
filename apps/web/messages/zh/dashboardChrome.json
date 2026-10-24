@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "您已开通 {plan}",
       "subtitle": "付款已收到。收据将很快发送到您的邮箱。",
+      "subtitleEur": "您的套餐已生效。如果您使用银行扣款付款，扣款可能需要几个工作日完成，在此期间您可以使用全部功能。",
+      "subtitleProcessing": "您的银行扣款正在处理中，可能需要几个工作日。在此期间您可以使用全部功能。",
       "close": "关闭",
       "planLabel": "套餐",
       "priceLabel": "价格",
@@ -51,6 +53,7 @@
       "activatingTitle": "马上就好",
       "activating": "正在激活您的订阅。这需要几秒钟，页面会自动更新。",
       "activatingSlow": "您的付款已成功。套餐激活比平时慢一些，稍等片刻，如果页面仍未更新，请重新加载。",
+      "activatingSlowNeutral": "套餐激活比平时慢一些，稍等片刻，如果页面仍未更新，请重新加载。",
       "billingDetailsNote": "您的价格和续订日期可在账单页面查看。",
       "connectCta": "再连接一个收件箱",
       "billingCta": "查看账单"

@@ -45,7 +45,7 @@ function fakeStorage() {
 const ENUMS = new Set([
   "review-card-v1",
   // card kinds
-  "outbound_review", "bulk_plan", "receipt", "draft_editor",
+  "outbound_review", "bulk_plan", "receipt", "draft_editor", "subscription_plan",
   // card states
   "pending", "editing", "sent", "scheduled", "rejected", "expired",
   "decided_elsewhere", "executed", "error",

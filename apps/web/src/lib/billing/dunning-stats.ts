@@ -28,6 +28,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
+import { toUsdMinor } from '@/lib/analytics/fx';
 
 /** Percentages are withheld until a denominator can carry one. */
 export const MIN_SEQUENCES_FOR_RATE = 5;
@@ -74,9 +75,15 @@ export interface RecoveryCounts {
   recoveredAfterEmail: number;
   /** Paid before any email went out: Stripe's own retry, unaided. */
   recoveredBeforeEmail: number;
-  /** Cash on the invoices in `recoveredAfterEmail`, in minor units. */
+  /**
+   * Cash on the invoices in `recoveredAfterEmail`, in USD minor units: each
+   * invoice converted at the rate of the month its sequence started (fx.ts).
+   */
   recoveredCents: number;
+  /** Always 'usd'. */
   currency: string;
+  /** Invoice currencies left out of `recoveredCents` for want of a rate. */
+  otherCurrencies: string[];
 }
 
 export interface DunningSummary {
@@ -125,7 +132,7 @@ export function summariseDunning(rows: DunningRow[], now = new Date()): DunningS
 
   // A dunning "sequence" is one (customer, invoice) pair: four rows sharing a
   // scope_key. Recovery is a property of the sequence, not of a row.
-  const sequences = new Map<string, { sent: boolean; recovered: boolean; cents: number; currency: string }>();
+  const sequences = new Map<string, { sent: boolean; recovered: boolean; cents: number; currency: string; month: string }>();
 
   for (const row of rows) {
     const bucket =
@@ -169,6 +176,7 @@ export function summariseDunning(rows: DunningRow[], now = new Date()): DunningS
         recovered: false,
         cents: 0,
         currency: (row.payload?.currency ?? 'usd').toLowerCase(),
+        month: row.send_after.slice(0, 7),
       };
     if (row.sent_at) seq.sent = true;
     if (row.cancel_reason === 'payment_recovered') seq.recovered = true;
@@ -183,18 +191,26 @@ export function summariseDunning(rows: DunningRow[], now = new Date()): DunningS
     recoveredBeforeEmail: 0,
     recoveredCents: 0,
     currency: 'usd',
+    otherCurrencies: [],
   };
+  // Summed in USD. This used to add every invoice up as-is and label the total
+  // with whichever currency came last, which adds euros to dollars.
+  let recoveredUsd = 0;
+  const other = new Set<string>();
   for (const seq of sequences.values()) {
     if (seq.sent) recovery.emailed += 1;
     if (!seq.recovered) continue;
     if (seq.sent) {
       recovery.recoveredAfterEmail += 1;
-      recovery.recoveredCents += seq.cents;
-      recovery.currency = seq.currency;
+      const usd = toUsdMinor(seq.cents, seq.currency, seq.month);
+      if (usd === null) other.add(seq.currency);
+      else recoveredUsd += usd;
     } else {
       recovery.recoveredBeforeEmail += 1;
     }
   }
+  recovery.recoveredCents = Math.round(recoveredUsd);
+  recovery.otherCurrencies = [...other].sort();
 
   return {
     states,

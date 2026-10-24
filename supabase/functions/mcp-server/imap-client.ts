@@ -347,6 +347,16 @@ export interface ImapMessageSummary {
   gmLabels?: string[];
 }
 
+/** One row of {@link ImapClient.fetchHeaderFields}. */
+export interface ImapHeaderFieldsRow {
+  uid: number;
+  flags: string[];
+  /** INTERNALDATE as ISO 8601, or null when the server sent none we can read. */
+  internalDate: string | null;
+  /** The raw `Name: value` lines (folded as sent), 8-bit octets decoded. "" when absent. */
+  headers: string;
+}
+
 export interface ImapRawMessage {
   raw: string;
   flags: string[];
@@ -1724,6 +1734,47 @@ export class ImapClient {
         const threadId = /\bX-GM-THRID (\d+)/.exec(line)?.[1];
         const messageId = /\bX-GM-MSGID (\d+)/.exec(line)?.[1];
         if (uid && threadId) out.push({ uid: Number(uid), threadId, messageId: messageId ?? "" });
+      }
+      return out;
+    }, "fetch");
+  }
+
+  /**
+   * `UID FETCH <uids> (UID FLAGS INTERNALDATE BODY.PEEK[HEADER.FIELDS (...)])`:
+   * the named header fields of each message, as one raw header block, with its
+   * flags and arrival time. Subscription cleanup's scan (subscription-scan.ts)
+   * is the only caller; it asks for From, the list headers, DKIM-Signature and
+   * Authentication-Results, every instance of each, in message order.
+   *
+   * PEEK, so nothing is marked read. Field names are checked against the
+   * RFC 5322 field-name grammar before they reach the command line. A NO/BAD
+   * reply throws, as `fetchSummaries` does; a header block over
+   * `maxLiteralBytes` throws {@link ImapMessageTooLargeError} with the socket
+   * left aligned, so the caller may carry on with the next set.
+   */
+  fetchHeaderFields(
+    uids: number[],
+    fields: readonly string[],
+    options: { maxLiteralBytes?: number } = {},
+  ): Promise<ImapHeaderFieldsRow[]> {
+    if (uids.length === 0) return Promise.resolve([]);
+    if (fields.length === 0 || fields.some((f) => !/^[A-Za-z0-9-]+$/.test(f))) {
+      return Promise.reject(new Error("fetchHeaderFields: invalid field name"));
+    }
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(
+        `${tag} UID FETCH ${toUidSet(uids)} (UID FLAGS INTERNALDATE BODY.PEEK[HEADER.FIELDS (${
+          fields.map((f) => f.toUpperCase()).join(" ")
+        })])${CRLF}`,
+      );
+      const resp = await this.readTagged(tag, { maxLiteralBytes: options.maxLiteralBytes ?? 1024 * 1024 });
+      if (resp.status !== "OK") throw new Error(`UID FETCH failed: ${resp.text}`);
+      const out: ImapHeaderFieldsRow[] = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const row = parseHeaderFieldsFetchLine(line);
+        if (row) out.push(row);
       }
       return out;
     }, "fetch");
@@ -3274,6 +3325,61 @@ function parseContinuationLine(line: string): { uid: number; source: string } | 
     }
   }
   return uid > 0 && source !== null ? { uid, source } : null;
+}
+
+const INTERNALDATE_MONTHS: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+/** RFC 3501 date-time ("17-Jul-1996 02:44:25 -0700") as ISO 8601, or null. */
+export function parseInternalDate(value: string): string | null {
+  const m = /^\s*(\d{1,2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-])(\d{2})(\d{2})\s*$/.exec(value);
+  if (!m) {
+    const ms = Date.parse(value);
+    return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+  }
+  const month = INTERNALDATE_MONTHS[m[2].toLowerCase()];
+  if (month === undefined) return null;
+  const offsetMin = (Number(m[8]) * 60 + Number(m[9])) * (m[7] === "-" ? -1 : 1);
+  const ms = Date.UTC(Number(m[3]), month, Number(m[1]), Number(m[4]), Number(m[5]), Number(m[6])) -
+    offsetMin * 60_000;
+  return new Date(ms).toISOString();
+}
+
+/**
+ * One `* N FETCH (UID u FLAGS (...) INTERNALDATE "..." BODY[HEADER.FIELDS
+ * (...)] {n} ...)` line as a {@link ImapHeaderFieldsRow}, or null without a
+ * UID. Items may come in any order. Exported for subscription-scan.test.ts.
+ */
+export function parseHeaderFieldsFetchLine(line: string): ImapHeaderFieldsRow | null {
+  const open = line.indexOf("(");
+  if (open === -1) return null;
+  const tokens = tokenize(line.slice(open));
+  const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
+  let uid = 0;
+  let flags: string[] = [];
+  let internalDate: string | null = null;
+  let headers = "";
+  for (let i = 0; i < attrs.length; i++) {
+    const key = attrs[i];
+    if (key === "UID" && typeof attrs[i + 1] === "string") {
+      uid = Number(attrs[++i]);
+    } else if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
+      flags = (attrs[++i] as Token[]).filter((t): t is string => typeof t === "string");
+    } else if (key === "INTERNALDATE" && typeof attrs[i + 1] === "string") {
+      internalDate = parseInternalDate(attrs[++i] as string);
+    } else if (
+      // Tokenizes as the atom "BODY[HEADER.FIELDS", the field list, the atom
+      // "]", then the value (see the same branch in parseFetchLine).
+      key === "BODY[HEADER.FIELDS" && Array.isArray(attrs[i + 1]) && attrs[i + 2] === "]" &&
+      typeof attrs[i + 3] === "string"
+    ) {
+      const value = attrs[i + 3] as string;
+      headers = value === "NIL" ? "" : decodeRawHeaderOctets(value);
+      i += 3;
+    }
+  }
+  return Number.isInteger(uid) && uid > 0 ? { uid, flags, internalDate, headers } : null;
 }
 
 /**
