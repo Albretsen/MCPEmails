@@ -195,3 +195,25 @@ test('cancel page: the header is the logo only', () => {
   const page = readFileSync(join(here, '../../../app/[locale]/cancel/page.js'), 'utf8');
   assert.match(page, /<Nav minimal \/>/);
 });
+
+test('terms: every section heading is rendered once, and its number matches its key', () => {
+  // A merge once left the referral section rendering the 5.10 heading, so
+  // /terms showed "5.10 Business founder price" twice and no 5.11.
+  const page = readFileSync(join(here, '../../../app/[locale]/terms/page.js'), 'utf8');
+  const keys = [...page.matchAll(/t\('plansAndPayment\.(h\d+)'\)/g)].map((m) => m[1]);
+  const seen = new Set();
+  for (const key of keys) {
+    assert.ok(!seen.has(key), `terms/page.js renders plansAndPayment.${key} twice`);
+    seen.add(key);
+  }
+  for (const locale of LOCALES) {
+    const section = messages(locale, 'terms').plansAndPayment;
+    for (const key of keys) {
+      // A locale without the key does not show that section (5.10 is hidden
+      // where founderTermsVisible says so).
+      if (section[key] === undefined) continue;
+      const number = key.slice(1).replace(/^(\d)(\d+)$/, '$1.$2');
+      assert.ok(String(section[key]).startsWith(`${number} `), `${locale} plansAndPayment.${key} should start with ${number}`);
+    }
+  }
+});
