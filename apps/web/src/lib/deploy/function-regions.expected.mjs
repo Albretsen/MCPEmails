@@ -107,6 +107,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/fastmail-app-password/route.ts': 60,
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
+  'app/api/internal/black-week-email/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/stripe/webhook/route.ts': 30,
   'app/api/webhooks/resend/route.ts': 30,
@@ -198,6 +199,7 @@ export const ROUTES = [
   ['app/api/inboxes/fastmail-app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
+  ['app/api/internal/black-week-email/dispatch/route.ts', 'arn1', '5+', 'paged user reads, Stripe API + Resend batches; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/kiosk/health/route.ts', 'arn1', '1+', '-'],
