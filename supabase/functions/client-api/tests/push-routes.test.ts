@@ -38,6 +38,12 @@ const SUMMARY: DispatchSummary = {
   failed: 0,
   skipped_reconnect: 0,
   deferred: 0,
+  webhooks_enqueued: 0,
+  webhooks_delivered: 0,
+  webhooks_failed: 0,
+  webhook_attempts: 0,
+  webhooks_abandoned: 0,
+  webhooks_disabled: 0,
   ms: 12,
 };
 

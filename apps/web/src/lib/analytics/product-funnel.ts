@@ -85,7 +85,10 @@ export type ProductFunnelEvent = {
     | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'
     | 'downgrade_scheduled' | 'downgrade_undone'
     | 'inbox_parked' | 'inbox_unparked'
-    | 'retention_option_clicked';
+    | 'retention_option_clicked'
+    // The failed-payment banner's button (/api/stripe/payment-fix). success =
+    // sent on to Stripe, failure = bounced to settings.
+    | 'payment_fix_clicked';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

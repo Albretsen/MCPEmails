@@ -7,7 +7,7 @@
 // knows how to send an RFC 8058 one-click POST without being turned against
 // our own network. This module is what a tool call does with that:
 //
-//   subscriptions_scan     scan, group, freeze the result as a plan for 15
+//   subscriptions_scan     scan, group, freeze the result as a plan for 60
 //                          minutes, return a `subscription_plan` card.
 //   subscriptions_cleanup  for the senders the user picked, run the method
 //                          ladder, write one ledger row per sender, then
@@ -36,7 +36,7 @@
 // the message ids. The caller sends a plan_id and sender keys, and a key that
 // is not in the plan is refused before anything runs. The plan is
 // workspace-scoped, bound to the key's inbox allowlist, single use for the
-// unsubscribe part (an atomic `used_at IS NULL` claim) and lives 15 minutes.
+// unsubscribe part (an atomic `used_at IS NULL` claim) and lives 60 minutes.
 // The ledger's idempotency key (inbox, sender, URL host or mailto address)
 // means a replay or a second scan finds its row instead of sending a second
 // POST. A run killed half way is recoverable: ledger rows it left `pending`
@@ -74,16 +74,29 @@ export function isSubscriptionToolName(name: string): name is SubscriptionToolNa
 /** Card kind (contract: "Card contract" in the build spec). */
 export const SUBSCRIPTION_CARD = "subscription_plan";
 
-/** A plan is runnable for 15 minutes, like a bulk plan. */
-export const SUBSCRIPTION_PLAN_TTL_MS = 15 * 60 * 1000;
 /**
- * `continue: true` (the backlog move only) is accepted for an hour after the
- * scan. The unsubscribe part stays bound to the 15-minute window; moving mail
- * the user already chose to archive is safe to finish a little later, and a
- * "Continue archiving" button that expires with the plan would strand a
- * half-archived backlog.
+ * A plan is runnable for 60 minutes. Longer than a bulk plan's 15: the user
+ * reads a list of up to 200 senders and picks from it, and 15 minutes was not
+ * enough to get through a 99-sender list (2026-10-24). The daily sweep
+ * (20261024210100) deletes plans a day after they were made, so the TTL must
+ * stay well under a day.
  */
-export const BACKLOG_CONTINUE_WINDOW_MS = 60 * 60 * 1000;
+export const SUBSCRIPTION_PLAN_TTL_MS = 60 * 60 * 1000;
+/** The TTL in minutes, for the text that names it. */
+export const SUBSCRIPTION_PLAN_TTL_MINUTES = SUBSCRIPTION_PLAN_TTL_MS / 60_000;
+/**
+ * `continue: true` (the backlog move only) is accepted for two hours after the
+ * scan. The unsubscribe part stays bound to the plan's TTL; moving mail the
+ * user already chose to archive is safe to finish a little later, and a
+ * "Continue archiving" button that expires with the plan would strand a
+ * half-archived backlog. Must stay longer than SUBSCRIPTION_PLAN_TTL_MS.
+ */
+export const BACKLOG_CONTINUE_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+/** A throw after the provider scan (grouping, encryption, the plan insert). */
+export const SCAN_POSTPROCESS_FAILED = "scan_postprocess_failed";
+/** Any other throw from this module's own code. */
+export const SUBSCRIPTION_INTERNAL_ERROR = "subscription_internal_error";
 /** How long a run holds the backlog lease. Longer than one call's budget. */
 export const BACKLOG_LEASE_MS = 90 * 1000;
 
@@ -501,6 +514,11 @@ function methodLabel(method: SenderMethod): string {
   }
 }
 
+/** Message of a caught throw for the operator log: bounded, never a value from the plan. */
+function errorText(error: unknown): string {
+  return (error instanceof Error ? error.message : String(error)).slice(0, 200);
+}
+
 function textResult(text: string, code: string, extra: Partial<SubToolResult> = {}): SubToolResult {
   return {
     result: { content: [{ type: "text", text }], isError: true, _meta: { error_code: code } },
@@ -712,7 +730,35 @@ function intArg(value: unknown, fallback: number, min: number, max: number): num
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * A throw from this module's own code is a tool error with a stable code, not
+ * an unhandled -32603 the model can only retry blind.
+ */
+function internalErrorResult(tool: SubscriptionToolName, error: unknown): SubToolResult {
+  console.error(`[subscriptions] ${tool}: internal_error`, { error: errorText(error) });
+  return textResult(
+    tool === "subscriptions_scan"
+      ? "The scan failed on the server. Nothing was changed. Try again in a moment."
+      : "The cleanup stopped on a server error. Senders already handled are recorded and are never asked " +
+        "twice: call subscriptions_cleanup again with the same plan_id and sender_keys to see what was done " +
+        "(a run that stopped half way is picked up again after about 10 minutes).",
+    SUBSCRIPTION_INTERNAL_ERROR,
+  );
+}
+
 export async function runSubscriptionsScan(
+  deps: SubscriptionDeps,
+  caller: SubCaller,
+  rawArgs: unknown,
+): Promise<SubToolResult> {
+  try {
+    return await scanInner(deps, caller, rawArgs);
+  } catch (error) {
+    return internalErrorResult("subscriptions_scan", error);
+  }
+}
+
+async function scanInner(
   deps: SubscriptionDeps,
   caller: SubCaller,
   rawArgs: unknown,
@@ -738,27 +784,43 @@ export async function runSubscriptionsScan(
     return scanErrorResult(error);
   }
 
-  // Only Authentication-Results from the inbox's own provider count (the scan
-  // context pins them); none = every sender is auth_unverified.
-  const candidates = groupSenders(scan.records, { maxSenders: SCAN_MAX_SENDERS, trust: scan.trust });
-  const senders = storedSendersOf(candidates, scan.records);
-  const summary = summaryOf(senders);
-  const at = nowMs(deps);
-  const expiresAt = new Date(at + SUBSCRIPTION_PLAN_TTL_MS).toISOString();
+  // Everything after the provider scan is our own code (grouping, encryption,
+  // the plan insert). A throw there used to escape as an unhandled -32603
+  // ("Maximum call stack size exceeded" from the encoder, 2026-10-24); now it
+  // is a tool error with a stable code, and nothing has changed yet.
+  let senders: StoredSender[];
+  let summary: Record<string, number>;
+  let expiresAt: string;
+  let planId: string | null;
+  try {
+    // Only Authentication-Results from the inbox's own provider count (the
+    // scan context pins them); none = every sender is auth_unverified.
+    const candidates = groupSenders(scan.records, { maxSenders: SCAN_MAX_SENDERS, trust: scan.trust });
+    senders = storedSendersOf(candidates, scan.records);
+    summary = summaryOf(senders);
+    expiresAt = new Date(nowMs(deps) + SUBSCRIPTION_PLAN_TTL_MS).toISOString();
 
-  const planId = await deps.store.insertPlan({
-    workspace_id: caller.workspace_id,
-    inbox_id: inbox.id,
-    api_key_id: caller.id,
-    senders: { v: 1, data: await deps.encrypt(JSON.stringify(senders)) },
-    senders_encrypted: true,
-    sender_count: senders.length,
-    summary,
-    window_days: days,
-    scanned: scan.scanned,
-    truncated: scan.truncated,
-    expires_at: expiresAt,
-  });
+    planId = await deps.store.insertPlan({
+      workspace_id: caller.workspace_id,
+      inbox_id: inbox.id,
+      api_key_id: caller.id,
+      senders: { v: 1, data: await deps.encrypt(JSON.stringify(senders)) },
+      senders_encrypted: true,
+      sender_count: senders.length,
+      summary,
+      window_days: days,
+      scanned: scan.scanned,
+      truncated: scan.truncated,
+      expires_at: expiresAt,
+    });
+  } catch (error) {
+    console.error("[subscriptions] scan_postprocess_failed", { scanned: scan.scanned, error: errorText(error) });
+    return textResult(
+      "The scan read the mailbox but could not build or save the list of senders. Nothing was changed. " +
+        "Try again with a smaller limit (for example limit: 500).",
+      SCAN_POSTPROCESS_FAILED,
+    );
+  }
   if (!planId) {
     return textResult(
       "The scan finished but its result could not be saved. Nothing was changed. Try again in a moment.",
@@ -816,29 +878,65 @@ function scanText(
       `${summary.mailto} by email, ${summary.link} by link, ${summary.none} with no unsubscribe option; ` +
       `${summary.unsafe} look unsafe and are never unsubscribed by the server.`,
   );
+  const preselected = senders.filter((s) => s.suggested);
   if (senders.length > 0) {
-    lines.push("", "Top senders (sender_key: name, messages, read share, method):");
+    lines.push(
+      "",
+      "Top senders (the quoted sender_key first, then name, messages, read share, method):",
+    );
     for (const s of senders.slice(0, SCAN_TEXT_SENDERS)) {
-      const name = JSON.stringify(clean(s.display_name, 80) || clean(s.from_address, 80));
       lines.push(
-        `- ${s.sender_key}: ${name}, ${s.message_count} message(s), ${Math.round(s.read_share * 100)}% read, ` +
-          `${methodLabel(s.method)}${s.safe ? "" : ", unsafe"}${s.suggested ? ", suggested" : ""}`,
+        `- ${senderKeyLabel(s)}, ${s.message_count} message(s), ${Math.round(s.read_share * 100)}% read, ` +
+          `${methodLabel(s.method)}${s.safe ? "" : ", unsafe"}${s.suggested ? ", pre-selected" : ""}`,
       );
     }
     if (senders.length > SCAN_TEXT_SENDERS) {
-      lines.push(`- and ${senders.length - SCAN_TEXT_SENDERS} more in the card.`);
+      lines.push(
+        `- and ${senders.length - SCAN_TEXT_SENDERS} more in the card ` +
+          "(their sender_key values are in structuredContent.subscriptions.senders).",
+      );
     }
   }
+  // The card ticks exactly the `suggested` senders, and the card's selection
+  // is what its button cleans up. Name every one of them so the model's reply
+  // describes the card the user is looking at (2026-10-24: the reply said
+  // GitHub and LinkedIn were left out while the card had them ticked).
+  lines.push("");
+  if (preselected.length === 0) {
+    lines.push("Pre-selected on the card: none. The user ticks the senders to clean up.");
+  } else {
+    lines.push(`Pre-selected on the card (${preselected.length}), ticked when the card opens:`);
+    for (const s of preselected) lines.push(`- ${senderKeyLabel(s)}`);
+  }
+  lines.push(
+    "Whatever is ticked on the card when the user presses its button is what gets unsubscribed, not what " +
+      "you write here. When you reply, describe exactly this pre-selection. If you think a pre-selected " +
+      "sender should be kept, say it is ticked and ask the user to untick it on the card; do not say it was " +
+      "left out.",
+  );
   lines.push(
     "",
-    "Nothing has been changed. To unsubscribe, call subscriptions_cleanup with this plan_id and the " +
-      "sender_keys the user chose (only keys from this list are accepted), and backlog \"archive\" to also " +
-      "archive what those senders already sent or \"keep\". One-click senders are unsubscribed by the server; " +
-      "senders that unsubscribe by email get a draft in the Drafts folder that the user sends themselves " +
-      "(nothing is sent); link-only senders come back as a link for the user to open.",
-    `plan_id: ${planId} (expires ${expiresAt}, runs once)`,
+    "Nothing has been changed. Without the card, call subscriptions_cleanup with this plan_id and the " +
+      "sender_keys the user chose, copied exactly as quoted above" +
+      (senders.length > 0 ? ` (for example ${JSON.stringify(senders.slice(0, 2).map((s) => s.sender_key))})` : "") +
+      ". Display names, addresses and domains are not sender_keys, and only keys from this plan are " +
+      "accepted. Pass backlog \"archive\" to " +
+      "also archive what those senders already sent, or \"keep\". One-click senders are unsubscribed by the " +
+      "server; senders that unsubscribe by email get a draft in the Drafts folder that the user sends " +
+      "themselves (nothing is sent); link-only senders come back as a link for the user to open.",
+    `plan_id: ${planId} (expires ${expiresAt}, ${SUBSCRIPTION_PLAN_TTL_MINUTES} minutes after the scan; runs once)`,
   );
   return lines.join("\n");
+}
+
+/**
+ * `"<sender_key>": "<name>"`. Both quoted with JSON.stringify: the key so it
+ * reads as one exact token to copy (a bare `list:news.example.com: Name` read
+ * as a label and a value), the name because the sender wrote it.
+ */
+function senderKeyLabel(s: StoredSender): string {
+  const name = JSON.stringify(clean(s.display_name, 80) || clean(s.from_address, 80));
+  return `${JSON.stringify(s.sender_key)}: ${name}`;
 }
 
 // ── subscriptions_cleanup ───────────────────────────────────────────────────
@@ -848,6 +946,89 @@ interface CleanupArgs {
   senderKeys: string[];
   backlog: "archive" | "keep";
   continueBacklog: boolean;
+}
+
+/** What every sender_keys refusal says about the expected shape. */
+const SENDER_KEYS_SHAPE =
+  "Expected the quoted sender_key strings from the subscriptions_scan text (or " +
+  "structuredContent.subscriptions.senders[].sender_key), for example " +
+  "[\"list:news.example.com\", \"from:deals@example.com\"]. Nothing was changed.";
+
+function describeJsonType(value: unknown): string {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "an array";
+  if (typeof value === "object") return "an object";
+  return `a ${typeof value}`;
+}
+
+/** At most this many keys are named back in a refusal. */
+const REFUSAL_MAX_KEYS = 40;
+
+function quotedKeys(keys: string[]): string {
+  const shown = keys.slice(0, REFUSAL_MAX_KEYS).map((k) => JSON.stringify(k));
+  return shown.join(", ") + (keys.length > REFUSAL_MAX_KEYS ? `, and ${keys.length - REFUSAL_MAX_KEYS} more` : "");
+}
+
+/** The pre-selected keys, or a pointer to where the keys are when none are. */
+function validKeysHint(senders: StoredSender[]): string {
+  const preselected = senders.filter((s) => s.suggested).map((s) => s.sender_key);
+  if (preselected.length > 0) {
+    return `The senders pre-selected on the card are: [${quotedKeys(preselected)}].`;
+  }
+  return senders.length > 0
+    ? `This plan's sender_keys include: [${quotedKeys(senders.map((s) => s.sender_key))}].`
+    : "This plan has no senders.";
+}
+
+/**
+ * For a key that is not in the plan, the plan key it most likely meant: the
+ * same key in another case, the key without its `list:` / `from:` prefix, or
+ * the sender's address, display name or domain when exactly one sender has
+ * it. A HINT only, never a substitute: the call is still refused, and the
+ * caller must send the real key (mcp-server CLAUDE.md, "hint, don't alias").
+ */
+export function guessSenderKey(value: string, senders: StoredSender[]): string | null {
+  const v = value.trim().replace(/^["'<]+|["'>]+$/g, "").trim().toLowerCase();
+  if (!v) return null;
+  const unique = (matches: StoredSender[]) => matches.length === 1 ? matches[0].sender_key : null;
+  return unique(senders.filter((s) => s.sender_key.toLowerCase() === v)) ??
+    unique(senders.filter((s) => s.sender_key === `list:${v}` || s.sender_key === `from:${v}`)) ??
+    unique(senders.filter((s) => s.from_address.trim().toLowerCase() === v)) ??
+    unique(senders.filter((s) => clean(s.display_name).toLowerCase() === v)) ??
+    unique(senders.filter((s) => s.domain.toLowerCase() === v || (s.list_id ?? "").toLowerCase() === v));
+}
+
+function unknownKeysResult(deps: SubscriptionDeps, planId: string, unknown: string[], senders: StoredSender[]) {
+  const shown = unknown.slice(0, 10).map((k) => {
+    const guess = guessSenderKey(k, senders);
+    const quoted = JSON.stringify(clean(k, 120));
+    return guess ? `${quoted} (did you mean ${JSON.stringify(guess)}?)` : quoted;
+  });
+  return envelopeFailure(
+    deps,
+    "error",
+    "unknown_sender_keys",
+    `subscriptions_cleanup: ${unknown.length} sender key(s) are not in this plan: ${shown.join(", ")}` +
+      (unknown.length > 10 ? `, and ${unknown.length - 10} more` : "") +
+      ". A sender_key is the quoted string before each sender's name in the subscriptions_scan text, such as " +
+      "\"list:news.example.com\" or \"from:deals@example.com\", copied exactly; a display name, address or " +
+      `domain is not one. ${validKeysHint(senders)} Nothing was changed; call again with keys from this plan.`,
+    planId,
+    "not_pending",
+  );
+}
+
+function emptyKeysResult(deps: SubscriptionDeps, planId: string, senders: StoredSender[]) {
+  return envelopeFailure(
+    deps,
+    "error",
+    "invalid_arguments",
+    "subscriptions_cleanup: sender_keys is empty, so there is nothing to unsubscribe from. Pass the " +
+      `sender_key of every sender the user chose. ${validKeysHint(senders)} If the user is choosing on ` +
+      "the card, do not call this tool: the card runs the cleanup itself. Nothing was changed.",
+    planId,
+    "not_pending",
+  );
 }
 
 function parseCleanupArgs(rawArgs: unknown): CleanupArgs | string {
@@ -860,15 +1041,22 @@ function parseCleanupArgs(rawArgs: unknown): CleanupArgs | string {
     return "plan_id must be the UUID returned by subscriptions_scan.";
   }
   const keys = args.sender_keys;
-  if (!Array.isArray(keys) || keys.some((k) => typeof k !== "string" || k.length === 0 || k.length > 600)) {
-    return "sender_keys must be a list of sender_key values from the scan.";
+  if (!Array.isArray(keys)) {
+    return `sender_keys must be a list of strings, not ${describeJsonType(keys)}. ${SENDER_KEYS_SHAPE}`;
+  }
+  const bad = keys.findIndex((k) => typeof k !== "string" || k.length === 0 || k.length > 600);
+  if (bad !== -1) {
+    const item = keys[bad];
+    const what = typeof item === "string" ? (item.length === 0 ? "an empty string" : "over 600 characters") : describeJsonType(item);
+    return `sender_keys[${bad}] is ${what}; every item must be one sender_key string. ${SENDER_KEYS_SHAPE}`;
   }
   if (keys.length > SCAN_MAX_SENDERS) return `sender_keys may name at most ${SCAN_MAX_SENDERS} senders.`;
   const backlog = args.backlog ?? "keep";
   if (backlog !== "archive" && backlog !== "keep") return "backlog must be \"archive\" or \"keep\".";
   const cont = args.continue ?? false;
   if (typeof cont !== "boolean") return "continue must be true or false.";
-  if (!cont && keys.length === 0) return "sender_keys must name at least one sender.";
+  // An empty list without continue is refused AFTER the plan is loaded
+  // (emptyKeysResult), so the refusal can name the plan's pre-selected keys.
   return {
     planId,
     senderKeys: [...new Set(keys as string[])],
@@ -904,6 +1092,18 @@ export async function runSubscriptionsCleanup(
   caller: SubCaller,
   rawArgs: unknown,
 ): Promise<SubToolResult> {
+  try {
+    return await cleanupInner(deps, caller, rawArgs);
+  } catch (error) {
+    return internalErrorResult("subscriptions_cleanup", error);
+  }
+}
+
+async function cleanupInner(
+  deps: SubscriptionDeps,
+  caller: SubCaller,
+  rawArgs: unknown,
+): Promise<SubToolResult> {
   if (!(await deps.workspaceEnabled(caller.workspace_id))) return flagOffResult();
   const parsed = parseCleanupArgs(rawArgs);
   if (typeof parsed === "string") return invalidArgs(deps, `subscriptions_cleanup: ${parsed}`);
@@ -929,17 +1129,8 @@ export async function runSubscriptionsCleanup(
   }
   const byKey = new Map(senders.map((s) => [s.sender_key, s]));
   const unknown = parsed.senderKeys.filter((k) => !byKey.has(k));
-  if (unknown.length > 0) {
-    return envelopeFailure(
-      deps,
-      "error",
-      "unknown_sender_keys",
-      `subscriptions_cleanup: ${unknown.length} sender key(s) are not in this plan. Use only sender_key ` +
-        "values returned by the same subscriptions_scan. Nothing was changed.",
-      row.id,
-      "not_pending",
-    );
-  }
+  if (unknown.length > 0) return unknownKeysResult(deps, row.id, unknown, senders);
+  if (!parsed.continueBacklog && parsed.senderKeys.length === 0) return emptyKeysResult(deps, row.id, senders);
   const selected = parsed.senderKeys.map((k) => byKey.get(k)!);
   const at = nowMs(deps);
   const meta = { window_days: row.window_days, scanned: row.scanned, truncated: row.truncated };
@@ -956,7 +1147,7 @@ export async function runSubscriptionsCleanup(
       deps,
       "expired",
       "plan_expired",
-      "This subscription plan expired (plans last 15 minutes). Nothing was changed. Run subscriptions_scan again.",
+      `This subscription plan expired (plans last ${SUBSCRIPTION_PLAN_TTL_MINUTES} minutes). Nothing was changed. Run subscriptions_scan again.`,
       row.id,
       "expired",
     );
@@ -1956,7 +2147,7 @@ export const SUBSCRIPTION_TOOL_DEFINITIONS: SubscriptionToolDefinition[] = [
     description:
       "Scan recent mail for newsletters and mailing lists, grouped by sender, with how each one can be " +
       "unsubscribed (one-click, by email, or by link) and which look worth dropping. Changes nothing. " +
-      "Returns a plan_id and sender_key values for subscriptions_cleanup; the plan expires after 15 minutes.",
+      `Returns a plan_id and sender_key values for subscriptions_cleanup; the plan expires after ${SUBSCRIPTION_PLAN_TTL_MINUTES} minutes.`,
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -1996,7 +2187,8 @@ export const SUBSCRIPTION_TOOL_DEFINITIONS: SubscriptionToolDefinition[] = [
       "themselves (nothing is ever sent); link-only senders come back as a link for the user to open. " +
       "backlog \"archive\" also archives what those senders already sent. Only sender_keys from the plan " +
       "are accepted, and each sender is asked once. Use continue: true with the same plan_id to finish " +
-      "archiving.",
+      "archiving. When the scan's card is shown, the user picks and runs the cleanup on the card; call " +
+      "this tool only when the user named the senders in chat.",
     // manage:folders covers the backlog step (it moves mail). The outbound
     // part has no scope of its own on purpose: send:email is reserved for
     // sending drafts (mcp-server CLAUDE.md) and an unsubscribe POST sends no
@@ -2012,7 +2204,10 @@ export const SUBSCRIPTION_TOOL_DEFINITIONS: SubscriptionToolDefinition[] = [
           type: "array",
           items: { type: "string" },
           maxItems: SCAN_MAX_SENDERS,
-          description: "sender_key values from that plan, for the senders to unsubscribe from.",
+          description:
+            "The senders to unsubscribe from: sender_key strings from that scan, copied exactly as quoted " +
+            "in its text (e.g. \"list:news.example.com\", \"from:deals@example.com\"). Not names, addresses " +
+            "or domains. At least one, unless continue is true.",
         },
         backlog: {
           type: "string",

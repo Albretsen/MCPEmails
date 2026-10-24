@@ -23,6 +23,7 @@ import {
   isOneClick,
   type ListHeaderRecord,
   looksLikeKeepReceiving,
+  neverSuggest,
   normalizeListId,
   organizationalDomain,
   parseListUnsubscribe,
@@ -498,6 +499,47 @@ Deno.test("classifySender: suggestion rules", () => {
     false,
   );
   assertEquals(classifySender([rec({ listId: "statements.example.com" }), rec({ listId: "statements.example.com" }), rec({ listId: "statements.example.com" })]).suggested, false);
+});
+
+// 2026-10-24, a real inbox: the card pre-ticked a CI bot of the user's own
+// repository (56 messages) and a "<person> via LinkedIn" notice.
+Deno.test("classifySender: CI bots, relayed people and sign-in mail are never pre-selected", () => {
+  const three = (over: Partial<ListHeaderRecord>) => [rec(over), rec(over), rec(over)];
+  // Control: the same shape from a newsletter is suggested.
+  assertEquals(classifySender(three({})).suggested, true);
+  assertEquals(classifySender(three({ fromName: "github-actions[bot]" })).suggested, false);
+  assertEquals(classifySender(three({ fromName: "Dependabot [bot]" })).suggested, false);
+  assertEquals(classifySender(three({ fromName: "Jane Doe via LinkedIn" })).suggested, false);
+  assertEquals(classifySender(three({ fromName: "John Roe (via Example Docs)" })).suggested, false);
+  // A repository's List-Id under a code host, whatever the From domain says.
+  assertEquals(classifySender(three({ listId: "<repo.owner.github.com>" })).suggested, false);
+  assertEquals(classifySender(three({ fromAddress: "invitations@example.com" })).suggested, false);
+  assertEquals(classifySender(three({ fromAddress: "messages-noreply@example.com" })).suggested, false);
+  assertEquals(classifySender(three({ fromName: "Example Login Alerts" })).suggested, false);
+  assertEquals(classifySender(three({ fromName: "Example 2FA" })).suggested, false);
+  assertEquals(classifySender(three({ fromAddress: "verify@example.com" })).suggested, false);
+  // One name of the group is enough, not just the newest.
+  assertEquals(classifySender([rec(), rec(), rec({ fromName: "Ann via LinkedIn" })]).suggested, false);
+});
+
+Deno.test("neverSuggest: code hosts by From domain or List-Id, bots, relayed people", () => {
+  const none = { names: [], addresses: [], listId: null };
+  assert(neverSuggest({ ...none, addresses: ["notifications@github.com"] }));
+  assert(neverSuggest({ ...none, addresses: ["gitlab@mg.gitlab.com"] }));
+  assert(neverSuggest({ ...none, addresses: ["noreply@bitbucket.org"] }));
+  assert(neverSuggest({ ...none, listId: "repo.owner.github.com" }));
+  assert(neverSuggest({ ...none, names: ["github-actions[bot]"] }));
+  assert(neverSuggest({ ...none, names: ["Oscar Example via LinkedIn"] }));
+  // Not a code host: a lookalike domain, and "via" inside a word.
+  assert(!neverSuggest({ ...none, addresses: ["news@notgithub.com"], names: ["Trivia Weekly", "Viable News"] }));
+  assert(!neverSuggest({ names: ["Example News"], addresses: ["news@example.com"], listId: "weekly.example.com" }));
+});
+
+Deno.test("looksLikeKeepReceiving: whole-token short words do not catch ordinary words", () => {
+  assert(looksLikeKeepReceiving("Example Login"));
+  assert(looksLikeKeepReceiving("sso@example.com"));
+  assert(!looksLikeKeepReceiving("Authors Weekly"));
+  assert(!looksLikeKeepReceiving("Otters Digest"));
 });
 
 Deno.test("looksLikeKeepReceiving: token prefixes, not substrings", () => {

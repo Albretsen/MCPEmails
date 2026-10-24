@@ -23,6 +23,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
+import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
@@ -4495,6 +4496,9 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
           />
         </div>
       </div>
+
+      {/* Webhooks for new mail sit with the keys: both are how your own agents use MCPEmails. */}
+      <WebhooksPanel inboxes={inboxes} planName={planDisplayName} />
 
       {confirmKey && (
         <RevokeDialog
