@@ -22,7 +22,8 @@ import type Stripe from 'stripe';
 
 import type { Database } from '@/types/database.types';
 import { isUnknownColumnError } from '@/lib/approvals/columns';
-import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
+import { basePlanItem, getPlanByStripePriceId, PERSONAL_PASS_3M } from '@/lib/stripe/plans';
+import { getActivePass } from '@/lib/billing/pass';
 import {
   PAUSED_STATUS,
   parkOwner,
@@ -149,15 +150,22 @@ async function reprojectOne(db: Db, row: DueRow, subscription: Stripe.Subscripti
     .update({ plan: projection.grantPlan, subscription_status: projection.status, updated_at: now.toISOString() })
     .eq('user_id', row.user_id);
   if (billingError) throw new Error(billingError.message);
+  // PASS-AWARE, like the webhook's applyUserPlan: a pause projects Free, but a
+  // 3-month pass that covers now keeps the workspaces on Personal and nothing
+  // is parked below it. Strict read: a failure throws and the row is retried
+  // on the next run rather than a paid pass being projected away.
+  const passHolds =
+    projection.grantPlan === 'free' && (await getActivePass(db, row.user_id, { strict: true, now })) !== null;
+  const workspacePlan = passHolds ? PERSONAL_PASS_3M.plan : projection.grantPlan;
   const { error: workspaceError } = await db
     .from('workspaces')
-    .update({ plan: projection.grantPlan, updated_at: now.toISOString() })
+    .update({ plan: workspacePlan, updated_at: now.toISOString() })
     .eq('owner_id', row.user_id)
     .is('deleted_at', null);
   if (workspaceError) throw new Error(workspaceError.message);
   await writePlanChangeColumns(db, row.user_id, projection.columns);
 
-  if (projection.parkTo) {
+  if (projection.parkTo && !passHolds) {
     await parkOwner(db, row.user_id, projection.parkTo, row.inbox_keep_order, label);
   } else if (projection.unpark) {
     await unparkOwner(db, row.user_id, projection.grantPlan, row.inbox_keep_order, label);

@@ -6143,6 +6143,9 @@ function formatRenewalDate(unixSeconds, locale) {
  *                 arrives here as null and is never quoted. Null itself (the
  *                 RPC failed) states nothing.
  */
+/** The checkout route's pass refusals; each has a billing.checkoutError sentence. */
+const PASS_ERROR_CODES = new Set(['pass_unavailable', 'already_subscribed', 'pass_already_queued', 'pass_monthly_not_yet']);
+
 function BillingSection({
   currentPlan,
   compedScale = false,
@@ -6247,9 +6250,11 @@ function BillingSection({
         // points at Resume / Keep, instead of the server's English.
         const message = data?.error_code === 'plan_change_pending'
           ? t('billing.planChange.pendingCheckout')
-          : typeof data?.error === 'string'
-            ? data.error
-            : t('billing.errCheckoutFailed');
+          : PASS_ERROR_CODES.has(data?.error_code)
+            ? t(`billing.checkoutError.${data.error_code}`)
+            : typeof data?.error === 'string'
+              ? data.error
+              : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
         return;
       }

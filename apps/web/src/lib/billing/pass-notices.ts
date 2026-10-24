@@ -23,6 +23,10 @@
  * follows does not end). The dispatcher asks checkPassNoticeFreshness again
  * immediately before each send, which covers whatever no event cancelled.
  *
+ * RESTORED WHEN TRUE AGAIN (resyncPassNotices). After a refund, and after a
+ * subscription ends while a pass still runs, the pass that ends the cover
+ * gets its two rows back with its current dates.
+ *
  * Nothing here throws into the webhook: every function logs and swallows.
  */
 
@@ -134,8 +138,12 @@ export async function cancelPassNotices(
   });
 }
 
+/** Cancellations that stop being true once no subscription is entitled. */
+const REVIVABLE_REASONS: readonly CancelReason[] = ['pass_renewed', 'subscription_started'];
+
 /**
- * Put a user's pass notices back in line with their passes after a refund.
+ * Put a user's pass notices back in line with their passes after a refund,
+ * or after a subscription ended while a pass still runs.
  *
  * A refund can change which pass ends the cover, and when:
  *   - refunding the covering pass starts the stacked one TODAY, so its two
@@ -149,7 +157,9 @@ export async function cancelPassNotices(
  *
  * So: the live pass that ends the cover gets both notices queued (if missing)
  * and every unsent row of it re-dated to its window, reviving rows cancelled
- * as `pass_renewed`. Rows cancelled for any other reason stay cancelled.
+ * as `pass_renewed` or `subscription_started` (the subscription that
+ * cancelled them is no longer entitled, checked below). Rows cancelled for any
+ * other reason stay cancelled.
  * Nothing when the user has an entitled subscription (subscription_started
  * stands) or no live pass. Queueing off: nothing. Never throws.
  */
@@ -196,7 +206,7 @@ export async function resyncPassNotices(
           .is('sent_at', null);
       const { error: openError } = await base().is('cancelled_at', null);
       if (openError) throw new Error(openError.message);
-      const { error: reviveError } = await base().eq('cancel_reason', 'pass_renewed');
+      const { error: reviveError } = await base().in('cancel_reason', [...REVIVABLE_REASONS]);
       if (reviveError) throw new Error(reviveError.message);
     }
     console.log(`[pass-notices] resynced notices of pass ${last.id} to end ${new Date(last.ends_at).toISOString()}`);

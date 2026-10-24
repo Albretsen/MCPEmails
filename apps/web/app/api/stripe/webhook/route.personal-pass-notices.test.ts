@@ -293,3 +293,37 @@ test('a refund leaves a subscriber notices cancelled', async () => {
   await deliver('charge.refunded', refundOf('cs_n8b'));
   assert.equal(open().length, 0);
 });
+
+test('a subscription that ends while the pass runs puts the pass notices back', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r3'));
+  await deliver('checkout.session.completed', {
+    id: 'cs_sub_r3',
+    object: 'checkout.session',
+    mode: 'subscription',
+    payment_status: 'no_payment_required',
+    customer: CUSTOMER,
+    subscription: 'sub_new',
+    amount_total: 0,
+    currency: 'usd',
+    metadata: { user_id: BUYER, plan_id: 'personal', interval: 'month' },
+  });
+  assert.equal(open().length, 0, 'cancelled when the subscription started');
+
+  await deliver('customer.subscription.deleted', { ...SUBSCRIPTION, status: 'canceled' });
+
+  const [pass] = db.table('user_passes');
+  const rows = open(pass.id as string);
+  assert.deepEqual(rows.map((r) => r.template).sort(), ['pass_ended', 'pass_ending_7d']);
+  assert.ok(rows.every((r) => r.cancel_reason == null));
+});
+
+test('a refund cancellation is never undone', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r4'));
+  await deliver('charge.refunded', refundOf('cs_r4'));
+  await deliver('customer.subscription.deleted', { ...SUBSCRIPTION, id: 'sub_old', status: 'canceled' });
+  const passRows = sends().filter((r) => String(r.template).startsWith('pass_'));
+  assert.equal(passRows.length, 2);
+  assert.ok(passRows.every((r) => r.cancelled_at != null && r.cancel_reason === 'pass_refunded'));
+});

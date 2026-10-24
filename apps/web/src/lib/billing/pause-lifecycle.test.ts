@@ -203,6 +203,35 @@ test('the cron projects a pause the webhook missed', async () => {
   assert.equal(db.table('workspaces')[0].plan, 'free');
 });
 
+test('a pause the cron projects never sets a 3-month pass holder to Free', async () => {
+  const db = new FakeSupabase();
+  const now = new Date();
+  const from = Math.floor(now.getTime() / 1000) - 86_400;
+  db.seed('user_billing', [{ user_id: 'u1', stripe_subscription_id: 'sub_c', subscription_status: 'active', plan: 'personal',
+    paused_from: new Date(from * 1000).toISOString(), pause_resumes_at: new Date((from + 30 * 86_400) * 1000).toISOString(),
+    pending_plan: null, pending_plan_effective_at: null, inbox_keep_order: null }]);
+  db.seed('workspaces', [{ id: 'w1', owner_id: 'u1', plan: 'personal', deleted_at: null, pro_unlimited_inboxes_exempt: false }]);
+  db.seed('user_passes', [{ id: 'pass1', user_id: 'u1', status: 'active',
+    starts_at: new Date(now.getTime() - 10 * 86_400_000).toISOString(), ends_at: new Date(now.getTime() + 80 * 86_400_000).toISOString() }]);
+  let parked = 0;
+  db.onRpc('workspace_inbox_activity', () => {
+    parked += 1;
+    return { data: [], error: null };
+  });
+  const subscription = subscriptionFixture({
+    id: 'sub_c',
+    price: PRICES.personalMonth,
+    periodEnd: new Date(from * 1000).toISOString(),
+    pauseResumesAt: from + 30 * 86_400,
+    metadata: { mcpe_pause_from: String(from), mcpe_pause_months: '1' },
+  });
+  const result = await reprojectDuePlanChanges(asClient(db), { subscriptions: { retrieve: async () => subscription as never } }, now);
+  assert.deepEqual(result, { checked: 1, reprojected: 1, failed: 0 });
+  assert.equal(db.table('user_billing')[0].subscription_status, 'paused', 'the subscription truth is recorded');
+  assert.equal(db.table('workspaces')[0].plan, 'personal', 'the pass keeps the workspace on Personal');
+  assert.equal(parked, 0, 'nothing is parked below the pass');
+});
+
 // ── Money ───────────────────────────────────────────────────────────────────
 
 test('a running pause is not MRR and not churn; a scheduled one is still MRR', () => {
