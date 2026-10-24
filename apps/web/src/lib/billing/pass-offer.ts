@@ -450,3 +450,53 @@ export function passCheckoutHref(options: {
   params.set('from', options.surface);
   return `${options.base ?? ''}/api/stripe/checkout/start?${params.toString()}`;
 }
+
+/**
+ * Step 3 of the paywall follow-up email (paywall_email_3). The run has already
+ * decided the workspace is Free with no subscription (its own eligibility
+ * test, at send time); this adds the pass's own conditions and the arm, which
+ * is assigned here, at the first eligible render. Null hides the line.
+ */
+export async function paywallEmailPassLine(
+  workspaceId: string,
+  now: Date = new Date(),
+  options: { db?: Db; store?: ExperimentStore; base?: string } = {},
+): Promise<{ endsOn: string; url: string } | null> {
+  const mode = personalPassMode();
+  if (mode === 'off') return null;
+  try {
+    const db = options.db ?? createServiceRoleClient();
+    const { data: workspace } = await db
+      .from('workspaces')
+      .select('owner_id, plan, deleted_at')
+      .eq('id', workspaceId)
+      .maybeSingle();
+    if (!workspace || workspace.deleted_at || !workspace.owner_id) return null;
+    const [{ data: billing }, { data: entitlement }, active] = await Promise.all([
+      db.from('user_billing').select('plan, subscription_status').eq('user_id', workspace.owner_id).maybeSingle(),
+      db.from('user_usage_entitlements').select('kind, expires_at').eq('user_id', workspace.owner_id).maybeSingle(),
+      getActivePass(db, workspace.owner_id, { now }),
+    ]);
+    const compedGrant =
+      entitlement?.kind === 'comped_scale' &&
+      (entitlement.expires_at == null || new Date(entitlement.expires_at) > now);
+    if (!passOfferEligible({ isOwner: true, workspacePlan: workspace.plan, billing, compedGrant, active })) {
+      return null;
+    }
+    const arm = await resolvePassArm(workspaceId, mode, options.store);
+    if (arm !== 'pass') return null;
+    const base = (options.base ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com').replace(/\/+$/, '');
+    const endsOn = new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(passEndsAt(now));
+    return { endsOn, url: passCheckoutHref({ base, arm, surface: 'paywall_email_3' }) };
+  } catch (err) {
+    console.error('[pass-offer] paywall email line failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}

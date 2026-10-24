@@ -19,6 +19,7 @@ import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { supportVisibleTo } from '@/lib/support/release-gate';
+import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -884,6 +885,15 @@ export default async function DashboardPage({ params }) {
   // displays hardcoded amounts. Falls back to static cents in plans.ts.
   const stripePrices = await fetchStripePrices();
 
+  // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
+  // until {date}" and the ways to keep it. Null for everyone else, and for a
+  // member viewing someone else's workspace. Tolerant: a failed read is null.
+  const passState = await loadPassBillingState(
+    createServiceRoleClient(),
+    user.id,
+    workspace?.owner_id === user.id,
+  );
+
   return (
     <DashboardApp
       initialRoute={initialRoute}
@@ -916,6 +926,7 @@ export default async function DashboardPage({ params }) {
       actionAllowance={actionAllowance}
       inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
+      passState={passState}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
       inboxes={inboxes}

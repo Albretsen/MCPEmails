@@ -619,7 +619,10 @@
       "workspace_not_found": "Wir konnten Ihren Workspace nicht finden. Laden Sie die Seite neu und versuchen Sie es erneut.",
       "invalid_plan": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
       "invalid_interval": "Dieser Upgrade-Link ist ungültig. Wählen Sie unten einen Tarif.",
-      "plan_change_failed": "Ihr Tarif konnte nicht geändert werden. Es wurde nichts berechnet. Bitte versuchen Sie es erneut."
+      "plan_change_failed": "Ihr Tarif konnte nicht geändert werden. Es wurde nichts berechnet. Bitte versuchen Sie es erneut.",
+      "pass_unavailable": "Der 3-Monats-Pass für Personal ist gerade nicht verfügbar.",
+      "already_subscribed": "Sie haben bereits ein Abonnement, das alles enthält, was der Pass bietet.",
+      "pass_already_queued": "Nach diesem Pass sind bereits weitere 3 Monate eingeplant."
     },
     "plans": {
       "personalFeature1": "3 verbundene Postfächer",
@@ -677,7 +680,26 @@
     "paymentRequiredToast": "Die Zahlung wurde nicht abgeschlossen, Sie nutzen also weiterhin {plan}. Öffnen Sie das Abrechnungsportal, um die offene Rechnung zu bezahlen.",
     "proInboxesKept": "Ihr Pro-Tarif behält unbegrenzt viele verbundene Postfächer.",
     "businessMailboxRate": "10 Postfächer inklusive, über alle Ihre Workspaces hinweg. Jedes weitere Postfach wird mit Ihrem Tarif abgerechnet: $3 pro Monat oder $28.80 pro Jahr.",
-    "confirmExtraMailboxes": "Enthält {count, plural, one {# zusätzliches Postfach} other {# zusätzliche Postfächer}} über die 10 inklusiven hinaus."
+    "confirmExtraMailboxes": "Enthält {count, plural, one {# zusätzliches Postfach} other {# zusätzliche Postfächer}} über die 10 inklusiven hinaus.",
+    "pass": {
+      "offerLine": "Oder Personal für 3 Monate, einmal bezahlt, {price}. Es verlängert sich nichts.",
+      "offerUntil": "Heute gekauft, läuft es bis zum {date}, danach ist dieser Workspace wieder auf Free.",
+      "offerCta": "3 Monate für {price}",
+      "returnTitle": "Personal: 3 verbundene Postfächer, kein monatliches Aktionslimit",
+      "subscribeMonthly": "Monatlich abonnieren, {price} pro Monat",
+      "subscribeYearly": "Jährlich, {price} pro Jahr",
+      "subscribeMonthlyFrom": "Monatlich abonnieren, {price} pro Monat, erste Abbuchung am {date}",
+      "subscribeYearlyFrom": "Jährlich, {price} pro Jahr, erste Abbuchung am {date}",
+      "until": "Personal bis zum {date}",
+      "queued": "Danach weitere 3 Monate, bis zum {date}.",
+      "after": "Einmal bezahlt, es verlängert sich nichts. Nach dem {date} ist dieser Workspace wieder auf Free: {cap} E-Mail-Aktionen pro Monat und ein Postfach für neue Verbindungen. Ihre Postfächer, Entwürfe und Einstellungen bleiben.",
+      "endingTitle": "Ihr Personal-Pass endet am {date}.",
+      "another": "Weitere 3 Monate, {price}, einmal bezahlt.",
+      "anotherUntil": "Jetzt gekauft, läuft Personal bis zum {date}.",
+      "seeOptions": "Optionen ansehen",
+      "close": "Schließen",
+      "started": "Zahlung erhalten. Ihr 3-Monats-Pass für Personal erscheint hier in einem Moment."
+    }
   },
   "security": {
     "title": "Sicherheit",

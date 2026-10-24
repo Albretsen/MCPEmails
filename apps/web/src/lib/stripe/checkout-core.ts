@@ -1059,7 +1059,9 @@ export async function runCheckout(input: {
   // shipped will still do when its buyer returns.
   const successUrl =
     `${appUrl}/dashboard?checkout=success&plan=${planId}&interval=${interval}`;
-  const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
+  // `plan` lets the dashboard tell an abandoned Personal checkout (the one
+  // post-decline surface of the 3-month pass) from any other.
+  const cancelUrl = `${appUrl}/dashboard?checkout=cancelled&plan=${planId}`;
 
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
   const locale = checkoutLocale(input.locale);
