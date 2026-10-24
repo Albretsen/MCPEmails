@@ -536,7 +536,7 @@ export const PLANS: Record<PlanId, Plan> = {
         process.env.STRIPE_PRICE_PRO_MONTHLY,
         process.env.STRIPE_PRICE_PRO_YEARLY,
       ),
-      // The founder price ($29 / $278.40), sold from 2026-11-09 to the first
+      // The founder price ($29 / $278.40), sold from 2026-10-25 to the first
       // 20 Business subscriptions (src/lib/stripe/founder-offer.ts). Kept here
       // forever: a founder keeps the price for as long as the subscription
       // lives, so its renewals must always resolve to Business.
