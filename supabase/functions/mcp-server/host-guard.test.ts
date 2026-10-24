@@ -18,6 +18,7 @@ import {
   connectGuardedTcp,
   guardMailHost,
   guardMailHostCached,
+  guardHttpsHost,
   type HostLookup,
   isAllowedAddress,
   isAllowedMailPort,
@@ -627,4 +628,57 @@ Deno.test("an IPv6-only host is pinned and dialled as a bare v6 literal", async 
   // Uncompressed but unbracketed: Deno.connect takes a bare v6 literal, and the
   // backstop has to be able to read back what we dialled.
   assertEquals(dialled, "2a00:1450:400f:80d:0:0:0:2005");
+});
+
+/* ── guardHttpsHost ─────────────────────────────────────────────────────── */
+
+Deno.test("guardHttpsHost approves a public name on 443 and pins a checked address", async () => {
+  const result = await guardHttpsHost("list.example.com", { lookup: publicLookup });
+  assertEquals(result, { ok: true, host: "list.example.com", address: "142.250.74.101", family: 4 });
+  const explicit = await guardHttpsHost("list.example.com", { port: 443, lookup: publicLookup });
+  assertEquals(explicit.ok, true);
+});
+
+Deno.test("guardHttpsHost refuses any port but 443 before resolving", async () => {
+  let lookups = 0;
+  const counting: HostLookup = (host) => {
+    lookups += 1;
+    return publicLookup(host);
+  };
+  for (const port of [80, 993, 8443, 0]) {
+    const result = await guardHttpsHost("list.example.com", { port, lookup: counting });
+    assertEquals(result.ok === false && result.code, "port_not_allowed", `port ${port}`);
+  }
+  assertEquals(lookups, 0);
+});
+
+Deno.test("guardHttpsHost applies the same address policy as the mail guard", async () => {
+  for (const literal of ["127.0.0.1", "10.1.2.3", "169.254.169.254", "100.64.0.1", "::1", "[::1]", "fc00::1", "fe80::1", "ff02::1", "0x7f.0.0.1", "2130706433"]) {
+    const result = await guardHttpsHost(literal, { lookup: publicLookup });
+    assertEquals(result.ok === false && result.code, "host_not_allowed", literal);
+  }
+  const internalName = await guardHttpsHost("unsub.example.com", { lookup: lookupReturning("192.168.1.10") });
+  assertEquals(internalName.ok === false && internalName.code, "host_not_allowed");
+  const mixed = await guardHttpsHost("unsub.example.com", { lookup: lookupReturning("142.250.74.101", "127.0.0.1") });
+  assertEquals(mixed.ok === false && mixed.code, "host_not_allowed");
+  const missing = await guardHttpsHost("unsub.example.com", { lookup: lookupFails });
+  assertEquals(missing.ok === false && missing.code, "host_not_found");
+  const hostile = await guardHttpsHost("user@evil.example.com", { lookup: publicLookup });
+  assertEquals(hostile.ok === false && hostile.code, "host_invalid");
+});
+
+Deno.test("adding the https variant leaves the mail ports exactly as they were", async () => {
+  const onHttpsPort = await guardMailHost("imap.example.com", { protocol: "imap", port: 443, lookup: publicLookup });
+  assertEquals(onHttpsPort.ok === false && onHttpsPort.code, "port_not_allowed");
+  assertEquals(isAllowedMailPort("imap", 443), false);
+  assertEquals(isAllowedMailPort("smtp", 443), false);
+});
+
+Deno.test({
+  name: "guardHttpsHost resolves a real public https host",
+  ignore: !NETWORK_TESTS,
+  fn: async () => {
+    const result = await guardHttpsHost("www.google.com");
+    assertEquals(result.ok, true);
+  },
 });
