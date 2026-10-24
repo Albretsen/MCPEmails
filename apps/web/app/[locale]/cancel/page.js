@@ -18,7 +18,8 @@ import '../../../styles/contract-forms.css';
  * posts to /api/legal/contract-request, which records the request as a
  * support ticket, emails the customer a receipt and notifies us.
  *
- * `?type=withdraw` preselects the withdrawal; /withdrawal links here with it.
+ * `?type=withdraw` preselects the subscription withdrawal (/withdrawal links
+ * here with it) and `?type=withdraw_pass` the 3-month pass withdrawal.
  * Linked from the footer on every page.
  */
 const PATH = '/cancel';
@@ -52,7 +53,7 @@ export default async function CancelPage({ params, searchParams }) {
   const c = cancelCopy(locale);
   const sp = await searchParams;
   const type = Array.isArray(sp?.type) ? sp.type[0] : sp?.type;
-  const initialKind = type === 'withdraw' ? 'withdraw' : 'cancel';
+  const initialKind = type === 'withdraw' || type === 'withdraw_pass' ? type : 'cancel';
 
   return (
     <div>

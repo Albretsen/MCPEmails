@@ -13,7 +13,9 @@ import { Btn } from '../Primitives';
  * Nothing is sent until the confirm button is pressed.
  *
  * `website` is a honeypot and `formToken` the signed render timestamp, the
- * same pair the /help form uses. Every string comes from `copy`
+ * same pair the /help form uses. `kind` is 'cancel', 'withdraw' (a
+ * subscription) or 'withdraw_pass' (the non-renewing 3-month pass, which has
+ * no subscription to cancel); the server stores it as given. Every string comes from `copy`
  * (app/[locale]/cancel/content.mjs); error codes map one to one onto
  * `copy.errors`.
  */
@@ -22,6 +24,7 @@ export const LIMITS = { name: 100, email: 254, contract: 100, reason: 2000 };
 
 const ENDPOINT = '/api/legal/contract-request';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const KINDS = ['cancel', 'withdraw', 'withdraw_pass'];
 
 function fillNodes(template, values) {
   return String(template ?? '')
@@ -56,7 +59,7 @@ function Summary({ rows }) {
 export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel', formToken = '', supportEmail }) {
   const f = copy.form;
   const [step, setStep] = useState('edit'); // 'edit' | 'review' | 'done'
-  const [kind, setKind] = useState(initialKind === 'withdraw' ? 'withdraw' : 'cancel');
+  const [kind, setKind] = useState(KINDS.includes(initialKind) ? initialKind : 'cancel');
   const [cancelType, setCancelType] = useState('ordinary');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,7 +72,10 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
 
   const support = <a href={`mailto:${supportEmail}`}>{supportEmail}</a>;
   const errorLine = (code) => fillNodes(copy.errors[code] ?? copy.errors.unknown, { support });
+  const withdrawing = kind !== 'cancel';
   const extraordinary = kind === 'cancel' && cancelType === 'extraordinary';
+  const kindValue = { cancel: f.kindValueCancel, withdraw: f.kindValueWithdraw, withdraw_pass: f.kindValueWithdrawPass }[kind];
+  const doneNext = { cancel: f.doneNextCancel, withdraw: f.doneNextWithdraw, withdraw_pass: f.doneNextWithdrawPass }[kind];
 
   function onContinue(event) {
     event.preventDefault();
@@ -125,7 +131,7 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
   const effective =
     kind === 'cancel' && cancelType === 'ordinary' ? f.effectiveOrdinary : f.effectiveImmediate;
   const summary = [
-    [f.labels.kind, kind === 'withdraw' ? f.kindValueWithdraw : f.kindValueCancel],
+    [f.labels.kind, kindValue],
     ...(kind === 'cancel'
       ? [[f.labels.type, cancelType === 'extraordinary' ? f.typeValueExtraordinary : f.typeValueOrdinary]]
       : []),
@@ -139,12 +145,12 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
   if (step === 'done') {
     return (
       <div className="contract-done" role="status">
-        <h2>{kind === 'withdraw' ? f.doneWithdraw : f.doneCancel}</h2>
+        <h2>{withdrawing ? f.doneWithdraw : f.doneCancel}</h2>
         {done?.ref ? (
           <>
             <p data-ref={done.ref}>{fillNodes(f.doneRef, { ref: <strong>{done.ref}</strong>, time: formatTime(done.receivedAt, locale) })}</p>
             <Summary rows={summary} />
-            <p>{kind === 'withdraw' ? f.doneNextWithdraw : f.doneNextCancel}</p>
+            <p>{doneNext}</p>
             <p className="help-muted">{fillNodes(f.doneEmail, { email: email.trim(), support })}</p>
             <div className="help-actions contract-print">
               <Btn variant="secondary" onClick={() => window.print()}>{f.print}</Btn>
@@ -165,7 +171,7 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
         <Summary rows={summary} />
         <div className="help-actions contract-actions">
           <Btn variant="primary" onClick={onConfirm} busy={sending}>
-            {sending ? f.sending : kind === 'withdraw' ? f.submitWithdraw : f.submitCancel}
+            {sending ? f.sending : withdrawing ? f.submitWithdraw : f.submitCancel}
           </Btn>
           <Btn variant="ghost" onClick={() => setStep('edit')} disabled={sending}>{f.back}</Btn>
         </div>
@@ -181,6 +187,7 @@ export default function CancelForm({ copy, locale = 'en', initialKind = 'cancel'
         {[
           ['cancel', f.kindCancel, f.kindCancelHint],
           ['withdraw', f.kindWithdraw, f.kindWithdrawHint],
+          ['withdraw_pass', f.kindWithdrawPass, f.kindWithdrawPassHint],
         ].map(([value, label, hint]) => (
           <label key={value} className="contract-choice">
             <input type="radio" name="kind" value={value} checked={kind === value} onChange={() => setKind(value)} />

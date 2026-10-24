@@ -119,3 +119,23 @@ test('footer: withdrawal, cancellation and Impressum links in every locale', () 
     }
   }
 });
+
+test('the 3-month pass: withdrawal, /cancel and terms 5.8 cover it in every locale', () => {
+  for (const locale of LOCALES) {
+    const w = WITHDRAWAL_COPY[locale];
+    assert.match(w.effects.paras[1], /5\.4.*5\.8/, `${locale} withdrawal effects cite 5.4 and 5.8`);
+    assert.match(w.form.lines[1], /3/, `${locale} model form names the pass`);
+    const f = CANCEL_COPY[locale].form;
+    for (const key of ['kindWithdrawPass', 'kindWithdrawPassHint', 'kindValueWithdrawPass', 'doneNextWithdrawPass']) {
+      assert.equal(typeof f[key], 'string', `${locale} cancel form.${key}`);
+    }
+    const p = messages(locale, 'terms').plansAndPayment;
+    assert.match(p.h58, /^5\.8 /, `${locale} h58`);
+    for (const tag of ['<email></email>', '<cancel>', '<withdrawal>']) {
+      assert.ok(p.p58.includes(tag), `${locale} p58 is missing ${tag}`);
+    }
+    assert.match(p.p58, /14/, `${locale} p58 states the 14 days`);
+    assert.ok(!/30|—/.test(p.p58), `${locale} p58 has no 30 days and no em dash`);
+  }
+  assert.ok(!/trial|discount|save/i.test(messages('en', 'terms').plansAndPayment.p58));
+});

@@ -200,6 +200,12 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h57')}</h4>
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
+
+              {/* 5.8 is the non-renewing 3-month Personal pass. Its 14-day
+                  full refund is the same policy as 5.4, and /withdrawal and
+                  /cancel cite both. Change them together. */}
+              <h4>{t('plansAndPayment.h58')}</h4>
+              <p>{t.rich('plansAndPayment.p58', richTags)}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}
