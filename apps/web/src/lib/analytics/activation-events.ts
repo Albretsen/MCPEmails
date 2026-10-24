@@ -25,7 +25,7 @@ import { ONBOARDING_CLIENTS } from '@/lib/onboarding/state';
  * comes from the session, never from the request body.
  *
  * Keep the stage list in step with the CHECK in
- * supabase/migrations/20261024190000_activation_rescue_stages.sql.
+ * supabase/migrations/20261024233717_activation_rescue_stages.sql.
  */
 export const ACTIVATION_EVENT_STAGES = [
   'connect_fix_shown',

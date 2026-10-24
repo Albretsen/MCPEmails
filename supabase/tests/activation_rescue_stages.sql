@@ -1,5 +1,5 @@
 -- ============================================================
--- Activation rescue instrumentation (20261024190000_activation_rescue_stages.sql)
+-- Activation rescue instrumentation (20261024233717_activation_rescue_stages.sql)
 -- ============================================================
 -- Proves:
 --   1. product_funnel_events accepts the four new stages in the shape the web

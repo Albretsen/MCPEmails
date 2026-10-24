@@ -31,32 +31,56 @@
 -- ---------------------------------------------------------------------------
 -- 1. stage vocabulary
 --
--- Current definition is 20261019150000_pro_inbox_cap_and_business.sql,
--- reproduced verbatim with four additions at the end.
+-- ADDITIVE, NOT VERBATIM (same pattern as 20261024225000_dunning_measurement):
+-- other branches add stages of their own, and restating a fixed list would
+-- drop them. Reads the live definition, keeps every stage in it, and appends
+-- the four activation stages that are missing.
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_stage_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_stage_check
-  CHECK (stage IN (
-    'onboarding_started', 'client_selected', 'provider_selected', 'inbox_connection',
-    'connection_verified', 'credential_created', 'technical_activation',
-    'value_activation', 'first_tool_call',
-    -- Billing funnel
-    'paywall_reached', 'pricing_viewed', 'checkout_started', 'checkout_completed',
-    'billing_portal_opened',
-    -- An existing subscriber's price was swapped in place, in either direction.
-    'plan_upgraded', 'plan_downgraded',
-    -- The Overview guide asked a business-domain workspace to connect a second
-    -- work mailbox: started = shown, success = clicked.
-    'multi_inbox_prompt',
-    -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
-    -- the paywall_reached row with connection_type = 'first_connect'.
-    'paywall_clicked',
-    -- Activation rescue: the connect fix panel and the first-call waiting state.
-    'connect_fix_shown', 'connect_fix_link_clicked',
-    'first_call_prompt_copied', 'waiting_state_shown'
-  ));
+DO $$
+DECLARE
+  def text;
+  stages text[];
+  wanted text[] := ARRAY['connect_fix_shown', 'connect_fix_link_clicked',
+                         'first_call_prompt_copied', 'waiting_state_shown'];
+  missing text[];
+BEGIN
+  SELECT pg_get_constraintdef(c.oid) INTO def
+  FROM pg_constraint c
+  WHERE c.conname = 'product_funnel_events_stage_check'
+    AND c.conrelid = 'public.product_funnel_events'::regclass;
+
+  IF def IS NULL THEN
+    RETURN;
+  END IF;
+
+  SELECT array_agg(DISTINCT s ORDER BY s) INTO stages
+  FROM (
+    SELECT m[1] AS s FROM regexp_matches(def, '''([a-z0-9_]+)''::text', 'g') AS m
+    UNION
+    SELECT trim(both '"' from x) FROM regexp_matches(def, '''\{([^}]*)\}''', 'g') AS a,
+      unnest(string_to_array(a[1], ',')) AS x
+  ) found
+  WHERE s ~ '^[a-z0-9_]+$';
+
+  IF stages IS NULL OR array_length(stages, 1) IS NULL THEN
+    RAISE EXCEPTION 'product_funnel_events_stage_check has no readable stage list: %', def;
+  END IF;
+
+  SELECT array_agg(w) INTO missing FROM unnest(wanted) AS w WHERE NOT (w = ANY (stages));
+  IF missing IS NULL THEN
+    RETURN;
+  END IF;
+
+  stages := stages || missing;
+
+  ALTER TABLE public.product_funnel_events
+    DROP CONSTRAINT product_funnel_events_stage_check;
+  EXECUTE format(
+    'ALTER TABLE public.product_funnel_events ADD CONSTRAINT product_funnel_events_stage_check CHECK (stage IN (%s))',
+    (SELECT string_agg(quote_literal(s), ', ' ORDER BY s) FROM unnest(stages) AS s)
+  );
+END
+$$;
 
 
 -- ---------------------------------------------------------------------------
