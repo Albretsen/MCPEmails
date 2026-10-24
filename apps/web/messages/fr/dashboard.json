@@ -163,6 +163,8 @@
     "statusConnected": "Connectée",
     "statusPending": "En attente",
     "statusError": "Erreur",
+    "statusParked": "En veille",
+    "parkedNote": "En veille, car votre offre comprend moins de boîtes. Elle revient dès que vous passez à une offre supérieure. Rien n'a été supprimé.",
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
     "viewerActionsNote": "Les lecteurs de l’espace de travail peuvent voir cette boîte, mais pas la vérifier, la reconnecter, la déconnecter ni la modifier.",

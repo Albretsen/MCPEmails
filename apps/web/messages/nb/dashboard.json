@@ -163,6 +163,8 @@
     "statusConnected": "Tilkoblet",
     "statusPending": "Venter",
     "statusError": "Feil",
+    "statusParked": "Parkert",
+    "parkedNote": "Parkert fordi planen din har færre innbokser. Den kommer tilbake når du oppgraderer. Ingenting er slettet.",
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
     "viewerActionsNote": "Lesere i arbeidsområdet kan se denne innboksen, men ikke sjekke, koble til på nytt, koble fra eller redigere den.",

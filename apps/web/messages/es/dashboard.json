@@ -163,6 +163,8 @@
     "statusConnected": "Conectada",
     "statusPending": "Pendiente",
     "statusError": "Error",
+    "statusParked": "En espera",
+    "parkedNote": "En espera porque tu plan incluye menos bandejas. Vuelve cuando mejores tu plan. No se ha eliminado nada.",
     "reconnect": "Reconectar",
     "checkConnection": "Comprobar conexión",
     "viewerActionsNote": "Los lectores del espacio de trabajo pueden ver este buzón, pero no comprobarlo, reconectarlo, desconectarlo ni editarlo.",

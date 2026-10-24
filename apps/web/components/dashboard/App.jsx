@@ -654,6 +654,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, [t.density]);
 
   const counts = { inboxes: inboxes.length, keys: keys.length, members: members.length };
+  // Inboxes that hold a slot under the plan's inbox cap. A parked inbox
+  // (src/lib/billing/parking.ts) is still listed but does not, matching the
+  // server's checkInboxLimit.
+  const activeInboxCount = inboxes.filter((ib) => !ib.parked).length;
 
   /**
    * Disconnects an inbox by calling DELETE /api/inboxes/[id].
@@ -1226,7 +1230,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
       </div>
 
@@ -1245,9 +1249,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}
-          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
+          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && activeInboxCount >= planLimits.maxInboxes}
           planName={planDisplayName(workspace?.plan)}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
@@ -1270,7 +1274,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           interval={checkoutSuccess.interval}
           livePlan={serverWorkspace?.plan ?? null}
           maxInboxes={planLimits?.maxInboxes ?? null}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           stripePrices={stripePrices}
           onRefreshPlan={refreshServerData}
           onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}
