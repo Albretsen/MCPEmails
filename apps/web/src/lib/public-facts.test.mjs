@@ -70,9 +70,14 @@ function serverSurface() {
   assert.ok(anchor >= 0, 'the advertised-surface test in tool-surface.test.ts moved');
   const open = surfaceTest.indexOf('[', surfaceTest.indexOf('assertEquals', anchor));
   const close = surfaceTest.indexOf(']', open);
-  const listed = [...surfaceTest.slice(open, close).matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
-
   const resources = read(path.join(server, 'mcp-app-resources.ts'));
+  // Tools behind an internal rollout flag are listed to our own workspaces
+  // only, so public copy does not count or document them until they launch.
+  const internalOnly = stringArray(resources, 'SUBSCRIPTION_CARD_TOOL_NAMES');
+  const listed = [...surfaceTest.slice(open, close).matchAll(/"([a-z_]+)"/g)]
+    .map((m) => m[1])
+    .filter((name) => !internalOnly.includes(name));
+
   const editorTools = stringArray(resources, 'DRAFT_EDITOR_APP_TOOL_NAMES');
   const editorModelVisible = stringArray(resources, 'DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES');
   const appOnly = [

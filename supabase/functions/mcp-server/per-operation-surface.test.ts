@@ -224,7 +224,10 @@ Deno.test("no other client is listed a per-operation tool", async () => {
   );
   assertEquals(
     (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name),
-    toolsForListing(claude(["read:email"])).map((tool) => tool.name),
+    // Minus the subscription tools: tools/list drops them for a workspace
+    // without subscription_cleanup_enabled, which introspection mode is.
+    toolsForListing(claude(["read:email"])).map((tool) => tool.name)
+      .filter((name) => !name.startsWith("subscriptions_")),
   );
   const names = (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name);
   for (const name of PER_OPERATION_ONLY_TOOLS.keys()) {
