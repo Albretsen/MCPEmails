@@ -7,7 +7,7 @@
  * is in src/lib/email/activation-help.ts.
  *
  * Called every 15 minutes by pg_cron (dispatch-activation-help, migration
- * 20261024160000_activation_help_emails.sql).
+ * 20261024190500_activation_help_emails.sql).
  *
  * OFF BY DEFAULT, THREE TIMES.
  *   ACTIVATION_HELP_ENABLED    unless `on`, return immediately. No DB access.
