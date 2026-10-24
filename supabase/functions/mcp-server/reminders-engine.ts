@@ -417,26 +417,36 @@ export function imapSinceDate(ms: number): string {
 }
 
 /**
- * The UID SEARCH criteria that find a reply in INBOX: a message naming the
- * tracked Message-ID in In-Reply-To or References, newer than the send, not
- * from the account itself. Null when the id cannot be searched for safely.
+ * How many of the newest candidates a reply check reads headers for. Checks
+ * run every REPLY_CHECK_INTERVAL_MS, so a reply is still among the newest few
+ * hundred non-own INBOX messages when the next check looks.
  */
-export function imapReplySearchCriteria(
-  rfcMessageId: string | null,
-  sinceMs: number,
-  ownAddresses: Iterable<string>,
-): string | null {
-  const id = cleanRfcMessageId(rfcMessageId);
-  if (!id) return null;
-  const parts = [
-    `SINCE ${imapSinceDate(sinceMs)}`,
-    `OR HEADER In-Reply-To "${id}" HEADER References "${id}"`,
-  ];
+export const IMAP_REPLY_CANDIDATE_LIMIT = 300;
+
+/**
+ * The UID SEARCH criteria for reply CANDIDATES in INBOX: newer than the send,
+ * not from the account itself. Deliberately no HEADER In-Reply-To/References
+ * key: Gmail evaluates those by scanning the folder and a large INBOX ran past
+ * the 30 s search timeout (live 2026-10-24). The header match happens locally
+ * on the newest candidates (headersReferenceMessageId).
+ */
+export function imapReplyCandidateCriteria(sinceMs: number, ownAddresses: Iterable<string>): string {
+  const parts = [`SINCE ${imapSinceDate(sinceMs)}`];
   for (const raw of ownAddresses) {
     const addr = addressOf(raw);
-    if (addr) parts.push(`NOT FROM "${addr}"`);
+    if (addr && !/["\\]/.test(addr)) parts.push(`NOT FROM "${addr}"`);
   }
   return parts.join(" ");
+}
+
+/**
+ * True when a raw In-Reply-To/References header block names `rfcMessageId`
+ * (bracketed, compared exactly; a Message-ID is case-sensitive).
+ */
+export function headersReferenceMessageId(headerBlock: string, rfcMessageId: string | null): boolean {
+  const id = cleanRfcMessageId(rfcMessageId);
+  if (!id || !headerBlock) return false;
+  return headerBlock.includes(`<${id}>`);
 }
 
 /** Gmail threads.get (format=metadata) message, the fields this reads. */
