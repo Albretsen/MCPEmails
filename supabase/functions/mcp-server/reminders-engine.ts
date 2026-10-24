@@ -18,7 +18,8 @@
 //
 //   follow_up: pending -> replied | due ; due -> replied ; pending|due -> done | cancelled
 //   snooze:    pending -> returned | replied ; pending -> cancelled (moved back now) | done (left in place)
-//   either:    pending|due -> failed after REMINDER_MAX_CONSECUTIVE_FAILURES
+//   follow_up: pending|due -> failed after REMINDER_MAX_CONSECUTIVE_FAILURES
+//   snooze:    never failed on a retryable error (backs off to daily; reconnect re-arms)
 //
 // No model anywhere: a reply is a message that names the tracked message in
 // In-Reply-To or References (IMAP), shares its thread (Gmail), or its
@@ -227,8 +228,17 @@ export function parseFutureTime(
   return { ok: true, value: new Date(ms).toISOString() };
 }
 
-/** The due time of a follow-up made from `days` or an explicit `due_at` (exactly one). */
-export function followUpDueAt(args: { days?: unknown; due_at?: unknown }, nowMs: number): Parsed<string> {
+/**
+ * The due time of a follow-up made from `days` or an explicit `due_at`
+ * (exactly one). `days` counts from `baseMs`, the message's own sent date when
+ * known (so a follow-up on last week's mail is due relative to when it went
+ * out), else from now. `due_at` must still be in the future.
+ */
+export function followUpDueAt(
+  args: { days?: unknown; due_at?: unknown },
+  nowMs: number,
+  baseMs: number = nowMs,
+): Parsed<string> {
   const hasDays = args.days !== undefined && args.days !== null;
   const hasDueAt = args.due_at !== undefined && args.due_at !== null;
   if (hasDays === hasDueAt) {
@@ -237,7 +247,7 @@ export function followUpDueAt(args: { days?: unknown; due_at?: unknown }, nowMs:
   if (hasDays) {
     const days = parseFollowUpDays(args.days, "days");
     if (!days.ok) return days;
-    return { ok: true, value: new Date(nowMs + days.value * DAY).toISOString() };
+    return { ok: true, value: new Date(baseMs + days.value * DAY).toISOString() };
   }
   return parseFutureTime(args.due_at, nowMs, "due_at");
 }
@@ -338,15 +348,34 @@ export function snoozeOutcomeUpdate(action: SnoozeAction, nowMs: number): Remind
     : { ...base, status: "replied", replied_at: now, completed_at: now };
 }
 
-/** Back-off, and `failed` at the limit. Status otherwise unchanged. */
+/** After the back-off ladder, a snooze retries this often, for ever. */
+export const SNOOZE_RETRY_CAP_MS = DAY;
+
+/**
+ * Errors after which a snooze stops: the stored reference cannot be read, so
+ * there is nothing any retry could move. Everything else (auth, an inbox that
+ * is down or disconnected, transport, provider errors) is retried.
+ */
+const SNOOZE_TERMINAL_ERRORS: ReadonlySet<string> = new Set(["reference_unreadable"]);
+
+/**
+ * Back-off, and `failed` at the limit. Status otherwise unchanged.
+ *
+ * A SNOOZE NEVER GOES TERMINAL on a retryable error: giving up would leave the
+ * message hidden in the snooze folder. It backs off along the same ladder
+ * (5 min, 15 min, 1 h, 4 h) and then daily, and the reconnect trigger
+ * (reminders_rearm_on_reconnect) makes it due again the moment the inbox is
+ * fixed.
+ */
 export function failureUpdate(
-  row: Pick<ReminderRow, "consecutive_failures">,
+  row: Pick<ReminderRow, "consecutive_failures"> & { kind?: ReminderKind },
   errorCode: string,
   nowMs: number,
 ): ReminderUpdate {
   const failures = (row.consecutive_failures ?? 0) + 1;
   const now = iso(nowMs);
-  if (failures >= REMINDER_MAX_CONSECUTIVE_FAILURES) {
+  const snooze = row.kind === "snooze";
+  if (snooze ? SNOOZE_TERMINAL_ERRORS.has(errorCode) : failures >= REMINDER_MAX_CONSECUTIVE_FAILURES) {
     return {
       status: "failed",
       consecutive_failures: failures,
@@ -355,7 +384,12 @@ export function failureUpdate(
       next_check_at: null,
     };
   }
-  const backoff = REMINDER_FAILURE_BACKOFF_MS[Math.min(failures, REMINDER_FAILURE_BACKOFF_MS.length) - 1];
+  const ladder = REMINDER_FAILURE_BACKOFF_MS;
+  const backoff = failures <= ladder.length
+    ? ladder[failures - 1]
+    : snooze
+    ? SNOOZE_RETRY_CAP_MS
+    : ladder[ladder.length - 1];
   return {
     consecutive_failures: failures,
     last_error_code: errorCode,
@@ -747,4 +781,123 @@ async function actOnRow(
     if (update.status === "failed") summary.failed++;
     return update;
   }
+}
+
+// ── Snooze orchestration (pure, over provider and store seams) ─────────────
+
+/** The retryable error for a snoozed message no search could locate. */
+export const SNOOZE_UNLOCATED = "snooze_message_unlocated";
+
+/** Gmail system labels and Outlook well-known folders a snooze may never wait in. */
+export const SNOOZE_FORBIDDEN_GMAIL_LABELS: ReadonlySet<string> = new Set(["INBOX", "TRASH", "SPAM", "DRAFT", "SENT", "CHAT"]);
+export const SNOOZE_FORBIDDEN_OUTLOOK_FOLDERS: ReadonlySet<string> = new Set([
+  "inbox",
+  "deleteditems",
+  "junkemail",
+  "drafts",
+  "sentitems",
+  "outbox",
+]);
+/** The roles a snooze folder may not resolve to. */
+export const SNOOZE_FORBIDDEN_ROLES = ["inbox", "trash", "spam", "drafts", "sent"] as const;
+
+/** The id-level half of the forbidden-folder rule (the role half needs the provider). */
+export function snoozeFolderIdForbidden(provider: string, folderId: string): boolean {
+  if (folderId.toUpperCase() === "INBOX") return true;
+  if (provider === "gmail") return SNOOZE_FORBIDDEN_GMAIL_LABELS.has(folderId.toUpperCase());
+  if (provider === "outlook") return SNOOZE_FORBIDDEN_OUTLOOK_FOLDERS.has(folderId.toLowerCase());
+  return false;
+}
+
+/**
+ * Can a snoozed IMAP copy be found again? Its uid changes on the move, so
+ * either the server reports it (COPYUID, UIDPLUS) or we search by Message-ID.
+ * Gmail and Graph keep ids across moves.
+ */
+export function snoozeIdentifiable(input: { imapLike: boolean; rfcMessageId: string | null; uidplus: boolean }): boolean {
+  return !input.imapLike || !!cleanRfcMessageId(input.rfcMessageId) || input.uidplus;
+}
+
+export type MoveOutcome = { moved: true; newId: string | null } | { moved: false; error: string };
+export type LookupOutcome = { searched: boolean; id: string | null };
+
+/**
+ * Bring a snoozed message back (IMAP and Graph; Gmail is a label change).
+ * Try the stored id; if it does not answer, look in the snooze folder by
+ * Message-ID. `notFound` ONLY when that search ran and was empty; when no
+ * search could run the error is retryable (SNOOZE_UNLOCATED), so a snooze is
+ * never closed on a guess.
+ */
+export async function returnSnoozedMessage(
+  ref: MessageRef,
+  seams: {
+    move(messageId: string): Promise<MoveOutcome>;
+    find(folderId: string, rfcMessageId: string | null): Promise<LookupOutcome>;
+    /** A move failure as a short code. */
+    code(error: string): string;
+  },
+): Promise<{ ref: MessageRef; notFound?: boolean }> {
+  const current = ref.snoozed_message_id ?? null;
+  if (current) {
+    const first = await seams.move(current);
+    if (first.moved) return { ref: { ...ref, snoozed_message_id: first.newId ?? current } };
+  }
+  const folder = ref.snooze_folder_id ?? null;
+  if (!folder) throw new Error(SNOOZE_UNLOCATED);
+  const lookup = await seams.find(folder, ref.rfc_message_id);
+  if (!lookup.searched) throw new Error(SNOOZE_UNLOCATED);
+  if (!lookup.id) return { ref, notFound: true };
+  const second = await seams.move(lookup.id);
+  if (!second.moved) throw new Error(seams.code(second.error));
+  return { ref: { ...ref, snoozed_message_id: second.newId ?? lookup.id } };
+}
+
+/** What creating a snooze came to. */
+export type SnoozeCreateOutcome =
+  | { kind: "snoozed"; ref: MessageRef }
+  | { kind: "already_snoozed" }
+  | { kind: "insert_failed" }
+  | { kind: "move_failed"; error: string }
+  /** Moved and stored, final save failed; still locatable, it will come back. */
+  | { kind: "saved_partially" }
+  /** Moved, save failed, not locatable: the move was undone (`restored`) or not. */
+  | { kind: "save_failed"; restored: boolean };
+
+/**
+ * Create a snooze ROW FIRST (leased), then move, then save the moved id and
+ * release the lease. A failed move deletes the row; a duplicate insert (23505)
+ * is the existing snooze and nothing is moved; a failed final save keeps the
+ * row when it can still find the message, else undoes the move and reports
+ * whether that worked.
+ */
+export async function createSnooze(
+  pendingRef: MessageRef,
+  locatableWithoutNewId: boolean,
+  seams: {
+    insertLeased(): Promise<"ok" | "duplicate" | "error">;
+    deleteRow(): Promise<void>;
+    move(): Promise<MoveOutcome>;
+    save(ref: MessageRef): Promise<boolean>;
+    undoMove(ref: MessageRef): Promise<boolean>;
+  },
+): Promise<SnoozeCreateOutcome> {
+  const inserted = await seams.insertLeased();
+  if (inserted === "duplicate") return { kind: "already_snoozed" };
+  if (inserted === "error") return { kind: "insert_failed" };
+  let moved: MoveOutcome;
+  try {
+    moved = await seams.move();
+  } catch (error) {
+    moved = { moved: false, error: error instanceof Error ? error.message : String(error) };
+  }
+  if (!moved.moved) {
+    await seams.deleteRow().catch(() => {});
+    return { kind: "move_failed", error: moved.error };
+  }
+  const ref: MessageRef = { ...pendingRef, snoozed_message_id: moved.newId };
+  if (await seams.save(ref).catch(() => false)) return { kind: "snoozed", ref };
+  if (locatableWithoutNewId) return { kind: "saved_partially" };
+  const restored = await seams.undoMove(ref).catch(() => false);
+  if (restored) await seams.deleteRow().catch(() => {});
+  return { kind: "save_failed", restored };
 }

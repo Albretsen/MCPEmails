@@ -1,10 +1,19 @@
 // Pro reminders: the state machine, the reply rules and the dispatcher's
 // claim logic, against fakes. No network, no database.
 
-import { assert, assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import {
   addressOf,
   cleanRfcMessageId,
+  createSnooze,
+  type LookupOutcome,
+  type MoveOutcome,
+  returnSnoozedMessage,
+  SNOOZE_FORBIDDEN_ROLES,
+  SNOOZE_RETRY_CAP_MS,
+  SNOOZE_UNLOCATED,
+  snoozeFolderIdForbidden,
+  snoozeIdentifiable,
   decideFollowUpCheck,
   decideSnoozeAction,
   DUE_RECHECK_INTERVAL_MS,
@@ -417,4 +426,214 @@ Deno.test("dispatcher: one invocation claims a bounded batch", async () => {
   const world = fakeWorld(rows);
   const summary = await runRemindersDispatch(world.deps);
   assert(summary.claimed <= MAX_REMINDERS_PER_INVOCATION);
+});
+
+// ── Review findings (PR #268) ──────────────────────────────────────────────
+
+Deno.test("a snooze never goes terminal on a retryable error: 4 h, then daily, for ever", () => {
+  let failures = 0;
+  const seen: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    const update = failureUpdate({ consecutive_failures: failures, kind: "snooze" }, "imap_auth_failed", NOW);
+    assertEquals(update.status, undefined, `failure ${i + 1} must not end the snooze`);
+    seen.push(Date.parse(update.next_check_at!) - NOW);
+    failures = update.consecutive_failures!;
+  }
+  assertEquals(seen.slice(0, 4), [...REMINDER_FAILURE_BACKOFF_MS]);
+  assert(seen.slice(4).every((ms) => ms === SNOOZE_RETRY_CAP_MS), "daily after the ladder");
+  // An unreadable reference cannot be retried into working.
+  assertEquals(failureUpdate({ consecutive_failures: 0, kind: "snooze" }, "reference_unreadable", NOW).status, "failed");
+  // Follow-ups still stop at the limit.
+  assertEquals(
+    failureUpdate({ consecutive_failures: REMINDER_MAX_CONSECUTIVE_FAILURES - 1, kind: "follow_up" }, "provider_error", NOW)
+      .status,
+    "failed",
+  );
+});
+
+Deno.test("dispatcher: a long-failing snooze is retried, never failed", async () => {
+  const rows = [row({ inbox_id: "a", kind: "snooze", condition: "always", due_at: iso(NOW - DAY), consecutive_failures: 9 })];
+  const world = fakeWorld(rows, { openFails: true });
+  await runRemindersDispatch(world.deps);
+  assertEquals(rows[0].status, "pending");
+  assertEquals(rows[0].next_check_at, iso(NOW + SNOOZE_RETRY_CAP_MS));
+});
+
+Deno.test("reconnecting an inbox re-arms its backed-off reminders (migration trigger)", async () => {
+  const sql = await Deno.readTextFile(new URL("../../migrations/20261024235200_reminders.sql", import.meta.url));
+  assert(/CREATE TRIGGER reminders_rearm_on_reconnect\s+AFTER UPDATE OF status, imap_password, oauth_refresh_token ON public\.inboxes/.test(sql));
+  assert(/NEW\.status = 'active'/.test(sql));
+  const body = sql.slice(sql.indexOf("FUNCTION public.reminders_rearm_on_reconnect()"));
+  for (const clause of ["consecutive_failures > 0", "claimed_at IS NULL", "kind = 'follow_up' OR due_at <= now()"]) {
+    assert(body.includes(clause), clause);
+  }
+  const selfHost = await Deno.readTextFile(new URL("../../../self-host/db/00-schema.sql", import.meta.url));
+  assert(selfHost.includes("CREATE TRIGGER reminders_rearm_on_reconnect"));
+});
+
+const SNOOZED: MessageRef = {
+  provider_message_id: "INBOX:7",
+  thread_id: null,
+  rfc_message_id: "abc@x.example",
+  since: iso(NOW),
+  snoozed_message_id: "MCPEmails Snoozed:3",
+  snooze_folder_id: "MCPEmails Snoozed",
+};
+
+function returnSeams(opts: { moves: Array<MoveOutcome>; lookup?: LookupOutcome }) {
+  const calls: string[] = [];
+  return {
+    calls,
+    seams: {
+      move: (id: string) => {
+        calls.push(`move ${id}`);
+        return Promise.resolve(opts.moves.shift() ?? { moved: false as const, error: "move_failed" });
+      },
+      find: (folder: string) => {
+        calls.push(`find ${folder}`);
+        return Promise.resolve(opts.lookup ?? { searched: true, id: null });
+      },
+      code: (e: string) => `code:${e}`,
+    },
+  };
+}
+
+Deno.test("return: the stored id moves back without a search", async () => {
+  const { seams, calls } = returnSeams({ moves: [{ moved: true, newId: "INBOX:9" }] });
+  const out = await returnSnoozedMessage(SNOOZED, seams);
+  assertEquals(out, { ref: { ...SNOOZED, snoozed_message_id: "INBOX:9" } });
+  assertEquals(calls, ["move MCPEmails Snoozed:3"]);
+});
+
+Deno.test("return: not found ONLY when a search of the snooze folder ran and was empty", async () => {
+  const empty = returnSeams({ moves: [{ moved: false, error: "message_not_found" }], lookup: { searched: true, id: null } });
+  assertEquals((await returnSnoozedMessage(SNOOZED, empty.seams)).notFound, true);
+  assertEquals(empty.calls, ["move MCPEmails Snoozed:3", "find MCPEmails Snoozed"]);
+
+  const found = returnSeams({
+    moves: [{ moved: false, error: "message_not_found" }, { moved: true, newId: null }],
+    lookup: { searched: true, id: "MCPEmails Snoozed:40" },
+  });
+  const moved = await returnSnoozedMessage(SNOOZED, found.seams);
+  assertEquals(moved.notFound, undefined);
+  assertEquals(moved.ref.snoozed_message_id, "MCPEmails Snoozed:40");
+});
+
+Deno.test("return: no search possible is a retryable failure, never not-found", async () => {
+  const noSearch = returnSeams({ moves: [{ moved: false, error: "x" }], lookup: { searched: false, id: null } });
+  await assertRejects(() => returnSnoozedMessage(SNOOZED, noSearch.seams), Error, SNOOZE_UNLOCATED);
+  const noFolder = returnSeams({ moves: [] });
+  await assertRejects(
+    () => returnSnoozedMessage({ ...SNOOZED, snoozed_message_id: null, snooze_folder_id: null }, noFolder.seams),
+    Error,
+    SNOOZE_UNLOCATED,
+  );
+  // never knew the moved id: goes straight to the search
+  const unknownId = returnSeams({ moves: [{ moved: true, newId: "INBOX:1" }], lookup: { searched: true, id: "S:2" } });
+  await returnSnoozedMessage({ ...SNOOZED, snoozed_message_id: null }, unknownId.seams);
+  assertEquals(unknownId.calls, ["find MCPEmails Snoozed", "move S:2"]);
+  // a found message that will not move is a coded, retryable error
+  const stuck = returnSeams({ moves: [{ moved: false, error: "a" }, { moved: false, error: "b" }], lookup: { searched: true, id: "S:2" } });
+  await assertRejects(() => returnSnoozedMessage(SNOOZED, stuck.seams), Error, "code:b");
+});
+
+Deno.test("an IMAP snooze needs COPYUID or a searchable Message-ID", () => {
+  assert(snoozeIdentifiable({ imapLike: false, rfcMessageId: null, uidplus: false }));
+  assert(snoozeIdentifiable({ imapLike: true, rfcMessageId: "<a@b.example>", uidplus: false }));
+  assert(snoozeIdentifiable({ imapLike: true, rfcMessageId: null, uidplus: true }));
+  assert(!snoozeIdentifiable({ imapLike: true, rfcMessageId: null, uidplus: false }));
+  assert(!snoozeIdentifiable({ imapLike: true, rfcMessageId: '<a"b@c>', uidplus: false }), "an unsearchable id does not count");
+});
+
+function createSeams(opts: {
+  insert?: "ok" | "duplicate" | "error";
+  move?: MoveOutcome | Error;
+  save?: boolean;
+  undo?: boolean;
+}) {
+  const calls: string[] = [];
+  return {
+    calls,
+    seams: {
+      insertLeased: () => {
+        calls.push("insert");
+        return Promise.resolve(opts.insert ?? "ok");
+      },
+      deleteRow: () => {
+        calls.push("delete");
+        return Promise.resolve();
+      },
+      move: () => {
+        calls.push("move");
+        return opts.move instanceof Error ? Promise.reject(opts.move) : Promise.resolve(opts.move ?? { moved: true as const, newId: "S:1" });
+      },
+      save: () => {
+        calls.push("save");
+        return Promise.resolve(opts.save ?? true);
+      },
+      undoMove: () => {
+        calls.push("undo");
+        return Promise.resolve(opts.undo ?? true);
+      },
+    },
+  };
+}
+
+const PENDING: MessageRef = { ...SNOOZED, snoozed_message_id: null };
+
+Deno.test("create: the row is written (leased) before the move, saved after", async () => {
+  const { seams, calls } = createSeams({});
+  const out = await createSnooze(PENDING, true, seams);
+  assertEquals(out, { kind: "snoozed", ref: { ...PENDING, snoozed_message_id: "S:1" } });
+  assertEquals(calls, ["insert", "move", "save"]);
+});
+
+Deno.test("create: a failed move deletes the row; a thrown move too", async () => {
+  for (const move of [{ moved: false as const, error: "nope" }, new Error("boom")]) {
+    const { seams, calls } = createSeams({ move });
+    const out = await createSnooze(PENDING, true, seams);
+    assertEquals(out.kind, "move_failed");
+    assertEquals(calls, ["insert", "move", "delete"]);
+  }
+});
+
+Deno.test("create: a duplicate insert (23505) is the existing snooze, nothing moved or undone", async () => {
+  const { seams, calls } = createSeams({ insert: "duplicate" });
+  assertEquals((await createSnooze(PENDING, true, seams)).kind, "already_snoozed");
+  assertEquals(calls, ["insert"]);
+  const failed = createSeams({ insert: "error" });
+  assertEquals((await createSnooze(PENDING, true, failed.seams)).kind, "insert_failed");
+  assertEquals(failed.calls, ["insert"]);
+});
+
+Deno.test("create: a failed save keeps a locatable snooze, else undoes and says whether it worked", async () => {
+  const locatable = createSeams({ save: false });
+  assertEquals((await createSnooze(PENDING, true, locatable.seams)).kind, "saved_partially");
+  assertEquals(locatable.calls, ["insert", "move", "save"]);
+
+  const undone = createSeams({ save: false, undo: true });
+  assertEquals(await createSnooze(PENDING, false, undone.seams), { kind: "save_failed", restored: true });
+  assertEquals(undone.calls, ["insert", "move", "save", "undo", "delete"]);
+
+  const stuck = createSeams({ save: false, undo: false });
+  assertEquals(await createSnooze(PENDING, false, stuck.seams), { kind: "save_failed", restored: false });
+  assertEquals(stuck.calls, ["insert", "move", "save", "undo"], "the row stays: it still knows where the mail is");
+});
+
+Deno.test("snooze folders: inbox, Trash, Spam/Junk, Drafts and Sent are refused by id", () => {
+  for (const id of ["INBOX", "TRASH", "SPAM", "DRAFT", "SENT"]) assert(snoozeFolderIdForbidden("gmail", id), id);
+  assert(!snoozeFolderIdForbidden("gmail", "Label_12"));
+  for (const id of ["inbox", "deleteditems", "JunkEmail", "drafts", "sentitems"]) assert(snoozeFolderIdForbidden("outlook", id), id);
+  assert(!snoozeFolderIdForbidden("outlook", "AAMkAGI2..."));
+  assert(snoozeFolderIdForbidden("imap", "INBOX"));
+  assert(!snoozeFolderIdForbidden("imap", "MCPEmails Snoozed"));
+  assertEquals([...SNOOZE_FORBIDDEN_ROLES], ["inbox", "trash", "spam", "drafts", "sent"]);
+});
+
+Deno.test("a follow-up on an existing message counts days from its own sent date", () => {
+  const sent = NOW - 5 * DAY;
+  assertEquals(followUpDueAt({ days: 3 }, NOW, sent), { ok: true, value: iso(sent + 3 * DAY) });
+  assertEquals(followUpDueAt({ days: 3 }, NOW), { ok: true, value: iso(NOW + 3 * DAY) });
+  // an explicit due_at is still checked against now
+  assertEquals(followUpDueAt({ due_at: iso(NOW - DAY) }, NOW, sent).ok, false);
 });
