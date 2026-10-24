@@ -11,6 +11,12 @@ import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
+import { BLACK_WEEK_2026 } from '@/lib/stripe/seasonal-offer';
+import {
+  seasonalOfferForPlan,
+  seasonalOfferValues,
+  shouldFetchSeasonalOffers,
+} from '@/lib/billing/seasonal-offer-view.mjs';
 import ProPriceNotice, { useProPriceNoticeVisible } from '../ProPriceNotice';
 import { proPriceNoticeCopy } from '@/lib/stripe/pro-price-notice-copy.mjs';
 
@@ -219,9 +225,69 @@ function UpgradeIntentReader({ onIntent }) {
 }
 
 /**
+ * The live seasonal first-year offers (Black Week 2026), or null.
+ *
+ * WHY AFTER MOUNT. This page is prerendered and CDN cached, and its HTML must
+ * not change for the offer: the titles, meta description and JSON-LD stay
+ * exactly what crawlers already read. So the offer is fetched from
+ * /api/seasonal-offer once the page is in the browser, and it switches on and
+ * off at the window boundaries with no deploy and no revalidation of the page.
+ * Outside a margin around the window no request is made at all. The server
+ * render and the first client render both show no offer, so hydration agrees.
+ *
+ * A tab left open past the end drops the line at `endsAt` rather than at the
+ * next reload.
+ */
+function useSeasonalOffers() {
+  const [offers, setOffers] = useState(null);
+  useEffect(() => {
+    if (!shouldFetchSeasonalOffers(BLACK_WEEK_2026, Date.now(), process.env.NODE_ENV)) return undefined;
+    let cancelled = false;
+    let timer = null;
+    fetch('/api/seasonal-offer')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.offers || typeof data.offers !== 'object') return;
+        setOffers(data.offers);
+        const ends = Object.values(data.offers)
+          .map((o) => Date.parse(o?.endsAt))
+          .filter(Number.isFinite);
+        const wait = ends.length ? Math.min(...ends) + 1000 - Date.now() : -1;
+        if (wait > 0 && wait < 2 ** 31 - 1) {
+          timer = setTimeout(() => { if (!cancelled) setOffers({}); }, wait);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+  return offers;
+}
+
+/**
+ * The Black Week line under an annual price: the first-year price, the renewal
+ * price in the same sentence, the computed saving, and the fixed end date.
+ * Every number comes from the offer object. Renders nothing without one.
+ */
+function SeasonalOfferLine({ offer, planKey }) {
+  const t = useTranslations('pricing');
+  const locale = useLocale();
+  const values = seasonalOfferValues(offer, locale);
+  if (!values) return null;
+  return (
+    <div className="price-seasonal" data-seasonal-offer={planKey}>
+      <p>{t('seasonal.line', values)}</p>
+      <p className="price-seasonal-ends">{t('seasonal.ends', { date: values.date, time: values.time })}</p>
+    </div>
+  );
+}
+
+/**
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
-function PlanCards({ annual, stripePrices, user, highlightPlan }) {
+function PlanCards({ annual, stripePrices, user, highlightPlan, seasonalOffers = null }) {
   const t = useTranslations('pricing');
   const locale = useLocale();
   // No entitlement is read here any more. The Personal CTA used to become a
@@ -291,6 +357,12 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
               </div>
               {annual && liveMonthly > 0 && (
                 <p className="price-annual-note">{t('card.billedYearly', { total: liveAnnualTotal })}</p>
+              )}
+              {/* Annual Personal and Pro only, inside the window only.
+                  Business and monthly never get one: the offer map has no
+                  entry for them, and the monthly view does not ask. */}
+              {annual && seasonalOffers && (
+                <SeasonalOfferLine offer={seasonalOfferForPlan(seasonalOffers, plan.key)} planKey={plan.key} />
               )}
               <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
             </div>
@@ -450,6 +522,9 @@ export default function PricingClient({ stripePrices }) {
   // non-conversion is actually diagnostic.
   usePricingView('pricing_page');
 
+  // Black Week 2026, fetched after mount (see useSeasonalOffers).
+  const seasonalOffers = useSeasonalOffers();
+
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a
   // clear account affordance without making the public page private.
@@ -518,7 +593,7 @@ export default function PricingClient({ stripePrices }) {
             className="pricing-footnote"
             style={{ textAlign: 'center', margin: '0 auto 24px', maxWidth: 720, color: 'var(--fg-2)' }}
           />
-          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} seasonalOffers={seasonalOffers} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>

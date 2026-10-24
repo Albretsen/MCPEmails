@@ -224,5 +224,10 @@
     "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week : {firstYear} $ la première année, puis {renewal} $ par an. Vous économisez {saving} $.",
+    "ends": "Se termine le {date} à {time}, heure d'Oslo."
   }
 }

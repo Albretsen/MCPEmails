@@ -1,0 +1,40 @@
+{
+  "id": "query-speedrun-sample",
+  "format": "vertical",
+  "automated": true,
+  "fps": 30,
+  "theme": "dark",
+  "timer": { "from": 2, "to": 2, "label": "Speedrun" },
+  "post": {
+    "caption": "Asking an AI agent which email I actually have to pay. Live tool calls against a demo mailbox.",
+    "hashtags": ["email", "ai", "productivity", "mcp"]
+  },
+  "scenes": [
+    {
+      "type": "title",
+      "durationInSeconds": 2.5,
+      "headline": "Find the bill you forgot",
+      "sub": "One question. Live tool calls."
+    },
+    {
+      "type": "query",
+      "durationInSeconds": 4.5,
+      "lead": "A sample question",
+      "question": "Can my AI tell me which emails I actually have to pay, without me reading all of them?",
+      "platform": "forum",
+      "sourceUrl": "https://example.com/sample-question"
+    },
+    {
+      "type": "chat",
+      "transcript": "transcripts/query-speedrun-sample.json",
+      "durationInSeconds": 11,
+      "title": "Your AI assistant"
+    },
+    {
+      "type": "outro",
+      "durationInSeconds": 3,
+      "cta": "mcpemails.com",
+      "sub": "Give your AI agent an inbox."
+    }
+  ]
+}

@@ -224,5 +224,10 @@
     "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} for your first year, then ${renewal} a year. You save ${saving}.",
+    "ends": "Ends {date}, {time} Oslo time."
   }
 }

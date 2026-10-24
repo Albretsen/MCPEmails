@@ -224,5 +224,10 @@
     "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
+    "ends": "Termina el {date} a las {time}, hora de Oslo."
   }
 }
