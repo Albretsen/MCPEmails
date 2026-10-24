@@ -1565,7 +1565,7 @@ The §1 envelope with `card: "subscription_plan"`, `state: "pending" | "executed
 
 ```jsonc
 "subscriptions": {
-  "plan_id": "uuid", "expires_at": "ISO",            // server-held, 15 min TTL
+  "plan_id": "uuid", "expires_at": "ISO",            // server-held, 60 min TTL
   "inbox": { "inbox_id": "uuid", "email_address": "you@example.com", "provider": "gmail" },
   "window_days": 90, "scanned": 1840, "truncated": false,
   "summary": { "senders": 41, "one_click": 20, "mailto": 9, "link": 5, "none": 7, "unsafe": 4 },
