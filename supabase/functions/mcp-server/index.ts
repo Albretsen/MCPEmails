@@ -183,7 +183,11 @@ import {
 type ProviderErrorAuditDetails =
   | ProviderCallAuditDetails
   | FolderResolveAuditDetails
-  | HandlerValidationAuditDetails;
+  | HandlerValidationAuditDetails
+  // Subscription cleanup's method mix and outcome counts, written on SUCCESS
+  // too (subscription-cleanup.ts#SubscriptionAuditDetails): the only way to
+  // measure the one-click/mailto split. Counts and `https://host` only.
+  | SubscriptionAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -484,6 +488,7 @@ import {
   hasProFeatureSurface,
   hideProFeaturesFromListing,
   isProFeatureTool,
+  PRO_FEATURE_ARGS,
   PRO_FEATURE_ERROR_CODE,
   type ProFeature,
   type ProFeatureAccess,
@@ -520,7 +525,12 @@ import {
   type RemindersStore,
   type ReminderSummary,
   type ReminderUpdate,
+  createSnooze,
+  returnSnoozedMessage,
   runRemindersDispatch,
+  SNOOZE_FORBIDDEN_ROLES,
+  snoozeFolderIdForbidden,
+  snoozeIdentifiable,
   SNOOZE_FOLDER_NAME,
   SNOOZE_MIN_LEAD_MS,
   statusesForFilter,
@@ -593,6 +603,20 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import { fetchListHeaderRecords, type ListHeaderScanContext } from "./subscription-scan.ts";
+import { authservTrustFor } from "./list-unsubscribe.ts";
+import { postOneClick } from "./one-click-post.ts";
+import {
+  isSubscriptionToolName,
+  runSubscriptionFollowUp,
+  runSubscriptionTool,
+  type SubInbox,
+  SUBSCRIPTION_TOOL_DEFINITIONS,
+  SUBSCRIPTION_TOOL_NAMES,
+  type SubscriptionAuditDetails,
+  type SubscriptionDeps,
+  supabaseSubscriptionStore,
+} from "./subscription-cleanup.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -876,6 +900,12 @@ interface ActivityContext {
    * to attach them to.
    */
   resultNotes?: string[];
+  /**
+   * Listed-only Pro arguments (e.g. follow_up_days) handleToolsCall took off
+   * an allowed call before validation; read by runExecutor. See
+   * PRO_LISTED_ARGUMENTS.
+   */
+  proArguments?: Record<string, unknown>;
 }
 
 const activityInboxStore = new AsyncLocalStorage<ActivityContext>();
@@ -3092,7 +3122,7 @@ async function checkPlanQuota(
 // ---------------------------------------------------------------------------
 // Pro feature gate (pro-features.ts holds the rule; this is its one read)
 //
-// workspace_pro_features() (migration 20261024210000) returns the effective
+// workspace_pro_features() (migration 20261024235100) returns the effective
 // plan, workspaces.pro_features_enabled and the pro_features_public switch in
 // one round trip. It is read at most once per request: memoised on the
 // ApiKeyRow object, which handleRequest creates per request and threads to
@@ -4989,9 +5019,15 @@ const CONFIRMATION_PROPERTY = {
 
 /**
  * Pro (reminders): track the sent message and list it as due when nobody has
- * replied within this many days. Hidden from the listed schema until the Pro
- * features are visible to the workspace (PRO_FEATURE_ARGS in pro-features.ts);
- * runSendWithFollowUp reads it, the send handlers never see it.
+ * replied within this many days.
+ *
+ * NOT in any registry schema. A Pro argument that lives in the validated
+ * schema leaks before launch: the argument index, the "action X takes ..."
+ * refusal hints and the validator would all know it for every workspace. So it
+ * is added to the LISTED schema only when the features are visible
+ * (withProArgumentsListed), and a call that passes it is taken off the
+ * arguments before validation only when allowed (handleToolsCall). Not visible,
+ * it is an unknown argument exactly as it was before it existed.
  */
 const FOLLOW_UP_DAYS_PROPERTY = {
   type: "integer",
@@ -5001,6 +5037,61 @@ const FOLLOW_UP_DAYS_PROPERTY = {
     "Optional: remind me if nobody replies within this many days. The server tracks the " +
     "sent message and reminder_list shows it as due; nothing is sent to anyone.",
 } as const;
+
+/** Listed-only Pro arguments, by tool name (consolidated and per-operation). */
+const PRO_LISTED_ARGUMENTS: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+  email_compose: { follow_up_days: FOLLOW_UP_DAYS_PROPERTY },
+  draft: { follow_up_days: { ...FOLLOW_UP_DAYS_PROPERTY, description: FOLLOW_UP_DAYS_PROPERTY.description + " Only with action 'send'." } },
+  email_send: { follow_up_days: FOLLOW_UP_DAYS_PROPERTY },
+  email_reply: { follow_up_days: FOLLOW_UP_DAYS_PROPERTY },
+  email_forward: { follow_up_days: FOLLOW_UP_DAYS_PROPERTY },
+  draft_send: { follow_up_days: FOLLOW_UP_DAYS_PROPERTY },
+};
+
+/** tools/list: add the listed-only Pro arguments, when (and only when) visible. */
+function withProArgumentsListed<T extends { name: string; inputSchema: Record<string, unknown>; listedInputSchema?: Record<string, unknown> }>(
+  tools: T[],
+  access: ProFeatureAccess,
+): T[] {
+  if (!access.visible) return tools;
+  return tools.map((tool) => {
+    const extra = PRO_LISTED_ARGUMENTS[tool.name];
+    if (!extra) return tool;
+    const add = (schema: Record<string, unknown>) => ({
+      ...schema,
+      properties: { ...((schema.properties ?? {}) as Record<string, unknown>), ...extra },
+    });
+    const copy: T = { ...tool, inputSchema: add(tool.inputSchema) };
+    if (tool.listedInputSchema) copy.listedInputSchema = add(tool.listedInputSchema);
+    return copy;
+  });
+}
+
+/**
+ * tools/call, visible and allowed: take the listed-only Pro arguments off the
+ * call (they are in no validated schema) and hand them to dispatch through the
+ * activity context. Pro arguments that ARE in a tool's schema stay put.
+ */
+function takeListedProArguments(toolName: string, rawArgs: unknown): Record<string, unknown> | null {
+  const extra = PRO_LISTED_ARGUMENTS[toolName];
+  if (!extra || rawArgs === null || typeof rawArgs !== "object" || Array.isArray(rawArgs)) return null;
+  const args = rawArgs as Record<string, unknown>;
+  const taken: Record<string, unknown> = {};
+  for (const name of Object.keys(extra)) {
+    if (args[name] === undefined || args[name] === null) continue;
+    taken[name] = args[name];
+    delete args[name];
+  }
+  return Object.keys(taken).length > 0 ? taken : null;
+}
+
+/** True when every Pro argument this call passes is a listed-only one (absent from the schema). */
+function proArgumentsAreListedOnly(toolName: string, rawArgs: unknown): boolean {
+  if (rawArgs === null || typeof rawArgs !== "object" || Array.isArray(rawArgs)) return false;
+  const args = rawArgs as Record<string, unknown>;
+  const passed = Object.keys(PRO_FEATURE_ARGS[toolName] ?? {}).filter((name) => args[name] !== undefined && args[name] !== null);
+  return passed.length > 0 && passed.every((name) => Object.hasOwn(PRO_LISTED_ARGUMENTS[toolName] ?? {}, name));
+}
 
 /**
  * The `attachments` array shared by email_send and email_reply.
@@ -6042,7 +6133,6 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
         confirmation: CONFIRMATION_PROPERTY,
-        follow_up_days: FOLLOW_UP_DAYS_PROPERTY,
       },
       required: ["to", "subject", "body"],
       additionalProperties: false,
@@ -6113,7 +6203,6 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
         confirmation: CONFIRMATION_PROPERTY,
-        follow_up_days: FOLLOW_UP_DAYS_PROPERTY,
       },
       required: ["message_id", "body"],
       additionalProperties: false,
@@ -6218,7 +6307,6 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
         confirmation: CONFIRMATION_PROPERTY,
-        follow_up_days: FOLLOW_UP_DAYS_PROPERTY,
       },
       // Only `to` is structurally required: the message to forward arrives as
       // either message_id or message_ids, and "exactly one of" is not a shape a
@@ -6540,7 +6628,6 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
         confirmation: CONFIRMATION_PROPERTY,
-        follow_up_days: FOLLOW_UP_DAYS_PROPERTY,
       },
       required: ["draft_id"],
       additionalProperties: false,
@@ -9943,6 +10030,22 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // and must stay that way — mcp-app-drafts.test.ts pins it.
 // ---------------------------------------------------------------------------
 for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition });
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup (`subscriptions_scan`, `subscriptions_cleanup`).
+//
+// Registered with NO `_meta`: the card metadata is attached per key in
+// `handleToolsList` (mcp-app-resources.ts#SUBSCRIPTION_CARD_TOOL_NAMES), and
+// both tools are DROPPED from the listing for a workspace without
+// `subscription_cleanup_enabled` (see subscriptionToolsVisible). Their handlers
+// refuse in such a workspace too, so a cached listing cannot reach them.
+// Not in BILLABLE_TOOL_NAMES (spec D2); rate limits and activity_log apply as
+// for every tool. Being registry tools, they are on the per-operation surface
+// below unchanged.
+// ---------------------------------------------------------------------------
+for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
   TOOL_REGISTRY.push({ ...definition });
 }
 
@@ -20582,6 +20685,229 @@ function searchMessagesForProvider(
         .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     default:
       return Promise.reject(new Error("unsupported_provider"));
+  }
+}
+
+/**
+ * The provider context `fetchListHeaderRecords` (subscription-scan.ts) scans
+ * with: subscription cleanup's read of List-Unsubscribe headers. Nothing on
+ * the request path calls it yet; the `subscriptions_scan` tool will.
+ *
+ * IMAP needs the caller's session (the caller owns and closes it) and resolves
+ * the Junk/Spam mailbox on it with a strict resolve (no `forRead`: that only
+ * unlocks the archive fallback, and imap-folder-target.test.ts pins its call
+ * sites); an account without one scans the inbox alone. Gmail and Outlook get an
+ * authorized fetch with a token refreshed once for the scan. The budget is the
+ * caller's, so the scan and whatever the tool does after it spend one pot.
+ */
+async function subscriptionScanContextFor(
+  inbox: InboxRow,
+  budget: WorkBudget,
+  session: ImapSession<ImapClient> | null,
+): Promise<ListHeaderScanContext> {
+  switch (inbox.provider) {
+    case "gmail": {
+      const accessToken = await withFreshGmailToken(inbox);
+      return {
+        provider: "gmail",
+        budget,
+        trust: authservTrustFor("gmail"),
+        fetch: (path) =>
+          fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+      };
+    }
+    case "outlook": {
+      const accessToken = await withFreshOutlookToken(inbox);
+      return {
+        provider: "outlook",
+        budget,
+        trust: authservTrustFor("outlook"),
+        fetch: (pathOrUrl) => graphFetch(accessToken, pathOrUrl),
+      };
+    }
+    default: {
+      if (!session) throw new Error("subscription scan: an IMAP inbox needs a session");
+      let junkFolder: string | null = null;
+      try {
+        junkFolder = await resolveFolderId(inbox, "junk", { strict: true, session });
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        // No Junk mailbox (or an ambiguous one): scan the inbox alone.
+        junkFolder = null;
+      }
+      return {
+        provider: "imap",
+        budget,
+        // Only Authentication-Results written by this host (or a known
+        // provider behind it) count; see list-unsubscribe.ts.
+        trust: authservTrustFor("imap", inbox.imap_host),
+        inboxFolder: "INBOX",
+        junkFolder,
+        select: (folder) => session.select(imapMailboxForServerFolder(folder)),
+      };
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup: the index.ts half (wiring only). The handlers, the
+// ladder and the follow-up live in subscription-cleanup.ts.
+// ---------------------------------------------------------------------------
+
+/**
+ * `workspaces.subscription_cleanup_enabled`: OUR rollout gate (seeded by
+ * 20261024210000). Fails to "off" on any error, and is always off in
+ * introspection mode, which has no database.
+ */
+async function workspaceSubscriptionCleanupEnabled(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("subscription_cleanup_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] subscription_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { subscription_cleanup_enabled?: unknown } | null)?.subscription_cleanup_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] subscription_rollout_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** The listing without the subscription tools unless the workspace is rolled out. */
+function subscriptionToolsVisible<T extends { name: string }>(tools: T[], enabled: boolean): T[] {
+  if (enabled) return tools;
+  return tools.filter((tool) => !(SUBSCRIPTION_TOOL_NAMES as readonly string[]).includes(tool.name));
+}
+
+/** Provider error to a sentinel the module can put in its refusal. */
+function subscriptionErrorSentinel(err: unknown): Error {
+  if (err instanceof ImapAuthError) return new Error("imap_auth_failed");
+  const message = err instanceof Error ? err.message : String(err);
+  return new Error(/^[a-z][a-z0-9_]{2,63}$/.test(message) ? message : "provider_error");
+}
+
+function subscriptionDepsFor(apiKey: ApiKeyRow): SubscriptionDeps {
+  // The module carries the inbox as a SubInbox; it is always the InboxRow that
+  // resolveInboxArg returned, so the cast back is exact.
+  const rowOf = (inbox: SubInbox) => inbox as unknown as InboxRow;
+  return {
+    store: supabaseSubscriptionStore(supabase),
+    encrypt: encryptForStorage,
+    decrypt: decryptStoredToken,
+    digest: idempotencyDigest,
+    appUrl: APP_URL,
+    workspaceEnabled: workspaceSubscriptionCleanupEnabled,
+    async resolveInbox(args) {
+      const resolved = await resolveInboxArg(args, apiKey);
+      if (!resolved.ok) {
+        const refusal = inboxResolutionError(resolved, "subscriptions");
+        return {
+          ok: false,
+          result: { result: refusal.result as never, logStatus: "error", logErrorCode: refusal.logErrorCode },
+        };
+      }
+      return { ok: true, inbox: resolved.inbox };
+    },
+    async scan(inbox, opts, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        const ctx = await subscriptionScanContextFor(row, budget, session);
+        return await fetchListHeaderRecords(ctx, opts);
+      } catch (err) {
+        throw subscriptionErrorSentinel(err);
+      } finally {
+        await session?.close();
+      }
+    },
+    // D3: straight from the edge function, behind the https host guard.
+    postOneClick: (url, opts) => postOneClick(url, { timeoutMs: opts.timeoutMs }),
+    async createDraft(inbox, draft) {
+      // D6: a draft, never a send. The provider create paths are the same
+      // ones draft_create uses; no signature (an unsubscribe note is not
+      // correspondence) and no card envelope (the result is the cleanup card).
+      const row = rowOf(inbox);
+      if (!getProviderCapabilities(row.provider).drafts) return { ok: false, error_code: "drafts_unsupported" };
+      if (!isValidEmailAddress(draft.to)) return { ok: false, error_code: "invalid_recipient" };
+      const params: DraftParams = { to: [draft.to], cc: [], bcc: [], subject: draft.subject, body: draft.body };
+      try {
+        const created = row.provider === "gmail"
+          ? await gmailCreateDraft(row, params)
+          : row.provider === "outlook"
+          ? await outlookCreateDraft(row, params)
+          : await imapCreateDraft(row, params);
+        return { ok: true, draft_id: created.draft_id };
+      } catch (err) {
+        return { ok: false, error_code: subscriptionErrorSentinel(err).message };
+      }
+    },
+    async archive(inbox, ids, budget) {
+      const row = rowOf(inbox);
+      const session = imapSessionFor(row);
+      try {
+        // Gmail archive is "remove INBOX" (an empty destination in the shared
+        // relocation plan, exactly as email_archive does it); Outlook and IMAP
+        // resolve the archive role the way a move to "archive" does, which on
+        // IMAP creates the mailbox when the account has none.
+        const destination = row.provider === "gmail" ? "" : await resolveFolderId(row, "archive", { session });
+        const result = await runBulkMoveOnIds(row, ids, destination, null, {
+          session: session ?? undefined,
+          budget,
+        });
+        return {
+          destination: "Archive",
+          moved: result.succeeded,
+          // Only a message that is gone counts as done. Any other failure (auth,
+          // outage) leaves the id for `continue: true`.
+          failed: result.failed.filter((f) => f.error === MESSAGE_NOT_FOUND).map((f) => f.id),
+        };
+      } finally {
+        await session?.close();
+      }
+    },
+  };
+}
+
+/** POST /subscription-followup (pg_cron, hourly). */
+async function handleSubscriptionFollowUp(): Promise<Response> {
+  try {
+    const summary = await runSubscriptionFollowUp({
+      store: supabaseSubscriptionStore(supabase),
+      async search(inboxId, fromAddress, sinceIso) {
+        const row = await loadInboxRowForTriage(inboxId);
+        if (!row) throw new Error("inbox_unavailable");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const result = await Promise.race([
+            searchMessagesForProvider(row, { from: fromAddress, since: sinceIso }, 1, 0, []),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS);
+            }),
+          ]);
+          return result.messages.length > 0;
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+    });
+    console.log("[subscriptions] follow_up", summary);
+    return new Response(JSON.stringify({ ok: true, ...summary }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[subscriptions] follow_up_failed", { error: err instanceof Error ? err.message : String(err) });
+    return new Response(JSON.stringify({ ok: false }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -32685,11 +33011,13 @@ async function handleToolsList(
   // `perOperation` is started here and only taken further down.
   // The Pro gate joins them only when some Pro tool or argument exists to hide;
   // until then tools/list makes no extra read.
-  const [uiGates, perOperation, proAccess] = await Promise.all([
+  const [baseGates, perOperation, subscriptions, proAccess] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
+    workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
     hasProFeatureSurface() ? proFeatureAccess(apiKey) : null,
   ]);
+  const uiGates = { ...baseGates, subscriptions };
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -32714,9 +33042,9 @@ async function handleToolsList(
   //
   // New Pro tools and arguments are left out until the features are visible to
   // this workspace (pro-features.ts), so customers see no change before launch.
-  const listed = toolsForListing(apiKey, perOperation);
+  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions);
   const visibleTools = withListingCardMeta(
-    proAccess ? hideProFeaturesFromListing(listed, proAccess) : listed,
+    proAccess ? withProArgumentsListed(hideProFeaturesFromListing(listed, proAccess), proAccess) : listed,
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -33149,8 +33477,20 @@ async function runExecutor(
   apiKey: ApiKeyRow,
 ): Promise<ExecutorOutcome | null> {
   // follow_up_days (Pro reminders) wraps the send: the send handlers never see it.
-  if (FOLLOW_UP_SEND_TOOLS.has(dispatchName) && hasFollowUpDaysArg(rawArgs)) {
-    return await runSendWithFollowUp(dispatchName, rawArgs, apiKey);
+  const pendingFollowUp = activityInboxStore.getStore()?.proArguments?.["follow_up_days"];
+  if (pendingFollowUp !== undefined && pendingFollowUp !== null && !FOLLOW_UP_SEND_TOOLS.has(dispatchName)) {
+    return reminderFailure(
+      dispatchName,
+      "follow_up_days applies to sending only (send, reply, forward, or sending a draft). Nothing was changed.",
+      "-32602",
+    );
+  }
+  const followUpDays = FOLLOW_UP_SEND_TOOLS.has(dispatchName) ? pendingFollowUp : undefined;
+  if (followUpDays !== undefined && followUpDays !== null) {
+    // Taken once: the inner send dispatch must not see it again.
+    const store = activityInboxStore.getStore()!;
+    store.proArguments = undefined;
+    return await runSendWithFollowUp(dispatchName, followUpDays, rawArgs, apiKey);
   }
   if (dispatchName === "inbox_list") return await executeListInboxes(rawArgs, apiKey);
   if (dispatchName === "email_list") return await executeListInbox(rawArgs, apiKey);
@@ -33259,6 +33599,18 @@ async function runExecutor(
     )!;
     return { result, logStatus, logErrorCode };
   }
+  if (isSubscriptionToolName(dispatchName)) {
+    // Subscription cleanup. The workspace flag, the plan's workspace and inbox
+    // allowlist, its expiry and the sender keys are all re-checked inside the
+    // handler; see subscription-cleanup.ts. `logDetails` carries counts only.
+    const { result, logStatus, logErrorCode, logDetails } = await runSubscriptionTool(
+      dispatchName,
+      subscriptionDepsFor(apiKey),
+      bulkCallerFor(apiKey),
+      rawArgs,
+    )!;
+    return { result, logStatus, logErrorCode, logErrorDetails: logDetails ?? null };
+  }
   if (isBulkToolName(dispatchName)) {
     // MCP Apps bulk-plan tools. As with the approval tools, the scope check
     // above is necessary and nowhere near sufficient: a plan_id supplied by
@@ -33352,10 +33704,18 @@ async function handleToolsCall(
   // Pro tool is answered as unknown, exactly as before it existed. Visible but
   // not on Pro or Business: the standard refusal, as an isError tool result.
   const proFeature = tool ? proFeatureForCall(toolName, rawArgs) : null;
+  // Listed-only Pro arguments taken off an allowed call, for dispatch.
+  let proArgumentValues: Record<string, unknown> | null = null;
   if (tool && proFeature) {
     const access = await proFeatureAccess(apiKey);
     if (!access.visible && isProFeatureTool(toolName)) {
       tool = undefined;
+    } else if (!access.visible && proArgumentsAreListedOnly(toolName, rawArgs)) {
+      // Not visible: a listed-only Pro argument is in no schema, so the call
+      // falls through to the ordinary unknown-argument handling, byte for byte
+      // what it got before the argument existed. No Pro refusal.
+    } else if (access.allowed && !isProFeatureTool(toolName)) {
+      proArgumentValues = takeListedProArguments(toolName, rawArgs);
     } else if (!access.allowed) {
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
@@ -33411,13 +33771,17 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: (hasProFeatureSurface()
-          ? hideProFeaturesFromListing(
+        //
+        // That includes the subscription rollout filter: a workspace without
+        // subscription_cleanup_enabled is never told those tools exist. The
+        // same goes for Pro tools before they are visible (pro-features.ts).
+        available_tools: await (async () => {
+          const listed = subscriptionToolsVisible(
             toolsForListing(apiKey, await isOpenAiClientKey(apiKey)),
-            await proFeatureAccess(apiKey),
-          )
-          : toolsForListing(apiKey, await isOpenAiClientKey(apiKey)))
-          .map((t) => t.name),
+            await workspaceSubscriptionCleanupEnabled(apiKey.workspace_id),
+          );
+          return hasProFeatureSurface() ? hideProFeaturesFromListing(listed, await proFeatureAccess(apiKey)) : listed;
+        })().then((tools) => tools.map((t) => t.name)),
       },
     );
   }
@@ -33984,7 +34348,7 @@ async function handleToolsCall(
 
   // Captures the inbox resolved during dispatch (inside resolveInboxArg) so the
   // activity log records the real inbox even for alias- or auto-resolved calls.
-  const logCtx: ActivityContext = { inboxId: null };
+  const logCtx: ActivityContext = { inboxId: null, ...(proArgumentValues ? { proArguments: proArgumentValues } : {}) };
   const idempotencyClaim = await claimOutboundIdempotency(dispatchName, rawArgs, apiKey);
 
   // The replay, processing and conflict branches below are shared by both
@@ -36143,7 +36507,7 @@ function triageDeps(): TriageDeps {
 // Entry point: POST /reminders-dispatch (path suffix), called every minute by
 // pg_cron -> dispatch_reminders() -> net.http_post, guarded by
 // X-Dispatch-Secret exactly like /dispatch and /triage-dispatch. Migration
-// 20261024211000_reminders.sql.
+// 20261024235200_reminders.sql.
 //
 // Gating: the tools are in PRO_FEATURE_TOOLS and follow_up_days is in
 // PRO_FEATURE_ARGS, so handleToolsCall hides and refuses them before any of
@@ -36279,6 +36643,15 @@ async function reminderRoomCheck(tool: string, workspaceId: string): Promise<Rem
 interface ReminderMessageFacts {
   ref: MessageRef;
   summary: ReminderSummary;
+  /** When the message itself was sent or received (ISO), when the provider says. */
+  sentAt?: string | null;
+}
+
+/** An ISO time from a provider date, or null. */
+function reminderIsoDate(value: string | number | null | undefined): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  const ms = typeof value === "number" ? value : /^\d+$/.test(value) ? Number(value) : Date.parse(value);
+  return Number.isFinite(ms) && ms > 0 ? new Date(ms).toISOString() : null;
 }
 
 /**
@@ -36306,7 +36679,11 @@ async function readReminderMessage(
     if (resp.status === 404 || resp.status === 400) throw new Error("message_not_found");
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     if (!resp.ok) throw new Error(`Gmail messages.get error ${resp.status}`);
-    const msg = (await resp.json()) as { threadId?: string; payload?: { headers?: { name: string; value: string }[] } };
+    const msg = (await resp.json()) as {
+      threadId?: string;
+      internalDate?: string;
+      payload?: { headers?: { name: string; value: string }[] };
+    };
     const header = (name: string) =>
       msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
     return {
@@ -36322,6 +36699,7 @@ async function readReminderMessage(
           .map((a) => a.email).filter(Boolean).slice(0, 50),
         from: reminderAddressOf(header("From")),
       },
+      sentAt: reminderIsoDate(msg.internalDate),
     };
   }
   if (inbox.provider === "outlook") {
@@ -36329,7 +36707,7 @@ async function readReminderMessage(
     const resp = await graphFetch(
       token,
       `/me/messages/${encodeURIComponent(messageId)}` +
-        "?$select=internetMessageId,conversationId,subject,from,toRecipients,ccRecipients",
+        "?$select=internetMessageId,conversationId,subject,from,toRecipients,ccRecipients,sentDateTime,receivedDateTime",
     );
     if (resp.status === 404 || resp.status === 400) throw new Error("message_not_found");
     if (resp.status === 401) throw new Error("outlook_auth_failed");
@@ -36342,6 +36720,8 @@ async function readReminderMessage(
       from?: GraphAddress;
       toRecipients?: GraphAddress[];
       ccRecipients?: GraphAddress[];
+      sentDateTime?: string;
+      receivedDateTime?: string;
     };
     return {
       ref: {
@@ -36356,6 +36736,7 @@ async function readReminderMessage(
           .map((r) => r.emailAddress?.address ?? "").filter(Boolean).slice(0, 50),
         from: msg.from?.emailAddress?.address ?? null,
       },
+      sentAt: reminderIsoDate(msg.sentDateTime ?? msg.receivedDateTime),
     };
   }
   // IMAP. The send path hands back the RFC Message-ID itself as message_id:
@@ -36385,6 +36766,7 @@ async function readReminderMessage(
       to: [...(env.to ?? []), ...(env.cc ?? [])].map((a) => a.email).filter(Boolean).slice(0, 50),
       from: env.from?.[0]?.email ?? null,
     },
+    sentAt: reminderIsoDate(env.date),
   };
 }
 
@@ -36468,8 +36850,9 @@ async function executeReminderFollowUp(rawArgs: unknown, apiKey: ApiKeyRow): Pro
   const args = rawArgs as Record<string, unknown>;
   const messageId = typeof args["message_id"] === "string" ? args["message_id"].trim() : "";
   if (!messageId) return reminderFailure(tool, "message_id is required: the sent message's id.", "-32602");
-  const due = followUpDueAt({ days: args["days"], due_at: args["due_at"] }, Date.now());
-  if (!due.ok) return reminderFailure(tool, due.error, "-32602");
+  // Validated now; recomputed below from the message's own sent date.
+  const dueCheck = followUpDueAt({ days: args["days"], due_at: args["due_at"] }, Date.now());
+  if (!dueCheck.ok) return reminderFailure(tool, dueCheck.error, "-32602");
 
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) return inboxResolutionError(resolved, tool) as ReminderOutcome;
@@ -36494,6 +36877,16 @@ async function executeReminderFollowUp(rawArgs: unknown, apiKey: ApiKeyRow): Pro
       "message_id_header_missing",
     );
   }
+  // The message's own date, not the moment of this call: a reply that already
+  // came in after it was sent counts, and `days` counts from the send.
+  const sentAt = facts.sentAt && Date.parse(facts.sentAt) <= Date.now() ? facts.sentAt : null;
+  if (sentAt) facts = { ...facts, ref: { ...facts.ref, since: sentAt } };
+  const due = followUpDueAt(
+    { days: args["days"], due_at: args["due_at"] },
+    Date.now(),
+    sentAt ? Date.parse(sentAt) : undefined,
+  );
+  if (!due.ok) return reminderFailure(tool, due.error, "-32602");
 
   const stored = await storeFollowUp(apiKey, inbox, facts, due.value);
   if (!stored.ok) return reminderFailure(tool, "database error while saving the reminder. Nothing was changed.", stored.code);
@@ -36516,10 +36909,50 @@ function reminderSessionFor(inboxRow: InboxRow): ReminderRunSession {
 }
 
 /**
+ * IMAP: create a mailbox on the call's own session. Never a second connection
+ * (one IMAP session per call; Yahoo and others cap connections per account).
+ * Returns false when the server says it already exists.
+ */
+async function imapCreateMailboxOnSession(session: ImapSession<ImapClient>, name: string): Promise<boolean> {
+  const client = await session.client();
+  try {
+    await client.createMailbox(name);
+    return true;
+  } catch (error) {
+    if (error instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    const detail = error instanceof Error ? error.message : String(error);
+    if (/already\s*exists|\[ALREADYEXISTS\]/i.test(detail)) return false;
+    throw error;
+  }
+}
+
+/**
+ * Is this folder one a snooze must not use? Trash and Spam purge or hide mail,
+ * Drafts and Sent are not where received mail belongs, and the inbox is where
+ * it is coming from. Decided by provider ids first (Gmail system labels,
+ * Outlook well-known names), then by resolving each role the same way every
+ * other tool does (special-use flags, the user's folder overrides, the
+ * alternate-name lists) and comparing ids.
+ */
+async function snoozeFolderForbidden(
+  inbox: InboxRow,
+  folderId: string,
+  session: ImapSession<ImapClient> | null,
+): Promise<boolean> {
+  if (snoozeFolderIdForbidden(inbox.provider, folderId)) return true;
+  for (const role of SNOOZE_FORBIDDEN_ROLES) {
+    const roleId = await resolveFolderId(inbox, role, { strict: true, session }).catch(() => null);
+    if (roleId && roleId === folderId) return true;
+  }
+  return false;
+}
+
+/**
  * The snooze folder: the caller's pick (it must exist), or "MCPEmails Snoozed",
- * created when missing through the same helpers folder_create uses. On IMAP a
- * server that refuses a top-level mailbox gets it under INBOX with the
- * server's delimiter, as Courier-style layouts require.
+ * created when missing through the provider's create (Gmail/Graph) or on the
+ * call's own IMAP session. On IMAP a server that refuses a top-level mailbox
+ * gets it under INBOX with "." or "/", as Courier-style layouts require; the
+ * id is then re-read from the listing so it is the server's own spelling.
  */
 async function resolveSnoozeFolder(
   inbox: InboxRow,
@@ -36536,57 +36969,81 @@ async function resolveSnoozeFolder(
   } catch (error) {
     if (!(error instanceof FolderTargetError) || error.logErrorCode !== "folder_not_found") throw error;
   }
-  const create = (candidate: string) => {
-    switch (inbox.provider) {
-      case "gmail":
-        return gmailCreateFolder(inbox, candidate);
-      case "outlook":
-        return outlookCreateFolder(inbox, candidate);
-      default:
-        return imapCreateFolder(inbox, candidate);
+  if (inbox.provider === "gmail" || inbox.provider === "outlook") {
+    try {
+      const created = inbox.provider === "gmail"
+        ? await gmailCreateFolder(inbox, name)
+        : await outlookCreateFolder(inbox, name);
+      return { id: created.id, name };
+    } catch (error) {
+      const collision = identifiedCreateCollision(error);
+      if (collision) return { id: collision.id, name };
+      throw error;
     }
-  };
-  try {
-    const created = await create(name);
-    return { id: created.id, name };
-  } catch (error) {
-    const collision = identifiedCreateCollision(error);
-    if (collision) return { id: collision.id, name };
-    if (inbox.provider === "gmail" || inbox.provider === "outlook") throw error;
-    for (const nested of [`INBOX.${name}`, `INBOX/${name}`]) {
-      try {
-        const created = await create(nested);
-        return { id: created.id, name: nested };
-      } catch (nestedError) {
-        const nestedCollision = identifiedCreateCollision(nestedError);
-        if (nestedCollision) return { id: nestedCollision.id, name: nested };
-      }
-    }
-    throw error;
   }
+  if (!session) throw new Error("imap_auth_failed");
+  let lastError: unknown = null;
+  for (const candidate of [name, `INBOX.${name}`, `INBOX/${name}`]) {
+    try {
+      await imapCreateMailboxOnSession(session, candidate);
+      return { id: await resolveFolderId(inbox, candidate, { strict: true, session }), name: candidate };
+    } catch (error) {
+      if (error instanceof Error && error.message === "imap_auth_failed") throw error;
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error("folder_create_failed");
 }
 
-/** IMAP: find a message in one mailbox by Message-ID, newest uid first. */
+/**
+ * IMAP: find a message in one mailbox by Message-ID, newest uid first.
+ * `searched: false` means no search could run (no usable Message-ID), which is
+ * NOT the same answer as an empty search.
+ */
 async function imapFindByMessageId(
   session: ImapSession<ImapClient>,
   folderId: string,
   rfcMessageId: string | null,
-): Promise<string | null> {
+): Promise<{ searched: boolean; id: string | null }> {
   const id = cleanRfcMessageId(rfcMessageId);
-  if (!id) return null;
+  if (!id) return { searched: false, id: null };
   const client = await session.select(imapMailboxForServerFolder(folderId));
   const uids = await client.uidSearch(`HEADER Message-ID "${id}"`);
-  if (uids.length === 0) return null;
-  return encodeImapId(folderId, Math.max(...uids));
+  if (uids.length === 0) return { searched: true, id: null };
+  return { searched: true, id: encodeImapId(folderId, Math.max(...uids)) };
 }
 
-/** Move one message; the id it has afterwards (IMAP uids change, Gmail/Graph ids do not). */
+/** Graph: find a message in one folder by internetMessageId. Same `searched` contract. */
+async function graphFindByInternetMessageId(
+  inbox: InboxRow,
+  folderId: string,
+  rfcMessageId: string | null,
+): Promise<{ searched: boolean; id: string | null }> {
+  const id = cleanRfcMessageId(rfcMessageId);
+  if (!id) return { searched: false, id: null };
+  const token = await withFreshOutlookToken(inbox);
+  const filter = `internetMessageId eq '<${id.replace(/'/g, "''")}>'`;
+  const resp = await graphFetch(
+    token,
+    `/me/mailFolders/${encodeURIComponent(folderId)}/messages?$filter=${encodeURIComponent(filter)}&$select=id&$top=1`,
+  );
+  if (resp.status === 401) throw new Error("outlook_auth_failed");
+  if (!resp.ok) throw new Error(`Outlook folder search error ${resp.status}`);
+  const body = (await resp.json()) as { value?: { id?: string }[] };
+  return { searched: true, id: body.value?.[0]?.id ?? null };
+}
+
+/**
+ * Move one message. `newId` is the id it has afterwards, or null when nothing
+ * could establish it (IMAP without COPYUID and no Message-ID match).
+ * Gmail and Graph (immutable ids) keep the id across a move.
+ */
 async function reminderMoveMessage(
   run: ReminderRunSession,
   messageId: string,
   destinationId: string,
   rfcMessageId: string | null,
-): Promise<{ moved: true; newId: string } | { moved: false; error: string }> {
+): Promise<{ moved: true; newId: string | null } | { moved: false; error: string }> {
   const result = await runBulkMoveOnIds(run.inboxRow, [messageId], destinationId, null, {
     session: run.imap ?? undefined,
   });
@@ -36600,22 +37057,24 @@ async function reminderMoveMessage(
   if (reported) return { moved: true, newId: reported };
   // No COPYUID: find it in the destination by its Message-ID.
   const found = run.imap ? await imapFindByMessageId(run.imap, destinationId, rfcMessageId) : null;
-  return { moved: true, newId: found ?? messageId };
+  return { moved: true, newId: found?.id ?? null };
 }
 
 /**
  * Bring a snoozed message back to INBOX. Gmail: put INBOX back and take the
  * snooze label off (a plain move would leave the label on). Others: a move to
- * the inbox. A message that is no longer where we left it is looked for once by
- * Message-ID in the snooze folder (IMAP), then reported as not found.
+ * the inbox. When the stored id no longer answers, the message is looked for
+ * by Message-ID in the snooze folder (IMAP UID SEARCH, Graph internetMessageId)
+ * and `notFound` is reported ONLY when that search ran and came back empty.
+ * When no search can run, the failure is retryable, never "not found".
  */
 async function reminderReturnSnoozed(
   run: ReminderRunSession,
   ref: MessageRef,
 ): Promise<{ ref: MessageRef; notFound?: boolean }> {
   const inbox = run.inboxRow;
-  const current = ref.snoozed_message_id ?? ref.provider_message_id;
   if (inbox.provider === "gmail") {
+    const current = ref.snoozed_message_id ?? ref.provider_message_id;
     const token = await withFreshGmailToken(inbox);
     const resp = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(current)}/modify`,
@@ -36628,6 +37087,7 @@ async function reminderReturnSnoozed(
         }),
       },
     );
+    // Gmail ids are stable across labels: a 404 is a deleted message.
     if (resp.status === 404) return { ref, notFound: true };
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     if (!resp.ok) throw new Error(`Gmail modify error ${resp.status}`);
@@ -36636,19 +37096,16 @@ async function reminderReturnSnoozed(
   }
 
   const inboxFolder = await resolveFolderId(inbox, "INBOX", { session: run.imap });
-  const first = await reminderMoveMessage(run, current, inboxFolder, ref.rfc_message_id);
-  if (first.moved) return { ref: { ...ref, snoozed_message_id: first.newId } };
-  if (inbox.provider === "outlook") {
-    if (/not.?found|404/i.test(first.error)) return { ref, notFound: true };
-    throw new Error(bulkFailureErrorCode(first.error, "read"));
-  }
-  // IMAP: the uid may have changed under us (UIDVALIDITY); look for it once.
-  const folder = ref.snooze_folder_id ?? null;
-  const again = folder && run.imap ? await imapFindByMessageId(run.imap, folder, ref.rfc_message_id) : null;
-  if (!again) return { ref, notFound: true };
-  const second = await reminderMoveMessage(run, again, inboxFolder, ref.rfc_message_id);
-  if (!second.moved) throw new Error(second.error);
-  return { ref: { ...ref, snoozed_message_id: second.newId } };
+  return await returnSnoozedMessage(ref, {
+    move: (id) => reminderMoveMessage(run, id, inboxFolder, ref.rfc_message_id),
+    find: (folder, rfc) =>
+      inbox.provider === "outlook"
+        ? graphFindByInternetMessageId(inbox, folder, rfc)
+        : run.imap
+        ? imapFindByMessageId(run.imap, folder, rfc)
+        : Promise.resolve({ searched: false, id: null }),
+    code: (error) => bulkFailureErrorCode(error, "read"),
+  });
 }
 
 /** Has a reply to the tracked message arrived? Per provider; see reminders-engine.ts for the rule. */
@@ -36711,7 +37168,8 @@ async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promi
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) return inboxResolutionError(resolved, tool) as ReminderOutcome;
   const inbox = resolved.inbox;
-  if (inbox.provider !== "gmail" && inbox.provider !== "outlook" && looksLikeRfcMessageId(messageId)) {
+  const imapLike = inbox.provider !== "gmail" && inbox.provider !== "outlook";
+  if (imapLike && looksLikeRfcMessageId(messageId)) {
     return reminderFailure(tool, "pass the message's id from email_read, not its Message-ID header.", "-32602");
   }
 
@@ -36719,37 +37177,55 @@ async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promi
   if (room) return room;
 
   const nowIso = new Date().toISOString();
-  // One IMAP session for the whole call: the read, the folder LIST, the move
-  // and any Message-ID lookup after it.
+  // One IMAP session for the whole call: the read, the folder LIST and CREATE,
+  // the move and any Message-ID lookup after it.
   const run = reminderSessionFor(inbox);
   try {
-  let facts: ReminderMessageFacts;
-  try {
-    facts = await readReminderMessage(run, messageId, nowIso);
-  } catch (error) {
-    return reminderReadFailure(tool, inbox, error);
-  }
-  const digest = await reminderMessageDigest("snooze", inbox.id, facts.ref.rfc_message_id ?? messageId);
-  const { data: already } = await supabase
-    .from("reminders")
-    .select(REMINDER_COLUMNS)
-    .eq("workspace_id", apiKey.workspace_id)
-    .eq("inbox_id", inbox.id)
-    .eq("kind", "snooze")
-    .eq("message_digest", digest)
-    .in("status", [...REMINDER_ACTIVE_STATUSES])
-    .maybeSingle();
-  if (already) {
-    return {
-      result: jsonOk(markUntrusted({
-        snoozed: false,
-        already_snoozed: true,
-        reminder: await reminderEntry(already as unknown as StoredReminder),
-      })),
-      logStatus: "success",
-      logErrorCode: null,
+    let facts: ReminderMessageFacts;
+    try {
+      facts = await readReminderMessage(run, messageId, nowIso);
+    } catch (error) {
+      return reminderReadFailure(tool, inbox, error);
+    }
+    const digest = await reminderMessageDigest("snooze", inbox.id, facts.ref.rfc_message_id ?? messageId);
+    const alreadySnoozed = async (): Promise<ReminderOutcome | null> => {
+      const { data } = await supabase
+        .from("reminders")
+        .select(REMINDER_COLUMNS)
+        .eq("workspace_id", apiKey.workspace_id)
+        .eq("inbox_id", inbox.id)
+        .eq("kind", "snooze")
+        .eq("message_digest", digest)
+        .in("status", [...REMINDER_ACTIVE_STATUSES])
+        .maybeSingle();
+      if (!data) return null;
+      return {
+        result: jsonOk(markUntrusted({
+          snoozed: false,
+          already_snoozed: true,
+          reminder: await reminderEntry(data as unknown as StoredReminder),
+        })),
+        logStatus: "success",
+        logErrorCode: null,
+      };
     };
-  }
+    const existing = await alreadySnoozed();
+    if (existing) return existing;
+
+    // IMAP: after the move the message has a new uid. Something must be able
+    // to name it: COPYUID (UIDPLUS) or a Message-ID we can search for. With
+    // neither, the server could move it but never bring it back, so refuse.
+    if (imapLike && !facts.ref.rfc_message_id) {
+      const client = run.imap ? await run.imap.client() : null;
+      if (!snoozeIdentifiable({ imapLike, rfcMessageId: null, uidplus: client?.hasCapability("UIDPLUS") === true })) {
+        return reminderFailure(
+          tool,
+          "this message has no Message-ID header and the mail server does not report moved ids, so a " +
+            "snoozed copy could not be found again. Nothing was moved.",
+          "snooze_unidentifiable",
+        );
+      }
+    }
 
     let folder: { id: string; name: string };
     try {
@@ -36760,57 +37236,122 @@ async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promi
       }
       return reminderFailure(tool, "could not find or create the snooze folder. Nothing was moved.", providerErrorCode(error));
     }
-    if (
-      folder.id.toUpperCase() === "INBOX" ||
-      folder.id === (await resolveFolderId(inbox, "INBOX", { session: run.imap }).catch(() => ""))
-    ) {
-      return reminderFailure(tool, "the snooze folder cannot be the inbox itself. Nothing was moved.", "-32602");
-    }
-
-    const moved = await reminderMoveMessage(run, messageId, folder.id, facts.ref.rfc_message_id).catch((error) => ({
-      moved: false as const,
-      error: providerErrorCode(error),
-    }));
-    if (!moved.moved) {
-      // Classified, never passed through: raw provider text does not belong in
-      // activity_log.error_code (see the triage move branch).
+    if (await snoozeFolderForbidden(inbox, folder.id, run.imap)) {
       return reminderFailure(
         tool,
-        "the message could not be moved to the snooze folder. Nothing was changed.",
-        bulkFailureErrorCode(moved.error, "read"),
+        "a snooze cannot wait in the inbox, Trash, Spam/Junk, Drafts or Sent. Pick another folder. Nothing was moved.",
+        "snooze_folder_forbidden",
       );
     }
 
-    const ref: MessageRef = { ...facts.ref, snoozed_message_id: moved.newId, snooze_folder_id: folder.id };
-    const { data, error } = await supabase
-      .from("reminders")
-      .insert({
-        workspace_id: apiKey.workspace_id,
-        inbox_id: inbox.id,
-        api_key_id: apiKey.id,
-        kind: "snooze",
-        status: "pending",
-        condition: condition.value,
-        due_at: until.value,
-        next_check_at: until.value,
-        message_digest: digest,
-        message_ref: await encryptReminderJson(ref),
-        summary: await encryptReminderJson(facts.summary),
-        folder: folder.name,
-      })
-      .select(REMINDER_COLUMNS)
-      .single();
-    if (error || !data) {
-      // Never leave a message hidden with nothing to bring it back.
-      await reminderReturnSnoozed(run, ref).catch(() => {});
-      console.error("[reminders] snooze_insert_failed", { workspace_id: apiKey.workspace_id, error: error?.message });
-      return reminderFailure(tool, "database error while saving the snooze; the message was put back in the inbox.", "db_error");
+    // ROW FIRST, leased, then the move (createSnooze in reminders-engine.ts).
+    // A crash between the two leaves a row whose lease goes stale and whose
+    // reference (snooze folder + Message-ID) lets the dispatcher find the
+    // message and bring it back: mail is never hidden with nothing that knows
+    // about it.
+    const token = crypto.randomUUID();
+    const pendingRef: MessageRef = { ...facts.ref, snoozed_message_id: null, snooze_folder_id: folder.id };
+    let rowId: string | null = null;
+    let savedRow: StoredReminder | null = null;
+    const outcome = await createSnooze(pendingRef, !imapLike || !!facts.ref.rfc_message_id, {
+      async insertLeased() {
+        const { data, error } = await supabase
+          .from("reminders")
+          .insert({
+            workspace_id: apiKey.workspace_id,
+            inbox_id: inbox.id,
+            api_key_id: apiKey.id,
+            kind: "snooze",
+            status: "pending",
+            condition: condition.value,
+            due_at: until.value,
+            next_check_at: until.value,
+            message_digest: digest,
+            message_ref: await encryptReminderJson(pendingRef),
+            summary: await encryptReminderJson(facts.summary),
+            folder: folder.name,
+            claimed_at: nowIso,
+            lease_token: token,
+          })
+          .select("id")
+          .single();
+        if (error?.code === "23505") return "duplicate";
+        if (error || !data) {
+          console.error("[reminders] snooze_insert_failed", { workspace_id: apiKey.workspace_id, error: error?.message });
+          return "error";
+        }
+        rowId = (data as { id: string }).id;
+        return "ok";
+      },
+      async deleteRow() {
+        if (rowId) await supabase.from("reminders").delete().eq("id", rowId).eq("lease_token", token);
+      },
+      async move() {
+        try {
+          return await reminderMoveMessage(run, messageId, folder.id, facts.ref.rfc_message_id);
+        } catch (error) {
+          return { moved: false as const, error: providerErrorCode(error) };
+        }
+      },
+      async save(ref) {
+        const { data, error } = await supabase
+          .from("reminders")
+          .update({ message_ref: await encryptReminderJson(ref), claimed_at: null, lease_token: null })
+          .eq("id", rowId!)
+          .eq("lease_token", token)
+          .select(REMINDER_COLUMNS)
+          .single();
+        if (error || !data) {
+          console.error("[reminders] snooze_save_failed", { workspace_id: apiKey.workspace_id, error: error?.message });
+          return false;
+        }
+        savedRow = data as unknown as StoredReminder;
+        return true;
+      },
+      undoMove: (ref) => reminderReturnSnoozed(run, ref).then((r) => !r.notFound),
+    });
+
+    switch (outcome.kind) {
+      case "snoozed":
+        return {
+          result: jsonOk(markUntrusted({ snoozed: true, reminder: await reminderEntry(savedRow!) })),
+          logStatus: "success",
+          logErrorCode: null,
+        };
+      case "already_snoozed": {
+        // A concurrent snooze of the same message won the unique index: that
+        // one IS the snooze. Nothing was moved here.
+        const raced = await alreadySnoozed();
+        if (raced) return raced;
+        return reminderFailure(tool, "this message is already being snoozed. Nothing was moved.", "already_snoozed");
+      }
+      case "insert_failed":
+        return reminderFailure(tool, "database error while saving the snooze. Nothing was moved.", "db_error");
+      case "move_failed":
+        // Classified, never passed through: raw provider text does not belong
+        // in activity_log.error_code (see the triage move branch).
+        return reminderFailure(
+          tool,
+          "the message could not be moved to the snooze folder. Nothing was changed.",
+          bulkFailureErrorCode(outcome.error, "read"),
+        );
+      case "saved_partially":
+        return reminderFailure(
+          tool,
+          `the message was moved to ${folder.name} and the snooze is stored, but saving its final state ` +
+            "failed. It will still come back on time. Check reminder_list before snoozing it again.",
+          "db_error",
+        );
+      case "save_failed":
+        return reminderFailure(
+          tool,
+          outcome.restored
+            ? "database error while saving the snooze; the message was put back in the inbox."
+            : `database error while saving the snooze, and the message could not be put back: it is in ${folder.name}.`,
+          "db_error",
+        );
     }
-    return {
-      result: jsonOk(markUntrusted({ snoozed: true, reminder: await reminderEntry(data as unknown as StoredReminder) })),
-      logStatus: "success",
-      logErrorCode: null,
-    };
+    return reminderFailure(tool, "unexpected snooze state. Check reminder_list.", "internal_error");
   } finally {
     if (run.imap) await run.imap.close().catch(() => {});
   }
@@ -37034,12 +37575,6 @@ async function executeReminderList(rawArgs: unknown, apiKey: ApiKeyRow): Promise
 /** The send operations that take follow_up_days (PRO_FEATURE_ARGS). */
 const FOLLOW_UP_SEND_TOOLS: ReadonlySet<string> = new Set(["email_send", "email_reply", "email_forward", "draft_send"]);
 
-function hasFollowUpDaysArg(rawArgs: unknown): boolean {
-  return typeof rawArgs === "object" && rawArgs !== null && !Array.isArray(rawArgs) &&
-    (rawArgs as Record<string, unknown>)["follow_up_days"] !== undefined &&
-    (rawArgs as Record<string, unknown>)["follow_up_days"] !== null;
-}
-
 /** The JSON a send executor returned, from structuredContent or its text block. */
 function sentResultJson(result: unknown): Record<string, unknown> | null {
   if (!result || typeof result !== "object") return null;
@@ -37069,9 +37604,14 @@ function addressStrings(value: unknown): string[] {
  * product here; a follow-up that cannot be stored never fails it, it is
  * reported in the result's notes instead.
  */
-async function runSendWithFollowUp(dispatchName: string, rawArgs: unknown, apiKey: ApiKeyRow): Promise<ExecutorOutcome | null> {
-  const args = rawArgs as Record<string, unknown>;
-  const days = parseFollowUpDays(args["follow_up_days"]);
+async function runSendWithFollowUp(
+  dispatchName: string,
+  followUpDays: unknown,
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const args = (rawArgs && typeof rawArgs === "object" && !Array.isArray(rawArgs) ? rawArgs : {}) as Record<string, unknown>;
+  const days = parseFollowUpDays(followUpDays);
   if (!days.ok) {
     return reminderFailure(dispatchName, `${days.error} Nothing was sent.`, "-32602");
   }
@@ -37088,7 +37628,7 @@ async function runSendWithFollowUp(dispatchName: string, rawArgs: unknown, apiKe
       "insufficient_scope",
     );
   }
-  const { follow_up_days: _dropped, ...sendArgs } = args;
+  const sendArgs = args;
 
   // draft_send: the draft's subject and recipients, read before it is gone.
   let draftSummary: ReminderSummary | null = null;
@@ -37192,7 +37732,7 @@ const remindersStore: RemindersStore = {
     return Array.isArray(data) ? data.length : 0;
   },
   async listDue(nowIso, limit) {
-    // The predicate of dispatch_reminders() (20261024211000). Keep in step.
+    // The predicate of dispatch_reminders() (20261024235200). Keep in step.
     const { data, error } = await supabase
       .from("reminders")
       .select(REMINDER_DISPATCH_COLUMNS)
@@ -37718,12 +38258,35 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return handleTriageDispatch(triageDeps());
   }
 
+  // ── Subscription cleanup follow-up route ──────────────────────────────────
+  // Called hourly by pg_cron (dispatch_subscription_followup, migration
+  // 20261024210100), same guard and secret as /triage-dispatch. The body is
+  // ignored: which rows are due, the leases and the budget live in
+  // runSubscriptionFollowUp.
+  if (reqUrl.pathname.endsWith("/subscription-followup")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (!dispatchSecret || !providedSecret || providedSecret !== dispatchSecret) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return await handleSubscriptionFollowUp();
+  }
+
   // ── Reminders dispatcher route (Pro) ──────────────────────────────────────
   // pg_cron every minute via dispatch_reminders(), same guard and secret as the
   // two routes above. The body is ignored: selection, leasing and the budget
   // live in reminders-engine.ts. "/reminders-dispatch" does not end in
   // "/dispatch" (hyphen, not slash), so the scheduled-send branch cannot take it.
-  // See migration 20261024211000_reminders.sql.
+  // See migration 20261024235200_reminders.sql.
   if (reqUrl.pathname.endsWith("/reminders-dispatch")) {
     if (req.method !== "POST") {
       return new Response(
@@ -38558,7 +39121,7 @@ export { executeListDrafts, executeListInbox, executeReadEmails };
 
 // Exported for reminders-surface.test.ts (Pro reminders): the gate on the
 // tools, the follow_up_days hook and the follow_up_radar variant.
-export { handlePromptsGet, renderWorkflowPrompt, WORKFLOW_PROMPTS };
+export { handlePromptsGet, renderWorkflowPrompt, runSendWithFollowUp, withProArgumentsListed, WORKFLOW_PROMPTS };
 
 // For scheduled-send-approval-flow.test.ts: the production dispatcher deps, so
 // a test can keep the REAL approved-operation path and stub only the provider.

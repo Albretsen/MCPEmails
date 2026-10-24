@@ -117,6 +117,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
@@ -601,6 +602,7 @@ $$;
 --   send review      send_approvals, outbound_idempotency
 --   drafts           draft_lineage, draft_card_activity
 --   bulk operations  bulk_plans, bulk_runs
+--   subscriptions    subscription_plans, unsubscribe_requests
 --   automations      triage_rules, triage_runs, triage_run_items,
 --                    triage_seen_messages
 --   clients          mcp_client_capabilities, workspace_members
@@ -1296,6 +1298,62 @@ CREATE TABLE IF NOT EXISTS public.inbox_sender_aliases (
 CREATE UNIQUE INDEX IF NOT EXISTS inbox_sender_aliases_inbox_address_key
   ON public.inbox_sender_aliases (inbox_id, lower(email_address));
 
+-- Subscription cleanup (20261024210000). senders and progress are ciphertext.
+CREATE TABLE IF NOT EXISTS public.subscription_plans (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  senders              jsonb NOT NULL,
+  senders_encrypted    boolean NOT NULL DEFAULT true,
+  sender_count         integer NOT NULL CHECK (sender_count >= 0),
+  summary              jsonb NOT NULL DEFAULT '{}'::jsonb,
+  window_days          integer NOT NULL CHECK (window_days BETWEEN 1 AND 365),
+  scanned              integer NOT NULL DEFAULT 0 CHECK (scanned >= 0),
+  truncated            boolean NOT NULL DEFAULT false,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  expires_at           timestamptz NOT NULL,
+  used_at              timestamptz,
+  used_by_api_key_id   uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  progress             jsonb,
+  backlog_action       text CHECK (backlog_action IS NULL OR backlog_action IN ('archive', 'keep')),
+  backlog_moved        integer NOT NULL DEFAULT 0 CHECK (backlog_moved >= 0),
+  backlog_remaining    integer NOT NULL DEFAULT 0 CHECK (backlog_remaining >= 0),
+  backlog_leased_until timestamptz
+);
+CREATE INDEX IF NOT EXISTS subscription_plans_workspace_created_idx
+  ON public.subscription_plans (workspace_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id     uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id         uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  plan_id          uuid REFERENCES public.subscription_plans(id) ON DELETE SET NULL,
+  api_key_id       uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  sender_key       text NOT NULL,
+  sender_domain    text,
+  display_name     text,
+  from_address     text,
+  method           text NOT NULL CHECK (method IN ('one_click', 'mailto', 'link', 'none')),
+  status           text NOT NULL CHECK (status IN ('pending', 'requested', 'failed', 'draft_ready', 'needs_user', 'filtered', 'skipped_unsafe', 'stopped', 'still_sending')),
+  http_status      integer,
+  error            text,
+  url_host         text,
+  draft_id         text,
+  idempotency_key  text NOT NULL UNIQUE,
+  requested_at     timestamptz,
+  check_after      timestamptz,
+  checked_at       timestamptz,
+  check_leased_at  timestamptz,
+  check_attempts   integer NOT NULL DEFAULT 0,
+  claimed_at       timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS unsubscribe_requests_follow_up_idx
+  ON public.unsubscribe_requests (check_after)
+  WHERE checked_at IS NULL AND check_after IS NOT NULL;
+
 
 CREATE OR REPLACE TRIGGER billing_email_sends_updated_at
   BEFORE UPDATE ON public.billing_email_sends
@@ -1318,7 +1376,7 @@ CREATE OR REPLACE TRIGGER user_usage_entitlements_updated_at
 -- emit_system_event differs (see its comment).
 -- ============================================================
 
--- Pro feature gate inputs (hosted: 20261024210000_pro_features_gate.sql).
+-- Pro feature gate inputs (hosted: 20261024235100_pro_features_gate.sql).
 CREATE OR REPLACE FUNCTION public.workspace_pro_features(p_workspace_id uuid) RETURNS TABLE(plan text, comped_scale boolean, rollout_enabled boolean, public_launch boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -1970,7 +2028,7 @@ $$;
 
 -- ============================================================
 -- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
--- 20261024211000). message_ref and summary are AES-256-GCM wrappers
+-- 20261024235200). message_ref and summary are AES-256-GCM wrappers
 -- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
 -- /reminders-dispatch is not part of self-host: POST that route with
 -- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
@@ -2012,6 +2070,49 @@ CREATE OR REPLACE TRIGGER reminders_updated_at
   BEFORE UPDATE ON public.reminders
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+
+-- ── Re-arm on reconnect ─────────────────────────────────────────────────────
+-- A snooze never goes 'failed' on an auth, inbox or transport error: it backs
+-- off (5 min, 15 min, 1 h, 4 h, then daily) and keeps trying, because giving up
+-- would leave the message hidden. When the user reconnects or re-authorises the
+-- inbox, every backed-off reminder of it is due again at once, so a snoozed
+-- message comes back within a minute of the fix rather than at the next daily
+-- retry. Snoozes only once their own time has come; open follow-ups always.
+-- Fires on the inbox becoming active, or on a new password / refresh token
+-- while active. Harmless when nothing has failed (no row matches).
+CREATE OR REPLACE FUNCTION public.reminders_rearm_on_reconnect()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.reminders
+     SET next_check_at = now()
+   WHERE inbox_id = NEW.id
+     AND status IN ('pending', 'due')
+     AND consecutive_failures > 0
+     AND claimed_at IS NULL
+     AND next_check_at > now()
+     AND (kind = 'follow_up' OR due_at <= now());
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.reminders_rearm_on_reconnect() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS reminders_rearm_on_reconnect ON public.inboxes;
+CREATE TRIGGER reminders_rearm_on_reconnect
+  AFTER UPDATE OF status, imap_password, oauth_refresh_token ON public.inboxes
+  FOR EACH ROW
+  WHEN (
+    NEW.status = 'active' AND (
+      OLD.status IS DISTINCT FROM NEW.status
+      OR OLD.imap_password IS DISTINCT FROM NEW.imap_password
+      OR OLD.oauth_refresh_token IS DISTINCT FROM NEW.oauth_refresh_token
+    )
+  )
+  EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
 -- ============================================================
 -- TABLE: morning_briefs  (Pro daily brief settings and schedule; hosted
 -- migration 20261024235400). The hosted pg_cron job that drives

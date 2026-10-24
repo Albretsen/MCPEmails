@@ -22,6 +22,7 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
+import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { MorningBriefSection } from './MorningBriefSection';
@@ -861,7 +862,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -945,6 +946,18 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       />
 
       {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
+
+      {/* First 14 days after the first payment, owner only. Renders nothing
+          otherwise; see lib/onboarding/first-week-checklist.ts. */}
+      <FirstWeekChecklist
+        inboxes={inboxes}
+        maxInboxes={planLimits?.maxInboxes ?? null}
+        userRole={userRole}
+        onReconnect={onReconnect}
+        onGoToInboxes={onGoToInboxes}
+        onGoToAutomations={onGoToAutomations}
+        onConnect={onConnect}
+      />
 
       <div className="stat-grid">
         <div className="stat">

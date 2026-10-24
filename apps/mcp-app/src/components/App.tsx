@@ -34,6 +34,7 @@ import {
   modelContextCapability,
   outboundApproveOpenedContextLine,
   outboundRejectContextLine,
+  subscriptionCleanupContextLine,
   type DraftCall as ModelDraftCall,
 } from "../model-context";
 import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
@@ -66,6 +67,7 @@ import { DraftReadLine } from "./DraftReadLine";
 import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { SentMessage } from "./SentMessage";
+import { SubscriptionPlan } from "./SubscriptionPlan";
 import { Loading, Notice, TextLink } from "./ui";
 
 /**
@@ -830,6 +832,17 @@ export function App(props: { bridge: HostBridge }) {
     );
   };
 
+  // One subscriptions_cleanup call at a time. `busy` is state, so a double
+  // click lands twice before the re-render that disables the button.
+  const subFlight = useRef(false);
+  const runSub = (key: string, args: Record<string, unknown>) => {
+    if (subFlight.current) return;
+    subFlight.current = true;
+    void run(key, "subscriptions_cleanup", args, subscriptionCleanupContextLine).finally(() => {
+      subFlight.current = false;
+    });
+  };
+
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
     if (!url) return;
@@ -1367,6 +1380,36 @@ export function App(props: { bridge: HostBridge }) {
               });
               void bridge.updateModelContext(bulkCancelContextLine(plan));
             },
+            setFullscreen,
+          }}
+        />
+      );
+    }
+
+    if (envelope.card === "subscription_plan" && envelope.subscriptions) {
+      const sub = envelope.subscriptions;
+      return (
+        <SubscriptionPlan
+          key={sub.plan_id}
+          env={envelope}
+          sub={sub}
+          fullscreen={fullscreen}
+          canExpand={canExpand}
+          busy={busy}
+          error={error}
+          actions={{
+            confirm: (keys, backlog) =>
+              runSub("cleanup", { plan_id: sub.plan_id, sender_keys: keys, backlog }),
+            // §9: `continue` only moves the backlog; the unsubscribe part never
+            // re-runs, so no sender keys are sent.
+            continueBacklog: () =>
+              runSub("continue", {
+                plan_id: sub.plan_id,
+                sender_keys: [],
+                backlog: "archive",
+                continue: true,
+              }),
+            openLink: (url) => openDashboard(url),
             setFullscreen,
           }}
         />
