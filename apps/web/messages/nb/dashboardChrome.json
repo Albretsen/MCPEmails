@@ -469,7 +469,9 @@
         "openGuide": "Vis meg hvordan",
         "later": "Senere"
       }
-    }
+    },
+    "businessCapBodyFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "businessCapCtaFounder": "Oppgrader til Business, ${price}/md"
   },
   "commandPalette": {
     "pageOverview": "Oversikt",
@@ -559,5 +561,10 @@
     "switchCta": "Bytt til årlig",
     "switchBusy": "Klargjør...",
     "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
+  },
+  "founder": {
+    "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",
+    "places": "{left} av {total} plasser igjen",
+    "priceChanged": "Prisen endret seg før du bekreftet, så ingenting ble belastet. Beløpene over er prisen som gjelder nå."
   }
 }

@@ -351,6 +351,8 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
         const liveAnnualTotal = annualTotalCents ? formatAmountCents(annualTotalCents, locale) : null;
 
         const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
+        // Set only on Business, only while the founder offer is open.
+        const founder = plan.key === 'pro' ? stripePrices?.pro?.founder ?? null : null;
         const features = t.raw(`plans.${plan.key}.features`).map(money);
 
         // The card the visitor was quoted at an in-product paywall, if they
@@ -388,6 +390,26 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
                   entry for them, and the monthly view does not ask. */}
               {annual && seasonalOffers && (
                 <SeasonalOfferLine offer={seasonalOfferForPlan(seasonalOffers, plan.key)} planKey={plan.key} />
+              )}
+              {/* The Business founder price, only while it is open. The page
+                  then prices the card from the founder pair, so the amount
+                  here is the amount checkout charges. Plain text: no badge,
+                  no strike-through, no colour change as places go. */}
+              {founder && (
+                <>
+                  <p className="price-annual-note" data-founder-line="">
+                    {money(
+                      t('founder.line', {
+                        price: formatAmountCents(founder.monthlyCents, locale),
+                        addon: formatAmountCents(founder.addonMonthlyCents, locale),
+                        total: founder.placesTotal,
+                      }),
+                    )}
+                  </p>
+                  <p className="price-annual-note" data-founder-places="">
+                    {t('founder.places', { left: founder.placesLeft, total: founder.placesTotal })}
+                  </p>
+                </>
               )}
               <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
             </div>
@@ -693,7 +715,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
         <div className="container">
           <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">
-            {money(t('ctaBand.sub'))}
+            {money(stripePrices?.pro?.founder ? t('ctaBand.subFounder') : t('ctaBand.sub'))}
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>

@@ -1507,6 +1507,27 @@ export type Database = {
           },
         ]
       }
+      business_founder_places: {
+        Row: {
+          created_at: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          interval?: string
+          owner_id?: string
+          stripe_subscription_id?: string
+        }
+        Relationships: []
+      }
       bulk_plans: {
         Row: {
           action: string
@@ -6454,6 +6475,10 @@ export type Database = {
       }
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
+        Returns: boolean
+      }
+      record_business_founder_place: {
+        Args: { p_interval: string; p_owner_id: string; p_subscription_id: string }
         Returns: boolean
       }
       record_inbox_cap_event: {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -20,6 +20,8 @@ import { ToastProvider, useToast } from './Toast';
 import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
+import { pricesWithFounder } from '@/lib/stripe/founder-offer';
+import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
 import {
   connectIntentStorage,
@@ -139,10 +141,18 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
+  // The Business founder price, when the server attached it: priced in here,
+  // once, for the viewer's language (zh keeps the normal price), so every
+  // surface below quotes what checkout charges.
+  const { locale: appLocale } = useAppLocale();
+  const stripePrices = useMemo(
+    () => pricesWithFounder(serverStripePrices, appLocale),
+    [serverStripePrices, appLocale],
+  );
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
   const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
@@ -615,6 +625,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // starts appending it, the panel picks it up and shows price and
         // renewal date; until then it renders without those two rows.
         const intervalParam = readQuery(searchParams, 'interval');
+        // A Business founder purchase (checkout-core adds offer=founder). The
+        // panel may only quote a price when the founder amounts are on this
+        // page; once the plan has landed they are not, and the price rows are
+        // left out rather than showing the $39 nobody was charged.
+        const founderPurchase = readQuery(searchParams, 'offer') === 'founder';
+        const priceKnown =
+          !founderPurchase ||
+          Boolean(stripePrices?.pro?.founder) ||
+          stripePrices?.pro?.founderSubscriber === true;
         // The return URL is a one-shot signal that only exists on the client,
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that
@@ -625,7 +644,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCheckoutSuccess({
           planId: planParam,
-          interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+          interval:
+            priceKnown && (intervalParam === 'month' || intervalParam === 'year') ? intervalParam : null,
           currency: currencyParam === 'eur' ? 'eur' : 'usd',
         });
         rememberCheckoutAcknowledged(planParam);
@@ -648,6 +668,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
       url.searchParams.delete('interval');
+      url.searchParams.delete('offer');
       url.searchParams.delete('currency');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }

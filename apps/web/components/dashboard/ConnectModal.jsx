@@ -11,7 +11,9 @@ import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { Link } from '@/i18n/navigation';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer, splitSharedFeatures } from '@/lib/billing/inbox-cap-offer.mjs';
-import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
+import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
+import FounderPriceNote from './FounderPriceNote';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
   PlanCheckoutLink,
@@ -1057,6 +1059,9 @@ export function ConnectModal({
   // offer from Personal alone to Personal and Pro side by side. The rule that
   // decides that is inboxCapOffer's, not this component's.
   const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped });
+  // The Business founder price swaps the $39 sentences for founder ones
+  // while it is open; every other offer keeps its own keys.
+  const capCopy = founderCapCopy(upgradeCopy, stripePrices);
 
   // MONTHLY, deliberately, and it stays monthly unless the person picks
   // otherwise. This panel used to have no interval at all and always bought
@@ -2644,11 +2649,12 @@ export function ConnectModal({
                     color: 'var(--fg-3)',
                     lineHeight: 1.5,
                   }}>
-                    {tr(upgradeCopy.bodyKey)}
+                    {tr(capCopy.bodyKey)}
                   </div>
                   {!upgradeCopy.dual && (
                     <ProPriceAppNotice plans={[upgradeCopy.plan]} style={{ marginTop: 6 }} />
                   )}
+                  <FounderPriceNote founder={capCopy.founder} />
                 </div>
               </div>
 
@@ -4210,7 +4216,11 @@ export function ConnectModal({
                 <PlanCheckoutLink
                   plan={upgradeCopy.plan}
                   planName={planDisplayName(upgradeCopy.plan)}
-                  monthlyLabel={tr(upgradeCopy.ctaKey)}
+                  monthlyLabel={
+                    capCopy.founder
+                      ? tr(capCopy.ctaKey, { price: formatAmountCents(capCopy.founder.monthlyCents) })
+                      : tr(upgradeCopy.ctaKey)
+                  }
                   annualOffer={annual}
                   interval={upgradeInterval}
                 >
