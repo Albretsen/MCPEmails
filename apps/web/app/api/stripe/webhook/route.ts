@@ -43,6 +43,14 @@
  *   which stops `past_due` / `unpaid` from keeping a SEPA subscription entitled
  *   when it has never had a paid invoice.
  *
+ * Failed-payment state (added 2026-10-24, src/lib/billing/payment-issue.ts):
+ *   `invoice.payment_failed` and `invoice.payment_action_required` store the
+ *   decline code and mark every owned workspace (dashboard banner +
+ *   once-a-day MCP note); a successful payment,
+ *   a subscription back out of past_due/unpaid, or a deleted subscription
+ *   clears it. Billing state only, never entitlement, and independent of the
+ *   lifecycle email flag.
+ *
  * Referral program (added 2026-10-25): `invoice.payment_succeeded` also moves
  * a referred friend's referral to 'charged' on their first paid subscription
  * invoice. That step runs whatever BILLING_LIFECYCLE_EMAILS says, and it can
@@ -153,6 +161,12 @@ import {
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
 import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
+import {
+  clearPaymentIssue,
+  hasPaymentIssue,
+  PAYMENT_ISSUE_STATUSES,
+  recordPaymentIssue,
+} from '@/lib/billing/payment-issue';
 import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
 import {
   liftPlanLimitPauses,
@@ -412,7 +426,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // If the subscription event won that race the invoice event would read as
   // stale and return here, and the dunning sequence would never be queued at
   // all. Exempting them is safe because neither one changes plan state: they
-  // only start and stop email sequences, both keyed on the invoice id.
+  // only start and stop email sequences, both keyed on the invoice id. They
+  // also write the failed-payment banner state, which is not entitlement; a
+  // late `payment_failed` re-reads the live invoice before it writes anything.
   //
   // `checkout.session.expired` changes no plan state either; it only decides
   // whether one reminder email goes out.
@@ -508,6 +524,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await handleSubscriptionUpserted(
           event.data.object as Stripe.Subscription,
         );
+        // Billing state only, after the entitlement work, and never throws.
+        await clearPaymentIssueIfRecovered(event.data.object as Stripe.Subscription);
         break;
 
       case 'invoice.payment_failed':
@@ -533,12 +551,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         break;
       }
 
-
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(
-          event.data.object as Stripe.Subscription,
-        );
+      case 'customer.subscription.deleted': {
+        const deleted = event.data.object as Stripe.Subscription;
+        await handleSubscriptionDeleted(deleted);
+        // Nothing left to pay for, so nothing left to warn about. Never throws.
+        const deletedCustomer =
+          typeof deleted.customer === 'string' ? deleted.customer : deleted.customer?.id;
+        if (deletedCustomer) {
+          await clearPaymentIssue(createServiceRoleClient(), {
+            stripeCustomerId: deletedCustomer,
+            source: 'customer.subscription.deleted',
+          });
+        }
         break;
+      }
 
       default:
         // Unhandled event types are acknowledged but not processed.
@@ -1289,7 +1315,8 @@ async function maybeQueueCancellationOnDelete(
  * failing customer ENTITLED while the card is retried. Duplicating any of that
  * here would give two events the ability to write the same state, which is the
  * class of bug the out-of-order guard exists to prevent. This handler queues
- * email and nothing else.
+ * email and records the failed-payment banner state (decline code and the
+ * workspaces.payment_issue_* markers), which no entitlement check reads.
  *
  * WHAT IT REFUSES TO DUN
  *
@@ -1355,7 +1382,8 @@ async function queueDunningForInvoice(
   invoice: Stripe.Invoice,
   options: { eventType: string; declineCode?: string },
 ): Promise<void> {
-  if (!lifecycleQueueingEnabled()) return;
+  // NOT gated on lifecycleQueueingEnabled() here: the failed-payment state
+  // below is written whether or not lifecycle email is on.
   const tag = [options.eventType, invoice.id] as const;
 
   const customerId =
@@ -1380,6 +1408,15 @@ async function queueDunningForInvoice(
 
   // Resolved before the retry guard, because the guard depends on it.
   const declineCode = options.declineCode ?? (await invoiceDeclineCode(invoice));
+
+  // The failed-payment STATE (dashboard banner + once-a-day MCP note), for
+  // both invoice.payment_failed and invoice.payment_action_required. It runs
+  // whether or not lifecycle email is on, and before the retry guard below on
+  // purpose: an SCA invoice often has no retry scheduled, and that customer is
+  // the one who most needs to be told. Billing state only, never throws.
+  await recordPaymentIssueForInvoice(invoice, customerId, declineCode);
+
+  if (!lifecycleQueueingEnabled()) return;
 
   // Stripe scheduled no retry and has barely tried. The ordinary sequence
   // asserts that "the card gets retried automatically over the next two weeks",
@@ -1466,13 +1503,20 @@ async function queueDunningForInvoice(
  * the sequence was queued.
  */
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-  if (!lifecycleQueueingEnabled()) return;
-
   const customerId =
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
   if (!customerId) return;
 
   const db = createServiceRoleClient();
+
+  // The payment went through: the banner and the MCP note stop. Independent of
+  // the lifecycle email flag, and never throws.
+  await clearPaymentIssue(db, {
+    stripeCustomerId: customerId,
+    source: 'invoice.payment_succeeded',
+  });
+
+  if (!lifecycleQueueingEnabled()) return;
 
   if (invoice.id) {
     await cancelOpenSequence({
@@ -1515,6 +1559,89 @@ async function recordReferralChargeSafely(invoice: Stripe.Invoice): Promise<void
   } catch (err) {
     console.error('[stripe-webhook] referral charge step failed:', {
       invoice: invoice.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Failed-payment state (src/lib/billing/payment-issue.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Record the failed-payment state for a declined renewal invoice, unless the
+ * invoice has been paid or voided since this event was emitted.
+ *
+ * Both invoice events are exempt from the out-of-order guard, so a redelivered
+ * `payment_failed` can land AFTER the `payment_succeeded` that settled it. The
+ * live invoice is the arbiter: one retrieve, only on a decline. If the
+ * retrieve fails the state is written anyway; the next success clears it.
+ *
+ * An `invoice.payment_action_required` handler records the same state through
+ * this, with the 'authentication_required' code. Never throws.
+ */
+async function recordPaymentIssueForInvoice(
+  invoice: Stripe.Invoice,
+  customerId: string,
+  declineCode: string | null,
+): Promise<void> {
+  try {
+    if (invoice.id) {
+      try {
+        const live = await stripe.invoices.retrieve(invoice.id);
+        if (live.status === 'paid' || live.status === 'void') {
+          console.log(
+            '[stripe-webhook] %s is already %s; no payment issue recorded.', invoice.id, live.status,
+          );
+          return;
+        }
+      } catch (err) {
+        console.error('[stripe-webhook] could not re-read invoice %s:', invoice.id, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    await recordPaymentIssue(createServiceRoleClient(), {
+      stripeCustomerId: customerId,
+      declineCode,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] recordPaymentIssueForInvoice failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * A subscription event says the subscription is no longer failing (active,
+ * trialing, canceled, ...). Clear the failed-payment state.
+ *
+ * The out-of-order guard compares whole seconds and strictly, so a sibling
+ * `subscription.updated` (still `active`) emitted in the same second as the
+ * `invoice.payment_failed` can arrive after it and is not stale. So, only when
+ * there is something to clear, the live subscription decides. Never throws.
+ */
+async function clearPaymentIssueIfRecovered(subscription: Stripe.Subscription): Promise<void> {
+  try {
+    if (PAYMENT_ISSUE_STATUSES.has(subscription.status)) return;
+    const customerId =
+      typeof subscription.customer === 'string'
+        ? subscription.customer
+        : subscription.customer?.id;
+    if (!customerId) return;
+
+    const db = createServiceRoleClient();
+    if (!(await hasPaymentIssue(db, customerId))) return;
+
+    const live = await stripe.subscriptions.retrieve(subscription.id);
+    if (PAYMENT_ISSUE_STATUSES.has(live.status)) return;
+
+    await clearPaymentIssue(db, {
+      stripeCustomerId: customerId,
+      source: `customer.subscription.updated (status=${live.status})`,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] clearPaymentIssueIfRecovered failed, swallowed:', {
       error: err instanceof Error ? err.message : String(err),
     });
   }

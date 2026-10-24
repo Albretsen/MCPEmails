@@ -902,9 +902,10 @@ $$;
 -- Free workspace in a referral month to Personal's burst. The month lives in
 -- referral_personal_until, which an older 'standard' row carries without
 -- changing its kind, so the gate must hand that column back with the kind
--- and expires_at. Current definition is 20261020214737, reproduced whole with
--- ONE change: section (d) adds 'referral_personal_until'. The per-query path
--- in index.ts selects the same three columns.
+-- and expires_at. Current definition is 20261024190000_payment_issue_columns,
+-- reproduced whole with ONE change: section (d) adds
+-- 'referral_personal_until'. The per-query path in index.ts selects the same
+-- three columns.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.mcp_tools_call_gate(
   p_key_hash text,
@@ -974,15 +975,18 @@ BEGIN
     FROM unnest(p_key_window_starts) WITH ORDINALITY AS t(s, ord)
   ) c;
 
-  -- (c) The workspace row checkPlanQuota reads, the activation markers, and
-  -- the card diagnostics flag.
+  -- (c) The workspace row checkPlanQuota reads, the activation markers, the
+  -- card diagnostics flag, and the failed-payment markers (payment-notice.ts).
   SELECT jsonb_build_object(
            'plan', w.plan,
            'grandfathered', w.grandfathered,
            'owner_id', w.owner_id,
            'analytics_first_tool_used_at', w.analytics_first_tool_used_at,
            'onboarding_value_activated_at', w.onboarding_value_activated_at,
-           'card_diagnostics', w.card_diagnostics
+           'card_diagnostics', w.card_diagnostics,
+           'payment_issue_since', w.payment_issue_since,
+           'payment_issue_kind', w.payment_issue_kind,
+           'payment_notice_shown_on', w.payment_notice_shown_on
          ),
          w.owner_id
     INTO v_workspace, v_owner_id
@@ -1094,10 +1098,3 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.mcp_tools_call_gate(text, timestamptz[], timestamptz, boolean, text, integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mcp_tools_call_gate(text, timestamptz[], timestamptz, boolean, text, integer) TO service_role;
-
-COMMENT ON FUNCTION public.mcp_tools_call_gate(text, timestamptz[], timestamptz, boolean, text, integer) IS
-  'mcp-server tools/call gate in one round trip: everything mcp_tools_call_preflight '
-  'returns, plus workspaces.card_diagnostics, the allowance terms without a usage count, '
-  'reserve_action_usage() when the caller names a tool and the workspace is metered, and '
-  'a last_used_at stamp at most once a minute. The edge function makes every decision and '
-  'releases a reservation it does not use. Service role only.';

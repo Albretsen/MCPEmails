@@ -12,6 +12,7 @@ import { ConnectModal } from './ConnectModal';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
+import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -1219,6 +1220,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       />
       <div className="main-col">
         <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} sidebarOpen={sidebarOpen} />
+
+        {/* Owner only, while the renewal payment is failing. Not dismissible. */}
+        <PaymentIssueBanner
+          isOwner={serverWorkspace?.isOwner === true}
+          subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
+          lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
+        />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
