@@ -4434,6 +4434,7 @@ export type Database = {
           onboarding_value_activated_at: string | null
           owner_id: string
           plan: string
+          pro_features_enabled: boolean
           pro_unlimited_inboxes_exempt: boolean
           slug: string
           stripe_customer_id: string | null
@@ -4484,6 +4485,7 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id: string
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           slug: string
           stripe_customer_id?: string | null
@@ -4534,6 +4536,7 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id?: string
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           slug?: string
           stripe_customer_id?: string | null

@@ -19,6 +19,7 @@
     "test:connection-type-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/connection-type-ui.test.mjs",
     "test:inbox-route-roles": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/inboxes/inbox-routes.roles.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts src/lib/plans/inbox-cap-events.test.ts",
+    "test:pro-features": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/pro-features.test.ts",
     "test:member-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-member-limit.test.ts",
     "test:workspace-roles": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/workspace/roles.test.ts",
     "test:api-keys": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/api-keys/key-authority.test.ts app/api/api-keys/routes.test.ts",

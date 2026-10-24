@@ -465,6 +465,19 @@ import {
   rateLimitPlanSentence,
   USAGE_LIMIT_SUPPORT_EMAIL,
 } from "./usage-limit-message.ts";
+import {
+  CLOSED_PRO_GATE,
+  decideProFeatureAccess,
+  hasProFeatureSurface,
+  hideProFeaturesFromListing,
+  isProFeatureTool,
+  PRO_FEATURE_ERROR_CODE,
+  type ProFeature,
+  type ProFeatureAccess,
+  proFeatureForCall,
+  proFeatureRefusalResult,
+  type ProGateInputs,
+} from "./pro-features.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
   type ActionReservationRow,
@@ -2988,6 +3001,90 @@ async function checkPlanQuota(
     usedThisMinute,
     retryAfterSeconds,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Pro feature gate (pro-features.ts holds the rule; this is its one read)
+//
+// workspace_pro_features() (migration 20261024150000) returns the effective
+// plan, workspaces.pro_features_enabled and the pro_features_public switch in
+// one round trip. It is read at most once per request: memoised on the
+// ApiKeyRow object, which handleRequest creates per request and threads to
+// every handler and executor (client-api's executors included, which never see
+// a RequestContext). Read lazily, so a request that touches no Pro feature
+// pays nothing.
+//
+// Where checkPlanQuota already resolved the plan for this request, that plan
+// wins over the RPC's (primeProGatePlan): both apply the same comped rule, so
+// they agree, and the request has one plan answer, not two.
+//
+// Fails CLOSED (hidden, refused): a failed read leaves the workspace in the
+// pre-launch state, never in a paid one it did not buy. Its own query rather
+// than a column on mcp_tools_call_gate, for deploy-order safety: a function
+// deployed before the migration reads "function does not exist", closes, and
+// behaves exactly as yesterday.
+// ---------------------------------------------------------------------------
+
+const proGateInputsMemo = new WeakMap<ApiKeyRow, Promise<ProGateInputs>>();
+const proGateKnownPlan = new WeakMap<ApiKeyRow, string>();
+
+/** Record the plan checkPlanQuota resolved for this request's key. */
+function primeProGatePlan(apiKey: ApiKeyRow, plan: string): void {
+  proGateKnownPlan.set(apiKey, plan);
+}
+
+async function readProGateInputs(apiKey: ApiKeyRow): Promise<ProGateInputs> {
+  if (INTROSPECTION_ONLY) return CLOSED_PRO_GATE;
+  try {
+    const { data, error } = await supabase.rpc("workspace_pro_features", {
+      p_workspace_id: apiKey.workspace_id,
+    });
+    if (error) {
+      console.warn("[mcp-server] pro_gate_read_failed", { workspace_id: apiKey.workspace_id, error: error.message });
+      return CLOSED_PRO_GATE;
+    }
+    const row = (Array.isArray(data) ? data[0] : data) as {
+      plan?: unknown;
+      rollout_enabled?: unknown;
+      public_launch?: unknown;
+    } | null | undefined;
+    if (!row) return CLOSED_PRO_GATE;
+    return {
+      plan: proGateKnownPlan.get(apiKey) ?? (typeof row.plan === "string" ? row.plan : null),
+      rolloutEnabled: row.rollout_enabled === true,
+      publicLaunch: row.public_launch === true,
+    };
+  } catch (err) {
+    console.warn("[mcp-server] pro_gate_read_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return CLOSED_PRO_GATE;
+  }
+}
+
+/**
+ * The Pro feature gate for this request's workspace: `{ visible, allowed, plan }`.
+ * Memoised per request; never throws. A handler gating a Pro VALUE of an
+ * existing argument calls this and returns proFeatureRefusalToolResult(...)
+ * when `allowed` is false.
+ */
+async function proFeatureAccess(apiKey: ApiKeyRow): Promise<ProFeatureAccess> {
+  let pending = proGateInputsMemo.get(apiKey);
+  if (!pending) {
+    pending = readProGateInputs(apiKey);
+    proGateInputsMemo.set(apiKey, pending);
+  }
+  return decideProFeatureAccess(await pending);
+}
+
+/** The standard Pro refusal, as an isError tool result, worded for this key's client. */
+async function proFeatureRefusalToolResult(
+  apiKey: ApiKeyRow,
+  feature: ProFeature,
+  access: ProFeatureAccess,
+): Promise<ReturnType<typeof proFeatureRefusalResult>> {
+  return proFeatureRefusalResult(feature, access.plan, APP_URL, await planLimitWording(apiKey));
 }
 
 /**
@@ -31901,9 +31998,12 @@ async function handleToolsList(
   // which is a frontend change.
   // Both reads below are independent pure reads, so they share one round trip:
   // `perOperation` is started here and only taken further down.
-  const [uiGates, perOperation] = await Promise.all([
+  // The Pro gate joins them only when some Pro tool or argument exists to hide;
+  // until then tools/list makes no extra read.
+  const [uiGates, perOperation, proAccess] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
+    hasProFeatureSurface() ? proFeatureAccess(apiKey) : null,
   ]);
 
   // Which tools this credential is shown, and whether the scope filter applies
@@ -31926,8 +32026,12 @@ async function handleToolsList(
   // An OpenAI client (ChatGPT, Codex) is listed one tool per operation, which
   // is what its plugin review requires; see PER_OPERATION_LISTING. Read
   // alongside the card gates above.
+  //
+  // New Pro tools and arguments are left out until the features are visible to
+  // this workspace (pro-features.ts), so customers see no change before launch.
+  const listed = toolsForListing(apiKey, perOperation);
   const visibleTools = withListingCardMeta(
-    toolsForListing(apiKey, perOperation),
+    proAccess ? hideProFeaturesFromListing(listed, proAccess) : listed,
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -32528,8 +32632,38 @@ async function handleToolsCall(
   // one of its operations (email_read, email_delete) keep resolving to the
   // consolidated entry; then the per-operation tools that exist only as
   // operations. See PER_OPERATION_LISTING.
-  const tool = TOOL_REGISTRY.find((t) => t.name === toolName) ??
+  let tool = TOOL_REGISTRY.find((t) => t.name === toolName) ??
     PER_OPERATION_ONLY_TOOLS.get(toolName);
+
+  // ── Pro feature gate (pro-features.ts) ───────────────────────────────────
+  // Read only when this call touches a Pro tool or argument. Not visible: a
+  // Pro tool is answered as unknown, exactly as before it existed. Visible but
+  // not on Pro or Business: the standard refusal, as an isError tool result.
+  const proFeature = tool ? proFeatureForCall(toolName, rawArgs) : null;
+  if (tool && proFeature) {
+    const access = await proFeatureAccess(apiKey);
+    if (!access.visible && isProFeatureTool(toolName)) {
+      tool = undefined;
+    } else if (!access.allowed) {
+      await writeActivityLog({
+        workspaceId: apiKey.workspace_id,
+        apiKeyId: apiKey.id,
+        inboxId,
+        toolName,
+        status: "error",
+        errorCode: PRO_FEATURE_ERROR_CODE,
+        durationMs: null,
+      });
+      console.info("[mcp-server] tools/call: pro_feature_refused", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        feature: proFeature,
+        plan: access.plan,
+        visible: access.visible,
+      });
+      return { jsonrpc: "2.0", id, result: await proFeatureRefusalToolResult(apiKey, proFeature, access) };
+    }
+  }
 
   if (!tool) {
     // Unknown tool — log the attempt so operators can see invalid tool names
@@ -32565,7 +32699,12 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: toolsForListing(apiKey, await isOpenAiClientKey(apiKey))
+        available_tools: (hasProFeatureSurface()
+          ? hideProFeaturesFromListing(
+            toolsForListing(apiKey, await isOpenAiClientKey(apiKey)),
+            await proFeatureAccess(apiKey),
+          )
+          : toolsForListing(apiKey, await isOpenAiClientKey(apiKey)))
           .map((t) => t.name),
       },
     );
@@ -35728,6 +35867,10 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
+  // A plan the workspace lookup actually resolved (firstUse is absent when it
+  // failed open to "free"): the Pro gate reuses it rather than deciding on a
+  // second plan answer.
+  if ("firstUse" in quotaResult && quotaResult.firstUse) primeProGatePlan(apiKey, quotaResult.plan);
 
   // ── Route to method handler ───────────────────────────────────────────────
   // Every method result leaves through here, so the `_meta` guard sits here too

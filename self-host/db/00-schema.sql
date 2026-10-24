@@ -116,6 +116,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS draft_editor_hidden                boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
@@ -478,6 +479,17 @@ CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     CONSTRAINT user_usage_entitlements_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_usage_entitlements_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id) ON DELETE SET NULL,
     CONSTRAINT user_usage_entitlements_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+);
+
+
+-- Runtime switches (hosted: 20261019150000). The server reads
+-- pro_features_public through workspace_pro_features(); a missing row is off.
+CREATE TABLE IF NOT EXISTS public.pricing_switches (
+    key text NOT NULL,
+    enabled boolean NOT NULL,
+    note text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pricing_switches_pkey PRIMARY KEY (key)
 );
 
 
@@ -1090,6 +1102,28 @@ CREATE OR REPLACE TRIGGER user_usage_entitlements_updated_at
 -- RPCs the server calls. Bodies match the hosted functions; only
 -- emit_system_event differs (see its comment).
 -- ============================================================
+
+-- Pro feature gate inputs (hosted: 20261024150000_pro_features_gate.sql).
+CREATE OR REPLACE FUNCTION public.workspace_pro_features(p_workspace_id uuid) RETURNS TABLE(plan text, comped_scale boolean, rollout_enabled boolean, public_launch boolean)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT
+    CASE WHEN e.kind = 'comped_scale'
+      AND (e.expires_at IS NULL OR e.expires_at > now()) THEN 'pro'
+      ELSE w.plan
+    END AS plan,
+    COALESCE(e.kind = 'comped_scale' AND (e.expires_at IS NULL OR e.expires_at > now()), false) AS comped_scale,
+    w.pro_features_enabled AS rollout_enabled,
+    COALESCE(
+      (SELECT s.enabled FROM public.pricing_switches s WHERE s.key = 'pro_features_public'),
+      false
+    ) AS public_launch
+  FROM public.workspaces w
+  LEFT JOIN public.user_usage_entitlements e ON e.user_id = w.owner_id
+  WHERE w.id = p_workspace_id
+    AND w.deleted_at IS NULL;
+$$;
 
 CREATE OR REPLACE FUNCTION public.workspace_action_allowance(p_workspace_id uuid) RETURNS TABLE(plan text, owner_id uuid, exempt boolean, exempt_reason text, cap integer, period_start timestamp with time zone, period_end timestamp with time zone, grace_ends_at timestamp with time zone, in_grace boolean, used integer, remaining integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
