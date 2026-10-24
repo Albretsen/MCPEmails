@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { easings } from '../components/snap-cn';
 import { getTheme, type ThemeName } from '../theme';
+import { useLayout } from '../layout';
 import type { OutroScene } from '../storyboard-types';
 
 /** The envelope from the product mark, drawn rather than loaded, so the outro
@@ -20,6 +21,8 @@ export const Outro: React.FC<{ scene: OutroScene; themeName: ThemeName }> = ({
   const theme = getTheme(themeName);
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  const layout = useLayout();
+  const { content } = layout;
 
   const enter = spring({
     frame,
@@ -49,6 +52,7 @@ export const Outro: React.FC<{ scene: OutroScene; themeName: ThemeName }> = ({
         alignItems: 'center',
         justifyContent: 'center',
         opacity: fadeOut,
+        padding: `${content.top}px ${content.right}px ${content.bottom}px ${content.left}px`,
       }}
     >
       <AbsoluteFill
@@ -88,7 +92,7 @@ export const Outro: React.FC<{ scene: OutroScene; themeName: ThemeName }> = ({
           style={{
             fontFamily: theme.fontSans,
             fontWeight: 600,
-            fontSize: 76,
+            fontSize: layout.type.cta,
             letterSpacing: '-0.03em',
             color: theme.fg1,
             opacity: ctaOpacity,
@@ -102,8 +106,9 @@ export const Outro: React.FC<{ scene: OutroScene; themeName: ThemeName }> = ({
             style={{
               marginTop: 22,
               fontFamily: theme.fontSans,
-              fontSize: 30,
+              fontSize: layout.vertical ? layout.type.sub : 30,
               color: theme.fg3,
+              textAlign: 'center',
               opacity: ctaOpacity,
             }}
           >
