@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "apps/web/src/lib/clients/content/en/claude.json (shared MCPEmails facts: scopes, limits, storage)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (client_id_metadata_document_supported, dynamic registration, PKCE S256)",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+    "https://support.claude.com/en/articles/13345190-get-started-with-cowork",
+    "https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans",
+    "https://academy.claude.com/tutorials/get-started-in-claude-cowork-in-three-steps",
+    "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
+  ],
+  "meta": {
+    "title": "Koble e-post til Claude Cowork: oppsett av egendefinert kobling",
+    "description": "Gi Claude Cowork en ekte innboks. Legg til én URL under Customize, Connectors, logg inn med OAuth, og Cowork kan lese, søke i, skrive utkast til og sende e-post. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude Cowork + e-post",
+    "titleLine1": "Koble innboksen din til Claude Cowork",
+    "titleLine2": "og overlat hele e-postoppgaver til den",
+    "lead": "Cowork jobber seg gjennom en oppgave på egen hånd i stedet for å svare på én melding om gangen. Med MCPEmails som egendefinert kobling kan den oppgaven lese, søke i, skrive utkast til, sende, svare på, videresende, planlegge og organisere e-post på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I Claude åpner du Customize, Connectors, klikker + Add og deretter Add custom connector. Lim inn https://mcpemails.com/api/mcp, klikk Continue gjennom innloggingsinnstillingene, klikk Add og logg inn med MCPEmails. Velg deretter Cowork i meldingsfeltet og beskriv e-postoppgaven. Cowork krever en betalt Claude-plan."
+  },
+  "method": {
+    "title": "Slik kobler Cowork seg til: OAuth, ingen API-nøkkel",
+    "body": "Cowork bruker de egendefinerte koblingene på Claude-kontoen din, og Claude åpner tilkoblingen fra Anthropics sky, ikke fra datamaskinen din, også når du kjører Cowork i skrivebordsappen. Claude kjører standard MCP OAuth-flyt mot denne serveren. Som standard identifiserer den seg med sin publiserte klientidentitet, og den kan også registrere seg selv med <b>RFC 7591 dynamisk klientregistrering</b>. Begge deler støttes her, så du trenger ikke opprette noen klient-ID. Den autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256, ingen klienthemmelighet sendes, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne siden for koblinger",
+      "p": "I Claude på nettet eller i Claude Desktop går du til <b>Customize</b> og deretter <b>Connectors</b>. Klikk <b>+ Add</b> og deretter <b>Add custom connector</b>."
+    },
+    {
+      "h": "Legg til serveren",
+      "p": "Skriv inn et navn, for eksempel MCPEmails, lim inn <code>https://mcpemails.com/api/mcp</code> som server-URL og klikk <b>Continue</b>. Se over autentiseringsinnstillingene som ble funnet, la OAuth-klienten stå på <b>Use Claude's published identity (Recommended)</b>, klikk <b>Continue</b> og deretter <b>Add</b>."
+    },
+    {
+      "h": "Logg inn og godkjenn tilganger",
+      "p": "Logg inn med MCPEmails-kontoen din når Claude ber om det, og godkjenn tilgangene du vil at Cowork skal ha. Ingen API-nøkkel nødvendig."
+    },
+    {
+      "h": "Start en Cowork-oppgave",
+      "p": "Viser meldingsfeltet Chat og Cowork, velger du <b>Cowork</b>. Klikk <b>+</b>-knappen, åpne <b>Connectors</b> og sjekk at MCPEmails er slått på, og beskriv deretter oppgaven, for eksempel \"vis innboksene mine og oppsummer dagens uleste e-post\"."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "I Auto-modus venter ikke en sending nødvendigvis på deg",
+      "p": "Cowork har modusene Manual, Auto og Skip i modusvelgeren. I Manual ber Claude deg tillate eller avslå hver handling; i Auto jobber den videre, og en sikkerhetsvurdering blokkerer handlinger den anser som utrygge. Auto er standard på Pro, Max og Team, Manual på Enterprise. For e-post betyr det at en sending kan gå ut midt i en oppgave uten at du blir spurt. Er det ikke det du vil, kjører du e-postoppgaver i Manual, lar <code>send:email</code> være ute av denne tilkoblingen og gir <code>manage:drafts</code> i stedet, eller slår på menneskelig godkjenning i MCPEmails-dashbordet slik at hver sending venter på en person."
+    },
+    {
+      "h": "På Team og Enterprise legger en eier til koblingen",
+      "p": "En Owner eller Primary Owner legger til den egendefinerte koblingen for organisasjonen: Organization settings, Connectors, klikk Add, hold pekeren over Custom og velg Web, og skriv deretter inn URL-en. Medlemmene finner den så under Customize, Connectors og klikker Connect. Eiere kan sette hvert verktøy til Always allow, Needs approval eller Blocked under Tool permissions, og enkeltbrukere kan ikke overstyre det. I Cowork ber skriveverktøy også om godkjenning for hver oppgave, med mindre en eier slår på Always allow i organisasjonens Cowork-innstillinger."
+    },
+    {
+      "h": "Én kobling, overalt i Claude",
+      "p": "Egendefinerte koblinger settes opp og formidles gjennom Claude-kontoen din, og Cowork administrerer dem på den samme siden, Customize, Connectors, som chat. En postkasse du kobler til for Cowork er den samme tilkoblingen som chat bruker, så ingenting må settes opp to ganger. Oppsettet for vanlige samtaler i claude.ai står i en egen Claude-veiledning."
+    }
+  ],
+  "limits": [
+    "Cowork krever i seg selv en betalt Claude-plan (Pro, Max, Team eller Enterprise).",
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri en Cowork-oppgave av seg selv. Cowork ser e-post når en oppgave ber om det.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Claude Cowork?",
+      "a": "Gå til Customize, Connectors, klikk + Add og deretter Add custom connector. Skriv inn et navn, lim inn https://mcpemails.com/api/mcp, klikk Continue to ganger, klikk Add og logg inn med MCPEmails. Velg deretter Cowork i meldingsfeltet, sjekk at MCPEmails er slått på i Connectors-menyen under +-knappen, og beskriv e-postoppgaven."
+    },
+    {
+      "q": "Hvilken Claude-plan trenger jeg for Cowork med e-post?",
+      "a": "Cowork finnes på de betalte planene: Pro, Max, Team og Enterprise. På Team og Enterprise legger en eier til den egendefinerte koblingen for organisasjonen, og hvert medlem klikker deretter Connect for å logge inn med sin egen MCPEmails-konto."
+    },
+    {
+      "q": "Er Cowork-koblingen en annen enn den jeg la til i claude.ai?",
+      "a": "Nei. Egendefinerte koblinger hører til Claude-kontoen din og administreres på én side, Customize, Connectors, som Cowork også bruker. Har du allerede lagt til MCPEmails for chat, kan Cowork bruke den som den er."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Cowork?",
+      "a": "Nei. Claude kjører OAuth-innloggingen mot denne serveren, så ingenting hemmelig skrives inn. En bearer-nøkkel er tilgjengelig for andre klienter som ikke støtter OAuth."
+    },
+    {
+      "q": "Kan Cowork sende e-post uten at jeg ser det?",
+      "a": "Ja, hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt. Eieren av en innboks kan også kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom, uansett hvilken modus Cowork kjører i."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til Claude. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Cowork en ekte innboks",
+    "sub": "Én URL, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

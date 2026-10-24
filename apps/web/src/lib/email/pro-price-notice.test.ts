@@ -69,7 +69,13 @@ test('the email states both prices and the date, carries a working opt-out, and 
   assert.equal(composeProPriceNotice(null), null);
 });
 
-test('nothing can be sent while the notice is off, which is how it ships', () => {
-  assert.equal(noticeSendAllowed(NOW.getTime()), false);
+test('the email may go out only on the announcement day, while the notice is up', () => {
+  assert.equal(noticeSendAllowed(Date.parse('2026-11-16T22:59:59Z')), false);
+  assert.equal(noticeSendAllowed(Date.parse('2026-11-16T23:00:00Z')), true);
+  assert.equal(noticeSendAllowed(NOW.getTime()), true);
+  assert.equal(noticeSendAllowed(Date.parse('2026-11-17T22:59:59Z')), true);
+  // The next day the notice is still up, but the one send is over.
+  assert.equal(noticeSendAllowed(Date.parse('2026-11-17T23:00:00Z')), false);
+  assert.equal(noticeSendAllowed(Date.parse('2026-12-01T09:00:00Z')), false);
   assert.equal(proPriceNoticeTriggerKey(), '2026-12-08');
 });

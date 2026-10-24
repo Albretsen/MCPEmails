@@ -108,6 +108,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
+  'app/api/internal/pro-price-notice/dispatch/route.ts': 60,
   'app/api/stripe/webhook/route.ts': 30,
   'app/api/webhooks/resend/route.ts': 30,
   'app/auth/callback/route.ts': 15,
@@ -200,6 +201,7 @@ export const ROUTES = [
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
+  ['app/api/internal/pro-price-notice/dispatch/route.ts', 'arn1', '~6', 'Resend per email, one run on one day; caller is the scheduler'],
   ['app/api/kiosk/health/route.ts', 'arn1', '1+', '-'],
   ['app/api/kiosk/version/route.ts', 'arn1', '1+', '-'],
   ['app/api/oauth/authorize/route.ts', 'arn1', '10-11', 'CIMD fetch (client-hosted, memoised)'],

@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors",
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors",
+    "https://mistral.ai/news/le-chat-mcp-connectors-memories/",
+    "https://mistral.ai/products/vibe/",
+    "https://docs.mistral.ai/vibe/work/connectors/mcp-connectors",
+    "https://docs.mistral.ai/vibe/work/safety-and-approvals",
+    "https://docs.mistral.ai/vibe/choose-chat-work-code",
+    "https://help.mistral.ai/en/articles/393572-configuring-a-custom-connector",
+    "https://developers.make.com/mcp-server/connect-using-oauth/usage-with-mistral-ai (third party: Authentication Method dropdown, OAuth2.1)",
+    "https://docs.bko.finologee.com/docs/mcp-mistral (third party: empty client secret makes Le Chat use dynamic client registration)",
+    "https://docs.qonto.com/mcp/install/mistral (third party: workspace Admin adds custom connectors)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
+  ],
+  "meta": {
+    "title": "E-Mail mit Le Chat von Mistral verbinden: MCP-Connector einrichten",
+    "description": "Fügen Sie Le Chat von Mistral per Custom MCP Connector ein echtes Postfach hinzu. Eine URL einfügen und anmelden. Kein API-Schlüssel. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Le Chat + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Le Chat",
+    "titleLine2": "über einen Custom MCP Connector",
+    "lead": "Fragen Sie den Assistenten von Mistral nach Ihren E-Mails und lassen Sie ihn gleich handeln. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie in Le Chat die Seite Connectors, klicken Sie auf + Add Connector, wählen Sie den Tab Custom MCP Connector, fügen Sie https://mcpemails.com/api/mcp als Server URL ein, klicken Sie auf Connect und melden Sie sich bei MCPEmails an."
+  },
+  "method": {
+    "title": "So verbindet sich Le Chat: OAuth, kein API-Schlüssel",
+    "body": "Sobald Sie die Server URL eingeben, erkennt Le Chat, wie sich der Server authentifiziert. Mistral erwartet, dass OAuth-Server eine nicht authentifizierte Anfrage mit <b>401</b> und einem <code>WWW-Authenticate</code>-Header beantworten. Dieser Server tut das und verweist dabei auf seine OAuth-Metadaten, deshalb startet Le Chat OAuth 2.1, statt nach einem Bearer-Token zu fragen. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Add Connector öffnen",
+      "p": "Öffnen Sie auf chat.mistral.ai in der Seitenleiste die Seite <b>Connectors</b>, klicken Sie auf <b>+ Add Connector</b> und wählen Sie den Tab <b>Custom MCP Connector</b>. Das Hinzufügen ist eine Funktion für Administratoren; in den Tarifen Free, Pro und Student ist der Kontoinhaber der Administrator."
+    },
+    {
+      "h": "Server eintragen",
+      "p": "Tragen Sie unter <b>Connector name</b> einen eindeutigen Namen ohne Leer- und Sonderzeichen ein (zum Beispiel MCPEmails), fügen Sie <code>https://mcpemails.com/api/mcp</code> unter <b>Server URL</b> ein und ergänzen Sie bei Bedarf eine <b>Description</b>."
+    },
+    {
+      "h": "Verbinden und anmelden",
+      "p": "Klicken Sie auf <b>Connect</b>. Le Chat erkennt OAuth und öffnet die Anmeldung bei MCPEmails; geben Sie die Scopes frei, die Le Chat erhalten soll. Erscheint ein Feld <b>Authentication Method</b>, wählen Sie OAuth 2.1 und lassen Sie Client-ID und Secret leer."
+    },
+    {
+      "h": "Im Chat einschalten",
+      "p": "Klicken Sie in einer Unterhaltung auf das Symbol <b>+</b> oder tippen Sie <code>/</code>, wählen Sie <b>Tools</b> und schalten Sie den MCPEmails-Connector ein. Bitten Sie Le Chat dann, Ihre Postfächer aufzulisten."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le Chat heißt jetzt Vibe",
+      "p": "Mistral hat Le Chat in Vibe umbenannt, und die Dokumentation führt Connectors jetzt unter Work. Die Adresse ist weiterhin chat.mistral.ai, und die Seite Connectors samt ihren Beschriftungen ist gleich geblieben. Die Schritte oben gelten also, egal welchen Namen Sie sehen."
+    },
+    {
+      "h": "Bei Team oder Enterprise fügt ein Admin ihn hinzu",
+      "p": "Custom MCP Connectors sind Administratoren vorbehalten. In den Tarifen Free, Pro und Student ist der Kontoinhaber der Administrator, Sie können den Connector also selbst hinzufügen. In einem Team- oder Enterprise-Workspace bitten Sie einen Workspace-Admin darum; der Connector erscheint dann in der Liste der Organisation, und Mitglieder schalten ihn in ihren eigenen Chats ein. Organisations-Admins können MCP Connectors für einen Workspace auch ganz abschalten."
+    },
+    {
+      "h": "Geben Sie das Senden weiterhin manuell frei",
+      "p": "Le Chat fragt nach, bevor ein Connector handelt, mit <b>Continue</b>, <b>Always allow</b> und <b>Decline</b>. Um eine Funktion dauerhaft vorab zu erlauben, öffnen Sie Connectors, My Connectors, die Karte des Connectors, Functions, und schalten Sie den Schalter <b>Always allow</b> ein. Für die Lese-Tools spart das Klicks. Geben Sie die Tools zum Senden, Antworten und Weiterleiten weiterhin manuell frei, oder lassen Sie <code>send:email</code> bei dieser Verbindung ganz weg."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Le Chat?",
+      "a": "Öffnen Sie in Le Chat die Seite Connectors, klicken Sie auf + Add Connector, wählen Sie den Tab Custom MCP Connector, fügen Sie https://mcpemails.com/api/mcp als Server URL ein und klicken Sie auf Connect. Melden Sie sich bei MCPEmails an und schalten Sie den Connector dann in einem Chat über das Menü + unter Tools ein."
+    },
+    {
+      "q": "Brauche ich für Le Chat einen API-Schlüssel?",
+      "a": "Nein. Le Chat durchläuft den OAuth-Ablauf mit dynamischer Client-Registrierung, es wird also nichts Geheimes in das Connector-Formular eingetippt. Für andere Clients, die das nicht können, gibt es einen Bearer-Schlüssel."
+    },
+    {
+      "q": "Funktioniert das im kostenlosen Le-Chat-Tarif?",
+      "a": "Laut Mistral stehen Connectors allen Nutzern von Le Chat zur Verfügung. In den Tarifen Free, Pro und Student ist der Kontoinhaber der Administrator, der einen Custom MCP Connector hinzufügen kann. In den Tarifen Team und Enterprise fügt ein Workspace-Admin ihn für die Organisation hinzu."
+    },
+    {
+      "q": "Welche Postfächer erreicht Le Chat auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Le Chat E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Token ohne diesen Scope kann also überhaupt nicht senden, und Le Chat bittet um Freigabe, bevor ein Connector handelt, sofern Sie für diese Funktion nicht Always allow gewählt haben. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Le Chat Ihr Postfach",
+    "sub": "Ein Connector, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

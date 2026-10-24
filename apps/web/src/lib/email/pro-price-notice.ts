@@ -161,7 +161,13 @@ export function composeProPriceNotice(unsubscribeToken: string | null | undefine
   };
 }
 
-/** Sending is allowed only while the notice itself is on screen. */
+/**
+ * Sending is allowed only on the announcement day (the first 24 hours from
+ * `announceFrom`) and only while the notice itself is on screen. The email is
+ * one send: a run on any later day sends nothing, so a stray retry can never
+ * turn it into a reminder.
+ */
 export function noticeSendAllowed(now: number = Date.now()): boolean {
-  return proPriceNoticeVisible(now);
+  const from = Date.parse(PRO_PRICE_CHANGE.announceFrom);
+  return proPriceNoticeVisible(now) && now < from + 86_400_000;
 }
