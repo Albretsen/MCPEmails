@@ -25,7 +25,7 @@ Empieza sencillo. Este es el que ejecuto casi todos los días. Pégalo en Claude
 
 > Mira mi bandeja de entrada principal. Saca todo lo no leído y dame un resumen agrupado en tres categorías: necesita respuesta hoy, para tu información / puede esperar, y probablemente ruido. Para cada elemento de las dos primeras categorías, dame una línea: de quién viene y qué quiere. No abras nada que no necesite — repasa primero los asuntos y los remitentes, y lee el cuerpo solo cuando el asunto sea ambiguo.
 
-Fíjate en lo que hace ese prompt. Le dice al agente que se apoye en los metadatos de \`email_read\` (action list) (remitente, asunto, fragmento) y que llame a \`email_read\` con \`action: read\` con moderación. Eso mantiene la sesión rápida y se queda muy por debajo de los límites de tasa — 100 solicitudes por minuto por clave de API, y un techo por espacio de trabajo que empieza en 60/min en el plan Free. Una cola de 40 mensajes no leídos clasificada así son quizá una docena de llamadas a herramientas, no cuarenta.
+Fíjate en lo que hace ese prompt. Le dice al agente que se apoye en los metadatos de \`email_read\` (action list) (remitente, asunto, fragmento) y que llame a \`email_read\` con \`action: read\` con moderación. Eso mantiene la sesión rápida y muy por debajo de los límites de tasa: cada clave de API recibe ventanas dimensionadas según el tope por minuto de tu plan, y varias claves comparten ese tope (consulta [precios](/pricing)). Una cola de 40 mensajes sin leer clasificada así son quizá una docena de llamadas a herramientas, no cuarenta.
 
 Una buena respuesta tiene este aspecto:
 

@@ -454,7 +454,7 @@ const MCP_CLIENTS = [
     guide: null,
     stepKeys: ['clients.api.step1', 'clients.api.step2'],
     config: (url) => `curl -X POST ${url} \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
   },
