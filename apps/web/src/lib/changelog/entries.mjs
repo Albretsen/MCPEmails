@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-24',
+    kind: 'added',
+    title: 'A first week checklist on your dashboard',
+    body:
+      'For two weeks after you subscribe, the dashboard Overview shows a short checklist with starter prompts you can copy, and ticks each step off as your assistant uses MCPEmails. If your inbox keeps failing, it takes you straight to Reconnect.',
+  },
+  {
+    date: '2026-10-24',
     kind: 'fixed',
     title: 'Searching one folder searches that folder',
     body:
