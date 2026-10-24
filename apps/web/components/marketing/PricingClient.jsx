@@ -135,6 +135,23 @@ const TABLE_SECTIONS = [
       { name: 'draft',          free: true, personal: true, solo: true, pro: true },
       { name: 'schedule',       free: true, personal: true, solo: true, pro: true },
       { name: 'contact_search', free: true, personal: true, solo: true, pro: true },
+      // Pro feature tools (pro-features.ts PRO_FEATURE_TOOLS): listed to every
+      // key since launch, refused with an upgrade note below Pro.
+      { name: 'reminder',       free: false, personal: false, solo: true, pro: true },
+      { name: 'reminder_list',  free: false, personal: false, solo: true, pro: true },
+    ],
+  },
+  {
+    // The Pro features. All new at launch: nothing here was ever on Free or
+    // Personal. Each row is gated to Pro and Business (`solo`, `pro`) in
+    // mcp-server/pro-features.ts and apps/web/src/lib/plans/pro-features.ts.
+    key: 'chatClosed',
+    rows: [
+      { key: 'followUps',    free: false, personal: false, solo: true, pro: true },
+      { key: 'snooze',       free: false, personal: false, solo: true, pro: true },
+      { key: 'brief',        free: false, personal: false, solo: true, pro: true },
+      { key: 'searchAll',    free: false, personal: false, solo: true, pro: true },
+      { key: 'instructions', free: false, personal: false, solo: true, pro: true },
     ],
   },
   {
@@ -410,6 +427,10 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
                     {t('founder.places', { left: founder.placesLeft, total: founder.placesTotal })}
                   </p>
                 </>
+              )}
+              {/* Pro only: the plan's one-line promise, above its description. */}
+              {t.has(`plans.${plan.key}.tagline`) && (
+                <p className="price-tagline">{t(`plans.${plan.key}.tagline`)}</p>
               )}
               <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
             </div>
