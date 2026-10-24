@@ -12,6 +12,7 @@ import {
   mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  retainedPriceGenerationId,
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
@@ -741,7 +742,14 @@ export async function runCheckout(input: {
       const samePlanAndInterval =
         fromPrice?.planId === planId && fromPrice?.interval === interval;
 
-      if (currentItem.price.id === priceId || samePlanAndInterval) {
+      // A Pro subscriber who kept $15 / $144 at the Pro price change keeps
+      // that generation when switching interval: monthly $15 goes to yearly
+      // $144, not to the $182.40 Pro now sells. Null for everyone else, who
+      // move to the sold price as before. See retainedPriceGenerationId.
+      const swapPriceId =
+        retainedPriceGenerationId(currentItem.price.id, planId, interval) ?? priceId;
+
+      if (currentItem.price.id === swapPriceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
         // on 2026-09-14 (see the note at the top of this branch): the
         // subscription is already on the exact price being asked for.
@@ -820,7 +828,7 @@ export async function runCheckout(input: {
           preview: await previewPlanChange({
             subscription,
             itemId: currentItem.id,
-            priceId,
+            priceId: swapPriceId,
             addonChanges,
             extraMailboxes,
             addonPriceId: mailboxAddonPriceId(interval),
@@ -867,7 +875,7 @@ export async function runCheckout(input: {
       // on the subscription from `subscription_data` at creation and survives
       // untouched, and the webhook resolves the plan from the price id.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: priceId }, ...addonChanges],
+        items: [{ id: currentItem.id, price: swapPriceId }, ...addonChanges],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
