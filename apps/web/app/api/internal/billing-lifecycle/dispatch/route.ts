@@ -420,6 +420,9 @@ async function finish(
 // Card expiry sweep
 // ---------------------------------------------------------------------------
 
+/** Upper bound on one sweep, so a runaway pager cannot loop forever. */
+const CARD_SWEEP_MAX_SCANNED = 5000;
+
 /**
  * Queue card-expiry warnings. Runs daily.
  *
@@ -427,14 +430,11 @@ async function finish(
  * legacy Sources, thirty days out, and every card in this account is a
  * PaymentMethod, for which no such event exists. There is no webhook that says
  * "this card expires next month", so the only honest implementation is to look.
- * At the current subscription count that is one API call.
+ * One list call per 100 active subscriptions, auto-paginated.
  *
  * The two windows do not overlap: a card with five days left gets the seven-day
  * warning only, never both on the same morning.
  */
-/** Upper bound on one sweep, so a runaway pager cannot loop forever. */
-const CARD_SWEEP_MAX_SCANNED = 5000;
-
 async function sweepExpiringCards(): Promise<Response> {
   if (lifecycleMode() === 'off') {
     return Response.json({ skipped: 'BILLING_LIFECYCLE_EMAILS=off' }, { status: 200 });
