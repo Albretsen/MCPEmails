@@ -605,10 +605,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that
         // shows a dialog, which is a hydration mismatch.
+        // `currency=eur` is an optional hint a EUR checkout can append to its
+        // return URL; allow-listed, anything else keeps the USD wording.
+        const currencyParam = readQuery(searchParams, 'currency');
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCheckoutSuccess({
           planId: planParam,
           interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+          currency: currencyParam === 'eur' ? 'eur' : 'usd',
         });
         rememberCheckoutAcknowledged(planParam);
       } else if (!isPaidPlan) {
@@ -629,6 +633,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
       url.searchParams.delete('interval');
+      url.searchParams.delete('currency');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1274,6 +1279,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           maxInboxes={planLimits?.maxInboxes ?? null}
           inboxCount={inboxes.length}
           stripePrices={stripePrices}
+          currency={checkoutSuccess.currency}
           onRefreshPlan={refreshServerData}
           onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}
           onViewBilling={() => { setCheckoutSuccess(null); setRoute('settings'); }}

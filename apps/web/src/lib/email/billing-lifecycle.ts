@@ -286,8 +286,19 @@ const DECLINE_COPY: Record<string, DeclineCopy> = {
  * under a heading that promises a reason is worse than printing no heading, so
  * the composer omits the whole block instead.
  */
-export function declineCopy(code: string | null | undefined): DeclineCopy | null {
+export function declineCopy(
+  code: string | null | undefined,
+  currency?: string | null,
+): DeclineCopy | null {
   if (!code) return null;
+  // The one decline that names a currency names the one actually charged: a
+  // EUR subscription is not refused "in US dollars".
+  if (code === 'currency_not_supported' && (currency ?? 'usd').toLowerCase() === 'eur') {
+    return {
+      reason: 'the card cannot be charged in euros',
+      fix: 'A card that accepts EUR will work. Most do, but some regional cards do not.',
+    };
+  }
   return DECLINE_COPY[code] ?? null;
 }
 
@@ -534,6 +545,8 @@ function usageFacts(payload: LifecyclePayload): UsageFacts | null {
  * stale number in an email. Whole dollars when the price is whole, otherwise
  * the usual two decimals.
  */
+// USD on purpose: these go to Free workspaces, which have never been charged,
+// so there is no charged currency to follow.
 function personalMonthlyPrice(): string {
   const cents = PLANS.personal.monthlyPriceCents;
   return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
@@ -884,7 +897,7 @@ export function composeBillingEmail(
   const name = planName(payload.planId);
   const yourPlan = yourPlanPhrase(name);
   const amount = amountLabel(payload);
-  const decline = declineCopy(payload.declineCode);
+  const decline = declineCopy(payload.declineCode, payload.currency);
   const consequence = consequenceLine(payload);
   const endsOn = longDate(payload.periodEnd);
 

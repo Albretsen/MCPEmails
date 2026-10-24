@@ -124,24 +124,31 @@ export function annualOfferFromPlan(plan: Plan): AnnualOffer | null {
 /**
  * Render a cent amount as the price the copy around it already speaks.
  *
+ * `currency` defaults to USD, the integration currency; pass the currency the
+ * buyer is actually charged in (a Stripe subscription or session currency,
+ * 'eur' for an EU buyer once EUR prices are on) to format that instead.
+ *
  * Whole dollars print as "$48", not "$48.00": every price on these surfaces is
  * whole today ($5, $15, $48, $144) and the neighbouring sentences write them
  * that way. A fractional amount keeps its cents rather than being rounded into
  * a number nobody is charged.
  */
-export function formatPriceCents(cents: number, locale = 'en-US'): string {
+export function formatPriceCents(cents: number, locale = 'en-US', currency = 'usd'): string {
   const whole = cents % 100 === 0;
+  const code = (currency || 'usd').toUpperCase();
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'USD',
+      currency: code,
       minimumFractionDigits: whole ? 0 : 2,
       maximumFractionDigits: whole ? 0 : 2,
     }).format(cents / 100);
   } catch {
     // A runtime that rejects the locale must still produce a price, not a gap
     // in a sentence that reads "Billed  once a year".
-    return whole ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`;
+    const amount = whole ? String(cents / 100) : (cents / 100).toFixed(2);
+    if (code === 'EUR') return `€${amount}`;
+    return code === 'USD' ? `$${amount}` : `${amount} ${code}`;
   }
 }
 
