@@ -159,7 +159,7 @@ import {
   PAYMENT_ISSUE_STATUSES,
   recordPaymentIssue,
 } from '@/lib/billing/payment-issue';
-import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
+import { invoiceLinePriceId, invoiceSubscriptionId } from '@/lib/billing/invoice-shape';
 import {
   liftPlanLimitPauses,
   workspacesEnteringPaidPlan,
@@ -1501,8 +1501,25 @@ async function queueDunningForInvoice(
 
   // The plan the failing invoice was for. Resolved from the price on the line
   // item, exactly as the subscription handlers do, so a legacy price still maps.
-  const priceId = invoiceLinePriceId(invoice);
-  const resolved = priceId ? getPlanByStripePriceId(priceId) : null;
+  // invoiceLinePriceId prefers the charged line over an upgrade's credit line
+  // on the old price. When no line maps to a plan, the subscription's own plan
+  // item is the fallback.
+  let priceId = invoiceLinePriceId(invoice);
+  let resolved = priceId ? getPlanByStripePriceId(priceId) : null;
+  const invoiceSubscription = resolved ? null : invoiceSubscriptionId(invoice);
+  if (invoiceSubscription) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(invoiceSubscription);
+      const basePriceId = basePlanItem(subscription.items.data)?.price?.id ?? null;
+      const fromBase = basePriceId ? getPlanByStripePriceId(basePriceId) : null;
+      if (fromBase) {
+        priceId = basePriceId;
+        resolved = fromBase;
+      }
+    } catch {
+      // Logged below as unresolved; the sequence still goes out.
+    }
+  }
   if (!resolved) {
     // Not fatal: the sequence is still worth sending, and the composer omits the
     // consequence sentence rather than guessing. Loud, though, because an

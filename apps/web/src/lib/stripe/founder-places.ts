@@ -20,7 +20,11 @@ import type Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import { basePlanItem, founderPriceInterval, isFounderPriceId } from '@/lib/stripe/plans';
-import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
+import {
+  invoiceLinePriceId,
+  invoiceLinePriceIds,
+  invoiceSubscriptionId,
+} from '@/lib/billing/invoice-shape';
 import { FOUNDER_METADATA_KEY, FOUNDER_OFFER_TAG } from '@/lib/stripe/founder-offer';
 
 /** Statuses that mean the founder subscription has been paid for. */
@@ -79,27 +83,14 @@ export async function recordFounderPlace(args: {
   }
 }
 
-/** The subscription id an invoice belongs to, across API versions. */
-function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  const raw = invoice as unknown as {
-    subscription?: unknown;
-    parent?: { subscription_details?: { subscription?: unknown } } | null;
-  };
-  const value = raw.parent?.subscription_details?.subscription ?? raw.subscription;
-  if (typeof value === 'string') return value;
-  if (value && typeof value === 'object' && 'id' in value) {
-    const id = (value as { id: unknown }).id;
-    return typeof id === 'string' ? id : null;
-  }
-  return null;
-}
-
 /**
- * The retry: a paid invoice whose plan line is a founder price records the
- * place again (a no-op when the row exists). It recovers a place whose first
+ * The retry: a paid invoice that touches a founder price records the place
+ * again (a no-op when the row exists). It recovers a place whose first
  * insert, in `after()` on the subscription event, failed: the next payment
  * writes it. Reads the subscription from Stripe so the status, owner and tag
- * are the live ones. Never throws.
+ * are the live ones, and the decision is the subscription's own base item
+ * (recordFounderPlace), not the invoice line: an upgrade invoice also carries
+ * a credit line on the old plan's price. Never throws.
  */
 export async function recordFounderPlaceFromInvoice(args: {
   db: SupabaseClient<Database>;
@@ -108,7 +99,12 @@ export async function recordFounderPlaceFromInvoice(args: {
   resolveOwner: (subscription: Stripe.Subscription) => Promise<string | null>;
   tagSubscription: (subscriptionId: string, metadata: Record<string, string>) => Promise<unknown>;
 }): Promise<FounderPlaceResult> {
-  if (!isFounderPriceId(invoiceLinePriceId(args.invoice))) {
+  // The charged plan line, or any line on a founder price: cheap, and it
+  // keeps the Stripe read off every invoice that has nothing to do with it.
+  if (
+    !isFounderPriceId(invoiceLinePriceId(args.invoice)) &&
+    !invoiceLinePriceIds(args.invoice).some((id) => isFounderPriceId(id))
+  ) {
     return { status: 'skipped', reason: 'not_founder' };
   }
   const subscriptionId = invoiceSubscriptionId(args.invoice);

@@ -357,6 +357,31 @@ test('a paid founder invoice retries the insert (a no-op once the row exists)', 
   }
 });
 
+test('an upgrade invoice (Pro credit first, founder debit, add-on lines) retries the insert', async () => {
+  const upgrade = {
+    id: 'in_up',
+    parent: { subscription_details: { subscription: 'sub_founder_1' } },
+    lines: {
+      data: [
+        { amount: -1041, proration: true, pricing: { price_details: { price: 'price_solo_month' } } },
+        { amount: 2013, proration: true, pricing: { price_details: { price: 'price_founder_month' } } },
+        { amount: -150, proration: true, pricing: { price_details: { price: 'price_addon_month' } } },
+        { amount: 300, proration: true, pricing: { price_details: { price: 'price_addon_month' } } },
+      ],
+    },
+  } as never;
+  const { db, calls } = writerDb({ data: true, error: null });
+  const result = await recordFounderPlaceFromInvoice({
+    db,
+    invoice: upgrade,
+    retrieveSubscription: async () => subscription(),
+    resolveOwner: async () => OWNER,
+    tagSubscription: async () => {},
+  });
+  assert.deepEqual(result, { status: 'recorded', inserted: true });
+  assert.equal(calls[0].args.p_interval, 'month');
+});
+
 test('an invoice on another price does nothing and reads nothing', async () => {
   const { db, calls } = writerDb({ data: true, error: null });
   let retrieved = 0;
