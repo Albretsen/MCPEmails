@@ -2611,7 +2611,7 @@ async function unresolvedRuleInbox(
   }
   const { data } = await deps.db
     .from("inboxes")
-    .select("status, deleted_at")
+    .select("status, deleted_at, parked_at")
     .eq("id", rule.inbox_id)
     .eq("workspace_id", deps.caller.workspace_id)
     .maybeSingle();
@@ -2620,6 +2620,16 @@ async function unresolvedRuleInbox(
       "automation update: this automation's inbox has been removed from the workspace, so the " +
         "rule can no longer run. Delete the automation (action 'delete'). Nothing was changed.",
       "inbox_removed",
+    );
+  }
+  if (data.parked_at) {
+    // Parked (parked-inbox.ts): the plan includes fewer inboxes. The rule is
+    // paused, not broken, and resumes by itself when the inbox is restored.
+    return toolErr(
+      "automation update: this automation's inbox is parked because the workspace's MCPEmails " +
+        "plan includes fewer inboxes than are connected. The automation is paused and resumes by " +
+        "itself when the inbox is restored from the billing page. Nothing was changed.",
+      "inbox_parked",
     );
   }
   if (data.status !== "active") {

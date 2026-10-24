@@ -23,10 +23,10 @@ En el dashboard, ve a **API Keys**, crea una key y concédele los scopes que rea
 - \`read:email\` — para sondear, listar y leer mensajes con \`email_read\`.
 - \`send:email\` — para llamar a \`email_compose\` (acción \`reply\`).
 
-La key se muestra una sola vez. Cópiala. Tiene el aspecto \`mcpe_live_...\` y la pasas en cada petición:
+La key se muestra una sola vez. Cópiala. Tiene el aspecto \`mcpe_9f86d081...\` y la pasas en cada petición:
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 El endpoint MCP es una única URL:
@@ -87,7 +87,7 @@ Si quieres que un mensaje deje de aparecer como sin leer una vez que has respond
 
 ## Límites de tasa, y por qué nunca reintentas un envío a ciegas
 
-Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Gratis, 120 en Personal, 300 en Pro, 1000 en Business** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
+Tu workspace tiene un tope por minuto fijado por su plan (consulta [precios](/pricing)), y cada API key recibe ventanas por minuto, por hora y por día dimensionadas según ese plan, así que una sola clave puede usar todo el tope y varias claves lo comparten. Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
 
 Cuando alcanzas un límite de tasa, el servidor devuelve un error reintentable (código \`-32003\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
 
