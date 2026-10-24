@@ -3636,6 +3636,7 @@ export type Database = {
           decision: string | null
           decision_detail: Json | null
           key: string
+          last_probe_at: string | null
           mode: string
           updated_at: string
         }
@@ -3645,6 +3646,7 @@ export type Database = {
           decision?: string | null
           decision_detail?: Json | null
           key: string
+          last_probe_at?: string | null
           mode?: string
           updated_at?: string
         }
@@ -3654,6 +3656,7 @@ export type Database = {
           decision?: string | null
           decision_detail?: Json | null
           key?: string
+          last_probe_at?: string | null
           mode?: string
           updated_at?: string
         }

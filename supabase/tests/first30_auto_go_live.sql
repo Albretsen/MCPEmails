@@ -13,10 +13,11 @@
 
 BEGIN;
 
-SELECT plan(14);
+SELECT plan(15);
 
 SELECT has_table('public', 'retention_switches', 'retention_switches exists');
 SELECT has_table('public', 'first30_dry_run_log', 'first30_dry_run_log exists');
+SELECT has_column('public', 'retention_switches', 'last_probe_at', 'the probe is claimed in the switch row');
 
 SELECT ok(
   (SELECT bool_and(c.relrowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace

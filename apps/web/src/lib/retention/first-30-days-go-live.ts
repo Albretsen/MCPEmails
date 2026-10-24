@@ -56,9 +56,15 @@ import {
  * All must hold for the automatic switch to live. Zero candidates is fine
  * (expected early): b and c pass trivially, a, d and e still have to hold.
  *
- *   a. steady_operation  at least 24 completed dry runs logged since
- *                        FIRST30_START_AT (one an hour for a day), and zero
- *                        runs with failed > 0 or an uncaught error.
+ *   a. steady_operation  at least 24 clean dry runs logged since
+ *                        FIRST30_START_AT, AND clean runs >= 90% of the whole
+ *                        hours between START_AT (or the first logged run, if
+ *                        later) and evaluation, AND no gap over 2 hours
+ *                        between clean runs in the last 24 hours (so lost
+ *                        runs, which leave no row, are seen), AND zero runs
+ *                        with failed > 0, an uncaught error or a truncated
+ *                        (out of time) loop. Manual ?dry_run=1 runs do not
+ *                        count either way.
  *   b. right_recipients  every would-draft / would-send / would-holdout entry
  *                        has recipient_matches_owner = true, a first_paid_at
  *                        at or after FIRST30_START_AT, a non-internal owner and
@@ -78,6 +84,9 @@ import {
  */
 export const GO_LIVE_CRITERIA = {
   minCompletedRuns: 24,
+  minHourlyCoverage: 0.9,
+  maxGapMs: 2 * 3_600_000,
+  gapWindowMs: DAY,
   maxStuckDraftWorkspaces: 10,
   week1EarliestAfterStartMs: 8 * DAY,
   maxWeek1Workspaces: 40,
@@ -86,7 +95,7 @@ export const GO_LIVE_CRITERIA = {
 
 export const CRITERIA_TEXT: Record<CriterionId, string> = {
   steady_operation:
-    'a. At least 24 completed dry runs logged since FIRST30_START_AT, and zero runs with failed > 0 or an uncaught error.',
+    'a. At least 24 clean dry runs since FIRST30_START_AT, clean runs >= 90% of whole hours elapsed since START_AT (or the first logged run, if later), no gap over 2 hours in the last 24 hours, and zero runs with failed > 0, an uncaught error or a truncated loop. Manual runs do not count.',
   right_recipients:
     'b. Every would-draft / would-send entry has recipient_matches_owner = true, first_paid_at >= FIRST30_START_AT, a non-internal owner and an active subscription at decision time.',
   idempotent: 'c. No workspace counted twice for the same template within one run (at most one distinct workspace per template).',
@@ -102,6 +111,10 @@ export interface EvidenceRun {
   runAt: string;
   failed: number;
   error: string | null;
+  /** The loop ran out of time before every candidate was decided. */
+  truncated?: boolean;
+  /** A manual ?dry_run=1 call: ignored by criterion a. */
+  forced?: boolean;
 }
 
 export interface EvidenceAction {
@@ -140,6 +153,8 @@ export interface GoLiveResult {
   counts: {
     completedRuns: number;
     badRuns: number;
+    expectedHours: number;
+    maxGapHours: number;
     stuckDraftWorkspaces: number;
     week1Workspaces: number;
     actionRows: number;
@@ -152,16 +167,24 @@ export function evaluateGoLive(evidence: Evidence): GoLiveResult {
   const C = GO_LIVE_CRITERIA;
   const nowMs = ms(evidence.now);
   const startMs = ms(evidence.startAt);
-  const runs = evidence.runs.filter((r) => ms(r.runAt) >= startMs);
+  const runs = evidence.runs.filter((r) => !r.forced && ms(r.runAt) >= startMs && ms(r.runAt) <= nowMs);
   const actions = evidence.actions;
 
   // a.
-  const completed = runs.filter((r) => !r.error && r.failed === 0).length;
-  const bad = runs.filter((r) => !!r.error || r.failed > 0).length;
+  const isBad = (r: EvidenceRun) => !!r.error || r.failed > 0 || !!r.truncated;
+  const clean = runs.filter((r) => !isBad(r)).sort((x, y) => ms(x.runAt) - ms(y.runAt));
+  const completed = clean.length;
+  const bad = runs.filter(isBad).length;
+  const firstRunMs = runs.length ? Math.min(...runs.map((r) => ms(r.runAt))) : nowMs;
+  const windowStart = Math.max(startMs, firstRunMs);
+  const expectedHours = Math.max(0, Math.floor((nowMs - windowStart) / HOUR_MS));
+  const coverageNeed = Math.ceil(expectedHours * C.minHourlyCoverage);
+  const maxGapMs = longestGap(clean.map((r) => ms(r.runAt)), nowMs - C.gapWindowMs, nowMs);
+  const maxGapHours = Math.round((maxGapMs / HOUR_MS) * 10) / 10;
   const a: CriterionResult = {
     id: 'steady_operation',
-    pass: completed >= C.minCompletedRuns && bad === 0,
-    detail: `${completed} completed runs (need ${C.minCompletedRuns}), ${bad} with failures or errors (need 0)`,
+    pass: completed >= C.minCompletedRuns && completed >= coverageNeed && maxGapMs <= C.maxGapMs && bad === 0,
+    detail: `${completed} clean runs (need ${Math.max(C.minCompletedRuns, coverageNeed)}: 24 and 90% of ${expectedHours} hours), longest gap in the last 24h ${maxGapHours}h (max 2h), ${bad} failed, errored or truncated (need 0)`,
   };
 
   // b.
@@ -224,12 +247,37 @@ export function evaluateGoLive(evidence: Evidence): GoLiveResult {
     counts: {
       completedRuns: completed,
       badRuns: bad,
+      expectedHours,
+      maxGapHours,
       stuckDraftWorkspaces: stuckWs.size,
       week1Workspaces: week1Ws.size,
       actionRows: actions.length,
       lastProbeOkAt: lastOkEver,
     },
   };
+}
+
+const HOUR_MS = 3_600_000;
+
+/**
+ * Longest stretch inside [from, to] with no run, counting the edges: from the
+ * window start to the first run and from the last run to `to`. Pure.
+ */
+export function longestGap(runMs: number[], from: number, to: number): number {
+  const inside = runMs.filter((t) => t >= from && t <= to).sort((a, b) => a - b);
+  let prev = from;
+  let gap = 0;
+  for (const t of inside) {
+    gap = Math.max(gap, t - prev);
+    prev = t;
+  }
+  return Math.max(gap, to - prev);
+}
+
+/** Replace anything shaped like an email address. Applied to every logged error string. */
+export function redactEmails(text: string | null): string | null {
+  if (text === null) return null;
+  return text.replace(/[^\s@<>"'(),;:]+@[^\s@<>"'(),;:]+/g, '[redacted]');
 }
 
 function summariseWrong(wrong: EvidenceAction[], startMs: number): string {
@@ -322,11 +370,15 @@ export async function resolveFirst30Mode(
 // The probe
 // ---------------------------------------------------------------------------
 
+/** 00:00 UTC of `now`'s day. */
+export function utcDayStart(now: Date): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
 /** Once per UTC day: due when the last attempt (any outcome) was before today's 00:00 UTC. */
 export function probeDue(lastAttemptAt: string | null, now: Date): boolean {
   if (!lastAttemptAt) return true;
-  const dayStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return !(ms(lastAttemptAt) >= dayStart);
+  return !(ms(lastAttemptAt) >= utcDayStart(now).getTime());
 }
 
 export type ProbeResult = { ok: true; mailbox: string } | { ok: false; reason: string };
@@ -365,8 +417,14 @@ export interface GoLiveStore {
   /** Throws when the row cannot be read; null when it does not exist. */
   readSwitch(): Promise<SwitchRow | null>;
   appendLog(rows: LogRow[]): Promise<void>;
-  /** run_at of the latest mailbox_probe row, or null. */
-  lastProbeAt(): Promise<string | null>;
+  /**
+   * Claim today's probe BEFORE probing: UPDATE retention_switches SET
+   * last_probe_at = now WHERE key = 'first30' AND (last_probe_at IS NULL OR
+   * last_probe_at < dayStart). True only for the caller whose update changed
+   * the row, so the probe runs at most once per UTC day even when the log
+   * insert fails or two runs overlap. Throws on a database error (no probe).
+   */
+  claimProbe(dayStart: Date, now: Date): Promise<boolean>;
   /** run_summary, mailbox_probe and would_* rows with run_at >= since. */
   readEvidence(since: Date): Promise<LogRow[]>;
   /**
@@ -389,7 +447,15 @@ export function evidenceFromLog(rows: LogRow[], now: Date, startAt: Date): Evide
   for (const r of rows) {
     if (r.decision === 'run_summary') {
       const failed = Number((r.detail as { failed?: unknown } | null)?.failed ?? 0);
-      runs.push({ runId: r.runId, runAt: r.runAt, failed: Number.isFinite(failed) ? failed : 1, error: r.error });
+      const detail = (r.detail ?? {}) as { truncated?: unknown; forced?: unknown };
+      runs.push({
+        runId: r.runId,
+        runAt: r.runAt,
+        failed: Number.isFinite(failed) ? failed : 1,
+        error: r.error,
+        truncated: detail.truncated === true || r.reason === 'truncated',
+        forced: detail.forced === true,
+      });
     } else if (r.decision === 'mailbox_probe') {
       probes.push({ runAt: r.runAt, ok: !r.error });
     } else if (r.decision === 'would_draft' || r.decision === 'would_send' || r.decision === 'would_holdout') {
@@ -477,7 +543,8 @@ export async function dispatchFirst30(deps: DispatchDeps): Promise<DispatchResul
   // 1. The daily mailbox probe (dry run only).
   if (mode === 'dry_run') {
     try {
-      if (probeDue(await deps.goLive.lastProbeAt(), clock())) {
+      const probeNow = clock();
+      if (await deps.goLive.claimProbe(utcDayStart(probeNow), probeNow)) {
         let result: ProbeResult;
         try {
           result = await deps.probe();
@@ -491,7 +558,7 @@ export async function dispatchFirst30(deps: DispatchDeps): Promise<DispatchResul
           template: null,
           decision: 'mailbox_probe',
           reason: result.ok ? 'selected' : null,
-          error: result.ok ? null : result.reason,
+          error: result.ok ? null : redactEmails(result.reason),
         });
       }
     } catch (err) {
@@ -540,7 +607,7 @@ export async function dispatchFirst30(deps: DispatchDeps): Promise<DispatchResul
       template: null,
       decision: 'run_summary',
       reason: r?.truncated ? 'truncated' : null,
-      error: out.error,
+      error: redactEmails(out.error),
       detail: r
         ? {
             candidates: r.candidates,
@@ -570,7 +637,10 @@ export async function dispatchFirst30(deps: DispatchDeps): Promise<DispatchResul
   // 4. The automatic decision.
   const row = resolved.switchRow;
   const now = clock();
+  // No decision on a run whose own evidence is incomplete.
   if (
+    !out.error &&
+    !out.logError &&
     resolved.source === 'db' &&
     !deps.forceDryRun &&
     row &&

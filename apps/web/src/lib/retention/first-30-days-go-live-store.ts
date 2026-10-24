@@ -8,7 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Json } from '@/types/database.types';
 import { readAllPages } from '@/lib/retention/first-30-days-store';
-import type { DecisionPatch, GoLiveStore, LogRow, SwitchRow } from '@/lib/retention/first-30-days-go-live';
+import { redactEmails, type DecisionPatch, type GoLiveStore, type LogRow, type SwitchRow } from '@/lib/retention/first-30-days-go-live';
 
 type Db = SupabaseClient<Database>;
 type LogInsert = Database['public']['Tables']['first30_dry_run_log']['Insert'];
@@ -26,12 +26,12 @@ export function toInsert(row: LogRow): LogInsert {
     workspace_id: row.workspaceId,
     template: row.template,
     decision: row.decision,
-    reason: row.reason ? row.reason.slice(0, 200) : null,
+    reason: row.reason ? redactEmails(row.reason)!.slice(0, 200) : null,
     recipient_matches_owner: row.recipientMatchesOwner,
     owner_internal: row.ownerInternal,
     subscription_active: row.subscriptionActive,
     first_paid_at: row.firstPaidAt,
-    error: row.error ? row.error.slice(0, 300) : null,
+    error: row.error ? redactEmails(row.error)!.slice(0, 300) : null,
     detail: (row.detail ?? null) as Json,
   };
 }
@@ -68,16 +68,15 @@ export class SupabaseGoLiveStore implements GoLiveStore {
     }
   }
 
-  async lastProbeAt(): Promise<string | null> {
+  async claimProbe(dayStart: Date, now: Date): Promise<boolean> {
     const { data, error } = await this.db
-      .from('first30_dry_run_log')
-      .select('run_at')
-      .eq('decision', 'mailbox_probe')
-      .order('run_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(`probe read failed: ${error.message}`);
-    return data?.run_at ?? null;
+      .from('retention_switches')
+      .update({ last_probe_at: now.toISOString() })
+      .eq('key', SWITCH_KEY)
+      .or(`last_probe_at.is.null,last_probe_at.lt.${dayStart.toISOString()}`)
+      .select('key');
+    if (error) throw new Error(`probe claim failed: ${error.message}`);
+    return (data ?? []).length === 1;
   }
 
   async readEvidence(since: Date): Promise<LogRow[]> {

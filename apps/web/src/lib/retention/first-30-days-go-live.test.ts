@@ -90,17 +90,85 @@ test('zero candidates passes when runs, volumes and the probe hold', () => {
   assert.equal(r.criteria.length, 5);
 });
 
-test('a: needs 24 completed runs since START_AT', () => {
-  assert.deepEqual(failedIds(evidence({ runs: runs(23) })), ['steady_operation']);
-  assert.deepEqual(failedIds(evidence({ runs: runs(24) })), []);
+/** Evidence evaluated just after a full first day of hourly runs. */
+function dayOne(overrides: Partial<Evidence> = {}): Evidence {
+  return evidence({
+    now: '2026-10-26T00:30:00.000Z',
+    probes: [{ runAt: '2026-10-25T12:00:00.000Z', ok: true }],
+    ...overrides,
+  });
+}
+
+test('a: needs 24 clean runs since START_AT', () => {
+  assert.deepEqual(failedIds(dayOne({ runs: runs(24) })), []);
+  assert.deepEqual(failedIds(dayOne({ runs: runs(23) })), ['steady_operation']);
   // Runs before START_AT do not count.
   const early = runs(30).map((r) => ({ ...r, runAt: new Date(START.getTime() - DAY + 1000).toISOString() }));
   assert.deepEqual(failedIds(evidence({ runs: early })), ['steady_operation']);
 });
 
-test('a: one run with failed > 0 or an uncaught error fails it', () => {
-  assert.deepEqual(failedIds(evidence({ runs: [...runs(30), ...runs(1, { failed: 1 })] })), ['steady_operation']);
-  assert.deepEqual(failedIds(evidence({ runs: [...runs(30), ...runs(1, { error: 'boom' })] })), ['steady_operation']);
+test('a: one run with failed > 0, an uncaught error or a truncated loop fails it', () => {
+  const extra = (o: Record<string, unknown>) => ({ ...runs(1)[0], runId: 'extra', runAt: '2026-10-28T08:00:00.000Z', ...o });
+  assert.deepEqual(failedIds(evidence({ runs: [...runs(80), extra({ failed: 1 })] })), ['steady_operation']);
+  assert.deepEqual(failedIds(evidence({ runs: [...runs(80), extra({ error: 'boom' })] })), ['steady_operation']);
+  assert.deepEqual(failedIds(evidence({ runs: [...runs(80), extra({ truncated: true })] })), ['steady_operation']);
+  assert.deepEqual(failedIds(evidence({ runs: [...runs(80), extra({})] })), []);
+});
+
+test('a: lost runs are seen: clean runs must cover 90% of elapsed hours', () => {
+  // 81 whole hours elapsed from the first run to evaluation: 73 needed.
+  const all = runs(80);
+  // Drop 8 runs early on (no gap over 2h in the last 24h): 72 left, fails.
+  const lost = all.filter((_, i) => !(i >= 10 && i < 26 && i % 2 === 0));
+  assert.equal(lost.length, 72);
+  assert.deepEqual(failedIds(evidence({ runs: lost })), ['steady_operation']);
+  assert.deepEqual(failedIds(evidence({ runs: all.filter((_, i) => !(i >= 10 && i < 24 && i % 2 === 0)) })), []);
+  // A late first run moves the window start: 24 hourly runs ending now pass.
+  const late = runs(24).map((r, i) => ({ ...r, runAt: new Date(DECIDE_AT.getTime() - (23 - i) * HOUR - 60_000).toISOString() }));
+  assert.deepEqual(failedIds(evidence({ runs: late })), []);
+});
+
+test('a: a gap over 2 hours in the last 24 hours fails, including since the last run', () => {
+  const all = runs(80);
+  const holed = all.filter((_, i) => !(i >= 70 && i <= 72)); // a 4-hour hole yesterday evening
+  assert.deepEqual(failedIds(evidence({ runs: holed })), ['steady_operation']);
+  const stale = all.slice(0, 78); // last run 05:17, evaluated 09:17
+  assert.deepEqual(failedIds(evidence({ runs: stale })), ['steady_operation']);
+  assert.equal(gl.longestGap([2, 5], 0, 10), 5);
+  assert.equal(gl.longestGap([], 0, 10), 10);
+});
+
+test('a: manual ?dry_run=1 runs never count toward it', () => {
+  const forced = runs(80).map((r) => ({ ...r, forced: true }));
+  assert.deepEqual(failedIds(evidence({ runs: forced })), ['steady_operation']);
+  // ... nor against it.
+  const forcedBad = { ...runs(1)[0], runId: 'manual', runAt: '2026-10-28T08:30:00.000Z', error: 'boom', forced: true };
+  assert.deepEqual(failedIds(evidence({ runs: [...runs(80), forcedBad] })), []);
+});
+
+test('evidenceFromLog reads truncated and forced from the run summary', () => {
+  const base = { runId: 'r', workspaceId: null, template: null, recipientMatchesOwner: null, ownerInternal: null, subscriptionActive: null, firstPaidAt: null, error: null };
+  const ev = gl.evidenceFromLog(
+    [
+      { ...base, runAt: '2026-10-25T01:17:00Z', decision: 'run_summary', reason: 'truncated', detail: { failed: 0, truncated: true, forced: false } },
+      { ...base, runAt: '2026-10-25T02:17:00Z', decision: 'run_summary', reason: null, detail: { failed: 0, truncated: false, forced: true } },
+    ],
+    DECIDE_AT,
+    START,
+  );
+  assert.deepEqual(ev.runs.map((r) => [r.truncated, r.forced]), [[true, false], [false, true]]);
+});
+
+test('redactEmails strips addresses from error strings', () => {
+  assert.equal(gl.redactEmails('LOGIN failed for someone@example.test (NO)'), 'LOGIN failed for [redacted] (NO)');
+  assert.equal(gl.redactEmails('<a.b+c@x.co>, d@e.io'), '<[redacted]>, [redacted]');
+  assert.equal(gl.redactEmails(null), null);
+  const row = glStore.toInsert({
+    runAt: DECIDE_AT.toISOString(), runId: 'r', workspaceId: null, template: null, decision: 'mailbox_probe',
+    reason: 'x@y.z', recipientMatchesOwner: null, ownerInternal: null, subscriptionActive: null, firstPaidAt: null,
+    error: 'auth failed for owner@example.test', detail: null,
+  });
+  assert.ok(!JSON.stringify(row).includes('@'));
 });
 
 test('b: every would-* entry must match the owner, be paid after go-live, external and subscribed', () => {
@@ -121,7 +189,7 @@ test('c: a workspace twice for one template in one run fails; across runs it is 
   assert.deepEqual(failedIds(evidence({ actions: [action(), action()] })), ['idempotent']);
   assert.deepEqual(failedIds(evidence({ actions: [action({ runId: 'r1' }), action({ runId: 'r2' })] })), []);
   // Same run, different template: fine for c (d catches an early M3).
-  const later = evidence({ now: new Date(START.getTime() + 9 * DAY).toISOString(), probes: [{ runAt: new Date(START.getTime() + 9 * DAY - HOUR).toISOString(), ok: true }] });
+  const later = evidence({ runs: runs(216), now: new Date(START.getTime() + 9 * DAY).toISOString(), probes: [{ runAt: new Date(START.getTime() + 9 * DAY - HOUR).toISOString(), ok: true }] });
   assert.deepEqual(failedIds({ ...later, actions: [action(), action({ template: TEMPLATE_WEEK1, decision: 'would_send' })] }), []);
 });
 
@@ -137,7 +205,7 @@ test('d: M3 must be zero before START_AT + 8 days and at most 40 after', () => {
   assert.deepEqual(failedIds(evidence({ actions: [m3] })), ['volumes']);
   assert.deepEqual(failedIds(evidence({ actions: [action({ template: TEMPLATE_WEEK1, decision: 'would_holdout' })] })), ['volumes']);
   const nine = new Date(START.getTime() + 9 * DAY);
-  const later = { now: nine.toISOString(), probes: [{ runAt: new Date(nine.getTime() - HOUR).toISOString(), ok: true }] };
+  const later = { runs: runs(216), now: nine.toISOString(), probes: [{ runAt: new Date(nine.getTime() - HOUR).toISOString(), ok: true }] };
   assert.deepEqual(failedIds(evidence({ ...later, actions: [m3] })), []);
   const many = Array.from({ length: 41 }, (_, i) =>
     action({ template: TEMPLATE_WEEK1, decision: 'would_send', workspaceId: `ws-${i}`, runId: `r-${i}` }),
@@ -305,11 +373,15 @@ class MemoryGoLive {
     return this.row ? { ...this.row } : null;
   }
   async appendLog(rows: LogRow[]) {
+    if (this.appendFails) throw new Error('insert failed');
     this.log.push(...rows);
   }
-  async lastProbeAt() {
-    const probes = this.log.filter((r) => r.decision === 'mailbox_probe');
-    return probes.length ? probes[probes.length - 1].runAt : null;
+  lastProbeClaim: string | null = null;
+  appendFails = false;
+  async claimProbe(dayStart: Date, now: Date) {
+    if (this.lastProbeClaim && new Date(this.lastProbeClaim).getTime() >= dayStart.getTime()) return false;
+    this.lastProbeClaim = now.toISOString();
+    return true;
   }
   async readEvidence(since: Date) {
     return this.log.filter((r) => new Date(r.runAt).getTime() >= since.getTime());
@@ -585,4 +657,58 @@ test('the migration seeds the switch in dry run at 2026-10-28 09:00 UTC with RLS
   assert.match(sql, /ALTER TABLE public\.retention_switches ENABLE ROW LEVEL SECURITY/);
   assert.match(sql, /ALTER TABLE public\.first30_dry_run_log ENABLE ROW LEVEL SECURITY/);
   assert.ok(!sql.includes(String.fromCharCode(0x2014)), 'no em dashes');
+});
+
+test('the probe stays once per UTC day when the log insert keeps failing', async () => {
+  const h = harness();
+  h.goLive.appendFails = true;
+  for (let hour = 0; hour < 30; hour += 1) {
+    h.setClock(new Date(Date.UTC(2026, 9, 25, hour, 17)));
+    await h.run();
+  }
+  assert.equal(h.probes, 2);
+});
+
+test('the probe error is logged without an email address', async () => {
+  const h = harness({ probe: { ok: false, reason: 'LOGIN rejected for asgeir@mcpemails.com' } });
+  await h.run();
+  const row = h.goLive.log.find((r) => r.decision === 'mailbox_probe')!;
+  assert.equal(row.error, 'LOGIN rejected for [redacted]');
+});
+
+test('no decision on a run whose log insert failed or whose loop threw', async () => {
+  const h = harness();
+  await dayOfDryRuns(h, 80);
+  h.goLive.appendFails = true;
+  h.setClock(new Date('2026-10-28T09:17:00Z'));
+  const res = await h.run();
+  assert.ok(res.logError);
+  assert.equal(res.decision, null);
+  assert.equal(h.goLive.decideCalls, 0);
+
+  h.goLive.appendFails = false;
+  const listFirstPayments = h.store.listFirstPayments;
+  h.store.listFirstPayments = async () => {
+    throw new Error('checkout read failed');
+  };
+  h.setClock(new Date('2026-10-28T10:17:00Z'));
+  const errored = await h.run();
+  assert.equal(errored.error, 'checkout read failed');
+  assert.equal(h.goLive.decideCalls, 0);
+
+  h.store.listFirstPayments = listFirstPayments;
+  h.setClock(new Date('2026-10-28T11:17:00Z'));
+  const ok = await h.run();
+  assert.equal(ok.decision?.outcome, 'held', 'the errored run counts as a bad run');
+  assert.ok((h.goLive.row!.decisionDetail as { failed: string[] }).failed.includes('steady_operation'));
+});
+
+test('a truncated dry run is logged as truncated and holds the decision', async () => {
+  const h = harness({ contexts: [ctx('aaaaaaaa-0000-4000-8000-000000000001', '2026-10-25T01:00:00Z')] });
+  await dayOfDryRuns(h, 80);
+  h.setClock(new Date('2026-10-28T09:17:00Z'));
+  const res = await h.run({ outOfTime: () => true });
+  const summary = h.goLive.log.filter((r) => r.decision === 'run_summary').pop()!;
+  assert.equal(summary.reason, 'truncated');
+  assert.equal(res.decision?.outcome, 'held');
 });

@@ -38,8 +38,13 @@ CREATE TABLE IF NOT EXISTS public.retention_switches (
   decided_at       timestamptz,
   decision         text CHECK (decision IS NULL OR decision IN ('went_live', 'held')),
   decision_detail  jsonb,
+  -- Claimed (set) BEFORE each daily mailbox probe, so the probe runs at most
+  -- once per UTC day even when the log insert fails.
+  last_probe_at    timestamptz,
   updated_at       timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.retention_switches ADD COLUMN IF NOT EXISTS last_probe_at timestamptz;
 
 ALTER TABLE public.retention_switches ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.retention_switches FROM PUBLIC, anon, authenticated;
