@@ -12,7 +12,11 @@ import { getTheme } from './theme';
 import type { Scene, StoryboardProps } from './storyboard-types';
 import { Title } from './scenes/Title';
 import { Capture } from './scenes/Capture';
-import { Chat } from './scenes/Chat';
+import { Chat, chatSchedule } from './scenes/Chat';
+import { Clip } from './scenes/Clip';
+import { Query } from './scenes/Query';
+import { Timer } from './components/Timer';
+import { LayoutProvider, computeLayout } from './layout';
 import { Terminal } from './scenes/Terminal';
 import { Outro } from './scenes/Outro';
 import { BurnedInCaptions } from './components/Captions';
@@ -45,9 +49,18 @@ export const StoryboardComposition: React.FC<StoryboardProps> = ({
   }
 
   const theme = getTheme(storyboard.theme);
+  const layout = computeLayout({
+    format: storyboard.format ?? 'landscape',
+    width: storyboard.width,
+    height: storyboard.height,
+    captions: storyboard.captions,
+    timer: Boolean(storyboard.timer),
+  });
+  const timer = storyboard.timer ? timerFrames(storyboard, transcripts) : null;
   let cursor = 0;
 
   return (
+    <LayoutProvider value={layout}>
     <AbsoluteFill style={{ background: theme.bgPage }}>
       {storyboard.scenes.map((scene, i) => {
         const from = cursor;
@@ -74,12 +87,44 @@ export const StoryboardComposition: React.FC<StoryboardProps> = ({
         <Audio src={staticFile(voiceoverStaticPath(storyboard.voiceover))} />
       ) : null}
 
+      {timer ? (
+        <Timer
+          startFrame={timer.startFrame}
+          stopFrame={timer.stopFrame}
+          endFrame={timer.endFrame}
+          label={storyboard.timer?.label}
+          themeName={storyboard.theme}
+        />
+      ) : null}
+
       {storyboard.captions ? (
         <BurnedInCaptions storyboardId={storyboard.id} themeName={storyboard.theme} />
       ) : null}
     </AbsoluteFill>
+    </LayoutProvider>
   );
 };
+
+/**
+ * Where the stopwatch starts, stops and disappears, in composition frames.
+ * It stops on the frame a chat scene's answer finishes arriving, which is the
+ * moment the viewer has their answer; for any other stop scene, at its end.
+ */
+function timerFrames(
+  storyboard: NonNullable<StoryboardProps['storyboard']>,
+  transcripts: StoryboardProps['transcripts'],
+): { startFrame: number; stopFrame: number; endFrame: number } {
+  const spec = storyboard.timer!;
+  const start = storyboard.boundaries[spec.from];
+  const stop = storyboard.boundaries[spec.to];
+  const stopScene = storyboard.scenes[spec.to];
+  let stopFrame = stop.endFrame;
+  if (stopScene.type === 'chat') {
+    const t = transcripts[stopScene.transcript];
+    if (t) stopFrame = stop.startFrame + chatSchedule(t.turns, stopScene.durationInFrames, storyboard.fps).answerDoneFrame;
+  }
+  return { startFrame: start.startFrame, stopFrame, endFrame: stop.endFrame };
+}
 
 /**
  * A storyboard writes its voiceover as a repo-relative path
@@ -107,6 +152,10 @@ const SceneSwitch: React.FC<{
       return <Terminal scene={scene} themeName={themeName} />;
     case 'outro':
       return <Outro scene={scene} themeName={themeName} />;
+    case 'clip':
+      return <Clip scene={scene} themeName={themeName} />;
+    case 'query':
+      return <Query scene={scene} themeName={themeName} />;
     default: {
       // Exhaustiveness: adding a scene type to the schema without adding it
       // here becomes a compile error rather than a blank scene.
