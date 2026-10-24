@@ -401,6 +401,51 @@ async function fetchOverviewStats(supabase, workspaceId) {
   };
 }
 
+/** The tools whose success means a message left the mailbox. */
+const SEND_TOOLS = ['email_send', 'email_reply', 'email_forward', 'draft_send'];
+
+/**
+ * What the Overview's referral tile is gated on, beyond what the page already
+ * has (components/dashboard/InvitePanel.jsx, referralTileEligible):
+ *   successfulSends  sends that succeeded, all time (a head count, no rows).
+ *   paidSince        the workspace's first `checkout_completed` funnel row,
+ *                    or null. That table is service-role only. A comped or
+ *                    pre-funnel paying workspace has no such row, and then
+ *                    the paid branch of the tile stays hidden.
+ * Free workspaces need neither: their branch counts active days off the
+ * usage series, so nothing is queried for them.
+ *
+ * @param {SchemaTypedClient} supabase
+ * @param {string} workspaceId
+ * @param {string} plan  the effective plan
+ * @returns {Promise<{ successfulSends: number, paidSince: string | null }>}
+ */
+async function fetchReferralTileFacts(supabase, workspaceId, plan) {
+  if (plan === 'free') return { successfulSends: 0, paidSince: null };
+  try {
+    const [sends, paid] = await Promise.all([
+      supabase
+        .from('activity_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspaceId)
+        .eq('status', 'success')
+        .in('tool_name', SEND_TOOLS),
+      createServiceRoleClient()
+        .from('product_funnel_events')
+        .select('occurred_at')
+        .eq('workspace_id', workspaceId)
+        .eq('stage', 'checkout_completed')
+        .order('occurred_at', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    return { successfulSends: sends.count ?? 0, paidSince: paid.data?.occurred_at ?? null };
+  } catch (err) {
+    console.error('[fetchReferralTileFacts]', err instanceof Error ? err.message : String(err));
+    return { successfulSends: 0, paidSince: null };
+  }
+}
+
 /**
  * Fetches 30 days of MCP call data for the Usage page.
  * Returns daily counts (oldest first), per-tool breakdown, and per-inbox breakdown.
@@ -678,7 +723,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -701,6 +746,10 @@ export default async function DashboardPage({ params }) {
   // otherwise the earliest-created workspace.
   const workspace =
     allWorkspaces.find((w) => w.id === preferredWorkspaceId) ?? allWorkspaces[0] ?? null;
+  // The referral program's rollout flag, at the workspace grain like the
+  // confirm-in-chat one. While it is off /dashboard/invite does not exist.
+  const referralEnabled = workspace?.referral_enabled === true;
+  if (initialRoute === 'invite' && !referralEnabled) notFound();
 
   // Join the anonymous visitor id to the account, once, on the first
   // authenticated render after signup. Both signup paths (password, and OAuth
@@ -919,6 +968,12 @@ export default async function DashboardPage({ params }) {
   // unlimited inboxes and does not need to be told they were spared anything.
   const inboxesGrandfathered = unlimitedInboxes && !compedScale && plan === 'free';
 
+  // The two facts the Overview's referral tile needs that no client array
+  // holds. Read only while the program is rolled out to this workspace.
+  const referralTileFacts = referralEnabled && workspace
+    ? await fetchReferralTileFacts(supabase, workspace.id, plan)
+    : null;
+
   // The single Streamable HTTP MCP endpoint clients connect to.
   const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
 
@@ -1015,6 +1070,9 @@ export default async function DashboardPage({ params }) {
         // "Confirm in chat" send review: OUR rollout gate, internal only for
         // now. Without it the option is not offered (the API refuses it too).
         chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
+        // The referral program: OUR rollout gate, internal only for now.
+        // Without it there is no Invite entry, tile or code field.
+        referralEnabled,
         // The Pro feature gate for this workspace: { visible, allowed }.
         proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
         // Black Week 2026: the offer for the billing page's switch card, or
@@ -1044,6 +1102,7 @@ export default async function DashboardPage({ params }) {
       members={members}
       pendingInvites={pendingInvites}
       supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
+      referralTileFacts={referralTileFacts}
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );

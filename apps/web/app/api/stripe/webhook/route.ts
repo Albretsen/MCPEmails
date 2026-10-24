@@ -22,12 +22,17 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
- *   charge.refunded                   : a full refund of a 3-month pass ends it
+ *   charge.refunded                   : a full refund of a 3-month pass ends it.
+ *                                       Also referral: void a referral before
+ *                                       its reward, claw the credit back after
+ *                                       (src/lib/referrals/webhook.ts);
+ *                                       charge.dispute.created does the same
  *   checkout.session.async_payment_succeeded : a delayed first payment (SEPA
  *                                       Direct Debit) cleared; re-sync the plan
  *   checkout.session.async_payment_failed    : a delayed first payment failed;
  *                                       revoke the provisional access
- *   charge.dispute.created            : a SEPA debit was disputed; log only
+ *   charge.dispute.created            : a SEPA debit was disputed; log only.
+ *                                       Also referral: see charge.refunded
  *
  * 3-month Personal pass (added 2026-10-24, src/lib/billing/pass.ts):
  *   A pass is a payment-mode Checkout (metadata.product = 'personal_pass_3m').
@@ -62,6 +67,11 @@
  *   a subscription back out of past_due/unpaid, or a deleted subscription
  *   clears it. Billing state only, never entitlement, and independent of the
  *   lifecycle email flag.
+ *
+ * Referral program (added 2026-10-25): `invoice.payment_succeeded` also moves
+ * a referred friend's referral to 'charged' on their first paid subscription
+ * invoice. That step runs whatever BILLING_LIFECYCLE_EMAILS says, and it can
+ * never fail the event: an error is logged and the billing work stands.
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
@@ -188,6 +198,7 @@ import {
   recordPassEvent,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
+import { recordReferralCharge, reverseReferralCharge } from '@/lib/referrals/webhook';
 import {
   PAUSED_STATUS,
   parkOwner,
@@ -495,6 +506,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //
   // `charge.dispute.created` carries no customer id, so the guard never runs
   // for it; listed for the reader, and because it only logs.
+  //
+  // The referral work on `charge.refunded` needs the same exemption: a refund
+  // is commonly issued alongside a cancellation, whose subscription event can
+  // land a second later; read as stale, the refund would never void the
+  // referral it belongs to. A dispute does the same referral work.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
     'checkout.session.completed',
     'checkout.session.expired',
@@ -548,9 +564,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
-      case 'charge.dispute.created':
-        await handleChargeDisputeCreated(event.data.object as Stripe.Dispute);
+      case 'charge.dispute.created': {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleChargeDisputeCreated(dispute);
+        // Referral: void, or claw back the credit, for a friend's first charge.
+        const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          await reverseReferralCharge(supabase, stripe, { chargeId, kind: 'dispute', fullyRefunded: false });
+        }
         break;
+      }
 
       case 'checkout.session.expired': {
         // Post-response and never throws: a reminder email can neither delay
@@ -579,6 +602,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        await recordReferralChargeSafely(event.data.object as Stripe.Invoice);
         retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
 
@@ -587,6 +611,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case 'invoice.paid':
         retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
+
+      case 'charge.refunded': {
+        // Two independent jobs: a full refund of a 3-month pass ends it, and a
+        // refund of a referred friend's first charge voids or claws back the
+        // referral. The pass runs first; when it throws, Stripe retries the
+        // event and the referral work, which is idempotent, runs then.
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
+        await reverseReferralCharge(supabase, stripe, {
+          chargeId: charge.id,
+          kind: 'refund',
+          fullyRefunded: charge.refunded === true || charge.amount_refunded >= charge.amount,
+        });
+        break;
+      }
 
       case 'invoice.voided':
         // A paused subscription's renewal is finalized, then voided (Stripe
@@ -610,10 +649,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         break;
       }
-
-      case 'charge.refunded':
-        await handleChargeRefunded(event.data.object as Stripe.Charge);
-        break;
 
       default:
         // Unhandled event types are acknowledged but not processed.
@@ -1954,6 +1989,35 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+/**
+ * Referral: the friend's first paid subscription invoice moves their referral
+ * to 'charged' (src/lib/referrals/webhook.ts). Never throws. Missing it is
+ * recoverable by hand from the row; failing a paid invoice's webhook is not.
+ */
+async function recordReferralChargeSafely(invoice: Stripe.Invoice): Promise<void> {
+  try {
+    if (invoice.billing_reason !== 'subscription_create') return;
+    const customerId =
+      typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    // subscription_data.metadata.user_id is set by checkout-core. The current
+    // shape carries it under `parent`; the older API version the live endpoint
+    // is pinned to carries `subscription_details` at the top level.
+    const legacy = (invoice as unknown as { subscription_details?: { metadata?: Record<string, string> | null } })
+      .subscription_details;
+    const metadataUserId =
+      invoice.parent?.subscription_details?.metadata?.user_id ?? legacy?.metadata?.user_id ?? null;
+    const friendUserId = await resolveUserId(db, customerId, metadataUserId);
+    await recordReferralCharge(db, stripe, invoice, friendUserId);
+  } catch (err) {
+    console.error('[stripe-webhook] referral charge step failed:', {
+      invoice: invoice.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**

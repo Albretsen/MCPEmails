@@ -110,6 +110,11 @@ export type ProductFunnelEvent = {
     // The failed-payment banner's button (/api/stripe/payment-fix). success =
     // sent on to Stripe, failure = bounced to settings.
     | 'payment_fix_clicked'
+    // Referral program (20261025090000). `category` is the workspace's plan.
+    // `referral_click` has no workspace and is never written here.
+    | 'referral_link_viewed' | 'referral_link_copied' | 'referral_attached'
+    | 'referral_attach_refused' | 'referral_charged' | 'referral_qualified'
+    | 'referral_voided' | 'referral_held' | 'referral_capped'
     // The 3-month Personal pass. A pass NEVER writes `checkout_started` or
     // `checkout_completed`, for the same reason a plan change does not: those
     // stages are the subscription conversion every read-out is built on.

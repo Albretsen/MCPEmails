@@ -16,6 +16,7 @@ function limit(over: Partial<InboxLimitCheckResult>): InboxLimitCheckResult {
     maxInboxes: 10,
     unlimitedInboxes: false,
     proUnlimitedInboxes: false,
+    referralPersonal: false,
     ...over,
   };
 }

@@ -31,6 +31,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
+import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
@@ -179,6 +180,11 @@ export function ApprovalsPage({ userRole }) {
 
 export function AutomationsPage({ userRole, inboxes, keys }) {
   return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
+}
+
+/** The referral program's Invite page (InvitePanel.jsx). */
+export function InvitePage() {
+  return <InvitePanel />;
 }
 
 // Rich-text tag handlers shared across pages (inline code + bold).
@@ -1061,7 +1067,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -1157,6 +1163,22 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
         onGoToAutomations={onGoToAutomations}
         onConnect={onConnect}
       />
+      {/* The referral program, while workspaces.referral_enabled is on: the
+          code field for a new account, or the tile once it is earned. The
+          Free branch counts active days off the same usage series the chart
+          below draws; the paid branch needs the two facts the page read on
+          the server (successful sends, first paid checkout). */}
+      {referralEnabled && (
+        <OverviewReferral
+          eligible={referralTileEligible({
+            plan: _plan,
+            successfulSends: referralTileFacts?.successfulSends ?? 0,
+            paidSince: referralTileFacts?.paidSince ?? null,
+            dailyCounts: usageData?.dailyCounts ?? [],
+          })}
+          onOpenInvite={onGoToInvite}
+        />
+      )}
 
       <div className="stat-grid">
         <div className="stat">
@@ -7942,7 +7964,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate, onGoToInvite }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7987,6 +8009,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
+      {/* Referral credit waiting for the next invoice, while
+          workspaces.referral_enabled is on (InvitePanel.jsx). */}
+      {workspace?.referralEnabled === true && <BillingReferralCredit onOpenInvite={onGoToInvite} />}
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>

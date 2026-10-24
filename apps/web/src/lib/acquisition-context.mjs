@@ -20,7 +20,7 @@ export const ACQUISITION_QUERY_KEYS = Object.freeze({
  *
  * The same strings are pinned by three CHECK constraints and by the signup
  * trigger's own allowlist, newest in
- * supabase/migrations/20261019130000_directory_listing_attribution.sql. A value
+ * supabase/migrations/20261025090000_referrals.sql. A value
  * this file emits that the database has not been taught is not a soft failure:
  * the CHECK rejects the write, or the trigger silently NULLs it. The drift test
  * in acquisition-context.test.mjs reads that migration and compares the two
@@ -57,6 +57,9 @@ export const SOURCES = new Set([
   // that started the OAuth flow (connectorSourceFromAuthorize), and kept apart
   // from `claude`, `chatgpt` and `cursor`, which mean a link someone clicked.
   'connector_claude', 'connector_chatgpt', 'connector_cursor', 'connector_vscode', 'connector_other',
+  // A signup that started on a referral link (2026-10-25). /r/<code> redirects
+  // to the home page with acq=referral; see referralSourceFromLocation.
+  'referral',
   'other',
 ]);
 export const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
@@ -413,6 +416,15 @@ export function connectorSourceFromAuthorize(url) {
   return connectorFromUrl(authorize.searchParams.get('redirect_uri') ?? '') ?? 'connector_other';
 }
 
+/**
+ * 'referral' when the landing URL carries acq=referral, which only our own
+ * /r/<code> redirect adds. No other value of `acq` is read here: on a landing
+ * page it is user-controlled, and only this one is ours to recognise.
+ */
+export function referralSourceFromLocation(url) {
+  return url.searchParams.get(ACQUISITION_QUERY_KEYS.source) === 'referral' ? 'referral' : null;
+}
+
 export function acquisitionFromLocation(url, referrerUrl = null) {
   let utmSource = sourceFromUtm(url.searchParams.get('utm_source'));
   const utmMedium = mediumFromUtm(url.searchParams.get('utm_medium'));
@@ -428,7 +440,10 @@ export function acquisitionFromLocation(url, referrerUrl = null) {
   // /authorize, so the order below only matters in theory.
   const tagged = utmSource ?? sourceFromRefParams(url.searchParams);
   return sanitizedAcquisition({
-    source: paidGoogle ? 'google_ads' : (tagged ?? connectorSourceFromAuthorize(url) ?? externalReferrer),
+    // A referral link wins over everything: the person was sent by a friend,
+    // whatever page or tag the friend's link happened to carry.
+    source: referralSourceFromLocation(url)
+      ?? (paidGoogle ? 'google_ads' : (tagged ?? connectorSourceFromAuthorize(url) ?? externalReferrer)),
     landing: landingFromPath(url.pathname),
     landingPath: safeLandingPath(url.pathname),
     locale,

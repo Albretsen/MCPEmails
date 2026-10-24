@@ -132,7 +132,8 @@
     "searchPlaceholder": "Rechercher des pages, des boîtes, des membres…",
     "openSearch": "Ouvrir la recherche (Command K)",
     "navWorkflows": "Workflows",
-    "navAutomations": "Automatisations"
+    "navAutomations": "Automatisations",
+    "navInvite": "Inviter un ami"
   },
   "topbar": {
     "mcpLabel": "Point de terminaison MCP",

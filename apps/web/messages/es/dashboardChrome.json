@@ -132,7 +132,8 @@
     "searchPlaceholder": "Buscar páginas, bandejas de entrada, miembros…",
     "openSearch": "Abrir búsqueda (Command K)",
     "navWorkflows": "Flujos de trabajo",
-    "navAutomations": "Automatizaciones"
+    "navAutomations": "Automatizaciones",
+    "navInvite": "Invita a un amigo"
   },
   "topbar": {
     "mcpLabel": "Endpoint MCP",

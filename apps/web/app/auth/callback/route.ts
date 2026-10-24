@@ -15,6 +15,12 @@ import { ssoRouteForEmail, isSsoUser, type SsoLookupRpc } from '@/lib/sso/sign-i
 import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
 import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
 import { clientIpFromHeaders, recordSsoAuditVia } from '@/lib/sso/audit';
+import { attachReferral } from '@/lib/referrals/attach';
+import {
+  clearReferralCookieString,
+  referralCookieFromHeader,
+  referralIpHash,
+} from '@/lib/referrals/server';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -193,6 +199,28 @@ export async function GET(request: Request) {
     }
   }
 
+  // Referral link opened in this browser (app/r/[code]/route.ts). Attached
+  // once, here, and the cookie is cleared below on every outcome, so a later
+  // login on a shared computer cannot attach someone else. attachReferral
+  // applies every rule (new account, no paid history, not the same person);
+  // nothing it does, throws or refuses may change where this login goes.
+  const referralCode = referralCookieFromHeader(request.headers.get('cookie'));
+  if (referralCode && exchangedUser) {
+    try {
+      // Loaded here, not at module scope: the Stripe client throws at import
+      // without STRIPE_SECRET_KEY, and that must never take the callback down.
+      const { stripe } = await import('@/lib/stripe/client');
+      await attachReferral(createServiceRoleClient(), stripe, {
+        code: referralCode,
+        friend: exchangedUser,
+        via: 'cookie',
+        ipHash: referralIpHash(clientIpFromHeaders(request.headers)),
+      });
+    } catch (err) {
+      console.error('[auth-callback] referral attach failed:', err instanceof Error ? err.message : String(err));
+    }
+  }
+
   // Session cookies are now written. Redirect to the dashboard (or the
   // originally-requested path stored in the `next` param).
   // Only allow same-origin relative `next` paths to prevent open-redirect
@@ -206,6 +234,12 @@ export async function GET(request: Request) {
     response.headers.append(
       'set-cookie',
       clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
+    );
+  }
+  if (referralCode !== null) {
+    response.headers.append(
+      'set-cookie',
+      clearReferralCookieString({ secure: new URL(request.url).protocol === 'https:' }),
     );
   }
   return response;

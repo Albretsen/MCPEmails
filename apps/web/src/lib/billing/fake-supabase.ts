@@ -27,14 +27,25 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 type Row = Record<string, unknown>;
-type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'gte' | 'lte' | 'notIs'; column: string; value: unknown };
+type Filter = {
+  op: 'eq' | 'neq' | 'is' | 'in' | 'like' | 'gt' | 'gte' | 'lt' | 'lte' | 'notIs';
+  column: string;
+  value: unknown;
+};
 
 /** Mirrors the unique index in 20260902130000_billing_lifecycle_emails.sql. */
 const CONFLICT_COLUMNS = ['stripe_customer_id', 'template', 'scope_key'];
 
-function matches(row: Row, filters: Filter[]): boolean {
+/**
+ * A filter column's value. `<table>.<column>` is a filter on an `!inner`
+ * embed: the parent row is found through `<table minus s>_id` (referrals ->
+ * referral_id), which is the only foreign-key shape the tests embed.
+ */
+type Resolve = (row: Row, column: string) => unknown;
+
+function matches(row: Row, filters: Filter[], resolve: Resolve = (r, c) => r[c]): boolean {
   return filters.every((f) => {
-    const actual = row[f.column];
+    const actual = resolve(row, f.column);
     switch (f.op) {
       case 'eq':
         return actual === f.value;
@@ -42,10 +53,15 @@ function matches(row: Row, filters: Filter[]): boolean {
         return f.value === null ? actual === null || actual === undefined : actual === f.value;
       case 'in':
         return Array.isArray(f.value) && f.value.includes(actual);
+      case 'neq':
+        return actual !== f.value;
       case 'gt':
         return actual != null && String(actual) > String(f.value);
+      // ISO timestamps compare correctly as strings; that is all these serve.
       case 'gte':
         return actual != null && String(actual) >= String(f.value);
+      case 'lt':
+        return actual != null && String(actual) < String(f.value);
       case 'lte':
         return actual != null && String(actual) <= String(f.value);
       case 'notIs':
@@ -72,9 +88,17 @@ interface Pending {
   /** upsert only: false merges the patch into the clashing row (ON CONFLICT DO UPDATE). */
   ignoreDuplicates?: boolean;
   order?: { column: string; ascending: boolean };
+  /** `select(_, { count: 'exact', head: true })`: answer with `count`, no rows. */
+  countHead?: boolean;
 }
 
-class Query implements PromiseLike<{ data: Row[] | null; error: { message: string; code?: string } | null }> {
+type Result = {
+  data: Row[] | null;
+  error: { message: string; code?: string } | null;
+  count?: number | null;
+};
+
+class Query implements PromiseLike<Result> {
   // Written out rather than declared as parameter properties: the test runner
   // is `node --test --experimental-strip-types`, which erases types without
   // transforming, and parameter properties are a transform.
@@ -106,33 +130,42 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
     this.pending.filters.push({ op: 'gt', column, value });
     return this;
   }
-  /** Only the `.not(column, 'is', value)` shape. */
-  not(column: string, operator: string, value: unknown): this {
-    if (operator !== 'is') throw new Error(`FakeSupabase: .not(_, '${operator}', _) is not implemented`);
-    this.pending.filters.push({ op: 'notIs', column, value });
+  neq(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'neq', column, value });
     return this;
   }
   gte(column: string, value: unknown): this {
     this.pending.filters.push({ op: 'gte', column, value });
     return this;
   }
+  lt(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'lt', column, value });
+    return this;
+  }
   lte(column: string, value: unknown): this {
     this.pending.filters.push({ op: 'lte', column, value });
+    return this;
+  }
+  order(column: string, options?: { ascending?: boolean }): this {
+    this.pending.order = { column, ascending: options?.ascending ?? true };
+    return this;
+  }
+  /** Only the `.not(column, 'is', value)` shape. */
+  not(column: string, operator: string, value: unknown): this {
+    if (operator !== 'is') throw new Error(`FakeSupabase: .not(_, '${operator}', _) is not implemented`);
+    this.pending.filters.push({ op: 'notIs', column, value });
     return this;
   }
   limit(n: number): this {
     this.pending.limit = n;
     return this;
   }
-  order(column: string, options: { ascending?: boolean } = {}): this {
-    this.pending.order = { column, ascending: options.ascending !== false };
-    return this;
-  }
-  select(_columns?: string): this {
+  select(_columns?: string, options?: { count?: string; head?: boolean }): this {
+    if (options?.head) this.pending.countHead = true;
     return this;
   }
 
-  private run(): { data: Row[] | null; error: { message: string; code?: string } | null } {
+  private run(): Result {
     const failure = this.store.failNext.get(this.pending.table);
     if (failure) {
       const left = (this.store.failCounts.get(this.pending.table) ?? 1) - 1;
@@ -173,6 +206,18 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
 
     if (this.pending.kind === 'insert') {
       const out: Row[] = [];
+      // Opt-in unique constraints (FakeSupabase.unique), checked before any
+      // row of the batch lands, as one INSERT statement would be.
+      for (const columns of this.store.uniques.get(this.pending.table) ?? []) {
+        for (const candidate of this.pending.inserted ?? []) {
+          if (table.some((existing) => columns.every((c) => existing[c] === candidate[c]))) {
+            return {
+              data: null,
+              error: { code: '23505', message: `duplicate key value violates unique constraint (${columns.join(', ')})` },
+            };
+          }
+        }
+      }
       for (const candidate of this.pending.inserted ?? []) {
         const row: Row = { id: this.store.nextId++, ...candidate };
         table.push(row);
@@ -181,7 +226,15 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
       return { data: out, error: null };
     }
 
-    let hits = table.filter((row) => matches(row, this.pending.filters));
+    const resolve: Resolve = (row, column) => {
+      const dot = column.indexOf('.');
+      if (dot < 0) return row[column];
+      const parentTable = column.slice(0, dot);
+      const fk = row[`${parentTable.replace(/s$/, '')}_id`];
+      const parent = (this.store.tables.get(parentTable) ?? []).find((p) => String(p.id) === String(fk));
+      return parent ? parent[column.slice(dot + 1)] : undefined;
+    };
+    let hits = table.filter((row) => matches(row, this.pending.filters, resolve));
     if (this.pending.order) {
       const { column, ascending } = this.pending.order;
       hits = [...hits].sort((a, b) => {
@@ -191,6 +244,9 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
       });
     }
     if (this.pending.limit != null) hits = hits.slice(0, this.pending.limit);
+    if (this.pending.countHead && this.pending.kind === 'select') {
+      return { data: null, error: null, count: hits.length };
+    }
 
     if (this.pending.kind === 'update') {
       for (const row of hits) Object.assign(row, this.pending.patch);
@@ -208,9 +264,7 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   }
 
   then<A, B = never>(
-    onfulfilled?:
-      | ((v: { data: Row[] | null; error: { message: string; code?: string } | null }) => A | PromiseLike<A>)
-      | null,
+    onfulfilled?: ((v: Result) => A | PromiseLike<A>) | null,
     onrejected?: ((reason: unknown) => B | PromiseLike<B>) | null,
   ): PromiseLike<A | B> {
     return Promise.resolve(this.run()).then(onfulfilled, onrejected);
@@ -232,10 +286,41 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   }
 }
 
+export type RpcHandler = (
+  args: Record<string, unknown>,
+  store: FakeSupabase,
+) => { data: unknown; error: { message: string; code?: string } | null };
+
 export class FakeSupabase {
   readonly tables = new Map<string, Row[]>();
   readonly failNext = new Map<string, { message: string; code?: string }>();
+  /** Opt-in UNIQUE constraints for `insert`, per table. See unique(). */
+  readonly uniques = new Map<string, string[][]>();
+  /** `rpc(fn, args)` answers, per function name. An unregistered name throws. */
+  readonly rpcs = new Map<string, RpcHandler>();
+  readonly rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
   nextId = 1;
+
+  /** Make `insert` into `table` fail with 23505 when these columns repeat. */
+  unique(table: string, columns: string[]): void {
+    this.uniques.set(table, [...(this.uniques.get(table) ?? []), columns]);
+  }
+
+  /**
+   * One rpc() for both registries: `rpcs` (handler gets the store too) and
+   * `onRpc` / `rpcHandlers`. An unregistered name throws.
+   */
+  async rpc(fn: string, args: Record<string, unknown> = {}) {
+    const handler = this.rpcs.get(fn);
+    if (handler) {
+      this.rpcCalls.push({ fn, args });
+      return handler(args, this);
+    }
+    const simple = this.rpcHandlers.get(fn);
+    if (!simple) throw new Error(`FakeSupabase: rpc('${fn}') has no handler`);
+    this.rpcCalls.push({ fn, args });
+    return simple(args);
+  }
 
   table(name: string): Row[] {
     let rows = this.tables.get(name);
@@ -278,16 +363,11 @@ export class FakeSupabase {
     this.rpcHandlers.set(name, handler);
   }
 
-  async rpc(name: string, args: Record<string, unknown> = {}) {
-    const handler = this.rpcHandlers.get(name);
-    if (!handler) throw new Error(`FakeSupabase: rpc('${name}') has no handler`);
-    return handler(args);
-  }
 
   from(table: string) {
     return {
-      select: (columns?: string) =>
-        new Query(this, { kind: 'select', table, filters: [] }).select(columns),
+      select: (columns?: string, options?: { count?: string; head?: boolean }) =>
+        new Query(this, { kind: 'select', table, filters: [] }).select(columns, options),
       update: (patch: Row) => new Query(this, { kind: 'update', table, filters: [], patch }),
       insert: (rows: Row | Row[]) =>
         new Query(this, { kind: 'insert', table, filters: [], inserted: Array.isArray(rows) ? rows : [rows] }),

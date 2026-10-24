@@ -22,7 +22,7 @@ import { Link } from '@/i18n/navigation';
  *   - `onClose` is called when the user taps the overlay backdrop.
  *   - Clicking a nav item also calls `onClose` so the drawer closes.
  */
-export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, supportVisible = false /* SUPPORT_RELEASE_GATE */, isOpen, onClose }) {
+export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralVisible = false, isOpen, onClose }) {
   const tr = useTranslations('dashboardChrome');
   const router = useRouter();
   const [wsMenuOpen, setWsMenuOpen] = useState(false);
@@ -119,6 +119,10 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "workflows", label: tr('sidebar.navWorkflows'), icon: "activity" },
     { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield" },
     { id: "automations", label: tr('sidebar.navAutomations'), icon: "zap" },
+    // The referral program, only while workspaces.referral_enabled is on (the
+    // dashboard page hands that flag down as `referralVisible`, the same way
+    // the confirm-in-chat rollout reaches the Inboxes page).
+    ...(referralVisible ? [{ id: "invite", label: tr('sidebar.navInvite'), icon: "gift" }] : []),
   ];
   const settings = [
     { id: "settings", label: tr('sidebar.navSettings'), icon: "settings" },
@@ -388,6 +392,7 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sid
     workflows: 'Workflows',
     approvals: tr('sidebar.navApprovals'),
     automations: tr('sidebar.navAutomations'),
+    invite: tr('sidebar.navInvite'),
     settings: tr('sidebar.navSettings'),
     security: tr('sidebar.navSecurity'),
   };

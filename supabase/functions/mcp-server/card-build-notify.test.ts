@@ -1055,6 +1055,10 @@ const SQL_ALLOWED = new Set([
   // Re-creates mcp_tools_call_gate verbatim with three workspace payment
   // columns added; the key row, this column included, is only read.
   "supabase/migrations/20261024190000_payment_issue_columns.sql",
+  // The referral migration re-creates mcp_tools_call_gate whole (to return
+  // referral_personal_until); it reads the column the same way and never
+  // writes it.
+  "supabase/migrations/20261025090000_referrals.sql",
 ]);
 
 /**
