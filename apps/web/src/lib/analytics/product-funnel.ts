@@ -76,7 +76,10 @@ export type ProductFunnelEvent = {
     | 'multi_inbox_prompt'
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
-    | 'paywall_clicked';
+    | 'paywall_clicked'
+    // The failed-payment banner's button (/api/stripe/payment-fix). success =
+    // sent on to Stripe, failure = bounced to settings.
+    | 'payment_fix_clicked';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

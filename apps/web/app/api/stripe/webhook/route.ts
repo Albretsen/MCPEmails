@@ -384,6 +384,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
   }
 
+  // Measurement: why the subscription ended. Before the out-of-order guard so
+  // a stale-skipped deletion is still counted. Never throws.
+  if (event.type === 'customer.subscription.deleted') {
+    await recordDeletionReason(supabase, event);
+  }
+
   // ── 3. Out-of-order guard ──────────────────────────────────────────────────
   // Ignore this event if a NEWER event for the same customer was already
   // processed (Stripe redelivery of a stale event must not clobber newer state).
@@ -1372,7 +1378,10 @@ async function queueDunningForInvoice(
   }
 
   // Resolved before the retry guard, because the guard depends on it.
-  const declineCode = options.declineCode ?? (await invoiceDeclineCode(invoice));
+  const failed = options.declineCode
+    ? { declineCode: options.declineCode, paymentMethodId: null }
+    : await invoiceFailedAttempt(invoice);
+  const declineCode = failed.declineCode;
 
   // The failed-payment STATE (dashboard banner + once-a-day MCP note), for
   // both invoice.payment_failed and invoice.payment_action_required. It runs
@@ -1434,6 +1443,8 @@ async function queueDunningForInvoice(
     amountCents: invoice.amount_due ?? null,
     currency: invoice.currency ?? null,
     declineCode,
+    // Not shown to anyone: recoveredBy compares it with the method that pays.
+    failedPaymentMethodId: failed.paymentMethodId,
     // The one-click "pay this exact invoice" page. Better than the billing
     // portal for a customer whose only problem is that one charge, and for a
     // bank approval it is the page that runs the 3DS challenge.
@@ -1484,12 +1495,16 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
   if (!lifecycleQueueingEnabled()) return;
 
   if (invoice.id) {
-    await cancelOpenSequence({
+    const cancelled = await cancelOpenSequence({
       db,
       stripeCustomerId: customerId,
       scopeKey: invoice.id,
       reason: 'payment_recovered',
     });
+    // Measurement only (/admin/growth/dunning): who fixed it. Only when this
+    // event is what closed a live sequence, so a redelivery or an invoice that
+    // was never dunned costs no Stripe call. Never throws.
+    if (cancelled > 0) await recordRecoveredBy(db, customerId, invoice.id);
   }
 
   await cancelOpenSequence({
@@ -1498,6 +1513,159 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+// ---------------------------------------------------------------------------
+// Who fixed it: recovered_by on a recovered dunning sequence
+// ---------------------------------------------------------------------------
+
+const DUNNING_TEMPLATE_LIST = ['dunning_1', 'dunning_3', 'dunning_7', 'dunning_14'] as const;
+
+type RecoveredBy = 'customer' | 'retry' | 'unknown';
+
+/**
+ * Did the customer act, or did Stripe's own retry get the money?
+ *
+ * THE HEURISTIC, from one invoice retrieve expanded through to the paying
+ * charge (payments.data.payment.payment_intent.latest_charge):
+ *
+ *   1. The paying charge ran 3-D Secure (payment_method_details.card.
+ *      three_d_secure is set) -> 'customer'. A 3DS check needs the cardholder
+ *      in a browser, which an off-session retry never has; this is the bank
+ *      approval (SCA) case and the hosted invoice page with a 3DS card.
+ *   2. The paying payment method differs from the one on the failed attempt
+ *      (failedPaymentMethodId, stored in the dunning payload at decline time)
+ *      -> 'customer'. A card typed on the hosted invoice page or saved in the
+ *      portal is a new pm_ id, even when it is the same physical card.
+ *   3. Same payment method, no 3DS -> 'retry'.
+ *   4. Anything not known (no stored failed method, no succeeded intent on the
+ *      invoice, or a Stripe error) -> 'unknown'.
+ *
+ * Its one blind spot: a customer who tops up the account and waits for the
+ * retry reads as 'retry'. Stripe records no "paid from the hosted page" flag
+ * on the charge, so the payment method is the strongest signal one retrieve
+ * gives. Never throws.
+ */
+async function recoveredBy(
+  invoiceId: string,
+  failedPaymentMethodId: string | null,
+): Promise<RecoveredBy> {
+  try {
+    const full = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payments.data.payment.payment_intent.latest_charge'],
+    });
+    const payments = (full as unknown as { payments?: { data?: unknown[] } }).payments;
+    for (const entry of payments?.data ?? []) {
+      const intent = (entry as { payment?: { payment_intent?: unknown } })?.payment?.payment_intent;
+      if (!intent || typeof intent !== 'object') continue;
+      const pi = intent as {
+        status?: string;
+        payment_method?: unknown;
+        latest_charge?: unknown;
+      };
+      if (pi.status !== 'succeeded') continue;
+
+      const charge =
+        pi.latest_charge && typeof pi.latest_charge === 'object'
+          ? (pi.latest_charge as {
+              payment_method?: unknown;
+              payment_method_details?: { card?: { three_d_secure?: unknown } | null } | null;
+            })
+          : null;
+      if (charge?.payment_method_details?.card?.three_d_secure) return 'customer';
+
+      const paidWith = paymentMethodIdOf(charge?.payment_method) ?? paymentMethodIdOf(pi.payment_method);
+      if (!failedPaymentMethodId || !paidWith) return 'unknown';
+      return paidWith === failedPaymentMethodId ? 'retry' : 'customer';
+    }
+    return 'unknown';
+  } catch (err) {
+    console.error('[stripe-webhook] recovered_by lookup failed for %s:', invoiceId, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 'unknown';
+  }
+}
+
+/**
+ * Stamp recovered_by on every row of the dunning sequence for this invoice.
+ * Measurement only: a failure is logged and swallowed, and the webhook acks.
+ */
+async function recordRecoveredBy(
+  db: ReturnType<typeof createServiceRoleClient>,
+  customerId: string,
+  invoiceId: string,
+): Promise<void> {
+  try {
+    const { data: rows, error: readError } = await db
+      .from('billing_email_sends')
+      .select('payload')
+      .eq('stripe_customer_id', customerId)
+      .eq('scope_key', invoiceId)
+      .in('template', [...DUNNING_TEMPLATE_LIST]);
+    if (readError) {
+      console.error('[stripe-webhook] recovered_by: could not read the sequence:', readError.message);
+      return;
+    }
+    if (!rows?.length) return;
+
+    let failedPaymentMethodId: string | null = null;
+    for (const row of rows) {
+      const payload = row.payload as { failedPaymentMethodId?: unknown } | null;
+      if (typeof payload?.failedPaymentMethodId === 'string' && payload.failedPaymentMethodId) {
+        failedPaymentMethodId = payload.failedPaymentMethodId;
+        break;
+      }
+    }
+
+    const by = await recoveredBy(invoiceId, failedPaymentMethodId);
+    const { error } = await db
+      .from('billing_email_sends')
+      .update({ recovered_by: by })
+      .eq('stripe_customer_id', customerId)
+      .eq('scope_key', invoiceId)
+      .in('template', [...DUNNING_TEMPLATE_LIST]);
+    if (error) {
+      console.error('[stripe-webhook] recovered_by: update failed:', error.message);
+      return;
+    }
+    console.log('[stripe-webhook] %s recovered_by=%s', invoiceId, by);
+  } catch (err) {
+    console.error('[stripe-webhook] recordRecoveredBy failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Why a subscription ended, on its own ledger row: Stripe's
+ * cancellation_details.reason ('payment_failed' when the retries ran out,
+ * 'cancellation_requested' when someone cancelled), or 'none'. Feeds the
+ * involuntary-churn panel on /admin/growth/dunning.
+ *
+ * Written right after the ledger insert, before the out-of-order guard, so a
+ * deletion that is skipped as stale is still counted with its reason. Best
+ * effort: before migration 20261024225000 the column does not exist, the
+ * update fails, and that is logged and swallowed. Never throws.
+ */
+async function recordDeletionReason(
+  db: ReturnType<typeof createServiceRoleClient>,
+  event: Stripe.Event,
+): Promise<void> {
+  try {
+    const subscription = event.data.object as Stripe.Subscription;
+    const raw = subscription.cancellation_details?.reason ?? null;
+    const reason = typeof raw === 'string' && raw ? raw.slice(0, 64) : 'none';
+    const { error } = await db
+      .from('stripe_webhook_events')
+      .update({ cancellation_reason: reason })
+      .eq('event_id', event.id);
+    if (error) console.error('[stripe-webhook] could not record the deletion reason:', error.message);
+  } catch (err) {
+    console.error('[stripe-webhook] recordDeletionReason failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1609,8 +1777,22 @@ async function stripeCustomerEmail(customerId: string): Promise<string | null> {
   }
 }
 
+/** The pm_ id on a last_payment_error, whether Stripe expanded it or not. */
+function paymentMethodIdOf(value: unknown): string | null {
+  if (typeof value === 'string') return value || null;
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id;
+    return typeof id === 'string' && id ? id : null;
+  }
+  return null;
+}
+
 /**
- * The issuer's decline code for a failed invoice, or null.
+ * The failed attempt on an invoice: the issuer's decline code and the payment
+ * method it was tried on, each null when unknown.
+ *
+ * The payment method is kept in the dunning payload so that, when the invoice
+ * is finally paid, recoveredBy can tell a new card from the same one retried.
  *
  * Worth the extra API call because it is the difference between "your payment
  * failed" and "your bank said there was not enough in the account", and the
@@ -1632,7 +1814,10 @@ async function stripeCustomerEmail(customerId: string): Promise<string | null> {
  * Never throws. A null here costs one sentence of copy; an exception here costs
  * the whole dunning sequence.
  */
-async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | null> {
+async function invoiceFailedAttempt(
+  invoice: Stripe.Invoice,
+): Promise<{ declineCode: string | null; paymentMethodId: string | null }> {
+  const none = { declineCode: null, paymentMethodId: null };
   try {
     // 1. The old shape, present when the endpoint is on an older API version.
     const raw = invoice as unknown as Record<string, unknown>;
@@ -1644,10 +1829,13 @@ async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | nul
     }
     if (paymentIntentId) {
       const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      return declineFrom(intent.last_payment_error);
+      return {
+        declineCode: declineFrom(intent.last_payment_error),
+        paymentMethodId: paymentMethodIdOf(intent.last_payment_error?.payment_method),
+      };
     }
 
-    if (!invoice.id) return null;
+    if (!invoice.id) return none;
 
     // 2. The current shape. One call: expanding through to the intent means the
     //    error is already on the object and no second retrieve is needed.
@@ -1660,19 +1848,18 @@ async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | nul
       const payment = (entry as { payment?: Record<string, unknown> })?.payment;
       const intent = payment?.payment_intent;
       if (intent && typeof intent === 'object' && 'last_payment_error' in intent) {
-        const code = declineFrom(
-          (intent as { last_payment_error?: Stripe.PaymentIntent.LastPaymentError | null })
-            .last_payment_error,
-        );
-        if (code) return code;
+        const error = (intent as { last_payment_error?: Stripe.PaymentIntent.LastPaymentError | null })
+          .last_payment_error;
+        const code = declineFrom(error);
+        if (code) return { declineCode: code, paymentMethodId: paymentMethodIdOf(error?.payment_method) };
       }
     }
-    return null;
+    return none;
   } catch (err) {
     console.error('[stripe-webhook] could not resolve decline code:', {
       error: err instanceof Error ? err.message : String(err),
     });
-    return null;
+    return none;
   }
 }
 
