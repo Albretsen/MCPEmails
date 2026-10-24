@@ -131,6 +131,10 @@ const SUITES = [
   // adapter that is not wired), and files as chips that can be removed and
   // attached.
   ["draft fields", "draft-fields.test.mjs"],
+  // The thirteenth DOM suite: the §9 subscription cleanup card. Pre-ticked
+  // senders, Select all / none, Confirm sending only ticked plan keys once,
+  // every result status, Continue archiving, expired and hostile names.
+  ["subscription plan", "subscription-plan.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).
@@ -186,6 +190,7 @@ const DOM_LANE = new Set([
   "draft-quote.test.mjs",
   "draft-layout.test.mjs",
   "draft-fields.test.mjs",
+  "subscription-plan.test.mjs",
 ]);
 
 const outcomes = new Array(SUITES.length);
