@@ -17,6 +17,16 @@
   white-space: pre-wrap; font-family: var(--font-sans); font-size: 15px; line-height: 1.6; color: var(--fg-1);
   background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 8px; padding: 16px 18px; margin: 12px 0 0;
 }
+/* /billing/feedback: the one-tap cancel reasons. */
+.feedback-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.feedback-reason {
+  font: inherit; font-size: 15px; color: var(--fg-1); background: var(--bg-surface);
+  border: 1px solid var(--border-1); border-radius: 8px; padding: 8px 14px; cursor: pointer; text-align: left;
+}
+.feedback-reason:hover { border-color: var(--border-2); }
+.feedback-reason:focus-visible { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+.feedback-reason[aria-pressed="true"] { border-color: var(--fg-1); font-weight: 600; }
+.feedback-thanks { font-size: 17px; color: var(--fg-1); }
 @media (max-width: 520px) {
   .contract-summary-row { grid-template-columns: 1fr; gap: 2px; }
 }

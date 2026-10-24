@@ -1702,6 +1702,50 @@ export type Database = {
           },
         ]
       }
+      cancellation_feedback: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          period_end: string | null
+          reason: string
+          source: string
+          stripe_customer_id: string | null
+          subscription_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          period_end?: string | null
+          reason: string
+          source: string
+          stripe_customer_id?: string | null
+          subscription_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          period_end?: string | null
+          reason?: string
+          source?: string
+          stripe_customer_id?: string | null
+          subscription_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_cancel_feedback: {
         Row: {
           created_at: string
