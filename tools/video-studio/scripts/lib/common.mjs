@@ -23,6 +23,11 @@ export const paths = {
   transcripts: resolve(ROOT, 'transcripts'),
   assets: resolve(ROOT, 'assets'),
   vo: resolve(ROOT, 'assets', 'vo'),
+  // Voiceover SCRIPTS, tracked. `npm run voice` turns vo/<id>.txt into
+  // assets/vo/<id>.mp3, which is generated and gitignored.
+  voScripts: resolve(ROOT, 'vo'),
+  clips: resolve(ROOT, 'assets', 'clips'),
+  fixtures: resolve(ROOT, 'fixtures'),
   auth: resolve(ROOT, '.auth'),
   authState: resolve(ROOT, '.auth', 'demo.json'),
   entry: resolve(ROOT, 'src', 'index.ts'),

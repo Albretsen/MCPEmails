@@ -22,6 +22,9 @@ import { runCheckout } from '@/lib/stripe/checkout-core';
  *              the first returns the quote, the second performs it.
  *   locale   : the buyer's app-realm language. Only 'de' changes anything (a
  *              German hosted page); any other value, or none, is English.
+ *   offer    : the seasonal offer id the confirmed quote carried, if any. When
+ *              it is no longer available the confirm pass charges nothing and
+ *              returns a fresh quote with `seasonal_offer_ended: true`.
  *
  * Response (200):
  *   { url: string }        : the Stripe Checkout hosted page URL to redirect to
@@ -66,9 +69,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm, locale } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale, offer } = body as Record<string, unknown>;
 
-  const outcome = await runCheckout({ planId, interval, confirmChange: confirm, locale });
+  const outcome = await runCheckout({
+    planId,
+    interval,
+    confirmChange: confirm,
+    locale,
+    ...(offer !== undefined ? { quotedOffer: offer } : {}),
+  });
 
   if (outcome.kind === 'checkout') {
     return NextResponse.json({ url: outcome.url }, { status: 200 });
@@ -85,6 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         plan: outcome.planName,
         interval: outcome.interval,
         preview: outcome.preview,
+        ...(outcome.offerEnded ? { seasonal_offer_ended: true } : {}),
       },
       { status: 200 },
     );
