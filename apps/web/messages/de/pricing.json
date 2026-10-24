@@ -221,5 +221,10 @@
     "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
     "ctaPrimary": "Kostenlos starten",
     "ctaSecondary": "Zur Doku"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} im ersten Jahr, danach ${renewal} pro Jahr. Sie sparen ${saving}.",
+    "ends": "Endet am {date} um {time} Uhr (Osloer Zeit)."
   }
 }

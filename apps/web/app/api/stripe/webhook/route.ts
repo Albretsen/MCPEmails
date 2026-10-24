@@ -585,6 +585,7 @@ async function handleCheckoutSessionCompleted(
     currentPeriodEnd,
     currentPeriodStart,
     source: 'checkout.session.completed',
+    offer: session.metadata?.offer ?? null,
   });
 
   if (resolvedPlan === 'free') return;
@@ -754,6 +755,7 @@ async function handleSubscriptionUpserted(
     currentPeriodStart: basePlanItem(subscription.items.data)?.current_period_start ?? null,
     currentPeriodEnd: basePlanItem(subscription.items.data)?.current_period_end ?? null,
     source: 'customer.subscription.upserted',
+    offer: subscription.metadata?.offer ?? null,
   });
 
   // Business bills mailboxes past ten as a second item. Re-sync it on every
@@ -1317,6 +1319,17 @@ interface ApplyUserPlanOptions {
   currentPeriodStart?: number | null;
   /** Human-readable label for log messages. */
   source: string;
+  /**
+   * The seasonal offer cohort tag (metadata `offer`, e.g. 'bw2026') from the
+   * session or subscription. Logged only: there is no column for it, and the
+   * tag on the Stripe subscription is the record of the cohort.
+   */
+  offer?: string | null;
+}
+
+/** A metadata tag safe to print in a log line, or null. */
+function safeOfferTag(value: string | null | undefined): string | null {
+  return typeof value === 'string' && /^[a-z0-9_]{1,32}$/.test(value) ? value : null;
 }
 
 /**
@@ -1337,6 +1350,7 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
     currentPeriodEnd,
     currentPeriodStart,
     source,
+    offer,
   } = options;
 
   const supabase = createServiceRoleClient();
@@ -1432,7 +1446,7 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   }
 
   console.log(
-    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
+    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'})${safeOfferTag(offer) ? ` offer=${safeOfferTag(offer)}` : ''}; propagated to all owned workspaces`,
   );
 
   // ── Resume automations the Free allowance paused ──────────────────────────
