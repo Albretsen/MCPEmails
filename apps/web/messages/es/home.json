@@ -184,7 +184,7 @@
       },
       "solo": {
         "name": "Pro",
-        "tagline": "Tu agente sigue trabajando cuando el chat está cerrado.",
+        "tagline": "Configúralo en el chat. Sigue funcionando cuando lo cierras.",
         "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
         "features": [
           "Todo lo de Personal",

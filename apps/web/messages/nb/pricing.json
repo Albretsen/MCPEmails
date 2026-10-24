@@ -52,7 +52,7 @@
     },
     "solo": {
       "name": "Pro",
-      "tagline": "Agenten din jobber videre når chatten er lukket.",
+      "tagline": "Sett det opp i chatten. Det fortsetter å kjøre etter at du lukker den.",
       "desc": "For én person som driver en bedrift: opptil 10 postkasser på én agent, fra økonomi og salg til support og din egen.",
       "cta": "Få Pro",
       "features": [
