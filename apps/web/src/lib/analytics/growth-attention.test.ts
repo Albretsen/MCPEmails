@@ -31,6 +31,8 @@ const revenue: RevenueSummary = {
   atRiskCustomers: 0,
   leavingMinor: 0,
   leavingCustomers: 0,
+  pausedCustomers: 0,
+  pausedMinor: 0,
   newMrrMinor: 500,
   newCustomers: 1,
   churnedMrrMinor: 0,

@@ -29,6 +29,7 @@ import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/g
 import {
   DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
+  pausedNow,
   priceInCurrency,
   scheduledToStop,
   summarizeSubscriptions,
@@ -212,6 +213,7 @@ export function subscriptionFacts(
     ...(ratio === undefined ? {} : { taxInclusiveRatio: ratio }),
     planLabel: planLabel(first),
     internal: isInternalAccount(customerEmail(subscription.customer)),
+    paused: pausedNow(subscription, Math.floor(Date.now() / 1000)),
   };
 }
 

@@ -4506,7 +4506,13 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          inbox_keep_order: Json | null
           last_decline_code: string | null
+          pause_history: Json
+          pause_resumes_at: string | null
+          paused_from: string | null
+          pending_plan: string | null
+          pending_plan_effective_at: string | null
           plan: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -4518,7 +4524,13 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          inbox_keep_order?: Json | null
           last_decline_code?: string | null
+          pause_history?: Json
+          pause_resumes_at?: string | null
+          paused_from?: string | null
+          pending_plan?: string | null
+          pending_plan_effective_at?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -4530,7 +4542,13 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          inbox_keep_order?: Json | null
           last_decline_code?: string | null
+          pause_history?: Json
+          pause_resumes_at?: string | null
+          paused_from?: string | null
+          pending_plan?: string | null
+          pending_plan_effective_at?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -5063,6 +5081,7 @@ export type Database = {
           payment_issue_since: string | null
           payment_notice_shown_on: string | null
           plan: string
+          pro_features_enabled: boolean
           pro_unlimited_inboxes_exempt: boolean
           sends_frozen_at: string | null
           slug: string
@@ -5119,6 +5138,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           sends_frozen_at?: string | null
           slug: string
@@ -5175,6 +5195,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           sends_frozen_at?: string | null
           slug?: string
