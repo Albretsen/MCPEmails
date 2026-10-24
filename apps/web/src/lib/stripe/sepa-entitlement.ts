@@ -79,7 +79,7 @@ export async function hasPaidInvoice(
     });
     return paid.data.length > 0;
   } catch (err) {
-    console.error(`[stripe-webhook] could not list paid invoices for ${subscriptionId}:`, {
+    console.error('[stripe-webhook] could not list paid invoices for %s:', subscriptionId, {
       error: err instanceof Error ? err.message : String(err),
     });
     return null;
@@ -97,7 +97,7 @@ async function paymentMethodType(
   try {
     return (await client.paymentMethods.retrieve(method)).type ?? null;
   } catch (err) {
-    console.error(`[stripe-webhook] could not retrieve payment method of ${subscription.id}:`, {
+    console.error('[stripe-webhook] could not retrieve payment method of %s:', subscription.id, {
       error: err instanceof Error ? err.message : String(err),
     });
     return null;

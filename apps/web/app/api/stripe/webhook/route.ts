@@ -892,7 +892,7 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void
       `[stripe-webhook] SEPA DISPUTE ${dispute.id} on charge ${chargeId ?? 'none'} (customer ${customerId ?? 'none'}): ${dispute.amount} ${dispute.currency}, reason=${dispute.reason}. SEPA disputes are final; review this account by hand. No plan change made.`,
     );
   } catch (err) {
-    console.error(`[stripe-webhook] charge.dispute.created ${dispute.id}: could not inspect the charge:`, {
+    console.error('[stripe-webhook] charge.dispute.created %s: could not inspect the charge:', dispute.id, {
       error: err instanceof Error ? err.message : String(err),
     });
   }
