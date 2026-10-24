@@ -45,6 +45,10 @@ import {
   POSTAL_ADDRESS_LINE,
 } from '@/lib/email/legal';
 import { PLANS } from '@/lib/stripe/plans';
+import { verifyFeedbackToken } from '@/lib/billing/feedback-token';
+
+// The signed /billing/feedback links in cancel_ask need the server secret.
+process.env.CSRF_SECRET = 'ab'.repeat(32);
 
 const TO = 'customer@example.com';
 const TOKEN = '11111111-2222-3333-4444-555555555555';
@@ -370,18 +374,6 @@ test('the internal plan ids never leak', () => {
       );
     }
   }
-});
-
-test('the cancellation email asks one question and offers no discount', () => {
-  const email = composeBillingEmail('cancel_ask', payload());
-  assert.ok(email);
-  assert.match(email.subject, /What stopped working/i);
-  assert.ok(
-    !/discount|% off|coupon|deal|special price/i.test(email.body),
-    'a discount here buys a month and destroys the only thing worth having',
-  );
-  // Exactly one question mark in the body: the question.
-  assert.equal((email.body.match(/\?/g) ?? []).length, 1, 'ask one thing, not three');
 });
 
 test('the day-14 win-back promises it is the last one, and is', () => {
@@ -757,12 +749,219 @@ test('an unusable recipient is refused before any network call', async () => {
   }
 });
 
-test('the cancellation email points a customer inside 14 days at withdrawal', () => {
+// ---------------------------------------------------------------------------
+// The cancellation confirmation (cancel_ask). Order: confirmation, withdrawal,
+// optional one-tap reason, and last, after a divider, the neutral pause /
+// smaller-plan paragraph (flag-gated, monthly Personal and Pro only).
+// ---------------------------------------------------------------------------
+
+const SUB = 'sub_1TestCancel';
+const CUS = 'cus_TestCancel';
+const PERIOD_END_S = 1_793_404_800; // 2026-10-31T00:00:00Z
+
+function cancelRow(overrides: Partial<LifecyclePayload> = {}, scopeKey = `${SUB}:${PERIOD_END_S}`) {
+  return {
+    stripe_customer_id: CUS,
+    recipient: TO,
+    template: 'cancel_ask' as const,
+    scope_key: scopeKey,
+    payload: payload({ periodEnd: new Date(PERIOD_END_S * 1000).toISOString(), ...overrides }),
+  };
+}
+
+function cancelEmail(overrides: Partial<LifecyclePayload> = {}) {
+  const email = composeBillingEmail('cancel_ask', sendInputForQueueRow(cancelRow(overrides)).payload);
+  assert.ok(email);
+  return email;
+}
+
+function withPauseFlag<T>(value: string | undefined, fn: () => T): T {
+  const saved = process.env.BILLING_PAUSE_ENABLED;
+  if (value === undefined) delete process.env.BILLING_PAUSE_ENABLED;
+  else process.env.BILLING_PAUSE_ENABLED = value;
+  try {
+    return fn();
+  } finally {
+    if (saved === undefined) delete process.env.BILLING_PAUSE_ENABLED;
+    else process.env.BILLING_PAUSE_ENABLED = saved;
+  }
+}
+
+const OFFER_URL = 'https://mcpemails.com/dashboard/settings?src=cancel_email#billing';
+const REASONS = ['too_expensive', 'not_using_enough', 'missing_feature', 'reliability', 'switched_tool', 'temporary_need', 'other'];
+
+test('the cancellation email confirms the cancel, the paid-up date and that nothing is deleted', () => {
+  const email = cancelEmail({ planId: 'solo', amountCents: 1500 });
+  assert.equal(email.subject, 'Your MCPEmails cancellation is confirmed');
+  assert.equal(email.category, 'transactional');
+  assert.match(email.body, /^You cancelled your Pro plan\. It stays active until 31 October 2026, which you have already paid for\./);
+  assert.ok(email.body.includes('Nothing is deleted either way.'), 'the NOTHING_DELETED line');
+  assert.match(email.htmlBody, /Your cancellation is confirmed/);
+  assert.match(email.htmlBody, /31 October 2026, which you have already paid for/);
+});
+
+test('D3: with a park count above one, the confirmation says the extra inboxes are parked, not deleted', () => {
+  const sentence =
+    'When your plan ends, one inbox stays active on Free and the others are parked, not deleted. They come back if you subscribe again.';
+  const email = cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 4 });
+  const lines = email.body.split('\n');
+  assert.equal(lines[1], sentence, 'right after the confirmation, before the withdrawal line');
+  assert.ok(email.htmlBody.includes(sentence));
+  assert.ok(!/delete your|will lose|warning/i.test(sentence), 'no threat language');
+});
+
+test('D3: no parking sentence without the marker, with one inbox, or for a grandfathered owner', () => {
+  const marker = /parked, not deleted/;
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500 }).body), 'rows queued without the marker');
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 1 }).body), 'one inbox');
+  assert.ok(!marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 0 }).body), 'nothing to park');
+  assert.ok(
+    !marker.test(cancelEmail({ planId: 'solo', amountCents: 1500, parkInboxCount: 3, grandfathered: true }).htmlBody),
+    'grandfathered owners keep every inbox',
+  );
+});
+
+test('without a period end it still says the plan runs to the end of what was paid', () => {
+  const email = composeBillingEmail('cancel_ask', payload({ periodEnd: null }));
+  assert.ok(email);
+  assert.match(email.body, /until the end of the period you have already paid for/);
+});
+
+test('the withdrawal line: conditional when the first charge is unknown, plain inside 14 days, gone after', () => {
+  const unknown = cancelEmail();
+  assert.match(unknown.body, /If your first charge was less than 14 days ago, you can also withdraw from the contract/);
+  assert.match(unknown.body, /: https:\/\/mcpemails\.com\/withdrawal$/m);
+  assert.match(unknown.htmlBody, /href="[^"]*\/withdrawal"/);
+
+  const recent = cancelEmail({ firstChargeAt: new Date(Date.now() - 3 * 86_400_000).toISOString() });
+  assert.match(recent.body, /Your first charge was less than 14 days ago, so you can also withdraw/);
+
+  const old = cancelEmail({ firstChargeAt: new Date(Date.now() - 40 * 86_400_000).toISOString() });
+  assert.ok(!/withdraw/i.test(old.body), 'outside the window the line is left out');
+  assert.ok(!/\/withdrawal/.test(old.htmlBody));
+});
+
+test('the seven reason links each carry a valid token for this cancellation and preselect their reason', () => {
+  const email = cancelEmail();
+  assert.match(email.body, /If you want to tell us why, one tap is enough:/);
+  assert.match(email.body, /Or just reply to this email\./);
+  const urls = [...email.body.matchAll(/https:\/\/mcpemails\.com\/billing\/feedback\?t=([^&\s]+)&r=([a-z_]+)/g)];
+  assert.deepEqual(urls.map((m) => m[2]), REASONS, 'seven links, in order');
+  for (const [, token] of urls) {
+    assert.deepEqual(verifyFeedbackToken(decodeURIComponent(token)), {
+      subscriptionId: SUB,
+      customerId: CUS,
+      periodEnd: PERIOD_END_S,
+    });
+  }
+  const hrefs = [...email.htmlBody.matchAll(/href="https:\/\/mcpemails\.com\/billing\/feedback\?t=[^"&]+&amp;r=([a-z_]+)"/g)];
+  assert.deepEqual(hrefs.map((m) => m[1]), REASONS, 'seven real anchors in the HTML part');
+  for (const label of ['Too expensive', 'Not using it enough', 'Missing a feature', 'Connection or reliability problems', 'Switched to another tool', 'Only needed it for a while', 'Other']) {
+    assert.ok(email.body.includes(`${label}: https://`), label);
+  }
+});
+
+test('a row with no subscription in its scope keeps "just reply" and no links', () => {
   const email = composeBillingEmail('cancel_ask', payload());
   assert.ok(email);
-  assert.match(email.body, /withdraw from the contract/);
-  assert.match(email.body, /\/withdrawal\b/);
-  assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
+  assert.match(email.body, /If you want to tell us why, just reply to this email\./);
+  assert.ok(!/billing\/feedback/.test(email.body));
+});
+
+test('the queue row supplies the cancellation identity; values already in the payload win', () => {
+  const filled = sendInputForQueueRow(cancelRow()).payload;
+  assert.equal(filled.subscriptionId, SUB);
+  assert.equal(filled.stripeCustomerId, CUS);
+  assert.equal(filled.periodEndSeconds, PERIOD_END_S);
+  const bare = sendInputForQueueRow(cancelRow({}, SUB)).payload;
+  assert.equal(bare.subscriptionId, SUB);
+  assert.equal(bare.periodEndSeconds, null);
+  const kept = sendInputForQueueRow(cancelRow({ subscriptionId: 'sub_kept' })).payload;
+  assert.equal(kept.subscriptionId, 'sub_kept');
+  const other = sendInputForQueueRow({ ...cancelRow(), template: 'winback_14' }).payload;
+  assert.equal(other.subscriptionId, undefined, 'only cancel_ask is touched');
+});
+
+test('the pause / smaller-plan paragraph shows only with the flag on, on monthly Personal and Pro', () => {
+  withPauseFlag(undefined, () => {
+    assert.ok(!cancelEmail({ planId: 'solo', amountCents: 1500 }).body.includes(OFFER_URL), 'flag off');
+  });
+  withPauseFlag('off', () => {
+    assert.ok(!cancelEmail({ planId: 'solo', amountCents: 1500 }).body.includes(OFFER_URL), 'flag "off"');
+  });
+  withPauseFlag('on', () => {
+    const pro = cancelEmail({ planId: 'solo', amountCents: 1500 });
+    assert.match(pro.body, /you can pause for up to 3 months, or switch to Personal, from your billing page\. Either one replaces this cancellation\./);
+    assert.ok(pro.body.includes(OFFER_URL));
+    assert.ok(pro.htmlBody.includes(`href="${OFFER_URL}"`));
+
+    const personal = cancelEmail({ planId: 'personal', amountCents: 900 });
+    assert.match(personal.body, /you can pause for up to 3 months from your billing page\. That replaces this cancellation\./);
+    assert.ok(!/switch to/i.test(personal.body), 'Personal is already the smallest paid plan');
+
+    const legacyPersonal = cancelEmail({ planId: 'personal', amountCents: 500 });
+    assert.ok(legacyPersonal.body.includes(OFFER_URL), 'the older $5 Personal price is monthly too');
+
+    const explicit = cancelEmail({ planId: 'solo', amountCents: null, interval: 'month' });
+    assert.ok(explicit.body.includes(OFFER_URL), 'interval from the queue wins');
+  });
+});
+
+test('no pause paragraph for annual plans, Business, Free, unknown intervals or a switch to Free', () => {
+  withPauseFlag('on', () => {
+    const cases: Array<[string, Partial<LifecyclePayload>]> = [
+      ['annual Pro by amount', { planId: 'solo', amountCents: PLANS.solo.yearlyPriceCents }],
+      ['annual Personal by interval', { planId: 'personal', interval: 'year', amountCents: 900 }],
+      ['Business', { planId: 'pro', amountCents: 3900 }],
+      ['no plan', { planId: null }],
+      ['unknown amount and interval', { planId: 'solo', amountCents: null }],
+      ['billing_switch_free', { planId: 'solo', amountCents: 1500, source: 'billing_switch_free' }],
+    ];
+    for (const [name, overrides] of cases) {
+      const email = cancelEmail(overrides);
+      assert.ok(!email.body.includes(OFFER_URL), name);
+      assert.ok(!/pause/i.test(email.body), `${name}: no pause wording`);
+      assert.ok(!/<hr/.test(email.htmlBody), `${name}: no divider`);
+    }
+  });
+});
+
+test('the pause paragraph is the last thing before the footer, after a divider', () => {
+  withPauseFlag('on', () => {
+    const email = cancelEmail({ planId: 'solo', amountCents: 1500 });
+    const blocks = email.body.split('\n\n');
+    const footerAt = blocks.findIndex((b) => b.startsWith('Replies come straight to a person'));
+    assert.ok(footerAt > 1);
+    assert.match(blocks[footerAt - 1], /^If you only need a break/);
+    assert.ok(blocks[footerAt - 1].endsWith(OFFER_URL));
+    assert.equal(blocks[footerAt - 2], '----------');
+    assert.ok(email.body.indexOf('one tap is enough') < email.body.indexOf('----------'), 'reasons come first');
+    assert.ok(email.body.indexOf('/withdrawal') < email.body.indexOf('one tap is enough'), 'withdrawal before reasons');
+
+    const html = email.htmlBody;
+    const hr = html.indexOf('<hr');
+    assert.ok(hr > html.indexOf('/billing/feedback'), 'divider after the reason links');
+    assert.ok(html.indexOf(OFFER_URL) > hr);
+    assert.ok(html.indexOf('Replies come straight to a person') > html.lastIndexOf(OFFER_URL));
+  });
+});
+
+test('the cancellation email: no discount, no em dash, no plan slug, no "30 days", no angle brackets in text', () => {
+  withPauseFlag('on', () => {
+    for (const planId of ['personal', 'solo', 'pro', null] as const) {
+      const email = cancelEmail({ planId, amountCents: planId === 'pro' ? 3900 : 900 });
+      for (const part of [email.subject, email.body, email.htmlBody]) {
+        assert.ok(!part.includes('—'), 'no em dash');
+        assert.ok(!/30 days/i.test(part), 'never "30 days"');
+        assert.ok(!/discount|% off|coupon|special price/i.test(part), 'no discount');
+        assert.ok(!/are you sure/i.test(part), 'no confirm-shaming');
+      }
+      // Slugs in prose, outside the reason URLs' `r=` values.
+      const prose = email.body.replace(/https:\/\/\S+/g, '');
+      assert.ok(!/\bsolo\b/i.test(prose), 'the Pro slug never shows');
+      assert.ok(!/<|>/.test(email.body), 'no angle brackets in the plain text');
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

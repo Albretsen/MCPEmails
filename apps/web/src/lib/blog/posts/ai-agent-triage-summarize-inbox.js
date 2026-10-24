@@ -32,7 +32,7 @@ Start simple. This is the one I run most days. Paste it into Claude (or any MCP 
 
 > Look at my main inbox. Pull everything unread, then give me a summary grouped into three buckets: needs a reply today, FYI / can wait, and probably noise. For each item in the first two buckets, give me one line: who it's from and what they want. Don't open anything I don't need — skim the subjects and senders first, only read the body when the subject is ambiguous.
 
-Notice what that prompt does. It tells the agent to lean on \`email_read\` (action list) metadata (sender, subject, snippet) and to call \`email_read\` with \`action: read\` sparingly. That keeps the session fast and stays well under the rate limits — 100 requests per minute per API key, and a per-workspace ceiling that starts at 60/min on the Free plan. A 40-message unread queue triaged this way is maybe a dozen tool calls, not forty.
+Notice what that prompt does. It tells the agent to lean on \`email_read\` (action list) metadata (sender, subject, snippet) and to call \`email_read\` with \`action: read\` sparingly. That keeps the session fast and well under the rate limits: every API key gets windows sized to your plan's per-minute ceiling, and several keys share that ceiling (see [pricing](/pricing)). A 40-message unread queue triaged this way is maybe a dozen tool calls, not forty.
 
 A good response looks like this:
 

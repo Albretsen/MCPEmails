@@ -64,7 +64,8 @@
         "Snooze: mail leaves the inbox and comes back when you choose",
         "A daily morning brief, placed straight in your inbox",
         "Search every connected inbox at once",
-        "Instructions for your AI, per inbox"
+        "Instructions for your AI, per inbox",
+        "Webhooks for new mail"
       ]
     },
     "pro": {
@@ -76,7 +77,8 @@
         "10 mailboxes included, $3 a month for each extra",
         "Unlimited members with roles, at no extra cost",
         "Admins approve sends held for review",
-        "Several workspaces on one subscription, one per company or client"
+        "Several workspaces on one subscription, one per company or client",
+        "Webhooks for new mail"
       ]
     }
   },
@@ -103,6 +105,7 @@
           "inboxes": "Connected inboxes",
           "actions": "Email actions per month",
           "keys": "API keys",
+          "webhooks": "Webhooks for new mail",
           "members": "People who can sign in",
           "burst": "Burst rate limit",
           "approvals": "Send review and approval hold"

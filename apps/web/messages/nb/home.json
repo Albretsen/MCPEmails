@@ -280,10 +280,11 @@
     "linkOauth": "OAuth-tilkobling",
     "linkProviders": "Leverandørstøtte",
     "linkReadOnly": "Skrivebeskyttet tilgang",
+    "linkApiGuide": "Utviklerguide",
     "linkClients": "Oppsett av MCP-klienter",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
-    "linkWithdrawal": "Angrerett",
+    "linkWithdrawal": "Gå fra avtalen her",
     "linkCancel": "Si opp avtaler her",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -300,7 +301,8 @@
     "linkHelp": "Hjelp og kundestøtte",
     "linkSelfHost": "Selvhosting",
     "linkFounders": "For gründere",
-    "linkBusiness": "For bedrifter"
+    "linkBusiness": "For bedrifter",
+    "linkDevelopers": "Utviklere"
   },
   "languageSwitcher": {
     "label": "Språk",

@@ -31,6 +31,16 @@ Deno.test("input: exactly the cap is accepted, one over is refused, padding does
   assertEquals(normalizeInboxInstructionsInput(atCap + "a"), { ok: false, error: "too_long" });
 });
 
+Deno.test("input: a long run of tabs trims in linear time (no regex backtracking)", () => {
+  const tabs = "\t".repeat(200_000);
+  const started = performance.now();
+  assertEquals(normalizeInboxInstructionsInput(`${tabs}Sign as Support.${tabs}`), { ok: true, value: "Sign as Support." });
+  assertEquals(normalizeInboxInstructionsInput(tabs), { ok: true, value: null });
+  assertEquals(normalizeInboxInstructionsInput(`x${tabs}y`), { ok: false, error: "too_long" });
+  assertEquals(normalizeStoredInboxInstructions(`${tabs}keep\tthis${tabs}`), "keep\tthis");
+  assert(performance.now() - started < 1000, "trimming long tab runs took over a second");
+});
+
 Deno.test("input: non-strings are refused", () => {
   for (const bad of [undefined, 42, true, {}, ["x"]]) {
     assertEquals(normalizeInboxInstructionsInput(bad), { ok: false, error: "invalid_instructions" });

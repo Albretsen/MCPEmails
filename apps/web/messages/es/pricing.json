@@ -64,7 +64,8 @@
         "Posponer: el correo sale de la bandeja de entrada y vuelve cuando tú elijas",
         "Un resumen cada mañana, directamente en tu bandeja de entrada",
         "Busca en todas tus bandejas conectadas a la vez",
-        "Instrucciones para tu IA, por bandeja"
+        "Instrucciones para tu IA, por bandeja",
+        "Webhooks para el correo nuevo"
       ]
     },
     "pro": {
@@ -76,7 +77,8 @@
         "10 buzones incluidos, $3 al mes por cada buzón extra",
         "Miembros ilimitados con roles, sin coste adicional",
         "Los administradores aprueban los envíos en espera",
-        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente"
+        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente",
+        "Webhooks para el correo nuevo"
       ]
     }
   },
@@ -103,6 +105,7 @@
           "inboxes": "Bandejas conectadas",
           "actions": "Acciones de correo al mes",
           "keys": "Claves de API",
+          "webhooks": "Webhooks para el correo nuevo",
           "members": "Personas con acceso",
           "burst": "Límite de ráfaga",
           "approvals": "Aprobación antes de enviar"

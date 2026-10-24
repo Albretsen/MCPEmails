@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Referencia de herramientas",
     "ctaSafety": "Modelo de seguridad",
-    "ctaProviders": "Soporte de proveedores"
+    "ctaProviders": "Soporte de proveedores",
+    "ctaApi": "Guía para desarrolladores"
   },
   "quickstart": {
     "eyebrow": "Inicio rápido",
@@ -59,7 +60,7 @@
     "bodyMethods": "Envía un cuerpo de petición JSON-RPC 2.0. Métodos admitidos: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
     "infoTransport": "Transporte: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Autenticación: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Límites de tasa: <b>100 pet/min · 1.000/h · 10.000/día</b> por clave, más el límite del espacio de trabajo de tu plan",
+    "infoRateLimits": "Límites de tasa: <b>ventanas por minuto, por hora y por día por clave</b>, dimensionadas según tu plan, más el límite del espacio de trabajo del plan",
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
     "pollingHeading": "Sondeo, no push",
@@ -506,8 +507,8 @@
     "eyebrow": "Límites de tasa",
     "heading": "Límites de tasa y uso justo.",
     "perKeyTag": "Ventanas móviles por clave",
-    "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
-    "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
+    "perKeyHeading": "Por minuto · por hora · por día, según tu plan",
+    "perKeyBody": "Cada clave tiene una ventana móvil por minuto, otra por hora y otra por día. La ventana por minuto es como mínimo el tope por minuto de tu plan, así que una sola clave puede usar todo el plan, y las ventanas por hora y por día escalan con ella. Las respuestas correctas de <code>tools/call</code> llevan <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> y <code>RateLimit-Reset</code> (segundos) para la ventana más cercana a llenarse. Cuando se supera una ventana, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, la ventana en <code>data.window</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
     "planTag": "Tope por minuto del plan",
     "planHeading": "Gratis 60 / min · Personal 120 / min · Pro 300 / min · Business 1.000 / min",
     "planBody": "Un límite de ráfaga de uso justo por espacio de trabajo, agregado entre todas tus claves de API. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Personal, Pro y Business elevan el tope.",

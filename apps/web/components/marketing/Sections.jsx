@@ -23,7 +23,29 @@ const RICH = {
   b: (chunks) => <strong>{chunks}</strong>,
 };
 
-export function Nav({ onSignIn, onGetStarted, user }) {
+/**
+ * @param {{ onSignIn?: () => void, onGetStarted?: () => void, user?: { email: string } | null, minimal?: boolean }} props
+ *   `minimal` renders the logo only: no links, no sign-up or sign-in buttons,
+ *   no mobile menu. Used by /cancel, where nothing may pull the customer away
+ *   from ending the contract (§312k BGB). The language switcher stays in the
+ *   footer.
+ */
+export function Nav({ onSignIn, onGetStarted, user, minimal = false }) {
+  if (minimal) return <MinimalNav />;
+  return <FullNav onSignIn={onSignIn} onGetStarted={onGetStarted} user={user} />;
+}
+
+function MinimalNav() {
+  return (
+    <header className="nav">
+      <div className="container nav-row">
+        <Link className="brand" href="/"><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
+      </div>
+    </header>
+  );
+}
+
+function FullNav({ onSignIn, onGetStarted, user }) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
   // /signup and /login are not localized by URL: say which language this page
@@ -173,7 +195,7 @@ https://mcpemails.com/api/mcp`,
   "mcpServers": {
     "mcpemails": {
       "url": "https://mcpemails.com/api/mcp",
-      "auth": { "type": "bearer", "token": "mcpe_live_••••" }
+      "auth": { "type": "bearer", "token": "mcpe_••••" }
     }
   }
 }`,
@@ -182,7 +204,7 @@ https://mcpemails.com/api/mcp`,
     "servers": {
       "mcpemails": {
         "url": "https://mcpemails.com/api/mcp",
-        "bearer": "mcpe_live_••••"
+        "bearer": "mcpe_••••"
       }
     }
   }
@@ -190,7 +212,7 @@ https://mcpemails.com/api/mcp`,
     n8n: `# n8n MCP node
 URL:    https://mcpemails.com/api/mcp
 Auth:   Bearer
-Token:  mcpe_live_••••`,
+Token:  mcpe_••••`,
   };
   const paths = {
     oauth:  "claude.ai · Claude Desktop · Cursor · OAuth",
@@ -1418,6 +1440,7 @@ export function Footer({ locales } = {}) {
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
             <Link href="/for/founders">{t('footer.linkFounders')}</Link>
             <Link href="/for/business">{t('footer.linkBusiness')}</Link>
+            <Link href="/developers">{t('footer.linkDevelopers')}</Link>
           </div>
           <div>
             <p className="footer-heading">{t('footer.resourcesHeading')}</p>
@@ -1426,6 +1449,7 @@ export function Footer({ locales } = {}) {
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
             <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
+            <Link href="/docs/api">{t('footer.linkApiGuide')}</Link>
             <Link href="/docs/clients">{t('footer.linkClients')}</Link>
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
@@ -1463,7 +1487,11 @@ export function Footer({ locales } = {}) {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
-            <Link href="/withdrawal">{t('footer.linkWithdrawal')}</Link>
+            {/* The withdrawal function (Art. 11a CRD, Directive (EU)
+                2023/2673): the label names the action and the link opens the
+                form with withdrawal preselected. The /withdrawal explainer is
+                linked from the /cancel lead. */}
+            <Link href="/cancel?type=withdraw">{t('footer.linkWithdrawal')}</Link>
             {/* The §312k BGB entry point: reachable from every page, no login. */}
             <Link href="/cancel">{t('footer.linkCancel')}</Link>
             {/* The provider identification an Impressum asks for already sits

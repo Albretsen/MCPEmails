@@ -64,7 +64,8 @@
         "Zurückstellen: Die E-Mail verlässt den Posteingang und kommt zur gewählten Zeit zurück",
         "Ein tägliches Morgen-Briefing, direkt in Ihrem Posteingang",
         "Alle verbundenen Postfächer auf einmal durchsuchen",
-        "Anweisungen für Ihre KI, pro Postfach"
+        "Anweisungen für Ihre KI, pro Postfach",
+        "Webhooks für neue E-Mails"
       ]
     },
     "pro": {
@@ -76,7 +77,8 @@
         "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
         "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
         "Admins geben zurückgehaltene Sendungen frei",
-        "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde"
+        "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde",
+        "Webhooks für neue E-Mails"
       ]
     }
   },
@@ -103,6 +105,7 @@
           "inboxes": "Verbundene Postfächer",
           "actions": "E-Mail-Aktionen pro Monat",
           "keys": "API-Schlüssel",
+          "webhooks": "Webhooks für neue E-Mails",
           "members": "Personen mit eigenem Login",
           "burst": "Burst-Ratenlimit",
           "approvals": "Versandprüfung und Freigabe"

@@ -1053,7 +1053,16 @@ body {
 .subs > li + li { border-top: var(--bw) solid var(--bd); }
 .subs > li > label { flex: 1 1 auto; min-width: 0; cursor: pointer; }
 .subs input { margin: 0; flex: none; }
-.sub-name { color: var(--fg); font-weight: var(--w-medium); }
+/* One line per sender: a long display name ends in an ellipsis (full name in
+   the title) instead of wrapping mid-word. */
+.sub-name {
+  display: block;
+  color: var(--fg);
+  font-weight: var(--w-medium);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .sub-meta { display: block; color: var(--fg-3); }
 .sel { user-select: all; color: var(--fg); }
 .pill {

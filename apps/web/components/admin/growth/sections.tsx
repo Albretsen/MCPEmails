@@ -71,6 +71,7 @@ import {
   valuationMultiple,
 } from '@/lib/analytics/kiosk-revenue';
 import { fetchRevenueDetail } from '@/lib/analytics/operator-revenue';
+import { fetchPassSummary, passSummaryLine } from '@/lib/analytics/pass-summary';
 import { fetchRecentIncidents, fetchSystemHealth } from '@/lib/analytics/kiosk-health';
 import { achievementReport } from '@/lib/analytics/growth-achievements';
 import { agoLabel, formatDayKey, recordDay, streak } from '@/lib/analytics/growth-records';
@@ -373,12 +374,13 @@ function deltaPercent(current: number, previous: number | null | undefined): num
 /* ============================================================= money band */
 
 export async function MoneySection({ days }: { days: number }) {
-  const [revenue, checkout, pressure, bands, conversion] = await Promise.all([
+  const [revenue, checkout, pressure, bands, conversion, passes] = await Promise.all([
     fetchRecurringRevenue(days),
     fetchCheckoutFunnel(),
     fetchUpgradePressure(),
     fetchInboxDistribution(),
     fetchSignupConversion(days),
+    fetchPassSummary(),
   ]);
 
   const mrr = orNull(revenue);
@@ -456,6 +458,19 @@ export async function MoneySection({ days }: { days: number }) {
         </Tile>
       </Cell>
 
+      {/* The 3-month Personal pass: one-time payments, so never in MRR or in
+          the churn rates above, and never summed into subscribers. Its cash is
+          already in the cash tiles. */}
+      <Cell span={12}>
+        {passes.ok ? (
+          <Tile label="3-month passes" aside="not in MRR or churn">
+            <p className="kiosk-big-caption">{passSummaryLine(passes.data)}</p>
+          </Tile>
+        ) : (
+          <TileError label="3-month passes" message={passes.error} />
+        )}
+      </Cell>
+
       <Cell span={4}>
         {mrr && mrr.byPlan.length > 0 ? (
           <Tile label="Which tier pays" aside={`${formatMoney(mrr.arrMinor, mrr.currency)}/yr`}>
@@ -490,6 +505,15 @@ export async function MoneySection({ days }: { days: number }) {
                 <>
                   <strong>{formatMoney(mrr.atRiskMinor, mrr.currency)}</strong> uncollectable,{' '}
                   <strong>{formatMoney(mrr.leavingMinor, mrr.currency)}</strong> set to stop
+                  {mrr.pausedCustomers > 0 && (
+                    // Paused is not MRR and not churn: shown beside the risk,
+                    // never added to it.
+                    <>
+                      {', '}
+                      <strong>{formatCount(mrr.pausedCustomers)}</strong> paused (
+                      {formatMoney(mrr.pausedMinor, mrr.currency)}/mo when they resume)
+                    </>
+                  )}
                 </>
               }
             />

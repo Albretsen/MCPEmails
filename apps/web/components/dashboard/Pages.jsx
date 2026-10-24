@@ -15,13 +15,23 @@ import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
 import { startVisiblePoll } from '@/lib/polling/visible-poll';
+import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+import {
+  FIRST_CALL_POLL_MAX_MS,
+  FIRST_CALL_POLL_MS,
+  FIRST_CALL_PROMPT_KEYS,
+  clientToggleKey,
+  guideStep2Mode,
+} from '@/lib/onboarding/first-call-prompts.mjs';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
   workspaceDraftEditorControl,
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
+import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
@@ -46,6 +56,7 @@ import {
   allowanceTone,
   showUsageCapBanner,
 } from '@/lib/usage/allowance-view.mjs';
+import { PassBillingPanel, PassOfferLine } from './PersonalPass';
 import UpgradeIntervalChoice, {
   IntervalToggle,
   SeasonalOfferNote,
@@ -455,7 +466,7 @@ const MCP_CLIENTS = [
     guide: null,
     stepKeys: ['clients.api.step1', 'clients.api.step2'],
     config: (url) => `curl -X POST ${url} \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
   },
@@ -578,25 +589,196 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, c
   );
 }
 
+/** MCP_CLIENTS uses 'api' for the curl tile; onboarding state calls it 'curl'. */
+function onboardingClientOf(c) {
+  return c.k === 'api' ? 'curl' : c.k;
+}
+
+/** Small marker for a sub-step of guide step 2: a check when done, a dot otherwise. */
+function SubStepDot({ done }) {
+  return (
+    <div style={{
+      width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+      background: done ? 'var(--live-soft)' : 'var(--bg-surface)',
+      border: `1px solid ${done ? 'rgba(31,203,139,0.28)' : 'var(--border-1)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {done ? <Icon name="check" size={10} color="var(--mint-600)" /> : null}
+    </div>
+  );
+}
+
+/**
+ * One suggested first prompt with a copy button. Copying records
+ * `first_call_prompt_copied` with the client the guide is pointed at.
+ */
+function FirstCallPrompt({ text, client }) {
+  const t = useTranslations('dashboard');
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    recordActivationEvent('first_call_prompt_copied', { client: client ?? 'unknown' });
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+  return (
+    <li data-first-call-prompt style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 8px 12px',
+      background: 'var(--bg-surface)', border: '1px solid var(--border-1)', borderRadius: 8,
+    }}>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}>{text}</span>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        title={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+      >
+        <Icon name={copied ? 'check' : 'copy'} size={14} color={copied ? 'var(--mint-600)' : 'var(--fg-3)'} />
+      </button>
+    </li>
+  );
+}
+
 /**
  * Getting-started guide shown on the Overview page until the workspace has
  * connected an inbox AND a client has made its first MCP call. Two steps:
- * connect an inbox, then connect an MCP client (the URL is highlighted and a
- * per-client guide opens on click).
+ * connect an inbox, then connect an MCP client.
+ *
+ * Step 2 has three versions (lib/onboarding/first-call-prompts.mjs,
+ * guideStep2Mode):
+ *   setup    the MCP URL and a client picker that opens a per-client guide.
+ *   waiting  once an inbox exists and no tool call has ever been made:
+ *            (a) connect your AI app, done when a credential exists (an API
+ *            key row, which OAuth grants create too), and (b) ask it
+ *            something, three copyable prompts plus the in-chat switch the
+ *            chosen app needs. GET /api/onboarding is polled every 10 s while
+ *            the tab is visible, for at most 15 minutes, so the step flips by
+ *            itself when the first call lands.
+ *   works    the first call landed while the page was open.
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, canCheckConnection = true }) {
+export function GettingStartedGuide({
+  inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys,
+  initialClient = null, onClientSelected, canCheckConnection = true,
+  apiKeys = [], firstToolUsed = false,
+  pollMs = FIRST_CALL_POLL_MS, pollMaxMs = FIRST_CALL_POLL_MAX_MS,
+}) {
   const t = useTranslations('dashboard');
-  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
+  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => onboardingClientOf(c) === initialClient) ?? null);
   // The second-work-mailbox invitation used to be the last row of this guide.
   // It is not here any more: see MultiInboxInvite, below, for where it went
   // and why. This guide is the two numbered steps and nothing else.
 
+  // The client this workspace said it uses: picked here, or stored on the
+  // workspace (onboarding_client, read back by the poll below).
+  const [pickedClient, setPickedClient] = useState(initialClient);
+  const [savedClient, setSavedClient] = useState(null);
+  const [credentialLive, setCredentialLive] = useState(false);
+  const [activatedLive, setActivatedLive] = useState(false);
+  const [pollStopped, setPollStopped] = useState(false);
+  const [loadedAt] = useState(() => Date.now());
+
+  const mode = guideStep2Mode({ inboxCount, firstToolUsed, activatedLive });
+  const waiting = mode === 'waiting';
+  const client = pickedClient ?? savedClient ?? null;
+  const hasCredential = (apiKeys?.length ?? 0) > 0 || credentialLive;
+
   const step1Done = inboxCount > 0;
-  const step2Done = callsThisMonth > 0;
+  const step2Done = callsThisMonth > 0 || activatedLive;
   const allDone   = step1Done && step2Done;
 
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const started = Date.now();
+    let loop = null;
+    const poll = async () => {
+      if (Date.now() - started >= pollMaxMs) {
+        loop?.stop();
+        setPollStopped(true);
+        return;
+      }
+      const response = await fetch('/api/onboarding', { cache: 'no-store' });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => null);
+      if (!data) return;
+      if (typeof data.onboarding_client === 'string' && data.onboarding_client !== 'unknown') setSavedClient(data.onboarding_client);
+      // Only a credential issued after this page loaded is news: one issued
+      // earlier and since revoked is already reflected in `apiKeys`.
+      const issued = Date.parse(data.onboarding_credential_issued_at ?? '');
+      if (Number.isFinite(issued) && issued >= loadedAt - 60_000) setCredentialLive(true);
+      // Set by the MCP server on the workspace's first tool call, in the same
+      // update as analytics_first_tool_used_at.
+      if (data.onboarding_technical_activated_at) setActivatedLive(true);
+    };
+    loop = startVisiblePoll({ poll, intervalMs: () => pollMs, immediate: true });
+    return () => loop.stop();
+  }, [waiting, pollMs, pollMaxMs, loadedAt]);
+
+  const shownRecorded = useRef(false);
+  useEffect(() => {
+    if (!waiting || shownRecorded.current) return;
+    shownRecorded.current = true;
+    recordActivationEvent('waiting_state_shown', { client: initialClient ?? 'unknown' });
+  }, [waiting, initialClient]);
+
+  const pickClient = (c) => {
+    const picked = onboardingClientOf(c);
+    trackProductEvent('mcp_connection_started', { client: picked });
+    onClientSelected?.(picked);
+    setPickedClient(picked);
+    setActiveClient(c);
+  };
+
+  const clientPicker = (
+    <>
+      <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+      <div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
+          {t('guide.chooseClient')}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          {MCP_CLIENTS.map((c) => {
+            const selected = waiting && onboardingClientOf(c) === client;
+            return (
+              <button
+                key={c.k}
+                data-client-tile={onboardingClientOf(c)}
+                aria-pressed={waiting ? selected : undefined}
+                onClick={() => pickClient(c)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                  background: 'var(--bg-surface)', border: `1px solid ${selected ? 'var(--brand)' : 'var(--border-1)'}`,
+                  borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                  transition: 'border-color var(--dur-1) var(--ease-out)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                onMouseLeave={e => { if (!selected) e.currentTarget.style.borderColor = 'var(--border-1)'; }}
+              >
+                <ClientLogo color={c.color} logo={c.logo} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
+  const toggleKey = clientToggleKey(client);
+  const subTitle = (done) => ({ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: done ? 'var(--fg-3)' : 'var(--fg-1)' });
+  const subDesc = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 };
+
+  let step2Title = t('guide.step2Title');
+  let step2Desc = t('guide.step2Desc');
+  if (mode === 'waiting') { step2Title = t('guide.waitingTitle'); step2Desc = t('guide.waitingDesc'); }
+  if (mode === 'works') { step2Title = t('guide.itWorksTitle'); step2Desc = t('guide.itWorksDesc'); }
+
   return (
-    <div className="card" style={{ marginTop: 16 }}>
+    <div className="card" style={{ marginTop: 16 }} data-guide-step2={mode}>
       <div className="card-h">
         <div>
           <div className="title">{t('guide.title')}</div>
@@ -633,7 +815,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           ) : null}
         </div>
 
-        {/* Step 2: connect an MCP client */}
+        {/* Step 2: connect an MCP client, then make the first call */}
         <div style={{
           display: 'flex', flexDirection: 'column', gap: 14, padding: '16px',
           background: 'var(--bg-sunken)', borderRadius: 10, border: '1px solid var(--border-1)',
@@ -641,44 +823,58 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <StepDot num={2} done={step2Done} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                {t('guide.step2Title')}
+              <div data-guide-step2-title style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+                {step2Title}
               </div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                {t('guide.step2Desc')}
+                {step2Desc}
               </div>
             </div>
           </div>
 
-          <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+          {mode === 'setup' ? clientPicker : null}
 
-          <div>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
-              {t('guide.chooseClient')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-              {MCP_CLIENTS.map((c) => (
-                <button
-                  key={c.k}
-                  onClick={() => { const client = c.k === 'api' ? 'curl' : c.k; trackProductEvent('mcp_connection_started', { client }); onClientSelected?.(client); setActiveClient(c); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                    background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
-                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                    transition: 'border-color var(--dur-1) var(--ease-out)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-1)'; }}
-                >
-                  <ClientLogo color={c.color} logo={c.logo} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+          {mode === 'waiting' ? (
+            <>
+              {/* (a) connect your AI app */}
+              <div data-guide-substep="connect" data-done={hasCredential ? 'true' : 'false'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={hasCredential} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <div style={subTitle(hasCredential)}>{t('guide.connectAppTitle')}</div>
+                    <div style={subDesc}>{hasCredential ? t('guide.connectAppDone') : t('guide.connectAppDesc')}</div>
                   </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                  {!hasCredential ? clientPicker : null}
+                </div>
+              </div>
+
+              {/* (b) ask it something */}
+              <div data-guide-substep="ask" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={false} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <div style={subTitle(false)}>{t('guide.askTitle')}</div>
+                    <div style={subDesc}>{t('guide.askDesc')}</div>
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {FIRST_CALL_PROMPT_KEYS.map((k) => (
+                      <FirstCallPrompt key={k} text={t(k)} client={client} />
+                    ))}
+                  </ul>
+                  {toggleKey ? (
+                    <div data-client-toggle={client} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                      <Icon name="zap" size={13} color="var(--brand)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{t(toggleKey)}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div role="status" data-guide-poll={pollStopped ? 'stopped' : 'live'} style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                {pollStopped ? t('guide.waitingStopped') : t('guide.waitingLive')}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -863,7 +1059,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -1078,6 +1274,8 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           onConnect={onConnect}
           onGoToKeys={onGoToKeys}
           initialClient={onboardingClient}
+          apiKeys={apiKeys}
+          firstToolUsed={firstToolUsed}
           onClientSelected={onClientSelected}
         />
       ) : (
@@ -1371,7 +1569,7 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1382,11 +1580,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error").length;
+  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
+  // hold a slot under the cap: the same count the server's checkInboxLimit uses.
+  const activeCount = inboxes.filter(ib => !ib.parked).length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
-  const atInboxLimit = maxInboxes !== null && inboxes.length >= maxInboxes;
+  const atInboxLimit = maxInboxes !== null && activeCount >= maxInboxes;
   // MONTHLY by default, and the notice buys monthly for anyone who does not
   // touch the choice: exactly what this CTA did before the choice existed.
   // Hoisted to the component body rather than kept inside the notice, because
@@ -1413,6 +1614,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
   // the reason instead of failing on click.
   const canManage = userRole !== 'viewer';
+  // Swapping which inbox is parked changes what the workspace can reach, so
+  // it is owner/admin only, as the server's /api/inboxes/swap-parked checks.
+  const canSwap = Boolean(onSwapParked) && (userRole === 'owner' || userRole === 'admin');
+  // parked inbox whose "Make active" dialog is open, or null
+  const [swapInbox, setSwapInbox] = useState(null);
   const viewerNote = t('inboxes.viewerActionsNote');
   const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
 
@@ -1466,7 +1672,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // with exactly one mailbox is invited, under the list, to add the others.
   // Counted off the live `inboxes` array, like the cap above.
   // Never for a viewer, who cannot connect one.
-  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit }) : null;
+  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: activeCount, atInboxLimit }) : null;
 
   return (
     <div className="page">
@@ -1475,8 +1681,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         sub={
           maxInboxes !== null
             ? (maxInboxes === 1
-                ? t('inboxes.subWithCountSingular', { count: inboxes.length, max: maxInboxes })
-                : t('inboxes.subWithCount', { count: inboxes.length, max: maxInboxes }))
+                ? t('inboxes.subWithCountSingular', { count: activeCount, max: maxInboxes })
+                : t('inboxes.subWithCount', { count: activeCount, max: maxInboxes }))
             : t('inboxes.sub')
         }
         action={connectAction}
@@ -1681,13 +1887,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           }}>
             <div style={{
               height: '100%',
-              width: `${Math.min(100, (inboxes.length / maxInboxes) * 100)}%`,
-              background: inboxes.length / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
+              width: `${Math.min(100, (activeCount / maxInboxes) * 100)}%`,
+              background: activeCount / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
               borderRadius: 2,
               transition: 'width 0.3s',
             }} />
           </div>
-          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: inboxes.length, max: maxInboxes }) : t('inboxes.usedPlural', { count: inboxes.length, max: maxInboxes })}</span>
+          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: activeCount, max: maxInboxes }) : t('inboxes.usedPlural', { count: activeCount, max: maxInboxes })}</span>
         </div>
       )}
 
@@ -1746,6 +1952,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                  className={ib.parked ? 'inbox-row-parked' : undefined}
                 >
                   <td><strong style={{ fontWeight: 600 }}>{ib.label}</strong></td>
                   <td className="mono">{ib.address}</td>
@@ -1756,9 +1963,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     </span>
                   </td>
                   <td>
-                    {ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
-                    {ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {ib.status === "error"   ? (
+                    {ib.parked ? (
+                      <div>
+                        <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                        <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)", maxWidth: 220, lineHeight: 1.4 }}>
+                          {t('inboxes.parkedNote')}
+                        </div>
+                      </div>
+                    ) : null}
+                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
+                    {!ib.parked && ib.status === "error"   ? (
                       <div>
                         <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
@@ -1778,6 +1993,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right" onClick={e => e.stopPropagation()}>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>
+                        {t('inboxes.makeActive')}
+                      </Btn>
+                    ) : null}
                     {needsReconnect(ib.status) ? (
                       <Btn
                         variant="secondary"
@@ -1824,13 +2044,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
               const canReconnect = needsReconnect(ib.status);
-              const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
+              const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                 : <Badge tone="neutral">{ib.status}</Badge>;
               return (
                 <article
-                  className="inbox-mobile-card"
+                  className={ib.parked ? 'inbox-mobile-card inbox-row-parked' : 'inbox-mobile-card'}
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
                   onMouseEnter={warmSignatureEditor}
@@ -1851,9 +2072,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span><ProviderLogo kind={ib.provider} size={16} /> {PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
-                  {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>{t('inboxes.makeActive')}</Btn>
+                    ) : null}
                     {canReconnect ? (
                       <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
@@ -1939,6 +2164,15 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
       )}
 
       {/* Disconnect confirmation dialog */}
+      {swapInbox && (
+        <SwapParkedDialog
+          inbox={swapInbox}
+          activeInboxes={inboxes.filter(ib => !ib.parked)}
+          maxInboxes={maxInboxes}
+          onSwap={onSwapParked}
+          onClose={() => setSwapInbox(null)}
+        />
+      )}
       {confirmInbox && (
         <DisconnectDialog
           inbox={confirmInbox}
@@ -1947,6 +2181,92 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onCancel={handleDisconnectCancel}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * "Make active" on a parked inbox (src/lib/billing/parking.ts). At the plan's
+ * cap the customer picks the active inbox that is parked in its place; with a
+ * free slot there is nothing to pick. One swap a day per workspace, enforced
+ * by /api/inboxes/swap-parked; a refusal is one line here.
+ */
+function SwapParkedDialog({ inbox, activeInboxes, maxInboxes, onSwap, onClose }) {
+  const t = useTranslations('dashboard');
+  const needsPick = maxInboxes !== null && activeInboxes.length >= maxInboxes;
+  const [pick, setPick] = useState(needsPick && activeInboxes[0] ? activeInboxes[0].id : '');
+  const [swapping, setSwapping] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleConfirm = async () => {
+    if (swapping) return;
+    if (needsPick && !pick) return;
+    setSwapping(true);
+    setError(null);
+    const result = await onSwap(inbox.id, needsPick ? pick : null);
+    setSwapping(false);
+    if (result?.ok) {
+      onClose();
+      return;
+    }
+    if (result?.error === 'swap_limit' && result.nextSwapAt) {
+      setError(t('inboxes.swapDialog.errorLimit', { time: new Date(result.nextSwapAt).toLocaleString() }));
+    } else {
+      setError(t('inboxes.swapDialog.errorFailed'));
+    }
+  };
+
+  return (
+    <div className="scrim" onClick={swapping ? undefined : onClose}>
+      <div
+        className="modal"
+        onClick={e => e.stopPropagation()}
+        style={{ width: 420 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="swap-dialog-title"
+      >
+        <div className="modal-h">
+          <h2 id="swap-dialog-title" style={{ margin: 0 }}>
+            {t('inboxes.swapDialog.title', { label: inbox.label })}
+          </h2>
+          <div className="sub" style={{ marginTop: 4 }}>
+            {needsPick ? t('inboxes.swapDialog.pickLead') : t('inboxes.swapDialog.freeSlot')}
+          </div>
+        </div>
+        <div className="modal-body">
+          {needsPick ? (
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--fg-2)', marginBottom: 6 }}>
+                {t('inboxes.swapDialog.pickLabel')}
+              </span>
+              <select
+                className="input"
+                value={pick}
+                onChange={e => setPick(e.target.value)}
+                disabled={swapping}
+                data-testid="swap-pick"
+              >
+                {activeInboxes.map(ib => (
+                  <option key={ib.id} value={ib.id}>{ib.label} ({ib.address})</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-3)' }}>{t('inboxes.swapDialog.onceADay')}</p>
+          {error ? (
+            <p role="alert" data-testid="swap-error" style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--red-700)' }}>{error}</p>
+          ) : null}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="secondary" onClick={onClose} disabled={swapping}>
+              {t('inboxes.swapDialog.cancel')}
+            </Btn>
+            <Btn variant="primary" onClick={handleConfirm} disabled={swapping || (needsPick && !pick)}>
+              {swapping ? t('inboxes.swapDialog.swapping') : t('inboxes.swapDialog.confirm')}
+            </Btn>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -3131,12 +3451,14 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const compatibility = compatibilityForInbox(inbox.provider);
 
   const statusLabel =
+    inbox.parked               ? t('inboxes.statusParked')    :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
     inbox.status;
 
   const statusBadge =
+    inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
@@ -4144,7 +4466,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, scopes, onDone }) {
                 {t('apiKeys.revealModal.nextStep3')}{' '}
                 <span style={{
                   fontStyle: 'italic', color: 'var(--fg-1)',
-                }}>&ldquo;{t('apiKeys.revealModal.nextPrompt')}&rdquo;</span>
+                }}>&ldquo;{t(FIRST_CALL_PROMPT_KEYS[0])}&rdquo;</span>
               </li>
             </ol>
             <a
@@ -4495,6 +4817,9 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
         </div>
       </div>
 
+      {/* Webhooks for new mail sit with the keys: both are how your own agents use MCPEmails. */}
+      <WebhooksPanel inboxes={inboxes} planName={planDisplayName} />
+
       {confirmKey && (
         <RevokeDialog
           apiKey={confirmKey}
@@ -4634,7 +4959,7 @@ function BulkRunsPanel({ userRole }) {
  *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, workspaceId = null, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
   // The banner's annual CTA label lives beside the modal's, in dashboardChrome.
   const trc = useTranslations('dashboardChrome');
@@ -4819,6 +5144,10 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 })}
               </a>
             </div>
+            {/* The 3-month pass, below the subscription offer, only once the
+                server says this workspace has been at a cap for 72 hours and
+                is in the pass arm (PersonalPass.jsx, pass-offer.ts). */}
+            <PassOfferLine surface="cap_banner" workspaceId={workspaceId} enabled={allowance.atLimit} />
           </div>
         );
       })()}
@@ -5816,6 +6145,8 @@ function BillingSection({
   proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
+  passState = null,
+  workspaceId = null,
   seasonalSwitch = null,
 }) {
   const t = useTranslations('dashboard');
@@ -5903,8 +6234,11 @@ function BillingSection({
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : typeof data?.error === 'string'
             ? data.error
             : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
@@ -5967,8 +6301,11 @@ function BillingSection({
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : typeof data?.error === 'string'
             ? data.error
             : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
@@ -6154,6 +6491,18 @@ function BillingSection({
     statusParamsHandled.current = true;
 
     const params = new URLSearchParams(window.location.search);
+    // Back from a 3-month pass Checkout. A cancelled one needs no word; a paid
+    // one is confirmed and the page reloads once the webhook has had a moment
+    // to record the pass and project Personal.
+    const passReturn = params.get('pass');
+    if (passReturn === 'started' || passReturn === 'cancelled') {
+      window.history.replaceState(window.history.state, '', '/dashboard/settings');
+      if (passReturn === 'started') {
+        toast({ message: t('billing.pass.started'), variant: 'success' });
+        window.setTimeout(() => window.location.reload(), 3500);
+      }
+      return;
+    }
     const checkoutError = params.get('checkout_error');
     const billingStatus = params.get('billing');
     const billingChanged = billingStatus === 'changed';
@@ -6329,7 +6678,18 @@ function BillingSection({
           </div>
         )}
 
-        {isOnPaidPlan && (
+        {passState && (
+          /* A 3-month pass holder: no subscription to manage, so the pass and
+             the ways to keep Personal take the portal box's place. */
+          <PassBillingPanel
+            passState={passState}
+            stripePrices={stripePrices}
+            onSubscribe={(planId, checkoutInterval) => handleUpgrade(planId, checkoutInterval)}
+            busy={upgrading}
+          />
+        )}
+
+        {isOnPaidPlan && !passState && (
           /* Paid plan: show active subscription summary + portal button */
           <div style={{
             padding: '16px',
@@ -6412,13 +6772,18 @@ function BillingSection({
           </div>
         )}
 
+        {/* Pause, switch to Personal, switch to Free, and the banners for a
+            change already booked. Renders nothing while both flags are off
+            for this account (its routes answer 404). */}
+        <PlanChangeBlock toast={toast} />
+
         {/* Black Week 2026: monthly Personal or Pro owners only. The server
             decided eligibility from the live subscription (current monthly
             price, never redeemed, see src/lib/stripe/seasonal-switch.ts);
             this only re-checks the plan and that the window has not closed
             on this clock. The button goes through the same two-step quote as
             every other plan change, so nothing is charged from this card. */}
-        {switchOffer && switchValues && (
+        {switchOffer && switchValues && !passState && (
           <div
             data-seasonal-switch={switchOffer.planId}
             style={{
@@ -6623,6 +6988,11 @@ function BillingSection({
               }}>
                 {t('billing.redirectNote')}
               </p>
+            )}
+            {/* The 3-month pass, below every subscription option, for a Free
+                workspace the server says has been at a cap for 72 hours. */}
+            {currentPlan === 'free' && !compedScale && (
+              <PassOfferLine surface="cap_banner" workspaceId={workspaceId} />
             )}
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
               {t('billing.customNote')} <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>{t('billing.contactUs')}</a>.
@@ -7538,7 +7908,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7579,6 +7949,8 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
+        passState={passState}
+        workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
 

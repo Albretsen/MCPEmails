@@ -59,7 +59,7 @@
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En 429 har Retry-After. Planens tak for fakturerbare handlinger gjelder i tillegg.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],

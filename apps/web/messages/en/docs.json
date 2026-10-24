@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Tool reference",
     "ctaSafety": "Safety model",
-    "ctaProviders": "Provider support"
+    "ctaProviders": "Provider support",
+    "ctaApi": "Developer guide"
   },
   "quickstart": {
     "eyebrow": "Quick start",
@@ -59,7 +60,7 @@
     "bodyMethods": "Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>, <code>prompts/list</code>, and <code>prompts/get</code>.",
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Auth: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key, plus your plan's workspace ceiling",
+    "infoRateLimits": "Rate limits: <b>per-minute, hourly and daily windows per key</b>, sized to your plan, plus the plan's workspace ceiling",
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
@@ -506,8 +507,8 @@
     "eyebrow": "Rate limits",
     "heading": "Rate limits & fair use.",
     "perKeyTag": "Per-key rolling windows",
-    "perKeyHeading": "100 req / min · 1,000 / hr · 10,000 / day",
-    "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns HTTP 429 with JSON-RPC error code <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying: this is a short, retryable pause.",
+    "perKeyHeading": "Per minute · per hour · per day, sized to your plan",
+    "perKeyBody": "Each key has a per-minute, an hourly and a daily rolling window. The per-minute window is at least your plan's per-minute ceiling, so a single key can use the whole plan, and the hourly and daily windows scale with it. Successful <code>tools/call</code> responses carry <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code> (seconds) for the window closest to full. When a window is exceeded, the server returns HTTP 429 with JSON-RPC error code <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, the window in <code>data.window</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying: this is a short, retryable pause.",
     "planTag": "Plan per-minute ceiling",
     "planHeading": "Free 60 / min · Personal 120 / min · Pro 300 / min · Business 1,000 / min",
     "planBody": "A per-workspace fair-use burst limit, aggregated across all your API keys. When exceeded, calls return error code <code>-32003</code> with <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Personal, Pro and Business raise the ceiling.",

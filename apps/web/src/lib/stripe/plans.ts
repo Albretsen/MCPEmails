@@ -48,6 +48,7 @@
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
+ *   STRIPE_PRICE_PERSONAL_PASS_3M=price_...   (3-month Personal pass, $29 once)
  *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
  *                                             (USD tax-inclusive twins of the
  *                                              prices EU subscribers were on,
@@ -191,6 +192,14 @@ export interface PlanLimits {
   auditLogEnabled: boolean;
   /** Support tier. */
   supportTier: SupportTier;
+  /**
+   * Webhooks for new mail (`message.received`). Enforced by the
+   * /api/webhook-endpoints routes and, for delivery, by the SQL function
+   * `webhooks_plan_allowed` (migration 20261024230000), which mirrors this
+   * flag: Pro and Business, and comped workspaces (they resolve to Business).
+   * A workspace that moves to Free or Personal keeps its endpoints, paused.
+   */
+  webhooksEnabled: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -321,6 +330,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'community',
+      webhooksEnabled: false,
     },
     monthlyPriceCents: 0,
     yearlyPriceCents: 0,
@@ -368,6 +378,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: false,
     },
     // THE Personal price. Every surface that quotes it (pricing page, paywall,
     // upgrade dialogs, JSON-LD, emails, translated copy) derives from these two
@@ -430,6 +441,7 @@ export const PLANS: Record<PlanId, Plan> = {
       ssoEnabled: false,
       auditLogEnabled: false,
       supportTier: 'email',
+      webhooksEnabled: true,
     },
     // $15 / $144 until PRO_PRICE_CHANGE.priceLive, then $19 / $182.40.
     monthlyPriceCents: PRO_SOLD.monthlyCents,
@@ -465,6 +477,10 @@ export const PLANS: Record<PlanId, Plan> = {
       'A daily morning brief, placed straight in your inbox',
       'Search every connected inbox at once',
       'Instructions for your AI, per inbox',
+      // webhooksEnabled. No numbers here on purpose (no endpoint count, no
+      // retry schedule, no tool count): this list is the purchase email.
+      // Scoped API keys are on every plan, so they are not sold here.
+      'Webhooks for new mail',
     ],
     highlighted: true,
   },
@@ -499,6 +515,7 @@ export const PLANS: Record<PlanId, Plan> = {
       // There is no priority queue behind "priority"; email support is what
       // every paid plan actually gets.
       supportTier: 'email',
+      webhooksEnabled: true,
     },
     monthlyPriceCents: 3900,
     yearlyPriceCents: 37440,
@@ -530,10 +547,55 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited members with roles, at no extra cost',
       'Admins approve held sends',
       'Several workspaces on one subscription',
+      'Webhooks for new mail',
     ],
     highlighted: false,
   },
 } as const;
+
+// ---------------------------------------------------------------------------
+// The 3-month Personal pass (2026-10-24): one payment, Personal for exactly
+// three calendar months, nothing renews.
+//
+// DELIBERATELY NOT IN PLANS. It is not a plan: it grants the `personal` plan
+// for a fixed window, and its price is a ONE-TIME price that never sits on a
+// subscription. Keeping it out of PLANS means getPlanByStripePriceId can never
+// map it, TIER_ORDER and planCommitmentRank do not see it, and every reader
+// that walks PLANS (pricing page, paywall copy, checkout allow-list) is
+// unchanged. Entitlement, stacking and the kill switch live in
+// src/lib/billing/pass.ts.
+//
+//   STRIPE_PRICE_PERSONAL_PASS_3M=price_...  (one-time, $29)
+//
+// $29, not $27: three monthly payments are $27, so the pass stays the dearer
+// way to buy the same three months and is never a discount on monthly.
+// ---------------------------------------------------------------------------
+export interface PassProduct {
+  /** Stored in user_passes.product and in Checkout metadata. */
+  id: 'personal_pass_3m';
+  /** The plan the pass grants while it runs. */
+  plan: 'personal';
+  /** Calendar months one pass lasts. */
+  months: number;
+  /** One-time price in USD cents. */
+  priceCents: number;
+}
+
+export const PERSONAL_PASS_3M: PassProduct = {
+  id: 'personal_pass_3m',
+  plan: 'personal',
+  months: 3,
+  priceCents: 2900,
+};
+
+/**
+ * The one-time Stripe price id for the pass, or null when unset. Read at call
+ * time, like mailboxAddonPriceId, so a test can set it after import and an env
+ * change takes effect without a redeploy of cached modules.
+ */
+export function personalPassPriceId(): string | null {
+  return process.env.STRIPE_PRICE_PERSONAL_PASS_3M?.trim() || null;
+}
 
 // ---------------------------------------------------------------------------
 // Helper: look up limits for a plan name stored in DB.

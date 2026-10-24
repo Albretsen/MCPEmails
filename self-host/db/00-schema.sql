@@ -216,7 +216,9 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
   ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
   ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024235300)
-  ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone;
+  ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
+  ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
+  ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
 -- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
 -- never INBOX, never one folder for two roles.
@@ -268,6 +270,24 @@ BEGIN
         ai_instructions IS NULL
         OR (char_length(ai_instructions) BETWEEN 1 AND 2000
             AND ai_instructions = btrim(ai_instructions, E' \t\r\n'))
+      );
+  END IF;
+END
+$$;
+-- Parking, as in the hosted migration 20261024173000: both NULL, or both set
+-- with a known reason.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_parked_reason_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_parked_reason_check
+      CHECK (
+        (parked_at IS NULL AND parked_reason IS NULL)
+        OR (parked_at IS NOT NULL AND parked_reason IS NOT NULL AND parked_reason IN ('plan_limit'))
       );
   END IF;
 END
@@ -699,6 +719,15 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     current_period_start timestamp with time zone,
+    -- Pause / downgrade state (20261024233000). Hosted-only in practice (a
+    -- self-host stack has no Stripe), mirrored because
+    -- workspace_action_allowance() reads paused_from.
+    paused_from timestamp with time zone,
+    pause_resumes_at timestamp with time zone,
+    pending_plan text,
+    pending_plan_effective_at timestamp with time zone,
+    inbox_keep_order jsonb,
+    pause_history jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT user_billing_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_billing_stripe_customer_id_key UNIQUE (stripe_customer_id),
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
@@ -1238,6 +1267,7 @@ CREATE TABLE IF NOT EXISTS public.triage_rules (
     deleted_at timestamp with time zone,
     paused_reason text,
     paused_until timestamp with time zone,
+    CONSTRAINT triage_rules_paused_reason_check CHECK (((paused_reason IS NULL) OR (paused_reason = ANY (ARRAY['plan_limit'::text, 'inbox_parked'::text])))),
     CONSTRAINT triage_rules_interval_minutes_check CHECK ((interval_minutes = ANY (ARRAY[15, 30, 60, 180, 360, 720, 1440]))),
     CONSTRAINT triage_rules_interval_required_check CHECK ((interval_minutes IS NOT NULL)),
     CONSTRAINT triage_rules_max_messages_check CHECK (((max_messages_per_run >= 1) AND (max_messages_per_run <= 200))),
@@ -1463,6 +1493,7 @@ DECLARE
   v_remaining       integer;
   v_ub_start        timestamptz;
   v_ub_end          timestamptz;
+  v_paused_from     timestamptz;
 BEGIN
   -- (a) The workspace. deleted_at is irrelevant: a soft-deleted workspace
   -- cannot make tool calls, and if it is restored its allowance must not have
@@ -1550,7 +1581,13 @@ BEGIN
     v_grace_ends_at := v_created_at + c_grace;
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
-    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at), v_month_end);
+    -- A paused subscriber's window opens no earlier than paused_from
+    -- (20261024233000). Always NULL on a self-host stack.
+    SELECT ub.paused_from INTO v_paused_from
+    FROM public.user_billing ub
+    WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
+    LIMIT 1;
+    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at, v_paused_from), v_month_end);
     v_cap := c_free_cap;
   END IF;
 
@@ -2142,7 +2179,7 @@ CREATE TRIGGER reminders_rearm_on_reconnect
     )
   )
   EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
-=======
+-- ============================================================
 -- Checkout link in the Free-cap refusal (hosted migrations
 -- 20260903120000_experiments and 20261024180000_chat_checkout_links).
 --

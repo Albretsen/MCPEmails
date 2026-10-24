@@ -280,10 +280,11 @@
     "linkOauth": "OAuth 连接",
     "linkProviders": "服务商支持",
     "linkReadOnly": "只读访问",
+    "linkApiGuide": "开发者指南",
     "linkClients": "MCP 客户端设置",
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
-    "linkWithdrawal": "撤回权",
+    "linkWithdrawal": "在此撤回合同",
     "linkCancel": "在此取消合同",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -300,7 +301,8 @@
     "linkHelp": "帮助与支持",
     "linkSelfHost": "自托管",
     "linkFounders": "面向创始人",
-    "linkBusiness": "面向企业"
+    "linkBusiness": "面向企业",
+    "linkDevelopers": "开发者"
   },
   "languageSwitcher": {
     "label": "语言",

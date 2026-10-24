@@ -64,7 +64,8 @@
         "Mise en attente : l'e-mail quitte la boîte de réception et revient au moment choisi",
         "Un récapitulatif chaque matin, déposé directement dans votre boîte de réception",
         "Recherche dans toutes vos boîtes connectées à la fois",
-        "Des instructions pour votre IA, boîte par boîte"
+        "Des instructions pour votre IA, boîte par boîte",
+        "Webhooks pour les nouveaux e-mails"
       ]
     },
     "pro": {
@@ -76,7 +77,8 @@
         "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
         "Membres illimités avec rôles, sans surcoût",
         "Les administrateurs valident les envois en attente",
-        "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client"
+        "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client",
+        "Webhooks pour les nouveaux e-mails"
       ]
     }
   },
@@ -103,6 +105,7 @@
           "inboxes": "Boîtes connectées",
           "actions": "Actions e-mail par mois",
           "keys": "Clés API",
+          "webhooks": "Webhooks pour les nouveaux e-mails",
           "members": "Personnes qui peuvent se connecter",
           "burst": "Limite de débit en pointe",
           "approvals": "Validation avant envoi"

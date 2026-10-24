@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Tool-Referenz",
     "ctaSafety": "Sicherheitsmodell",
-    "ctaProviders": "Unterstützte Anbieter"
+    "ctaProviders": "Unterstützte Anbieter",
+    "ctaApi": "Entwicklerhandbuch"
   },
   "quickstart": {
     "eyebrow": "Schnellstart",
@@ -59,7 +60,7 @@
     "bodyMethods": "Senden Sie einen JSON-RPC-2.0-Request-Body. Unterstützte Methoden: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>, <code>prompts/list</code> und <code>prompts/get</code>.",
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Authentifizierung: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Ratenlimits: <b>100 Anfragen/Min. · 1.000/Std. · 10.000/Tag</b> pro Schlüssel, dazu die Obergrenze Ihres Tarifs für den Workspace",
+    "infoRateLimits": "Ratenlimits: <b>Minuten-, Stunden- und Tagesfenster pro Schlüssel</b>, bemessen nach Ihrem Tarif, dazu die Obergrenze des Tarifs für den Workspace",
     "infoFormat": "Antwortformat: <b>JSON-RPC 2.0</b>. Erfolgreiche Ergebnisse enthalten zusätzlich ein typisiertes <code>structuredContent</code>-Objekt",
     "handshakeLabel": "Initialize-Handshake",
     "pollingHeading": "Abfragen statt Push",
@@ -506,8 +507,8 @@
     "eyebrow": "Ratenlimits",
     "heading": "Ratenlimits & faire Nutzung.",
     "perKeyTag": "Gleitende Zeitfenster pro Schlüssel",
-    "perKeyHeading": "100 Anfragen / Min. · 1.000 / Std. · 10.000 / Tag",
-    "perKeyBody": "Gilt pro API-Schlüssel, unabhängig vom Tarif. Bei Überschreitung antwortet der Server mit HTTP 429, JSON-RPC-Fehlercode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> und einem Feld <code>data.retry_after</code> (Sekunden). Halten Sie diese Wartezeit ein, bevor Sie es erneut versuchen: Es ist eine kurze, wiederholbare Pause.",
+    "perKeyHeading": "Pro Minute · pro Stunde · pro Tag, bemessen nach Ihrem Tarif",
+    "perKeyBody": "Jeder Schlüssel hat ein gleitendes Minuten-, Stunden- und Tagesfenster. Das Minutenfenster entspricht mindestens der Minuten-Obergrenze Ihres Tarifs, sodass ein einzelner Schlüssel den ganzen Tarif nutzen kann, und Stunden- und Tagesfenster skalieren im selben Verhältnis. Erfolgreiche <code>tools/call</code>-Antworten tragen <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> und <code>RateLimit-Reset</code> (Sekunden) für das Fenster, das seiner Grenze am nächsten ist. Bei Überschreitung eines Fensters antwortet der Server mit HTTP 429, JSON-RPC-Fehlercode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, dem Fenster in <code>data.window</code> und einem Feld <code>data.retry_after</code> (Sekunden). Halten Sie diese Wartezeit ein, bevor Sie es erneut versuchen: Es ist eine kurze, wiederholbare Pause.",
     "planTag": "Obergrenze pro Minute je Tarif",
     "planHeading": "Free 60 / Min. · Personal 120 / Min. · Pro 300 / Min. · Business 1.000 / Min.",
     "planBody": "Ein Burst-Limit für faire Nutzung pro Workspace, summiert über alle Ihre API-Schlüssel. Bei Überschreitung liefern Aufrufe den Fehlercode <code>-32003</code> mit <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> und einem Countdown <code>data.retry_after</code> (Sekunden). Personal, Pro und Business heben die Obergrenze an.",

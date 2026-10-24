@@ -146,7 +146,10 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
       .is("workspaces.deleted_at", null)
       .eq("workspaces.api_keys.kind", WEB_CLIENT_KEY_KIND)
       .is("workspaces.api_keys.deleted_at", null)
-      .is("workspaces.inboxes.deleted_at", null);
+      .is("workspaces.inboxes.deleted_at", null)
+      // A parked inbox (mcp-server/parked-inbox.ts) never enters the inbox
+      // cache, so no mail call can be served from a row the plan excludes.
+      .is("workspaces.inboxes.parked_at", null);
     // Any refusal (an ambiguous relationship after a schema change, a column
     // a migration has not landed) falls back to the plain query below.
     if (error || !Array.isArray(data)) return null;

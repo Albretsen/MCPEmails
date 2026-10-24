@@ -22,11 +22,23 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
+ *   charge.refunded                   : a full refund of a 3-month pass ends it
  *   checkout.session.async_payment_succeeded : a delayed first payment (SEPA
  *                                       Direct Debit) cleared; re-sync the plan
  *   checkout.session.async_payment_failed    : a delayed first payment failed;
  *                                       revoke the provisional access
  *   charge.dispute.created            : a SEPA debit was disputed; log only
+ *
+ * 3-month Personal pass (added 2026-10-24, src/lib/billing/pass.ts):
+ *   A pass is a payment-mode Checkout (metadata.product = 'personal_pass_3m').
+ *   `checkout.session.completed` with mode 'payment' records a `user_passes`
+ *   row (idempotent on the session id) and projects Personal, writing a
+ *   `pass_checkout_completed` funnel row and NEVER `checkout_completed`.
+ *   `applyUserPlan` is pass-aware: it never projects Free onto the workspaces
+ *   while a pass covers now, so an old subscription's deletion cannot take a
+ *   paid pass away. `user_billing.plan` stays the subscription's own truth.
+ *   `charge.refunded` (full refunds only) marks the pass refunded and
+ *   re-projects. Passes end in /api/internal/pass-expiry, not here.
  *
  * Delayed payment methods (added 2026-10-24, for the EUR launch):
  *   Stripe makes a SEPA Direct Debit subscription `active` while its first
@@ -139,6 +151,7 @@ import {
   cancelDunningForCustomer,
   cancelOpenSequence,
   cancellationAction,
+  cancellationSource,
   hasCancellationSeries,
   isGrandfathered,
   queueCancellationSequence,
@@ -166,9 +179,39 @@ import {
   billingTarget,
   primaryWorkspaceId,
   recordCheckoutCompleted,
+  recordPassEvent,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
+import {
+  PAUSED_STATUS,
+  parkOwner,
+  projectSubscription,
+  readPlanChangeRow,
+  unparkOwner,
+  writePlanChangeColumns,
+  type PlanChangeProjection,
+  type PlanChangeRow,
+} from '@/lib/billing/plan-change-sync';
+import { PAUSE_EARLY_KEY } from '@/lib/billing/pause';
+import {
+  parkInboxCountForEmail,
+  parkOnSubscriptionEnd,
+  syncParkMarker,
+} from '@/lib/billing/park-on-cancel';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { expireGrowthCache } from '@/lib/analytics/growth-queries';
+import {
+  getActivePass,
+  recordPassPurchase,
+  refundPass,
+} from '@/lib/billing/pass';
+import {
+  cancelPassNotices,
+  isPassRenewal,
+  passNoticeSink,
+  passesForRenewal,
+} from '@/lib/billing/pass-notices';
+import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -384,6 +427,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
   }
 
+  // Measurement: why the subscription ended. Before the out-of-order guard so
+  // a stale-skipped deletion is still counted. Never throws.
+  if (event.type === 'customer.subscription.deleted') {
+    await recordDeletionReason(supabase, event);
+  }
+
   // ── 3. Out-of-order guard ──────────────────────────────────────────────────
   // Ignore this event if a NEWER event for the same customer was already
   // processed (Stripe redelivery of a stale event must not clobber newer state).
@@ -422,6 +471,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // `checkout.session.expired` changes no plan state either; it only decides
   // whether one reminder email goes out.
   //
+  // `charge.refunded` is exempt too: it carries the customer id, so any later
+  // subscription event for that customer would make it read as stale and the
+  // refunded pass would keep its entitlement. It acts on one pass row found by
+  // its payment intent, and a second delivery finds that row already refunded.
+  //
   // The two `checkout.session.async_payment_*` events are exempt for the
   // reason checkout.session.completed is: each fires once per Checkout
   // session, and neither trusts its own payload for plan state. Both
@@ -442,6 +496,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'invoice.payment_failed',
     'invoice.payment_action_required',
     'invoice.payment_succeeded',
+    'charge.refunded',
   ]);
 
   if (customerIdForEvent && !EXEMPT_FROM_STALENESS.has(event.type)) {
@@ -516,6 +571,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
+      case 'invoice.voided':
+        // A paused subscription's renewal is finalized, then voided (Stripe
+        // test T6). The void is the moment the paid period has rolled into
+        // the pause, so it re-projects the subscription like the period-roll
+        // subscription.updated does. Either event alone is enough.
+        await handleInvoiceVoided(event.data.object as Stripe.Invoice);
+        break;
+
       case 'customer.subscription.deleted': {
         const deleted = event.data.object as Stripe.Subscription;
         await handleSubscriptionDeleted(deleted);
@@ -530,6 +593,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         break;
       }
+
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
 
       default:
         // Unhandled event types are acknowledged but not processed.
@@ -557,6 +624,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 /** Stripe events that move a number on the growth board or the kiosk. */
 const GROWTH_EVENT_TYPES = new Set([
+  'invoice.voided',
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
   'checkout.session.async_payment_failed',
@@ -565,6 +633,8 @@ const GROWTH_EVENT_TYPES = new Set([
   'customer.subscription.deleted',
   'invoice.payment_succeeded',
   'invoice.payment_failed',
+  // A refunded pass moves the cash tile.
+  'charge.refunded',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -594,6 +664,10 @@ const GROWTH_EVENT_TYPES = new Set([
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  if (session.mode === 'payment') {
+    await handlePassCheckoutCompleted(session);
+    return;
+  }
   const synced = await syncPlanFromCheckoutSession(session, 'checkout.session.completed');
   if (!synced) return;
   const { userId, resolvedPlan, resolvedInterval } = synced;
@@ -617,6 +691,7 @@ async function handleCheckoutSessionCompleted(
       await primaryWorkspaceId(service, userId),
       billingTarget(purchasedPlan, interval),
     );
+    await recordPassHolderSubscribed(service, userId, customerIdOf(session), purchasedPlan, interval);
   }
 
   // ── Purchase confirmation email ──────────────────────────────────────────
@@ -814,6 +889,8 @@ async function syncPlanFromCheckoutSession(
     offer: session.metadata?.offer ?? null,
   });
 
+  if (resolvedPlan !== 'free') await unparkAfterCheckout(customerId, userId, resolvedPlan);
+
   return { userId, resolvedPlan, resolvedInterval };
 }
 
@@ -933,6 +1010,161 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void
 }
 
 /**
+ * checkout.session.completed, mode 'payment': a 3-month Personal pass.
+ *
+ * Only a PAID session for the pass product grants anything. The pass is
+ * stored once per Checkout session, then every owned workspace is projected
+ * onto Personal (a subscription that is entitled keeps its own plan). This
+ * writes `pass_checkout_completed`, never `checkout_completed`, and sends no
+ * confirmation email of its own: the buyer gets Stripe's receipt and invoice
+ * (invoice_creation in runPassCheckout); the pass emails come with the
+ * surfaces PR.
+ *
+ * Deliberately independent of PERSONAL_PASS_ENABLED: a payment that reached
+ * us is honoured whatever the switch says now.
+ */
+async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.metadata?.product !== PERSONAL_PASS_3M.id) return;
+
+  if (session.payment_status !== 'paid') {
+    console.error(
+      `[stripe-webhook] pass checkout ${session.id} completed with payment_status=${session.payment_status}; nothing granted.`,
+    );
+    return;
+  }
+
+  const customerId =
+    typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+  const db = createServiceRoleClient();
+  const userId =
+    session.metadata?.user_id ??
+    session.client_reference_id ??
+    (customerId ? await resolveUserId(db, customerId, null) : null);
+  if (!userId) {
+    // Thrown, not returned: the customer paid, so Stripe must retry until the
+    // owner can be resolved rather than this purchase being dropped.
+    throw new Error(`[stripe-webhook] pass checkout ${session.id}: could not resolve the owner.`);
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null;
+
+  const paidAt = new Date();
+
+  const result = await recordPassPurchase(db, {
+    userId,
+    sessionId: session.id,
+    paymentIntentId,
+    amountMinor: session.amount_total ?? null,
+    currency: session.currency ?? null,
+    paidAt,
+    source: 'checkout.session.completed (pass)',
+    // pass_ending_7d and pass_ended, queued now (BILLING_LIFECYCLE_EMAILS
+    // permitting). Never throws.
+    notices: passNoticeSink(db, {
+      stripeCustomerId: customerId,
+      stripeEmail: session.customer_details?.email ?? null,
+    }),
+  });
+
+  if (result.kind === 'table_missing') {
+    // The code is live before its migration. Retry until it is applied.
+    throw new Error(`[stripe-webhook] pass checkout ${session.id}: user_passes is missing; retry after the migration.`);
+  }
+  if (result.kind === 'duplicate') {
+    console.log(`[stripe-webhook] pass checkout ${session.id} already recorded; nothing to do.`);
+    return;
+  }
+  console.log(
+    `[stripe-webhook] pass ${result.pass.id} for ${userId}: ${result.pass.status} until ${result.pass.ends_at}; projected "${result.plan}".`,
+  );
+
+  // The passes held besides this one: the renewal test and the earlier pass's
+  // notices (a pass that another pass follows does not end) are about them.
+  // Read after the purchase is stored, so a failed read cannot cost a retry.
+  const heldBefore = (await passesForRenewal(db, userId)).filter((p) => p.id !== result.pass.id);
+  // A stacked pass: the earlier pass no longer ends, so its notices are untrue.
+  for (const earlier of heldBefore) {
+    if (earlier.status === 'active' || earlier.status === 'scheduled') {
+      await cancelPassNotices(db, { stripeCustomerId: customerId, passId: earlier.id, reason: 'pass_renewed' });
+    }
+  }
+  if (isPassRenewal(heldBefore, paidAt, result.pass.id)) {
+    await recordPassEvent({
+      workspaceId: await primaryWorkspaceId(db, userId),
+      stage: 'pass_renewed',
+      category: 'pass',
+    });
+  }
+}
+
+/**
+ * A subscription started for someone who holds, or recently held, a 3-month
+ * pass. Their pass notices stop being true (a subscriber's pass does not end
+ * into Free), and a Personal subscription within the renewal window is a
+ * `pass_renewed` (category personal_month / personal_year). Never throws.
+ */
+async function recordPassHolderSubscribed(
+  db: ReturnType<typeof createServiceRoleClient>,
+  userId: string,
+  customerId: string | null,
+  planId: Exclude<PlanId, 'free'>,
+  interval: BillingInterval,
+): Promise<void> {
+  try {
+    const passes = await passesForRenewal(db, userId);
+    if (passes.length === 0) return;
+    await cancelPassNotices(db, { stripeCustomerId: customerId, reason: 'subscription_started' });
+    if (planId === 'personal' && isPassRenewal(passes, new Date())) {
+      await recordPassEvent({
+        workspaceId: await primaryWorkspaceId(db, userId),
+        stage: 'pass_renewed',
+        category: billingTarget('personal', interval),
+      });
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] pass holder subscription bookkeeping failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * charge.refunded
+ *
+ * Only a FULL refund of a pass charge ends the pass (see refundPass). Any
+ * other charge, a subscription invoice for example, is not a pass and is left
+ * alone, so this changes nothing for subscribers.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id ?? null;
+  const fullyRefunded = charge.refunded === true || charge.amount_refunded >= charge.amount;
+
+  const result = await refundPass(createServiceRoleClient(), {
+    paymentIntentId,
+    fullyRefunded,
+    source: 'charge.refunded',
+  });
+  if (result.kind === 'refunded') {
+    console.log(`[stripe-webhook] pass ${result.pass.id} refunded; projected "${result.plan}".`);
+    const customerId =
+      typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
+    await cancelPassNotices(createServiceRoleClient(), {
+      stripeCustomerId: customerId,
+      passId: result.pass.id,
+      reason: 'pass_refunded',
+    });
+  } else if (result.kind === 'partial') {
+    console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
+  }
+}
+
+/**
  * customer.subscription.created / customer.subscription.updated
  *
  * Resolve the plan from the first line item's price ID. Apply the dunning grace
@@ -966,6 +1198,12 @@ async function handleSubscriptionUpserted(
       subscriptionStatus: status,
       source: `customer.subscription.updated (status=${status}${neverPaid ? ', SEPA never paid' : ''})`,
     });
+    // Decision D3: a marked cancellation that ends here parks the inboxes
+    // above Free's cap. Unmarked ends (dunning, immediate cancels, anything
+    // cancelled before the flag) never park. src/lib/billing/park-on-cancel.ts.
+    if (status === 'canceled' || status === 'unpaid') {
+      await parkOnEndIfMarked(subscription, customerId, userId);
+    }
     return;
   }
 
@@ -1004,17 +1242,39 @@ async function handleSubscriptionUpserted(
     return;
   }
 
+  // ── Pause and pending downgrade ──────────────────────────────────────────
+  //
+  // `status` stays 'active' through a Stripe pause, so the price alone would
+  // keep a paused customer on the paid plan for free. projectSubscription
+  // decides the entitlement first: paused = Free; a downgrade booked for the
+  // period end = the plan it came from until then. The stored row is read
+  // BEFORE the write, so the transitions (resumed, downgrade landed) are
+  // visible. See src/lib/billing/plan-change-sync.ts.
+  const projection = projectSubscription(subscription, resolved.plan.id);
+  const planChangeDb = createServiceRoleClient();
+  const ownerId = await resolveUserId(planChangeDb, customerId, userId);
+  const before = ownerId ? await readPlanChangeRow(planChangeDb, ownerId) : null;
+
   await applyUserPlan({
     userId,
     customerId,
     subscriptionId: subscription.id,
-    newPlan: resolved.plan.id,
-    subscriptionStatus: status,
+    newPlan: projection.grantPlan,
+    subscriptionStatus: projection.status,
     currentPeriodStart: basePlanItem(subscription.items.data)?.current_period_start ?? null,
     currentPeriodEnd: basePlanItem(subscription.items.data)?.current_period_end ?? null,
-    source: 'customer.subscription.upserted',
+    source:
+      projection.status === PAUSED_STATUS
+        ? 'customer.subscription.upserted (paused)'
+        : projection.downgrade.state === 'pending'
+          ? 'customer.subscription.upserted (downgrade pending)'
+          : 'customer.subscription.upserted',
     offer: subscription.metadata?.offer ?? null,
   });
+
+  if (ownerId) {
+    await syncPlanChange(ownerId, subscription, projection, before);
+  }
 
   // Business bills mailboxes past ten as a second item. Re-sync it on every
   // Business subscription event: it covers a mailbox connected while a plan
@@ -1050,8 +1310,24 @@ async function handleSubscriptionUpserted(
   // Reading the boolean alone skipped the queue for those customers and then
   // ran the un-cancel branch below against them.
   const cancellation = cancellationAction(subscription);
+
+  // Decision D3: record, the first time a scheduled cancel is seen with
+  // BILLING_PARK_ON_CANCEL_ENABLED on, that this subscription's end parks the
+  // inboxes above Free's cap; clear it when the cancel is undone. BEFORE the
+  // queue call, so the cancel email can say so. Not gated on lifecycle email:
+  // the marker is a billing fact, the email only reports it. Cannot throw.
+  const parkOnEnd = ownerId
+    ? await syncParkMarker({
+        db: planChangeDb,
+        ownerId,
+        subscriptionId: subscription.id,
+        cancellation,
+        email: () => stripeCustomerEmail(customerId),
+      })
+    : false;
+
   if (lifecycleQueueingEnabled() && cancellation === 'queue') {
-    await maybeQueueCancellation(subscription, resolved.plan.id);
+    await maybeQueueCancellation(subscription, resolved.plan.id, parkOnEnd);
   }
 
   // Un-cancelled: they clicked "renew" in the portal before the period ended,
@@ -1081,6 +1357,7 @@ async function handleSubscriptionUpserted(
 async function maybeQueueCancellation(
   subscription: Stripe.Subscription,
   planId: PlanId,
+  parkOnEnd = false,
 ): Promise<void> {
   try {
     if (cancellationAction(subscription) !== 'queue') return;
@@ -1098,6 +1375,12 @@ async function maybeQueueCancellation(
     );
     if ((await accountState(db, userId)) === 'deleted') {
       console.log(`[stripe-webhook] cancellation for ${customerId}: account deleted; nothing queued.`);
+      return;
+    }
+    // A pass holder keeps Personal through the pass and gets the pass's own
+    // two notices instead; they never enter the cancellation or win-back series.
+    if (userId && (await getActivePass(db, userId))) {
+      console.log(`[stripe-webhook] cancellation for ${customerId}: holds a 3-month pass; nothing queued.`);
       return;
     }
 
@@ -1123,6 +1406,12 @@ async function maybeQueueCancellation(
       currency: subscription.currency ?? null,
       periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
       grandfathered: await isGrandfathered(db, userId),
+      // "Switch to Free" on the billing card: the cancel email leaves out the
+      // "switch to a cheaper plan" line for it.
+      source: cancellationSource(subscription.metadata, periodEnd),
+      // D3: the confirmation says the extra inboxes park at the end, only
+      // when this subscription is marked and something would actually park.
+      ...(parkOnEnd && userId ? { parkInboxCount: await parkInboxCountForEmail(db, userId) } : {}),
     };
 
     await queueCancellationSequence({
@@ -1163,6 +1452,12 @@ async function handleSubscriptionDeleted(
     subscriptionStatus: 'canceled',
     source: 'customer.subscription.deleted',
   });
+
+  await clearPlanChangeOnDelete(subscription, customerId, userId);
+
+  // Decision D3: park above Free's cap when this subscription's cancellation
+  // was marked. Never for an unmarked end. Cannot throw.
+  await parkOnEndIfMarked(subscription, customerId, userId);
 
   // The subscription is gone, so any dunning still queued for it is now a lie:
   // "update your card and this carries on" is not true once there is nothing
@@ -1223,6 +1518,12 @@ async function maybeQueueCancellationOnDelete(
     if ((await accountState(db, userId)) === 'deleted') {
       console.log(
         `[stripe-webhook] subscription.deleted ${subscription.id}: account deleted; nothing queued.`,
+      );
+      return;
+    }
+    if (userId && (await getActivePass(db, userId))) {
+      console.log(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: holds a 3-month pass; nothing queued.`,
       );
       return;
     }
@@ -1355,6 +1656,14 @@ async function queueDunningForInvoice(
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
   if (!customerId || !invoice.id) return;
 
+  // A paused subscription's renewals are voided, never dunned (Stripe T6:
+  // finalized, then voided, no charge attempt). Guarded anyway: a "your
+  // payment failed" email to someone who paused is the worst outcome here.
+  if (invoice.status === 'void') {
+    console.log(`[stripe-webhook] invoice.payment_failed ${invoice.id}: invoice is void; no dunning.`);
+    return;
+  }
+
   const reason = invoice.billing_reason;
   if (reason !== 'subscription_cycle' && reason !== 'subscription_update') {
     console.log('[stripe-webhook] %s %s: billing_reason=%s; not a renewal, no dunning.', ...tag, reason);
@@ -1372,7 +1681,10 @@ async function queueDunningForInvoice(
   }
 
   // Resolved before the retry guard, because the guard depends on it.
-  const declineCode = options.declineCode ?? (await invoiceDeclineCode(invoice));
+  const failed = options.declineCode
+    ? { declineCode: options.declineCode, paymentMethodId: null }
+    : await invoiceFailedAttempt(invoice);
+  const declineCode = failed.declineCode;
 
   // The failed-payment STATE (dashboard banner + once-a-day MCP note), for
   // both invoice.payment_failed and invoice.payment_action_required. It runs
@@ -1434,6 +1746,8 @@ async function queueDunningForInvoice(
     amountCents: invoice.amount_due ?? null,
     currency: invoice.currency ?? null,
     declineCode,
+    // Not shown to anyone: recoveredBy compares it with the method that pays.
+    failedPaymentMethodId: failed.paymentMethodId,
     // The one-click "pay this exact invoice" page. Better than the billing
     // portal for a customer whose only problem is that one charge, and for a
     // bank approval it is the page that runs the 3DS challenge.
@@ -1484,12 +1798,16 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
   if (!lifecycleQueueingEnabled()) return;
 
   if (invoice.id) {
-    await cancelOpenSequence({
+    const cancelled = await cancelOpenSequence({
       db,
       stripeCustomerId: customerId,
       scopeKey: invoice.id,
       reason: 'payment_recovered',
     });
+    // Measurement only (/admin/growth/dunning): who fixed it. Only when this
+    // event is what closed a live sequence, so a redelivery or an invoice that
+    // was never dunned costs no Stripe call. Never throws.
+    if (cancelled > 0) await recordRecoveredBy(db, customerId, invoice.id);
   }
 
   await cancelOpenSequence({
@@ -1498,6 +1816,369 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+/**
+ * The pause / downgrade half of a subscription event, after the plan write.
+ *
+ * Writes the user_billing pause and downgrade columns, parks inboxes when the
+ * plan has just dropped (pause running, downgrade landed), unparks them when
+ * it comes back, and records the transitions. The column write and the
+ * transition rows are skipped before migration 20261024233000 is applied
+ * (`before` is null); parking for a running pause still happens, because it
+ * only needs the parking columns.
+ *
+ * CANNOT THROW (every call below is non-throwing and the body is guarded): it
+ * runs after applyUserPlan, and a throw would roll back the ledger row and
+ * make Stripe re-deliver a plan write that already happened. Same pattern as
+ * liftPlanLimitPauses.
+ */
+async function syncPlanChange(
+  ownerId: string,
+  subscription: Stripe.Subscription,
+  projection: PlanChangeProjection,
+  before: PlanChangeRow | null,
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const involved =
+      projection.pause.state !== 'none' ||
+      projection.downgrade.state !== 'none' ||
+      Boolean(before?.paused_from) ||
+      Boolean(before?.pending_plan) ||
+      before?.subscription_status === PAUSED_STATUS;
+    const keepOrder = before?.inbox_keep_order ?? null;
+    const label = `webhook ${subscription.id}`;
+
+    if (before && involved) {
+      await writePlanChangeColumns(db, ownerId, projection.columns);
+    }
+
+    if (projection.parkTo) {
+      await parkOwner(db, ownerId, projection.parkTo, keepOrder, label);
+    } else if (
+      projection.unpark &&
+      (involved || (before !== null && planRankOf(projection.grantPlan) > planRankOf(before.plan)))
+    ) {
+      await unparkOwner(db, ownerId, projection.grantPlan, keepOrder, label);
+    }
+
+    if (!before) return;
+    const workspaceId = await primaryWorkspaceId(db, ownerId);
+    if (!workspaceId) return;
+
+    // The pause ended by itself (Stripe cleared pause_collection). A resume
+    // the customer asked for early is recorded by the route instead.
+    if (
+      before.subscription_status === PAUSED_STATUS &&
+      projection.status !== PAUSED_STATUS &&
+      subscription.metadata?.[PAUSE_EARLY_KEY] !== '1'
+    ) {
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'pause_resumed', outcome: 'success', category: 'auto' });
+    }
+
+    // The downgrade landed: the closing row of the plan_downgraded that the
+    // route opened as `started` at confirm time.
+    if (before.pending_plan && projection.downgrade.state === 'effective') {
+      const interval: BillingInterval =
+        basePlanItem(subscription.items.data)?.price?.recurring?.interval === 'year' ? 'year' : 'month';
+      const target = projection.grantPlan;
+      if (target !== 'free') {
+        // The same row recordPlanChange writes, through the writer itself:
+        // this file's other billing-funnel imports are all it needs from there.
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: 'plan_downgraded',
+          outcome: 'success',
+          category: billingTarget(target, interval),
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] syncPlanChange failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Decision D3: a subscription ended (deleted, or projected to Free as
+ * canceled or unpaid). Parks the owner's inboxes above Free's cap when, and
+ * only when, the webhook marked this subscription's cancellation while
+ * BILLING_PARK_ON_CANCEL_ENABLED was on (src/lib/billing/park-on-cancel.ts).
+ * Cannot throw: it runs after the plan write, and parking never costs Stripe
+ * its 200.
+ */
+async function parkOnEndIfMarked(
+  subscription: Stripe.Subscription,
+  customerId: string | null,
+  metadataUserId: string | null,
+): Promise<void> {
+  try {
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    const ownerId = await resolveUserId(db, customerId, metadataUserId);
+    if (!ownerId) return;
+    await parkOnSubscriptionEnd(db, ownerId, subscription.id, `webhook ${subscription.id} (ended)`);
+  } catch (err) {
+    console.error('[stripe-webhook] parkOnEndIfMarked failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * A checkout bought a paid plan. Unpark up to its cap whatever parked the
+ * inboxes before (a cancel, a pause that ended in a cancel). Needed here and
+ * not only in syncPlanChange: when checkout.session.completed lands first,
+ * the subscription.created that follows already reads the paid plan as
+ * `before` and sees no upgrade. Cheap when nothing is parked (one read).
+ * Cannot throw.
+ */
+async function unparkAfterCheckout(
+  customerId: string | null,
+  metadataUserId: string | null,
+  plan: PlanId,
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const ownerId = customerId ? await resolveUserId(db, customerId, metadataUserId) : metadataUserId;
+    if (!ownerId) return;
+    const row = await readPlanChangeRow(db, ownerId);
+    await unparkOwner(db, ownerId, plan, row?.inbox_keep_order ?? null, `checkout ${plan}`);
+  } catch (err) {
+    console.error('[stripe-webhook] unparkAfterCheckout failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/** Ladder position for "did the plan go up". Unknown and free are 0. */
+function planRankOf(plan: string | null | undefined): number {
+  return plan === 'personal' ? 1 : plan === 'solo' ? 2 : plan === 'pro' ? 3 : 0;
+}
+
+/**
+ * A subscription ended. If it was paused or had a downgrade pending, the
+ * columns are cleared, and a pause that ended in a cancel is recorded as such
+ * (a pause is not churn; a pause that ends in a cancel is, at this moment).
+ * Inboxes parked by the pause stay parked: the owner is on Free now.
+ * Cannot throw, for the same reason as syncPlanChange.
+ */
+async function clearPlanChangeOnDelete(
+  subscription: Stripe.Subscription,
+  customerId: string | null,
+  metadataUserId: string | null,
+): Promise<void> {
+  try {
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    const ownerId = await resolveUserId(db, customerId, metadataUserId);
+    if (!ownerId) return;
+    const before = await readPlanChangeRow(db, ownerId);
+    if (!before || (!before.paused_from && !before.pending_plan)) return;
+    await writePlanChangeColumns(db, ownerId, {
+      paused_from: null,
+      pause_resumes_at: null,
+      pending_plan: null,
+      pending_plan_effective_at: null,
+    });
+    if (before.paused_from) {
+      const workspaceId = await primaryWorkspaceId(db, ownerId);
+      const item = basePlanItem(subscription.items.data);
+      const plan = item?.price?.id ? getPlanByStripePriceId(item.price.id)?.plan.id ?? null : null;
+      if (workspaceId) {
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: 'pause_ended_cancelled',
+          outcome: 'success',
+          category: plan ?? 'unknown',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] clearPlanChangeOnDelete failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * invoice.voided: re-project the subscription when it carries a pause or a
+ * pending downgrade. Any other voided invoice changes nothing. The invoice's
+ * subscription id sits in `parent.subscription_details` on current API
+ * versions and at the top level on older ones; the endpoint is pinned older
+ * than the SDK, so both are read.
+ */
+async function handleInvoiceVoided(invoice: Stripe.Invoice): Promise<void> {
+  const shape = invoice as unknown as {
+    subscription?: string | { id: string } | null;
+    parent?: { subscription_details?: { subscription?: string | { id: string } | null } | null } | null;
+  };
+  const raw = shape.parent?.subscription_details?.subscription ?? shape.subscription ?? null;
+  const subscriptionId = typeof raw === 'string' ? raw : raw?.id ?? null;
+  if (!subscriptionId) return;
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const meta = subscription.metadata ?? {};
+  const relevant =
+    Boolean(subscription.pause_collection?.behavior) ||
+    Boolean(meta.mcpe_pause_from) ||
+    Boolean(meta.mcpe_downgrade_effective_at);
+  if (!relevant) return;
+  await handleSubscriptionUpserted(subscription);
+}
+
+// ---------------------------------------------------------------------------
+// Who fixed it: recovered_by on a recovered dunning sequence
+// ---------------------------------------------------------------------------
+
+const DUNNING_TEMPLATE_LIST = ['dunning_1', 'dunning_3', 'dunning_7', 'dunning_14'] as const;
+
+type RecoveredBy = 'customer' | 'retry' | 'unknown';
+
+/**
+ * Did the customer act, or did Stripe's own retry get the money?
+ *
+ * THE HEURISTIC, from one invoice retrieve expanded through to the paying
+ * charge (payments.data.payment.payment_intent.latest_charge):
+ *
+ *   1. The paying charge ran 3-D Secure (payment_method_details.card.
+ *      three_d_secure is set) -> 'customer'. A 3DS check needs the cardholder
+ *      in a browser, which an off-session retry never has; this is the bank
+ *      approval (SCA) case and the hosted invoice page with a 3DS card.
+ *   2. The paying payment method differs from the one on the failed attempt
+ *      (failedPaymentMethodId, stored in the dunning payload at decline time)
+ *      -> 'customer'. A card typed on the hosted invoice page or saved in the
+ *      portal is a new pm_ id, even when it is the same physical card.
+ *   3. Same payment method, no 3DS -> 'retry'.
+ *   4. Anything not known (no stored failed method, no succeeded intent on the
+ *      invoice, or a Stripe error) -> 'unknown'.
+ *
+ * Its one blind spot: a customer who tops up the account and waits for the
+ * retry reads as 'retry'. Stripe records no "paid from the hosted page" flag
+ * on the charge, so the payment method is the strongest signal one retrieve
+ * gives. Never throws.
+ */
+async function recoveredBy(
+  invoiceId: string,
+  failedPaymentMethodId: string | null,
+): Promise<RecoveredBy> {
+  try {
+    const full = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payments.data.payment.payment_intent.latest_charge'],
+    });
+    const payments = (full as unknown as { payments?: { data?: unknown[] } }).payments;
+    for (const entry of payments?.data ?? []) {
+      const intent = (entry as { payment?: { payment_intent?: unknown } })?.payment?.payment_intent;
+      if (!intent || typeof intent !== 'object') continue;
+      const pi = intent as {
+        status?: string;
+        payment_method?: unknown;
+        latest_charge?: unknown;
+      };
+      if (pi.status !== 'succeeded') continue;
+
+      const charge =
+        pi.latest_charge && typeof pi.latest_charge === 'object'
+          ? (pi.latest_charge as {
+              payment_method?: unknown;
+              payment_method_details?: { card?: { three_d_secure?: unknown } | null } | null;
+            })
+          : null;
+      if (charge?.payment_method_details?.card?.three_d_secure) return 'customer';
+
+      const paidWith = paymentMethodIdOf(charge?.payment_method) ?? paymentMethodIdOf(pi.payment_method);
+      if (!failedPaymentMethodId || !paidWith) return 'unknown';
+      return paidWith === failedPaymentMethodId ? 'retry' : 'customer';
+    }
+    return 'unknown';
+  } catch (err) {
+    console.error('[stripe-webhook] recovered_by lookup failed for %s:', invoiceId, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 'unknown';
+  }
+}
+
+/**
+ * Stamp recovered_by on every row of the dunning sequence for this invoice.
+ * Measurement only: a failure is logged and swallowed, and the webhook acks.
+ */
+async function recordRecoveredBy(
+  db: ReturnType<typeof createServiceRoleClient>,
+  customerId: string,
+  invoiceId: string,
+): Promise<void> {
+  try {
+    const { data: rows, error: readError } = await db
+      .from('billing_email_sends')
+      .select('payload')
+      .eq('stripe_customer_id', customerId)
+      .eq('scope_key', invoiceId)
+      .in('template', [...DUNNING_TEMPLATE_LIST]);
+    if (readError) {
+      console.error('[stripe-webhook] recovered_by: could not read the sequence:', readError.message);
+      return;
+    }
+    if (!rows?.length) return;
+
+    let failedPaymentMethodId: string | null = null;
+    for (const row of rows) {
+      const payload = row.payload as { failedPaymentMethodId?: unknown } | null;
+      if (typeof payload?.failedPaymentMethodId === 'string' && payload.failedPaymentMethodId) {
+        failedPaymentMethodId = payload.failedPaymentMethodId;
+        break;
+      }
+    }
+
+    const by = await recoveredBy(invoiceId, failedPaymentMethodId);
+    const { error } = await db
+      .from('billing_email_sends')
+      .update({ recovered_by: by })
+      .eq('stripe_customer_id', customerId)
+      .eq('scope_key', invoiceId)
+      .in('template', [...DUNNING_TEMPLATE_LIST]);
+    if (error) {
+      console.error('[stripe-webhook] recovered_by: update failed:', error.message);
+      return;
+    }
+    console.log('[stripe-webhook] %s recovered_by=%s', invoiceId, by);
+  } catch (err) {
+    console.error('[stripe-webhook] recordRecoveredBy failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Why a subscription ended, on its own ledger row: Stripe's
+ * cancellation_details.reason ('payment_failed' when the retries ran out,
+ * 'cancellation_requested' when someone cancelled), or 'none'. Feeds the
+ * involuntary-churn panel on /admin/growth/dunning.
+ *
+ * Written right after the ledger insert, before the out-of-order guard, so a
+ * deletion that is skipped as stale is still counted with its reason. Best
+ * effort: before migration 20261024225000 the column does not exist, the
+ * update fails, and that is logged and swallowed. Never throws.
+ */
+async function recordDeletionReason(
+  db: ReturnType<typeof createServiceRoleClient>,
+  event: Stripe.Event,
+): Promise<void> {
+  try {
+    const subscription = event.data.object as Stripe.Subscription;
+    const raw = subscription.cancellation_details?.reason ?? null;
+    const reason = typeof raw === 'string' && raw ? raw.slice(0, 64) : 'none';
+    const { error } = await db
+      .from('stripe_webhook_events')
+      .update({ cancellation_reason: reason })
+      .eq('event_id', event.id);
+    if (error) console.error('[stripe-webhook] could not record the deletion reason:', error.message);
+  } catch (err) {
+    console.error('[stripe-webhook] recordDeletionReason failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1609,8 +2290,22 @@ async function stripeCustomerEmail(customerId: string): Promise<string | null> {
   }
 }
 
+/** The pm_ id on a last_payment_error, whether Stripe expanded it or not. */
+function paymentMethodIdOf(value: unknown): string | null {
+  if (typeof value === 'string') return value || null;
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id;
+    return typeof id === 'string' && id ? id : null;
+  }
+  return null;
+}
+
 /**
- * The issuer's decline code for a failed invoice, or null.
+ * The failed attempt on an invoice: the issuer's decline code and the payment
+ * method it was tried on, each null when unknown.
+ *
+ * The payment method is kept in the dunning payload so that, when the invoice
+ * is finally paid, recoveredBy can tell a new card from the same one retried.
  *
  * Worth the extra API call because it is the difference between "your payment
  * failed" and "your bank said there was not enough in the account", and the
@@ -1632,7 +2327,10 @@ async function stripeCustomerEmail(customerId: string): Promise<string | null> {
  * Never throws. A null here costs one sentence of copy; an exception here costs
  * the whole dunning sequence.
  */
-async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | null> {
+async function invoiceFailedAttempt(
+  invoice: Stripe.Invoice,
+): Promise<{ declineCode: string | null; paymentMethodId: string | null }> {
+  const none = { declineCode: null, paymentMethodId: null };
   try {
     // 1. The old shape, present when the endpoint is on an older API version.
     const raw = invoice as unknown as Record<string, unknown>;
@@ -1644,10 +2342,13 @@ async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | nul
     }
     if (paymentIntentId) {
       const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      return declineFrom(intent.last_payment_error);
+      return {
+        declineCode: declineFrom(intent.last_payment_error),
+        paymentMethodId: paymentMethodIdOf(intent.last_payment_error?.payment_method),
+      };
     }
 
-    if (!invoice.id) return null;
+    if (!invoice.id) return none;
 
     // 2. The current shape. One call: expanding through to the intent means the
     //    error is already on the object and no second retrieve is needed.
@@ -1660,19 +2361,18 @@ async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | nul
       const payment = (entry as { payment?: Record<string, unknown> })?.payment;
       const intent = payment?.payment_intent;
       if (intent && typeof intent === 'object' && 'last_payment_error' in intent) {
-        const code = declineFrom(
-          (intent as { last_payment_error?: Stripe.PaymentIntent.LastPaymentError | null })
-            .last_payment_error,
-        );
-        if (code) return code;
+        const error = (intent as { last_payment_error?: Stripe.PaymentIntent.LastPaymentError | null })
+          .last_payment_error;
+        const code = declineFrom(error);
+        if (code) return { declineCode: code, paymentMethodId: paymentMethodIdOf(error?.payment_method) };
       }
     }
-    return null;
+    return none;
   } catch (err) {
     console.error('[stripe-webhook] could not resolve decline code:', {
       error: err instanceof Error ? err.message : String(err),
     });
-    return null;
+    return none;
   }
 }
 
@@ -1835,13 +2535,27 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   } = {
     updated_at: new Date().toISOString(),
   };
-  if (newPlan !== null) workspaceUpdate.plan = newPlan;
+  // PASS-AWARE. Free is never projected while a 3-month pass covers now: an
+  // old subscription's deletion (or a lapsed status) arriving during a pass
+  // must not take the paid pass away. `user_billing.plan` above still records
+  // 'free', the subscription's own truth; only the workspaces keep Personal.
+  // Strict read: a failure throws, Stripe retries, and nobody loses a pass to
+  // a transient error. A missing table (migration not applied) is no pass.
+  let projectedPlan = newPlan;
+  if (newPlan === 'free' && (await getActivePass(supabase, resolvedUserId, { strict: true }))) {
+    projectedPlan = PERSONAL_PASS_3M.plan;
+    console.log(
+      `[stripe-webhook] ${source}: user ${resolvedUserId} holds an active pass; workspaces stay on "${projectedPlan}".`,
+    );
+  }
+
+  if (projectedPlan !== null) workspaceUpdate.plan = projectedPlan;
   if (customerId) workspaceUpdate.stripe_customer_id = customerId;
 
   // Read BEFORE the projection overwrites it: which workspaces are about to
   // move onto a paid plan. A renewal or a card change for a customer already
   // on the plan returns none, and this cannot throw.
-  const enteringPaidPlan = await workspacesEnteringPaidPlan(supabase, resolvedUserId, newPlan);
+  const enteringPaidPlan = await workspacesEnteringPaidPlan(supabase, resolvedUserId, projectedPlan);
 
   const { error: wsError } = await supabase
     .from('workspaces')
@@ -1851,12 +2565,12 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
 
   if (wsError) {
     throw new Error(
-      `[stripe-webhook] ${source}: failed to project plan "${newPlan ?? '(unchanged)'}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
+      `[stripe-webhook] ${source}: failed to project plan "${projectedPlan ?? '(unchanged)'}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
     );
   }
 
   console.log(
-    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'})${safeOfferTag(offer) ? ` offer=${safeOfferTag(offer)}` : ''}; propagated to all owned workspaces`,
+    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${projectedPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'})${safeOfferTag(offer) ? ` offer=${safeOfferTag(offer)}` : ''}; propagated to all owned workspaces`,
   );
 
   // ── Resume automations the Free allowance paused ──────────────────────────

@@ -27,8 +27,8 @@ const QUICKSTART_STEPS = [
   {
     num: '02',
     id: 'apikey',
-    code: `# Your key looks like this:
-mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
+    code: `# Your key looks like this: mcpe_ followed by 64 hex characters
+mcpe_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`,
     cta: null,
   },
   {
@@ -71,7 +71,7 @@ const CLIENT_SNIPPETS = {
       "url": "https://mcpemails.com/api/mcp",
       "auth": {
         "type": "bearer",
-        "token": "mcpe_live_YOUR_KEY_HERE"
+        "token": "mcpe_YOUR_KEY_HERE"
       }
     }
   }
@@ -82,14 +82,14 @@ const CLIENT_SNIPPETS = {
     "servers": {
       "mcpemails": {
         "url": "https://mcpemails.com/api/mcp",
-        "bearer": "mcpe_live_YOUR_KEY_HERE"
+        "bearer": "mcpe_YOUR_KEY_HERE"
       }
     }
   }
 }`,
   raw: `# Raw JSON-RPC 2.0: initialize handshake
 curl -X POST https://mcpemails.com/api/mcp \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY_HERE" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
     "jsonrpc": "2.0",
@@ -1250,6 +1250,7 @@ export default function DocsClient() {
             <a className="btn btn-secondary btn-lg" href="#tools">{t('hero.ctaTools')}</a>
             <a className="btn btn-secondary btn-lg" href="#automation-safety">{t('hero.ctaSafety')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</Link>
+            <Link className="btn btn-secondary btn-lg" href="/docs/api">{t('hero.ctaApi')}</Link>
           </div>
         </div>
       </section>
@@ -1316,7 +1317,7 @@ export default function DocsClient() {
             <div className="docs-example-label" style={{ marginBottom: 8 }}>{t('endpoint.handshakeLabel')}</div>
             <CodeBlock
               code={`curl -X POST https://mcpemails.com/api/mcp \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
     "jsonrpc": "2.0",

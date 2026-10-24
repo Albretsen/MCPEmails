@@ -23,6 +23,7 @@ import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
 import { supportVisibleTo } from '@/lib/support/release-gate';
+import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -178,8 +179,10 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden', 'signature_embed_images'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
+        'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+      // `parked_at` (20261024173000) degrades like the two preferences above:
+      // without it every inbox reads as active, which is the pre-parking truth.
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -233,6 +236,9 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         ? row.service
         : row.provider,
     status: row.status,
+    // Parked above a lower plan's inbox cap (src/lib/billing/parking.ts):
+    // connected and kept, but no tool or automation can use it.
+    parked: !!row.parked_at,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
     // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
@@ -666,7 +672,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -953,6 +959,15 @@ export default async function DashboardPage({ params }) {
   const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
   const stripePrices = withSeasonalOffers(livePrices, surfaceOffers);
 
+  // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
+  // until {date}" and the ways to keep it. Null for everyone else, and for a
+  // member viewing someone else's workspace. Tolerant: a failed read is null.
+  const passState = await loadPassBillingState(
+    createServiceRoleClient(),
+    user.id,
+    workspace?.owner_id === user.id,
+  );
+
   return (
     <DashboardApp
       initialRoute={initialRoute}
@@ -964,6 +979,9 @@ export default async function DashboardPage({ params }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // Whether this workspace has ever made a tool call. The Overview guide
+        // shows its "waiting for your first call" step only while it has not.
+        firstToolUsed: Boolean(workspace?.analytics_first_tool_used_at),
         // The draft editor card, at the workspace grain. Two separate columns
         // on purpose: `draftEditorEnabled` is OUR rollout gate (internal only
         // in v1, so most workspaces see no control at all) and
@@ -994,6 +1012,7 @@ export default async function DashboardPage({ params }) {
       actionAllowance={actionAllowance}
       inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
+      passState={passState}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
       inboxes={inboxes}
