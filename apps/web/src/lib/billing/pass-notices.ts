@@ -23,6 +23,13 @@
  * follows does not end). The dispatcher asks checkPassNoticeFreshness again
  * immediately before each send, which covers whatever no event cancelled.
  *
+ * RESTORED WHEN TRUE AGAIN. A cancellation for `pass_renewed` or
+ * `subscription_started` can stop being right: the stacked pass is refunded,
+ * or the subscription ends while the pass still runs. restorePassNotices then
+ * puts the last live pass's two rows back (un-cancelled, with its current end
+ * date) so a pass never ends without its notices. It also moves the dates of
+ * open rows, for a stacked pass that a refund started early.
+ *
  * Nothing here throws into the webhook: every function logs and swallows.
  */
 
@@ -30,6 +37,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
 import {
+  getActivePass,
+  hasEntitledSubscription,
+  passNoticesFor,
+  type BillingSnapshot,
   type PassNotice,
   type PassNoticeSink,
   type PassStatus,
@@ -126,6 +137,89 @@ export async function cancelPassNotices(
     reason: options.reason,
     ...(options.passId ? { scopeKey: options.passId } : {}),
   });
+}
+
+/** Cancellations that a later event can make untrue again. */
+const RESTORABLE_REASONS: readonly CancelReason[] = ['pass_renewed', 'subscription_started'];
+
+/**
+ * Bring the pass notices back in line with what is stored, after an event that
+ * can make an earlier cancellation untrue: a pass refunded (the stacked one, or
+ * the running one, which starts the stacked one early) or a subscription that
+ * ended while a pass runs.
+ *
+ * The pass whose notices are due is the LAST of the live cover (the queued one
+ * when there is one: the running pass does not end). For its two rows, unsent:
+ *   - an open row gets the pass's current end (send_after and payload);
+ *   - a row cancelled for `pass_renewed` or `subscription_started` is
+ *     un-cancelled with the same dates;
+ *   - a missing row is queued through the sink.
+ * Rows cancelled for any other reason (a refund, suppression) stay cancelled.
+ * Nothing when the user has an entitled subscription, holds no pass, or
+ * BILLING_LIFECYCLE_EMAILS is off. Returns the rows written. Never throws.
+ */
+export async function restorePassNotices(
+  db: Db,
+  options: { userId: string; stripeCustomerId?: string | null; now?: Date },
+): Promise<number> {
+  try {
+    if (!lifecycleQueueingEnabled()) return 0;
+    const now = options.now ?? new Date();
+    const { data: billing, error: billingError } = await db
+      .from('user_billing')
+      .select('plan, subscription_status, stripe_customer_id')
+      .eq('user_id', options.userId)
+      .maybeSingle();
+    if (billingError) {
+      console.error(`[pass-notices] restore: billing read failed for ${options.userId}: ${billingError.message}`);
+      return 0;
+    }
+    if (hasEntitledSubscription(billing as BillingSnapshot | null)) return 0;
+    const active = await getActivePass(db, options.userId, { now });
+    if (!active) return 0;
+    const last = active.queued ?? active.current;
+    const customerId = options.stripeCustomerId ?? billing?.stripe_customer_id ?? null;
+    if (!customerId) {
+      console.error(`[pass-notices] restore: no Stripe customer for ${options.userId}; nothing restored.`);
+      return 0;
+    }
+
+    let written = 0;
+    for (const notice of passNoticesFor(last)) {
+      const patch = {
+        send_after: notice.sendAfter,
+        payload: { planId: 'personal', periodEnd: notice.endsAt } satisfies LifecyclePayload,
+      };
+      const scoped = () =>
+        db
+          .from('billing_email_sends')
+          .update({ ...patch, cancelled_at: null, cancel_reason: null })
+          .eq('stripe_customer_id', customerId)
+          .eq('template', notice.template)
+          .eq('scope_key', last.id)
+          .is('sent_at', null);
+      const [open, restored] = await Promise.all([
+        scoped().is('cancelled_at', null).select('id'),
+        scoped().in('cancel_reason', [...RESTORABLE_REASONS]).select('id'),
+      ]);
+      for (const result of [open, restored]) {
+        if (result.error) {
+          console.error(`[pass-notices] restore failed for pass ${last.id}: ${result.error.message}`);
+        } else {
+          written += result.data?.length ?? 0;
+        }
+      }
+    }
+    // Rows that were never queued (queueing was off at purchase, say).
+    await passNoticeSink(db, { stripeCustomerId: customerId })(passNoticesFor(last));
+    if (written > 0) console.log(`[pass-notices] restored or moved ${written} notice row(s) for pass ${last.id}`);
+    return written;
+  } catch (err) {
+    console.error('[pass-notices] restore failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
 }
 
 // ---------------------------------------------------------------------------

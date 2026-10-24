@@ -16,6 +16,7 @@
  *   canQueueAnotherPass(active)            false once a pass is already queued (one queued pass max)
  *   hasEntitledSubscription(billing)       a user_billing row that is entitled (active, trialing,
  *                                          past_due, unpaid, or a paid plan with no status)
+ *   isPausedSubscriber(billing)            a paused subscription is stored (it resumes; no pass beside it)
  *   passEligibility({ billing, active })   may this user buy a pass right now, and if not, why
  *   effectivePlan({ billing, active })     the plan to project onto workspaces.plan
  *   reprojectUserPlan(db, userId, source)  writes effectivePlan onto every owned workspace
@@ -380,6 +381,8 @@ export const ENTITLED_SUBSCRIPTION_STATUSES: readonly string[] = [
 export interface BillingSnapshot {
   plan: string | null;
   subscription_status: string | null;
+  /** Read where a paused subscription matters (isPausedSubscriber). */
+  stripe_subscription_id?: string | null;
 }
 
 /**
@@ -395,9 +398,20 @@ export function hasEntitledSubscription(billing: BillingSnapshot | null | undefi
   );
 }
 
+/**
+ * True when `user_billing` holds a PAUSED subscription: on Free while paused
+ * (status 'paused' is our own value), but the subscription is still there and
+ * resumes. Same test checkout-core.ts applies before any plan checkout. Such a
+ * user is not offered a pass and cannot buy one: it would run next to a
+ * subscription that starts charging again.
+ */
+export function isPausedSubscriber(billing: BillingSnapshot | null | undefined): boolean {
+  return billing?.subscription_status === 'paused' && Boolean(billing.stripe_subscription_id);
+}
+
 export type PassEligibility =
   | { eligible: true; stacked: boolean }
-  | { eligible: false; reason: 'already_subscribed' | 'pass_already_queued' };
+  | { eligible: false; reason: 'already_subscribed' | 'subscription_paused' | 'pass_already_queued' };
 
 /** May this user buy a pass right now (plan D6 and D7)? */
 export function passEligibility(input: {
@@ -405,6 +419,7 @@ export function passEligibility(input: {
   active: ActivePass | null;
 }): PassEligibility {
   if (hasEntitledSubscription(input.billing)) return { eligible: false, reason: 'already_subscribed' };
+  if (isPausedSubscriber(input.billing)) return { eligible: false, reason: 'subscription_paused' };
   if (!canQueueAnotherPass(input.active)) return { eligible: false, reason: 'pass_already_queued' };
   return { eligible: true, stacked: input.active != null };
 }
@@ -426,10 +441,35 @@ export function effectivePlan(input: {
   return 'free';
 }
 
+/** Read user_billing and the passes, and decide the plan. Throws on a failed read. */
+async function readEffectivePlan(db: Db, userId: string, source: string, now: Date): Promise<PlanId> {
+  const { data: billing, error: billingError } = await db
+    .from('user_billing')
+    .select('plan, subscription_status')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (billingError) {
+    throw new Error(`[pass] ${source}: could not read user_billing for ${userId}: ${billingError.message}`);
+  }
+  const active = await getActivePass(db, userId, { strict: true, now });
+  return effectivePlan({ billing: billing as BillingSnapshot | null, active });
+}
+
+/** How many times reprojectUserPlan re-reads after a write that turned out stale. */
+const REPROJECT_ATTEMPTS = 3;
+
 /**
  * Re-run the projection for one user from what is stored: their user_billing
  * row and their passes. Writes `workspaces.plan` on every owned, undeleted
  * workspace and lifts plan-limit pauses for the ones moving onto a paid plan.
+ *
+ * READ, WRITE, READ AGAIN. The read and the write are two statements, so a
+ * purchase landing between them (the expiry sweep read "no pass", the webhook
+ * inserted one and projected Personal, then the sweep wrote Free) would leave
+ * the later, stale write in place. So after each write the inputs are read
+ * again, and when they now give a different plan it is written again. Any
+ * change that lands after that final read runs its own projection, which
+ * writes after it, so the last write always reflects the stored state.
  *
  * Throws on a failed read or write so the webhook can answer 500 and be
  * retried. Returns the plan it projected.
@@ -440,29 +480,30 @@ export async function reprojectUserPlan(
   source: string,
   now: Date = new Date(),
 ): Promise<PlanId> {
-  const { data: billing, error: billingError } = await db
-    .from('user_billing')
-    .select('plan, subscription_status')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (billingError) {
-    throw new Error(`[pass] ${source}: could not read user_billing for ${userId}: ${billingError.message}`);
-  }
-  const active = await getActivePass(db, userId, { strict: true, now });
-  const plan = effectivePlan({ billing: billing as BillingSnapshot | null, active });
+  let plan = await readEffectivePlan(db, userId, source, now);
+  for (let attempt = 1; ; attempt += 1) {
+    const entering = await workspacesEnteringPaidPlan(db, userId, plan);
+    const { error } = await db
+      .from('workspaces')
+      .update({ plan, updated_at: new Date().toISOString() })
+      .eq('owner_id', userId)
+      .is('deleted_at', null);
+    if (error) {
+      throw new Error(`[pass] ${source}: could not project "${plan}" for ${userId}: ${error.message}`);
+    }
+    console.log(`[pass] ${source}: user ${userId} projected to "${plan}"`);
+    await liftPlanLimitPauses(db, entering, { label: source });
 
-  const entering = await workspacesEnteringPaidPlan(db, userId, plan);
-  const { error } = await db
-    .from('workspaces')
-    .update({ plan, updated_at: now.toISOString() })
-    .eq('owner_id', userId)
-    .is('deleted_at', null);
-  if (error) {
-    throw new Error(`[pass] ${source}: could not project "${plan}" for ${userId}: ${error.message}`);
+    const after = await readEffectivePlan(db, userId, source, new Date(Math.max(now.getTime(), Date.now())));
+    if (after === plan) return plan;
+    if (attempt >= REPROJECT_ATTEMPTS) {
+      throw new Error(
+        `[pass] ${source}: plan for ${userId} kept changing ("${plan}" then "${after}"); retry.`,
+      );
+    }
+    console.log(`[pass] ${source}: user ${userId} changed during the projection ("${plan}" to "${after}"); writing again.`);
+    plan = after;
   }
-  console.log(`[pass] ${source}: user ${userId} projected to "${plan}"`);
-  await liftPlanLimitPauses(db, entering, { label: source });
-  return plan;
 }
 
 // ---------------------------------------------------------------------------
@@ -530,6 +571,7 @@ async function deliverNotices(sink: PassNoticeSink | undefined, notices: PassNot
 
 export type PassPurchaseResult =
   | { kind: 'recorded'; pass: PassRow; plan: PlanId }
+  | { kind: 'recorded_refunded'; pass: PassRow }
   | { kind: 'duplicate' }
   | { kind: 'table_missing' };
 
@@ -538,6 +580,15 @@ export type PassPurchaseResult =
  * (the ledger already dedupes event ids; this also covers a second event for
  * the same session) records nothing and projects nothing. Then re-projects, so
  * every owned workspace is on Personal. Throws on a failed write.
+ *
+ * `paidAt` is when the money moved (the charge's time), not when the webhook
+ * ran, so a delivery Stripe retried for hours does not shorten the pass. The
+ * projection still runs at the real current time.
+ *
+ * `alreadyRefunded`: the payment was refunded before this purchase was
+ * recorded (the charge.refunded event won the race and found no pass). The row
+ * is stored as `refunded` for the books and the session-id dedupe, and grants
+ * nothing: no projection, no notices, no funnel row.
  */
 export async function recordPassPurchase(
   db: Db,
@@ -548,6 +599,7 @@ export async function recordPassPurchase(
     amountMinor: number | null;
     currency: string | null;
     paidAt?: Date;
+    alreadyRefunded?: boolean;
     source: string;
     notices?: PassNoticeSink;
   },
@@ -581,7 +633,8 @@ export async function recordPassPurchase(
       currency: input.currency,
       starts_at: window.startsAt.toISOString(),
       ends_at: window.endsAt.toISOString(),
-      status: window.status,
+      status: input.alreadyRefunded ? 'refunded' : window.status,
+      ...(input.alreadyRefunded ? { refunded_at: new Date().toISOString() } : {}),
     })
     .select(PASS_COLUMNS)
     .single();
@@ -590,8 +643,14 @@ export async function recordPassPurchase(
     throw new Error(`[pass] ${input.source}: could not record pass for ${input.userId}: ${error.message}`);
   }
   const pass = inserted as unknown as PassRow;
+  if (input.alreadyRefunded) {
+    console.error(
+      `[pass] ${input.source}: payment for session ${input.sessionId} was refunded before it was recorded; pass ${pass.id} stored as refunded, nothing granted.`,
+    );
+    return { kind: 'recorded_refunded', pass };
+  }
 
-  const plan = await reprojectUserPlan(db, input.userId, input.source, paidAt);
+  const plan = await reprojectUserPlan(db, input.userId, input.source);
   await recordPassEvent({
     workspaceId: await primaryWorkspaceId(db, input.userId),
     stage: 'pass_checkout_completed',

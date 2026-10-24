@@ -2390,6 +2390,9 @@ test('a Free user gets a payment-mode Checkout for the one-time price, never dis
   assert.equal(params.mode, 'payment');
   assert.deepEqual(params.line_items, [{ price: 'price_pass_3m', quantity: 1 }]);
   assert.equal(params.allow_promotion_codes, false);
+  // Cards only: a delayed method would complete the session unpaid.
+  assert.deepEqual(params.allowed_payment_method_types, ['card']);
+  assert.equal('payment_method_configuration' in params, false);
   assert.equal(params.submit_type, 'pay');
   assert.equal(params.client_reference_id, USER_ID);
   assert.equal('subscription_data' in params, false);
@@ -2437,6 +2440,17 @@ test('an entitled subscriber is refused with already_subscribed, in every entitl
     assert.equal(sessionsCreated.length, 0);
     assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'subscription_exists' }]);
   }
+});
+
+test('a paused subscriber is refused: the subscription resumes and charges again', async () => {
+  const { outcome, sessionsCreated, passRows: rows } = await passCheckout({
+    billing: { plan: 'free', subscription_status: 'paused', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'plan_change_pending');
+  assert.equal(outcome.kind === 'error' && outcome.status, 409);
+  assert.equal(outcome.kind === 'error' && outcome.errorCode, 'plan_change_pending');
+  assert.equal(sessionsCreated.length, 0);
+  assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'subscription_exists' }]);
 });
 
 test('a lapsed subscriber can buy a pass', async () => {

@@ -252,13 +252,18 @@ export function PassBillingPanel({ passState, stripePrices, onSubscribe, busy = 
  * The last-7-days banner on every dashboard page but Settings (where the
  * Billing panel already says the same). It points at Billing, where the
  * options are, and records `pass_offer_shown / pass_reminder` once a day.
+ * Shown only when the server's pass_reminder answer says so.
  */
 export function PassEndingBanner({ passState, workspaceId, onOpenBilling }) {
   const t = useTranslations('dashboard');
   const { locale } = useAppLocale();
   const [dismissed, setDismissed] = useState(false);
-  const show = !!passState?.inLastWeek && !dismissed;
-  usePassOffer('pass_reminder', workspaceId, show);
+  const due = !!passState?.inLastWeek && !dismissed;
+  // The server decides (pass_reminder: no subscription, no pause, no comped
+  // grant), the same rule that builds passState; the banner never shows on
+  // the client's guess alone.
+  const answer = usePassOffer('pass_reminder', workspaceId, due);
+  const show = due && answer?.show === true;
   if (!show) return null;
   return (
     <div

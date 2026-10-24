@@ -234,3 +234,92 @@ test('without a pass the deletion still queues the cancellation series', async (
   const series = sends().filter((r) => r.template === 'cancel_ask');
   assert.equal(series.length, 1);
 });
+
+// ---------------------------------------------------------------------------
+// Notices that become true again, and notices whose dates move
+// ---------------------------------------------------------------------------
+
+function refund(paymentIntent: string) {
+  return {
+    id: `ch_${paymentIntent}`,
+    object: 'charge',
+    customer: CUSTOMER,
+    payment_intent: paymentIntent,
+    amount: 2900,
+    amount_refunded: 2900,
+    refunded: true,
+  };
+}
+
+test('refunding the stacked pass puts the running pass notices back, with its end date', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r1a'));
+  await deliver('checkout.session.completed', passSession('cs_r1b'));
+  const [first] = db.table('user_passes');
+  assert.equal(open(first.id as string).length, 0, 'cancelled while the stacked pass followed');
+
+  await deliver('charge.refunded', refund('pi_cs_r1b'));
+
+  const restored = open(first.id as string);
+  assert.deepEqual(restored.map((r) => r.template).sort(), ['pass_ended', 'pass_ending_7d']);
+  const ended = restored.find((r) => r.template === 'pass_ended')!;
+  assert.equal(ended.send_after, first.ends_at);
+  assert.equal((ended.payload as { periodEnd: string }).periodEnd, first.ends_at);
+  assert.equal(ended.cancel_reason, null);
+});
+
+test('refunding the running pass moves the stacked pass notices to its new dates', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r2a'));
+  await deliver('checkout.session.completed', passSession('cs_r2b'));
+
+  await deliver('charge.refunded', refund('pi_cs_r2a'));
+
+  const [first, second] = db.table('user_passes');
+  assert.equal(first.status, 'refunded');
+  assert.equal(second.status, 'active');
+  const rows = open(second.id as string);
+  assert.equal(rows.length, 2);
+  const ending = rows.find((r) => r.template === 'pass_ending_7d')!;
+  const ended = rows.find((r) => r.template === 'pass_ended')!;
+  assert.equal(ended.send_after, second.ends_at);
+  assert.equal((ended.payload as { periodEnd: string }).periodEnd, second.ends_at);
+  assert.equal(Date.parse(second.ends_at as string) - Date.parse(ending.send_after as string), 7 * DAY);
+  assert.equal((ending.payload as { periodEnd: string }).periodEnd, second.ends_at);
+  // The refunded pass's own rows stay cancelled.
+  assert.equal(open(first.id as string).length, 0);
+});
+
+test('a subscription that ends while the pass runs puts the pass notices back', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r3'));
+  await deliver('checkout.session.completed', {
+    id: 'cs_sub_r3',
+    object: 'checkout.session',
+    mode: 'subscription',
+    payment_status: 'no_payment_required',
+    customer: CUSTOMER,
+    subscription: 'sub_new',
+    amount_total: 0,
+    currency: 'usd',
+    metadata: { user_id: BUYER, plan_id: 'personal', interval: 'month' },
+  });
+  assert.equal(open().length, 0, 'cancelled when the subscription started');
+
+  await deliver('customer.subscription.deleted', { ...SUBSCRIPTION, status: 'canceled' });
+
+  const [pass] = db.table('user_passes');
+  const rows = open(pass.id as string);
+  assert.deepEqual(rows.map((r) => r.template).sort(), ['pass_ended', 'pass_ending_7d']);
+  assert.ok(rows.every((r) => r.cancel_reason == null));
+});
+
+test('a refund cancellation is never undone', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_r4'));
+  await deliver('charge.refunded', refund('pi_cs_r4'));
+  await deliver('customer.subscription.deleted', { ...SUBSCRIPTION, id: 'sub_old', status: 'canceled' });
+  const passRows = sends().filter((r) => String(r.template).startsWith('pass_'));
+  assert.equal(passRows.length, 2);
+  assert.ok(passRows.every((r) => r.cancelled_at != null && r.cancel_reason === 'pass_refunded'));
+});

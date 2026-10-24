@@ -1795,6 +1795,12 @@ export async function runPassCheckout(input: {
         'You already have a subscription, which includes everything the pass does.',
       );
     }
+    if (eligibility.reason === 'subscription_paused') {
+      // A paused subscription resumes and charges again: a pass beside it
+      // would pay twice for the same months.
+      await record('subscription_exists');
+      return fail('plan_change_pending', 409, PLAN_CHANGE_PENDING_MESSAGE, 'plan_change_pending');
+    }
     await record('conflict');
     return fail('pass_already_queued', 409, 'You already have another 3-month pass queued after this one.');
   }
@@ -1840,6 +1846,12 @@ export async function runPassCheckout(input: {
       cancel_url: `${appUrl}/dashboard/settings?pass=cancelled`,
       // Never discounted: the pass is priced above three months of monthly.
       allow_promotion_codes: false,
+      // Cards only (wallets such as Apple Pay ride on the card type). A
+      // delayed method (SEPA Direct Debit, bank transfer) completes the
+      // session 'unpaid' and pays days later; a one-off pass is paid when it
+      // starts. stripe-node 23 dropped `payment_method_types`; this is its
+      // filter on the account's enabled methods.
+      allowed_payment_method_types: ['card'],
       billing_address_collection: 'auto',
       adaptive_pricing: adaptivePricingParam(),
       locale,

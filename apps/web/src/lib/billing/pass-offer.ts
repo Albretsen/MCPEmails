@@ -44,6 +44,7 @@ import {
   canQueueAnotherPass,
   getActivePass,
   hasEntitledSubscription,
+  isPausedSubscriber,
   passCheckoutOpen,
   passEndsAt,
   passSubscriptionStart,
@@ -148,7 +149,7 @@ export function capBannerDue(input: {
 /**
  * May this workspace be offered a pass at all (before any surface trigger)?
  * A Free workspace owned by the viewer, whose owner has no entitled
- * subscription, no comped grant and no pass running. Pure.
+ * subscription, no paused one, no comped grant and no pass running. Pure.
  */
 export function passOfferEligible(input: {
   isOwner: boolean;
@@ -161,6 +162,7 @@ export function passOfferEligible(input: {
   if ((input.workspacePlan ?? 'free') !== 'free') return false;
   if (input.compedGrant) return false;
   if (hasEntitledSubscription(input.billing)) return false;
+  if (isPausedSubscriber(input.billing)) return false;
   if (input.active) return false;
   return true;
 }
@@ -233,9 +235,22 @@ export function passBillingState(
 }
 
 /**
+ * Does the holder's pass get its own Billing panel and last-week banner? Not
+ * for a subscriber: an entitled subscription is what they have (the paid-plan
+ * panel shows it), and the pass ending changes nothing for them. The same
+ * rule evaluatePassOffer applies to `pass_reminder`, so the banner and the
+ * server answer agree. Pure.
+ */
+export function passPanelApplies(billing: BillingSnapshot | null | undefined): boolean {
+  return !hasEntitledSubscription(billing);
+}
+
+/**
  * The dashboard's read: the holder's Billing state, or null for anyone who
- * holds no pass (and for a member of someone else's workspace, whose owner's
- * passes are not theirs to see). Tolerant: a read failure is "no pass".
+ * holds no pass, for a subscriber (passPanelApplies), and for a member of
+ * someone else's workspace, whose owner's passes are not theirs to see. A
+ * paused subscriber sees the pass, without the option to add another.
+ * Tolerant: a read failure is "no pass".
  */
 export async function loadPassBillingState(
   db: Db,
@@ -245,7 +260,19 @@ export async function loadPassBillingState(
 ): Promise<PassBillingState | null> {
   if (!isOwner) return null;
   const active = await getActivePass(db, userId, { now });
-  return active ? passBillingState(active, { now }) : null;
+  if (!active) return null;
+  const { data: billing, error } = await db
+    .from('user_billing')
+    .select('plan, subscription_status, stripe_subscription_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) {
+    console.error('[pass-offer] billing read failed, treating as no pass:', { error: error.message });
+    return null;
+  }
+  if (!passPanelApplies(billing)) return null;
+  const state = passBillingState(active, { now });
+  return isPausedSubscriber(billing) ? { ...state, canAddPass: false } : state;
 }
 
 // ---------------------------------------------------------------------------
@@ -393,7 +420,11 @@ export async function evaluatePassOffer(input: {
     if (!workspace || workspace.deleted_at || workspace.owner_id !== input.userId) return HIDDEN;
 
     const [{ data: billing }, { data: entitlement }, active] = await Promise.all([
-      db.from('user_billing').select('plan, subscription_status').eq('user_id', input.userId).maybeSingle(),
+      db
+        .from('user_billing')
+        .select('plan, subscription_status, stripe_subscription_id')
+        .eq('user_id', input.userId)
+        .maybeSingle(),
       db.from('user_usage_entitlements').select('kind, expires_at').eq('user_id', input.userId).maybeSingle(),
       getActivePass(db, input.userId, { now }),
     ]);
@@ -403,7 +434,7 @@ export async function evaluatePassOffer(input: {
 
     if (input.surface === 'pass_reminder') {
       // For holders in their last week; not part of the experiment.
-      if (!active || hasEntitledSubscription(billing) || compedGrant) return HIDDEN;
+      if (!active || !passPanelApplies(billing) || isPausedSubscriber(billing) || compedGrant) return HIDDEN;
       const state = passBillingState(active, { now });
       if (!state.inLastWeek) return HIDDEN;
       await recordPassOfferShownOnce(db, input.workspaceId, 'pass_reminder', now);
@@ -473,7 +504,11 @@ export async function paywallEmailPassLine(
       .maybeSingle();
     if (!workspace || workspace.deleted_at || !workspace.owner_id) return null;
     const [{ data: billing }, { data: entitlement }, active] = await Promise.all([
-      db.from('user_billing').select('plan, subscription_status').eq('user_id', workspace.owner_id).maybeSingle(),
+      db
+        .from('user_billing')
+        .select('plan, subscription_status, stripe_subscription_id')
+        .eq('user_id', workspace.owner_id)
+        .maybeSingle(),
       db.from('user_usage_entitlements').select('kind, expires_at').eq('user_id', workspace.owner_id).maybeSingle(),
       getActivePass(db, workspace.owner_id, { now }),
     ]);

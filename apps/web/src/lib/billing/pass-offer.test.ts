@@ -16,6 +16,7 @@ import {
   CAP_DWELL_MS,
   capBannerDue,
   evaluatePassOffer,
+  loadPassBillingState,
   passBillingState,
   passCheckoutHref,
   passExperimentSubject,
@@ -404,4 +405,72 @@ test('the board counts active and this month, never refunded or internal passes'
   const summary = summarisePasses(rows, 1, NOW, new Set(['me']));
   assert.deepEqual(summary, { active: 2, soldThisMonth: 1, renewed: 1 });
   assert.equal(passSummaryLine(summary), 'Passes: 2 active, 1 sold this month, 1 renewed');
+});
+
+// ---------------------------------------------------------------------------
+// A pass holder who also subscribes, or whose subscription is paused
+// ---------------------------------------------------------------------------
+
+function seedHolder(db: FakeSupabase, billing: Record<string, unknown> | null) {
+  seedWorkspace(db);
+  // In the last week, so the reminder would be due on the pass alone.
+  db.seed('user_passes', [{ ...pass('held', new Date(NOW.getTime() - 85 * DAY), new Date(NOW.getTime() + 3 * DAY)) }]);
+  if (billing) db.seed('user_billing', [{ user_id: OWNER, ...billing }]);
+}
+
+test('a subscriber who also holds a pass gets no pass panel and no last-week banner', async () => {
+  await withMode('on', async () => {
+    const db = new FakeSupabase();
+    seedHolder(db, { plan: 'personal', subscription_status: 'trialing', stripe_subscription_id: 'sub_1' });
+    assert.equal(await loadPassBillingState(asClient(db), OWNER, true, NOW), null);
+    const reminder = await evaluatePassOffer({
+      userId: OWNER, workspaceId: WS, surface: 'pass_reminder', now: NOW, db: asClient(db),
+    });
+    assert.equal(reminder.show, false);
+  });
+});
+
+test('a holder without a subscription keeps the pass panel and the banner', async () => {
+  await withMode('on', async () => {
+    const db = new FakeSupabase();
+    seedHolder(db, { plan: 'free', subscription_status: 'canceled', stripe_subscription_id: 'sub_old' });
+    const state = await loadPassBillingState(asClient(db), OWNER, true, NOW);
+    assert.ok(state);
+    assert.equal(state.inLastWeek, true);
+    assert.equal(state.canAddPass, true);
+    const reminder = await evaluatePassOffer({
+      userId: OWNER, workspaceId: WS, surface: 'pass_reminder', now: NOW, db: asClient(db),
+    });
+    assert.equal(reminder.show, true);
+    // Somebody else's pass is never theirs to see.
+    assert.equal(await loadPassBillingState(asClient(db), OWNER, false, NOW), null);
+  });
+});
+
+test('a paused subscriber is never offered a pass, and a holder among them cannot add one', async () => {
+  const paused = { plan: 'free', subscription_status: 'paused', stripe_subscription_id: 'sub_paused' };
+  const base = { isOwner: true, workspacePlan: 'free', billing: null, compedGrant: false, active: null };
+  assert.equal(passOfferEligible({ ...base, billing: paused }), false);
+  // 'paused' without a stored subscription is not a live subscription.
+  assert.equal(passOfferEligible({ ...base, billing: { ...paused, stripe_subscription_id: null } }), true);
+
+  await withMode('on', async () => {
+    const db = new FakeSupabase();
+    seedWorkspace(db);
+    db.seed('user_billing', [{ user_id: OWNER, ...paused }]);
+    const offer = await evaluatePassOffer({
+      userId: OWNER, workspaceId: WS, surface: 'checkout_return', now: NOW, db: asClient(db), store: store('pass').store,
+    });
+    assert.equal(offer.show, false);
+
+    const holder = new FakeSupabase();
+    seedHolder(holder, paused);
+    const state = await loadPassBillingState(asClient(holder), OWNER, true, NOW);
+    assert.ok(state, 'the pass is still shown');
+    assert.equal(state.canAddPass, false);
+    const reminder = await evaluatePassOffer({
+      userId: OWNER, workspaceId: WS, surface: 'pass_reminder', now: NOW, db: asClient(holder),
+    });
+    assert.equal(reminder.show, false);
+  });
 });
