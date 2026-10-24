@@ -154,6 +154,7 @@
     "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta hasta 10 para una persona que lleva un negocio. Business incluye 10 buzones, suma $3 al mes por cada uno extra y tiene sitio para todo tu equipo.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
+    "inclVat": "IVA incluido",
     "tiers": {
       "free": {
         "name": "Gratis",

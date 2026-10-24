@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/dauerhaft",
     "perMonth": "/Monat",
-    "billedYearly": "${total}/Jahr, jährlich abgerechnet"
+    "billedYearly": "${total}/Jahr, jährlich abgerechnet",
+    "inclVat": "inkl. MwSt."
   },
   "plans": {
     "free": {

@@ -38,6 +38,10 @@
 //         Stripe and Resend are US-hosted, and the routes that call them
 //         still win: checkout about 7 x 114 - 2 x 100 = +600 ms, the portal
 //         +480 ms, the Stripe webhook +500 ms (and its caller is a machine).
+//         The chat checkout link (/u/[token]) runs the same checkout core plus
+//         the link lookup, and its success page (/upgrade/done) makes two
+//         reads for one Stripe call, so both follow checkout to arn1. The
+//         expired page touches nothing and stays on the iad1 default.
 //
 //   iad1  app/api/automations/preview: a proxy to the Supabase edge function,
 //         which runs in the Supabase region nearest its caller. From arn1
@@ -191,6 +195,9 @@ export const ROUTES = [
   ['app/api/automations/preview/route.ts', 'iad1', '3', 'Supabase edge function triage-preview (opens the IMAP session)'],
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
+  // Reads one request header and the STRIPE_EUR_PRICES switch; no database,
+  // no third party. The app/api/** default is as good as any.
+  ['app/api/geo/route.ts', 'arn1', '0', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
   ['app/api/inboxes/[id]/connection/route.ts', 'iad1', '4', 'IMAP or SMTP login probe to the mail host when a half is added'],
   ['app/api/inboxes/[id]/folders/route.ts', 'iad1', '5', 'IMAP login + LIST to the mail host'],
@@ -228,12 +235,14 @@ export const ROUTES = [
   ['app/api/stripe/checkout/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/checkout/start/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/portal/route.ts', 'arn1', '6', 'Stripe API x1-2'],
+  ['app/api/stripe/payment-fix/route.ts', 'arn1', '3', 'Stripe API x2-3'],
   ['app/api/stripe/webhook/route.ts', 'arn1', '7+', 'Stripe API, Resend; caller is Stripe (US)'],
   ['app/api/support/preview/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/support/tickets/route.ts', 'arn1', '4-8', 'Resend x2'],
   ['app/api/legal/contract-request/route.ts', 'arn1', '4-8', 'Resend x2'],
   ['app/api/support/visibility/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/usage/route.ts', 'arn1', '2', '-'],
+  ['app/api/upgrade/status/route.ts', 'arn1', '2', 'Stripe API x1'],
   ['app/api/user/delete-account/route.ts', 'arn1', '11', '-'],
   ['app/api/user/email/route.ts', 'arn1', '3', '-'],
   ['app/api/user/password/route.ts', 'arn1', '5', '-'],
@@ -275,4 +284,7 @@ export const ROUTES = [
   ['app/robots.ts', 'iad1', '0', '-'],
   ['app/signup/page.js', 'arn1', '0', '-'],
   ['app/sitemap.ts', 'iad1', '0', '-'],
+  ['app/u/[token]/route.ts', 'arn1', '~8', 'Stripe API x1-2 (chat checkout link, same trade as checkout)'],
+  ['app/upgrade/done/page.js', 'arn1', '2', 'Stripe API x1'],
+  ['app/upgrade/expired/page.js', 'iad1', '0', '-'],
 ];

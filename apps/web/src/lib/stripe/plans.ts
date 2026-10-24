@@ -48,6 +48,11 @@
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
+ *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
+ *                                             (USD tax-inclusive twins of the
+ *                                              prices EU subscribers were on,
+ *                                              EUR launch 2026-12-07; see
+ *                                              priceTwinMap below)
  *
  * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
  *
@@ -614,6 +619,13 @@ export function getPlanByStripePriceId(
   if (!priceId || typeof priceId !== 'string') {
     return null;
   }
+  return planByCatalogueId(priceId) ?? planByCatalogueId(priceTwinMap().get(priceId) ?? '');
+}
+
+function planByCatalogueId(
+  priceId: string,
+): { plan: Plan; interval: BillingInterval } | null {
+  if (!priceId) return null;
   for (const plan of Object.values(PLANS)) {
     if (plan.stripePriceIdMonthly && plan.stripePriceIdMonthly === priceId) {
       return { plan, interval: 'month' };
@@ -628,6 +640,70 @@ export function getPlanByStripePriceId(
       // Legacy ids are listed monthly-then-yearly in pairs.
       return { plan, interval: idx % 2 === 0 ? 'month' : 'year' };
     }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Tax-inclusive twins (EUR launch, 2026-12-07).
+//
+// EU subscribers who started on a USD price keep their amount: their
+// subscription items move to a USD twin with the same amount and interval and
+// tax_behavior `inclusive`, so Stripe Tax takes the VAT out of what they
+// already pay (scripts/stripe-eur/, docs/RUNBOOK-eur-launch.md). A twin is not
+// a new plan. It must resolve exactly like its original, everywhere a price id
+// is read, or a renewal on a twin would look like an unknown price.
+//
+// One env var holds every twin, STRIPE_PRICE_TWINS = {"twinId":"originalId"},
+// so adding a twin never needs a new variable. Read at call time (tests set it
+// after import) and parsed once per distinct value. A malformed value maps
+// nothing and logs once: failing loud at module load would take checkout down
+// with it.
+// ---------------------------------------------------------------------------
+let twinCache: { raw: string; map: Map<string, string> } | null = null;
+
+export function priceTwinMap(): ReadonlyMap<string, string> {
+  const raw = process.env.STRIPE_PRICE_TWINS?.trim() ?? '';
+  if (twinCache && twinCache.raw === raw) return twinCache.map;
+  const map = new Map<string, string>();
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        for (const [twin, original] of Object.entries(parsed as Record<string, unknown>)) {
+          // Only real ids, never a twin of itself, never a chain.
+          if (twin.startsWith('price_') && typeof original === 'string' &&
+            original.startsWith('price_') && original !== twin) {
+            map.set(twin, original);
+          }
+        }
+      } else {
+        console.error('[plans] STRIPE_PRICE_TWINS is not a JSON object; no twins mapped');
+      }
+    } catch {
+      console.error('[plans] STRIPE_PRICE_TWINS is not valid JSON; no twins mapped');
+    }
+  }
+  for (const [twin, original] of map) {
+    if (map.has(original)) map.delete(twin);
+  }
+  twinCache = { raw, map };
+  return map;
+}
+
+/** The catalogue price a twin stands in for; any other id comes back as is. */
+export function canonicalPriceId(priceId: string): string;
+export function canonicalPriceId(priceId: string | null | undefined): string | null;
+export function canonicalPriceId(priceId: string | null | undefined): string | null {
+  if (!priceId) return null;
+  return priceTwinMap().get(priceId) ?? priceId;
+}
+
+/** The inclusive twin of a catalogue price, or null when it has none. */
+export function twinOfPriceId(priceId: string | null | undefined): string | null {
+  if (!priceId) return null;
+  for (const [twin, original] of priceTwinMap()) {
+    if (original === priceId) return twin;
   }
   return null;
 }
@@ -653,9 +729,14 @@ export function retainedPriceGenerationId(
   retainedPair: readonly string[] = PRO_PRICE_CHANGE.priceLive ? PRO_RETAINED_PAIR : [],
 ): string | null {
   if (targetPlanId !== 'solo' || !currentPriceId) return null;
-  if (!retainedPair.includes(currentPriceId)) return null;
+  // A subscriber on an inclusive twin of the retained pair keeps both the
+  // amount and the tax treatment: the target is the other half's twin when it
+  // has one, else the other half itself.
+  const current = canonicalPriceId(currentPriceId);
+  if (!retainedPair.includes(current)) return null;
   const target = retainedPair[targetInterval === 'year' ? 1 : 0];
-  return target || null;
+  if (!target) return null;
+  return (current !== currentPriceId ? twinOfPriceId(target) : null) ?? target;
 }
 
 // ---------------------------------------------------------------------------
@@ -685,6 +766,7 @@ export function mailboxAddonInterval(
   priceId: string | null | undefined,
 ): BillingInterval | null {
   if (!priceId) return null;
+  priceId = canonicalPriceId(priceId);
   if (priceId === mailboxAddonPriceId('month')) return 'month';
   if (priceId === mailboxAddonPriceId('year')) return 'year';
   return null;
