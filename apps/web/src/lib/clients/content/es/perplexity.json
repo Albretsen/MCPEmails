@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Perplexity: conector MCP personalizado",
+    "description": "Añade una bandeja real a Perplexity con un conector remoto personalizado. Pega una URL, elige OAuth e inicia sesión. Sin clave de API. Pro, Max y Enterprise."
+  },
+  "hero": {
+    "eyebrow": "Perplexity + correo",
+    "titleLine1": "Conecta tu bandeja a Perplexity",
+    "titleLine2": "como conector personalizado",
+    "lead": "Pregúntale a Perplexity por tu correo, además de por la web. Lee, busca, envía, responde, reenvía, programa y organiza correo en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Con un plan Pro, Max o Enterprise de Perplexity, abre Plugins, elige Add custom, luego Connector y Add MCP connector. Elige Remote, pega https://mcpemails.com/api/mcp como MCP Server URL, selecciona OAuth en Authentication, haz clic en Add y después haz clic en la tarjeta del conector para iniciar sesión en MCPEmails."
+  },
+  "method": {
+    "title": "Cómo se conecta Perplexity: OAuth, sin clave de API",
+    "body": "Los conectores remotos personalizados de Perplexity admiten OAuth 2.0 con descubrimiento, y MCPEmails publica sus endpoints en <code>/.well-known/oauth-authorization-server</code>. Perplexity se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún Client ID ni Client Secret que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. El token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre Add custom en Perplexity",
+      "p": "En perplexity.ai, abre <b>Plugins</b> en la barra lateral y elige <b>Add custom</b>, luego <b>Connector</b> y después <b>Add MCP connector</b>. Si todavía ves el menú antiguo, ve a <b>Customize</b>, <b>Connectors</b>."
+    },
+    {
+      "h": "Introduce el servidor",
+      "p": "Elige <b>Remote</b>, escribe un <b>Name</b> como MCPEmails y pega <code>https://mcpemails.com/api/mcp</code> como <b>MCP Server URL</b>. Pon <b>Authentication</b> en <b>OAuth</b> y <b>Transport</b> en <b>Streamable HTTP</b>. Perplexity descubre nuestros endpoints OAuth y se registra solo, así que no hay Client ID ni Client Secret que rellenar."
+    },
+    {
+      "h": "Añádelo e inicia sesión",
+      "p": "Marca la casilla de confirmación y haz clic en <b>Add</b>. Después haz clic en la tarjeta del conector para empezar la autenticación, inicia sesión en MCPEmails y aprueba los permisos que quieres que tenga Perplexity."
+    },
+    {
+      "h": "Elígelo para tu pregunta",
+      "p": "Empieza una consulta nueva y escribe <code>@MCPEmails</code>, o haz clic en el icono <b>+</b> del cuadro de búsqueda, abre <b>Connectors and sources</b> y elige MCPEmails. Luego pregunta por tu correo, por ejemplo qué mensajes han llegado hoy."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Las cuentas gratuitas no tienen conectores personalizados",
+      "p": "Perplexity ofrece servidores MCP personalizados en los planes Pro, Max y Enterprise. En Enterprise, los miembros solo pueden añadir sus propios conectores personalizados cuando un administrador activa <b>Allow members to add custom connectors</b>, que está desactivado por defecto. Un administrador también puede añadir MCPEmails una sola vez para toda la organización."
+    },
+    {
+      "h": "Añadir el conector no es lo mismo que usarlo",
+      "p": "Algunas versiones de Perplexity solo llaman a un conector si lo eliges para ese chat, con el selector de conectores o una mención con @. Si Sources o Focus está limitado a Web, Academic o Social, Perplexity no llama a las apps conectadas, responde desde la web y parece que no puede ver tu bandeja. Revisa las dos cosas antes de sospechar de la conexión."
+    },
+    {
+      "h": "Configúralo en la web, no en el móvil",
+      "p": "Perplexity advierte de que un conector puede estar disponible en la web pero todavía no en el móvil. Añade MCPEmails en perplexity.ai desde un navegador. Si la autorización no termina nunca, permite las ventanas emergentes y las cookies entre sitios para perplexity.ai, porque un bloqueador de anuncios puede bloquear la ventana de OAuth."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Perplexity?",
+      "a": "Abre Plugins, elige Add custom, luego Connector y Add MCP connector. Elige Remote, pega https://mcpemails.com/api/mcp como MCP Server URL, pon Authentication en OAuth, haz clic en Add y después haz clic en la tarjeta del conector e inicia sesión en MCPEmails. En una consulta, escribe @MCPEmails o elígelo en Connectors and sources."
+    },
+    {
+      "q": "¿Qué plan de Perplexity necesito?",
+      "a": "Los conectores MCP personalizados están disponibles en Pro, Max y Enterprise. En Enterprise, un administrador añade el conector para la organización o permite que los miembros añadan los suyos."
+    },
+    {
+      "q": "¿Necesito una clave de API para Perplexity?",
+      "a": "No. Perplexity ejecuta el flujo OAuth cuando haces clic en la tarjeta del conector, y MCPEmails admite el registro dinámico de clientes, así que no hay Client ID, Client Secret ni clave que pegar. Hay una clave bearer disponible para otros clientes que no pueden usar OAuth."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Perplexity de esta forma?",
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. Perplexity los ve todos a través de la misma conexión: primero llama a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Perplexity enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Busca en tu bandeja como buscas en la web",
+    "sub": "Un conector, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}
