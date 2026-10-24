@@ -282,3 +282,36 @@ test('a create that still leaves no item is reported as failed, not updated', as
   const result = await syncMailboxAddon(OWNER, { db: fakeDb({ billing: BUSINESS, inboxes: 12 }), stripe });
   assert.deepEqual(result, { status: 'failed', reason: 'addon_item_missing_after_create' });
 });
+
+test('an add-on on an inclusive twin keeps the twin; only the quantity moves', () => {
+  process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+    price_twin_addon_month: 'price_addon_month',
+    price_twin_addon_year: 'price_addon_year',
+  });
+  try {
+    const onTwin = { id: 'si_addon', priceId: 'price_twin_addon_month', quantity: 2 };
+    assert.deepEqual(
+      mailboxAddonItemChanges({ targetPlan: 'pro', interval: 'month', extra: 2, addonItem: onTwin }),
+      [],
+    );
+    assert.deepEqual(
+      mailboxAddonItemChanges({ targetPlan: 'pro', interval: 'month', extra: 3, addonItem: onTwin }),
+      [{ id: 'si_addon', quantity: 3 }],
+    );
+    // An interval switch from a twin lands on the other interval's twin.
+    assert.deepEqual(
+      mailboxAddonItemChanges({ targetPlan: 'pro', interval: 'year', extra: 3, addonItem: onTwin }),
+      [{ id: 'si_addon', price: 'price_twin_addon_year', quantity: 3 }],
+    );
+    // Not on a twin: unchanged, the plain price.
+    assert.deepEqual(
+      mailboxAddonItemChanges({
+        targetPlan: 'pro', interval: 'year', extra: 1,
+        addonItem: { id: 'si_addon', priceId: 'price_addon_month', quantity: 1 },
+      }),
+      [{ id: 'si_addon', price: 'price_addon_year', quantity: 1 }],
+    );
+  } finally {
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});

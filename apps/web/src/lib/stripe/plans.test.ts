@@ -621,3 +621,109 @@ test('the pass price is never read as a subscription plan', () => {
     else process.env.STRIPE_PRICE_PERSONAL_PASS_3M = before;
   }
 });
+
+// ---------------------------------------------------------------------------
+// Tax-inclusive twins (EUR launch). An EU subscriber moved to a USD inclusive
+// twin must resolve to exactly the plan and interval of the original, or a
+// renewal on the twin would read as an unknown price.
+// ---------------------------------------------------------------------------
+test('an inclusive twin resolves to the same plan and interval as its original', async () => {
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_twinfixture';
+  process.env.STRIPE_PRICE_BUSINESS_YEARLY = 'price_business_37440_twinfixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_twinfixture';
+  process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+    price_twin_business_month: 'price_business_39_twinfixture',
+    price_twin_business_year: 'price_business_37440_twinfixture',
+    price_twin_legacy_scale_year: 'price_1TcQBGARrgumc6cqmy0LeLSL', // legacy Scale yearly
+    price_twin_addon_month: 'price_addon_month_twinfixture',
+  });
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins')) as typeof import('./plans.ts');
+  try {
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_business_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_business_year'), { plan: fresh.PLANS.pro, interval: 'year' });
+    // A twin of a LEGACY id keeps the legacy pair's interval rule.
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_legacy_scale_year'), { plan: fresh.PLANS.pro, interval: 'year' });
+    // The add-on twin is still the add-on, still not a plan.
+    assert.equal(fresh.isMailboxAddonPriceId('price_twin_addon_month'), true);
+    assert.equal(fresh.mailboxAddonInterval('price_twin_addon_month'), 'month');
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_addon_month'), null);
+    const base = { id: 'si_base', price: { id: 'price_twin_business_month' } };
+    const addon = { id: 'si_addon', price: { id: 'price_twin_addon_month' } };
+    assert.equal(fresh.basePlanItem([addon, base])?.id, 'si_base');
+    assert.equal(fresh.mailboxAddonItem([base, addon])?.id, 'si_addon');
+    assert.equal(fresh.canonicalPriceId('price_twin_business_month'), 'price_business_39_twinfixture');
+    assert.equal(fresh.canonicalPriceId('price_business_39_twinfixture'), 'price_business_39_twinfixture');
+    assert.equal(fresh.twinOfPriceId('price_business_39_twinfixture'), 'price_twin_business_month');
+    assert.equal(fresh.twinOfPriceId('price_nothing'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});
+
+test('the twin map is read at call time and a bad value maps nothing', async () => {
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins-bad')) as typeof import('./plans.ts');
+  const legacyScaleMonthly = 'price_1TcQBFARrgumc6cqmaRTXJ5Q';
+  const originalError = console.error;
+  const errors: unknown[] = [];
+  console.error = (...a: unknown[]) => { errors.push(a); };
+  try {
+    delete process.env.STRIPE_PRICE_TWINS;
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_x'), null);
+
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_x: legacyScaleMonthly });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_x'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    for (const bad of ['{not json', '["price_a"]', '"price_a"']) {
+      process.env.STRIPE_PRICE_TWINS = bad;
+      assert.equal(fresh.getPlanByStripePriceId('price_twin_x'), null);
+      assert.equal(fresh.priceTwinMap().size, 0);
+    }
+    assert.ok(errors.length >= 3, 'a malformed STRIPE_PRICE_TWINS is logged');
+
+    // Non-price ids, self-maps and chains are dropped; an unknown original stays unknown.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+      cus_x: legacyScaleMonthly,
+      price_self: 'price_self',
+      price_chain_a: 'price_chain_b',
+      price_chain_b: legacyScaleMonthly,
+      price_twin_unknown: 'price_not_in_catalogue',
+      price_twin_num: 42,
+    });
+    const map = fresh.priceTwinMap();
+    assert.equal(map.has('cus_x'), false);
+    assert.equal(map.has('price_self'), false);
+    assert.equal(map.has('price_chain_a'), false);
+    assert.equal(map.has('price_twin_num'), false);
+    assert.equal(map.get('price_chain_b'), legacyScaleMonthly);
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_unknown'), null);
+  } finally {
+    console.error = originalError;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});
+
+test('a Pro subscriber on a retained-pair twin switches interval onto the other twin', async () => {
+  const { retainedPriceGenerationId } = await import('./plans.ts');
+  const pair = ['price_pro_15_month', 'price_pro_144_year'];
+  process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+    price_twin_pro_month: 'price_pro_15_month',
+    price_twin_pro_year: 'price_pro_144_year',
+  });
+  try {
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'solo', 'year', pair), 'price_twin_pro_year');
+    assert.equal(retainedPriceGenerationId('price_twin_pro_year', 'solo', 'month', pair), 'price_twin_pro_month');
+    // Not on a twin: unchanged behaviour, the plain other half.
+    assert.equal(retainedPriceGenerationId('price_pro_15_month', 'solo', 'year', pair), 'price_pro_144_year');
+    // Only one half twinned: fall back to the original other half.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_pro_month: 'price_pro_15_month' });
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'solo', 'year', pair), 'price_pro_144_year');
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'pro', 'year', pair), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});

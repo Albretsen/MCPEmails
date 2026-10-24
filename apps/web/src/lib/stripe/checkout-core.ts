@@ -8,6 +8,17 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
+import {
+  checkoutCurrencyFor,
+  checkoutPresentsEur,
+  forceUsdEnabled,
+} from '@/lib/stripe/currency';
+import {
+  automaticTaxEnabled,
+  checkoutTaxParams,
+  paymentMethodConfigurationId,
+} from '@/lib/stripe/tax-switch';
+import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
 import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
 import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
@@ -519,6 +530,13 @@ function fail(
  * in the new session's metadata, after a format check, so the completed
  * purchase can be credited to the reminder.
  *
+ * `country` is the country Vercel placed the request in (`x-vercel-ip-country`,
+ * read by the route with countryFromHeaders). Like `locale` it never changes
+ * what is sold: it can only choose EUR for an EU buyer outside the euro area
+ * (checkoutCurrencyFor in currency.ts) and, with Stripe Tax on, ride along in
+ * the session metadata as location evidence. It is sanitized again here, so a
+ * caller cannot put anything but two letters into Stripe.
+ *
  * `quotedOffer` is the seasonal offer id the confirmed quote carried (the
  * dashboard echoes `preview.seasonalOffer.offerId`). On the confirmed pass of a
  * plan change, an offer that was quoted but is no longer available stops the
@@ -530,6 +548,7 @@ export async function runCheckout(input: {
   confirmChange?: unknown;
   locale?: unknown;
   recoveredFrom?: unknown;
+  country?: unknown;
   quotedOffer?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
@@ -683,6 +702,8 @@ async function checkoutFor(
     locale?: unknown;
     recoveredFrom?: unknown;
     quotedOffer?: unknown;
+    /** Visitor country from x-vercel-ip-country; see runCheckout. */
+    country?: unknown;
   },
   options: CheckoutOptions & { allowPlanChange: boolean },
 ): Promise<CheckoutOutcome> {
@@ -1343,12 +1364,31 @@ async function checkoutFor(
   const lang = reminderLocale(input.locale);
   const reminderLang = lang === 'en' ? null : lang;
   const recoveredFrom = checkoutSessionIdOrNull(input.recoveredFrom);
+  // The EUR launch switches (all default OFF; see tax-switch.ts and
+  // currency.ts). Each one only ADDS keys when it is on, so with every switch
+  // off the session below is byte for byte the one created before they existed.
+  //
+  // STRIPE_FORCE_USD is the rollback and beats the others: it pins the session
+  // to USD and drops Stripe Tax with it, because the tax setup assumes the
+  // VAT-inclusive EUR amounts. The payment method configuration stays, since
+  // it is about how a buyer pays, not in what currency.
+  const country = sanitizedCountry(input.country);
+  const forceUsd = forceUsdEnabled();
+  const taxOn = !forceUsd && automaticTaxEnabled();
+  const currency = checkoutCurrencyFor(country);
+  const paymentMethodConfiguration = paymentMethodConfigurationId();
+  // The confirmation panel (components/dashboard/App.jsx) reads
+  // `currency=eur` to word the amount in EUR. Only added when the page will
+  // really be in EUR, so with every switch off the URL is unchanged.
+  const checkoutSuccessUrl = checkoutPresentsEur(country)
+    ? `${successUrl}&currency=eur`
+    : successUrl;
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: lineItems,
-      success_url: successUrl,
+      success_url: checkoutSuccessUrl,
       cancel_url: cancelUrl,
       // `discounts` and `allow_promotion_codes` cannot be combined in one
       // session, so an offer session applies the coupon server side and
@@ -1358,10 +1398,19 @@ async function checkoutFor(
         : { allow_promotion_codes: true }),
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
-      // Local-currency checkout for buyers outside the US. Prices stay USD and
-      // every amount Stripe hands back to us stays USD; see adaptive-pricing.ts.
-      // It converts the amount only, so the language pin below is unaffected.
+      // Local-currency checkout for buyers outside the US and, once the EUR
+      // currency options exist, outside the EU. See adaptive-pricing.ts. It
+      // converts the amount only, so the language pin below is unaffected.
       adaptive_pricing: adaptivePricingParam(),
+      // EUR for an EU buyer outside the euro area, USD for everyone under
+      // STRIPE_FORCE_USD, and otherwise omitted so Stripe's own localization
+      // decides (currency.ts).
+      ...(currency ? { currency } : {}),
+      // The payment methods on offer, pinned in code once STRIPE_PMC_ID is set.
+      // Unset leaves the account's default configuration in charge.
+      ...(paymentMethodConfiguration
+        ? { payment_method_configuration: paymentMethodConfiguration }
+        : {}),
       // ── Presentation ────────────────────────────────────────────────────
       //
       // ENGLISH IS PINNED for everyone but German buyers, deliberately. Left
@@ -1420,20 +1469,26 @@ async function checkoutFor(
         // session can be written in it. Allow-listed; English adds nothing.
         ...(reminderLang ? { lang: reminderLang } : {}),
         ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
+        // Second piece of location evidence for EU VAT, beside the billing
+        // address Stripe Tax collects. Only while Stripe Tax is on: that is
+        // when a sale is taxed and the evidence has a use.
+        ...(taxOn && country ? { ip_country: country } : {}),
       },
-      // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
+      // Stripe Tax, behind STRIPE_AUTOMATIC_TAX (default OFF; tax-switch.ts).
       //
-      // Stripe Tax IS active on the account, but the account holds ZERO tax
-      // registrations. Stripe only calculates tax where you are registered, so
-      // enabling automatic_tax today would add a "Tax: $0.00" line to every
-      // checkout in every country and change nothing else. The prerequisite is
-      // registering for Norway MVA, EU Non-Union OSS and UK VAT; until those
-      // exist there is nothing for it to compute.
+      // Planned to go on at the EUR launch, 2026-12-07, once the account holds
+      // its registrations: EU non-Union OSS (one registration covering every
+      // EU consumer sale) and Norway MVA. Stripe only calculates tax where the
+      // account is registered; anywhere else the buyer sees no tax line.
       //
-      // Turning it on later needs no price migration: the prices created in the
-      // repricing already carry tax_behavior=exclusive, so the displayed amount
-      // stays the amount and tax is added on top the day registrations land.
-      // automatic_tax: { enabled: true },
+      // How the shown amount relates to the tax: the EUR amounts come from
+      // each price's currency_options with tax_behavior=inclusive, so an EU
+      // buyer pays exactly the EUR price on the page and Stripe extracts the
+      // VAT from it. The USD prices stay tax_behavior=exclusive, so tax is
+      // added on top of a USD amount where a registration applies.
+      //
+      // Switch off, this spreads nothing and the session is unchanged.
+      ...(taxOn ? checkoutTaxParams() : {}),
     });
 
     if (!session.url) {

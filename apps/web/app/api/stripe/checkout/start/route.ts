@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCheckout, runPassCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
  * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>][&recovered_from=<cs_...>]
@@ -97,6 +98,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const recoveredFrom = request.nextUrl.searchParams.get('recovered_from');
   const product = request.nextUrl.searchParams.get('product');
 
+  // Vercel's geolocation of this request, for the EUR currency choice and VAT
+  // evidence (see `country` on runCheckout). Absent locally and in tests.
+  const country = countryFromHeaders(request.headers);
+
   const outcome =
     product === PERSONAL_PASS_3M.id
       ? await runPassCheckout({
@@ -109,6 +114,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           interval,
           locale,
           ...(recoveredFrom ? { recoveredFrom } : {}),
+          ...(country ? { country } : {}),
         });
 
   if (outcome.kind === 'checkout') {

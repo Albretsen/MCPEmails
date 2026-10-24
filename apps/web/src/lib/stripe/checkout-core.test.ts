@@ -426,6 +426,8 @@ async function checkout(opts: {
   recoveredFrom?: unknown;
   /** The buyer's own 3-month pass rows. */
   passes?: Array<Record<string, unknown>>;
+  /** The visitor country a route read from x-vercel-ip-country. */
+  country?: unknown;
   /** The seasonal offer id the confirmed quote carried. */
   quotedOffer?: unknown;
 }) {
@@ -455,6 +457,7 @@ async function checkout(opts: {
     confirmChange: opts.confirmChange,
     ...('locale' in opts ? { locale: opts.locale } : {}),
     ...('recoveredFrom' in opts ? { recoveredFrom: opts.recoveredFrom } : {}),
+    ...('country' in opts ? { country: opts.country } : {}),
     ...('quotedOffer' in opts ? { quotedOffer: opts.quotedOffer } : {}),
   });
   return {
@@ -1925,6 +1928,189 @@ test('a valid recovered_from lands in metadata, anything else is dropped', async
     return { ...rest, metadata: meta };
   };
   assert.deepEqual(strip(ok.sessionsCreated[0]), strip(plain.sessionsCreated[0]));
+});
+
+// ---------------------------------------------------------------------------
+// The EUR launch switches (2026-10-24): Stripe Tax, EUR for the non-euro EU,
+// VAT location evidence, and the payment method configuration.
+//
+// All four default OFF. The first test is the one that matters before launch:
+// with every switch off, a session for a buyer in any country is exactly the
+// session created before this work, key for key. Then each switch on, per
+// country: DE (euro area, Stripe localizes), SE (EU, not euro, forced to EUR),
+// NO (outside the EU, no forcing) and US (home currency).
+// ---------------------------------------------------------------------------
+
+const EUR_SWITCHES = [
+  'STRIPE_AUTOMATIC_TAX',
+  'STRIPE_EUR_PRICES',
+  'STRIPE_PMC_ID',
+  'STRIPE_FORCE_USD',
+  'STRIPE_ADAPTIVE_PRICING',
+] as const;
+
+/** Run `fn` with exactly these switch values, every other one unset. */
+async function withSwitches<T>(
+  values: Partial<Record<(typeof EUR_SWITCHES)[number], string>>,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const previous = Object.fromEntries(EUR_SWITCHES.map((k) => [k, process.env[k]]));
+  for (const key of EUR_SWITCHES) {
+    if (values[key] === undefined) delete process.env[key];
+    else process.env[key] = values[key];
+  }
+  try {
+    return await fn();
+  } finally {
+    for (const key of EUR_SWITCHES) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+    }
+  }
+}
+
+/** The top-level keys a session carried before the EUR work, in no order. */
+const KEYS_BEFORE_EUR = [
+  'adaptive_pricing',
+  'allow_promotion_codes',
+  'billing_address_collection',
+  'cancel_url',
+  'custom_text',
+  'customer',
+  'line_items',
+  'locale',
+  'metadata',
+  'mode',
+  'subscription_data',
+  'success_url',
+].sort();
+
+const COUNTRIES = ['DE', 'SE', 'NO', 'US'] as const;
+
+async function sessionFor(country: string | undefined) {
+  const { outcome, sessionsCreated } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    ...(country ? { country } : {}),
+  });
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  return sessionsCreated[0];
+}
+
+test('switches off: every country gets the session from before the EUR work, key for key', async () => {
+  await withSwitches({}, async () => {
+    const baseline = await sessionFor(undefined);
+    assert.deepEqual(Object.keys(baseline).sort(), KEYS_BEFORE_EUR);
+    assert.deepEqual(Object.keys(baseline.metadata as object).sort(), ['interval', 'plan_id', 'user_id']);
+    for (const country of COUNTRIES) {
+      assert.deepEqual(await sessionFor(country), baseline, country);
+    }
+  });
+});
+
+test('Stripe Tax on: tax, tax id collection, customer_update and the IP country, per country', async () => {
+  await withSwitches({ STRIPE_AUTOMATIC_TAX: 'true' }, async () => {
+    for (const country of COUNTRIES) {
+      const params = await sessionFor(country);
+      assert.deepEqual(params.automatic_tax, { enabled: true }, country);
+      assert.deepEqual(params.tax_id_collection, { enabled: true }, country);
+      assert.deepEqual(params.customer_update, { name: 'auto', address: 'auto' }, country);
+      assert.equal((params.metadata as Record<string, unknown>).ip_country, country);
+      // Tax alone forces no currency: that is the EUR switch's job.
+      assert.equal('currency' in params, false, country);
+      assert.deepEqual(params.adaptive_pricing, { enabled: true }, 'Adaptive Pricing is unchanged');
+    }
+    const unknown = await sessionFor(undefined);
+    assert.equal('ip_country' in (unknown.metadata as object), false, 'no country, no evidence key');
+  });
+});
+
+test('EUR prices on: only Sweden (EU, not euro) is forced to EUR; tax stays off', async () => {
+  await withSwitches({ STRIPE_EUR_PRICES: 'on' }, async () => {
+    const expected: Record<string, string | undefined> = { DE: undefined, SE: 'eur', NO: undefined, US: undefined };
+    for (const country of COUNTRIES) {
+      const params = await sessionFor(country);
+      assert.equal(params.currency, expected[country], country);
+      assert.equal('automatic_tax' in params, false, country);
+      assert.equal('ip_country' in (params.metadata as object), false, 'evidence only rides with tax');
+    }
+  });
+});
+
+test('every switch on: Sweden gets EUR with tax, the others keep Stripe localizing', async () => {
+  await withSwitches(
+    { STRIPE_AUTOMATIC_TAX: '1', STRIPE_EUR_PRICES: 'yes', STRIPE_PMC_ID: 'pmc_test123' },
+    async () => {
+      for (const country of COUNTRIES) {
+        const params = await sessionFor(country);
+        assert.equal(params.payment_method_configuration, 'pmc_test123', country);
+        assert.equal(params.currency, country === 'SE' ? 'eur' : undefined, country);
+        assert.deepEqual(params.automatic_tax, { enabled: true }, country);
+        assert.deepEqual(
+          Object.keys(params).sort(),
+          [
+            ...KEYS_BEFORE_EUR,
+            'automatic_tax',
+            'customer_update',
+            'payment_method_configuration',
+            'tax_id_collection',
+            ...(country === 'SE' ? ['currency'] : []),
+          ].sort(),
+          country,
+        );
+      }
+    },
+  );
+});
+
+test('a country value that is not two letters is dropped before Stripe sees it', async () => {
+  await withSwitches({ STRIPE_AUTOMATIC_TAX: 'true', STRIPE_EUR_PRICES: 'true' }, async () => {
+    for (const bad of ['XX', 'EU', 'Sweden', 'S', 42, '<se>']) {
+      const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, country: bad });
+      assert.equal('ip_country' in (sessionsCreated[0].metadata as object), false, String(bad));
+      assert.equal('currency' in sessionsCreated[0], false, String(bad));
+    }
+    const lower = await sessionFor('se');
+    assert.equal(lower.currency, 'eur');
+    assert.equal((lower.metadata as Record<string, unknown>).ip_country, 'SE');
+  });
+});
+
+test('EUR on: the success URL tells the dashboard EUR for EU buyers only, and is unchanged when off', async () => {
+  const off = await withSwitches({}, () => sessionFor('SE'));
+  assert.doesNotMatch(String(off.success_url), /currency=/, 'switches off: URL unchanged');
+  await withSwitches({ STRIPE_EUR_PRICES: 'true' }, async () => {
+    for (const [country, eur] of [['SE', true], ['DE', true], ['BG', true], ['NO', false], ['US', false]] as const) {
+      const url = String((await sessionFor(country)).success_url);
+      assert.equal(url.endsWith('&currency=eur'), eur, country);
+      assert.equal(url.replace('&currency=eur', ''), String(off.success_url), `${country}: nothing else changes`);
+    }
+    assert.doesNotMatch(String((await sessionFor(undefined)).success_url), /currency=/, 'unknown country');
+  });
+});
+
+test('STRIPE_FORCE_USD pins USD and drops the EUR and tax additions, whatever else is on', async () => {
+  const baseline = await withSwitches({}, () => sessionFor('SE'));
+  await withSwitches(
+    { STRIPE_FORCE_USD: 'true', STRIPE_AUTOMATIC_TAX: 'true', STRIPE_EUR_PRICES: 'true' },
+    async () => {
+      for (const country of COUNTRIES) {
+        const params = await sessionFor(country);
+        assert.equal(params.currency, 'usd', country);
+        for (const key of ['automatic_tax', 'tax_id_collection', 'customer_update']) {
+          assert.equal(key in params, false, `${country}: ${key}`);
+        }
+        assert.equal('ip_country' in (params.metadata as object), false, country);
+        assert.doesNotMatch(String(params.success_url), /currency=/, country);
+        const { currency: _c, ...rest } = params;
+        assert.deepEqual(rest, baseline, `${country}: otherwise the pre-EUR session`);
+      }
+    },
+  );
+  await withSwitches({ STRIPE_FORCE_USD: 'true', STRIPE_PMC_ID: 'pmc_keep1' }, async () => {
+    assert.equal((await sessionFor('DE')).payment_method_configuration, 'pmc_keep1', 'payment methods are not a currency choice');
+  });
 });
 
 // ---------------------------------------------------------------------------

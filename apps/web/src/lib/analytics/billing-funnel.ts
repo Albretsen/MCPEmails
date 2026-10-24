@@ -347,3 +347,45 @@ export async function recordPricingViewed(
   if (existing) return;
   await record({ workspaceId, stage: 'pricing_viewed', outcome: 'success', category: surface });
 }
+
+/**
+ * The failed-payment banner's button was clicked (/api/stripe/payment-fix).
+ *
+ * One row per click, not deduped: a second click is a second attempt to pay.
+ * `success` = the owner was sent on to Stripe (the open invoice, or the portal
+ * when there was none). `failure` = they were bounced to settings, with
+ * `no_customer` (nothing provably theirs) or `stripe_error`. The category is
+ * the plan of their primary workspace, read server-side.
+ *
+ * This is how the board tells whether the in-product surfaces do anything the
+ * dunning email does not. Never throws.
+ */
+export async function recordPaymentFixClicked(
+  userId: string,
+  failure?: 'no_customer' | 'stripe_error',
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const { data, error } = await db
+      .from('workspaces')
+      .select('id, plan')
+      .eq('owner_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) console.error('[billing-funnel] payment-fix workspace lookup failed', { error: error.message });
+    if (!data?.id) return;
+    await record({
+      workspaceId: data.id,
+      stage: 'payment_fix_clicked',
+      outcome: failure ? 'failure' : 'success',
+      category: planCategory(data.plan),
+      errorCategory: failure,
+    });
+  } catch (err) {
+    console.error('[billing-funnel] payment-fix record failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
