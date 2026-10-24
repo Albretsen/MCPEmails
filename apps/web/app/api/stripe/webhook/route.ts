@@ -179,6 +179,7 @@ import {
   billingTarget,
   primaryWorkspaceId,
   recordCheckoutCompleted,
+  recordPassEvent,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
 import {
@@ -199,6 +200,12 @@ import {
   recordPassPurchase,
   refundPass,
 } from '@/lib/billing/pass';
+import {
+  cancelPassNotices,
+  isPassRenewal,
+  passNoticeSink,
+  passesForRenewal,
+} from '@/lib/billing/pass-notices';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
@@ -679,6 +686,7 @@ async function handleCheckoutSessionCompleted(
       await primaryWorkspaceId(service, userId),
       billingTarget(purchasedPlan, interval),
     );
+    await recordPassHolderSubscribed(service, userId, customerIdOf(session), purchasedPlan, interval);
   }
 
   // ── Purchase confirmation email ──────────────────────────────────────────
@@ -1036,13 +1044,22 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
+  const paidAt = new Date();
+
   const result = await recordPassPurchase(db, {
     userId,
     sessionId: session.id,
     paymentIntentId,
     amountMinor: session.amount_total ?? null,
     currency: session.currency ?? null,
+    paidAt,
     source: 'checkout.session.completed (pass)',
+    // pass_ending_7d and pass_ended, queued now (BILLING_LIFECYCLE_EMAILS
+    // permitting). Never throws.
+    notices: passNoticeSink(db, {
+      stripeCustomerId: customerId,
+      stripeEmail: session.customer_details?.email ?? null,
+    }),
   });
 
   if (result.kind === 'table_missing') {
@@ -1056,6 +1073,55 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
   console.log(
     `[stripe-webhook] pass ${result.pass.id} for ${userId}: ${result.pass.status} until ${result.pass.ends_at}; projected "${result.plan}".`,
   );
+
+  // The passes held besides this one: the renewal test and the earlier pass's
+  // notices (a pass that another pass follows does not end) are about them.
+  // Read after the purchase is stored, so a failed read cannot cost a retry.
+  const heldBefore = (await passesForRenewal(db, userId)).filter((p) => p.id !== result.pass.id);
+  // A stacked pass: the earlier pass no longer ends, so its notices are untrue.
+  for (const earlier of heldBefore) {
+    if (earlier.status === 'active' || earlier.status === 'scheduled') {
+      await cancelPassNotices(db, { stripeCustomerId: customerId, passId: earlier.id, reason: 'pass_renewed' });
+    }
+  }
+  if (isPassRenewal(heldBefore, paidAt, result.pass.id)) {
+    await recordPassEvent({
+      workspaceId: await primaryWorkspaceId(db, userId),
+      stage: 'pass_renewed',
+      category: 'pass',
+    });
+  }
+}
+
+/**
+ * A subscription started for someone who holds, or recently held, a 3-month
+ * pass. Their pass notices stop being true (a subscriber's pass does not end
+ * into Free), and a Personal subscription within the renewal window is a
+ * `pass_renewed` (category personal_month / personal_year). Never throws.
+ */
+async function recordPassHolderSubscribed(
+  db: ReturnType<typeof createServiceRoleClient>,
+  userId: string,
+  customerId: string | null,
+  planId: Exclude<PlanId, 'free'>,
+  interval: BillingInterval,
+): Promise<void> {
+  try {
+    const passes = await passesForRenewal(db, userId);
+    if (passes.length === 0) return;
+    await cancelPassNotices(db, { stripeCustomerId: customerId, reason: 'subscription_started' });
+    if (planId === 'personal' && isPassRenewal(passes, new Date())) {
+      await recordPassEvent({
+        workspaceId: await primaryWorkspaceId(db, userId),
+        stage: 'pass_renewed',
+        category: billingTarget('personal', interval),
+      });
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] pass holder subscription bookkeeping failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**
@@ -1079,6 +1145,13 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
   });
   if (result.kind === 'refunded') {
     console.log(`[stripe-webhook] pass ${result.pass.id} refunded; projected "${result.plan}".`);
+    const customerId =
+      typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
+    await cancelPassNotices(createServiceRoleClient(), {
+      stripeCustomerId: customerId,
+      passId: result.pass.id,
+      reason: 'pass_refunded',
+    });
   } else if (result.kind === 'partial') {
     console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
   }
@@ -1274,6 +1347,12 @@ async function maybeQueueCancellation(
       console.log(`[stripe-webhook] cancellation for ${customerId}: account deleted; nothing queued.`);
       return;
     }
+    // A pass holder keeps Personal through the pass and gets the pass's own
+    // two notices instead; they never enter the cancellation or win-back series.
+    if (userId && (await getActivePass(db, userId))) {
+      console.log(`[stripe-webhook] cancellation for ${customerId}: holds a 3-month pass; nothing queued.`);
+      return;
+    }
 
     // The customer object is retrieved rather than read off the event, because
     // the event is serialised at the ENDPOINT's pinned API version while the
@@ -1402,6 +1481,12 @@ async function maybeQueueCancellationOnDelete(
     if ((await accountState(db, userId)) === 'deleted') {
       console.log(
         `[stripe-webhook] subscription.deleted ${subscription.id}: account deleted; nothing queued.`,
+      );
+      return;
+    }
+    if (userId && (await getActivePass(db, userId))) {
+      console.log(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: holds a 3-month pass; nothing queued.`,
       );
       return;
     }

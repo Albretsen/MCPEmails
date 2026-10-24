@@ -790,6 +790,9 @@
       "invalid_plan": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
       "invalid_interval": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
       "plan_change_failed": "Kunne ikke endre planen din. Ingenting ble belastet. Prøv igjen.",
+      "pass_unavailable": "Personal-passet for 3 måneder er ikke tilgjengelig akkurat nå.",
+      "already_subscribed": "Du har allerede et abonnement, som inkluderer alt passet gir.",
+      "pass_already_queued": "Du har allerede 3 måneder til planlagt etter dette passet.",
       "plan_change_pending": "Det er bestilt en pause eller et bytte av abonnement. Bruk Fortsett tidligere eller Behold på denne siden først, og endre deretter abonnementet."
     },
     "plans": {
@@ -849,6 +852,25 @@
     "proInboxesKept": "Pro-abonnementet ditt beholder ubegrenset antall tilkoblede innbokser.",
     "businessMailboxRate": "10 postkasser inkludert på tvers av alle arbeidsområdene dine. Hver ekstra postkasse faktureres med abonnementet: 3 dollar i måneden eller 28,80 dollar i året.",
     "confirmExtraMailboxes": "Inkluderer {count, plural, one {# ekstra postkasse} other {# ekstra postkasser}} utover de 10 som er inkludert.",
+    "pass": {
+      "offerLine": "Eller Personal i 3 måneder, betalt én gang, {price}. Ingenting fornyes.",
+      "offerUntil": "Kjøpt i dag varer det til {date}, så går dette arbeidsområdet tilbake til Free.",
+      "offerCta": "3 måneder for {price}",
+      "returnTitle": "Personal: 3 tilkoblede innbokser, ingen månedlig handlingsgrense",
+      "subscribeMonthly": "Abonner månedlig, {price} i måneden",
+      "subscribeYearly": "Årlig, {price} i året",
+      "subscribeMonthlyFrom": "Abonner månedlig, {price} i måneden, første trekk {date}",
+      "subscribeYearlyFrom": "Årlig, {price} i året, første trekk {date}",
+      "until": "Personal til {date}",
+      "queued": "Deretter 3 måneder til, til {date}.",
+      "after": "Betalt én gang, ingenting fornyes. Etter {date} går dette arbeidsområdet tilbake til Free: {cap} e-posthandlinger i måneden og én innboks for nye tilkoblinger. Innboksene, utkastene og innstillingene dine blir værende.",
+      "endingTitle": "Personal-passet ditt slutter {date}.",
+      "another": "3 måneder til, {price}, betalt én gang.",
+      "anotherUntil": "Kjøpt nå varer Personal til {date}.",
+      "seeOptions": "Se valgene",
+      "close": "Lukk",
+      "started": "Betaling mottatt. Personal-passet ditt for 3 måneder vises her om et øyeblikk."
+  },
     "planChange": {
       "title": "Endre eller sett abonnementet på pause",
       "sub": "Sett et månedsabonnement på pause i opptil 3 måneder, eller bytt til et mindre abonnement når den nåværende perioden er over.",
