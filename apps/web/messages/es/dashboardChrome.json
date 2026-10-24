@@ -426,5 +426,15 @@
     "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
     "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
     "openApp": "Abrir MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
+    "ends": "Termina el {date} a las {time}, hora de Oslo.",
+    "ctaAnnual": "Mejorar a {plan} anual",
+    "switchBody": "Black Week: cámbiate al plan anual por ${firstYear} el primer año y después ${renewal} al año. Se descuentan los días que no has usado de tu mes actual, así que hoy pagas algo menos.",
+    "switchCta": "Cambiar a anual",
+    "switchBusy": "Preparando...",
+    "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
   }
 }

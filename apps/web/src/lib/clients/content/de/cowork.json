@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "apps/web/src/lib/clients/content/en/claude.json (shared MCPEmails facts: scopes, limits, storage)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (client_id_metadata_document_supported, dynamic registration, PKCE S256)",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+    "https://support.claude.com/en/articles/13345190-get-started-with-cowork",
+    "https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans",
+    "https://academy.claude.com/tutorials/get-started-in-claude-cowork-in-three-steps",
+    "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
+  ],
+  "meta": {
+    "title": "E-Mail mit Claude Cowork verbinden: Custom Connector einrichten",
+    "description": "Geben Sie Claude Cowork ein echtes Postfach. Eine URL unter Customize, Connectors hinzufügen, per OAuth anmelden, und Cowork kann E-Mails lesen, suchen, entwerfen und senden. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Claude Cowork + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Claude Cowork",
+    "titleLine2": "und übergeben Sie ganze E-Mail-Aufgaben",
+    "lead": "Cowork arbeitet eine Aufgabe selbstständig ab, statt Nachricht für Nachricht zu antworten. Mit MCPEmails als Custom Connector kann diese Aufgabe E-Mails über alle verbundenen Postfächer hinweg lesen, suchen, entwerfen, senden, beantworten, weiterleiten, planen und organisieren.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie in Claude Customize, Connectors, klicken Sie auf + Add und dann auf Add custom connector. Fügen Sie https://mcpemails.com/api/mcp ein, klicken Sie sich mit Continue durch die Anmeldeeinstellungen, klicken Sie auf Add und melden Sie sich bei MCPEmails an. Wählen Sie dann im Eingabefeld Cowork und beschreiben Sie die E-Mail-Aufgabe. Cowork setzt einen kostenpflichtigen Claude-Tarif voraus."
+  },
+  "method": {
+    "title": "So verbindet sich Cowork: OAuth, kein API-Schlüssel",
+    "body": "Cowork nutzt die Custom Connectors Ihres Claude-Kontos, und Claude baut die Verbindung aus der Cloud von Anthropic auf, nicht von Ihrem Computer aus, auch wenn Sie Cowork in der Desktop-App ausführen. Claude durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Standardmäßig weist es sich mit seiner veröffentlichten Client-Identität aus, kann sich aber auch per <b>dynamischer Client-Registrierung nach RFC 7591</b> selbst registrieren. Beides wird hier unterstützt, Sie müssen also keine Client-ID anlegen. Claude autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256), ein Client-Secret wird nicht übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Connector-Seite öffnen",
+      "p": "Öffnen Sie in Claude im Web oder in Claude Desktop <b>Customize</b> und dann <b>Connectors</b>. Klicken Sie auf <b>+ Add</b> und dann auf <b>Add custom connector</b>."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Geben Sie einen Namen wie MCPEmails ein, fügen Sie <code>https://mcpemails.com/api/mcp</code> als Server-URL ein und klicken Sie auf <b>Continue</b>. Prüfen Sie die erkannten Authentifizierungseinstellungen, lassen Sie den OAuth-Client auf <b>Use Claude's published identity (Recommended)</b>, klicken Sie auf <b>Continue</b> und dann auf <b>Add</b>."
+    },
+    {
+      "h": "Anmelden und Scopes freigeben",
+      "p": "Melden Sie sich mit Ihrem MCPEmails-Konto an, wenn Claude danach fragt, und geben Sie die Scopes frei, die Cowork erhalten soll. Kein API-Schlüssel nötig."
+    },
+    {
+      "h": "Cowork-Aufgabe starten",
+      "p": "Wenn Ihr Eingabefeld Chat und Cowork anzeigt, wählen Sie <b>Cowork</b>. Klicken Sie auf <b>+</b>, öffnen Sie <b>Connectors</b> und prüfen Sie, ob MCPEmails eingeschaltet ist. Beschreiben Sie dann die Aufgabe, zum Beispiel „Liste meine Postfächer auf und fasse die ungelesenen E-Mails von heute zusammen“."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Im Auto-Modus wartet ein Senden womöglich nicht auf Sie",
+      "p": "Cowork bietet in der Modusauswahl die Modi Manual, Auto und Skip. In Manual fragt Claude Sie bei jeder Aktion, ob Sie sie erlauben oder ablehnen; in Auto arbeitet es weiter, und eine Sicherheitsprüfung blockiert Aktionen, die es für unsicher hält. Auto ist bei Pro, Max und Team voreingestellt, Manual bei Enterprise. Für E-Mail heißt das: Eine Nachricht kann mitten in einer Aufgabe ohne Rückfrage verschickt werden. Wenn Sie das nicht wollen, führen Sie E-Mail-Aufgaben in Manual aus, lassen Sie <code>send:email</code> bei dieser Verbindung weg und geben Sie stattdessen <code>manage:drafts</code> frei, oder schalten Sie im MCPEmails-Dashboard die menschliche Freigabe ein, damit jedes Senden auf eine Person wartet."
+    },
+    {
+      "h": "Bei Team und Enterprise fügt ein Owner den Connector hinzu",
+      "p": "Ein Owner oder Primary Owner fügt den Custom Connector für die Organisation hinzu: Organization settings, Connectors, auf Add klicken, mit der Maus auf Custom zeigen, Web wählen und die URL eingeben. Mitglieder finden ihn dann unter Customize, Connectors und klicken auf Connect. Owner können unter Tool permissions jedes Tool auf Always allow, Needs approval oder Blocked setzen, und einzelne Nutzer können das nicht übersteuern. In Cowork fragen Schreib-Tools außerdem bei jeder Aufgabe nach einer Freigabe, es sei denn, ein Owner schaltet in den Cowork-Einstellungen der Organisation die Option Always allow ein."
+    },
+    {
+      "h": "Ein Connector für alle Claude-Oberflächen",
+      "p": "Custom Connectors werden über Ihr Claude-Konto eingerichtet und vermittelt, und Cowork verwaltet sie auf derselben Seite Customize, Connectors wie der Chat. Ein Postfach, das Sie für Cowork verbinden, ist dieselbe Verbindung, die auch der Chat nutzt, Sie richten also nichts doppelt ein. Die Einrichtung für normale Chats auf claude.ai steht in der separaten Anleitung für Claude."
+    }
+  ],
+  "limits": [
+    "Cowork selbst setzt einen kostenpflichtigen Claude-Tarif voraus (Pro, Max, Team oder Enterprise).",
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken eine Cowork-Aufgabe also nie von selbst. Cowork sieht E-Mails, wenn eine Aufgabe danach fragt.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Claude Cowork?",
+      "a": "Öffnen Sie Customize, Connectors, klicken Sie auf + Add und dann auf Add custom connector. Geben Sie einen Namen ein, fügen Sie https://mcpemails.com/api/mcp ein, klicken Sie zweimal auf Continue, dann auf Add, und melden Sie sich bei MCPEmails an. Wählen Sie anschließend im Eingabefeld Cowork, prüfen Sie im Connectors-Menü hinter der Schaltfläche +, ob MCPEmails eingeschaltet ist, und beschreiben Sie Ihre E-Mail-Aufgabe."
+    },
+    {
+      "q": "Welchen Claude-Tarif brauche ich für Cowork mit E-Mail?",
+      "a": "Cowork gibt es in den kostenpflichtigen Tarifen Pro, Max, Team und Enterprise. Bei Team und Enterprise fügt ein Owner den Custom Connector für die Organisation hinzu, und jedes Mitglied klickt dann auf Connect und meldet sich mit seinem eigenen MCPEmails-Konto an."
+    },
+    {
+      "q": "Ist der Cowork-Connector getrennt von dem, den ich auf claude.ai hinzugefügt habe?",
+      "a": "Nein. Custom Connectors gehören zu Ihrem Claude-Konto und werden auf einer einzigen Seite Customize, Connectors verwaltet, die auch Cowork nutzt. Wenn Sie MCPEmails bereits für den Chat hinzugefügt haben, kann Cowork es unverändert verwenden."
+    },
+    {
+      "q": "Brauche ich für Cowork einen API-Schlüssel?",
+      "a": "Nein. Claude führt die OAuth-Anmeldung mit diesem Server durch, es wird also nichts Geheimes eingetippt. Für andere Clients, die kein OAuth beherrschen, gibt es einen Bearer-Schlüssel."
+    },
+    {
+      "q": "Kann Cowork E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Ja, wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt, ganz gleich, in welchem Modus Cowork läuft."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Claude übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Cowork ein echtes Postfach",
+    "sub": "Eine URL, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

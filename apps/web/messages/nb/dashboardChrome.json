@@ -426,5 +426,15 @@
     "unavailableBody": "Vi kunne ikke starte godkjenningen. Prøv igjen om noen minutter.",
     "closeHint": "Spørsmål? Skriv til hello@mcpemails.com.",
     "openApp": "Åpne MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} det første året, deretter ${renewal} i året. Du sparer ${saving}.",
+    "ends": "Slutter {date} kl. {time} norsk tid.",
+    "ctaAnnual": "Oppgrader til {plan} årlig",
+    "switchBody": "Black Week: bytt til årlig for ${firstYear} det første året, deretter ${renewal} i året. Ubrukte dager i inneværende måned trekkes fra, så du betaler litt mindre enn det i dag.",
+    "switchCta": "Bytt til årlig",
+    "switchBusy": "Klargjør...",
+    "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
   }
 }

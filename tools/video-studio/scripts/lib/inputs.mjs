@@ -8,6 +8,7 @@
  * is a lie, and the difference can only be judged with the file in hand.
  */
 
+import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { paths, readJson } from './common.mjs';
@@ -99,10 +100,12 @@ export function loadTranscripts(storyboard) {
 
     const failed = t.turns
       .map((turn, ti) => ({ turn, ti }))
-      .filter(({ turn }) => turn.role === 'tool' && turn.ok === false);
+      // Any turn: a JSON plan's assistant line is marked ok:false when one of
+      // its references resolved to nothing.
+      .filter(({ turn }) => turn.ok === false);
     if (failed.length) {
       const detail = failed
-        .map(({ turn, ti }) => `turn ${ti} (${turn.name}): ${turn.summary ?? 'failed'}`)
+        .map(({ turn, ti }) => `turn ${ti} (${turn.name ?? turn.role}): ${turn.summary ?? 'failed'}`)
         .join('; ');
       problems.push(
         `scene ${i} (chat): ${rel} contains ${failed.length} failed tool call(s), so it cannot go on camera. ${detail}. ` +
@@ -158,4 +161,78 @@ export function assertCapturesPresent(storyboard, timelines) {
     err.problems = missing;
     throw err;
   }
+}
+
+/** Seconds of audio or video in a media file, via ffprobe. */
+export function mediaSeconds(file) {
+  const r = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], {
+    encoding: 'utf8',
+  });
+  if (r.error) throw new Error(`ffprobe failed to start: ${r.error.message}`);
+  const n = Number(String(r.stdout).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Every clip scene's file must exist and be long enough for the scene. A
+ * clip that runs out early holds its last frame, which reads as a stall.
+ */
+export function assertClipsPresent(storyboard) {
+  const problems = [];
+  for (const [i, scene] of storyboard.scenes.entries()) {
+    if (scene.type !== 'clip') continue;
+    const file = resolve(paths.root, scene.src);
+    if (!existsSync(file)) {
+      problems.push(`scene ${i} (clip): ${scene.src} does not exist. Generated clips live in assets/clips/, which is not committed.`);
+      continue;
+    }
+    const length = mediaSeconds(file);
+    const needed = scene.from + scene.durationInSeconds;
+    if (length === null) {
+      problems.push(`scene ${i} (clip): ffprobe could not read ${scene.src}.`);
+    } else if (length + 0.1 < needed) {
+      problems.push(`scene ${i} (clip): ${scene.src} is ${length.toFixed(2)}s, but the scene needs ${needed.toFixed(2)}s (from ${scene.from}s for ${scene.durationInSeconds}s).`);
+    }
+  }
+  if (problems.length) {
+    const err = new Error('Refusing to render.\n  - ' + problems.join('\n  - '));
+    err.name = 'ClipError';
+    err.problems = problems;
+    throw err;
+  }
+}
+
+/**
+ * The voiceover must exist and must not run past the video, or the end of the
+ * last sentence is cut off mid-word. Returns its length and, when `npm run
+ * voice` made it, the provenance sidecar, which decides whether the cut is
+ * labelled AI-generated.
+ */
+export function checkVoiceover(storyboard) {
+  if (!storyboard.voiceover) return null;
+  const file = resolve(paths.root, storyboard.voiceover);
+  if (!existsSync(file)) {
+    throw new Error(
+      `voiceover "${storyboard.voiceover}" does not exist. ` +
+      `Run: npm run voice -- --storyboard ${storyboard.id}`,
+    );
+  }
+  const seconds = mediaSeconds(file);
+  const videoSeconds = storyboard.durationInFrames / storyboard.fps;
+  if (seconds !== null && seconds > videoSeconds + 0.05) {
+    throw new Error(
+      `voiceover is ${seconds.toFixed(2)}s but the video is ${videoSeconds.toFixed(2)}s. ` +
+      'Shorten vo/<id>.txt or lengthen the scenes, then re-run voice.',
+    );
+  }
+  const sidecar = file.replace(/\.mp3$/, '.voice.json');
+  let provenance = null;
+  if (existsSync(sidecar)) {
+    try {
+      provenance = readJson(sidecar);
+    } catch {
+      provenance = null;
+    }
+  }
+  return { file: storyboard.voiceover, seconds, provenance };
 }

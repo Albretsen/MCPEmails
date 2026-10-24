@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "apps/web/src/lib/clients/content/en/claude.json (shared MCPEmails facts: scopes, limits, storage)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (client_id_metadata_document_supported, dynamic registration, PKCE S256)",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+    "https://support.claude.com/en/articles/13345190-get-started-with-cowork",
+    "https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans",
+    "https://academy.claude.com/tutorials/get-started-in-claude-cowork-in-three-steps",
+    "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
+  ],
+  "meta": {
+    "title": "Connect Email to Claude Cowork: Custom Connector Setup",
+    "description": "Give Claude Cowork a real inbox. Add one URL under Customize, Connectors, sign in with OAuth, and Cowork can read, search, draft and send mail. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Claude Cowork + email",
+    "titleLine1": "Connect your inbox to Claude Cowork",
+    "titleLine2": "and hand it whole email tasks",
+    "lead": "Cowork works through a task on its own instead of answering one message at a time. With MCPEmails as a custom connector, that task can read, search, draft, send, reply, forward, schedule and organize mail across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "In Claude, open Customize, Connectors, click + Add, then Add custom connector. Paste https://mcpemails.com/api/mcp, click Continue through the sign-in settings, click Add and sign in with MCPEmails. Then select Cowork in the message box and describe the email task. Cowork needs a paid Claude plan."
+  },
+  "method": {
+    "title": "How Cowork connects: OAuth, no API key",
+    "body": "Cowork uses the custom connectors on your Claude account, and Claude opens the connection from Anthropic's cloud, not from your computer, even when you run Cowork in the desktop app. Claude runs the standard MCP OAuth flow against this server. By default it identifies itself with its published client identity, and it can also register itself with <b>RFC 7591 dynamic client registration</b>; both are supported here, so there is no client ID to create. It authorizes with <b>authorization code plus PKCE</b> using S256, no client secret is transmitted, and the token carries only the scopes you approve on our consent screen. The access token lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open the connector page",
+      "p": "In Claude on the web or in Claude Desktop, go to <b>Customize</b>, then <b>Connectors</b>. Click <b>+ Add</b>, then <b>Add custom connector</b>."
+    },
+    {
+      "h": "Add the server",
+      "p": "Enter a name such as MCPEmails, paste <code>https://mcpemails.com/api/mcp</code> as the server URL and click <b>Continue</b>. Review the detected authentication settings, keep the OAuth client on <b>Use Claude's published identity (Recommended)</b>, click <b>Continue</b>, then click <b>Add</b>."
+    },
+    {
+      "h": "Sign in and approve scopes",
+      "p": "Sign in with your MCPEmails account when Claude asks, and approve the scopes you want Cowork to hold. No API key needed."
+    },
+    {
+      "h": "Start a Cowork task",
+      "p": "If your message box shows Chat and Cowork, select <b>Cowork</b>. Click the <b>+</b> button, open <b>Connectors</b> and make sure MCPEmails is toggled on, then describe the task, for example \"list my inboxes and summarize today's unread mail\"."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Auto mode means a send may not pause for you",
+      "p": "Cowork has Manual, Auto and Skip modes in the mode selector. In Manual, Claude asks you to allow or deny each action; in Auto, it keeps working and a safety review blocks actions it judges unsafe. Auto is the default on Pro, Max and Team, Manual on Enterprise. For email that means a send may go out mid-task without a prompt. If that is not what you want, run email tasks in Manual, leave <code>send:email</code> off this connection and grant <code>manage:drafts</code> instead, or turn on human approval in the MCPEmails dashboard so every send waits for a person."
+    },
+    {
+      "h": "On Team and Enterprise, an owner adds the connector",
+      "p": "An Owner or Primary Owner adds the custom connector for the organization: Organization settings, Connectors, click Add, hover over Custom and select Web, then enter the URL. Members then find it under Customize, Connectors and click Connect. Owners can set each tool to Always allow, Needs approval or Blocked under Tool permissions, and individual users cannot override that. In Cowork, write tools also ask for approval on each task unless an owner turns on the Always allow option in the organization's Cowork settings."
+    },
+    {
+      "h": "One connector, every Claude surface",
+      "p": "Custom connectors are configured and brokered through your Claude account, and Cowork manages them on the same Customize, Connectors page as chat. A mailbox you connect for Cowork is the same connection chat uses, so there is nothing to set up twice. The setup for regular claude.ai chats is on the separate Claude guide."
+    }
+  ],
+  "limits": [
+    "Cowork itself needs a paid Claude plan (Pro, Max, Team or Enterprise).",
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes a Cowork task by itself. Cowork sees mail when a task asks for it.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Claude Cowork?",
+      "a": "Go to Customize, Connectors, click + Add, then Add custom connector. Enter a name, paste https://mcpemails.com/api/mcp, click Continue twice, click Add and sign in with MCPEmails. Then select Cowork in the message box, check that MCPEmails is toggled on under the + button's Connectors menu, and describe your email task."
+    },
+    {
+      "q": "Which Claude plan do I need for Cowork with email?",
+      "a": "Cowork is on the paid plans: Pro, Max, Team and Enterprise. On Team and Enterprise, an owner adds the custom connector for the organization and each member then clicks Connect to sign in with their own MCPEmails account."
+    },
+    {
+      "q": "Is the Cowork connector separate from the one I added in claude.ai?",
+      "a": "No. Custom connectors belong to your Claude account and are managed on one Customize, Connectors page, which Cowork uses too. If you already added MCPEmails for chat, Cowork can use it as it is."
+    },
+    {
+      "q": "Do I need an API key for Cowork?",
+      "a": "No. Claude runs the OAuth sign-in with this server, so nothing secret is typed in. A bearer key is available for other clients that cannot do OAuth."
+    },
+    {
+      "q": "Can Cowork send email without me seeing it?",
+      "a": "It can if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all. An inbox owner can also require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it, whatever mode Cowork is running in."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to Claude. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Cowork a real inbox",
+    "sub": "One URL, one sign-in. One inbox free forever, no card required."
+  }
+}
