@@ -274,6 +274,7 @@
     "linkOauth": "OAuth-Verbindung",
     "linkProviders": "Unterstützte Anbieter",
     "linkReadOnly": "Nur-Lese-Zugriff",
+    "linkApiGuide": "Entwicklerhandbuch",
     "linkClients": "MCP-Clients einrichten",
     "linkPrivacy": "Datenschutz",
     "linkTerms": "Nutzungsbedingungen",
@@ -294,7 +295,8 @@
     "linkHelp": "Hilfe & Support",
     "linkSelfHost": "Self-Hosting",
     "linkFounders": "Für Gründer",
-    "linkBusiness": "Für Unternehmen"
+    "linkBusiness": "Für Unternehmen",
+    "linkDevelopers": "Entwickler"
   },
   "languageSwitcher": {
     "label": "Sprache",

@@ -83,6 +83,10 @@ interface Pending {
   patch?: Row;
   inserted?: Row[];
   limit?: number;
+  /** upsert only: the conflict columns, default the billing_email_sends index. */
+  onConflict?: string[];
+  /** upsert only: false merges the patch into the clashing row (ON CONFLICT DO UPDATE). */
+  ignoreDuplicates?: boolean;
   order?: { column: string; ascending: boolean };
   /** `select(_, { count: 'exact', head: true })`: answer with `count`, no rows. */
   countHead?: boolean;
@@ -178,13 +182,21 @@ class Query implements PromiseLike<Result> {
 
     if (this.pending.kind === 'upsert') {
       const out: Row[] = [];
+      const conflictColumns = this.pending.onConflict ?? CONFLICT_COLUMNS;
       for (const candidate of this.pending.inserted ?? []) {
-        const clash = table.some((existing) =>
-          CONFLICT_COLUMNS.every((c) => existing[c] === candidate[c]),
+        const clash = table.find((existing) =>
+          conflictColumns.every((c) => existing[c] === candidate[c]),
         );
         // ON CONFLICT DO NOTHING: skipped rows are not inserted and, because
-        // ignoreDuplicates is set, are not returned either.
-        if (clash) continue;
+        // ignoreDuplicates is set, are not returned either. Without
+        // ignoreDuplicates (and with an explicit onConflict) it is DO UPDATE.
+        if (clash) {
+          if (this.pending.ignoreDuplicates === false) {
+            Object.assign(clash, candidate);
+            out.push(clash);
+          }
+          continue;
+        }
         const row: Row = { id: this.store.nextId++, ...candidate, sent_at: null, cancelled_at: null };
         table.push(row);
         out.push(row);
@@ -245,6 +257,9 @@ class Query implements PromiseLike<Result> {
       table.length = 0;
       table.push(...kept);
     }
+    // A read returns copies, as PostgREST does: a row read before a write
+    // must not change under the caller when the write lands.
+    if (this.pending.kind === 'select') return { data: hits.map((row) => ({ ...row })), error: null };
     return { data: hits, error: null };
   }
 
@@ -357,12 +372,21 @@ export class FakeSupabase {
       insert: (rows: Row | Row[]) =>
         new Query(this, { kind: 'insert', table, filters: [], inserted: Array.isArray(rows) ? rows : [rows] }),
       delete: () => new Query(this, { kind: 'delete', table, filters: [] }),
-      upsert: (rows: Row | Row[], _options?: unknown) =>
+      upsert: (rows: Row | Row[], options?: { onConflict?: string; ignoreDuplicates?: boolean }) =>
         new Query(this, {
           kind: 'upsert',
           table,
           filters: [],
           inserted: Array.isArray(rows) ? rows : [rows],
+          // Named conflict columns without ignoreDuplicates behave like
+          // PostgREST's merge-duplicates (DO UPDATE). The lifecycle queue's
+          // call names ignoreDuplicates and keeps DO NOTHING.
+          ...(options?.onConflict
+            ? {
+                onConflict: options.onConflict.split(',').map((c) => c.trim()),
+                ignoreDuplicates: options.ignoreDuplicates === true,
+              }
+            : {}),
         }),
     };
   }

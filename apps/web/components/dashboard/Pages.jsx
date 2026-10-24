@@ -21,6 +21,7 @@ import {
   workspaceDraftEditorControl,
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
 import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
@@ -460,7 +461,7 @@ const MCP_CLIENTS = [
     guide: null,
     stepKeys: ['clients.api.step1', 'clients.api.step2'],
     config: (url) => `curl -X POST ${url} \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
   },
@@ -5927,8 +5928,11 @@ function BillingSection({
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : typeof data?.error === 'string'
             ? data.error
             : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
@@ -5991,8 +5995,11 @@ function BillingSection({
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : typeof data?.error === 'string'
             ? data.error
             : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
@@ -6435,6 +6442,11 @@ function BillingSection({
             </div>
           </div>
         )}
+
+        {/* Pause, switch to Personal, switch to Free, and the banners for a
+            change already booked. Renders nothing while both flags are off
+            for this account (its routes answer 404). */}
+        <PlanChangeBlock toast={toast} />
 
         {/* Black Week 2026: monthly Personal or Pro owners only. The server
             decided eligibility from the live subscription (current monthly

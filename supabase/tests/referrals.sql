@@ -195,11 +195,11 @@ SELECT lives_ok(
 SELECT is((SELECT schedule FROM cron.job WHERE jobname = 'dispatch-referrals'), '15 10 * * *',
   'the dispatcher runs daily');
 
--- The stage list is re-pinned whole: no stage an earlier migration added may
--- be lost (payment_fix_clicked, 20261024225000).
+-- The stage list is extended, never restated: stages other migrations added
+-- survive (payment_fix_clicked 20261024225000, pause_started 20261024233000).
 SELECT ok(pg_get_constraintdef((SELECT oid FROM pg_constraint WHERE conname = 'product_funnel_events_stage_check'))
-            LIKE '%payment_fix_clicked%',
-  'the stage list keeps payment_fix_clicked');
+            LIKE ALL (ARRAY['%payment_fix_clicked%', '%pause_started%', '%referral_capped%']),
+  'the stage list keeps other migrations'' stages and adds the referral ones');
 -- The tools/call gate hands back the referral month for the burst ceiling.
 SELECT ok(pg_get_functiondef('public.mcp_tools_call_gate(text,timestamptz[],timestamptz,boolean,text,integer)'::regprocedure)
             LIKE '%payment_notice_shown_on%referral_personal_until%',

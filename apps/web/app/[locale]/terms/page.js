@@ -208,14 +208,18 @@ export default async function TermsPage({ params }) {
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
 
-              {/* 5.8 The referral program. The plan names and the yearly cap
+              {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
+              <h4>{t('plansAndPayment.h59')}</h4>
+              <p>{t('plansAndPayment.p59')}</p>
+
+              {/* 5.10 The referral program. The plan names and the yearly cap
                   are parameters, so the terms cannot drift from the catalogue
                   or from REWARD_CAP_PER_YEAR. The id is the dashboard's
                   "Program terms" link target. */}
-              <h4 id="referral-program">{t('plansAndPayment.h58')}</h4>
-              <p>{t('plansAndPayment.p58a')}</p>
-              <p>{t('plansAndPayment.p58b', referralTerms)}</p>
-              <p>{t('plansAndPayment.p58c')}</p>
+              <h4 id="referral-program">{t('plansAndPayment.h510')}</h4>
+              <p>{t('plansAndPayment.p510a')}</p>
+              <p>{t('plansAndPayment.p510b', referralTerms)}</p>
+              <p>{t('plansAndPayment.p510c')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}

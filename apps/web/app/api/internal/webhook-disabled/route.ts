@@ -2,7 +2,6 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isUuid } from '@/lib/webhooks/access';
-import { webhookDb } from '@/lib/webhooks/db';
 import { sendWebhookDisabledEmail } from '@/lib/email/webhook-disabled';
 
 /**
@@ -43,7 +42,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!isUuid(endpointId)) return NextResponse.json({ error: 'endpoint_id is required.' }, { status: 400 });
 
   const service = createServiceRoleClient();
-  const { data: endpoint } = await webhookDb(service)
+  const { data: endpoint } = await service
     .from('webhook_endpoints')
     .select('id, workspace_id, url, disabled_at, disabled_reason')
     .eq('id', endpointId)

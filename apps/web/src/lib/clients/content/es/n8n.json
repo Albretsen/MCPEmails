@@ -65,7 +65,7 @@
     }
   ],
   "limits": [
-    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave. Un flujo que recorre muchos elementos debe espaciar sus llamadas o repartir el trabajo entre claves distintas.",
+    "Las solicitudes se limitan por clave en ventanas por minuto, por hora y por día dimensionadas según tu plan, así que una sola clave puede usar todo el tope por minuto del plan y varias claves lo comparten. Un flujo que recorre muchos elementos debe respetar Retry-After y espaciar sus llamadas.",
     "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca inicia un flujo por sí solo. Para reaccionar al correo entrante, inicia el flujo con un Schedule Trigger y haz que el agente compruebe si hay mensajes sin leer.",
     "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
   ],

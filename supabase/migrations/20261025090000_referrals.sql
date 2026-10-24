@@ -302,8 +302,9 @@ COMMENT ON FUNCTION public.grant_referral_personal(uuid, integer, text) IS
 -- rest of the function runs the paid branch with the Personal ceiling and
 -- reports plan = 'personal' (the edge function then shows no Free notices,
 -- exactly as for a paying Personal workspace). Exemptions still win.
---   workspace_action_allowance()        from 20261017160000_free_grace_three_days.sql
---   workspace_action_allowance_terms()  from 20261020214737_mcp_tools_call_gate.sql
+--   workspace_action_allowance()        from 20261024233000_pause_downgrade.sql
+--   workspace_action_allowance_terms()  from 20261024233000_pause_downgrade.sql
+-- (that migration's paused_from window is kept as it is).
 -- supabase/tests/mcp_tools_call_gate.sql compares the two column by column.
 -- Attributes and grants are restated from those definitions.
 -- ---------------------------------------------------------------------------
@@ -348,6 +349,7 @@ DECLARE
   v_remaining       integer;
   v_ub_start        timestamptz;
   v_ub_end          timestamptz;
+  v_paused_from     timestamptz;
 BEGIN
   -- (a) The workspace. deleted_at is irrelevant: a soft-deleted workspace
   -- cannot make tool calls, and if it is restored its allowance must not have
@@ -445,10 +447,19 @@ BEGIN
     -- 28th is in grace until the 5th of next month: this month's window is
     -- empty (period_start = period_end, used = 0), next month's starts on
     -- the 5th.
+    --
+    -- A paused subscriber (20261024233000) is on Free from paused_from, and
+    -- the window opens no earlier than that, so the paid month before the
+    -- pause is not counted against the Free allowance. Only a pause that has
+    -- started counts; GREATEST ignores the NULL of everyone else.
+    SELECT ub.paused_from INTO v_paused_from
+    FROM public.user_billing ub
+    WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
+    LIMIT 1;
     v_grace_ends_at := public.free_action_grace_ends_at(v_created_at);
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
-    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at), v_month_end);
+    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at, v_paused_from), v_month_end);
     v_cap := c_free_cap;
   END IF;
 
@@ -513,6 +524,7 @@ DECLARE
   v_in_grace        boolean := false;
   v_ub_start        timestamptz;
   v_ub_end          timestamptz;
+  v_paused_from     timestamptz;
 BEGIN
   SELECT w.plan, w.owner_id, w.created_at, w.free_action_cap_exempt
     INTO v_plan, v_owner_id, v_created_at, v_early_member
@@ -589,10 +601,14 @@ BEGIN
     v_in_grace := false;
 
   ELSE
+    SELECT ub.paused_from INTO v_paused_from
+    FROM public.user_billing ub
+    WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
+    LIMIT 1;
     v_grace_ends_at := public.free_action_grace_ends_at(v_created_at);
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
-    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at), v_month_end);
+    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at, v_paused_from), v_month_end);
     v_cap := c_free_cap;
   END IF;
 
@@ -660,38 +676,82 @@ GRANT EXECUTE ON FUNCTION public.effective_workspace_plan(uuid) TO authenticated
 -- ---------------------------------------------------------------------------
 -- 5. product_funnel_events stages for the referral analytics events.
 --
--- Current definition is 20261019150000 plus 'payment_fix_clicked', which
--- 20261024225000_dunning_measurement appends in place. Reproduced with the ten
--- referral stages added; keep every stage a later migration adds. Each event is one row with the stage named after it;
--- outcome 'success', or 'failure' for referral_attach_refused and
--- referral_voided.
+-- ADDITIVE, like 20261024225000_dunning_measurement and
+-- 20261024233000_pause_downgrade: the helper (copied from the latter) reads
+-- the live CHECK, keeps every stage already in it and appends the ten
+-- referral stages, so no stage another migration added is lost whatever the
+-- order. Each event is one row with the stage named after it; outcome
+-- 'success', or 'failure' for referral_attach_refused and referral_voided.
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_stage_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_stage_check
-  CHECK (stage IN (
-    'onboarding_started', 'client_selected', 'provider_selected', 'inbox_connection',
-    'connection_verified', 'credential_created', 'technical_activation',
-    'value_activation', 'first_tool_call',
-    -- Billing funnel
-    'paywall_reached', 'pricing_viewed', 'checkout_started', 'checkout_completed',
-    'billing_portal_opened',
-    -- An existing subscriber's price was swapped in place, in either direction.
-    'plan_upgraded', 'plan_downgraded',
-    -- The Overview guide asked a business-domain workspace to connect a second
-    -- work mailbox: started = shown, success = clicked.
-    'multi_inbox_prompt',
-    -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
-    -- the paywall_reached row with connection_type = 'first_connect'.
-    'paywall_clicked',
-    -- The failed-payment banner's button (20261024225000).
-    'payment_fix_clicked',
-    -- Referral program (20261025090000).
+CREATE OR REPLACE FUNCTION pg_temp.mcpe_extend_in_check(
+  p_table regclass,
+  p_constraint text,
+  p_column text,
+  p_values text[]
+) RETURNS void
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  def      text;
+  existing text[];
+  merged   text[];
+  nullable boolean;
+BEGIN
+  SELECT pg_get_constraintdef(c.oid) INTO def
+  FROM pg_constraint c
+  WHERE c.conname = p_constraint AND c.conrelid = p_table;
+
+  -- No constraint at all: nothing restricts the column, nothing to add.
+  IF def IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Postgres prints the list as ARRAY['a'::text, ...] (or ANY of it); an
+  -- array literal '{a,b}'::text[] is read too.
+  SELECT array_agg(DISTINCT s ORDER BY s) INTO existing
+  FROM (
+    SELECT m[1] AS s FROM regexp_matches(def, '''([a-z0-9_]+)''::text', 'g') AS m
+    UNION
+    SELECT trim(both '"' from x) FROM regexp_matches(def, '''\{([^}]*)\}''', 'g') AS a,
+      unnest(string_to_array(a[1], ',')) AS x
+  ) found
+  WHERE s ~ '^[a-z0-9_]+$';
+
+  IF existing IS NULL OR array_length(existing, 1) IS NULL THEN
+    RAISE EXCEPTION '% has no readable value list: %', p_constraint, def;
+  END IF;
+
+  IF p_values <@ existing THEN
+    RETURN;
+  END IF;
+
+  SELECT array_agg(DISTINCT v ORDER BY v) INTO merged
+  FROM unnest(existing || p_values) AS v;
+
+  -- Keep "column IS NULL OR ..." when the original allowed NULL.
+  nullable := def ILIKE '%' || p_column || ' IS NULL%';
+
+  EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', p_table, p_constraint);
+  EXECUTE format(
+    'ALTER TABLE %s ADD CONSTRAINT %I CHECK (%s%I IN (%s))',
+    p_table,
+    p_constraint,
+    CASE WHEN nullable THEN format('%I IS NULL OR ', p_column) ELSE '' END,
+    p_column,
+    (SELECT string_agg(quote_literal(v), ', ' ORDER BY v) FROM unnest(merged) AS v)
+  );
+END
+$fn$;
+
+SELECT pg_temp.mcpe_extend_in_check(
+  'public.product_funnel_events'::regclass, 'product_funnel_events_stage_check', 'stage',
+  ARRAY[
     'referral_link_viewed', 'referral_link_copied', 'referral_click',
     'referral_attached', 'referral_attach_refused', 'referral_charged',
     'referral_qualified', 'referral_voided', 'referral_held', 'referral_capped'
-  ));
+  ]);
+
+DROP FUNCTION pg_temp.mcpe_extend_in_check(regclass, text, text, text[]);
 
 
 -- ---------------------------------------------------------------------------

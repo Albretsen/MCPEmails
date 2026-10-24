@@ -3,7 +3,7 @@
 //
 // Run with: npm run test:referral-ui
 //
-// Covers dashboard.referral, the sidebar entry, the home banner and Terms 5.8:
+// Covers dashboard.referral, the sidebar entry, the home banner and Terms 5.10:
 // every locale has every key with the same {tokens} as English, and none says
 // "30 days" (the refund window is 14 days and the Free reward is "a month"),
 // mentions an action cap, uses an em dash or an angle bracket, or spells the
@@ -26,7 +26,7 @@ function referralCopy(locale) {
     dashboard: read(locale, 'dashboard').referral,
     nav: read(locale, 'dashboardChrome').sidebar.navInvite,
     banner: read(locale, 'home').referralBanner,
-    terms: { h58: terms.h58, p58a: terms.p58a, p58b: terms.p58b, p58c: terms.p58c },
+    terms: { h510: terms.h510, p510a: terms.p510a, p510b: terms.p510b, p510c: terms.p510c },
   };
 }
 
@@ -75,5 +75,5 @@ test('plan names are tokens, never raw slugs', () => {
   }
   const en = referralCopy('en');
   assert.deepEqual(tokens(en.dashboard.howPaid), ['{free}', '{personal}']);
-  assert.deepEqual(tokens(en.terms.p58b), ['{cap}', '{free}', '{personal}']);
+  assert.deepEqual(tokens(en.terms.p510b), ['{cap}', '{free}', '{personal}']);
 });
