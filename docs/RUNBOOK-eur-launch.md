@@ -12,16 +12,19 @@ This covers the Stripe configuration only. The code switches
 where they are read. Nothing here was run against live with `--apply` by the
 PR that added it.
 
-## Automatic launch (the default path)
+## No automatic launch (decided 2026-10-25)
 
-Nobody has to do anything on 2026-12-07. A dispatcher turns the launch on by
-itself once Stripe is ready, and stays off, with an email, while it is not.
+The owner decided the EUR launch does NOT turn itself on. Migration
+`20261025130000_eur_launch_cron_off` removed the pg_cron jobs that
+`20261025120000_eur_launch_cron` had scheduled. Nothing happens on
+2026-12-07 unless someone starts it.
 
-- **Who runs it.** pg_cron (migration `20261025120000_eur_launch_cron`) calls
-  `POST /api/internal/eur-launch/dispatch` every hour from 2026-12-07 00:00
-  Oslo for 14 days, so an OSS registration that only lands by its 2026-12-10
-  deadline still launches within the hour. A cleanup job removes the cron
-  jobs on 2026-12-21.
+To launch, call the dispatcher by hand (same secret header as the other
+internal dispatchers; the secret is not written here). It runs the preflight
+below and launches only when every check passes; `?dry_run=1` runs the
+checks only. Calling `public.dispatch_eur_launch()` from SQL does the same.
+The rest of this section describes what one run does.
+
 - **Before the date** the route returns `outside_window` and reads nothing.
 - **Preflight, read-only, every run until it passes:**
   1. `tax_registrations`: an active `oss_non_union` registration AND an
