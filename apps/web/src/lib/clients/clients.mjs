@@ -368,10 +368,9 @@ export const ALL_CLIENTS = [
  * slug here once its test passes; a failed test means the page is fixed or
  * deleted, never released as is.
  *
- *  - openclaw: no live sign-in has been seen yet, and Control UI sign-in
- *    from a private or Tailscale address is unverified.
+ * Nothing is held right now.
  */
-export const HELD_CLIENTS = new Set(['openclaw']);
+export const HELD_CLIENTS = new Set([]);
 
 /** Every public client, in registry order. */
 export const CLIENTS = ALL_CLIENTS.filter((c) => !HELD_CLIENTS.has(c.slug));

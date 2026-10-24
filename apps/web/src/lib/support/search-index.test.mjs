@@ -41,7 +41,7 @@ test('it holds every released provider, every public client, the 7 articles, doc
   const index = await indexFor('en');
   assert.equal(countKind(index, 'provider'), releasedProviders().length);
   assert.equal(countKind(index, 'client'), CLIENTS.length);
-  assert.equal(CLIENTS.length, 20);
+  assert.equal(CLIENTS.length, 21);
   assert.equal(countKind(index, 'article'), 7);
   assert.equal(countKind(index, 'docs'), 10);
   assert.equal(countKind(index, 'faq') > 0, true);
