@@ -27,7 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 type Row = Record<string, unknown>;
-type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'notIs'; column: string; value: unknown };
+type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'lte' | 'notIs'; column: string; value: unknown };
 
 /** Mirrors the unique index in 20260902130000_billing_lifecycle_emails.sql. */
 const CONFLICT_COLUMNS = ['stripe_customer_id', 'template', 'scope_key'];
@@ -44,6 +44,8 @@ function matches(row: Row, filters: Filter[]): boolean {
         return Array.isArray(f.value) && f.value.includes(actual);
       case 'gt':
         return actual != null && String(actual) > String(f.value);
+      case 'lte':
+        return actual != null && String(actual) <= String(f.value);
       case 'notIs':
         return f.value === null ? actual !== null && actual !== undefined : actual !== f.value;
       case 'like': {
@@ -106,6 +108,10 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   not(column: string, operator: string, value: unknown): this {
     if (operator !== 'is') throw new Error(`FakeSupabase: .not(_, '${operator}', _) is not implemented`);
     this.pending.filters.push({ op: 'notIs', column, value });
+    return this;
+  }
+  lte(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'lte', column, value });
     return this;
   }
   limit(n: number): this {
