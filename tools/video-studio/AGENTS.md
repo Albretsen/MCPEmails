@@ -325,9 +325,9 @@ says, runs only with `--write`, and only on messages named by id that an
 earlier result showed coming FROM a video fixture sender. See the demo mailbox
 below for why.
 
-`email_read` with `action: "search"` currently ignores `folder` on this
-mailbox and searches INBOX. Read the Demo folder with `action: "list"` and
-filter with `where`.
+`email_read` with `action: "search"` honours `folder` (fixed in PR #258,
+2026-10-24; before that it searched INBOX). Either a `search` with
+`"folder": "Demo"` or a `list` filtered with `where` reads the video fixtures.
 
 ## Voiceover
 
