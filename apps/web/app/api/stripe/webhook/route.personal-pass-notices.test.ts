@@ -234,3 +234,62 @@ test('without a pass the deletion still queues the cancellation series', async (
   const series = sends().filter((r) => r.template === 'cancel_ask');
   assert.equal(series.length, 1);
 });
+
+function refundOf(sessionId: string) {
+  return {
+    id: `ch_${sessionId}`,
+    object: 'charge',
+    customer: CUSTOMER,
+    payment_intent: `pi_${sessionId}`,
+    amount: 2900,
+    amount_refunded: 2900,
+    refunded: true,
+  };
+}
+
+test('refunding the covering pass re-dates the promoted pass notices to its new window', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_n6a'));
+  await deliver('checkout.session.completed', passSession('cs_n6b'));
+  await deliver('charge.refunded', refundOf('cs_n6a'));
+  const second = db.table('user_passes').find((p) => p.stripe_checkout_session_id === 'cs_n6b')!;
+  assert.equal(second.status, 'active');
+  const rows = open(second.id as string);
+  assert.equal(rows.length, 2);
+  const ended = rows.find((r) => r.template === 'pass_ended')!;
+  assert.equal(Date.parse(ended.send_after as string), Date.parse(second.ends_at as string));
+  const ending = rows.find((r) => r.template === 'pass_ending_7d')!;
+  assert.equal(Date.parse(second.ends_at as string) - Date.parse(ending.send_after as string), 7 * DAY);
+  assert.equal(
+    Date.parse((ended.payload as { periodEnd: string }).periodEnd),
+    Date.parse(second.ends_at as string),
+  );
+});
+
+test('refunding the stacked pass revives the earlier pass notices', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_n7a'));
+  await deliver('checkout.session.completed', passSession('cs_n7b'));
+  await deliver('charge.refunded', refundOf('cs_n7b'));
+  const first = db.table('user_passes').find((p) => p.stripe_checkout_session_id === 'cs_n7a')!;
+  const second = db.table('user_passes').find((p) => p.stripe_checkout_session_id === 'cs_n7b')!;
+  assert.equal(second.status, 'refunded');
+  assert.equal(open(second.id as string).length, 0);
+  const rows = open(first.id as string);
+  assert.deepEqual(rows.map((r) => r.template).sort(), ['pass_ended', 'pass_ending_7d']);
+  assert.equal(
+    Date.parse(rows.find((r) => r.template === 'pass_ended')!.send_after as string),
+    Date.parse(first.ends_at as string),
+  );
+});
+
+test('a refund leaves a subscriber notices cancelled', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_n8a'));
+  await deliver('checkout.session.completed', passSession('cs_n8b'));
+  const billing = db.table('user_billing')[0];
+  billing.plan = 'personal';
+  billing.subscription_status = 'active';
+  await deliver('charge.refunded', refundOf('cs_n8b'));
+  assert.equal(open().length, 0);
+});

@@ -211,6 +211,7 @@ import {
   isPassRenewal,
   passNoticeSink,
   passesForRenewal,
+  resyncPassNotices,
 } from '@/lib/billing/pass-notices';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
@@ -1168,6 +1169,12 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
       stripeCustomerId: customerId,
       passId: result.pass.id,
       reason: 'pass_refunded',
+    });
+    // The pass that now ends the cover may have moved (a stacked pass started
+    // today) or ends again (its follower was refunded): re-date its notices.
+    await resyncPassNotices(createServiceRoleClient(), {
+      userId: result.pass.user_id,
+      stripeCustomerId: customerId,
     });
   } else if (result.kind === 'partial') {
     console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
