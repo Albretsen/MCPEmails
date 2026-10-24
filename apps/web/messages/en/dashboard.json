@@ -576,6 +576,37 @@
       "deleting": "Deleting…",
       "errFailed": "Failed to delete account. Please try again.",
       "networkError": "Network error. Please check your connection and try again."
+    },
+    "morningBrief": {
+      "title": "Morning brief",
+      "sub": "A daily summary of new mail, VIP senders, follow-ups and scheduled sends, put into one of your inboxes.",
+      "enable": "Put a morning brief in my inbox every day",
+      "hour": "Time",
+      "timezone": "Time zone",
+      "inbox": "Deliver to",
+      "inboxPlaceholder": "Choose an inbox",
+      "vip": "VIP senders",
+      "vipPlaceholder": "boss@example.com\nexample.com",
+      "help": "One address or domain per line. VIP mail is listed first. The brief is added to the inbox directly, it is not sent as an email, and days with nothing new are skipped.",
+      "save": "Save",
+      "saved": "Saved. The next brief follows these settings.",
+      "loading": "Loading...",
+      "proOnly": "The morning brief is part of Pro.",
+      "upgrade": "See plans",
+      "roleNote": "Only workspace owners and admins can change the morning brief.",
+      "lastSent": "Last brief: {when}",
+      "paused": "Paused after repeated failures. Check the inbox connection, then save to resume.",
+      "errors": {
+        "load": "Could not load the morning brief settings.",
+        "save": "Could not save. Try again.",
+        "unavailable": "The morning brief is not available yet.",
+        "pro_feature_required": "The morning brief is part of Pro.",
+        "invalid_vip": "Not an address or domain: {detail}",
+        "too_many_vips": "Up to {max} VIP senders.",
+        "inbox_required": "Choose an inbox to deliver the brief to.",
+        "invalid_inbox": "That inbox is not in this workspace.",
+        "invalid_timezone": "Choose a time zone from the list."
+      }
     }
   },
   "billing": {

@@ -24,6 +24,7 @@ import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
+import { MorningBriefSection } from './MorningBriefSection';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
@@ -7507,7 +7508,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7564,6 +7565,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         userRole={userRole}
         onWorkspaceUpdate={onWorkspaceUpdate}
       />
+
+      {/* Morning brief (Pro): renders nothing unless the feature is visible. */}
+      <MorningBriefSection workspace={workspace} inboxes={inboxes} proFeatures={proFeatures} />
 
       {/* Delete THIS workspace only (owner-only) */}
       <DeleteWorkspaceSection

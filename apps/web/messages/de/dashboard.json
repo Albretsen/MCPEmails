@@ -576,6 +576,37 @@
       "deleting": "Wird gelöscht…",
       "errFailed": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
       "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+    },
+    "morningBrief": {
+      "title": "Morgenübersicht",
+      "sub": "Eine tägliche Übersicht über neue E-Mails, VIP-Absender, Nachfassaktionen und geplante Sendungen, abgelegt in einem Ihrer Posteingänge.",
+      "enable": "Jeden Tag eine Morgenübersicht in meinen Posteingang legen",
+      "hour": "Uhrzeit",
+      "timezone": "Zeitzone",
+      "inbox": "Zustellen an",
+      "inboxPlaceholder": "Posteingang wählen",
+      "vip": "VIP-Absender",
+      "vipPlaceholder": "chefin@example.com\nexample.com",
+      "help": "Eine Adresse oder Domain pro Zeile. E-Mails von VIPs stehen oben. Die Übersicht wird direkt in den Posteingang gelegt, nicht als E-Mail versendet, und Tage ohne Neues werden übersprungen.",
+      "save": "Speichern",
+      "saved": "Gespeichert. Die nächste Übersicht folgt diesen Einstellungen.",
+      "loading": "Wird geladen...",
+      "proOnly": "Die Morgenübersicht ist Teil von Pro.",
+      "upgrade": "Tarife ansehen",
+      "roleNote": "Nur Eigentümer und Administratoren des Arbeitsbereichs können die Morgenübersicht ändern.",
+      "lastSent": "Letzte Übersicht: {when}",
+      "paused": "Nach wiederholten Fehlern pausiert. Prüfen Sie die Verbindung des Posteingangs und speichern Sie, um fortzufahren.",
+      "errors": {
+        "load": "Die Einstellungen der Morgenübersicht konnten nicht geladen werden.",
+        "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "unavailable": "Die Morgenübersicht ist noch nicht verfügbar.",
+        "pro_feature_required": "Die Morgenübersicht ist Teil von Pro.",
+        "invalid_vip": "Keine Adresse oder Domain: {detail}",
+        "too_many_vips": "Bis zu {max} VIP-Absender.",
+        "inbox_required": "Wählen Sie den Posteingang, in den die Übersicht gelegt wird.",
+        "invalid_inbox": "Dieser Posteingang gehört nicht zu diesem Arbeitsbereich.",
+        "invalid_timezone": "Wählen Sie eine Zeitzone aus der Liste."
+      }
     }
   },
   "billing": {

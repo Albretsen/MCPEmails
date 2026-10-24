@@ -2013,6 +2013,39 @@ CREATE OR REPLACE TRIGGER reminders_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============================================================
+-- TABLE: morning_briefs  (Pro daily brief settings and schedule; hosted
+-- migration 20261024235400). The hosted pg_cron job that drives
+-- /morning-brief-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every 5 minutes).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.morning_briefs (
+  workspace_id         uuid PRIMARY KEY REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  enabled              boolean NOT NULL DEFAULT false,
+  hour                 smallint NOT NULL DEFAULT 7 CHECK (hour BETWEEN 0 AND 23),
+  timezone             text NOT NULL DEFAULT 'UTC',
+  locale               text NOT NULL DEFAULT 'en' CHECK (locale IN ('en', 'nb', 'fr', 'es', 'de')),
+  inbox_id             uuid REFERENCES public.inboxes(id) ON DELETE SET NULL,
+  vip_senders          text[] NOT NULL DEFAULT '{}',
+  next_due_at          timestamptz,
+  last_local_date      date,
+  last_sent_at         timestamptz,
+  last_run_at          timestamptz,
+  last_outcome         text,
+  last_error_code      text,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  paused_at            timestamptz,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS morning_briefs_due_idx ON public.morning_briefs (next_due_at NULLS FIRST)
+  WHERE enabled AND paused_at IS NULL AND claimed_at IS NULL;
+CREATE OR REPLACE TRIGGER morning_briefs_updated_at
+  BEFORE UPDATE ON public.morning_briefs
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- ============================================================
 -- Grants, service_role bypasses RLS and owns the data plane.
 -- ============================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;

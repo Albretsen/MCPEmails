@@ -576,6 +576,37 @@
       "deleting": "Eliminando…",
       "errFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
       "networkError": "Error de red. Comprueba tu conexión e inténtalo de nuevo."
+    },
+    "morningBrief": {
+      "title": "Resumen matinal",
+      "sub": "Un resumen diario del correo nuevo, los remitentes VIP, los seguimientos y los envíos programados, en una de tus bandejas de entrada.",
+      "enable": "Dejar un resumen matinal en mi bandeja de entrada cada día",
+      "hour": "Hora",
+      "timezone": "Zona horaria",
+      "inbox": "Entregar en",
+      "inboxPlaceholder": "Elige una bandeja de entrada",
+      "vip": "Remitentes VIP",
+      "vipPlaceholder": "jefa@example.com\nexample.com",
+      "help": "Una dirección o un dominio por línea. El correo de los VIP aparece primero. El resumen se añade directamente a la bandeja de entrada, no se envía como correo, y los días sin novedades se omiten.",
+      "save": "Guardar",
+      "saved": "Guardado. El próximo resumen seguirá estos ajustes.",
+      "loading": "Cargando...",
+      "proOnly": "El resumen matinal forma parte de Pro.",
+      "upgrade": "Ver planes",
+      "roleNote": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el resumen matinal.",
+      "lastSent": "Último resumen: {when}",
+      "paused": "En pausa tras varios fallos. Revisa la conexión de la bandeja de entrada y guarda para reanudar.",
+      "errors": {
+        "load": "No se pudieron cargar los ajustes del resumen matinal.",
+        "save": "No se pudo guardar. Inténtalo de nuevo.",
+        "unavailable": "El resumen matinal aún no está disponible.",
+        "pro_feature_required": "El resumen matinal forma parte de Pro.",
+        "invalid_vip": "No es una dirección ni un dominio: {detail}",
+        "too_many_vips": "Hasta {max} remitentes VIP.",
+        "inbox_required": "Elige la bandeja de entrada donde dejar el resumen.",
+        "invalid_inbox": "Esa bandeja de entrada no pertenece a este espacio de trabajo.",
+        "invalid_timezone": "Elige una zona horaria de la lista."
+      }
     }
   },
   "billing": {

@@ -525,6 +525,23 @@ import {
   SNOOZE_MIN_LEAD_MS,
   statusesForFilter,
 } from "./reminders-engine.ts";
+import {
+  BRIEF_FROM_NAME,
+  BRIEF_LIST_LIMIT,
+  BRIEF_MAX_INBOXES,
+  BRIEF_MAX_SECTION_ITEMS,
+  type BriefData,
+  type BriefInboxData,
+  type BriefReminderItem,
+  BriefSkip,
+  type BuiltBrief,
+  type CollectWindow,
+  type MorningBriefDeps,
+  type MorningBriefRow,
+  type MorningBriefStore,
+  type MorningBriefUpdate,
+  runMorningBriefDispatch,
+} from "./morning-brief-engine.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
   type ActionReservationRow,
@@ -37291,6 +37308,321 @@ async function handleRemindersDispatch(): Promise<Response> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Morning brief (Pro feature `morning_brief`)
+//
+// morning-brief-engine.ts holds the schedule, the content builder and the
+// dispatcher loop. What lives here is the wiring: the Supabase store, the
+// reads the brief shows, and the delivery.
+//
+// Entry point: POST /morning-brief-dispatch (path suffix), called every 5
+// minutes by pg_cron -> dispatch_morning_briefs() -> net.http_post, guarded by
+// X-Dispatch-Secret like the other dispatch routes. Migration
+// 20261024235400_morning_briefs.sql.
+//
+// Delivery is an INSERT into the owner's chosen inbox, never a send: IMAP
+// APPEND to INBOX without \Seen, Gmail users.messages.insert with INBOX and
+// UNREAD, Graph POST /me/mailFolders/inbox/messages with the unsent flag off.
+// Nothing here writes action_usage or activity_log, so a brief is never
+// metered. Gate: workspace_pro_features + decideProFeatureAccess per row.
+// ---------------------------------------------------------------------------
+
+const MORNING_BRIEF_COLUMNS =
+  "workspace_id, enabled, hour, timezone, locale, inbox_id, vip_senders, next_due_at, " +
+  "last_local_date, last_sent_at, consecutive_failures";
+
+const morningBriefStore: MorningBriefStore = {
+  async releaseStaleLeases(cutoffIso) {
+    const { data, error } = await supabase
+      .from("morning_briefs")
+      .update({ claimed_at: null, lease_token: null })
+      .not("claimed_at", "is", null)
+      .lt("claimed_at", cutoffIso)
+      .select("workspace_id");
+    if (error) throw new Error(error.message);
+    return Array.isArray(data) ? data.length : 0;
+  },
+  async listDue(nowIso, limit) {
+    // The predicate of dispatch_morning_briefs() (20261024235400). Keep in step.
+    const { data, error } = await supabase
+      .from("morning_briefs")
+      .select(MORNING_BRIEF_COLUMNS)
+      .eq("enabled", true)
+      .is("paused_at", null)
+      .is("claimed_at", null)
+      .or(`next_due_at.is.null,next_due_at.lte.${nowIso}`)
+      .order("next_due_at", { ascending: true, nullsFirst: true })
+      .limit(limit);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as MorningBriefRow[];
+  },
+  async claim(workspaceId, nowIso, token) {
+    // The CAS: every predicate again, so a row taken, paused or turned off in
+    // between is lost, never doubled.
+    const { data, error } = await supabase
+      .from("morning_briefs")
+      .update({ claimed_at: nowIso, lease_token: token })
+      .eq("workspace_id", workspaceId)
+      .eq("enabled", true)
+      .is("paused_at", null)
+      .is("claimed_at", null)
+      .select(MORNING_BRIEF_COLUMNS);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as unknown as MorningBriefRow[];
+    return rows[0] ?? null;
+  },
+  async release(workspaceId, token, update) {
+    const clean = Object.fromEntries(Object.entries(update as MorningBriefUpdate).filter(([, v]) => v !== undefined));
+    const { error } = await supabase
+      .from("morning_briefs")
+      .update({ ...clean, claimed_at: null, lease_token: null })
+      .eq("workspace_id", workspaceId)
+      .eq("lease_token", token);
+    if (error) throw new Error(error.message);
+  },
+};
+
+/** The newest INBOX messages of one inbox, through the same list code email_list uses. */
+async function briefListInbox(inbox: InboxRow): Promise<EmailSummary[]> {
+  switch (inbox.provider) {
+    case "gmail":
+      return (await listGmailMessages(inbox, "INBOX", BRIEF_LIST_LIMIT, 0, undefined)).messages;
+    case "outlook":
+      return (await listOutlookMessages(inbox, "INBOX", BRIEF_LIST_LIMIT, 0, undefined)).messages;
+    default:
+      return (await listImapMessages(inbox, "INBOX", BRIEF_LIST_LIMIT, 0, undefined, null)).messages;
+  }
+}
+
+/** New mail of one inbox since `sinceMs`, without the briefs we put there ourselves. */
+async function briefInboxData(inboxId: string, address: string, w: CollectWindow): Promise<BriefInboxData> {
+  const inbox = await loadInboxRowForTriage(inboxId);
+  if (!inbox) return { address, count: 0, more: false, messages: [], error: "inbox_unavailable" };
+  try {
+    const listed = await briefListInbox(inbox);
+    const own = inbox.email_address.toLowerCase();
+    const fresh = listed
+      .filter((m) => Date.parse(m.date) > w.sinceMs)
+      .filter((m) => !(m.from?.name === BRIEF_FROM_NAME && (m.from?.email ?? "").toLowerCase() === own));
+    fresh.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+    return {
+      address: inbox.email_address,
+      count: fresh.length,
+      // A full page that is all new: there may be more than we listed.
+      more: listed.length >= BRIEF_LIST_LIMIT && fresh.length === listed.length,
+      messages: fresh.map((m) => ({
+        fromName: m.from?.name ?? "",
+        fromEmail: m.from?.email ?? "",
+        subject: m.subject ?? "",
+        date: m.date,
+      })),
+    };
+  } catch (error) {
+    console.warn("[morning-brief] inbox_read_failed", { inbox_id: inboxId, error: providerErrorCode(error) });
+    return { address: inbox.email_address, count: 0, more: false, messages: [], error: providerErrorCode(error) };
+  }
+}
+
+async function briefCollect(row: MorningBriefRow, w: CollectWindow): Promise<BriefData> {
+  const { data: inboxRows, error } = await supabase
+    .from("inboxes")
+    .select("id, email_address")
+    .eq("workspace_id", row.workspace_id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(BRIEF_MAX_INBOXES);
+  if (error) throw new Error("db_error");
+  const list = (inboxRows ?? []) as { id: string; email_address: string }[];
+  const addressOf = new Map(list.map((i) => [i.id, i.email_address]));
+
+  // One inbox at a time: at most one provider connection per brief.
+  const inboxes: BriefInboxData[] = [];
+  for (const i of list) inboxes.push(await briefInboxData(i.id, i.email_address, w));
+
+  const nowIso = new Date(w.nowMs).toISOString();
+  const endIso = new Date(w.endMs).toISOString();
+  const [followRes, snoozeRes, schedRes] = await Promise.all([
+    supabase
+      .from("reminders")
+      .select("id, inbox_id, due_at, summary")
+      .eq("workspace_id", row.workspace_id)
+      .eq("kind", "follow_up")
+      .eq("status", "due")
+      .order("due_at", { ascending: true })
+      .limit(BRIEF_MAX_SECTION_ITEMS),
+    supabase
+      .from("reminders")
+      .select("id, inbox_id, due_at, summary")
+      .eq("workspace_id", row.workspace_id)
+      .eq("kind", "snooze")
+      .eq("status", "pending")
+      .gte("due_at", nowIso)
+      .lt("due_at", endIso)
+      .order("due_at", { ascending: true })
+      .limit(BRIEF_MAX_SECTION_ITEMS),
+    supabase
+      .from("scheduled_sends")
+      .select("id, inbox_id, payload, payload_encrypted, send_at")
+      .eq("workspace_id", row.workspace_id)
+      .eq("status", "pending")
+      .lt("send_at", endIso)
+      .order("send_at", { ascending: true })
+      .limit(BRIEF_MAX_SECTION_ITEMS),
+  ]);
+  if (followRes.error || snoozeRes.error || schedRes.error) throw new Error("db_error");
+
+  const reminderItems = async (
+    rows: unknown[],
+    pick: (s: ReminderSummary) => string[],
+  ): Promise<BriefReminderItem[]> => {
+    const out: BriefReminderItem[] = [];
+    for (const r of rows as { inbox_id: string; due_at: string; summary: unknown }[]) {
+      let summary: ReminderSummary = { subject: "", to: [], from: null };
+      try {
+        if (r.summary) summary = await decryptReminderJson<ReminderSummary>(r.summary);
+      } catch { /* shown without a subject */ }
+      out.push({ subject: summary.subject ?? "", people: pick(summary), at: r.due_at, inbox: addressOf.get(r.inbox_id) ?? "" });
+    }
+    return out;
+  };
+  const followUps = await reminderItems(followRes.data ?? [], (s) => s.to ?? []);
+  const snoozes = await reminderItems(snoozeRes.data ?? [], (s) => (s.from ? [s.from] : []));
+
+  const scheduled: BriefReminderItem[] = [];
+  for (
+    const r of (schedRes.data ?? []) as {
+      inbox_id: string;
+      payload: unknown;
+      payload_encrypted?: boolean | null;
+      send_at: string;
+    }[]
+  ) {
+    let payload: Record<string, unknown> = {};
+    try {
+      payload = await resolveScheduledPayload(r);
+    } catch { /* shown without a subject */ }
+    const to = Array.isArray(payload["to"])
+      ? (payload["to"] as unknown[]).filter((x): x is string => typeof x === "string")
+      : [];
+    scheduled.push({
+      subject: typeof payload["subject"] === "string" ? payload["subject"] as string : "",
+      people: to,
+      at: r.send_at,
+      inbox: addressOf.get(r.inbox_id) ?? "",
+    });
+  }
+  return { inboxes, followUps, snoozes, scheduled };
+}
+
+/** Put the brief into the target inbox. Not a send; nothing leaves the mailbox. */
+async function briefDeliver(row: MorningBriefRow, brief: BuiltBrief): Promise<void> {
+  if (!row.inbox_id) throw new BriefSkip("target_inbox_missing");
+  const inbox = await loadInboxRowForTriage(row.inbox_id);
+  if (!inbox || inbox.workspace_id !== row.workspace_id) throw new BriefSkip("target_inbox_unavailable");
+  const html = sanitizeEmailHtml(brief.html);
+  const mime = () =>
+    buildMimeMessage({
+      from: formatMailbox(BRIEF_FROM_NAME, inbox.email_address),
+      to: [inbox.email_address],
+      subject: brief.subject,
+      textBody: brief.text,
+      htmlBody: html,
+      messageId: crypto.randomUUID(),
+    });
+
+  if (inbox.provider === "gmail") {
+    const token = await withFreshGmailToken(inbox);
+    const resp = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages?internalDateSource=receivedTime",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ raw: mimeMessageToBase64url(mime()), labelIds: ["INBOX", "UNREAD"] }),
+      },
+    );
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (!resp.ok) throw new Error(`Gmail messages.insert error ${resp.status}`);
+    await resp.body?.cancel().catch(() => {});
+    return;
+  }
+
+  if (inbox.provider === "outlook") {
+    const token = await withFreshOutlookToken(inbox);
+    const resp = await graphFetch(token, "/me/mailFolders/inbox/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject: brief.subject,
+        body: { contentType: "HTML", content: html },
+        from: { emailAddress: { name: BRIEF_FROM_NAME, address: inbox.email_address } },
+        toRecipients: [{ emailAddress: { address: inbox.email_address } }],
+        isRead: false,
+        // PR_MESSAGE_FLAGS without MSGFLAG_UNSENT: an arrived message, not a draft.
+        singleValueExtendedProperties: [{ id: "Integer 0x0E07", value: "0" }],
+      }),
+    });
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (!resp.ok) throw new Error(`Outlook create message error ${resp.status}`);
+    await resp.body?.cancel().catch(() => {});
+    return;
+  }
+
+  const session = imapSessionFor(inbox);
+  if (!session) throw new BriefSkip("provider_unsupported");
+  try {
+    const client = await session.client();
+    // No flags: unseen, so it shows as new mail.
+    const result = await client.appendWithFlags("INBOX", mime(), []);
+    if (!result.ok) throw new Error("imap_append_refused");
+  } finally {
+    await session.close().catch(() => {});
+  }
+}
+
+function morningBriefDeps(): MorningBriefDeps {
+  return {
+    store: morningBriefStore,
+    async access(workspaceId) {
+      // No ApiKeyRow here: the gate's RPC directly, failing closed.
+      const { data, error } = await supabase.rpc("workspace_pro_features", { p_workspace_id: workspaceId });
+      if (error) return { allowed: false };
+      const r = (Array.isArray(data) ? data[0] : data) as
+        | { plan?: unknown; rollout_enabled?: unknown; public_launch?: unknown }
+        | null
+        | undefined;
+      if (!r) return { allowed: false };
+      return decideProFeatureAccess({
+        plan: typeof r.plan === "string" ? r.plan : null,
+        rolloutEnabled: r.rollout_enabled === true,
+        publicLaunch: r.public_launch === true,
+      });
+    },
+    collect: briefCollect,
+    deliver: briefDeliver,
+    appUrl: APP_URL,
+    errorCode(error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message === "db_error" || message === "imap_append_refused") return message;
+      return providerErrorCode(error);
+    },
+    newToken: () => crypto.randomUUID(),
+  };
+}
+
+async function handleMorningBriefDispatch(): Promise<Response> {
+  try {
+    const summary = await runMorningBriefDispatch(morningBriefDeps());
+    console.log("[morning-brief-dispatch] done", summary);
+    return new Response(JSON.stringify(summary), { status: 200, headers: { "Content-Type": "application/json" } });
+  } catch (error) {
+    console.error("[morning-brief-dispatch] failed", error instanceof Error ? error.message.slice(0, 200) : "unknown");
+    return new Response(JSON.stringify({ error: "dispatch_failed" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 // Opens the per-request round-trip counter (requestMeterStore) and the
 // per-request IMAP timing record (imapTimingStore), and does nothing else. A
 // named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
@@ -37408,6 +37740,28 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       );
     }
     return handleRemindersDispatch();
+  }
+
+  // ── Morning brief dispatcher route (Pro) ──────────────────────────────────
+  // pg_cron every 5 minutes via dispatch_morning_briefs(), same guard and
+  // secret as the routes above. Body ignored. "/morning-brief-dispatch" does
+  // not end in "/dispatch" (hyphen, not slash). Migration 20261024235400.
+  if (reqUrl.pathname.endsWith("/morning-brief-dispatch")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (!dispatchSecret || !providedSecret || providedSecret !== dispatchSecret) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return handleMorningBriefDispatch();
   }
 
   // ── Automations preview route ─────────────────────────────────────────────

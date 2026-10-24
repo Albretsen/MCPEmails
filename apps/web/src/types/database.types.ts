@@ -2551,6 +2551,87 @@ export type Database = {
           },
         ]
       }
+      morning_briefs: {
+        Row: {
+          claimed_at: string | null
+          consecutive_failures: number
+          created_at: string
+          enabled: boolean
+          hour: number
+          inbox_id: string | null
+          last_error_code: string | null
+          last_local_date: string | null
+          last_outcome: string | null
+          last_run_at: string | null
+          last_sent_at: string | null
+          lease_token: string | null
+          locale: string
+          next_due_at: string | null
+          paused_at: string | null
+          timezone: string
+          updated_at: string
+          vip_senders: string[]
+          workspace_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          inbox_id?: string | null
+          last_error_code?: string | null
+          last_local_date?: string | null
+          last_outcome?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          lease_token?: string | null
+          locale?: string
+          next_due_at?: string | null
+          paused_at?: string | null
+          timezone?: string
+          updated_at?: string
+          vip_senders?: string[]
+          workspace_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          inbox_id?: string | null
+          last_error_code?: string | null
+          last_local_date?: string | null
+          last_outcome?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          lease_token?: string | null
+          locale?: string
+          next_due_at?: string | null
+          paused_at?: string | null
+          timezone?: string
+          updated_at?: string
+          vip_senders?: string[]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "morning_briefs_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "morning_briefs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       oauth_auth_codes: {
         Row: {
           client_id: string
