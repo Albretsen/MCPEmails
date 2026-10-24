@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type {
   Envelope,
   SubscriptionResult,
@@ -77,9 +77,32 @@ export function SubscriptionPlan(props: Props) {
   );
 }
 
+/**
+ * Suggested senders first, then the rest, each group by message volume. The
+ * server orders by volume alone, which put a busy sender the user reads (and
+ * the plan leaves unticked) above everything it actually proposes. Array sort is
+ * stable, so equal counts keep the server's order.
+ */
+export function orderSenders(list: SubscriptionSender[]): SubscriptionSender[] {
+  return [...list].sort(
+    (a, b) =>
+      +(b.suggested === true) - +(a.suggested === true) ||
+      num(b.message_count) - num(a.message_count),
+  );
+}
+
 function Picker(props: Props) {
   const { env, sub, actions } = props;
-  const senders: SubscriptionSender[] = Array.isArray(sub.senders) ? sub.senders : [];
+  const [senders] = useState<SubscriptionSender[]>(() =>
+    orderSenders(Array.isArray(sub.senders) ? sub.senders : []),
+  );
+  // The label counts down from the plan's own expires_at; re-read it every
+  // 30 s so "expires in N min" stays true and the card locks when it lapses.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
   const [ticked, setTicked] = useState<Set<string>>(
     () => new Set(senders.filter((s) => s.suggested === true).map((s) => s.sender_key)),
   );
@@ -152,6 +175,7 @@ function Picker(props: Props) {
           const unverified = s.unsafe_reason === "auth_unverified";
           const unsafe = s.safe === false && !unverified;
           const why = UNSAFE[s.unsafe_reason ?? ""] ?? "not verified";
+          const name = s.display_name || s.from_address || "(unknown sender)";
           return (
             <li key={s.sender_key}>
               <input
@@ -162,9 +186,9 @@ function Picker(props: Props) {
                 onChange={(e) => toggle(s.sender_key, (e.currentTarget as HTMLInputElement).checked)}
               />
               <label for={id}>
-                <span class="sub-name">{s.display_name || s.from_address || "(unknown sender)"}</span>{" "}
-                <span class="muted">{s.domain}</span>
+                <span class="sub-name" title={name}>{name}</span>
                 <span class="sub-meta">
+                  {s.domain && `${s.domain}, `}
                   {fmt(s.message_count)} {plural(num(s.message_count), "message", "messages")},{" "}
                   {Math.round(num(s.read_share) * 100)}% read
                   {unsafe ? `. Not safe to unsubscribe (${why}): archive only.` : unverified ? `. ${UNSAFE.auth_unverified}.` : ""}
@@ -246,7 +270,9 @@ function Results(props: Props & { results: SubscriptionResult[] }) {
             <li key={r.sender_key} data-status={r.status}>
               <span class="dot" data-tone={tone} aria-hidden="true" />
               <span class="grow">
-                <span class="sub-name">{r.display_name || "(unknown sender)"}</span>
+                <span class="sub-name" title={r.display_name}>
+                  {r.display_name || "(unknown sender)"}
+                </span>
                 <span class="sub-meta">
                   {label}
                   {extra ? `. ${extra}` : ""}

@@ -57,6 +57,9 @@ const MARKETING_PATHS = new Set([
   '/email-mcp-servers-compared',
   '/for/founders',
   '/for/business',
+  // The developer landing page. Its guide lives under /docs/, which the
+  // prefix rule below already covers.
+  '/developers',
   // Help & support. The route itself 404s anyone the release gate does not
   // admit, so listing it here exposes nothing; without it /help never reaches
   // the [locale] route and 404s even for staff. Stays at release.
@@ -65,6 +68,9 @@ const MARKETING_PATHS = new Set([
   // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
   '/cancel',
   '/withdrawal',
+  // The optional cancel reason, opened from the post-cancel email by a signed
+  // link (no login). noindex; the page itself never writes on GET.
+  '/billing/feedback',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

@@ -24,6 +24,11 @@ import { runDispatch } from "./push/dispatch.ts";
 import { createWatchMail } from "./push/mail.ts";
 import { supabasePushStore } from "./push/store.ts";
 import { createPushSender, vapidFromEnv } from "./push/webpush.ts";
+import type { WebhookDeps } from "./webhooks/deliver.ts";
+import { createDisabledNotifier } from "./webhooks/notify-disabled.ts";
+import { createSecretDecryptor } from "./webhooks/secret.ts";
+import { supabaseWebhookStore } from "./webhooks/store.ts";
+import { createPinnedTransport } from "./webhooks/transport.ts";
 import { RateLimiter } from "./rate-limit.ts";
 import { loadMcpSeam } from "./seam.ts";
 import { recycleSockets, serveSocket } from "./ws.ts";
@@ -105,6 +110,21 @@ async function start(): Promise<Started> {
   const pushStore = supabasePushStore(mcp.serviceRoleClient);
   const vapid = vapidFromEnv((name) => Deno.env.get(name));
   const pushSender = vapid ? createPushSender({ vapid }) : null;
+  // Webhooks for new mail (webhooks/deliver.ts), delivered from the same
+  // dispatch pass. Signing secrets are decrypted with ENCRYPTION_KEY, the key
+  // the tool layer already uses for inbox credentials.
+  const watchLog = (event: string, fields: Record<string, unknown>) => console.log(`[client-api] ${event}`, fields);
+  const webhooks: WebhookDeps = {
+    store: supabaseWebhookStore(mcp.serviceRoleClient),
+    transport: createPinnedTransport(),
+    decrypt: createSecretDecryptor(Deno.env.get("ENCRYPTION_KEY")),
+    log: watchLog,
+    onEndpointDisabled: createDisabledNotifier({
+      secret: Deno.env.get("DISPATCH_SECRET"),
+      url: Deno.env.get("WEBHOOK_DISABLED_NOTIFY_URL"),
+      log: watchLog,
+    }),
+  };
   return {
     handler: createApp({
       mcp,
@@ -139,7 +159,8 @@ async function start(): Promise<Started> {
                 void store.markLoginRefused(inboxId, workspaceId, Date.now()).catch(() => {});
               },
             }),
-            log: (event, fields) => console.log(`[client-api] ${event}`, fields),
+            webhooks,
+            log: watchLog,
           }),
       },
     }),

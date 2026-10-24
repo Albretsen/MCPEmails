@@ -108,6 +108,8 @@ const CTA_FILES = [
   '../../components/marketing/BlogPostClient.jsx',
   '../../app/[locale]/self-hosting/page.js',
   '../../app/[locale]/docs/read-only-access/page.js',
+  '../../app/[locale]/docs/api/page.js',
+  '../../app/[locale]/developers/page.js',
 ];
 
 test('no localized marketing CTA links to a bare /signup or /login', () => {
