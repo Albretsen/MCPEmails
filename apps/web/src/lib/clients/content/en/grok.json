@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Connect Email to Grok: Custom MCP Connector Setup",
+    "description": "Add a real inbox to Grok as a custom MCP connector. Paste one URL on grok.com, sign in with OAuth, then read, search, send and schedule mail. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Grok + email",
+    "titleLine1": "Connect your inbox to Grok",
+    "titleLine2": "as a custom MCP connector",
+    "lead": "Add one URL under Connectors on grok.com and Grok can read, search, send, reply, forward, schedule and organize mail across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Go to grok.com/connectors, click New Connector, select Custom, paste https://mcpemails.com/api/mcp as the MCP server URL, then sign in to MCPEmails when Grok asks and approve the scopes. On Grok Business and Enterprise, a team admin adds the server in the cloud console first."
+  },
+  "method": {
+    "title": "How Grok connects: OAuth, no API key",
+    "body": "Grok runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open Connectors on grok.com",
+      "p": "Go to <code>grok.com/connectors</code> while signed in to Grok."
+    },
+    {
+      "h": "Add a custom connector",
+      "p": "Click <b>New Connector</b>, then select <b>Custom</b>. Paste <code>https://mcpemails.com/api/mcp</code> as the MCP server URL."
+    },
+    {
+      "h": "Sign in and approve",
+      "p": "Complete the authentication Grok asks for: it sends you to MCPEmails, where you sign in and approve the scopes you want Grok to hold. Grok then discovers the tools the server exposes."
+    },
+    {
+      "h": "Ask about your mail",
+      "p": "Start a chat and ask something like \"which inboxes do I have?\" or \"summarize my unread mail\". Grok uses a connector's tools when your question relates to it."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "On Business and Enterprise, an admin adds it first",
+      "p": "On Grok Business and Enterprise plans, members cannot add the server themselves until a team admin provisions it. The admin signs in to <code>console.x.ai</code>, selects the team, opens <b>Grok Business</b>, <b>Connectors</b>, clicks <b>+ Add Connector</b>, selects <b>Other</b> and enters <code>https://mcpemails.com/api/mcp</code>. That needs Team Read-Write permissions. Each member then connects their own MCPEmails account on <code>grok.com/connectors</code>."
+    },
+    {
+      "h": "Set it up on the web",
+      "p": "xAI documents adding a custom connector only at <code>grok.com/connectors</code>, with no steps for the iOS or Android apps. Add the connector from a browser."
+    },
+    {
+      "h": "Read-only is a real option and often the right first one",
+      "p": "The consent screen lets you hand Grok <code>read:email</code> and <code>search:email</code> alone. That is enough for triage, summarising and finding things, and it removes every irreversible action from the table while you decide how much further you want to go. If you do grant <code>send:email</code>, an inbox owner can turn on human approval so each send waits for a person."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Grok?",
+      "a": "Go to grok.com/connectors, click New Connector, select Custom, paste https://mcpemails.com/api/mcp, then sign in to MCPEmails and approve the scopes. Grok then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Do I need an API key for Grok?",
+      "a": "No. Grok runs the OAuth flow when you add the connector, so nothing secret is pasted into Grok. A bearer key is available for other clients that cannot do that."
+    },
+    {
+      "q": "Is Grok's built-in Gmail connector the same thing?",
+      "a": "No. Grok's built-in Gmail and Outlook connectors reach those two providers. MCPEmails is a custom connector that reaches Outlook, Microsoft 365, Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex and any IMAP mailbox through one connection, with scopes you choose and optional human approval on sends."
+    },
+    {
+      "q": "Which mailboxes can Grok reach this way?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. Grok sees them all through the same connection: it calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Grok send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Grok your real inbox",
+    "sub": "One URL, one sign-in. One inbox free forever, no card required."
+  }
+}

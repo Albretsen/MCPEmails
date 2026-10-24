@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "apps/web/src/lib/clients/content/en/claude.json (shared MCPEmails facts: scopes, limits, storage)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (client_id_metadata_document_supported, dynamic registration, PKCE S256)",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+    "https://support.claude.com/en/articles/13345190-get-started-with-cowork",
+    "https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans",
+    "https://academy.claude.com/tutorials/get-started-in-claude-cowork-in-three-steps",
+    "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Claude Cowork: conector personalizado",
+    "description": "Dale a Claude Cowork una bandeja real. Añade una URL en Customize, Connectors, inicia sesión con OAuth y Cowork podrá leer, buscar, redactar y enviar correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude Cowork + correo",
+    "titleLine1": "Conecta tu bandeja a Claude Cowork",
+    "titleLine2": "y encárgale tareas de correo completas",
+    "lead": "Cowork resuelve una tarea por su cuenta en lugar de responder mensaje a mensaje. Con MCPEmails como conector personalizado, esa tarea puede leer, buscar, redactar, enviar, responder, reenviar, programar y organizar correo en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "En Claude, abre Customize, Connectors, haz clic en + Add y luego en Add custom connector. Pega https://mcpemails.com/api/mcp, pulsa Continue en los ajustes de inicio de sesión, haz clic en Add e inicia sesión con MCPEmails. Después elige Cowork en el cuadro de mensaje y describe la tarea de correo. Cowork requiere un plan de pago de Claude."
+  },
+  "method": {
+    "title": "Cómo se conecta Cowork: OAuth, sin clave de API",
+    "body": "Cowork usa los conectores personalizados de tu cuenta de Claude, y Claude abre la conexión desde la nube de Anthropic, no desde tu ordenador, aunque ejecutes Cowork en la app de escritorio. Claude ejecuta el flujo OAuth estándar de MCP contra este servidor. Por defecto se identifica con su identidad de cliente publicada, y también puede registrarse solo mediante <b>registro dinámico de clientes RFC 7591</b>; aquí se admiten las dos opciones, así que no hay ningún client ID que crear. Se autoriza con <b>código de autorización más PKCE</b> usando S256, no se transmite ningún secreto de cliente y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre la página de conectores",
+      "p": "En Claude para la web o en Claude Desktop, ve a <b>Customize</b> y luego a <b>Connectors</b>. Haz clic en <b>+ Add</b> y después en <b>Add custom connector</b>."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Escribe un nombre, por ejemplo MCPEmails, pega <code>https://mcpemails.com/api/mcp</code> como URL del servidor y haz clic en <b>Continue</b>. Revisa los ajustes de autenticación detectados, deja el cliente OAuth en <b>Use Claude's published identity (Recommended)</b>, haz clic en <b>Continue</b> y luego en <b>Add</b>."
+    },
+    {
+      "h": "Inicia sesión y aprueba los permisos",
+      "p": "Inicia sesión con tu cuenta de MCPEmails cuando Claude te lo pida y aprueba los permisos que quieres que tenga Cowork. No necesitas clave de API."
+    },
+    {
+      "h": "Empieza una tarea en Cowork",
+      "p": "Si tu cuadro de mensaje muestra Chat y Cowork, elige <b>Cowork</b>. Haz clic en el botón <b>+</b>, abre <b>Connectors</b> y comprueba que MCPEmails está activado; luego describe la tarea, por ejemplo \"lista mis bandejas y resume el correo sin leer de hoy\"."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En modo Auto, puede que un envío no espere tu confirmación",
+      "p": "Cowork tiene los modos Manual, Auto y Skip en el selector de modo. En Manual, Claude te pide permitir o denegar cada acción; en Auto, sigue trabajando y una revisión de seguridad bloquea las acciones que considera inseguras. Auto es el predeterminado en Pro, Max y Team, y Manual en Enterprise. En el caso del correo, eso significa que un envío puede salir a mitad de la tarea sin preguntarte. Si no es lo que quieres, ejecuta las tareas de correo en Manual, deja <code>send:email</code> fuera de esta conexión y concede <code>manage:drafts</code> en su lugar, o activa la aprobación humana en el panel de MCPEmails para que cada envío espere a una persona."
+    },
+    {
+      "h": "En Team y Enterprise, un propietario añade el conector",
+      "p": "Un Owner o Primary Owner añade el conector personalizado para la organización: Organization settings, Connectors, haz clic en Add, pasa el cursor por Custom y elige Web, y luego introduce la URL. Después, los miembros lo encuentran en Customize, Connectors y hacen clic en Connect. Los propietarios pueden poner cada herramienta en Always allow, Needs approval o Blocked dentro de Tool permissions, y los usuarios no pueden cambiarlo. En Cowork, las herramientas de escritura también piden aprobación en cada tarea, salvo que un propietario active la opción Always allow en los ajustes de Cowork de la organización."
+    },
+    {
+      "h": "Un conector para todas las versiones de Claude",
+      "p": "Los conectores personalizados se configuran y se gestionan a través de tu cuenta de Claude, y Cowork los administra en la misma página Customize, Connectors que el chat. Un buzón que conectas para Cowork usa la misma conexión que el chat, así que no hay nada que configurar dos veces. La configuración para los chats normales de claude.ai está en la guía específica de Claude."
+    }
+  ],
+  "limits": [
+    "Cowork en sí requiere un plan de pago de Claude (Pro, Max, Team o Enterprise).",
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca inicia una tarea de Cowork por sí solo. Cowork ve el correo cuando una tarea lo pide.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Claude Cowork?",
+      "a": "Ve a Customize, Connectors, haz clic en + Add y luego en Add custom connector. Escribe un nombre, pega https://mcpemails.com/api/mcp, haz clic dos veces en Continue, luego en Add e inicia sesión con MCPEmails. Después elige Cowork en el cuadro de mensaje, comprueba que MCPEmails está activado en el menú Connectors del botón + y describe tu tarea de correo."
+    },
+    {
+      "q": "¿Qué plan de Claude necesito para usar Cowork con el correo?",
+      "a": "Cowork está disponible en los planes de pago: Pro, Max, Team y Enterprise. En Team y Enterprise, un propietario añade el conector personalizado para la organización y luego cada miembro hace clic en Connect para iniciar sesión con su propia cuenta de MCPEmails."
+    },
+    {
+      "q": "¿El conector de Cowork es distinto del que añadí en claude.ai?",
+      "a": "No. Los conectores personalizados pertenecen a tu cuenta de Claude y se gestionan en una única página Customize, Connectors, que también usa Cowork. Si ya añadiste MCPEmails para el chat, Cowork puede usarlo tal cual."
+    },
+    {
+      "q": "¿Necesito una clave de API para Cowork?",
+      "a": "No. Claude ejecuta el inicio de sesión OAuth con este servidor, así que no escribes nada secreto. Hay una clave bearer disponible para otros clientes que no pueden usar OAuth."
+    },
+    {
+      "q": "¿Puede Cowork enviar correo sin que yo lo vea?",
+      "a": "Puede, si tú lo permites. El envío depende del permiso send:email, así que un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera, sea cual sea el modo en que se ejecute Cowork."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a Claude. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Cowork una bandeja real",
+    "sub": "Una URL, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}
