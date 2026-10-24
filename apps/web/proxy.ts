@@ -65,6 +65,9 @@ const MARKETING_PATHS = new Set([
   // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
   '/cancel',
   '/withdrawal',
+  // The optional cancel reason, opened from the post-cancel email by a signed
+  // link (no login). noindex; the page itself never writes on GET.
+  '/billing/feedback',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

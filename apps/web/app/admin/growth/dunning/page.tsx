@@ -64,7 +64,7 @@ const TEMPLATE_WORDS: Record<string, string> = {
   dunning_14: 'Day 14, the last note',
   card_expiry_30: 'Card expires next month',
   card_expiry_7: 'Card expires next week',
-  cancel_ask: 'What stopped working for you?',
+  cancel_ask: 'Cancellation confirmed',
   winback_14: 'Win-back, 14 days after the period ended',
   winback_30: 'Win-back, the last email',
 };
