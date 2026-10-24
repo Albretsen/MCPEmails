@@ -16,6 +16,8 @@
  *   customer.subscription.updated     : sub changed (upgrade/downgrade/renew/status)
  *   customer.subscription.deleted     : sub fully cancelled; revert to free
  *   invoice.payment_failed            : a renewal was declined; start dunning
+ *   invoice.payment_action_required   : the bank wants the renewal approved (SCA /
+ *                                       3DS); start the confirm-the-payment dunning
  *   invoice.payment_succeeded         : a charge landed; STOP any dunning
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
@@ -35,9 +37,12 @@
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
- *   two invoice events do NO entitlement work at all and exist only to start
+ *   invoice events do NO entitlement work at all and exist only to start
  *   and stop email sequences. `invoice.payment_failed` materialises the
- *   four-email dunning sequence into `billing_email_sends`;
+ *   four-email dunning sequence into `billing_email_sends`, and
+ *   `invoice.payment_action_required` (added 2026-10-24) queues the same
+ *   sequence with the decline code forced to `authentication_required`, so the
+ *   emails ask the customer to approve the payment with their bank;
  *   `invoice.payment_succeeded` cancels whatever is still pending for that
  *   invoice, which is the primary guarantee that a "your payment failed" email
  *   never lands after the retry already worked.
@@ -112,6 +117,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
   creditAbandonedCheckout,
@@ -128,7 +134,10 @@ import {
   resolveRecipient,
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
-import type { LifecyclePayload } from '@/lib/email/billing-lifecycle';
+import {
+  CONFIRM_PAYMENT_DECLINE_CODE,
+  type LifecyclePayload,
+} from '@/lib/email/billing-lifecycle';
 import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
 import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
 import {
@@ -388,7 +397,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Exempting it is safe: it writes the plan its own session paid for, and the
   // per-event-id ledger above still makes a redelivery a no-op.
   //
-  // The two `invoice.*` events are exempt for the same reason, and it is not a
+  // The `invoice.*` events are exempt for the same reason, and it is not a
   // theoretical concern: Stripe emits `customer.subscription.updated`
   // (status -> past_due) alongside `invoice.payment_failed` for the same
   // decline, with second-granularity timestamps that can land in either order.
@@ -408,6 +417,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'checkout.session.completed',
     'checkout.session.expired',
     'invoice.payment_failed',
+    'invoice.payment_action_required',
     'invoice.payment_succeeded',
     'charge.refunded',
   ]);
@@ -456,6 +466,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'invoice.payment_failed':
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'invoice.payment_action_required':
+        await handleInvoicePaymentActionRequired(event.data.object as Stripe.Invoice);
         break;
 
       case 'invoice.payment_succeeded':
@@ -692,6 +706,12 @@ async function handleCheckoutSessionCompleted(
   // Credit an abandoned-checkout reminder (or its holdout row) with this
   // purchase, for the holdout comparison. Post-response, never throws.
   after(() => creditAbandonedCheckout(session));
+  // The chat checkout link this session came from, if any: stamp it paid for
+  // the experiment read-out. Post-response and never throws, so it cannot cost
+  // anyone the plan that was just granted above.
+  if (session.metadata?.checkout_link_id) {
+    after(() => markCheckoutLinkComplete(session.metadata?.checkout_link_id));
+  }
 
   const recipient = session.customer_details?.email ?? session.customer_email ?? null;
   if (recipient) {
@@ -1256,9 +1276,49 @@ async function maybeQueueCancellationOnDelete(
  *     fourteen-day sequence on an invoice nothing is going to happen to, this
  *     falls through to the log. See the review notes: this case also means
  *     Smart Retries is off, which is a configuration problem, not an email one.
+ *     EXCEPT for `authentication_required` (SCA / 3DS): the customer's bank
+ *     wants them to approve the charge, no retry can ever do that, and a null
+ *     next_payment_attempt after one attempt is normal there. It is the case
+ *     that needs a human most, and its copy promises no retry, so it is queued.
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  await queueDunningForInvoice(invoice, { eventType: 'invoice.payment_failed' });
+}
+
+/**
+ * invoice.payment_action_required
+ *
+ * The renewal needs the customer to approve it with their bank (EU SCA /
+ * 3DS). Same gates and same sequence as invoice.payment_failed, with the
+ * decline code forced to `authentication_required`, so the emails say
+ * "confirm the payment" instead of "update the card".
+ *
+ * Stripe usually sends invoice.payment_failed for the same invoice too, in
+ * either order. Both key their rows (stripe_customer_id, template,
+ * scope_key = invoice id), and the insert is ON CONFLICT DO NOTHING
+ * (`ignoreDuplicates` in lifecycle-queue.ts), so whichever event lands first
+ * writes the four rows and the second inserts nothing. The second never
+ * overwrites the first one's payload. That is fine in both orders: the
+ * payment_failed for an SCA charge carries `authentication_required` as its
+ * own decline code, so both events normally freeze the same payload.
+ */
+async function handleInvoicePaymentActionRequired(invoice: Stripe.Invoice): Promise<void> {
+  await queueDunningForInvoice(invoice, {
+    eventType: 'invoice.payment_action_required',
+    declineCode: CONFIRM_PAYMENT_DECLINE_CODE,
+  });
+}
+
+/**
+ * The one dunning path behind both invoice events. Every gate described on
+ * handleInvoicePaymentFailed lives here, once.
+ */
+async function queueDunningForInvoice(
+  invoice: Stripe.Invoice,
+  options: { eventType: string; declineCode?: string },
+): Promise<void> {
   if (!lifecycleQueueingEnabled()) return;
+  const tag = [options.eventType, invoice.id] as const;
 
   const customerId =
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
@@ -1266,32 +1326,37 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
 
   const reason = invoice.billing_reason;
   if (reason !== 'subscription_cycle' && reason !== 'subscription_update') {
-    console.log(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: billing_reason=${reason}; not a renewal, no dunning.`,
-    );
+    console.log('[stripe-webhook] %s %s: billing_reason=%s; not a renewal, no dunning.', ...tag, reason);
     return;
   }
   if (invoice.collection_method !== 'charge_automatically') {
     console.log(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: collection_method=${invoice.collection_method}; no card to fix, no dunning.`,
+      '[stripe-webhook] %s %s: collection_method=%s; no card to fix, no dunning.', ...tag, invoice.collection_method,
     );
     return;
   }
   if ((invoice.amount_due ?? 0) <= 0) {
-    console.log(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: amount_due is 0; no dunning.`,
-    );
+    console.log('[stripe-webhook] %s %s: amount_due is 0; no dunning.', ...tag);
     return;
   }
-  // Stripe scheduled no retry and has barely tried. The whole sequence asserts
-  // that "the card gets retried automatically over the next two weeks", so
-  // starting it on an invoice nothing is going to happen to would put a
+
+  // Resolved before the retry guard, because the guard depends on it.
+  const declineCode = options.declineCode ?? (await invoiceDeclineCode(invoice));
+
+  // Stripe scheduled no retry and has barely tried. The ordinary sequence
+  // asserts that "the card gets retried automatically over the next two weeks",
+  // so starting it on an invoice nothing is going to happen to would put a
   // falsehood in four emails. Deliberately narrow: a null next_payment_attempt
   // on a SECOND or later attempt is the normal end of a retry schedule and
-  // still deserves the sequence.
-  if (invoice.next_payment_attempt == null && (invoice.attempt_count ?? 0) <= 1) {
+  // still deserves the sequence. Never applied to a bank approval (SCA): no
+  // retry can approve it, and that copy promises none.
+  if (
+    declineCode !== CONFIRM_PAYMENT_DECLINE_CODE &&
+    invoice.next_payment_attempt == null &&
+    (invoice.attempt_count ?? 0) <= 1
+  ) {
     console.log(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: no retry scheduled after ${invoice.attempt_count ?? 0} attempt(s); no dunning. Check that Smart Retries is enabled.`,
+      '[stripe-webhook] %s %s: no retry scheduled after %d attempt(s); no dunning. Check that Smart Retries is enabled.', ...tag, invoice.attempt_count ?? 0,
     );
     return;
   }
@@ -1306,9 +1371,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
     userId,
   );
   if (!recipient) {
-    console.error(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: no usable recipient; nothing queued.`,
-    );
+    console.error('[stripe-webhook] %s %s: no usable recipient; nothing queued.', ...tag);
     return;
   }
 
@@ -1322,7 +1385,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
     // unresolved price means every email in this sequence names the wrong plan
     // unless the composer is given null, which is what happens here.
     console.error(
-      `[stripe-webhook] invoice.payment_failed ${invoice.id}: could not resolve a plan from price ${priceId ?? 'none'}; queueing without a plan name.`,
+      '[stripe-webhook] %s %s: could not resolve a plan from price %s; queueing without a plan name.', ...tag, priceId ?? 'none',
     );
   }
 
@@ -1330,9 +1393,10 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
     planId: resolved?.plan.id ?? null,
     amountCents: invoice.amount_due ?? null,
     currency: invoice.currency ?? null,
-    declineCode: await invoiceDeclineCode(invoice),
+    declineCode,
     // The one-click "pay this exact invoice" page. Better than the billing
-    // portal for a customer whose only problem is that one charge.
+    // portal for a customer whose only problem is that one charge, and for a
+    // bank approval it is the page that runs the 3DS challenge.
     hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
     grandfathered: await isGrandfathered(db, userId),
   };

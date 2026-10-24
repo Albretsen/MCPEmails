@@ -134,6 +134,9 @@ Deno.test("a dashboard key is still filtered to exactly the tools its scopes all
     "folder",
     "signature_get",
     "contact_search",
+    // In the scope-filtered registry list; tools/list then drops it for a
+    // workspace without subscription_cleanup_enabled (handleToolsList).
+    "subscriptions_scan",
   ]);
   for (const forbidden of ["email_compose", "email_delete", "draft", "schedule", "automation"]) {
     assert(!listed.includes(forbidden), `a read-only dashboard key must not see ${forbidden}`);
@@ -482,6 +485,12 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     // Same scope as the two above: it changes how a draft is DISPLAYED, which
     // cannot sensibly be harder to do than rewriting the draft's whole body.
     "draft_editor_hide": ["manage:drafts"],
+    // Subscription cleanup (2026-10-24). The scan only reads; the cleanup
+    // moves mail (the backlog step), so it takes the move scope. Drafting a
+    // mailto unsubscribe additionally needs manage:drafts, checked inside the
+    // handler (a key without it gets the mailto link back instead).
+    "subscriptions_scan": ["read:email"],
+    "subscriptions_cleanup": ["manage:folders"],
   };
   const actual: Record<string, string[]> = {};
   for (const tool of TOOL_REGISTRY) {
@@ -496,4 +505,36 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     }
   }
   assertEquals(actual, expected);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. The unknown-tool error does not leak rollout-gated tools
+//
+// `available_tools` on the -32602 answer is "the same list tools/list gave
+// this credential". That includes the subscription rollout filter: a
+// workspace without subscription_cleanup_enabled (every workspace in
+// introspection mode, which has no database) must not learn those names here.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("an unknown tool's available_tools omits the subscription tools when the workspace is not rolled out", async () => {
+  for (const key of [oauthToken(["read:email", "manage:folders"]), dashboardKey(["read:email", "manage:folders"])]) {
+    const response = await handleToolsCall(
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "no_such_tool_here", arguments: {} },
+      },
+      1,
+      key,
+      NO_REQUEST_CONTEXT,
+    ) as CallResponse;
+    assertEquals(response.error?.code, -32602);
+    const available = response.error?.data?.available_tools as string[];
+    assert(Array.isArray(available) && available.includes("inbox_list"), JSON.stringify(response));
+    assert(!available.includes("subscriptions_scan"), "subscriptions_scan leaked");
+    assert(!available.includes("subscriptions_cleanup"), "subscriptions_cleanup leaked");
+    // The listing without the filter would have named them.
+    assert(names(toolsForListing(key)).includes("subscriptions_scan"));
+  }
 });

@@ -1,7 +1,7 @@
 /**
  * The 3-month Personal pass: one payment, Personal for exactly three calendar
  * months, nothing renews. Plan: Documents/plans/three-month-pass-20261024.md
- * (owner's checkout, not in git). Schema: 20261024170000_personal_pass.sql.
+ * (owner's checkout, not in git). Schema: 20261024230000_personal_pass.sql.
  *
  * EXPORTED API (the dashboard, emails and checkout build on these):
  *
@@ -51,6 +51,8 @@ import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-fun
 import { liftPlanLimitPauses, workspacesEnteringPaidPlan } from '@/lib/billing/plan-limit-pauses';
 
 type Db = SupabaseClient<Database>;
+/** Reads need only `from`, so the checkout core's narrowed client fits. */
+type ReadDb = Pick<Db, 'from'>;
 
 // ---------------------------------------------------------------------------
 // Kill switch
@@ -191,7 +193,7 @@ export interface ActivePass {
 }
 
 /**
- * `public.user_passes` exactly as 20261024170000_personal_pass.sql declares it,
+ * `public.user_passes` exactly as 20261024230000_personal_pass.sql declares it,
  * in the generator's shape. Merged into the generated public schema below, so
  * every other table keeps its generated types and this one is checked against
  * this declaration until the regenerated types carry it (the two then agree).
@@ -244,7 +246,7 @@ type PassSchema = Database['public'] & {
  * TYPING in the header. The client is the same object, typed with the
  * generated schema plus UserPassesTable.
  */
-function passTable(db: Db) {
+function passTable(db: ReadDb) {
   return (db as unknown as SupabaseClient<Database, 'public', 'public', PassSchema>).from('user_passes');
 }
 
@@ -260,7 +262,7 @@ function logMissingTableOnce(): void {
   if (missingTableLogged) return;
   missingTableLogged = true;
   console.error(
-    '[pass] public.user_passes does not exist yet (migration 20261024170000 not applied); treating every user as holding no pass.',
+    '[pass] public.user_passes does not exist yet (migration 20261024230000 not applied); treating every user as holding no pass.',
   );
 }
 
@@ -275,7 +277,7 @@ function covers(pass: PassRow, now: Date): boolean {
  * start first. `null` when the table does not exist. Throws on any other read
  * error, so a caller can decide whether that is fatal.
  */
-async function readLivePasses(db: Db, userId: string, now: Date): Promise<PassRow[] | null> {
+async function readLivePasses(db: ReadDb, userId: string, now: Date): Promise<PassRow[] | null> {
   const { data, error } = await passTable(db)
     .select(PASS_COLUMNS)
     .eq('user_id', userId)
@@ -319,7 +321,7 @@ export function activeFromLive(live: readonly PassRow[], now: Date = new Date())
  * projected away on a transient failure.
  */
 export async function getActivePass(
-  db: Db,
+  db: ReadDb,
   userId: string,
   options: { strict?: boolean; now?: Date } = {},
 ): Promise<ActivePass | null> {

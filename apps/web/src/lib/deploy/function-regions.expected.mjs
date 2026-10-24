@@ -38,6 +38,10 @@
 //         Stripe and Resend are US-hosted, and the routes that call them
 //         still win: checkout about 7 x 114 - 2 x 100 = +600 ms, the portal
 //         +480 ms, the Stripe webhook +500 ms (and its caller is a machine).
+//         The chat checkout link (/u/[token]) runs the same checkout core plus
+//         the link lookup, and its success page (/upgrade/done) makes two
+//         reads for one Stripe call, so both follow checkout to arn1. The
+//         expired page touches nothing and stays on the iad1 default.
 //
 //   iad1  app/api/automations/preview: a proxy to the Supabase edge function,
 //         which runs in the Supabase region nearest its caller. From arn1
@@ -108,6 +112,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/black-week-email/dispatch/route.ts': 60,
+  'app/api/internal/first-30-days/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/internal/pro-price-notice/dispatch/route.ts': 60,
   'app/api/internal/pass-expiry/route.ts': 60,
@@ -158,6 +163,7 @@ export const ROUTES = [
   ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
   ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],
+  ['app/admin/growth/first-30-days/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/[key]/update/route.ts', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/create/route.ts', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/override/route.ts', 'arn1', '2+', '-'],
@@ -203,6 +209,7 @@ export const ROUTES = [
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/black-week-email/dispatch/route.ts', 'arn1', '5+', 'paged user reads, Stripe API + Resend batches; caller is the scheduler'],
+  ['app/api/internal/first-30-days/dispatch/route.ts', 'arn1', '2+', 'Resend per email; one IMAP APPEND per stuck-note draft; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/pro-price-notice/dispatch/route.ts', 'arn1', '~6', 'Resend per email, one run on one day; caller is the scheduler'],
@@ -214,6 +221,7 @@ export const ROUTES = [
   ['app/api/oauth/revoke/route.ts', 'arn1', '1-2', '-'],
   ['app/api/oauth/token/route.ts', 'arn1', '9 (refresh 6)', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/userinfo/route.ts', 'arn1', '2', '-'],
+  ['app/api/onboarding/first-week/route.ts', 'arn1', '4-7 (GET; most owners stop at 4)', '-'],
   ['app/api/onboarding/route.ts', 'arn1', '4', '-'],
   ['app/api/seasonal-offer/route.ts', 'arn1', '0', 'Stripe API x0-4 in the Black Week window (cached 60 s), none outside it'],
   ['app/api/security/audit-log/route.ts', 'arn1', '3', '-'],
@@ -232,6 +240,7 @@ export const ROUTES = [
   ['app/api/legal/contract-request/route.ts', 'arn1', '4-8', 'Resend x2'],
   ['app/api/support/visibility/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/usage/route.ts', 'arn1', '2', '-'],
+  ['app/api/upgrade/status/route.ts', 'arn1', '2', 'Stripe API x1'],
   ['app/api/user/delete-account/route.ts', 'arn1', '11', '-'],
   ['app/api/user/email/route.ts', 'arn1', '3', '-'],
   ['app/api/user/password/route.ts', 'arn1', '5', '-'],
@@ -272,4 +281,7 @@ export const ROUTES = [
   ['app/robots.ts', 'iad1', '0', '-'],
   ['app/signup/page.js', 'arn1', '0', '-'],
   ['app/sitemap.ts', 'iad1', '0', '-'],
+  ['app/u/[token]/route.ts', 'arn1', '~8', 'Stripe API x1-2 (chat checkout link, same trade as checkout)'],
+  ['app/upgrade/done/page.js', 'arn1', '2', 'Stripe API x1'],
+  ['app/upgrade/expired/page.js', 'iad1', '0', '-'],
 ];

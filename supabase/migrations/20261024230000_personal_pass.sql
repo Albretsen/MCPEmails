@@ -11,7 +11,7 @@
 --   1. public.user_passes            one row per paid pass
 --   2. public.user_active_pass()     the end of the user's current pass cover
 --   3. public.dispatch_pass_expiry() pg_cron poke for /api/internal/pass-expiry
---   4. product_funnel_events         stage + category vocabulary for passes
+--   4. product_funnel_events         pass stages appended to the stage CHECK
 --
 -- Statuses:
 --   active     the pass that covers now (starts_at <= now < ends_at)
@@ -187,57 +187,76 @@ SELECT cron.schedule(
 
 
 -- ---------------------------------------------------------------------------
--- 4. product_funnel_events vocabulary
+-- 4. product_funnel_events stage vocabulary
 --
--- stage: current definition is 20261019150000, reproduced verbatim with the
--- pass stages added. A pass never writes `checkout_completed`, so the
--- subscription conversion read-outs keep their meaning.
--- category: current definition is 20260827100000, reproduced verbatim with the
--- pass product and the surfaces a pass offer can be shown on.
+-- Append-only. Other sessions add stages to this CHECK from migrations that
+-- may land before or after this one, so the list is never written out here:
+-- the block reads the values the live constraint allows, adds the pass stages
+-- that are missing, and re-adds the constraint with the union. Running it
+-- twice changes nothing. If the constraint is missing it is left missing
+-- (a pass-only list would refuse every other stage).
+--
+-- A pass never writes `checkout_completed`, so the subscription conversion
+-- read-outs keep their meaning. The category column has no CHECK in
+-- production, and this migration does not add one.
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_stage_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_stage_check
-  CHECK (stage IN (
-    'onboarding_started', 'client_selected', 'provider_selected', 'inbox_connection',
-    'connection_verified', 'credential_created', 'technical_activation',
-    'value_activation', 'first_tool_call',
-    -- Billing funnel
-    'paywall_reached', 'pricing_viewed', 'checkout_started', 'checkout_completed',
-    'billing_portal_opened',
-    -- An existing subscriber's price was swapped in place, in either direction.
-    'plan_upgraded', 'plan_downgraded',
-    -- The Overview guide asked a business-domain workspace to connect a second
-    -- work mailbox: started = shown, success = clicked.
-    'multi_inbox_prompt',
-    -- A buy button on the inbox-cap offer was clicked. The matching "shown" is
-    -- the paywall_reached row with connection_type = 'first_connect'.
-    'paywall_clicked',
-    -- The 3-month Personal pass (20261024170000).
+DO $stage$
+DECLARE
+  v_def    text;
+  v_values text[];
+  v_add    text[] := ARRAY[
     'pass_offer_shown', 'pass_checkout_started', 'pass_checkout_completed',
     'pass_reminder_sent', 'pass_expired', 'pass_refunded', 'pass_renewed'
-  ));
+  ];
+BEGIN
+  SELECT pg_get_constraintdef(c.oid)
+    INTO v_def
+    FROM pg_constraint c
+   WHERE c.conrelid = 'public.product_funnel_events'::regclass
+     AND c.conname = 'product_funnel_events_stage_check'
+     AND c.contype = 'c';
 
-ALTER TABLE public.product_funnel_events
-  DROP CONSTRAINT IF EXISTS product_funnel_events_category_check;
-ALTER TABLE public.product_funnel_events
-  ADD CONSTRAINT product_funnel_events_category_check
-  CHECK (category IN (
-    'gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex',
-    'generic_imap', 'api_key', 'oauth', 'claude', 'chatgpt', 'cursor',
-    'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast',
-    'warp', 'curl', 'unknown',
-    -- Billing: the plan+interval a checkout targeted ...
-    'personal_month', 'personal_year',
-    'solo_month', 'solo_year', 'pro_month', 'pro_year',
-    -- ... the plan a user was on when a paywall or portal event fired ...
-    'free', 'personal', 'solo', 'pro',
-    -- ... and the surface a pricing view happened on.
-    'pricing_page', 'dashboard_billing',
-    -- The 3-month Personal pass: the product, the surfaces its offer is shown
-    -- on, and 'pass' for a renewal that bought another pass.
-    'personal_pass_3m',
-    'checkout_return', 'cap_banner', 'paywall_email_3', 'pass_reminder',
-    'pass'
-  ));
+  IF v_def IS NULL THEN
+    RAISE NOTICE 'product_funnel_events_stage_check does not exist, pass stages not added.';
+    RETURN;
+  END IF;
+
+  -- Only a plain list is rewritten. Anything else (an OR, a NULL arm) would
+  -- lose its meaning here, so the migration stops instead.
+  IF v_def !~ '^CHECK \(\(stage = ANY \(' THEN
+    RAISE EXCEPTION 'product_funnel_events_stage_check is not a plain list, not rewritten: %', v_def;
+  END IF;
+
+  -- Every quoted literal in the definition, in order. pg_get_constraintdef
+  -- prints either ARRAY['a'::text, ...] or '{a,...}'::text[]; the second
+  -- form is one literal that holds the whole list, so it is cast and unnested.
+  SELECT array_agg(u.v ORDER BY t.n, u.k)
+    INTO v_values
+    FROM regexp_matches(v_def, '''((?:[^'']|'''')*)''(::text\[\])?', 'g') WITH ORDINALITY AS t(m, n)
+    CROSS JOIN LATERAL unnest(
+           CASE WHEN t.m[2] IS NULL
+                THEN ARRAY[replace(t.m[1], '''''', '''')]
+                ELSE replace(t.m[1], '''''', '''')::text[]
+           END
+         ) WITH ORDINALITY AS u(v, k);
+
+  IF v_values IS NULL OR cardinality(v_values) = 0 THEN
+    RAISE EXCEPTION 'product_funnel_events_stage_check has no readable values: %', v_def;
+  END IF;
+
+  -- Keep the existing order, append only what is missing.
+  SELECT v_values || coalesce(array_agg(t.a ORDER BY t.n), ARRAY[]::text[])
+    INTO v_values
+    FROM unnest(v_add) WITH ORDINALITY AS t(a, n)
+   WHERE t.a <> ALL (v_values);
+
+  -- Written as ARRAY['a'::text, ...], the same form production prints.
+  ALTER TABLE public.product_funnel_events
+    DROP CONSTRAINT product_funnel_events_stage_check;
+  EXECUTE format(
+    'ALTER TABLE public.product_funnel_events ADD CONSTRAINT product_funnel_events_stage_check CHECK (stage = ANY (ARRAY[%s]))',
+    (SELECT string_agg(quote_literal(v) || '::text', ', ' ORDER BY n)
+       FROM unnest(v_values) WITH ORDINALITY AS t(v, n))
+  );
+END;
+$stage$;

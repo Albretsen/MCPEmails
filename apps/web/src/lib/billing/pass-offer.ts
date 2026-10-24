@@ -18,7 +18,7 @@
  * The pass always sits below the subscription options and is never
  * preselected; monthly stays the default.
  *
- * THE EXPERIMENT. Key `personal_pass_3m` (migration 20261024190000). Unit: the
+ * THE EXPERIMENT. Key `personal_pass_3m` (migration 20261024230100). Unit: the
  * workspace, as a subject id (its uuid without dashes is 32 lowercase hex, the
  * shape the experiments system requires). Variants `holdout` (control, today's
  * surfaces) and `pass`. Assigned at the first ELIGIBLE surface render through

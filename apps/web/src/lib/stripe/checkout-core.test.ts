@@ -164,6 +164,13 @@ const nodeMock = mock as unknown as {
 const funnelRows: Array<{ target: string; failure: string | undefined }> = [];
 
 /**
+ * The `entryPoint` each `checkout_started` row was written with, kept apart
+ * from `funnelRows` so the older deepEqual assertions on that list stay as
+ * they are. Undefined for every cookie-path row; 'chat_link' for the link.
+ */
+const funnelEntryPoints: Array<string | undefined> = [];
+
+/**
  * The plan-change rows, kept apart from the checkout rows on purpose.
  *
  * They are a different stage in a different part of the funnel, and the whole
@@ -209,6 +216,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       workspaceId: string | null,
       target: string,
       failure?: string,
+      entryPoint?: string,
     ) => {
       // Mirrors the real helper, which no-ops on a null workspace id. Without
       // that, a test could "prove" a row was written for a user who has no
@@ -216,6 +224,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       if (!workspaceId) return;
       assert.equal(workspaceId, WORKSPACE_ID, 'a row must land on the buyer\'s own workspace');
       funnelRows.push({ target, failure });
+      funnelEntryPoints.push(entryPoint);
     },
     recordPlanChange: async (args: {
       workspaceId: string | null;
@@ -281,6 +290,12 @@ nodeMock.module('@/lib/stripe/seasonal-offer-server', {
   },
 });
 
+/**
+ * Every `subscriptions.retrieve` call. The chat link must refuse an existing
+ * subscriber before the subscription is even read, which only this can show.
+ */
+const subscriptionsRetrieved: string[] = [];
+
 nodeMock.module('@/lib/stripe/client', {
   namedExports: {
     stripe: {
@@ -288,7 +303,7 @@ nodeMock.module('@/lib/stripe/client', {
         sessions: {
           create: async (params: Record<string, unknown>) => {
             sessionsCreated.push(params);
-            return { url: SESSION_URL };
+            return { url: SESSION_URL, id: 'cs_test_core_session' };
           },
         },
       },
@@ -297,7 +312,7 @@ nodeMock.module('@/lib/stripe/client', {
           if (listThrows) throw new Error('stripe_list_down');
           return { data: customerSubscriptions };
         },
-        retrieve: async (id: string) => ({
+        retrieve: async (id: string) => (subscriptionsRetrieved.push(id), {
           id,
           customer: 'cus_test_subscriber',
           metadata: currentMetadata,
@@ -366,6 +381,12 @@ nodeMock.module('@/lib/supabase/service', {
           select: chain,
           eq: chain,
           in: chain,
+          // The identity entry point (the chat checkout link) reads user_billing
+          // and user_usage_entitlements through the service-role client. Same
+          // fixtures as the cookie client, so both paths see the same buyer.
+          maybeSingle: () =>
+            (currentSupabase.from(table) as unknown as { maybeSingle: () => Promise<unknown> })
+              .maybeSingle(),
           is: () =>
             Promise.resolve(
               table === 'workspaces'
@@ -379,7 +400,7 @@ nodeMock.module('@/lib/supabase/service', {
   },
 });
 
-const { runCheckout } = await import('./checkout-core.ts');
+const { runCheckout, runCheckoutForIdentity } = await import('./checkout-core.ts');
 const { FREE_ACTION_ALLOWANCE, PLANS, resolvePlanLimits } = await import('./plans.ts');
 
 /** Run one checkout against a freshly stubbed database, and report what it did. */
@@ -416,6 +437,7 @@ async function checkout(opts: {
     passes: opts.passes,
   });
   funnelRows.length = 0;
+  funnelEntryPoints.length = 0;
   planChangeRows.length = 0;
   sessionsCreated.length = 0;
   subscriptionsUpdated.length = 0;
@@ -1906,7 +1928,186 @@ test('a valid recovered_from lands in metadata, anything else is dropped', async
 });
 
 // ---------------------------------------------------------------------------
-// 9. The 3-month Personal pass (runPassCheckout), and a pass holder's
+// 10. The identity entry point: the chat checkout link (app/u/[token]).
+//
+// `runCheckoutForIdentity` is the third caller of the one core. It has no
+// cookie session, so the owner arrives as an identity resolved with the
+// service-role client from a checkout_links row. Two things are pinned here:
+// it runs every guard the cookie path runs (it is the same function past the
+// identity), and it can NEVER reach the in-place price swap, not even its
+// quote, because a bearer link in a chat transcript must not be able to touch
+// a card on file.
+// ---------------------------------------------------------------------------
+
+const LINK_ID = '11111111-2222-4333-8444-555555555555';
+
+async function linkCheckout(opts: {
+  entitlement: EntitlementRow;
+  billing?: BillingRow;
+  planId?: unknown;
+  interval?: unknown;
+  extraMetadata?: Record<string, string>;
+  /** Smuggled past the type, to prove the core ignores it. */
+  confirmChange?: unknown;
+}) {
+  currentSupabase = fakeSupabase({ entitlement: opts.entitlement, billing: opts.billing });
+  funnelRows.length = 0;
+  funnelEntryPoints.length = 0;
+  planChangeRows.length = 0;
+  sessionsCreated.length = 0;
+  subscriptionsUpdated.length = 0;
+  subscriptionsRetrieved.length = 0;
+  previewsRequested.length = 0;
+  swapBehaviour = 'applied';
+  currentSubscriptionPrice = 'price_solo_month';
+  currentAddon = null;
+  ownedInboxes = 0;
+  const input = {
+    planId: opts.planId ?? 'personal',
+    interval: opts.interval ?? 'month',
+    locale: 'en',
+    ...('confirmChange' in opts ? { confirmChange: opts.confirmChange } : {}),
+  };
+  const outcome = await runCheckoutForIdentity(
+    { userId: USER_ID, email: 'owner@example.com', workspaceId: WORKSPACE_ID, displayName: 'Test Workspace' },
+    input,
+    {
+      successUrl: 'https://mcpemails.test/upgrade/done?session_id={CHECKOUT_SESSION_ID}',
+      cancelUrl: 'https://mcpemails.test/pricing?from=chat_link',
+      entryPoint: 'chat_link',
+      extraMetadata: opts.extraMetadata ?? { checkout_link_id: LINK_ID },
+      sessionExpiresAt: 1_900_000_000,
+    },
+  );
+  return {
+    outcome,
+    funnelRows: [...funnelRows],
+    funnelEntryPoints: [...funnelEntryPoints],
+    planChangeRows: [...planChangeRows],
+    sessionsCreated: [...sessionsCreated],
+    subscriptionsUpdated: [...subscriptionsUpdated],
+    subscriptionsRetrieved: [...subscriptionsRetrieved],
+    previewsRequested: [...previewsRequested],
+  };
+}
+
+test('a link checkout for a Free owner opens Stripe with the link URLs, expiry and metadata', async () => {
+  const r = await linkCheckout({ entitlement: null });
+  assert.equal(r.outcome.kind, 'checkout');
+  if (r.outcome.kind !== 'checkout') return;
+  assert.equal(r.outcome.url, SESSION_URL);
+  assert.equal(r.outcome.sessionId, 'cs_test_core_session');
+  assert.equal(r.sessionsCreated.length, 1);
+  const params = r.sessionsCreated[0];
+  assert.equal(params.success_url, 'https://mcpemails.test/upgrade/done?session_id={CHECKOUT_SESSION_ID}');
+  assert.equal(params.cancel_url, 'https://mcpemails.test/pricing?from=chat_link');
+  assert.equal(params.expires_at, 1_900_000_000);
+  assert.equal(params.customer, 'cus_test_grandfathered');
+  assert.deepEqual(params.line_items, [{ price: 'price_personal_month', quantity: 1 }]);
+  assert.deepEqual(params.metadata, {
+    checkout_link_id: LINK_ID,
+    user_id: USER_ID,
+    plan_id: 'personal',
+    interval: 'month',
+  });
+  assert.deepEqual(params.subscription_data, { metadata: { user_id: USER_ID } });
+});
+
+test('a link checkout records exactly one checkout_started row, tagged chat_link', async () => {
+  const r = await linkCheckout({ entitlement: null });
+  assert.deepEqual(r.funnelRows, [{ target: 'personal_month', failure: undefined }]);
+  assert.deepEqual(r.funnelEntryPoints, ['chat_link']);
+});
+
+test('the cookie path is unchanged: dashboard URLs, Stripe default expiry, no link metadata or entry point', async () => {
+  const { sessionsCreated, funnelRows: rows } = await checkout({ planId: 'personal', entitlement: null });
+  const params = sessionsCreated[0];
+  assert.equal(params.success_url, 'http://localhost:3000/dashboard?checkout=success&plan=personal&interval=month');
+  assert.equal(params.cancel_url, 'http://localhost:3000/dashboard?checkout=cancelled&plan=personal');
+  assert.equal('expires_at' in params, false);
+  assert.deepEqual(params.metadata, { user_id: USER_ID, plan_id: 'personal', interval: 'month' });
+  assert.equal(rows.length, 1);
+  assert.deepEqual(funnelEntryPoints, [undefined]);
+});
+
+test('extra metadata can never replace the keys the webhook trusts', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    extraMetadata: { checkout_link_id: LINK_ID, user_id: 'attacker', plan_id: 'pro', interval: 'year' },
+  });
+  const meta = r.sessionsCreated[0].metadata as Record<string, unknown>;
+  assert.equal(meta.user_id, USER_ID);
+  assert.equal(meta.plan_id, 'personal');
+  assert.equal(meta.interval, 'month');
+});
+
+test('an existing subscriber is refused before the swap: no read, no quote, no change', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'solo', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(r.outcome.kind, 'error');
+  if (r.outcome.kind !== 'error') return;
+  assert.equal(r.outcome.reason, 'subscription_exists');
+  assert.equal(r.outcome.status, 409);
+  assert.deepEqual(r.subscriptionsRetrieved, []);
+  assert.deepEqual(r.previewsRequested, []);
+  assert.deepEqual(r.subscriptionsUpdated, []);
+  assert.deepEqual(r.sessionsCreated, []);
+  assert.deepEqual(r.planChangeRows, []);
+  assert.deepEqual(r.funnelRows, [{ target: 'personal_month', failure: 'subscription_exists' }]);
+});
+
+test('a smuggled confirmChange: true still cannot reach the swap from a link', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    confirmChange: true,
+  });
+  assert.equal(r.outcome.kind, 'error');
+  assert.deepEqual(r.subscriptionsUpdated, []);
+  assert.deepEqual(r.subscriptionsRetrieved, []);
+});
+
+test('the same subscriber on the cookie path still gets the quote, so the refusal is link-only', async () => {
+  const { outcome } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    billing: { plan: 'solo', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    currentPrice: 'price_solo_month',
+  });
+  assert.equal(outcome.kind, 'confirmation_required');
+});
+
+test('the comped guard refuses a link checkout too', async () => {
+  const r = await linkCheckout({ entitlement: { kind: 'comped_scale', expires_at: null } });
+  assert.equal(r.outcome.kind, 'error');
+  if (r.outcome.kind !== 'error') return;
+  assert.equal(r.outcome.reason, 'comped');
+  assert.deepEqual(r.sessionsCreated, []);
+});
+
+test('a lapsed subscription buys through Checkout from a link, like on the cookie path', async () => {
+  const r = await linkCheckout({
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'canceled', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(r.outcome.kind, 'checkout');
+  assert.deepEqual(r.subscriptionsUpdated, []);
+});
+
+test('the purchasable allowlist still applies to a link', async () => {
+  const bad = await linkCheckout({ entitlement: null, planId: 'enterprise' });
+  assert.equal(bad.outcome.kind, 'error');
+  if (bad.outcome.kind === 'error') assert.equal(bad.outcome.reason, 'invalid_plan');
+  const badInterval = await linkCheckout({ entitlement: null, interval: 'week' });
+  assert.equal(badInterval.outcome.kind, 'error');
+  if (badInterval.outcome.kind === 'error') assert.equal(badInterval.outcome.reason, 'invalid_interval');
+  assert.deepEqual(badInterval.sessionsCreated, []);
+});
+
+// ---------------------------------------------------------------------------
+// 11. The 3-month Personal pass (runPassCheckout), and a pass holder's
 //    subscription anchored to the pass end.
 // ---------------------------------------------------------------------------
 
