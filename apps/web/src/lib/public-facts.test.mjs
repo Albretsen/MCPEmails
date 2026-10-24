@@ -64,6 +64,15 @@ function definitionNames(source, constName) {
   return [...source.slice(start, end).matchAll(/^ {4}name: "([a-z_]+)",$/gm)].map((m) => m[1]);
 }
 
+/** The keys of `PRO_FEATURE_TOOLS` in pro-features.ts (tool name -> feature). */
+function proFeatureToolNames(source) {
+  const start = source.indexOf('export const PRO_FEATURE_TOOLS');
+  assert.ok(start >= 0, 'PRO_FEATURE_TOOLS not found');
+  const open = source.indexOf('{', source.indexOf('=', start));
+  const close = source.indexOf('};', open);
+  return [...source.slice(open, close).matchAll(/^\s+"?([a-z_]+)"?:\s*"/gm)].map((m) => m[1]);
+}
+
 function serverSurface() {
   const surfaceTest = read(path.join(server, 'tool-surface.test.ts'));
   const anchor = surfaceTest.indexOf('tools/list advertises exactly the post-split surface');
@@ -74,9 +83,12 @@ function serverSurface() {
   // Tools behind an internal rollout flag are listed to our own workspaces
   // only, so public copy does not count or document them until they launch.
   const internalOnly = stringArray(resources, 'SUBSCRIPTION_CARD_TOOL_NAMES');
+  // Pro feature tools (PRO_FEATURE_TOOLS in pro-features.ts) are hidden by the
+  // Pro gate until launch, so they are not public facts yet either.
+  const proOnly = proFeatureToolNames(read(path.join(server, 'pro-features.ts')));
   const listed = [...surfaceTest.slice(open, close).matchAll(/"([a-z_]+)"/g)]
     .map((m) => m[1])
-    .filter((name) => !internalOnly.includes(name));
+    .filter((name) => !internalOnly.includes(name) && !proOnly.includes(name));
 
   const editorTools = stringArray(resources, 'DRAFT_EDITOR_APP_TOOL_NAMES');
   const editorModelVisible = stringArray(resources, 'DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES');
@@ -87,6 +99,13 @@ function serverSurface() {
   ];
   return { listed, appOnly, modelVisible: listed.filter((name) => !appOnly.includes(name)) };
 }
+
+test('Pro feature tools are read from the gate and kept out of the public surface', () => {
+  const names = proFeatureToolNames(read(path.join(server, 'pro-features.ts')));
+  assert.ok(names.includes('reminder') && names.includes('reminder_list'), names.join(', '));
+  const { listed } = serverSurface();
+  for (const name of names) assert.ok(!listed.includes(name), `${name} counted before launch`);
+});
 
 test('the counts match what mcp-server lists', () => {
   const { listed, appOnly, modelVisible } = serverSurface();

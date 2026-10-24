@@ -728,6 +728,37 @@
       "deleting": "Eliminando…",
       "errFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
       "networkError": "Error de red. Comprueba tu conexión e inténtalo de nuevo."
+    },
+    "morningBrief": {
+      "title": "Resumen matinal",
+      "sub": "Un resumen diario del correo nuevo, los remitentes VIP, los seguimientos y los envíos programados, en una de tus bandejas de entrada.",
+      "enable": "Dejar un resumen matinal en mi bandeja de entrada cada día",
+      "hour": "Hora",
+      "timezone": "Zona horaria",
+      "inbox": "Entregar en",
+      "inboxPlaceholder": "Elige una bandeja de entrada",
+      "vip": "Remitentes VIP",
+      "vipPlaceholder": "jefa@example.com\nexample.com",
+      "help": "Una dirección o un dominio por línea. El correo de los VIP aparece primero. El resumen se añade directamente a la bandeja de entrada, no se envía como correo, y los días sin novedades se omiten.",
+      "save": "Guardar",
+      "saved": "Guardado. El próximo resumen seguirá estos ajustes.",
+      "loading": "Cargando...",
+      "proOnly": "El resumen matinal forma parte de Pro.",
+      "upgrade": "Ver planes",
+      "roleNote": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el resumen matinal.",
+      "lastSent": "Último resumen: {when}",
+      "paused": "En pausa tras varios fallos. Revisa la conexión de la bandeja de entrada y guarda para reanudar.",
+      "errors": {
+        "load": "No se pudieron cargar los ajustes del resumen matinal.",
+        "save": "No se pudo guardar. Inténtalo de nuevo.",
+        "unavailable": "El resumen matinal aún no está disponible.",
+        "pro_feature_required": "El resumen matinal forma parte de Pro.",
+        "invalid_vip": "No es una dirección ni un dominio: {detail}",
+        "too_many_vips": "Hasta {max} remitentes VIP.",
+        "inbox_required": "Elige la bandeja de entrada donde dejar el resumen.",
+        "invalid_inbox": "Esa bandeja de entrada no pertenece a este espacio de trabajo.",
+        "invalid_timezone": "Elige una zona horaria de la lista."
+      }
     }
   },
   "billing": {
@@ -772,6 +803,9 @@
       "invalid_plan": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
       "invalid_interval": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
       "plan_change_failed": "No hemos podido cambiar tu plan. No se ha cobrado nada. Inténtalo de nuevo.",
+      "pass_unavailable": "El pase Personal de 3 meses no está disponible ahora mismo.",
+      "already_subscribed": "Ya tienes una suscripción, que incluye todo lo que ofrece el pase.",
+      "pass_already_queued": "Ya tienes otros 3 meses programados después de este pase.",
       "plan_change_pending": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
     },
     "plans": {
@@ -831,6 +865,25 @@
     "proInboxesKept": "Tu plan Pro conserva las bandejas conectadas ilimitadas.",
     "businessMailboxRate": "10 buzones incluidos entre todos tus espacios de trabajo. Cada buzón adicional se factura con tu plan: 3 $ al mes o 28,80 $ al año.",
     "confirmExtraMailboxes": "Incluye {count, plural, one {# buzón adicional} other {# buzones adicionales}} además de los 10 incluidos.",
+    "pass": {
+      "offerLine": "O Personal durante 3 meses, un solo pago, {price}. No se renueva nada.",
+      "offerUntil": "Si lo compras hoy, dura hasta el {date} y después este espacio de trabajo vuelve a Free.",
+      "offerCta": "3 meses por {price}",
+      "returnTitle": "Personal: 3 bandejas conectadas, sin límite mensual de acciones",
+      "subscribeMonthly": "Suscripción mensual, {price} al mes",
+      "subscribeYearly": "Anual, {price} al año",
+      "subscribeMonthlyFrom": "Suscripción mensual, {price} al mes, primer cargo el {date}",
+      "subscribeYearlyFrom": "Anual, {price} al año, primer cargo el {date}",
+      "until": "Personal hasta el {date}",
+      "queued": "Después, otros 3 meses, hasta el {date}.",
+      "after": "Un solo pago, no se renueva nada. Después del {date} este espacio de trabajo vuelve a Free: {cap} acciones de correo al mes y una bandeja para nuevas conexiones. Tus bandejas, borradores y ajustes se mantienen.",
+      "endingTitle": "Tu pase Personal termina el {date}.",
+      "another": "Otros 3 meses, {price}, un solo pago.",
+      "anotherUntil": "Si lo compras ahora, Personal dura hasta el {date}.",
+      "seeOptions": "Ver las opciones",
+      "close": "Cerrar",
+      "started": "Pago recibido. Tu pase Personal de 3 meses aparecerá aquí en un momento."
+  },
     "planChange": {
       "title": "Cambiar o pausar tu plan",
       "sub": "Pausa un plan mensual hasta 3 meses o cambia a un plan más pequeño cuando termine tu periodo actual.",

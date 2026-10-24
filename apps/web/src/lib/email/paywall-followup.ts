@@ -59,6 +59,7 @@ import {
   composePaywallFollowup,
   type PaywallFollowupStep,
   type PaywallKind,
+  type PaywallPassLine,
 } from '@/lib/email/paywall-followup-templates';
 
 // ---------------------------------------------------------------------------
@@ -381,6 +382,15 @@ export interface RunOptions {
   ignoreConsent?: boolean;
   /** Returns true when the run should stop early (wall clock). */
   outOfTime?: () => boolean;
+  /**
+   * Step 3, send mode only: the 3-month pass line for this workspace, or null
+   * when it is not in the pass arm (or the pass is switched off). Asked right
+   * before the send, so the experiment assignment happens at the first
+   * eligible render. Must not throw.
+   */
+  passOffer?: (workspaceId: string, now: Date) => Promise<PaywallPassLine | null>;
+  /** Called once after a step 3 that carried the pass line was sent. */
+  onPassOfferShown?: (workspaceId: string) => Promise<void>;
 }
 
 export interface RunEntry {
@@ -507,10 +517,19 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
 
     // decision.kind === 'send'
     const owner = ctx.owner!;
+    let pass: PaywallPassLine | null = null;
+    if (decision.step === 3 && mode === 'send' && options.passOffer) {
+      try {
+        pass = await options.passOffer(ctx.workspaceId, now);
+      } catch {
+        pass = null;
+      }
+    }
     const composed = composePaywallFollowup({
       step: decision.step,
       paywallKind: ctx.paywallKind,
       unsubscribeToken: owner.unsubscribeToken,
+      pass,
     });
     entry.subject = composed?.subject ?? null;
 
@@ -572,6 +591,13 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
       await store.finish(key, { status: 'sent', providerId: result.id });
       report.sent += 1;
       entry.outcome = 'sent';
+      if (pass && options.onPassOfferShown) {
+        try {
+          await options.onPassOfferShown(ctx.workspaceId);
+        } catch {
+          // Analytics only.
+        }
+      }
     } else {
       // Kept, never retried: the next run sees a non-'sent' row and stops.
       await store.finish(key, { status: 'failed', detail: result.reason });

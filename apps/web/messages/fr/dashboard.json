@@ -728,6 +728,37 @@
       "deleting": "Suppression…",
       "errFailed": "Échec de la suppression du compte. Veuillez réessayer.",
       "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer."
+    },
+    "morningBrief": {
+      "title": "Brief du matin",
+      "sub": "Un résumé quotidien des nouveaux e-mails, des expéditeurs VIP, des relances et des envois programmés, déposé dans l'une de vos boîtes de réception.",
+      "enable": "Déposer un brief du matin dans ma boîte de réception chaque jour",
+      "hour": "Heure",
+      "timezone": "Fuseau horaire",
+      "inbox": "Déposer dans",
+      "inboxPlaceholder": "Choisir une boîte de réception",
+      "vip": "Expéditeurs VIP",
+      "vipPlaceholder": "patron@example.com\nexample.com",
+      "help": "Une adresse ou un domaine par ligne. Les e-mails des VIP apparaissent en premier. Le brief est ajouté directement à la boîte de réception, il n'est pas envoyé par e-mail, et les jours sans nouveauté sont ignorés.",
+      "save": "Enregistrer",
+      "saved": "Enregistré. Le prochain brief suivra ces réglages.",
+      "loading": "Chargement...",
+      "proOnly": "Le brief du matin fait partie de Pro.",
+      "upgrade": "Voir les offres",
+      "roleNote": "Seuls les propriétaires et les administrateurs de l'espace de travail peuvent modifier le brief du matin.",
+      "lastSent": "Dernier brief : {when}",
+      "paused": "En pause après plusieurs échecs. Vérifiez la connexion de la boîte de réception, puis enregistrez pour reprendre.",
+      "errors": {
+        "load": "Impossible de charger les réglages du brief du matin.",
+        "save": "Impossible d'enregistrer. Réessayez.",
+        "unavailable": "Le brief du matin n'est pas encore disponible.",
+        "pro_feature_required": "Le brief du matin fait partie de Pro.",
+        "invalid_vip": "Ce n'est ni une adresse ni un domaine : {detail}",
+        "too_many_vips": "Jusqu'à {max} expéditeurs VIP.",
+        "inbox_required": "Choisissez la boîte de réception où déposer le brief.",
+        "invalid_inbox": "Cette boîte de réception n'appartient pas à cet espace de travail.",
+        "invalid_timezone": "Choisissez un fuseau horaire dans la liste."
+      }
     }
   },
   "billing": {
@@ -772,6 +803,9 @@
       "invalid_plan": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
       "invalid_interval": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
       "plan_change_failed": "Impossible de changer votre offre. Rien n'a été débité. Veuillez réessayer.",
+      "pass_unavailable": "Le pass Personal de 3 mois n'est pas disponible pour le moment.",
+      "already_subscribed": "Vous avez déjà un abonnement, qui comprend tout ce que le pass offre.",
+      "pass_already_queued": "Vous avez déjà 3 mois de plus prévus après ce pass.",
       "plan_change_pending": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule."
     },
     "plans": {
@@ -831,6 +865,25 @@
     "proInboxesKept": "Votre formule Pro conserve des boîtes connectées illimitées.",
     "businessMailboxRate": "10 boîtes incluses sur l'ensemble de vos espaces de travail. Chaque boîte supplémentaire est facturée avec votre formule : 3 $ par mois ou 28,80 $ par an.",
     "confirmExtraMailboxes": "Comprend {count, plural, one {# boîte supplémentaire} other {# boîtes supplémentaires}} en plus des 10 incluses.",
+    "pass": {
+      "offerLine": "Ou Personal pendant 3 mois, payé une seule fois, {price}. Rien ne se renouvelle.",
+      "offerUntil": "Acheté aujourd'hui, il court jusqu'au {date}, puis cet espace de travail repasse en Free.",
+      "offerCta": "3 mois pour {price}",
+      "returnTitle": "Personal : 3 boîtes connectées, pas de plafond mensuel d'actions",
+      "subscribeMonthly": "S'abonner au mois, {price} par mois",
+      "subscribeYearly": "À l'année, {price} par an",
+      "subscribeMonthlyFrom": "S'abonner au mois, {price} par mois, premier prélèvement le {date}",
+      "subscribeYearlyFrom": "À l'année, {price} par an, premier prélèvement le {date}",
+      "until": "Personal jusqu'au {date}",
+      "queued": "Puis 3 mois de plus, jusqu'au {date}.",
+      "after": "Payé une seule fois, rien ne se renouvelle. Après le {date}, cet espace de travail repasse en Free : {cap} actions e-mail par mois et une boîte pour les nouvelles connexions. Vos boîtes, brouillons et réglages restent.",
+      "endingTitle": "Votre pass Personal se termine le {date}.",
+      "another": "3 mois de plus, {price}, payés une seule fois.",
+      "anotherUntil": "Acheté maintenant, Personal court jusqu'au {date}.",
+      "seeOptions": "Voir les options",
+      "close": "Fermer",
+      "started": "Paiement reçu. Votre pass Personal de 3 mois apparaît ici dans un instant."
+  },
     "planChange": {
       "title": "Modifier ou mettre en pause votre abonnement",
       "sub": "Mettez un abonnement mensuel en pause jusqu'à 3 mois, ou passez à une formule plus petite à la fin de la période en cours.",

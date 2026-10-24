@@ -48,6 +48,7 @@
  *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
+ *   STRIPE_PRICE_PERSONAL_PASS_3M=price_...   (3-month Personal pass, $29 once)
  *   STRIPE_PRICE_TWINS={"price_twin":"price_original",...}
  *                                             (USD tax-inclusive twins of the
  *                                              prices EU subscribers were on,
@@ -540,6 +541,50 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: false,
   },
 } as const;
+
+// ---------------------------------------------------------------------------
+// The 3-month Personal pass (2026-10-24): one payment, Personal for exactly
+// three calendar months, nothing renews.
+//
+// DELIBERATELY NOT IN PLANS. It is not a plan: it grants the `personal` plan
+// for a fixed window, and its price is a ONE-TIME price that never sits on a
+// subscription. Keeping it out of PLANS means getPlanByStripePriceId can never
+// map it, TIER_ORDER and planCommitmentRank do not see it, and every reader
+// that walks PLANS (pricing page, paywall copy, checkout allow-list) is
+// unchanged. Entitlement, stacking and the kill switch live in
+// src/lib/billing/pass.ts.
+//
+//   STRIPE_PRICE_PERSONAL_PASS_3M=price_...  (one-time, $29)
+//
+// $29, not $27: three monthly payments are $27, so the pass stays the dearer
+// way to buy the same three months and is never a discount on monthly.
+// ---------------------------------------------------------------------------
+export interface PassProduct {
+  /** Stored in user_passes.product and in Checkout metadata. */
+  id: 'personal_pass_3m';
+  /** The plan the pass grants while it runs. */
+  plan: 'personal';
+  /** Calendar months one pass lasts. */
+  months: number;
+  /** One-time price in USD cents. */
+  priceCents: number;
+}
+
+export const PERSONAL_PASS_3M: PassProduct = {
+  id: 'personal_pass_3m',
+  plan: 'personal',
+  months: 3,
+  priceCents: 2900,
+};
+
+/**
+ * The one-time Stripe price id for the pass, or null when unset. Read at call
+ * time, like mailboxAddonPriceId, so a test can set it after import and an env
+ * change takes effect without a redeploy of cached modules.
+ */
+export function personalPassPriceId(): string | null {
+  return process.env.STRIPE_PRICE_PERSONAL_PASS_3M?.trim() || null;
+}
 
 // ---------------------------------------------------------------------------
 // Helper: look up limits for a plan name stored in DB.

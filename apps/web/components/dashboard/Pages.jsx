@@ -35,6 +35,7 @@ import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
+import { MorningBriefSection } from './MorningBriefSection';
 import { InboxInstructionsEditor } from './InboxInstructionsEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
@@ -55,6 +56,7 @@ import {
   allowanceTone,
   showUsageCapBanner,
 } from '@/lib/usage/allowance-view.mjs';
+import { PassBillingPanel, PassOfferLine } from './PersonalPass';
 import UpgradeIntervalChoice, {
   IntervalToggle,
   SeasonalOfferNote,
@@ -4957,7 +4959,7 @@ function BulkRunsPanel({ userRole }) {
  *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, workspaceId = null, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
   // The banner's annual CTA label lives beside the modal's, in dashboardChrome.
   const trc = useTranslations('dashboardChrome');
@@ -5142,6 +5144,10 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 })}
               </a>
             </div>
+            {/* The 3-month pass, below the subscription offer, only once the
+                server says this workspace has been at a cap for 72 hours and
+                is in the pass arm (PersonalPass.jsx, pass-offer.ts). */}
+            <PassOfferLine surface="cap_banner" workspaceId={workspaceId} enabled={allowance.atLimit} />
           </div>
         );
       })()}
@@ -6137,6 +6143,8 @@ function BillingSection({
   proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
+  passState = null,
+  workspaceId = null,
   seasonalSwitch = null,
 }) {
   const t = useTranslations('dashboard');
@@ -6481,6 +6489,18 @@ function BillingSection({
     statusParamsHandled.current = true;
 
     const params = new URLSearchParams(window.location.search);
+    // Back from a 3-month pass Checkout. A cancelled one needs no word; a paid
+    // one is confirmed and the page reloads once the webhook has had a moment
+    // to record the pass and project Personal.
+    const passReturn = params.get('pass');
+    if (passReturn === 'started' || passReturn === 'cancelled') {
+      window.history.replaceState(window.history.state, '', '/dashboard/settings');
+      if (passReturn === 'started') {
+        toast({ message: t('billing.pass.started'), variant: 'success' });
+        window.setTimeout(() => window.location.reload(), 3500);
+      }
+      return;
+    }
     const checkoutError = params.get('checkout_error');
     const billingStatus = params.get('billing');
     const billingChanged = billingStatus === 'changed';
@@ -6656,7 +6676,18 @@ function BillingSection({
           </div>
         )}
 
-        {isOnPaidPlan && (
+        {passState && (
+          /* A 3-month pass holder: no subscription to manage, so the pass and
+             the ways to keep Personal take the portal box's place. */
+          <PassBillingPanel
+            passState={passState}
+            stripePrices={stripePrices}
+            onSubscribe={(planId, checkoutInterval) => handleUpgrade(planId, checkoutInterval)}
+            busy={upgrading}
+          />
+        )}
+
+        {isOnPaidPlan && !passState && (
           /* Paid plan: show active subscription summary + portal button */
           <div style={{
             padding: '16px',
@@ -6750,7 +6781,7 @@ function BillingSection({
             this only re-checks the plan and that the window has not closed
             on this clock. The button goes through the same two-step quote as
             every other plan change, so nothing is charged from this card. */}
-        {switchOffer && switchValues && (
+        {switchOffer && switchValues && !passState && (
           <div
             data-seasonal-switch={switchOffer.planId}
             style={{
@@ -6955,6 +6986,11 @@ function BillingSection({
               }}>
                 {t('billing.redirectNote')}
               </p>
+            )}
+            {/* The 3-month pass, below every subscription option, for a Free
+                workspace the server says has been at a cap for 72 hours. */}
+            {currentPlan === 'free' && !compedScale && (
+              <PassOfferLine surface="cap_banner" workspaceId={workspaceId} />
             )}
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
               {t('billing.customNote')} <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>{t('billing.contactUs')}</a>.
@@ -7870,7 +7906,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7911,6 +7947,8 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
+        passState={passState}
+        workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
 
@@ -7927,6 +7965,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         userRole={userRole}
         onWorkspaceUpdate={onWorkspaceUpdate}
       />
+
+      {/* Morning brief (Pro): renders nothing unless the feature is visible. */}
+      <MorningBriefSection workspace={workspace} inboxes={inboxes} proFeatures={proFeatures} />
 
       {/* Delete THIS workspace only (owner-only) */}
       <DeleteWorkspaceSection
