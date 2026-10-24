@@ -808,6 +808,7 @@
       "pass_unavailable": "The 3-month Personal pass is not available right now.",
       "already_subscribed": "You already have a subscription, which includes everything the pass does.",
       "pass_already_queued": "You already have another 3 months queued after this pass.",
+      "pass_monthly_not_yet": "Monthly billing can start in the last month of your pass. Yearly is available now.",
       "plan_change_pending": "A pause or a plan switch is booked on your subscription. Use Resume early or Keep on this page first, then change plans."
     },
     "plans": {
@@ -878,6 +879,7 @@
       "subscribeYearly": "Yearly, {price} a year",
       "subscribeMonthlyFrom": "Subscribe monthly, {price} a month, first charge on {date}",
       "subscribeYearlyFrom": "Yearly, {price} a year, first charge on {date}",
+      "monthlyFrom": "Monthly is available from {date}.",
       "until": "Personal until {date}",
       "queued": "Then another 3 months, until {date}.",
       "after": "Paid once, nothing renews. After {date} this workspace goes back to Free: {cap} email actions a month and one inbox for new connections. Your inboxes, drafts and settings stay.",

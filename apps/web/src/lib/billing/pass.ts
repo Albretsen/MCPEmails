@@ -9,7 +9,9 @@
  *   passCheckoutOpen(mode?)                true when new pass checkouts are accepted (holdout or on)
  *   passEndsAt(paidAt, months?)            paidAt + 3 calendar months, UTC, clamped to month end
  *   passSubscriptionStart(until, interval) how a subscription bought during a pass starts (anchor,
- *                                          trial_end fallback, or null for today); re-exported by checkout-core
+ *                                          or null for today); re-exported by checkout-core
+ *   passSubscriptionOpensAt(until, interval) null when that subscription can be bought now, else the
+ *                                          day it can (monthly fits only in the pass's last month)
  *   planPassWindow(live, paidAt)           where a new pass goes: active now, or stacked after the cover
  *   getActivePass(db, userId, opts?)       the pass covering now (+ queued one), or null; tolerant of
  *                                          the table not existing yet; `strict` throws on other errors
@@ -115,44 +117,75 @@ export function passEndsAt(paidAt: Date, months: number = PERSONAL_PASS_3M.month
 
 const HOUR_SECONDS = 60 * 60;
 
+/** Months to the first natural billing date of an interval. */
+function intervalMonths(interval: BillingInterval): number {
+  return interval === 'year' ? 12 : 1;
+}
+
+/** True when Stripe takes an anchor at `endSeconds` for a subscription started at `at`. */
+function anchorFits(endSeconds: number, interval: BillingInterval, at: Date): boolean {
+  const naturalBilling = Math.floor(passEndsAt(at, intervalMonths(interval)).getTime() / 1000);
+  return endSeconds < naturalBilling - HOUR_SECONDS;
+}
+
 /**
  * How a Personal subscription bought during a pass starts, or null for "from
  * today".
  *
- * Preferred: `billing_cycle_anchor` at the pass's end with `proration_behavior:
- * 'none'`. The hosted page shows nothing due today and the first full charge on
- * that date, and the subscription is `active` from the start. Stripe only
- * accepts an anchor up to the first natural billing date, so it covers a yearly
+ * `billing_cycle_anchor` at the pass's end with `proration_behavior: 'none'`.
+ * The hosted page shows nothing due today and the first full charge on that
+ * date, and the subscription is `active` from the start. Stripe only accepts
+ * an anchor up to the first natural billing date, so it covers a yearly
  * subscription always and a monthly one only in the pass's last month.
  *
- * Otherwise `trial_end` at the pass's end, which Checkout accepts up to two
- * years out but only from 48 hours ahead. Stripe labels those days a trial on
- * its own page; the subscription is `trialing`, which every entitlement check
- * here already treats as entitled.
+ * There is NO trial_end fallback any more: Stripe's hosted page words those
+ * days as a free trial ("Start trial"), which the pass must never be called.
+ * Outside the anchor window the subscription is not offered at all; callers
+ * ask passSubscriptionOpensAt first, and the checkout refuses
+ * (pass_monthly_not_yet) rather than charge for days the pass already paid.
  */
 export function passSubscriptionStart(
   coveredUntil: Date,
   interval: BillingInterval,
   now: Date = new Date(),
-):
-  | { billing_cycle_anchor: number; proration_behavior: 'none' }
-  | { trial_end: number }
-  | null {
+): { billing_cycle_anchor: number; proration_behavior: 'none' } | null {
   const nowSeconds = Math.floor(now.getTime() / 1000);
   const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
   // Within the hour: not worth a different first invoice.
   if (endSeconds <= nowSeconds + HOUR_SECONDS) return null;
-
-  const naturalBilling = Math.floor(
-    passEndsAt(now, interval === 'year' ? 12 : 1).getTime() / 1000,
-  );
-  if (endSeconds < naturalBilling - HOUR_SECONDS) {
+  if (anchorFits(endSeconds, interval, now)) {
     return { billing_cycle_anchor: endSeconds, proration_behavior: 'none' };
   }
-  if (endSeconds >= nowSeconds + 48 * HOUR_SECONDS) {
-    return { trial_end: endSeconds };
-  }
   return null;
+}
+
+/**
+ * When a Personal subscription of `interval` can be bought during a pass that
+ * covers until `coveredUntil`: null when it can be bought now (anchored to the
+ * pass end, or charged today when the pass ends within the hour), otherwise
+ * the first UTC midnight from which the anchor fits. In practice only a
+ * monthly subscription with more than a month of pass left gets a date; a
+ * yearly one always fits (a pass and a queued one cover at most six months).
+ */
+export function passSubscriptionOpensAt(
+  coveredUntil: Date,
+  interval: BillingInterval,
+  now: Date = new Date(),
+): Date | null {
+  const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
+  if (endSeconds <= Math.floor(now.getTime() / 1000) + HOUR_SECONDS) return null;
+  if (anchorFits(endSeconds, interval, now)) return null;
+  // The first UTC midnight whose whole day fits. Midnight is the worst moment
+  // of a day (passEndsAt clamps 29 to 31 January to 28 February at the same
+  // time of day, so the morning of a clamped day can fail while its evening
+  // fits), and passEndsAt of successive midnights never decreases, so the
+  // first midnight that fits is the answer. Start at most a little more than
+  // the interval before the end, never before today.
+  const DAY_MS = 24 * HOUR_SECONDS * 1000;
+  const from = new Date(Math.max(now.getTime(), coveredUntil.getTime() - (intervalMonths(interval) * 31 + 2) * DAY_MS));
+  let midnight = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()) + DAY_MS;
+  while (midnight < coveredUntil.getTime() && !anchorFits(endSeconds, interval, new Date(midnight))) midnight += DAY_MS;
+  return new Date(midnight);
 }
 
 // ---------------------------------------------------------------------------

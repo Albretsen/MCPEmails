@@ -283,11 +283,20 @@ test('Billing state: the anchored first charge is the pass end, the queued pass 
   assert.equal(state.canAddPass, true);
   assert.equal(state.nextPassEndsAt, new Date(Date.UTC(2027, 2, 30, 12)).toISOString());
 
-  // A pass ending beyond the first monthly period: Stripe falls back to
-  // trial_end, and the first charge is STILL the pass end.
+  assert.equal(state.monthlyOpensAt, null, 'monthly fits in the last month');
+
+  // A pass ending beyond the first monthly period: monthly is not offered
+  // until it fits (no trial_end fallback); yearly is, from the pass end.
   const far = new Date(NOW.getTime() + 80 * DAY);
   const long: ActivePass = { current: pass('p2', NOW, far), queued: null, coveredUntil: far };
-  assert.equal(passBillingState(long, { now: NOW }).firstCharge.month, far.toISOString());
+  const longState = passBillingState(long, { now: NOW });
+  assert.equal(longState.firstCharge.month, null);
+  assert.equal(longState.firstCharge.year, far.toISOString());
+  assert.ok(longState.monthlyOpensAt);
+  const opens = Date.parse(longState.monthlyOpensAt);
+  assert.ok(opens > NOW.getTime() && opens < far.getTime());
+  assert.equal(new Date(opens).getUTCHours(), 0, 'a whole UTC day');
+  assert.equal(passBillingState(long, { now: new Date(opens) }).monthlyOpensAt, null);
 
   // Within the hour: charged today.
   const soon = new Date(NOW.getTime() + 30 * 60 * 1000);

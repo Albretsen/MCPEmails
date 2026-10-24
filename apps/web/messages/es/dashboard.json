@@ -808,6 +808,7 @@
       "pass_unavailable": "El pase Personal de 3 meses no está disponible ahora mismo.",
       "already_subscribed": "Ya tienes una suscripción, que incluye todo lo que ofrece el pase.",
       "pass_already_queued": "Ya tienes otros 3 meses programados después de este pase.",
+      "pass_monthly_not_yet": "La facturación mensual puede empezar en el último mes de tu pase. La anual ya está disponible.",
       "plan_change_pending": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
     },
     "plans": {
@@ -878,6 +879,7 @@
       "subscribeYearly": "Anual, {price} al año",
       "subscribeMonthlyFrom": "Suscripción mensual, {price} al mes, primer cargo el {date}",
       "subscribeYearlyFrom": "Anual, {price} al año, primer cargo el {date}",
+      "monthlyFrom": "La opción mensual está disponible a partir del {date}.",
       "until": "Personal hasta el {date}",
       "queued": "Después, otros 3 meses, hasta el {date}.",
       "after": "Un solo pago, no se renueva nada. Después del {date} este espacio de trabajo vuelve a Free: {cap} acciones de correo al mes y una bandeja para nuevas conexiones. Tus bandejas, borradores y ajustes se mantienen.",

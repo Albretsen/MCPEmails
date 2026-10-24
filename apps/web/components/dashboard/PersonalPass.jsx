@@ -178,10 +178,11 @@ export function CheckoutReturnPassCard({ workspaceId, stripePrices, onDismiss })
 /**
  * Billing for someone who holds a pass: "Personal until {date}", the queued
  * pass, what happens after, and the ways to keep Personal. The subscribe
- * buttons state the first charge date, which is the pass end (anchored, or
- * Stripe's trial_end fallback when the pass ends beyond the first monthly
- * period; we never call those days a trial) or today when the pass ends
- * within the hour.
+ * buttons state the first charge date, which is the pass end (Stripe anchors
+ * the billing cycle there) or today when the pass ends within the hour.
+ * Monthly can only be anchored in the pass's last month, so before that it
+ * is a plain line with the day it opens (passState.monthlyOpensAt) instead of
+ * a button.
  */
 export function PassBillingPanel({ passState, stripePrices, onSubscribe, busy = null }) {
   const t = useTranslations('dashboard');
@@ -227,15 +228,26 @@ export function PassBillingPanel({ passState, stripePrices, onSubscribe, busy = 
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Btn variant="primary" onClick={() => onSubscribe('personal', 'month')} disabled={busy !== null}>
-          {busy === 'personal' ? t('billing.redirecting') : chargeLabel('month', prices.monthly)}
-        </Btn>
+        {!passState.monthlyOpensAt && (
+          <Btn variant="primary" onClick={() => onSubscribe('personal', 'month')} disabled={busy !== null}>
+            {busy === 'personal' ? t('billing.redirecting') : chargeLabel('month', prices.monthly)}
+          </Btn>
+        )}
         {prices.yearly && (
-          <Btn variant="secondary" onClick={() => onSubscribe('personal', 'year')} disabled={busy !== null}>
+          <Btn
+            variant={passState.monthlyOpensAt ? 'primary' : 'secondary'}
+            onClick={() => onSubscribe('personal', 'year')}
+            disabled={busy !== null}
+          >
             {chargeLabel('year', prices.yearly)}
           </Btn>
         )}
       </div>
+      {passState.monthlyOpensAt && (
+        <p data-pass-monthly="later" style={{ ...lineStyle, margin: 0 }}>
+          {t('billing.pass.monthlyFrom', { date: passDate(passState.monthlyOpensAt, locale) })}
+        </p>
+      )}
       {passState.canAddPass && (
         <p style={{ ...lineStyle, margin: 0 }}>
           <a href={passStartHref({ locale, arm: 'holder', surface: 'pass_reminder' })} style={linkStyle}>

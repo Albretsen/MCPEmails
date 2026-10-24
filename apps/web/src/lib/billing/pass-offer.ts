@@ -47,6 +47,7 @@ import {
   isPausedSubscriber,
   passCheckoutOpen,
   passEndsAt,
+  passSubscriptionOpensAt,
   passSubscriptionStart,
   personalPassMode,
   type ActivePass,
@@ -208,11 +209,17 @@ export interface PassBillingState {
   nextPassEndsAt: string;
   /**
    * When a subscription bought now would first charge, ISO, per interval: the
-   * pass's end whether Stripe anchors the billing cycle there or has to fall
-   * back to trial_end; null when it would charge today (the pass ends within
-   * the hour). Our UI only ever calls it the first charge date, never a trial.
+   * pass's end, where Stripe anchors the billing cycle; null when it would
+   * charge today (the pass ends within the hour) or cannot be bought yet.
    */
   firstCharge: { month: string | null; year: string | null };
+  /**
+   * The day monthly Personal can be bought, ISO, or null when it can be now.
+   * Stripe anchors a monthly subscription only inside its first period, so
+   * monthly opens in the pass's last month; the checkout refuses it before
+   * (pass_monthly_not_yet). Yearly always fits.
+   */
+  monthlyOpensAt: string | null;
 }
 
 export function passBillingState(
@@ -223,6 +230,7 @@ export function passBillingState(
   const checkoutOpen = options.checkoutOpen ?? passCheckoutOpen();
   const firstChargeAt = (interval: 'month' | 'year'): string | null =>
     passSubscriptionStart(active.coveredUntil, interval, now) ? active.coveredUntil.toISOString() : null;
+  const monthlyOpensAt = passSubscriptionOpensAt(active.coveredUntil, 'month', now);
   return {
     currentEndsAt: new Date(active.current.ends_at).toISOString(),
     queuedEndsAt: active.queued ? new Date(active.queued.ends_at).toISOString() : null,
@@ -231,6 +239,7 @@ export function passBillingState(
     canAddPass: checkoutOpen && canQueueAnotherPass(active),
     nextPassEndsAt: passEndsAt(active.coveredUntil).toISOString(),
     firstCharge: { month: firstChargeAt('month'), year: firstChargeAt('year') },
+    monthlyOpensAt: monthlyOpensAt ? monthlyOpensAt.toISOString() : null,
   };
 }
 

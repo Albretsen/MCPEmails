@@ -298,3 +298,19 @@ test('without a race the projection writes once and returns the plan', async () 
   assert.equal(await reprojectUserPlan(asClient(db), USER, 'test'), 'free');
   assert.equal(db.table('workspaces')[0].plan, 'free');
 });
+
+test('monthly opens on the first whole UTC day Stripe can anchor it, across the February clamp', async () => {
+  const { passSubscriptionOpensAt, passSubscriptionStart } = await import('./pass.ts');
+  const now = new Date('2026-12-10T12:00:00Z');
+  const end = new Date('2027-02-28T12:00:00Z');
+  // 29 to 31 January + 1 month all clamp to 28 February at the same time of
+  // day, so their mornings do not fit; 1 February is the first whole day.
+  const opens = passSubscriptionOpensAt(end, 'month', now);
+  assert.equal(opens?.toISOString(), '2027-02-01T00:00:00.000Z');
+  assert.equal(passSubscriptionStart(end, 'month', new Date('2027-01-30T06:00:00Z')), null);
+  for (const hour of [0, 6, 12, 23]) {
+    assert.ok(passSubscriptionStart(end, 'month', new Date(Date.UTC(2027, 1, 1, hour))), `1 Feb ${hour}:00`);
+  }
+  assert.equal(passSubscriptionOpensAt(end, 'month', opens!), null);
+  assert.equal(passSubscriptionOpensAt(end, 'year', now), null, 'yearly always fits');
+});
