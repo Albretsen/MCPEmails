@@ -11117,7 +11117,7 @@ async function executeListInboxes(
   }));
 
   // Active first, then parked, each in connection order.
-  const inboxes: Array<Record<string, unknown>> = [...activeEntries, ...parkedEntries];
+  const inboxes: Array<Record<string, unknown> & { inbox_id: string }> = [...activeEntries, ...parkedEntries];
 
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
