@@ -354,7 +354,123 @@
     "businessFeatureInboxes": "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
     "businessFeatureMembers": "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
     "businessFeatureApprovals": "Admins geben zurückgehaltene Sendungen frei",
-    "businessFeatureWorkspaces": "Mehrere Workspaces in einem Abonnement"
+    "businessFeatureWorkspaces": "Mehrere Workspaces in einem Abonnement",
+    "fix": {
+      "heading": "So beheben Sie es",
+      "testAgain": "Erneut testen",
+      "useOutlook": "Mit Microsoft anmelden",
+      "receiveOnly": "Nur zum Lesen verbinden",
+      "useSuggestedHost": "{host} verwenden",
+      "progressLogin": "Anmeldung wird geprüft...",
+      "progressSending": "Versand wird geprüft...",
+      "progressSlow": "Die Prüfung läuft noch. Manche Mailserver brauchen bis zu einer Minute für eine Antwort.",
+      "gmail": {
+        "twoStep": "Aktivieren Sie die Bestätigung in zwei Schritten für Ihr Google-Konto.",
+        "create": "Erstellen Sie unter myaccount.google.com/apppasswords ein App-Passwort und nennen Sie es MCPEmails.",
+        "paste": "Fügen Sie die 16 Buchstaben in das Passwortfeld ein. Leerzeichen sind kein Problem.",
+        "workspace": "Bei einem Arbeits- oder Schulkonto kann die Option für App-Passwörter fehlen, weil Ihr Administrator sie deaktiviert hat. Bitten Sie dann Ihren Administrator, App-Passwörter zu erlauben.",
+        "imapDisabled": "Ihr Google-Workspace-Administrator hat IMAP für Ihr Konto deaktiviert, daher funktioniert kein Passwort.",
+        "imapDisabledAdmin": "Senden Sie dies an Ihre IT: Bitte aktivieren Sie den IMAP-Zugriff für mein Konto in der Google Admin-Konsole unter Apps, Google Workspace, Gmail, Endnutzerzugriff."
+      },
+      "appPassword": {
+        "normalRejected": "Ihr normales {provider}-Passwort wird hier abgelehnt. Nur ein App-Passwort funktioniert.",
+        "paste": "Fügen Sie es in das Passwortfeld ein und klicken Sie auf Erneut testen."
+      },
+      "yahoo": {
+        "create": "Wählen Sie auf der Yahoo-Seite Kontosicherheit unter Externe Verbindungen die Option App-Passwort erstellen, nennen Sie es MCPEmails und erzeugen Sie es."
+      },
+      "aol": {
+        "create": "Erzeugen Sie auf der AOL-Seite Kontosicherheit ein App-Passwort und nennen Sie es MCPEmails. Fehlt die Option, aktivieren Sie zuerst die Bestätigung in zwei Schritten."
+      },
+      "icloud": {
+        "create": "Öffnen Sie auf account.apple.com Anmeldung und Sicherheit, dann App-spezifische Passwörter, und erstellen Sie eines mit dem Namen MCPEmails. Die Zwei-Faktor-Authentifizierung muss aktiviert sein."
+      },
+      "ionos": {
+        "password": "IONOS erwartet das Passwort dieser E-Mail-Adresse, nicht das Passwort, mit dem Sie sich bei IONOS anmelden."
+      },
+      "fullAddress": "Verwenden Sie Ihre vollständige E-Mail-Adresse als Benutzernamen.",
+      "tOnline": {
+        "password": "Die Telekom akzeptiert hier nur Ihr Passwort für E-Mail-Programme, nicht Ihr Telekom-Login-Passwort.",
+        "where": "Legen Sie es im E-Mail Center unter Einstellungen, dann Passwörter, dann Passwort für E-Mail-Programme fest."
+      },
+      "mailRu": {
+        "create": "Öffnen Sie in Mail.ru Einstellungen, Alle Einstellungen, Sicherheit, dann Passwörter für externe Anwendungen, und erstellen Sie eines mit vollem Zugriff auf die Mail."
+      },
+      "qq": {
+        "service": "Öffnen Sie in QQ Mail 设置 (Einstellungen), dann 账号与安全 (Konto und Sicherheit), und aktivieren Sie den POP3/IMAP/SMTP-Dienst.",
+        "code": "Erzeugen Sie einen Autorisierungscode (授权码) und fügen Sie ihn in das Passwortfeld ein. Ihr QQ-Passwort funktioniert nicht."
+      },
+      "mailCom": {
+        "imap": "Aktivieren Sie IMAP bei mail.com: Email, Settings, POP3 and IMAP, dann Enable access to this account via POP3 and IMAP ankreuzen. IMAP erfordert einen mail.com-Premium-Tarif.",
+        "twoFactor": "Bei aktivierter Zwei-Faktor-Authentifizierung erstellen Sie unter Security Options ein anwendungsspezifisches Passwort und verwenden dieses."
+      },
+      "infomaniak": {
+        "password": "Infomaniak akzeptiert hier nicht Ihr Manager-Passwort. Öffnen Sie im Manager den Mail Service, Ihre Adresse, dann Geräte, und fügen Sie ein Gerät hinzu, um ein Gerätepasswort zu erhalten."
+      },
+      "orange": {
+        "imap": "Aktivieren Sie POP/IMAP in Ihrem Orange-Postfach: Zahnrad, tous les paramètres, Sécurité, Protocoles POP ou IMAP, dann Activer POP/IMAP.",
+        "password": "Verwenden Sie dann das mot de passe dédié aus Ihrem Espace client unter Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "Ist die Zwei-Faktor-Authentifizierung (dvoufázové ověření) aktiv, funktioniert Ihr Seznam-Passwort hier nicht mehr. Legen Sie unter Zabezpečení účtu ein Heslo pro aplikace fest und verwenden Sie dieses."
+      },
+      "gmx": {
+        "imap": "{provider} schaltet den POP3- und IMAP-Zugriff standardmäßig aus. Aktivieren Sie ihn unter E-Mail-Einstellungen, dann POP3/IMAP.",
+        "twoFactor": "Bei aktivierter Zwei-Faktor-Authentifizierung verwenden Sie ein App-Passwort statt Ihres normalen Passworts."
+      },
+      "zoho": {
+        "imap": "Aktivieren Sie den IMAP-Zugriff in Zoho Mail unter Einstellungen, Mail-Konten, IMAP-Zugriff.",
+        "twoFactor": "Bei Zwei-Faktor-Authentifizierung, föderierter Anmeldung oder SAML erzeugen Sie ein anwendungsspezifisches Passwort und verwenden dieses."
+      },
+      "yandex": {
+        "create": "Öffnen Sie auf id.yandex.com Sicherheit, dann App-Passwörter, und erstellen Sie eines vom Typ Mail.",
+        "imap": "Öffnen Sie in den Yandex-Mail-Einstellungen E-Mail-Programme und aktivieren Sie sowohl den IMAP-Zugriff als auch App-Passwörter und OAuth-Token."
+      },
+      "office365": {
+        "useOutlook": "Microsoft-365-Postfächer von Arbeit oder Schule akzeptieren keine Passwörter aus Mail-Apps. Verbinden Sie es stattdessen mit der Microsoft-Anmeldung."
+      },
+      "smtp": {
+        "readingOk": "Ihr Server hat die Anmeldung zum Lesen akzeptiert, aber zum Senden abgelehnt.",
+        "username": "Wenn Ihr Anbieter einen eigenen Login zum Senden vergibt, tragen Sie ihn unter Erweiterte Einstellungen, Benutzername ein.",
+        "readOnly": "Oder verbinden Sie jetzt nur zum Lesen und ergänzen Sie den Versand später in den Postfach-Einstellungen."
+      },
+      "unreachable": {
+        "tried": "Wir haben {host} versucht, aber der Server hat nicht geantwortet.",
+        "notFound": "Wir konnten keinen Mailserver namens {host} finden.",
+        "suggest": "Ihre Adresse liegt bei {provider}, deren Server {host} ist.",
+        "check": "Prüfen Sie den Servernamen auf der Einstellungsseite Ihres Anbieters und testen Sie erneut.",
+        "blocked": "Ihr Mailserver nimmt keine Verbindungen von unseren Servern an. Das ist bei Mailservern von Schulen und Unternehmen häufig.",
+        "blockedNext": "Bitten Sie Ihre IT, den Zugriff von außen zu erlauben, oder verbinden Sie eine andere Adresse."
+      },
+      "tls": {
+        "tried": "Wir haben Port {tlsPort} mit TLS und Port {starttlsPort} mit STARTTLS versucht, und die sichere Verbindung ist bei beiden fehlgeschlagen.",
+        "next": "Wenn Ihr Anbieter einen anderen Port oder eine andere Sicherheitseinstellung angibt, ändern Sie sie hier und testen Sie erneut."
+      },
+      "link": {
+        "twoStep": "Bestätigung in zwei Schritten öffnen",
+        "appPasswords": "App-Passwort-Seite von {provider} öffnen",
+        "imapSetting": "So aktivieren Sie IMAP bei {provider}",
+        "providerHelp": "Hilfeseite von {provider}",
+        "adminGuide": "Anleitung von Google für Ihren Administrator"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft zeigt eine Zustimmungsseite, auf der steht, was MCPEmails darf: Mails lesen und ändern, Mails senden und verbunden bleiben.",
+        "line2": "Stimmen Sie zu, um zu verbinden. Ihr Microsoft-Passwort geben Sie nur auf der Seite von Microsoft ein.",
+        "line3": "Bei einem Arbeitskonto kann stattdessen eine Administratorfreigabe verlangt werden. Dann kommen Sie hierher zurück und holen den Link für Ihren Administrator."
+      },
+      "outlookCancelled": {
+        "title": "Sie haben auf der Microsoft-Seite abgebrochen",
+        "body": "Es wurde nichts verbunden. Um Ihr Outlook-Postfach zu verbinden, stimmen Sie auf der Zustimmungsseite von Microsoft zu.",
+        "tryAgain": "Erneut versuchen"
+      },
+      "done": {
+        "title": "Postfach verbunden",
+        "body": "Verbinden Sie jetzt Ihre KI-App, damit sie dieses Postfach nutzen kann.",
+        "bodyClient": "Verbinden Sie jetzt {client}, damit es dieses Postfach nutzen kann.",
+        "openGuide": "Zeigen Sie mir, wie",
+        "later": "Später"
+      }
+    }
   },
   "commandPalette": {
     "pageOverview": "Übersicht",

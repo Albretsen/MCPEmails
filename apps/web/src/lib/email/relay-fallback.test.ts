@@ -298,4 +298,45 @@ test('no relay configured: the connect form behaves exactly as before', async ()
   assert.equal(out.route, null);
   assert.ok(seen.every((key) => key.startsWith('direct:')));
   assert.equal(calls.length, 0);
+  assert.equal(out.relayAlsoFailed, undefined, 'never claimed when the relay was not tried');
+});
+
+// ── relayAlsoFailed: what the connect panel's "does not accept connections
+// from our servers" sentence rests on ────────────────────────────────────────
+
+test('direct and relayed attempts both unanswered: the direct failure, flagged relayAlsoFailed', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({});
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.school.example', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.route, null);
+  assert.equal(out.detection.result.code, 'CONNECTION_TIMEOUT');
+  assert.equal(out.relayAlsoFailed, true);
+});
+
+test('a relay that is down is not the host refusing us: no relayAlsoFailed', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({});
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.school.example', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelDown,
+  });
+  assert.equal(out.route, null);
+  assert.equal(out.relayAlsoFailed, undefined);
+});
+
+test('a relayed attempt that worked is never flagged', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({ 'relay:993': { ok: true } });
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.allsimple.net', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.detection.result.ok, true);
+  assert.equal(out.relayAlsoFailed, undefined);
 });

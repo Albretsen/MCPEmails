@@ -354,7 +354,123 @@
     "businessFeatureInboxes": "10 buzones incluidos, $3 al mes por cada uno adicional",
     "businessFeatureMembers": "Miembros ilimitados con roles, sin coste extra",
     "businessFeatureApprovals": "Los administradores aprueban los envíos retenidos",
-    "businessFeatureWorkspaces": "Varios espacios de trabajo con una sola suscripción"
+    "businessFeatureWorkspaces": "Varios espacios de trabajo con una sola suscripción",
+    "fix": {
+      "heading": "Cómo solucionarlo",
+      "testAgain": "Probar de nuevo",
+      "useOutlook": "Usar el inicio de sesión de Microsoft",
+      "receiveOnly": "Conectar solo para leer",
+      "useSuggestedHost": "Usar {host}",
+      "progressLogin": "Comprobando el inicio de sesión...",
+      "progressSending": "Comprobando el envío...",
+      "progressSlow": "Seguimos comprobando. Algunos servidores de correo tardan hasta un minuto en responder.",
+      "gmail": {
+        "twoStep": "Activa la verificación en dos pasos en tu cuenta de Google.",
+        "create": "Crea una contraseña de aplicación en myaccount.google.com/apppasswords y llámala MCPEmails.",
+        "paste": "Pega las 16 letras en el campo de contraseña. Los espacios no importan.",
+        "workspace": "En una cuenta de trabajo o de centro educativo puede faltar la opción de contraseñas de aplicación porque tu administrador la desactivó. En ese caso, pide a tu administrador que permita las contraseñas de aplicación.",
+        "imapDisabled": "El administrador de tu Google Workspace ha desactivado IMAP en tu cuenta, así que ninguna contraseña puede funcionar.",
+        "imapDisabledAdmin": "Envía esto a tu equipo de TI: activad el acceso IMAP para mi cuenta en la Consola de administración de Google, en Aplicaciones, Google Workspace, Gmail, Acceso de usuarios finales."
+      },
+      "appPassword": {
+        "normalRejected": "Aquí se rechaza tu contraseña normal de {provider}. Solo funciona una contraseña de aplicación.",
+        "paste": "Pégala en el campo de contraseña y pulsa Probar de nuevo."
+      },
+      "yahoo": {
+        "create": "En la página Seguridad de la cuenta de Yahoo, en Conexiones externas, elige Crear contraseña de aplicación, llámala MCPEmails y genérala."
+      },
+      "aol": {
+        "create": "En la página Seguridad de la cuenta de AOL, genera una contraseña de aplicación y llámala MCPEmails. Si no aparece la opción, activa primero la verificación en dos pasos."
+      },
+      "icloud": {
+        "create": "En account.apple.com, abre Inicio de sesión y seguridad, luego Contraseñas específicas de apps, y crea una llamada MCPEmails. La autenticación de doble factor debe estar activada."
+      },
+      "ionos": {
+        "password": "IONOS pide la contraseña de esta dirección de correo, no la que usas para entrar en IONOS."
+      },
+      "fullAddress": "Usa tu dirección de correo completa como usuario.",
+      "tOnline": {
+        "password": "Telekom solo acepta aquí tu Passwort für E-Mail-Programme, no la contraseña de Telekom Login.",
+        "where": "Configúrala en el E-Mail Center, en Einstellungen, luego Passwörter, luego Passwort für E-Mail-Programme."
+      },
+      "mailRu": {
+        "create": "En Mail.ru, abre Configuración, Toda la configuración, Seguridad, luego Contraseñas para aplicaciones externas, y crea una con acceso completo al correo."
+      },
+      "qq": {
+        "service": "En QQ Mail, abre 设置 (Configuración), luego 账号与安全 (Cuenta y seguridad), y activa el servicio POP3/IMAP/SMTP.",
+        "code": "Genera un código de autorización (授权码) y pégalo en el campo de contraseña. Tu contraseña de QQ no funciona."
+      },
+      "mailCom": {
+        "imap": "Activa IMAP en mail.com: Email, Settings, POP3 and IMAP, y marca Enable access to this account via POP3 and IMAP. IMAP requiere un plan Premium de mail.com.",
+        "twoFactor": "Con la autenticación de dos factores activada, crea una contraseña específica de aplicación en Security Options y usa esa."
+      },
+      "infomaniak": {
+        "password": "Infomaniak no acepta aquí tu contraseña del Manager. En el Manager, abre Mail Service, tu dirección, luego Dispositivos, y añade un dispositivo para obtener una contraseña de dispositivo."
+      },
+      "orange": {
+        "imap": "Activa POP/IMAP en tu buzón de Orange: la rueda dentada, tous les paramètres, Sécurité, Protocoles POP ou IMAP, y luego Activer POP/IMAP.",
+        "password": "Después usa el mot de passe dédié de tu Espace client, en Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "Si la autenticación de dos factores (dvoufázové ověření) está activada, tu contraseña de Seznam deja de funcionar aquí. Crea una Heslo pro aplikace en Zabezpečení účtu y usa esa."
+      },
+      "gmx": {
+        "imap": "{provider} desactiva por defecto el acceso POP3 e IMAP. Actívalo en E-Mail-Einstellungen, luego POP3/IMAP.",
+        "twoFactor": "Con la autenticación de dos factores activada, usa una contraseña de aplicación en lugar de tu contraseña normal."
+      },
+      "zoho": {
+        "imap": "Activa el acceso IMAP en Zoho Mail, en Configuración, Cuentas de correo, Acceso IMAP.",
+        "twoFactor": "Con autenticación de dos factores, inicio de sesión federado o SAML, genera una contraseña específica de aplicación y usa esa."
+      },
+      "yandex": {
+        "create": "En id.yandex.com, abre Seguridad, luego Contraseñas de aplicaciones, y crea una de tipo Correo.",
+        "imap": "En la configuración de Yandex Mail, abre Clientes de correo y activa tanto el acceso IMAP como Contraseñas de aplicaciones y tokens OAuth."
+      },
+      "office365": {
+        "useOutlook": "Los buzones de Microsoft 365 de trabajo o de centros educativos no aceptan contraseñas desde apps de correo. Conéctalo con el inicio de sesión de Microsoft."
+      },
+      "smtp": {
+        "readingOk": "Tu servidor aceptó el inicio de sesión para leer el correo, pero lo rechazó para enviar.",
+        "username": "Si tu proveedor te da un usuario distinto para enviar, escríbelo en Configuración avanzada, Usuario.",
+        "readOnly": "O conecta ahora solo para leer y añade el envío más tarde en la configuración del buzón."
+      },
+      "unreachable": {
+        "tried": "Probamos {host} y el servidor no respondió.",
+        "notFound": "No encontramos ningún servidor de correo llamado {host}.",
+        "suggest": "Tu dirección es de {provider}, cuyo servidor es {host}.",
+        "check": "Revisa el nombre del servidor en la página de configuración de tu proveedor y prueba de nuevo.",
+        "blocked": "Tu servidor de correo no acepta conexiones desde nuestros servidores. Es habitual en servidores de correo de centros educativos y empresas.",
+        "blockedNext": "Pide a tu equipo de TI que permita el acceso desde fuera, o conecta otra dirección."
+      },
+      "tls": {
+        "tried": "Probamos el puerto {tlsPort} con TLS y el puerto {starttlsPort} con STARTTLS, y la conexión segura falló en ambos.",
+        "next": "Si tu proveedor indica otro puerto u otra seguridad, cámbialo aquí y prueba de nuevo."
+      },
+      "link": {
+        "twoStep": "Abrir la verificación en dos pasos",
+        "appPasswords": "Abrir la página de contraseñas de aplicación de {provider}",
+        "imapSetting": "Cómo activar IMAP en {provider}",
+        "providerHelp": "Página de ayuda de {provider}",
+        "adminGuide": "Guía de Google para tu administrador"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft mostrará una pantalla de consentimiento con lo que MCPEmails puede hacer: leer y cambiar el correo, enviar correo y seguir conectado.",
+        "line2": "Acéptala para conectar. Tu contraseña de Microsoft solo se escribe en la página de Microsoft.",
+        "line3": "Una cuenta de trabajo puede pedir la aprobación de un administrador. Si pasa, vuelve aquí y consigue el enlace para tu administrador."
+      },
+      "outlookCancelled": {
+        "title": "Cancelaste en la página de Microsoft",
+        "body": "No se conectó nada. Para conectar tu buzón de Outlook, acepta la pantalla de consentimiento cuando Microsoft la muestre.",
+        "tryAgain": "Intentar de nuevo"
+      },
+      "done": {
+        "title": "Buzón conectado",
+        "body": "Ahora conecta tu app de IA para que pueda usar este buzón.",
+        "bodyClient": "Ahora conecta {client} para que pueda usar este buzón.",
+        "openGuide": "Muéstrame cómo",
+        "later": "Más tarde"
+      }
+    }
   },
   "commandPalette": {
     "pageOverview": "Resumen",

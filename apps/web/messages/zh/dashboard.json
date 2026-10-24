@@ -101,7 +101,28 @@
     "multiInboxDescUpgrade": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。免费版包含一个邮箱；Pro 最多包含 10 个。",
     "multiInboxCompact": "还在使用 info@、sales@ 或 invoices@ 吗？把它们连接进来，智能体就能在同一个对话中处理公司的每一个邮箱。",
     "multiInboxCompactUpgrade": "还在使用 info@、sales@ 或 invoices@ 吗？智能体可以在同一个对话中处理公司的每一个邮箱。第二个邮箱需要付费套餐。",
-    "multiInboxCta": "添加邮箱"
+    "multiInboxCta": "添加邮箱",
+    "waitingTitle": "等待第一次调用",
+    "waitingDesc": "邮箱已连接。连接你的 AI 应用并向它提个问题，第一次调用到达时本页会自动更新。",
+    "connectAppTitle": "连接你的 AI 应用",
+    "connectAppDesc": "把这个 URL 粘贴到你的 AI 应用中，然后在下方选择它查看步骤。",
+    "connectAppDone": "你的 AI 应用已连接到 MCPEmails。",
+    "askTitle": "向它提个问题",
+    "askDesc": "新建一个对话，粘贴下面任意一句。",
+    "copyPrompt": "复制提示词",
+    "prompts": {
+      "unread": "总结我今天未读的邮件",
+      "bank": "找到我银行发来的最新一封邮件，告诉我内容",
+      "draftReply": "为我最新的一封邮件起草回复，但不要发送"
+    },
+    "clientToggle": {
+      "claude": "在 Claude 中，点击输入框里的 +，打开 Connectors，确认 MCPEmails 在此对话中已开启。否则 Claude 会在不读取你邮件的情况下回答。",
+      "chatgpt": "在 ChatGPT 中，每个新对话都要点击 +，选择 Developer mode，再选择 MCPEmails 应用。否则 ChatGPT 看不到你的邮件。"
+    },
+    "itWorksTitle": "已生效",
+    "itWorksDesc": "你的 AI 应用刚刚第一次调用了 MCPEmails。在同一个对话中继续即可。",
+    "waitingLive": "第一次调用到达时，本页会自动更新。",
+    "waitingStopped": "仍未收到调用。试过提示词后请刷新本页。"
   },
   "firstWeek": {
     "title": "你的第一周",
@@ -387,7 +408,6 @@
       "nextStep1": "在 claude.ai 或 Claude Desktop 中，打开设置 → 连接器 → 添加自定义连接器。",
       "nextStep2": "粘贴上面的 URL。OAuth 客户端一键连接。",
       "nextStep3": "然后直接问 Claude：",
-      "nextPrompt": "总结我今天未读的邮件。",
       "nextGuide": "分步指南",
       "warning": "请将此密钥妥善保存。它无法再次显示。如果丢失，请撤销此密钥并创建一个新的。",
       "acknowledge": "我已复制我的 API 密钥，并了解它无法再次显示。",
