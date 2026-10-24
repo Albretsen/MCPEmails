@@ -6,6 +6,7 @@ import {
   type BillingPlanCategory,
   type BillingTargetCategory,
   type ConnectEntryPoint,
+  type PassFunnelCategory,
   type PricingSurfaceCategory,
   type ProductFunnelEvent,
 } from '@/lib/analytics/product-funnel';
@@ -102,6 +103,41 @@ export async function recordCheckoutCompleted(
 ): Promise<void> {
   if (!workspaceId) return;
   await record({ workspaceId, stage: 'checkout_completed', outcome: 'success', category: target });
+}
+
+/**
+ * A 3-month Personal pass event (20261024120000). Kept apart from the
+ * subscription stages on purpose: a pass never writes `checkout_started` or
+ * `checkout_completed`, so the subscription conversion and the experiment
+ * read-out built on `paid_at` are not inflated by one-time payments.
+ *
+ *   pass_checkout_started    a pass Checkout was requested (failure = refused)
+ *   pass_checkout_completed  Stripe confirmed the payment (webhook only)
+ *   pass_refunded            a full refund ended the pass
+ *   pass_expired             the pass ran to its end date
+ *
+ * Best-effort like every helper here: it never throws.
+ */
+export async function recordPassEvent(args: {
+  workspaceId: string | null;
+  stage:
+    | 'pass_offer_shown' | 'pass_checkout_started' | 'pass_checkout_completed'
+    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed';
+  outcome?: 'started' | 'success' | 'failure';
+  category?: PassFunnelCategory | BillingTargetCategory;
+  failure?: ProductFunnelEvent['errorCategory'];
+}): Promise<void> {
+  const { workspaceId, stage, failure } = args;
+  if (!workspaceId) return;
+  const outcome = args.outcome ?? (failure ? 'failure' : 'success');
+  await record({
+    workspaceId,
+    stage,
+    outcome,
+    category: args.category ?? 'personal_pass_3m',
+    // The terminal-error CHECK rejects a reason on any outcome but `failure`.
+    errorCategory: outcome === 'failure' ? failure : undefined,
+  });
 }
 
 /**

@@ -27,7 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 type Row = Record<string, unknown>;
-type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'notIs'; column: string; value: unknown };
+type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'lte' | 'notIs'; column: string; value: unknown };
 
 /** Mirrors the unique index in 20260902130000_billing_lifecycle_emails.sql. */
 const CONFLICT_COLUMNS = ['stripe_customer_id', 'template', 'scope_key'];
@@ -44,6 +44,8 @@ function matches(row: Row, filters: Filter[]): boolean {
         return Array.isArray(f.value) && f.value.includes(actual);
       case 'gt':
         return actual != null && String(actual) > String(f.value);
+      case 'lte':
+        return actual != null && String(actual) <= String(f.value);
       case 'notIs':
         return f.value === null ? actual !== null && actual !== undefined : actual !== f.value;
       case 'like': {
@@ -63,6 +65,10 @@ interface Pending {
   patch?: Row;
   inserted?: Row[];
   limit?: number;
+  order?: { column: string; ascending: boolean };
+  /** upsert only: the conflict target, and whether a clash is skipped or merged. */
+  onConflict?: string[];
+  ignoreDuplicates?: boolean;
 }
 
 class Query implements PromiseLike<{ data: Row[] | null; error: { message: string; code?: string } | null }> {
@@ -103,8 +109,17 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
     this.pending.filters.push({ op: 'notIs', column, value });
     return this;
   }
+  lte(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'lte', column, value });
+    return this;
+  }
   limit(n: number): this {
     this.pending.limit = n;
+    return this;
+  }
+  /** Sorts by the column's string form, which is chronological for ISO timestamps. */
+  order(column: string, options: { ascending?: boolean } = {}): this {
+    this.pending.order = { column, ascending: options.ascending !== false };
     return this;
   }
   select(_columns?: string): this {
@@ -128,13 +143,21 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
 
     if (this.pending.kind === 'upsert') {
       const out: Row[] = [];
+      // Without an explicit target this keeps the billing_email_sends index,
+      // which is what every caller written before the target was read assumed.
+      const columns = this.pending.onConflict ?? CONFLICT_COLUMNS;
+      const ignore = this.pending.onConflict ? this.pending.ignoreDuplicates === true : true;
       for (const candidate of this.pending.inserted ?? []) {
-        const clash = table.some((existing) =>
-          CONFLICT_COLUMNS.every((c) => existing[c] === candidate[c]),
-        );
+        const existing = table.find((row) => columns.every((c) => row[c] === candidate[c]));
         // ON CONFLICT DO NOTHING: skipped rows are not inserted and, because
         // ignoreDuplicates is set, are not returned either.
-        if (clash) continue;
+        if (existing && ignore) continue;
+        // ON CONFLICT DO UPDATE: the named columns overwrite, the rest stay.
+        if (existing) {
+          Object.assign(existing, candidate);
+          out.push(existing);
+          continue;
+        }
         const row: Row = { id: this.store.nextId++, ...candidate, sent_at: null, cancelled_at: null };
         table.push(row);
         out.push(row);
@@ -153,6 +176,15 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
     }
 
     let hits = table.filter((row) => matches(row, this.pending.filters));
+    if (this.pending.order) {
+      const { column, ascending } = this.pending.order;
+      hits = [...hits].sort((a, b) => {
+        const left = String(a[column] ?? '');
+        const right = String(b[column] ?? '');
+        if (left === right) return 0;
+        return (left < right ? -1 : 1) * (ascending ? 1 : -1);
+      });
+    }
     if (this.pending.limit != null) hits = hits.slice(0, this.pending.limit);
 
     if (this.pending.kind === 'update') {
@@ -232,12 +264,14 @@ export class FakeSupabase {
       insert: (rows: Row | Row[]) =>
         new Query(this, { kind: 'insert', table, filters: [], inserted: Array.isArray(rows) ? rows : [rows] }),
       delete: () => new Query(this, { kind: 'delete', table, filters: [] }),
-      upsert: (rows: Row | Row[], _options?: unknown) =>
+      upsert: (rows: Row | Row[], options?: { onConflict?: string; ignoreDuplicates?: boolean }) =>
         new Query(this, {
           kind: 'upsert',
           table,
           filters: [],
           inserted: Array.isArray(rows) ? rows : [rows],
+          onConflict: options?.onConflict?.split(',').map((c) => c.trim()),
+          ignoreDuplicates: options?.ignoreDuplicates,
         }),
     };
   }

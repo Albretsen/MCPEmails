@@ -8,8 +8,10 @@ import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
 import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
+  PERSONAL_PASS_3M,
   PLANS,
   basePlanItem,
+  personalPassPriceId,
   extraMailboxQuantity,
   mailboxAddonPriceId,
   planCommitmentRank,
@@ -28,9 +30,16 @@ import {
   billingTarget,
   planCategory,
   recordCheckoutStarted,
+  recordPassEvent,
   recordPlanChange,
   type PlanChangeDirection,
 } from '@/lib/analytics/billing-funnel';
+import {
+  getActivePass,
+  passEligibility,
+  passEndsAt,
+  personalPassMode,
+} from '@/lib/billing/pass';
 
 /**
  * The shared checkout core.
@@ -131,7 +140,16 @@ export type CheckoutReason =
   | 'already_on_plan_interval'
   | 'stripe_customer_failed'
   | 'plan_change_failed'
-  | 'stripe_session_failed';
+  | 'stripe_session_failed'
+  // The 3-month Personal pass (runPassCheckout). `pass_unavailable` is the
+  // kill switch (PERSONAL_PASS_ENABLED=off); `already_subscribed` is a user
+  // with an entitled subscription (plan D7); `pass_already_queued` is a pass
+  // holder who already has the one stacked pass allowed (plan D6). The
+  // dashboard falls back to its generic sentence for a reason it has no key
+  // for, so these need no copy until the pass surfaces ship.
+  | 'pass_unavailable'
+  | 'already_subscribed'
+  | 'pass_already_queued';
 
 /**
  * What an in-place plan change will cost, quoted BEFORE anything is changed.
@@ -992,6 +1010,19 @@ export async function runCheckout(input: {
     if (extra > 0) lineItems.push({ price: addonPriceId, quantity: extra });
   }
 
+  // ── 4d. A pass holder subscribing to Personal pays from the pass's end ─────
+  // A 3-month pass already paid for Personal up to its end date. A Personal
+  // subscription bought during it starts billing on that date, so nobody pays
+  // twice for the same days. Higher tiers are charged from today: they give
+  // more than the pass does from the first minute. Tolerant read: a failure
+  // here only means no anchor, never a refused checkout.
+  const passStart =
+    planId === 'personal'
+      ? await getActivePass(supabase, user.id).then((active) =>
+          active ? passSubscriptionStart(active.coveredUntil, interval) : null,
+        )
+      : null;
+
   // ── 5. Get or create the single Stripe Customer for this user ─────────────
   const ownerEmail = user.email ?? '';
   let customerId: string;
@@ -1087,6 +1118,7 @@ export async function runCheckout(input: {
         metadata: {
           user_id: user.id,
         },
+        ...(passStart ?? {}),
       },
       metadata: {
         user_id: user.id,
@@ -1129,5 +1161,285 @@ export async function runCheckout(input: {
       500,
       'Failed to create checkout session. Please try again.',
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The 3-month Personal pass
+// ---------------------------------------------------------------------------
+
+const HOUR_SECONDS = 60 * 60;
+
+/**
+ * How a Personal subscription bought during a pass starts, or null for "from
+ * today".
+ *
+ * Preferred: `billing_cycle_anchor` at the pass's end with `proration_behavior:
+ * 'none'`. The hosted page shows nothing due today and the first full charge on
+ * that date, and the subscription is `active` from the start. Stripe only
+ * accepts an anchor up to the first natural billing date, so it covers a yearly
+ * subscription always and a monthly one only in the pass's last month.
+ *
+ * Otherwise `trial_end` at the pass's end, which Checkout accepts up to two
+ * years out but only from 48 hours ahead. Stripe labels those days a trial on
+ * its own page; the subscription is `trialing`, which every entitlement check
+ * here already treats as entitled.
+ */
+export function passSubscriptionStart(
+  coveredUntil: Date,
+  interval: BillingInterval,
+  now: Date = new Date(),
+):
+  | { billing_cycle_anchor: number; proration_behavior: 'none' }
+  | { trial_end: number }
+  | null {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+  const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
+  // Within the hour: not worth a different first invoice.
+  if (endSeconds <= nowSeconds + HOUR_SECONDS) return null;
+
+  const naturalBilling = Math.floor(
+    passEndsAt(now, interval === 'year' ? 12 : 1).getTime() / 1000,
+  );
+  if (endSeconds < naturalBilling - HOUR_SECONDS) {
+    return { billing_cycle_anchor: endSeconds, proration_behavior: 'none' };
+  }
+  if (endSeconds >= nowSeconds + 48 * HOUR_SECONDS) {
+    return { trial_end: endSeconds };
+  }
+  return null;
+}
+
+/** "3 Feb 2027" / "3. Februar 2027", always in UTC like the pass itself. */
+export function passEndDateLabel(date: Date, locale: CheckoutLocale): string {
+  return new Intl.DateTimeFormat(locale === 'de' ? 'de-DE' : 'en-GB', {
+    day: 'numeric',
+    month: locale === 'de' ? 'long' : 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
+/**
+ * The hosted page text for a pass. The obligation and the end date sit right
+ * above the pay button, with the 14-day full refund and its link. No discount,
+ * no urgency, and never the word trial.
+ */
+function passCustomText(
+  locale: CheckoutLocale,
+  appUrl: string,
+  endsAt: Date,
+): Stripe.Checkout.SessionCreateParams.CustomText {
+  const until = passEndDateLabel(endsAt, locale);
+  if (locale === 'de') {
+    return {
+      submit: {
+        message:
+          `Einmalige Zahlung. Personal bis zum ${until}. Es verlängert sich nichts automatisch, es gibt nichts zu kündigen. ` +
+          `Volle Erstattung innerhalb von 14 Tagen: [Widerrufsrecht](${appUrl}/de/withdrawal). ` +
+          'Fragen vor dem Kauf: hello@mcpemails.com',
+      },
+      after_submit: {
+        message: 'Sie werden zu mcpemails.com zurückgeleitet.',
+      },
+    };
+  }
+  return {
+    submit: {
+      message:
+        `Paid once. Personal until ${until}. Nothing renews and there is nothing to cancel. ` +
+        `Full refund within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
+        'Questions before you buy: hello@mcpemails.com',
+    },
+    after_submit: {
+      message: 'Taking you back to mcpemails.com.',
+    },
+  };
+}
+
+/**
+ * The experiment arm and offer surface, as they arrive from a request. Only a
+ * short lowercase token reaches Stripe metadata; anything else is 'unknown'.
+ */
+function metadataToken(value: unknown): string {
+  return typeof value === 'string' && /^[a-z0-9_]{1,32}$/.test(value) ? value : 'unknown';
+}
+
+/**
+ * Run a 3-month Personal pass checkout for the signed-in user.
+ *
+ * A payment-mode Checkout: one $29 charge, no subscription. The webhook turns
+ * the paid session into a `user_passes` row and projects Personal.
+ *
+ * Refuses, in this order: the kill switch (PERSONAL_PASS_ENABLED=off), a user
+ * with no workspace, an unconfigured price, a comped account, an entitled
+ * subscriber (plan D7), and a pass holder who already has a stacked pass
+ * (plan D6). Every refusal past the kill switch and the workspace check writes
+ * one `pass_checkout_started / failure` row, and a created session writes one
+ * success row. Never a `checkout_started` row: that stage is the
+ * subscription funnel.
+ *
+ * `experimentArm` and `surface` are passed in by the caller (the dashboard
+ * surface that showed the offer) and only travel to Stripe metadata.
+ */
+export async function runPassCheckout(input: {
+  locale?: unknown;
+  experimentArm?: unknown;
+  surface?: unknown;
+}): Promise<CheckoutOutcome> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    console.warn('[checkout] pass: unauthenticated attempt:', authError ? authError.message : 'no session');
+    return fail('unauthenticated', 401, 'Unauthorized');
+  }
+
+  if (personalPassMode() === 'off') {
+    // Not recorded: with the switch off no surface offers the pass, so an
+    // attempt here is a stale link, not a buyer turned away.
+    return fail('pass_unavailable', 404, 'The 3-month Personal pass is not available.');
+  }
+
+  const { data: workspace, error: wsError } = await supabase
+    .from('workspaces')
+    .select('id, display_name')
+    .eq('owner_id', user.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single();
+  if (wsError || !workspace) {
+    console.error('[checkout] pass: workspace not found, not recordable in the funnel:', {
+      code: wsError?.code ?? 'none',
+    });
+    return fail('workspace_not_found', 404, 'Workspace not found.');
+  }
+
+  let recorded = false;
+  const record = async (failure?: Parameters<typeof recordPassEvent>[0]['failure']) => {
+    if (recorded) return;
+    recorded = true;
+    await recordPassEvent({ workspaceId: workspace.id, stage: 'pass_checkout_started', failure });
+  };
+
+  const priceId = personalPassPriceId();
+  if (!priceId) {
+    await record('price_not_configured');
+    return fail(
+      'price_not_configured',
+      503,
+      'Stripe price ID for the 3-month Personal pass is not configured. ' +
+        'Please try again later or contact support.',
+    );
+  }
+
+  const [{ data: billing }, { data: entitlement }, active] = await Promise.all([
+    supabase
+      .from('user_billing')
+      .select('plan, subscription_status, stripe_subscription_id')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('user_usage_entitlements')
+      .select('kind, expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    getActivePass(supabase, user.id),
+  ]);
+
+  const hasCompedGrant =
+    entitlement?.kind === 'comped_scale' &&
+    (entitlement.expires_at == null || new Date(entitlement.expires_at) > new Date());
+  if (hasCompedGrant) {
+    await record('subscription_exists');
+    return fail(
+      'comped',
+      409,
+      'Your account already has full access at no charge. Contact us if you need to change it.',
+      'subscription_not_self_service',
+    );
+  }
+
+  const eligibility = passEligibility({ billing, active });
+  if (!eligibility.eligible) {
+    if (eligibility.reason === 'already_subscribed') {
+      await record('subscription_exists');
+      return fail(
+        'already_subscribed',
+        409,
+        'You already have a subscription, which includes everything the pass does.',
+      );
+    }
+    await record('conflict');
+    return fail('pass_already_queued', 409, 'You already have another 3-month pass queued after this one.');
+  }
+
+  let customerId: string;
+  try {
+    customerId = (
+      await getOrCreateStripeCustomer({
+        userId: user.id,
+        ownerEmail: user.email ?? '',
+        displayName: workspace.display_name,
+      })
+    ).customerId;
+  } catch (err) {
+    console.error('[checkout] pass: getOrCreateStripeCustomer failed:', err);
+    await record('stripe_error');
+    return fail('stripe_customer_failed', 500, 'Failed to create Stripe customer. Please try again.');
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const locale = checkoutLocale(input.locale);
+  // The end date the buyer is shown: from today, or from the end of the pass
+  // they already hold. The webhook computes the stored dates the same way
+  // from the moment the payment lands, so a slow buyer gets the later date.
+  const endsAt = passEndsAt(active?.coveredUntil ?? new Date());
+
+  const metadata = {
+    user_id: user.id,
+    workspace_id: workspace.id,
+    product: PERSONAL_PASS_3M.id,
+    plan_id: PERSONAL_PASS_3M.plan,
+    experiment_arm: metadataToken(input.experimentArm),
+    surface: metadataToken(input.surface),
+  };
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer: customerId,
+      client_reference_id: user.id,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${appUrl}/dashboard/settings?pass=started`,
+      cancel_url: `${appUrl}/dashboard/settings?pass=cancelled`,
+      // Never discounted: the pass is priced above three months of monthly.
+      allow_promotion_codes: false,
+      billing_address_collection: 'auto',
+      adaptive_pricing: adaptivePricingParam(),
+      locale,
+      submit_type: 'pay',
+      custom_text: passCustomText(locale, appUrl, endsAt),
+      // A real invoice for the buyer and for bookkeeping, which books sales
+      // from Stripe invoices.
+      invoice_creation: { enabled: true, invoice_data: { metadata } },
+      // On the PaymentIntent too, so `charge.refunded` can be traced back to a
+      // pass without another lookup.
+      payment_intent_data: { metadata },
+      metadata,
+    });
+    if (!session.url) throw new Error('Stripe returned a session without a URL.');
+    await record();
+    return { kind: 'checkout', url: session.url };
+  } catch (err) {
+    console.error(
+      '[checkout] pass: stripe.checkout.sessions.create failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    await record('stripe_error');
+    return fail('stripe_session_failed', 500, 'Failed to create checkout session. Please try again.');
   }
 }

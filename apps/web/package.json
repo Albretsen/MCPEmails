@@ -105,6 +105,7 @@
     "test:inbox-cap-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/inbox-cap-offer-ui.test.mjs",
     "test:lifecycle-queue": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/lifecycle-queue.test.ts",
     "test:lifecycle-dispatch": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/deleted-account.test.ts app/api/internal/billing-lifecycle/dispatch/route.test.ts app/api/internal/billing-lifecycle/dispatch/route.card-sweep.test.ts",
+    "test:personal-pass": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/pass.test.ts app/api/stripe/webhook/route.personal-pass.test.ts",
     "test:plan-limit-pauses": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/plan-limit-pauses.test.ts app/api/stripe/webhook/route.plan-limit-pause.test.ts",
     "test:onboarding": "node --test --experimental-strip-types src/lib/onboarding/state.test.ts src/lib/onboarding/multi-inbox-prompt.test.mjs",
     "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",

@@ -20,6 +20,18 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
+ *   charge.refunded                   : a full refund of a 3-month pass ends it
+ *
+ * 3-month Personal pass (added 2026-10-24, src/lib/billing/pass.ts):
+ *   A pass is a payment-mode Checkout (metadata.product = 'personal_pass_3m').
+ *   `checkout.session.completed` with mode 'payment' records a `user_passes`
+ *   row (idempotent on the session id) and projects Personal, writing a
+ *   `pass_checkout_completed` funnel row and NEVER `checkout_completed`.
+ *   `applyUserPlan` is pass-aware: it never projects Free onto the workspaces
+ *   while a pass covers now, so an old subscription's deletion cannot take a
+ *   paid pass away. `user_billing.plan` stays the subscription's own truth.
+ *   `charge.refunded` (full refunds only) marks the pass refunded and
+ *   re-projects. Passes end in /api/internal/pass-expiry, not here.
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
@@ -130,6 +142,12 @@ import {
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
 import { expireGrowthCache } from '@/lib/analytics/growth-queries';
+import {
+  getActivePass,
+  recordPassPurchase,
+  refundPass,
+} from '@/lib/billing/pass';
+import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -374,11 +392,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //
   // `checkout.session.expired` changes no plan state either; it only decides
   // whether one reminder email goes out.
+  //
+  // `charge.refunded` is exempt too: it carries the customer id, so any later
+  // subscription event for that customer would make it read as stale and the
+  // refunded pass would keep its entitlement. It acts on one pass row found by
+  // its payment intent, and a second delivery finds that row already refunded.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
     'checkout.session.completed',
     'checkout.session.expired',
     'invoice.payment_failed',
     'invoice.payment_succeeded',
+    'charge.refunded',
   ]);
 
   if (customerIdForEvent && !EXEMPT_FROM_STALENESS.has(event.type)) {
@@ -437,6 +461,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+
       default:
         // Unhandled event types are acknowledged but not processed.
         break;
@@ -469,6 +497,8 @@ const GROWTH_EVENT_TYPES = new Set([
   'customer.subscription.deleted',
   'invoice.payment_succeeded',
   'invoice.payment_failed',
+  // A refunded pass moves the cash tile.
+  'charge.refunded',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -493,6 +523,10 @@ const GROWTH_EVENT_TYPES = new Set([
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  if (session.mode === 'payment') {
+    await handlePassCheckoutCompleted(session);
+    return;
+  }
   if (session.mode !== 'subscription') return;
 
   const userId = session.metadata?.user_id ?? null;
@@ -674,6 +708,96 @@ async function handleCheckoutSessionCompleted(
     console.error(
       `[stripe-webhook] checkout.session.completed ${session.id}: no email on the session; confirmation email skipped.`,
     );
+  }
+}
+
+/**
+ * checkout.session.completed, mode 'payment': a 3-month Personal pass.
+ *
+ * Only a PAID session for the pass product grants anything. The pass is
+ * stored once per Checkout session, then every owned workspace is projected
+ * onto Personal (a subscription that is entitled keeps its own plan). This
+ * writes `pass_checkout_completed`, never `checkout_completed`, and sends no
+ * confirmation email of its own: the buyer gets Stripe's receipt and invoice
+ * (invoice_creation in runPassCheckout); the pass emails come with the
+ * surfaces PR.
+ *
+ * Deliberately independent of PERSONAL_PASS_ENABLED: a payment that reached
+ * us is honoured whatever the switch says now.
+ */
+async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.metadata?.product !== PERSONAL_PASS_3M.id) return;
+
+  if (session.payment_status !== 'paid') {
+    console.error(
+      `[stripe-webhook] pass checkout ${session.id} completed with payment_status=${session.payment_status}; nothing granted.`,
+    );
+    return;
+  }
+
+  const customerId =
+    typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+  const db = createServiceRoleClient();
+  const userId =
+    session.metadata?.user_id ??
+    session.client_reference_id ??
+    (customerId ? await resolveUserId(db, customerId, null) : null);
+  if (!userId) {
+    // Thrown, not returned: the customer paid, so Stripe must retry until the
+    // owner can be resolved rather than this purchase being dropped.
+    throw new Error(`[stripe-webhook] pass checkout ${session.id}: could not resolve the owner.`);
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null;
+
+  const result = await recordPassPurchase(db, {
+    userId,
+    sessionId: session.id,
+    paymentIntentId,
+    amountMinor: session.amount_total ?? null,
+    currency: session.currency ?? null,
+    source: 'checkout.session.completed (pass)',
+  });
+
+  if (result.kind === 'table_missing') {
+    // The code is live before its migration. Retry until it is applied.
+    throw new Error(`[stripe-webhook] pass checkout ${session.id}: user_passes is missing; retry after the migration.`);
+  }
+  if (result.kind === 'duplicate') {
+    console.log(`[stripe-webhook] pass checkout ${session.id} already recorded; nothing to do.`);
+    return;
+  }
+  console.log(
+    `[stripe-webhook] pass ${result.pass.id} for ${userId}: ${result.pass.status} until ${result.pass.ends_at}; projected "${result.plan}".`,
+  );
+}
+
+/**
+ * charge.refunded
+ *
+ * Only a FULL refund of a pass charge ends the pass (see refundPass). Any
+ * other charge, a subscription invoice for example, is not a pass and is left
+ * alone, so this changes nothing for subscribers.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id ?? null;
+  const fullyRefunded = charge.refunded === true || charge.amount_refunded >= charge.amount;
+
+  const result = await refundPass(createServiceRoleClient(), {
+    paymentIntentId,
+    fullyRefunded,
+    source: 'charge.refunded',
+  });
+  if (result.kind === 'refunded') {
+    console.log(`[stripe-webhook] pass ${result.pass.id} refunded; projected "${result.plan}".`);
+  } else if (result.kind === 'partial') {
+    console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
   }
 }
 
@@ -1411,13 +1535,27 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   } = {
     updated_at: new Date().toISOString(),
   };
-  if (newPlan !== null) workspaceUpdate.plan = newPlan;
+  // PASS-AWARE. Free is never projected while a 3-month pass covers now: an
+  // old subscription's deletion (or a lapsed status) arriving during a pass
+  // must not take the paid pass away. `user_billing.plan` above still records
+  // 'free', the subscription's own truth; only the workspaces keep Personal.
+  // Strict read: a failure throws, Stripe retries, and nobody loses a pass to
+  // a transient error. A missing table (migration not applied) is no pass.
+  let projectedPlan = newPlan;
+  if (newPlan === 'free' && (await getActivePass(supabase, resolvedUserId, { strict: true }))) {
+    projectedPlan = PERSONAL_PASS_3M.plan;
+    console.log(
+      `[stripe-webhook] ${source}: user ${resolvedUserId} holds an active pass; workspaces stay on "${projectedPlan}".`,
+    );
+  }
+
+  if (projectedPlan !== null) workspaceUpdate.plan = projectedPlan;
   if (customerId) workspaceUpdate.stripe_customer_id = customerId;
 
   // Read BEFORE the projection overwrites it: which workspaces are about to
   // move onto a paid plan. A renewal or a card change for a customer already
   // on the plan returns none, and this cannot throw.
-  const enteringPaidPlan = await workspacesEnteringPaidPlan(supabase, resolvedUserId, newPlan);
+  const enteringPaidPlan = await workspacesEnteringPaidPlan(supabase, resolvedUserId, projectedPlan);
 
   const { error: wsError } = await supabase
     .from('workspaces')
@@ -1427,12 +1565,12 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
 
   if (wsError) {
     throw new Error(
-      `[stripe-webhook] ${source}: failed to project plan "${newPlan ?? '(unchanged)'}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
+      `[stripe-webhook] ${source}: failed to project plan "${projectedPlan ?? '(unchanged)'}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
     );
   }
 
   console.log(
-    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
+    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${projectedPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
   );
 
   // ── Resume automations the Free allowance paused ──────────────────────────

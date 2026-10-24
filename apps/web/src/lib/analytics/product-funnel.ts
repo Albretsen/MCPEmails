@@ -42,6 +42,14 @@ export type BillingTargetCategory =
 export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
+/**
+ * The 3-month Personal pass (20261024120000): the product itself, the surfaces
+ * its offer can be shown on, and `pass` for a renewal that bought another pass.
+ */
+export type PassFunnelCategory =
+  | 'personal_pass_3m'
+  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
+  | 'pass';
 
 export type ProductFunnelEvent = {
   workspaceId: string;
@@ -64,13 +72,18 @@ export type ProductFunnelEvent = {
     | 'multi_inbox_prompt'
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
-    | 'paywall_clicked';
+    | 'paywall_clicked'
+    // The 3-month Personal pass. A pass NEVER writes `checkout_started` or
+    // `checkout_completed`, for the same reason a plan change does not: those
+    // stages are the subscription conversion every read-out is built on.
+    | 'pass_offer_shown' | 'pass_checkout_started' | 'pass_checkout_completed'
+    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
-    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory;
+    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

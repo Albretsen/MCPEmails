@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { runCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
+import { runCheckout, runPassCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
+import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
 /**
  * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>][&recovered_from=<cs_...>]
+ * GET /api/stripe/checkout/start?product=personal_pass_3m[&lang=<locale>][&arm=<arm>][&from=<surface>]
  *
  * `recovered_from` is the expired session an abandoned-checkout reminder links
  * from. It only goes into the new session's metadata.
+ *
+ * `product=personal_pass_3m` buys the 3-month Personal pass instead (one
+ * payment, runPassCheckout); `plan` and `interval` are then ignored. `arm` is
+ * the experiment arm and `from` the surface that showed the offer, both only
+ * passed through to Stripe metadata. With PERSONAL_PASS_ENABLED=off it lands
+ * on the billing screen with `checkout_error=pass_unavailable`.
  *
  * `lang` is the language the buyer was reading (the marketing page's locale,
  * or the dashboard's). Only 'de' changes anything: it shows the hosted page in
@@ -87,13 +95,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const locale = request.nextUrl.searchParams.get('lang');
   // Set only by the abandoned-checkout reminder's link; validated in the core.
   const recoveredFrom = request.nextUrl.searchParams.get('recovered_from');
+  const product = request.nextUrl.searchParams.get('product');
 
-  const outcome = await runCheckout({
-    planId,
-    interval,
-    locale,
-    ...(recoveredFrom ? { recoveredFrom } : {}),
-  });
+  const outcome =
+    product === PERSONAL_PASS_3M.id
+      ? await runPassCheckout({
+          locale,
+          experimentArm: request.nextUrl.searchParams.get('arm'),
+          surface: request.nextUrl.searchParams.get('from'),
+        })
+      : await runCheckout({
+          planId,
+          interval,
+          locale,
+          ...(recoveredFrom ? { recoveredFrom } : {}),
+        });
 
   if (outcome.kind === 'checkout') {
     // Straight to Stripe. 303 rather than 302 so the redirect is unambiguously

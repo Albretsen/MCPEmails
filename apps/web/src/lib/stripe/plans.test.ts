@@ -7,6 +7,7 @@ import {
   BUSINESS_INCLUDED_INBOXES,
   FREE_ACTION_ALLOWANCE,
   FREE_ACTION_GRACE_DAYS,
+  PERSONAL_PASS_3M,
   PLANS,
   PRO_INBOX_CAP,
   basePlanItem,
@@ -16,6 +17,7 @@ import {
   mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  personalPassPriceId,
   planDisplayName,
   resolvePlanLimits,
 } from './plans.ts';
@@ -591,5 +593,31 @@ test('the retired $79 / $756 Team prices still resolve to Business', async () =>
     delete process.env.STRIPE_PRICE_PRO_YEARLY;
     delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
     delete process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+  }
+});
+
+test('the 3-month pass costs more than three months of Personal monthly, so it is never a discount', () => {
+  assert.equal(PERSONAL_PASS_3M.priceCents, 2900);
+  assert.equal(PERSONAL_PASS_3M.months, 3);
+  assert.equal(PERSONAL_PASS_3M.plan, 'personal');
+  assert.ok(
+    PERSONAL_PASS_3M.priceCents > PLANS.personal.monthlyPriceCents * PERSONAL_PASS_3M.months,
+    'the pass must stay dearer than paying monthly for the same months',
+  );
+});
+
+test('the pass price is never read as a subscription plan', () => {
+  const before = process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+  process.env.STRIPE_PRICE_PERSONAL_PASS_3M = ' price_pass_unit ';
+  try {
+    assert.equal(personalPassPriceId(), 'price_pass_unit');
+    assert.equal(getPlanByStripePriceId('price_pass_unit'), null);
+    assert.equal(basePlanItem([{ price: { id: 'price_pass_unit' } }])?.price?.id, 'price_pass_unit');
+    assert.equal(Object.keys(PLANS).includes(PERSONAL_PASS_3M.id), false);
+    process.env.STRIPE_PRICE_PERSONAL_PASS_3M = '';
+    assert.equal(personalPassPriceId(), null);
+  } finally {
+    if (before === undefined) delete process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+    else process.env.STRIPE_PRICE_PERSONAL_PASS_3M = before;
   }
 });

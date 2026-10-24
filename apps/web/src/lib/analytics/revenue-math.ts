@@ -21,6 +21,11 @@
  * coupon, and against the price table they would each read as full revenue.
  * Priced from Stripe they correctly contribute nothing.
  *
+ * ONE-TIME PAYMENTS ARE NOT MRR. The 3-month Personal pass is a payment-mode
+ * Checkout and creates no subscription, so nothing here ever sees it; its
+ * charge and any refund land in the cash tiles through cash-math.ts. Do not
+ * add an "MRR equivalent" for it (src/lib/billing/pass.ts).
+ *
  * WHAT IS DELIBERATELY NOT MODELLED: expansion and contraction. Net new MRR
  * here is new minus churned, not new plus expansion minus contraction minus
  * churn. Doing it properly needs a stored MRR history to diff against, and

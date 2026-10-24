@@ -30,10 +30,12 @@ type Outcome =
   | { kind: 'error'; reason: string; status: number; message: string };
 
 let calls: Array<Record<string, unknown>> = [];
+let passCalls: Array<Record<string, unknown>> = [];
 let nextOutcome: Outcome = { kind: 'checkout', url: SESSION_URL };
 
 beforeEach(() => {
   calls = [];
+  passCalls = [];
   nextOutcome = { kind: 'checkout', url: SESSION_URL };
 });
 
@@ -41,6 +43,10 @@ nodeMock.module('@/lib/stripe/checkout-core', {
   namedExports: {
     runCheckout: async (input: Record<string, unknown>) => {
       calls.push(input);
+      return nextOutcome;
+    },
+    runPassCheckout: async (input: Record<string, unknown>) => {
+      passCalls.push(input);
       return nextOutcome;
     },
   },
@@ -148,4 +154,50 @@ test('each route exports only the method it serves; Next answers 405 to the rest
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
   assert.deepEqual(methods.filter((m) => typeof startRoute[m] === 'function'), ['GET']);
   assert.deepEqual(methods.filter((m) => typeof postRoute[m] === 'function'), ['POST']);
+});
+
+// ── The 3-month Personal pass ───────────────────────────────────────────────
+
+test('GET product=personal_pass_3m runs the pass checkout, with the language, arm and surface', async () => {
+  const response = await GET(getRequest('?product=personal_pass_3m&lang=de&arm=treatment&from=cap_banner&plan=solo'));
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.get('location'), SESSION_URL);
+  assert.equal(calls.length, 0, 'never the subscription checkout');
+  assert.deepEqual(passCalls, [{ locale: 'de', experimentArm: 'treatment', surface: 'cap_banner' }]);
+});
+
+test('GET a refused pass lands on the billing screen with its reason', async () => {
+  nextOutcome = { kind: 'error', reason: 'pass_unavailable', status: 404, message: 'x' };
+  const response = await GET(getRequest('?product=personal_pass_3m'));
+  assert.equal(response.status, 303);
+  const location = new URL(String(response.headers.get('location')));
+  assert.equal(location.pathname, '/dashboard/settings');
+  assert.equal(location.searchParams.get('checkout_error'), 'pass_unavailable');
+});
+
+test('GET without a product is the subscription checkout, exactly as before', async () => {
+  await GET(getRequest('?plan=personal&interval=month'));
+  assert.equal(passCalls.length, 0);
+  assert.equal(calls.length, 1);
+});
+
+test('POST product=personal_pass_3m runs the pass checkout and answers the URL', async () => {
+  const response = await POST(postRequest({ product: 'personal_pass_3m', locale: 'de', arm: 'holdout', surface: 'checkout_return', confirm: true }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { url: SESSION_URL });
+  assert.equal(calls.length, 0);
+  assert.deepEqual(passCalls, [{ locale: 'de', experimentArm: 'holdout', surface: 'checkout_return' }]);
+});
+
+test('POST an unknown product is a 400 and runs nothing', async () => {
+  const response = await POST(postRequest({ product: 'personal_pass_12m', planId: 'personal', interval: 'month' }));
+  assert.equal(response.status, 400);
+  assert.equal(calls.length + passCalls.length, 0);
+});
+
+test('POST a refused pass answers its status and message', async () => {
+  nextOutcome = { kind: 'error', reason: 'already_subscribed', status: 409, message: 'You already have a subscription.' };
+  const response = await POST(postRequest({ product: 'personal_pass_3m' }));
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'You already have a subscription.' });
 });
