@@ -44,13 +44,6 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-10-24',
-    kind: 'improved',
-    title: 'A clear email when your bank wants to approve a renewal',
-    body:
-      'Renewals your bank asks you to approve now get an email with a link to confirm the payment, instead of a request to update a card that works fine.',
-  },
-  {
     date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',
