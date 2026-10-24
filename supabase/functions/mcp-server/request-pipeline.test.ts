@@ -1862,9 +1862,14 @@ Deno.test("tools/list reads its card gates and its client identity in the same w
   // Wave 3 holds the entitlement (the plan quota's second read); the handler
   // starts once it has answered, and its reads all go out together: the card
   // gates (inboxes, workspace flag) and the client identity. The wave after it
-  // is the card-build bookkeeping write, which is not the handler's.
+  // is the card-build bookkeeping write, which is not the handler's. The Pro
+  // gate read (cross-inbox search changes the listing when visible) rides the
+  // same wave, so it adds no round trip.
   assertEquals(waves.length, 5, JSON.stringify(waves));
-  assertEquals(waves[3], ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces"].sort());
+  assertEquals(
+    waves[3],
+    ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces", "RPC workspace_pro_features"].sort(),
+  );
   assertEquals(waves[4], ["PATCH api_keys"]);
 });
 

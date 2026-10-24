@@ -478,6 +478,23 @@ import {
   proFeatureRefusalResult,
   type ProGateInputs,
 } from "./pro-features.ts";
+import {
+  advertiseCrossInboxSearch,
+  CROSS_INBOX_CONCURRENCY,
+  CROSS_INBOX_MAX_INBOXES,
+  CROSS_INBOX_TIMEOUT_MS,
+  CROSS_INBOX_WINDOW,
+  crossInboxBuckets,
+  crossInboxFetchLimit,
+  crossInboxLegArgs,
+  crossInboxValidationArgs,
+  type CrossInboxLeg,
+  isCrossInboxAll,
+  isCrossInboxCall,
+  legFromToolResult,
+  mergeCrossInboxPages,
+  runFanOut,
+} from "./cross-inbox.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
   type ActionReservationRow,
@@ -30511,6 +30528,29 @@ interface ContactScan {
   capped: boolean;
 }
 
+/**
+ * Every active inbox this key may see, oldest first, with the full
+ * credentialed row (INBOX_SELECT_COLUMNS). Shared by the tools that fan out
+ * over a workspace: contact_search without an inbox, and the cross-inbox
+ * email_list / email_search (`inbox_id: "all"`).
+ */
+async function accessibleActiveInboxes(
+  apiKey: ApiKeyRow,
+): Promise<{ data: InboxRow[] | null; error: { message: string } | null }> {
+  let q = supabase
+    .from("inboxes")
+    .select(INBOX_SELECT_COLUMNS)
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    q = q.in("id", apiKey.inbox_ids);
+  }
+  const { data, error } = await q;
+  return { data: (data ?? null) as unknown as InboxRow[] | null, error: error ? { message: error.message } : null };
+}
+
 /** Max inboxes scanned per call when inbox_id is omitted (bounds fan-out cost). */
 const CONTACT_SEARCH_MAX_INBOXES = 10;
 /** Max messages inspected per inbox (bounds the per-provider scan window). */
@@ -30920,17 +30960,7 @@ async function executeSearchContacts(
     if (store) store.inboxId = inbox.id;
     targets = [inbox];
   } else {
-    let q = supabase
-      .from("inboxes")
-      .select(INBOX_SELECT_COLUMNS)
-      .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null)
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
-    if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
-      q = q.in("id", apiKey.inbox_ids);
-    }
-    const { data, error } = await q;
+    const { data, error } = await accessibleActiveInboxes(apiKey);
     if (error) {
       console.error("[mcp-server] contact_search: inbox_enumeration_failed", {
         workspace_id: apiKey.workspace_id,
@@ -31056,6 +31086,164 @@ async function executeSearchContacts(
       }) as unknown as Record<string, unknown>,
     ),
     logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Cross-inbox email_list / email_search (`inbox_id: "all"`, Pro feature
+// `cross_inbox_search`). The rules (scheduling, merge, paging window, listing)
+// live in cross-inbox.ts; this is the I/O around them.
+// ---------------------------------------------------------------------------
+
+/**
+ * `email_list` / `email_search` over every inbox the key may see.
+ *
+ * Returns null when the feature is not visible to this workspace: the caller
+ * then runs the ordinary executor, which answers "all" exactly as it always
+ * did. Visible but not on Pro or Business: the standard Pro refusal.
+ *
+ * Inboxes come from the same enumeration contact_search uses, then are held
+ * to resolveInbox's own allowlist rule, so "all" is never wider than what the
+ * key could name one by one. Each inbox runs the unchanged single-inbox
+ * executor in its own activity context (so one inbox's resolution notes and
+ * transport checks stay its own), under the per-provider and per-IMAP-host
+ * limits in cross-inbox.ts, with a per-inbox timeout. One failing inbox is an
+ * entry in `inbox_errors`; only when every inbox fails is the call an error.
+ *
+ * Billing: one call, one action, like contact_search's fan-out.
+ */
+async function executeCrossInbox(
+  dispatchName: string,
+  rawArgs: Record<string, unknown>,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const access = await proFeatureAccess(apiKey);
+  if (!access.visible) return null;
+  if (!access.allowed) {
+    return {
+      result: await proFeatureRefusalToolResult(apiKey, "cross_inbox_search", access),
+      logStatus: "error",
+      logErrorCode: PRO_FEATURE_ERROR_CODE,
+    };
+  }
+
+  const toolError = (text: string, code = "-32602"): ExecutorOutcome => ({
+    result: { content: [{ type: "text", text }], isError: true },
+    logStatus: "error",
+    logErrorCode: code,
+  });
+
+  if (typeof rawArgs["inbox"] === "string" && rawArgs["inbox"].trim() !== "") {
+    return toolError(
+      `${dispatchName}: inbox_id "all" already covers every inbox, so inbox cannot be given with it. ` +
+        "Pass inbox_id \"all\" alone, or name one inbox.",
+    );
+  }
+  const paginationError = invalidPaginationArgument(rawArgs);
+  if (paginationError) return paginationError;
+  const limit = typeof rawArgs["limit"] === "number" ? rawArgs["limit"] : 20;
+  const offset = typeof rawArgs["offset"] === "number" ? rawArgs["offset"] : 0;
+  if (offset >= CROSS_INBOX_WINDOW) {
+    return toolError(
+      `${dispatchName}: across all inboxes, offset can reach the newest ${CROSS_INBOX_WINDOW} ` +
+        "results of each inbox. Narrow the request (since, before, from) or pass one inbox_id to page further.",
+    );
+  }
+  // Refused once here rather than once per inbox.
+  if (dispatchName === "email_search") {
+    const built = buildNormalizedSearch(rawArgs);
+    if (!built.ok) return invalidSearchDateError(built.badDate, "email_search");
+    if (built.empty) return noSearchCriterionError("email_search");
+  }
+
+  const { data, error } = await accessibleActiveInboxes(apiKey);
+  if (error) {
+    console.error("[mcp-server] cross_inbox: inbox_enumeration_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return toolError(`${dispatchName}: failed to enumerate inboxes.`, "db_error");
+  }
+  const allowed = (data ?? []).filter((inbox) =>
+    apiKey.inbox_ids === null || apiKey.inbox_ids.includes(inbox.id)
+  );
+
+  const legs: CrossInboxLeg[] = [];
+  const runnable: InboxRow[] = [];
+  for (const inbox of allowed) {
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    if (transportBlockingTool(dispatchName, inbox)) {
+      legs.push({
+        ok: false,
+        target,
+        errorCode: "transport_not_configured",
+        message: "This inbox is connected for sending only, so it has no mail to read.",
+      });
+      continue;
+    }
+    runnable.push(inbox);
+  }
+  const covered = runnable.slice(0, CROSS_INBOX_MAX_INBOXES);
+  const skippedInboxes = runnable.length - covered.length;
+  const fetchLimit = crossInboxFetchLimit(offset, limit);
+
+  const outcomes = await runFanOut(
+    covered,
+    {
+      concurrency: CROSS_INBOX_CONCURRENCY,
+      timeoutMs: CROSS_INBOX_TIMEOUT_MS,
+      buckets: (inbox) => crossInboxBuckets(inbox),
+    },
+    (inbox) =>
+      activityInboxStore.run({ inboxId: null, dispatchName }, () =>
+        runExecutor(dispatchName, crossInboxLegArgs(rawArgs, inbox.id, fetchLimit), apiKey)
+      ),
+  );
+  for (let i = 0; i < covered.length; i++) {
+    const inbox = covered[i];
+    const target = { inbox_id: inbox.id, inbox_address: inbox.email_address };
+    const outcome = outcomes[i];
+    if (outcome.ok) {
+      legs.push(legFromToolResult(target, outcome.value as Parameters<typeof legFromToolResult>[1]));
+      continue;
+    }
+    console.error("[mcp-server] cross_inbox: inbox_failed", {
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      dispatch_name: dispatchName,
+      timed_out: outcome.timedOut,
+      error: outcome.error instanceof Error ? outcome.error.message : String(outcome.error),
+    });
+    legs.push({
+      ok: false,
+      target,
+      errorCode: outcome.timedOut ? "timeout" : "internal_error",
+      message: outcome.timedOut
+        ? `This inbox did not answer within ${Math.round(CROSS_INBOX_TIMEOUT_MS / 1000)} seconds.`
+        : "This inbox could not be read just now.",
+    });
+  }
+  // Inboxes in enumeration order, whatever order the legs were built in.
+  const order = new Map(allowed.map((inbox, i) => [inbox.id, i]));
+  legs.sort((a, b) => (order.get(a.target.inbox_id) ?? 0) - (order.get(b.target.inbox_id) ?? 0));
+
+  const page = mergeCrossInboxPages({ legs, offset, limit, skippedInboxes });
+  const failures = legs.filter((leg) => !leg.ok);
+  if (legs.length > 0 && failures.length === legs.length) {
+    const lines = page.inbox_errors.map((e) => `  - ${e.inbox_address}: ${e.message}`).join("\n");
+    return toolError(
+      `${dispatchName}: no inbox could be read for inbox_id "all". Nothing was changed.\n${lines}`,
+      page.inbox_errors[0]?.error_code ?? "provider_error",
+    );
+  }
+  return {
+    result: {
+      ...jsonOk(markUntrusted(page as unknown as Record<string, unknown>)),
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
   };
 }
 
@@ -32003,7 +32191,9 @@ async function handleToolsList(
   const [uiGates, perOperation, proAccess] = await Promise.all([
     keyReviewCardGates(apiKey),
     isOpenAiClientKey(apiKey),
-    hasProFeatureSurface() ? proFeatureAccess(apiKey) : null,
+    // Always read since cross-inbox search (a Pro VALUE, inbox_id "all") has
+    // listing changes of its own; memoised, so one read per request.
+    proFeatureAccess(apiKey),
   ]);
 
   // Which tools this credential is shown, and whether the scope filter applies
@@ -32031,7 +32221,10 @@ async function handleToolsList(
   // this workspace (pro-features.ts), so customers see no change before launch.
   const listed = toolsForListing(apiKey, perOperation);
   const visibleTools = withListingCardMeta(
-    proAccess ? hideProFeaturesFromListing(listed, proAccess) : listed,
+    advertiseCrossInboxSearch(
+      hasProFeatureSurface() ? hideProFeaturesFromListing(listed, proAccess) : listed,
+      proAccess,
+    ),
     uiGates,
     perOperation ? "per_operation" : "consolidated",
   ).map(serializeToolForList);
@@ -32445,6 +32638,11 @@ async function runExecutor(
   rawArgs: unknown,
   apiKey: ApiKeyRow,
 ): Promise<ExecutorOutcome | null> {
+  // `inbox_id: "all"` (Pro): null when not visible, and the call runs as before.
+  if (isCrossInboxCall(dispatchName, rawArgs)) {
+    const crossInbox = await executeCrossInbox(dispatchName, rawArgs as Record<string, unknown>, apiKey);
+    if (crossInbox) return crossInbox;
+  }
   if (dispatchName === "inbox_list") return await executeListInboxes(rawArgs, apiKey);
   if (dispatchName === "email_list") return await executeListInbox(rawArgs, apiKey);
   if (dispatchName === "email_read") return await executeReadEmail(rawArgs, apiKey);
@@ -32623,7 +32821,9 @@ async function handleToolsCall(
     rawArgs !== null &&
     typeof rawArgs === "object" &&
     !Array.isArray(rawArgs) &&
-    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string"
+    typeof (rawArgs as Record<string, unknown>)["inbox_id"] === "string" &&
+      // `"all"` (cross-inbox, Pro) names no one inbox; activity_log.inbox_id is a uuid.
+      !isCrossInboxAll((rawArgs as Record<string, unknown>)["inbox_id"])
       ? (rawArgs as Record<string, unknown>)["inbox_id"] as string
       : null;
 
@@ -33093,9 +33293,15 @@ async function handleToolsCall(
   // Validate at the server boundary.  The schema is part of our public MCP
   // contract, but clients may skip validation entirely; continuing here would
   // let permissive handlers silently coerce malformed optional fields.
+  // `inbox_id: "all"` (cross-inbox, Pro) cannot meet inbox_id's uuid format.
+  // Only where the feature is visible is inbox_id left out of the check (every
+  // other argument is still validated); elsewhere "all" is refused as before.
+  const validationArgs = isCrossInboxCall(dispatchName, rawArgs) && (await proFeatureAccess(apiKey)).visible
+    ? crossInboxValidationArgs(rawArgs as Record<string, unknown>)
+    : rawArgs;
   const argumentErrors = validateInputSchema(
     tool.inputSchema,
-    schemaValidationArguments(tool.inputSchema, rawArgs),
+    schemaValidationArguments(tool.inputSchema, validationArgs),
   );
   if (argumentErrors.length > 0) {
     const rejectedAction = consolidated
@@ -33200,7 +33406,9 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
-      inboxId: typeof cappedArgs?.["inbox_id"] === "string" ? cappedArgs["inbox_id"] as string : null,
+      inboxId: typeof cappedArgs?.["inbox_id"] === "string" && !isCrossInboxAll(cappedArgs["inbox_id"])
+        ? cappedArgs["inbox_id"] as string
+        : null,
       toolName: dispatchName,
       status: "rate_limited",
       errorCode: "usage_limit_reached",
