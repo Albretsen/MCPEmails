@@ -545,7 +545,12 @@ test('the connector migration only re-pins constraints and the trigger, and chan
 const REFERRAL_MIGRATION = '20261025090000_referrals.sql';
 
 test('the referral migration changes only the three source allowlist lines of the signup trigger', () => {
-  const body = (sql) => sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()')).split('\n');
+  // The trigger body only, up to its closing $$: the referral migration has
+  // more after it (section 8, mcp_tools_call_gate).
+  const body = (sql) => {
+    const from = sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()');
+    return sql.slice(from, sql.indexOf('\n$$;', from) + 4).split('\n');
+  };
   const before = body(migration(CONNECTOR_MIGRATION));
   const after = body(migration(REFERRAL_MIGRATION));
 

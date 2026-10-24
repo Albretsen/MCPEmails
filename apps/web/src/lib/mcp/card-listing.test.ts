@@ -359,6 +359,10 @@ const SQL_ALLOWED = new Set([
   // mcp_tools_call_gate, its successor, for the same reason: it reads the
   // column into the key row and never writes it.
   'supabase/migrations/20261020214737_mcp_tools_call_gate.sql',
+  // The referral migration re-creates mcp_tools_call_gate whole (to return
+  // referral_personal_until); it reads the column the same way and never
+  // writes it.
+  'supabase/migrations/20261025090000_referrals.sql',
 ]);
 
 /**
