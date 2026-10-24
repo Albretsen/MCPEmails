@@ -10,6 +10,7 @@ import {
   isCheckoutLinkToken,
 } from '@/lib/stripe/checkout-link';
 import { recordChatLinkOpened } from '@/lib/analytics/billing-funnel';
+import { CHECKOUT_LINK_SUPERSEDED_KEY } from '@/lib/email/abandoned-checkout';
 
 /**
  * GET /u/<token>
@@ -32,7 +33,8 @@ import { recordChatLinkOpened } from '@/lib/analytics/billing-funnel';
  * unfurler, a prefetch or a second tab therefore cannot burn the link or create
  * a second session. Two opens racing on the very first request each create a
  * session, and `checkout_link_attach_session` keeps the first writer's: the
- * loser redirects to the winner's session and its own simply expires unused.
+ * loser redirects to the winner's session and expires its own at once (see
+ * retireOrphanSession).
  *
  * NO EXISTENCE ORACLE. A malformed, unknown, expired or already used token all
  * end on the same /upgrade/expired page. The shape check runs before any
@@ -76,6 +78,36 @@ const SUBSCRIBED_REASONS: ReadonlySet<CheckoutReason> = new Set([
   'plan_not_self_service',
   'already_on_plan_interval',
 ]);
+
+/**
+ * The losing side of two racing first opens made a session nobody will use.
+ * Tag it, then expire it now: left open it would sit payable for 31 minutes,
+ * and its `checkout.session.expired` would reach the abandoned-checkout
+ * reminder. The tag is what makes the reminder skip it, so the session is only
+ * expired once the tag is on; if tagging fails it is left to expire on its own,
+ * exactly as before. Best effort, never throws.
+ */
+async function retireOrphanSession(sessionId: string): Promise<void> {
+  try {
+    await stripe.checkout.sessions.update(sessionId, {
+      metadata: { [CHECKOUT_LINK_SUPERSEDED_KEY]: 'true' },
+    });
+  } catch (err) {
+    console.error(
+      '[checkout-link] orphan session tag failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return;
+  }
+  try {
+    await stripe.checkout.sessions.expire(sessionId);
+  } catch (err) {
+    console.error(
+      '[checkout-link] orphan session expire failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+}
 
 /**
  * Send the visitor to the session a previous open stored. Never creates one:
@@ -193,7 +225,10 @@ export async function GET(
       console.error('[checkout-link] attach failed:', attachError.message);
       return redirectTo(outcome.url);
     }
-    if (stored && stored !== outcome.sessionId) return toStoredSession(request, stored);
+    if (stored && stored !== outcome.sessionId) {
+      await retireOrphanSession(outcome.sessionId);
+      return toStoredSession(request, stored);
+    }
     return redirectTo(outcome.url);
   } catch (err) {
     console.error(

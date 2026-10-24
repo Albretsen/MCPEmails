@@ -157,7 +157,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- checkout_link_attach_session: store the Checkout Session created for a link.
 -- First writer wins; the stored id is returned so a racing second request
--- redirects to the same session (its own orphan session simply expires).
+-- redirects to the same session (the web route expires its own orphan).
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.checkout_link_attach_session(
   p_id uuid,

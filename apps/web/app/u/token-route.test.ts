@@ -64,6 +64,8 @@ let sessions = new Map<string, { id: string; status: string; url: string | null 
 let coreCalls: Array<{ identity: Record<string, unknown>; input: Record<string, unknown>; options: Record<string, unknown> }> = [];
 let coreOutcome: Record<string, unknown> | null = null;
 let clicked: Array<string | null> = [];
+let stripeCalls: Array<{ op: string; id: string; params?: Record<string, unknown> }> = [];
+let failUpdate = false;
 
 beforeEach(() => {
   links = new Map();
@@ -74,6 +76,8 @@ beforeEach(() => {
   coreCalls = [];
   coreOutcome = null;
   clicked = [];
+  stripeCalls = [];
+  failUpdate = false;
 });
 
 function hashOf(token: string): string {
@@ -167,6 +171,17 @@ nodeMock.module('@/lib/stripe/client', {
           retrieve: async (id: string) => {
             const s = sessions.get(id);
             if (!s) throw new Error('No such checkout.session');
+            return s;
+          },
+          update: async (id: string, params: Record<string, unknown>) => {
+            stripeCalls.push({ op: 'update', id, params });
+            if (failUpdate) throw new Error('update failed');
+            return sessions.get(id);
+          },
+          expire: async (id: string) => {
+            stripeCalls.push({ op: 'expire', id });
+            const s = sessions.get(id);
+            if (s) s.status = 'expired';
             return s;
           },
         },
@@ -321,6 +336,31 @@ test('two racing first opens both end on the first writer\'s session', async () 
   attachWinner = winner;
   const { location } = await open(token);
   assert.equal(location.href, 'https://checkout.stripe.com/c/pay/winner');
+  // The loser's own session is tagged for the reminder to skip, then expired.
+  assert.equal(coreCalls.length, 1);
+  assert.deepEqual(stripeCalls.map((c) => c.op), ['update', 'expire']);
+  assert.ok(stripeCalls[0].id.startsWith('cs_test_link'));
+  assert.equal(stripeCalls[1].id, stripeCalls[0].id);
+  assert.deepEqual(stripeCalls[0].params, { metadata: { checkout_link_superseded: 'true' } });
+});
+
+test('a racing loser whose tag fails leaves its session to expire on its own', async () => {
+  const token = newToken();
+  addLink(token);
+  const winner = 'cs_test_winner0000002';
+  sessions.set(winner, { id: winner, status: 'open', url: 'https://checkout.stripe.com/c/pay/winner2' });
+  attachWinner = winner;
+  failUpdate = true;
+  const { location } = await open(token);
+  assert.equal(location.href, 'https://checkout.stripe.com/c/pay/winner2');
+  assert.deepEqual(stripeCalls.map((c) => c.op), ['update']);
+});
+
+test('a first open that wins the attach expires nothing', async () => {
+  const token = newToken();
+  addLink(token);
+  await open(token);
+  assert.deepEqual(stripeCalls, []);
 });
 
 test('a paid session sends a reopen to /upgrade/done, an expired one to /upgrade/expired', async () => {
