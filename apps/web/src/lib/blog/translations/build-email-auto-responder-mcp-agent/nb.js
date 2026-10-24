@@ -87,7 +87,7 @@ Hvis du vil at en melding skal slutte å dukke opp som ulest når du har svart, 
 
 ## Ratebegrensninger, og hvorfor du aldri prøver et send-kall på nytt i blinde
 
-Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, uavhengig av plan. Arbeidsområdet ditt har også et burst-tak per nivå: **60 req/min på Gratis, 120 på Personal, 300 på Pro, 1 000 på Business** (se [priser](/pricing)). En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
+Arbeidsområdet ditt har et tak per minutt satt av planen (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
 
 Når du treffer en hastighetsgrense, returnerer serveren en feil du kan prøve på nytt (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
 

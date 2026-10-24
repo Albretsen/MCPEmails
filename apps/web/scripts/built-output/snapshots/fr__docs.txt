@@ -27,6 +27,7 @@ OAuth (claude.ai)
 Référence des outils
 Modèle de sécurité
 Fournisseurs pris en charge
+Guide du développeur
 Démarrage rapide
 Opérationnel en quelques minutes.
 Aucun SDK requis. MCPEmails parle le MCP standard via HTTP, donc il s'intègre dans tout agent compatible MCP.
@@ -40,8 +41,8 @@ Créez une clé API
 Générez un jeton bearer pour votre agent
 Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email ) et copiez la clé. Elle n'est affichée qu'une seule fois.
 Copier
-# Your key looks like this:
-mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+# Your key looks like this: mcpe_ followed by 64 hex characters
+mcpe_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 03
 Ajoutez MCPEmails à votre agent
 Collez le point de terminaison MCP dans votre client
@@ -93,8 +94,8 @@ Streamable HTTP
 Auth :
 Authorization: Bearer &lt;api-key&gt;
 Limites de débit :
-100 req/min · 1 000/h · 10 000/jour
-par clé, plus le plafond d'espace de travail de votre formule
+fenêtres par minute, par heure et par jour par clé
+, dimensionnées selon votre formule, plus le plafond d'espace de travail de la formule
 Format de réponse :
 JSON-RPC 2.0
 : les résultats réussis comportent aussi un objet typé
@@ -103,7 +104,7 @@ Handshake d'initialisation
 bash
 Copier
 curl -X POST https://mcpemails.com/api/mcp \
--H "Authorization: Bearer mcpe_live_YOUR_KEY" \
+-H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \
 -H "Content-Type: application/json" \
 -d '{
 "jsonrpc": "2.0",
@@ -1212,11 +1213,21 @@ Copier
 Limites de débit
 Limites de débit et usage équitable.
 Fenêtres glissantes par clé
-100 req / min · 1 000 / h · 10 000 / jour
-Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC
+Par minute · par heure · par jour, selon votre formule
+Chaque clé a une fenêtre glissante par minute, une par heure et une par jour. La fenêtre par minute vaut au moins le plafond par minute de votre formule, de sorte qu'une seule clé peut utiliser toute la formule, et les fenêtres horaire et quotidienne s'ajustent dans la même proportion. Les réponses réussies de
+tools/call
+portent
+RateLimit-Limit
+,
+RateLimit-Remaining
+et
+RateLimit-Reset
+(secondes) pour la fenêtre la plus proche de la saturation. En cas de dépassement d'une fenêtre, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC
 -32003
 ,
 data.error_code: "rate_limit_exceeded"
+, la fenêtre dans
+data.window
 et un champ
 data.retry_after
 (secondes). Respectez cette valeur avant de réessayer : il s'agit d'une courte pause réessayable.
@@ -1294,12 +1305,14 @@ Docs
 Auto-hébergement
 Pour les fondateurs
 Pour les entreprises
+Développeurs
 Ressources
 Référence des outils
 Démarrage rapide
 Connexion OAuth
 Fournisseurs pris en charge
 Accès en lecture seule
+Guide du développeur
 Configuration des clients MCP
 Blog
 Changelog

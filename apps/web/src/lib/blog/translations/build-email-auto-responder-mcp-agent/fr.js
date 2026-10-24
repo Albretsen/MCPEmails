@@ -87,7 +87,7 @@ Si vous voulez qu’un message cesse d’apparaître comme non lu une fois que v
 
 ## Limites de débit, et pourquoi on ne réessaie jamais aveuglément un envoi
 
-Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, quel que soit le forfait. Votre espace de travail a aussi un plafond de pointe selon le palier : **60 req/min sur Gratuit, 120 sur Personal, 300 sur Pro, 1 000 sur Business** (voir [tarifs](/pricing)). Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
+Votre espace de travail a un plafond par minute fixé par son forfait (voir [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
 
 Lorsque vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
 
