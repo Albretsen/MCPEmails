@@ -203,6 +203,10 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h57')}</h4>
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
+
+              {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
+              <h4>{t('plansAndPayment.h59')}</h4>
+              <p>{t('plansAndPayment.p59')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}

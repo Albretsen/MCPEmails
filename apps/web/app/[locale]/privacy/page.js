@@ -243,6 +243,12 @@ export default async function PrivacyPage({ params }) {
               <p>{t.rich('howWeUseData.marketingP1', richTags)}</p>
               <p>{t('howWeUseData.marketingP2')}</p>
               <p>{t('howWeUseData.marketingP3')}</p>
+
+              {/* Service email about a setup the reader started (activation
+                  help, src/lib/email/activation-help.ts). Not marketing, so
+                  not under 3.9; unsubscribable under the lifecycle category. */}
+              <h4>{t('howWeUseData.setupHelpTitle')}</h4>
+              <p>{t.rich('howWeUseData.setupHelpP', richTags)}</p>
             </LegalSection>
 
             {/* 4 - Data retention */}

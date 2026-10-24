@@ -8,6 +8,8 @@
  *   'support-preview'  release-gate.ts, the staff preview cookie
  *   'support-form'     form-token.ts, the signed render timestamp
  *   'support-ip'       ip.ts, the stored client IP hash
+ *   'billing-feedback' src/lib/billing/feedback-token.ts, the signed link in
+ *                      the post-cancel email that opens /billing/feedback
  *
  * FAIL CLOSED. A missing or malformed secret returns null rather than
  * throwing, and every caller treats null as "does not verify". The secret is
@@ -15,7 +17,7 @@
  */
 import crypto from 'node:crypto';
 
-export type SupportHmacLabel = 'support-preview' | 'support-form' | 'support-ip';
+export type SupportHmacLabel = 'support-preview' | 'support-form' | 'support-ip' | 'billing-feedback';
 
 function key(): Buffer | null {
   const hex = process.env.CSRF_SECRET;

@@ -23,10 +23,10 @@ Dans le tableau de bord, allez dans **API Keys**, créez une clé, et accordez-l
 - \`read:email\` — pour interroger, lister et lire les messages avec \`email_read\`.
 - \`send:email\` — pour appeler \`email_compose\` (action \`reply\`).
 
-La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_live_...\` et vous la transmettez à chaque requête :
+La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_9f86d081...\` et vous la transmettez à chaque requête :
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Le point de terminaison MCP est une URL unique :
@@ -87,7 +87,7 @@ Si vous voulez qu’un message cesse d’apparaître comme non lu une fois que v
 
 ## Limites de débit, et pourquoi on ne réessaie jamais aveuglément un envoi
 
-Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, quel que soit le forfait. Votre espace de travail a aussi un plafond de pointe selon le palier : **60 req/min sur Gratuit, 120 sur Personal, 300 sur Pro, 1 000 sur Business** (voir [tarifs](/pricing)). Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
+Votre espace de travail a un plafond par minute fixé par son forfait (voir [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
 
 Lorsque vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
 

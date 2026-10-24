@@ -11,7 +11,7 @@ import {
   resolveWebhookAccess,
   validateInboxIds,
 } from '@/lib/webhooks/access';
-import { ENDPOINT_PUBLIC_COLUMNS, MAX_WEBHOOK_ENDPOINTS, endpointJson, webhookDb } from '@/lib/webhooks/db';
+import { ENDPOINT_PUBLIC_COLUMNS, MAX_WEBHOOK_ENDPOINTS, endpointJson } from '@/lib/webhooks/endpoints';
 import { generateWebhookSecret } from '@/lib/webhooks/sign';
 import { validateWebhookUrl } from '@/lib/webhooks/url';
 
@@ -44,7 +44,7 @@ export async function GET(): Promise<NextResponse> {
   // so owners and admins get it whole here and everyone else masked.
   const service = createServiceRoleClient();
   const [{ data, error }, { data: inboxes }] = await Promise.all([
-    webhookDb(service)
+    service
       .from('webhook_endpoints')
       .select(ENDPOINT_PUBLIC_COLUMNS)
       .eq('workspace_id', access.workspaceId)
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const service = createServiceRoleClient();
-  const hooks = webhookDb(service);
+  const hooks = service;
 
   const { count, error: countError } = await hooks
     .from('webhook_endpoints')
