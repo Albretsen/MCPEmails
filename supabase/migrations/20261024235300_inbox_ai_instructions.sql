@@ -8,7 +8,7 @@
 -- Every AI client sees it: inbox_list returns it on the inbox, and the
 -- drafting and sending tools (draft create/reply, email_compose) add it to
 -- their result as a labelled note. A Pro feature (`inbox_instructions`,
--- 20261024210000_pro_features_gate.sql): nothing is served, and the dashboard
+-- 20261024235100_pro_features_gate.sql): nothing is served, and the dashboard
 -- shows no field, until the workspace is in the rollout or the launch switch
 -- is on, and then only on Pro or Business.
 --

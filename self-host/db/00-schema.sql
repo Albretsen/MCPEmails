@@ -210,7 +210,7 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
   ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
-  ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024212000)
+  ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024235300)
   ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone;
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
 -- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
@@ -248,7 +248,7 @@ BEGIN
   END IF;
 END
 $$;
--- The rule for ai_instructions, as in the hosted migration 20261024212000:
+-- The rule for ai_instructions, as in the hosted migration 20261024235300:
 -- trimmed, 1 to 2000 characters, or NULL.
 DO $$
 BEGIN

@@ -4,7 +4,7 @@
 // The workspace writes standing instructions once per inbox in the dashboard
 // ("This is the support inbox. Sign as the Support Team. Never reply to
 // invoices; move them to Finance."), stored in inboxes.ai_instructions
-// (migration 20261024212000). Every AI client then sees them:
+// (migration 20261024235300). Every AI client then sees them:
 //
 //   inbox_list            each inbox carries `owner_instructions`
 //   drafting / sending    draft create and reply, email_compose send, reply and
