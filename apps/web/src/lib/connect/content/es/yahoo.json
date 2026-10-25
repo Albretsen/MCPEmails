@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Yahoo Mail a Claude, Cursor y clientes MCP",
-    "description": "Conecta Yahoo Mail a Claude, Cursor y cualquier cliente MCP por IMAP (puerto 993) con una contraseña de aplicación. La normal no sirve. Una bandeja gratis."
+    "title": "MCP de Yahoo Mail: conecta Yahoo Mail a Claude y ChatGPT",
+    "description": "Conecta Yahoo Mail a Claude o ChatGPT con una contraseña de aplicación de Yahoo, por IMAP (puerto 993). La contraseña normal no sirve. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",
     "titleLine1": "Conecta Yahoo Mail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja real de Yahoo en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a Claude o ChatGPT tu bandeja real de Yahoo en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -72,6 +72,10 @@
     {
       "q": "¿Funciona Claude con Yahoo Mail?",
       "a": "No directamente. Claude no tiene un conector integrado para Yahoo. Conectar un servidor MCP como MCPEmails a tu buzón de Yahoo por IMAP, con una contraseña de aplicación de Yahoo, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. La misma conexión funciona después sin cambios desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Puede ChatGPT conectarse a Yahoo Mail?",
+      "a": "Sí, añadiendo MCPEmails como conector personalizado. Activa el modo desarrollador en ChatGPT (chatgpt.com, en Plus, Pro, Business, Enterprise y Edu), crea un conector con la URL de MCPEmails, elige OAuth e inicia sesión. La bandeja de Yahoo que conectaste aquí queda disponible en cada chat donde actives el modo desarrollador, y la misma contraseña de aplicación sirve también para Claude."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Yahoo Mail?",

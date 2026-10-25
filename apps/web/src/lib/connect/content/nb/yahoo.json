@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Yahoo Mail til Claude, Cursor og MCP-klienter",
-    "description": "Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis."
+    "title": "Yahoo Mail-MCP: koble Yahoo Mail til Claude og ChatGPT",
+    "description": "Koble Yahoo Mail til Claude eller ChatGPT med et Yahoo-app-passord via IMAP port 993. Kontopassordet ditt virker ikke. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + AI",
     "titleLine1": "Koble Yahoo Mail til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "lead": "Gi Claude eller ChatGPT den ekte Yahoo-innboksen din på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
@@ -72,6 +72,10 @@
     {
       "q": "Fungerer Claude med Yahoo Mail?",
       "a": "Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som MCPEmails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Kan ChatGPT kobles til Yahoo Mail?",
+      "a": "Ja, ved å legge til MCPEmails som en egendefinert kobling. Slå på utviklermodus i ChatGPT (chatgpt.com, på Plus, Pro, Business, Enterprise og Edu), opprett en kobling med MCPEmails-URL-en, velg OAuth og logg inn. Yahoo-innboksen du koblet til her er da tilgjengelig i hver samtale der utviklermodus er slått på, og det samme app-passordet fungerer også for Claude."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?",
