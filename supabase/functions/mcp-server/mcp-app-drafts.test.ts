@@ -673,10 +673,14 @@ Deno.test("the merge is a superset and the two key sets are disjoint", () => {
     assert(!(key in envelope), `${key} collides: the envelope must not carry it`);
   }
   const merged = draftCardToolResult(payload, envelope).structuredContent;
+  // Plus one: the server note (`notes`, result-notes.ts), which is neither
+  // side's key and carries DRAFT_CARD_NOTICE on an editor envelope.
+  assert(!("notes" in payload) && !("notes" in envelope));
+  assertEquals(merged.notes, [DRAFT_CARD_NOTICE]);
   assertEquals(
     Object.keys(merged).length,
-    Object.keys(payload).length + Object.keys(envelope).length,
-    "the merged object must be exactly the sum of both key counts",
+    Object.keys(payload).length + Object.keys(envelope).length + 1,
+    "the merged object must be exactly the sum of both key counts, plus notes",
   );
   // And the published keys still read exactly where callers already find them.
   assertEquals(merged.draft_id, "Drafts:2");
@@ -2908,28 +2912,33 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
   assertEquals(sent._meta, undefined);
 });
 
-Deno.test("a second content block says a card exists, only when an editor envelope is attached", () => {
+Deno.test("a card-envelope result says the card is on screen, on both channels; no envelope, no note", () => {
   const withCard = draftCardToolResult(WRITE_PAYLOAD, editorEnvelope());
   assertEquals(withCard.content.length, 2);
   // Block one is the payload JSON, byte for byte (contract §8).
   assertEquals(withCard.content[0], { type: "text", text: JSON.stringify(WRITE_PAYLOAD) });
   assertEquals(withCard.content[1], { type: "text", text: DRAFT_CARD_NOTICE });
+  // And as a server note in the structured payload, which is the channel a
+  // client with structured output reads instead of `content` (result-notes.ts).
+  assertEquals((withCard.structuredContent as any).notes, [DRAFT_CARD_NOTICE]);
   assertEquals(
     DRAFT_CARD_NOTICE,
-    "Hosts that render MCP Apps cards show this draft to the user in an " +
-      "editable card, where the user can change it, and draft_read returns the " +
-      "current text; this result does not say whether this host displayed the card.",
+    "The user is shown this draft in an editable card in this chat now, where " +
+      "they can change, save or send it. Do not paste the draft text back, do not " +
+      "say the card is missing, and do not send the user to their mail client or " +
+      "dashboard to see it. draft_read returns its current text.",
   );
-  // One sentence of fact. It asks the model for nothing.
-  assertEquals(DRAFT_CARD_NOTICE.split(". ").length, 1);
-  assert(!/\b(you|please|must|should|call|use)\b/i.test(DRAFT_CARD_NOTICE), "no directive in tool output");
+  // 2026-10-25: the hedge is gone. "does not say whether this host displayed
+  // the card" is what a model in Claude's Code tab read as "it did not".
+  assert(!/whether/i.test(DRAFT_CARD_NOTICE), "no hedge about whether the card showed");
   assert(!DRAFT_CARD_NOTICE.includes("—"), "no em dash");
 
   // No envelope (gate off, hidden inbox, Outlook reply, a failed build): the
-  // result is exactly what it was before the card existed.
+  // result is exactly what it was before the card existed. No note anywhere.
   const without = draftCardToolResult(WRITE_PAYLOAD, null);
   assertEquals(without.content, [{ type: "text", text: JSON.stringify(WRITE_PAYLOAD) }]);
   assertEquals(without.structuredContent, WRITE_PAYLOAD);
+  assertEquals("notes" in without.structuredContent, false);
   assertEquals("_meta" in without, false);
 
   // A receipt is an envelope, but not an editor: send and delete get no notice.
@@ -2943,6 +2952,7 @@ Deno.test("a second content block says a card exists, only when an editor envelo
   });
   const deleted = draftCardToolResult({ draft_id: "Drafts:2", deleted: true }, receipt);
   assertEquals(deleted.content.length, 1);
+  assertEquals("notes" in deleted.structuredContent, false);
   assertEquals("_meta" in deleted, false);
 });
 

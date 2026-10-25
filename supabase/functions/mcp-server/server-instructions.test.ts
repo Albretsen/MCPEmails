@@ -201,3 +201,15 @@ Deno.test("the APP-ONLY paragraph names each card family for what it is, and dra
   assert(pairs!.includes("`draft_read` reads one draft in full."), pairs);
   assert(!SERVER_INSTRUCTIONS.includes("\u2014"), "no em dash");
 });
+
+Deno.test("the DRAFTS paragraph tells a model to save a requested email as a draft", () => {
+  // 2026-10-25: asked to write an email, models wrote it in the chat and never
+  // called a draft tool, so the draft editor card never appeared. Worded
+  // without a tool name so it holds on both listings and on hosts with no card.
+  const drafts = SERVER_INSTRUCTIONS.split("\n\n").find((p: string) => p.startsWith("DRAFTS:"));
+  assertEquals(
+    drafts,
+    "DRAFTS: save an email the user asks you to write as a draft, not only as " +
+      "chat text, so they can see and edit it.",
+  );
+});
