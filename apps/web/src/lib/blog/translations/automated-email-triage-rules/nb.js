@@ -67,7 +67,7 @@ De fem regelhandlingene:
 
 Hva en regel ikke kan gjøre:
 
-- **Slette e-post.** Sletting er ikke tilgjengelig for en automasjon. Å flytte til Papirkurv, Søppelpost eller Spam avvises også: alle leverandører tømmer disse på en tidtaker, så å arkivere dit er en sletting med forsinket lunte. Arkiver til en mappe du eier, og slett selv når du har lest kjøreloggen.
+- **Slette e-post.** Sletting er ikke tilgjengelig for en automasjon. Å flytte til Papirkurv avvises også, uansett språk: alle leverandører tømmer den på en tidtaker, så å arkivere dit er en sletting med forsinket lunte. Arkiver til en mappe du eier, og slett selv når du har lest kjøreloggen. Søppelpost og Spam er tillatt, siden det å arkivere uønsket e-post der er en vanlig grunn til å lage en regel.
 - **Tolke noe som helst.** Ingen oppsummering, ingen «hvis det høres hastende ut».
 - **Lenke sammen to handlinger.** Etikettert og markert som lest er to regler over samme filter.
 
@@ -105,7 +105,7 @@ Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fo
 Nei. En regel er et lagret søk pluss én fast handling. E-post matches, aldri tolkes, og meldingstekster kopieres aldri inn i noe en regel produserer.
 
 **Kan en regel slette e-posten min?**  
-Nei. Sletting er ikke tilgjengelig for automasjoner, og å flytte e-post til Papirkurv, Søppelpost eller Spam avvises av samme grunn.
+Nei. Sletting er ikke tilgjengelig for automasjoner, og å flytte e-post til Papirkurv avvises av samme grunn. Å flytte den til Søppelpost eller Spam er tillatt.
 
 **Hvilket tilgangsnivå krever dette?**  
 Enhver automasjonshandling krever \`manage:automations\`, en egen tildeling atskilt fra lesing og sending, fordi det å ha den betyr at en klient kan opprette stående regler som rører postkassen din uten tilsyn.
