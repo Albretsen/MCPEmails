@@ -1,13 +1,14 @@
 // The two site-feed jobs end to end, with Supabase and albretsen.no faked:
 // internal workspaces (the synthetic monitor's among them) never reach the
-// site, the country is k-anonymous, a 401 stops the run, the MRR job posts on
-// change and refuses zero, and the bearer key is never in a summary.
+// site, the country is k-anonymous, a 401 stops the run, the figure job posts
+// on change and never lowers the site's figure, and the bearer key is never in
+// a summary.
 // Run: npm run test:site-feed
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { siteRequest } from './client.ts';
-import { runEventsJob, runMrrJob } from './run.ts';
+import { loadEmailsHandled, runEventsJob, runFigureJob } from './run.ts';
 
 process.env.GROWTH_INTERNAL_EMAILS = 'founder@example.test';
 
@@ -149,43 +150,73 @@ test('events: a read failure is a summary, not a throw', async () => {
   assert.equal(site.sent.length, 0);
 });
 
-const figure = (value: number, updated: string) => ({ figures: { 'mcp-emails': { label: 'MRR', value, unit: 'NOK', updated } } });
+const figure = (value: number | string, updated: string, label = 'emails handled') => ({ figures: { 'mcp-emails': { label, value, updated } } });
 
-test('mrr: posts the NOK figure when it changed', async () => {
-  const site = fakeSite((s) => (s.method === 'GET' ? { status: 200, body: figure(1, new Date(NOW).toISOString()) } : { status: 200 }));
-  const summary = await runMrrJob({ key: KEY, loadMrrMinorUsd: async () => 107_400, nowMs: NOW, client: site.client });
-  assert.deepEqual(summary, { job: 'mrr', posted: true });
+test('figure: posts the emails handled string, with no unit, when it grew', async () => {
+  const site = fakeSite((s) => (s.method === 'GET' ? { status: 200, body: figure('1.24 million+', new Date(NOW).toISOString()) } : { status: 200 }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_257_482, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: true });
   assert.equal(site.sent[0].auth, null, 'the GET carries no key');
   const post = site.sent[1];
   assert.equal(post.url, 'https://albretsen.no/api/figures');
   assert.equal(post.auth, `Bearer ${KEY}`);
-  const body = post.body as { product: string; label: string; value: number; unit: string };
-  assert.deepEqual(Object.keys(body).sort(), ['label', 'product', 'unit', 'value']);
-  assert.equal(body.product, 'mcp-emails');
-  assert.equal(body.unit, 'NOK');
-  assert.ok(body.value > 9000 && body.value < 12000);
-  assert.equal(Math.round(body.value * 100) / 100, body.value);
+  assert.deepEqual(post.body, { product: 'mcp-emails', label: 'emails handled', value: '1.25 million+' });
 });
 
-test('mrr: unchanged and fresh is not reposted', async () => {
-  let value = 0;
-  const probe = fakeSite((s) => {
-    if (s.method === 'POST') value = (s.body as { value: number }).value;
-    return { status: 200 };
-  });
-  await runMrrJob({ key: KEY, loadMrrMinorUsd: async () => 107_400, nowMs: NOW, client: probe.client });
-  const site = fakeSite(() => ({ status: 200, body: figure(value, new Date(NOW - 10 * 60_000).toISOString()) }));
-  const summary = await runMrrJob({ key: KEY, loadMrrMinorUsd: async () => 107_400, nowMs: NOW, client: site.client });
-  assert.deepEqual(summary, { job: 'mrr', posted: false, reason: 'unchanged' });
+test('figure: replaces the old MRR figure', async () => {
+  const site = fakeSite((s) => (s.method === 'GET' ? { status: 200, body: figure(10203.19, new Date(NOW).toISOString(), 'MRR') } : { status: 200 }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_257_482, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: true });
+  assert.equal((site.sent[1].body as { label: string }).label, 'emails handled');
+});
+
+test('figure: the same string, freshly posted, is not reposted', async () => {
+  const site = fakeSite(() => ({ status: 200, body: figure('1.25 million+', new Date(NOW - 3_600_000).toISOString()) }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_259_000, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: false, reason: 'unchanged' });
   assert.equal(site.sent.length, 1);
 });
 
-test('mrr: zero and a failed revenue read never post', async () => {
+test('figure: a count below what the site shows is never posted', async () => {
+  const site = fakeSite(() => ({ status: 200, body: figure('1.26 million+', new Date(NOW - 7 * 86_400_000).toISOString()) }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_257_482, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: false, reason: 'would_decrease' });
+  assert.equal(site.sent.length, 1);
+});
+
+test('figure: a failed site read skips the run rather than risk a lower figure', async () => {
+  const site = fakeSite((s) => (s.method === 'GET' ? 'network' : { status: 200 }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_257_482, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: false, reason: 'site_read_failed', status: 0 });
+  assert.ok(site.sent.every((s) => s.method === 'GET'));
+});
+
+test('figure: a tiny count and a failed count read never post', async () => {
   const site = fakeSite(() => ({ status: 200 }));
-  assert.equal((await runMrrJob({ key: KEY, loadMrrMinorUsd: async () => 0, nowMs: NOW, client: site.client })).reason, 'refused_non_positive');
-  const failed = await runMrrJob({ key: KEY, loadMrrMinorUsd: async () => { throw new Error('stripe down'); }, nowMs: NOW, client: site.client });
-  assert.equal(failed.reason, 'revenue_read_failed');
+  assert.equal((await runFigureJob({ key: KEY, loadEmailsHandled: async () => 0, nowMs: NOW, client: site.client })).reason, 'refused_too_small');
+  const failed = await runFigureJob({ key: KEY, loadEmailsHandled: async () => { throw new Error('db down'); }, nowMs: NOW, client: site.client });
+  assert.deepEqual(failed, { job: 'figure', posted: false, reason: 'read_failed' });
   assert.equal(site.sent.length, 0);
+});
+
+test('figure: a refused POST is a summary with the status, and no figure or key in it', async () => {
+  const site = fakeSite((s) => (s.method === 'GET' ? { status: 200, body: { figures: {} } } : { status: 400 }));
+  const summary = await runFigureJob({ key: KEY, loadEmailsHandled: async () => 1_257_482, nowMs: NOW, client: site.client });
+  assert.deepEqual(summary, { job: 'figure', posted: false, reason: 'site_rejected', status: 400 });
+  const text = JSON.stringify(summary);
+  assert.ok(!text.includes(KEY) && !text.includes('million') && !text.includes('1257482'));
+});
+
+test('loadEmailsHandled: calls the RPC with the configured internal addresses and reads a number', async () => {
+  const calls: { fn: string; args: unknown }[] = [];
+  const db = (answer: { data: unknown; error: { message: string } | null }) =>
+    ({ rpc: async (fn: string, args: unknown) => { calls.push({ fn, args }); return answer; } }) as never;
+  assert.equal(await loadEmailsHandled(db({ data: 1_257_482, error: null })), 1_257_482);
+  assert.deepEqual(calls[0], { fn: 'site_feed_emails_handled', args: { p_internal_emails: ['founder@example.test'] } });
+  // bigint can arrive as a string.
+  assert.equal(await loadEmailsHandled(db({ data: '1340269', error: null })), 1_340_269);
+  await assert.rejects(loadEmailsHandled(db({ data: null, error: { message: 'boom' } })), /boom/);
+  await assert.rejects(loadEmailsHandled(db({ data: null, error: null })), /no number/);
 });
 
 test('client: retries a network error and a 5xx twice, then gives up without throwing', async () => {

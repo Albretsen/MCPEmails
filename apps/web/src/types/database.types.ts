@@ -6868,6 +6868,10 @@ export type Database = {
           total: number
         }[]
       }
+      site_feed_emails_handled: {
+        Args: { p_internal_emails?: string[] }
+        Returns: number
+      }
       sso_admin_test_sign_in_seen: {
         Args: { p_connection_id: string }
         Returns: boolean

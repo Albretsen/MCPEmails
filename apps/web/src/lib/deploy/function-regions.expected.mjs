@@ -236,7 +236,7 @@ export const ROUTES = [
   ['app/api/internal/pro-price-notice/dispatch/route.ts', 'arn1', '~6', 'Resend per email, one run on one day; caller is the scheduler'],
   ['app/api/internal/referrals/dispatch/route.ts', 'arn1', '~12 per row', 'Stripe API x4-6 + Resend per due referral; caller is the scheduler'],
   ['app/api/internal/pass-expiry/route.ts', 'arn1', '2+', '-'],
-  ['app/api/internal/site-feed/dispatch/route.ts', 'arn1', '3-6', 'Stripe API (mrr job) + albretsen.no, up to 4 POSTs; caller is the scheduler'],
+  ['app/api/internal/site-feed/dispatch/route.ts', 'arn1', '3-6', 'one Supabase RPC (figure job) + albretsen.no, up to 4 POSTs; caller is the scheduler'],
   ['app/api/kiosk/health/route.ts', 'arn1', '1+', '-'],
   ['app/api/kiosk/version/route.ts', 'arn1', '1+', '-'],
   ['app/api/oauth/authorize/route.ts', 'arn1', '10-11', 'CIMD fetch (client-hosted, memoised)'],

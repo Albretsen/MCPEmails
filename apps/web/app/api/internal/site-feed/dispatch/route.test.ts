@@ -22,14 +22,14 @@ nodeMock.module('@/lib/site-feed/run', {
       ran.push(`events:${deps.key}`);
       return { job: 'events', candidates: 0, posted: 0 };
     },
-    runMrrJob: async (deps: { key: string }) => {
-      ran.push(`mrr:${deps.key}`);
-      return { job: 'mrr', posted: true };
+    runFigureJob: async (deps: { key: string }) => {
+      ran.push(`figure:${deps.key}`);
+      return { job: 'figure', posted: true };
     },
+    loadEmailsHandled: async () => 1,
   },
 });
 nodeMock.module('@/lib/supabase/service', { namedExports: { createServiceRoleClient: () => ({}) } });
-nodeMock.module('@/lib/analytics/kiosk-revenue', { namedExports: { loadRecurringRevenue: async () => ({ mrrMinor: 1 }) } });
 
 const route = await import('./route.ts');
 
@@ -63,19 +63,21 @@ test('an unknown or missing job is a 400', async () => {
   ran.length = 0;
   assert.equal((await post('')).status, 400);
   assert.equal((await post('?job=all')).status, 400);
+  // The retired MRR job is gone with the revenue read.
+  assert.equal((await post('?job=mrr')).status, 400);
   assert.deepEqual(ran, []);
 });
 
 test('without ALBRETSEN_FEED_KEY every job is a silent no-op', async () => {
   delete process.env.ALBRETSEN_FEED_KEY;
   ran.length = 0;
-  for (const job of ['events', 'mrr']) {
+  for (const job of ['events', 'figure']) {
     const res = await post(`?job=${job}`);
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { job, skipped: 'not_configured' });
   }
   process.env.ALBRETSEN_FEED_KEY = '   ';
-  assert.deepEqual(await (await post('?job=mrr')).json(), { job: 'mrr', skipped: 'not_configured' });
+  assert.deepEqual(await (await post('?job=figure')).json(), { job: 'figure', skipped: 'not_configured' });
   assert.deepEqual(ran, []);
 });
 
@@ -84,10 +86,10 @@ test('each job runs with the key, and the key is not in the response', async () 
   ran.length = 0;
   const events = await post('?job=events');
   assert.equal(events.status, 200);
-  const mrr = await post('?job=mrr');
-  assert.equal(mrr.status, 200);
-  assert.deepEqual(ran, ['events:feed_key_secret_value', 'mrr:feed_key_secret_value']);
-  const text = JSON.stringify([await events.json(), await mrr.json()]);
+  const figure = await post('?job=figure');
+  assert.equal(figure.status, 200);
+  assert.deepEqual(ran, ['events:feed_key_secret_value', 'figure:feed_key_secret_value']);
+  const text = JSON.stringify([await events.json(), await figure.json()]);
   assert.ok(!text.includes('feed_key_secret_value'));
 });
 

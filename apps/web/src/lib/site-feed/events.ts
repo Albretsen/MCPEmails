@@ -16,7 +16,7 @@
  * environment, so every rule is unit tested (events.test.ts).
  */
 
-import { SITE_FEED_PRODUCT } from './mrr.ts';
+import { SITE_FEED_PRODUCT } from './figure.ts';
 
 /** A country is sent only when at least this many workspaces share it. */
 export const COUNTRY_K = 5;
