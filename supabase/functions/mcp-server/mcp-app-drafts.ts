@@ -104,6 +104,7 @@ import { htmlHasFormatting, mergeTextEditIntoHtml } from "./html-text-merge.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import { attachResultNote } from "./result-notes.ts";
 import { parseAttachmentInputs } from "./attachment-reference.ts";
 import {
   type CarriedAttachments,
@@ -180,15 +181,6 @@ export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
 export const DEFERRED_BODY_SCHEMA_VERSION = "review-card-v2";
 
 /**
- * The second `content` block on a draft write that carries an editor envelope.
- *
- * Without it nothing in the model's half of the result says a card exists, so
- * a model would describe the draft as if the user could not see it, and would
- * overwrite text the user had since changed. One sentence of fact; it asks for
- * nothing. A block of its own, because the first block is the payload JSON and
- * contract §8 pins that byte for byte.
- */
-/**
  * The detail on the receipt a send from a draft returns.
  *
  * It said "Delivered via IMAP + SMTP." until QA on 2026-10-15, which claimed
@@ -199,10 +191,34 @@ export const DEFERRED_BODY_SCHEMA_VERSION = "review-card-v2";
  */
 export const DRAFT_SENT_RECEIPT_DETAIL = "Accepted by the mail server for delivery.";
 
+/**
+ * The server note on a draft write that carries an editor envelope.
+ *
+ * Without it nothing in the model's half of the result says a card exists, so
+ * a model would describe the draft as if the user could not see it, and would
+ * overwrite text the user had since changed. It is the second `content` block
+ * (the first is the payload JSON, which contract §8 pins byte for byte) and,
+ * since 2026-10-25, also `structuredContent.notes`, because it is attached
+ * with `attachResultNote`: a client that reads only the structured payload
+ * never saw a second block (result-notes.ts).
+ *
+ * ── Why it says the card is on screen, and what not to do (2026-10-25) ─────
+ * It used to end "this result does not say whether this host displayed the
+ * card". Right after a create that mounted the card, a model in Claude's Code
+ * tab told the user the card "probably won't show up" and sent them to their
+ * mail client. The three "do not" clauses are what that model did.
+ *
+ * The server still cannot see what a host renders. The envelope, and so this
+ * note, exists only when the workspace has the editor on and the inbox has not
+ * hidden it, which is the strongest signal the server has; a host without
+ * MCP Apps in such a workspace gets a sentence that overstates, which costs
+ * less than hedging on every host that does draw the card.
+ */
 export const DRAFT_CARD_NOTICE =
-  "Hosts that render MCP Apps cards show this draft to the user in an " +
-  "editable card, where the user can change it, and draft_read returns the " +
-  "current text; this result does not say whether this host displayed the card.";
+  "The user is shown this draft in an editable card in this chat now, where " +
+  "they can change, save or send it. Do not paste the draft text back, do not " +
+  "say the card is missing, and do not send the user to their mail client or " +
+  "dashboard to see it. draft_read returns its current text.";
 
 /**
  * The tools defined in this module, in `tools/list` order.
@@ -1033,7 +1049,8 @@ export function draftReceiptEnvelope(
  *     depends on the provider handing that body back unchanged; Outlook does
  *     not (Exchange rewrites the HTML), so the card must treat a mismatch as
  *     "adopt the read", and it does;
- *   * a second `content` block, `DRAFT_CARD_NOTICE`, states that a card exists.
+ *   * `DRAFT_CARD_NOTICE` is attached as a server note (a second `content`
+ *     block and `structuredContent.notes`): the card is on screen.
  *
  * A receipt envelope (send, delete) carries no body and no editor, so it gets
  * none of this, and neither does a result with no envelope.
@@ -1067,8 +1084,7 @@ export function draftCardToolResult(
   const draftFields = draft as Record<string, unknown>;
   const body = (draftFields["body"] ?? {}) as Record<string, unknown>;
   const truncated = body["truncated"] === true;
-  content.push({ type: "text", text: DRAFT_CARD_NOTICE });
-  return {
+  const result = {
     content,
     structuredContent: {
       ...payload,
@@ -1078,7 +1094,7 @@ export function draftCardToolResult(
         ...draftFields,
         body: { text: null, html: null, truncated, deferred: true },
       },
-    },
+    } as Record<string, unknown>,
     _meta: {
       [DRAFT_BODY_META_KEY]: {
         text: typeof body["text"] === "string" ? body["text"] : null,
@@ -1089,6 +1105,11 @@ export function draftCardToolResult(
       },
     },
   };
+  // On both channels a model reads: the second `content` block (the first,
+  // the payload JSON, is left byte for byte) and `structuredContent.notes`.
+  // Only here, so only on a result that carries an editor envelope.
+  attachResultNote({ result }, DRAFT_CARD_NOTICE);
+  return result;
 }
 
 // ---------------------------------------------------------------------------

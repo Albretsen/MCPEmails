@@ -1178,3 +1178,31 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
     assert(!text.includes("\u2014"), `em dash in model-facing text: ${text}`);
   }
 });
+
+Deno.test("the draft writes say to save a requested email as a draft, and to attach files from a direct call", () => {
+  // 2026-10-25, two ways the draft card went unseen: a model asked to write an
+  // email wrote it in the chat and called nothing, and in claude.ai a model
+  // encoded an upload in its code sandbox and called `draft` from there, where
+  // no card is mounted. Both sentences stay true on a host with no card.
+  const perOperation = new Map(
+    PER_OPERATION_LISTING.map((tool) => [tool.name, serializeToolForList(tool)]),
+  );
+  const descriptions: Array<[string, string]> = [
+    ["draft", (serializeToolForList(registryEntry("draft")) as { description: string }).description],
+    ["draft_create", (perOperation.get("draft_create") as { description: string }).description],
+    ["draft_reply", (perOperation.get("draft_reply") as { description: string }).description],
+  ];
+  for (const [name, description] of descriptions) {
+    assert(/rather than only writing it in chat, so they can see and edit it\./.test(description), name);
+    assert(
+      description.includes(
+        "Put a file's base64 straight into attachments[].data and call this tool directly, " +
+          "never from code: only a direct call can show the draft card.",
+      ),
+      `${name}: attachments from a direct call`,
+    );
+    assert(!description.includes("\u2014"), `${name}: no em dash`);
+    // Claude Code cuts a tool description at 2KB.
+    assert(new TextEncoder().encode(description).length <= 2048, `${name}: under 2KB`);
+  }
+});
