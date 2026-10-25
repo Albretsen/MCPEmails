@@ -1,8 +1,9 @@
 /**
  * The two albretsen.no feed jobs, run by /api/internal/site-feed/dispatch.
  *
- * Both are pg_cron driven (20261026090000_schedule_site_feed.sql) and read
- * what already happened; nothing on the product's request path knows the feed
+ * Both are pg_cron driven (20261026090000_schedule_site_feed.sql, and
+ * 20261026100000_site_feed_emails_handled.sql for the figure) and read what
+ * already happened; nothing on the product's request path knows the feed
  * exists, so it can never slow or break a tool call. Both return a small
  * summary with no figures, ids or text in it, and never throw.
  */
@@ -10,9 +11,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
-import { isInternalAccount } from '@/lib/analytics/internal-accounts';
+import { internalAccountMatchers, isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { siteRequest, type SiteClientOptions } from './client.ts';
-import { SITE_FEED_PRODUCT, monthKey, mrrNok, readSiteFigure, shouldPostFigure } from './mrr.ts';
+import { FIGURE_LABEL, SITE_FEED_PRODUCT, decideFigure, displayEmailsHandled, readSiteFigure } from './figure.ts';
 import {
   FEED_TOOL_NAMES,
   OUTBOUND_TOOL_NAMES,
@@ -28,39 +29,57 @@ type Db = SupabaseClient<Database>;
 export type JobSummary = Record<string, string | number | boolean>;
 
 // ---------------------------------------------------------------------------
-// MRR
+// Emails handled
 // ---------------------------------------------------------------------------
 
-export async function runMrrJob(deps: {
+export async function runFigureJob(deps: {
   key: string;
-  /** Live MRR in USD minor units, net of VAT, internal and comps excluded. */
-  loadMrrMinorUsd: () => Promise<number>;
+  /** site_feed_emails_handled(): emails handled, external workspaces only. */
+  loadEmailsHandled: () => Promise<number>;
   nowMs: number;
   client?: SiteClientOptions;
 }): Promise<JobSummary> {
-  let mrrMinor: number;
+  let count: number;
   try {
-    mrrMinor = await deps.loadMrrMinorUsd();
+    count = await deps.loadEmailsHandled();
   } catch (err) {
-    console.error('[site-feed] mrr read failed', { error: err instanceof Error ? err.message : String(err) });
-    return { job: 'mrr', posted: false, reason: 'revenue_read_failed' };
+    console.error('[site-feed] emails handled read failed', { error: err instanceof Error ? err.message : String(err) });
+    return { job: 'figure', posted: false, reason: 'read_failed' };
   }
-  const value = mrrNok(mrrMinor, monthKey(deps.nowMs));
-  if (value === null) return { job: 'mrr', posted: false, reason: 'refused_non_positive' };
+  const value = displayEmailsHandled(count);
+  if (value === null) return { job: 'figure', posted: false, reason: 'refused_too_small' };
 
+  // Without the site's current figure the never-decrease rule cannot be kept,
+  // so a failed GET skips this run; the next one tries again.
   const current = await siteRequest('/api/figures', { method: 'GET' }, deps.client);
-  const existing = current.ok ? readSiteFigure(current.body) : undefined;
-  if (!shouldPostFigure(existing, value, deps.nowMs)) {
-    return { job: 'mrr', posted: false, reason: 'unchanged' };
-  }
+  if (!current.ok) return { job: 'figure', posted: false, reason: 'site_read_failed', status: current.status };
+  const decision = decideFigure(readSiteFigure(current.body), value, deps.nowMs);
+  if (decision !== 'post') return { job: 'figure', posted: false, reason: decision };
+
   const posted = await siteRequest(
     '/api/figures',
-    { method: 'POST', key: deps.key, json: { product: SITE_FEED_PRODUCT, label: 'MRR', value, unit: 'NOK' } },
+    { method: 'POST', key: deps.key, json: { product: SITE_FEED_PRODUCT, label: FIGURE_LABEL, value } },
     deps.client,
   );
   return posted.ok
-    ? { job: 'mrr', posted: true }
-    : { job: 'mrr', posted: false, reason: 'site_rejected', status: posted.status };
+    ? { job: 'figure', posted: true }
+    : { job: 'figure', posted: false, reason: 'site_rejected', status: posted.status };
+}
+
+/**
+ * The count, in SQL (one pass over action_usage and bulk_runs, so the 1000
+ * row cap does not apply). GROWTH_INTERNAL_EMAILS is passed in because the
+ * database only knows `public.internal_accounts`. Throws on an error or a
+ * non-numeric answer; runFigureJob turns that into a summary.
+ */
+export async function loadEmailsHandled(db: Db): Promise<number> {
+  const { data, error } = await db.rpc('site_feed_emails_handled', {
+    p_internal_emails: internalAccountMatchers().emails,
+  });
+  if (error) throw new Error(error.message);
+  const count = Number(data);
+  if (data === null || !Number.isFinite(count)) throw new Error('site_feed_emails_handled returned no number');
+  return count;
 }
 
 // ---------------------------------------------------------------------------

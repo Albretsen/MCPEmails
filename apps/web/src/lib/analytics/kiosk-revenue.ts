@@ -73,10 +73,9 @@ export async function fetchRecurringRevenue(windowDays: number): Promise<GrowthR
 
 /**
  * The same read with no cache in front of it, for callers that must not be
- * served a figure older than their own schedule: the albretsen.no MRR feed
- * (src/lib/site-feed/run.ts) posts every 15 minutes, and `unstable_cache`
- * revalidates stale-while-revalidate, so behind the 10 minute window above it
- * could post a figure 25 minutes old. Throws on a Stripe failure.
+ * served a figure older than their own schedule (`unstable_cache` revalidates
+ * stale-while-revalidate, so the 10 minute window above can serve an older
+ * figure). Throws on a Stripe failure.
  */
 export async function loadRecurringRevenue(windowDays: number): Promise<RevenueSummary> {
   // Imported inside the read, not at module scope. `@/lib/stripe/client`

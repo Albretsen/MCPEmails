@@ -1,15 +1,18 @@
 /**
- * POST /api/internal/site-feed/dispatch?job=events|mrr
+ * POST /api/internal/site-feed/dispatch?job=events|figure
  *
- * Feeds albretsen.no, the owner's personal site, with MCPEmails' live MRR in
- * NOK and an anonymous ticker of what agents are doing. Poked by pg_cron
- * through dispatch_site_feed() (20261026090000_schedule_site_feed.sql):
- * `events` every minute, `mrr` every 15 minutes. The jobs live in
- * src/lib/site-feed/run.ts; the privacy rules in src/lib/site-feed/events.ts.
+ * Feeds albretsen.no, the owner's personal site, with how many emails agents
+ * have handled through MCPEmails ("1.25 million+ emails handled") and an
+ * anonymous ticker of what agents are doing. Poked by pg_cron through
+ * dispatch_site_feed() (20261026090000_schedule_site_feed.sql,
+ * 20261026100000_site_feed_emails_handled.sql): `events` every minute,
+ * `figure` hourly. The jobs live in src/lib/site-feed/run.ts; the privacy
+ * rules in src/lib/site-feed/events.ts, the figure's rounding and its
+ * never-decrease rule in src/lib/site-feed/figure.ts. No revenue is read.
  *
  * OFF THE PRODUCT'S PATH. The jobs read rows that already exist
- * (activity_log, inboxes, Stripe), so nothing a customer does waits on this
- * route or on albretsen.no.
+ * (activity_log, inboxes, action_usage, bulk_runs), so nothing a customer does
+ * waits on this route or on albretsen.no.
  *
  * AUTH. `X-Dispatch-Secret` against DISPATCH_SECRET in constant time, the same
  * secret and check as /api/internal/billing-lifecycle/dispatch.
@@ -25,8 +28,7 @@
 import { timingSafeEqual } from 'node:crypto';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { loadRecurringRevenue } from '@/lib/analytics/kiosk-revenue';
-import { runEventsJob, runMrrJob } from '@/lib/site-feed/run';
+import { loadEmailsHandled, runEventsJob, runFigureJob } from '@/lib/site-feed/run';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -49,7 +51,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
   const job = new URL(request.url).searchParams.get('job');
-  if (job !== 'events' && job !== 'mrr') {
+  if (job !== 'events' && job !== 'figure') {
     return Response.json({ error: 'unknown_job' }, { status: 400 });
   }
   const key = process.env.ALBRETSEN_FEED_KEY?.trim();
@@ -58,14 +60,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
+    const db = createServiceRoleClient();
     const summary =
-      job === 'mrr'
-        ? await runMrrJob({
-          key,
-          loadMrrMinorUsd: async () => (await loadRecurringRevenue(28)).mrrMinor,
-          nowMs: Date.now(),
-        })
-        : await runEventsJob({ key, db: createServiceRoleClient(), nowMs: Date.now() });
+      job === 'figure'
+        ? await runFigureJob({ key, loadEmailsHandled: () => loadEmailsHandled(db), nowMs: Date.now() })
+        : await runEventsJob({ key, db, nowMs: Date.now() });
     if (summary.reason && summary.reason !== 'unchanged') console.warn('[site-feed]', JSON.stringify(summary));
     return Response.json(summary, { status: 200 });
   } catch (err) {
