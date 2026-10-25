@@ -144,6 +144,11 @@ export async function reverseReferralCharge(
       .eq('id', referral.id)
       .in('status', BEFORE_REWARD);
     if (voidError) throw new Error(`referrals void failed: ${voidError.message}`);
+    // The dispatcher may be issuing this referral's credits right now: it
+    // read the charge before this refund or dispute. Whatever it already
+    // issued is taken back here; whatever it issues after this void, it
+    // takes back itself (its final status write finds the row voided).
+    await clawBackReferralRewards(db, stripe, referral.id);
     await recordReferralEvent(db, referral.friend_workspace_id, 'referral_voided', { failure: true });
     return 'voided';
   }
@@ -151,13 +156,35 @@ export async function reverseReferralCharge(
   if (!AFTER_REWARD.includes(referral.status)) return 'skipped';
   if (input.kind === 'refund' && !input.fullyRefunded) return 'skipped';
 
+  await clawBackReferralRewards(db, stripe, referral.id);
+
+  const { error: voidError } = await db
+    .from('referrals')
+    .update({ status: 'voided', void_reason: `${reason}_after_reward` })
+    .eq('id', referral.id);
+  if (voidError) throw new Error(`referrals void failed: ${voidError.message}`);
+  await recordReferralEvent(db, referral.friend_workspace_id, 'referral_voided', { failure: true });
+  return 'clawed_back';
+}
+
+/**
+ * Take back the unspent part of every Stripe credit issued for a referral,
+ * once per side. Safe to repeat: a side with a clawback row is skipped, and
+ * before a clawback is written the customer's recent balance transactions
+ * are searched for one already made for this referral and side, so a retry
+ * after Stripe answered (when the idempotency key would see different
+ * parameters, the balance having moved) records that one instead of failing.
+ * A Personal month is never shortened. Throws on a database or Stripe error.
+ */
+export async function clawBackReferralRewards(db: Db, stripe: ReferralStripeApi, referralId: string): Promise<number> {
   const { data: rewards, error: rewardsError } = await db
     .from('referral_rewards')
     .select('side, kind, amount_cents, currency, stripe_customer_id, stripe_balance_txn_id')
-    .eq('referral_id', referral.id);
+    .eq('referral_id', referralId);
   if (rewardsError) throw new Error(`referral_rewards read failed: ${rewardsError.message}`);
   const rows = rewards ?? [];
   const done = new Set(rows.map((r) => r.side));
+  let clawedBack = 0;
 
   for (const reward of rows) {
     if (reward.kind !== 'stripe_credit') continue;
@@ -169,20 +196,26 @@ export async function reverseReferralCharge(
     const currency = creditCurrency(reward.currency);
     if (!currency) {
       console.error('[referrals] clawback skipped: reward currency is not one we credit in; reverse it by hand', {
-        referral: referral.id,
+        referral: referralId,
         side,
       });
       continue;
     }
-    const clawed = await clawbackReferralCredit(stripe, {
-      customerId: reward.stripe_customer_id,
-      referralId: referral.id,
-      side,
-      maxCents: reward.amount_cents,
-      currency,
-    });
+    const recent = await stripe.customers.listBalanceTransactions(reward.stripe_customer_id, { limit: 100 });
+    const earlier = recent.data.find(
+      (txn) => txn.metadata?.referral_id === referralId && txn.metadata?.side === `clawback_${side}`,
+    );
+    const clawed = earlier
+      ? { id: earlier.id, amountCents: earlier.amount }
+      : await clawbackReferralCredit(stripe, {
+          customerId: reward.stripe_customer_id,
+          referralId,
+          side,
+          maxCents: reward.amount_cents,
+          currency,
+        });
     const { error: insertError } = await db.from('referral_rewards').insert({
-      referral_id: referral.id,
+      referral_id: referralId,
       side: `clawback_${side}`,
       kind: 'stripe_credit',
       amount_cents: clawed?.amountCents ?? 0,
@@ -193,13 +226,7 @@ export async function reverseReferralCharge(
     if (insertError && insertError.code !== '23505') {
       throw new Error(`referral_rewards clawback insert failed: ${insertError.message}`);
     }
+    clawedBack += 1;
   }
-
-  const { error: voidError } = await db
-    .from('referrals')
-    .update({ status: 'voided', void_reason: `${reason}_after_reward` })
-    .eq('id', referral.id);
-  if (voidError) throw new Error(`referrals void failed: ${voidError.message}`);
-  await recordReferralEvent(db, referral.friend_workspace_id, 'referral_voided', { failure: true });
-  return 'clawed_back';
+  return clawedBack;
 }

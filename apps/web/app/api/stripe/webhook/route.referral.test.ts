@@ -247,6 +247,39 @@ test('a reward in a currency we do not credit in is left for a person, not clawe
   assert.equal(referral().void_reason, 'refunded_after_reward');
 });
 
+test('a refund landing while the dispatcher is rewarding voids the row and takes back what was already issued', async () => {
+  // The dispatcher read the charge before the refund and issued the referrer
+  // credit; the row is still 'charged' when the refund arrives.
+  seed({ status: 'charged' });
+  fake.customer('cus_referrer', { balance: -1500 });
+  db.seed('referral_rewards', [
+    { referral_id: 'ref-1', side: 'referrer', kind: 'stripe_credit', amount_cents: 1500, currency: 'usd', stripe_customer_id: 'cus_referrer', stripe_balance_txn_id: 'cbtxn_r' },
+    // Claimed, not yet issued: the dispatcher takes this one back itself.
+    { referral_id: 'ref-1', side: 'friend', kind: 'stripe_credit', amount_cents: 900, currency: 'usd', stripe_customer_id: 'cus_friend', stripe_balance_txn_id: null },
+  ]);
+  assert.equal(await deliver('charge.refunded', { id: 'ch_first', customer: 'cus_friend', amount: 900, amount_refunded: 900, refunded: true }), 200);
+  assert.equal(referral().status, 'voided');
+  assert.equal(referral().void_reason, 'refunded');
+  assert.equal(fake.balances.get('cus_referrer'), 0);
+  assert.deepEqual(
+    db.table('referral_rewards').filter((r) => String(r.side).startsWith('clawback_')).map((r) => [r.side, r.amount_cents]),
+    [['clawback_referrer', 1500]],
+  );
+});
+
+test('a clawback retried after Stripe answered records the earlier reversal instead of failing', async () => {
+  rewarded();
+  // A first delivery reversed the referrer credit in Stripe, then lost the row.
+  fake.balances.set('cus_referrer', 0);
+  fake.txns.push({ id: 'cbtxn_claw_earlier', customer: 'cus_referrer', amount: 1500, currency: 'usd', metadata: { referral_id: 'ref-1', side: 'clawback_referrer', program: 'referral_v1' } });
+  assert.equal(await deliver('charge.dispute.created', { id: 'dp_1', charge: 'ch_first' }), 200);
+  const claw = db.table('referral_rewards').find((r) => r.side === 'clawback_referrer');
+  assert.equal(claw?.stripe_balance_txn_id, 'cbtxn_claw_earlier');
+  assert.equal(claw?.amount_cents, 1500);
+  assert.equal(fake.txns.filter((t) => t.customer === 'cus_referrer').length, 1, 'no second reversal');
+  assert.equal(referral().void_reason, 'disputed_after_reward');
+});
+
 test('a refund on a charge no referral knows is acknowledged and ignored', async () => {
   seed({ status: 'charged' });
   assert.equal(await deliver('charge.refunded', { id: 'ch_other', customer: 'cus_friend', amount: 900, amount_refunded: 900, refunded: true }), 200);

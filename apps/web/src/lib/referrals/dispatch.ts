@@ -37,6 +37,11 @@
  * issues nothing: the referral is held with reason 'currency' for a person,
  * before either side is credited.
  *
+ * RACE WITH A REFUND. The charge is read before the rewards go out, so a
+ * refund or dispute webhook can void the row in between. The final status
+ * write only moves a row that is still 'charged'; when it moves nothing, the
+ * credits this run issued are clawed back (webhook.ts) and nobody is emailed.
+ *
  * One row failing is logged and counted; the rest of the batch still runs.
  */
 
@@ -44,6 +49,7 @@ import type { ReferralEmailInput, ReferralEmailResult } from '@/lib/email/referr
 import type { Database } from '@/types/database.types';
 import { PERSONAL_MONTH_DAYS } from './constants.ts';
 import { decideQualification, type QualificationDecision } from './qualify.ts';
+import { clawBackReferralRewards } from './webhook.ts';
 import {
   creditCurrency,
   issueReferralCredit,
@@ -259,12 +265,20 @@ async function reward(
   }
 
   const status = decision.outcome === 'capped' ? 'capped' : 'qualified';
-  await setStatus(db, row, {
+  const moved = await setStatus(db, row, {
     status,
     qualified_at: now.toISOString(),
     // The network signal is kept only until it has been used.
     ip_hash: null,
   });
+  if (moved === 0) {
+    // A refund or dispute webhook voided the row while the credits were being
+    // issued (the charge was read before it). Take back what this run issued;
+    // the webhook took back anything issued before its void. Nobody is emailed.
+    console.warn('[referral-dispatch] row left charged during the reward; clawing back', { referral: row.id });
+    await clawBackReferralRewards(db, stripe, row.id);
+    return 'voided';
+  }
   await recordReferralEvent(
     db,
     row.friend_workspace_id,
@@ -282,9 +296,16 @@ async function reward(
   return status;
 }
 
-async function setStatus(db: Db, row: DueRow, patch: ReferralUpdate): Promise<void> {
-  const { error } = await db.from('referrals').update(patch).eq('id', row.id).eq('status', 'charged');
+/** Moves a row that is still 'charged'. Returns how many rows moved (0 or 1). */
+async function setStatus(db: Db, row: DueRow, patch: ReferralUpdate): Promise<number> {
+  const { data, error } = await db
+    .from('referrals')
+    .update(patch)
+    .eq('id', row.id)
+    .eq('status', 'charged')
+    .select('id');
   if (error) throw new Error(`referrals update failed: ${error.message}`);
+  return (data ?? []).length;
 }
 
 interface RewardClaim {
