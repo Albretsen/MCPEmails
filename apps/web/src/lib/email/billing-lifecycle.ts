@@ -702,7 +702,8 @@ const PASS_KEEPS = 'Your inboxes, drafts and settings stay.';
 // The HTML shell
 // ---------------------------------------------------------------------------
 
-interface ShellOptions {
+/** Shared with src/lib/email/referral-emails.ts, so every transactional email looks alike. */
+export interface ShellOptions {
   title: string;
   /** Blocks of already-escaped HTML. */
   html: string;
@@ -712,7 +713,7 @@ interface ShellOptions {
   unsubscribe?: string | null;
 }
 
-function shell(options: ShellOptions): string {
+export function shell(options: ShellOptions): string {
   const cta =
     options.ctaUrl && options.ctaLabel
       ? `<table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
@@ -775,7 +776,7 @@ function shell(options: ShellOptions): string {
 </html>`;
 }
 
-function p(text: string): string {
+export function p(text: string): string {
   return `<p style="margin:0 0 16px;font-size:15px;color:#334155;line-height:1.6;">${escapeHtml(text)}</p>`;
 }
 

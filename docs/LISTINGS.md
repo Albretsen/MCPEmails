@@ -27,7 +27,7 @@ Published to the registry as 1.0.8 on 2026-10-20 (`isLatest: true`, title "MCPEm
 >
 > Email is fetched live from your provider on every call and never stored. Outbound mail is sent by your own provider from your real address. If a provider refuses connections from cloud addresses, the connection goes through our own relay instead, a plain tunnel; TLS still runs end to end to your provider, so the relay never sees your mail or password. Credentials are encrypted at rest. Permissions are scoped per API key and per inbox, so a key can be read-only, or allowed to send but never delete. Clients that support MCP Apps get in-chat cards to review a held send, preview a bulk move or delete before it runs, and edit a draft.
 >
-> 19 tools, 7 workflow prompts (morning triage, follow-up radar, reply drafts, safe cleanup and more). OAuth sign-in for Claude, ChatGPT and Cursor; a scoped API key for everything else.
+> 21 tools, 7 workflow prompts (morning triage, follow-up radar, reply drafts, safe cleanup and more). OAuth sign-in for Claude, ChatGPT and Cursor; a scoped API key for everything else.
 >
 > Pricing: Free connects 1 inbox with 150 email actions a month (the first 3 days are not counted). Personal $9/month for 3 inboxes, Pro $15/month for up to 10 inboxes, Business $39/month includes 10 inboxes ($3/month for each extra) and adds unlimited members with roles. Paid plans have no monthly action cap (fair use).
 >
@@ -35,13 +35,13 @@ Published to the registry as 1.0.8 on 2026-10-20 (`isLatest: true`, title "MCPEm
 
 Wording rule: never write "no relay", "nothing in between" or "never our mail relay". Since PR #109 (2026-10-15) IMAP and SMTP connections to a provider that refuses cloud addresses go through our tunnel (`supabase/functions/mcp-server/smtp-client.ts:283-297`, `smtp-relay.ts:26-30`). What stays true: the provider sends the mail, from the user's address, and TLS is end to end. Fix any listing that claims otherwise.
 
-## Tools (19 model-visible)
+## Tools (21 model-visible)
 
-`inbox_list`, `email_read`, `email_organize`, `email_search_and_move`, `email_delete`, `email_compose`, `folder_list`, `folder`, `draft_list`, `draft`, `schedule_list`, `schedule`, `signature_get`, `signature_set`, `automation_read`, `automation`, `contact_search`, `draft_read`, `draft_editor_hide`
+`inbox_list`, `email_read`, `email_organize`, `email_search_and_move`, `email_delete`, `email_compose`, `folder_list`, `folder`, `draft_list`, `draft`, `schedule_list`, `schedule`, `reminder_list`, `reminder`, `signature_get`, `signature_set`, `automation_read`, `automation`, `contact_search`, `draft_read`, `draft_editor_hide`
 
-A full-scope key's `tools/list` has 26 entries. The other 7 are app-only card plumbing and must not be listed as tools: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule`, `bulk_execute`, `bulk_cancel`, `draft_editor_save`.
+A full-scope key's `tools/list` has 28 entries. The other 7 are app-only card plumbing and must not be listed as tools: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule`, `bulk_execute`, `bulk_cancel`, `draft_editor_save`.
 
-ChatGPT and Codex keys get a different, per-operation listing (one tool per action, for OpenAI's review rules). Quote 19 everywhere else. Do not quote the per-operation count on general directories.
+ChatGPT and Codex keys get a different, per-operation listing (one tool per action, for OpenAI's review rules). Quote 21 everywhere else. `reminder` and `reminder_list` are Pro and Business features: every key lists them, and a call from another plan gets a note naming Pro. Do not quote the per-operation count on general directories.
 
 ## Prompts (7)
 

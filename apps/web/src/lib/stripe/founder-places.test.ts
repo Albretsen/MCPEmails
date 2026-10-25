@@ -152,7 +152,7 @@ test('a fresh count that has reached 20 closes the offer even with a cached lowe
 
 // ── The terms clause ─────────────────────────────────────────────────────
 
-const BEFORE = new Date('2026-11-01T12:00:00Z');
+const BEFORE = new Date('2026-10-20T12:00:00Z');
 const AFTER = new Date('2027-02-01T12:00:00Z');
 
 test('terms: flag off and no founder rows hides the clause', async () => {

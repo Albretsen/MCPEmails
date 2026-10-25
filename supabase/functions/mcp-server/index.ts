@@ -525,7 +525,9 @@ import {
   type GraphConversationMessage,
   graphConversationFilter,
   graphConversationHasReply,
-  imapReplySearchCriteria,
+  headersReferenceMessageId,
+  IMAP_REPLY_CANDIDATE_LIMIT,
+  imapReplyCandidateCriteria,
   isEncryptedWrapper,
   looksLikeRfcMessageId,
   MAX_OPEN_REMINDERS_PER_WORKSPACE,
@@ -613,6 +615,7 @@ import {
   firstUseAlreadyRecorded,
   settleAfterResponse,
 } from "./request-pipeline.ts";
+import { kickBillingDispatch } from "./billing-dispatch-kick.ts";
 import {
   GATE_RPC,
   gateParams,
@@ -770,6 +773,7 @@ import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
 import { textPartMatchingHtml } from "./html-text-merge.ts";
 import { configureRelayRegistry } from "./relay-registry.ts";
 import { relayConfigured } from "./smtp-relay.ts";
+import { referralPersonalActive } from "./referral-burst.ts";
 import {
   byteStringToBase64url,
   gmailHeaderValue,
@@ -3079,7 +3083,7 @@ async function checkPlanQuota(
     ? { data: preloaded.entitlement, error: null }
     : await supabase
       .from("user_usage_entitlements")
-      .select("kind, expires_at")
+      .select("kind, expires_at, referral_personal_until")
       .eq("user_id", workspace.owner_id)
       .maybeSingle();
   if (entitlementError) {
@@ -3087,7 +3091,11 @@ async function checkPlanQuota(
   }
   const compedScale = entitlement?.kind === "comped_scale" &&
     (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
-  const plan = compedScale ? "pro" : (workspace.plan as string) ?? "free";
+  // A Free workspace in an earned referral month bursts as Personal, matching
+  // the allowance SQL that meters it as Personal (referral-burst.ts).
+  const storedPlan = (workspace.plan as string) ?? "free";
+  const referralPersonal = !compedScale && referralPersonalActive({ storedPlan, entitlement });
+  const plan = compedScale ? "pro" : referralPersonal ? "personal" : storedPlan;
   // Grandfathered ("legacy") workspaces keep the launch-era ceiling. When usage
   // caps (e.g. a monthly total) are reintroduced here later, they must also
   // exempt grandfathered workspaces — see the workspaces.grandfathered column.
@@ -4072,6 +4080,12 @@ async function queueUsageEmail(input: UsageEmailInput): Promise<void> {
         workspace_id: input.workspaceId, template: input.template,
         error: error.message, error_code: error.code,
       });
+    }
+    // Queued just now (not a 23505 replay) and due now: ask the web
+    // dispatcher to send it instead of waiting for the five-minute cron.
+    // Fire and forget; see billing-dispatch-kick.ts.
+    if (!error) {
+      kickBillingDispatch({ secret: Deno.env.get("DISPATCH_SECRET"), appUrl: APP_URL });
     }
   } catch (error) {
     console.error("[mcp-server] usage_email_queue_threw", {
@@ -37597,13 +37611,16 @@ async function reminderCheckReply(run: ReminderRunSession, ref: MessageRef): Pro
     const body = (await resp.json()) as { value?: GraphConversationMessage[] };
     return graphConversationHasReply(body.value ?? [], ref.provider_message_id, sinceMs, own);
   }
-  const criteria = imapReplySearchCriteria(ref.rfc_message_id, sinceMs, own);
-  if (!criteria || !run.imap) return false;
-  // INBOX only, on purpose (mcp-server/CLAUDE.md). One SEARCH on the run's
-  // shared connection; the client serialises commands itself.
+  if (!cleanRfcMessageId(ref.rfc_message_id) || !run.imap) return false;
+  // INBOX only, on purpose (mcp-server/CLAUDE.md). A cheap SEARCH for the
+  // candidates, then their In-Reply-To/References headers matched here: a
+  // HEADER search key made Gmail scan the whole folder past the timeout.
   const client = await run.imap.select("INBOX");
-  const uids = await client.uidSearch(criteria);
-  return uids.length > 0;
+  const uids = await client.uidSearch(imapReplyCandidateCriteria(sinceMs, own));
+  if (uids.length === 0) return false;
+  const newest = [...uids].sort((a, b) => b - a).slice(0, IMAP_REPLY_CANDIDATE_LIMIT);
+  const rows = await client.fetchHeaderFields(newest, ["In-Reply-To", "References"]);
+  return rows.some((row) => headersReferenceMessageId(row.headers, ref.rfc_message_id));
 }
 
 async function executeReminderSnooze(rawArgs: unknown, apiKey: ApiKeyRow): Promise<ReminderOutcome> {

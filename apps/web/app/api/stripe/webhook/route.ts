@@ -22,12 +22,17 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
- *   charge.refunded                   : a full refund of a 3-month pass ends it
+ *   charge.refunded                   : a full refund of a 3-month pass ends it.
+ *                                       Also referral: void a referral before
+ *                                       its reward, claw the credit back after
+ *                                       (src/lib/referrals/webhook.ts);
+ *                                       charge.dispute.created does the same
  *   checkout.session.async_payment_succeeded : a delayed first payment (SEPA
  *                                       Direct Debit) cleared; re-sync the plan
  *   checkout.session.async_payment_failed    : a delayed first payment failed;
  *                                       revoke the provisional access
- *   charge.dispute.created            : a SEPA debit was disputed; log only
+ *   charge.dispute.created            : a SEPA debit was disputed; log only.
+ *                                       Also referral: see charge.refunded
  *
  * 3-month Personal pass (added 2026-10-24, src/lib/billing/pass.ts):
  *   A pass is a payment-mode Checkout (metadata.product = 'personal_pass_3m').
@@ -38,7 +43,12 @@
  *   while a pass covers now, so an old subscription's deletion cannot take a
  *   paid pass away. `user_billing.plan` stays the subscription's own truth.
  *   `charge.refunded` (full refunds only) marks the pass refunded and
- *   re-projects. Passes end in /api/internal/pass-expiry, not here.
+ *   re-projects, moves the first charge of a Personal subscription that was
+ *   waiting for that pass to end (pass-refund-subscription.ts), and puts the
+ *   still-running pass's notices back. A pass session that completed
+ *   'unpaid' is recorded on `checkout.session.async_payment_succeeded`
+ *   (the pass Checkout is cards only, so this is a safety net). Passes end
+ *   in /api/internal/pass-expiry, not here.
  *
  * Delayed payment methods (added 2026-10-24, for the EUR launch):
  *   Stripe makes a SEPA Direct Debit subscription `active` while its first
@@ -57,6 +67,11 @@
  *   a subscription back out of past_due/unpaid, or a deleted subscription
  *   clears it. Billing state only, never entitlement, and independent of the
  *   lifecycle email flag.
+ *
+ * Referral program (added 2026-10-25): `invoice.payment_succeeded` also moves
+ * a referred friend's referral to 'charged' on their first paid subscription
+ * invoice. That step runs whatever BILLING_LIFECYCLE_EMAILS says, and it can
+ * never fail the event: an error is logged and the billing work stands.
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
@@ -183,6 +198,7 @@ import {
   recordPassEvent,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
+import { recordReferralCharge, reverseReferralCharge } from '@/lib/referrals/webhook';
 import {
   PAUSED_STATUS,
   parkOwner,
@@ -211,7 +227,9 @@ import {
   isPassRenewal,
   passNoticeSink,
   passesForRenewal,
+  resyncPassNotices,
 } from '@/lib/billing/pass-notices';
+import { endPassFreeStart } from '@/lib/billing/pass-refund-subscription';
 import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
@@ -488,6 +506,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //
   // `charge.dispute.created` carries no customer id, so the guard never runs
   // for it; listed for the reader, and because it only logs.
+  //
+  // The referral work on `charge.refunded` needs the same exemption: a refund
+  // is commonly issued alongside a cancellation, whose subscription event can
+  // land a second later; read as stale, the refund would never void the
+  // referral it belongs to. A dispute does the same referral work.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
     'checkout.session.completed',
     'checkout.session.expired',
@@ -541,9 +564,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
-      case 'charge.dispute.created':
-        await handleChargeDisputeCreated(event.data.object as Stripe.Dispute);
+      case 'charge.dispute.created': {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleChargeDisputeCreated(dispute);
+        // Referral: void, or claw back the credit, for a friend's first charge.
+        const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          await reverseReferralCharge(supabase, stripe, { chargeId, kind: 'dispute', fullyRefunded: false });
+        }
         break;
+      }
 
       case 'checkout.session.expired': {
         // Post-response and never throws: a reminder email can neither delay
@@ -572,6 +602,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        await recordReferralChargeSafely(event.data.object as Stripe.Invoice);
         retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
 
@@ -580,6 +611,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case 'invoice.paid':
         retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
+
+      case 'charge.refunded': {
+        // Two independent jobs: a full refund of a 3-month pass ends it, and a
+        // refund of a referred friend's first charge voids or claws back the
+        // referral. The pass runs first; when it throws, Stripe retries the
+        // event and the referral work, which is idempotent, runs then.
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
+        await reverseReferralCharge(supabase, stripe, {
+          chargeId: charge.id,
+          kind: 'refund',
+          fullyRefunded: charge.refunded === true || charge.amount_refunded >= charge.amount,
+        });
+        break;
+      }
 
       case 'invoice.voided':
         // A paused subscription's renewal is finalized, then voided (Stripe
@@ -603,10 +649,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         break;
       }
-
-      case 'charge.refunded':
-        await handleChargeRefunded(event.data.object as Stripe.Charge);
-        break;
 
       default:
         // Unhandled event types are acknowledged but not processed.
@@ -915,6 +957,11 @@ async function syncPlanFromCheckoutSession(
  * "this purchase is now paid", and it would repair a plan that a past_due
  * blip in between had taken away. No funnel row and no email: both went out
  * at completion, and this must not count the purchase twice.
+ *
+ * A 3-month pass (mode 'payment') is different: its completed event arrived
+ * 'unpaid' and granted nothing, so this is the moment it is paid, and it is
+ * recorded here through the same idempotent handler. The pass Checkout offers
+ * cards only, so this is a safety net for a session created before that.
  */
 async function handleCheckoutAsyncPaymentSucceeded(
   session: Stripe.Checkout.Session,
@@ -922,6 +969,10 @@ async function handleCheckoutAsyncPaymentSucceeded(
   console.log(
     `[stripe-webhook] checkout.session.async_payment_succeeded ${session.id}: delayed payment cleared (customer ${customerIdOf(session) ?? 'none'}).`,
   );
+  if (session.mode === 'payment') {
+    await handlePassCheckoutCompleted(session);
+    return;
+  }
   await syncPlanFromCheckoutSession(session, 'checkout.session.async_payment_succeeded');
 }
 
@@ -1061,7 +1112,12 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
-  const paidAt = new Date();
+  // When the money moved, and whether it has already gone back: a
+  // charge.refunded that beat this event to us found no pass to end.
+  const payment = await passPaymentState(paymentIntentId);
+  const paidAt =
+    payment?.paidAt ??
+    (typeof session.created === 'number' ? new Date(session.created * 1000) : new Date());
 
   const result = await recordPassPurchase(db, {
     userId,
@@ -1069,7 +1125,8 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
     paymentIntentId,
     amountMinor: session.amount_total ?? null,
     currency: session.currency ?? null,
-    paidAt,
+    paidAt: paidAt.getTime() > Date.now() ? new Date() : paidAt,
+    alreadyRefunded: payment?.refunded === true,
     source: 'checkout.session.completed (pass)',
     // pass_ending_7d and pass_ended, queued now (BILLING_LIFECYCLE_EMAILS
     // permitting). Never throws.
@@ -1087,6 +1144,7 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
     console.log(`[stripe-webhook] pass checkout ${session.id} already recorded; nothing to do.`);
     return;
   }
+  if (result.kind === 'recorded_refunded') return;
   console.log(
     `[stripe-webhook] pass ${result.pass.id} for ${userId}: ${result.pass.status} until ${result.pass.ends_at}; projected "${result.plan}".`,
   );
@@ -1107,6 +1165,33 @@ async function handlePassCheckoutCompleted(session: Stripe.Checkout.Session): Pr
       stage: 'pass_renewed',
       category: 'pass',
     });
+  }
+}
+
+/**
+ * The pass payment's charge: when it was made, and whether it is already fully
+ * refunded. Null when there is no payment intent or Stripe could not be read;
+ * the caller then records the pass as paid now (fail open: the customer paid,
+ * and a later refund still ends it).
+ */
+async function passPaymentState(
+  paymentIntentId: string | null,
+): Promise<{ paidAt: Date | null; refunded: boolean } | null> {
+  if (!paymentIntentId) return null;
+  try {
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] });
+    const charge = intent.latest_charge && typeof intent.latest_charge === 'object' ? intent.latest_charge : null;
+    if (!charge) return { paidAt: null, refunded: false };
+    return {
+      paidAt: typeof charge.created === 'number' ? new Date(charge.created * 1000) : null,
+      refunded: charge.refunded === true || (charge.amount > 0 && charge.amount_refunded >= charge.amount),
+    };
+  } catch (err) {
+    console.error('[stripe-webhook] pass payment: could not read the charge; recording as paid.', {
+      paymentIntentId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
   }
 }
 
@@ -1164,10 +1249,24 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
     console.log(`[stripe-webhook] pass ${result.pass.id} refunded; projected "${result.plan}".`);
     const customerId =
       typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
-    await cancelPassNotices(createServiceRoleClient(), {
+    const db = createServiceRoleClient();
+    await cancelPassNotices(db, {
       stripeCustomerId: customerId,
       passId: result.pass.id,
       reason: 'pass_refunded',
+    });
+    // A Personal subscription that was set to start billing at this pass's
+    // end no longer has the pass paying for those days. Never throws.
+    await endPassFreeStart(db, stripe, {
+      userId: result.pass.user_id,
+      refundedEndsAt: result.pass.ends_at,
+      source: 'charge.refunded',
+    });
+    // The pass that now ends the cover may have moved (a stacked pass started
+    // today) or ends again (its follower was refunded): re-date its notices.
+    await resyncPassNotices(db, {
+      userId: result.pass.user_id,
+      stripeCustomerId: customerId,
     });
   } else if (result.kind === 'partial') {
     console.log(`[stripe-webhook] charge ${charge.id}: partial refund of a pass; entitlement unchanged.`);
@@ -1477,6 +1576,10 @@ async function handleSubscriptionDeleted(
   // was marked. Never for an unmarked end. Cannot throw.
   await parkOnEndIfMarked(subscription, customerId, userId);
 
+  // A pass still running: its notices were cancelled when the subscription
+  // started, and are true again now that it is gone. Never throws.
+  await resyncPassNoticesAfterSubscription(customerId, userId);
+
   // The subscription is gone, so any dunning still queued for it is now a lie:
   // "update your card and this carries on" is not true once there is nothing
   // left to carry on. The win-backs are deliberately NOT cancelled here, since
@@ -1505,6 +1608,19 @@ async function handleSubscriptionDeleted(
     if (!isAccountDeletionCancellation(subscription)) {
       await maybeQueueCancellationOnDelete(subscription, customerId);
     }
+  }
+}
+
+/** resyncPassNotices for the owner of a deleted subscription. Never throws. */
+async function resyncPassNoticesAfterSubscription(customerId: string, userId: string | null): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const ownerId = await resolveUserId(db, customerId, userId);
+    if (ownerId) await resyncPassNotices(db, { userId: ownerId, stripeCustomerId: customerId });
+  } catch (err) {
+    console.error('[stripe-webhook] pass notice restore after subscription end failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -1873,6 +1989,35 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+/**
+ * Referral: the friend's first paid subscription invoice moves their referral
+ * to 'charged' (src/lib/referrals/webhook.ts). Never throws. Missing it is
+ * recoverable by hand from the row; failing a paid invoice's webhook is not.
+ */
+async function recordReferralChargeSafely(invoice: Stripe.Invoice): Promise<void> {
+  try {
+    if (invoice.billing_reason !== 'subscription_create') return;
+    const customerId =
+      typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    // subscription_data.metadata.user_id is set by checkout-core. The current
+    // shape carries it under `parent`; the older API version the live endpoint
+    // is pinned to carries `subscription_details` at the top level.
+    const legacy = (invoice as unknown as { subscription_details?: { metadata?: Record<string, string> | null } })
+      .subscription_details;
+    const metadataUserId =
+      invoice.parent?.subscription_details?.metadata?.user_id ?? legacy?.metadata?.user_id ?? null;
+    const friendUserId = await resolveUserId(db, customerId, metadataUserId);
+    await recordReferralCharge(db, stripe, invoice, friendUserId);
+  } catch (err) {
+    console.error('[stripe-webhook] referral charge step failed:', {
+      invoice: invoice.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**

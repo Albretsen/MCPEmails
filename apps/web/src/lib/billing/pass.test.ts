@@ -17,12 +17,14 @@ import {
   effectivePlan,
   getActivePass,
   hasEntitledSubscription,
+  isPausedSubscriber,
   passCheckoutOpen,
   passEligibility,
   passEndsAt,
   passNoticesFor,
   personalPassMode,
   planPassWindow,
+  reprojectUserPlan,
   type PassRow,
 } from './pass.ts';
 
@@ -239,4 +241,76 @@ test('a pass is owed two notices: seven days before its end, and on the day', ()
       ['pass_ended', '2027-03-10T10:00:00.000Z'],
     ],
   );
+});
+
+// ---------------------------------------------------------------------------
+// Review fixes: paused subscribers, and the projection race
+// ---------------------------------------------------------------------------
+
+test('a paused subscriber cannot buy a pass', () => {
+  const paused = { plan: 'free', subscription_status: 'paused', stripe_subscription_id: 'sub_p' };
+  assert.equal(isPausedSubscriber(paused), true);
+  assert.equal(isPausedSubscriber({ ...paused, stripe_subscription_id: null }), false);
+  assert.equal(isPausedSubscriber({ plan: 'free', subscription_status: 'canceled', stripe_subscription_id: 'sub_p' }), false);
+  assert.deepEqual(passEligibility({ billing: paused, active: null }), {
+    eligible: false,
+    reason: 'subscription_paused',
+  });
+});
+
+test('a pass bought while the projection runs is not overwritten with Free', async () => {
+  const db = new FakeSupabase();
+  db.seed('workspaces', [{ id: 'w1', owner_id: USER, plan: 'personal', deleted_at: null }]);
+  const now = new Date();
+  const client = asClient(db);
+  let raced = false;
+  // The concurrent purchase lands after this projection read "no pass" and
+  // before its write: exactly the window the expiry sweep used to lose.
+  const racing = {
+    ...client,
+    from(table: string) {
+      if (table === 'workspaces' && !raced) {
+        raced = true;
+        db.seed('user_passes', [
+          {
+            ...pass({
+              id: 'bought',
+              starts_at: new Date(now.getTime() - 1000).toISOString(),
+              ends_at: passEndsAt(now).toISOString(),
+            }),
+          },
+        ]);
+      }
+      return client.from(table as never);
+    },
+  } as unknown as typeof client;
+
+  const plan = await reprojectUserPlan(racing, USER, 'test', now);
+
+  assert.equal(raced, true);
+  assert.equal(plan, 'personal');
+  assert.equal(db.table('workspaces')[0].plan, 'personal');
+});
+
+test('without a race the projection writes once and returns the plan', async () => {
+  const db = new FakeSupabase();
+  db.seed('workspaces', [{ id: 'w1', owner_id: USER, plan: 'personal', deleted_at: null }]);
+  assert.equal(await reprojectUserPlan(asClient(db), USER, 'test'), 'free');
+  assert.equal(db.table('workspaces')[0].plan, 'free');
+});
+
+test('monthly opens on the first whole UTC day Stripe can anchor it, across the February clamp', async () => {
+  const { passSubscriptionOpensAt, passSubscriptionStart } = await import('./pass.ts');
+  const now = new Date('2026-12-10T12:00:00Z');
+  const end = new Date('2027-02-28T12:00:00Z');
+  // 29 to 31 January + 1 month all clamp to 28 February at the same time of
+  // day, so their mornings do not fit; 1 February is the first whole day.
+  const opens = passSubscriptionOpensAt(end, 'month', now);
+  assert.equal(opens?.toISOString(), '2027-02-01T00:00:00.000Z');
+  assert.equal(passSubscriptionStart(end, 'month', new Date('2027-01-30T06:00:00Z')), null);
+  for (const hour of [0, 6, 12, 23]) {
+    assert.ok(passSubscriptionStart(end, 'month', new Date(Date.UTC(2027, 1, 1, hour))), `1 Feb ${hour}:00`);
+  }
+  assert.equal(passSubscriptionOpensAt(end, 'month', opens!), null);
+  assert.equal(passSubscriptionOpensAt(end, 'year', now), null, 'yearly always fits');
 });

@@ -67,28 +67,38 @@ const MAX_EVENT_PAGES = 10;
  * costs one Stripe call every ten minutes rather than one per render.
  */
 export async function fetchRecurringRevenue(windowDays: number): Promise<GrowthResult<RevenueSummary>> {
-  return cachedSection<RevenueSummary>(['recurring_revenue', String(windowDays)], GROWTH_TAGS.revenue, async () => {
-    // Imported inside the cached read, not at module scope. `@/lib/stripe/client`
-    // throws on an unset STRIPE_SECRET_KEY, and at module scope that throw takes
-    // the whole board down rather than one tile: a wall display that shows
-    // nothing at all because of one missing environment variable is a worse
-    // failure than one that says which panel could not load.
-    const { stripe } = await import('@/lib/stripe/client');
-    const subscriptions = await stripe.subscriptions
-      .list({
-        status: 'all',
-        limit: 100,
-        // The customer carries the email the internal check runs on; the
-        // discounts carry the coupons that make a comp worth nothing; the
-        // latest invoice carries the VAT share of an inclusive price.
-        expand: SUBSCRIPTION_EXPAND,
-      })
-      .autoPagingToArray({ limit: MAX_SUBSCRIPTIONS });
-    const options = await loadCurrencyOptions(stripe, subscriptions);
-    return summarizeSubscriptions(subscriptions.map((subscription) => subscriptionFacts(subscription, options)), {
-      nowSeconds: Math.floor(Date.now() / 1000),
-      windowDays,
-    });
+  return cachedSection<RevenueSummary>(['recurring_revenue', String(windowDays)], GROWTH_TAGS.revenue, () =>
+    loadRecurringRevenue(windowDays));
+}
+
+/**
+ * The same read with no cache in front of it, for callers that must not be
+ * served a figure older than their own schedule: the albretsen.no MRR feed
+ * (src/lib/site-feed/run.ts) posts every 15 minutes, and `unstable_cache`
+ * revalidates stale-while-revalidate, so behind the 10 minute window above it
+ * could post a figure 25 minutes old. Throws on a Stripe failure.
+ */
+export async function loadRecurringRevenue(windowDays: number): Promise<RevenueSummary> {
+  // Imported inside the read, not at module scope. `@/lib/stripe/client`
+  // throws on an unset STRIPE_SECRET_KEY, and at module scope that throw takes
+  // the whole board down rather than one tile: a wall display that shows
+  // nothing at all because of one missing environment variable is a worse
+  // failure than one that says which panel could not load.
+  const { stripe } = await import('@/lib/stripe/client');
+  const subscriptions = await stripe.subscriptions
+    .list({
+      status: 'all',
+      limit: 100,
+      // The customer carries the email the internal check runs on; the
+      // discounts carry the coupons that make a comp worth nothing; the
+      // latest invoice carries the VAT share of an inclusive price.
+      expand: SUBSCRIPTION_EXPAND,
+    })
+    .autoPagingToArray({ limit: MAX_SUBSCRIPTIONS });
+  const options = await loadCurrencyOptions(stripe, subscriptions);
+  return summarizeSubscriptions(subscriptions.map((subscription) => subscriptionFacts(subscription, options)), {
+    nowSeconds: Math.floor(Date.now() / 1000),
+    windowDays,
   });
 }
 

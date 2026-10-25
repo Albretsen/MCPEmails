@@ -2298,6 +2298,7 @@ test('the purchasable allowlist still applies to a link', async () => {
 // ---------------------------------------------------------------------------
 
 const { runPassCheckout, passSubscriptionStart } = await import('./checkout-core.ts');
+const { passSubscriptionOpensAt } = await import('@/lib/billing/pass');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -2374,6 +2375,7 @@ test('with the switch off (the default) a pass checkout is refused and nothing i
     const { outcome, sessionsCreated, passRows: rows } = await passCheckout({ mode });
     assert.equal(outcome.kind, 'error');
     assert.equal(outcome.kind === 'error' && outcome.reason, 'pass_unavailable', JSON.stringify(mode));
+    assert.equal(outcome.kind === 'error' && outcome.errorCode, 'pass_unavailable');
     assert.equal(sessionsCreated.length, 0);
     assert.equal(rows.length, 0);
   }
@@ -2390,6 +2392,9 @@ test('a Free user gets a payment-mode Checkout for the one-time price, never dis
   assert.equal(params.mode, 'payment');
   assert.deepEqual(params.line_items, [{ price: 'price_pass_3m', quantity: 1 }]);
   assert.equal(params.allow_promotion_codes, false);
+  // Cards only: a delayed method would complete the session unpaid.
+  assert.deepEqual(params.allowed_payment_method_types, ['card']);
+  assert.equal('payment_method_configuration' in params, false);
   assert.equal(params.submit_type, 'pay');
   assert.equal(params.client_reference_id, USER_ID);
   assert.equal('subscription_data' in params, false);
@@ -2433,10 +2438,22 @@ test('an entitled subscriber is refused with already_subscribed, in every entitl
       billing: { plan: 'personal', subscription_status: status, stripe_subscription_id: SUBSCRIPTION_ID },
     });
     assert.equal(outcome.kind === 'error' && outcome.reason, 'already_subscribed', status);
+    assert.equal(outcome.kind === 'error' && outcome.errorCode, 'already_subscribed');
     assert.equal(outcome.kind === 'error' && outcome.status, 409);
     assert.equal(sessionsCreated.length, 0);
     assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'subscription_exists' }]);
   }
+});
+
+test('a paused subscriber is refused: the subscription resumes and charges again', async () => {
+  const { outcome, sessionsCreated, passRows: rows } = await passCheckout({
+    billing: { plan: 'free', subscription_status: 'paused', stripe_subscription_id: SUBSCRIPTION_ID },
+  });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'plan_change_pending');
+  assert.equal(outcome.kind === 'error' && outcome.status, 409);
+  assert.equal(outcome.kind === 'error' && outcome.errorCode, 'plan_change_pending');
+  assert.equal(sessionsCreated.length, 0);
+  assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'subscription_exists' }]);
 });
 
 test('a lapsed subscriber can buy a pass', async () => {
@@ -2470,6 +2487,7 @@ test('a second queued pass is refused', async () => {
     passes: [livePass('a', -10, 80), livePass('b', 80, 170, 'scheduled')],
   });
   assert.equal(outcome.kind === 'error' && outcome.reason, 'pass_already_queued');
+  assert.equal(outcome.kind === 'error' && outcome.errorCode, 'pass_already_queued');
   assert.equal(sessionsCreated.length, 0);
   assert.deepEqual(rows, [{ stage: 'pass_checkout_started', failure: 'conflict' }]);
 });
@@ -2503,12 +2521,23 @@ test('a pass holder subscribing to Personal yearly is anchored to the pass end, 
   assert.deepEqual(data.metadata, { user_id: USER_ID });
 });
 
-test('a pass holder subscribing to Personal monthly far from the end starts after the pass instead', async () => {
+test('a pass holder asking for monthly Personal before the last month is refused, with no session', async () => {
   const passes = [livePass('a', -10, 80)];
-  const { sessionsCreated } = await checkout({ planId: 'personal', interval: 'month', entitlement: null, passes });
+  const { outcome, sessionsCreated } = await checkout({ planId: 'personal', interval: 'month', entitlement: null, passes });
+  assert.equal(outcome.kind === 'error' && outcome.reason, 'pass_monthly_not_yet');
+  assert.equal(outcome.kind === 'error' && outcome.status, 409);
+  assert.equal(outcome.kind === 'error' && outcome.errorCode, 'pass_monthly_not_yet');
+  assert.equal(sessionsCreated.length, 0, 'never a trial_end session');
+});
+
+test('in the pass last month, monthly Personal is anchored to the pass end', async () => {
+  const passes = [livePass('a', -70, 20)];
+  const { outcome, sessionsCreated } = await checkout({ planId: 'personal', interval: 'month', entitlement: null, passes });
+  assert.equal(outcome.kind, 'checkout');
   const data = sessionsCreated[0].subscription_data as Record<string, unknown>;
-  assert.equal(data.trial_end, Math.floor(Date.parse(passes[0].ends_at) / 1000));
-  assert.equal('billing_cycle_anchor' in data, false);
+  assert.equal(data.billing_cycle_anchor, Math.floor(Date.parse(passes[0].ends_at) / 1000));
+  assert.equal(data.proration_behavior, 'none');
+  assert.equal('trial_end' in data, false);
 });
 
 test('a pass holder buying a higher tier is charged from today', async () => {
@@ -2526,7 +2555,7 @@ test('without a pass a Personal subscription is exactly what it was', async () =
   assert.deepEqual(sessionsCreated[0].subscription_data, { metadata: { user_id: USER_ID } });
 });
 
-test('passSubscriptionStart: anchor inside the first period, trial_end past it, nothing for a pass about to end', () => {
+test('passSubscriptionStart: anchor inside the first period, nothing past it or for a pass about to end', () => {
   const now = new Date('2027-01-01T00:00:00Z');
   const in20Days = new Date('2027-01-21T00:00:00Z');
   const in80Days = new Date('2027-03-22T00:00:00Z');
@@ -2538,7 +2567,17 @@ test('passSubscriptionStart: anchor inside the first period, trial_end past it, 
     billing_cycle_anchor: seconds(in20Days),
     proration_behavior: 'none',
   });
-  assert.deepEqual(passSubscriptionStart(in80Days, 'month', now), { trial_end: seconds(in80Days) });
+  // Past the first monthly period: no trial_end fallback (Stripe calls it a trial).
+  assert.equal(passSubscriptionStart(in80Days, 'month', now), null);
+  assert.equal(passSubscriptionOpensAt(in20Days, 'month', now), null);
+  assert.equal(passSubscriptionOpensAt(in80Days, 'year', now), null);
+  assert.equal(passSubscriptionOpensAt(in30Minutes, 'month', now), null);
+  // 22 March: monthly opens once a month from the buy date passes the end,
+  // at the next UTC midnight after 22 February.
+  const opens = passSubscriptionOpensAt(in80Days, 'month', now);
+  assert.equal(opens?.toISOString(), '2027-02-23T00:00:00.000Z');
+  assert.ok(passSubscriptionStart(in80Days, 'month', opens!), 'and on that day the anchor fits');
+  assert.equal(passSubscriptionStart(in80Days, 'month', new Date('2027-02-21T00:00:00Z')), null);
   assert.deepEqual(passSubscriptionStart(in80Days, 'year', now), {
     billing_cycle_anchor: seconds(in80Days),
     proration_behavior: 'none',

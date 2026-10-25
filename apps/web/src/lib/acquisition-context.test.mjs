@@ -13,6 +13,7 @@ import {
   connectorSourceFromAuthorize,
   isNewAccountSignup,
   landingFromPath,
+  referralSourceFromLocation,
   safeLandingPath,
   sourceFromHost,
   sourceFromRefParams,
@@ -385,7 +386,7 @@ test('plain product referrals and loose spellings keep their old buckets', () =>
  */
 test('the SQL allowlists and the JS SOURCES set hold exactly the same members', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20261022180000_acquisition_connector_sources.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20261025090000_referrals.sql', import.meta.url)),
     'utf8',
   );
 
@@ -537,6 +538,56 @@ test('the connector migration only re-pins constraints and the trigger, and chan
   const code = migration(CONNECTOR_MIGRATION).split('\n').filter((line) => !line.trimStart().startsWith('--')).join('\n');
   assert.equal(/\b(UPDATE|DELETE|INSERT INTO public\.workspaces)\b/.test(code.slice(0, code.indexOf('CREATE OR REPLACE'))), false);
   assert.equal(inLists(migration(CONNECTOR_MIGRATION), 'direct').length, 6);
+});
+
+/* ---------------------------------------------- referral source, SQL/JS */
+
+const REFERRAL_MIGRATION = '20261025090000_referrals.sql';
+
+test('the referral migration changes only the three source allowlist lines of the signup trigger', () => {
+  // The trigger body only, up to its closing $$: the referral migration has
+  // more after it (section 8, mcp_tools_call_gate).
+  const body = (sql) => {
+    const from = sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()');
+    return sql.slice(from, sql.indexOf('\n$$;', from) + 4).split('\n');
+  };
+  const before = body(migration(CONNECTOR_MIGRATION));
+  const after = body(migration(REFERRAL_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_source', 'v_referrer', 'v_utm_source'],
+  );
+  for (const index of changed) {
+    assert.equal(after[index], before[index].replace("'connector_other', 'other')", "'connector_other', 'referral', 'other')"));
+  }
+});
+
+test('the referral migration pins the source list in exactly three CHECKs and three trigger guards', () => {
+  assert.equal(inLists(migration(REFERRAL_MIGRATION), 'direct').length, 6);
+  for (const members of inLists(migration(REFERRAL_MIGRATION), 'direct')) assert.ok(members.includes('referral'));
+});
+
+test('acq=referral on the landing URL files the visit as a referral', () => {
+  const url = new URL('https://mcpemails.com/?acq=referral');
+  assert.equal(referralSourceFromLocation(url), 'referral');
+  assert.equal(acquisitionFromLocation(url, new URL('https://www.google.com/')).source, 'referral');
+  // The referrer is still recorded as the channel the link was opened from.
+  assert.equal(acquisitionFromLocation(url, new URL('https://www.reddit.com/')).referrer, 'reddit');
+  // It survives the hop to signup and back through the OAuth callback params.
+  const params = new URLSearchParams();
+  appendAcquisitionParams(params, acquisitionFromLocation(url));
+  assert.equal(acquisitionFromParams(params).source, 'referral');
+});
+
+test('no other acq value on a landing URL is trusted', () => {
+  for (const value of ['claude', 'google_ads', 'Referral', 'referral ', 'x']) {
+    const url = new URL(`https://mcpemails.com/?acq=${encodeURIComponent(value)}`);
+    assert.equal(referralSourceFromLocation(url), null, value);
+    assert.equal(acquisitionFromLocation(url).source, 'direct', value);
+  }
 });
 
 /* ------------------------------------------------- connector installs */

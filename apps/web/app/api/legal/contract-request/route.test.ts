@@ -239,7 +239,7 @@ test('a 3-month pass withdrawal needs no subscription and is told apart from a s
   assert.equal(ctx.contract_request.cancel_type, null);
   assert.equal(ctx.contract_request.contract, null);
   assert.match(String(row.message), /refund the 3-month pass payment in full/);
-  assert.match(String(row.message), /no subscription to cancel/);
+  assert.match(String(row.message), /may also have a Personal subscription bought during the pass/);
 
   assert.equal(sends.length, 2);
   const notice = sends.find((s) => s.payload.to === 'support@mcpemails.com');

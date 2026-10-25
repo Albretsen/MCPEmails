@@ -58,13 +58,18 @@ function configuredInternalEmails(): Set<string> {
  * declared internal. Gmail's dot-insensitivity is deliberately NOT emulated:
  * it is Gmail-specific, and folding `a.b@` into `ab@` across every provider
  * would silently merge accounts belonging to different people.
+ *
+ * `extraEmails` adds addresses read from elsewhere, such as the rows of
+ * `public.internal_accounts`, matched by the same rules. Lowercase them first.
  */
-export function isInternalAccount(email: string | null): boolean {
+export function isInternalAccount(email: string | null, extraEmails?: ReadonlySet<string>): boolean {
   if (!email) return false;
   const normalized = email.trim().toLowerCase();
   if (INTERNAL_DOMAINS.some((domain) => normalized.endsWith(domain))) return true;
+  const bare = withoutPlusTag(normalized);
   const configured = configuredInternalEmails();
-  return configured.has(normalized) || configured.has(withoutPlusTag(normalized));
+  if (configured.has(normalized) || configured.has(bare)) return true;
+  return extraEmails !== undefined && (extraEmails.has(normalized) || extraEmails.has(bare));
 }
 
 /** `name+anything@host` becomes `name@host`. Anything else is returned as is. */

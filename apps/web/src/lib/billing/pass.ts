@@ -9,13 +9,16 @@
  *   passCheckoutOpen(mode?)                true when new pass checkouts are accepted (holdout or on)
  *   passEndsAt(paidAt, months?)            paidAt + 3 calendar months, UTC, clamped to month end
  *   passSubscriptionStart(until, interval) how a subscription bought during a pass starts (anchor,
- *                                          trial_end fallback, or null for today); re-exported by checkout-core
+ *                                          or null for today); re-exported by checkout-core
+ *   passSubscriptionOpensAt(until, interval) null when that subscription can be bought now, else the
+ *                                          day it can (monthly fits only in the pass's last month)
  *   planPassWindow(live, paidAt)           where a new pass goes: active now, or stacked after the cover
  *   getActivePass(db, userId, opts?)       the pass covering now (+ queued one), or null; tolerant of
  *                                          the table not existing yet; `strict` throws on other errors
  *   canQueueAnotherPass(active)            false once a pass is already queued (one queued pass max)
  *   hasEntitledSubscription(billing)       a user_billing row that is entitled (active, trialing,
  *                                          past_due, unpaid, or a paid plan with no status)
+ *   isPausedSubscriber(billing)            a paused subscription is stored (it resumes; no pass beside it)
  *   passEligibility({ billing, active })   may this user buy a pass right now, and if not, why
  *   effectivePlan({ billing, active })     the plan to project onto workspaces.plan
  *   reprojectUserPlan(db, userId, source)  writes effectivePlan onto every owned workspace
@@ -114,44 +117,75 @@ export function passEndsAt(paidAt: Date, months: number = PERSONAL_PASS_3M.month
 
 const HOUR_SECONDS = 60 * 60;
 
+/** Months to the first natural billing date of an interval. */
+function intervalMonths(interval: BillingInterval): number {
+  return interval === 'year' ? 12 : 1;
+}
+
+/** True when Stripe takes an anchor at `endSeconds` for a subscription started at `at`. */
+function anchorFits(endSeconds: number, interval: BillingInterval, at: Date): boolean {
+  const naturalBilling = Math.floor(passEndsAt(at, intervalMonths(interval)).getTime() / 1000);
+  return endSeconds < naturalBilling - HOUR_SECONDS;
+}
+
 /**
  * How a Personal subscription bought during a pass starts, or null for "from
  * today".
  *
- * Preferred: `billing_cycle_anchor` at the pass's end with `proration_behavior:
- * 'none'`. The hosted page shows nothing due today and the first full charge on
- * that date, and the subscription is `active` from the start. Stripe only
- * accepts an anchor up to the first natural billing date, so it covers a yearly
+ * `billing_cycle_anchor` at the pass's end with `proration_behavior: 'none'`.
+ * The hosted page shows nothing due today and the first full charge on that
+ * date, and the subscription is `active` from the start. Stripe only accepts
+ * an anchor up to the first natural billing date, so it covers a yearly
  * subscription always and a monthly one only in the pass's last month.
  *
- * Otherwise `trial_end` at the pass's end, which Checkout accepts up to two
- * years out but only from 48 hours ahead. Stripe labels those days a trial on
- * its own page; the subscription is `trialing`, which every entitlement check
- * here already treats as entitled.
+ * There is NO trial_end fallback any more: Stripe's hosted page words those
+ * days as a free trial ("Start trial"), which the pass must never be called.
+ * Outside the anchor window the subscription is not offered at all; callers
+ * ask passSubscriptionOpensAt first, and the checkout refuses
+ * (pass_monthly_not_yet) rather than charge for days the pass already paid.
  */
 export function passSubscriptionStart(
   coveredUntil: Date,
   interval: BillingInterval,
   now: Date = new Date(),
-):
-  | { billing_cycle_anchor: number; proration_behavior: 'none' }
-  | { trial_end: number }
-  | null {
+): { billing_cycle_anchor: number; proration_behavior: 'none' } | null {
   const nowSeconds = Math.floor(now.getTime() / 1000);
   const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
   // Within the hour: not worth a different first invoice.
   if (endSeconds <= nowSeconds + HOUR_SECONDS) return null;
-
-  const naturalBilling = Math.floor(
-    passEndsAt(now, interval === 'year' ? 12 : 1).getTime() / 1000,
-  );
-  if (endSeconds < naturalBilling - HOUR_SECONDS) {
+  if (anchorFits(endSeconds, interval, now)) {
     return { billing_cycle_anchor: endSeconds, proration_behavior: 'none' };
   }
-  if (endSeconds >= nowSeconds + 48 * HOUR_SECONDS) {
-    return { trial_end: endSeconds };
-  }
   return null;
+}
+
+/**
+ * When a Personal subscription of `interval` can be bought during a pass that
+ * covers until `coveredUntil`: null when it can be bought now (anchored to the
+ * pass end, or charged today when the pass ends within the hour), otherwise
+ * the first UTC midnight from which the anchor fits. In practice only a
+ * monthly subscription with more than a month of pass left gets a date; a
+ * yearly one always fits (a pass and a queued one cover at most six months).
+ */
+export function passSubscriptionOpensAt(
+  coveredUntil: Date,
+  interval: BillingInterval,
+  now: Date = new Date(),
+): Date | null {
+  const endSeconds = Math.floor(coveredUntil.getTime() / 1000);
+  if (endSeconds <= Math.floor(now.getTime() / 1000) + HOUR_SECONDS) return null;
+  if (anchorFits(endSeconds, interval, now)) return null;
+  // The first UTC midnight whose whole day fits. Midnight is the worst moment
+  // of a day (passEndsAt clamps 29 to 31 January to 28 February at the same
+  // time of day, so the morning of a clamped day can fail while its evening
+  // fits), and passEndsAt of successive midnights never decreases, so the
+  // first midnight that fits is the answer. Start at most a little more than
+  // the interval before the end, never before today.
+  const DAY_MS = 24 * HOUR_SECONDS * 1000;
+  const from = new Date(Math.max(now.getTime(), coveredUntil.getTime() - (intervalMonths(interval) * 31 + 2) * DAY_MS));
+  let midnight = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()) + DAY_MS;
+  while (midnight < coveredUntil.getTime() && !anchorFits(endSeconds, interval, new Date(midnight))) midnight += DAY_MS;
+  return new Date(midnight);
 }
 
 // ---------------------------------------------------------------------------
@@ -380,6 +414,8 @@ export const ENTITLED_SUBSCRIPTION_STATUSES: readonly string[] = [
 export interface BillingSnapshot {
   plan: string | null;
   subscription_status: string | null;
+  /** Read where a paused subscription matters (isPausedSubscriber). */
+  stripe_subscription_id?: string | null;
 }
 
 /**
@@ -395,9 +431,20 @@ export function hasEntitledSubscription(billing: BillingSnapshot | null | undefi
   );
 }
 
+/**
+ * True when `user_billing` holds a PAUSED subscription: on Free while paused
+ * (status 'paused' is our own value), but the subscription is still there and
+ * resumes. Same test checkout-core.ts applies before any plan checkout. Such a
+ * user is not offered a pass and cannot buy one: it would run next to a
+ * subscription that starts charging again.
+ */
+export function isPausedSubscriber(billing: BillingSnapshot | null | undefined): boolean {
+  return billing?.subscription_status === 'paused' && Boolean(billing.stripe_subscription_id);
+}
+
 export type PassEligibility =
   | { eligible: true; stacked: boolean }
-  | { eligible: false; reason: 'already_subscribed' | 'pass_already_queued' };
+  | { eligible: false; reason: 'already_subscribed' | 'subscription_paused' | 'pass_already_queued' };
 
 /** May this user buy a pass right now (plan D6 and D7)? */
 export function passEligibility(input: {
@@ -405,6 +452,7 @@ export function passEligibility(input: {
   active: ActivePass | null;
 }): PassEligibility {
   if (hasEntitledSubscription(input.billing)) return { eligible: false, reason: 'already_subscribed' };
+  if (isPausedSubscriber(input.billing)) return { eligible: false, reason: 'subscription_paused' };
   if (!canQueueAnotherPass(input.active)) return { eligible: false, reason: 'pass_already_queued' };
   return { eligible: true, stacked: input.active != null };
 }
@@ -426,10 +474,35 @@ export function effectivePlan(input: {
   return 'free';
 }
 
+/** Read user_billing and the passes, and decide the plan. Throws on a failed read. */
+async function readEffectivePlan(db: Db, userId: string, source: string, now: Date): Promise<PlanId> {
+  const { data: billing, error: billingError } = await db
+    .from('user_billing')
+    .select('plan, subscription_status')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (billingError) {
+    throw new Error(`[pass] ${source}: could not read user_billing for ${userId}: ${billingError.message}`);
+  }
+  const active = await getActivePass(db, userId, { strict: true, now });
+  return effectivePlan({ billing: billing as BillingSnapshot | null, active });
+}
+
+/** How many times reprojectUserPlan re-reads after a write that turned out stale. */
+const REPROJECT_ATTEMPTS = 3;
+
 /**
  * Re-run the projection for one user from what is stored: their user_billing
  * row and their passes. Writes `workspaces.plan` on every owned, undeleted
  * workspace and lifts plan-limit pauses for the ones moving onto a paid plan.
+ *
+ * READ, WRITE, READ AGAIN. The read and the write are two statements, so a
+ * purchase landing between them (the expiry sweep read "no pass", the webhook
+ * inserted one and projected Personal, then the sweep wrote Free) would leave
+ * the later, stale write in place. So after each write the inputs are read
+ * again, and when they now give a different plan it is written again. Any
+ * change that lands after that final read runs its own projection, which
+ * writes after it, so the last write always reflects the stored state.
  *
  * Throws on a failed read or write so the webhook can answer 500 and be
  * retried. Returns the plan it projected.
@@ -440,29 +513,30 @@ export async function reprojectUserPlan(
   source: string,
   now: Date = new Date(),
 ): Promise<PlanId> {
-  const { data: billing, error: billingError } = await db
-    .from('user_billing')
-    .select('plan, subscription_status')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (billingError) {
-    throw new Error(`[pass] ${source}: could not read user_billing for ${userId}: ${billingError.message}`);
-  }
-  const active = await getActivePass(db, userId, { strict: true, now });
-  const plan = effectivePlan({ billing: billing as BillingSnapshot | null, active });
+  let plan = await readEffectivePlan(db, userId, source, now);
+  for (let attempt = 1; ; attempt += 1) {
+    const entering = await workspacesEnteringPaidPlan(db, userId, plan);
+    const { error } = await db
+      .from('workspaces')
+      .update({ plan, updated_at: new Date().toISOString() })
+      .eq('owner_id', userId)
+      .is('deleted_at', null);
+    if (error) {
+      throw new Error(`[pass] ${source}: could not project "${plan}" for ${userId}: ${error.message}`);
+    }
+    console.log(`[pass] ${source}: user ${userId} projected to "${plan}"`);
+    await liftPlanLimitPauses(db, entering, { label: source });
 
-  const entering = await workspacesEnteringPaidPlan(db, userId, plan);
-  const { error } = await db
-    .from('workspaces')
-    .update({ plan, updated_at: now.toISOString() })
-    .eq('owner_id', userId)
-    .is('deleted_at', null);
-  if (error) {
-    throw new Error(`[pass] ${source}: could not project "${plan}" for ${userId}: ${error.message}`);
+    const after = await readEffectivePlan(db, userId, source, new Date(Math.max(now.getTime(), Date.now())));
+    if (after === plan) return plan;
+    if (attempt >= REPROJECT_ATTEMPTS) {
+      throw new Error(
+        `[pass] ${source}: plan for ${userId} kept changing ("${plan}" then "${after}"); retry.`,
+      );
+    }
+    console.log(`[pass] ${source}: user ${userId} changed during the projection ("${plan}" to "${after}"); writing again.`);
+    plan = after;
   }
-  console.log(`[pass] ${source}: user ${userId} projected to "${plan}"`);
-  await liftPlanLimitPauses(db, entering, { label: source });
-  return plan;
 }
 
 // ---------------------------------------------------------------------------
@@ -530,6 +604,7 @@ async function deliverNotices(sink: PassNoticeSink | undefined, notices: PassNot
 
 export type PassPurchaseResult =
   | { kind: 'recorded'; pass: PassRow; plan: PlanId }
+  | { kind: 'recorded_refunded'; pass: PassRow }
   | { kind: 'duplicate' }
   | { kind: 'table_missing' };
 
@@ -538,6 +613,15 @@ export type PassPurchaseResult =
  * (the ledger already dedupes event ids; this also covers a second event for
  * the same session) records nothing and projects nothing. Then re-projects, so
  * every owned workspace is on Personal. Throws on a failed write.
+ *
+ * `paidAt` is when the money moved (the charge's time), not when the webhook
+ * ran, so a delivery Stripe retried for hours does not shorten the pass. The
+ * projection still runs at the real current time.
+ *
+ * `alreadyRefunded`: the payment was refunded before this purchase was
+ * recorded (the charge.refunded event won the race and found no pass). The row
+ * is stored as `refunded` for the books and the session-id dedupe, and grants
+ * nothing: no projection, no notices, no funnel row.
  */
 export async function recordPassPurchase(
   db: Db,
@@ -548,6 +632,7 @@ export async function recordPassPurchase(
     amountMinor: number | null;
     currency: string | null;
     paidAt?: Date;
+    alreadyRefunded?: boolean;
     source: string;
     notices?: PassNoticeSink;
   },
@@ -581,7 +666,8 @@ export async function recordPassPurchase(
       currency: input.currency,
       starts_at: window.startsAt.toISOString(),
       ends_at: window.endsAt.toISOString(),
-      status: window.status,
+      status: input.alreadyRefunded ? 'refunded' : window.status,
+      ...(input.alreadyRefunded ? { refunded_at: new Date().toISOString() } : {}),
     })
     .select(PASS_COLUMNS)
     .single();
@@ -590,8 +676,14 @@ export async function recordPassPurchase(
     throw new Error(`[pass] ${input.source}: could not record pass for ${input.userId}: ${error.message}`);
   }
   const pass = inserted as unknown as PassRow;
+  if (input.alreadyRefunded) {
+    console.error(
+      `[pass] ${input.source}: payment for session ${input.sessionId} was refunded before it was recorded; pass ${pass.id} stored as refunded, nothing granted.`,
+    );
+    return { kind: 'recorded_refunded', pass };
+  }
 
-  const plan = await reprojectUserPlan(db, input.userId, input.source, paidAt);
+  const plan = await reprojectUserPlan(db, input.userId, input.source);
   await recordPassEvent({
     workspaceId: await primaryWorkspaceId(db, input.userId),
     stage: 'pass_checkout_completed',

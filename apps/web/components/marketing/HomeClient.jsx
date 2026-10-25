@@ -6,6 +6,7 @@ import {
   Nav, Hero, Trusted, WhatIs, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
   Pricing, Faq, Footer
 } from './Sections';
+import { ReferralBanner } from './ReferralBanner';
 import { useDisplayCurrency } from './useDisplayCurrency';
 
 const TWEAK_DEFAULTS = {
@@ -65,6 +66,7 @@ export default function HomeClient({ stripePrices, eurEnabled = false }) {
         <Faq currency={currency} />
       </main>
       <Footer />
+      <ReferralBanner />
 
       <TweaksPanel>
         <TweakSection label="Hero" />

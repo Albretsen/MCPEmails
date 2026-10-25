@@ -727,3 +727,53 @@ test('a Pro subscriber on a retained-pair twin switches interval onto the other 
     delete process.env.STRIPE_PRICE_TWINS;
   }
 });
+
+// The EUR launch dispatcher creates the twins on its own, with
+// metadata.twin_of, and nothing can set STRIPE_PRICE_TWINS from there. A
+// twin must therefore resolve from the price object a subscription carries.
+test('a twin resolves from its own metadata.twin_of, with no STRIPE_PRICE_TWINS', async () => {
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_metafixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year_metafixture';
+  delete process.env.STRIPE_PRICE_TWINS;
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins-meta')) as typeof import('./plans.ts');
+  try {
+    const twin = { id: 'price_twin_meta_month', metadata: { twin_of: 'price_business_39_metafixture' } };
+    // Unknown by id alone until a price object has been seen.
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_meta_month'), null);
+    // The object resolves directly, and teaches the id.
+    assert.deepEqual(fresh.getPlanByStripePriceId(twin), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    // basePlanItem learns from the items it is handed, so the webhook's
+    // `getPlanByStripePriceId(basePlanItem(items).price.id)` resolves.
+    const addonTwin = { id: 'price_twin_meta_addon', metadata: { twin_of: 'price_addon_year_metafixture' } };
+    const items = [{ id: 'si_addon', price: addonTwin }, { id: 'si_base', price: twin }];
+    assert.equal(fresh.basePlanItem(items)?.id, 'si_base');
+    assert.equal(fresh.mailboxAddonItem(items)?.id, 'si_addon');
+    assert.equal(fresh.mailboxAddonInterval('price_twin_meta_addon'), 'year');
+    assert.equal(fresh.canonicalPriceId('price_twin_meta_addon'), 'price_addon_year_metafixture');
+
+    // Metadata pointing outside the catalogue, at itself, or at nothing, is ignored.
+    fresh.notePriceTwin({ id: 'price_stray', metadata: { twin_of: 'price_other_product_line' } });
+    fresh.notePriceTwin({ id: 'price_self', metadata: { twin_of: 'price_self' } });
+    fresh.notePriceTwin({ id: 'price_none', metadata: {} });
+    fresh.notePriceTwin({ id: 'not_a_price', metadata: { twin_of: 'price_business_39_metafixture' } });
+    for (const id of ['price_stray', 'price_self', 'price_none', 'not_a_price']) {
+      assert.equal(fresh.getPlanByStripePriceId(id), null, id);
+    }
+
+    // The env map still works next to it and wins on a conflict.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_meta_month: 'price_1TcQBGARrgumc6cqmy0LeLSL' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'year' });
+    delete process.env.STRIPE_PRICE_TWINS;
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    fresh.resetLearnedTwins();
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_meta_month'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});

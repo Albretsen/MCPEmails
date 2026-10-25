@@ -77,11 +77,42 @@ nodeMock.module('@/lib/supabase/service', {
   },
 });
 
+/**
+ * The Stripe reads and writes the pass paths make. Charges and subscriptions
+ * not set up by a test are "No such ..." errors, as before these stubs.
+ */
+const stripeState: {
+  charges: Map<string, Record<string, unknown>>;
+  subscriptions: Map<string, Record<string, unknown>>;
+  updates: Array<{ id: string; params: Record<string, unknown> }>;
+  failUpdate: boolean;
+} = { charges: new Map(), subscriptions: new Map(), updates: [], failUpdate: false };
+
 nodeMock.module('@/lib/stripe/client', {
   namedExports: {
     stripe: {
       webhooks: {
         constructEvent: (raw: Buffer) => JSON.parse(raw.toString('utf8')),
+      },
+      paymentIntents: {
+        retrieve: async (id: string) => {
+          const charge = stripeState.charges.get(id);
+          if (!charge) throw new Error(`No such payment_intent: ${id}`);
+          return { id, latest_charge: charge };
+        },
+      },
+      subscriptions: {
+        retrieve: async (id: string) => {
+          const sub = stripeState.subscriptions.get(id);
+          if (!sub) throw new Error(`No such subscription: ${id}`);
+          return sub;
+        },
+        update: async (id: string, params: Record<string, unknown>) => {
+          if (stripeState.failUpdate) throw new Error('Stripe is down');
+          stripeState.updates.push({ id, params });
+          const sub = stripeState.subscriptions.get(id) ?? {};
+          return { ...sub, id };
+        },
       },
     },
   },
@@ -109,6 +140,10 @@ const DAY = 24 * 60 * 60 * 1000;
 function seed(options: { billing?: Record<string, unknown> } = {}) {
   db = new FakeSupabase();
   ledger = new Set();
+  stripeState.charges = new Map();
+  stripeState.subscriptions = new Map();
+  stripeState.updates = [];
+  stripeState.failUpdate = false;
   db.seed('workspaces', [
     { id: 'ws-buyer-1', owner_id: BUYER, plan: 'free', deleted_at: null, created_at: '2026-01-01T00:00:00Z' },
     { id: 'ws-buyer-2', owner_id: BUYER, plan: 'free', deleted_at: null, created_at: '2026-02-01T00:00:00Z' },
@@ -515,4 +550,145 @@ test('before the migration: a purchase is retried, a deletion still goes to Free
   const sweep = await runExpiry();
   assert.equal(sweep.status, 200);
   assert.equal(sweep.body.tableMissing, true);
+});
+
+// ---------------------------------------------------------------------------
+// Review fixes
+// ---------------------------------------------------------------------------
+
+test('a delayed payment grants the pass when it clears, once', async () => {
+  seed();
+  await deliver('checkout.session.completed', passSession('cs_delayed', { payment_status: 'unpaid' }));
+  assert.equal(passes().length, 0, 'nothing granted while unpaid');
+
+  const cleared = await deliver('checkout.session.async_payment_succeeded', passSession('cs_delayed'));
+  assert.equal(cleared.status, 200);
+  assert.equal(passes().length, 1);
+  assert.equal(passes()[0].status, 'active');
+  assert.deepEqual(plans(), ['personal', 'personal']);
+
+  await deliver('checkout.session.async_payment_succeeded', passSession('cs_delayed'));
+  assert.equal(passes().length, 1);
+  assert.deepEqual(stages(), ['pass_checkout_completed:success:personal_pass_3m']);
+});
+
+test('the pass starts when the charge was made, not when the webhook ran', async () => {
+  seed();
+  const chargedAt = Math.floor((Date.now() - 2 * DAY) / 1000);
+  stripeState.charges.set('pi_for_cs_late', { id: 'ch_late', created: chargedAt, amount: 2900, amount_refunded: 0, refunded: false });
+
+  await deliver('checkout.session.completed', passSession('cs_late'));
+
+  const [pass] = passes();
+  assert.equal(pass.starts_at, new Date(chargedAt * 1000).toISOString());
+  assert.equal(pass.ends_at, passEndsAt(new Date(chargedAt * 1000)).toISOString());
+});
+
+test('without a charge time, the session creation time is used', async () => {
+  seed();
+  const created = Math.floor((Date.now() - DAY) / 1000);
+  await deliver('checkout.session.completed', passSession('cs_created', { created }));
+  assert.equal(passes()[0].starts_at, new Date(created * 1000).toISOString());
+});
+
+test('a payment refunded before it was recorded is stored as refunded and grants nothing', async () => {
+  seed();
+  stripeState.charges.set('pi_for_cs_gone', {
+    id: 'ch_gone', created: Math.floor(Date.now() / 1000), amount: 2900, amount_refunded: 2900, refunded: true,
+  });
+  // The refund event came first and found no pass.
+  await deliver('charge.refunded', refundCharge('pi_for_cs_gone'));
+
+  const result = await deliver('checkout.session.completed', passSession('cs_gone'));
+
+  assert.equal(result.status, 200);
+  assert.equal(passes().length, 1);
+  assert.equal(passes()[0].status, 'refunded');
+  assert.ok(passes()[0].refunded_at);
+  assert.deepEqual(plans(), ['free', 'free']);
+  assert.deepEqual(stages(), []);
+});
+
+function waitingSubscription(id: string, fields: Record<string, unknown>) {
+  stripeState.subscriptions.set(id, {
+    ...subscription(String(fields.status ?? 'active')),
+    id,
+    ...fields,
+  });
+}
+
+test('refunding a pass ends the free start of a Personal subscription that waited for it', async () => {
+  seed({ billing: { plan: 'personal', subscription_status: 'trialing', stripe_subscription_id: 'sub_waiting' } });
+  for (const ws of db.table('workspaces')) if (ws.owner_id === BUYER) ws.plan = 'personal';
+  seedPass('running', -3, 87, 'active');
+  const passEnd = Math.floor(Date.parse(String(passes()[0].ends_at)) / 1000);
+  waitingSubscription('sub_waiting', { status: 'trialing', trial_end: passEnd, billing_cycle_anchor: passEnd });
+
+  const result = await deliver('charge.refunded', refundCharge('pi_running'));
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(stripeState.updates, [{ id: 'sub_waiting', params: { trial_end: 'now' } }]);
+  assert.deepEqual(plans(), ['personal', 'personal'], 'the subscription carries on');
+
+  // A second delivery of the refund changes nothing more.
+  await deliver('charge.refunded', refundCharge('pi_running'));
+  assert.equal(stripeState.updates.length, 1);
+});
+
+test('an anchored subscription is re-anchored to now, with no proration', async () => {
+  seed({ billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: 'sub_anchored' } });
+  seedPass('running', -60, 30, 'active');
+  const passEnd = Math.floor(Date.parse(String(passes()[0].ends_at)) / 1000);
+  waitingSubscription('sub_anchored', { status: 'active', trial_end: null, billing_cycle_anchor: passEnd });
+
+  await deliver('charge.refunded', refundCharge('pi_running'));
+
+  assert.deepEqual(stripeState.updates, [
+    { id: 'sub_anchored', params: { billing_cycle_anchor: { type: 'now' }, proration_behavior: 'none' } },
+  ]);
+});
+
+test('with a stacked pass still running, the first charge moves to that pass end instead', async () => {
+  seed({ billing: { plan: 'personal', subscription_status: 'trialing', stripe_subscription_id: 'sub_waiting' } });
+  seedPass('running', -3, 87, 'active');
+  seedPass('stacked', 87, 177, 'scheduled');
+  const coverEnd = Math.floor(Date.parse(String(passes().find((p) => p.id === 'stacked')?.ends_at)) / 1000);
+  waitingSubscription('sub_waiting', { status: 'trialing', trial_end: coverEnd, billing_cycle_anchor: coverEnd });
+
+  await deliver('charge.refunded', refundCharge('pi_running'));
+
+  const stacked = passes().find((p) => p.id === 'stacked');
+  assert.equal(stacked?.status, 'active', 'the stacked pass started today');
+  assert.deepEqual(stripeState.updates, [
+    {
+      id: 'sub_waiting',
+      params: { trial_end: Math.floor(Date.parse(String(stacked?.ends_at)) / 1000), proration_behavior: 'none' },
+    },
+  ]);
+});
+
+test('an ordinary subscription already charging, or a higher tier, is never touched by a pass refund', async () => {
+  seed({ billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: 'sub_plain' } });
+  seedPass('running', -3, 87, 'active');
+  waitingSubscription('sub_plain', { status: 'active', trial_end: null, billing_cycle_anchor: Math.floor(Date.now() / 1000) - 3 * 86_400 });
+  await deliver('charge.refunded', refundCharge('pi_running'));
+  assert.equal(stripeState.updates.length, 0);
+
+  seed({ billing: { plan: 'solo', subscription_status: 'trialing', stripe_subscription_id: 'sub_pro' } });
+  seedPass('running', -3, 87, 'active');
+  await deliver('charge.refunded', refundCharge('pi_running'));
+  assert.equal(stripeState.updates.length, 0);
+});
+
+test('a Stripe failure moving the first charge never fails the refund', async () => {
+  seed({ billing: { plan: 'personal', subscription_status: 'trialing', stripe_subscription_id: 'sub_waiting' } });
+  seedPass('running', -3, 87, 'active');
+  const passEnd = Math.floor(Date.parse(String(passes()[0].ends_at)) / 1000);
+  waitingSubscription('sub_waiting', { status: 'trialing', trial_end: passEnd, billing_cycle_anchor: passEnd });
+  stripeState.failUpdate = true;
+
+  const result = await deliver('charge.refunded', refundCharge('pi_running'));
+
+  assert.equal(result.status, 200);
+  assert.equal(passes()[0].status, 'refunded');
 });

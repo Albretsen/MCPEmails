@@ -31,6 +31,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
+import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
@@ -179,6 +180,11 @@ export function ApprovalsPage({ userRole }) {
 
 export function AutomationsPage({ userRole, inboxes, keys }) {
   return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
+}
+
+/** The referral program's Invite page (InvitePanel.jsx). */
+export function InvitePage() {
+  return <InvitePanel />;
 }
 
 // Rich-text tag handlers shared across pages (inline code + bold).
@@ -1061,7 +1067,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -1157,6 +1163,22 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
         onGoToAutomations={onGoToAutomations}
         onConnect={onConnect}
       />
+      {/* The referral program, while workspaces.referral_enabled is on: the
+          code field for a new account, or the tile once it is earned. The
+          Free branch counts active days off the same usage series the chart
+          below draws; the paid branch needs the two facts the page read on
+          the server (successful sends, first paid checkout). */}
+      {referralEnabled && (
+        <OverviewReferral
+          eligible={referralTileEligible({
+            plan: _plan,
+            successfulSends: referralTileFacts?.successfulSends ?? 0,
+            paidSince: referralTileFacts?.paidSince ?? null,
+            dailyCounts: usageData?.dailyCounts ?? [],
+          })}
+          onOpenInvite={onGoToInvite}
+        />
+      )}
 
       <div className="stat-grid">
         <div className="stat">
@@ -6052,7 +6074,9 @@ const BILLING_PLANS = [
   {
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
-    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
+    // soloFeatureChatClosed / soloFeatureAllInboxes: the Pro features, new at
+    // launch and gated to Pro and Business (see PLANS.solo.features).
+    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeatureChatClosed', 'billing.plans.soloFeatureAllInboxes', 'billing.plans.soloFeature4'],
     // Pro is the highlighted plan: ten mailboxes for one person running a
     // business is the upgrade nearly everyone here actually wants. Business
     // pays off past ten mailboxes or once other people need in.
@@ -6141,6 +6165,9 @@ function formatRenewalDate(unixSeconds, locale) {
  *                 arrives here as null and is never quoted. Null itself (the
  *                 RPC failed) states nothing.
  */
+/** The checkout route's pass refusals; each has a billing.checkoutError sentence. */
+const PASS_ERROR_CODES = new Set(['pass_unavailable', 'already_subscribed', 'pass_already_queued', 'pass_monthly_not_yet']);
+
 function BillingSection({
   currentPlan,
   compedScale = false,
@@ -6245,9 +6272,11 @@ function BillingSection({
         // points at Resume / Keep, instead of the server's English.
         const message = data?.error_code === 'plan_change_pending'
           ? t('billing.planChange.pendingCheckout')
-          : typeof data?.error === 'string'
-            ? data.error
-            : t('billing.errCheckoutFailed');
+          : PASS_ERROR_CODES.has(data?.error_code)
+            ? t(`billing.checkoutError.${data.error_code}`)
+            : typeof data?.error === 'string'
+              ? data.error
+              : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
         return;
       }
@@ -7935,7 +7964,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate, onGoToInvite }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -7980,6 +8009,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
+      {/* Referral credit waiting for the next invoice, while
+          workspaces.referral_enabled is on (InvitePanel.jsx). */}
+      {workspace?.referralEnabled === true && <BillingReferralCredit onOpenInvite={onGoToInvite} />}
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>

@@ -878,6 +878,17 @@ const PARITY_WORLDS: Array<[string, () => World]> = [
   ["a comped owner at 1000", () => world({ workspaceCount: 1_000, entitlement: { kind: "comped_scale", expires_at: null } })],
   ["an expired comp", () => world({ workspaceCount: 120, entitlement: { kind: "comped_scale", expires_at: "2026-01-01T00:00:00.000Z" } })],
   ["a grandfathered free workspace", () => world({ workspace: activatedWorkspace({ plan: "free", grandfathered: true }), workspaceCount: 60 })],
+  // Referral month (20261025090000): Personal's 120 a minute, so 60 passes.
+  ["a free workspace in a referral month at 60", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  })],
+  ["an older standard row in a referral month at 60", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  })],
   ["a missing workspace row", () => world({ workspaceMissing: true, workspaceCount: 10_000 })],
   ["a capped workspace", () => world({
     workspace: activatedWorkspace({ plan: "free" }),
@@ -948,6 +959,30 @@ for (const [name, make] of PARITY_WORLDS) {
     assertEquals(notices(viaPreflight), notices(viaQuery));
   });
 }
+
+Deno.test("a referral month bursts at Personal's ceiling on both paths; plain Free does not", async () => {
+  const referral = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  const ended = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2020-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  const standardRow = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  for (const w of [referral(), perQuery(referral()), standardRow(), perQuery(standardRow())]) {
+    assertEquals((await run(w, rpcRequest("tools/call", SIGNATURE_GET))).status, 200);
+  }
+  for (const w of [ended(), perQuery(ended())]) {
+    assertEquals((await run(w, rpcRequest("tools/call", SIGNATURE_GET))).status, 429);
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Rate limiting still comes before the tool, and costs no allowance
