@@ -696,6 +696,12 @@ async function main() {
     await c.settled();
     c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
     await after(80);
+    expect(
+      "the fresh result says the card is on screen",
+      c.contexts().at(-1),
+      "The MCPEmails draft card is on screen for the user, who can edit and send it. " +
+        'Its current draft_id is Drafts:2. Subject: "Quarterly numbers". To 1, cc 0, bcc 0.',
+    );
 
     c.type("d-body", "Here they are, revised today.");
     await after(60);
@@ -734,7 +740,7 @@ async function main() {
         "The message has left Drafts, so that draft_id no longer resolves. " +
         "The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote.",
     );
-    expect("three lines in all", c.contexts().length, 3);
+    expect("four lines in all", c.contexts().length, 4);
     await c.done();
   }
 

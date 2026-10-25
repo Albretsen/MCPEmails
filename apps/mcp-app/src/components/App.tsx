@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { HostBridge, ToolResultParams } from "../bridge";
 import {
   isSupportedVersion,
@@ -108,9 +108,10 @@ function absoluteUrl(url: string | null | undefined): string | null {
 function Diagnostics(props: { bridge: HostBridge }) {
   // The model-context counters live on the bridge, not in the store, so a
   // reply landing re-rendered nothing: QA 2026-10-17 read 0/0/0 right after a
-  // save. Subscribe to them directly.
+  // save. Subscribe to them directly, in a layout effect: a plain effect runs
+  // after paint, and the reply to the card's first line can land before it.
   const [, bump] = useState(0);
-  useEffect(() => props.bridge.onModelContextChange(() => bump((n) => n + 1)), [props.bridge]);
+  useLayoutEffect(() => props.bridge.onModelContextChange(() => bump((n) => n + 1)), [props.bridge]);
   const s = getState();
   const h = props.bridge.hostInfo ?? {};
   const line = [

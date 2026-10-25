@@ -1017,7 +1017,9 @@ async function main() {
     c.push({ ...draftEnvelope(), diagnostics: true });
     await settle();
     const diag = () => c.root.querySelector(".diag")?.textContent ?? "";
-    expect("the line shows what the host listed", /mctx cap\[text,structuredContent\] 0\/0\/0/.test(diag()), true);
+    await settle();
+    expect("the line shows what the host listed", /mctx cap\[text,structuredContent\] 1\/0\/1/.test(diag()), true);
+    expect("the fresh result said the card is on screen", /^The MCPEmails draft card is on screen/.test(c.contexts[0]?.content?.[0]?.text ?? ""), true);
     c.tools.draft_editor_save = () => ({
       structuredContent: { ...draftEnvelope({ draft_id: "Drafts:140", origin: "save", subject: "Edited" }), diagnostics: true },
       content: [{ type: "text", text: "{}" }],
@@ -1026,14 +1028,14 @@ async function main() {
     await settle();
     c.press(c.btn(/^Save$/));
     await settle();
-    expect("after the save, with no other input, the reply is counted", /mctx cap\[text,structuredContent\] 1\/0\/1/.test(diag()), true);
-    expect("one update went out", c.contexts.length, 1);
-    expect("as one text block", c.contexts[0]?.content?.[0]?.type, "text");
-    expect("naming the live id", /current draft_id is Drafts:140\./.test(c.contexts[0]?.content?.[0]?.text ?? ""), true);
+    expect("after the save, with no other input, the reply is counted", /mctx cap\[text,structuredContent\] 2\/0\/2/.test(diag()), true);
+    expect("one more update went out", c.contexts.length, 2);
+    expect("as one text block", c.contexts[1]?.content?.[0]?.type, "text");
+    expect("naming the live id", /current draft_id is Drafts:140\./.test(c.contexts[1]?.content?.[0]?.text ?? ""), true);
     expect(
       "with the same text as structuredContent, because this host listed it",
-      c.contexts[0]?.structuredContent?.context,
-      c.contexts[0]?.content?.[0]?.text,
+      c.contexts[1]?.structuredContent?.context,
+      c.contexts[1]?.content?.[0]?.text,
     );
     await c.done();
   }

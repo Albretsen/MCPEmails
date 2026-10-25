@@ -224,7 +224,6 @@ body {
   color: var(--fg-2);
 }
 
-.tiny { font-size: var(--fs-xs); color: var(--fg-3); margin: 0; }
 .nowrap { white-space: nowrap; }
 
 /* ---- header ------------------------------------------------------------ */
@@ -454,15 +453,6 @@ body {
 }
 
 /* ---- chips ------------------------------------------------------------- */
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 
 .chip {
   display: inline-flex;

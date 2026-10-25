@@ -24,6 +24,7 @@ import {
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
 import { announceDraft } from "./draft-signal";
+import { draftShownContextLine } from "./model-context";
 
 /**
  * What the last tool result was, which is NOT the same question as "did it
@@ -1656,6 +1657,7 @@ export function wireResultHandlers(bridge: HostBridge) {
     }
 
     // Decided by the FIRST result accepted, which is the mounting call's.
+    const firstResult = !pushAccepted;
     if (!pushAccepted) {
       const rev = envelope.card === "draft_editor" ? envelope.draft?.revision : null;
       check = {
@@ -1681,6 +1683,10 @@ export function wireResultHandlers(bridge: HostBridge) {
       check.draftCheck === undefined && envelope.draft.origin !== "read"
     ) {
       announceDraft(envelope.draft);
+      // The model's only sign that the card rendered (model-context.ts). Once,
+      // for the mounting call's own fresh result: a replay says nothing, so a
+      // reloaded chat cannot replace a later save or send line with this one.
+      if (firstResult) void bridge.updateModelContext(draftShownContextLine(envelope.draft));
     }
   };
 
