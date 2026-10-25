@@ -2,15 +2,15 @@ const translation = {
   title: 'Configurar el correo para agentes de IA en Cursor, Cline y VS Code',
   description: 'Da acceso al correo a tu agente de programación en Cursor, Cline y VS Code. Cursor usa OAuth; Cline y los clientes propios usan una API key con permisos por MCP.',
   coverAlt: 'Configurar el acceso al correo para agentes de programación con IA en Cursor, Cline y VS Code mediante MCP',
-  content: `Aquí va la versión corta. Para darle a un agente de programación de tu editor acceso a una bandeja de entrada real, apúntalo a un único endpoint MCP: \`https://www.mcpemails.com/api/mcp\`. Cursor habla OAuth, así que pegas esa URL e inicias sesión. Cline, la configuración MCP en bruto de VS Code y cualquier script propio no hacen el baile de OAuth, así que se autentican con una API key con permisos enviada en una cabecera \`Authorization: Bearer\`. El mismo endpoint, las mismas herramientas, dos formas de entrar.
+  content: `Aquí va la versión corta. Para darle a un agente de programación de tu editor acceso a una bandeja de entrada real, apúntalo a un único endpoint MCP: \`https://www.mcpemails.com/api/mcp\`. Cursor habla OAuth, así que pegas esa URL e inicias sesión. Cline, la configuración MCP en bruto de VS Code y cualquier script propio no hacen el baile de OAuth, así que se autentican con una clave de API con permisos limitados, enviada en una cabecera \`Authorization: Bearer\`. El mismo endpoint, las mismas herramientas, dos formas de entrar.
 
-Esta guía cubre ambas vías, muestra cómo generar una API key limitada exactamente a \`read:email\` y \`send:email\`, y termina con un flujo de trabajo que uso de verdad: el agente clasifica mi bandeja de entrada y envía respuestas sin que yo salga del editor. Si prefieres ver primero el panorama general, la guía base sobre [cómo dar a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access) es el punto de partida.
+Esta guía cubre ambas vías, muestra cómo generar una clave de API limitada exactamente a \`read:email\` y \`send:email\`, y termina con un flujo de trabajo que uso de verdad: el agente clasifica mi bandeja de entrada y envía respuestas sin que yo salga del editor. Si prefieres ver primero el panorama general, la guía base sobre [cómo dar a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access) es el punto de partida.
 
 ## Antes de conectar cualquier cliente: conecta una bandeja de entrada
 
 El servidor MCP no es dueño de tu correo. Hace de intermediario con una conexión en vivo al proveedor que ya uses, recupera los mensajes en el momento de la llamada y los descarta. No se almacena nada de tu correo. Así que el primer paso ocurre en el panel, no en tu editor.
 
-Ve a **Dashboard → Inboxes → Connect Inbox** y elige un proveedor:
+Ve a **Panel → Bandejas de entrada → Conectar bandeja** y elige un proveedor:
 
 - **Gmail** → una contraseña de aplicación de Google sobre IMAP. Activa la verificación en dos pasos, crea una en myaccount.google.com/apppasswords y pega las 16 letras con tu dirección de Gmail completa. Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio.
 - **Outlook / Microsoft 365** → OAuth con Iniciar sesión con Microsoft, sin contraseña de aplicación. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Una cuenta de trabajo o educativa de Microsoft 365 puede necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo.
@@ -22,24 +22,24 @@ Una vez conectada una bandeja de entrada, tu agente llega a ella a través de la
 
 ## Cursor: pega la URL, inicia sesión y listo
 
-Cursor admite OAuth 2.0 para servidores MCP, que es la vía indolora. No hay API key ni secreto que gestionar en un archivo de configuración.
+Cursor admite OAuth 2.0 para servidores MCP, que es la vía indolora. No hay clave de API ni secreto que gestionar en un archivo de configuración.
 
 1. Abre los ajustes de Cursor y busca la sección de servidores MCP.
 2. Añade un nuevo servidor con la URL \`https://www.mcpemails.com/api/mcp\`.
 3. Cursor abre una ventana del navegador. Inicia sesión en tu cuenta de MCPEmails y aprueba los permisos que quieras darle al agente: \`read:email\`, \`send:email\` o ambos.
 4. La conexión se pone en verde y las herramientas de correo aparecen en la lista de herramientas de Cursor.
 
-Por debajo, eso es OAuth 2.0 con código de autorización y PKCE, y el token que guarda Cursor está limitado exactamente a lo que aprobaste. Si solo concediste \`read:email\`, el agente literalmente no puede enviar. Cuando termines, revoca la conexión desde **Dashboard → API Keys** (las concesiones de OAuth también viven ahí) con un clic, y el acceso de Cursor muere al instante.
+Por debajo, eso es OAuth 2.0 con código de autorización y PKCE, y el token que guarda Cursor está limitado exactamente a lo que aprobaste. Si solo concediste \`read:email\`, el agente literalmente no puede enviar. Cuando termines, revoca la conexión desde **Panel → Claves de API** (las concesiones de OAuth también están ahí) con un clic, y el acceso de Cursor se corta al instante.
 
 Claude Desktop y claude.ai siguen el mismo flujo de pegar y aprobar si también los usas.
 
-## Cline, VS Code en bruto y scripts propios: usa una API key
+## Cline, VS Code en bruto y scripts propios: usa una clave de API
 
-Cline, la configuración \`mcp\` simple de VS Code, JetBrains y cualquier cosa que programes tú no implementan el apretón de manos de OAuth. Para esos casos creas una API key y la envías como token bearer. También es la opción adecuada para trabajos de CI y automatizaciones lanzadas por cron, donde no hay una persona para hacer clic en una pantalla de aprobación.
+Cline, la configuración \`mcp\` simple de VS Code, JetBrains y cualquier cosa que programes tú no implementan el flujo de autorización OAuth. Para esos casos creas una clave de API y la envías como token bearer. También es la opción adecuada para trabajos de CI y automatizaciones lanzadas por cron, donde no hay una persona para hacer clic en una pantalla de aprobación.
 
-### Paso 1: crea una API key con permisos
+### Paso 1: crea una clave de API con permisos limitados
 
-En **Dashboard → API Keys**, haz clic en **Create key**. Ponle un nombre que reconozcas después (\`cline-laptop\`, \`triage-cron\`) y luego elige sus permisos:
+En **Panel → Claves de API**, haz clic en **Crear clave**. Ponle un nombre que reconozcas después (\`cline-laptop\`, \`triage-cron\`) y luego elige sus permisos:
 
 - \`read:email\` para listar, buscar y leer.
 - \`send:email\` para enviar y responder.
@@ -72,7 +72,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` significa que la clave es incorrecta, y un \`-32004\` (HTTP 403) que le falta un permiso que la herramienta necesita; ninguno se puede reintentar, así que arregla la clave en vez de meterte en un bucle. No subas la clave al repositorio. Léela desde una variable de entorno y mantenla fuera de git. Si estás sopesando qué modelo de autenticación usar en cada sitio, [OAuth frente a API keys para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access) expone las ventajas y desventajas.
+Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` significa que la clave es incorrecta, y un \`-32004\` (HTTP 403) que le falta un permiso que la herramienta necesita; ninguno se puede reintentar, así que arregla la clave en vez de meterte en un bucle. No subas la clave al repositorio. Léela desde una variable de entorno y mantenla fuera de git. Si estás sopesando qué modelo de autenticación usar en cada sitio, [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access) expone las ventajas y desventajas.
 
 ## Las herramientas que recibe tu agente
 
@@ -85,7 +85,7 @@ Ambas vías exponen la misma superficie. Un puñado de herramientas consolidadas
 - \`email_compose\` (acción \`send\`) — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB.
 - \`email_compose\` (acción \`reply\`) — ajusta por ti las cabeceras In-Reply-To y References para que el hilo se mantenga intacto.
 
-Hay algunas más para etiquetas y movimientos (\`email_organize\`), carpetas, envío programado y contactos, pero esas pocas hacen el grueso del trabajo real.
+Hay algunas más para marcas y movimientos (\`email_organize\`), carpetas, envío programado y contactos, pero esas pocas hacen el grueso del trabajo real.
 
 ## Un flujo de trabajo de desarrollo que merece la pena
 
@@ -99,9 +99,9 @@ El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y
 
 > Responde al mensaje del contratista de diseño confirmando que el jueves a las 14:00 va bien, que sea breve.
 
-Llama a \`email_compose\` con la acción \`reply\`, el hilado se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
+Llama a \`email_compose\` con la acción \`reply\`, el hilo se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces polling: \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autocontestador sobre MCP](/blog/build-email-auto-responder-mcp-agent).
+Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces sondeo (polling): \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autorrespondedor sobre MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Límites de tasa para el acceso por scripts
 

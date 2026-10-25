@@ -12,7 +12,7 @@
     "method": "account-password",
     "label": "Contraseña de la cuenta (contraseña específica de aplicación si la 2FA está activada)",
     "helpUrl": "https://support.mail.com/pop-imap/index.html",
-    "usernameForm": "Tu dirección de mail.com completa exactamente como se emitió, termine en el dominio de la familia mail.com que termine, como you@email.com o you@usa.com.",
+    "usernameForm": "Tu dirección de mail.com completa, exactamente como se emitió y con su dominio de la familia mail.com, como you@email.com o you@usa.com.",
     "status": "active"
   },
   "meta": {
@@ -22,7 +22,7 @@
   "hero": {
     "eyebrow": "Mail.com + IA",
     "titleLine1": "Conecta Mail.com a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine2": "y a Cursor, ChatGPT o cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de mail.com. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, una vez activado el acceso de clientes.",
     "answer": "Claude no puede acceder por sí solo a mail.com. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.mail.com en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Antes hay dos condiciones de mail.com: POP3, IMAP y SMTP son funciones Premium, e incluso en Premium el acceso empieza desactivado hasta que lo activas en Email, Settings, POP3 and IMAP. Una vez activado, conectar una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",

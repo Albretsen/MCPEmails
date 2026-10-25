@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Los dos factores retiran sin avisar tu contraseña para los clientes de correo",
-      "p": "Seznam documenta este fallo con precisión: la primera vez que un cliente intenta conectarse después de activar dvoufázové ověření, recibes un mensaje del tipo <code>Přihlášení k serveru imap.seznam.cz selhalo</code>, que parece una errata y no una política. La solución es la fila <b>Heslo pro aplikace</b> en Zabezpečení účtu. Dos detalles pillan a la gente desprevenida. La contraseña de aplicación debe ser distinta de tu contraseña de inicio de sesión, y una vez configurada no se puede borrar, solo cambiar. Si vuelves a desactivar los dos factores, la contraseña de aplicación se desactiva y tu contraseña normal de la cuenta vuelve a mandar."
+      "p": "Seznam documenta este fallo con precisión: la primera vez que un cliente intenta conectarse después de activar dvoufázové ověření, recibes un mensaje del tipo <code>Přihlášení k serveru imap.seznam.cz selhalo</code>, que parece una errata y no una política. La solución es la fila <b>Heslo pro aplikace</b> en Zabezpečení účtu. Dos detalles sorprenden a la gente. La contraseña de aplicación debe ser distinta de tu contraseña de inicio de sesión, y una vez configurada no se puede borrar, solo cambiar. Si vuelves a desactivar los dos factores, la contraseña de aplicación se desactiva y tu contraseña normal de la cuenta vuelve a mandar."
     },
     {
       "h": "No hay ningún interruptor de IMAP que buscar",

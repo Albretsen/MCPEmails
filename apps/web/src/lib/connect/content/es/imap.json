@@ -48,7 +48,7 @@
     },
     {
       "h": "Pégalos en MCPEmails",
-      "p": "Elige IMAP / SMTP y añade tu dirección, los dos servidores y la contraseña. Los puertos y los modos de seguridad están en Advanced, rellenados con los valores estándar."
+      "p": "Elige IMAP / SMTP y añade tu dirección, los dos servidores y la contraseña. Los puertos y los modos de seguridad están en Configuración avanzada, ya rellenados con los valores estándar."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -58,7 +58,7 @@
   "gotchas": [
     {
       "h": "Cómo encontrar tu nombre de servidor real, en el orden que de verdad funciona",
-      "p": "Hay cuatro sitios donde mirar, del más barato al más caro. <b>Uno</b>, la página de ayuda de tu proveedor, buscando el nombre de tu proveedor más las palabras IMAP settings; para eso existen las demás páginas de proveedores de este sitio. <b>Dos</b>, el panel de control: en cPanel es Email Accounts, luego Connect Devices, luego el bloque de ajustes manuales; en Plesk es Mail, luego la dirección, luego la pantalla de conexión al buzón; la mayoría de paneles de hosting tienen una pantalla equivalente y es la fuente fiable para tu cuenta. <b>Tres</b>, el DNS: un proveedor que sigue la RFC 6186 publica un registro SRV <code>_imaps._tcp.yourdomain.com</code> que indica directamente el servidor y el puerto. <b>Cuatro</b>, tu registro MX, que nombra la máquina que recibe tu correo y muy a menudo pertenece a la misma familia de nombres que el servidor IMAP. Lo que no funciona es adivinar <code>imap.yourdomain.com</code> y esperar que funcione: muchísimos proveedores sirven tu correo en un nombre que no tiene nada que ver con tu dominio."
+      "p": "Hay cuatro sitios donde mirar, del más rápido al más laborioso. <b>Uno</b>, la página de ayuda de tu proveedor, buscando el nombre de tu proveedor junto a «configuración IMAP» (o «IMAP settings»); para eso existen las demás páginas de proveedores de este sitio. <b>Dos</b>, el panel de control: en cPanel es Email Accounts, luego Connect Devices, luego el bloque de ajustes manuales; en Plesk es Mail, luego la dirección, luego la pantalla de conexión al buzón; la mayoría de paneles de hosting tienen una pantalla equivalente y es la fuente fiable para tu cuenta. <b>Tres</b>, el DNS: un proveedor que sigue la RFC 6186 publica un registro SRV <code>_imaps._tcp.yourdomain.com</code> que indica directamente el servidor y el puerto. <b>Cuatro</b>, tu registro MX, que nombra la máquina que recibe tu correo y muy a menudo pertenece a la misma familia de nombres que el servidor IMAP. Lo que no funciona es adivinar <code>imap.yourdomain.com</code> y esperar que funcione: muchísimos proveedores sirven tu correo en un nombre que no tiene nada que ver con tu dominio."
     },
     {
       "h": "El certificado es lo que rompe un nombre de servidor personalizado",
@@ -75,7 +75,7 @@
   ],
   "limits": [
     "El servidor tiene que ser accesible desde internet. Un buzón en una red privada, detrás de una VPN o en una dirección IP privada se rechaza a propósito: se resuelve el nombre de servidor y cualquier dirección en un rango privado se rechaza.",
-    "Solo se marcan los puertos de correo estándar: 143 y 993 para IMAP, y 25, 465 y 587 para SMTP. Un servidor que escucha en un puerto personalizado no se puede conectar.",
+    "Solo se usan los puertos de correo estándar: 143 y 993 para IMAP, y 25, 465 y 587 para SMTP. Un servidor que escucha en un puerto personalizado no se puede conectar.",
     "Un buzón que exige OAuth y no acepta una contraseña por IMAP no se puede conectar de esta forma. Microsoft 365 y Outlook.com son los casos más habituales: conéctalos con la opción Outlook (Iniciar sesión con Microsoft) en lugar de IMAP."
   ],
   "faq": [
@@ -97,7 +97,7 @@
     },
     {
       "q": "¿Necesito una contraseña de aplicación?",
-      "a": "Depende por completo del proveedor. iCloud de Apple, Yahoo, AOL, Fastmail, Yandex y Mail.ru rechazan todos la contraseña de la cuenta desde un cliente de correo y exigen una dedicada. Zoho la exige cuando la autenticación en dos factores está activada. La mayoría de proveedores de hosting independientes y de servidores cPanel aceptan directamente la contraseña del buzón. Si se rechaza una contraseña que parece correcta, lo primero que hay que comprobar es si se exige una contraseña de aplicación."
+      "a": "Depende por completo del proveedor. iCloud de Apple, Yahoo, AOL, Fastmail, Yandex y Mail.ru rechazan todos la contraseña de la cuenta desde un cliente de correo y exigen una dedicada. Zoho la exige cuando la autenticación de dos factores está activada. La mayoría de proveedores de hosting independientes y de servidores cPanel aceptan directamente la contraseña del buzón. Si se rechaza una contraseña que parece correcta, lo primero que hay que comprobar es si se exige una contraseña de aplicación."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",

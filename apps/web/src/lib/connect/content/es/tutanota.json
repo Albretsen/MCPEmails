@@ -34,7 +34,7 @@
     },
     {
       "h": "Elige la dirección con la que quieres que trabaje un agente",
-      "p": "Es una decisión real, no un trámite. Elige un buzón en un proveedor que ofrezca IMAP: tu propio dominio, una cuenta del trabajo, Fastmail, Migadu, Gmail. La correspondencia que debe estar tras el cifrado de Tuta debe quedarse en Tuta, y el correo que quieres clasificar, responder y archivar automáticamente vive en la cuenta conectada."
+      "p": "Es una decisión real, no un trámite. Elige un buzón en un proveedor que ofrezca IMAP: tu propio dominio, una cuenta del trabajo, Fastmail, Migadu, Gmail. La correspondencia que merece el cifrado de Tuta debe quedarse en Tuta, y el correo que quieres clasificar, responder y archivar automáticamente vive en la cuenta conectada."
     },
     {
       "h": "Traslada el archivo si necesitas allí el historial",
@@ -52,7 +52,7 @@
     },
     {
       "h": "No existe un bridge de Tuta, y la gente llega esperando uno",
-      "p": "Proton resolvió el mismo problema de cifrado con una aplicación de escritorio local que descifra en tu máquina y sirve IMAP a un cliente en el mismo ordenador. Tuta no ofrece nada equivalente. No hay ningún componente compatible, oficial ni de otro tipo, que convierta una cuenta de Tuta en un punto de acceso IMAP en ninguna máquina, así que el truco de localhost que con Proton al menos funciona para un cliente de escritorio aquí no existe."
+      "p": "Proton resolvió el mismo problema de cifrado con una aplicación de escritorio local que descifra en tu máquina y sirve IMAP a un cliente en el mismo ordenador. Tuta no ofrece nada equivalente. No hay ningún componente compatible, oficial ni de otro tipo, que convierta una cuenta de Tuta en un endpoint IMAP en ninguna máquina, así que el truco de localhost que con Proton al menos funciona para un cliente de escritorio aquí no existe."
     },
     {
       "h": "Los directorios de ajustes publican nombres de servidor de Tuta que no existen",
@@ -82,7 +82,7 @@
     },
     {
       "q": "¿Hay un bridge de Tuta como Proton Mail Bridge?",
-      "a": "No. Proton ofrece una aplicación de escritorio que descifra en local y proporciona IMAP a los clientes del mismo ordenador. Tuta no tiene ningún componente así en ningún plan, así que tampoco hay un punto de acceso local. Las herramientas de terceros que dicen hacer de bridge con Tuta no se basan en ninguna interfaz compatible, y darle a una tu contraseña de Tuta le da tu buzón."
+      "a": "No. Proton ofrece una aplicación de escritorio que descifra en local y proporciona IMAP a los clientes del mismo ordenador. Tuta no tiene ningún componente así en ningún plan, así que tampoco hay un endpoint local. Las herramientas de terceros que dicen hacer de bridge con Tuta no se basan en ninguna interfaz compatible, y darle a una tu contraseña de Tuta le da tu buzón."
     },
     {
       "q": "¿Puedo exportar mi correo de Tuta?",

@@ -57,7 +57,7 @@
     },
     {
       "h": "WEB.DE vuelve a desactivar el acceso si nada se conecta durante un tiempo",
-      "p": "Esto pilla a la gente meses después. WEB.DE documenta que, si no usas el programa o la aplicación durante un periodo prolongado, la recuperación por POP3 e IMAP se desactiva de nuevo automáticamente. Así que una conexión que funcionó perfectamente todo el año puede empezar a fallar tras una temporada sin uso, sin ninguna notificación ni cambio por tu parte. Si una bandeja que antes funcionaba deja de hacerlo de repente, revisa el control deslizante antes de tocar la contraseña. Un agente que lee el buzón con regularidad mantiene el acceso activo por sí solo."
+      "p": "Esto sorprende a la gente meses después. WEB.DE documenta que, si no usas el programa o la aplicación durante un periodo prolongado, la recuperación por POP3 e IMAP se desactiva de nuevo automáticamente. Así que una conexión que funcionó perfectamente todo el año puede empezar a fallar tras una temporada sin uso, sin ninguna notificación ni cambio por tu parte. Si una bandeja que antes funcionaba deja de hacerlo de repente, revisa el control deslizante antes de tocar la contraseña. Un agente que lee el buzón con regularidad mantiene el acceso activo por sí solo."
     },
     {
       "h": "Activar la autenticación de dos factores retira tu contraseña para los clientes de correo",

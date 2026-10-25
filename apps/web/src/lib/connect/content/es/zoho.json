@@ -54,7 +54,7 @@
     },
     {
       "h": "IMAP está desactivado hasta que alguien lo active, buzón por buzón",
-      "p": "Zoho entrega los buzones con el acceso IMAP deshabilitado. Actívalo en Settings, luego Mail Accounts, luego haz clic en la dirección, marca <b>IMAP Access</b> y guarda. Hay dos detalles que pillan a la gente. Se configura en cada buzón por separado, así que activarlo para tu propia dirección no hace nada por la de un compañero. Y mientras no esté activado, Zoho rechaza el inicio de sesión de plano, con un fallo que no se distingue de una contraseña incorrecta."
+      "p": "Zoho entrega los buzones con el acceso IMAP deshabilitado. Actívalo en Settings, luego Mail Accounts, luego haz clic en la dirección, marca <b>IMAP Access</b> y guarda. Hay dos detalles que suelen pasar desapercibidos. Se configura en cada buzón por separado, así que activarlo para tu propia dirección no hace nada por la de un compañero. Y mientras no esté activado, Zoho rechaza el inicio de sesión de plano, con un fallo que no se distingue de una contraseña incorrecta."
     },
     {
       "h": "Las cuentas gratuitas y de pago de Zoho se documentan con nombres de servidor distintos",
@@ -68,7 +68,7 @@
   "limits": [
     "El servidor de envío de Zoho anuncia un tamaño máximo de mensaje de unos 31 MB, menos que la mayoría de los proveedores para particulares.",
     "IMAP hay que activarlo en cada buzón de Zoho desde los ajustes de ese mismo buzón. Nadie puede activarlo por ti desde fuera.",
-    "Las cuentas con autenticación de dos factores, inicio de sesión federado o SAML deben usar una contraseña específica de aplicación. La contraseña normal de la cuenta no autenticará."
+    "Las cuentas con autenticación de dos factores, inicio de sesión federado o SAML deben usar una contraseña específica de aplicación. La contraseña normal de la cuenta no servirá para autenticarse."
   ],
   "faq": [
     {

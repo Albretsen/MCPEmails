@@ -12,10 +12,10 @@ Este artículo recorre por qué esa última milla es engañosamente difícil, y 
 El correo parece un problema resuelto. No lo es, al menos no para un agente autónomo. Hay tres cosas que se interponen:
 
 1. **La autenticación depende del proveedor.** Gmail quiere una contraseña de aplicación y la Verificación en dos pasos. Outlook quiere identidad de Microsoft. Fastmail quiere una contraseña de aplicación. Cada uno tiene su propio ciclo de vida del token y sus propios modos de fallo.
-2. **Las credenciales son radiactivas.** No quieres una contraseña de buzón en una transcripción de chat, en una línea de log o en un almacén vectorial. Nunca.
+2. **Las credenciales son radiactivas.** No quieres una contraseña de buzón en una transcripción de chat, en una línea de registro o en un almacén vectorial. Nunca.
 3. **La "forma" del correo es caótica.** MIME, hilos, HTML frente a texto plano, adjuntos, carpetas que en realidad son etiquetas. Un agente necesita una interfaz limpia y predecible, no RFC 5322 en crudo.
 
-El arreglo ingenuo —darle al modelo una librería IMAP y tu contraseña— falla en los tres puntos a la vez.
+El arreglo ingenuo (darle al modelo una librería IMAP y tu contraseña) falla en los tres puntos a la vez.
 
 ## Qué cambia MCP en realidad
 
@@ -26,7 +26,8 @@ MCP es una forma estándar de exponer **herramientas** y **recursos** a un model
   "tools": [
     "inbox_list",
     "email_read",
-    "email_compose"
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
@@ -37,7 +38,7 @@ El agente nunca ve una contraseña. Ve verbos. Ese único cambio es lo que hace 
 
 ### Descubrir antes de actuar
 
-Una buena herramienta de correo es **sin estado desde el punto de vista del agente**. El agente no debería tener fijada a fuego el UUID de un buzón. En su lugar, llama primero a \`inbox_list\`, descubre qué hay disponible y luego actúa:
+Una buena herramienta de correo es **sin estado desde el punto de vista del agente**. El agente no debería fijar en el código el UUID de un buzón. En su lugar, llama primero a \`inbox_list\`, descubre qué hay disponible y luego actúa:
 
 - \`inbox_list\` → devuelve las cuentas conectadas y sus capacidades
 - \`email_read\` (acción \`list\`) → paginado, lo más reciente primero, por bandeja
@@ -55,14 +56,14 @@ Imagina que quieres que Claude clasifique tu bandeja de entrada por la mañana. 
 3. Para cualquier cosa que parezca urgente, llama a \`email_read\` (acción \`read\`) para obtener el cuerpo completo.
 4. Redacta respuestas y llama a \`email_compose\` (acción \`reply\`), o simplemente resume y espera tu visto bueno.
 
-Ninguna contraseña cruzó el cable. Ningún código específico de proveedor vivió en tu prompt. El agente razonó sobre verbos e hizo trabajo de verdad.
+Ninguna contraseña viajó por la red. Ningún código específico de proveedor vivió en tu prompt. El agente razonó sobre verbos e hizo trabajo de verdad.
 
 ## La seguridad es la funcionalidad
 
-La razón por la que esto funciona es que las partes aburridas se gestionan donde corresponde —en el servidor, no en el modelo:
+La razón por la que esto funciona es que las partes aburridas se gestionan donde corresponde: en el servidor, no en el modelo.
 
 - **Los tokens de OAuth se cifran en reposo** y nunca se devuelven al cliente.
-- **Los scopes son mínimos**: leer y enviar, nada más.
+- **Los permisos (scopes) son mínimos**: leer y enviar, nada más.
 - **El agente se autentica ante el servidor**, el servidor se autentica ante el proveedor. Dos saltos, un solo almacén de secretos.
 
 Si recuerdas una sola cosa de este artículo, que sea esta: *el modelo debe tener capacidades, nunca credenciales.*

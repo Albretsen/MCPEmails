@@ -31,7 +31,7 @@
   },
   "method": {
     "title": "Cómo se conecta GMX: IMAP y la contraseña de tu cuenta",
-    "body": "GMX se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP está desactivado por defecto</b>. En una cuenta alemana de GMX, actívalo en <b>E-Mail-Einstellungen</b> (ajustes de correo), <b>E-Mail empfangen</b>, <b>POP3/IMAP</b>; en gmx.com es la pestaña Email, Settings, POP3 & IMAP. Después conecta con tu dirección de GMX y tu contraseña, o con un App-Passwort si tienes activada la autenticación en dos factores. Las cuentas alemanas usan los servidores .net, <code>imap.gmx.net</code> y <code>mail.gmx.net</code>. La ayuda internacional de GMX indica <code>imap.gmx.com</code> y <code>mail.gmx.com</code> para gmx.com."
+    "body": "GMX se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP está desactivado por defecto</b>. En una cuenta alemana de GMX, actívalo en <b>E-Mail-Einstellungen</b> (ajustes de correo), <b>E-Mail empfangen</b>, <b>POP3/IMAP</b>; en gmx.com es la pestaña Email, Settings, POP3 & IMAP. Después conecta con tu dirección de GMX y tu contraseña, o con un App-Passwort si tienes activada la autenticación de dos factores. Las cuentas alemanas usan los servidores .net, <code>imap.gmx.net</code> y <code>mail.gmx.net</code>. La ayuda internacional de GMX indica <code>imap.gmx.com</code> y <code>mail.gmx.com</code> para gmx.com."
   },
   "setup": [
     {
@@ -65,8 +65,8 @@
       "p": "El servidor de envío de GMX Mail anuncia un tamaño máximo de mensaje de unos 135 MB, con mucha diferencia el mayor de todos los proveedores de este sitio. Es un límite de lo que GMX acepta de ti, no una promesa de entrega. El servidor de destino aplica su propio límite, y la mayoría están entre 10 MB y 50 MB, así que un adjunto grande que GMX acepta sin problema puede rebotar minutos después desde el otro extremo. Si un agente va a enviar algo grande, comparte un enlace en su lugar."
     },
     {
-      "h": "Con la autenticación en dos factores, los programas de correo necesitan un App-Passwort",
-      "p": "GMX coloca su contraseña de aplicación dentro de la autenticación en dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Créala en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCPEmails, y cópiala enseguida, porque GMX la muestra una sola vez. Si la pierdes, bórrala y crea otra. El IMAP de GMX solo ofrece los mecanismos <code>PLAIN</code> y <code>LOGIN</code>, sin OAuth, así que la credencial siempre es una contraseña, de un tipo o de otro."
+      "h": "Con la autenticación de dos factores, los programas de correo necesitan un App-Passwort",
+      "p": "GMX coloca su contraseña de aplicación dentro de la autenticación de dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Créala en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCPEmails, y cópiala enseguida, porque GMX la muestra una sola vez. Si la pierdes, bórrala y crea otra. El IMAP de GMX solo ofrece los mecanismos <code>PLAIN</code> y <code>LOGIN</code>, sin OAuth, así que la credencial siempre es una contraseña, de un tipo o de otro."
     },
     {
       "h": "Un programa de correo no puede decirte por qué GMX lo rechazó, pero el navegador sí",
@@ -96,7 +96,7 @@
     },
     {
       "q": "¿GMX necesita una contraseña de aplicación?",
-      "a": "Solo si tienes activada la autenticación en dos factores. En ese caso crea un App-Passwort en un navegador, en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCPEmails en lugar de tu contraseña de GMX. GMX lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
+      "a": "Solo si tienes activada la autenticación de dos factores. En ese caso crea un App-Passwort en un navegador, en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCPEmails en lugar de tu contraseña de GMX. GMX lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
     },
     {
       "q": "¿Se almacena mi correo de GMX en sus servidores?",

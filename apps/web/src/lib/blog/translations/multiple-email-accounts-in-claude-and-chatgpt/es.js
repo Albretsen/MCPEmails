@@ -25,7 +25,7 @@ MCPEmails es un servidor MCP alojado. Conectas cada buzón una vez y tu cliente 
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **Cualquier combinación de proveedores.** Gmail y Google Workspace (contraseña de aplicación de Google), Outlook y Microsoft 365 (Iniciar sesión con Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón que hable IMAP y SMTP. Hay una página por proveedor en [connect](/connect), incluidas [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) y [Microsoft 365](/connect/office365).
+- **Cualquier combinación de proveedores.** Gmail y Google Workspace (contraseña de aplicación de Google), Outlook y Microsoft 365 (Iniciar sesión con Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón que hable IMAP y SMTP. Hay una página por proveedor en la sección [Conectar](/connect), incluidas [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) y [Microsoft 365](/connect/office365).
 - **Los mismos buzones en los dos asistentes.** Es un servidor MCP estándar, así que la misma conexión funciona en Claude y en ChatGPT, y también en Cursor, VS Code y otros clientes MCP. Añade un buzón una vez y todos los clientes lo ven.
 - **El agente sabe qué buzón es cuál.** Llama a \`inbox_list\` y obtiene todas las direcciones conectadas con su nombre visible. Todas las demás herramientas indican el buzón sobre el que actúan, así que basta con decir «en ventas@» con tus propias palabras.
 - **Las respuestas salen desde la dirección correcta.** Cada buzón envía a través de su propio proveedor o servidor SMTP, con su propio nombre de remitente y su propia firma. Una respuesta a un hilo de soporte@ sale desde soporte@.
@@ -34,7 +34,7 @@ El correo se obtiene en vivo en cada solicitud y no se almacena. La única excep
 
 ## Conecta los buzones
 
-En el panel de MCPEmails, abre **Inboxes**, luego **Connect Inbox**, una vez por buzón:
+En el panel de MCPEmails, abre **Bandejas de entrada** y luego **Conectar bandeja**, una vez por buzón:
 
 - **Buzón de empresa en su propio dominio.** Elige **IMAP** y escribe la dirección. Los proveedores habituales se reconocen a partir de la dirección, y un dominio de Google Workspace se reconoce por sus registros de correo, así que los ajustes se rellenan solos. Usa la contraseña o la contraseña de aplicación que pida tu proveedor.
 - **Gmail o Google Workspace.** Una contraseña de aplicación de Google por IMAP. Google solo la ofrece cuando la verificación en dos pasos está activada, y en Workspace tu administrador puede desactivar las contraseñas de aplicación y el IMAP.
@@ -74,11 +74,11 @@ Una llamada llega a un solo buzón, así que «busca en todos los buzones» es e
 
 ## Deja a una persona en el botón de enviar
 
-Activa **Revisar antes de enviar** (Review before sending) en cualquier buzón y cada envío, respuesta, reenvío, envío de borrador y envío programado desde él esperará tu aprobación en el panel. Se configura por buzón, así que la bandeja de facturas puede quedar retenida mientras la tuya envía libremente. Está incluido en todos los planes, también en el gratuito. Consulta [aprobación humana para los envíos de correo de un agente de IA](/blog/approve-ai-agent-email-sends).
+Activa **Revisión antes de enviar** en cualquier buzón y cada envío, respuesta, reenvío, envío de borrador y envío programado desde él esperará tu aprobación en el panel. Se configura por buzón, así que la bandeja de facturas puede quedar retenida mientras la tuya envía libremente. Está incluido en todos los planes, también en el plan Gratis. Consulta [aprobación humana para los envíos de correo de un agente de IA](/blog/approve-ai-agent-email-sends).
 
 ## Cuántos buzones conecta cada plan
 
-- **Free:** un buzón.
+- **Gratis:** un buzón.
 - **Personal:** tres buzones.
 - **Pro:** hasta 10 buzones, con un solo inicio de sesión.
 - **Business:** 10 buzones incluidos y $3 al mes por cada uno extra, y para cuando una segunda persona necesita su propio inicio de sesión.
@@ -97,7 +97,7 @@ Su propio plugin de Gmail ya admite varias cuentas de Google. Para los buzones q
 No. Una sola URL de conector cubre todos los buzones de tu espacio de trabajo de MCPEmails, y la misma URL funciona en Claude, ChatGPT y otros clientes MCP.
 
 **¿Saldrá la respuesta desde la dirección correcta?**
-Sí. Cada buzón envía a través de su propio proveedor o servidor de correo, con su propio nombre visible y su propia firma. Para enviar desde otra dirección en un buzón IMAP, añádela en los ajustes de ese buzón en el panel y verifícala con el código que se envía a esa dirección. Outlook envía desde la dirección conectada, y una dirección From sin verificar se rechaza.
+Sí. Cada buzón envía a través de su propio proveedor o servidor de correo, con su propio nombre visible y su propia firma. Para enviar desde otra dirección en un buzón IMAP, añádela en los ajustes de ese buzón en el panel y verifícala con el código que se envía a esa dirección. Outlook envía desde la dirección conectada, y se rechaza cualquier dirección de remitente (From) que no esté verificada.
 
 **¿Se almacena el correo de todas esas cuentas?**
 No. El contenido de los mensajes se obtiene en vivo de tu proveedor en cada solicitud y se descarta. Lo que se conserva es la credencial cifrada de cada buzón. Consulta [seguridad](/security).

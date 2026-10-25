@@ -85,7 +85,7 @@
     },
     {
       "q": "¿Por qué el correo de SiteGround muestra un aviso de SSL?",
-      "a": "Porque el certificado de correo de SiteGround está emitido para sgcpanel.com y no para tu dominio, así que mail.yourdomain.com no supera la validación del nombre sobre TLS. Sustituye el nombre del servidor por el nombre de servidor seguro de tu cuenta, que tiene un aspecto como secure164.sgcpanel.com, y el aviso desaparece sin añadir ninguna excepción."
+      "a": "Porque el certificado de correo de SiteGround está emitido para sgcpanel.com y no para tu dominio, así que mail.yourdomain.com no supera la validación del nombre sobre TLS. Sustituye el nombre del servidor por el nombre de servidor seguro de tu cuenta, del tipo secure164.sgcpanel.com, y el aviso desaparece sin añadir ninguna excepción."
     },
     {
       "q": "¿Se almacena mi correo de SiteGround en sus servidores?",

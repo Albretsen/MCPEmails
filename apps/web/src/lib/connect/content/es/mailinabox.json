@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "fail2ban te bloqueará por probar una contraseña incorrecta",
-      "p": "Mail-in-a-Box viene con fail2ban activado y vigilando los servicios de correo, una de las razones por las que es seguro ponerlo en internet. También significa que guardar una conexión dos o tres veces con una errata en la contraseña hace que se bloquee la dirección que se conecta, y todos los intentos posteriores caducan o se rechazan en lugar de devolver un error de autenticación. El síntoma parece una caída del servidor. Acierta primero con la contraseña y, si ya lo has activado, levanta el bloqueo en la box antes de volver a intentarlo."
+      "p": "Mail-in-a-Box viene con fail2ban activado y vigilando los servicios de correo, una de las razones por las que es seguro ponerlo en internet. También significa que guardar una conexión dos o tres veces con una errata en la contraseña hace que se bloquee la dirección que se conecta, y todos los intentos posteriores caducan o se rechazan en lugar de devolver un error de autenticación. El síntoma parece una caída del servidor. Acierta primero con la contraseña y, si el bloqueo ya ha saltado, levántalo en la box antes de volver a intentarlo."
     },
     {
       "h": "Aquí el envío va por el 465, y el 587 no está en la lista de puertos documentada",
@@ -63,7 +63,7 @@
   ],
   "limits": [
     "Tu box tiene que aceptar conexiones entrantes en el 993 desde fuera para que un servidor MCP alojado pueda llegar a ella. Un Mail-in-a-Box en una conexión doméstica detrás de NAT, o uno restringido por un grupo de seguridad en la nube a tu propia dirección, no se puede conectar. MCPEmails se puede alojar por tu cuenta si prefieres mantener la sesión IMAP dentro de tu propia red.",
-    "Mail-in-a-Box espera controlar el DNS y el TLS del nombre de la box, así que esto funciona mejor con la instalación estándar sin modificar. Una box muy personalizada puede no presentar el certificado que cree el panel de control."
+    "Mail-in-a-Box espera controlar el DNS y el TLS del nombre de la box, así que esto funciona mejor con la instalación estándar sin modificar. Una box muy personalizada puede no presentar el certificado que el panel de control cree que presenta."
   ],
   "faq": [
     {

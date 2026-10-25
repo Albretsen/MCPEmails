@@ -29,7 +29,7 @@
   },
   "method": {
     "title": "Cómo se conecta T-Online: IMAP y una segunda contraseña aparte",
-    "body": "Telekom documenta los mismos servidores para todas las direcciones @t-online.de y @magenta.de: IMAP en <code>secureimap.t-online.de</code>, puerto 993 con SSL, y SMTP en <code>securesmtp.t-online.de</code>, puerto 465 o 587. Ambos nombres están delante de un proxy IMAP y no de un servidor de buzones con el que hables directamente, lo que explica varias de las peculiaridades de abajo. Lo que casi todo el mundo hace mal es la credencial. Telekom mantiene dos contraseñas en una misma cuenta: la del <b>Telekom Login</b>, que se usa para el E-Mail Center, el Kundencenter y la app MeinMagenta, y una segunda <b>Passwort für E-Mail-Programme</b>, que según Telekom necesitas en cuanto lees tu correo en un programa como Outlook o Thunderbird en lugar del E-Mail Center. Solo la segunda autentica contra <code>secureimap.t-online.de</code>, y Telekom recomienda que las dos sean distintas."
+    "body": "Telekom documenta los mismos servidores para todas las direcciones @t-online.de y @magenta.de: IMAP en <code>secureimap.t-online.de</code>, puerto 993 con SSL, y SMTP en <code>securesmtp.t-online.de</code>, puerto 465 o 587. Ambos nombres están delante de un proxy IMAP y no de un servidor de buzones con el que hables directamente, lo que explica varias de las peculiaridades de abajo. Lo que casi todo el mundo hace mal es la credencial. Telekom mantiene dos contraseñas en una misma cuenta: la del <b>Telekom Login</b>, que se usa para el E-Mail Center, el Kundencenter y la app MeinMagenta, y un segundo <b>Passwort für E-Mail-Programme</b>, que según Telekom necesitas en cuanto lees tu correo en un programa como Outlook o Thunderbird en lugar del E-Mail Center. Solo el segundo autentica contra <code>secureimap.t-online.de</code>, y Telekom recomienda que las dos sean distintas."
   },
   "setup": [
     {
@@ -52,7 +52,7 @@
   "gotchas": [
     {
       "h": "La contraseña del Telekom Login se rechaza, y es a propósito",
-      "p": "Es el fallo de conexión con T-Online más habitual con diferencia, y produce un error de autenticación corriente sin nada que explique el motivo. Telekom divide la cuenta en una contraseña de inicio de sesión para telekom.de y el Kundencenter, y un <b>Passwort für E-Mail-Programme</b> aparte para IMAP, POP3 y SMTP. El servidor de correo solo acepta la segunda. Telekom aconseja expresamente que las dos sean distintas, así que ponerles la misma cadena tampoco es la solución prevista; crea la contraseña para programas de correo y úsala tanto en la parte de entrada como en la de salida de la conexión."
+      "p": "Es el fallo de conexión con T-Online más habitual con diferencia, y produce un error de autenticación corriente sin nada que explique el motivo. Telekom divide la cuenta en una contraseña de inicio de sesión para telekom.de y el Kundencenter, y un <b>Passwort für E-Mail-Programme</b> aparte para IMAP, POP3 y SMTP. El servidor de correo solo acepta este último. Telekom aconseja expresamente que las dos sean distintas, así que ponerles la misma cadena tampoco es la solución prevista; crea la contraseña para programas de correo y úsala tanto en la parte de entrada como en la de salida de la conexión."
     },
     {
       "h": "El proxy IMAP no anuncia ningún mecanismo AUTH antes del inicio de sesión",
@@ -82,11 +82,11 @@
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de T-Online?",
-      "a": "El IMAP es secureimap.t-online.de en el puerto 993 con SSL. El SMTP es securesmtp.t-online.de en el puerto 465 o 587, también con SSL; MCPEmails usa el 465. Inicia sesión con tu dirección completa y la Passwort für E-Mail-Programme. Telekom indica los mismos servidores para las direcciones @t-online.de y @magenta.de, y ambos servidores se confirmaron con una conexión TLS real."
+      "a": "El IMAP es secureimap.t-online.de en el puerto 993 con SSL. El SMTP es securesmtp.t-online.de en el puerto 465 o 587, también con SSL; MCPEmails usa el 465. Inicia sesión con tu dirección completa y el Passwort für E-Mail-Programme. Telekom indica los mismos servidores para las direcciones @t-online.de y @magenta.de, y ambos servidores se confirmaron con una conexión TLS real."
     },
     {
       "q": "¿Por qué se rechaza mi contraseña de T-Online en un programa de correo?",
-      "a": "Casi siempre porque escribiste la contraseña del Telekom Login. Telekom emite una segunda credencial, la Passwort für E-Mail-Programme, y solo esa autentica contra los servidores de correo. Créala o restablécela en el E-Mail Center desde el engranaje, Alle Einstellungen anzeigen, Passwörter, o en el Kundencenter en Profil verwalten, Login-Daten, Weitere Passwörter."
+      "a": "Casi siempre porque escribiste la contraseña del Telekom Login. Telekom emite una segunda credencial, el Passwort für E-Mail-Programme, y solo ese autentica contra los servidores de correo. Créalo o restablécelo en el E-Mail Center desde el engranaje, Alle Einstellungen anzeigen, Passwörter, o en el Kundencenter en Profil verwalten, Login-Daten, Weitere Passwörter."
     },
     {
       "q": "¿Dónde creo el Passwort für E-Mail-Programme?",
@@ -94,7 +94,7 @@
     },
     {
       "q": "¿Funciona con direcciones magenta.de?",
-      "a": "Sí. Telekom documenta los mismos servidores para las direcciones @magenta.de y @t-online.de: secureimap.t-online.de para IMAP y securesmtp.t-online.de para SMTP, con la Passwort für E-Mail-Programme como contraseña y la dirección completa como usuario."
+      "a": "Sí. Telekom documenta los mismos servidores para las direcciones @magenta.de y @t-online.de: secureimap.t-online.de para IMAP y securesmtp.t-online.de para SMTP, con el Passwort für E-Mail-Programme como contraseña y la dirección completa como usuario."
     },
     {
       "q": "¿Se almacena mi correo de T-Online en sus servidores?",

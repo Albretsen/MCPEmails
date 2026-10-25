@@ -19,7 +19,7 @@
     "eyebrow": "Gmail + IA",
     "titleLine1": "El servidor MCP de Gmail",
     "titleLine2": "para Claude, Cursor y ChatGPT",
-    "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña de aplicación de Google, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja de Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña de aplicación de Google, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Se conecta con una contraseña de aplicación de Google",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -46,15 +46,15 @@
   "gotchas": [
     {
       "h": "Google publica su propio servidor MCP de Gmail, y solo para Gmail es el camino más corto",
-      "p": "Google anunció soporte oficial de MCP para sus servicios, incluido un servidor MCP de Workspace que cubre Gmail junto con Drive, Calendar y Chat. No vamos a fingir lo contrario. Si Gmail es el único buzón al que quieres que acceda un asistente, y tu cliente se comunica con el servidor de Google, úsalo. La razón para apuntar MCPEmails a Gmail es que el mismo servidor también tiene tu buzón de iCloud, Fastmail, Zoho, Yahoo o IMAP de empresa, los expone todos a través de <b>una sola</b> URL MCP y se comporta igual en Claude, Cursor y ChatGPT. Un conector por proveedor, cada uno con su propia autenticación y sus propios nombres de herramienta, es justo lo que esto evita."
+      "p": "Google anunció soporte oficial de MCP para sus servicios, incluido un servidor MCP de Workspace que cubre Gmail junto con Drive, Calendar y Chat. No vamos a fingir lo contrario. Si Gmail es el único buzón al que quieres que acceda un asistente, y tu cliente se comunica con el servidor de Google, úsalo. La razón para conectar Gmail a MCPEmails es que el mismo servidor también reúne tu buzón de iCloud, Fastmail, Zoho, Yahoo o IMAP de empresa, los expone todos a través de <b>una sola</b> URL MCP y se comporta igual en Claude, Cursor y ChatGPT. Un conector por proveedor, cada uno con su propia autenticación y sus propios nombres de herramienta, es justo lo que esto evita."
     },
     {
       "h": "Enviar desde otra dirección requiere una dirección de envío verificada",
-      "p": "Un buzón conectado con una contraseña de aplicación envía desde su propia dirección. Para que tu agente envíe desde un alias u otra dirección tuya, añádela en <b>Direcciones de envío</b> en los ajustes de la bandeja en MCPEmails. Enviamos a esa dirección un código de 6 dígitos, y queda disponible en cuanto introduces el código. Gmail también tiene que aceptar la dirección, así que configúrala antes en Gmail como dirección <b>Send mail as</b>. Una dirección From que no es la del propio buzón ni está verificada se rechaza, no se reescribe en silencio."
+      "p": "Un buzón conectado con una contraseña de aplicación envía desde su propia dirección. Para que tu agente envíe desde un alias u otra dirección tuya, añádela en <b>Direcciones de envío</b> en los ajustes de la bandeja en MCPEmails. Enviamos a esa dirección un código de 6 dígitos, y queda disponible en cuanto introduces el código. Gmail también tiene que aceptar la dirección, así que configúrala antes en Gmail, en <b>Enviar como</b>. Una dirección de remitente (From) que no es la del propio buzón ni está verificada se rechaza; no se reescribe en silencio."
     },
     {
       "h": "Gmail tiene etiquetas, no carpetas, así que mover no es mover",
-      "p": "Gmail guarda etiquetas, no carpetas. Por IMAP cada etiqueta aparece como una carpeta, así que un mensaje puede llevar varias etiquetas a la vez y aparecer en varias carpetas. Moverlo significa añadir una etiqueta y quitar otra, y archivar es simplemente quitar <code>INBOX</code>. Eliminar pone el mensaje en la Papelera de Gmail en lugar de borrarlo. Si le pides a un agente que archive correo en una carpeta que aún no existe, primero hay que crear la etiqueta, que después aparecerá en Gmail en todos tus dispositivos."
+      "p": "Gmail guarda etiquetas, no carpetas. Por IMAP cada etiqueta aparece como una carpeta, así que un mensaje puede llevar varias etiquetas a la vez y aparecer en varias carpetas. Moverlo significa añadir una etiqueta y quitar otra, y archivar es simplemente quitar <code>INBOX</code>. Eliminar pone el mensaje en la Papelera de Gmail en lugar de borrarlo. Si le pides a un agente que guarde correo en una carpeta que aún no existe, primero hay que crear la etiqueta, que después aparecerá en Gmail en todos tus dispositivos."
     },
     {
       "h": "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación",
@@ -63,13 +63,13 @@
   ],
   "limits": [
     "MCPEmails solo llega al correo: una contraseña de aplicación se usa únicamente para IMAP y SMTP. Drive, Calendar, Chat y Docs no son accesibles.",
-    "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio desde la Admin console. Solo un administrador puede cambiar esa decisión.",
+    "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio desde la consola de administración. Solo un administrador puede cambiar esa decisión.",
     "Eliminar mueve un mensaje a la Papelera de Gmail. Un borrado permanente sigue los ajustes de IMAP de Gmail: por defecto solo quita la etiqueta desde la que se eliminó el mensaje, y eliminarlo desde la Papelera lo borra para siempre."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Gmail?",
-      "a": "Sí, en cuanto hay algo entre ambos que habla Gmail en nombre de Claude. MCPEmails es una de esas cosas: creas una contraseña de aplicación de Google, pegas una URL MCP y Claude puede leer, buscar, enviar, responder, reenviar y programar correo. Google también publica un servidor MCP oficial de Workspace que cubre Gmail. La diferencia práctica es que MCPEmails no es solo para Google, así que la misma URL sirve también para tus otros buzones."
+      "a": "Sí, siempre que haya algo entre ambos que hable con Gmail en nombre de Claude. MCPEmails cumple ese papel: creas una contraseña de aplicación de Google, pegas una URL MCP y Claude puede leer, buscar, enviar, responder, reenviar y programar correo. Google también publica un servidor MCP oficial de Workspace que cubre Gmail. La diferencia práctica es que MCPEmails no es solo para Google, así que la misma URL sirve también para tus otros buzones."
     },
     {
       "q": "¿Existe un servidor MCP oficial de Gmail de Google?",
@@ -93,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Gmail",
+    "title": "Dale a tu IA una bandeja de Gmail",
     "sub": "Conecta Gmail en minutos. Una bandeja gratis para siempre, sin tarjeta."
   },
   "guide": {

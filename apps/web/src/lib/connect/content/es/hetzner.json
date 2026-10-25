@@ -54,7 +54,7 @@
   "gotchas": [
     {
       "h": "El nombre de servidor no se construye a partir de tu dominio",
-      "p": "El fallo de configuración más común en Hetzner es escribir <code>mail.your-domain.de</code> sustituyéndolo por tu dominio real, porque así funcionan casi todos los demás proveedores. Hetzner no. La cadena <code>mail.your-server.de</code> es el nombre de servidor real, compartido por todos los clientes de hosting, y escribir tu propio dominio en su lugar produce un fallo de DNS o una conexión a algún servidor sin relación que responde a ese nombre. La documentación de Hetzner escribe el nombre literal, y la gente lo lee como un marcador de posición."
+      "p": "El fallo de configuración más común en Hetzner es escribir <code>mail.your-domain.de</code> poniendo tu dominio real en lugar de your-domain, porque así funcionan casi todos los demás proveedores. Hetzner no. La cadena <code>mail.your-server.de</code> es el nombre de servidor real, compartido por todos los clientes de hosting, y escribir tu propio dominio en su lugar produce un fallo de DNS o una conexión a algún servidor sin relación que responde a ese nombre. La documentación de Hetzner escribe el nombre literal, y la gente lo lee como un marcador de posición."
     },
     {
       "h": "Un servidor Hetzner Cloud o dedicado no es esto",

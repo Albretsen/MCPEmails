@@ -15,7 +15,7 @@ La conexión consta de tres partes:
 
 1. **Tu proveedor de correo** ofrece IMAP para leer y organizar mensajes, además de SMTP para enviarlos.
 2. **MCPEmails** guarda las credenciales de correo cifradas, se comunica con esos servidores y convierte sus respuestas en herramientas de correo predecibles.
-3. **Claude** se conecta al endpoint MCP y solo invoca las herramientas permitidas por los ámbitos que apruebes.
+3. **Claude** se conecta al endpoint MCP y solo invoca las herramientas permitidas por los permisos que apruebes.
 
 Por tanto, Claude nunca necesita una biblioteca IMAP, una configuración SMTP ni una contraseña en el prompt. Una vez conectado, puede usar \`inbox_list\` para encontrar el buzón, \`email_read\` para listar, leer, buscar o recuperar archivos adjuntos, \`email_compose\` para enviar, responder y reenviar, y \`email_organize\` para mover, copiar, marcar o archivar mensajes. Otras herramientas se ocupan de carpetas, borradores, programación, contactos y eliminación; consulta la lista completa en la [referencia de herramientas](/docs#tools).
 
@@ -33,11 +33,11 @@ No deduzcas los nombres de servidor a partir del dominio si el proveedor publica
 
 Usa una **contraseña de aplicación** siempre que el proveedor la admita. Es independiente de la contraseña principal de la cuenta y puede revocarse sin cambiar la contraseña que utilizas para iniciar sesión. Los proveedores suelen exigir autenticación de dos factores antes de permitir su creación. Algunos también requieren activar primero el acceso IMAP en los ajustes del correo.
 
-MCPEmails incluye configuraciones predefinidas para [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) y [Yandex](/connect/yandex), además de un flujo específico de contraseña de aplicación para [Fastmail](/connect/fastmail). Estas opciones rellenan automáticamente los servidores y puertos conocidos. Elige **Generic IMAP** para otro proveedor o tu propio servidor de correo e introduce tú mismo los valores. Consulta la [página de configuración de IMAP genérico](/connect/imap).
+MCPEmails incluye configuraciones predefinidas para [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) y [Yandex](/connect/yandex), además de un flujo específico de contraseña de aplicación para [Fastmail](/connect/fastmail). Estas opciones rellenan automáticamente los servidores y puertos conocidos. Elige **IMAP genérico** para otro proveedor o tu propio servidor de correo e introduce tú mismo los valores. Consulta la [página de configuración de IMAP genérico](/connect/imap).
 
 ## Paso 1: conecta el buzón IMAP/SMTP
 
-1. [Crea una cuenta de MCPEmails o inicia sesión](/signup) y abre **Dashboard → Inboxes → Connect Inbox**.
+1. [Crea una cuenta de MCPEmails o inicia sesión](/signup) y abre **Panel → Bandejas de entrada → Conectar bandeja**.
 2. Selecciona el proveedor por nombre cuando esté disponible. En caso contrario, elige **IMAP / SMTP**.
 3. Introduce la dirección de correo y la contraseña de aplicación. Para el conector genérico, añade también el servidor y puerto IMAP, el servidor y puerto SMTP y, si tu proveedor te lo asignó, un nombre de usuario distinto.
 4. Guarda la conexión. MCPEmails valida las credenciales con el servidor IMAP antes de almacenar la bandeja, por lo que un inicio de sesión rechazado o un endpoint TLS inaccesible falla aquí en vez de aparecer más tarde en Claude.
@@ -52,12 +52,12 @@ Después de conectar el buzón, dirige Claude a MCPEmails:
 2. Elige **Add connector** e introduce \`https://www.mcpemails.com/api/mcp\`.
 3. Selecciona **Connect**, inicia sesión en MCPEmails y aprueba solo los permisos que necesite el flujo de trabajo.
 
-Por ejemplo, un resumidor necesita acceso de lectura y búsqueda, pero no de envío o eliminación. Un flujo de respuestas necesita acceso de envío. La gestión de carpetas y la eliminación permanente tienen sus propios ámbitos, por lo que puedes mantener deshabilitadas las acciones destructivas hasta que sean realmente útiles. Consulta el [tutorial para conectar Claude al correo](/blog/connect-claude-to-email) para ver el proceso del lado del cliente con más detalle.
+Por ejemplo, un resumidor necesita acceso de lectura y búsqueda, pero no de envío o eliminación. Un flujo de respuestas necesita acceso de envío. La gestión de carpetas y la eliminación permanente tienen sus propios permisos, por lo que puedes mantener deshabilitadas las acciones destructivas hasta que sean realmente útiles. Consulta el [tutorial para conectar Claude al correo](/blog/connect-claude-to-email) para ver el proceso del lado del cliente con más detalle.
 
 Ejecuta después una pequeña prueba de funcionamiento:
 
 \`\`\`
-Use inbox_list to find my IMAP inbox. List my five newest unread messages and summarize them. Do not send, move, or delete anything.
+Usa inbox_list para encontrar mi bandeja IMAP. Lista mis cinco mensajes no leídos más recientes y resúmelos. No envíes, muevas ni elimines nada.
 \`\`\`
 
 Empezar con \`inbox_list\` permite a Claude obtener el \`inbox_id\` correcto en lugar de depender de un UUID copiado.
@@ -98,11 +98,11 @@ Comprueba la ortografía del servidor y usa los puertos seguros documentados por
 
 ### Claude puede leer, pero no enviar
 
-Los ajustes IMAP funcionan, pero SMTP es independiente. Revisa el servidor y puerto SMTP, confirma que las credenciales tengan acceso SMTP o «mail» y verifica que el proveedor permita el envío autenticado desde la dirección From. Por ejemplo, las contraseñas de aplicación de Fastmail deben crearse con acceso **Mail (IMAP/SMTP)**, no con acceso de solo lectura.
+Los ajustes IMAP funcionan, pero SMTP es independiente. Revisa el servidor y puerto SMTP, confirma que las credenciales tengan acceso SMTP o «mail» y verifica que el proveedor permita el envío autenticado desde la dirección del remitente (From). Por ejemplo, las contraseñas de aplicación de Fastmail deben crearse con acceso **Mail (IMAP/SMTP)**, no con acceso de solo lectura.
 
 ### Claude no encuentra el buzón
 
-Pide a Claude que vuelva a llamar a \`inbox_list\`. Si la bandeja no aparece, revisa su estado en el panel de MCPEmails y vuelve a conectarla si la contraseña de aplicación fue revocada o cambiada. Si aparece pero se deniega una acción, vuelve a conectar el conector de Claude o actualiza la clave de API con el ámbito necesario.
+Pide a Claude que vuelva a llamar a \`inbox_list\`. Si la bandeja no aparece, revisa su estado en el panel de MCPEmails y vuelve a conectarla si la contraseña de aplicación fue revocada o cambiada. Si aparece pero se deniega una acción, vuelve a conectar el conector de Claude o actualiza la clave de API con el permiso necesario.
 
 ### Los resultados de búsqueda son más limitados de lo esperado
 
@@ -112,11 +112,11 @@ Empieza con campos estructurados como \`from\`, \`subject\`, \`text\`, \`since\`
 
 MCPEmails almacena el token OAuth o la contraseña de aplicación IMAP necesarios para futuras llamadas, cifrados en reposo con AES-256-GCM. El contenido normal del buzón se obtiene en directo cuando se ejecuta una herramienta y no persiste entre llamadas. El tráfico usa TLS, y puedes revocar una contraseña de aplicación en el proveedor o desconectar la bandeja desde el panel.
 
-Esta separación clara es el principal motivo para usar un puente MCP en vez de pegar credenciales de correo en un chat o configuración local: Claude recibe capacidades de correo con ámbitos limitados, no las llaves del buzón. Para conocer los detalles de almacenamiento y del modelo de amenazas, consulta [por qué importa que «el correo nunca se almacene»](/blog/why-email-never-stored-matters) y el [resumen de seguridad](/security).
+Esta separación clara es el principal motivo para usar un puente MCP en vez de pegar credenciales de correo en un chat o configuración local: Claude recibe capacidades de correo con permisos limitados, no las llaves del buzón. Para conocer los detalles de almacenamiento y del modelo de amenazas, consulta [por qué importa que «el correo nunca se almacene»](/blog/why-email-never-stored-matters) y el [resumen de seguridad](/security).
 
 ## En pocas palabras
 
-Un conector IMAP para Claude es una conexión de buzón IMAP/SMTP presentada a Claude como herramientas MCP. Reúne los ajustes seguros del servidor, crea una contraseña de aplicación revocable, conecta la bandeja en MCPEmails y añade \`https://www.mcpemails.com/api/mcp\` en Claude. Prueba primero el acceso de solo lectura, añade deliberadamente los ámbitos de envío o acciones destructivas y usa la lista de solución de problemas anterior si el proveedor rechaza la conexión.
+Un conector IMAP para Claude es una conexión de buzón IMAP/SMTP presentada a Claude como herramientas MCP. Reúne los ajustes seguros del servidor, crea una contraseña de aplicación revocable, conecta la bandeja en MCPEmails y añade \`https://www.mcpemails.com/api/mcp\` en Claude. Prueba primero el acceso de solo lectura, añade con criterio los permisos de envío o de acciones destructivas y usa la lista de solución de problemas anterior si el proveedor rechaza la conexión.
 
 ¿Quieres probarlo? [Conecta una bandeja IMAP](/signup) o usa la [guía de configuración específica por proveedor](/blog/connect-icloud-fastmail-imap-to-claude) para ver los detalles de iCloud y Fastmail.`,
 };

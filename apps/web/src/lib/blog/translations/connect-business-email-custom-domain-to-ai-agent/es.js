@@ -4,7 +4,7 @@ const translation = {
     'Guía de configuración para tu@tuempresa.com: averigua quién gestiona realmente tu correo, conecta Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS o cPanel, y corrige el nombre del remitente antes de que tu agente responda.',
   coverAlt:
     'Conecta un correo de empresa con dominio propio a un agente de IA con MCPEmails',
-  content: `> **¿Usas Microsoft 365?** Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo. Conéctalo con **Outlook** e Iniciar sesión con Microsoft en lugar de IMAP; puede que tu administrador de TI tenga que aprobar antes la aplicación una sola vez para toda la organización. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los pasos.
+  content: `> **¿Usas Microsoft 365?** Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo. Conéctalo con **Outlook** mediante Iniciar sesión con Microsoft en lugar de IMAP; puede que tu administrador de TI tenga que aprobar antes la aplicación una sola vez para toda la organización. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los pasos.
 
 Casi todas las guías para conectar el correo a un agente de IA dan por hecho que tu dirección acaba en gmail.com. El correo de empresa es distinto: el dominio no dice quién sirve el buzón, puede que otra persona controle si los clientes de correo pueden iniciar sesión, y lo que envía tu agente llega a tus clientes con tu nombre. Esta es la guía para tu@tuempresa.com.
 
@@ -38,7 +38,7 @@ Los registros de servicio indican host y puerto directamente, pero la mayoría d
 
 ## Paso 2: Sigue el camino de tu proveedor
 
-En el panel, abre **Inboxes → Connect Inbox** y elige la ruta que te corresponda.
+En el panel, abre **Bandejas de entrada → Conectar bandeja** y elige la ruta que te corresponda.
 
 ### Google Workspace
 
@@ -52,7 +52,7 @@ Tu host depende de dos cosas que Zoho nunca muestra juntas: en cuál de sus seis
 
 ### Fastmail y Migadu
 
-Fastmail usa una **contraseña de aplicación** con acceso a Mail (IMAP/SMTP), desde Configuración → Privacy & Security: \`imap.fastmail.com\` en el 993 y \`smtp.fastmail.com\` en el 465. Una guía que te diga que inicies sesión en Fastmail con OAuth está desactualizada.
+Fastmail usa una **contraseña de aplicación** con acceso a Mail (IMAP/SMTP), desde Settings → Privacy & Security: \`imap.fastmail.com\` en el 993 y \`smtp.fastmail.com\` en el 465. Una guía que te diga que inicies sesión en Fastmail con OAuth está desactualizada.
 
 Migadu usa la **contraseña del buzón**, no la de tu cuenta de Migadu, que gestiona dominios y facturación y no autentica correo alguno. Un alias no tiene contraseña, así que si la dirección que quieres es un alias, añade una **identidad** en el buzón y dale la suya. Los hosts son \`imap.migadu.com\` y \`smtp.migadu.com\`. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) detalla los pasos de la contraseña de aplicación.
 
@@ -79,7 +79,7 @@ Da a MCPEmails cuatro cosas por protocolo: host, puerto, modo de seguridad y tu 
 - IMAP **993** es TLS implícito; IMAP **143** es STARTTLS.
 - SMTP **465** es TLS implícito; SMTP **587** es STARTTLS, y el **25** es STARTTLS en los hosts pequeños que no ofrecen otra cosa.
 
-Confundirlos era la mayor causa de conexiones genéricas fallidas: STARTTLS en el 993 se queda esperando un saludo que un servidor solo TLS nunca envía, y TLS implícito en el 143 falla el handshake. Ya no tienes que acertar a la primera. Una conexión que nunca llegó a establecer una sesión utilizable se reintenta en los otros transportes estándar, hasta tres intentos por protocolo, empezando por el que pediste. Una contraseña rechazada por el servidor nunca se reintenta: reenviarla solo triplicaría el contador de inicios de sesión fallidos que tu proveedor usa para bloquear cuentas. Consulta también la [página de conexión IMAP genérica](/connect/imap).
+Confundirlos era la mayor causa de conexiones genéricas fallidas: STARTTLS en el 993 se queda esperando un saludo que un servidor solo TLS nunca envía, y TLS implícito en el 143 falla en el handshake. Ya no tienes que acertar a la primera. Una conexión que nunca llegó a establecer una sesión utilizable se reintenta en los otros transportes estándar, hasta tres intentos por protocolo, empezando por el que pediste. Una contraseña rechazada por el servidor nunca se reintenta: reenviarla solo triplicaría el contador de inicios de sesión fallidos que tu proveedor usa para bloquear cuentas. Consulta también la [página de conexión IMAP genérica](/connect/imap).
 
 El envío negocia una cosa más que nunca verás. Los hosts tipo Exchange anuncian **LOGIN** sin PLAIN, así que MCPEmails lee lo que ofrece el servidor, prueba PLAIN primero cuando están los dos y recurre a LOGIN. Un mecanismo rechazado nunca se comunica como contraseña incorrecta.
 
@@ -91,11 +91,11 @@ Defínelo por buzón en la página de detalle del buzón, donde una vista previa
 
 ## Resolución de problemas del correo de empresa
 
-- **Rechaza el inicio de sesión y la contraseña es correcta.** Comprueba primero el interruptor: acceso IMAP en Zoho, acceso de terceros en Titan, contraseñas de aplicación en Workspace, multifactor en Rackspace.
+- **Rechaza el inicio de sesión y la contraseña seguro que es correcta.** Comprueba primero el interruptor: acceso IMAP en Zoho, acceso de terceros en Titan, contraseñas de aplicación en Workspace, multifactor en Rackspace.
 - **Estás usando otra contraseña.** Migadu, IONOS, Rackspace y cPanel separan el acceso al panel de control de la contraseña del buzón, y las dos suelen ser direcciones de correo.
-- **Da tiempo de espera en lugar de fallar.** Eso es el host o el puerto, no la credencial. Vuelve a leer el nombre del host en el panel del proveedor.
+- **Se agota el tiempo de espera en lugar de fallar.** Eso es el host o el puerto, no la credencial. Vuelve a leer el nombre del host en el panel del proveedor.
 - **Lee el correo pero no envía.** La mitad saliente tiene su propio host, puerto y modo de seguridad, y algunos hosts no escuchan en el 465. Confirma que concediste \`send:email\`.
-- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft. Conéctalo con **Outlook** e Iniciar sesión con Microsoft, no por IMAP. Si Microsoft dice que hace falta la aprobación de un administrador, envía a tu administrador de TI el enlace que muestra el panel. La [página de conexión de Microsoft 365](/connect/office365) tiene los detalles.
+- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft. Conéctalo con **Outlook** mediante Iniciar sesión con Microsoft, no por IMAP. Si Microsoft dice que hace falta la aprobación de un administrador, envía a tu administrador de TI el enlace que muestra el panel. La [página de conexión de Microsoft 365](/connect/office365) tiene los detalles.
 
 La [matriz de proveedores](/docs/providers) y las [páginas de proveedor](/connect) recogen el detalle de cada uno.
 
@@ -113,8 +113,8 @@ Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como
 **¿MCPEmails almacena el correo de mi empresa?**
 No. El contenido de los mensajes se obtiene en tiempo real de tu proveedor en cada solicitud y se descarta. Solo se conserva la credencial cifrada del proveedor.
 
-**¿Basta un buzón en el plan gratuito?**
-Free conecta 1 buzón. Personal cuesta 9 $/mes por 3 buzones sin límite mensual de acciones, y Pro 15 $/mes por hasta 10. Consulta los [precios](/pricing).
+**¿Basta una bandeja en el plan gratuito?**
+El plan Gratis conecta 1 bandeja. Personal cuesta $9/mes por 3 bandejas sin límite mensual de acciones, y Pro $15/mes por hasta 10. Consulta los [precios](/pricing).
 
 ## Siguiente paso
 
