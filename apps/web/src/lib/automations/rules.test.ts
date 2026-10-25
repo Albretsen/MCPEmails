@@ -10,6 +10,7 @@ import {
   FILTER_STRING_FIELDS,
   providerSearchLabel,
   unrunnableFilterFields,
+  validateAction,
   validateFilter,
   validateFilterForProvider,
 } from './rules.ts';
@@ -55,6 +56,36 @@ test('the two copies of the automation filter field lists agree', () => {
       `${engineName} and its web counterpart have drifted; a rule saved here would fail every run`,
     );
   }
+});
+
+test('a move into trash is refused in any language, and junk is allowed', () => {
+  // The dashboard and REST write path refuse the same names the runner does,
+  // because both call the edge function's isForbiddenMoveDestination. Until
+  // 2026-10-20 this side held its own English-only copy, so "Papierkorb" saved.
+  for (const folder of [
+    'Trash', '[Gmail]/Trash', 'INBOX.Deleted Items', 'Papierkorb', 'INBOX/Корзина',
+    'Éléments supprimés', 'ごみ箱', 'INBOX.Gelöschte Elemente',
+  ]) {
+    const result = validateAction({ type: 'move', folder });
+    assert.equal(result.ok, false, `move to '${folder}' must be refused`);
+  }
+  for (const folder of [
+    'Archive', 'Archiv', 'Clients', 'Trashed drafts', 'Junk', 'Spam', 'Junk Email', 'Bulk',
+    'Correo no deseado',
+  ]) {
+    const result = validateAction({ type: 'move', folder });
+    assert.equal(result.ok, true, `move to '${folder}' must stay allowed`);
+  }
+});
+
+test('the web validator uses the engine\'s forbidden-destination check, not a copy', () => {
+  // A second list is how this side stayed English while the engine's folder
+  // resolver learned 42 languages. Keep it an import.
+  const source = fs.readFileSync(path.resolve(HERE, 'rules.ts'), 'utf8');
+  assert.match(source, /import \{ isForbiddenMoveDestination \} from '[./]+\/supabase\/functions\/mcp-server\/triage-forbidden-destinations\.ts'/);
+  assert.doesNotMatch(source, /FORBIDDEN_MOVE_DESTINATIONS = \[/, 'a local copy of the list is back');
+  const engine = fs.readFileSync(ENGINE_COPY, 'utf8');
+  assert.match(engine, /if \(isForbiddenMoveDestination\(folder\)\)/, 'the engine no longer refuses by the shared check');
 });
 
 test('a provider-native raw query cannot be saved as an automation filter', () => {

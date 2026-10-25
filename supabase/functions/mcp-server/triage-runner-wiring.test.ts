@@ -118,10 +118,20 @@ Deno.test("the move destination is resolved strictly first, so 'verified' means 
   const deps = triageDepsSource();
   assertStringIncludes(
     deps,
-    "{ strict: true, session: imap }",
+    "strict: true,\n          session: imap,",
     "the first resolve must be the one that only answers from the provider's listing",
   );
   assertStringIncludes(deps, "verified: true", "and a strict hit is what verified means");
+});
+
+Deno.test("the resolved destination carries the trash role its SPECIAL-USE flags give it", () => {
+  // A mailbox flagged \\Trash under a name no list knows ("Müll") passes
+  // validateTriageAction; this is the only place the run can still see it.
+  const deps = triageDepsSource();
+  assertStringIncludes(deps, "imapMailboxes: mailboxes", "the strict resolve reads the listing the flags come from");
+  assertStringIncludes(deps, "purgedRoleFromFlags(", "the flags of the resolved mailbox are checked");
+  assertStringIncludes(deps, "verified: true, forbiddenRole: forbiddenRole(id)", "on the verified branch");
+  assertStringIncludes(deps, "verified: false, forbiddenRole: forbiddenRole(id)", "and on the pass-through");
 });
 
 Deno.test("only a missing folder falls back to the pass-through, and it is marked unverified", () => {
