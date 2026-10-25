@@ -119,6 +119,40 @@ test('a clean paying referral credits both sides one list-price month and emails
   assert.deepEqual(w.db.table('product_funnel_events').map((e) => [e.stage, e.workspace_id]), [['referral_qualified', 'ws-friend']]);
 });
 
+test('a refund that voids the row while credits go out: this run claws back what it issued and emails nobody', async () => {
+  const w = world();
+  const api = w.stripe.api();
+  const create = api.customers.createBalanceTransaction.bind(api.customers);
+  let issued = 0;
+  api.customers.createBalanceTransaction = (async (...args: Parameters<typeof create>) => {
+    const txn = await create(...args);
+    issued += 1;
+    // The refund webhook lands after the first credit: it voids the row.
+    if (issued === 1) ref(w).status = 'voided';
+    return txn;
+  }) as typeof create;
+  const summary = await dispatchReferrals({
+    db: asClient(w.db),
+    stripe: api,
+    sendEmail: async (input) => {
+      w.outbox.push(input);
+      return { ok: true };
+    },
+    accountState: async () => 'live',
+    now: NOW,
+  });
+  assert.equal(summary.voided, 1);
+  assert.equal(summary.qualified, 0);
+  assert.equal(ref(w).status, 'voided', 'the webhook\'s void stands');
+  assert.equal(w.stripe.balances.get('cus_referrer'), 0);
+  assert.equal(w.stripe.balances.get('cus_friend'), 0);
+  assert.deepEqual(
+    w.db.table('referral_rewards').filter((r) => String(r.side).startsWith('clawback_')).map((r) => r.side).sort(),
+    ['clawback_friend', 'clawback_referrer'],
+  );
+  assert.equal(w.outbox.length, 0);
+});
+
 test('a second run issues nothing and sends nothing', async () => {
   const w = world();
   await run(w);
