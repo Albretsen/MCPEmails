@@ -18,7 +18,7 @@
   "hero": {
     "eyebrow": "mailcow + IA",
     "titleLine1": "Conecta mailcow a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine2": "y a Cursor, ChatGPT o cualquier cliente MCP",
     "lead": "mailcow ya te da Dovecot, Postfix y SOGo en una sola pila. Añade un servidor MCP encima y tu agente podrá leer, buscar, enviar, responder, programar y archivar correo en los buzones que alojas tú mismo.",
     "answer": "Claude no puede acceder por sí solo a un servidor mailcow. MCPEmails es un servidor MCP alojado que se conecta a tu instalación de mailcow por IMAP en el puerto 993, en el nombre de servidor que definiste como MAILCOW_HOSTNAME en mailcow.conf, con la contraseña del buzón de la lista Mailboxes, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor compartido: es tu servidor, tiene que estar publicado en internet y tienes que conectarte exactamente con el nombre de servidor del certificado que emitió acme-mailcow. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",

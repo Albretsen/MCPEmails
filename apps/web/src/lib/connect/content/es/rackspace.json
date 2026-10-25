@@ -89,7 +89,7 @@
     },
     {
       "q": "¿De verdad secure.emailsrvr.com es mi servidor?",
-      "a": "Sí. emailsrvr.com es el dominio de correo sin marca de Rackspace, y secure.emailsrvr.com es el punto de acceso TLS que usan todos los clientes de Rackspace Email. No hay un nombre de servidor por dominio que buscar, y sustituirlo por un nombre basado en tu propio dominio es la causa más habitual de que una configuración de Rackspace no conecte en absoluto."
+      "a": "Sí. emailsrvr.com es el dominio de correo sin marca de Rackspace, y secure.emailsrvr.com es el endpoint TLS que usan todos los clientes de Rackspace Email. No hay un nombre de servidor por dominio que buscar, y sustituirlo por un nombre basado en tu propio dominio es la causa más habitual de que una configuración de Rackspace no conecte en absoluto."
     },
     {
       "q": "¿Se almacena mi correo de Rackspace en sus servidores?",

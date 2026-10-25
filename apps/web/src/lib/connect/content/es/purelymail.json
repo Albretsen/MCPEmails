@@ -24,7 +24,7 @@
     "titleLine1": "Conecta Purelymail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja de Purelymail real. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña propia del buzón, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede llegar a Purelymail por su cuenta. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.purelymail.com, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Purelymail no tiene ningún interruptor de IMAP que buscar: te autenticas con la dirección de correo completa del buzón y la contraseña propia de ese buzón, o con una contraseña de aplicación si el buzón tiene activada la autenticación de dos factores. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a Purelymail por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.purelymail.com, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Purelymail no tiene ningún interruptor de IMAP que buscar: te autenticas con la dirección de correo completa del buzón y la contraseña propia de ese buzón, o con una contraseña de aplicación si el buzón tiene activada la autenticación de dos factores. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón o contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -54,7 +54,7 @@
   "gotchas": [
     {
       "h": "El inicio de sesión del portal no es el inicio de sesión de un buzón",
-      "p": "Purelymail separa a propósito la cuenta que inicia sesión en el portal de gestión y paga la factura de los usuarios que contienen el correo. IMAP y SMTP solo aceptan un usuario, y solo completo: <code>you@yourdomain.com</code>, nunca la parte local sola y nunca el nombre de cuenta que elegiste al registrarte. El servidor responde a un nombre de cuenta incorrecto y a una contraseña incorrecta con el mismo fallo de autenticación genérico, así que parece una errata y no un error de concepto."
+      "p": "Purelymail separa a propósito dos cosas: la cuenta que inicia sesión en el portal de gestión y paga la factura, y los usuarios que contienen el correo. IMAP y SMTP solo aceptan un usuario, y solo completo: <code>you@yourdomain.com</code>, nunca la parte local sola y nunca el nombre de cuenta que elegiste al registrarte. El servidor responde a un nombre de cuenta incorrecto y a una contraseña incorrecta con el mismo fallo de autenticación genérico, así que parece una errata y no un error de concepto."
     },
     {
       "h": "Un alias o un catch-all no tiene detrás ningún buzón en el que iniciar sesión",

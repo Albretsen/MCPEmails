@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Daum Mail a Claude con una contraseña de Kakao",
+    "title": "Conecta Daum Mail a Claude con una contraseña de aplicación de Kakao",
     "description": "Conecta Daum Mail (daum.net, hanmail.net) a Claude o a cualquier cliente MCP por IMAP en imap.daum.net:993. Desde enero de 2025 pide una contraseña de aplicación de Kakao."
   },
   "hero": {

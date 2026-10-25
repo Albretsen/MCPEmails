@@ -24,7 +24,7 @@
     "eyebrow": "Google Workspace + IA",
     "titleLine1": "Conecta Google Workspace a Claude",
     "titleLine2": "y a ChatGPT, Cursor, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA los buzones de la empresa que viven en Google Workspace con tu propio dominio: el tuyo, ventas@, soporte@ y los demás. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de aplicación, y los mismos buzones funcionan en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA los buzones de la empresa que tienes en Google Workspace con tu propio dominio: el tuyo, ventas@, soporte@ y los demás. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de aplicación, y los mismos buzones funcionan en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Se conecta con una contraseña de aplicación de Google",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -59,7 +59,7 @@
     },
     {
       "h": "IMAP lo activa el administrador, no tú",
-      "p": "En Google Workspace, los usuarios no pueden activar ni desactivar IMAP en sus propios ajustes de Gmail. Lo hace un administrador en la Admin console de Google, en <b>Apps, Google Workspace, Gmail, End User Access</b>, dentro de la sección <b>POP and IMAP access</b>, para todos o por unidad organizativa. Ahí hay dos ajustes que deciden si funciona una contraseña de aplicación: IMAP tiene que estar activado para tu unidad, y el administrador tiene que haber elegido <b>Allow any mail client</b>. Si restringió IMAP a clientes de correo OAuth concretos, se rechaza el inicio de sesión con contraseña de aplicación por muy correcta que sea."
+      "p": "En Google Workspace, los usuarios no pueden activar ni desactivar IMAP en sus propios ajustes de Gmail. Lo hace un administrador en la consola de administración de Google, en <b>Apps, Google Workspace, Gmail, End User Access</b>, dentro de la sección <b>POP and IMAP access</b>, para todos o por unidad organizativa. Ahí hay dos ajustes que deciden si funciona una contraseña de aplicación: IMAP tiene que estar activado para tu unidad, y el administrador tiene que haber elegido <b>Allow any mail client</b>. Si restringió IMAP a clientes de correo OAuth concretos, se rechaza el inicio de sesión con contraseña de aplicación por muy correcta que sea."
     },
     {
       "h": "Un alias no es un buzón, y un grupo tampoco",
@@ -67,7 +67,7 @@
     },
     {
       "h": "Responder desde un alias funciona en cuanto el alias está verificado",
-      "p": "Con una contraseña de aplicación, un buzón envía por defecto desde su propia dirección. Para responder desde un alias, como uno configurado en Gmail como dirección <b>Send mail as</b>, añádelo en <b>Direcciones de envío</b> en los ajustes de la bandeja en MCPEmails. Enviamos al alias un código de 6 dígitos y, en cuanto lo introduces, tu agente puede enviar desde esa dirección. Una dirección From que no es la del propio buzón ni una dirección de envío verificada se rechaza, no se reescribe en silencio."
+      "p": "Con una contraseña de aplicación, un buzón envía por defecto desde su propia dirección. Para responder desde un alias, como uno configurado en Gmail en <b>Enviar como</b>, añádelo en <b>Direcciones de envío</b> en los ajustes de la bandeja en MCPEmails. Enviamos al alias un código de 6 dígitos y, en cuanto lo introduces, tu agente puede enviar desde esa dirección. Una dirección de remitente (From) que no es la del propio buzón ni una dirección de envío verificada se rechaza; no se reescribe en silencio."
     }
   ],
   "limits": [

@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Runbox no anuncia SASL-IR, y la mayoría de las bibliotecas cliente lo dan por hecho",
-      "p": "El servidor responde con un simple <code>* OK IMAP4 ready</code> y ofrece <code>AUTH=PLAIN</code> sin la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un BAD a secas sin explicación, y todas las capas superiores lo presentan como un fallo de inicio de sesión, así que acabas buscando un problema de contraseña que no existe. MCPEmails detecta el BAD y recurre al intercambio en dos pasos, de modo que aquí la conexión se completa. Por eso muchas herramientas IMAP por lo demás sólidas fallan con Runbox y funcionan en todas partes."
+      "p": "El servidor responde con un simple <code>* OK IMAP4 ready</code> y ofrece <code>AUTH=PLAIN</code> sin la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un BAD a secas sin explicación, y todas las capas superiores lo presentan como un fallo de inicio de sesión, así que acabas buscando un problema de contraseña que no existe. MCPEmails detecta el BAD y recurre al intercambio en dos pasos, de modo que aquí la conexión se completa. Por eso muchas herramientas IMAP por lo demás sólidas fallan con Runbox aunque funcionan con todos los demás servidores."
     },
     {
       "h": "Activar la 2FA rompe todos los protocolos a la vez, no solo el correo",

@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "La verificación en dos pasos convierte tu contraseña en contraseña más código",
-      "p": "Esta es la que pilla a todo el mundo. Hushmail no emite contraseñas de aplicación. Con la verificación en dos pasos activada, cada inicio de sesión IMAP y SMTP espera <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> en un solo campo: tu contraseña normal, un espacio y luego el código de seguridad de 20 caracteres dividido en cuatro grupos por espacios. Si te equivocas en un grupo, añades un espacio al final o pegas solo el código, el servidor te rechaza con un fallo de autenticación normal idéntico al de una contraseña incorrecta. El código está en el webmail, en Preferences, pestaña Security."
+      "p": "Esta es la trampa en la que cae todo el mundo. Hushmail no emite contraseñas de aplicación. Con la verificación en dos pasos activada, cada inicio de sesión IMAP y SMTP espera <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> en un solo campo: tu contraseña normal, un espacio y luego el código de seguridad de 20 caracteres dividido en cuatro grupos por espacios. Si te equivocas en un grupo, añades un espacio al final o pegas solo el código, el servidor te rechaza con un fallo de autenticación normal idéntico al de una contraseña incorrecta. El código está en el webmail, en Preferences, pestaña Security."
     },
     {
       "h": "El servidor IMAP de Hushmail no anuncia SASL-IR",

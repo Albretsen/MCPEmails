@@ -18,7 +18,7 @@ Tres partes, y nada más.
 - **Una acción.** Exactamente una, de un conjunto cerrado, fijada al crear la regla.
 - **Una cadencia.** \`interval_minutes\`, tomada de una escala fija: 15, 30, 60, 180, 360, 720 o 1440 minutos. Una escala en vez de un entero libre, porque una regla de un minuto no consigue nada salvo que te limiten la tasa de llamadas.
 
-Define también \`max_messages_per_run\` (25 por defecto, 200 como máximo): es el radio de impacto por ejecución y limita cuánto correo puede tocar un filtro defectuoso antes de que una persona vea el registro de ejecuciones. Una regla se ejecuta con la credencial que la creó, y la autoridad se vuelve a derivar en cada ejecución, así que revocar la clave detiene la regla en su siguiente ejecución.
+Define también \`max_messages_per_run\` (25 por defecto, 200 como máximo): es el radio de impacto por ejecución y limita cuánto correo puede tocar un filtro defectuoso antes de que una persona vea el registro de ejecuciones. Una regla se ejecuta con la credencial que la creó, y sus permisos se vuelven a comprobar en cada ejecución, así que revocar la clave detiene la regla en su siguiente ejecución.
 
 ## Por qué una regla supera a pedírselo al agente cada mañana
 
@@ -75,7 +75,7 @@ Lo que una regla no puede hacer:
 
 \`automation_read\` con la acción \`runs\` lista las ejecuciones recientes y sus contadores: coincidencias, procesados, correctos, fallidos y omitidos. La acción \`list\` devuelve todas las reglas del espacio de trabajo con su calendario, su acción y su estado de salud; \`get\` lee una al completo, filtro y estado de fallos incluidos.
 
-El contador que conviene entender es el de omitidos (**skipped**). Un recuento alto de omitidos frente a un recuento bajo de procesados no es un problema: significa que una ejecución solapada se deduplicó correctamente. Cada regla reclama un mensaje antes de actuar sobre él, así que una ejecución reenviada no puede mover el mismo correo dos veces. Las reglas además se detienen solas tras cinco ejecuciones fallidas consecutivas, en lugar de seguir chocando eternamente contra un nombre de carpeta incorrecto.
+El contador que conviene entender es el de omitidos (**skipped**). Un recuento alto de omitidos frente a un recuento bajo de procesados no es un problema: significa que una ejecución solapada se deduplicó correctamente. Cada regla reclama un mensaje antes de actuar sobre él, así que una ejecución relanzada no puede mover el mismo correo dos veces. Las reglas además se detienen solas tras cinco ejecuciones fallidas consecutivas, en lugar de seguir chocando eternamente contra un nombre de carpeta incorrecto.
 
 ## Cuándo no escribir una regla
 
@@ -97,7 +97,7 @@ Después preguntas a tu agente por los treinta mensajes que quedan en lugar de p
 
 ## Las reglas cuentan para las acciones de tu plan
 
-Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Free** son 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $9 al mes, elimina el límite mensual de acciones y permite 3 buzones conectados. Consulta los [precios](/pricing).
+Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Gratis** son 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $9 al mes, elimina el límite mensual de acciones y permite 3 bandejas conectadas. Consulta los [precios](/pricing).
 
 ## Preguntas frecuentes
 

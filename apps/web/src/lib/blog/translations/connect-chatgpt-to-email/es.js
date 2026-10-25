@@ -4,7 +4,7 @@ const translation = {
     'Paso a paso: conecta Gmail, Outlook, iCloud, Fastmail o cualquier buzón IMAP a ChatGPT con un conector MCP, y a OpenAI Codex con una clave limitada. Sin almacenar correo.',
   coverAlt:
     'Conecta ChatGPT y OpenAI Codex a Gmail, Outlook, iCloud, Fastmail y correo IMAP con MCPEmails',
-  content: `ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCPEmails es ese servidor: conecta un buzón una vez, apunta ChatGPT a una sola URL y obtendrás las mismas herramientas de correo tanto si el buzón está en Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP propio.
+  content: `ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCPEmails es ese servidor: conecta una bandeja una vez, apunta ChatGPT a una sola URL y obtendrá las mismas herramientas de correo, esté tu correo en Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP autoalojado.
 
 Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta. ChatGPT ejecuta un flujo OAuth en el navegador, así que no hay ninguna clave de API que pegar. OpenAI Codex se ejecuta en tu terminal y usa una clave limitada como token bearer. Mismo endpoint, mismas herramientas.
 
@@ -13,14 +13,14 @@ Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta.
 ## Lo que necesitas
 
 - **ChatGPT Plus, Pro, Business, Enterprise o Edu, en la web.** Los conectores MCP personalizados están detrás del modo de desarrollador, que OpenAI ofrece en chatgpt.com para esos planes. Las cuentas Free y Go no pueden añadir uno, y las apps de móvil y escritorio no muestran la opción. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador.
-- **Una cuenta gratuita de MCPEmails.** [Créala aquí](/signup). El plan gratuito admite un buzón conectado y no pide tarjeta.
+- **Una cuenta gratuita de MCPEmails.** [Créala aquí](/signup). El plan Gratis admite una bandeja conectada y no pide tarjeta.
 - **Un buzón.** Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex o cualquier servicio que hable IMAP y SMTP.
 
 Si estás en Free o Go, la misma bandeja y la misma URL ya funcionan en [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) y los demás [clientes compatibles](/docs/clients).
 
-## Paso 1: Conecta tu buzón a MCPEmails
+## Paso 1: Conecta tu bandeja a MCPEmails
 
-En el panel de MCPEmails, abre **Inboxes**, luego **Connect Inbox**, y elige tu proveedor.
+En el panel de MCPEmails, abre **Bandejas de entrada**, luego **Conectar bandeja**, y elige tu proveedor.
 
 ### Gmail y Google Workspace
 
@@ -36,7 +36,7 @@ Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de 
 
 ### Cualquier otro buzón IMAP
 
-Elige **IMAP** e introduce la dirección y la contraseña de aplicación. Los ajustes habituales se detectan automáticamente; un dominio personalizado puede requerir el host, el puerto y el modo de seguridad de tu proveedor. La [matriz de proveedores](/docs/providers) indica qué admite cada uno, y hay una página por proveedor en [connect](/connect), incluidas [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) e [IMAP genérico](/connect/imap).
+Elige **IMAP** e introduce la dirección y la contraseña de aplicación. Los ajustes habituales se detectan automáticamente; un dominio personalizado puede requerir el host, el puerto y el modo de seguridad de tu proveedor. La [matriz de proveedores](/docs/providers) indica qué admite cada uno, y hay una página por proveedor en la sección [conectar](/connect), incluidas [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) e [IMAP genérico](/connect/imap).
 
 Conecta más de un buzón si tu plan lo permite. ChatGPT los descubre con \`inbox_list\`, así que nunca pegas un identificador de buzón en un prompt.
 
@@ -53,13 +53,13 @@ https://mcpemails.com/api/mcp
 4. Elige **OAuth** como método de autenticación, crea el conector y autoriza con MCPEmails.
 5. Abre un chat nuevo, haz clic en **+**, elige **Developer mode** y selecciona la app de MCPEmails. ChatGPT solo ve las herramientas en un chat donde lo hayas hecho, así que repítelo en cada conversación nueva.
 
-Elige OAuth, no la opción sin autenticación. Este servidor rechaza las llamadas anónimas, así que un conector creado sin autenticación parece correcto durante la configuración y falla en su primera llamada a una herramienta, que es el orden más confuso posible. Con OAuth, ChatGPT se registra solo y completa un flujo de código de autorización con PKCE: no hay ningún client id que crear ni ningún secreto en ninguna parte. La redacción de los menús cambia mientras OpenAI itera sobre la beta, así que consulta la [página de configuración de ChatGPT](/docs/chatgpt) para ver la ruta actual.
+Elige OAuth, no la opción sin autenticación. Este servidor rechaza las llamadas anónimas, así que un conector creado sin autenticación parece correcto durante la configuración y falla en su primera llamada a una herramienta, que es el orden más confuso posible. Con OAuth, ChatGPT se registra solo y completa un flujo de código de autorización con PKCE: no hay ningún ID de cliente que crear ni ningún secreto de cliente en ninguna parte. La redacción de los menús cambia mientras OpenAI itera sobre la beta, así que consulta la [página de configuración de ChatGPT](/docs/chatgpt) para ver la ruta actual.
 
 ## Paso 3: Aprueba solo los permisos necesarios
 
-La pantalla de consentimiento es nuestra, no de OpenAI. El primer consentimiento empieza en \`read:email\`, que basta para triar, resumir y encontrar cosas, y deja fuera toda acción irreversible mientras decides hasta dónde quieres llegar. Los demás permisos son \`send:email\`, \`search:email\` y \`manage:automations\`.
+La pantalla de consentimiento es nuestra, no de OpenAI. El primer consentimiento empieza en \`read:email\`, que basta para clasificar, resumir y encontrar cosas, y deja fuera toda acción irreversible mientras decides hasta dónde quieres llegar. Los demás permisos son \`send:email\`, \`search:email\` y \`manage:automations\`.
 
-Conceder de menos tiene arreglo: una llamada que necesita un permiso que el token no tiene devuelve un 403 con un error de permiso insuficiente, así que el cliente puede volver a pedir ese permiso y reintentar. El propietario del buzón también puede exigir [aprobación humana](/blog/approve-ai-agent-email-sends) en el panel, lo que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera.
+Conceder de menos tiene arreglo: una llamada que necesita un permiso que el token no tiene devuelve un 403 con un error de permiso insuficiente, así que el cliente puede volver a pedir ese permiso y reintentar. El propietario de la bandeja también puede exigir [aprobación humana](/blog/approve-ai-agent-email-sends) en el panel, lo que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera.
 
 ## Paso 4: Dale a ChatGPT una primera tarea segura
 
@@ -67,7 +67,7 @@ Empieza en modo de solo lectura:
 
 > Resume mis tres correos no leídos más recientes y marca todo lo que necesite respuesta hoy. No envíes, muevas ni elimines nada.
 
-ChatGPT encuentra primero el buzón y después lee solo los mensajes que necesita. Cuando eso funcione, prueba:
+ChatGPT encuentra primero la bandeja y después lee solo los mensajes que necesita. Cuando eso funcione, prueba:
 
 - «Busca la factura de Stripe del mes pasado y dime el importe.»
 - «Redacta una respuesta al último mensaje de Alex, pero déjala como borrador.»
@@ -91,9 +91,9 @@ Un límite que conviene tener en cuenta: MCPEmails funciona por sondeo. No hay w
 
 Codex es una superficie distinta de los conectores de ChatGPT, y ahí el flujo OAuth del navegador no es el camino. Un cliente de terminal se autentica con un token bearer:
 
-1. En el panel, abre **API Keys** y crea una clave marcando solo los permisos que ese agente necesita.
+1. En el panel, abre **Claves de API** y crea una clave marcando solo los permisos que ese agente necesita.
 2. Cópiala de inmediato. La clave empieza por \`mcpe_\` seguido de 64 caracteres hexadecimales y solo se muestra una vez.
-3. Registra \`https://mcpemails.com/api/mcp\` como servidor MCP por HTTP en la configuración MCP del propio Codex, pasando la clave en una cabecera \`Authorization: Bearer\`.
+3. Registra \`https://mcpemails.com/api/mcp\` como servidor MCP con transporte Streamable HTTP en la configuración MCP del propio Codex, pasando la clave en una cabecera \`Authorization: Bearer\`.
 
 Las conexiones con clave y las conexiones OAuth llegan al mismo endpoint y ven el mismo catálogo de herramientas. La única diferencia es de dónde salió el token. Para comprobar antes el endpoint, la [guía de HTTP en bruto](/docs/curl) incluye una llamada \`tools/list\` de una línea, y [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica cuándo conviene cada camino.
 
@@ -101,12 +101,12 @@ Limita bien la clave. Solo lectura suele ser lo correcto para un agente de progr
 
 ## Problemas comunes
 
-- **No aparece la opción de crear un conector personalizado.** El modo de desarrollador requiere Plus, Pro, Business, Enterprise o Edu, en chatgpt.com desde un navegador. Las cuentas Free y Go no lo tienen. En un espacio Business o Enterprise, un administrador tiene que permitirlo.
+- **No aparece la opción de crear un conector personalizado.** El modo de desarrollador requiere Plus, Pro, Business, Enterprise o Edu, en chatgpt.com desde un navegador. Las cuentas Free y Go no lo tienen. En un espacio de trabajo Business o Enterprise, un administrador tiene que permitirlo.
 - **El conector falla en su primera llamada a una herramienta.** Probablemente se creó sin autenticación. Bórralo y vuelve a crearlo con OAuth.
 - **El conector está creado, pero ChatGPT responde sin tocar tu correo.** No está activado en este chat. Haz clic en **+**, elige **Developer mode**, selecciona la app de MCPEmails y vuelve a preguntar.
-- **El proveedor rechaza tu contraseña.** Usa una contraseña de aplicación generada por el proveedor, no la de inicio de sesión web. Algunos proveedores solo la emiten con la verificación en dos pasos activada.
-- **Una conexión IMAP personalizada agota el tiempo.** Confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
-- **ChatGPT se conecta pero no ve correo.** Comprueba que el buzón esté activo en el panel, confirma que la conexión tiene \`read:email\` y pide a ChatGPT que llame primero a \`inbox_list\`.
+- **El proveedor rechaza tu contraseña.** Usa una contraseña de aplicación generada por el proveedor, no la de inicio de sesión web. Algunos proveedores solo la emiten con la autenticación de dos factores activada.
+- **Una conexión IMAP personalizada agota el tiempo de espera.** Confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
+- **ChatGPT se conecta pero no ve correo.** Comprueba que la bandeja esté activa en el panel, confirma que la conexión tiene \`read:email\` y pide a ChatGPT que llame primero a \`inbox_list\`.
 
 ## Preguntas frecuentes
 
@@ -119,15 +119,15 @@ No. Elige OAuth y ChatGPT se registra solo y completa el flujo. Las claves de AP
 **¿Codex se configura igual?**
 No. Codex es una superficie de terminal, así que usa una clave de API limitada en una cabecera \`Authorization: Bearer\` en lugar del flujo OAuth del navegador. Mismo endpoint, mismas herramientas.
 
-**¿Se almacena mi correo en vuestros servidores?**
+**¿Se almacena mi correo en los servidores de MCPEmails?**
 No. Cada mensaje se obtiene en tiempo real de tu proveedor para la petición que lo pidió y después se descarta. Solo se conserva la credencial cifrada del proveedor. [Por qué importa no almacenar correo](/blog/why-email-never-stored-matters) explica el razonamiento.
 
 **¿Cuánto cuesta?**
-El plan gratuito incluye un buzón conectado y 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Los planes de pago añaden buzones y quitan el límite: consulta [precios](/pricing).
+El plan Gratis incluye una bandeja conectada y 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 13 de septiembre de 2026; los creados antes están exentos. Los planes de pago añaden bandejas y quitan el límite: consulta [precios](/pricing).
 
 ## Siguiente paso
 
-[Empieza gratis](/signup), conecta un buzón, añade \`https://mcpemails.com/api/mcp\` a ChatGPT y pídele que resuma tu correo no leído. La [página de configuración de ChatGPT](/docs/chatgpt) tiene la ruta actual; la [documentación](/docs) tiene la referencia completa de herramientas.`,
+[Empieza gratis](/signup), conecta una bandeja, añade \`https://mcpemails.com/api/mcp\` a ChatGPT y pídele que resuma tu correo no leído. La [página de configuración de ChatGPT](/docs/chatgpt) tiene la ruta actual; la [documentación](/docs) tiene la referencia completa de herramientas.`,
 };
 
 export default translation;

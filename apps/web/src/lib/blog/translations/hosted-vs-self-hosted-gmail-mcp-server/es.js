@@ -11,7 +11,7 @@ Este es el análisis honesto. Yo construí un servidor alojado, así que tengo u
 
 Busca "servidor MCP de Gmail" y encontrarás una docena de repos en GitHub. Clonas uno, registras un proyecto de Google Cloud, generas credenciales de cliente OAuth, ejecutas un flujo local de consentimiento OAuth y el servidor guarda un refresh token en disco o en una variable de entorno. A partir de ahí tu cliente MCP habla con un proceso que se ejecuta en \`localhost\` o en una máquina que alquilas.
 
-Ese es todo el discurso, y para una sola cuenta de Gmail en tu propio portátil funciona. El coste aparece después, y no se mide en dólares.
+Esa es toda la propuesta, y para una sola cuenta de Gmail en tu propio portátil funciona. El coste aparece después, y no se mide en dólares.
 
 ## El caso del autoalojamiento: dónde gana de verdad
 
@@ -23,11 +23,11 @@ El código se ejecuta en tu propio hardware. Ningún tercero se interpone jamás
 
 ### Es gratis en dólares
 
-Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con 9 $/mes (o 15 $/mes cuando necesites más de tres bandejas), las cuentas favorecen montártelo tú mismo.
+Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con $9/mes (o $15/mes cuando necesites más de tres bandejas), las cuentas favorecen montártelo tú mismo.
 
 ### Puedes adaptarlo a cualquier cosa
 
-Herramientas personalizadas, carpetas IMAP raras, una taxonomía de etiquetas privada, un pipeline de logging que alimenta tu SIEM. Cuando eres dueño del proceso puedes hacerlo todo. Un producto alojado te da la superficie que te da.
+Herramientas personalizadas, carpetas IMAP raras, una taxonomía de etiquetas privada, un pipeline de registros que alimenta tu SIEM. Cuando eres dueño del proceso puedes hacerlo todo. Un producto alojado te da la superficie que te da.
 
 ## El caso del autoalojamiento: dónde te cuesta de verdad
 
@@ -35,13 +35,13 @@ Ahora la parte que los README de los repos pasan por alto.
 
 ### Asumes la configuración de OAuth
 
-Un proyecto de Google Cloud, una pantalla de consentimiento OAuth, los scopes correctos y —si quieres que lo use alguien más aparte de ti— el proceso de verificación de apps de Google, que es una revisión real con un plazo real. Equivócate en un scope y vuelves a la consola. Este es el paso que te come una tarde la primera vez y un bocado más pequeño cada vez que un token expira o Google cambia una política.
+Un proyecto de Google Cloud, una pantalla de consentimiento OAuth, los scopes correctos y, si quieres que lo use alguien más aparte de ti, el proceso de verificación de apps de Google, que es una revisión real con un plazo real. Equivócate en un scope y vuelves a la consola. Este es el paso que te come una tarde la primera vez y un bocado más pequeño cada vez que un token expira o Google cambia una política.
 
 ### Asumes el almacenamiento y el cifrado de credenciales
 
 Este es el que me quita el sueño. Un refresh token para \`read:email\` y \`send:email\` es una llave maestra del buzón de alguien. La mayoría de los montajes DIY lo dejan en un archivo en texto plano o en una variable de entorno. Si esa máquina se ve comprometida, o el token se filtra en un log o en una copia de seguridad, el atacante lee y envía correo en tu nombre.
 
-Hacerlo bien significa cifrar el token en reposo, mantener la clave de cifrado separada del almacén de tokens y descifrar solo en el momento de la llamada en un contexto aislado. Eso no es difícil de describir y es genuinamente engorroso de construir y mantener. Si te lo saltas, has construido un pasivo. [Por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters) profundiza en el lado arquitectónico de esto.
+Hacerlo bien significa cifrar el token en reposo, mantener la clave de cifrado separada del almacén de tokens y descifrar solo en el momento de la llamada en un contexto aislado. No es difícil de describir, pero es realmente engorroso de construir y mantener. Si te lo saltas, has creado un riesgo. [Por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters) profundiza en el lado arquitectónico de esto.
 
 ### Asumes el alojamiento y la disponibilidad
 
@@ -49,7 +49,7 @@ Un servidor en localhost muere cuando tu portátil se suspende. Si quieres que e
 
 ### Asumes las actualizaciones y los parches de seguridad
 
-MCP es joven. La especificación se mueve, Google rota requisitos y el repo que clonaste puede quedarse obsoleto o ser abandonado. Cuando una dependencia publica un CVE, ese aviso es tuyo. Fija una versión y te quedas atrás; sigue \`main\` y heredas los bugs de otra gente.
+MCP es joven. La especificación se mueve, Google rota requisitos y el repo que clonaste puede quedarse obsoleto o ser abandonado. Cuando una dependencia publica un CVE, la alerta te toca a ti. Fija una versión y te quedas atrás; sigue \`main\` y heredas los bugs de otra gente.
 
 ### El multiproveedor corre de tu cuenta
 
@@ -61,15 +61,15 @@ Un servidor MCP alojado invierte el trato. Renuncias a ejecutar el código; recu
 
 ### La configuración son minutos, no una tarde
 
-Te registras, vas a **Dashboard → Inboxes → Connect Inbox**, eliges Gmail y pegas una contraseña de aplicación de Google (Google te pide activar la verificación en dos pasos antes de crearla). Sin proyecto de Cloud propio, sin pantalla de consentimiento que configurar, sin cola de verificación. Luego conectas tu agente. Para [claude.ai o Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) pegas la URL del endpoint MCP, inicias sesión y apruebas los scopes; sin API key. Para un cliente sin OAuth, como [Cursor, Cline o un script directo](/blog/email-for-ai-agents-cursor-cline-vscode), generas una API key con scopes en **Dashboard → API Keys** y la envías como bearer token.
+Te registras, vas a **Panel → Bandejas de entrada → Conectar bandeja**, eliges Gmail y pegas una contraseña de aplicación de Google (Google te pide activar la verificación en dos pasos antes de crearla). Sin proyecto de Cloud propio, sin pantalla de consentimiento que configurar, sin cola de verificación. Luego conectas tu agente. Para [claude.ai o Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) pegas la URL del endpoint MCP, inicias sesión y apruebas los scopes, sin clave de API. Para un cliente sin OAuth, como [Cursor, Cline o un script directo](/blog/email-for-ai-agents-cursor-cline-vscode), generas una clave de API con scopes en **Panel → Claves de API** y la envías como bearer token.
 
 ### Las credenciales están cifradas y el correo nunca se almacena
 
-La credencial del buzón (la contraseña de aplicación o el token OAuth) es lo único que se persiste por buzón, y está cifrado con AES-256-GCM en reposo. La clave se guarda como secreto del servidor, separada de la base de datos, y la credencial se descifra en nuestros servidores solo cuando una petición la necesita. Nunca se envía a tu agente. El correo en sí no se almacena en absoluto: cada llamada \`email_read\` (ya sea para listar, leer o buscar) consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
+La credencial del buzón (la contraseña de aplicación o el token OAuth) es lo único que se persiste por buzón, y está cifrada con AES-256-GCM en reposo. La clave se guarda como secreto del servidor, separada de la base de datos, y la credencial se descifra en nuestros servidores solo cuando una petición la necesita. Nunca se envía a tu agente. El correo en sí no se almacena en absoluto: cada llamada \`email_read\` (ya sea para listar, leer o buscar) consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
 
 ### El multiproveedor viene gratis
 
-El mismo endpoint y las mismas herramientas principales —\`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` para flags y carpetas, más \`folder\`, \`draft\`, \`schedule\` y \`contact_search\`— funcionan en Gmail, Outlook, iCloud, Fastmail y cualquier buzón IMAP. Añade una cuenta de Outlook la semana que viene y nada cambia en tu agente.
+El mismo endpoint y las mismas herramientas principales (\`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` para marcas y carpetas, más \`folder\`, \`draft\`, \`schedule\` y \`contact_search\`) funcionan en Gmail, Outlook, iCloud, Fastmail y cualquier buzón IMAP. Añade una cuenta de Outlook la semana que viene y nada cambia en tu agente.
 
 ### El envío se queda en tu proveedor
 
@@ -81,15 +81,15 @@ Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado
 
 ## Cuánto cuesta en dólares
 
-MCPEmails es gratis para empezar: una bandeja conectada, API keys ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días y soporte de la comunidad. [Personal cuesta 9 $/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte por correo), Pro cuesta 15 $/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta 39 $/mes (10 buzones incluidos más 3 $/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCPEmails es gratis para empezar: una bandeja conectada, claves de API ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días y soporte de la comunidad. [Personal cuesta $9/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte por correo), Pro cuesta $15/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta $39/mes (10 buzones incluidos más $3/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
 
 ## ¿Cuál deberías elegir?
 
-Elige **autoalojado** si eres un ingeniero que disfruta de la fontanería, necesitas control total o tienes una regla de cero-terceros, te sientes cómodo asumiendo OAuth, cifrado y disponibilidad, y solo vas a tocar una cuenta de Gmail. Es una opción real y defendible.
+Elige **autoalojado** si eres un ingeniero que disfruta de la fontanería, necesitas control total o tienes una norma de cero terceros, te sientes cómodo asumiendo OAuth, cifrado y disponibilidad, y solo vas a tocar una cuenta de Gmail. Es una opción real y defendible.
 
 Elige **alojado** si quieres un endpoint funcionando hoy, prefieres no estar de guardia para tu propia infraestructura de correo, es probable que en algún momento añadas Outlook o iCloud o un buzón IMAP, y quieres que el cifrado de credenciales lo gestionen personas que lo mantienen a tiempo completo. Esa es la mayoría de la gente, incluidos la mayoría de los ingenieros que podrían construirlo pero tienen cosas mejores que hacer.
 
-Si aún estás decidiendo cómo debería un agente llegar a tu buzón siquiera, [las mejores formas de dejar que Claude gestione tu bandeja de entrada](/blog/best-ways-to-let-claude-manage-your-inbox) compara las opciones más amplias. Cuando estés listo, [empieza gratis](/signup) o echa un vistazo a [la documentación](/docs): conectar un buzón de Gmail de verdad lleva como un minuto.`,
+Si aún no tienes claro cómo debería acceder un agente a tu buzón, [las mejores formas de dejar que Claude gestione tu bandeja de entrada](/blog/best-ways-to-let-claude-manage-your-inbox) compara las opciones más amplias. Cuando estés listo, [empieza gratis](/signup) o echa un vistazo a [la documentación](/docs): conectar una bandeja de Gmail lleva, de verdad, alrededor de un minuto.`,
 };
 
 export default translation;

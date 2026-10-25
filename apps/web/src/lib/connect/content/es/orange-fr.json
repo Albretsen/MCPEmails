@@ -19,7 +19,7 @@
     "titleLine1": "Conecta tu buzón de Orange",
     "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja de Orange real. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez que hayas activado el acceso POP/IMAP que Orange mantiene desactivado.",
-    "answer": "Claude no puede llegar a un buzón de Orange por su cuenta. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.orange.fr, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Antes tienen que estar bien dos cosas: Orange desactiva el acceso POP e IMAP del buzón por motivos de seguridad, así que lo activas en el webmail en Sécurité, y Orange recomienda autenticarse con el mot de passe dédié de tu Espace client en lugar de tu contraseña habitual de Orange. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de Orange por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.orange.fr, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Antes tienen que estar bien dos cosas: Orange desactiva el acceso POP e IMAP del buzón por motivos de seguridad, así que lo activas en el webmail en Sécurité, y Orange recomienda autenticarse con el mot de passe dédié de tu Espace client en lugar de tu contraseña habitual de Orange. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Activa POP/IMAP, usa la contraseña dedicada",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"

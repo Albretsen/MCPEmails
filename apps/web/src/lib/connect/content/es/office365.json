@@ -23,7 +23,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "Enlace de aprobación para el administrador de TI incluido",
-    "answer": "Sí, con una condición que depende de tu organización. MCPEmails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel te da un enlace de aprobación para enviar a tu administrador de TI. El administrador lo abre, inicia sesión con su cuenta de Microsoft del trabajo y aprueba MCPEmails una vez para toda la organización, sin necesitar una cuenta de MCPEmails, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
+    "answer": "Sí, con una condición que depende de tu organización. MCPEmails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que antes un administrador de TI apruebe la aplicación, una sola vez, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel te da un enlace de aprobación para enviar a tu administrador de TI. El administrador lo abre, inicia sesión con su cuenta de Microsoft del trabajo y aprueba MCPEmails una vez para toda la organización, sin necesitar una cuenta de MCPEmails, y a partir de ahí cualquier persona de la organización, tú incluido, se conecta con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
   },
   "method": {
     "title": "Cómo se conecta Microsoft 365: inicio de sesión con Microsoft, a veces con aprobación del administrador",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Microsoft 365?",
-      "a": "Sí. Conecta tu buzón del trabajo o del centro educativo a MCPEmails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Si tu organización exige la aprobación de un administrador, tu administrador de TI aprueba MCPEmails una vez primero, con el enlace que te da el panel."
+      "a": "Sí. Conecta tu buzón del trabajo o del centro educativo a MCPEmails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Si tu organización exige la aprobación de un administrador, tu administrador de TI tiene que aprobar antes MCPEmails, una sola vez, con el enlace que te da el panel."
     },
     {
       "q": "¿Por qué se me pide la aprobación de un administrador?",

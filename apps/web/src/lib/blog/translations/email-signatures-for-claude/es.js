@@ -6,7 +6,7 @@ const translation = {
     'Firmas de correo para Claude: configura una firma por bandeja una vez y Claude firma cada mensaje que envía, en todos los proveedores',
   content: `Cuando Claude envía un correo por ti, debería parecer que lo enviaste tú. Eso incluye la despedida: tu nombre, tu cargo, la línea de tu empresa, ese enlace a tu página de reservas. Hasta ahora, o bien escribías tu firma en cada prompt, o aceptabas correos que terminaban de forma un poco abrupta. Hoy eso cambia: **MCPEmails ahora aplica tu firma automáticamente a cada mensaje que Claude envía.**
 
-Las firmas son **por bandeja**. Cada buzón conectado conserva la suya, así que el sombrero de fundador va en tu dirección de trabajo y un sencillo "— Sam" va en la personal. Una vez configurada, no vuelves a pensar en ella.
+Las firmas son **por bandeja**. Cada buzón conectado conserva la suya, así que la firma de fundador va en tu dirección de trabajo y un sencillo "— Sam" va en la personal. Una vez configurada, no vuelves a pensar en ella.
 
 ## Qué se firma
 
@@ -47,7 +47,7 @@ A veces una firma es ruido: un "¡Gracias!" de una palabra no necesita tres lín
 
 ## Cómo encaja en el resto del flujo de trabajo
 
-Las firmas se integran en las herramientas que ya usas. Si Claude está ejecutando tu triaje matutino y disparando respuestas, ahora cada una lleva tu despedida sin que la menciones. Lo mismo ocurre con los [patrones de autorespuesta](/blog/build-email-auto-responder-mcp-agent) y la [guía de triaje y resumen](/blog/ai-agent-triage-summarize-inbox): cualquier cosa que termine en un envío ahora termina firmada.
+Las firmas se integran en las herramientas que ya usas. Si Claude está ejecutando tu triaje matutino y enviando respuestas, ahora cada una lleva tu despedida sin que la menciones. Lo mismo ocurre con los [patrones de autorrespuesta](/blog/build-email-auto-responder-mcp-agent) y la [guía de triaje y resumen](/blog/ai-agent-triage-summarize-inbox): cualquier cosa que termine en un envío ahora termina firmada.
 
 Y el modelo de privacidad no cambia: tu correo sigue [sin almacenarse nunca](/blog/why-email-never-stored-matters). La firma es una pequeña pieza de configuración por bandeja; tus mensajes se siguen obteniendo en directo y se descartan en cuanto Claude los tiene.
 
@@ -66,7 +66,7 @@ Todos: Gmail, Outlook, Fastmail, iCloud y cualquier otra cuenta IMAP. MCPEmails 
 Sí. Usa la opción \`include_signature\` (simplemente dile a Claude que omita la firma) para un mensaje escueto puntual. Tu firma guardada permanece para todo lo demás.
 
 **¿Cómo configuro mi firma?**
-De dos formas: edítala por bandeja en el panel, o pídeselo a Claude — por ejemplo, "configura mi firma como …" mediante la nueva herramienta \`signature\`.
+De dos formas: edítala por bandeja en el panel, o pídeselo a Claude, por ejemplo, "configura mi firma como …" mediante la nueva herramienta \`signature\`.
 
 ## Conclusión
 
