@@ -186,7 +186,7 @@ SELECT is((SELECT acquisition_source || ':' || acquisition_referrer || ':' || ac
              FROM public.workspaces WHERE owner_id = '7e000000-0000-0000-0000-000000000002'),
   'referral:referral:referral', 'the signup trigger keeps the referral source');
 SELECT is((SELECT referral_enabled FROM public.workspaces WHERE owner_id = '7e000000-0000-0000-0000-000000000002'),
-  false, 'referral_enabled defaults off');
+  true, 'referral_enabled defaults on (20261026120000)');
 SELECT lives_ok(
   $$INSERT INTO public.product_funnel_events (workspace_id, stage, outcome, category)
     SELECT id, 'referral_attached', 'success', 'free' FROM public.workspaces
