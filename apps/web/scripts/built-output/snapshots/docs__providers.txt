@@ -122,6 +122,10 @@ AUTH LOGIN
 on its own.
 Other hosts:
 IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX and mail.com are recognised from the address or the mail host you type, and their hosts, ports and transport security are filled in for you.
+Raw data:
+the hosts, ports, login mechanisms and size limits we probed for every provider are published as an
+open dataset
+, with free JSON and CSV downloads.
 What the agent can do once connected
 The operations an MCP client can perform per provider: read, search, send, reply, forward, move, flag, folders, drafts, scheduled send and attachments.
 [aria-label] Supported
@@ -414,12 +418,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

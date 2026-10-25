@@ -62,7 +62,7 @@ Planlegg denne oppfølgingen til å sendes mandag kl. 08:00, så den lander før
 Arkiver alle nyhetsbrev og varsler, så bare ekte mennesker er igjen i innboksen min.
 Hva det faktisk gjør
 En ekte innboks, ikke et skrivebeskyttet glimt
-Nitten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.
+Tjueen handlingsbaserte verktøy agenten din kan bruke fra start til slutt.
 Les og søk
 List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid.
 Send og svar
@@ -117,12 +117,14 @@ Dokumentasjon
 Selvhosting
 For gründere
 For bedrifter
+Utviklere
 Ressurser
 Verktøyreferanse
 Hurtigstart
 OAuth-tilkobling
 Leverandørstøtte
 Skrivebeskyttet tilgang
+Utviklerguide
 Oppsett av MCP-klienter
 Blog
 Changelog

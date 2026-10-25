@@ -107,12 +107,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

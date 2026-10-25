@@ -33,13 +33,13 @@ View the source
 Your inbox never leaves your box.
 Connect Fastmail, iCloud, Yahoo, Zoho, Yandex, or any IMAP/SMTP mailbox with an app password. Email is fetched live and never stored. Credentials are encrypted at rest with AES-256-GCM using a key you generate and keep. There is nothing to phone home to.
 Self-host vs hosted
-The full MCP server and all 19 tools are in both. Self-hosting trades managed convenience for total control.
+The full MCP server and its email tools are in both. Self-hosting trades managed convenience for total control.
 Self-host
 Hosted
 Price
 Free, you run it
 Free, $9, $15, or $39
-The MCP server and all 19 tools
+The MCP server and its email tools
 Yes
 Yes
 IMAP / SMTP inboxes (app password)
@@ -116,12 +116,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

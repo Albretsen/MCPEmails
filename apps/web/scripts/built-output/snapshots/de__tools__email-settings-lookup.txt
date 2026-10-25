@@ -173,12 +173,14 @@ Doku
 Self-Hosting
 Für Gründer
 Für Unternehmen
+Entwickler
 Ressourcen
 Tool-Referenz
 Schnellstart
 OAuth-Verbindung
 Unterstützte Anbieter
 Nur-Lese-Zugriff
+Entwicklerhandbuch
 MCP-Clients einrichten
 Blog
 Changelog

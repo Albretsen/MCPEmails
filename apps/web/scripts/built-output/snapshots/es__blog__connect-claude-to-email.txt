@@ -278,12 +278,14 @@ Documentación
 Auto-alojamiento
 Para fundadores
 Para empresas
+Desarrolladores
 Recursos
 Referencia de herramientas
 Inicio rápido
 Conexión OAuth
 Soporte de proveedores
 Acceso de solo lectura
+Guía para desarrolladores
 Configuración de clientes MCP
 Blog
 Changelog

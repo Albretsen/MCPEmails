@@ -62,7 +62,7 @@ Schedule this follow-up to send Monday at 8am so it lands first thing.
 Archive every newsletter and notification so only real people are left in my inbox.
 What it actually does
 A real inbox, not a read-only peek
-Nineteen action-based tools your agent can use end to end.
+Twenty-one action-based tools your agent can use end to end.
 Read & search
 List, read, and search across folders and every connected inbox, fetched live.
 Send & reply
@@ -117,12 +117,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
