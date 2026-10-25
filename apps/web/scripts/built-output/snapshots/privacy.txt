@@ -21,7 +21,7 @@ Get started free
 Legal
 Privacy Policy
 We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The exceptions are outgoing messages that have to wait: a message you schedule to send later, or a send held for your approval, which we store encrypted. This policy explains what we do collect, and why.
-Last updated: October 20, 2026 · Effective: May 25, 2026
+Last updated: October 24, 2026 · Effective: May 25, 2026
 1. Who We Are
 The MCPEmails service at
 mcpemails.com
@@ -134,6 +134,10 @@ consent
 (GDPR Article 6(1)(a)), which the Norwegian Marketing Control Act (markedsføringsloven) § 15 also requires for marketing by email.
 To choose which of a small number of messages to send, and when, we use account and product-usage signals: for example that your workspace reached a plan limit, how many inboxes you have connected, your plan, and when you signed up. We never use the content of your mailbox, or anything derived from it, for this.
 You can withdraw your consent at any time with the unsubscribe link in every marketing email. It takes effect immediately and does not affect receipts, security notices, or other email we need to send to run your account. We keep a record of when you consented and which wording you saw, so that we can show consent was given.
+3.10 Emails to help you finish setting up
+If you start setting up MCPEmails and get stuck, we may send you up to two short emails to help you finish: for example after a failed connection, with the fix for the error we saw, or after you connected an inbox but have not used it from your AI app yet. To choose which email to send and when, we use the setup steps recorded for your workspace, such as which provider failed and why and which AI app you picked. We never use the content of your mailbox for this, and these emails contain no offers. The legal basis is our
+legitimate interests
+in helping you use the service you signed up for. Every one of these emails has an unsubscribe link, which stops them immediately.
 4. Data Retention
 We keep each category of data for the following periods:
 Data category
@@ -291,12 +295,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

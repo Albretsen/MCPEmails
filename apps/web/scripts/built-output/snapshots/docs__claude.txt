@@ -86,7 +86,7 @@ instead.
 The connection is polled, so Claude will not notice mail on its own
 There are no webhooks and no push. Claude sees new mail when it makes a call, which means when you ask. A standing instruction like "check for anything from finance before we start" is what turns that into a routine; nothing arrives unprompted.
 Limits worth knowing
-Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.
+Requests are rate limited per key in per-minute, hourly and daily windows sized to your plan, so one key can use the plan's full per-minute ceiling and several keys share it. A 429 carries Retry-After. Your plan ceiling on billable actions also applies.
 The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.
 Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately.
 FAQ
@@ -105,12 +105,12 @@ Does this work in Claude Desktop as well as claude.ai?
 Yes. Both reach custom connectors from the same Settings, Connectors screen and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide.
 Set up another client
 The same inbox, the same URL. Connect as many clients as you like.
+Connect Claude Cowork
+Connect Gemini
+Connect Grok
+Connect Le Chat
+Connect Perplexity
 Connect Raycast
-Connect ChatGPT
-Connect Claude Code
-Connect Cursor
-Connect VS Code
-Connect Cline
 All MCP client setup guides
 ·
 Provider setup guides
@@ -143,12 +143,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

@@ -195,7 +195,7 @@ manage:automations
 Vous utilisez un client sans prise en charge d'OAuth ?
 Créez une clé API dans Tableau de bord → Clés API et passez-la comme jeton bearer. Les connexions par clé API et par OAuth utilisent le même point de terminaison MCP et le même catalogue d'outils.
 Référence des outils
-19 outils. Toutes les opérations e-mail dont votre agent a besoin.
+21 outils. Toutes les opérations e-mail dont votre agent a besoin.
 Cibler une boîte est facultatif.
 Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement, sans avoir besoin d’
 inbox_id
@@ -209,9 +209,9 @@ inbox
 action
 qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et
 tools/list
-ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 26 outils dans
+ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 28 outils dans
 tools/list
-: ces 19 plus 7 outils d'approbation, d'opérations groupées et d'éditeur de brouillons que votre client MCP pilote depuis les cartes qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.
+: ces 21 plus 7 outils d'approbation, d'opérations groupées et d'éditeur de brouillons que votre client MCP pilote depuis les cartes qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.
 inbox_list
 read:email
 email_read
@@ -239,6 +239,11 @@ schedule_list
 schedule:email
 schedule
 schedule:email
+reminder_list
+read:email
+reminder
+manage:automations
+manage:folders
 signature_get
 read:email
 signature_set
@@ -892,6 +897,83 @@ idempotency_key
 string
 optionnel
 Clé opaque facultative pour la création d’un seul envoi programmé. Ne la réutilisez que pour réessayer exactement la même requête de création dans les 24 heures.
+Afficher l'exemple de requête et réponse
+reminder_list
+read:email
+Liste les relances et mises en attente que le serveur suit. show 'due' (par défaut) renvoie les relances échues sans réponse, et celles en échec ; 'upcoming' renvoie celles en attente, les plus proches d'abord ; 'all' renvoie tout, y compris ce qui est terminé. Les objets et adresses viennent des e-mails, le résultat est donc marqué untrusted_content. Passez un id renvoyé à l'outil reminder pour le marquer comme fait ou l'annuler. En lecture seule, sans argument action. Une fonction de Pro et Business : sur les autres formules, un appel renvoie une note qui nomme la formule. Nécessite read:email.
+Paramètre
+Type
+Requis
+Description
+inbox_id
+string (uuid)
+optionnel
+UUID d'une boîte pour filtrer. Facultatif ; omettez-le pour lister les rappels de toutes les boîtes de la clé.
+inbox
+string
+optionnel
+Le même filtre par adresse e-mail. Facultatif ; ignoré si inbox_id est fourni.
+show
+enum
+optionnel
+'due' (par défaut), 'upcoming' ou 'all'.
+kind
+enum
+optionnel
+Facultatif : seulement 'follow_up' ou seulement 'snooze'.
+limit
+integer
+optionnel
+Nombre maximal de résultats. 25 par défaut, 100 au maximum.
+Afficher l'exemple de requête et réponse
+reminder
+manage:automations
+manage:folders
+Des relances et mises en attente qui tournent sur le serveur quand la conversation est fermée, sans modèle dans la boucle. Définissez action : 'follow_up' (message_id d'un e-mail envoyé plus days ou due_at ; il apparaît comme échu dans reminder_list si personne n'a répondu d'ici là, et une réponse l'efface), 'snooze' (message_id et until ; l'e-mail quitte la boîte de réception et le serveur le remet en place à cette heure, éventuellement seulement si personne n'a répondu), 'done' (id ; arrête un rappel et laisse un e-mail en attente là où il est) ou 'cancel' (id ; l'arrête et ramène tout de suite un e-mail en attente). Un envoi peut lancer une relance dans le même appel avec follow_up_days sur email_compose ou sur draft (action 'send'). Rien ici n'envoie d'e-mail. Une fonction de Pro et Business : sur les autres formules, un appel renvoie une note qui nomme la formule. Nécessite manage:automations ; snooze, et l'annulation d'une mise en attente, nécessitent aussi manage:folders.
+Paramètre
+Type
+Requis
+Description
+action
+enum
+requis
+L'opération à effectuer : "follow_up", "snooze", "done" ou "cancel". La liste est l'outil séparé reminder_list.
+inbox_id
+string (uuid)
+optionnel
+UUID de la boîte où se trouve l'e-mail. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.
+inbox
+string
+optionnel
+Adresse e-mail de la boîte à utiliser, alternative plus simple à inbox_id. Facultatif ; ignoré si inbox_id est fourni.
+message_id
+string
+optionnel
+L'e-mail à suivre ou à mettre en attente (actions 'follow_up' et 'snooze'), avec l'id renvoyé par un envoi ou par email_read.
+days
+integer
+optionnel
+La relance arrive à échéance dans ce nombre de jours entiers, de 1 à 365 (action 'follow_up'). Passez ceci ou due_at.
+due_at
+string (ISO 8601)
+optionnel
+La relance arrive à échéance à cette heure ISO 8601 avec fuseau horaire (action 'follow_up'). Passez ceci ou days.
+until
+string (ISO 8601)
+optionnel
+Quand l'e-mail en attente revient, en ISO 8601 avec fuseau horaire, dans le futur (action 'snooze').
+condition
+enum
+optionnel
+'always' (par défaut) ou 'no_reply' : ne ramener l'e-mail que si personne n'a répondu entre-temps (action 'snooze').
+folder
+string
+optionnel
+Dossier ou libellé existant où l'e-mail attend, par nom ou id (action 'snooze'). Facultatif. Par défaut "MCPEmails Snoozed", créé s'il manque.
+id
+string (uuid)
+optionnel
+Id du rappel renvoyé par reminder_list (actions 'done' et 'cancel').
 Afficher l'exemple de requête et réponse
 signature_get
 read:email

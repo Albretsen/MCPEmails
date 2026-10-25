@@ -120,7 +120,7 @@ Yes, for Gmail and work Microsoft 365 accounts, with Claude's own connectors. Ya
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 ·
-Oct 21, 2026
+Oct 20, 2026
 ·
 8 min
 [alt] Connect your email to an AI agent in under 2 minutes — Gmail, Outlook, iCloud, Fastmail, and IMAP over MCP
@@ -142,7 +142,7 @@ What Claude custom connectors are, which plans and apps support them, how to add
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 ·
-Oct 21, 2026
+Oct 20, 2026
 ·
 13 min
 [alt] One AI agent connected to work, personal, and side-business email accounts with MCPEmails
@@ -175,7 +175,7 @@ What an app password is, why mail apps and AI connectors need one, where to crea
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 ·
-Oct 21, 2026
+Oct 20, 2026
 ·
 11 min
 [alt] One AI agent working across separate client mailboxes with scoped access, MCPEmails
@@ -263,7 +263,7 @@ Schedule an email from Claude or ChatGPT to go out later from your own Gmail, Ou
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 ·
-Oct 21, 2026
+Oct 20, 2026
 ·
 8 min
 [alt] How to connect Gmail to Claude in two minutes over MCP: a Google app password, one endpoint URL, no email stored
@@ -285,7 +285,7 @@ Claude's Microsoft 365 connector does not accept personal Microsoft accounts. Co
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 ·
-Oct 21, 2026
+Oct 20, 2026
 ·
 7 min
 [alt] Email signatures for Claude — set a per-inbox signature once and Claude signs every message it sends, on every provider
@@ -489,12 +489,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog

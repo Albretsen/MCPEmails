@@ -200,7 +200,7 @@ manage:automations
 Using a client without OAuth support?
 Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same tool catalogue.
 Tool reference
-19 tools. Every email operation your agent needs.
+21 tools. Every email operation your agent needs.
 Targeting an inbox is optional.
 When your key has exactly one inbox, every per-inbox tool auto-resolves it, with no
 inbox_id
@@ -214,9 +214,9 @@ inbox
 action
 argument that selects the operation; the badges show the scope(s) each one needs, and
 tools/list
-only returns the tools your key (or OAuth token) is scoped for. A full-scope key sees 26 tools in
+only returns the tools your key (or OAuth token) is scoped for. A full-scope key sees 28 tools in
 tools/list
-: these 19 plus 7 approval, bulk-operation and draft-editor tools your MCP client drives from the cards it renders for you, rather than ones you compose by hand. Click "Show example" to see a full request and response.
+: these 21 plus 7 approval, bulk-operation and draft-editor tools your MCP client drives from the cards it renders for you, rather than ones you compose by hand. Click "Show example" to see a full request and response.
 inbox_list
 read:email
 email_read
@@ -244,6 +244,11 @@ schedule_list
 schedule:email
 schedule
 schedule:email
+reminder_list
+read:email
+reminder
+manage:automations
+manage:folders
 signature_get
 read:email
 signature_set
@@ -897,6 +902,83 @@ idempotency_key
 string
 optional
 Optional opaque key for one scheduled-send creation. Reuse it only to retry the exact same create request within 24 hours.
+Show example request & response
+reminder_list
+read:email
+List the follow-ups and snoozes the server tracks. show 'due' (default) returns follow-ups past due with no reply, and any that failed; 'upcoming' returns pending ones, soonest first; 'all' returns everything, finished included. Subjects and addresses come from mail, so the result is marked untrusted_content. Pass a returned id to the reminder tool to mark it done or cancel it. Read-only, with no action argument. A Pro and Business feature: on other plans a call returns a note naming the plan. Needs read:email.
+Parameter
+Type
+Required
+Description
+inbox_id
+string (uuid)
+optional
+UUID of an inbox to filter by. Optional; omit it to list the reminders of every inbox on the key.
+inbox
+string
+optional
+The same filter by email address. Optional; ignored if inbox_id is given.
+show
+enum
+optional
+'due' (default), 'upcoming' or 'all'.
+kind
+enum
+optional
+Optional: only 'follow_up' or only 'snooze'.
+limit
+integer
+optional
+Maximum number of results. Default 25, max 100.
+Show example request & response
+reminder
+manage:automations
+manage:folders
+Follow-ups and snoozes that run on the server while the chat is closed, with no model in the loop. Set action: 'follow_up' (message_id of a sent message plus days or due_at; it shows as due in reminder_list when nobody has replied by then, and a reply clears it), 'snooze' (message_id and until; the message leaves the inbox and the server moves it back at that time, optionally only if nobody replied), 'done' (id; stops a reminder and leaves a snoozed message where it is) or 'cancel' (id; stops it and brings a snoozed message back now). A send can start a follow-up in the same call with follow_up_days on email_compose or on draft (action 'send'). Nothing here sends mail. A Pro and Business feature: on other plans a call returns a note naming the plan. Needs manage:automations; snooze, and cancelling a snooze, also need manage:folders.
+Parameter
+Type
+Required
+Description
+action
+enum
+required
+Which operation to perform: "follow_up", "snooze", "done" or "cancel". Listing is the separate reminder_list tool.
+inbox_id
+string (uuid)
+optional
+UUID of the inbox the message is in. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.
+inbox
+string
+optional
+Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.
+message_id
+string
+optional
+The message to track or snooze (actions 'follow_up' and 'snooze'), as a send result or email_read returned its id.
+days
+integer
+optional
+Follow-up due this many whole days from now, 1 to 365 (action 'follow_up'). Pass this or due_at.
+due_at
+string (ISO 8601)
+optional
+Follow-up due at this ISO 8601 time with a timezone (action 'follow_up'). Pass this or days.
+until
+string (ISO 8601)
+optional
+When a snoozed message comes back, ISO 8601 with a timezone, in the future (action 'snooze').
+condition
+enum
+optional
+'always' (default) or 'no_reply': bring the message back only if nobody replied meanwhile (action 'snooze').
+folder
+string
+optional
+Optional existing folder or label the snoozed message waits in, by name or id (action 'snooze'). Default "MCPEmails Snoozed", created when missing.
+id
+string (uuid)
+optional
+Reminder id from reminder_list (actions 'done' and 'cancel').
 Show example request & response
 signature_get
 read:email

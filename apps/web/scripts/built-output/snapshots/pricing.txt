@@ -53,11 +53,18 @@ Pro
 $12
 /month
 Billed $144/year
+Set it up in chat. It keeps running after you close it.
 For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.
 Everything in Personal
 10 connected inboxes
 5x higher burst rate limit
 Longer analytics history
+Follow-up reminders when nobody replies to mail you sent
+Snooze: mail leaves the inbox and comes back when you choose
+A daily morning brief, placed straight in your inbox
+Search every connected inbox at once
+Instructions for your AI, per inbox
+Webhooks for new mail
 Get Pro
 Business
 $31.20
@@ -69,6 +76,7 @@ Everything in Pro
 Unlimited members with roles, at no extra cost
 Admins approve sends held for review
 Several workspaces on one subscription, one per company or client
+Webhooks for new mail
 Get Business
 All plans include: email fetched live, never stored · credentials encrypted at rest · data stored in the EU (Stockholm)
 One person running several company mailboxes? That is Pro, for up to 10.
@@ -101,6 +109,9 @@ Unlimited
 Unlimited
 Unlimited
 Unlimited
+Webhooks for new mail
+–
+–
 People who can sign in
 1 person
 1 person
@@ -127,6 +138,28 @@ folder
 draft
 schedule
 contact_search
+reminder
+–
+–
+reminder_list
+–
+–
+When the chat is closed
+Follow-up reminders on mail you send
+–
+–
+Snooze mail until a time you choose
+–
+–
+Morning brief in your inbox
+–
+–
+Search all inboxes at once
+–
+–
+Instructions for your AI, per inbox
+–
+–
 Analytics & security
 Usage analytics dashboard
 Members with roles (viewer, member, admin)
@@ -197,12 +230,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
