@@ -173,9 +173,11 @@ export function modelContextCapability(advertised: unknown): string {
  * Without it the model has no fact that the card is on screen: the tool result
  * is the same whether or not a host draws the card, so a model in a host it
  * believes cannot render one told the user "the card probably won't show up"
- * over a card the user was looking at (2026-10-25). Hosts deliver this with
- * the next user message, so it serves the turns after the call, not the reply
- * the call is part of. Any later line from this card replaces it, and each of
+ * over a card the user was looking at (2026-10-25). A host that forwards this
+ * delivers it with the next user message, so it serves the turns after the
+ * call. Claude does not forward it (checked 2026-10-25 on claude.ai: the
+ * request is answered ok, and the model reported neither this line nor a later
+ * save line on the next turn), so the server's notice promises nothing. Any later line from this card replaces it, and each of
  * those also says the card is the MCPEmails card. No body count: the body may
  * still be deferred (contract §8) when the card first renders.
  */
