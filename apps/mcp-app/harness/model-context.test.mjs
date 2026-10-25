@@ -160,6 +160,16 @@ async function main() {
     );
   }
 
+  group("the card says it is on screen");
+  {
+    expect(
+      "shown",
+      m.draftShownContextLine(SAVED),
+      "The MCPEmails draft card is on screen for the user, who can edit and send it. " +
+        `Its current draft_id is Drafts:3. ${SHAPE}`,
+    );
+  }
+
   group("a quoted subject cannot end its own sentence");
   {
     const line = m.draftSavedContextLine(

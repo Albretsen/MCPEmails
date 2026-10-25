@@ -437,6 +437,9 @@ export const SLOW_WRITE_MS = 4_000;
  * pointer, and which never sits where Save or Send are (`CONFIRM_GUARD_MS`).
  */
 export const SEND_UNDO_MS = 5_000;
+
+/** Why a countdown ended without sending, from either of the two checks. */
+const SEND_CHANGED_NOTE = "Not sent, because the draft changed. Press Send again to send it.";
 let sendUndoMs = SEND_UNDO_MS;
 /**
  * Harness only: the undo window, shortened so the suites that send do not each
@@ -1737,7 +1740,7 @@ export function DraftEditor(props: Props) {
     dropTimer();
     setPendingSend(null);
     if (changed) {
-      setSendNote("Not sent, because the draft changed. Press Send again to send it.");
+      setSendNote(SEND_CHANGED_NOTE);
       return;
     }
     if (!canSend || busy !== null || folded || confirm !== null) {
@@ -1798,7 +1801,7 @@ export function DraftEditor(props: Props) {
     // (a typed address that became a chip), so that is the state to hold.
     if (armedKey.current === null) armedKey.current = sendKey;
     if (armedKey.current !== sendKey) {
-      cancelSend("Not sent, because the draft changed. Press Send again to send it.");
+      cancelSend(SEND_CHANGED_NOTE);
     } else if (!canSend || busy !== null || folded || confirm !== null) {
       cancelSend("Not sent. The draft is unchanged.");
     }

@@ -168,6 +168,25 @@ export function modelContextCapability(advertised: unknown): string {
 // ---- the draft card --------------------------------------------------------
 
 /**
+ * When a fresh draft result first renders.
+ *
+ * Without it the model has no fact that the card is on screen: the tool result
+ * is the same whether or not a host draws the card, so a model in a host it
+ * believes cannot render one told the user "the card probably won't show up"
+ * over a card the user was looking at (2026-10-25). Hosts deliver this with
+ * the next user message, so it serves the turns after the call, not the reply
+ * the call is part of. Any later line from this card replaces it, and each of
+ * those also says the card is the MCPEmails card. No body count: the body may
+ * still be deferred (contract §8) when the card first renders.
+ */
+export function draftShownContextLine(draft: DraftFacts): string {
+  return (
+    `The MCPEmails draft card is on screen for the user, who can edit and send it. ` +
+    `Its current draft_id is ${idOf(draft)}. ${draftShape(draft)}`
+  );
+}
+
+/**
  * After a successful save.
  *
  * `bodyEdited` is "a save from this card has changed the body since the agent
