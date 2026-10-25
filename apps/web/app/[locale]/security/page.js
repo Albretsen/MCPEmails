@@ -2,9 +2,11 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'security' });
   const title = t.has('meta.title') ? t('meta.title') : 'Security & Trust';
   const description = t.has('meta.description')
@@ -44,6 +46,7 @@ const GOOGLE_POLICY_URL = 'https://developers.google.com/terms/api-services-user
 
 export default async function SecurityPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('security');
   const title = t.has('meta.title') ? t('meta.title') : 'AI Email Agent Security';

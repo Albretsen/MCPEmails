@@ -6,9 +6,11 @@ import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 import { planDisplayName } from '@/lib/stripe/plans';
 import { REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
 import { founderTermsVisible } from '@/lib/stripe/founder-offer-server';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'terms' });
   const title = t.has('meta.title') ? t('meta.title') : 'Terms of Service';
   const description = t.has('meta.description')
@@ -62,6 +64,7 @@ const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
 
 export default async function TermsPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('terms');
   const referralTerms = {

@@ -6,6 +6,7 @@ import { getClientContent, clientParams } from '@/lib/clients/content.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ClientSetupView from '../../../../components/marketing/ClientSetupView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * One setup page per MCP client, at /docs/<slug>.
@@ -30,6 +31,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale, client: slug } = await params;
+  requireLocale(locale);
   const client = getClient(slug);
   const content = await getClientContent(locale, slug);
   if (!client || !content) return {};
@@ -58,6 +60,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ClientSetupPage({ params }) {
   const { locale, client: slug } = await params;
+  requireLocale(locale);
   const client = getClient(slug);
   if (!client) notFound();
   setRequestLocale(locale);

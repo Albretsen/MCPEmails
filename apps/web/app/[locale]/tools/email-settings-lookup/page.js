@@ -7,6 +7,7 @@ import { isViewable } from '@/lib/connect/release.mjs';
 import { localizeHref } from '@/lib/blog/links.mjs';
 import { getPost, getPostLocales } from '@/lib/blog/posts';
 import EmailSettingsLookupView from '../../../../components/marketing/EmailSettingsLookupView';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../../styles/tools.css';
 
 /**
@@ -49,6 +50,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const c = await L.getLookupContent(locale);
   if (!c) return {};
   const { title, description } = c.meta;
@@ -75,6 +77,7 @@ export async function generateMetadata({ params }) {
 
 export default async function EmailSettingsLookupPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const c = await L.getLookupContent(locale);
   if (!c) notFound();
   setRequestLocale(locale);

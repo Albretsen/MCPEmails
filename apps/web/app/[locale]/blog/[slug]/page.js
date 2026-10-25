@@ -7,6 +7,7 @@ import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
 import { localizeHref } from '@/lib/blog/links.mjs';
 import { withReadingLangEscaped } from '@/i18n/reading-lang.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * Pre-render each post in the locales it is translated into. Any other locale
@@ -41,6 +42,7 @@ function buildAlternates(post, locale, path) {
 
 export async function generateMetadata({ params }) {
   const { locale, slug } = await params;
+  requireLocale(locale);
   const post = getLocalizedPost(slug, locale);
   if (!post) return {};
   const author = getAuthor(post);
@@ -77,6 +79,7 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogPostPage({ params }) {
   const { locale, slug } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const post = getLocalizedPost(slug, locale);

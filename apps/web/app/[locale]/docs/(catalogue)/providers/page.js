@@ -1,9 +1,11 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, pageJsonLd } from '@/i18n/seo';
 import ProvidersClient from '../../../../../components/marketing/ProvidersClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'docs' });
   const title = t.has('providers.meta.title') ? t('providers.meta.title') : 'Provider Support';
   const description = t.has('providers.meta.description')
@@ -30,6 +32,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ProvidersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   // WebPage + BreadcrumbList. This page is written to be the thing other

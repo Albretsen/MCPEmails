@@ -1,11 +1,13 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import FoundersClient from '../../../../components/marketing/FoundersClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 const PATH = '/for/founders';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'forFounders' });
   const title = t.has('meta.title') ? t('meta.title') : 'Email for founders';
   const description = t.has('meta.description')
@@ -34,6 +36,7 @@ export async function generateMetadata({ params }) {
 
 export default async function FoundersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'forFounders' });

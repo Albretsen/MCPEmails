@@ -11,6 +11,7 @@ import { getPost, getPostLocales } from '@/lib/blog/posts';
 import { getGuideCopy } from '@/lib/connect/guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * One landing page per email provider, at /connect/<slug>.
@@ -27,6 +28,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale, provider: slug } = await params;
+  requireLocale(locale);
   const provider = getProvider(slug);
   const content = await getProviderContent(locale, slug);
   if (!provider || !content || !isViewable(provider)) return {};
@@ -55,6 +57,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ConnectProviderPage({ params }) {
   const { locale, provider: slug } = await params;
+  requireLocale(locale);
   const provider = getProvider(slug);
   // Providers are released in waves (see lib/connect/release.mjs). A wave that
   // has not opened yet has no page at all, rather than a page carrying noindex:

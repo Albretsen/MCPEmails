@@ -6,6 +6,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { LEGAL_ENTITY_NAME, LEGAL_POSTAL_ADDRESS } from '@/lib/email/legal';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { withdrawalCopy } from './content.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/contract-forms.css';
 
 /**
@@ -27,6 +28,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const { meta } = withdrawalCopy(locale);
   return {
     title: meta.title,
@@ -58,6 +60,7 @@ function fillText(text, values) {
 
 export default async function WithdrawalPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const c = withdrawalCopy(locale);
 

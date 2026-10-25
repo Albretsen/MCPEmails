@@ -9,9 +9,11 @@ import {
 } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'about' });
   const title = t.has('meta.title') ? t('meta.title') : 'About MCPEmails';
   const description = t.has('meta.description')
@@ -122,6 +124,7 @@ function aboutJsonLd(locale, { title, description }) {
 
 export default async function AboutPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('about');
   const title = t.has('meta.title') ? t('meta.title') : 'About MCPEmails';

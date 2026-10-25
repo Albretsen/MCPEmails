@@ -10,6 +10,7 @@ import {
 } from '@/i18n/seo';
 import * as C from '@/lib/compare/email-mcp-servers.mjs';
 import EmailMcpServersView from '../../../components/marketing/EmailMcpServersView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /best-email-mcp-servers: the ranked field of MCP email servers.
@@ -49,6 +50,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = C.meta;
   return {
@@ -74,6 +76,7 @@ export async function generateMetadata({ params }) {
 
 export default async function BestEmailMcpServersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) notFound();
   setRequestLocale(locale);
 

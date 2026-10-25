@@ -1,23 +1,11 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { hasLocale } from 'next-intl';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
 import { routing } from '@/i18n/routing';
+import { requireLocale } from '@/i18n/require-locale';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
-
-/**
- * Any one-segment URL that is not a marketing path (/this-page-does-not-exist)
- * reaches this route with the segment as its "locale". The layout's notFound()
- * does not stop this page's metadata and body from rendering alongside it, so
- * without the same check here the 404 document carried the home meta
- * description and the FAQPage JSON-LD.
- */
-function requireLocale(locale: string): void {
-  if (!hasLocale(routing.locales, locale)) notFound();
-}
 
 export async function generateMetadata({
   params,

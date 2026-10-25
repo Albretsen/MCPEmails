@@ -5,9 +5,11 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pricingJsonLd } from '
 import PricingClient from '../../../components/marketing/PricingClient';
 import { attachFounder, founderDisplayFor } from '@/lib/stripe/founder-display';
 import { FOUNDER_VALID_UNTIL, pricesWithFounder } from '@/lib/stripe/founder-offer';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'pricing' });
   const title = t.has('meta.title') ? t('meta.title') : 'Pricing';
   const description = t.has('meta.description')
@@ -36,6 +38,7 @@ export async function generateMetadata({ params }) {
 
 export default async function PricingPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   // The Business founder price, while it is open (src/lib/stripe/founder-offer.ts).
   // Null outside the window, with the flag off, when every place is taken,

@@ -6,6 +6,7 @@ import { issueSupportFormToken } from '@/lib/support/form-token';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import CancelForm from '../../../components/legal/CancelForm';
 import { cancelCopy } from './content.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/help.css';
 import '../../../styles/contract-forms.css';
 
@@ -34,6 +35,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const { meta } = cancelCopy(locale);
   return {
     title: meta.title,
@@ -52,6 +54,7 @@ export async function generateMetadata({ params }) {
 
 export default async function CancelPage({ params, searchParams }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const c = cancelCopy(locale);
   const sp = await searchParams;

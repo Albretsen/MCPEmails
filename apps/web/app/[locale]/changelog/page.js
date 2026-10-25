@@ -3,6 +3,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd, APP_URL } 
 import { getEntriesByMonth, getEntries, getLatestDate } from '@/lib/changelog/entries.mjs';
 import { getChangelogCopy } from '@/lib/changelog/copy.mjs';
 import ChangelogView from '../../../components/marketing/ChangelogView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /changelog: the public record of what has shipped.
@@ -19,6 +20,7 @@ import ChangelogView from '../../../components/marketing/ChangelogView';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const copy = getChangelogCopy(locale);
   const { title, description } = copy.meta;
   return {
@@ -44,6 +46,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ChangelogPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const copy = getChangelogCopy(locale);
