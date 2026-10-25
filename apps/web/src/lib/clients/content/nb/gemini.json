@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://support.google.com/gemini/answer/17209137?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://support.google.com/gemini/answer/17094507?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://blog.google/innovation-and-ai/products/gemini-app/gemini-spark-updates-june-2026/"
+  ],
+  "meta": {
+    "title": "Koble e-post til Gemini-appen: oppsett av egendefinert MCP-app",
+    "description": "Gi Gemini-appen en ekte innboks som egendefinert app. Lim inn én MCP-server-URL under Connected Apps og logg inn. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Gemini + e-post",
+    "titleLine1": "Koble innboksen din til Gemini-appen",
+    "titleLine2": "som egendefinert tilkoblet app",
+    "lead": "Legg til én URL under Connected Apps på gemini.google.com, så kan Gemini lese, søke i, sende, svare på, videresende, planlegge og organisere den ekte e-posten din, både på nettet og i mobilappen.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "På gemini.google.com åpner du Settings, Connected Apps, og under Custom apps legger du til en egendefinert app med MCP-server-URL-en https://mcpemails.com/api/mcp. Klikk Next og følg innloggingen på skjermen for å autorisere med MCPEmails. Google tilbyr foreløpig egendefinerte apper til brukere over 18 år i USA som er logget inn med en personlig Google-konto, har Keep Activity slått på og bruker Gemini på engelsk."
+  },
+  "method": {
+    "title": "Slik kobler Gemini-appen seg til: OAuth, ingen API-nøkkel",
+    "body": "Oppsettskjemaet til Google forventer en MCP-server som støtter <b>Dynamic Client Registration</b>, og det gjør denne: Gemini-appen registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID eller fylle inn noe under Advanced features. Deretter autoriserer den med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne Connected Apps på nettet",
+      "p": "Gå til gemini.google.com på datamaskinen. Nederst klikker du <b>Settings</b> og deretter <b>Connected Apps</b>. Egendefinerte apper kan bare legges til i nettappen."
+    },
+    {
+      "h": "Legg til en egendefinert app",
+      "p": "Under <b>Custom apps</b> bruker du feltet <b>Add a custom app link to get started</b>, eller klikker <b>Add a custom app</b> hvis du allerede har en. Skriv inn <code>https://mcpemails.com/api/mcp</code> som MCP-server-URL, og la Advanced features være lukket."
+    },
+    {
+      "h": "Klikk Next og autoriser",
+      "p": "Klikk <b>Next</b> og følg instruksjonene på skjermen. Du sendes til MCPEmails for å logge inn og godkjenne tilgangene du vil at Gemini skal ha."
+    },
+    {
+      "h": "Hent den fram med @",
+      "p": "Skriv <b>@</b> i en samtale og velg MCPEmails-appen, så er du sikker på at Gemini bruker den for den forespørselen. Når den er koblet til, er den også tilgjengelig i Gemini-mobilappen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Egendefinerte apper gjelder foreløpig bare USA, personlige kontoer og engelsk",
+      "p": "Google oppgir disse kravene: du må være over 18 år og i USA, være logget inn med en personlig Google-konto og ha Keep Activity slått på. Google-kontoer fra jobb eller skole kan ikke legge til egendefinerte apper ennå, og funksjonen finnes bare på engelsk. Vises ikke Custom apps under Connected Apps, sjekker du disse punktene først. Hjelpesiden til Google nevner ingen betalt plan for egendefinerte apper."
+    },
+    {
+      "h": "Ikke fyll inn Advanced features",
+      "p": "Skjemaet har et felt for legitimasjon bak <b>Show more</b> ved siden av Advanced features. Det er ment for servere uten Dynamic Client Registration. Denne serveren støtter det, så la feltet stå tomt og la Gemini registrere seg selv. Det finnes ingen klient-ID eller klienthemmelighet å opprette hos MCPEmails."
+    },
+    {
+      "h": "Gemini ber om bekreftelse før skrivehandlinger, og du kan i tillegg begrense tilgangene",
+      "p": "Ifølge Google ber Gemini foreløpig om manuell bekreftelse før enhver skrivehandling. I tillegg lar samtykkeskjermen deg gi Gemini bare <code>read:email</code> og <code>search:email</code>, noe som holder for sortering og søk, eller du kan slå på menneskelig godkjenning i dashbordet slik at hver sending venter på en person."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Gemini-appen?",
+      "a": "På gemini.google.com åpner du Settings, Connected Apps, og under Custom apps legger du til en egendefinert app med URL-en https://mcpemails.com/api/mcp. Klikk Next, logg inn på MCPEmails og godkjenn tilgangene. Da har Gemini verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, både på nettet og i mobilappen."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Gemini?",
+      "a": "Nei. Gemini-appen registrerer seg selv via Dynamic Client Registration og logger deg inn med OAuth, så ingenting hemmelig skrives inn i skjemaet. En bearer-nøkkel er tilgjengelig for andre klienter som ikke kan gjøre det."
+    },
+    {
+      "q": "Hvorfor ser jeg ikke Custom apps under Connected Apps?",
+      "a": "Google tilbyr foreløpig egendefinerte apper bare til brukere over 18 år i USA som er logget inn med en personlig Google-konto, har Keep Activity slått på og bruker Gemini på engelsk. Jobb- og skolekontoer støttes ikke ennå. Egendefinerte apper legges til i nettappen på gemini.google.com, ikke i mobilappen."
+    },
+    {
+      "q": "Hvilke postkasser kan Gemini nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Gemini sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt, og ifølge Google ber Gemini deg bekrefte skrivehandlinger. Eieren av en innboks kan også kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Tilbakekaller du OAuth-oppføringen under Dashboard, API Keys, eller sletter innboksen, avsluttes tilkoblingen med en gang. I Gemini kobler More details, Remove app i tillegg serveren fra Google-kontoen din."
+    }
+  ],
+  "ctaBand": {
+    "title": "Ta innboksen med inn i Gemini-appen",
+    "sub": "Én URL, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

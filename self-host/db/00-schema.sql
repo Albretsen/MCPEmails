@@ -115,6 +115,14 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS draft_editor_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS draft_editor_hidden                boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
+  ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
+  ADD COLUMN IF NOT EXISTS chat_checkout_link_enabled         boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
@@ -201,11 +209,89 @@ ALTER TABLE public.inboxes
     CONSTRAINT inboxes_smtp_security_check CHECK (smtp_security IN ('tls', 'starttls')),
   ADD COLUMN IF NOT EXISTS send_approval_required boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS send_review_mode       text NOT NULL DEFAULT 'off'
-    CONSTRAINT inboxes_send_review_mode_check CHECK (send_review_mode IN ('off', 'inline', 'dashboard')),
+    CONSTRAINT inboxes_send_review_mode_check CHECK (send_review_mode IN ('off', 'chat', 'inline', 'dashboard')),
   ADD COLUMN IF NOT EXISTS bulk_review_mode       text NOT NULL DEFAULT 'off'
     CONSTRAINT inboxes_bulk_review_mode_check CHECK (bulk_review_mode IN ('off', 'plan')),
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false;  -- send signature images inline (cid:) instead of as https URLs
+  ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
+  ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
+  ADD COLUMN IF NOT EXISTS ai_instructions        text,   -- owner's standing instructions for AI clients, Pro feature (20261024235300)
+  ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
+  ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
+  ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
+-- The rules for folder_overrides, as in the hosted migration 20261020230000:
+-- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
+-- never INBOX, never one folder for two roles.
+CREATE OR REPLACE FUNCTION public.inbox_folder_overrides_valid(overrides jsonb)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+SET search_path = ''
+AS $$
+  SELECT overrides IS NULL OR (
+    jsonb_typeof(overrides) = 'object'
+    AND (overrides - ARRAY['sent', 'drafts', 'trash', 'spam', 'archive']) = '{}'::jsonb
+    AND NOT EXISTS (
+      SELECT 1
+        FROM jsonb_each(overrides) AS e(key, value)
+       WHERE jsonb_typeof(e.value) <> 'string'
+          OR char_length(e.value #>> '{}') NOT BETWEEN 1 AND 512
+          OR upper(e.value #>> '{}') = 'INBOX'
+    )
+    AND (SELECT count(*) FROM jsonb_each(overrides))
+      = (SELECT count(DISTINCT e.value) FROM jsonb_each(overrides) AS e(key, value))
+  );
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_folder_overrides_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_folder_overrides_check
+      CHECK (public.inbox_folder_overrides_valid(folder_overrides));
+  END IF;
+END
+$$;
+-- The rule for ai_instructions, as in the hosted migration 20261024235300:
+-- trimmed, 1 to 2000 characters, or NULL.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_ai_instructions_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_ai_instructions_check
+      CHECK (
+        ai_instructions IS NULL
+        OR (char_length(ai_instructions) BETWEEN 1 AND 2000
+            AND ai_instructions = btrim(ai_instructions, E' \t\r\n'))
+      );
+  END IF;
+END
+$$;
+-- Parking, as in the hosted migration 20261024173000: both NULL, or both set
+-- with a known reason.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_parked_reason_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_parked_reason_check
+      CHECK (
+        (parked_at IS NULL AND parked_reason IS NULL)
+        OR (parked_at IS NOT NULL AND parked_reason IS NOT NULL AND parked_reason IN ('plan_limit'))
+      );
+  END IF;
+END
+$$;
 CREATE INDEX IF NOT EXISTS idx_inboxes_workspace_id_status   ON public.inboxes (workspace_id, status);
 CREATE INDEX IF NOT EXISTS idx_inboxes_workspace_id_provider ON public.inboxes (workspace_id, provider);
 -- Full (non-partial) unique index so `provision-inbox` can upsert by this pair
@@ -337,6 +423,220 @@ END;
 $$;
 
 -- ============================================================
+-- Outbound abuse brakes: outbound_send_events, inbox_send_brakes,
+-- outbound_send_gate(), outbound_send_refusal()
+-- (migration 20261024130000_outbound_abuse_brakes.sql). The hosted
+-- schema runs purge_outbound_send_events() hourly with pg_cron; self-host has
+-- no pg_cron, so run it from your own scheduler to keep the table small.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.outbound_send_events (
+  id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  workspace_id   uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id       uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  kind           text NOT NULL CHECK (kind IN ('message', 'recipient', 'refusal')),
+  messages       integer NOT NULL DEFAULT 1 CHECK (messages >= 1),
+  content_hash   text CHECK (content_hash IS NULL OR content_hash ~ '^[0-9a-f]{64}$'),
+  recipient_hash text CHECK (recipient_hash IS NULL OR recipient_hash ~ '^[0-9a-f]{64}$'),
+  created_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbound_send_events_inbox_kind_time
+  ON public.outbound_send_events (inbox_id, kind, created_at);
+CREATE INDEX IF NOT EXISTS idx_outbound_send_events_inbox_content_time
+  ON public.outbound_send_events (inbox_id, content_hash, created_at)
+  WHERE kind = 'recipient';
+CREATE INDEX IF NOT EXISTS idx_outbound_send_events_created_at
+  ON public.outbound_send_events (created_at);
+CREATE INDEX IF NOT EXISTS idx_outbound_send_events_workspace_id
+  ON public.outbound_send_events (workspace_id);
+
+ALTER TABLE public.outbound_send_events ENABLE ROW LEVEL SECURITY;
+
+-- Current brake state per inbox. A row exists only once a brake has tripped.
+CREATE TABLE IF NOT EXISTS public.inbox_send_brakes (
+  inbox_id            uuid PRIMARY KEY REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  workspace_id        uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  fanout_hold_until   timestamptz,
+  refusal_pause_until timestamptz,
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_inbox_send_brakes_workspace_id
+  ON public.inbox_send_brakes (workspace_id);
+
+ALTER TABLE public.inbox_send_brakes ENABLE ROW LEVEL SECURITY;
+
+-- ── outbound_send_gate ──────────────────────────────────────────────────────
+-- Decide one send and, when it is allowed and p_commit is true, record it, in
+-- one transaction serialised per inbox (advisory lock), so two concurrent
+-- sends cannot both slip under a ceiling.
+--
+-- Returns jsonb { decision, retry_at?, newly_tripped? } where decision is one
+-- of: allow | frozen | paused | daily_limit | hold.
+--
+-- p_human_approved: the send is already a human's decision (an approved send
+-- being dispatched). It skips the fan-out brake, which exists to put a human
+-- in the loop, and is still counted and still subject to the other three.
+CREATE OR REPLACE FUNCTION public.outbound_send_gate(
+  p_workspace_id     uuid,
+  p_inbox_id         uuid,
+  p_messages         integer,
+  p_content_hash     text,
+  p_recipient_hashes text[],
+  p_daily_limit      integer,
+  p_fanout_limit     integer,
+  p_fanout_window_ms bigint,
+  p_human_approved   boolean,
+  p_commit           boolean
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_now        timestamptz := now();
+  v_messages   integer := GREATEST(COALESCE(p_messages, 1), 1);
+  v_frozen     timestamptz;
+  v_brake      public.inbox_send_brakes%ROWTYPE;
+  v_sent       bigint;
+  v_oldest     timestamptz;
+  v_distinct   bigint;
+  v_hold_until timestamptz;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('outbound_send_gate:' || p_inbox_id::text, 0));
+
+  SELECT sends_frozen_at INTO v_frozen FROM public.workspaces WHERE id = p_workspace_id;
+  IF v_frozen IS NOT NULL THEN
+    RETURN jsonb_build_object('decision', 'frozen');
+  END IF;
+
+  SELECT * INTO v_brake FROM public.inbox_send_brakes WHERE inbox_id = p_inbox_id;
+  IF v_brake.refusal_pause_until IS NOT NULL AND v_brake.refusal_pause_until > v_now THEN
+    RETURN jsonb_build_object('decision', 'paused', 'retry_at', v_brake.refusal_pause_until);
+  END IF;
+
+  SELECT COALESCE(sum(messages), 0), min(created_at) INTO v_sent, v_oldest
+    FROM public.outbound_send_events
+   WHERE inbox_id = p_inbox_id AND kind = 'message' AND created_at > v_now - interval '24 hours';
+  IF v_sent + v_messages > p_daily_limit THEN
+    RETURN jsonb_build_object(
+      'decision', 'daily_limit',
+      'retry_at', COALESCE(v_oldest, v_now) + interval '24 hours'
+    );
+  END IF;
+
+  IF NOT COALESCE(p_human_approved, false) THEN
+    IF v_brake.fanout_hold_until IS NOT NULL AND v_brake.fanout_hold_until > v_now THEN
+      RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_brake.fanout_hold_until, 'newly_tripped', false);
+    END IF;
+
+    IF p_content_hash IS NOT NULL AND COALESCE(cardinality(p_recipient_hashes), 0) > 0 THEN
+      SELECT count(*) INTO v_distinct FROM (
+        SELECT recipient_hash FROM public.outbound_send_events
+         WHERE inbox_id = p_inbox_id
+           AND kind = 'recipient'
+           AND content_hash = p_content_hash
+           AND created_at > v_now - (p_fanout_window_ms || ' milliseconds')::interval
+        UNION
+        SELECT unnest(p_recipient_hashes)
+      ) AS recipients;
+      IF v_distinct > p_fanout_limit THEN
+        -- Held until the end of the current UTC day.
+        v_hold_until := (date_trunc('day', v_now AT TIME ZONE 'UTC') + interval '1 day') AT TIME ZONE 'UTC';
+        INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, fanout_hold_until, updated_at)
+        VALUES (p_inbox_id, p_workspace_id, v_hold_until, v_now)
+        ON CONFLICT (inbox_id) DO UPDATE
+          SET fanout_hold_until = EXCLUDED.fanout_hold_until, updated_at = v_now;
+        RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_hold_until, 'newly_tripped', true);
+      END IF;
+    END IF;
+  END IF;
+
+  IF COALESCE(p_commit, true) THEN
+    INSERT INTO public.outbound_send_events (workspace_id, inbox_id, kind, messages)
+    VALUES (p_workspace_id, p_inbox_id, 'message', v_messages);
+    IF p_content_hash IS NOT NULL AND COALESCE(cardinality(p_recipient_hashes), 0) > 0 THEN
+      INSERT INTO public.outbound_send_events (workspace_id, inbox_id, kind, content_hash, recipient_hash)
+      SELECT p_workspace_id, p_inbox_id, 'recipient', p_content_hash, r
+        FROM (SELECT DISTINCT unnest(p_recipient_hashes) AS r) AS distinct_recipients
+       WHERE r IS NOT NULL;
+    END IF;
+  END IF;
+
+  RETURN jsonb_build_object('decision', 'allow');
+END;
+$$;
+
+-- ── outbound_send_refusal ───────────────────────────────────────────────────
+-- Count one provider spam/policy refusal for an inbox. The p_threshold-th
+-- refusal inside p_window_ms pauses the inbox for p_pause_ms. Returns jsonb
+-- { paused, newly_tripped, retry_at? }.
+CREATE OR REPLACE FUNCTION public.outbound_send_refusal(
+  p_workspace_id uuid,
+  p_inbox_id     uuid,
+  p_threshold    integer,
+  p_window_ms    bigint,
+  p_pause_ms     bigint
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_now    timestamptz := now();
+  v_count  bigint;
+  v_until  timestamptz;
+  v_active timestamptz;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('outbound_send_gate:' || p_inbox_id::text, 0));
+
+  INSERT INTO public.outbound_send_events (workspace_id, inbox_id, kind)
+  VALUES (p_workspace_id, p_inbox_id, 'refusal');
+
+  SELECT refusal_pause_until INTO v_active FROM public.inbox_send_brakes WHERE inbox_id = p_inbox_id;
+  IF v_active IS NOT NULL AND v_active > v_now THEN
+    RETURN jsonb_build_object('paused', true, 'newly_tripped', false, 'retry_at', v_active);
+  END IF;
+
+  SELECT count(*) INTO v_count FROM public.outbound_send_events
+   WHERE inbox_id = p_inbox_id AND kind = 'refusal'
+     AND created_at > v_now - (p_window_ms || ' milliseconds')::interval;
+  IF v_count < p_threshold THEN
+    RETURN jsonb_build_object('paused', false, 'newly_tripped', false);
+  END IF;
+
+  v_until := v_now + (p_pause_ms || ' milliseconds')::interval;
+  INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, refusal_pause_until, updated_at)
+  VALUES (p_inbox_id, p_workspace_id, v_until, v_now)
+  ON CONFLICT (inbox_id) DO UPDATE
+    SET refusal_pause_until = EXCLUDED.refusal_pause_until, updated_at = v_now;
+  RETURN jsonb_build_object('paused', true, 'newly_tripped', true, 'retry_at', v_until);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.purge_outbound_send_events()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_events bigint;
+  v_brakes bigint;
+BEGIN
+  DELETE FROM public.outbound_send_events WHERE created_at < now() - interval '2 days';
+  GET DIAGNOSTICS v_events = ROW_COUNT;
+  DELETE FROM public.inbox_send_brakes
+   WHERE COALESCE(fanout_hold_until, '-infinity') < now() - interval '1 day'
+     AND COALESCE(refusal_pause_until, '-infinity') < now() - interval '1 day';
+  GET DIAGNOSTICS v_brakes = ROW_COUNT;
+  RETURN jsonb_build_object('outbound_send_events', v_events, 'inbox_send_brakes', v_brakes);
+END;
+$$;
+
+-- ============================================================
 -- The rest of the data plane, copied from the hosted schema (pg_dump of
 -- public, 2026-10-15) with RLS policies, grants to anon/authenticated and
 -- auth.users foreign keys removed (they point at public.users here).
@@ -347,6 +647,7 @@ $$;
 --   send review      send_approvals, outbound_idempotency
 --   drafts           draft_lineage, draft_card_activity
 --   bulk operations  bulk_plans, bulk_runs
+--   subscriptions    subscription_plans, unsubscribe_requests
 --   automations      triage_rules, triage_runs, triage_run_items,
 --                    triage_seen_messages
 --   clients          mcp_client_capabilities, workspace_members
@@ -418,11 +719,22 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     current_period_start timestamp with time zone,
+    -- Pause / downgrade state (20261024233000). Hosted-only in practice (a
+    -- self-host stack has no Stripe), mirrored because
+    -- workspace_action_allowance() reads paused_from.
+    paused_from timestamp with time zone,
+    pause_resumes_at timestamp with time zone,
+    pending_plan text,
+    pending_plan_effective_at timestamp with time zone,
+    inbox_keep_order jsonb,
+    pause_history jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT user_billing_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_billing_stripe_customer_id_key UNIQUE (stripe_customer_id),
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_billing_stripe_customer_id ON public.user_billing (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL);
+ALTER TABLE public.user_billing
+  ADD COLUMN IF NOT EXISTS last_decline_code text;
 
 CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     user_id uuid NOT NULL,
@@ -435,11 +747,23 @@ CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     unlimited_inboxes boolean DEFAULT false NOT NULL,
-    CONSTRAINT user_usage_entitlements_kind_check CHECK ((kind = ANY (ARRAY['standard'::text, 'comped_scale'::text]))),
-    CONSTRAINT user_usage_entitlements_source_check CHECK ((source = ANY (ARRAY['migration'::text, 'support'::text, 'promotion'::text]))),
+    referral_personal_until timestamp with time zone,
+    CONSTRAINT user_usage_entitlements_kind_check CHECK ((kind = ANY (ARRAY['standard'::text, 'comped_scale'::text, 'referral_personal'::text]))),
+    CONSTRAINT user_usage_entitlements_source_check CHECK ((source = ANY (ARRAY['migration'::text, 'support'::text, 'promotion'::text, 'referral'::text]))),
     CONSTRAINT user_usage_entitlements_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_usage_entitlements_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id) ON DELETE SET NULL,
     CONSTRAINT user_usage_entitlements_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+);
+
+
+-- Runtime switches (hosted: 20261019150000). The server reads
+-- pro_features_public through workspace_pro_features(); a missing row is off.
+CREATE TABLE IF NOT EXISTS public.pricing_switches (
+    key text NOT NULL,
+    enabled boolean NOT NULL,
+    note text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pricing_switches_pkey PRIMARY KEY (key)
 );
 
 
@@ -944,6 +1268,7 @@ CREATE TABLE IF NOT EXISTS public.triage_rules (
     deleted_at timestamp with time zone,
     paused_reason text,
     paused_until timestamp with time zone,
+    CONSTRAINT triage_rules_paused_reason_check CHECK (((paused_reason IS NULL) OR (paused_reason = ANY (ARRAY['plan_limit'::text, 'inbox_parked'::text])))),
     CONSTRAINT triage_rules_interval_minutes_check CHECK ((interval_minutes = ANY (ARRAY[15, 30, 60, 180, 360, 720, 1440]))),
     CONSTRAINT triage_rules_interval_required_check CHECK ((interval_minutes IS NOT NULL)),
     CONSTRAINT triage_rules_max_messages_check CHECK (((max_messages_per_run >= 1) AND (max_messages_per_run <= 200))),
@@ -1031,6 +1356,62 @@ CREATE TABLE IF NOT EXISTS public.inbox_sender_aliases (
 CREATE UNIQUE INDEX IF NOT EXISTS inbox_sender_aliases_inbox_address_key
   ON public.inbox_sender_aliases (inbox_id, lower(email_address));
 
+-- Subscription cleanup (20261024210000). senders and progress are ciphertext.
+CREATE TABLE IF NOT EXISTS public.subscription_plans (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  senders              jsonb NOT NULL,
+  senders_encrypted    boolean NOT NULL DEFAULT true,
+  sender_count         integer NOT NULL CHECK (sender_count >= 0),
+  summary              jsonb NOT NULL DEFAULT '{}'::jsonb,
+  window_days          integer NOT NULL CHECK (window_days BETWEEN 1 AND 365),
+  scanned              integer NOT NULL DEFAULT 0 CHECK (scanned >= 0),
+  truncated            boolean NOT NULL DEFAULT false,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  expires_at           timestamptz NOT NULL,
+  used_at              timestamptz,
+  used_by_api_key_id   uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  progress             jsonb,
+  backlog_action       text CHECK (backlog_action IS NULL OR backlog_action IN ('archive', 'keep')),
+  backlog_moved        integer NOT NULL DEFAULT 0 CHECK (backlog_moved >= 0),
+  backlog_remaining    integer NOT NULL DEFAULT 0 CHECK (backlog_remaining >= 0),
+  backlog_leased_until timestamptz
+);
+CREATE INDEX IF NOT EXISTS subscription_plans_workspace_created_idx
+  ON public.subscription_plans (workspace_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.unsubscribe_requests (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id     uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id         uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  plan_id          uuid REFERENCES public.subscription_plans(id) ON DELETE SET NULL,
+  api_key_id       uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  sender_key       text NOT NULL,
+  sender_domain    text,
+  display_name     text,
+  from_address     text,
+  method           text NOT NULL CHECK (method IN ('one_click', 'mailto', 'link', 'none')),
+  status           text NOT NULL CHECK (status IN ('pending', 'requested', 'failed', 'draft_ready', 'needs_user', 'filtered', 'skipped_unsafe', 'stopped', 'still_sending')),
+  http_status      integer,
+  error            text,
+  url_host         text,
+  draft_id         text,
+  idempotency_key  text NOT NULL UNIQUE,
+  requested_at     timestamptz,
+  check_after      timestamptz,
+  checked_at       timestamptz,
+  check_leased_at  timestamptz,
+  check_attempts   integer NOT NULL DEFAULT 0,
+  claimed_at       timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS unsubscribe_requests_follow_up_idx
+  ON public.unsubscribe_requests (check_after)
+  WHERE checked_at IS NULL AND check_after IS NOT NULL;
+
 
 CREATE OR REPLACE TRIGGER billing_email_sends_updated_at
   BEFORE UPDATE ON public.billing_email_sends
@@ -1052,6 +1433,28 @@ CREATE OR REPLACE TRIGGER user_usage_entitlements_updated_at
 -- RPCs the server calls. Bodies match the hosted functions; only
 -- emit_system_event differs (see its comment).
 -- ============================================================
+
+-- Pro feature gate inputs (hosted: 20261024235100_pro_features_gate.sql).
+CREATE OR REPLACE FUNCTION public.workspace_pro_features(p_workspace_id uuid) RETURNS TABLE(plan text, comped_scale boolean, rollout_enabled boolean, public_launch boolean)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT
+    CASE WHEN e.kind = 'comped_scale'
+      AND (e.expires_at IS NULL OR e.expires_at > now()) THEN 'pro'
+      ELSE w.plan
+    END AS plan,
+    COALESCE(e.kind = 'comped_scale' AND (e.expires_at IS NULL OR e.expires_at > now()), false) AS comped_scale,
+    w.pro_features_enabled AS rollout_enabled,
+    COALESCE(
+      (SELECT s.enabled FROM public.pricing_switches s WHERE s.key = 'pro_features_public'),
+      false
+    ) AS public_launch
+  FROM public.workspaces w
+  LEFT JOIN public.user_usage_entitlements e ON e.user_id = w.owner_id
+  WHERE w.id = p_workspace_id
+    AND w.deleted_at IS NULL;
+$$;
 
 CREATE OR REPLACE FUNCTION public.workspace_action_allowance(p_workspace_id uuid) RETURNS TABLE(plan text, owner_id uuid, exempt boolean, exempt_reason text, cap integer, period_start timestamp with time zone, period_end timestamp with time zone, grace_ends_at timestamp with time zone, in_grace boolean, used integer, remaining integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
@@ -1091,6 +1494,7 @@ DECLARE
   v_remaining       integer;
   v_ub_start        timestamptz;
   v_ub_end          timestamptz;
+  v_paused_from     timestamptz;
 BEGIN
   -- (a) The workspace. deleted_at is irrelevant: a soft-deleted workspace
   -- cannot make tool calls, and if it is restored its allowance must not have
@@ -1178,7 +1582,13 @@ BEGIN
     v_grace_ends_at := v_created_at + c_grace;
     v_in_grace := v_now < v_grace_ends_at;
     v_period_end := v_month_end;
-    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at), v_month_end);
+    -- A paused subscriber's window opens no earlier than paused_from
+    -- (20261024233000). Always NULL on a self-host stack.
+    SELECT ub.paused_from INTO v_paused_from
+    FROM public.user_billing ub
+    WHERE ub.user_id = v_owner_id AND ub.paused_from <= v_now
+    LIMIT 1;
+    v_period_start := LEAST(GREATEST(v_month_start, v_grace_ends_at, v_paused_from), v_month_end);
     v_cap := c_free_cap;
   END IF;
 
@@ -1680,6 +2090,261 @@ AS $$
   INSERT INTO public.system_events (event_type, payload, status)
   VALUES (p_event_type, COALESCE(p_payload, '{}'::jsonb), 'pending');
 $$;
+
+-- ============================================================
+-- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
+-- 20261024235200). message_ref and summary are AES-256-GCM wrappers
+-- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
+-- /reminders-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
+-- =====================================================
+
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.reminders (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id         uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  inbox_id             uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  api_key_id           uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  kind                 text NOT NULL CHECK (kind IN ('follow_up', 'snooze')),
+  status               text NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'due', 'replied', 'returned', 'done', 'cancelled', 'failed')),
+  condition            text NOT NULL DEFAULT 'always' CHECK (condition IN ('always', 'no_reply')),
+  due_at               timestamptz NOT NULL,
+  next_check_at        timestamptz,
+  message_digest       text NOT NULL,
+  message_ref          jsonb NOT NULL,
+  summary              jsonb,
+  folder               text,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  last_error_code      text,
+  last_checked_at      timestamptz,
+  replied_at           timestamptz,
+  returned_at          timestamptz,
+  completed_at         timestamptz,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
+  WHERE status IN ('pending', 'due') AND claimed_at IS NULL AND next_check_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS reminders_inbox_open_idx ON public.reminders (inbox_id, next_check_at)
+  WHERE status IN ('pending', 'due');
+CREATE INDEX IF NOT EXISTS reminders_workspace_status_idx ON public.reminders (workspace_id, status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS reminders_open_message_uniq ON public.reminders (inbox_id, kind, message_digest)
+  WHERE status IN ('pending', 'due', 'failed');
+CREATE OR REPLACE TRIGGER reminders_updated_at
+  BEFORE UPDATE ON public.reminders
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+-- ── Re-arm on reconnect ─────────────────────────────────────────────────────
+-- A snooze never goes 'failed' on an auth, inbox or transport error: it backs
+-- off (5 min, 15 min, 1 h, 4 h, then daily) and keeps trying, because giving up
+-- would leave the message hidden. When the user reconnects or re-authorises the
+-- inbox, every backed-off reminder of it is due again at once, so a snoozed
+-- message comes back within a minute of the fix rather than at the next daily
+-- retry. Snoozes only once their own time has come; open follow-ups always.
+-- Fires on the inbox becoming active, or on a new password / refresh token
+-- while active. Harmless when nothing has failed (no row matches).
+CREATE OR REPLACE FUNCTION public.reminders_rearm_on_reconnect()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.reminders
+     SET next_check_at = now()
+   WHERE inbox_id = NEW.id
+     AND status IN ('pending', 'due')
+     AND consecutive_failures > 0
+     AND claimed_at IS NULL
+     AND next_check_at > now()
+     AND (kind = 'follow_up' OR due_at <= now());
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.reminders_rearm_on_reconnect() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS reminders_rearm_on_reconnect ON public.inboxes;
+CREATE TRIGGER reminders_rearm_on_reconnect
+  AFTER UPDATE OF status, imap_password, oauth_refresh_token ON public.inboxes
+  FOR EACH ROW
+  WHEN (
+    NEW.status = 'active' AND (
+      OLD.status IS DISTINCT FROM NEW.status
+      OR OLD.imap_password IS DISTINCT FROM NEW.imap_password
+      OR OLD.oauth_refresh_token IS DISTINCT FROM NEW.oauth_refresh_token
+    )
+  )
+  EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
+-- ============================================================
+-- Checkout link in the Free-cap refusal (hosted migrations
+-- 20260903120000_experiments and 20261024180000_chat_checkout_links).
+--
+-- The seeded workspace is exempt from the Free cap, so a self-host install
+-- never refuses for it and never reaches these. They are here because the
+-- server names them (self-host-schema.test.ts holds every .from/.rpc to this
+-- file), and so an operator who sets CHAT_CHECKOUT_LINK by mistake gets a
+-- quiet "no link" instead of a PostgREST error on every refusal. Only the
+-- columns and functions the server uses; the hosted read-out and redeem RPCs
+-- belong to the web app and are not copied.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.experiments (
+  key                   text PRIMARY KEY CHECK (key ~ '^[a-z0-9_]{2,64}$'),
+  name                  text NOT NULL,
+  description           text,
+  status                text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'running', 'concluded')),
+  variants              jsonb NOT NULL,
+  winner_variant_id     text,
+  retention_goal        text NOT NULL DEFAULT 'mailbox_activity',
+  retention_window_days int NOT NULL DEFAULT 7,
+  created_at            timestamptz NOT NULL DEFAULT now(),
+  updated_at            timestamptz NOT NULL DEFAULT now(),
+  started_at            timestamptz,
+  concluded_at          timestamptz
+);
+ALTER TABLE public.experiments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.experiments FROM anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.experiment_assignments (
+  experiment_key    text NOT NULL REFERENCES public.experiments(key) ON DELETE CASCADE,
+  subject_id        text NOT NULL CHECK (subject_id ~ '^[a-f0-9]{32}$'),
+  variant_id        text NOT NULL,
+  first_assigned_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (experiment_key, subject_id)
+);
+ALTER TABLE public.experiment_assignments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.experiment_assignments FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.experiment_assign(p_key text, p_subject_id text, p_variant_id text)
+RETURNS text
+LANGUAGE plpgsql
+VOLATILE
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_stored text;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.experiments e, jsonb_array_elements(e.variants) AS v(value)
+    WHERE e.key = p_key AND v.value ->> 'id' = p_variant_id
+  ) THEN
+    RAISE EXCEPTION 'variant % is not part of experiment %', p_variant_id, p_key
+      USING ERRCODE = 'check_violation';
+  END IF;
+  INSERT INTO public.experiment_assignments (experiment_key, subject_id, variant_id)
+  VALUES (p_key, p_subject_id, p_variant_id)
+  ON CONFLICT (experiment_key, subject_id) DO NOTHING;
+  SELECT a.variant_id INTO v_stored FROM public.experiment_assignments a
+  WHERE a.experiment_key = p_key AND a.subject_id = p_subject_id;
+  RETURN v_stored;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.experiment_assign(text, text, text) FROM PUBLIC, anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.checkout_links (
+  id                        uuid PRIMARY KEY,
+  token_hash                bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
+  workspace_id              uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  owner_user_id             uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  plan_id                   text NOT NULL DEFAULT 'personal' CHECK (plan_id IN ('personal')),
+  billing_interval          text NOT NULL DEFAULT 'month' CHECK (billing_interval IN ('month')),
+  client_label              text NOT NULL DEFAULT 'unknown' CHECK (client_label ~ '^[a-z0-9_.-]{1,40}$'),
+  blocked_tool              text CHECK (blocked_tool IS NULL OR blocked_tool ~ '^[a-z0-9_]{1,64}$'),
+  variant                   text NOT NULL DEFAULT 'link' CHECK (variant ~ '^[a-z0-9_]{1,32}$'),
+  created_at                timestamptz NOT NULL DEFAULT now(),
+  expires_at                timestamptz NOT NULL,
+  first_opened_at           timestamptz,
+  open_count                int NOT NULL DEFAULT 0,
+  stripe_session_id         text,
+  stripe_session_expires_at timestamptz,
+  completed_at              timestamptz
+);
+CREATE INDEX IF NOT EXISTS checkout_links_workspace_live_idx ON public.checkout_links (workspace_id, expires_at DESC);
+ALTER TABLE public.checkout_links ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.checkout_links FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.checkout_link_issue(
+  p_id uuid,
+  p_token_hash bytea,
+  p_workspace_id uuid,
+  p_owner_user_id uuid,
+  p_client_label text,
+  p_blocked_tool text,
+  p_variant text,
+  p_ttl_minutes int DEFAULT 30
+)
+RETURNS TABLE (id uuid, expires_at timestamptz, reused boolean)
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_id uuid;
+  v_expires timestamptz;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('checkout_link:' || p_workspace_id::text, 0));
+  SELECT l.id, l.expires_at INTO v_id, v_expires
+  FROM public.checkout_links l
+  WHERE l.workspace_id = p_workspace_id
+    AND l.owner_user_id = p_owner_user_id
+    AND l.completed_at IS NULL
+    AND l.expires_at > now() + interval '2 minutes'
+  ORDER BY l.expires_at DESC
+  LIMIT 1;
+  IF v_id IS NOT NULL THEN
+    RETURN QUERY SELECT v_id, v_expires, true;
+    RETURN;
+  END IF;
+  INSERT INTO public.checkout_links
+    (id, token_hash, workspace_id, owner_user_id, client_label, blocked_tool, variant, expires_at)
+  VALUES
+    (p_id, p_token_hash, p_workspace_id, p_owner_user_id,
+     coalesce(nullif(p_client_label, ''), 'unknown'), p_blocked_tool,
+     coalesce(nullif(p_variant, ''), 'link'),
+     now() + make_interval(mins => greatest(5, least(p_ttl_minutes, 60))))
+  RETURNING checkout_links.expires_at INTO v_expires;
+  RETURN QUERY SELECT p_id, v_expires, false;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.checkout_link_issue(uuid, bytea, uuid, uuid, text, text, text, int) FROM PUBLIC, anon, authenticated;
+
+-- ============================================================
+-- TABLE: morning_briefs  (Pro daily brief settings and schedule; hosted
+-- migration 20261024235400). The hosted pg_cron job that drives
+-- /morning-brief-dispatch is not part of self-host: POST that route with
+-- X-Dispatch-Secret from your own scheduler (every 5 minutes).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.morning_briefs (
+  workspace_id         uuid PRIMARY KEY REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  enabled              boolean NOT NULL DEFAULT false,
+  hour                 smallint NOT NULL DEFAULT 7 CHECK (hour BETWEEN 0 AND 23),
+  timezone             text NOT NULL DEFAULT 'UTC',
+  locale               text NOT NULL DEFAULT 'en' CHECK (locale IN ('en', 'nb', 'fr', 'es', 'de')),
+  inbox_id             uuid REFERENCES public.inboxes(id) ON DELETE SET NULL,
+  vip_senders          text[] NOT NULL DEFAULT '{}',
+  next_due_at          timestamptz,
+  last_local_date      date,
+  last_sent_at         timestamptz,
+  last_run_at          timestamptz,
+  last_outcome         text,
+  last_error_code      text,
+  consecutive_failures integer NOT NULL DEFAULT 0,
+  paused_at            timestamptz,
+  claimed_at           timestamptz,
+  lease_token          uuid,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS morning_briefs_due_idx ON public.morning_briefs (next_due_at NULLS FIRST)
+  WHERE enabled AND paused_at IS NULL AND claimed_at IS NULL;
+CREATE OR REPLACE TRIGGER morning_briefs_updated_at
+  BEFORE UPDATE ON public.morning_briefs
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============================================================
 -- Grants, service_role bypasses RLS and owns the data plane.

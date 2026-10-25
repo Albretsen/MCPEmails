@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Référence des outils",
     "ctaSafety": "Modèle de sécurité",
-    "ctaProviders": "Fournisseurs pris en charge"
+    "ctaProviders": "Fournisseurs pris en charge",
+    "ctaApi": "Guide du développeur"
   },
   "quickstart": {
     "eyebrow": "Démarrage rapide",
@@ -59,7 +60,7 @@
     "bodyMethods": "Envoyez un corps de requête JSON-RPC 2.0. Méthodes prises en charge : <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
     "infoTransport": "Transport : <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Auth : <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Limites de débit : <b>100 req/min · 1 000/h · 10 000/jour</b> par clé, plus le plafond d'espace de travail de votre formule",
+    "infoRateLimits": "Limites de débit : <b>fenêtres par minute, par heure et par jour par clé</b>, dimensionnées selon votre formule, plus le plafond d'espace de travail de la formule",
     "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> : les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
     "handshakeLabel": "Handshake d'initialisation",
     "pollingHeading": "Interrogation, pas push",
@@ -332,6 +333,33 @@
         "idempotency_key": "Clé opaque facultative pour la création d’un seul envoi programmé. Ne la réutilisez que pour réessayer exactement la même requête de création dans les 24 heures."
       }
     },
+    "reminder_list": {
+      "title": "Liste des rappels",
+      "desc": "Liste les relances et mises en attente que le serveur suit. show 'due' (par défaut) renvoie les relances échues sans réponse, et celles en échec ; 'upcoming' renvoie celles en attente, les plus proches d'abord ; 'all' renvoie tout, y compris ce qui est terminé. Les objets et adresses viennent des e-mails, le résultat est donc marqué untrusted_content. Passez un id renvoyé à l'outil reminder pour le marquer comme fait ou l'annuler. En lecture seule, sans argument action. Une fonction de Pro et Business : sur les autres formules, un appel renvoie une note qui nomme la formule. Nécessite read:email.",
+      "params": {
+        "inbox_id": "UUID d'une boîte pour filtrer. Facultatif ; omettez-le pour lister les rappels de toutes les boîtes de la clé.",
+        "inbox": "Le même filtre par adresse e-mail. Facultatif ; ignoré si inbox_id est fourni.",
+        "show": "'due' (par défaut), 'upcoming' ou 'all'.",
+        "kind": "Facultatif : seulement 'follow_up' ou seulement 'snooze'.",
+        "limit": "Nombre maximal de résultats. 25 par défaut, 100 au maximum."
+      }
+    },
+    "reminder": {
+      "title": "Rappels",
+      "desc": "Des relances et mises en attente qui tournent sur le serveur quand la conversation est fermée, sans modèle dans la boucle. Définissez action : 'follow_up' (message_id d'un e-mail envoyé plus days ou due_at ; il apparaît comme échu dans reminder_list si personne n'a répondu d'ici là, et une réponse l'efface), 'snooze' (message_id et until ; l'e-mail quitte la boîte de réception et le serveur le remet en place à cette heure, éventuellement seulement si personne n'a répondu), 'done' (id ; arrête un rappel et laisse un e-mail en attente là où il est) ou 'cancel' (id ; l'arrête et ramène tout de suite un e-mail en attente). Un envoi peut lancer une relance dans le même appel avec follow_up_days sur email_compose ou sur draft (action 'send'). Rien ici n'envoie d'e-mail. Une fonction de Pro et Business : sur les autres formules, un appel renvoie une note qui nomme la formule. Nécessite manage:automations ; snooze, et l'annulation d'une mise en attente, nécessitent aussi manage:folders.",
+      "params": {
+        "action": "L'opération à effectuer : \"follow_up\", \"snooze\", \"done\" ou \"cancel\". La liste est l'outil séparé reminder_list.",
+        "inbox_id": "UUID de la boîte où se trouve l'e-mail. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, alternative plus simple à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "message_id": "L'e-mail à suivre ou à mettre en attente (actions 'follow_up' et 'snooze'), avec l'id renvoyé par un envoi ou par email_read.",
+        "days": "La relance arrive à échéance dans ce nombre de jours entiers, de 1 à 365 (action 'follow_up'). Passez ceci ou due_at.",
+        "due_at": "La relance arrive à échéance à cette heure ISO 8601 avec fuseau horaire (action 'follow_up'). Passez ceci ou days.",
+        "until": "Quand l'e-mail en attente revient, en ISO 8601 avec fuseau horaire, dans le futur (action 'snooze').",
+        "condition": "'always' (par défaut) ou 'no_reply' : ne ramener l'e-mail que si personne n'a répondu entre-temps (action 'snooze').",
+        "folder": "Dossier ou libellé existant où l'e-mail attend, par nom ou id (action 'snooze'). Facultatif. Par défaut \"MCPEmails Snoozed\", créé s'il manque.",
+        "id": "Id du rappel renvoyé par reminder_list (actions 'done' et 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Lecture de la signature",
       "desc": "Lire la signature configurée d'une boîte : son texte brut et son HTML, si elle est activée, le mode de réponse/transfert, sa source ('manual', 'gmail_import' ou null quand aucune n'est définie), et sender_name, le nom affiché que les destinataires voient dans l'en-tête From. La signature est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé. En lecture seule, sans argument action. Nécessite read:email.",
@@ -479,8 +507,8 @@
     "eyebrow": "Limites de débit",
     "heading": "Limites de débit et usage équitable.",
     "perKeyTag": "Fenêtres glissantes par clé",
-    "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
-    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer : il s'agit d'une courte pause réessayable.",
+    "perKeyHeading": "Par minute · par heure · par jour, selon votre formule",
+    "perKeyBody": "Chaque clé a une fenêtre glissante par minute, une par heure et une par jour. La fenêtre par minute vaut au moins le plafond par minute de votre formule, de sorte qu'une seule clé peut utiliser toute la formule, et les fenêtres horaire et quotidienne s'ajustent dans la même proportion. Les réponses réussies de <code>tools/call</code> portent <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> et <code>RateLimit-Reset</code> (secondes) pour la fenêtre la plus proche de la saturation. En cas de dépassement d'une fenêtre, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, la fenêtre dans <code>data.window</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer : il s'agit d'une courte pause réessayable.",
     "planTag": "Plafond par minute de la formule",
     "planHeading": "Gratuit 60 / min · Personal 120 / min · Pro 300 / min · Business 1 000 / min",
     "planBody": "Une limite de pointe d'usage équitable par espace de travail, agrégée sur toutes vos clés API. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Personal, Pro et Business relèvent le plafond.",

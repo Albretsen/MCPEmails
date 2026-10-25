@@ -878,6 +878,17 @@ const PARITY_WORLDS: Array<[string, () => World]> = [
   ["a comped owner at 1000", () => world({ workspaceCount: 1_000, entitlement: { kind: "comped_scale", expires_at: null } })],
   ["an expired comp", () => world({ workspaceCount: 120, entitlement: { kind: "comped_scale", expires_at: "2026-01-01T00:00:00.000Z" } })],
   ["a grandfathered free workspace", () => world({ workspace: activatedWorkspace({ plan: "free", grandfathered: true }), workspaceCount: 60 })],
+  // Referral month (20261025090000): Personal's 120 a minute, so 60 passes.
+  ["a free workspace in a referral month at 60", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  })],
+  ["an older standard row in a referral month at 60", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  })],
   ["a missing workspace row", () => world({ workspaceMissing: true, workspaceCount: 10_000 })],
   ["a capped workspace", () => world({
     workspace: activatedWorkspace({ plan: "free" }),
@@ -949,15 +960,41 @@ for (const [name, make] of PARITY_WORLDS) {
   });
 }
 
+Deno.test("a referral month bursts at Personal's ceiling on both paths; plain Free does not", async () => {
+  const referral = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  const ended = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "referral_personal", expires_at: "2020-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  const standardRow = () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    entitlement: { kind: "standard", expires_at: null, referral_personal_until: "2099-01-01T00:00:00.000Z" },
+    workspaceCount: 60,
+  });
+  for (const w of [referral(), perQuery(referral()), standardRow(), perQuery(standardRow())]) {
+    assertEquals((await run(w, rpcRequest("tools/call", SIGNATURE_GET))).status, 200);
+  }
+  for (const w of [ended(), perQuery(ended())]) {
+    assertEquals((await run(w, rpcRequest("tools/call", SIGNATURE_GET))).status, 429);
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Rate limiting still comes before the tool, and costs no allowance
 // ═══════════════════════════════════════════════════════════════════════════
 
 for (const [mode, prepare] of MODES) {
+  // The test workspace is on Personal (120 a minute), so the per-key windows
+  // are the base 100 / 1000 / 10000 lifted by 1.2 (perKeyWindows).
   for (const [name, saturated, window, limit] of [
-    ["per-minute", { minute: 100, hour: 100, day: 100 }, "per_minute", 100],
-    ["per-hour", { minute: 3, hour: 1_000, day: 1_000 }, "per_hour", 1_000],
-    ["per-day", { minute: 3, hour: 40, day: 10_000 }, "per_day", 10_000],
+    ["per-minute", { minute: 120, hour: 120, day: 120 }, "per_minute", 120],
+    ["per-hour", { minute: 3, hour: 1_200, day: 1_200 }, "per_hour", 1_200],
+    ["per-day", { minute: 3, hour: 40, day: 12_000 }, "per_day", 12_000],
   ] as const) {
     Deno.test(`a ${name} rate-limited call is refused before any tool work or reservation (${mode})`, async () => {
       const { status, body, labels, w } = await run(
@@ -993,13 +1030,13 @@ for (const [mode, prepare] of MODES) {
 
 Deno.test("the narrowest saturated window still decides, with all three counted at once", async () => {
   const { body } = await run(
-    world({ keyCounts: { minute: 100, hour: 1_000, day: 10_000 } }),
+    world({ keyCounts: { minute: 120, hour: 1_200, day: 12_000 } }),
     rpcRequest("tools/call", SIGNATURE_GET),
   );
   assertEquals(body.error.data.window, "per_minute");
 });
 
-Deno.test("the limits themselves are unchanged: 99 / 999 / 9999 passes", async () => {
+Deno.test("under the plan-scaled windows, 99 / 999 / 9999 passes", async () => {
   const { status, body } = await run(
     world({ keyCounts: { minute: 99, hour: 999, day: 9_999 } }),
     rpcRequest("tools/call", SIGNATURE_GET),
@@ -1058,12 +1095,12 @@ Deno.test("a missing workspace row still fails the plan ceiling open, and says s
 
 Deno.test("the per-key limiter outranks the plan ceiling when both are saturated", async () => {
   const { body } = await run(
-    world({ keyCounts: { minute: 100, hour: 100, day: 100 }, workspaceCount: 500 }),
+    world({ keyCounts: { minute: 120, hour: 120, day: 120 }, workspaceCount: 500 }),
     rpcRequest("tools/call", SIGNATURE_GET),
   );
   // The per-key refusal carries no `plan`; the plan refusal does.
   assertEquals(body.error.data.plan, undefined);
-  assertEquals(body.error.data.limit, 100);
+  assertEquals(body.error.data.limit, 120);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1728,7 +1765,7 @@ Deno.test("ping is still checked against both limiters, and reads no allowance",
     WORKSPACE_COUNT,
     "PATCH api_keys",
   ]);
-  const limited = await run(world({ keyCounts: { minute: 100, hour: 100, day: 100 } }), rpcRequest("ping"));
+  const limited = await run(world({ keyCounts: { minute: 120, hour: 120, day: 120 } }), rpcRequest("ping"));
   assertEquals(limited.status, 429);
   // Only tools/call leaves a rate_limited row.
   assertEquals(limited.w.inserted.activity_log, undefined);
@@ -1861,10 +1898,16 @@ Deno.test("tools/list reads its card gates and its client identity in the same w
   assert(body.result.tools.length > 0);
   // Wave 3 holds the entitlement (the plan quota's second read); the handler
   // starts once it has answered, and its reads all go out together: the card
-  // gates (inboxes, workspace flag) and the client identity. The wave after it
-  // is the card-build bookkeeping write, which is not the handler's.
+  // gates (inboxes, the draft-editor workspace flag), the subscription
+  // cleanup workspace flag and the client identity. The wave after it
+  // is the card-build bookkeeping write, which is not the handler's. The Pro
+  // gate read (cross-inbox search changes the listing when visible) rides the
+  // same wave, so it adds no round trip.
   assertEquals(waves.length, 5, JSON.stringify(waves));
-  assertEquals(waves[3], ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces"].sort());
+  assertEquals(
+    waves[3],
+    ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces", "GET workspaces", "RPC workspace_pro_features"].sort(),
+  );
   assertEquals(waves[4], ["PATCH api_keys"]);
 });
 
@@ -1892,8 +1935,9 @@ for (const bucket of ["min", "hr"]) {
     );
     assertEquals(status, 429);
     assertEquals(body.error.data.window, bucket === "min" ? "per_minute" : "per_hour");
-    // The discovery ceilings (250 / 2500), not the per-key limiter's 100.
-    assertEquals(body.error.data.limit, bucket === "min" ? 250 : 2_500);
+    // The discovery ceilings, not the per-key limiter's: the base 250 / 2500
+    // lifted by Personal's 1.2 (checkCheapMethodRateLimit).
+    assertEquals(body.error.data.limit, bucket === "min" ? 300 : 3_000);
     assertEquals(logged(logs, "[mcp-server] cheap_method_rate_limit_exceeded").length, 1);
     assertEquals(logged(logs, "[mcp-server] rate_limit_exceeded").length, 0);
     assertEquals(logged(logs, "[mcp-server] plan_rate_limit_exceeded").length, 0);

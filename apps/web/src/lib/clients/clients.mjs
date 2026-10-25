@@ -16,7 +16,7 @@
 //     VS Code, Windsurf, Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
 //     browser flow against /.well-known/oauth-authorization-server (RFC 7591
 //     dynamic registration, authorization code + PKCE with S256, public
-//     clients only). Cline, JetBrains and raw HTTP callers do not, and paste a
+//     clients only). Cline, JetBrains, n8n and raw HTTP callers do not, and paste a
 //     scoped API key into an Authorization header instead. Publishing the
 //     wrong one of those two for a client sends the reader down a path that
 //     cannot complete.
@@ -28,7 +28,7 @@
 //
 // Prose lives in src/lib/clients/content/<locale>/<slug>.json, deliberately
 // NOT in a next-intl namespace: src/i18n/request.ts hands every marketing
-// namespace to every marketing page, so putting thirteen clients' copy there
+// namespace to every marketing page, so putting every client's copy there
 // would put all of it in the bundle of the home page too.
 
 /** The endpoint every one of these pages tells the reader to paste. */
@@ -40,7 +40,7 @@ export const CLIENT_CATEGORIES = [
   { id: 'terminal', label: 'Terminals, CLIs and scripts', anchor: 'terminals' },
 ];
 
-export const CLIENTS = [
+export const ALL_CLIENTS = [
   {
     slug: 'claude',
     name: 'Claude',
@@ -69,6 +69,20 @@ export const CLIENTS = [
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
+    slug: 'codex',
+    name: 'OpenAI Codex',
+    shortName: 'Codex',
+    surface: 'the Codex CLI, IDE extension and ChatGPT desktop app',
+    category: 'terminal',
+    logo: 'openai',
+    color: '#000000',
+    auth: 'oauth',
+    configFile: 'terminal',
+    config: (url) => `codex mcp add mcpemails --url ${url}`,
+    guide: 'https://learn.chatgpt.com/docs/extend/mcp?surface=cli',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
     slug: 'chatgpt',
     name: 'ChatGPT',
     surface: 'ChatGPT Apps and connectors, developer mode',
@@ -81,6 +95,71 @@ export const CLIENTS = [
     guide: 'https://help.openai.com/en/articles/12584461',
     post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+  },
+  {
+    slug: 'cowork',
+    name: 'Claude Cowork',
+    surface: 'Cowork in Claude Desktop and on the web',
+    category: 'assistant',
+    logo: 'claude',
+    color: '#D97757',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'gemini',
+    name: 'Gemini',
+    surface: 'the Gemini app, Connected Apps, Custom apps',
+    category: 'assistant',
+    logo: 'gemini',
+    color: '#8E75B2',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://support.google.com/gemini/answer/17209137',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'grok',
+    name: 'Grok',
+    surface: 'Grok custom connectors on grok.com',
+    category: 'assistant',
+    logo: 'grok',
+    color: '#000000',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.x.ai/grok/connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'le-chat',
+    name: 'Le Chat',
+    surface: 'Le Chat by Mistral AI, now Vibe',
+    category: 'assistant',
+    logo: 'mistral',
+    color: '#FA520F',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'perplexity',
+    name: 'Perplexity',
+    surface: 'perplexity.ai custom connectors',
+    category: 'assistant',
+    logo: 'perplexity',
+    color: '#1FB8CD',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
   },
   {
     slug: 'cursor',
@@ -235,6 +314,32 @@ export const CLIENTS = [
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
+    slug: 'n8n',
+    name: 'n8n',
+    surface: 'the AI Agent node in n8n workflows',
+    category: 'terminal',
+    logo: 'n8n',
+    color: '#EA4B71',
+    auth: 'apikey',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'openclaw',
+    name: 'OpenClaw',
+    surface: 'OpenClaw agents, via the Gateway',
+    category: 'assistant',
+    logo: 'openclaw',
+    color: '#E05540',
+    auth: 'oauth',
+    configFile: 'terminal',
+    config: (url) => `openclaw mcp add mcpemails --url ${url} --transport streamable-http --auth oauth`,
+    guide: 'https://docs.openclaw.ai/tools/mcp',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
     slug: 'curl',
     name: 'curl and the raw API',
     shortName: 'curl',
@@ -252,6 +357,23 @@ export const CLIENTS = [
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
 ];
+
+/**
+ * Clients whose page is written but not public yet.
+ *
+ * A client page goes live only once a real connection test has shown that
+ * client connecting to MCP_URL and running a read tool. Until then its entry
+ * and copy stay in the repo, so the parity tests keep checking them, but it
+ * has no route, no sitemap entry, no hub card and no search entry. Remove a
+ * slug here once its test passes; a failed test means the page is fixed or
+ * deleted, never released as is.
+ *
+ * Nothing is held right now.
+ */
+export const HELD_CLIENTS = new Set([]);
+
+/** Every public client, in registry order. */
+export const CLIENTS = ALL_CLIENTS.filter((c) => !HELD_CLIENTS.has(c.slug));
 
 const BY_SLUG = new Map(CLIENTS.map((c) => [c.slug, c]));
 

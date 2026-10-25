@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/for alltid",
     "perMonth": "/måned",
-    "billedYearly": "Faktureres ${total}/år"
+    "billedYearly": "Faktureres ${total}/år",
+    "inclVat": "inkl. mva."
   },
   "plans": {
     "free": {
@@ -51,13 +52,20 @@
     },
     "solo": {
       "name": "Pro",
+      "tagline": "Sett det opp i chatten. Det fortsetter å kjøre etter at du lukker den.",
       "desc": "For én person som driver en bedrift: opptil 10 postkasser på én agent, fra økonomi og salg til support og din egen.",
       "cta": "Få Pro",
       "features": [
         "Alt i Personal",
         "10 tilkoblede innbokser",
         "5x høyere burst-grense",
-        "Lengre analysehistorikk"
+        "Lengre analysehistorikk",
+        "Påminnelser når ingen svarer på e-post du har sendt",
+        "Utsett: e-post forsvinner fra innboksen og kommer tilbake når du vil",
+        "En daglig morgenoppsummering, lagt rett i innboksen din",
+        "Søk i alle tilkoblede innbokser samtidig",
+        "Instruksjoner til AI-en din, per innboks",
+        "Webhooks for ny e-post"
       ]
     },
     "pro": {
@@ -69,7 +77,8 @@
         "10 postkasser inkludert, $3 i måneden for hver ekstra",
         "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
         "Administratorer godkjenner sendinger som venter",
-        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde"
+        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde",
+        "Webhooks for ny e-post"
       ]
     }
   },
@@ -96,6 +105,7 @@
           "inboxes": "Tilkoblede innbokser",
           "actions": "E-posthandlinger per måned",
           "keys": "API-nøkler",
+          "webhooks": "Webhooks for ny e-post",
           "members": "Personer som kan logge inn",
           "burst": "Burst-grense",
           "approvals": "Godkjenning før sending"
@@ -113,6 +123,16 @@
       },
       "mcpTools": {
         "label": "MCP-verktøy"
+      },
+      "chatClosed": {
+        "label": "Når chatten er lukket",
+        "rows": {
+          "followUps": "Oppfølgingspåminnelser på e-post du sender",
+          "snooze": "Utsett e-post til et tidspunkt du velger",
+          "brief": "Morgenoppsummering i innboksen",
+          "searchAll": "Søk i alle innbokser samtidig",
+          "instructions": "Instruksjoner til AI-en din, per innboks"
+        }
       },
       "analytics": {
         "label": "Analyse og sikkerhet",
@@ -164,11 +184,11 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 3 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 3 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din kan lese, søke, organisere, merke, skrive, planlegge og sende i den postkassen, og godkjenning før sending per innboks er inkludert. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
       },
       {
         "q": "Hva gir Personal utover Free?",
-        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
+        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt du bruker til vanlig ligger også i Free: lese, søke, organisere, skrive, sende og planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Funksjonene som jobber videre når chatten er lukket, som oppfølgingspåminnelser, utsettelse og morgenoppsummeringen, ligger i Pro."
       },
       {
         "q": "Hva regnes som en e-posthandling?",
@@ -184,7 +204,7 @@
       },
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Business?",
-        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og e-poststøtte. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt."
+        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og e-poststøtte. Pro jobber også videre når chatten er lukket: oppfølgingspåminnelser på e-post du har sendt, utsettelse, en daglig morgenoppsummering i innboksen, ett søk i alle tilkoblede innbokser og instruksjoner til AI-en per innboks. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt. Alt i Pro er inkludert."
       },
       {
         "q": "Vi er et firma med flere postkasser. Hvilken plan trenger vi?",
@@ -220,6 +240,16 @@
     "title": "Klar til å gi agenten din en innboks?",
     "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
-    "ctaSecondary": "Les dokumentasjonen"
+    "ctaSecondary": "Les dokumentasjonen",
+    "subFounder": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert til grunnleggerprisen over, med $3 i måneden for hver ekstra."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} det første året, deretter ${renewal} i året. Du sparer ${saving}.",
+    "ends": "Slutter {date} kl. {time} norsk tid."
+  },
+  "founder": {
+    "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",
+    "places": "{left} av {total} plasser igjen"
   }
 }

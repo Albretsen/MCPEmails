@@ -22,7 +22,7 @@ body { background: var(--bg-page); }
   padding: 18px 14px;
 }
 .sidebar .brand {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; text-decoration: none; align-items: center; gap: 10px;
   padding: 6px 8px 18px;
 }
 .sidebar .brand img { height: 30px; }
@@ -1245,6 +1245,29 @@ body { background: var(--bg-page); }
 .inbox-sending-details summary { align-items: center; cursor: pointer; display: flex; font: 600 13px var(--font-sans); justify-content: space-between; min-height: 46px; color: var(--fg-1); }
 .inbox-sending-details summary span:last-child { color: var(--fg-3); font-size: 12px; font-weight: 400; }
 .inbox-sending-details > p { margin: 0 0 12px; color: var(--fg-2); font: 13px/1.5 var(--font-sans); }
+.inbox-advanced-details { margin: 8px 0 16px; }
+.inbox-advanced-details summary span:only-child { color: var(--fg-1); font-size: 13px; font-weight: 600; }
+.inbox-advanced-details [data-folder-overrides] { padding: 0 0 12px; }
+.inbox-advanced-details [data-connection-type] { padding: 0 0 14px; }
+.inbox-advanced-details [data-inbox-instructions] { padding: 0 0 14px; }
+.inbox-instructions-text { font: 13px/1.5 var(--font-sans); min-height: 96px; padding: 8px; resize: vertical; }
+.inbox-instructions-actions { align-items: center; display: flex; gap: 10px; justify-content: space-between; margin-top: 6px; }
+.inbox-instructions-count { font: 12px var(--font-sans); }
+.inbox-instructions-upsell a { color: var(--fg-1); text-decoration: underline; }
+.folder-override-control input.input { flex: 1 1 200px; height: 32px; max-width: 100%; min-width: 0; padding: 0 8px; }
+.folder-overrides-title { margin: 0 0 2px; color: var(--fg-1); font: 600 13.5px var(--font-sans); }
+.folder-overrides-help { margin: 0 0 10px; color: var(--fg-2); font: 12.5px/1.5 var(--font-sans); }
+.folder-override-row { align-items: center; display: grid; gap: 4px 12px; grid-template-columns: 76px minmax(0, 1fr); padding: 5px 0; }
+.folder-override-row > label { color: var(--fg-1); font: 500 13px var(--font-sans); }
+.folder-override-control { align-items: center; display: flex; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+.folder-override-control select { flex: 1 1 200px; height: 32px; max-width: 100%; min-width: 0; padding: 0 8px; }
+.folder-override-control select.folder-override-automatic { color: var(--fg-3); }
+.folder-override-control select option { color: var(--fg-1); }
+.folder-override-reset { background: none; border: 0; color: var(--fg-2); cursor: pointer; font: 12.5px var(--font-sans); padding: 0; text-decoration: underline; }
+.folder-override-reset:disabled { cursor: default; opacity: 0.5; }
+@media (max-width: 480px) {
+  .folder-override-row { grid-template-columns: minmax(0, 1fr); }
+}
 .inbox-detail-summary { margin-bottom: 4px; }
 
 /* === Form inputs: always full-width ===================================== */
@@ -1666,6 +1689,7 @@ select.input:disabled {
   .inbox-mobile-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--fg-2); font: 12px var(--font-sans); }
   .inbox-mobile-meta span { display: inline-flex; align-items: center; gap: 5px; }
   .inbox-mobile-error { margin: 10px 0 0; color: var(--red-700); font: 12px/1.45 var(--font-sans); }
+  .inbox-mobile-parked { margin: 10px 0 0; color: var(--fg-3); font: 12px/1.45 var(--font-sans); }
   .inbox-mobile-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
   /* 44px, not the 36px this bump started at. It is more specific than the
      `.btn` minimum in the touch-target rules above, so leaving it at 36 would
@@ -2200,3 +2224,7 @@ select.input:disabled {
  * still governs phones, and the run tables scroll inside their own `.tbl-wrap`
  * rather than pushing the page sideways.
  */
+
+/* A parked inbox (over a lower plan's inbox cap, see src/lib/billing/parking.ts):
+   still listed and openable, visibly not in use. */
+.inbox-row-parked { opacity: 0.6; }

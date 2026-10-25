@@ -129,22 +129,15 @@ export async function completeSsoSignIn(
 export function findSsoConnectionVia(
   service: SupabaseClient<Database>,
 ): SsoJoinDeps['findConnection'] {
-  // sso_connections is not in the generated Database types until its
-  // migration is applied and `npm run gen:types` runs; a narrow view of
-  // from() until then, bound back to the client.
-  type Query = {
-    select: (columns: string) => Query;
-    eq: (column: string, value: string) => Query;
-    maybeSingle: () => PromiseLike<{ data: SsoConnectionForJoin | null; error: { message: string } | null }>;
-  };
-  const from = (service.from as unknown as (table: 'sso_connections') => Query).bind(service);
-
   return async (providerId) => {
-    const { data, error } = await from('sso_connections')
+    const { data, error } = await service
+      .from('sso_connections')
       .select('id, workspace_id, status, default_role')
       .eq('supabase_sso_provider_id', providerId)
       .maybeSingle();
     if (error) throw new Error(`sso_connections lookup failed: ${error.message}`);
-    return data;
+    // status and default_role are text columns with CHECK constraints, so the
+    // generated type is string; the constraint guarantees the narrower union.
+    return data as SsoConnectionForJoin | null;
   };
 }

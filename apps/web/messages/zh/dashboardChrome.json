@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "您已开通 {plan}",
       "subtitle": "付款已收到。收据将很快发送到您的邮箱。",
+      "subtitleEur": "您的套餐已生效。如果您使用银行扣款付款，扣款可能需要几个工作日完成，在此期间您可以使用全部功能。",
+      "subtitleProcessing": "您的银行扣款正在处理中，可能需要几个工作日。在此期间您可以使用全部功能。",
       "close": "关闭",
       "planLabel": "套餐",
       "priceLabel": "价格",
@@ -51,6 +53,7 @@
       "activatingTitle": "马上就好",
       "activating": "正在激活您的订阅。这需要几秒钟，页面会自动更新。",
       "activatingSlow": "您的付款已成功。套餐激活比平时慢一些，稍等片刻，如果页面仍未更新，请重新加载。",
+      "activatingSlowNeutral": "套餐激活比平时慢一些，稍等片刻，如果页面仍未更新，请重新加载。",
       "billingDetailsNote": "您的价格和续订日期可在账单页面查看。",
       "connectCta": "再连接一个收件箱",
       "billingCta": "查看账单"
@@ -94,6 +97,10 @@
     "firstRunTitle": "欢迎使用 MCPEmails",
     "firstRunBody": "连接您的第一个收件箱，不到一分钟即可获得可用的 MCP 端点。",
     "firstRunCta": "连接收件箱",
+    "paymentIssueDeclined": "您最近一次付款未成功。我们重试期间，您的套餐仍然有效。",
+    "paymentIssueDeclinedCta": "更新付款方式",
+    "paymentIssueConfirm": "您的银行需要您确认最近一次付款。您的套餐仍然有效。",
+    "paymentIssueConfirmCta": "确认付款",
     "inviteSentNotDelivered": "已为 {email} 创建邀请，但邮件未能发送。请在待处理的邀请上点击“重新发送”。",
     "inviteResent": "已向 {email} 重新发送邀请。",
     "inviteResendFailed": "重新发送邀请失败。",
@@ -125,7 +132,8 @@
     "searchPlaceholder": "搜索页面、收件箱、成员…",
     "openSearch": "打开搜索（Command K）",
     "navWorkflows": "工作流",
-    "navAutomations": "自动化"
+    "navAutomations": "自动化",
+    "navInvite": "邀请好友"
   },
   "topbar": {
     "mcpLabel": "MCP 端点",
@@ -346,7 +354,123 @@
     "businessFeatureInboxes": "包含 10 个邮箱，每多一个每月 $3",
     "businessFeatureMembers": "成员数量不限，可分配角色，不额外收费",
     "businessFeatureApprovals": "由管理员审批暂缓发送的邮件",
-    "businessFeatureWorkspaces": "一个订阅即可使用多个工作区"
+    "businessFeatureWorkspaces": "一个订阅即可使用多个工作区",
+    "fix": {
+      "heading": "解决方法",
+      "testAgain": "重新测试",
+      "useOutlook": "使用 Microsoft 登录",
+      "receiveOnly": "仅以只读方式连接",
+      "useSuggestedHost": "使用 {host}",
+      "progressLogin": "正在检查登录...",
+      "progressSending": "正在检查发信...",
+      "progressSlow": "仍在检查。有些邮件服务器最长需要一分钟才会响应。",
+      "gmail": {
+        "twoStep": "为你的 Google 账号开启两步验证。",
+        "create": "在 myaccount.google.com/apppasswords 创建一个应用专用密码，命名为 MCPEmails。",
+        "paste": "将这 16 个字母粘贴到密码栏。包含空格也没关系。",
+        "workspace": "在工作或学校账号上，如果管理员关闭了应用专用密码，这个选项可能不会出现。这种情况下，请让管理员允许使用应用专用密码。",
+        "imapDisabled": "你的 Google Workspace 管理员已为你的账号关闭 IMAP，因此任何密码都无法使用。",
+        "imapDisabledAdmin": "请将以下内容发给 IT 管理员：请在 Google 管理控制台的 应用、Google Workspace、Gmail、最终用户访问权限 中为我的账号开启 IMAP 访问。"
+      },
+      "appPassword": {
+        "normalRejected": "这里不接受你平时的 {provider} 密码，只能使用应用专用密码。",
+        "paste": "将它粘贴到密码栏，然后点击重新测试。"
+      },
+      "yahoo": {
+        "create": "在 Yahoo 的账号安全页面，于外部连接下选择创建应用密码，命名为 MCPEmails 并生成。"
+      },
+      "aol": {
+        "create": "在 AOL 的账号安全页面生成一个应用密码，命名为 MCPEmails。如果没有该选项，请先开启两步验证。"
+      },
+      "icloud": {
+        "create": "在 account.apple.com 打开登录和安全，再打开 App 专用密码，创建一个名为 MCPEmails 的密码。必须已开启双重认证。"
+      },
+      "ionos": {
+        "password": "IONOS 需要的是这个邮箱地址的密码，而不是你登录 IONOS 时使用的密码。"
+      },
+      "fullAddress": "请使用完整的邮箱地址作为用户名。",
+      "tOnline": {
+        "password": "Telekom 在这里只接受 Passwort für E-Mail-Programme，不接受你的 Telekom Login 密码。",
+        "where": "请在 E-Mail Center 的 Einstellungen、Passwörter、Passwort für E-Mail-Programme 中设置。"
+      },
+      "mailRu": {
+        "create": "在 Mail.ru 中打开设置、全部设置、安全，再打开外部应用密码，创建一个拥有完整邮件访问权限的密码。"
+      },
+      "qq": {
+        "service": "在 QQ 邮箱中打开 设置，再打开 账号与安全，开启 POP3/IMAP/SMTP 服务。",
+        "code": "生成授权码，并将其粘贴到密码栏。QQ 密码无法使用。"
+      },
+      "mailCom": {
+        "imap": "在 mail.com 开启 IMAP：Email、Settings、POP3 and IMAP，然后勾选 Enable access to this account via POP3 and IMAP。IMAP 需要 mail.com Premium 套餐。",
+        "twoFactor": "如果开启了双重认证，请在 Security Options 中创建应用专用密码并使用它。"
+      },
+      "infomaniak": {
+        "password": "Infomaniak 在这里不接受你的 Manager 密码。请在 Manager 中打开 Mail Service、你的地址、设备，添加一个设备以获得设备密码。"
+      },
+      "orange": {
+        "imap": "在 Orange 邮箱中开启 POP/IMAP：齿轮图标、tous les paramètres、Sécurité、Protocoles POP ou IMAP，然后 Activer POP/IMAP。",
+        "password": "然后使用 Espace client 中 Connexion et sécurité 下的 mot de passe dédié。"
+      },
+      "seznam": {
+        "password": "如果开启了双重认证（dvoufázové ověření），Seznam 密码在这里将无法使用。请在 Zabezpečení účtu 中设置 Heslo pro aplikace 并使用它。"
+      },
+      "gmx": {
+        "imap": "{provider} 默认关闭 POP3 和 IMAP 访问。请在 E-Mail-Einstellungen 的 POP3/IMAP 中开启。",
+        "twoFactor": "如果开启了双重认证，请使用应用密码代替平时的密码。"
+      },
+      "zoho": {
+        "imap": "在 Zoho Mail 的设置、邮件账户、IMAP 访问中开启 IMAP 访问。",
+        "twoFactor": "如果使用双重认证、联合登录或 SAML，请生成应用专用密码并使用它。"
+      },
+      "yandex": {
+        "create": "在 id.yandex.com 打开安全，再打开应用密码，创建一个类型为邮件的密码。",
+        "imap": "在 Yandex Mail 设置中打开邮件客户端，同时开启 IMAP 访问以及应用密码和 OAuth 令牌。"
+      },
+      "office365": {
+        "useOutlook": "Microsoft 365 的工作和学校邮箱不接受邮件应用的密码。请改用 Microsoft 登录连接。"
+      },
+      "smtp": {
+        "readingOk": "你的服务器接受了用于读取邮件的登录，但拒绝了用于发信的登录。",
+        "username": "如果服务商为发信提供了单独的登录名，请在高级设置的用户名中填写。",
+        "readOnly": "也可以现在以只读方式连接，之后在收件箱设置中添加发信。"
+      },
+      "unreachable": {
+        "tried": "我们尝试了 {host}，但服务器没有响应。",
+        "notFound": "找不到名为 {host} 的邮件服务器。",
+        "suggest": "你的地址属于 {provider}，其服务器是 {host}。",
+        "check": "请在服务商的设置页面核对服务器名称，然后重新测试。",
+        "blocked": "你的邮件服务器不接受来自我们服务器的连接。学校和公司的邮件服务器常有这种情况。",
+        "blockedNext": "请让 IT 部门允许外部访问，或连接其他地址。"
+      },
+      "tls": {
+        "tried": "我们尝试了使用 TLS 的端口 {tlsPort} 和使用 STARTTLS 的端口 {starttlsPort}，两者的安全连接都失败了。",
+        "next": "如果服务商提供了其他端口或安全设置，请在此修改后重新测试。"
+      },
+      "link": {
+        "twoStep": "打开两步验证",
+        "appPasswords": "打开 {provider} 的应用密码页面",
+        "imapSetting": "如何在 {provider} 开启 IMAP",
+        "providerHelp": "{provider} 帮助页面",
+        "adminGuide": "Google 为管理员提供的指南"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft 会显示一个授权页面，列出 MCPEmails 可以做的事：读取和更改邮件、发送邮件以及保持连接。",
+        "line2": "接受即可连接。你的 Microsoft 密码只在 Microsoft 的页面上输入。",
+        "line3": "工作账号可能会要求管理员批准。如果出现这种情况，请回到这里获取发给管理员的链接。"
+      },
+      "outlookCancelled": {
+        "title": "你在 Microsoft 页面上取消了",
+        "body": "没有连接任何内容。要连接 Outlook 收件箱，请在 Microsoft 显示授权页面时选择接受。",
+        "tryAgain": "重试"
+      },
+      "done": {
+        "title": "收件箱已连接",
+        "body": "现在连接你的 AI 应用，让它可以使用这个收件箱。",
+        "bodyClient": "现在连接 {client}，让它可以使用这个收件箱。",
+        "openGuide": "告诉我怎么做",
+        "later": "稍后"
+      }
+    }
   },
   "commandPalette": {
     "pageOverview": "概览",

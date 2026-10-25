@@ -32,6 +32,12 @@ const OUT = resolve(repoRoot, "supabase/functions/mcp-server/ui/review-card.html
 // single dependency grew; it is product code. Claude caches the bundle by
 // build id; the reference host re-fetches it per call (Q4), so the cap stays a
 // hard failure and was raised once, deliberately, not removed.
+//
+// 2026-10-20: 169.1 KB, 5.9 KB under the cap. Switching the minifier from
+// esbuild to Oxc (vite.config.ts) and sharing one FNV helper took it to
+// 166.6 KB with no product change. The largest remaining contributors are
+// product code: DraftEditor (~26 KB minified), App (~16 KB), the shared
+// html-text-merge.ts (~12 KB) and Preact (~13 KB with hooks).
 const TARGET_RAW = 50 * 1024;
 const MAX_RAW = 175 * 1024;
 

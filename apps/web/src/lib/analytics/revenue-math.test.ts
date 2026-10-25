@@ -9,8 +9,11 @@ import {
   scheduledToStop,
   valuationFromArr,
   NO_DISCOUNT,
+  priceInCurrency,
+  taxInclusiveRatio,
   type SubscriptionFacts,
 } from './revenue-math.ts';
+import { monthOf, usdPerUnit } from './fx.ts';
 
 const NOW = 1_800_000_000; // fixed clock; all fixtures are relative to it
 const DAY = 86_400;
@@ -123,14 +126,147 @@ test('ARR is twelve months of MRR and ARPA divides by payers only', () => {
   assert.equal(summary.arpaMinor, 5400);
 });
 
-test('mixed currencies report the biggest one and name the rest', () => {
+test('mixed currencies are converted to USD and summed, not dropped', () => {
+  const eurRate = usdPerUnit('eur', monthOf(NOW));
+  assert.ok(eurRate !== null && eurRate > 0);
   const summary = summarizeSubscriptions(
     [sub({ id: 'a' }), sub({ id: 'b' }), sub({ id: 'c', currency: 'eur', grossMonthlyMinor: 1000 })],
     WINDOW,
   );
   assert.equal(summary.currency, 'usd');
-  assert.equal(summary.mrrMinor, 5800);
-  assert.deepEqual(summary.otherCurrencies, ['eur']);
+  assert.equal(summary.mrrMinor, Math.round(5800 + 1000 * eurRate));
+  assert.equal(summary.payingCustomers, 3);
+  assert.deepEqual(summary.otherCurrencies, []);
+  assert.deepEqual(summary.byCurrency, [
+    { currency: 'usd', customers: 2, mrrMinor: 5800, mrrUsdMinor: 5800 },
+    { currency: 'eur', customers: 1, mrrMinor: 1000, mrrUsdMinor: Math.round(1000 * eurRate) },
+  ]);
+});
+
+test('REGRESSION: no live subscription is dropped from MRR because of its currency', () => {
+  // Every currency the rate table carries, one paying subscriber each. Before
+  // the EUR launch the board kept only the biggest currency and silently left
+  // the other nine out of every figure.
+  const codes = ['usd', 'eur', 'gbp', 'nok', 'chf', 'sek', 'dkk', 'pln', 'czk', 'aud', 'cad'];
+  const subs = codes.map((currency, i) =>
+    sub({ id: `s${i}`, currency, grossMonthlyMinor: 900, createdAt: NOW - 5 * DAY }));
+  const summary = summarizeSubscriptions(subs, WINDOW);
+  assert.equal(summary.payingCustomers, codes.length);
+  assert.equal(summary.newCustomers, codes.length);
+  assert.equal(summary.churnBaseCustomers, codes.length);
+  assert.equal(summary.byCurrency.length, codes.length);
+  assert.deepEqual(summary.otherCurrencies, []);
+  const expected = codes.reduce((total, code) => total + 900 * (usdPerUnit(code, monthOf(NOW)) ?? NaN), 0);
+  assert.equal(summary.mrrMinor, Math.round(expected));
+  assert.equal(summary.newMrrMinor, Math.round(expected));
+  assert.equal(summary.churnBaseMrrMinor, Math.round(expected));
+});
+
+test('a currency with no rate is named, not counted as zero', () => {
+  const summary = summarizeSubscriptions(
+    [
+      sub({ id: 'a' }),
+      sub({ id: 'b', currency: 'xts', grossMonthlyMinor: 5000 }),
+      // A comp needs no rate: it is a customer worth nothing in any currency.
+      sub({ id: 'c', currency: 'xts', discount: { percentOff: 100, amountOffMonthlyMinor: 0 } }),
+    ],
+    WINDOW,
+  );
+  assert.equal(summary.mrrMinor, 2900);
+  assert.equal(summary.payingCustomers, 1);
+  assert.equal(summary.compedCustomers, 1);
+  assert.deepEqual(summary.otherCurrencies, ['xts']);
+  assert.deepEqual(summary.byCurrency, [
+    { currency: 'usd', customers: 1, mrrMinor: 2900, mrrUsdMinor: 2900 },
+    { currency: 'xts', customers: 1, mrrMinor: 5000, mrrUsdMinor: null },
+  ]);
+});
+
+test('churn converts at the rate of the month billing stopped', () => {
+  const now = Date.UTC(2026, 9, 20) / 1000;
+  const ended = Date.UTC(2026, 2, 15) / 1000;
+  const marchRate = usdPerUnit('eur', '2026-03');
+  const octoberRate = usdPerUnit('eur', '2026-10');
+  assert.ok(marchRate !== null && octoberRate !== null && marchRate !== octoberRate);
+  const summary = summarizeSubscriptions(
+    [
+      sub({ id: 'live', currency: 'eur', grossMonthlyMinor: 1000, createdAt: now - 400 * DAY }),
+      sub({
+        id: 'gone',
+        status: 'canceled',
+        currency: 'eur',
+        grossMonthlyMinor: 1000,
+        createdAt: now - 400 * DAY,
+        canceledAt: ended - DAY,
+        endedAt: ended,
+      }),
+    ],
+    { nowSeconds: now, windowDays: 365 },
+  );
+  assert.equal(summary.mrrMinor, Math.round(1000 * octoberRate));
+  assert.equal(summary.churnedMrrMinor, Math.round(1000 * marchRate));
+  assert.equal(summary.movements.stopped.mrrMinor, Math.round(1000 * marchRate));
+  assert.equal(summary.churnBaseMrrMinor, Math.round(1000 * octoberRate + 1000 * marchRate));
+  assert.equal(summary.cancelledCustomers, 1);
+});
+
+test('a VAT-inclusive price counts net of the tax it includes', () => {
+  // EUR 9.00 including 19% VAT: 7.56 is ours, 1.44 belongs to the tax office.
+  const ratio = taxInclusiveRatio(true, { total: 900, total_excluding_tax: 756 });
+  assert.equal(ratio, 0.84);
+  assert.equal(netMonthlyMinor(sub({ currency: 'eur', grossMonthlyMinor: 900, taxInclusiveRatio: ratio })), 756);
+  // Applied after coupons: half off an inclusive price halves the net too.
+  assert.equal(
+    netMonthlyMinor(sub({ grossMonthlyMinor: 900, taxInclusiveRatio: 0.84, discount: { percentOff: 50, amountOffMonthlyMinor: 0 } })),
+    378,
+  );
+  const summary = summarizeSubscriptions(
+    [sub({ id: 'a' }), sub({ id: 'b', grossMonthlyMinor: 900, taxInclusiveRatio: 0.84 })],
+    WINDOW,
+  );
+  assert.equal(summary.mrrMinor, 2900 + 756);
+});
+
+test('the VAT share is only taken from an inclusive price', () => {
+  // Tax-exclusive: the total is list price PLUS tax, and the list price is ours.
+  assert.equal(taxInclusiveRatio(false, { total: 1071, total_excluding_tax: 900 }), undefined);
+  // The invoice says the tax was inclusive even when the price did not.
+  assert.equal(
+    taxInclusiveRatio(false, {
+      total: 1000,
+      total_excluding_tax: 800,
+      total_taxes: [{ amount: 200, tax_behavior: 'inclusive' }],
+    }),
+    0.8,
+  );
+  // Inclusive price, no tax collected (outside a registered country): all ours.
+  assert.equal(taxInclusiveRatio(true, { total: 900, total_excluding_tax: 900 }), 1);
+  // Nothing to read: counted gross, as before.
+  assert.equal(taxInclusiveRatio(true, null), undefined);
+  assert.equal(taxInclusiveRatio(true, 'in_unexpanded'), undefined);
+  assert.equal(taxInclusiveRatio(true, { total: 0, total_excluding_tax: 0 }), undefined);
+  // A missing ratio changes nothing.
+  assert.equal(netMonthlyMinor(sub()), netMonthlyMinor(sub({ taxInclusiveRatio: 1 })));
+});
+
+test('a EUR subscriber on a multi-currency USD price is priced in euros', () => {
+  const price = {
+    currency: 'usd',
+    unit_amount: 900,
+    tax_behavior: 'exclusive',
+    currency_options: {
+      usd: { unit_amount: 900, tax_behavior: 'exclusive' },
+      eur: { unit_amount: 1000, tax_behavior: 'inclusive' },
+    },
+  };
+  assert.deepEqual(priceInCurrency(price, 'usd'), { unitAmount: 900, taxBehavior: 'exclusive' });
+  assert.deepEqual(priceInCurrency(price, 'eur'), { unitAmount: 1000, taxBehavior: 'inclusive' });
+  // Options read separately, because a subscription item's price omits them.
+  assert.deepEqual(
+    priceInCurrency({ currency: 'usd', unit_amount: 900 }, 'eur', price.currency_options),
+    { unitAmount: 1000, taxBehavior: 'inclusive' },
+  );
+  assert.equal(priceInCurrency({ currency: 'usd', unit_amount: 900 }, 'eur'), null);
 });
 
 test('an account with nothing in it reports zero dollars, not a blank', () => {
@@ -289,4 +425,34 @@ test('churn rate is null, not zero, when nobody paid in the window', () => {
   const summary = summarizeSubscriptions([], WINDOW);
   assert.equal(summary.customerChurnRate, null);
   assert.equal(summary.revenueChurnRate, null);
+});
+
+test('movement rows never count the same customer twice', () => {
+  const summary = summarizeSubscriptions(
+    [
+      // New this month and already set to stop: only "set to stop".
+      sub({ id: 'new-leaving', createdAt: NOW - 3 * DAY, cancelAtPeriodEnd: true, canceledAt: NOW - DAY }),
+      // Card failing and set to stop: only "set to stop".
+      sub({ id: 'failing-leaving', status: 'past_due', cancelAtPeriodEnd: true }),
+      // New this month with a failing card: only "card failing".
+      sub({ id: 'new-failing', status: 'past_due', createdAt: NOW - 2 * DAY }),
+      // Cancelled and ended inside the window: only "billing stopped".
+      sub({ id: 'ended', status: 'canceled', canceledAt: NOW - 10 * DAY, endedAt: NOW - 5 * DAY }),
+      // Plain new customer.
+      sub({ id: 'new', createdAt: NOW - DAY }),
+      // Old, healthy: on no row.
+      sub({ id: 'steady' }),
+    ],
+    WINDOW,
+  );
+  const m = summary.movements;
+  assert.deepEqual(
+    [m.new.customers, m.stopped.customers, m.leaving.customers, m.failing.customers],
+    [1, 1, 2, 1],
+  );
+  assert.equal(m.new.mrrMinor, 2900);
+  assert.equal(m.leaving.mrrMinor, 5800);
+  // The overlapping fields keep their own meaning for the other tiles.
+  assert.equal(summary.newCustomers, 3);
+  assert.equal(summary.cancelledCustomers, 2);
 });

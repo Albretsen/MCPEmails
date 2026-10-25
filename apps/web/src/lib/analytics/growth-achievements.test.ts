@@ -79,6 +79,8 @@ const REVENUE: RevenueSummary = {
   atRiskCustomers: 0,
   leavingMinor: 0,
   leavingCustomers: 0,
+  pausedCustomers: 0,
+  pausedMinor: 0,
   newMrrMinor: 1_500,
   newCustomers: 3,
   churnedMrrMinor: 0,
@@ -87,11 +89,18 @@ const REVENUE: RevenueSummary = {
   cancelledMrrMinor: 0,
   churnBaseCustomers: 0,
   churnBaseMrrMinor: 0,
+  movements: {
+    new: { customers: 0, mrrMinor: 0 },
+    stopped: { customers: 0, mrrMinor: 0 },
+    leaving: { customers: 0, mrrMinor: 0 },
+    failing: { customers: 0, mrrMinor: 0 },
+  },
   customerChurnRate: null,
   revenueChurnRate: null,
   netNewMrrMinor: 1_500,
   byPlan: [{ label: 'Personal', customers: 5, mrrMinor: 2_500 }],
   internalCustomers: 1,
+  byCurrency: [],
   otherCurrencies: [],
 };
 
@@ -108,6 +117,7 @@ const CASH: CashCollected = {
   since: '2026-08-29T10:00:00Z',
   truncated: false,
   mode: 'live',
+  otherCurrencies: [],
 };
 
 const CHECKOUT: CheckoutFunnel = {

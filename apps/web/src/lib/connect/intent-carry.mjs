@@ -171,3 +171,78 @@ export function withoutConnectIntent(href) {
   url.searchParams.delete(CONNECT_INTENT_PARAM);
   return url.toString();
 }
+
+// ── Server settings from /tools/email-settings-lookup ────────────────────────
+//
+// The settings lookup can name servers the registry does not hold: a company
+// domain whose MX or ISPDB entry points at its own host, or a provider whose
+// mailbox lives on a different server than the one its /connect page lists
+// (OVH Exchange's ex4.mail.ovh.net). "Connect" on that page should open the
+// generic form with exactly the servers the visitor just read.
+//
+// Kept apart from the slug, and only ever in local storage, never in a URL: a
+// mail host on a company's own domain names the company. Same TTL and the same
+// "looked at once, then thrown away" rule as the slug. Nothing here is
+// trusted either: the modal still validates every field and the connect route
+// probes the servers before anything is saved.
+
+export const CONNECT_SETTINGS_KEY = 'mcpe-connect-settings';
+
+const HOST_SHAPE = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+const SECURITY_MODES = ['tls', 'starttls'];
+
+function cleanServer(host, port, security) {
+  const h = typeof host === 'string' ? host.trim().toLowerCase() : '';
+  const p = Number(port);
+  if (!HOST_SHAPE.test(h) || !Number.isInteger(p) || p < 1 || p > 65535) return null;
+  if (!SECURITY_MODES.includes(security)) return null;
+  return { host: h, port: p, security };
+}
+
+/** The generic form's six server fields, or null unless both halves are well formed. */
+export function connectSettingsShape(value) {
+  if (!value || typeof value !== 'object') return null;
+  const imap = cleanServer(value.imapHost, value.imapPort, value.imapSecurity);
+  const smtp = cleanServer(value.smtpHost, value.smtpPort, value.smtpSecurity);
+  if (!imap || !smtp) return null;
+  const label = typeof value.label === 'string' ? value.label.trim().slice(0, 80) : '';
+  return {
+    imapHost: imap.host, imapPort: imap.port, imapSecurity: imap.security,
+    smtpHost: smtp.host, smtpPort: smtp.port, smtpSecurity: smtp.security,
+    label,
+  };
+}
+
+/** Remember the servers. Returns false when they are malformed or cannot be stored. */
+export function rememberConnectSettings(storage, settings, now = Date.now()) {
+  const clean = connectSettingsShape(settings);
+  if (!clean) return false;
+  try {
+    if (!storage) return false;
+    storage.setItem(
+      CONNECT_SETTINGS_KEY,
+      JSON.stringify({ v: CONNECT_INTENT_VERSION, settings: clean, at: now }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Read the stored servers and spend them, in one step. Null when there are none. */
+export function takeConnectSettings(storage, now = Date.now()) {
+  const raw = safeGet(storage, CONNECT_SETTINGS_KEY);
+  safeRemove(storage, CONNECT_SETTINGS_KEY);
+  if (typeof raw !== 'string' || raw === '') return null;
+  let record = null;
+  try {
+    record = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!record || typeof record !== 'object' || record.v !== CONNECT_INTENT_VERSION) return null;
+  if (typeof record.at !== 'number' || !Number.isFinite(record.at)) return null;
+  const age = now - record.at;
+  if (age < 0 || age >= CONNECT_INTENT_TTL_MS) return null;
+  return connectSettingsShape(record.settings);
+}

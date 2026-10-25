@@ -1,5 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
-import { updateSession } from '@/lib/supabase/middleware';
+import { signedInDashboardRedirect, updateSession } from '@/lib/supabase/middleware';
+import { isSignedInHomeCandidate } from '@/lib/home-redirect';
 import { isKioskPath, kioskUrlRedirect, refreshKioskCookie } from '@/lib/admin/kiosk-cookie';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/csp';
 import { SUBJECT_COOKIE, SUBJECT_HEADER, SUBJECT_ID_PATTERN } from '@/lib/experiments/constants';
@@ -44,6 +45,9 @@ const MARKETING_PATHS = new Set([
   '/status',
   '/about',
   '/native-connectors-vs-mcp',
+  // The free IMAP/SMTP settings lookup. en, nb, es, fr and de; the route
+  // itself 404s zh, which has no content file.
+  '/tools/email-settings-lookup',
   // The ranked field of email MCP servers. English only, so it is a flat entry
   // rather than a prefix; the route itself 404s the other locales.
   '/best-email-mcp-servers',
@@ -53,6 +57,9 @@ const MARKETING_PATHS = new Set([
   '/email-mcp-servers-compared',
   '/for/founders',
   '/for/business',
+  // The developer landing page. Its guide lives under /docs/, which the
+  // prefix rule below already covers.
+  '/developers',
   // Help & support. The route itself 404s anyone the release gate does not
   // admit, so listing it here exposes nothing; without it /help never reaches
   // the [locale] route and 404s even for staff. Stays at release.
@@ -61,6 +68,9 @@ const MARKETING_PATHS = new Set([
   // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
   '/cancel',
   '/withdrawal',
+  // The optional cancel reason, opened from the post-cancel email by a signed
+  // link (no login). noindex; the page itself never writes on GET.
+  '/billing/feedback',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {
@@ -135,7 +145,7 @@ export default async function proxy(request: NextRequest) {
   // documents what the policy allows, why 'unsafe-inline' had to leave
   // `script-src`, and what was deliberately left alone (`style-src`).
   const nonce = generateNonce();
-  const csp = await buildContentSecurityPolicy(nonce);
+  const csp = await buildContentSecurityPolicy(nonce, request.nextUrl.pathname);
 
   // Next.js does not offer an API for handing it a nonce. It re-parses the CSP
   // off the INCOMING REQUEST and takes the first 'nonce-…' it finds in
@@ -212,9 +222,26 @@ export default async function proxy(request: NextRequest) {
  * The original routing decision, unchanged. Kept as a separate function purely
  * so the CSP wrapper above cannot get tangled up in it — this file has silently
  * disabled the dashboard auth guard once before, and every path through here
- * still ends in exactly one of intlMiddleware / kioskUrlRedirect / updateSession.
+ * still ends in exactly one of signedInDashboardRedirect / intlMiddleware /
+ * kioskUrlRedirect / updateSession.
  */
 async function routeRequest(request: NextRequest) {
+  // A signed-in visitor opening the homepage from outside the site (typed URL,
+  // bookmark, search result) goes to the dashboard. One who clicked through
+  // from another page on the site still gets the homepage. The cheap checks
+  // run first so only requests carrying an auth cookie pay for getUser().
+  if (
+    isSignedInHomeCandidate({
+      method: request.method,
+      url: request.nextUrl,
+      headers: request.headers,
+      cookieNames: request.cookies.getAll().map((c) => c.name),
+    })
+  ) {
+    const redirect = await signedInDashboardRedirect(request);
+    if (redirect) return redirect;
+  }
+
   if (isLocalizedRoute(request.nextUrl.pathname)) {
     const response = intlMiddleware(request);
     response.headers.set('Cache-Control', MARKETING_CACHE_CONTROL);
@@ -272,9 +299,9 @@ export const config = {
      *  - _next/image   (image optimisation endpoint)
      *  - favicon.ico
      *  - common image/font extensions
-     *  - video and caption files (the demo cut lives at /demo/*.mp4 and is
-     *    fetched with Range requests; running the auth round trip on each of
-     *    those byte-range requests is pure latency for no decision)
+     *  - video and caption files (fetched with Range requests; running the
+     *    auth round trip on each byte-range request is pure latency for no
+     *    decision)
      *  - machine routes, which no browser session ever drives and which read
      *    nothing this proxy produces (no nonce, no subject id, no locale, no
      *    refreshed Supabase session). Running the proxy on them minted a
@@ -287,9 +314,16 @@ export const config = {
      *                                    the consent POST reads the session.
      *      .well-known/*                 static discovery documents
      *      sitemap.xml, robots.txt, opengraph-image
+     *      u/<token>                     the chat checkout link
+     *                                    (app/u/[token]/route.ts). It must
+     *                                    never set a cookie, and this proxy
+     *                                    would add the visitor-id cookie and
+     *                                    could refresh a Supabase session on
+     *                                    the way out. It renders no HTML, so
+     *                                    it needs no nonce either.
      *    None of these is a protected path in updateSession, so the dashboard
      *    guard is untouched by this list.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|u/[^/]+/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
   ],
 };

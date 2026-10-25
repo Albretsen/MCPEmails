@@ -23,6 +23,7 @@ import {
 } from '@/lib/sso/management-api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { SsoConnection } from '@/lib/sso/types';
+import type { Database } from '@/types/database.types';
 
 /**
  * PUT   /api/sso/connection  { metadataUrl }
@@ -64,7 +65,7 @@ function managementFailure(err: unknown): NextResponse {
 async function updateConnection(
   ctx: SsoAdminContext,
   connectionId: string,
-  patch: Record<string, unknown>,
+  patch: Database['public']['Tables']['sso_connections']['Update'],
 ): Promise<SsoConnection> {
   const { data, error } = await ctx.db
     .from('sso_connections')

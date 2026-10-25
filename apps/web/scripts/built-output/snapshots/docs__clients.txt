@@ -1,10 +1,10 @@
-Connect Email to Claude, Cursor, ChatGPT and 13 MCP Clients · MCPEmails
-[meta description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp or curl.
-[meta og:title] Connect Email to Claude, Cursor, ChatGPT and 13 MCP Clients · MCPEmails
-[meta og:description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp or curl.
+Connect Email to Claude, Cursor, ChatGPT and 14 MCP Clients · MCPEmails
+[meta description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n or curl.
+[meta og:title] Connect Email to Claude, Cursor, ChatGPT and 14 MCP Clients · MCPEmails
+[meta og:description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n or curl.
 [meta og:locale] en_US
-[meta twitter:title] Connect Email to Claude, Cursor, ChatGPT and 13 MCP Clients · MCPEmails
-[meta twitter:description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp or curl.
+[meta twitter:title] Connect Email to Claude, Cursor, ChatGPT and 14 MCP Clients · MCPEmails
+[meta twitter:description] Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n or curl.
 [alt] MCPEmails
 [alt] MCPEmails
 [aria-label] Primary navigation
@@ -20,15 +20,15 @@ Get started free
 [aria-label] Open navigation menu
 MCP clients
 Connect your inbox to any MCP client
-One hosted MCP server, 13 setup guides. Pick the client you actually use and follow the steps written for it, not a generic template.
-MCPEmails is a hosted MCP server for email. You connect a mailbox once, then paste one URL into the client you already work in. 10 of the 13 clients here run the OAuth browser flow and need no API key at all; the rest take a scoped API key in an Authorization header.
+One hosted MCP server, 14 setup guides. Pick the client you actually use and follow the steps written for it, not a generic template.
+MCPEmails is a hosted MCP server for email. You connect a mailbox once, then paste one URL into the client you already work in. 10 of the 14 clients here run the OAuth browser flow and need no API key at all; the rest take a scoped API key in an Authorization header.
 https://mcpemails.com/api/mcp
 AI assistants
 3
 Code editors and IDEs
 6
 Terminals, CLIs and scripts
-4
+5
 AI assistants
 Claude
 OAuth
@@ -56,6 +56,8 @@ Gemini CLI
 OAuth
 Warp
 OAuth
+n8n
+API key
 curl and the raw API
 API key
 Client not listed?
@@ -113,10 +115,10 @@ Security
 Status
 Privacy
 Terms
-Right of withdrawal
+Withdraw from contract here
 Cancel contracts here
 Impressum
 © 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
 MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://mcpemails.com/docs/clients","url":"https://mcpemails.com/docs/clients","name":"Connect Email to Claude, Cursor, ChatGPT and 13 MCP Clients","description":"Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp or curl.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/docs/clients#breadcrumb"},"mainEntity":{"@type":"ItemList","numberOfItems":13,"itemListElement":[{"@type":"ListItem","position":1,"name":"Claude","url":"https://mcpemails.com/docs/claude"},{"@type":"ListItem","position":2,"name":"Claude Code","url":"https://mcpemails.com/docs/claude-code"},{"@type":"ListItem","position":3,"name":"ChatGPT","url":"https://mcpemails.com/docs/chatgpt"},{"@type":"ListItem","position":4,"name":"Cursor","url":"https://mcpemails.com/docs/cursor"},{"@type":"ListItem","position":5,"name":"VS Code","url":"https://mcpemails.com/docs/vscode"},{"@type":"ListItem","position":6,"name":"Cline","url":"https://mcpemails.com/docs/cline"},{"@type":"ListItem","position":7,"name":"Windsurf","url":"https://mcpemails.com/docs/windsurf"},{"@type":"ListItem","position":8,"name":"Gemini CLI","url":"https://mcpemails.com/docs/gemini-cli"},{"@type":"ListItem","position":9,"name":"Zed","url":"https://mcpemails.com/docs/zed"},{"@type":"ListItem","position":10,"name":"JetBrains","url":"https://mcpemails.com/docs/jetbrains"},{"@type":"ListItem","position":11,"name":"Raycast","url":"https://mcpemails.com/docs/raycast"},{"@type":"ListItem","position":12,"name":"Warp","url":"https://mcpemails.com/docs/warp"},{"@type":"ListItem","position":13,"name":"curl and the raw API","url":"https://mcpemails.com/docs/curl"}]}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/docs/clients#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://mcpemails.com/docs"},{"@type":"ListItem","position":3,"name":"MCP clients"}]}]}
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://mcpemails.com/docs/clients","url":"https://mcpemails.com/docs/clients","name":"Connect Email to Claude, Cursor, ChatGPT and 14 MCP Clients","description":"Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n or curl.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/docs/clients#breadcrumb"},"mainEntity":{"@type":"ItemList","numberOfItems":14,"itemListElement":[{"@type":"ListItem","position":1,"name":"Claude","url":"https://mcpemails.com/docs/claude"},{"@type":"ListItem","position":2,"name":"Claude Code","url":"https://mcpemails.com/docs/claude-code"},{"@type":"ListItem","position":3,"name":"ChatGPT","url":"https://mcpemails.com/docs/chatgpt"},{"@type":"ListItem","position":4,"name":"Cursor","url":"https://mcpemails.com/docs/cursor"},{"@type":"ListItem","position":5,"name":"VS Code","url":"https://mcpemails.com/docs/vscode"},{"@type":"ListItem","position":6,"name":"Cline","url":"https://mcpemails.com/docs/cline"},{"@type":"ListItem","position":7,"name":"Windsurf","url":"https://mcpemails.com/docs/windsurf"},{"@type":"ListItem","position":8,"name":"Gemini CLI","url":"https://mcpemails.com/docs/gemini-cli"},{"@type":"ListItem","position":9,"name":"Zed","url":"https://mcpemails.com/docs/zed"},{"@type":"ListItem","position":10,"name":"JetBrains","url":"https://mcpemails.com/docs/jetbrains"},{"@type":"ListItem","position":11,"name":"Raycast","url":"https://mcpemails.com/docs/raycast"},{"@type":"ListItem","position":12,"name":"Warp","url":"https://mcpemails.com/docs/warp"},{"@type":"ListItem","position":13,"name":"n8n","url":"https://mcpemails.com/docs/n8n"},{"@type":"ListItem","position":14,"name":"curl and the raw API","url":"https://mcpemails.com/docs/curl"}]}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/docs/clients#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://mcpemails.com/docs"},{"@type":"ListItem","position":3,"name":"MCP clients"}]}]}

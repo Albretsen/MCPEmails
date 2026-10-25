@@ -3,6 +3,7 @@ import type { Database } from '@/types/database.types';
 import { planDisplayName, resolvePlanLimits } from '@/lib/stripe/plans';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
+import { isUnknownColumnError } from '@/lib/approvals/columns';
 
 /**
  * Result of an inbox cap check.
@@ -18,7 +19,12 @@ export interface InboxLimitCheckResult {
   plan: string;
   /** Customer-facing plan name ("Free" | "Personal" | "Pro" | "Business"). Safe to render. */
   planName: string;
-  /** Number of active (non-deleted) inboxes currently connected. */
+  /**
+   * Number of inboxes currently connected and usable: not deleted and not
+   * parked. A parked inbox (parked above a lower plan's cap, see
+   * src/lib/billing/parking.ts) does not hold a slot, so it never blocks the
+   * customer from connecting the one inbox their plan does include.
+   */
   currentCount: number;
   /**
    * The plan's inbox cap. `null` means unlimited (a paid plan, or a
@@ -39,6 +45,13 @@ export interface InboxLimitCheckResult {
    * switch is off. Returned for every plan; only `solo` acts on it.
    */
   proUnlimitedInboxes: boolean;
+  /**
+   * True while a Free workspace's owner holds an earned referral month. The
+   * workspace is then checked, and reported, as Personal: `plan` is
+   * "personal" here even though `workspaces.plan` is still "free". When the
+   * month ends the extra inboxes pause through plan-limit-pauses.ts.
+   */
+  referralPersonal: boolean;
 }
 
 /**
@@ -46,7 +59,7 @@ export interface InboxLimitCheckResult {
  *
  * Runs two parallel queries:
  *   1. Fetch the workspace's current plan.
- *   2. Count active (non-deleted) inboxes for the workspace.
+ *   2. Count active inboxes for the workspace: not deleted, not parked.
  *
  * Returns `{ atLimit: false, ... }` when the workspace can still connect
  * more inboxes, or `{ atLimit: true, ... }` when the plan cap is reached.
@@ -65,18 +78,31 @@ export async function checkInboxLimit(
   workspaceId: string,
 ): Promise<InboxLimitCheckResult> {
   // Run both queries in parallel to minimise latency.
-  const [effectivePlanResult, inboxCountResult] = await Promise.all([
-    supabase
-      .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
-    supabase
+  const countActive = (excludeParked: boolean) => {
+    const query = supabase
       .from('inboxes')
       .select('id', { count: 'exact', head: true })
       .eq('workspace_id', workspaceId)
-      .is('deleted_at', null),
+      .is('deleted_at', null);
+    return excludeParked ? query.is('parked_at', null) : query;
+  };
+  const [effectivePlanResult, firstCount] = await Promise.all([
+    supabase
+      .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
+    countActive(true),
   ]);
+  // Before migration 20261024173000 is applied the column does not exist and
+  // PostgREST refuses the filter. A null count would read as 0 and open the
+  // gate, so count the way this did before parking existed instead.
+  const inboxCountResult = firstCount.error && isUnknownColumnError(firstCount.error)
+    ? await countActive(false)
+    : firstCount;
 
   const effectivePlan = effectivePlanResult.data?.[0];
-  const plan = effectivePlan?.plan ?? 'free';
+  const storedPlan = effectivePlan?.plan ?? 'free';
+  // Absent on an RPC that predates 20261025090000: no referral month.
+  const referralPersonal = storedPlan === 'free' && (effectivePlan?.referral_personal ?? false);
+  const plan = referralPersonal ? 'personal' : storedPlan;
   const unlimitedInboxes = effectivePlan?.unlimited_inboxes ?? false;
   const proUnlimitedInboxes = effectivePlan?.pro_unlimited_inboxes ?? false;
   const limits = resolvePlanLimits(plan, {
@@ -96,6 +122,7 @@ export async function checkInboxLimit(
       maxInboxes: null,
       unlimitedInboxes,
       proUnlimitedInboxes,
+      referralPersonal,
     };
   }
 
@@ -107,6 +134,7 @@ export async function checkInboxLimit(
     maxInboxes: limits.maxInboxes,
     unlimitedInboxes,
     proUnlimitedInboxes,
+    referralPersonal,
   };
 }
 

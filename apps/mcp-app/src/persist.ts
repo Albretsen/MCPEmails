@@ -58,6 +58,7 @@ import type {
 } from "./contract";
 import { isEnvelope } from "./contract";
 import { neutralizeDeep } from "./sanitize";
+import { fnv1a } from "./hash";
 import type { ToolInfoSummary } from "./store";
 
 /** Bumped when the stored shape changes, so old entries are simply unreadable. */
@@ -306,16 +307,6 @@ function salt(): string {
   // would change on every mount and no entry would ever be readable again.
   write(store);
   return saltCache;
-}
-
-/** FNV-1a, 32-bit, seedable. Not a security primitive: this is a cache key. */
-function fnv1a(s: string, seed = 0x811c9dc5): string {
-  let h = seed;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(36);
 }
 
 /**
@@ -589,6 +580,9 @@ const CARD_KINDS: readonly string[] = [
   "bulk_plan",
   "receipt",
   "draft_editor",
+  // Kept as a bare kind and state, like bulk_plan: nothing to re-request, so a
+  // remount shows the one line with the dashboard link.
+  "subscription_plan",
 ];
 const CARD_STATES: readonly string[] = [
   "pending",

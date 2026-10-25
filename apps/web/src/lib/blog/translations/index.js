@@ -119,6 +119,26 @@ import t106 from './multiple-email-accounts-in-claude-and-chatgpt/de';
 import t107 from './connect-email-to-ai-agent-under-2-minutes/de';
 import t108 from './connect-gmail-to-claude/de';
 import t109 from './email-for-ai-agents-cursor-cline-vscode/de';
+import t110 from './can-claude-read-my-email/es';
+import t111 from './can-claude-read-my-email/fr';
+import t112 from './can-claude-read-my-email/nb';
+import t113 from './can-claude-read-my-email/de';
+import t114 from './claude-custom-connectors-explained/es';
+import t115 from './claude-custom-connectors-explained/fr';
+import t116 from './claude-custom-connectors-explained/nb';
+import t117 from './claude-custom-connectors-explained/de';
+import t118 from './what-is-an-app-password/es';
+import t119 from './what-is-an-app-password/fr';
+import t120 from './what-is-an-app-password/nb';
+import t121 from './what-is-an-app-password/de';
+import t122 from './schedule-email-with-claude-and-chatgpt/es';
+import t123 from './schedule-email-with-claude-and-chatgpt/fr';
+import t124 from './schedule-email-with-claude-and-chatgpt/nb';
+import t125 from './schedule-email-with-claude-and-chatgpt/de';
+import t126 from './connect-claude-to-outlook-com-hotmail/es';
+import t127 from './connect-claude-to-outlook-com-hotmail/fr';
+import t128 from './connect-claude-to-outlook-com-hotmail/nb';
+import t129 from './connect-claude-to-outlook-com-hotmail/de';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -147,6 +167,11 @@ const TRANSLATIONS = {
   'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
   'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
   'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102, de: t106 },
+  'can-claude-read-my-email': { es: t110, fr: t111, nb: t112, de: t113 },
+  'claude-custom-connectors-explained': { es: t114, fr: t115, nb: t116, de: t117 },
+  'what-is-an-app-password': { es: t118, fr: t119, nb: t120, de: t121 },
+  'schedule-email-with-claude-and-chatgpt': { es: t122, fr: t123, nb: t124, de: t125 },
+  'connect-claude-to-outlook-com-hotmail': { es: t126, fr: t127, nb: t128, de: t129 },
 };
 
 export default TRANSLATIONS;

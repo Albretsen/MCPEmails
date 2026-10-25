@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Referencia de herramientas",
     "ctaSafety": "Modelo de seguridad",
-    "ctaProviders": "Soporte de proveedores"
+    "ctaProviders": "Soporte de proveedores",
+    "ctaApi": "Guía para desarrolladores"
   },
   "quickstart": {
     "eyebrow": "Inicio rápido",
@@ -59,7 +60,7 @@
     "bodyMethods": "Envía un cuerpo de petición JSON-RPC 2.0. Métodos admitidos: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
     "infoTransport": "Transporte: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Autenticación: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Límites de tasa: <b>100 pet/min · 1.000/h · 10.000/día</b> por clave, más el límite del espacio de trabajo de tu plan",
+    "infoRateLimits": "Límites de tasa: <b>ventanas por minuto, por hora y por día por clave</b>, dimensionadas según tu plan, más el límite del espacio de trabajo del plan",
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
     "pollingHeading": "Sondeo, no push",
@@ -332,6 +333,33 @@
         "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."
       }
     },
+    "reminder_list": {
+      "title": "Lista de recordatorios",
+      "desc": "Lista los seguimientos y los correos pospuestos que sigue el servidor. show 'due' (por defecto) devuelve los seguimientos vencidos sin respuesta, y los que fallaron; 'upcoming' devuelve los pendientes, los más próximos primero; 'all' devuelve todo, incluidos los terminados. Los asuntos y las direcciones vienen del correo, así que el resultado va marcado como untrusted_content. Pasa un id devuelto a la herramienta reminder para marcarlo como hecho o cancelarlo. Solo lectura, sin argumento action. Una función de Pro y Business: en otros planes, una llamada devuelve una nota que nombra el plan. Necesita read:email.",
+      "params": {
+        "inbox_id": "UUID de una bandeja por la que filtrar. Opcional; omítelo para listar los recordatorios de todas las bandejas de la clave.",
+        "inbox": "El mismo filtro por dirección de correo. Opcional; se ignora si se da inbox_id.",
+        "show": "'due' (por defecto), 'upcoming' o 'all'.",
+        "kind": "Opcional: solo 'follow_up' o solo 'snooze'.",
+        "limit": "Número máximo de resultados. Por defecto 25, máximo 100."
+      }
+    },
+    "reminder": {
+      "title": "Recordatorios",
+      "desc": "Seguimientos y correos pospuestos que funcionan en el servidor con el chat cerrado, sin ningún modelo de por medio. Indica action: 'follow_up' (message_id de un correo enviado más days o due_at; aparece como vencido en reminder_list si nadie ha respondido para entonces, y una respuesta lo borra), 'snooze' (message_id y until; el correo sale de la bandeja de entrada y el servidor lo devuelve a esa hora, opcionalmente solo si nadie respondió), 'done' (id; detiene un recordatorio y deja un correo pospuesto donde está) o 'cancel' (id; lo detiene y devuelve ya un correo pospuesto). Un envío puede iniciar un seguimiento en la misma llamada con follow_up_days en email_compose o en draft (action 'send'). Nada de esto envía correo. Una función de Pro y Business: en otros planes, una llamada devuelve una nota que nombra el plan. Necesita manage:automations; snooze, y cancelar un correo pospuesto, también necesitan manage:folders.",
+      "params": {
+        "action": "Qué operación realizar: \"follow_up\", \"snooze\", \"done\" o \"cancel\". La lista es la herramienta aparte reminder_list.",
+        "inbox_id": "UUID de la bandeja en la que está el correo. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja que usar, como alternativa más sencilla a inbox_id. Opcional; se ignora si se da inbox_id.",
+        "message_id": "El correo que seguir o posponer (acciones 'follow_up' y 'snooze'), con el id que devolvió un envío o email_read.",
+        "days": "El seguimiento vence dentro de este número de días enteros, de 1 a 365 (action 'follow_up'). Pasa esto o due_at.",
+        "due_at": "El seguimiento vence en esta hora ISO 8601 con zona horaria (action 'follow_up'). Pasa esto o days.",
+        "until": "Cuándo vuelve el correo pospuesto, en ISO 8601 con zona horaria, en el futuro (action 'snooze').",
+        "condition": "'always' (por defecto) o 'no_reply': devolver el correo solo si nadie respondió mientras tanto (action 'snooze').",
+        "folder": "Carpeta o etiqueta existente en la que espera el correo pospuesto, por nombre o id (action 'snooze'). Opcional. Por defecto \"MCPEmails Snoozed\", que se crea si falta.",
+        "id": "Id del recordatorio de reminder_list (acciones 'done' y 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Leer firma",
       "desc": "Lee la firma configurada de una bandeja: su texto plano y su HTML, si está habilitada, el modo de respuesta/reenvío, su origen ('manual', 'gmail_import' o null cuando no hay ninguna) y sender_name, el nombre que los destinatarios ven en la cabecera From. La firma se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Solo lectura, sin argumento action. Necesita read:email.",
@@ -479,8 +507,8 @@
     "eyebrow": "Límites de tasa",
     "heading": "Límites de tasa y uso justo.",
     "perKeyTag": "Ventanas móviles por clave",
-    "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
-    "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
+    "perKeyHeading": "Por minuto · por hora · por día, según tu plan",
+    "perKeyBody": "Cada clave tiene una ventana móvil por minuto, otra por hora y otra por día. La ventana por minuto es como mínimo el tope por minuto de tu plan, así que una sola clave puede usar todo el plan, y las ventanas por hora y por día escalan con ella. Las respuestas correctas de <code>tools/call</code> llevan <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> y <code>RateLimit-Reset</code> (segundos) para la ventana más cercana a llenarse. Cuando se supera una ventana, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, la ventana en <code>data.window</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
     "planTag": "Tope por minuto del plan",
     "planHeading": "Gratis 60 / min · Personal 120 / min · Pro 300 / min · Business 1.000 / min",
     "planBody": "Un límite de ráfaga de uso justo por espacio de trabajo, agregado entre todas tus claves de API. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Personal, Pro y Business elevan el tope.",

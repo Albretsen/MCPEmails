@@ -44,15 +44,9 @@ export type RecordSsoAudit = (entry: SsoAuditEntry) => Promise<void>;
  * errors are logged instead.
  */
 export function recordSsoAuditVia(service: SupabaseClient<Database>): RecordSsoAudit {
-  // sso_audit_events is not in the generated Database types until its
-  // migration is applied and `npm run gen:types` runs; a narrow view of
-  // from() until then, bound back to the client.
-  type Insert = { insert: (row: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }> };
-  const from = (service.from as unknown as (table: 'sso_audit_events') => Insert).bind(service);
-
   return async (entry) => {
     try {
-      const { error } = await from('sso_audit_events').insert({
+      const { error } = await service.from('sso_audit_events').insert({
         workspace_id: entry.workspaceId,
         connection_id: entry.connectionId,
         actor_user_id: entry.userId,

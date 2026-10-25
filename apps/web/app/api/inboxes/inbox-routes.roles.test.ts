@@ -57,6 +57,8 @@ interface World {
   /** What the stubbed Gmail probe answers. */
   gmailOk: boolean;
   uploads: Array<{ key: string; contentType: string }>;
+  /** workspaces.chat_send_confirm_enabled: the internal rollout gate for 'chat'. */
+  chatRollout: boolean;
 }
 
 let world: World;
@@ -105,6 +107,7 @@ function reset(overrides: Partial<World> = {}): void {
     fetches: [],
     gmailOk: true,
     uploads: [],
+    chatRollout: false,
     ...overrides,
   };
 }
@@ -140,6 +143,9 @@ function resolve(call: Call): { data: unknown; error: unknown } {
     return { data: { ...world.row, ...(call.payload as Record<string, unknown>) }, error: null };
   }
   if (call.table === 'workspaces' && call.op === 'update') return { data: [], error: null };
+  if (call.table === 'workspaces' && call.op === 'select') {
+    return { data: { chat_send_confirm_enabled: world.chatRollout }, error: null };
+  }
   return { data: null, error: null };
 }
 
@@ -493,6 +499,35 @@ for (const role of ['owner', 'admin']) {
     assert.equal(payload.send_approval_required, false);
   });
 }
+
+test('PATCH: chat mode is stored without holding sends, whatever the client says', async () => {
+  reset({ role: 'owner', chatRollout: true });
+  const res = await patch({ send_review_mode: 'chat', send_approval_required: true });
+  assert.equal(res.status, 200);
+  const payload = inboxCalls('service').find((c) => c.op === 'update')!.payload as Record<string, unknown>;
+  assert.equal(payload.send_review_mode, 'chat');
+  assert.equal(payload.send_approval_required, false);
+});
+
+test('PATCH: chat mode is refused for a workspace outside the internal rollout', async () => {
+  reset({ role: 'owner', chatRollout: false });
+  const res = await patch({ send_review_mode: 'chat' });
+  assert.equal(res.status, 400);
+  assert.ok(noReviewWrite(), 'no update was written');
+});
+
+test('PATCH: an unchanged chat mode never blocks a signature save, even outside the rollout', async () => {
+  reset({ role: 'owner', chatRollout: false, row: { ...appPasswordRow(), send_review_mode: 'chat', send_approval_required: false } });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'chat', send_approval_required: false });
+  assert.equal(res.status, 200);
+});
+
+test('verify PATCH: a member sending chat over stored dashboard is refused', async () => {
+  reset({ role: 'member', chatRollout: true, row: { ...appPasswordRow(), send_review_mode: 'dashboard', send_approval_required: true } });
+  const res = await patch({ send_review_mode: 'chat' });
+  assert.equal(res.status, 403);
+  assert.ok(noReviewWrite());
+});
 
 test('PATCH: a viewer is refused even a signature-only save', async () => {
   reset({ role: 'viewer' });

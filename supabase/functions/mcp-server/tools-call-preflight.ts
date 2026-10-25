@@ -32,7 +32,7 @@ export type ToolsCallPreflight =
     keyCounts: number[];
     /** null: no workspace row, which checkPlanQuota fails open on. */
     workspace: Row | null;
-    entitlement: { kind?: unknown; expires_at?: unknown } | null;
+    entitlement: { kind?: unknown; expires_at?: unknown; referral_personal_until?: unknown } | null;
     /** null exactly when `workspace` is null. */
     workspaceCount: number | null;
     /** The workspace_action_allowance() row; null when not asked for or none. */

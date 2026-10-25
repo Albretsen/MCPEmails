@@ -85,7 +85,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 
 ## Tools
 
-19 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+21 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, in batches, plus attachments, extracted attachment text and the original `.eml`.
@@ -99,6 +99,8 @@ Copy‑paste instructions per client, including where each one keeps its config 
 - `draft` - Creates, updates, sends and deletes drafts, including provider-native replies.
 - `schedule_list` - Lists what is queued for future delivery. Read-only.
 - `schedule` - Queues a message for future delivery, and cancels one that is queued.
+- `reminder_list` - Lists the follow-ups and snoozes the server tracks: due, upcoming or all. Read-only. Pro and Business.
+- `reminder` - Follows up on sent mail nobody replied to, and snoozes a message out of the inbox until a time you choose. Runs server-side while the chat is closed. Pro and Business.
 - `signature_get` - Reads the signature and sender name configured for an inbox. Read-only.
 - `signature_set` - Sets the signature appended to outbound mail, and the sender name.
 - `automation_read` - Lists triage rules, reads one, shows run history, and dry-runs a filter. Read-only.
@@ -121,6 +123,8 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | `draft` | `create`, `reply`, `update`, `send`, `delete` | `manage:drafts` (create/reply/update/delete), `read:email` (reply also), `send:email` (send) |
 | `schedule_list` | *(single action)* | `schedule:email` |
 | `schedule` | `create`, `cancel` | `schedule:email` |
+| `reminder_list` | *(single action)* | `read:email` |
+| `reminder` | `follow_up`, `snooze`, `done`, `cancel` | `manage:automations` (`snooze`, and `cancel` of a snooze, also need `manage:folders`) |
 | `signature_get` | *(single action)* | `read:email` |
 | `signature_set` | *(single action)* | `send:email` |
 | `automation_read` | `list`, `get`, `runs`, `preview` | `manage:automations` |
@@ -129,7 +133,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | `draft_read` | *(single action)* | `manage:drafts` and `read:email` |
 | `draft_editor_hide` | *(single action)* | `manage:drafts` |
 
-A full-scope key sees **26** tools in `tools/list`: the 19 above plus seven app-only tools that drive the in-chat cards rather than being composed by hand: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule` (a held send), `bulk_execute`, `bulk_cancel` (a previewed bulk operation) and `draft_editor_save` (the draft editor's Save button). The six `approval_*` and `bulk_*` tools always carry `_meta.ui.visibility: ["app"]`; `draft_editor_save` carries it where the draft editor is on and refuses every call where it is off.
+A full-scope key sees **28** tools in `tools/list`: the 21 above plus seven app-only tools that drive the in-chat cards rather than being composed by hand: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule` (a held send), `bulk_execute`, `bulk_cancel` (a previewed bulk operation) and `draft_editor_save` (the draft editor's Save button). The six `approval_*` and `bulk_*` tools always carry `_meta.ui.visibility: ["app"]`; `draft_editor_save` carries it where the draft editor is on and refuses every call where it is off.
 
 `prompts/list` holds 7 user-invoked workflow prompts (`morning_inbox_triage`, `find_and_brief`, `follow_up_radar`, `decision_tracker`, `prepare_reply_drafts`, `clean_up_safely`, `review_scheduled_sends`), each listed only to a key holding its scopes.
 
@@ -209,7 +213,7 @@ flowchart LR
     subgraph Supabase
       Edge["mcp-server<br/>edge function (Deno)"]
       DB[("Postgres<br/>RLS + encrypted creds")]
-      Cron["token-refresh<br/>edge functions"]
+      Cron["outlook-token-refresh<br/>edge function"]
     end
 
     Web -->|proxies| Edge
@@ -221,7 +225,7 @@ flowchart LR
 
 - **`/api/mcp`** is a thin Next.js route handler that proxies to the Supabase edge function `mcp-server` — the real MCP implementation, where credentials are decrypted and provider calls are made.
 - **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
-- **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
+- **A cron edge function** (`outlook-token-refresh`) refreshes Outlook OAuth tokens before expiry.
 
 **Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing and sanitization run in the edge functions (`supabase/functions/mcp-server/mime.ts`); signature HTML is sanitized with DOMPurify in the browser and a dependency-free allow-list on the server.
 

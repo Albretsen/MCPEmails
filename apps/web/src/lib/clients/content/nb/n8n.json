@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "Koble e-post til n8n: MCP Client Tool for AI Agent",
+    "description": "Koble e-post til en AI Agent i n8n med noden MCP Client Tool: HTTP Streamable, Bearer Auth og en API-nøkkel med avgrensede tilganger. Les, søk, skriv utkast og send e-post."
+  },
+  "hero": {
+    "eyebrow": "n8n + e-post",
+    "titleLine1": "Koble innboksen din til n8n",
+    "titleLine2": "med MCP Client Tool",
+    "lead": "Gi AI Agent-noden i n8n-arbeidsflyten din en ekte postkasse. Den kan lese, søke i, skrive utkast til, sende, svare på, videresende og sortere e-post gjennom ett MCP-endepunkt, med en nøkkel som bare gir tilgang til det arbeidsflyten skal gjøre.",
+    "meta0": "Fungerer med den innebygde noden MCP Client Tool",
+    "meta1": "API-nøkkel med avgrensede tilganger, tilbakekalles med ett klikk",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I n8n-arbeidsflyten legger du til en MCP Client Tool-node på Tool-inngangen til AI Agent. Sett Endpoint til https://mcpemails.com/api/mcp, Server Transport til HTTP Streamable og Authentication til Bearer Auth, og lim deretter inn en API-nøkkel fra MCPEmails-dashbordet som Bearer Token."
+  },
+  "method": {
+    "title": "Slik kobler n8n seg til: en Bearer Auth-legitimasjon med en avgrenset nøkkel",
+    "body": "Noden MCP Client Tool sender den legitimasjonen (credential) du knytter til den. Denne veiledningen bruker <b>Bearer Auth</b>-legitimasjonen i n8n, som legger nøkkelen din i <code>Authorization</code>-headeren på hver forespørsel. Opprett nøkkelen i dashbordet og huk av bare for tilgangene (scopes) arbeidsflyten trenger. En arbeidsflyt kjører ofte etter en tidsplan uten at noen følger med, så det er disse tilgangene som setter grensen. Tilkoblinger med nøkkel og tilkoblinger med OAuth treffer det samme endepunktet og får den samme verktøykatalogen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP."
+    },
+    {
+      "h": "Opprett en API-nøkkel med avgrensede tilganger",
+      "p": "Under Dashboard, API Keys klikker du Create key. Gi den navn etter arbeidsflyten og huk av bare for tilgangene den trenger: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> og <code>manage:automations</code>. Nøkkelen ser ut som <code>mcpe_</code> etterfulgt av 64 heksadesimale tegn og vises bare én gang, så kopier den før du lukker dialogen."
+    },
+    {
+      "h": "Legg MCP Client Tool til AI Agent-noden",
+      "p": "Åpne arbeidsflyten, klikk plusstegnet under <b>Tool</b>-inngangen på AI Agent-noden og velg <b>MCP Client Tool</b>. Lim inn <code>https://mcpemails.com/api/mcp</code> i <b>Endpoint</b> og sett <b>Server Transport</b> til <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Knytt til en Bearer Auth-legitimasjon",
+      "p": "Sett <b>Authentication</b> til <b>Bearer Auth</b>, opprett en ny legitimasjon og lim inn nøkkelen i <b>Bearer Token</b>, uten noe foran. La <b>Tools to Include</b> stå på All, eller bytt til Selected og velg bare verktøyene denne arbeidsflyten skal se."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Lim inn nøkkelen uten ordet Bearer",
+      "p": "Bearer Auth-legitimasjonen i n8n legger til <code>Bearer</code> og et mellomrom for deg. Skriver du det selv, sendes ordet to ganger, og kallet feiler med 401. Bruker du <b>Header Auth</b> i stedet, er det motsatt: Name er <code>Authorization</code> og Value er <code>Bearer</code>, et mellomrom og så nøkkelen."
+    },
+    {
+      "h": "Ser du feltet SSE Endpoint, er noden gammel",
+      "p": "Versjon 1 av noden MCP Client Tool hadde bare feltet <b>SSE Endpoint</b> og ikke noe valg av transport. Nyere versjoner viser <b>Endpoint</b> pluss <b>Server Transport</b>. Denne serveren bruker Streamable HTTP, så ser du bare SSE Endpoint, legger du til en ny node eller oppdaterer n8n. Står Server Transport på Server Sent Events (Deprecated), bytter du til HTTP Streamable."
+    },
+    {
+      "h": "Behold standard tidsavbrudd",
+      "p": "Noden venter 60 000 ms på et verktøykall, satt under Options, <b>Timeout</b>. Det holder selv for massearbeid: en flytting eller sletting i en stor mappe stopper på serverens egen tidsgrense før den tid og returnerer et resultat merket <code>partial</code>, med de urørte meldingene listet i <code>remaining_message_ids</code>, så agenten kan kalle på nytt med de ID-ene. Setter du Timeout mye lavere, kan et kall bli avbrutt før det resultatet kommer, og agenten står igjen uten å vite hva som ble gjort."
+    },
+    {
+      "h": "Tools to Include skjuler verktøy; nøkkelens tilganger sperrer dem",
+      "p": "Noden viser bare verktøyene nøkkelen din har tilgang til, fordi serveren utelater resten fra <code>tools/list</code>. Velger du et utvalg under Tools to Include, snevrer du listen inn ytterligere, noe som hjelper modellen å velge, men det endrer ikke hva nøkkelen har lov til. Sett grensen på nøkkelen, og bruk Tools to Include til å holde agenten fokusert."
+    }
+  ],
+  "limits": [
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En arbeidsflyt som går i løkke over mange elementer, bør respektere Retry-After og dosere kallene.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post starter aldri en arbeidsflyt av seg selv. Vil du reagere på innkommende e-post, starter du arbeidsflyten med en Schedule Trigger og lar agenten se etter uleste meldinger.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til en AI Agent i n8n?",
+      "a": "Legg til en MCP Client Tool-node på Tool-inngangen til AI Agent. Sett Endpoint til https://mcpemails.com/api/mcp og Server Transport til HTTP Streamable, velg Bearer Auth og lim inn en API-nøkkel fra Dashboard, API Keys som Bearer Token. Da har agenten verktøy for å lese, søke, skrive utkast, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Kan jeg kalle et e-postverktøy uten en AI Agent?",
+      "a": "Ja. Den frittstående MCP Client-noden i n8n kjører ett MCP-verktøy som et vanlig steg i arbeidsflyten, uten at noen modell bestemmer hva som skal kalles. Pek MCP Endpoint URL mot den samme adressen, knytt til den samme Bearer Auth-legitimasjonen, velg et verktøy og fyll inn parameterne for det, for eksempel email_read med action satt til list og unread satt til true. Det passer for faste flyter der stegene aldri endres."
+    },
+    {
+      "q": "Hvorfor Bearer Auth og ikke MCP OAuth2-legitimasjonen?",
+      "a": "n8n har også en MCP OAuth2-legitimasjon. Denne veiledningen bruker Bearer Auth fordi tilgangene på en nøkkel låses når du oppretter den og er synlige i dashbordet, noe som er lettere å ha oversikt over for en arbeidsflyt som kjører uten tilsyn. Tilbakekaller du nøkkelen under Dashboard, API Keys, stopper arbeidsflyten ved neste kall."
+    },
+    {
+      "q": "Kan arbeidsflyten sende e-post uten at noen sjekker?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel uten den kan ikke sende i det hele tatt. Du kan også slå på godkjenning for en innboks i dashbordet: sendinger, svar, videresendinger, utkast som sendes og planlagte sendinger holdes da tilbake, agenten får et ventende resultat, og et medlem av arbeidsområdet godkjenner eller avviser hver enkelt før noe går ut."
+    },
+    {
+      "q": "Hvilke postkasser kan en n8n-arbeidsflyt nå?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Med flere innbokser tilkoblet kaller agenten inbox_list for å finne ID-en til hver av dem, så du slipper å hardkode UUID-er i arbeidsflyten."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til n8n. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi n8n-agenten din en ekte innboks",
+    "sub": "Ett endepunkt, én Bearer Auth-legitimasjon, én avgrenset nøkkel. Uten kort."
+  }
+}

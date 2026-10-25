@@ -119,3 +119,101 @@ test('footer: withdrawal, cancellation and Impressum links in every locale', () 
     }
   }
 });
+
+test('the 3-month pass: withdrawal, /cancel and terms 5.8 cover it in every locale', () => {
+  for (const locale of LOCALES) {
+    const w = WITHDRAWAL_COPY[locale];
+    assert.match(w.effects.paras[1], /5\.4.*5\.8/, `${locale} withdrawal effects cite 5.4 and 5.8`);
+    assert.match(w.form.lines[1], /3/, `${locale} model form names the pass`);
+    const f = CANCEL_COPY[locale].form;
+    for (const key of ['kindWithdrawPass', 'kindWithdrawPassHint', 'kindValueWithdrawPass', 'doneNextWithdrawPass']) {
+      assert.equal(typeof f[key], 'string', `${locale} cancel form.${key}`);
+    }
+    const p = messages(locale, 'terms').plansAndPayment;
+    assert.match(p.h58, /^5\.8 /, `${locale} h58`);
+    for (const tag of ['<email></email>', '<cancel>', '<withdrawal>']) {
+      assert.ok(p.p58.includes(tag), `${locale} p58 is missing ${tag}`);
+    }
+    assert.match(p.p58, /14/, `${locale} p58 states the 14 days`);
+    assert.ok(!/30|—/.test(p.p58), `${locale} p58 has no 30 days and no em dash`);
+  }
+  assert.ok(!/trial|discount|save/i.test(messages('en', 'terms').plansAndPayment.p58));
+});
+
+// §312k BGB and Art. 11a CRD: the cancel page may not try to keep the customer.
+const RETENTION = {
+  en: /pause|downgrade|discount|are you sure/i,
+  nb: /pause|nedgrader|rabatt|er du sikker/i,
+  es: /pausa|pausar|rebaja|descuento|est[aá]s seguro/i,
+  fr: /pause|r[ée]trograd|remise|r[ée]duction|[êe]tes-vous s[ûu]r/i,
+  zh: /暂停|降级|折扣|优惠|确定吗/,
+  de: /pause|pausier|downgrade|herabstuf|rabatt|nachlass|sind sie sicher/i,
+};
+
+test('cancel: no locale offers a pause, a downgrade or a discount', () => {
+  for (const locale of LOCALES) {
+    for (const [path, value] of leaves(CANCEL_COPY[locale])) {
+      assert.ok(!RETENTION[locale].test(value), `cancel/${locale} ${path}: ${value}`);
+    }
+  }
+});
+
+test('cancel: the final buttons carry the statutory labels, with no step before them', () => {
+  assert.equal(CANCEL_COPY.de.form.submitCancel, 'Jetzt kündigen');
+  assert.equal(CANCEL_COPY.de.form.submitWithdraw, 'Widerruf bestätigen');
+  assert.equal(CANCEL_COPY.en.form.submitCancel, 'Cancel now');
+  assert.equal(CANCEL_COPY.en.form.submitWithdraw, 'Confirm withdrawal');
+  for (const locale of LOCALES) {
+    for (const key of ['continue', 'reviewHeading', 'reviewLead', 'back']) {
+      assert.ok(!(key in CANCEL_COPY[locale].form), `cancel/${locale} still has the review step key ${key}`);
+    }
+    assert.ok(CANCEL_COPY[locale].form.effectiveOnDate.includes('{date}'), `cancel/${locale} effectiveOnDate`);
+  }
+  const form = readFileSync(join(here, '../../../components/legal/CancelForm.jsx'), 'utf8');
+  assert.ok(!/setStep\('review'\)/.test(form), 'CancelForm still has a review step');
+});
+
+test('footer: the withdrawal link names the function and opens the form with withdrawal preselected', () => {
+  const expected = {
+    en: 'Withdraw from contract here',
+    de: 'Vertrag hier widerrufen',
+    nb: 'Gå fra avtalen her',
+    fr: 'Se rétracter du contrat ici',
+    es: 'Desistir del contrato aquí',
+    zh: '在此撤回合同',
+  };
+  for (const locale of LOCALES) {
+    assert.equal(messages(locale, 'home').footer.linkWithdrawal, expected[locale], locale);
+  }
+  const sections = readFileSync(join(here, '../../../components/marketing/Sections.jsx'), 'utf8');
+  const link = sections.match(/<Link href="([^"]+)">\{t\('footer\.linkWithdrawal'\)\}<\/Link>/);
+  assert.ok(link, 'footer withdrawal link not found');
+  assert.equal(link[1], '/cancel?type=withdraw');
+});
+
+test('cancel page: the header is the logo only', () => {
+  const page = readFileSync(join(here, '../../../app/[locale]/cancel/page.js'), 'utf8');
+  assert.match(page, /<Nav minimal \/>/);
+});
+
+test('terms: every section heading is rendered once, and its number matches its key', () => {
+  // A merge once left the referral section rendering the 5.10 heading, so
+  // /terms showed "5.10 Business founder price" twice and no 5.11.
+  const page = readFileSync(join(here, '../../../app/[locale]/terms/page.js'), 'utf8');
+  const keys = [...page.matchAll(/t\('plansAndPayment\.(h\d+)'\)/g)].map((m) => m[1]);
+  const seen = new Set();
+  for (const key of keys) {
+    assert.ok(!seen.has(key), `terms/page.js renders plansAndPayment.${key} twice`);
+    seen.add(key);
+  }
+  for (const locale of LOCALES) {
+    const section = messages(locale, 'terms').plansAndPayment;
+    for (const key of keys) {
+      // A locale without the key does not show that section (5.10 is hidden
+      // where founderTermsVisible says so).
+      if (section[key] === undefined) continue;
+      const number = key.slice(1).replace(/^(\d)(\d+)$/, '$1.$2');
+      assert.ok(String(section[key]).startsWith(`${number} `), `${locale} plansAndPayment.${key} should start with ${number}`);
+    }
+  }
+});

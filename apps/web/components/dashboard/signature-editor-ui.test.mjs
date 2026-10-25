@@ -78,7 +78,7 @@ const STORED_TEXT = 'Ada Lovelace\nacme.com';
  * A PATCH is answered the way the route answers it: the saved signature echoed
  * back under `signature`, which App.jsx merges into the inbox.
  */
-async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owner' } = {}) {
+async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owner', chatConfirmEnabled = false } = {}) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -108,7 +108,7 @@ async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owne
     createElement(DashboardApp, {
       initialRoute: 'inboxes',
       user: { displayName: 'Ada', email: 'ada@acme.com', initials: 'A', id: 'u-0001' },
-      workspace: { id: WORKSPACE_ID, slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: userRole === 'owner' },
+      workspace: { id: WORKSPACE_ID, slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: userRole === 'owner', chatConfirmEnabled },
       workspaces: [],
       activeWorkspaceId: WORKSPACE_ID,
       mcpUrl: 'https://mcpemails.com/api/mcp',
@@ -800,7 +800,7 @@ test('member: can save a signature; the review fields are not sent, and the sele
   await view.openReady();
 
   const radios = reviewRadios(view);
-  assert.equal(radios.length, 3);
+  assert.equal(radios.length, 3, 'outside the chat rollout: off, inline, dashboard');
   for (const r of radios) assert.equal(r.disabled, true, 'a member cannot change the review gate');
   assert.ok(view.container.textContent.includes(en.approvals.mode.ownerAdminOnly), 'the reason is shown');
   assert.equal(view.button(COPY.save).disabled, false, 'a member can still save');
@@ -820,6 +820,23 @@ test('admin: the review selector is enabled and a changed mode is sent', async (
   const patch = await view.save();
   assert.equal(patch.body.send_review_mode, 'inline');
   assert.equal(patch.body.send_approval_required, true);
+});
+
+test('outside the internal rollout, "Confirm in chat" is not offered', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  assert.equal(reviewRadios(view).length, 3);
+  assert.equal(view.container.querySelectorAll('input[name="send-review-mode"][value="chat"]').length, 0);
+});
+
+test('admin: "Confirm in chat" is sent as the chat mode and holds nothing', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', chatConfirmEnabled: true, inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  assert.ok(view.container.textContent.includes(en.approvals.mode.chat), 'the option is labelled');
+  await view.click(view.container.querySelector('input[name="send-review-mode"][value="chat"]'));
+  const patch = await view.save();
+  assert.equal(patch.body.send_review_mode, 'chat');
+  assert.equal(patch.body.send_approval_required, false, 'chat mode never holds a send for approval');
 });
 
 test('viewer: sender name and signature are read-only with the reason, and nothing is saved', async (t) => {

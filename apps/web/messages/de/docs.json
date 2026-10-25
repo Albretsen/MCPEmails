@@ -12,7 +12,8 @@
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Tool-Referenz",
     "ctaSafety": "Sicherheitsmodell",
-    "ctaProviders": "Unterstützte Anbieter"
+    "ctaProviders": "Unterstützte Anbieter",
+    "ctaApi": "Entwicklerhandbuch"
   },
   "quickstart": {
     "eyebrow": "Schnellstart",
@@ -59,7 +60,7 @@
     "bodyMethods": "Senden Sie einen JSON-RPC-2.0-Request-Body. Unterstützte Methoden: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>, <code>prompts/list</code> und <code>prompts/get</code>.",
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Authentifizierung: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Ratenlimits: <b>100 Anfragen/Min. · 1.000/Std. · 10.000/Tag</b> pro Schlüssel, dazu die Obergrenze Ihres Tarifs für den Workspace",
+    "infoRateLimits": "Ratenlimits: <b>Minuten-, Stunden- und Tagesfenster pro Schlüssel</b>, bemessen nach Ihrem Tarif, dazu die Obergrenze des Tarifs für den Workspace",
     "infoFormat": "Antwortformat: <b>JSON-RPC 2.0</b>. Erfolgreiche Ergebnisse enthalten zusätzlich ein typisiertes <code>structuredContent</code>-Objekt",
     "handshakeLabel": "Initialize-Handshake",
     "pollingHeading": "Abfragen statt Push",
@@ -332,6 +333,33 @@
         "idempotency_key": "Optionaler, frei wählbarer Schlüssel für das Anlegen einer geplanten Sendung. Verwenden Sie ihn nur erneut, um genau dieselbe create-Anfrage innerhalb von 24 Stunden zu wiederholen."
       }
     },
+    "reminder_list": {
+      "title": "Erinnerungen auflisten",
+      "desc": "Listet die Nachfass-Erinnerungen und zurückgestellten E-Mails, die der Server verfolgt. show 'due' (Standard) liefert überfällige Erinnerungen ohne Antwort und fehlgeschlagene; 'upcoming' liefert ausstehende, die nächsten zuerst; 'all' liefert alles, auch abgeschlossene. Betreffzeilen und Adressen stammen aus E-Mails, daher ist das Ergebnis als untrusted_content markiert. Übergeben Sie eine zurückgegebene id an das Tool reminder, um sie als erledigt zu markieren oder abzubrechen. Nur lesend, ohne action-Argument. Eine Funktion von Pro und Business: in anderen Tarifen liefert ein Aufruf einen Hinweis, der den Tarif nennt. Braucht read:email.",
+      "params": {
+        "inbox_id": "UUID eines Postfachs zum Filtern. Optional; weglassen, um die Erinnerungen aller Postfächer des Schlüssels aufzulisten.",
+        "inbox": "Derselbe Filter per E-Mail-Adresse. Optional; wird ignoriert, wenn inbox_id angegeben ist.",
+        "show": "'due' (Standard), 'upcoming' oder 'all'.",
+        "kind": "Optional: nur 'follow_up' oder nur 'snooze'.",
+        "limit": "Maximale Anzahl Ergebnisse. Standard 25, höchstens 100."
+      }
+    },
+    "reminder": {
+      "title": "Erinnerungen",
+      "desc": "Nachfass-Erinnerungen und zurückgestellte E-Mails, die bei geschlossenem Chat auf dem Server laufen, ohne Modell dazwischen. Setzen Sie action: 'follow_up' (message_id einer gesendeten E-Mail plus days oder due_at; sie erscheint in reminder_list als fällig, wenn bis dahin niemand geantwortet hat, und eine Antwort löscht sie), 'snooze' (message_id und until; die E-Mail verlässt den Posteingang und der Server legt sie zu dieser Zeit zurück, wahlweise nur, wenn niemand geantwortet hat), 'done' (id; beendet eine Erinnerung und lässt eine zurückgestellte E-Mail, wo sie ist) oder 'cancel' (id; beendet sie und holt eine zurückgestellte E-Mail sofort zurück). Ein Versand kann im selben Aufruf eine Erinnerung starten, mit follow_up_days bei email_compose oder bei draft (Aktion 'send'). Nichts hier sendet E-Mails. Eine Funktion von Pro und Business: in anderen Tarifen liefert ein Aufruf einen Hinweis, der den Tarif nennt. Braucht manage:automations; snooze und das Abbrechen einer Zurückstellung brauchen zusätzlich manage:folders.",
+      "params": {
+        "action": "Welche Operation ausgeführt wird: \"follow_up\", \"snooze\", \"done\" oder \"cancel\". Das Auflisten ist das separate Tool reminder_list.",
+        "inbox_id": "UUID des Postfachs, in dem die E-Mail liegt. Optional: wird automatisch ermittelt, wenn der Schlüssel genau ein Postfach hat; andernfalls dies oder inbox übergeben. Rufen Sie inbox_list auf, um verfügbare Postfach-IDs zu erhalten.",
+        "inbox": "E-Mail-Adresse des Postfachs, als einfachere Alternative zu inbox_id. Optional; wird ignoriert, wenn inbox_id angegeben ist.",
+        "message_id": "Die E-Mail, die verfolgt oder zurückgestellt wird (Aktionen 'follow_up' und 'snooze'), mit der id aus einem Versandergebnis oder aus email_read.",
+        "days": "Die Erinnerung ist in so vielen ganzen Tagen fällig, 1 bis 365 (Aktion 'follow_up'). Dies oder due_at übergeben.",
+        "due_at": "Die Erinnerung ist zu dieser ISO-8601-Zeit mit Zeitzone fällig (Aktion 'follow_up'). Dies oder days übergeben.",
+        "until": "Wann die zurückgestellte E-Mail zurückkommt, ISO 8601 mit Zeitzone, in der Zukunft (Aktion 'snooze').",
+        "condition": "'always' (Standard) oder 'no_reply': die E-Mail nur zurückholen, wenn inzwischen niemand geantwortet hat (Aktion 'snooze').",
+        "folder": "Optional ein vorhandener Ordner oder ein Label, in dem die E-Mail wartet, per Name oder id (Aktion 'snooze'). Standard ist \"MCPEmails Snoozed\", wird bei Bedarf angelegt.",
+        "id": "Erinnerungs-id aus reminder_list (Aktionen 'done' und 'cancel')."
+      }
+    },
     "signature_get": {
       "title": "Signatur lesen",
       "desc": "Liest die für ein Postfach konfigurierte Signatur: ihren Klartext und ihr HTML, ob sie aktiviert ist, den Modus für Antworten und Weiterleitungen, ihre Quelle ('manual', 'gmail_import' oder null, wenn keine gesetzt ist) und sender_name, den Anzeigenamen, den Empfänger im From-Header sehen. Die Signatur wird serverseitig an jede gesendete Nachricht, Antwort, Weiterleitung, jeden Entwurf und jede geplante Nachricht angefügt. Nur lesend, ohne action-Argument. Braucht read:email.",
@@ -479,8 +507,8 @@
     "eyebrow": "Ratenlimits",
     "heading": "Ratenlimits & faire Nutzung.",
     "perKeyTag": "Gleitende Zeitfenster pro Schlüssel",
-    "perKeyHeading": "100 Anfragen / Min. · 1.000 / Std. · 10.000 / Tag",
-    "perKeyBody": "Gilt pro API-Schlüssel, unabhängig vom Tarif. Bei Überschreitung antwortet der Server mit HTTP 429, JSON-RPC-Fehlercode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> und einem Feld <code>data.retry_after</code> (Sekunden). Halten Sie diese Wartezeit ein, bevor Sie es erneut versuchen: Es ist eine kurze, wiederholbare Pause.",
+    "perKeyHeading": "Pro Minute · pro Stunde · pro Tag, bemessen nach Ihrem Tarif",
+    "perKeyBody": "Jeder Schlüssel hat ein gleitendes Minuten-, Stunden- und Tagesfenster. Das Minutenfenster entspricht mindestens der Minuten-Obergrenze Ihres Tarifs, sodass ein einzelner Schlüssel den ganzen Tarif nutzen kann, und Stunden- und Tagesfenster skalieren im selben Verhältnis. Erfolgreiche <code>tools/call</code>-Antworten tragen <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> und <code>RateLimit-Reset</code> (Sekunden) für das Fenster, das seiner Grenze am nächsten ist. Bei Überschreitung eines Fensters antwortet der Server mit HTTP 429, JSON-RPC-Fehlercode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code>, dem Fenster in <code>data.window</code> und einem Feld <code>data.retry_after</code> (Sekunden). Halten Sie diese Wartezeit ein, bevor Sie es erneut versuchen: Es ist eine kurze, wiederholbare Pause.",
     "planTag": "Obergrenze pro Minute je Tarif",
     "planHeading": "Free 60 / Min. · Personal 120 / Min. · Pro 300 / Min. · Business 1.000 / Min.",
     "planBody": "Ein Burst-Limit für faire Nutzung pro Workspace, summiert über alle Ihre API-Schlüssel. Bei Überschreitung liefern Aufrufe den Fehlercode <code>-32003</code> mit <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> und einem Countdown <code>data.retry_after</code> (Sekunden). Personal, Pro und Business heben die Obergrenze an.",

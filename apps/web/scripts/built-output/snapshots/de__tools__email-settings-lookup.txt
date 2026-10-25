@@ -1,0 +1,208 @@
+IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden · MCPEmails
+[meta description] E-Mail-Adresse eingeben und IMAP- und SMTP-Server, Port und Verschlüsselung erhalten, dazu den Anbieter hinter einer eigenen Domain. Kostenlos, läuft im Browser.
+[meta og:title] IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden · MCPEmails
+[meta og:description] E-Mail-Adresse eingeben und IMAP- und SMTP-Server, Port und Verschlüsselung erhalten, dazu den Anbieter hinter einer eigenen Domain. Kostenlos, läuft im Browser.
+[meta og:locale] de_DE
+[meta twitter:title] IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden · MCPEmails
+[meta twitter:description] E-Mail-Adresse eingeben und IMAP- und SMTP-Server, Port und Verschlüsselung erhalten, dazu den Anbieter hinter einer eigenen Domain. Kostenlos, läuft im Browser.
+[alt] MCPEmails
+[alt] MCPEmails
+[aria-label] Primary navigation
+Funktionen
+So funktioniert es
+Preise
+Vergleichen
+Doku
+Self-Hosting
+Blog
+Anmelden
+Kostenlos starten
+[aria-label] Open navigation menu
+Kostenloses Tool
+IMAP- und SMTP-Server herausfinden
+Finden Sie die IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse. Geben Sie eine Adresse, eine Domain oder einen Mailservernamen ein, und Sie erhalten den Posteingangsserver (IMAP) und den Postausgangsserver (SMTP) mit Port und Verschlüsselung. Bei einer Adresse auf einer Firmendomain liest das Tool die MX-Einträge der Domain und zeigt, welcher Anbieter das Postfach tatsächlich betreibt.
+E-Mail-Adresse, Domain oder Mailserver
+[placeholder] sie@ihrefirma.de
+Einstellungen suchen
+Beispiele:
+you@gmx.net
+ex4.mail.ovh.net
+you@purelymail.com
+Läuft in Ihrem Browser. Der Teil vor dem @ verlässt diese Seite nie. Steht eine Domain nicht in unseren Tabellen, wird nur die Domain an den öffentlichen DNS-Resolver von Cloudflare und an die Autoconfig-Datenbank von Mozilla Thunderbird gesendet.
+Standards und Angaben zu Drittanbietern geprüft am 20. Oktober 2026.
+Was diese Einstellungen bedeuten
+Jede Mail-App und jeder Konnektor fragt nach denselben sechs Werten. Das bedeuten sie im Einzelnen.
+IMAP zum Lesen, SMTP zum Senden
+Über IMAP (Internet Message Access Protocol) liest eine App Ihr Postfach direkt auf dem Server: Ordner, Gelesen- und Ungelesen-Markierungen und verschobene Nachrichten bleiben mit Webmail und Smartphone synchron. Über SMTP (Simple Mail Transfer Protocol) übergibt eine App eine neue Nachricht zur Zustellung an Ihren Anbieter. Ein Postfach braucht beides, und oft laufen die beiden auf verschiedenen Servern, etwa
+imap.gmx.net
+und
+mail.gmx.net
+.
+Ports und Verschlüsselung
+Port und Verschlüsselung gehören zusammen.
+SSL/TLS
+(auch implizites TLS genannt) verschlüsselt die Verbindung ab dem ersten Byte, auf Port 993 für IMAP und 465 für SMTP.
+STARTTLS
+verbindet sich auf Port 143 oder 587 und schaltet danach auf Verschlüsselung um. RFC 8314 empfiehlt implizites TLS für Lesen und Senden. Ein Port mit der falschen Verschlüsselung endet meist in einer Zeitüberschreitung oder einem unklaren TLS-Fehler statt in einer verständlichen Meldung.
+Benutzername und Passwort
+Der Benutzername ist fast immer Ihre vollständige E-Mail-Adresse. Beim Passwort scheitern die meisten Verbindungen: Gmail, iCloud, Yahoo, AOL, Fastmail und Yandex lehnen Ihr normales Kontopasswort aus einer Mail-App ab und verlangen stattdessen ein
+App-Passwort
+, Zoho ebenfalls, sobald Zwei-Faktor-Authentifizierung oder Single Sign-on aktiv ist. Private Microsoft-Konten akzeptieren keines von beiden und brauchen die Anmeldung bei Microsoft.
+Eigene Domains und MX-Einträge
+Eine Adresse auf Ihrer eigenen Domain verrät nicht, wo das Postfach liegt. Das verraten die MX-Einträge der Domain: Sie nennen die Server, die ihre E-Mails entgegennehmen, und wem dieser Server gehört, der betreibt fast immer auch die IMAP- und SMTP-Server.
+aspmx.l.google.com
+steht für Google Workspace,
+*.mail.protection.outlook.com
+für Microsoft 365,
+aspmx1.migadu.com
+für Migadu. Verweist der MX auf einen Spamfilter, ist der Postfach-Hoster dahinter verborgen, und Sie müssen bei der Person oder Firma nachfragen, die die Domain verwaltet. Die
+Anleitung für eigene Domains
+geht die gängigen Hoster durch.
+So funktioniert die Suche
+Die Suche prüft der Reihe nach: die
+Anbietereinstellungen
+, die MCPEmails durch eine Verbindung zu jedem Server geprüft hat; eine Tabelle mit Hostern, aufgebaut aus echten fehlgeschlagenen Verbindungen; die eigenen RFC-6186-Service-Einträge der Domain; ihre MX-Einträge, abgeglichen mit diesen Tabellen; und die Autoconfig-Datenbank von Mozilla Thunderbird. Ein Ergebnis erscheint nur, wenn sowohl die IMAP- als auch die SMTP-Einstellungen gefunden wurden. Die Anbietereinstellungen sind auch als offener
+Datensatz
+veröffentlicht.
+Standard-Ports für E-Mail
+Port
+Protokoll
+Verschlüsselung
+Verwendung
+993
+IMAP
+SSL/TLS
+E-Mails abrufen. Fast überall der Standard.
+143
+IMAP
+STARTTLS
+E-Mails abrufen auf Servern ohne Port 993.
+465
+SMTP
+SSL/TLS
+Senden aus einer Mail-App. Von RFC 8314 empfohlen.
+587
+SMTP
+STARTTLS
+Senden aus einer Mail-App (Message Submission, RFC 6409).
+25
+SMTP
+STARTTLS oder keine
+Zustellung zwischen Mailservern. Manche Netze sperren ihn für ausgehende Verbindungen.
+MCPEmails verbindet sich nur über SSL/TLS oder STARTTLS, nie unverschlüsselt.
+Fragen
+Wie finde ich die IMAP- und SMTP-Einstellungen für meine E-Mail-Adresse?
+Geben Sie die Adresse oben in die Suche ein. Bei einer Anbieteradresse wie @gmx.net oder @yahoo.com erhalten Sie sofort IMAP- und SMTP-Server, Ports und Verschlüsselung des Anbieters. Bei einer Adresse auf Ihrer eigenen Domain liest das Tool die DNS-Einträge der Domain, ermittelt den Anbieter des Postfachs und zeigt dessen Einstellungen. Wird nichts gefunden, sehen Sie an den angezeigten MX-Einträgen, wer die E-Mails der Domain entgegennimmt, und damit, wen Sie fragen können.
+Wie lauten die SMTP-Einstellungen für OVH Hosted Exchange (ex4.mail.ovh.net)?
+Der Postausgang nutzt denselben nummerierten Host wie der Posteingang, zum Beispiel
+ex4.mail.ovh.net
+, auf Port 587 mit STARTTLS. IMAP läuft auf diesem Host auf Port 993 mit SSL/TLS. Port 465 antwortet bei Hosted Exchange nicht, deshalb hängt die Verbindung mit Einstellungen aus dem OVH-Webhosting (
+ssl0.ovh.net
+, Port 465) bis zur Zeitüberschreitung. Die Nummer im Hostnamen gehört zu Ihrem Dienst und steht im OVHcloud Control Panel. Mehr auf der
+OVH-Seite
+.
+Wie lauten die IMAP- und SMTP-Einstellungen von Purelymail?
+IMAP ist
+imap.purelymail.com
+auf Port 993 mit SSL/TLS, SMTP ist
+smtp.purelymail.com
+auf Port 465 mit SSL/TLS. Der Benutzername ist die vollständige E-Mail-Adresse des Postfachs. Hinweise zur Einrichtung stehen auf der
+Purelymail-Seite
+.
+Soll ich für SMTP Port 465 oder 587 verwenden?
+Nehmen Sie den, den Ihr Anbieter angibt. Port 465 verschlüsselt von Anfang an und wird von RFC 8314 empfohlen; Port 587 beginnt unverschlüsselt und schaltet per STARTTLS um. Viele Anbieter bieten beide an. Entscheidend ist, dass jeder Port die passende Verschlüsselung bekommt: 465 mit SSL/TLS, 587 mit STARTTLS.
+Die Einstellungen stimmen, aber mein Passwort wird abgelehnt. Warum?
+Viele Anbieter lehnen Ihr normales Kontopasswort aus einer Mail-App ab. Gmail, iCloud, Yahoo, AOL, Fastmail und Yandex verlangen ein
+App-Passwort
+, das Sie in den Sicherheitseinstellungen des Kontos erstellen, Zoho ebenfalls, sobald Zwei-Faktor-Authentifizierung oder Single Sign-on aktiv ist. Private Microsoft-Konten nehmen seit dem 16. September 2024 keine Passwörter von Mail-Apps mehr an und brauchen die Anmeldung bei Microsoft.
+Kann dieses Tool meine Anmeldung testen?
+Nein. Eine Webseite kann keine IMAP- oder SMTP-Verbindung öffnen, und ein Postfachpasswort gehört ohnehin nicht in eine Suchseite. MCPEmails testet die IMAP- und SMTP-Anmeldung, wenn Sie
+ein Postfach mit Ihrem KI-Assistenten verbinden
+, und zeigt Ihnen, welcher der beiden Teile fehlgeschlagen ist.
+Verwandte Anleitungen
+Ein beliebiges IMAP-Postfach mit Claude oder ChatGPT verbinden
+E-Mail auf eigener Domain mit einem KI-Agenten verbinden
+Was ist ein App-Passwort?
+Kompatibilitätsübersicht der Anbieter
+Offener Datensatz mit IMAP- und SMTP-Anbietern
+Einrichtungsanleitungen für jeden Anbieter
+Quellen
+Gelesen am 20. Oktober 2026.
+RFC 8314: Use of TLS for email submission and access:
+https://www.rfc-editor.org/rfc/rfc8314
+RFC 6186: Use of SRV records for locating email services:
+https://www.rfc-editor.org/rfc/rfc6186
+RFC 6409: Message submission for mail:
+https://www.rfc-editor.org/rfc/rfc6409
+RFC 5068: Email submission operations:
+https://www.rfc-editor.org/rfc/rfc5068
+Microsoft Support: Moderne Authentifizierung für Outlook.com in anderen Apps jetzt erforderlich:
+https://support.microsoft.com/en-us/office/modern-authentication-methods-now-needed-to-continue-syncing-outlook-email-in-non-microsoft-email-apps-c5d65390-9676-4763-b41f-d7986499a90d
+Microsoft Learn: Einstellung der Standardauthentifizierung in Exchange Online:
+https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online
+Autoconfig-Datenbank von Mozilla Thunderbird (ISPDB):
+https://autoconfig.thunderbird.net/v1.1/
+Cloudflare: JSON-API für DNS over HTTPS:
+https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json/
+Einstellungen gefunden? Geben Sie Ihrem KI-Assistenten Zugriff auf das Postfach.
+MCPEmails verbindet Gmail, Outlook, iCloud und jedes IMAP-Postfach mit Claude, ChatGPT, Cursor und anderen MCP-Clients. E-Mails werden live abgerufen und nie gespeichert.
+Postfach verbinden
+Anbieter ansehen
+[alt] MCPEmails
+Ein gehosteter MCP-Server, der KI-Agenten Lese- und Sendezugriff auf Ihr Postfach gibt, ohne die gelesenen E-Mails je zu speichern.
+Kontakt
+hello@mcpemails.com
+[aria-label] Kontakt kopieren
+Kopieren
+MCP-Endpunkt
+https://mcpemails.com/api/mcp
+[aria-label] MCP-Endpunkt kopieren
+Kopieren
+[aria-label] Sprache
+English
+Norsk
+Español
+Français
+中文
+Deutsch
+Produkt
+Funktionen
+So funktioniert es
+Preise
+Doku
+Self-Hosting
+Für Gründer
+Für Unternehmen
+Ressourcen
+Tool-Referenz
+Schnellstart
+OAuth-Verbindung
+Unterstützte Anbieter
+Nur-Lese-Zugriff
+MCP-Clients einrichten
+Blog
+Changelog
+Verbinden
+Alle E-Mail-Anbieter
+Beliebiges IMAP-Postfach verbinden
+Gmail verbinden
+Outlook verbinden
+Fastmail verbinden
+iCloud verbinden
+Yahoo verbinden
+Zoho verbinden
+Yandex verbinden
+vs. native Konnektoren
+Unternehmen
+Über uns
+Sicherheit
+Status
+Datenschutz
+Nutzungsbedingungen
+Vertrag hier widerrufen
+Verträge hier kündigen
+Impressum
+© 2026 MCPEmails.
+E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert
+MCPEmails ist ein Dienst der Albretsen AS, Organisationsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norwegen.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/de/tools/email-settings-lookup","url":"https://mcpemails.com/de/tools/email-settings-lookup","name":"IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden","description":"E-Mail-Adresse eingeben und IMAP- und SMTP-Server, Port und Verschlüsselung erhalten, dazu den Anbieter hinter einer eigenen Domain. Kostenlos, läuft im Browser.","inLanguage":"de","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/de/tools/email-settings-lookup#breadcrumb"},"datePublished":"2026-10-20","dateModified":"2026-10-20"},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/de/tools/email-settings-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com/de"},{"@type":"ListItem","position":2,"name":"IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden"}]},{"@type":"WebApplication","@id":"https://mcpemails.com/de/tools/email-settings-lookup#tool","name":"IMAP- und SMTP-Server herausfinden","url":"https://mcpemails.com/de/tools/email-settings-lookup","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","isAccessibleForFree":true,"inLanguage":"de"},{"@type":"FAQPage","@id":"https://mcpemails.com/de/tools/email-settings-lookup#faq","mainEntity":[{"@type":"Question","name":"Wie finde ich die IMAP- und SMTP-Einstellungen für meine E-Mail-Adresse?","acceptedAnswer":{"@type":"Answer","text":"Geben Sie die Adresse oben in die Suche ein. Bei einer Anbieteradresse wie @gmx.net oder @yahoo.com erhalten Sie sofort IMAP- und SMTP-Server, Ports und Verschlüsselung des Anbieters. Bei einer Adresse auf Ihrer eigenen Domain liest das Tool die DNS-Einträge der Domain, ermittelt den Anbieter des Postfachs und zeigt dessen Einstellungen. Wird nichts gefunden, sehen Sie an den angezeigten MX-Einträgen, wer die E-Mails der Domain entgegennimmt, und damit, wen Sie fragen können."}},{"@type":"Question","name":"Wie lauten die SMTP-Einstellungen für OVH Hosted Exchange (ex4.mail.ovh.net)?","acceptedAnswer":{"@type":"Answer","text":"Der Postausgang nutzt denselben nummerierten Host wie der Posteingang, zum Beispiel ex4.mail.ovh.net, auf Port 587 mit STARTTLS. IMAP läuft auf diesem Host auf Port 993 mit SSL/TLS. Port 465 antwortet bei Hosted Exchange nicht, deshalb hängt die Verbindung mit Einstellungen aus dem OVH-Webhosting (ssl0.ovh.net, Port 465) bis zur Zeitüberschreitung. Die Nummer im Hostnamen gehört zu Ihrem Dienst und steht im OVHcloud Control Panel. Mehr auf der OVH-Seite."}},{"@type":"Question","name":"Wie lauten die IMAP- und SMTP-Einstellungen von Purelymail?","acceptedAnswer":{"@type":"Answer","text":"IMAP ist imap.purelymail.com auf Port 993 mit SSL/TLS, SMTP ist smtp.purelymail.com auf Port 465 mit SSL/TLS. Der Benutzername ist die vollständige E-Mail-Adresse des Postfachs. Hinweise zur Einrichtung stehen auf der Purelymail-Seite."}},{"@type":"Question","name":"Soll ich für SMTP Port 465 oder 587 verwenden?","acceptedAnswer":{"@type":"Answer","text":"Nehmen Sie den, den Ihr Anbieter angibt. Port 465 verschlüsselt von Anfang an und wird von RFC 8314 empfohlen; Port 587 beginnt unverschlüsselt und schaltet per STARTTLS um. Viele Anbieter bieten beide an. Entscheidend ist, dass jeder Port die passende Verschlüsselung bekommt: 465 mit SSL/TLS, 587 mit STARTTLS."}},{"@type":"Question","name":"Die Einstellungen stimmen, aber mein Passwort wird abgelehnt. Warum?","acceptedAnswer":{"@type":"Answer","text":"Viele Anbieter lehnen Ihr normales Kontopasswort aus einer Mail-App ab. Gmail, iCloud, Yahoo, AOL, Fastmail und Yandex verlangen ein App-Passwort, das Sie in den Sicherheitseinstellungen des Kontos erstellen, Zoho ebenfalls, sobald Zwei-Faktor-Authentifizierung oder Single Sign-on aktiv ist. Private Microsoft-Konten nehmen seit dem 16. September 2024 keine Passwörter von Mail-Apps mehr an und brauchen die Anmeldung bei Microsoft."}},{"@type":"Question","name":"Kann dieses Tool meine Anmeldung testen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Eine Webseite kann keine IMAP- oder SMTP-Verbindung öffnen, und ein Postfachpasswort gehört ohnehin nicht in eine Suchseite. MCPEmails testet die IMAP- und SMTP-Anmeldung, wenn Sie ein Postfach mit Ihrem KI-Assistenten verbinden, und zeigt Ihnen, welcher der beiden Teile fehlgeschlagen ist."}}]}]}

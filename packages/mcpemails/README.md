@@ -138,7 +138,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-19 tools you call directly. Most take an `action` argument that selects the specific operation:
+21 tools you call directly. Most take an `action` argument that selects the specific operation:
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
@@ -152,6 +152,8 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `draft` - Creates, updates, sends and deletes drafts (`create`, `reply`, `update`, `send`, `delete`).
 - `schedule_list` - Lists what is queued for future delivery. Read-only.
 - `schedule` - Queues a message for future delivery, or cancels one (`create`, `cancel`).
+- `reminder_list` - Lists the follow-ups and snoozes the server tracks. Read-only. Pro and Business.
+- `reminder` - Follows up on sent mail nobody replied to, and snoozes a message until a time you choose (`follow_up`, `snooze`, `done`, `cancel`). Pro and Business.
 - `signature_get` - Reads the signature and sender name configured for an inbox. Read-only.
 - `signature_set` - Sets the signature appended to outbound mail, and the sender name.
 - `automation_read` - Lists triage rules, reads one, shows run history, dry-runs a filter (`list`, `get`, `runs`, `preview`). Read-only.
@@ -160,7 +162,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `draft_read` - Reads one unsent draft in full, for example after the user edited it in the draft editor card. Read-only.
 - `draft_editor_hide` - Hides or shows the in-chat draft editor card for one inbox or the whole workspace. A display preference only.
 
-A full-scope key sees 26 tools in `tools/list`: the 19 above plus seven app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`) that drive the cards your MCP client renders for a held send, a previewed bulk operation or a draft being edited. There are also 7 workflow prompts in `prompts/list`.
+A full-scope key sees 28 tools in `tools/list`: the 21 above plus seven app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`) that drive the cards your MCP client renders for a held send, a previewed bulk operation or a draft being edited. There are also 7 workflow prompts in `prompts/list`.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 

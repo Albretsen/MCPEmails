@@ -31,6 +31,8 @@ const revenue: RevenueSummary = {
   atRiskCustomers: 0,
   leavingMinor: 0,
   leavingCustomers: 0,
+  pausedCustomers: 0,
+  pausedMinor: 0,
   newMrrMinor: 500,
   newCustomers: 1,
   churnedMrrMinor: 0,
@@ -39,11 +41,18 @@ const revenue: RevenueSummary = {
   cancelledMrrMinor: 0,
   churnBaseCustomers: 0,
   churnBaseMrrMinor: 0,
+  movements: {
+    new: { customers: 0, mrrMinor: 0 },
+    stopped: { customers: 0, mrrMinor: 0 },
+    leaving: { customers: 0, mrrMinor: 0 },
+    failing: { customers: 0, mrrMinor: 0 },
+  },
   customerChurnRate: null,
   revenueChurnRate: null,
   netNewMrrMinor: 500,
   byPlan: [],
   internalCustomers: 1,
+  byCurrency: [],
   otherCurrencies: [],
 };
 
@@ -72,6 +81,7 @@ function calm(): AttentionInput {
       since: '2026-08-15T00:00:00Z',
       truncated: false,
       mode: 'live',
+      otherCurrencies: [],
     },
     lifecycle: {
       value_activated: 169,

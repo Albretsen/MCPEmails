@@ -65,7 +65,7 @@
     "items": {
       "0": {
         "tag": "Omfang",
-        "h": "Nitten fokuserte verktøy. Det essensielle, dekket.",
+        "h": "Tjueen fokuserte verktøy. Det essensielle, dekket.",
         "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter, signaturer og automatiseringer som går uten tilsyn. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
@@ -75,8 +75,8 @@
       },
       "2": {
         "tag": "Sending",
-        "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "h": "Du har kontroll over hver sending.",
+        "p": "Din egen leverandør sender hver melding, fra din adresse: Gmail, Outlook, Fastmail eller din egen SMTP-server. Hvis en leverandør avviser tilkoblinger fra skyadresser, går tilkoblingen gjennom vårt relé, en ren tunnel med TLS hele veien, så reléet ser aldri e-posten eller passordet ditt. Slå på godkjenning per innboks for å holde tilbake sendinger, svar, videresendinger, sending av utkast og planlagte sendinger til de er gjennomgått i dashbordet. Automatiske nye forsøk kan gjenbruke en idempotensnøkkel i 24 timer, og en annen avsenderadresse fungerer bare når den er en verifisert Send As-adresse for den innboksen."
       },
       "3": {
         "tag": "Leverandører",
@@ -154,6 +154,7 @@
     "sub": "Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til opptil 10 for én person som driver en bedrift. Business har 10 postkasser inkludert, $3 i måneden for hver ekstra, og plass til hele teamet.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
+    "inclVat": "inkl. mva.",
     "tiers": {
       "free": {
         "name": "Gratis",
@@ -183,12 +184,18 @@
       },
       "solo": {
         "name": "Pro",
+        "tagline": "Sett det opp i chatten. Det fortsetter å kjøre etter at du lukker den.",
         "desc": "For én person som driver en bedrift: opptil 10 postkasser på én agent, fra økonomi og salg til support og din egen.",
         "features": [
           "Alt i Personal",
           "10 tilkoblede innbokser",
           "5x høyere burst-grense",
-          "Lengre analysehistorikk"
+          "Lengre analysehistorikk",
+          "Påminnelser når ingen svarer på e-post du har sendt",
+          "Utsett: e-post forsvinner fra innboksen og kommer tilbake når du vil",
+          "En daglig morgenoppsummering, lagt rett i innboksen din",
+          "Søk i alle tilkoblede innbokser samtidig",
+          "Instruksjoner til AI-en din, per innboks"
         ],
         "cta": "Velg Pro"
       },
@@ -243,11 +250,11 @@
       },
       {
         "q": "Er det virkelig gratis?",
-        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din får alle verktøyene vi leverer mot den: lese, søke, sende, svare, planlegge og organisere. Personal koster $9 i måneden for postkasse nummer to og tre på samme agent, Pro dekker opptil 10 for $15, og Business er for flere postkasser eller når andre folk skal inn."
+        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din kan lese, søke, sende, svare, planlegge og organisere i den. Personal koster $9 i måneden for postkasse nummer to og tre på samme agent, Pro dekker opptil 10 for $15, og Business er for flere postkasser eller når andre folk skal inn."
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
-        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Nitten action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Tjueen action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
@@ -273,10 +280,11 @@
     "linkOauth": "OAuth-tilkobling",
     "linkProviders": "Leverandørstøtte",
     "linkReadOnly": "Skrivebeskyttet tilgang",
+    "linkApiGuide": "Utviklerguide",
     "linkClients": "Oppsett av MCP-klienter",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
-    "linkWithdrawal": "Angrerett",
+    "linkWithdrawal": "Gå fra avtalen her",
     "linkCancel": "Si opp avtaler her",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -293,7 +301,8 @@
     "linkHelp": "Hjelp og kundestøtte",
     "linkSelfHost": "Selvhosting",
     "linkFounders": "For gründere",
-    "linkBusiness": "For bedrifter"
+    "linkBusiness": "For bedrifter",
+    "linkDevelopers": "Utviklere"
   },
   "languageSwitcher": {
     "label": "Språk",
@@ -309,14 +318,8 @@
     "title": "Se hele MCP-driften din med ett blikk.",
     "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
   },
-  "demo": {
-    "eyebrow": "Se det i bruk",
-    "title": "Koble til en innboks, og spør hva som haster.",
-    "sub": "Under ett minutt, tatt opp mot det ekte produktet: en virkelig IMAP-tilkobling, og så et virkelig verktøykall som finner den ene e-posten som betyr noe.",
-    "caption": "Tatt opp mot en demo-innboks fylt med oppdiktet e-post. Ingen ekte korrespondanse vises i videoen.",
-    "player": {
-      "label": "Demovideo: koble til en innboks og la en AI-agent sortere den",
-      "fallback": "Nettleseren din kan ikke spille av denne videoen. Hurtigstarten i dokumentasjonen dekker de samme trinnene."
-    }
+  "referralBanner": {
+    "text": "En venn har invitert deg til MCPEmails. Din andre betalte måned er gratis.",
+    "close": "Lukk"
   }
 }

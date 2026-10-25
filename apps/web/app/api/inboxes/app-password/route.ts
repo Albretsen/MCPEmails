@@ -12,6 +12,7 @@ import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { yandexLoginUsername } from '@/lib/email/connection-config';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { connectFailureContext } from '@/lib/email/auth-failure-help';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
@@ -289,9 +290,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // was never the point: the client picks a short headline from the code and
     // decides whether the fix lives in Advanced settings, and a timeout or TLS
     // failure with no code reads to it exactly like a rejected password.
-    const body: Record<string, string> = {
+    const body: Record<string, string | boolean> = {
       error: validation.message,
       error_code: validation.code.toLowerCase(),
+      // The fix panel's row keys. This route never relays.
+      ...connectFailureContext({ host: imapHost, phase: validation.phase, viaRelay: false }),
     };
     // Which of the credential situations this rejection actually is. The
     // branded providers all mandate an app password, so a bare "wrong
@@ -378,6 +381,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         error: smtpValidation.message,
         error_code: smtpValidation.code.toLowerCase(),
         ...(smtpAuthFailure?.fields ?? {}),
+        ...connectFailureContext({ host: smtpHost, phase: `smtp_${smtpValidation.phase}`, viaRelay: false, imapOk: true }),
       },
       { status: 422 },
     );

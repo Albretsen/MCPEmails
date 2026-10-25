@@ -6,6 +6,8 @@ import {
   Nav, Hero, Trusted, WhatIs, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
   Pricing, Faq, Footer
 } from './Sections';
+import { ReferralBanner } from './ReferralBanner';
+import { useDisplayCurrency } from './useDisplayCurrency';
 
 const TWEAK_DEFAULTS = {
   heroVariant: 'pipe',
@@ -15,10 +17,13 @@ const TWEAK_DEFAULTS = {
 /**
  * @param {{
  *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   eurEnabled?: boolean,
  * }} props
  */
-export default function HomeClient({ stripePrices }) {
+export default function HomeClient({ stripePrices, eurEnabled = false }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  // 'eur' only for an EU visitor while STRIPE_EUR_PRICES is on; see the hook.
+  const currency = useDisplayCurrency(eurEnabled);
 
   // Apply dark mode (also persisted so other pages match)
   useEffect(() => {
@@ -57,10 +62,11 @@ export default function HomeClient({ stripePrices }) {
         <Examples />
         <Quote />
         <Reviews />
-        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
-        <Faq />
+        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} currency={currency} />
+        <Faq currency={currency} />
       </main>
       <Footer />
+      <ReferralBanner />
 
       <TweaksPanel>
         <TweakSection label="Hero" />

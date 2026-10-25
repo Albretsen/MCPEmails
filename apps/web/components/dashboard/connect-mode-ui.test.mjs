@@ -11,7 +11,10 @@
 //   - choosing one half hides the other half's host, port and security fields;
 //   - the request carries `mode` and only the half it names, even when the
 //     hidden fields still hold what was typed before the switch;
-//   - an empty host in the one visible half is refused naming that half alone.
+//   - an empty host in the one visible half is refused naming that half alone;
+//   - on Reconnect the type is shown but locked, with every server field: the
+//     type is changed on the inbox itself (Advanced > Connection type), and
+//     Reconnect only re-enters the password.
 // ---------------------------------------------------------------------------
 
 import test from 'node:test';
@@ -49,7 +52,7 @@ async function openGenericForm(t) {
   return opened;
 }
 
-async function openCredentialsStep(t) {
+async function openCredentialsStep(t, reconnect = null) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -61,10 +64,10 @@ async function openCredentialsStep(t) {
   };
   const view = await mount(createElement(AppLocaleProvider, null, createElement(ToastProvider, null,
     createElement(ConnectModal, {
-      reconnect: null,
+      reconnect,
       onClose: () => {},
       onConnect: () => {},
-      preselect: { card: 'generic' },
+      preselect: reconnect ? null : { card: 'generic' },
       atInboxLimit: false,
       planName: 'Free',
       inboxCount: 0,
@@ -77,10 +80,12 @@ async function openCredentialsStep(t) {
     await view.unmount();
     globalThis.fetch = previousFetch;
   });
-  const next = buttonNamed(view, chrome.connect.enterCredentials);
-  assert.ok(next, 'step 1 should offer the button that opens the credentials form');
-  await flush(async () => { next.click(); });
-  await waitFor(() => view.container.querySelector('#cm-imap-host'), { message: 'the credentials form' });
+  if (!reconnect) {
+    const next = buttonNamed(view, chrome.connect.enterCredentials);
+    assert.ok(next, 'step 1 should offer the button that opens the credentials form');
+    await flush(async () => { next.click(); });
+  }
+  await waitFor(() => view.container.querySelector('#cm-email'), { message: 'the credentials form' });
   return { view, requests };
 }
 
@@ -181,4 +186,64 @@ test('an empty host in a one-sided form names only that half', async (t) => {
   );
   assert.equal(view.container.textContent.includes(chrome.connect.errorHostRequired), false);
   assert.equal(requests.length, 0, 'nothing was sent');
+});
+
+// ── Reconnect ──────────────────────────────────────────────────────────────
+
+/** A stored generic inbox, shaped the way the dashboard page hands it over. */
+function storedInbox(connectionMode) {
+  const imap = connectionMode !== 'smtp';
+  const smtp = connectionMode !== 'imap';
+  return {
+    id: 'inbox-1',
+    address: 'box@example.com',
+    provider: 'imap',
+    service: 'generic',
+    hasImap: true,
+    connectionMode,
+    imapHost: imap ? 'imap.example.com' : null,
+    imapPort: imap ? 993 : null,
+    smtpHost: smtp ? 'smtp.example.com' : null,
+    smtpPort: smtp ? 465 : null,
+    imapSecurity: 'tls',
+    smtpSecurity: 'tls',
+    username: null,
+  };
+}
+
+async function openReconnect(t, connectionMode) {
+  const opened = await openCredentialsStep(t, storedInbox(connectionMode));
+  if (!q(opened.view, 'cm-connection-mode')) {
+    const advanced = buttonNamed(opened.view, chrome.connect.advancedToggle);
+    assert.ok(advanced, 'the reconnect form should have the Advanced settings toggle');
+    await flush(async () => { advanced.click(); });
+  }
+  await waitFor(() => q(opened.view, 'cm-connection-mode'), { message: 'the connection type' });
+  return opened;
+}
+
+test('reconnect: the connection type is locked and only the password is asked for', async (t) => {
+  const { view, requests } = await openReconnect(t, 'imap');
+  const select = q(view, 'cm-connection-mode');
+  assert.equal(select.value, 'imap', 'opens on the stored type');
+  assert.equal(select.disabled, true, 'the type is changed on the inbox page, not here');
+  assert.equal(q(view, 'cm-email').readOnly, true, 'the address stays locked');
+  assert.equal(q(view, 'cm-imap-host').readOnly, true, 'the IMAP host stays locked');
+  assert.equal(q(view, 'cm-smtp-host') === null, true, 'a receive-only inbox shows no SMTP half');
+
+  await type(q(view, 'cm-password'), 'a-long-enough-password');
+  await submit(view);
+  await waitFor(() => requests.length === 1, { message: 'the connect request' });
+  const [body] = requests;
+  assert.equal(body.mode, 'imap', 'the stored type is sent back unchanged');
+  assert.equal(body.imapHost, 'imap.example.com');
+  assert.equal('smtpHost' in body, false);
+});
+
+test('reconnect: a send-and-receive inbox keeps both halves locked', async (t) => {
+  const { view } = await openReconnect(t, 'both');
+  assert.equal(q(view, 'cm-connection-mode').disabled, true);
+  assert.equal(q(view, 'cm-imap-host').readOnly, true);
+  assert.equal(q(view, 'cm-smtp-host').readOnly, true);
+  assert.equal(q(view, 'cm-smtp-port').disabled, true);
 });

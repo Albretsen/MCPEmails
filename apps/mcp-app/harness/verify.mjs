@@ -47,6 +47,7 @@
 // ---------------------------------------------------------------------------
 
 import { spawn } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -130,6 +131,10 @@ const SUITES = [
   // adapter that is not wired), and files as chips that can be removed and
   // attached.
   ["draft fields", "draft-fields.test.mjs"],
+  // The thirteenth DOM suite: the §9 subscription cleanup card. Pre-ticked
+  // senders, Select all / none, Confirm sending only ticked plan keys once,
+  // every result status, Continue archiving, expired and hostile names.
+  ["subscription plan", "subscription-plan.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).
@@ -138,6 +143,12 @@ const SUITES = [
   // chain (kept verbatim as an oracle), plus 512 KB timing on hostile shapes.
   ["sanitize layer 1", "sanitize.test.mjs"],
 ];
+
+// Every *.test.mjs in this folder must be listed above. The count used to be
+// written down in ci.yml ("thirteen") and went stale at eighteen; a missing
+// suite is now an error derived from the folder, not a number to keep in step.
+const listed = new Set(SUITES.map(([, file]) => file));
+const unlisted = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && !listed.has(f));
 
 function runSuite([label, file]) {
   return new Promise((done) => {
@@ -179,6 +190,7 @@ const DOM_LANE = new Set([
   "draft-quote.test.mjs",
   "draft-layout.test.mjs",
   "draft-fields.test.mjs",
+  "subscription-plan.test.mjs",
 ]);
 
 const outcomes = new Array(SUITES.length);
@@ -215,6 +227,7 @@ for (const o of outcomes) {
 }
 
 const bad = outcomes.filter((o) => o.state !== "passed");
+for (const f of unlisted) console.log(`FAIL  ${f} is not in SUITES in harness/verify.mjs, so it never runs`);
 console.log(`${outcomes.length - bad.length}/${outcomes.length} suites passed`);
 // exitCode, not exit(): a pipe may still be draining the buffered output.
-process.exitCode = bad.length ? 1 : 0;
+process.exitCode = bad.length || unlisted.length ? 1 : 0;

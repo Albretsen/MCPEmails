@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à n8n : MCP Client Tool pour l'AI Agent",
+    "description": "Connectez l'e-mail à un AI Agent n8n avec le nœud MCP Client Tool : HTTP Streamable, Bearer Auth et clé API limitée. Lisez, cherchez, rédigez, envoyez."
+  },
+  "hero": {
+    "eyebrow": "n8n + e-mail",
+    "titleLine1": "Connectez votre boîte à n8n",
+    "titleLine2": "avec le MCP Client Tool",
+    "lead": "Donnez une vraie boîte mail à l'AI Agent de votre workflow n8n. Il peut lire, rechercher, rédiger, envoyer, répondre, transférer et classer des e-mails via un seul point de terminaison MCP, avec une clé dont les autorisations couvrent exactement ce que le workflow doit faire.",
+    "meta0": "Fonctionne avec le nœud MCP Client Tool intégré",
+    "meta1": "Clé API à portée limitée, révocable en un clic",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Dans votre workflow n8n, ajoutez un nœud MCP Client Tool sur l'entrée Tool de l'AI Agent. Réglez Endpoint sur https://mcpemails.com/api/mcp, Server Transport sur HTTP Streamable et Authentication sur Bearer Auth, puis collez une clé API de votre tableau de bord MCPEmails comme Bearer Token."
+  },
+  "method": {
+    "title": "Comment n8n se connecte : un identifiant Bearer Auth qui contient une clé limitée",
+    "body": "Le nœud MCP Client Tool envoie l'identifiant que vous lui associez, quel qu'il soit. Ce guide utilise l'identifiant <b>Bearer Auth</b> de n8n, qui place votre clé dans l'en-tête <code>Authorization</code> de chaque requête. Créez la clé dans votre tableau de bord et cochez uniquement les autorisations dont le workflow a besoin. Un workflow s'exécute souvent de façon planifiée, sans personne pour le surveiller : ce sont donc ces autorisations qui fixent la vraie limite. Les connexions par clé et les connexions OAuth atteignent le même point de terminaison et reçoivent le même catalogue d'outils."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard."
+    },
+    {
+      "h": "Créez une clé API à portée limitée",
+      "p": "Dans Dashboard, API Keys, cliquez sur Create key. Donnez-lui le nom du workflow et cochez uniquement les autorisations nécessaires : <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>. La clé se présente sous la forme <code>mcpe_</code> suivi de 64 caractères hexadécimaux et ne s'affiche qu'une fois : copiez-la avant de fermer la fenêtre."
+    },
+    {
+      "h": "Ajoutez le MCP Client Tool à votre AI Agent",
+      "p": "Ouvrez le workflow, cliquez sur le plus sous l'entrée <b>Tool</b> du nœud AI Agent et choisissez <b>MCP Client Tool</b>. Collez <code>https://mcpemails.com/api/mcp</code> dans <b>Endpoint</b> et réglez <b>Server Transport</b> sur <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Associez un identifiant Bearer Auth",
+      "p": "Réglez <b>Authentication</b> sur <b>Bearer Auth</b>, créez un nouvel identifiant et collez la clé dans <b>Bearer Token</b>, sans rien devant. Laissez <b>Tools to Include</b> sur All, ou passez à Selected et choisissez uniquement les outils que ce workflow doit voir."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Collez la clé sans le mot Bearer",
+      "p": "L'identifiant Bearer Auth de n8n ajoute lui-même <code>Bearer</code> et une espace. Si vous le tapez vous-même, le mot est envoyé deux fois et l'appel échoue avec une erreur 401. Si vous utilisez plutôt <b>Header Auth</b>, c'est l'inverse : Name vaut <code>Authorization</code> et Value vaut <code>Bearer</code>, une espace, puis la clé."
+    },
+    {
+      "h": "Un champ SSE Endpoint signale un ancien nœud",
+      "p": "La version 1 du nœud MCP Client Tool n'avait qu'un champ <b>SSE Endpoint</b> et aucun choix de transport. Les versions actuelles affichent <b>Endpoint</b> et <b>Server Transport</b>. Ce serveur utilise le transport Streamable HTTP : si vous ne voyez que SSE Endpoint, ajoutez un nouveau nœud ou mettez n8n à jour. Si Server Transport indique Server Sent Events (Deprecated), passez-le sur HTTP Streamable."
+    },
+    {
+      "h": "Gardez le délai d'attente par défaut",
+      "p": "Le nœud accorde 60 000 ms à chaque appel d'outil, une valeur réglable sous Options, <b>Timeout</b>. C'est suffisant même pour les traitements en masse : un déplacement ou une suppression sur un gros dossier atteint avant cela la limite de temps propre au serveur, s'arrête et renvoie un résultat marqué <code>partial</code>, avec les messages non traités listés dans <code>remaining_message_ids</code>, pour que l'agent puisse relancer l'appel avec ces identifiants. Un Timeout bien plus bas peut couper l'appel avant l'arrivée de ce résultat, et l'agent ne sait plus ce qui a été fait."
+    },
+    {
+      "h": "Tools to Include masque des outils ; les autorisations de la clé les interdisent",
+      "p": "Le nœud ne liste jamais que les outils couverts par les autorisations de votre clé, car le serveur omet les autres dans <code>tools/list</code>. Choisir un sous-ensemble dans Tools to Include réduit encore la liste, ce qui aide le modèle à choisir, mais ne change rien à ce que la clé a le droit de faire. Définissez la limite sur la clé et servez-vous de Tools to Include pour garder l'agent concentré."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées par clé dans des fenêtres par minute, par heure et par jour dimensionnées selon votre formule : une seule clé peut utiliser tout le plafond par minute de la formule, et plusieurs clés le partagent. Un workflow qui boucle sur de nombreux éléments doit respecter Retry-After et espacer ses appels.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne lance jamais un workflow de lui-même. Pour réagir au courrier entrant, démarrez le workflow avec un Schedule Trigger et demandez à l'agent de vérifier les messages non lus.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à un AI Agent n8n ?",
+      "a": "Ajoutez un nœud MCP Client Tool sur l'entrée Tool de l'AI Agent. Réglez Endpoint sur https://mcpemails.com/api/mcp et Server Transport sur HTTP Streamable, choisissez Bearer Auth et collez une clé API de Dashboard, API Keys comme Bearer Token. L'agent dispose alors d'outils pour lire, rechercher, rédiger, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Puis-je appeler un outil e-mail sans AI Agent ?",
+      "a": "Oui. Le nœud MCP Client autonome de n8n exécute un outil MCP comme une étape ordinaire du workflow, sans modèle qui décide quoi appeler. Saisissez la même adresse dans son champ MCP Endpoint URL, associez le même identifiant Bearer Auth, choisissez un outil et renseignez ses paramètres, par exemple email_read avec action réglé sur list et unread sur true. C'est adapté aux pipelines fixes dont les étapes ne changent jamais."
+    },
+    {
+      "q": "Pourquoi Bearer Auth plutôt que l'identifiant MCP OAuth2 ?",
+      "a": "n8n propose aussi un identifiant MCP OAuth2. Ce guide utilise Bearer Auth parce que les autorisations d'une clé sont fixées à sa création et visibles dans votre tableau de bord, ce qui est plus simple à maîtriser pour un workflow qui tourne sans surveillance. Révoquer la clé dans Dashboard, API Keys arrête le workflow dès son appel suivant."
+    },
+    {
+      "q": "Le workflow peut-il envoyer des e-mails sans que personne ne vérifie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi exige l'autorisation send:email : une clé sans cette autorisation ne peut rien envoyer du tout. Vous pouvez aussi activer la validation pour une boîte dans le tableau de bord : les envois, réponses, transferts, envois de brouillons et envois planifiés sont alors retenus, l'agent reçoit un résultat en attente, et un membre de l'espace de travail approuve ou rejette chacun d'eux avant que quoi que ce soit ne parte."
+    },
+    {
+      "q": "Quelles boîtes un workflow n8n peut-il atteindre ?",
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte compatible IMAP et SMTP sur les ports standard. Avec plusieurs boîtes connectées, l'agent appelle inbox_list pour trouver l'identifiant de chacune, vous n'avez donc aucun UUID à coder en dur dans le workflow."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à n8n. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à votre agent n8n",
+    "sub": "Un point de terminaison, un identifiant Bearer Auth, une clé limitée. Sans carte bancaire."
+  }
+}

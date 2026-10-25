@@ -5,6 +5,7 @@ import type { Database } from '@/types/database.types';
 type Db = SupabaseClient<Database>;
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
+import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 
 /**
@@ -14,6 +15,18 @@ import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs'
 export type ConnectEntryPoint =
   | 'header' | 'inboxes_page' | 'guide' | 'multi_inbox_overview' | 'multi_inbox_inboxes'
   | 'post_checkout' | 'first_run' | 'provider_intent' | 'reconnect' | 'command_palette' | 'other';
+
+/**
+ * Every value the `entry_point` column takes: the connect-modal openers above,
+ * plus `chat_link`, the checkout link in the in-chat Free-cap refusal
+ * (app/u/[token]/route.ts).
+ *
+ * `chat_link` is deliberately NOT in connect-entry-point.mjs. That list is what
+ * the browser's beacon is narrowed against, and a link opened from a chat
+ * transcript is only ever recorded by the server; leaving it off the browser's
+ * list means no client can forge a chat-link row.
+ */
+export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link';
 
 /** Narrow an untrusted value to the closed list; anything else is null. */
 export function connectEntryPoint(value: unknown): ConnectEntryPoint | null {
@@ -40,8 +53,21 @@ export type BillingTargetCategory =
   | 'personal_month' | 'personal_year' | 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
 /** The plan a user was on when a paywall / portal event fired. */
 export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
+/** Which retention option a `retention_option_clicked` row is about. */
+export type RetentionOptionCategory = 'pause' | 'downgrade';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
+/**
+ * The 3-month Personal pass (20261025010000): the product itself, the surfaces
+ * its offer can be shown on, and `pass` for a renewal that bought another pass.
+ */
+export type PassFunnelCategory =
+  | 'personal_pass_3m'
+  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
+  | 'pass';
+
+/** pause_resumed: who ended it. retention_option_clicked: which option. */
+export type PlanChangeCategory = 'early' | 'auto' | 'pause' | 'downgrade';
 
 export type ProductFunnelEvent = {
   workspaceId: string;
@@ -64,13 +90,43 @@ export type ProductFunnelEvent = {
     | 'multi_inbox_prompt'
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
-    | 'paywall_clicked';
+    | 'paywall_clicked'
+    // Activation rescue, written from the dashboard through
+    // /api/analytics/activation-event (lib/analytics/activation-events.ts).
+    | 'connect_fix_shown' | 'connect_fix_link_clicked'
+    | 'first_call_prompt_copied' | 'waiting_state_shown'
+    // Pause and switch to Personal (migration 20261024233000). Category is the
+    // plan the customer was on, except pause_resumed (early | auto) and
+    // retention_option_clicked (pause | downgrade).
+    | 'pause_started' | 'pause_extended' | 'pause_resumed' | 'pause_ended_cancelled'
+    | 'downgrade_scheduled' | 'downgrade_undone'
+    | 'inbox_parked' | 'inbox_unparked'
+    // Why a subscriber cancelled, answered after the cancel was done
+    // (/billing/feedback). category = the reason.
+    | 'cancel_reason_submitted'
+    // A pause or downgrade option was clicked (billing card or post-cancel
+    // email). category = 'pause' | 'downgrade'.
+    | 'retention_option_clicked'
+    // The failed-payment banner's button (/api/stripe/payment-fix). success =
+    // sent on to Stripe, failure = bounced to settings.
+    | 'payment_fix_clicked'
+    // Referral program (20261025090000). `category` is the workspace's plan.
+    // `referral_click` has no workspace and is never written here.
+    | 'referral_link_viewed' | 'referral_link_copied' | 'referral_attached'
+    | 'referral_attach_refused' | 'referral_charged' | 'referral_qualified'
+    | 'referral_voided' | 'referral_held' | 'referral_capped'
+    // The 3-month Personal pass. A pass NEVER writes `checkout_started` or
+    // `checkout_completed`, for the same reason a plan change does not: those
+    // stages are the subscription conversion every read-out is built on.
+    | 'pass_offer_shown' | 'pass_checkout_started' | 'pass_checkout_completed'
+    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
-    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory;
+    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
+    | PlanChangeCategory | CancelReason | RetentionOptionCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
@@ -101,7 +157,7 @@ export type ProductFunnelEvent = {
    * (`paywall_reached` from the inbox cap, `provider_selected`). Null on every
    * other row, and for a value the server did not recognise.
    */
-  entryPoint?: ConnectEntryPoint | null;
+  entryPoint?: FunnelEntryPoint | null;
 };
 
 export async function recordProductFunnelEvent(db: Db, event: ProductFunnelEvent): Promise<void> {

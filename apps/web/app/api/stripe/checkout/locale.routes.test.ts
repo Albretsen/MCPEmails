@@ -30,10 +30,12 @@ type Outcome =
   | { kind: 'error'; reason: string; status: number; message: string };
 
 let calls: Array<Record<string, unknown>> = [];
+let passCalls: Array<Record<string, unknown>> = [];
 let nextOutcome: Outcome = { kind: 'checkout', url: SESSION_URL };
 
 beforeEach(() => {
   calls = [];
+  passCalls = [];
   nextOutcome = { kind: 'checkout', url: SESSION_URL };
 });
 
@@ -41,6 +43,10 @@ nodeMock.module('@/lib/stripe/checkout-core', {
   namedExports: {
     runCheckout: async (input: Record<string, unknown>) => {
       calls.push(input);
+      return nextOutcome;
+    },
+    runPassCheckout: async (input: Record<string, unknown>) => {
+      passCalls.push(input);
       return nextOutcome;
     },
   },
@@ -91,6 +97,17 @@ test('GET without ?lang= hands the core no language, so it stays English', async
   assert.deepEqual(calls, [{ planId: 'solo', interval: 'month', locale: null }]);
 });
 
+test('GET hands the reminder link\'s recovered_from to the core, and keeps it through /login', async () => {
+  await GET(getRequest('?plan=solo&interval=year&lang=fr&recovered_from=cs_live_a1B2c3D4e5F6g7H8'));
+  assert.deepEqual(calls, [
+    { planId: 'solo', interval: 'year', locale: 'fr', recoveredFrom: 'cs_live_a1B2c3D4e5F6g7H8' },
+  ]);
+  nextOutcome = { kind: 'error', reason: 'unauthenticated', status: 401, message: 'Unauthorized' };
+  const res = await GET(getRequest('?plan=solo&interval=year&recovered_from=cs_live_a1B2c3D4e5F6g7H8'));
+  const login = new URL(res.headers.get('location') ?? '');
+  assert.match(login.searchParams.get('redirect') ?? '', /recovered_from=cs_live_a1B2c3D4e5F6g7H8/);
+});
+
 test('GET passes another language through as given: the core decides, not the route', async () => {
   await GET(getRequest('?plan=solo&interval=month&lang=nb'));
   assert.equal(calls[0].locale, 'nb');
@@ -137,4 +154,50 @@ test('each route exports only the method it serves; Next answers 405 to the rest
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
   assert.deepEqual(methods.filter((m) => typeof startRoute[m] === 'function'), ['GET']);
   assert.deepEqual(methods.filter((m) => typeof postRoute[m] === 'function'), ['POST']);
+});
+
+// ── The 3-month Personal pass ───────────────────────────────────────────────
+
+test('GET product=personal_pass_3m runs the pass checkout, with the language, arm and surface', async () => {
+  const response = await GET(getRequest('?product=personal_pass_3m&lang=de&arm=treatment&from=cap_banner&plan=solo'));
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.get('location'), SESSION_URL);
+  assert.equal(calls.length, 0, 'never the subscription checkout');
+  assert.deepEqual(passCalls, [{ locale: 'de', experimentArm: 'treatment', surface: 'cap_banner' }]);
+});
+
+test('GET a refused pass lands on the billing screen with its reason', async () => {
+  nextOutcome = { kind: 'error', reason: 'pass_unavailable', status: 404, message: 'x' };
+  const response = await GET(getRequest('?product=personal_pass_3m'));
+  assert.equal(response.status, 303);
+  const location = new URL(String(response.headers.get('location')));
+  assert.equal(location.pathname, '/dashboard/settings');
+  assert.equal(location.searchParams.get('checkout_error'), 'pass_unavailable');
+});
+
+test('GET without a product is the subscription checkout, exactly as before', async () => {
+  await GET(getRequest('?plan=personal&interval=month'));
+  assert.equal(passCalls.length, 0);
+  assert.equal(calls.length, 1);
+});
+
+test('POST product=personal_pass_3m runs the pass checkout and answers the URL', async () => {
+  const response = await POST(postRequest({ product: 'personal_pass_3m', locale: 'de', arm: 'holdout', surface: 'checkout_return', confirm: true }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { url: SESSION_URL });
+  assert.equal(calls.length, 0);
+  assert.deepEqual(passCalls, [{ locale: 'de', experimentArm: 'holdout', surface: 'checkout_return' }]);
+});
+
+test('POST an unknown product is a 400 and runs nothing', async () => {
+  const response = await POST(postRequest({ product: 'personal_pass_12m', planId: 'personal', interval: 'month' }));
+  assert.equal(response.status, 400);
+  assert.equal(calls.length + passCalls.length, 0);
+});
+
+test('POST a refused pass answers its status and message', async () => {
+  nextOutcome = { kind: 'error', reason: 'already_subscribed', status: 409, message: 'You already have a subscription.' };
+  const response = await POST(postRequest({ product: 'personal_pass_3m' }));
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'You already have a subscription.' });
 });

@@ -1028,6 +1028,58 @@ body {
   .samples .s-date { order: 3; }
 }
 
+/* ---- subscription senders (§9) ----------------------------------------- */
+
+/* Up to 200 rows, so inline this list is the one place the card scrolls inside
+   itself: an auto-fit card 200 rows tall would push the conversation around.
+   Fullscreen drops the cap and the frame scrolls, as everywhere else. */
+.subs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r-md);
+  max-height: 320px;
+  overflow-y: auto;
+}
+.card[data-mode="fullscreen"] .subs { max-height: none; }
+.subs > li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 8px;
+  font-size: var(--fs-sm);
+}
+.subs > li + li { border-top: var(--bw) solid var(--bd); }
+.subs > li > label { flex: 1 1 auto; min-width: 0; cursor: pointer; }
+.subs input { margin: 0; flex: none; }
+/* One line per sender: a long display name ends in an ellipsis (full name in
+   the title) instead of wrapping mid-word. */
+.sub-name {
+  display: block;
+  color: var(--fg);
+  font-weight: var(--w-medium);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sub-meta { display: block; color: var(--fg-3); }
+.sel { user-select: all; color: var(--fg); }
+.pill {
+  flex: none;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  border: var(--bw) solid var(--bd-2);
+  border-radius: 999px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.pill[data-tone="warning"] { color: var(--fg-warning); border-color: var(--fg-warning); }
+.sub-backlog select { font: inherit; color: inherit; background: transparent; }
+/* A fixed width at the right edge: the label changes with the count and while
+   busy, and the button must not move under the pointer. */
+.sub-acts > .btn { width: 16em; flex: none; overflow: hidden; }
+
 /* ---- count ------------------------------------------------------------- */
 
 .count {

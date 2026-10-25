@@ -190,6 +190,22 @@ Deno.test("folder roles (imap): a role two folders could equally claim is given 
   assertEquals([...roles.entries()], [["INBOX", "inbox"]]);
 });
 
+Deno.test("folder roles (imap): a folder the user picked takes its role, and a vanished pick changes nothing", () => {
+  const layout = [
+    { name: "INBOX", flags: [], delimiter: "." },
+    { name: "INBOX.Copies", flags: [], delimiter: "." },
+    { name: "INBOX.Corbeille", flags: [], delimiter: "." },
+    { name: "Old trash", flags: [], delimiter: "." },
+  ];
+  assertEquals(imapFolderRoles(layout).get("INBOX.Copies"), undefined, "detection alone does not know it");
+  const picked = imapFolderRoles(layout, { sent: "INBOX.Copies", trash: "Old trash" });
+  assertEquals(picked.get("INBOX.Copies"), "sent");
+  assertEquals(picked.get("Old trash"), "trash");
+  assertEquals(picked.get("INBOX.Corbeille"), undefined, "one folder per role");
+  assertEquals(picked.get("INBOX"), "inbox");
+  assertEquals([...imapFolderRoles(layout, { sent: "Gone" }).entries()], [...imapFolderRoles(layout).entries()]);
+});
+
 Deno.test("folders (gmail): system labels carry their role; nothing is the archive", async () => {
   const world = { historyId: "1", sent: [], modified: [], messages: [] };
   const handler: harness.ProviderHandler = (call) => {

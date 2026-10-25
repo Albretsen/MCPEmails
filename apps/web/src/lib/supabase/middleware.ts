@@ -115,3 +115,42 @@ function isAuthPath(pathname: string): boolean {
   const authPaths = ['/login', '/signup'];
   return authPaths.some((path) => pathname === path || pathname.startsWith(path + '/'));
 }
+
+/**
+ * Returns a redirect to /dashboard when the request carries a live Supabase
+ * session, otherwise null. Used by the proxy for signed-in visitors opening
+ * the homepage (see src/lib/home-redirect.ts for which requests qualify).
+ *
+ * getUser() may refresh the access token, and Supabase rotates the refresh
+ * token when it does. The new cookies are copied onto the redirect: dropping
+ * them would leave the browser holding a spent refresh token and sign the
+ * visitor out on their next request.
+ */
+export async function signedInDashboardRedirect(request: NextRequest): Promise<NextResponse | null> {
+  const refreshed: { name: string; value: string; options: Parameters<NextResponse['cookies']['set']>[2] }[] = [];
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          refreshed.push(...cookiesToSet);
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const response = NextResponse.redirect(new URL('/dashboard', request.nextUrl.origin));
+  for (const { name, value, options } of refreshed) response.cookies.set(name, value, options);
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
+}

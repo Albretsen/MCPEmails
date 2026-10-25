@@ -21,7 +21,10 @@
 //            (\Sent \Drafts \Trash \Junk \Archive), else the names it knows.
 //            `archive` on a mailbox with no archive of its own is the folder
 //            flagged \All (Gmail's All Mail), as it is for a read. A role two
-//            folders could equally claim is given to neither.
+//            folders could equally claim is given to neither. A folder the
+//            user picked for a role in the dashboard (folder-overrides.ts)
+//            takes that role whenever the server still lists it, exactly as
+//            the alias resolves in the tool layer.
 //   Gmail    the system labels INBOX, SENT, DRAFT, TRASH, SPAM. No label is
 //            the archive (archiving removes INBOX), so no entry has that role.
 //   Outlook  Graph's well-known folder names (inbox, sentitems, drafts,
@@ -32,6 +35,12 @@
 // ---------------------------------------------------------------------------
 
 import { CANONICAL_FOLDER_ALIASES, resolveImapAlias } from "../../mcp-server/imap-folder-target.ts";
+import {
+  type FolderOverrides,
+  isFolderOverrideRole,
+  parseFolderOverrides,
+  pickFolderOverride,
+} from "../../mcp-server/folder-overrides.ts";
 import { graphFetch } from "../../mcp-server/outlook-graph.ts";
 import type { ApiKeyRow, InboxRow, McpSeam } from "../seam.ts";
 
@@ -52,13 +61,27 @@ const GMAIL_LABEL_ROLE: Record<string, FolderRole> = {
   SPAM: "spam",
 };
 
-/** Folder id -> role for an IMAP mailbox list. Pure. */
+/** Folder id -> role for an IMAP mailbox list (and the user's folder picks). Pure. */
 export function imapFolderRoles(
   mailboxes: Array<{ name: string; flags: string[]; delimiter?: string }>,
+  overrides: FolderOverrides = {},
 ): Map<string, FolderRole> {
   const roles = new Map<string, FolderRole>();
+  // Picks first: a picked folder carries its role even when detection would
+  // have given that folder (or that role) to something else.
+  const picked = new Set<FolderRole>();
+  for (const alias of CANONICAL_FOLDER_ALIASES) {
+    const role = alias.aliases[0];
+    if (!isFolderOverrideRole(role)) continue;
+    const pick = pickFolderOverride(overrides, role, mailboxes);
+    if (pick.kind === "override" && !roles.has(pick.name)) {
+      roles.set(pick.name, role);
+      picked.add(role);
+    }
+  }
   for (const alias of CANONICAL_FOLDER_ALIASES) {
     const role = alias.aliases[0] as FolderRole;
+    if (picked.has(role)) continue;
     const match = resolveImapAlias(mailboxes, alias, { forRead: true });
     if (match.kind !== "matched") continue;
     // "INBOX" is reserved and case-insensitive: answer with the listed spelling.
@@ -156,7 +179,8 @@ export async function withFolderRoles(
       const session = mcp.imapSessionFor(inbox);
       if (session) {
         try {
-          roles = imapFolderRoles(await (await session.client()).listMailboxes());
+          const overrides = parseFolderOverrides(await mcp.readInboxFolderOverrides?.(inbox.id).catch(() => ({})));
+          roles = imapFolderRoles(await (await session.client()).listMailboxes(), overrides);
         } finally {
           await session.close().catch(() => {});
         }

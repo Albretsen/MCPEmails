@@ -248,6 +248,9 @@ test('vercel.json region config stays inside what this test can model', () => {
     ['$schema', 'functions', 'headers', 'ignoreCommand', 'rewrites'],
     'apps/web/vercel.json may contain only "$schema", "functions", "ignoreCommand" and the pinned /api/mcp rewrite',
   );
+  // Vercel rejects an ignoreCommand over 256 characters, and the deployment
+  // then fails before the step runs: every preview AND production deploy.
+  assert.ok(config.ignoreCommand.length <= 256, `ignoreCommand is ${config.ignoreCommand.length} characters; Vercel allows 256`);
   assert.deepEqual(config.rewrites, [
     {
       source: '/api/mcp',

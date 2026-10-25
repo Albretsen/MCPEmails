@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/forever",
     "perMonth": "/month",
-    "billedYearly": "Billed ${total}/year"
+    "billedYearly": "Billed ${total}/year",
+    "inclVat": "incl. VAT"
   },
   "plans": {
     "free": {
@@ -51,13 +52,20 @@
     },
     "solo": {
       "name": "Pro",
+      "tagline": "Set it up in chat. It keeps running after you close it.",
       "desc": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
       "cta": "Get Pro",
       "features": [
         "Everything in Personal",
         "10 connected inboxes",
         "5x higher burst rate limit",
-        "Longer analytics history"
+        "Longer analytics history",
+        "Follow-up reminders when nobody replies to mail you sent",
+        "Snooze: mail leaves the inbox and comes back when you choose",
+        "A daily morning brief, placed straight in your inbox",
+        "Search every connected inbox at once",
+        "Instructions for your AI, per inbox",
+        "Webhooks for new mail"
       ]
     },
     "pro": {
@@ -69,7 +77,8 @@
         "10 mailboxes included, $3 a month for each extra",
         "Unlimited members with roles, at no extra cost",
         "Admins approve sends held for review",
-        "Several workspaces on one subscription, one per company or client"
+        "Several workspaces on one subscription, one per company or client",
+        "Webhooks for new mail"
       ]
     }
   },
@@ -96,6 +105,7 @@
           "inboxes": "Connected inboxes",
           "actions": "Email actions per month",
           "keys": "API keys",
+          "webhooks": "Webhooks for new mail",
           "members": "People who can sign in",
           "burst": "Burst rate limit",
           "approvals": "Send review and approval hold"
@@ -113,6 +123,16 @@
       },
       "mcpTools": {
         "label": "MCP tools"
+      },
+      "chatClosed": {
+        "label": "When the chat is closed",
+        "rows": {
+          "followUps": "Follow-up reminders on mail you send",
+          "snooze": "Snooze mail until a time you choose",
+          "brief": "Morning brief in your inbox",
+          "searchAll": "Search all inboxes at once",
+          "instructions": "Instructions for your AI, per inbox"
+        }
       },
       "analytics": {
         "label": "Analytics & security",
@@ -164,11 +184,11 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 3 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
+        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 3 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent can read, search, organise, label, draft, schedule and send in that mailbox, and the per-inbox send review and approval hold are included. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
       },
       {
         "q": "What does Personal add over Free?",
-        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), 90 days of analytics history instead of 30, and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We do not hold features back from Free to make the paid tiers look bigger."
+        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), 90 days of analytics history instead of 30, and email support instead of the community forum. That is the whole list. Everything else you use day to day is on Free too: reading, searching, organising, drafting, sending and scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. The features that keep working when the chat is closed, such as follow-up reminders, snooze and the morning brief, are on Pro."
       },
       {
         "q": "What counts as an email action?",
@@ -184,7 +204,7 @@
       },
       {
         "q": "What's the difference between Personal, Pro and Business?",
-        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, 90 days of analytics history, and email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, two years of analytics history instead of 90 days, and email support. Business is for more mailboxes or more people: 10 mailboxes included and $3 a month for each one after that, unlimited members with roles (viewer, member, admin) at no extra cost, admins who approve sends held for review, several workspaces on one subscription, and a 1,000 requests/minute ceiling."
+        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, 90 days of analytics history, and email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, two years of analytics history instead of 90 days, and email support. Pro also keeps working when the chat is closed: follow-up reminders on mail you sent, snooze, a daily morning brief placed in your inbox, one search across every connected inbox, and instructions for your AI per inbox. Business is for more mailboxes or more people: 10 mailboxes included and $3 a month for each one after that, unlimited members with roles (viewer, member, admin) at no extra cost, admins who approve sends held for review, several workspaces on one subscription, and a 1,000 requests/minute ceiling. Everything in Pro is included."
       },
       {
         "q": "We are a company with several mailboxes. Which plan do we need?",
@@ -220,6 +240,16 @@
     "title": "Ready to give your agent an inbox?",
     "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
-    "ctaSecondary": "Read the docs"
+    "ctaSecondary": "Read the docs",
+    "subFounder": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 at the founder price above, with $3 a month for each one after that."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} for your first year, then ${renewal} a year. You save ${saving}.",
+    "ends": "Ends {date}, {time} Oslo time."
+  },
+  "founder": {
+    "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
+    "places": "{left} of {total} places left"
   }
 }

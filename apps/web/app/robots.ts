@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/pricing', '/docs', '/blog', '/native-connectors-vs-mcp', '/connect/', '/privacy', '/terms', '/llms.txt'],
+        allow: ['/', '/pricing', '/docs', '/blog', '/native-connectors-vs-mcp', '/tools/', '/connect/', '/privacy', '/terms', '/llms.txt'],
         disallow: [
           '/dashboard',
           '/dashboard/',
@@ -28,6 +28,10 @@ export default function robots(): MetadataRoute.Robots {
           '/authorize',
           '/api/',
           '/auth/',
+          // The chat checkout link and the two pages it lands on. Bearer
+          // links and per-purchase status pages; nothing here is content.
+          '/u/',
+          '/upgrade/',
         ],
       },
     ],

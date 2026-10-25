@@ -332,19 +332,20 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
 // on every consent, above the permissions. For an anonymously registered (DCR)
 // client the name is the registrant's own free text: the heading becomes the
 // destination host unless that host belongs to a known vendor, and the name is
-// shown only here, labelled as self-reported. The decision is made server-side
-// in lib/oauth/client-identity.ts; this only renders it.
+// shown only here. An app we cannot verify gets no badge and no notice, only
+// the red alert when its name claims a vendor whose host it is not. The
+// decision is made server-side in lib/oauth/client-identity.ts; this only
+// renders it.
 
 const DESTINATION_BADGE = {
   registered: { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
   verified:   { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
   local:      { key: 'badgeLocal',      icon: 'key',    fg: 'var(--fg-2)',               bg: 'var(--ink-25)' },
-  unverified: { key: 'badgeUnverified', icon: 'eye',    fg: 'var(--amber-700, #9A6311)', bg: 'var(--amber-100, #FCEFD2)' },
 };
 
 function DestinationPanel({ identity }) {
   const t = useTranslations('auth');
-  const badge = DESTINATION_BADGE[identity.verification] ?? DESTINATION_BADGE.unverified;
+  const badge = DESTINATION_BADGE[identity.verification];
   const label = identity.destinationLabel;
   const where =
     identity.destinationKind === 'app'
@@ -352,15 +353,13 @@ function DestinationPanel({ identity }) {
       : identity.destinationKind === 'loopback'
         ? t('authorize.destinationLoopback', { host: label })
         : label;
-  const warn = identity.impersonates || identity.verification === 'unverified';
-
   return (
     <div
       data-testid="az-destination"
       data-verification={identity.verification}
       style={{
         marginBottom: 16, padding: '10px 12px', borderRadius: 8,
-        border: '1px solid ' + (identity.impersonates ? 'var(--red-500, #E5484D)' : warn ? 'var(--amber-500, #F0A53E)' : 'var(--border-1)'),
+        border: '1px solid ' + (identity.impersonates ? 'var(--red-500, #E5484D)' : 'var(--border-1)'),
         background: 'var(--bg-surface)',
         fontFamily: 'var(--font-sans)',
       }}
@@ -368,17 +367,19 @@ function DestinationPanel({ identity }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 13, color: 'var(--fg-2)' }}>{t('authorize.destinationLabel')}</span>
         <strong data-testid="az-destination-host" style={{ fontSize: 14, color: 'var(--fg-1)', wordBreak: 'break-all' }}>{where}</strong>
-        <span
-          data-testid="az-destination-badge"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 'auto',
-            padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-            color: badge.fg, background: badge.bg, whiteSpace: 'nowrap',
-          }}
-        >
-          <Icon name={badge.icon} size={12} color="currentColor" />
-          {t(`authorize.${badge.key}`)}
-        </span>
+        {badge && (
+          <span
+            data-testid="az-destination-badge"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 'auto',
+              padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+              color: badge.fg, background: badge.bg, whiteSpace: 'nowrap',
+            }}
+          >
+            <Icon name={badge.icon} size={12} color="currentColor" />
+            {t(`authorize.${badge.key}`)}
+          </span>
+        )}
       </div>
 
       {identity.selfReportedName && identity.verification === 'unverified' && (
@@ -402,15 +403,11 @@ function DestinationPanel({ identity }) {
         </div>
       )}
 
-      {identity.impersonates ? (
+      {identity.impersonates && (
         <div role="alert" data-testid="az-impersonation" style={{ fontSize: 12, color: 'var(--red-700, #A11D22)', marginTop: 6, lineHeight: 1.5 }}>
           {t('authorize.impersonationWarning', { vendor: identity.impersonates, host: label })}
         </div>
-      ) : identity.verification === 'unverified' ? (
-        <div data-testid="az-unverified" style={{ fontSize: 12, color: 'var(--amber-700, #9A6311)', marginTop: 6, lineHeight: 1.5 }}>
-          {t('authorize.unverifiedWarning', { host: label })}
-        </div>
-      ) : null}
+      )}
     </div>
   );
 }

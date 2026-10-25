@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/pour toujours",
     "perMonth": "/mois",
-    "billedYearly": "Facturé {total} $/an"
+    "billedYearly": "Facturé {total} $/an",
+    "inclVat": "TVA incluse"
   },
   "plans": {
     "free": {
@@ -51,13 +52,20 @@
     },
     "solo": {
       "name": "Pro",
+      "tagline": "Configurez-le dans la conversation. Il continue de tourner une fois celle-ci fermée.",
       "desc": "Pour une personne qui gère une entreprise : jusqu'à 10 boîtes sur un seul agent, de la finance et des ventes au support et à la vôtre.",
       "cta": "Choisir Pro",
       "features": [
         "Tout ce que contient Personal",
         "10 boîtes connectées",
         "Limite de pointe 5x plus élevée",
-        "Historique d'analytique plus long"
+        "Historique d'analytique plus long",
+        "Des relances quand personne ne répond à un e-mail que vous avez envoyé",
+        "Mise en attente : l'e-mail quitte la boîte de réception et revient au moment choisi",
+        "Un récapitulatif chaque matin, déposé directement dans votre boîte de réception",
+        "Recherche dans toutes vos boîtes connectées à la fois",
+        "Des instructions pour votre IA, boîte par boîte",
+        "Webhooks pour les nouveaux e-mails"
       ]
     },
     "pro": {
@@ -69,7 +77,8 @@
         "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
         "Membres illimités avec rôles, sans surcoût",
         "Les administrateurs valident les envois en attente",
-        "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client"
+        "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client",
+        "Webhooks pour les nouveaux e-mails"
       ]
     }
   },
@@ -96,6 +105,7 @@
           "inboxes": "Boîtes connectées",
           "actions": "Actions e-mail par mois",
           "keys": "Clés API",
+          "webhooks": "Webhooks pour les nouveaux e-mails",
           "members": "Personnes qui peuvent se connecter",
           "burst": "Limite de débit en pointe",
           "approvals": "Validation avant envoi"
@@ -113,6 +123,16 @@
       },
       "mcpTools": {
         "label": "Outils MCP"
+      },
+      "chatClosed": {
+        "label": "Quand la conversation est fermée",
+        "rows": {
+          "followUps": "Relances sur les e-mails envoyés sans réponse",
+          "snooze": "Mettre un e-mail en attente jusqu'à l'heure choisie",
+          "brief": "Récapitulatif du matin dans votre boîte de réception",
+          "searchAll": "Recherche dans toutes les boîtes à la fois",
+          "instructions": "Des instructions pour votre IA, boîte par boîte"
+        }
       },
       "analytics": {
         "label": "Analytique et sécurité",
@@ -164,11 +184,11 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent peut lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer dans cette boîte, et la validation avant envoi, réglable par boîte, est incluse. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
+        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
@@ -184,7 +204,7 @@
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Business ?",
-        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute."
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Pro continue aussi de travailler quand la conversation est fermée : relances sur les e-mails envoyés, mise en attente, un récapitulatif chaque matin déposé dans votre boîte, une seule recherche dans toutes vos boîtes connectées et des instructions pour votre IA, boîte par boîte. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute. Tout ce qui est dans Pro est inclus."
       },
       {
         "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
@@ -220,6 +240,16 @@
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
     "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
     "ctaPrimary": "Commencer gratuitement",
-    "ctaSecondary": "Lire la documentation"
+    "ctaSecondary": "Lire la documentation",
+    "subFounder": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 au prix fondateur indiqué plus haut, avec 3 $ par mois pour chaque boîte en plus."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week : {firstYear} $ la première année, puis {renewal} $ par an. Vous économisez {saving} $.",
+    "ends": "Se termine le {date} à {time}, heure d'Oslo."
+  },
+  "founder": {
+    "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
+    "places": "Places restantes : {left} sur {total}"
   }
 }

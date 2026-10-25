@@ -495,6 +495,23 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * The subscription cleanup tools (`subscriptions_scan`, `subscriptions_cleanup`),
+ * which return a `subscription_plan` card (contract §9).
+ *
+ * Gated per WORKSPACE on `workspaces.subscription_cleanup_enabled`
+ * (`ReviewCardGates.subscriptions`), and gated harder than the other card
+ * tools: with the flag off they are not listed at all (`handleToolsList`
+ * drops them), so the metadata below only ever reaches a key whose workspace
+ * is rolled out. Both are model-visible and the card calls the second, so
+ * they carry `visibility: ["model", "app"]`. The same names on both surfaces:
+ * neither is an operation of a consolidated tool.
+ */
+export const SUBSCRIPTION_CARD_TOOL_NAMES: readonly string[] = [
+  "subscriptions_scan",
+  "subscriptions_cleanup",
+];
+
+/**
  * The same three gates on the per-operation surface (the listing OpenAI
  * clients get, PER_OPERATION_LISTING in index.ts), keyed by the operation
  * rather than by the consolidated tool it belongs to.
@@ -507,7 +524,7 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
  * read carry nothing, where their consolidated parents have to.
  */
 export const PER_OPERATION_CARD_TOOL_NAMES: Readonly<
-  Record<keyof ReviewCardGates, readonly string[]>
+  Record<"outbound" | "bulk" | "drafts", readonly string[]>
 > = {
   outbound: ["email_send", "email_reply", "email_forward", "schedule_create"],
   bulk: [
@@ -563,6 +580,7 @@ export function isCardBearingToolName(name: string): boolean {
   return (
     REVIEW_CARD_TOOL_NAMES.includes(name) ||
     BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
+    SUBSCRIPTION_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_APP_TOOL_NAMES.includes(name) ||
     Object.values(PER_OPERATION_CARD_TOOL_NAMES).some((names) => names.includes(name))
@@ -687,6 +705,12 @@ export interface ReviewCardGates {
    * `workspaces`.
    */
   drafts: boolean;
+  /**
+   * True when `workspaces.subscription_cleanup_enabled` is set for the key's
+   * workspace. Optional so the three-gate literals elsewhere stay valid; absent
+   * reads as false. See SUBSCRIPTION_CARD_TOOL_NAMES.
+   */
+  subscriptions?: boolean;
 }
 
 /**
@@ -715,6 +739,10 @@ export function reviewCardMetaForListing(
   gates: ReviewCardGates,
   surface: ToolSurface = "consolidated",
 ): { ui: { resourceUri?: string; visibility?: string[] } } | undefined {
+  // Same tools, same metadata on both surfaces.
+  if (SUBSCRIPTION_CARD_TOOL_NAMES.includes(toolName)) {
+    return gates.subscriptions === true ? modelAndAppReviewCardToolMeta() : undefined;
+  }
   if (surface === "per_operation") {
     // Checked INSTEAD of the consolidated lists, not as well as them:
     // `email_delete` is on the bulk list above as the consolidated tool, and

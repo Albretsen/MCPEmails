@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "Koble e-post til Perplexity: oppsett av egendefinert MCP-kobling",
+    "description": "Gi Perplexity en ekte innboks med en egendefinert ekstern kobling. Lim inn én URL, velg OAuth og logg inn. Ingen API-nøkkel. Pro, Max og Enterprise."
+  },
+  "hero": {
+    "eyebrow": "Perplexity + e-post",
+    "titleLine1": "Koble innboksen din til Perplexity",
+    "titleLine2": "som egendefinert kobling",
+    "lead": "Spør Perplexity om din egen e-post, side om side med nettsøket. Les, søk i, send, svar på, videresend, planlegg og organiser e-post på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "På en Perplexity Pro-, Max- eller Enterprise-plan åpner du Plugins, velger Add custom og deretter Connector og Add MCP connector. Velg Remote, lim inn https://mcpemails.com/api/mcp som MCP Server URL, velg OAuth under Authentication, klikk Add, og klikk deretter koblingskortet for å logge inn på MCPEmails."
+  },
+  "method": {
+    "title": "Slik kobler Perplexity seg til: OAuth, ingen API-nøkkel",
+    "body": "De egendefinerte eksterne koblingene i Perplexity støtter OAuth 2.0 med automatisk oppdagelse (discovery), og MCPEmails publiserer endepunktene sine på <code>/.well-known/oauth-authorization-server</code>. Perplexity registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen Client ID eller Client Secret, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne Add custom i Perplexity",
+      "p": "På perplexity.ai åpner du <b>Plugins</b> i sidepanelet og velger <b>Add custom</b>, deretter <b>Connector</b> og så <b>Add MCP connector</b>. Ser du fortsatt den eldre menyen, går du i stedet til <b>Customize</b>, <b>Connectors</b>."
+    },
+    {
+      "h": "Legg inn serveren",
+      "p": "Velg <b>Remote</b>, skriv inn et <b>Name</b>, for eksempel MCPEmails, og lim inn <code>https://mcpemails.com/api/mcp</code> som <b>MCP Server URL</b>. Sett <b>Authentication</b> til <b>OAuth</b> og <b>Transport</b> til <b>Streamable HTTP</b>. Perplexity finner OAuth-endepunktene våre og registrerer seg selv, så du trenger ikke fylle inn noen Client ID eller Client Secret."
+    },
+    {
+      "h": "Legg den til og logg inn",
+      "p": "Huk av i bekreftelsesboksen og klikk <b>Add</b>. Klikk deretter koblingskortet for å starte autentiseringen, logg inn på MCPEmails og godkjenn tilgangene du vil at Perplexity skal ha."
+    },
+    {
+      "h": "Velg den for spørsmålet ditt",
+      "p": "Start et nytt søk og skriv <code>@MCPEmails</code>, eller klikk <b>+</b>-ikonet i søkefeltet, åpne <b>Connectors and sources</b> og velg MCPEmails. Spør deretter om e-posten din, for eksempel hvilke meldinger som kom i dag."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Gratiskontoer får ikke egendefinerte koblinger",
+      "p": "Perplexity tilbyr egendefinerte MCP-servere på Pro-, Max- og Enterprise-planene. På Enterprise kan medlemmer bare legge til egne egendefinerte koblinger etter at en administrator har slått på <b>Allow members to add custom connectors</b>, som er av som standard. En administrator kan også legge til MCPEmails én gang for hele organisasjonen."
+    },
+    {
+      "h": "Å legge til koblingen er ikke det samme som å bruke den",
+      "p": "Enkelte steder i Perplexity kaller bare en kobling du har valgt for den samtalen, med koblingsvelgeren eller en @-nevning. Står Sources eller Focus på bare Web, Academic eller Social, kaller ikke Perplexity tilkoblede apper, men svarer fra nettet, og det ser ut som om den ikke ser innboksen din. Sjekk begge deler før du mistenker tilkoblingen."
+    },
+    {
+      "h": "Sett det opp på nettet, ikke på mobil",
+      "p": "Perplexity påpeker at en kobling kan være tilgjengelig på nettet, men ennå ikke på mobil. Legg til MCPEmails på perplexity.ai i en nettleser. Blir autoriseringen aldri ferdig, tillater du popup-vinduer og informasjonskapsler på tvers av nettsteder for perplexity.ai, siden en annonseblokkering kan stoppe OAuth-vinduet."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Perplexity?",
+      "a": "Åpne Plugins, velg Add custom, deretter Connector og Add MCP connector. Velg Remote, lim inn https://mcpemails.com/api/mcp som MCP Server URL, sett Authentication til OAuth, klikk Add, og klikk deretter koblingskortet og logg inn på MCPEmails. I et søk skriver du @MCPEmails eller velger den under Connectors and sources."
+    },
+    {
+      "q": "Hvilken Perplexity-plan trenger jeg?",
+      "a": "Egendefinerte MCP-koblinger er tilgjengelige på Pro, Max og Enterprise. På Enterprise legger en administrator enten til koblingen for organisasjonen eller lar medlemmene legge til sine egne."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Perplexity?",
+      "a": "Nei. Perplexity kjører OAuth-flyten når du klikker koblingskortet, og MCPEmails støtter dynamisk klientregistrering, så du trenger ikke lime inn noen Client ID, Client Secret eller nøkkel. En bearer-nøkkel er tilgjengelig for andre klienter som ikke støtter OAuth."
+    },
+    {
+      "q": "Hvilke postkasser kan Perplexity nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Perplexity ser alle gjennom den samme tilkoblingen: den kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Perplexity sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Søk i innboksen slik du søker på nettet",
+    "sub": "Én kobling, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -118,6 +118,11 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft",
       "schedule_list",
       "schedule",
+      // Pro (reminders): registered here, hidden from every workspace by the
+      // Pro gate until pro_features_enabled / pro_features_public (see the
+      // reminders tests for the hidden listing).
+      "reminder_list",
+      "reminder",
       "signature_get",
       "signature_set",
       "automation_read",
@@ -135,6 +140,10 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft_read",
       "draft_editor_save",
       "draft_editor_hide",
+      // Subscription cleanup. In the registry for every client; tools/list
+      // drops both for a workspace without subscription_cleanup_enabled.
+      "subscriptions_scan",
+      "subscriptions_cleanup",
     ],
   );
 });
@@ -320,7 +329,9 @@ Deno.test("the tools split out of a mixed one keep the right write annotations",
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Tools that can reach a party outside the connected mailbox. */
-const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation"];
+// `subscriptions_cleanup` sends an RFC 8058 one-click POST to the sender's
+// server, which is outside the account.
+const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation", "subscriptions_cleanup"];
 
 Deno.test("openWorldHint is true only where the tool can reach outside the account", () => {
   for (const tool of advertisedTools()) {
@@ -1155,7 +1166,9 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
       .test(description),
     description,
   );
-  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\.$/.test(description));
+  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\. /.test(description));
+  // Testers 2026-10-23: the model mixed the card up with another connector's draft tool.
+  assert(/Only drafts made here show in the card: for these inboxes, never use another connector's draft tool\.$/.test(description));
 
   const list = registryEntry("draft_list").description;
   assert(/and no body: draft_read returns one draft's text\./.test(list), list);

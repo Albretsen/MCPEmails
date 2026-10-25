@@ -349,6 +349,52 @@ test('German page, logged in: paid buttons carry lang=de to checkout', async (t)
   ]);
 });
 
+// ── The Business founder price ──────────────────────────────────────────────
+// The page server prices Business from the founder pair and attaches the line
+// (founder-offer.ts) only while the offer is open; the card then prints the
+// founder line and the places left, and nothing else on the page changes.
+
+const FOUNDER_PRICES = {
+  pro: {
+    monthlyCents: 2900,
+    yearlyCents: 27840,
+    monthlyPriceConfigured: true,
+    yearlyPriceConfigured: true,
+    founder: { monthlyCents: 2900, yearlyCents: 27840, addonMonthlyCents: 300, placesLeft: 14, placesTotal: 20 },
+  },
+};
+
+function pricingHost(stripePrices) {
+  const html = renderToString(
+    createElement(NextIntlClientProvider, { locale: 'en', messages }, createElement(PricingClient, { stripePrices })),
+  );
+  const host = document.createElement('div');
+  host.innerHTML = html;
+  return { host, card: host.querySelectorAll('.price-grid .price')[3] };
+}
+
+test('founder offer open: the Business card prints the founder line and places left', () => {
+  const { host, card } = pricingHost(FOUNDER_PRICES);
+  assert.equal(
+    card.querySelector('[data-founder-line]').textContent,
+    'Founder price: $29 a month, kept for as long as you stay subscribed. Open to the first 20 companies or until 31 December 2026, whichever comes first. Extra mailboxes are $3 a month each.',
+  );
+  assert.equal(card.querySelector('[data-founder-places]').textContent, '14 of 20 places left');
+  // Annual is the default: $278.40 / 12, and the yearly total from the same pair.
+  assert.match(card.querySelector('.num').textContent, /^\$23\.20/);
+  assert.match(card.textContent, /Billed \$278\.40\/year/);
+  assert.equal(host.querySelectorAll('[data-founder-line]').length, 1);
+  assert.match(host.textContent, /Business includes 10 at the founder price above/);
+  assert.doesNotMatch(host.textContent, /Business includes 10 for \$39/);
+});
+
+test('no founder offer: no founder line anywhere and the closing band quotes $39', () => {
+  const { host } = pricingHost(undefined);
+  assert.equal(host.querySelectorAll('[data-founder-line], [data-founder-places]').length, 0);
+  assert.doesNotMatch(host.textContent, /Founder price/);
+  assert.match(host.textContent, /Business includes 10 for \$39/);
+});
+
 test('German page, logged out: lang=de is inside the post-signup destination, and on /signup', async (t) => {
   const view = await renderPricing(t, { locale: 'de' });
   await waitFor(() => calls.includes('getUser'), { message: 'the session check' });

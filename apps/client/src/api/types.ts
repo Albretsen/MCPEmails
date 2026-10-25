@@ -597,7 +597,8 @@ export interface AssistantAllowance extends AllowancePeriod {
   plan: PlanSlug;
 }
 
-/** Slugs are historical: `solo` is sold as Pro and `pro` as Team. */
+/** Slugs are historical: `solo` is sold as Pro and `pro` as Business. Keep in
+ *  step with planDisplayName in apps/web/src/lib/stripe/plans.ts. */
 export function planDisplayName(plan: PlanSlug): string {
   switch (plan) {
     case "free":
@@ -607,7 +608,7 @@ export function planDisplayName(plan: PlanSlug): string {
     case "solo":
       return "Pro";
     case "pro":
-      return "Team";
+      return "Business";
   }
 }
 

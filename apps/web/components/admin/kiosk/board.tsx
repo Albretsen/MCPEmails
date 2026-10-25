@@ -409,11 +409,13 @@ async function MoneyBoard({ days }: { days: number }) {
             value={formatMoney(mrr.atRiskMinor + mrr.leavingMinor, mrr.currency)}
             suffix="/mo"
             caption={riskCaption(mrr)}
+            flash
+            goodDirection="down"
           />
           <FactRow
             facts={[
-              { label: 'Card failing', value: mrr.atRiskCustomers },
-              { label: 'Leaving', value: mrr.leavingCustomers },
+              { label: 'Card failing', value: mrr.atRiskCustomers, flash: true, goodDirection: 'down' },
+              { label: 'Leaving', value: mrr.leavingCustomers, flash: true, goodDirection: 'down' },
               { label: 'Comped', value: mrr.compedCustomers },
             ]}
           />
@@ -478,6 +480,7 @@ async function GrowthBoard({ days }: { days: number }) {
         <Tile label={`New this ${peopleDays(days)}d`} aside="people" span={3} tone={head.new_users > head.prev_new_users ? 'good' : 'default'} detail="signups">
           <BigNumber
             value={head.new_users}
+            flash
             trend={trend(head.new_users, head.prev_new_users, 'up')}
             caption={<>Previous {days} days: <strong>{formatCount(head.prev_new_users)}</strong></>}
             spark={(signups.ok ? signups.data : []).slice(-30).map((row) => row.new_users)}
@@ -940,6 +943,7 @@ function SignedUpTile({
     <Tile label="Signed up" aside="all time" span={3} tone="good" detail="signups">
       <BigNumber
         value={people.total_users}
+        flash
         trend={trend(people.total_users, people.total_users_prior, 'up')}
         caption={
           <>
@@ -1140,6 +1144,7 @@ function RevenueTile({
       <BigNumber
         value={formatMoney(mrr.mrrMinor, mrr.currency)}
         suffix="/mo"
+        flash
         // The prior period is derived, not stored: today's MRR less what
         // arrived and left inside the window. That is exact while nobody has
         // upgraded or downgraded, which is true today and is noted in
@@ -1191,7 +1196,7 @@ function ValuationTile({ mrr, error }: { mrr: RevenueSummary | null; error: stri
       <FactRow
         facts={[
           { label: 'Per subscriber', value: formatMoney(mrr.arpaMinor, mrr.currency) },
-          { label: 'Subscribers', value: mrr.payingCustomers },
+          { label: 'Subscribers', value: mrr.payingCustomers, flash: true },
         ]}
       />
     </Tile>
@@ -1332,6 +1337,7 @@ function SignupsPerDayTile({ pace }: { pace: PaceResult }) {
       <BigNumber
         value={today.soFar}
         suffix="today"
+        flash
         trend={today.projected !== null && today.baseline ? trend(today.projected, today.baseline, 'up') : null}
         caption={
           today.projected === null ? (

@@ -177,6 +177,29 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
  * comma-below and cedilla (ș/ş), Vietnamese tone-mark placement (xóa/xoá), the
  * Russian ё/е, the Persian zero-width non-joiner.
  */
+/**
+ * The alternate names as they stood before the localized names were added,
+ * frozen. {@link resolveImapAlias} runs every tier it always ran with ONLY
+ * these, and returns that answer whenever it is a match or an ambiguity. The
+ * localized names are consulted only when this pass finds nothing, so a layout
+ * that resolved before resolves to the same mailbox now: an account holding
+ * both "Gesendet" and "Gesendete Objekte" still gets "Gesendet", and
+ * "INBOX.Sent" is not pre-empted by a top-level "Enviados". Do not add names
+ * here; add them to IMAP_ALIAS_ALTERNATE_NAMES.
+ */
+export const IMAP_ALIAS_LEGACY_ALTERNATE_NAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  sent: Object.freeze(["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés", "已发送"]),
+  drafts: Object.freeze(["Draft", "Entwürfe", "Brouillons", "草稿箱"]),
+  trash: Object.freeze(["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille", "已删除"]),
+  archive: Object.freeze(["Archives"]),
+  spam: Object.freeze(["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail", "垃圾邮件"]),
+});
+
+/**
+ * Every alternate name a role answers to: the legacy names above plus the
+ * localized ones. The legacy names must stay in here too (a test checks it), so
+ * this is the one list the collision rules are enforced over.
+ */
 export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
   sent: [
     // English
@@ -294,6 +317,9 @@ export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
 /** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */
 const IMAP_ALL_MAIL_FLAG = "\\all";
 
+/** Every SPECIAL-USE flag that gives a mailbox a role, lower-cased. */
+const IMAP_ROLE_FLAGS = new Set([...Object.values(IMAP_ALIAS_SPECIAL_USE), IMAP_ALL_MAIL_FLAG]);
+
 /** LIST attributes of a name that exists in the hierarchy but cannot be opened. */
 const IMAP_UNSELECTABLE_FLAGS = new Set(["\\noselect", "\\nonexistent"]);
 
@@ -342,7 +368,9 @@ export type ImapAliasMatchTier =
   | "alternate_name"
   | "namespaced_canonical_name"
   | "namespaced_alternate_name"
-  | "all_mail";
+  | "all_mail"
+  | "localized_name"
+  | "namespaced_localized_name";
 
 /** Case- and normalization-insensitive key for comparing mailbox names. */
 export function nameKey(name: string): string {
@@ -357,13 +385,22 @@ export function nameKey(name: string): string {
  *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
  *   3. Case-insensitive match against the canonical English name (e.g.
  *      a mailbox literally named "Archive").
- *   4. One of the role's {@link IMAP_ALIAS_ALTERNATE_NAMES} ("Sent Items",
+ *   4. One of the role's {@link IMAP_ALIAS_LEGACY_ALTERNATE_NAMES} ("Sent Items",
  *      "Deleted Items", "Papierkorb").
  *   5. The canonical name under the personal namespace: "INBOX" + the mailbox's
  *      own hierarchy delimiter + the name ("INBOX.Sent", "INBOX/Trash"), which
  *      is how Courier and many Dovecot/cPanel hosts lay an account out.
  *   6. An alternate name under that same prefix ("INBOX.Sent Items").
  *   7. `archive` only, and only with `forRead`: the mailbox flagged \\All.
+ *   8. Only when 1 to 7 found nothing: one of the localized names in
+ *      {@link IMAP_ALIAS_ALTERNATE_NAMES} that is not a legacy name
+ *      ("Éléments envoyés", "Отправленные").
+ *   9. A localized name under the INBOX + delimiter prefix
+ *      ("INBOX.Éléments envoyés").
+ *
+ * Tiers 4 to 6 use only {@link IMAP_ALIAS_LEGACY_ALTERNATE_NAMES}, so adding a
+ * localized name can never change the answer for a layout tiers 1 to 7 already
+ * resolve (or already refuse as ambiguous).
  *
  * Every name tier is a match on the WHOLE name (for 5 and 6, the whole name
  * after the "INBOX" + delimiter prefix), never on a path segment or a suffix,
@@ -375,7 +412,7 @@ export function nameKey(name: string): string {
  * endsWith().
  *
  * AMBIGUITY. Tiers 2 and 3 take the first hit, as they always have. Tiers 4 to
- * 6 are new and do not guess: when two mailboxes qualify at the same tier (an
+ * 6 and 8 to 9 do not guess: when two mailboxes qualify at the same tier (an
  * account with both "Sent Items" and "Sent Messages" and no flag on either),
  * the answer is `ambiguous`, and the caller refuses with both names.
  *
@@ -408,9 +445,9 @@ export function resolveImapAlias(
   const byName = selectable.find((mb) => mb.name.toLowerCase() === wantName);
   if (byName) return { kind: "matched", name: byName.name, how: "canonical_name" };
 
-  // (4)-(6) The new name tiers. Each is unique-or-refuse.
+  // (4)-(6) The alternate-name tiers, legacy names only. Each is unique-or-refuse.
   const canonical = new Set([nameKey(alias.imap)]);
-  const alternates = new Set((IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey));
+  const legacy = new Set((IMAP_ALIAS_LEGACY_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey));
   /** The part of a name after "INBOX" + its own delimiter, or null. */
   const underInbox = (mb: MailboxListEntry): string | null => {
     if (!mb.delimiter) return null;
@@ -420,22 +457,28 @@ export function resolveImapAlias(
       ? mb.name.slice(prefix.length)
       : null;
   };
-  const tiers: [ImapAliasMatchTier, (mb: MailboxListEntry) => boolean][] = [
-    ["alternate_name", (mb) => alternates.has(nameKey(mb.name))],
+  const uniqueOrRefuse = (
+    tiers: [ImapAliasMatchTier, (mb: MailboxListEntry) => boolean][],
+  ): ImapAliasMatch | null => {
+    for (const [how, qualifies] of tiers) {
+      const hits = selectable.filter(qualifies);
+      if (hits.length === 1) return { kind: "matched", name: hits[0].name, how };
+      if (hits.length > 1) return { kind: "ambiguous", candidates: hits.map((mb) => mb.name) };
+    }
+    return null;
+  };
+  const legacyAnswer = uniqueOrRefuse([
+    ["alternate_name", (mb) => legacy.has(nameKey(mb.name))],
     ["namespaced_canonical_name", (mb) => {
       const rest = underInbox(mb);
       return rest !== null && canonical.has(nameKey(rest));
     }],
     ["namespaced_alternate_name", (mb) => {
       const rest = underInbox(mb);
-      return rest !== null && alternates.has(nameKey(rest));
+      return rest !== null && legacy.has(nameKey(rest));
     }],
-  ];
-  for (const [how, qualifies] of tiers) {
-    const hits = selectable.filter(qualifies);
-    if (hits.length === 1) return { kind: "matched", name: hits[0].name, how };
-    if (hits.length > 1) return { kind: "ambiguous", candidates: hits.map((mb) => mb.name) };
-  }
+  ]);
+  if (legacyAnswer) return legacyAnswer;
 
   // (7) Reads only: the archive role on a mailbox with no archive is All Mail.
   if (canonicalToken === "archive" && opts.forRead) {
@@ -444,6 +487,24 @@ export function resolveImapAlias(
     );
     if (allMail.length === 1) return { kind: "matched", name: allMail[0].name, how: "all_mail" };
   }
+
+  // (8)-(9) Only when everything above found nothing: the localized names, as a
+  // whole name and then under INBOX + delimiter. Same unique-or-refuse rule; two
+  // localized names in one tier are ambiguous, never ranked. A mailbox the
+  // server flags for a role (\\Sent, \\Trash, ..., \\All) already belongs to that
+  // role, so a localized name never hands it to a second one.
+  const localized = new Set(
+    (IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey).filter((k) => !legacy.has(k)),
+  );
+  const unflagged = (mb: MailboxListEntry) => !mb.flags.some((f) => IMAP_ROLE_FLAGS.has(f.toLowerCase()));
+  const localizedAnswer = uniqueOrRefuse([
+    ["localized_name", (mb) => unflagged(mb) && localized.has(nameKey(mb.name))],
+    ["namespaced_localized_name", (mb) => {
+      const rest = underInbox(mb);
+      return unflagged(mb) && rest !== null && localized.has(nameKey(rest));
+    }],
+  ]);
+  if (localizedAnswer) return localizedAnswer;
 
   return { kind: "none" };
 }

@@ -125,7 +125,29 @@ function themeScriptHash(): Promise<string> {
  * AFTER `script-src`, or Next will read the nonce out of the wrong directive
  * (or find none) and every inline framework script will be blocked.
  */
-export async function buildContentSecurityPolicy(nonce: string): Promise<string> {
+/**
+ * Pages whose own code calls a third-party origin from the browser, and the
+ * origins each may call. Scoped per path so the rest of the site keeps the
+ * tight base `connect-src`.
+ *
+ * /tools/email-settings-lookup (any locale prefix) resolves MX records over
+ * Cloudflare DNS-over-HTTPS and reads Mozilla's ISPDB. Both answer with
+ * Access-Control-Allow-Origin: *.
+ */
+const EXTRA_CONNECT_SRC: Array<{ path: RegExp; origins: string[] }> = [
+  {
+    path: /^(?:\/[a-z]{2})?\/tools\/email-settings-lookup\/?$/,
+    origins: ['https://cloudflare-dns.com', 'https://autoconfig.thunderbird.net'],
+  },
+];
+
+/** The extra connect-src origins `pathname` is allowed, or none. */
+export function extraConnectSrc(pathname: string | undefined): string[] {
+  if (!pathname) return [];
+  return EXTRA_CONNECT_SRC.filter((entry) => entry.path.test(pathname)).flatMap((entry) => entry.origins);
+}
+
+export async function buildContentSecurityPolicy(nonce: string, pathname?: string): Promise<string> {
   const isProduction = process.env.NODE_ENV === 'production';
 
   const scriptSrc = [
@@ -145,7 +167,7 @@ export async function buildContentSecurityPolicy(nonce: string): Promise<string>
     `script-src ${scriptSrc.join(' ')}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+    ["connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com", ...extraConnectSrc(pathname)].join(' '),
     "font-src 'self' https://fonts.gstatic.com",
     'frame-src https://js.stripe.com https://hooks.stripe.com',
     "frame-ancestors 'none'",

@@ -27,6 +27,7 @@ OAuth (claude.ai)
 Tool reference
 Safety model
 Provider support
+Developer guide
 Quick start
 Up and running in minutes.
 No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.
@@ -40,8 +41,8 @@ Create an API key
 Generate a bearer token for your agent
 In Dashboard → API Keys, click "Create key". Name it, select the scopes your agent needs (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations), then copy the key. It is shown only once.
 Copy
-# Your key looks like this:
-mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+# Your key looks like this: mcpe_ followed by 64 hex characters
+mcpe_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 03
 Add MCPEmails to your agent
 Paste the MCP endpoint into your client
@@ -97,8 +98,8 @@ Streamable HTTP
 Auth:
 Authorization: Bearer &lt;api-key&gt;
 Rate limits:
-100 req/min · 1,000/hr · 10,000/day
-per key, plus your plan's workspace ceiling
+per-minute, hourly and daily windows per key
+, sized to your plan, plus the plan's workspace ceiling
 Response format:
 JSON-RPC 2.0
 . Successful results also carry a typed
@@ -108,7 +109,7 @@ Initialize handshake
 bash
 Copy
 curl -X POST https://mcpemails.com/api/mcp \
--H "Authorization: Bearer mcpe_live_YOUR_KEY" \
+-H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \
 -H "Content-Type: application/json" \
 -d '{
 "jsonrpc": "2.0",
@@ -1217,11 +1218,21 @@ Copy
 Rate limits
 Rate limits & fair use.
 Per-key rolling windows
-100 req / min · 1,000 / hr · 10,000 / day
-Enforced per API key regardless of plan. When exceeded, the server returns HTTP 429 with JSON-RPC error code
+Per minute · per hour · per day, sized to your plan
+Each key has a per-minute, an hourly and a daily rolling window. The per-minute window is at least your plan's per-minute ceiling, so a single key can use the whole plan, and the hourly and daily windows scale with it. Successful
+tools/call
+responses carry
+RateLimit-Limit
+,
+RateLimit-Remaining
+and
+RateLimit-Reset
+(seconds) for the window closest to full. When a window is exceeded, the server returns HTTP 429 with JSON-RPC error code
 -32003
 ,
 data.error_code: "rate_limit_exceeded"
+, the window in
+data.window
 and a
 data.retry_after
 field (seconds). Respect that value before retrying: this is a short, retryable pause.
@@ -1299,12 +1310,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
 Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
@@ -1326,7 +1339,7 @@ Security
 Status
 Privacy
 Terms
-Right of withdrawal
+Withdraw from contract here
 Cancel contracts here
 Impressum
 © 2026 MCPEmails.

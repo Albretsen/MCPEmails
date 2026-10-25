@@ -2,7 +2,7 @@
  * Billing lifecycle email: dunning, card expiry, cancellation save, win-back,
  * and the Free allowance notices.
  *
- * Twelve templates in two categories, and the split between them is the most
+ * Fourteen templates in two categories, and the split between them is the most
  * important thing in this file.
  *
  * TRANSACTIONAL (dunning_1/3/7/14, card_expiry_30/7, cancel_ask)
@@ -24,6 +24,11 @@
  *   "Your service is about to stop" is account status, so they are not
  *   suppressible and carry no unsubscribe header. The upgrade line in each is
  *   secondary to the numbers, which is what keeps them out of marketing.
+ *
+ * TRANSACTIONAL, PASS NOTICES (pass_ending_7d, pass_ended)
+ *   The 3-month Personal pass ends in 7 days, or has ended. About the end of a
+ *   fixed-term contract the customer bought, so no consent and no unsubscribe;
+ *   queued at purchase by src/lib/billing/pass-notices.ts, two per pass.
  *
  * MARKETING-ADJACENT (winback_14, winback_30)
  *   Sent to somebody who has already left. Carries List-Unsubscribe and
@@ -91,10 +96,12 @@
 
 import { Resend } from 'resend';
 
-import { PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
+import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
-import { POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
+import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
+import { CANCEL_REASONS, CANCEL_REASON_EMAIL_LABELS } from '@/lib/billing/cancel-reasons';
+import { issueFeedbackToken } from '@/lib/billing/feedback-token';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -125,6 +132,10 @@ export const BILLING_TEMPLATES = [
   'usage_warning_80',
   'usage_limit_reached',
   'automation_paused_limit',
+  'pass_ending_7d',
+  'pass_ended',
+  'pause_started',
+  'pause_ending_3',
 ] as const;
 
 export type BillingTemplate = (typeof BILLING_TEMPLATES)[number];
@@ -140,6 +151,20 @@ export type UsageTemplate = (typeof USAGE_TEMPLATES)[number];
 
 export function isUsageTemplate(template: string): template is UsageTemplate {
   return (USAGE_TEMPLATES as ReadonlyArray<string>).includes(template);
+}
+
+/**
+ * The two service notices of a 3-month Personal pass (migration
+ * 20261025010100, src/lib/billing/pass-notices.ts). Keyed on the Stripe
+ * customer with scope_key = the user_passes id. Transactional: they are about
+ * the end of a contract the customer bought, so no consent and no unsubscribe.
+ */
+export const PASS_TEMPLATES = ['pass_ending_7d', 'pass_ended'] as const satisfies ReadonlyArray<BillingTemplate>;
+
+export type PassTemplate = (typeof PASS_TEMPLATES)[number];
+
+export function isPassTemplate(template: string): template is PassTemplate {
+  return (PASS_TEMPLATES as ReadonlyArray<string>).includes(template);
 }
 
 export type BillingCategory = 'transactional' | 'marketing';
@@ -286,8 +311,19 @@ const DECLINE_COPY: Record<string, DeclineCopy> = {
  * under a heading that promises a reason is worse than printing no heading, so
  * the composer omits the whole block instead.
  */
-export function declineCopy(code: string | null | undefined): DeclineCopy | null {
+export function declineCopy(
+  code: string | null | undefined,
+  currency?: string | null,
+): DeclineCopy | null {
   if (!code) return null;
+  // The one decline that names a currency names the one actually charged: a
+  // EUR subscription is not refused "in US dollars".
+  if (code === 'currency_not_supported' && (currency ?? 'usd').toLowerCase() === 'eur') {
+    return {
+      reason: 'the card cannot be charged in euros',
+      fix: 'A card that accepts EUR will work. Most do, but some regional cards do not.',
+    };
+  }
   return DECLINE_COPY[code] ?? null;
 }
 
@@ -338,6 +374,12 @@ export type LifecyclePayload = {
   currency?: string | null;
   /** Stripe decline code from the failed payment intent, when there was one. */
   declineCode?: string | null;
+  /**
+   * The payment method on the failed attempt (a Stripe pm_ id), when known.
+   * Never printed in an email: the webhook compares it with the method that
+   * finally paid, to tell a customer fix from a silent retry (recovered_by).
+   */
+  failedPaymentMethodId?: string | null;
   /** Stripe hosted invoice page: lets them pay the exact invoice in one click. */
   hostedInvoiceUrl?: string | null;
   /** ISO date the paid period ends (cancellation) or ended (win-back). */
@@ -383,6 +425,48 @@ export type LifecyclePayload = {
   /** The triage rule that was paused (automation_paused_limit only). */
   rule_id?: string | null;
   rule_name?: string | null;
+
+  // ── Pause ────────────────────────────────────────────────────────────────
+
+  /** ISO: when the paid plan stops and the pause begins. */
+  pauseStartsAt?: string | null;
+  /** ISO: the renewal that bills again (pause_collection.resumes_at + 1h). */
+  billingResumesAt?: string | null;
+  /** True when the pause replaced a scheduled cancellation. */
+  replacedCancel?: boolean;
+
+
+  // ── Cancellation confirmation (cancel_ask) ─────────────────────────────
+  //
+  // All optional, so every row queued before these existed still composes.
+
+  /** 'month' | 'year' when the queue wrote it; otherwise inferred from the amount. */
+  interval?: 'month' | 'year' | null;
+  /**
+   * What led to the cancellation. 'billing_switch_free' (the Billing card's
+   * switch to Free) leaves out the pause/smaller-plan paragraph: the customer
+   * has just chosen the smallest option there is.
+   */
+  source?: string | null;
+  /** ISO time of the subscription's first charge, when known (withdrawal window). */
+  firstChargeAt?: string | null;
+  /**
+   * Decision D3 (src/lib/billing/park-on-cancel.ts). Set at queue time only
+   * when this subscription's end will park inboxes: the largest number of
+   * active inboxes in one workspace above Free's cap. Above 1, the
+   * confirmation adds one factual sentence about parking. Absent on every row
+   * queued before D3, and for anyone the marker does not cover.
+   */
+  parkInboxCount?: number | null;
+  /**
+   * The cancellation's identity for the signed /billing/feedback links. Not
+   * stored in the queued payload: sendInputForQueueRow fills them from the
+   * row's stripe_customer_id and scope_key (`${subscriptionId}:${periodEnd}`).
+   */
+  subscriptionId?: string | null;
+  stripeCustomerId?: string | null;
+  /** Unix seconds; the period end half of the scope key. */
+  periodEndSeconds?: number | null;
 };
 
 export interface ComposedLifecycleEmail {
@@ -534,6 +618,8 @@ function usageFacts(payload: LifecyclePayload): UsageFacts | null {
  * stale number in an email. Whole dollars when the price is whole, otherwise
  * the usual two decimals.
  */
+// USD on purpose: these go to Free workspaces, which have never been charged,
+// so there is no charged currency to follow.
 function personalMonthlyPrice(): string {
   const cents = PLANS.personal.monthlyPriceCents;
   return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
@@ -557,11 +643,67 @@ function usageUpgradeUrl(base: string): string {
 const NOTHING_DELETED =
   'Nothing is deleted either way. Your inbox connections, API keys and settings stay exactly where they are, and reconnecting is one click if you come back.';
 
+/** Decision D3: the one sentence about parking, stated as a fact. */
+export const CANCEL_PARKING_SENTENCE =
+  'When your plan ends, one inbox stays active on Free and the others are parked, not deleted. They come back if you subscribe again.';
+
+/** True when the cancel confirmation carries the parking sentence. */
+function cancelMentionsParking(payload: LifecyclePayload): boolean {
+  return typeof payload.parkInboxCount === 'number' && payload.parkInboxCount > 1 && payload.grandfathered !== true;
+}
+
+// ---------------------------------------------------------------------------
+// Pass notice helpers
+// ---------------------------------------------------------------------------
+
+/** "$9", "$86.40", "$29": whole dollars when whole, from the catalogue. */
+function dollars(cents: number): string {
+  return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
+}
+
+/**
+ * The three ways to keep Personal, as links to the checkout start route. A
+ * Personal subscription bought by a pass holder is anchored to the pass end
+ * by checkout-core, so nobody pays twice for the same days.
+ */
+function passOptions(base: string, firstChargeOn: string | null) {
+  const monthly = dollars(PLANS.personal.monthlyPriceCents);
+  const yearlyCents = PLANS.personal.yearlyPriceCents;
+  const on = firstChargeOn ? `, first charge on ${firstChargeOn}` : '';
+  const options: Array<{ label: string; url: string }> = [
+    {
+      label: `Subscribe monthly, ${monthly} a month${on}`,
+      url: `${base}/api/stripe/checkout/start?plan=personal&interval=month`,
+    },
+  ];
+  if (yearlyCents) {
+    options.push({
+      label: `Yearly, ${dollars(yearlyCents)} a year${on}`,
+      url: `${base}/api/stripe/checkout/start?plan=personal&interval=year`,
+    });
+  }
+  options.push({
+    label: `Another 3 months, ${dollars(PERSONAL_PASS_3M.priceCents)}, paid once`,
+    url: `${base}/api/stripe/checkout/start?product=personal_pass_3m&arm=holder&from=pass_reminder`,
+  });
+  return options;
+}
+
+/** What Free means after a pass, from the catalogue. */
+function freeAfterPass(): string {
+  const inboxes = PLANS.free.limits.maxInboxes;
+  const inboxPhrase = inboxes === 1 ? 'one inbox' : `${inboxes} inboxes`;
+  return `${FREE_ACTION_ALLOWANCE} email actions a month and ${inboxPhrase} for new connections`;
+}
+
+const PASS_KEEPS = 'Your inboxes, drafts and settings stay.';
+
 // ---------------------------------------------------------------------------
 // The HTML shell
 // ---------------------------------------------------------------------------
 
-interface ShellOptions {
+/** Shared with src/lib/email/referral-emails.ts, so every transactional email looks alike. */
+export interface ShellOptions {
   title: string;
   /** Blocks of already-escaped HTML. */
   html: string;
@@ -571,7 +713,7 @@ interface ShellOptions {
   unsubscribe?: string | null;
 }
 
-function shell(options: ShellOptions): string {
+export function shell(options: ShellOptions): string {
   const cta =
     options.ctaUrl && options.ctaLabel
       ? `<table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
@@ -634,7 +776,7 @@ function shell(options: ShellOptions): string {
 </html>`;
 }
 
-function p(text: string): string {
+export function p(text: string): string {
   return `<p style="margin:0 0 16px;font-size:15px;color:#334155;line-height:1.6;">${escapeHtml(text)}</p>`;
 }
 
@@ -687,6 +829,256 @@ const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply 
 const CANCEL_FOOTER = `Replies come straight to a person, not a ticket queue. Written by Asgeir, who builds MCPEmails.`;
 
 // ---------------------------------------------------------------------------
+// Cancellation confirmation helpers (cancel_ask only)
+// ---------------------------------------------------------------------------
+
+const WITHDRAWAL_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * The withdrawal sentence, without its link, or null when it must not show.
+ *
+ * When the payload says when the first charge was (`firstChargeAt`), the line
+ * shows only inside the 14-day window and says so plainly. When it does not
+ * (every row queued today), the conditional wording stays, because the line is
+ * also the customer's written pointer to the stronger remedy.
+ */
+function cancelWithdrawalSentence(payload: LifecyclePayload, nowMs: number): string | null {
+  const first = payload.firstChargeAt ? new Date(payload.firstChargeAt).getTime() : Number.NaN;
+  if (Number.isNaN(first)) {
+    return 'If your first charge was less than 14 days ago, you can also withdraw from the contract and we refund that charge in full';
+  }
+  return nowMs - first < WITHDRAWAL_WINDOW_MS
+    ? 'Your first charge was less than 14 days ago, so you can also withdraw from the contract and we refund that charge in full'
+    : null;
+}
+
+/** Unix seconds of the cancelled period's end, from the queue scope or the payload. */
+function cancelPeriodEndSeconds(payload: LifecyclePayload): number | null {
+  if (typeof payload.periodEndSeconds === 'number' && Number.isInteger(payload.periodEndSeconds)) {
+    return payload.periodEndSeconds;
+  }
+  if (!payload.periodEnd) return null;
+  const ms = new Date(payload.periodEnd).getTime();
+  return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
+}
+
+/**
+ * The seven one-tap reason links, or null when no signed token can be made
+ * (no subscription id on the row, or no usable secret). The links only OPEN
+ * /billing/feedback with the reason preselected; nothing is recorded until the
+ * reader presses Send there, because mail scanners prefetch every link.
+ */
+function cancelReasonLinks(
+  base: string,
+  payload: LifecyclePayload,
+): Array<{ label: string; url: string }> | null {
+  if (!payload.subscriptionId) return null;
+  const token = issueFeedbackToken({
+    subscriptionId: payload.subscriptionId,
+    customerId: payload.stripeCustomerId ?? null,
+    periodEnd: cancelPeriodEndSeconds(payload),
+  });
+  if (!token) return null;
+  return CANCEL_REASONS.map((reason) => ({
+    label: CANCEL_REASON_EMAIL_LABELS[reason],
+    url: `${base}/billing/feedback?t=${encodeURIComponent(token)}&r=${reason}`,
+  }));
+}
+
+/**
+ * Monthly or not. `interval` when the queue wrote it; otherwise read off the
+ * charged amount, which is far below half a year's price on every monthly
+ * price we have sold (including the older Personal and Pro prices) and above
+ * it on every annual one. Unknown means not monthly: the paragraph is left out
+ * rather than shown to an annual customer.
+ */
+function cancelIsMonthly(payload: LifecyclePayload): boolean {
+  if (payload.interval) return payload.interval === 'month';
+  if (!payload.planId || payload.amountCents == null || payload.amountCents <= 0) return false;
+  const plan = PLANS[payload.planId];
+  if (!plan?.yearlyPriceCents) return false;
+  return payload.amountCents < plan.yearlyPriceCents / 2;
+}
+
+/**
+ * The one neutral paragraph about pausing or a smaller plan, or null.
+ *
+ * Shown only when BILLING_PAUSE_ENABLED is 'on' (read at call time, so the
+ * switch needs no deploy), on a monthly Personal or Pro plan, and never after a
+ * cancellation that came from switching to Free (`source` 'billing_switch_free').
+ * Pro gets both options; Personal is already the smallest paid plan, so it gets
+ * the pause only. Business and annual plans get nothing.
+ */
+function cancelRetentionOffer(base: string, payload: LifecyclePayload): { text: string; url: string } | null {
+  if (process.env.BILLING_PAUSE_ENABLED !== 'on') return null;
+  if (payload.source === 'billing_switch_free') return null;
+  if (payload.planId !== 'personal' && payload.planId !== 'solo') return null;
+  if (!cancelIsMonthly(payload)) return null;
+  const url = `${base}/dashboard/settings?src=cancel_email#billing`;
+  const text =
+    payload.planId === 'solo'
+      ? `If you only need a break or a smaller plan: you can pause for up to 3 months, or switch to ${planDisplayName('personal')}, from your billing page. Either one replaces this cancellation.`
+      : 'If you only need a break: you can pause for up to 3 months from your billing page. That replaces this cancellation.';
+  return { text, url };
+}
+
+// ---------------------------------------------------------------------------
+// Confirm-the-payment variant (SCA / 3DS)
+// ---------------------------------------------------------------------------
+
+/**
+ * Stripe's code for a renewal the customer's bank wants them to approve in
+ * person (EU Strong Customer Authentication). Set either by the decline code
+ * on the failed payment intent or, forced, by `invoice.payment_action_required`.
+ */
+export const CONFIRM_PAYMENT_DECLINE_CODE = 'authentication_required';
+
+/** True when this dunning payload is a bank approval, not a declined card. */
+export function isConfirmPayment(payload: LifecyclePayload): boolean {
+  return payload.declineCode === CONFIRM_PAYMENT_DECLINE_CODE;
+}
+
+const CONFIRM_CTA = 'Confirm the payment';
+
+/**
+ * dunning_1/3/7 for a renewal the bank wants approved.
+ *
+ * The card works, so nothing here asks for a new one, and Stripe's automatic
+ * retries cannot answer a 3DS challenge, so nothing here promises a retry will
+ * fix it. The CTA is the hosted invoice page, which runs the challenge.
+ */
+function composeConfirmPayment(
+  template: 'dunning_1' | 'dunning_3' | 'dunning_7',
+  ctx: {
+    category: BillingCategory;
+    base: string;
+    payUrl: string;
+    yourPlan: string;
+    amount: string | null;
+    consequence: string | null;
+  },
+): ComposedLifecycleEmail {
+  const { category, base, payUrl, yourPlan, amount, consequence } = ctx;
+  const signOff = ['', SUPPORT_FOOTER_TEXT, '', 'MCPEmails', base, '', POSTAL_ADDRESS_LINE];
+  const collapse = (lines: string[]) =>
+    lines.filter((line, i, all) => !(line === '' && all[i - 1] === '')).join('\n');
+
+  if (template === 'dunning_1') {
+    const lead = amount
+      ? `Your bank asked you to approve the ${amount} renewal for ${yourPlan} before it goes through. Nothing is wrong with the card.`
+      : `Your bank asked you to approve the renewal for ${yourPlan} before it goes through. Nothing is wrong with the card.`;
+    const running =
+      'Your plan is still running and your agent has not lost anything. We keep paid access on while the payment waits for you, so there is no rush in the next hour.';
+    const why =
+      'Automatic retries cannot confirm a payment for you, so this one needs one tap from you. Your bank usually asks in their app or by SMS. If it is never confirmed, the subscription closes.';
+    const how = 'Open the payment here and approve it when your bank asks. You do not need to tell us:';
+    const stop =
+      'And if you meant to stop, you do not have to do anything or reply to this. Leave it and it closes itself.';
+
+    return {
+      subject: 'Confirm your MCPEmails payment with your bank',
+      category,
+      body: collapse([
+        lead,
+        '',
+        'NOTHING HAS STOPPED WORKING',
+        running,
+        '',
+        'WHY IT NEEDS YOU',
+        why,
+        consequence ?? '',
+        '',
+        'CONFIRM IT IN ABOUT A MINUTE',
+        how,
+        payUrl,
+        '',
+        stop,
+        ...signOff,
+      ]),
+      htmlBody: shell({
+        title: 'Confirm your payment with your bank',
+        html:
+          p(lead) +
+          h('Nothing has stopped working') +
+          p(running) +
+          h('Why it needs you') +
+          p(why) +
+          (consequence ? p(consequence) : '') +
+          h('Confirm it in about a minute') +
+          p('Open the payment and approve it when your bank asks. You do not need to tell us.') +
+          p(stop),
+        ctaUrl: payUrl,
+        ctaLabel: CONFIRM_CTA,
+        footerNote: SUPPORT_FOOTER,
+      }),
+    };
+  }
+
+  if (template === 'dunning_3') {
+    const lead = amount
+      ? `Three days on, the ${amount} for ${yourPlan} is still waiting for you to approve it with your bank.`
+      : `Three days on, the renewal for ${yourPlan} is still waiting for you to approve it with your bank.`;
+    const running =
+      'Your plan is still running. We do not cut access off while a payment is waiting, but the automatic retries cannot approve it for you.';
+    const stop =
+      'If you would rather stop paying for this, that is a completely fine answer and you can ignore this. It closes on its own.';
+
+    return {
+      subject: "Your MCPEmails payment still needs your bank's approval",
+      category,
+      body: collapse([
+        lead,
+        '',
+        running,
+        '',
+        'Approving it with your bank is the whole fix:',
+        payUrl,
+        '',
+        stop,
+        ...signOff,
+      ]),
+      htmlBody: shell({
+        title: 'Your payment still needs your approval',
+        html: p(lead) + p(running) + p(stop),
+        ctaUrl: payUrl,
+        ctaLabel: CONFIRM_CTA,
+        footerNote: SUPPORT_FOOTER,
+      }),
+    };
+  }
+
+  const lead = `It has been a week since your bank asked you to approve the renewal for ${yourPlan}. The automatic retries cannot approve it for you, and if it stays unconfirmed the subscription closes.`;
+  const running = 'Your plan is still running today. Nothing has been taken away yet.';
+  return {
+    subject: 'Your MCPEmails payment is still waiting for your approval',
+    category,
+    body: collapse([
+      lead,
+      '',
+      running,
+      '',
+      consequence ? 'WHEN IT CLOSES' : '',
+      consequence ?? '',
+      consequence ? NOTHING_DELETED : '',
+      consequence ? '' : '',
+      'One approval with your bank ends this:',
+      payUrl,
+      ...signOff,
+    ]),
+    htmlBody: shell({
+      title: 'Your payment is still waiting for you',
+      html:
+        p(lead) +
+        p(running) +
+        (consequence ? h('When it closes') + p(consequence) + p(NOTHING_DELETED) : ''),
+      ctaUrl: payUrl,
+      ctaLabel: CONFIRM_CTA,
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Composition
 // ---------------------------------------------------------------------------
 
@@ -727,9 +1119,27 @@ export function composeBillingEmail(
   const name = planName(payload.planId);
   const yourPlan = yourPlanPhrase(name);
   const amount = amountLabel(payload);
-  const decline = declineCopy(payload.declineCode);
+  const decline = declineCopy(payload.declineCode, payload.currency);
   const consequence = consequenceLine(payload);
   const endsOn = longDate(payload.periodEnd);
+
+  // A renewal the bank wants approved (EU SCA / 3DS) gets its own copy for the
+  // first three dunning emails. The card is fine and Stripe's retries cannot
+  // answer a 3DS challenge, so "update the card" and "the retry picks it up"
+  // are both false here. dunning_14 is the same for every decline code.
+  if (
+    isConfirmPayment(payload) &&
+    (template === 'dunning_1' || template === 'dunning_3' || template === 'dunning_7')
+  ) {
+    return composeConfirmPayment(template, {
+      category,
+      base,
+      payUrl,
+      yourPlan,
+      amount,
+      consequence,
+    });
+  }
 
   switch (template) {
     // ─────────────────────────────────────────────────────────────────────
@@ -1008,39 +1418,145 @@ export function composeBillingEmail(
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Cancellation. ONE question, and no discount.
+    // Cancellation confirmed. The template keeps its NAME (`cancel_ask`): the
+    // unique index, the tombstones and cancelOpenSequence all key on it.
     //
-    // A discount here buys a month and destroys the only thing worth having
-    // from five customers, which is the sentence that explains why the sixth
-    // one left. It also teaches the customer that the price is negotiable,
-    // which is a bad thing to teach at $5.
+    // Order is fixed (Documents/plans/pause-downgrade-20261024.md, section 5):
+    // the confirmation, the withdrawal line, the optional one-tap reason, and
+    // LAST, after a divider, one neutral paragraph about pausing or a smaller
+    // plan. Nothing is keyed to a reason, nothing asks "are you sure", and no
+    // discount: the email confirms what the customer did.
     // ─────────────────────────────────────────────────────────────────────
     case 'cancel_ask': {
-      const subject = 'What stopped working for you?';
+      const subject = 'Your MCPEmails cancellation is confirmed';
       const until = endsOn
-        ? `You keep everything until ${endsOn}, which you have already paid for.`
-        : 'You keep everything until the end of the period you have already paid for.';
-      const lead = `You cancelled ${yourPlan}, and that is fine. I am not going to try to talk you out of it.`;
-      const ask =
-        'I would like to know one thing though: what stopped working for you? One line is plenty. Reply straight to this email and it comes to me.';
-      // This email is also the customer's written confirmation that the
-      // cancellation went through, so it says so, and it points a customer
-      // still inside the 14-day window at the stronger remedy.
+        ? `It stays active until ${endsOn}, which you have already paid for.`
+        : 'It stays active until the end of the period you have already paid for.';
+      const lead = `You cancelled ${yourPlan}. ${until}`;
+      const parking = cancelMentionsParking(payload) ? CANCEL_PARKING_SENTENCE : null;
+
       const withdrawalUrl = `${base}${WITHDRAWAL_PATH}`;
-      const withdrawal =
-        `If your first charge was less than 14 days ago, you can also withdraw from the contract and we refund that charge in full: ${withdrawalUrl}`;
+      const withdrawalText = cancelWithdrawalSentence(payload, Date.now());
+
+      const reasonLinks = cancelReasonLinks(base, payload);
+      const reasonLead = reasonLinks
+        ? 'If you want to tell us why, one tap is enough:'
+        : 'If you want to tell us why, just reply to this email.';
+      const replyLine = 'Or just reply to this email.';
+
+      const offer = cancelRetentionOffer(base, payload);
+
+      const body = [
+        lead,
+        ...(parking ? [parking] : []),
+        NOTHING_DELETED,
+        '',
+        ...(withdrawalText ? [`${withdrawalText}: ${withdrawalUrl}`, ''] : []),
+        reasonLead,
+        ...(reasonLinks
+          ? [...reasonLinks.map(({ label, url }) => `${label}: ${url}`), replyLine]
+          : []),
+        '',
+        ...(offer ? ['----------', '', offer.text, offer.url, ''] : []),
+        CANCEL_FOOTER,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      const reasonHtml = reasonLinks
+        ? h(reasonLead) +
+          `<ul style="margin:0 0 12px;padding:0 0 0 20px;font-size:15px;color:#334155;line-height:1.9;">${reasonLinks
+            .map(
+              ({ label, url }) =>
+                `<li><a href="${escapeHtml(url)}" style="color:#3b82f6;">${escapeHtml(label)}</a></li>`,
+            )
+            .join('')}</ul>` +
+          p(replyLine)
+        : p(reasonLead);
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: 'Your cancellation is confirmed',
+          html:
+            p(lead) +
+            (parking ? p(parking) : '') +
+            p(NOTHING_DELETED) +
+            (withdrawalText ? pLink(`${withdrawalText}.`, withdrawalUrl) : '') +
+            reasonHtml +
+            (offer
+              ? '<hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0;"/>' + pLink(offer.text, offer.url)
+              : ''),
+          footerNote: escapeHtml(CANCEL_FOOTER),
+        }),
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Pause. Both transactional: they are about money on a contract that is
+    // still running. The receipt says what stays active and when billing
+    // comes back; the reminder 3 days before says it again, with the cancel
+    // route, so nobody is charged by surprise after a quiet few months.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'pause_started': {
+      const startsOn = longDate(payload.pauseStartsAt);
+      const resumesOn = longDate(payload.billingResumesAt);
+      const subject = startsOn
+        ? `Your MCPEmails plan is paused from ${startsOn}`
+        : 'Your MCPEmails plan is paused';
+      const lead = `You paused ${yourPlan}. Here is what that means.`;
+      const replaced = payload.replacedCancel
+        ? 'This pause replaces the cancellation you had scheduled, so your subscription continues after it.'
+        : null;
+      const untilStart = startsOn
+        ? `Until ${startsOn} nothing changes: you keep the plan you have already paid for.`
+        : 'Until the end of the period you have already paid for, nothing changes.';
+      const whileHeading = 'While the plan is paused';
+      const whileLines = [
+        payload.grandfathered
+          ? null
+          : 'One inbox stays active, the one you picked. Any others are parked, not deleted, and come back when billing resumes.',
+        `You have the Free allowance of ${FREE_ACTION_ALLOWANCE} email actions a month, counted from the day the pause starts.`,
+        'Scheduled sends you booked before the pause still go out as planned.',
+        'Your API keys, connections and settings stay exactly as they are.',
+      ].filter((line): line is string => line !== null);
+      const resumes =
+        resumesOn && amount
+          ? `Billing resumes automatically on ${resumesOn} at ${amount}. We will email you 3 days before.`
+          : resumesOn
+            ? `Billing resumes automatically on ${resumesOn}. We will email you 3 days before.`
+            : 'Billing resumes automatically at the end of the pause. We will email you 3 days before.';
+      const options = `You can resume early, extend the pause or cancel at any time from your billing page: ${billingUrl}`;
+      const cancelLine = `You can also cancel without signing in: ${base}${CANCEL_PATH}`;
+
+      const factRows: Array<[string, string]> = [];
+      if (name) factRows.push(['Plan', name]);
+      if (startsOn) factRows.push(['Pause starts', startsOn]);
+      if (resumesOn) factRows.push(['Billing resumes', resumesOn]);
+      if (amount) factRows.push(['Then billed', amount]);
 
       const body = [
         lead,
         '',
-        ask,
+        ...factRows.map(([label, value]) => `${label}: ${value}`),
         '',
-        until,
-        NOTHING_DELETED,
+        ...(replaced ? [replaced, ''] : []),
+        untilStart,
         '',
-        withdrawal,
+        `${whileHeading}:`,
+        ...whileLines.map((line) => `- ${line}`),
         '',
-        CANCEL_FOOTER,
+        resumes,
+        '',
+        options,
+        cancelLine,
+        '',
+        SUPPORT_FOOTER_TEXT,
         '',
         'MCPEmails',
         base,
@@ -1053,17 +1569,76 @@ export function composeBillingEmail(
         category,
         body,
         htmlBody: shell({
-          title: 'What stopped working for you?',
+          title: 'Your plan is paused',
           html:
             p(lead) +
-            p(ask) +
-            p(until) +
-            p(NOTHING_DELETED) +
-            pLink(
-              'If your first charge was less than 14 days ago, you can also withdraw from the contract and we refund that charge in full.',
-              withdrawalUrl,
-            ),
-          footerNote: escapeHtml(CANCEL_FOOTER),
+            (factRows.length > 0 ? facts(factRows) : '') +
+            (replaced ? p(replaced) : '') +
+            p(untilStart) +
+            h(whileHeading) +
+            whileLines.map((line) => p(line)).join('') +
+            p(resumes) +
+            pLink('You can resume early, extend the pause or cancel at any time from your billing page:', billingUrl) +
+            pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
+          ctaUrl: billingUrl,
+          ctaLabel: 'Open billing',
+          footerNote: SUPPORT_FOOTER,
+        }),
+      };
+    }
+
+    case 'pause_ending_3': {
+      const resumesOn = longDate(payload.billingResumesAt);
+      const subject = resumesOn
+        ? `Your MCPEmails plan resumes on ${resumesOn}`
+        : 'Your MCPEmails plan resumes soon';
+      const lead =
+        resumesOn && amount
+          ? `Your pause ends soon. Billing for ${yourPlan} resumes on ${resumesOn} at ${amount}.`
+          : resumesOn
+            ? `Your pause ends soon. Billing for ${yourPlan} resumes on ${resumesOn}.`
+            : `Your pause ends soon, and billing for ${yourPlan} resumes at the end of it.`;
+      const nothing =
+        'There is nothing to do if you want to continue: your plan and any parked inboxes come back on their own.';
+      const options = `If you would rather not continue yet, you can extend the pause or cancel before that date from your billing page: ${billingUrl}`;
+      const cancelLine = `You can also cancel without signing in: ${base}${CANCEL_PATH}`;
+
+      const factRows: Array<[string, string]> = [];
+      if (name) factRows.push(['Plan', name]);
+      if (resumesOn) factRows.push(['Billing resumes', resumesOn]);
+      if (amount) factRows.push(['Amount', amount]);
+
+      const body = [
+        lead,
+        '',
+        nothing,
+        '',
+        options,
+        cancelLine,
+        '',
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: 'Your plan resumes soon',
+          html:
+            p(lead) +
+            (factRows.length > 0 ? facts(factRows) : '') +
+            p(nothing) +
+            pLink('If you would rather not continue yet, you can extend the pause or cancel before that date from your billing page:', billingUrl) +
+            pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
+          ctaUrl: billingUrl,
+          ctaLabel: 'Open billing',
+          footerNote: SUPPORT_FOOTER,
         }),
       };
     }
@@ -1153,6 +1728,61 @@ export function composeBillingEmail(
           ctaLabel: 'See the plans',
           footerNote: SUPPORT_FOOTER,
           unsubscribe: unsub,
+        }),
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 3-month Personal pass. Two service notices per pass, nothing after:
+    // the date, what Free means, what stays, and the same three options.
+    // No countdown, no urgency, no discount, never the word trial.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'pass_ending_7d':
+    case 'pass_ended': {
+      if (!endsOn) {
+        console.error(`[billing-email] ${template} not composed: no end date in the payload.`);
+        return null;
+      }
+      const ending = template === 'pass_ending_7d';
+      const subject = ending
+        ? `Your MCPEmails Personal pass ends on ${endsOn}`
+        : 'Your MCPEmails Personal pass has ended';
+      const title = ending ? `Your Personal pass ends on ${endsOn}` : 'Your Personal pass has ended';
+      const lead = ending
+        ? `Your Personal pass ends on ${endsOn}. After that this workspace goes back to Free: ${freeAfterPass()}. ${PASS_KEEPS}`
+        : `Your Personal pass ended on ${endsOn}, and the workspace is on Free: ${freeAfterPass()}. ${PASS_KEEPS}`;
+      const ask = ending
+        ? 'To keep Personal, pick one of these. Nothing happens unless you do.'
+        : 'To go back to Personal, pick one of these. This is the only email about it.';
+      // The first charge lands on the pass end only while the pass still runs.
+      const options = passOptions(base, ending ? endsOn : null);
+      const body = [
+        lead,
+        '',
+        ask,
+        '',
+        ...options.flatMap((option) => [`${option.label}:`, option.url, '']),
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title,
+          html:
+            p(lead) +
+            p(ask) +
+            options.slice(1).map((option) => pLink(`${option.label}:`, option.url)).join(''),
+          ctaUrl: options[0].url,
+          ctaLabel: options[0].label,
+          footerNote: SUPPORT_FOOTER,
         }),
       };
     }
@@ -1396,7 +2026,27 @@ export function sendInputForQueueRow(row: LifecycleQueueRowInput): SendBillingEm
     scopeKey: row.scope_key,
     workspaceId: row.workspace_id ?? null,
     periodStart: row.period_start ?? null,
-    payload: row.payload ?? {},
+    payload: payloadForQueueRow(row),
+  };
+}
+
+/**
+ * The payload a queued row composes from. For `cancel_ask` it adds the
+ * cancellation's identity, which the queue writer already put in the row
+ * (queueCancellationSequence: scope_key `${subscriptionId}:${periodEndSeconds}`
+ * or just the subscription id), so the signed reason links can be made without
+ * storing anything new. Values already in the payload win. Pure.
+ */
+export function payloadForQueueRow(row: LifecycleQueueRowInput): LifecyclePayload {
+  const payload = row.payload ?? {};
+  if (row.template !== 'cancel_ask') return payload;
+  const match = /^(sub_[A-Za-z0-9]+)(?::(\d+))?$/.exec(row.scope_key);
+  if (!match) return payload;
+  return {
+    ...payload,
+    subscriptionId: payload.subscriptionId ?? match[1],
+    stripeCustomerId: payload.stripeCustomerId ?? row.stripe_customer_id,
+    periodEndSeconds: payload.periodEndSeconds ?? (match[2] ? Number(match[2]) : null),
   };
 }
 

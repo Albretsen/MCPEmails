@@ -44,6 +44,105 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'Follow-ups, snooze and a morning brief that work while the chat is closed',
+    body:
+      'Your AI app can now ask MCPEmails to remind you when nobody replies to mail you sent, and to snooze a message out of your inbox until a time you choose. A daily morning brief with new mail, VIP senders, follow-ups that are due and snoozed mail coming back is placed straight in your inbox at the hour you set, under Settings. All of it runs on our servers, so nothing waits for a chat to be open.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'Search every inbox at once, and give your AI instructions per inbox',
+    body:
+      'Your AI app can now search or list all your connected inboxes in one call instead of one inbox at a time. You can also write standing instructions for each inbox, such as how to sign or which mail never to answer, under Advanced in the inbox settings, and every AI app you connect sees them when it lists your inboxes and when it drafts or sends.',
+  },
+  {
+    // Date must be the day this lands on main.
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'Webhooks for new mail',
+    body:
+      'Add a webhook under API keys in the dashboard and MCPEmails sends a signed POST to your URL when new mail arrives in an inbox, with message IDs your agent can open with email_read. Each webhook has a test button and a delivery log.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Ready-made first prompts once your inbox is connected',
+    body:
+      'After you connect an inbox, the dashboard overview now suggests three things to ask your AI app, each with a copy button, and reminds you how to switch MCPEmails on inside a Claude or ChatGPT chat. The step turns to "It works" by itself when your app makes its first call.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'A failed inbox connection tells you exactly what to do',
+    body:
+      'When an inbox does not connect, the form now shows the steps for your provider, such as creating a Yahoo, AOL, Gmail or iCloud app password or turning on IMAP, with a link to the right settings page and a Test again button that keeps what you typed. After your first inbox connects, it takes you straight to connecting your AI app.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'added',
+    title: 'A first week checklist on your dashboard',
+    body:
+      'For two weeks after you subscribe, the dashboard Overview shows a short checklist with starter prompts you can copy, and ticks each step off as your assistant uses MCPEmails. If your inbox keeps failing, it takes you straight to Reconnect.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'fixed',
+    title: 'Searching one folder searches that folder',
+    body:
+      'When your AI app searches a single named folder, the search now looks in that folder only. Before, a search that named the folder this way looked in the inbox instead.',
+  },
+  {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Pick the date your cancellation takes effect',
+    body:
+      'On the cancel contracts page you can now choose the date your cancellation takes effect and send it with one button. The footer link "Withdraw from contract here" opens the same form with withdrawal selected.',
+  },
+  {
+    date: '2026-10-23',
+    kind: 'improved',
+    title: 'mcpemails.com opens your dashboard when you are signed in',
+    body:
+      'Opening mcpemails.com while signed in now takes you straight to your dashboard. Click the logo in the dashboard to visit the homepage.',
+  },
+  {
+    date: '2026-10-21',
+    kind: 'added',
+    title: 'Change an inbox\'s connection type from its settings',
+    body:
+      'You can now switch an IMAP inbox between send and receive, receive only and send only from the inbox\'s Advanced settings, without entering your password again. The inbox keeps its ID and the AI apps already connected to it.',
+  },
+  {
+    date: '2026-10-21',
+    kind: 'added',
+    title: 'Choose the folders MCPEmails uses',
+    body:
+      'For IMAP inboxes you can now pick which folder MCPEmails uses for Sent, Drafts, Trash, Spam and Archive, under Advanced in the inbox\'s settings. Automatic detection stays the default.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Drafts to international addresses send again',
+    body:
+      'On IMAP inboxes, a draft written in another mail app to an address with a non-Latin domain such as münchen.de or пример.рф, or with a quoted name before the @, now sends. Before, sending it stopped with an invalid recipient error.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'added',
+    title: 'Free IMAP and SMTP settings lookup',
+    body:
+      'Type an email address or domain at mcpemails.com/tools/email-settings-lookup to see its incoming and outgoing server, port and security setting. For a company domain it reads the MX records to show which provider runs the mailbox.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Approved scheduled sends go out on time',
+    body:
+      'On an inbox that holds sends for approval, a scheduled email you approve now goes out at the time it was scheduled for. Before, the approved message could end in an error at that time instead of being sent.',
+  },
+  {
     date: '2026-10-20',
     kind: 'fixed',
     title: 'Sent, Trash and Spam in your language',

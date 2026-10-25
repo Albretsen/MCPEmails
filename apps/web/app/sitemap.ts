@@ -7,6 +7,7 @@ import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 import { PATH as COMPARE_PATH, PAGE_UPDATED as COMPARE_UPDATED } from '@/lib/compare/email-mcp-servers.mjs';
 import { DATE_MODIFIED as NATIVE_MODIFIED } from '@/lib/compare/native-connectors.mjs';
+import { PATH as LOOKUP_PATH, DATE_MODIFIED as LOOKUP_MODIFIED, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
 
 /**
  * The provider pages are gated by a release schedule (lib/connect/release.mjs)
@@ -41,6 +42,8 @@ const MARKETING_PAGES: {
   // and the visible last-verified date on the page itself.
   { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/docs/api', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/developers', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/native-connectors-vs-mcp', lastModified: NATIVE_MODIFIED, changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/security', lastModified: '2026-10-20', changeFrequency: 'monthly', priority: 0.6 },
@@ -50,7 +53,7 @@ const MARKETING_PAGES: {
   { path: '/connect', lastModified: '2026-09-26', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
   // Bump lastModified whenever a changelog entry is added.
-  { path: '/changelog', lastModified: '2026-09-08', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/changelog', lastModified: '2026-10-20', changeFrequency: 'weekly', priority: 0.6 },
   // The monitor writes a new run every five minutes, so the page's content
   // changes daily even when nothing ships.
   { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },
@@ -159,6 +162,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // The open provider dataset, English only. Its rows come from the same
     // probe as the /connect pages; move this date when the probe is re-run.
     { path: '/docs/providers/data', lastModified: '2026-10-20', priority: 0.7, locales: ['en'] },
+    // The free IMAP/SMTP settings lookup. No zh content file (zh is frozen).
+    { path: LOOKUP_PATH, lastModified: LOOKUP_MODIFIED, priority: 0.7, locales: LOOKUP_LOCALES },
   ].map(({ path, lastModified, priority, locales }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),

@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "Finn IMAP- og SMTP-innstillinger for enhver e-postadresse",
+    "description": "Skriv inn en e-postadresse og få IMAP- og SMTP-server, port og sikkerhet, og se hvilken leverandør som håndterer e-posten på et eget domene. Gratis, kjører i nettleseren."
+  },
+  "hero": {
+    "eyebrow": "Gratis verktøy",
+    "title": "Finn IMAP- og SMTP-innstillinger",
+    "lead": "Finn IMAP- og SMTP-innstillingene for enhver e-postadresse. Skriv inn en adresse, et domene eller navnet på en e-postserver, så får du innkommende (IMAP) og utgående (SMTP) server, port og sikkerhetsinnstilling. For en adresse på et firmadomene leser oppslaget domenets MX-poster og viser hvilken leverandør som faktisk drifter postkassen.",
+    "updated": "Standarder og opplysninger om tredjeparter sjekket {date}."
+  },
+  "tool": {
+    "label": "E-postadresse, domene eller e-postserver",
+    "placeholder": "deg@dittfirma.no",
+    "submit": "Finn innstillinger",
+    "checking": "Sjekker DNS-poster...",
+    "privacy": "Kjører i nettleseren din. Delen før @ forlater aldri denne siden. Når et domene ikke finnes i tabellene våre, sendes bare domenet til Cloudflares offentlige DNS-resolver og til Mozillas autoconfig-database for Thunderbird.",
+    "invalid": "Skriv inn en e-postadresse som deg@eksempel.no, et domene eller et servernavn.",
+    "examplesLabel": "Prøv:",
+    "examples": ["you@gmx.net", "ex4.mail.ovh.net", "you@purelymail.com"],
+    "provider": "Leverandør",
+    "providerUnknown": "Ikke oppgitt",
+    "incoming": "Innkommende e-post (IMAP)",
+    "outgoing": "Utgående e-post (SMTP)",
+    "server": "Server",
+    "port": "Port",
+    "security": "Sikkerhet",
+    "securityTls": "SSL/TLS",
+    "securityStarttls": "STARTTLS",
+    "username": "Brukernavn",
+    "usernameValue": "Vanligvis hele e-postadressen din",
+    "mxTitle": "MX-poster for {domain}",
+    "mxNote": "Disse serverne tar imot e-posten til domenet. Det er ikke serverne et e-postprogram logger inn på.",
+    "source": {
+      "registry": "Innstillinger MCPEmails har bekreftet med en TLS-tilkobling til leverandørens servere.",
+      "host": "Gjenkjent fra servernavnet du skrev inn.",
+      "table": "Fra MCPEmails' tabell over leverandørinnstillinger.",
+      "srv": "Publisert av {domain} selv i domenets DNS-tjenesteposter (RFC 6186).",
+      "mx": "Utledet fra MX-postene, som peker til {provider}.",
+      "ispdb": "Fra Mozilla Thunderbirds autoconfig-database."
+    },
+    "appPassword": "{provider} krever et app-passord fra e-postprogrammer. Hvis det vanlige passordet ditt blir avvist, oppretter du et app-passord og bruker det i stedet.",
+    "appPasswordCreate": "Opprett et app-passord",
+    "appPasswordGeneric": "Hvis leverandøren avviser det vanlige passordet ditt med disse innstillingene, vil den mest sannsynlig ha et app-passord.",
+    "appPasswordLearn": "Hva er et app-passord?",
+    "microsoftOutlook": "Dette er en personlig Microsoft-konto (Outlook.com, Hotmail, Live eller MSN). Microsoft sluttet å godta passord fra e-postprogrammer på disse kontoene 16. september 2024, så du kommer ikke inn med serverinnstillinger og passord. E-postprogrammer og koblinger logger nå inn med Microsoft-kontoen din i stedet.",
+    "microsoftOffice365": "MX-postene for {domain} peker til Microsoft, så denne postkassen ligger i Microsoft 365. Exchange Online godtar ikke lenger passord over IMAP, så e-postprogrammer og koblinger logger inn med Microsoft i stedet.",
+    "microsoftCta": "Koble til med Microsoft",
+    "limited": "{provider} har ingen IMAP- eller SMTP-server som et program på en annen datamaskin kan logge inn på, så det finnes ingen innstillinger å vise.",
+    "limitedLink": "Hvorfor {provider} ikke kan kobles til",
+    "notFound": "Fant ingen innstillinger for {domain}. Domenet publiserer ingen tjenesteposter for e-post, Mozillas database har det ikke, og MX-postene peker ikke til en leverandør vi kjenner igjen.",
+    "notFoundMx": "Spør den som administrerer domenet hvilken leverandør som drifter postkassene, eller se i kontrollpanelet hos den leverandøren.",
+    "notFoundNoMx": "{domain} publiserer ingen MX-poster, så det finnes ingen e-postleverandør å hente innstillinger fra. Sjekk stavemåten.",
+    "dnsFailed": "DNS-oppslaget for {domain} fikk ikke svar, så vi kan ikke si noe om e-posten ennå. Prøv igjen om litt.",
+    "ctaTitle": "Bruk denne postkassen fra Claude, ChatGPT eller Cursor",
+    "ctaBody": "MCPEmails kobler {provider} til AI-assistenten din med disse innstillingene og sjekker IMAP- og SMTP-innloggingen når du kobler til. Tilkoblingsskjemaet fyller ut serverne for deg.",
+    "ctaBodyGeneric": "MCPEmails kobler enhver IMAP-postkasse til AI-assistenten din og sjekker IMAP- og SMTP-innloggingen når du kobler til. Tilkoblingsskjemaet fyller ut serverne for deg.",
+    "ctaButton": "Koble til {provider}",
+    "ctaButtonGeneric": "Koble til denne postkassen",
+    "guideLink": "Oppsettsguide for {provider}"
+  },
+  "explain": {
+    "title": "Hva innstillingene betyr",
+    "sub": "Alle e-postprogrammer og koblinger spør etter de samme seks verdiene. Her er hva hver av dem gjør.",
+    "items": [
+      {
+        "h": "IMAP er for å lese, SMTP er for å sende",
+        "p": "IMAP (Internet Message Access Protocol) lar et program lese postkassen der den ligger: mapper, lest- og ulest-markeringer og flyttede meldinger holdes synkronisert med webmail og telefonen. SMTP (Simple Mail Transfer Protocol) er måten et program leverer en ny melding til leverandøren din som så sender den videre. En postkasse trenger begge, og de kjører ofte på ulike servere, for eksempel <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
+      },
+      {
+        "h": "Porter og sikkerhet",
+        "p": "Port og sikkerhetsinnstilling hører sammen. <b>SSL/TLS</b> (også kalt implisitt TLS) krypterer tilkoblingen fra første byte, på port 993 for IMAP og 465 for SMTP. <b>STARTTLS</b> kobler til på port 143 eller 587 og går deretter over til kryptering. RFC 8314 anbefaler implisitt TLS både for lesing og sending. En port med feil sikkerhetsinnstilling ender som regel med tidsavbrudd eller en uklar TLS-feil, ikke en tydelig melding."
+      },
+      {
+        "h": "Brukernavn og passord",
+        "p": "Brukernavnet er nesten alltid hele e-postadressen din. Det er passordet de fleste mislykkede tilkoblinger strander på: Gmail, iCloud, Yahoo, AOL, Fastmail og Yandex avviser det vanlige kontopassordet fra et e-postprogram og vil ha et [app-passord](appPassword) i stedet, og det samme gjelder Zoho når tofaktorautentisering eller enkel pålogging er slått på. Personlige Microsoft-kontoer godtar ingen av delene og krever innlogging med Microsoft."
+      },
+      {
+        "h": "Egne domener og MX-poster",
+        "p": "En adresse på ditt eget domene sier ingenting om hvor postkassen ligger. Det gjør domenets MX-poster: de angir serverne som tar imot e-posten, og den som eier de serverne, drifter nesten alltid IMAP- og SMTP-serverne også. <code>aspmx.l.google.com</code> betyr Google Workspace, <code>*.mail.protection.outlook.com</code> betyr Microsoft 365, <code>aspmx1.migadu.com</code> betyr Migadu. Når MX-posten peker til et spamfilter, er postkasseleverandøren skjult bak det, og du må spørre den som administrerer domenet. [Guiden for eget domene](customDomain) går gjennom de vanligste leverandørene."
+      },
+      {
+        "h": "Slik fungerer oppslaget",
+        "p": "Det sjekker i denne rekkefølgen: [leverandørinnstillingene](providers) MCPEmails har bekreftet ved å koble til hver server; en tabell over hostingleverandører bygget på faktiske tilkoblingsfeil; domenets egne tjenesteposter etter RFC 6186; MX-postene, matchet mot de samme tabellene; og Mozilla Thunderbirds autoconfig-database. Det viser bare et resultat når både IMAP- og SMTP-delen er funnet. Leverandørinnstillingene er også publisert som et åpent [datasett](dataset)."
+      }
+    ]
+  },
+  "ports": {
+    "title": "Standardporter for e-post",
+    "colPort": "Port",
+    "colProtocol": "Protokoll",
+    "colSecurity": "Sikkerhet",
+    "colUse": "Bruk",
+    "rows": [
+      { "port": "993", "protocol": "IMAP", "security": "SSL/TLS", "use": "Lese e-post. Standard nesten overalt." },
+      { "port": "143", "protocol": "IMAP", "security": "STARTTLS", "use": "Lese e-post på servere uten port 993." },
+      { "port": "465", "protocol": "SMTP", "security": "SSL/TLS", "use": "Sende fra et e-postprogram. Foretrukket av RFC 8314." },
+      { "port": "587", "protocol": "SMTP", "security": "STARTTLS", "use": "Sende fra et e-postprogram (meldingsinnsending, RFC 6409)." },
+      { "port": "25", "protocol": "SMTP", "security": "STARTTLS eller ingen", "use": "Levering mellom e-postservere. Noen nettverk blokkerer den for utgående tilkoblinger." }
+    ],
+    "note": "MCPEmails kobler bare til over SSL/TLS eller STARTTLS, aldri ukryptert."
+  },
+  "faq": {
+    "title": "Spørsmål",
+    "items": [
+      {
+        "q": "Hvordan finner jeg IMAP- og SMTP-innstillingene for e-postadressen min?",
+        "a": "Skriv adressen inn i oppslaget over. For en adresse hos en leverandør, som @gmx.net eller @yahoo.com, får du leverandørens IMAP- og SMTP-servere, porter og sikkerhet med en gang. For en adresse på ditt eget domene leser oppslaget domenets DNS-poster for å finne hvilken leverandør som drifter postkassen, og viser den leverandørens innstillinger. Finner det ingenting, viser MX-postene hvem som tar imot domenets e-post, og det er dem du bør spørre."
+      },
+      {
+        "q": "Hva er SMTP-innstillingene for OVH Hosted Exchange (ex4.mail.ovh.net)?",
+        "a": "Utgående e-post bruker den samme nummererte verten som innkommende, for eksempel <code>ex4.mail.ovh.net</code>, på port 587 med STARTTLS. IMAP ligger på samme vert på port 993 med SSL/TLS. Port 465 svarer ikke på Hosted Exchange, så innstillinger kopiert fra OVHs webhotell (<code>ssl0.ovh.net</code>, port 465) henger til de får tidsavbrudd. Nummeret i vertsnavnet er unikt for tjenesten din og vises i OVHcloud-kontrollpanelet. Mer på [OVH-siden](ovh)."
+      },
+      {
+        "q": "Hva er IMAP- og SMTP-innstillingene for Purelymail?",
+        "a": "IMAP er <code>imap.purelymail.com</code> på port 993 med SSL/TLS, og SMTP er <code>smtp.purelymail.com</code> på port 465 med SSL/TLS. Brukernavnet er hele e-postadressen til postkassen. Mer om oppsettet finner du på [Purelymail-siden](purelymail)."
+      },
+      {
+        "q": "Skal jeg bruke port 465 eller 587 for SMTP?",
+        "a": "Bruk den leverandøren din oppgir. Port 465 krypterer fra start og er det RFC 8314 anbefaler; port 587 starter ukryptert og oppgraderer med STARTTLS. Mange leverandører tilbyr begge. Det viktige er at hver port får sin egen sikkerhetsinnstilling: 465 med SSL/TLS, 587 med STARTTLS."
+      },
+      {
+        "q": "Innstillingene er riktige, men passordet blir avvist. Hvorfor?",
+        "a": "Mange leverandører avviser det vanlige kontopassordet fra et e-postprogram. Gmail, iCloud, Yahoo, AOL, Fastmail og Yandex vil ha et [app-passord](appPassword), som du oppretter i sikkerhetsinnstillingene for kontoen, og det samme gjelder Zoho når tofaktorautentisering eller enkel pålogging er slått på. Personlige Microsoft-kontoer sluttet å godta passord fra e-postprogrammer 16. september 2024 og krever innlogging med Microsoft."
+      },
+      {
+        "q": "Kan verktøyet teste innloggingen min?",
+        "a": "Nei. En nettside kan ikke åpne en IMAP- eller SMTP-tilkobling, og du bør uansett ikke skrive inn passordet til en postkasse på en oppslagsside. MCPEmails tester IMAP- og SMTP-innloggingen når du [kobler en postkasse](imap) til AI-assistenten din, og forteller deg hvilken del som feilet."
+      }
+    ]
+  },
+  "related": {
+    "title": "Relaterte guider",
+    "items": {
+      "imap": "Koble enhver IMAP-postkasse til Claude eller ChatGPT",
+      "customDomain": "Koble e-post på eget domene til en AI-agent",
+      "appPassword": "Hva er et app-passord?",
+      "providers": "Kompatibilitetsoversikt for leverandører",
+      "dataset": "Åpent datasett med IMAP- og SMTP-leverandører",
+      "connect": "Oppsettsguider for alle leverandører"
+    }
+  },
+  "sources": {
+    "title": "Kilder",
+    "sub": "Lest {date}.",
+    "items": {
+      "rfc8314": "RFC 8314: Bruk av TLS for innsending av og tilgang til e-post",
+      "rfc6186": "RFC 6186: Bruk av SRV-poster for å finne e-posttjenester",
+      "rfc6409": "RFC 6409: Meldingsinnsending for e-post",
+      "rfc5068": "RFC 5068: Drift av e-postinnsending",
+      "msBasicAuth": "Microsoft Support: moderne autentisering kreves nå for Outlook.com i andre apper",
+      "msExchangeOnline": "Microsoft Learn: utfasing av grunnleggende autentisering i Exchange Online",
+      "ispdb": "Mozilla Thunderbirds autoconfig-database (ISPDB)",
+      "cloudflareDoh": "Cloudflare: JSON-API for DNS over HTTPS"
+    }
+  },
+  "ctaBand": {
+    "title": "Fant du innstillingene? Gi postkassen til AI-assistenten din.",
+    "sub": "MCPEmails kobler Gmail, Outlook, iCloud og enhver IMAP-postkasse til Claude, ChatGPT, Cursor og andre MCP-klienter. E-post hentes direkte og lagres aldri.",
+    "ctaPrimary": "Koble til en postkasse",
+    "ctaSecondary": "Se leverandører"
+  }
+}

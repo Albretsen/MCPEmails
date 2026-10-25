@@ -25,7 +25,7 @@
  * No em dashes, no fake "Re:", no urgency.
  */
 
-import { PLANS, FREE_ACTION_ALLOWANCE, type Plan } from '@/lib/stripe/plans';
+import { PLANS, FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, type Plan } from '@/lib/stripe/plans';
 import { annualOfferFromPlan, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { appUrl, unsubscribeUrl } from '@/lib/email/lifecycle';
@@ -129,6 +129,25 @@ export interface PaywallFollowupInput {
   paywallKind: PaywallKind;
   /** The recipient's own users.unsubscribe_token. Required; null = no email. */
   unsubscribeToken: string | null | undefined;
+  /**
+   * Step 3 only: the 3-month Personal pass line for a workspace in the pass
+   * arm of the holdout test. Placed after every subscription option, never
+   * the call to action. Null or absent: the email is exactly as before.
+   */
+  pass?: PaywallPassLine | null;
+}
+
+export interface PaywallPassLine {
+  /** The end date a pass bought on the send day runs to, already formatted. */
+  endsOn: string;
+  /** The pass checkout start URL, absolute. */
+  url: string;
+}
+
+/** The pass sentence of step 3. Exported for the test. */
+export function passSentence(pass: PaywallPassLine): string {
+  const price = formatPriceCents(PERSONAL_PASS_3M.priceCents);
+  return `If you would rather not subscribe: ${PLANS.personal.name}, 3 months, paid once, ${price}. Nothing renews. Bought today, it runs until ${pass.endsOn}, then your account goes back to Free.`;
 }
 
 export interface ComposedPaywallFollowup {
@@ -153,6 +172,8 @@ const SIGN_OFF = ['Asgeir', 'MCPEmails'];
 // Plan facts, from the catalogue
 // ---------------------------------------------------------------------------
 
+// USD on purpose, also after EUR prices launch: a Free workspace has never
+// been charged, so its currency is unknown. The digits are the EUR price too.
 function monthly(plan: Plan): string {
   return formatPriceCents(plan.monthlyPriceCents);
 }
@@ -290,6 +311,7 @@ export function composePaywallFollowup(input: PaywallFollowupInput): ComposedPay
         `${personal.name}, ${monthly(personal)} a month: ${inboxPhrase(personal)}, ${lowerFirst(noCap)}, ${lowerFirst(catalogueFeature(personal, 'email support'))}.`,
         `${pro.name}, ${monthly(pro)} a month: ${inboxPhrase(pro)}, ${lowerFirst(catalogueFeature(pro, `everything in ${personal.name}`))}.`,
         ...(annual ? [annual] : []),
+        ...(input.pass ? [`${passSentence(input.pass)} ${input.pass.url}`] : []),
         'Scheduled send and the approval hold are on every plan, Free included. Your Free account stays as it is whatever you decide.',
       ];
       ctaLabel = 'Compare plans';
@@ -339,3 +361,9 @@ export function composePaywallFollowup(input: PaywallFollowupInput): ComposedPay
     },
   };
 }
+
+// The same HTML shell and paragraph helper for the other one-off lifecycle
+// emails (pro-price-notice.ts, black-week-email-template.ts), so every
+// lifecycle email keeps one look and one footer.
+export { shell as lifecycleShell, p as lifecycleParagraph, UNSUBSCRIBE_REASON as LIFECYCLE_UNSUBSCRIBE_REASON };
+export type { ShellOptions as LifecycleShellOptions };

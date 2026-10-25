@@ -90,6 +90,12 @@ export const GROWTH_TAGS = {
 /**
  * Ten minutes. Growth numbers move in days, and the operator has a Refresh
  * button for the rare case where they need to see a change immediately.
+ *
+ * The events the owner actually watches for do not wait out this timer: a
+ * Stripe webhook and a signup both expire the whole tag (see
+ * expireGrowthCache), so the next kiosk tick or page load reads them. Before
+ * 2026-10-22 a purchase could take ten minutes of cache plus a five minute
+ * kiosk tick to appear, long after its notification email had arrived.
  */
 export const GROWTH_REVALIDATE_SECONDS = 600;
 
@@ -428,8 +434,23 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
  * seven page reloads and no POST at all, which took the logs to establish.
  */
 export async function refreshGrowthData(): Promise<void> {
-  revalidateTag(GROWTH_TAG, { expire: 0 });
-  console.info('[growth]', 'refresh: expired tag', { tag: GROWTH_TAG, generation: CACHE_GENERATION });
+  expireGrowthCache('refresh');
+}
+
+/**
+ * Drop every cached growth read now, because something the board reports on
+ * just happened: a Stripe event, a signup, or the Refresh button. Whole tag
+ * rather than one section, because a purchase moves revenue, the funnel and
+ * the people counts at once, and these events arrive a few times a day.
+ * Never throws: a failed expiry must not fail the webhook that called it.
+ */
+export function expireGrowthCache(reason: string): void {
+  try {
+    revalidateTag(GROWTH_TAG, { expire: 0 });
+    console.info('[growth]', 'expired tag', { reason, tag: GROWTH_TAG, generation: CACHE_GENERATION });
+  } catch (err) {
+    console.error('[growth]', 'expire failed', { reason, error: err instanceof Error ? err.message : String(err) });
+  }
 }
 
 /**

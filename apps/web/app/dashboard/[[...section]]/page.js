@@ -3,6 +3,7 @@ import { after } from 'next/server';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { decideProFeatureAccess, PRO_FEATURES_PUBLIC_SWITCH } from '@/lib/plans/pro-features';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
@@ -18,7 +19,17 @@ import { retentionDays } from '../../../src/lib/analytics/retention';
 import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
+import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
+import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import {
+  attachFounder,
+  founderDisplayFor,
+  ownerIsOnFounderPrice,
+  withFounderSubscriberPrices,
+} from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
+import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -174,8 +185,10 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden', 'signature_embed_images'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
+        'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+      // `parked_at` (20261024173000) degrades like the two preferences above:
+      // without it every inbox reads as active, which is the pre-parking truth.
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -229,6 +242,9 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         ? row.service
         : row.provider,
     status: row.status,
+    // Parked above a lower plan's inbox cap (src/lib/billing/parking.ts):
+    // connected and kept, but no tool or automation can use it.
+    parked: !!row.parked_at,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
     // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
@@ -383,6 +399,51 @@ async function fetchOverviewStats(supabase, workspaceId) {
     callsToday: callsTodayResult.count ?? 0,
     callsThisMonth: callsMonthResult.count ?? 0,
   };
+}
+
+/** The tools whose success means a message left the mailbox. */
+const SEND_TOOLS = ['email_send', 'email_reply', 'email_forward', 'draft_send'];
+
+/**
+ * What the Overview's referral tile is gated on, beyond what the page already
+ * has (components/dashboard/InvitePanel.jsx, referralTileEligible):
+ *   successfulSends  sends that succeeded, all time (a head count, no rows).
+ *   paidSince        the workspace's first `checkout_completed` funnel row,
+ *                    or null. That table is service-role only. A comped or
+ *                    pre-funnel paying workspace has no such row, and then
+ *                    the paid branch of the tile stays hidden.
+ * Free workspaces need neither: their branch counts active days off the
+ * usage series, so nothing is queried for them.
+ *
+ * @param {SchemaTypedClient} supabase
+ * @param {string} workspaceId
+ * @param {string} plan  the effective plan
+ * @returns {Promise<{ successfulSends: number, paidSince: string | null }>}
+ */
+async function fetchReferralTileFacts(supabase, workspaceId, plan) {
+  if (plan === 'free') return { successfulSends: 0, paidSince: null };
+  try {
+    const [sends, paid] = await Promise.all([
+      supabase
+        .from('activity_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspaceId)
+        .eq('status', 'success')
+        .in('tool_name', SEND_TOOLS),
+      createServiceRoleClient()
+        .from('product_funnel_events')
+        .select('occurred_at')
+        .eq('workspace_id', workspaceId)
+        .eq('stage', 'checkout_completed')
+        .order('occurred_at', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    return { successfulSends: sends.count ?? 0, paidSince: paid.data?.occurred_at ?? null };
+  } catch (err) {
+    console.error('[fetchReferralTileFacts]', err instanceof Error ? err.message : String(err));
+    return { successfulSends: 0, paidSince: null };
+  }
 }
 
 /**
@@ -651,7 +712,7 @@ export default async function DashboardPage({ params }) {
   const cookieStore = await cookies();
   const preferredWorkspaceId = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
 
-  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }] = await Promise.all([
+  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }, { data: ownBilling }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
@@ -662,12 +723,20 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
       .from('user_usage_entitlements')
       .select('kind, expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    // The viewer's OWN billing row (RLS: select own). Feeds the failed-payment
+    // banner, which only the owner of the active workspace sees. A read error
+    // leaves it null, and null shows no banner.
+    supabase
+      .from('user_billing')
+      .select('subscription_status, last_decline_code')
       .eq('user_id', user.id)
       .maybeSingle(),
   ]);
@@ -677,6 +746,10 @@ export default async function DashboardPage({ params }) {
   // otherwise the earliest-created workspace.
   const workspace =
     allWorkspaces.find((w) => w.id === preferredWorkspaceId) ?? allWorkspaces[0] ?? null;
+  // The referral program's rollout flag, at the workspace grain like the
+  // confirm-in-chat one. While it is off /dashboard/invite does not exist.
+  const referralEnabled = workspace?.referral_enabled === true;
+  if (initialRoute === 'invite' && !referralEnabled) notFound();
 
   // Join the anonymous visitor id to the account, once, on the first
   // authenticated render after signup. Both signup paths (password, and OAuth
@@ -731,8 +804,12 @@ export default async function DashboardPage({ params }) {
   // case the Overview shows a plain call count and no bar, as it did before
   // the allowance existed.
   let actionAllowance = null;
+  // The Pro feature gate's two switches (lib/plans/pro-features.ts). Each in
+  // its own query, never in the shared workspace select above: before the
+  // gate's migration lands a missing column only closes the gate. Fails closed.
+  let proGateSwitches = { rolloutEnabled: false, publicLaunch: false };
   if (workspace) {
-    const [{ data: memberRow }, { data: effectivePlanRows }, allowance] = await Promise.all([
+    const [{ data: memberRow }, { data: effectivePlanRows }, allowance, proRollout, proLaunch] = await Promise.all([
       supabase
         .from('workspace_members')
         .select('role')
@@ -748,7 +825,14 @@ export default async function DashboardPage({ params }) {
       // user_billing row) is not used for it. The viewer's membership is
       // established by the RLS-filtered workspace list above.
       fetchWorkspaceActionAllowance(createServiceRoleClient(), workspace.id),
+      supabase.from('workspaces').select('pro_features_enabled').eq('id', workspace.id).maybeSingle(),
+      // Server-owned switch (no grant to authenticated), so the service role.
+      createServiceRoleClient().from('pricing_switches').select('enabled').eq('key', PRO_FEATURES_PUBLIC_SWITCH).maybeSingle(),
     ]);
+    proGateSwitches = {
+      rolloutEnabled: !proRollout.error && proRollout.data?.pro_features_enabled === true,
+      publicLaunch: !proLaunch.error && proLaunch.data?.enabled === true,
+    };
     userRole = memberRow?.role ?? 'member';
     effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
     actionAllowance = allowance;
@@ -782,6 +866,13 @@ export default async function DashboardPage({ params }) {
   // Read here for the same reason as the grandfather above.
   const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
+  // Pro features (lib/plans/pro-features.ts): visible = rollout flag OR launch
+  // switch, allowed = visible AND Pro or Business. Only the effective plan the
+  // RPC resolved counts; an unresolved plan stays closed.
+  const proFeatureAccess = decideProFeatureAccess({
+    plan: effectiveWorkspacePlan?.plan ?? null,
+    ...proGateSwitches,
+  });
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -877,12 +968,82 @@ export default async function DashboardPage({ params }) {
   // unlimited inboxes and does not need to be told they were spared anything.
   const inboxesGrandfathered = unlimitedInboxes && !compedScale && plan === 'free';
 
+  // The two facts the Overview's referral tile needs that no client array
+  // holds. Read only while the program is rolled out to this workspace.
+  const referralTileFacts = referralEnabled && workspace
+    ? await fetchReferralTileFacts(supabase, workspace.id, plan)
+    : null;
+
   // The single Streamable HTTP MCP endpoint clients connect to.
   const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
 
   // Live plan prices from Stripe (ISR-cached 1h), so the billing UI never
   // displays hardcoded amounts. Falls back to static cents in plans.ts.
-  const stripePrices = await fetchStripePrices();
+  //
+  // The seasonal first-year offer (Black Week 2026) rides on the same map as
+  // `seasonalOffer` on the Personal and Pro entries, so every upgrade surface
+  // that already receives `stripePrices` can show it. Outside the window, or
+  // with the coupon killed in Stripe, `offers` is {} and the map is unchanged.
+  const [livePrices, seasonalOffers] = await Promise.all([
+    fetchStripePrices(),
+    getActiveSeasonalOffers(),
+  ]);
+  // The billing page's "switch to annual" card, for an owner on monthly
+  // Personal or Pro. The interval is only written down on the Stripe
+  // subscription, so this reads Stripe, but only when an offer exists and the
+  // account could take it (no call at all for the rest of the year).
+  const switchInput = {
+    offers: seasonalOffers,
+    plan,
+    isOwner: workspace?.owner_id === user.id,
+    compedScale,
+  };
+  let seasonalSwitch = null;
+  if (mayOfferSeasonalSwitch(switchInput)) {
+    const { data: billingRow } = await createServiceRoleClient()
+      .from('user_billing')
+      .select('stripe_customer_id, stripe_subscription_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    seasonalSwitch = await getSeasonalSwitchOffer({
+      ...switchInput,
+      stripeCustomerId: billingRow?.stripe_customer_id ?? null,
+      stripeSubscriptionId: billingRow?.stripe_subscription_id ?? null,
+    });
+  }
+  // Which accounts the upgrade surfaces may quote the first-year price to:
+  // a Free workspace (a new subscription through Stripe Checkout), and a paid
+  // one only when it qualifies for the switch, i.e. it is on the CURRENT
+  // monthly Personal or Pro price and has never redeemed the offer. Anyone
+  // else (annual, Business, legacy, comped) would be quoted a price that
+  // checkout-core does not apply to their swap, so they are shown none.
+  const surfaceOffers = plan === 'free' || seasonalSwitch ? seasonalOffers : {};
+  //
+  // The Business founder line rides on the Business entry, for an owner who is
+  // not on Business already (src/lib/stripe/founder-offer.ts). The client
+  // swaps the founder amounts in for its language (zh keeps the normal price).
+  // The seasonal offer never touches Business, so the two do not meet.
+  const founder =
+    workspace?.owner_id === user.id && plan !== 'pro' && !compedScale
+      ? await founderDisplayFor({ ownerId: user.id })
+      : null;
+  const offeredPrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
+  // An owner who already pays the founder price sees Business at that price
+  // ($29 / $278.40), not the $39 list price, on every surface that prices it.
+  const stripePrices =
+    workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&
+    (await ownerIsOnFounderPrice(user.id))
+      ? await withFounderSubscriberPrices(offeredPrices)
+      : offeredPrices;
+
+  // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
+  // until {date}" and the ways to keep it. Null for everyone else, and for a
+  // member viewing someone else's workspace. Tolerant: a failed read is null.
+  const passState = await loadPassBillingState(
+    createServiceRoleClient(),
+    user.id,
+    workspace?.owner_id === user.id,
+  );
 
   return (
     <DashboardApp
@@ -895,6 +1056,9 @@ export default async function DashboardPage({ params }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // Whether this workspace has ever made a tool call. The Overview guide
+        // shows its "waiting for your first call" step only while it has not.
+        firstToolUsed: Boolean(workspace?.analytics_first_tool_used_at),
         // The draft editor card, at the workspace grain. Two separate columns
         // on purpose: `draftEditorEnabled` is OUR rollout gate (internal only
         // in v1, so most workspaces see no control at all) and
@@ -903,6 +1067,21 @@ export default async function DashboardPage({ params }) {
         // deliberately turned it off. See src/lib/drafts/editor-preference.ts.
         draftEditorEnabled: workspace?.draft_editor_enabled === true,
         draftEditorHidden: workspace?.draft_editor_hidden === true,
+        // "Confirm in chat" send review: OUR rollout gate, internal only for
+        // now. Without it the option is not offered (the API refuses it too).
+        chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
+        // The referral program: OUR rollout gate, internal only for now.
+        // Without it there is no Invite entry, tile or code field.
+        referralEnabled,
+        // The Pro feature gate for this workspace: { visible, allowed }.
+        proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
+        // Black Week 2026: the offer for the billing page's switch card, or
+        // null (see src/lib/stripe/seasonal-switch.ts).
+        seasonalSwitch,
+        // Failed-payment banner (components/dashboard/PaymentIssueBanner.jsx).
+        // The owner's own subscription only: a member never sees who pays.
+        subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,
+        lastDeclineCode: workspace?.owner_id === user.id ? ownBilling?.last_decline_code ?? null : null,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}
@@ -913,6 +1092,7 @@ export default async function DashboardPage({ params }) {
       actionAllowance={actionAllowance}
       inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
+      passState={passState}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
       inboxes={inboxes}
@@ -922,6 +1102,7 @@ export default async function DashboardPage({ params }) {
       members={members}
       pendingInvites={pendingInvites}
       supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
+      referralTileFacts={referralTileFacts}
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );

@@ -10,10 +10,13 @@ import {
   acquisitionFromLocation,
   acquisitionFromParams,
   appendAcquisitionParams,
+  connectorSourceFromAuthorize,
   isNewAccountSignup,
   landingFromPath,
+  referralSourceFromLocation,
   safeLandingPath,
   sourceFromHost,
+  sourceFromRefParams,
   sourceFromUtm,
 } from './acquisition-context.mjs';
 
@@ -383,7 +386,7 @@ test('plain product referrals and loose spellings keep their old buckets', () =>
  */
 test('the SQL allowlists and the JS SOURCES set hold exactly the same members', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20261019130000_directory_listing_attribution.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20261025090000_referrals.sql', import.meta.url)),
     'utf8',
   );
 
@@ -512,4 +515,239 @@ test('the locale migration changes only the locale line of the signup trigger', 
     changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
     ['v_locale'],
   );
+});
+
+/* ------------------------------------------- connector sources, SQL/JS */
+
+const CONNECTOR_MIGRATION = '20261022180000_acquisition_connector_sources.sql';
+
+test('the connector migration changes only the three source allowlist lines of the signup trigger', () => {
+  const body = (sql) => sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()')).split('\n');
+  const before = body(migration(LOCALE_MIGRATION));
+  const after = body(migration(CONNECTOR_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_source', 'v_referrer', 'v_utm_source'],
+  );
+});
+
+test('the connector migration only re-pins constraints and the trigger, and changes no row', () => {
+  const code = migration(CONNECTOR_MIGRATION).split('\n').filter((line) => !line.trimStart().startsWith('--')).join('\n');
+  assert.equal(/\b(UPDATE|DELETE|INSERT INTO public\.workspaces)\b/.test(code.slice(0, code.indexOf('CREATE OR REPLACE'))), false);
+  assert.equal(inLists(migration(CONNECTOR_MIGRATION), 'direct').length, 6);
+});
+
+/* ---------------------------------------------- referral source, SQL/JS */
+
+const REFERRAL_MIGRATION = '20261025090000_referrals.sql';
+
+test('the referral migration changes only the three source allowlist lines of the signup trigger', () => {
+  // The trigger body only, up to its closing $$: the referral migration has
+  // more after it (section 8, mcp_tools_call_gate).
+  const body = (sql) => {
+    const from = sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()');
+    return sql.slice(from, sql.indexOf('\n$$;', from) + 4).split('\n');
+  };
+  const before = body(migration(CONNECTOR_MIGRATION));
+  const after = body(migration(REFERRAL_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_source', 'v_referrer', 'v_utm_source'],
+  );
+  for (const index of changed) {
+    assert.equal(after[index], before[index].replace("'connector_other', 'other')", "'connector_other', 'referral', 'other')"));
+  }
+});
+
+test('the referral migration pins the source list in exactly three CHECKs and three trigger guards', () => {
+  assert.equal(inLists(migration(REFERRAL_MIGRATION), 'direct').length, 6);
+  for (const members of inLists(migration(REFERRAL_MIGRATION), 'direct')) assert.ok(members.includes('referral'));
+});
+
+test('acq=referral on the landing URL files the visit as a referral', () => {
+  const url = new URL('https://mcpemails.com/?acq=referral');
+  assert.equal(referralSourceFromLocation(url), 'referral');
+  assert.equal(acquisitionFromLocation(url, new URL('https://www.google.com/')).source, 'referral');
+  // The referrer is still recorded as the channel the link was opened from.
+  assert.equal(acquisitionFromLocation(url, new URL('https://www.reddit.com/')).referrer, 'reddit');
+  // It survives the hop to signup and back through the OAuth callback params.
+  const params = new URLSearchParams();
+  appendAcquisitionParams(params, acquisitionFromLocation(url));
+  assert.equal(acquisitionFromParams(params).source, 'referral');
+});
+
+test('no other acq value on a landing URL is trusted', () => {
+  for (const value of ['claude', 'google_ads', 'Referral', 'referral ', 'x']) {
+    const url = new URL(`https://mcpemails.com/?acq=${encodeURIComponent(value)}`);
+    assert.equal(referralSourceFromLocation(url), null, value);
+    assert.equal(acquisitionFromLocation(url).source, 'direct', value);
+  }
+});
+
+/* ------------------------------------------------- connector installs */
+
+/** The URL /authorize sends a logged-out user to, as in app/authorize/page.js. */
+function loginFor(params, page = '/login') {
+  const returnTo = `/authorize?${new URLSearchParams(params).toString()}`;
+  return new URL(`https://mcpemails.com${page}?redirect=${encodeURIComponent(returnTo)}`);
+}
+
+test('a connector install is named after the client, not filed as direct', () => {
+  const cases = [
+    // CIMD clients: the client_id is a URL on the vendor's own host.
+    [{ client_id: 'https://vscode.dev/oauth/client-metadata.json', redirect_uri: 'http://127.0.0.1:33418/' }, 'connector_vscode'],
+    [{ client_id: 'https://claude.ai/oauth/mcp-oauth-client-metadata', redirect_uri: 'https://claude.ai/api/mcp/auth_callback' }, 'connector_claude'],
+    [{ client_id: 'https://chatgpt.com/oauth/client.json', redirect_uri: 'https://chatgpt.com/connector_platform_oauth_redirect' }, 'connector_chatgpt'],
+    // Dynamically registered clients: the redirect_uri says where the code goes.
+    [{ client_id: 'dyn_abc', redirect_uri: 'https://claude.ai/api/mcp/auth_callback' }, 'connector_claude'],
+    [{ client_id: 'dyn_abc', redirect_uri: 'https://chatgpt.com/connector_platform_oauth_redirect' }, 'connector_chatgpt'],
+    [{ client_id: 'dyn_abc', redirect_uri: 'cursor://anysphere.cursor-mcp/oauth/callback' }, 'connector_cursor'],
+    [{ client_id: 'dyn_abc', redirect_uri: 'https://www.cursor.com/oauth/callback' }, 'connector_cursor'],
+    [{ client_id: 'dyn_abc', redirect_uri: 'vscode://vscode.github-authentication/did-authenticate' }, 'connector_vscode'],
+    [{ client_id: 'dyn_abc', redirect_uri: 'http://127.0.0.1:60864/callback' }, 'connector_other'],
+    [{ client_id: 'dyn_abc' }, 'connector_other'],
+    // Seeded rows: the id is ours.
+    [{ client_id: 'claude-desktop', redirect_uri: 'claude://oauth/callback' }, 'connector_claude'],
+    [{ client_id: 'claude-code', redirect_uri: 'http://localhost:54545/callback' }, 'connector_claude'],
+    [{ client_id: 'cursor-v1' }, 'connector_cursor'],
+    [{ client_id: 'n8n-self-hosted' }, 'connector_other'],
+  ];
+  for (const [params, expected] of cases) {
+    assert.equal(connectorSourceFromAuthorize(loginFor(params)), expected, JSON.stringify(params));
+    const value = acquisitionFromLocation(loginFor(params));
+    assert.equal(value.source, expected);
+    assert.equal(SOURCES.has(expected), true, expected);
+    // Everything else is what it always was: an auth page is not a landing.
+    assert.equal(value.landing, 'other');
+    assert.equal(value.landingPath, '/other');
+    assert.equal(value.referrer, 'direct');
+    assert.equal(value.utmSource, null);
+  }
+});
+
+test('a connector install that starts on /signup counts too, and nothing from the URL is kept', () => {
+  const url = loginFor({ client_id: 'dyn_secret123', redirect_uri: 'https://claude.ai/api/mcp/auth_callback', state: 'state-xyz' }, '/signup');
+  const value = acquisitionFromLocation(url);
+  assert.equal(value.source, 'connector_claude');
+  const stored = JSON.stringify(value);
+  for (const fragment of ['secret123', 'state-xyz', 'auth_callback', 'claude.ai']) {
+    assert.equal(stored.includes(fragment), false, fragment);
+  }
+});
+
+test('a vendor host is matched exactly, never by suffix or by a look-alike scheme', () => {
+  for (const redirect_uri of [
+    'https://claude.ai.evil.example/cb',
+    'https://evilclaude.ai/cb',
+    'https://notchatgpt.com/cb',
+    'http://claude.ai/cb',
+    'x-safari-https://claude.ai/cb',
+    'vscodex://cb',
+  ]) {
+    assert.equal(connectorSourceFromAuthorize(loginFor({ client_id: 'dyn_abc', redirect_uri })), 'connector_other', redirect_uri);
+  }
+  // A CIMD client_id on an unknown host falls through to its redirect_uri.
+  assert.equal(
+    connectorSourceFromAuthorize(loginFor({ client_id: 'https://example.org/client.json', redirect_uri: 'cursor://cb' })),
+    'connector_cursor',
+  );
+});
+
+test('only /login or /signup returning to our own /authorize is a connector install', () => {
+  const plain = new URL('https://mcpemails.com/login');
+  assert.equal(connectorSourceFromAuthorize(plain), null);
+  assert.equal(acquisitionFromLocation(plain).source, 'direct');
+  for (const redirect of ['/dashboard', '//evil.example/authorize?client_id=x', 'https://evil.example/authorize?client_id=x', '/authorize']) {
+    const url = new URL(`https://mcpemails.com/login?redirect=${encodeURIComponent(redirect)}`);
+    assert.equal(connectorSourceFromAuthorize(url), null, redirect);
+  }
+  // Any other page carrying the same redirect is not one either.
+  const blog = new URL(loginFor({ client_id: 'cursor-v1' }).href.replace('/login', '/blog'));
+  assert.equal(connectorSourceFromAuthorize(blog), null);
+});
+
+test('a connector install wins over a referrer, a tagged link wins over both', () => {
+  const url = loginFor({ client_id: 'dyn_abc', redirect_uri: 'https://claude.ai/api/mcp/auth_callback' });
+  const withReferrer = acquisitionFromLocation(url, new URL('https://claude.ai/'));
+  assert.equal(withReferrer.source, 'connector_claude');
+  assert.equal(withReferrer.referrer, 'claude');
+
+  url.searchParams.set('utm_source', 'smithery');
+  assert.equal(acquisitionFromLocation(url).source, 'smithery');
+});
+
+test('a connector source survives the OAuth query round trip', () => {
+  for (const source of ['connector_claude', 'connector_chatgpt', 'connector_cursor', 'connector_vscode', 'connector_other', 'gemini', 'copilot']) {
+    const params = new URLSearchParams();
+    appendAcquisitionParams(params, { source, landing: 'other', landingPath: '/other' });
+    assert.equal(acquisitionFromParams(params).source, source);
+  }
+});
+
+/* ------------------------------------------------- misfiled referrers */
+
+test('Gemini and Copilot get their own bucket, and Gemini is checked before google.com', () => {
+  assert.equal(sourceFromHost('gemini.google.com'), 'gemini');
+  assert.equal(sourceFromHost('copilot.microsoft.com'), 'copilot');
+  assert.equal(sourceFromHost('www.google.com'), 'organic_google');
+  assert.equal(sourceFromHost('microsoft.com'), 'other');
+  assert.equal(
+    acquisitionFromLocation(new URL('https://mcpemails.com/'), new URL('https://gemini.google.com/app/abc')).source,
+    'gemini',
+  );
+  assert.equal(sourceFromUtm('gemini'), 'gemini');
+  assert.equal(sourceFromUtm('copilot.microsoft.com'), 'copilot');
+});
+
+test('the Android Google app counts as organic Google', () => {
+  const value = acquisitionFromLocation(
+    new URL('https://mcpemails.com/connect/gmail'),
+    new URL('android-app://com.google.android.googlequicksearchbox/https/www.google.com'),
+  );
+  assert.equal(value.source, 'organic_google');
+  assert.equal(value.referrer, 'organic_google');
+});
+
+test("Google's country domains count as organic Google", () => {
+  for (const host of ['google.de', 'www.google.no', 'www.google.co.uk', 'google.com.au', 'www.google.fr', 'www.google.co.jp']) {
+    assert.equal(sourceFromHost(host), 'organic_google', host);
+  }
+  for (const host of ['notgoogle.de', 'google.de.evil.example', 'google.example', 'googleusercontent.com']) {
+    assert.equal(sourceFromHost(host), 'other', host);
+  }
+});
+
+/* ------------------------------------------------------ ref and source */
+
+test('?ref= and ?source= name a known channel when utm_source is absent', () => {
+  const cases = [
+    ['https://mcpemails.com/?ref=mcpservers', 'mcpservers'],
+    ['https://mcpemails.com/?ref=producthunt', 'direct'],
+    ['https://mcpemails.com/?source=smithery', 'smithery'],
+    ['https://mcpemails.com/?ref=github_punkpeye', 'github_punkpeye'],
+    ['https://mcpemails.com/?ref=nav', 'direct'],
+    ['https://mcpemails.com/?ref=jane&source=glama', 'glama'],
+    ['https://mcpemails.com/?ref=glama&utm_source=reddit', 'reddit'],
+  ];
+  for (const [href, expected] of cases) {
+    assert.equal(acquisitionFromLocation(new URL(href)).source, expected, href);
+  }
+  // ref is not a utm_source, so the utm column stays empty.
+  assert.equal(acquisitionFromLocation(new URL('https://mcpemails.com/?ref=glama')).utmSource, null);
+  assert.equal(sourceFromRefParams(new URLSearchParams('ref=someone')), null);
+});
+
+test('a tagged ref beats the referrer it came with', () => {
+  const value = acquisitionFromLocation(
+    new URL('https://mcpemails.com/?ref=github_bestof'),
+    new URL('https://github.com/some/list'),
+  );
+  assert.equal(value.source, 'github_bestof');
+  assert.equal(value.referrer, 'github');
 });

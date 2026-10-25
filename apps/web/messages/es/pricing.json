@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/para siempre",
     "perMonth": "/mes",
-    "billedYearly": "Facturado ${total}/año"
+    "billedYearly": "Facturado ${total}/año",
+    "inclVat": "IVA incluido"
   },
   "plans": {
     "free": {
@@ -51,13 +52,20 @@
     },
     "solo": {
       "name": "Pro",
+      "tagline": "Configúralo en el chat. Sigue funcionando cuando lo cierras.",
       "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
       "cta": "Obtener Pro",
       "features": [
         "Todo lo de Personal",
         "10 bandejas conectadas",
         "Límite de ráfaga 5x más alto",
-        "Más historial de analíticas"
+        "Más historial de analíticas",
+        "Recordatorios cuando nadie responde a un correo que enviaste",
+        "Posponer: el correo sale de la bandeja de entrada y vuelve cuando tú elijas",
+        "Un resumen cada mañana, directamente en tu bandeja de entrada",
+        "Busca en todas tus bandejas conectadas a la vez",
+        "Instrucciones para tu IA, por bandeja",
+        "Webhooks para el correo nuevo"
       ]
     },
     "pro": {
@@ -69,7 +77,8 @@
         "10 buzones incluidos, $3 al mes por cada buzón extra",
         "Miembros ilimitados con roles, sin coste adicional",
         "Los administradores aprueban los envíos en espera",
-        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente"
+        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente",
+        "Webhooks para el correo nuevo"
       ]
     }
   },
@@ -96,6 +105,7 @@
           "inboxes": "Bandejas conectadas",
           "actions": "Acciones de correo al mes",
           "keys": "Claves de API",
+          "webhooks": "Webhooks para el correo nuevo",
           "members": "Personas con acceso",
           "burst": "Límite de ráfaga",
           "approvals": "Aprobación antes de enviar"
@@ -113,6 +123,16 @@
       },
       "mcpTools": {
         "label": "Herramientas MCP"
+      },
+      "chatClosed": {
+        "label": "Cuando el chat está cerrado",
+        "rows": {
+          "followUps": "Recordatorios de seguimiento de correos enviados",
+          "snooze": "Posponer correo hasta la hora que elijas",
+          "brief": "Resumen matinal en tu bandeja de entrada",
+          "searchAll": "Búsqueda en todas las bandejas a la vez",
+          "instructions": "Instrucciones para tu IA, por bandeja"
+        }
       },
       "analytics": {
         "label": "Analíticas y seguridad",
@@ -164,11 +184,11 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente puede leer, buscar, organizar, etiquetar, redactar, programar y enviar en ese buzón, y la aprobación antes de enviar, configurable por bandeja, está incluida. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
-        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo demás ya está en Free: todas las herramientas MCP, incluidos los envíos programados, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. No retenemos funciones en Free para que los planes de pago parezcan más grandes."
+        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
       },
       {
         "q": "¿Qué cuenta como una acción de correo?",
@@ -184,7 +204,7 @@
       },
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Business?",
-        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte por correo. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto."
+        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte por correo. Pro además sigue trabajando con el chat cerrado: recordatorios de seguimiento de correos enviados, posponer, un resumen cada mañana en tu bandeja de entrada, una sola búsqueda en todas tus bandejas conectadas e instrucciones para tu IA por bandeja. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto. Incluye todo lo de Pro."
       },
       {
         "q": "Somos una empresa con varios buzones. ¿Qué plan necesitamos?",
@@ -220,6 +240,16 @@
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
     "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
-    "ctaSecondary": "Lee la documentación"
+    "ctaSecondary": "Lee la documentación",
+    "subFounder": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 con el precio fundador de arriba, con $3 al mes por cada uno adicional."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
+    "ends": "Termina el {date} a las {time}, hora de Oslo."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}"
   }
 }

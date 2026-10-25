@@ -29,6 +29,8 @@ type EffectivePlanRow = {
   unlimited_inboxes: boolean;
   /** Pro cap cutover exemption / kill switch (20261019150000). Absent = false. */
   pro_unlimited_inboxes?: boolean;
+  /** Active referral month on a Free workspace (20261025090000). Absent = false. */
+  referral_personal?: boolean;
 };
 
 /**
@@ -39,7 +41,12 @@ type EffectivePlanRow = {
  */
 function fakeSupabase(opts: {
   effectivePlan: EffectivePlanRow | null;
+  /** Live inboxes that are NOT parked. */
   inboxCount: number;
+  /** Live inboxes that are parked (20261024173000). Absent = 0. */
+  parkedCount?: number;
+  /** Answer a `parked_at` filter as PostgREST does before the migration. */
+  parkedColumnMissing?: boolean;
   /** Addresses that already have a live inbox in this workspace. */
   existingEmails?: string[];
 }) {
@@ -52,17 +59,29 @@ function fakeSupabase(opts: {
     from(table: string) {
       assert.equal(table, 'inboxes');
       let email: string | null = null;
+      let excludesParked = false;
       const builder = {
         select: () => builder,
         eq: (column: string, value: string) => {
           if (column === 'email_address') email = value;
           return builder;
         },
-        is: () => builder,
+        is: (column: string) => {
+          if (column === 'parked_at') excludesParked = true;
+          return builder;
+        },
         maybeSingle: () => Promise.resolve({ data: email && existing.has(email) ? { id: 'inbox-1' } : null, error: null }),
         // The count query is awaited directly, without .maybeSingle().
-        then: (resolve: (v: unknown) => unknown) =>
-          Promise.resolve({ count: opts.inboxCount, error: null }).then(resolve),
+        then: (resolve: (v: unknown) => unknown) => {
+          if (excludesParked && opts.parkedColumnMissing) {
+            return Promise.resolve({
+              count: null,
+              error: { code: '42703', message: 'column inboxes.parked_at does not exist' },
+            }).then(resolve);
+          }
+          const count = opts.inboxCount + (excludesParked ? 0 : opts.parkedCount ?? 0);
+          return Promise.resolve({ count, error: null }).then(resolve);
+        },
       };
       return builder;
     },
@@ -380,4 +399,92 @@ test('the Pro exemption does not lift Personal or Free', async () => {
     );
     assert.equal(result.atLimit, true, `${plan} stays capped at ${cap}`);
   }
+});
+
+test('a Free workspace with an active referral month is checked as Personal', async () => {
+  const fourth = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 2,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(fourth.atLimit, false, 'a second and third inbox are allowed during the month');
+  assert.equal(fourth.maxInboxes, 3);
+  assert.equal(fourth.plan, 'personal');
+  assert.equal(fourth.planName, 'Personal');
+  assert.equal(fourth.referralPersonal, true);
+
+  const capped = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 3,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(capped.atLimit, true, 'Personal limits, not unlimited');
+});
+
+test('referral_personal is ignored on a paid plan and absent means Free limits', async () => {
+  const paid = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 4,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(paid.plan, 'solo');
+  assert.equal(paid.referralPersonal, false);
+
+  const expired = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: false },
+      inboxCount: 1,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(expired.atLimit, true);
+  assert.equal(expired.maxInboxes, 1);
+  assert.equal(expired.plan, 'free');
+});
+
+// ── Parking (20261024173000) ────────────────────────────────────────────────
+
+test('a parked inbox does not hold a slot: a Free workspace with one parked inbox can connect one', async () => {
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 0,
+      parkedCount: 4,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.currentCount, 0);
+  assert.equal(result.atLimit, false);
+});
+
+test('the active inbox still counts while others are parked', async () => {
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 1,
+      parkedCount: 4,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.currentCount, 1);
+  assert.equal(result.atLimit, true);
+});
+
+test('before the parking migration, the count falls back to every live inbox rather than to zero', async () => {
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 1,
+      parkedColumnMissing: true,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.currentCount, 1);
+  assert.equal(result.atLimit, true);
 });

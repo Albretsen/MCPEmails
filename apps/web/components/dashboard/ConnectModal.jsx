@@ -11,10 +11,14 @@ import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { Link } from '@/i18n/navigation';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer, splitSharedFeatures } from '@/lib/billing/inbox-cap-offer.mjs';
-import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
+import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
+import FounderPriceNote from './FounderPriceNote';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
   PlanCheckoutLink,
+  ProPriceAppNotice,
+  SeasonalOfferNote,
   SharedIntervalChoice,
 } from './UpgradeIntervalChoice';
 import { planDisplayName } from './Pages';
@@ -35,13 +39,52 @@ import {
 // node:dns and cannot be pulled into a client bundle.
 import { ALLOWED_MAIL_PORTS, allowedMailPorts } from '@/lib/email/mail-ports';
 import { useToast } from './Toast';
-import { emailDomain, prefillFromDomain } from '@/lib/email-providers/host-presets';
+import { emailDomain, findMailHostPreset, prefillFromDomain } from '@/lib/email-providers/host-presets';
 import { isMicrosoftConsumerAddress } from '@/lib/email-providers/microsoft-accounts';
 import {
   identifyAppPasswordProvider,
   checkAppPasswordShape,
 } from '@/lib/email-providers/app-password';
-import { authFailureHelp } from '@/lib/email/auth-failure-help';
+import { authFailureHelp, connectFix } from '@/lib/email/auth-failure-help';
+import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+
+/**
+ * The connect check that outlives the modal.
+ *
+ * A check runs 20 to 40 seconds with the relay, and people close the modal
+ * while it runs and open it again. The request keeps going either way (see
+ * `mountedRef`), so its answer is kept here, at module scope, for the next
+ * modal to pick up: a failure reopens on the same form with the same fix, and
+ * a check still in flight shows its progress line again instead of a blank
+ * form. The password is never kept.
+ *
+ *   pending  { snapshot, startedAt }  a check is in flight
+ *   outcome  { snapshot, kind, status, data, at }  a check answered while no modal was open
+ *   listener the open modal that wants the in-flight answer, if any
+ */
+const checkMemory = { pending: null, outcome: null, listener: null };
+/** How long a kept failure is still worth reopening on. */
+const CHECK_MEMORY_TTL_MS = 15 * 60 * 1000;
+
+/** Exported for tests only. */
+export function resetConnectCheckMemoryForTests() {
+  checkMemory.pending = null;
+  checkMemory.outcome = null;
+  checkMemory.listener = null;
+}
+
+/** Display names for the client the post-connect screen names. */
+const CLIENT_NAMES = {
+  claude: 'Claude', chatgpt: 'ChatGPT', cursor: 'Cursor', vscode: 'VS Code', cline: 'Cline',
+  windsurf: 'Windsurf', gemini: 'Gemini', zed: 'Zed', jetbrains: 'JetBrains', raycast: 'Raycast', warp: 'Warp',
+};
+
+/**
+ * Generated tokens from providers outside the six app-password policies that
+ * are still shown in groups, so a pasted space is never part of the secret.
+ * T-Online is not here: its mail-program password is chosen by the user.
+ */
+const GENERATED_TOKEN_PRESETS = new Set(['aol', 'qq', 'mail-ru', 'infomaniak']);
 
 /**
  * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
@@ -593,8 +636,32 @@ export function ConnectModal({
   // rides on the rows this modal already writes and changes nothing on screen.
   entryPoint = null,
   supportVisible = false, // SUPPORT_RELEASE_GATE
+  // 'outlook_cancelled' when the Outlook callback came back with the person
+  // having declined Microsoft's consent screen (App.jsx reads ?error=).
+  returnNotice = null,
+  // True for the workspace's first inbox: after it connects, the modal stays
+  // open on a "Now connect your AI app" screen instead of closing.
+  showNextStepAfterConnect = false,
+  // Opens the Overview client guide (GettingStartedGuide / ClientGuideModal)
+  // with the given client preselected. Called from that last screen.
+  onOpenClientGuide = null,
+  // The client chosen during onboarding, when the page already knows it.
+  onboardingClient = null,
 }) {
   const tr = useTranslations('dashboardChrome');
+  /**
+   * A check this modal should pick up from a previous one (see checkMemory):
+   * read once, on mount, and only for an ordinary connect. Seeds the initial
+   * provider, step and form below so the form is back before the first paint.
+   */
+  const [restored] = useState(() => {
+    if (reconnect != null || preselect || atInboxLimit || returnNotice) return null;
+    if (checkMemory.outcome && Date.now() - checkMemory.outcome.at < CHECK_MEMORY_TTL_MS) {
+      return { kind: 'outcome', ...checkMemory.outcome };
+    }
+    if (checkMemory.pending) return { kind: 'pending', ...checkMemory.pending };
+    return null;
+  });
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
   // survives the modal being closed. That is what makes it safe to let someone
   // walk away from a verification that is still running: see `deliverOutcome`.
@@ -622,17 +689,23 @@ export function ConnectModal({
     ? preselect
     : null;
   const seedForm = seed?.card === 'generic' ? (seed.form ?? null) : null;
-  const [provider, setProvider] = useState(reconnectProvider ?? seed?.card ?? 'generic');
-  const [step, setStep] = useState(isReconnect ? 2 : 1);
+  const restoredSnapshot = restored?.snapshot ?? null;
+  const [provider, setProvider] = useState(
+    reconnectProvider ?? seed?.card ?? restoredSnapshot?.provider ?? (returnNotice === 'outlook_cancelled' ? 'outlook' : 'generic')
+  );
+  // 1 = provider, 2 = credentials, 3 = connected ("Now connect your AI app").
+  const [step, setStep] = useState(isReconnect || restoredSnapshot ? 2 : 1);
   /**
    * Which halves of a generic IMAP/SMTP mailbox this connection carries:
    * 'both', 'imap' (receive only) or 'smtp' (send only). A receive-only
    * mailbox has no SMTP server to give and a send-only one has no IMAP server,
    * and requiring both shut either out. A reconnect keeps the mode the inbox
-   * was stored with, for the same reason it keeps the hosts.
+   * was stored with, for the same reason it keeps the hosts: Reconnect means
+   * "re-enter my password". The type is changed on the inbox itself, under
+   * Advanced > Connection type (ConnectionTypeEditor.jsx).
    */
-  const [connectionMode, setConnectionMode] = useState(reconnect?.connectionMode ?? 'both');
-  const [form, setForm] = useState(() => ({
+  const [connectionMode, setConnectionMode] = useState(reconnect?.connectionMode ?? restoredSnapshot?.connectionMode ?? 'both');
+  const [form, setForm] = useState(() => restoredSnapshot ? { ...restoredSnapshot.form, password: '' } : ({
     email: reconnect?.address ?? '',
     username: reconnect?.username ?? '',
     password: '',
@@ -662,17 +735,17 @@ export function ConnectModal({
    * host falls back to the same defaults a fresh connect starts from.
    */
   const reconnectZoho = isReconnect ? zohoSettingsFromHost(reconnect?.imapHost) : null;
-  const [zohoRegion, setZohoRegion] = useState(reconnectZoho?.region ?? DEFAULT_ZOHO_REGION);
+  const [zohoRegion, setZohoRegion] = useState(reconnectZoho?.region ?? restoredSnapshot?.zohoRegion ?? DEFAULT_ZOHO_REGION);
   const [zohoAccountType, setZohoAccountType] = useState(
-    reconnectZoho?.accountType ?? DEFAULT_ZOHO_ACCOUNT_TYPE
+    reconnectZoho?.accountType ?? restoredSnapshot?.zohoAccountType ?? DEFAULT_ZOHO_ACCOUNT_TYPE
   );
   // Optional login override for Yandex 360 custom-domain accounts whose IMAP
   // login differs from the email address. Blank → authenticate with the email.
   // On a reconnect of a Yandex inbox, seed it with the stored login.
   const [yandexLogin, setYandexLogin] = useState(
-    isReconnect && reconnectProvider === 'yandex' ? (reconnect.username ?? '') : ''
+    isReconnect && reconnectProvider === 'yandex' ? (reconnect.username ?? '') : (restoredSnapshot?.yandexLogin ?? '')
   );
-  const [yandexAccountType, setYandexAccountType] = useState('personal');
+  const [yandexAccountType, setYandexAccountType] = useState(restoredSnapshot?.yandexAccountType ?? 'personal');
   const [lastFailure, setLastFailure] = useState({ code: null, count: 0 });
   // Set when a connect route answers 402 inbox_limit_reached. The client-side
   // `atInboxLimit` prop is computed from the inbox list this page loaded with,
@@ -682,7 +755,19 @@ export function ConnectModal({
   // prop would have shown, rather than printing the route's unlocalised
   // fallback sentence as a form error.
   const [serverLimit, setServerLimit] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  // A check still in flight from a modal that was closed shows as running here.
+  const [submitting, setSubmitting] = useState(restored?.kind === 'pending');
+  /** When the running check started, for the progress line. */
+  const [checkStartedAt, setCheckStartedAt] = useState(restored?.kind === 'pending' ? restored.startedAt : null);
+  /** Ticks once a second while a check runs, so the progress line can move on. */
+  const [checkNow, setCheckNow] = useState(() => Date.now());
+  /**
+   * What the last failure was about, for the fix table: the route's code,
+   * auth_reason, phase, host and relay flags. Cleared with the error.
+   */
+  const [failureContext, setFailureContext] = useState(null);
+  /** The client named on the "Now connect your AI app" screen. */
+  const [doneClient, setDoneClient] = useState(onboardingClient);
   const [formError, setFormError] = useState(null);
   /**
    * The fields the last failed submit was actually about.
@@ -974,6 +1059,9 @@ export function ConnectModal({
   // offer from Personal alone to Personal and Pro side by side. The rule that
   // decides that is inboxCapOffer's, not this component's.
   const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped });
+  // The Business founder price swaps the $39 sentences for founder ones
+  // while it is open; every other offer keeps its own keys.
+  const capCopy = founderCapCopy(upgradeCopy, stripePrices);
 
   // MONTHLY, deliberately, and it stays monthly unless the person picks
   // otherwise. This panel used to have no interval at all and always bought
@@ -1312,6 +1400,7 @@ export function ConnectModal({
     setAuthReason(null);
     setSessionExpired(false);
     setShownFailureCode(null);
+    setFailureContext(null);
   };
 
   /**
@@ -1514,6 +1603,82 @@ export function ConnectModal({
     providerLabel: appPasswordProvider,
   });
 
+  /**
+   * The fix table's input for one failure (lib/email/auth-failure-help.ts
+   * connectFix): the route's code, reason, phase, host and relay flags, and
+   * what is typed in the form now. Never the password.
+   */
+  const fixInputFor = context => ({
+    card: provider,
+    errorCode: context?.code ?? null,
+    reason: context?.reason ?? null,
+    phase: context?.phase ?? null,
+    host: context?.host ?? null,
+    email: form.email,
+    username: isGeneric ? form.username : null,
+    imapHost: isGeneric ? form.imapHost : null,
+    smtpHost: isGeneric ? form.smtpHost : null,
+    relayFailed: context?.relayFailed === true,
+    imapOk: context?.imapOk === true,
+    connectionMode: isGeneric ? connectionMode : null,
+    providerLabel: appPasswordProvider,
+  });
+  /** The one fix block under the error, or null. */
+  const fix = failureContext ? connectFix(fixInputFor(failureContext)) : null;
+  const fixEventFields = fix
+    ? { provider: fix.analyticsProvider, authReason: failureContext?.reason ?? null, phase: failureContext?.phase ?? null }
+    : null;
+
+  // connect_fix_shown, once per failure that renders a fix (errorSeq moves on
+  // every failure, including a repeat of the same one).
+  const fixShownForSeq = useRef(null);
+  const fixRow = fix?.row ?? null;
+  useEffect(() => {
+    if (!fixRow || !fixEventFields || fixShownForSeq.current === errorSeq) return;
+    fixShownForSeq.current = errorSeq;
+    recordActivationEvent('connect_fix_shown', fixEventFields);
+    // fixEventFields is derived from the same failure as fixRow and errorSeq.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixRow, errorSeq]);
+
+  const onFixLinkClick = () => {
+    if (fixEventFields) recordActivationEvent('connect_fix_link_clicked', fixEventFields);
+  };
+
+  // The progress line moves on while a check runs; see `checkProgressKey`.
+  useEffect(() => {
+    if (!submitting) return undefined;
+    const id = window.setInterval(() => setCheckNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [submitting]);
+
+  /**
+   * Pick up a check from a modal that was closed while it ran (checkMemory).
+   * A kept failure is shown as if it had just come back; a check still in
+   * flight registers this modal to receive its answer. State is written from
+   * a timer or the callback, never in the effect body.
+   */
+  const handleCheckResultRef = useRef(null);
+  useEffect(() => {
+    if (!restored) return undefined;
+    if (restored.kind === 'outcome') {
+      checkMemory.outcome = null;
+      const id = window.setTimeout(() => handleCheckResultRef.current?.(restored.result, restored.email), 0);
+      return () => window.clearTimeout(id);
+    }
+    const listener = (result, email) => {
+      if (checkMemory.listener === listener) checkMemory.listener = null;
+      if (!mountedRef.current) return;
+      setSubmitting(false);
+      setCheckStartedAt(null);
+      handleCheckResultRef.current?.(result, email);
+    };
+    checkMemory.listener = listener;
+    return () => {
+      if (checkMemory.listener === listener) checkMemory.listener = null;
+    };
+  }, [restored]);
+
   // ── The notices, as text ───────────────────────────────────────────────────
   // Computed once, here, rather than inline in the JSX, because each of them is
   // needed twice: once for the span the user reads and once for the announcer
@@ -1560,7 +1725,13 @@ export function ConnectModal({
 
   // ── Step 2: credentials submission ─────────────────────────────────────────
 
-  const handleAppPasswordSubmit = async () => {
+  /**
+   * `overrides.mode` lets "Connect for reading only" submit as receive-only in
+   * the same click, before the mode change has rendered. Called from an
+   * onClick it receives the click event, which has no `mode`.
+   */
+  const handleAppPasswordSubmit = async (overrides) => {
+    const submitMode = typeof overrides?.mode === 'string' ? overrides.mode : connectionMode;
     showError(null);
 
     const email = form.email.trim().toLowerCase();
@@ -1576,8 +1747,14 @@ export function ConnectModal({
     // spaces out of it is as right there as on the branded card. A generic
     // mailbox we cannot identify keeps its whitespace: that value is a real
     // account password and a space in it may well be deliberate.
+    // The generated tokens of the providers the fix table names (AOL, QQ,
+    // Mail.ru, Infomaniak) get the same treatment once the address or host
+    // identifies one.
+    const generatedToken = isGeneric && GENERATED_TOKEN_PRESETS.has(
+      findMailHostPreset({ email: form.email, host: form.imapHost })?.id ?? ''
+    );
     const appPassword =
-      isGeneric && !activePolicy?.requiresAppPassword
+      isGeneric && !activePolicy?.requiresAppPassword && !generatedToken
         ? form.password.trim()
         : normalizeAppPassword(form.password);
 
@@ -1620,8 +1797,8 @@ export function ConnectModal({
       // Digits that cannot be used as a port were just stripped off a host
       // field. Submitting anyway would connect on the default port, which is
       // not what the user asked for, so stop and say which ports are accepted.
-      const withImap = connectionMode !== 'smtp';
-      const withSmtp = connectionMode !== 'imap';
+      const withImap = submitMode !== 'smtp';
+      const withSmtp = submitMode !== 'imap';
       // A half the connection type leaves out is neither checked nor sent: its
       // fields are hidden, and anything still in them was typed before the
       // user switched type.
@@ -1668,7 +1845,7 @@ export function ConnectModal({
       // sent with implicit TLS and fail the handshake.
       const imapSecurity = (imapParsed.port !== null ? securityForPort('imap', imapPort) : null) ?? form.imapSecurity;
       const smtpSecurity = (smtpParsed.port !== null ? securityForPort('smtp', smtpPort) : null) ?? form.smtpSecurity;
-      body = { email, username, appPassword, mode: connectionMode };
+      body = { email, username, appPassword, mode: submitMode };
       if (withImap) Object.assign(body, { imapHost, imapPort, imapSecurity });
       if (withSmtp) Object.assign(body, { smtpHost, smtpPort, smtpSecurity });
     }
@@ -1709,15 +1886,67 @@ export function ConnectModal({
       return;
     }
 
+    // Kept for the next modal if this one is closed mid-check (checkMemory).
+    // Never the password. A reconnect is not kept: it reopens from its row.
+    const startedAt = Date.now();
+    const snapshot = isReconnect
+      ? null
+      : {
+          provider,
+          connectionMode: submitMode,
+          form: { ...form, password: '' },
+          zohoRegion,
+          zohoAccountType,
+          yandexLogin,
+          yandexAccountType,
+        };
+    if (snapshot) {
+      checkMemory.pending = { snapshot, startedAt };
+      checkMemory.outcome = null;
+    }
     setSubmitting(true);
+    setCheckStartedAt(startedAt);
+    setCheckNow(startedAt);
+    let result;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-
       const data = await response.json();
+      result = { ok: response.ok, status: response.status, data };
+    } catch {
+      result = { network: true };
+    }
+    if (snapshot && checkMemory.pending?.snapshot === snapshot) checkMemory.pending = null;
+
+    if (mountedRef.current) {
+      setSubmitting(false);
+      setCheckStartedAt(null);
+      handleCheckResult(result, email);
+      return;
+    }
+    // Closed mid-check, and a new modal is open waiting for this answer.
+    if (snapshot && checkMemory.listener) {
+      checkMemory.listener(result, email);
+      return;
+    }
+    // Closed and not reopened: the toast (and onConnect) below, and the
+    // failure kept for the next open.
+    handleCheckResult(result, email);
+    if (snapshot && !result.ok) checkMemory.outcome = { snapshot, result, email, at: Date.now() };
+  };
+
+  /**
+   * Turn one connect answer into what the user sees. Called by the modal that
+   * sent it, or by a newer modal that picked the check up (checkMemory).
+   */
+  const handleCheckResult = (result, email) => {
+    try {
+      if (result.network) throw new Error('network');
+      const data = result.data ?? {};
+      const response = { ok: result.ok, status: result.status };
 
       if (!response.ok) {
         // A plan cap is not a credential problem. Rendering `data.error` here
@@ -1785,6 +2014,18 @@ export function ConnectModal({
 
         setLastFailure({ code, count });
         setAuthReason(reason);
+        const context = {
+          code,
+          reason: typeof data.auth_reason === 'string' ? data.auth_reason : null,
+          phase: typeof data.phase === 'string' ? data.phase : null,
+          host: typeof data.host === 'string' ? data.host : null,
+          relayFailed: data.relay_failed === true,
+          imapOk: data.imap_ok === true,
+        };
+        setFailureContext(context);
+        // The row the panel will show, decided here as well so the password
+        // field is cleared only when the password is the thing to replace.
+        const nextFix = connectFix(fixInputFor(context));
         setSessionExpired(code === SESSION_EXPIRED_CODE);
         setShownFailureCode(code);
         setFormError(headline);
@@ -1846,7 +2087,15 @@ export function ConnectModal({
         // rather than edited, so hand the field back ready to overwrite. Only
         // for auth failures: stealing focus when the fix is a host or a port
         // would move the user away from the field they need.
-        if (code === 'auth_failed' && reason !== 'provider_refused_signin' && passwordRef.current) {
+        if (nextFix?.passwordProblem) {
+          // The fix row says the password is the problem (an account password
+          // where an app password belongs, or a plain rejection): clear only
+          // that field and put the cursor in it, ready for the new one. Every
+          // other field keeps what was typed, so "Test again" re-sends it.
+          setForm(f => ({ ...f, password: '' }));
+          shapeWarnedFor.current = null;
+          if (passwordRef.current) passwordRef.current.focus();
+        } else if (code === 'auth_failed' && reason !== 'provider_refused_signin' && passwordRef.current) {
           // Arm the one-shot select first: taking focus fires the focus
           // handler, which spends the flag, so the contents are selected
           // exactly once per rejection and never on an ordinary click-back.
@@ -1906,13 +2155,32 @@ export function ConnectModal({
       // inbox list and the success toast, and it is still on screen either way:
       // a connection that succeeded after the user walked away is still a
       // connection, and the row has to appear.
+      // A first inbox ends on "Now connect your AI app" rather than a bare
+      // list, so the modal stays open (keepOpen) and moves to step 3. Only
+      // when it is still on screen: a check that lands after the modal closed
+      // behaves as before.
+      const keepOpen = Boolean(showNextStepAfterConnect) && mountedRef.current;
+      checkMemory.outcome = null;
       onConnect({
         provider: optimisticProvider,
         address: email,
         label: optimisticLabel,
         connectionMethod,
         transport,
+        keepOpen,
       });
+      if (keepOpen) {
+        showError(null);
+        setStep(3);
+        if (!doneClient) {
+          fetch('/api/onboarding', { headers: { Accept: 'application/json' } })
+            .then(res => (res.ok ? res.json() : null))
+            .then(row => {
+              if (mountedRef.current && typeof row?.onboarding_client === 'string') setDoneClient(row.onboarding_client);
+            })
+            .catch(() => { /* the screen works without a named client */ });
+        }
+      }
     } catch {
       // A dropped connection or an aborted request. Same rule as above: say so
       // where the user can see it, wherever that now is.
@@ -1924,9 +2192,52 @@ export function ConnectModal({
           variant: 'error',
         });
       }
-    } finally {
-      if (mountedRef.current) setSubmitting(false);
     }
+  };
+
+  useEffect(() => {
+    handleCheckResultRef.current = handleCheckResult;
+  });
+
+  /**
+   * What the progress line says while a check runs.
+   *
+   * The browser cannot see which half the server is on, so this follows the
+   * order the routes check in (login, then sending) on a clock: an IMAP login
+   * answers in a few seconds when it answers at all, so after six seconds the
+   * check is most likely on the sending half. Past 25 seconds it says the
+   * check is slow rather than guessing further. A receive-only connection has
+   * no sending step, and a send-only one has no login step of its own here.
+   */
+  const checkElapsed = submitting && checkStartedAt ? Math.max(0, checkNow - checkStartedAt) : 0;
+  const checksLogin = !(isGeneric && connectionMode === 'smtp');
+  const checksSending = !(isGeneric && connectionMode === 'imap');
+  const checkProgressKey = checkElapsed >= 25000
+    ? 'connect.fix.progressSlow'
+    : checksSending && (!checksLogin || checkElapsed >= 6000)
+      ? 'connect.fix.progressSending'
+      : 'connect.fix.progressLogin';
+
+  /** "Use imap.example.com": put the documented servers in, then Test again. */
+  const applySuggestedHost = () => {
+    const suggestion = fix?.suggestedHost;
+    if (!suggestion) return;
+    setForm(f => ({
+      ...f,
+      imapHost: suggestion.imapHost,
+      imapPort: suggestion.imapPort,
+      imapSecurity: suggestion.imapSecurity,
+      smtpHost: suggestion.smtpHost,
+      smtpPort: suggestion.smtpPort,
+      smtpSecurity: suggestion.smtpSecurity,
+    }));
+  };
+
+  /** "Connect for reading only": switch the type and test again in one click. */
+  const connectReadOnly = () => {
+    setConnectionMode('imap');
+    setAdvancedOpen(true);
+    handleAppPasswordSubmit({ mode: 'imap' });
   };
 
   const handleBackToProviders = () => {
@@ -2230,7 +2541,9 @@ export function ConnectModal({
                   ? tr('connect.titleLimitReached')
                   : isReconnect
                     ? tr('connect.titleReconnectProvider', { provider: providerLabel() })
-                    : step === 2
+                    : step === 3
+                      ? tr('connect.fix.done.title')
+                      : step === 2
                       ? tr('connect.titleConnectProvider', { provider: providerLabel() })
                       : tr('connect.titleConnectInbox')}
               </h2>
@@ -2239,6 +2552,10 @@ export function ConnectModal({
                   ? (typeof limitInboxCount === 'number' && typeof limitMaxInboxes === 'number'
                       ? tr('connect.subLimitReached', { plan: limitPlanName, count: limitInboxCount, max: limitMaxInboxes })
                       : tr('connect.subLimitReachedNoCount', { plan: limitPlanName }))
+                  : step === 3
+                    ? (CLIENT_NAMES[doneClient]
+                        ? tr('connect.fix.done.bodyClient', { client: CLIENT_NAMES[doneClient] })
+                        : tr('connect.fix.done.body'))
                   : step === 1
                     ? tr('connect.subChooseProvider')
                     : isGeneric
@@ -2332,8 +2649,12 @@ export function ConnectModal({
                     color: 'var(--fg-3)',
                     lineHeight: 1.5,
                   }}>
-                    {tr(upgradeCopy.bodyKey)}
+                    {tr(capCopy.bodyKey)}
                   </div>
+                  {!upgradeCopy.dual && (
+                    <ProPriceAppNotice plans={[upgradeCopy.plan]} style={{ marginTop: 6 }} />
+                  )}
+                  <FounderPriceNote founder={capCopy.founder} />
                 </div>
               </div>
 
@@ -2438,9 +2759,13 @@ export function ConnectModal({
                               when one pitch wraps to more lines than the
                               other. */}
                           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+                            <ProPriceAppNotice plans={[o.plan]} />
                             {/* What the annual button actually charges, said
                                 before the click, per plan. */}
-                            {upgradeInterval === 'year' && planAnnual && (
+                            {upgradeInterval === 'year' && planAnnual?.firstYear && (
+                              <SeasonalOfferNote offer={planAnnual.firstYear} size="sm" />
+                            )}
+                            {upgradeInterval === 'year' && planAnnual && !planAnnual.firstYear && (
                               <div style={{
                                 fontFamily: 'var(--font-sans)',
                                 fontSize: 11.5,
@@ -2720,6 +3045,57 @@ export function ConnectModal({
                   is offered here as well as in the toast after a refusal, so
                   someone who already knows their tenant needs it can send it
                   before trying. */}
+              {/* Back from Microsoft's consent screen with "cancelled". Said
+                  plainly, with the retry right here, instead of a toast. */}
+              {provider === 'outlook' && returnNotice === 'outlook_cancelled' && (
+                <div
+                  role="status"
+                  className="cm-outlook-cancelled"
+                  style={{
+                    marginTop: 16,
+                    padding: '10px 12px',
+                    background: 'var(--bg-sunken)',
+                    border: '1px solid var(--border-1)',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-sans)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>{tr('connect.fix.outlookCancelled.title')}</span>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--fg-2)' }}>{tr('connect.fix.outlookCancelled.body')}</span>
+                  <div>
+                    <Btn variant="secondary" size="sm" icon="refresh" onClick={handleConnect} className="cm-outlook-try-again">
+                      {tr('connect.fix.outlookCancelled.tryAgain')}
+                    </Btn>
+                  </div>
+                </div>
+              )}
+
+              {/* What Microsoft's consent screen will ask, before the
+                  redirect, so the screen is expected rather than alarming. */}
+              {provider === 'outlook' && (
+                <ul
+                  className="cm-outlook-consent"
+                  style={{
+                    margin: '12px 0 0',
+                    paddingLeft: 18,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 12,
+                    color: 'var(--fg-2)',
+                    lineHeight: 1.5,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <li>{tr('connect.fix.outlookConsent.line1')}</li>
+                  <li>{tr('connect.fix.outlookConsent.line2')}</li>
+                  <li>{tr('connect.fix.outlookConsent.line3')}</li>
+                </ul>
+              )}
+
               {provider === 'outlook' && (
                 <p style={{
                   margin: '12px 0 0',
@@ -3540,7 +3916,7 @@ export function ConnectModal({
                   }}
                 >
                   <span className="cm-check-spinner" aria-hidden="true" />
-                  {tr('connect.verifyingStep')}
+                  {tr(checkProgressKey)}
                 </div>
               )}
 
@@ -3607,7 +3983,65 @@ export function ConnectModal({
                     </a>
                   )}
 
-                  {(errorDetail || appPasswordUrl || authHelp.lines.length > 0) && (
+                  {/* The fix: one block from the fix table
+                      (lib/email/auth-failure-help.ts connectFix), chosen by
+                      provider, reason, phase and host. The steps, the exact
+                      links, and a way to retry in place. */}
+                  {fix && (
+                    <div className="cm-fix" data-fix-row={fix.row} style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5, lineHeight: 1.55 }}>
+                      <span style={{ fontWeight: 600 }}>{tr('connect.fix.heading')}</span>
+                      {fix.steps.length > 0 && (
+                        <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {fix.steps.map(line => (
+                            <li key={line.key}>{tr(line.key, line.values)}</li>
+                          ))}
+                        </ol>
+                      )}
+                      {fix.links.map(link => (
+                        <a
+                          key={link.id}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-fix-link={link.id}
+                          onClick={onFixLinkClick}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--red-700)', fontWeight: 600, width: 'fit-content' }}
+                        >
+                          <Icon name="external" size={12} />
+                          {tr(link.labelKey, link.values)}
+                        </a>
+                      ))}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                        {fix.action === 'use_outlook' ? (
+                          <Btn variant="secondary" size="sm" onClick={handleUseOutlook}>{tr('connect.fix.useOutlook')}</Btn>
+                        ) : (
+                          <Btn
+                            variant="secondary"
+                            size="sm"
+                            icon="refresh"
+                            busy={submitting}
+                            disabled={submitting || (fix.passwordProblem && !form.password)}
+                            onClick={() => handleAppPasswordSubmit()}
+                            className="cm-fix-test-again"
+                          >
+                            {tr('connect.fix.testAgain')}
+                          </Btn>
+                        )}
+                        {fix.suggestedHost && (
+                          <Btn variant="ghost" size="sm" onClick={applySuggestedHost} className="cm-fix-suggested-host">
+                            {tr('connect.fix.useSuggestedHost', { host: fix.suggestedHost.host })}
+                          </Btn>
+                        )}
+                        {fix.offerReceiveOnly && (
+                          <Btn variant="ghost" size="sm" disabled={submitting} onClick={connectReadOnly} className="cm-fix-receive-only">
+                            {tr('connect.fix.receiveOnly')}
+                          </Btn>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(fix ? Boolean(errorDetail) : (errorDetail || appPasswordUrl || authHelp.lines.length > 0)) && (
                     <>
                       <button
                         type="button"
@@ -3654,14 +4088,16 @@ export function ConnectModal({
                               is already printed beside the password field, and
                               for a login-name or IMAP-disabled failure it is
                               not the next step at all. */}
-                          {authHelp.lines.map(line => (
+                          {/* With a fix block above, it already says all of
+                              this; only the route's own sentence is left. */}
+                          {!fix && authHelp.lines.map(line => (
                             <span key={line.key}>{tr(line.key, line.values)}</span>
                           ))}
-                          {!isGeneric && !authReason && (
+                          {!fix && !isGeneric && !authReason && (
                             <span>{tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}</span>
                           )}
                           {errorDetail && <span>{errorDetail}</span>}
-                          {appPasswordUrl && (
+                          {!fix && appPasswordUrl && (
                             <a
                               href={appPasswordUrl}
                               target="_blank"
@@ -3780,7 +4216,11 @@ export function ConnectModal({
                 <PlanCheckoutLink
                   plan={upgradeCopy.plan}
                   planName={planDisplayName(upgradeCopy.plan)}
-                  monthlyLabel={tr(upgradeCopy.ctaKey)}
+                  monthlyLabel={
+                    capCopy.founder
+                      ? tr(capCopy.ctaKey, { price: formatAmountCents(capCopy.founder.monthlyCents) })
+                      : tr(upgradeCopy.ctaKey)
+                  }
                   annualOffer={annual}
                   interval={upgradeInterval}
                 >
@@ -3796,6 +4236,24 @@ export function ConnectModal({
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <Btn variant="primary" icon="shield" onClick={handleConnect}>
                 {connectLabel()}
+              </Btn>
+            </>
+          )}
+
+          {/* Connected: the next step is the AI app, not a bare list. */}
+          {!showLimitPanel && step === 3 && (
+            <>
+              <Btn variant="ghost" onClick={onClose}>{tr('connect.fix.done.later')}</Btn>
+              <Btn
+                variant="primary"
+                icon="zap"
+                className="cm-done-open-guide"
+                onClick={() => {
+                  if (onOpenClientGuide) onOpenClientGuide(CLIENT_NAMES[doneClient] || doneClient === 'curl' ? doneClient : null);
+                  else onClose();
+                }}
+              >
+                {tr('connect.fix.done.openGuide')}
               </Btn>
             </>
           )}

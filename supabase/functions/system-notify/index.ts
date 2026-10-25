@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
+import { renderEurLaunchEmail } from "./eur-launch.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
@@ -16,6 +17,28 @@ const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
 // entry to turn them back on.
 const MUTED_EVENT_TYPES = new Set(["user.signup"]);
 const REQUEST_TIMEOUT_MS = 30_000;
+
+// Events that move a number on /admin/growth and the kiosk. Their reads are
+// cached for ten minutes on the web app; this asks it to drop them now.
+const GROWTH_EVENT_TYPES = new Set(["user.signup"]);
+const GROWTH_EXPIRE_URL = Deno.env.get("GROWTH_EXPIRE_URL") ?? "https://mcpemails.com/api/internal/growth-expire";
+
+/** Best effort and bounded: a slow or failed expiry must never hold up or fail the event. */
+async function expireGrowthCache(eventType: string): Promise<void> {
+  const secret = Deno.env.get("DISPATCH_SECRET");
+  if (!secret) return;
+  try {
+    const response = await fetch(GROWTH_EXPIRE_URL, {
+      method: "POST",
+      headers: { "x-dispatch-secret": secret, "x-growth-reason": eventType },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) console.warn("growth cache expiry refused", response.status);
+    await response.body?.cancel();
+  } catch (error) {
+    console.warn("growth cache expiry failed", error instanceof Error ? error.message : error);
+  }
+}
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type EventBody = { event_id?: unknown; event_type?: unknown; payload?: unknown };
@@ -337,6 +360,29 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
   // records disabled_reason and the system_events row is still written, but
   // the operator email was noise (one per rule, so a dead mailbox with 48
   // rules sent 48 of them) and nobody acted on it.
+  if (eventType === "outbound.brake_tripped") {
+    // An outbound abuse brake in mcp-server (outbound-brakes.ts) just tripped
+    // for an inbox. Ids only: the payload never carries content or addresses.
+    const text = (value: unknown) => (typeof value === "string" && value.length > 0 ? value : "unknown");
+    const brake = text(payload.brake);
+    const what = brake === "fanout_hold"
+      ? "one message went to more than 25 recipients within an hour, so further sends from this inbox are held for approval in the dashboard"
+      : brake === "provider_refusal_pause"
+      ? "the mail provider refused 3 messages as spam or policy within an hour, so sends from this inbox are paused"
+      : `brake ${brake} tripped`;
+    return {
+      subject: `Send brake: ${brake}`,
+      body: [
+        `An outbound send brake tripped: ${what}.`,
+        "",
+        `workspace_id: ${text(payload.workspace_id)}`,
+        `inbox_id: ${text(payload.inbox_id)}`,
+        `until: ${text(payload.until)}`,
+        "",
+        "To stop every send from the workspace, set workspaces.sends_frozen_at.",
+      ].join("\n"),
+    };
+  }
   if (eventType === "checkout.feedback") {
     // Someone answered the "what held you back?" card after abandoning a
     // Stripe checkout. Wording lives in ./checkout-feedback.ts, which is pure
@@ -345,6 +391,12 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     const workspaceId = typeof payload.workspace_id === "string" ? payload.workspace_id : "";
     const reason = typeof payload.reason === "string" ? payload.reason : null;
     return renderCheckoutFeedbackEmail(await fetchCheckoutFeedbackContext(supabase, feedbackId, workspaceId, reason));
+  }
+  if (eventType === "billing.eur_launch") {
+    // The EUR launch dispatcher on the web app: a failed preflight (once a
+    // day), a launch that stopped part way, the launch going live, or legacy
+    // swap failures. Wording comes from the dispatcher; see ./eur-launch.ts.
+    return renderEurLaunchEmail(payload);
   }
   return null;
 }
@@ -533,6 +585,10 @@ Deno.serve(async (request) => {
   const markProcessed = async (status: "sent" | "failed", error: string | null) => {
     await supabase.from("system_events").update({ status, error, processed_at: new Date().toISOString() }).eq("id", eventId);
   };
+
+  // Before the mute check: signup emails are muted, but the board still has
+  // to count the signup.
+  if (GROWTH_EVENT_TYPES.has(eventType)) await expireGrowthCache(eventType);
 
   // Event types whose email is switched off. The system_events row is still
   // written (growth analytics read it); only the notification is skipped.

@@ -65,7 +65,7 @@
     "items": {
       "0": {
         "tag": "Scope",
-        "h": "Nineteen focused tools. The essentials, covered.",
+        "h": "Twenty-one focused tools. The essentials, covered.",
         "p": "Tools cover the everyday work: <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply), plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, signatures, and unattended automations. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
@@ -154,6 +154,7 @@
     "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects up to 10 for one person running a business. Business includes 10 mailboxes, adds $3 a month for each extra, and has room for your whole team.",
     "perForever": "/forever",
     "perMonth": "/month",
+    "inclVat": "incl. VAT",
     "tiers": {
       "free": {
         "name": "Free",
@@ -183,12 +184,18 @@
       },
       "solo": {
         "name": "Pro",
+        "tagline": "Set it up in chat. It keeps running after you close it.",
         "desc": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
         "features": [
           "Everything in Personal",
           "10 connected inboxes",
           "5x higher burst rate limit",
-          "Longer analytics history"
+          "Longer analytics history",
+          "Follow-up reminders when nobody replies to mail you sent",
+          "Snooze: mail leaves the inbox and comes back when you choose",
+          "A daily morning brief, placed straight in your inbox",
+          "Search every connected inbox at once",
+          "Instructions for your AI, per inbox"
         ],
         "cta": "Get Pro"
       },
@@ -243,11 +250,11 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
+        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent can read, search, send, reply, schedule and organise in it. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
       },
       {
         "q": "What can the AI actually do with my inbox?",
-        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Nineteen action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Twenty-one action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
       },
       {
         "q": "How do I connect an inbox?",
@@ -273,10 +280,11 @@
     "linkOauth": "OAuth connection",
     "linkProviders": "Provider support",
     "linkReadOnly": "Read-only access",
+    "linkApiGuide": "Developer guide",
     "linkClients": "MCP client setup",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
-    "linkWithdrawal": "Right of withdrawal",
+    "linkWithdrawal": "Withdraw from contract here",
     "linkCancel": "Cancel contracts here",
     "linkImpressum": "Impressum",
     "copyright": "© 2026 MCPEmails.",
@@ -293,7 +301,8 @@
     "linkHelp": "Help & support",
     "linkSelfHost": "Self-hosting",
     "linkFounders": "For founders",
-    "linkBusiness": "For business"
+    "linkBusiness": "For business",
+    "linkDevelopers": "Developers"
   },
   "languageSwitcher": {
     "label": "Language",
@@ -309,14 +318,8 @@
     "title": "See your whole MCP operation at a glance.",
     "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing."
   },
-  "demo": {
-    "eyebrow": "See it work",
-    "title": "Connect an inbox, then ask what needs you.",
-    "sub": "Under a minute, recorded against the live product: a real IMAP connection, then a real tool call that finds the one email that matters.",
-    "caption": "Recorded against a demo mailbox seeded with fictional mail. No real correspondence appears in this video.",
-    "player": {
-      "label": "Demo video: connecting an inbox and triaging it with an AI agent",
-      "fallback": "Your browser cannot play this video. The quickstart in the docs covers the same steps."
-    }
+  "referralBanner": {
+    "text": "A friend invited you to MCPEmails. Your second paid month is free.",
+    "close": "Close"
   }
 }

@@ -67,6 +67,7 @@ export const PER_OPERATION_REWORDINGS: ReadonlyArray<readonly [string, string]> 
     "unlike draft_update when it is given a body",
   ],
   ["Use the schedule tool (action 'cancel') with the returned `id`", "Use schedule_cancel with the returned `id`"],
+  ["Use the reminder tool with an `id` to mark one done or cancel it.", "Use reminder_done or reminder_cancel with an `id`."],
   [
     "reference form is email_compose's, not this tool's",
     "reference form belongs to email_send, email_reply and email_forward, not to this tool",
