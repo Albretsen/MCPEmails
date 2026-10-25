@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-25',
+    kind: 'improved',
+    title: 'Automations can file mail into Junk or Spam',
+    body:
+      'An automation can now move the mail it matches into your Junk or Spam folder. Before, a rule whose destination was named Junk or Spam was refused when you saved it.',
+  },
+  {
     date: '2026-10-24',
     kind: 'added',
     title: 'Follow-ups, snooze and a morning brief that work while the chat is closed',

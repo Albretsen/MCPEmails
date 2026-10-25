@@ -8,7 +8,7 @@ const post = {
     'Unattended email triage rules in MCPEmails: a stored search plus one fixed action on a schedule',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-10-25T09:00:00.000Z',
   tags: ['Automations', 'Inbox triage', 'MCP', 'Email'],
   featured: false,
   content: `Every morning you ask your agent to clear the noise: file the build notifications, mark the receipts read, forward invoices to your bookkeeper. It works. It also costs a model call every time, and it does something slightly different on Tuesday than it did on Monday.
@@ -74,7 +74,7 @@ The five rule actions:
 
 What a rule cannot do:
 
-- **Delete mail.** Deleting is not available to an automation. Moving to Trash, Junk or Spam is refused too: every provider empties those on a timer, so filing into them is a delete with a delayed fuse. File to a folder you own and delete it yourself once you have read the run log.
+- **Delete mail.** Deleting is not available to an automation. Moving to Trash is refused too, in any language: every provider empties it on a timer, so filing into it is a delete with a delayed fuse. File to a folder you own and delete it yourself once you have read the run log. Junk and Spam are allowed, since filing unwanted mail there is a common reason to write a rule.
 - **Interpret anything.** No summarizing, no "if it sounds urgent".
 - **Chain two actions.** Labelled and marked read is two rules over the same filter.
 
@@ -112,7 +112,7 @@ Every action a rule applies is metered exactly like an interactive one, because 
 No. A rule is a stored search plus one fixed action. Mail is matched, never interpreted, and message bodies are never copied into anything a rule produces.
 
 **Can a rule delete my email?**  
-No. Deleting is not available to automations, and moving mail into Trash, Junk or Spam is refused for the same reason.
+No. Deleting is not available to automations, and moving mail into Trash is refused for the same reason. Moving it into Junk or Spam is allowed.
 
 **What scope does this need?**  
 Every automation action requires \`manage:automations\`, a separate grant from reading or sending, because holding it means a client may create standing rules that touch your mailbox unattended.

@@ -67,7 +67,7 @@ Les cinq actions de règle :
 
 Ce qu'une règle ne peut pas faire :
 
-- **Supprimer du courrier.** La suppression n'est pas offerte à une automatisation. Déplacer vers la Corbeille, les Indésirables ou le Spam est refusé aussi : tous les fournisseurs vident ces dossiers sur minuterie, donc y classer un message revient à le supprimer à retardement. Classez dans un dossier à vous et supprimez vous-même une fois le journal des exécutions lu.
+- **Supprimer du courrier.** La suppression n'est pas offerte à une automatisation. Déplacer vers la Corbeille est refusé aussi, quelle que soit la langue : tous les fournisseurs la vident sur minuterie, donc y classer un message revient à le supprimer à retardement. Classez dans un dossier à vous et supprimez vous-même une fois le journal des exécutions lu. Les Indésirables et le Spam sont autorisés, car y classer le courrier dont vous ne voulez pas est une raison courante d'écrire une règle.
 - **Interpréter quoi que ce soit.** Pas de résumé, pas de « si cela a l'air urgent ».
 - **Enchaîner deux actions.** Étiqueter et marquer comme lu, cela fait deux règles sur le même filtre.
 
@@ -105,7 +105,7 @@ Chaque action appliquée par une règle est décomptée exactement comme une act
 Non. Une règle est une recherche enregistrée plus une action fixe. Le courrier est mis en correspondance, jamais interprété, et le corps des messages n'est jamais copié dans quoi que ce soit que produit une règle.
 
 **Une règle peut-elle supprimer mes e-mails ?**  
-Non. La suppression n'est pas offerte aux automatisations, et déplacer du courrier vers la Corbeille, les Indésirables ou le Spam est refusé pour la même raison.
+Non. La suppression n'est pas offerte aux automatisations, et déplacer du courrier vers la Corbeille est refusé pour la même raison. Le déplacer vers les Indésirables ou le Spam est autorisé.
 
 **Quelle autorisation faut-il ?**  
 Toute action d'automatisation exige \`manage:automations\`, une autorisation distincte de la lecture ou de l'envoi, parce que la détenir signifie qu'un client peut créer des règles permanentes qui touchent votre boîte sans surveillance.

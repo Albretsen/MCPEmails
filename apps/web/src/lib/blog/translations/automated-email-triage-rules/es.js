@@ -67,7 +67,7 @@ Las cinco acciones de regla:
 
 Lo que una regla no puede hacer:
 
-- **Borrar correo.** Borrar no está disponible para una automatización. Mover a Papelera, Correo no deseado o Spam también se rechaza: todos los proveedores vacían esas carpetas con un temporizador, así que archivar ahí es un borrado con mecha retardada. Archiva en una carpeta tuya y bórrala tú mismo cuando hayas leído el registro de ejecuciones.
+- **Borrar correo.** Borrar no está disponible para una automatización. Mover a la Papelera también se rechaza, en cualquier idioma: todos los proveedores la vacían con un temporizador, así que archivar ahí es un borrado con mecha retardada. Archiva en una carpeta tuya y bórrala tú mismo cuando hayas leído el registro de ejecuciones. Correo no deseado y Spam sí están permitidos, porque archivar ahí el correo que no quieres es un motivo habitual para crear una regla.
 - **Interpretar nada.** Ni resúmenes ni «si suena urgente».
 - **Encadenar dos acciones.** Etiquetar y marcar como leído son dos reglas sobre el mismo filtro.
 
@@ -105,7 +105,7 @@ Cada acción que aplica una regla se contabiliza igual que una interactiva, porq
 No. Una regla es una búsqueda guardada más una acción fija. El correo se compara, nunca se interpreta, y los cuerpos de los mensajes nunca se copian en nada de lo que produce una regla.
 
 **¿Puede una regla borrar mi correo?**  
-No. Borrar no está disponible para las automatizaciones, y mover correo a Papelera, Correo no deseado o Spam se rechaza por la misma razón.
+No. Borrar no está disponible para las automatizaciones, y mover correo a la Papelera se rechaza por la misma razón. Moverlo a Correo no deseado o Spam sí está permitido.
 
 **¿Qué permiso hace falta?**  
 Toda acción de automatización requiere \`manage:automations\`, una concesión distinta de la de leer o enviar, porque tenerla significa que un cliente puede crear reglas permanentes que tocan tu buzón sin supervisión.
