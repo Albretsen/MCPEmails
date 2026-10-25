@@ -2918,8 +2918,7 @@ Deno.test("a second content block says a card exists, only when an editor envelo
     DRAFT_CARD_NOTICE,
     "Hosts that render MCP Apps cards show this draft to the user in an " +
       "editable card, where the user can change it, and draft_read returns the " +
-      "current text; this result cannot tell whether this host displayed the " +
-      "card, and a displayed card reports itself in model context from the next turn.",
+      "current text; this result does not say whether this host displayed the card.",
   );
   // One sentence of fact. It asks the model for nothing.
   assertEquals(DRAFT_CARD_NOTICE.split(". ").length, 1);
