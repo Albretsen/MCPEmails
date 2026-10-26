@@ -133,7 +133,10 @@ test('links, configs and the curl request point at the given URL', () => {
   assert.equal(JSON.parse(configSnippet('zed', url)!.text).context_servers.mcpemails.url, url);
   assert.equal(configSnippet('raycast', url), null);
   const curl = curlFirstCall(url, 'mcpe_abc');
-  assert.ok(curl.includes(url) && curl.includes('Bearer mcpe_abc') && curl.includes('"email_read"'));
+  const target = new URL(curl.split(/\s+/)[3]);
+  assert.equal(target.host, 'mcpemails.com');
+  assert.equal(target.pathname, '/api/mcp');
+  assert.ok(curl.includes('Bearer mcpe_abc') && curl.includes('"email_read"'));
   assert.ok(isPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'));
   assert.ok(!isPhone('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15'));
 });
@@ -166,11 +169,16 @@ test('assist events accept only the closed lists', () => {
 test('service emails: the right link, the prompt, the client, every locale', () => {
   const app = 'https://mcpemails.com';
   const link = setupLinkEmail('en', 'cursor', app);
-  assert.ok(link.text.includes('https://mcpemails.com/onboarding?step=add_to_ai&client=cursor'));
+  const resume = new URL(link.text.split('\n').find((line) => line.startsWith('https://')) ?? '');
+  assert.equal(resume.host, 'mcpemails.com');
+  assert.equal(resume.pathname, '/onboarding');
+  assert.equal(resume.searchParams.get('step'), 'add_to_ai');
+  assert.equal(resume.searchParams.get('client'), 'cursor');
   assert.ok(link.text.includes('Cursor'));
   const help = helpStepsEmail('nb', 'claude', app);
   assert.ok(help.subject.includes('Claude'));
-  assert.ok(help.text.includes('https://mcpemails.com/docs/claude'));
+  const guide = help.text.split('\n').filter((line) => line.startsWith('https://')).map((line) => new URL(line));
+  assert.ok(guide.some((u) => u.host === 'mcpemails.com' && u.pathname === '/docs/claude'));
   const morning = morningBriefEmail('de', 'chatgpt');
   assert.ok(morning.text.includes('MCPEmails'));
   assert.notEqual(morning.subject, morningBriefEmail('en', 'chatgpt').subject);
