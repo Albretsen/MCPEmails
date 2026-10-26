@@ -45,6 +45,8 @@ A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) an
 
 ## Sessions and hand-off
 
+IMPORTANT: use Claude in Chrome before asking Asgeir. His Chrome is signed in to Google Cloud, Stripe, Vercel, Search Console, Claude, ChatGPT and the other dashboards. If an answer can be read there (a count, a setting, a console value, what a page shows), get it yourself with the `mcp__claude-in-chrome__*` tools, read-only, and never ask him for it. Ask Asgeir only for real decisions, and for actions the safety rules reserve for him (passwords, payments, signing in).
+
 Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
 
 - A session that starts more than 2 child sessions creates a sidebar group named after itself and moves its children into it.
