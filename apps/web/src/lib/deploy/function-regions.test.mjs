@@ -236,7 +236,9 @@ test('vercel.json region config stays inside what this test can model', () => {
   // this test. Headers and redirects live in next.config.js. One exception
   // is `ignoreCommand` (build skipping, no runtime effect): previews stay
   // skipped, and production skips only when nothing the web build reads
-  // changed since the first parent; a failing diff (no HEAD^) builds.
+  // changed since the last deployed commit (VERCEL_GIT_PREVIOUS_SHA, when it
+  // is an ancestor of HEAD, so a multi-commit staging fast-forward is diffed
+  // whole), else since the first parent; a failing diff (no HEAD^) builds.
   //
   // /api/mcp is an external rewrite to the mcp-server edge function
   // (2026-10-20), so no Vercel function runs per MCP call. It lived here until

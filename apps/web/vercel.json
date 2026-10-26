@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ../../packages ../../package.json ../../package-lock.json ../../supabase/functions/mcp-server/search-translate.ts",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" = production ] || exit 0; B=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}; git merge-base --is-ancestor $B HEAD || B=HEAD^; git diff --quiet $B HEAD -- . ../../packages ../../package*.json ../../supabase/functions/mcp-server/search-translate.ts",
   "functions": {
     "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/imap/route.ts": { "regions": ["iad1"] },

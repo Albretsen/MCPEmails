@@ -8,6 +8,8 @@
 //   - open PRs with CI state and age
 //   - PRs merged since the previous run
 //   - git worktrees with unmerged work and no open PR
+//   - staging drift: commits on origin/staging not on origin/main, and how
+//     far origin/staging is behind main
 //   - dated OWED / owed / pending / read-out / awaiting lines (and DONE: lines)
 //     from the Claude memory folder and Documents/IDEAS.md
 //   - what changed since the previous snapshot
@@ -146,7 +148,11 @@ try {
 const worktrees = []
 const worktreeCounts = { total: 0, empty: 0, pr_open: 0, pr_merged_or_closed: 0, missing: 0 }
 {
-  tryRun('git', ['fetch', '--quiet', 'origin', 'main'], { cwd: mainCheckout })
+  // One fetch for main and staging; if origin has no staging branch the
+  // combined fetch fails, so fall back to main alone.
+  if (tryRun('git', ['fetch', '--quiet', 'origin', 'main', 'staging'], { cwd: mainCheckout }) === null) {
+    tryRun('git', ['fetch', '--quiet', 'origin', 'main'], { cwd: mainCheckout })
+  }
   const porcelain = run('git', ['worktree', 'list', '--porcelain'], { cwd: mainCheckout })
   for (const block of porcelain.split('\n\n')) {
     const lines = block.split('\n')
@@ -187,6 +193,39 @@ const worktreeCounts = { total: 0, empty: 0, pr_open: 0, pr_merged_or_closed: 0,
     })
   }
   worktrees.sort((a, b) => (a.last_commit_at ?? '').localeCompare(b.last_commit_at ?? ''))
+}
+
+// ---------- staging drift ----------
+// `staging` is reset to main weekly (sync-staging.yml). Anything on it that
+// main lacks is either waiting for its main PR or will be lost at the next
+// reset; staging behind main means it is testing stale code. Git only, from
+// the refs the fetch above updated.
+
+const repo = tryRun('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], { cwd: mainCheckout })
+let staging = null
+if (tryRun('git', ['rev-parse', '--verify', '--quiet', 'refs/remotes/origin/staging'], { cwd: mainCheckout })) {
+  const log = (range) =>
+    (tryRun('git', ['log', '--format=%h%x09%cI%x09%s', range], { cwd: mainCheckout }) ?? '')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => {
+        const [sha, at, subject] = l.split('\t')
+        return { sha, committed_at: at, subject }
+      })
+  const notOnMain = log('origin/main..origin/staging')
+  const behind = Number(tryRun('git', ['rev-list', '--count', 'origin/staging..origin/main'], { cwd: mainCheckout }) ?? 0)
+  const tip = tryRun('git', ['log', '-1', '--format=%h%x09%cI', 'origin/staging'], { cwd: mainCheckout })?.split('\t') ?? []
+  staging = {
+    tip: tip[0] ?? null,
+    tip_committed_at: tip[1] ?? null,
+    commits_not_on_main: notOnMain.length,
+    commits: notOnMain.slice(0, 20),
+    behind_main: behind,
+    in_sync: !notOnMain.length && !behind,
+    compare_url: repo ? `https://github.com/${repo}/compare/main...staging` : null,
+  }
+} else {
+  errors.push('origin/staging not found: no staging drift reported')
 }
 
 // ---------- owed lines ----------
@@ -301,13 +340,14 @@ const changes = previous
 const state = {
   generated_at: now.toISOString(),
   since,
-  repo: tryRun('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], { cwd: mainCheckout }),
+  repo,
   main_checkout: mainCheckout,
   sources: { memory_dir: memoryDir, ideas_file: ideasFile },
   open_prs: openPrs,
   merged_since_last_run: mergedSince,
   worktrees_without_pr: worktrees,
   worktree_counts: worktreeCounts,
+  staging,
   owed,
   done,
   changes,
@@ -322,7 +362,8 @@ else {
   fs.writeFileSync(outFile, json + '\n')
   console.log(
     `wrote ${outFile}: ${openPrs.length} open PRs, ${mergedSince.length} merged since ${since}, ` +
-      `${worktrees.length} worktrees without PR, ${owed.length} owed, ${done.length} done` +
+      `${worktrees.length} worktrees without PR, ${owed.length} owed, ${done.length} done, ` +
+      (staging ? `staging +${staging.commits_not_on_main}/-${staging.behind_main} vs main` : 'staging n/a') +
       (errors.length ? `, ${errors.length} errors` : ''),
   )
 }
