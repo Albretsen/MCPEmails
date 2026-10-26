@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Your plan: Free",
+    "lead": "Free covers what you just did. Here is what each plan adds when you want more.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# inbox} other {Up to # inboxes}}",
+    "freeGrace": "Unlimited until {date}",
+    "freeCap": "{cap} email actions a month",
+    "noCap": "No monthly cap",
+    "emailSupport": "Email support",
+    "everythingPersonal": "Everything in Personal",
+    "perMonth": "{price}/mo",
+    "perYear": "{price}/yr",
+    "intervalLabel": "Billing interval",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "recommended": "Recommended",
+    "choose": "Choose {plan}",
+    "continueFree": "Continue on Free",
+    "dismiss": "Hide the plan summary"
+  },
+  "graceNote": {
+    "today": "You used MCPEmails on {days, plural, one {# day} other {# days}}. From today Free counts your monthly email actions.",
+    "since": "You used MCPEmails on {days, plural, one {# day} other {# days}}. Since {date}, Free counts your monthly email actions.",
+    "seeUsage": "See usage",
+    "dismiss": "Dismiss"
+  },
+  "meter": {
+    "level50": "Half of this month's {cap} email actions are used. The count resets {date}.",
+    "level80": "{used} of {cap} email actions used this month. The count resets {date}. Personal removes the monthly cap.",
+    "level100": "All {cap} email actions are used. Reads and writes are refused until {date}. Personal removes the monthly cap.",
+    "seePlans": "See plans"
+  },
+  "multiInbox": {
+    "title": "Connect your other inbox",
+    "desc": "Your other Gmail, iCloud or Outlook too? Connect it and your AI works both inboxes from one chat.",
+    "descUpgrade": "Your other Gmail, iCloud or Outlook too? Your AI can work both inboxes from one chat. A second inbox needs a paid plan."
+  }
+}

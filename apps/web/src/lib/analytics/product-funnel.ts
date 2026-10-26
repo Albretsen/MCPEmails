@@ -16,7 +16,8 @@ import type { OnboardingAssistCategory } from '@/lib/onboarding/assist';
  */
 export type ConnectEntryPoint =
   | 'header' | 'inboxes_page' | 'guide' | 'multi_inbox_overview' | 'multi_inbox_inboxes'
-  | 'post_checkout' | 'first_run' | 'provider_intent' | 'reconnect' | 'command_palette' | 'other';
+  | 'post_checkout' | 'first_run' | 'provider_intent' | 'reconnect' | 'command_palette' | 'other'
+  | 'second_inbox';
 
 /**
  * Every value the `entry_point` column takes: the connect-modal openers above,
@@ -143,6 +144,13 @@ export type ProductFunnelEvent = {
     | 'onboarding_handshake_seen' | 'onboarding_help_shown' | 'onboarding_prompt_copied'
     | 'onboarding_open_client_clicked' | 'onboarding_link_emailed'
     | 'morning_brief_opt_in' | 'morning_brief_sent'
+    // Onboarding Flow B (20261026233917, src/lib/onboarding/flow-b.mjs):
+    // second-inbox card and plan summary carry the surface (surface_*) or,
+    // for plan_summary_clicked, the plan; the usage meter its level
+    // (level_* on the dashboard, chat_* written by mcp-server).
+    | 'second_inbox_prompt_shown' | 'second_inbox_prompt_clicked'
+    | 'plan_summary_shown' | 'plan_summary_dismissed' | 'plan_summary_clicked'
+    | 'usage_meter_shown' | 'grace_end_note_shown'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
     | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
@@ -154,7 +162,9 @@ export type ProductFunnelEvent = {
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
     | PlanChangeCategory | CancelReason | RetentionOptionCategory
-    | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory;
+    | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory
+    | 'surface_onboarding' | 'surface_overview'
+    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100';
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

@@ -32,6 +32,7 @@ import {
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import { getOnboardingVariant } from '@/lib/onboarding/variant';
+import { buildFlowBProp } from '@/lib/onboarding/flow-b-server';
 import { onboardingEntryPath } from '@/lib/onboarding/entry';
 import { verifyChatConnectLink, withChatLinkParams } from '@/lib/onboarding/chat-connect-link';
 import '../../../styles/dashboard.css';
@@ -727,7 +728,7 @@ export default async function DashboardPage({ params, searchParams }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, created_at, onboarding_completed_at, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
+      .select('id, slug, display_name, plan, owner_id, created_at, onboarding_completed_at, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at, plan_summary_dismissed_at, grace_end_note_seen_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -1079,6 +1080,21 @@ export default async function DashboardPage({ params, searchParams }) {
       ? await withFounderSubscriberPrices(offeredPrices)
       : offeredPrices;
 
+  // Onboarding Flow B (src/lib/onboarding/flow-b-server.ts): the plan
+  // summary, grace-end note and usage meter on the Overview. Null, with no
+  // query, outside the onb_convert arm, on any paid plan, and for a member
+  // who does not own the workspace (the buy buttons are the owner's).
+  const flowB = workspace && onboarding?.convert === 'on' && workspace.owner_id === user.id
+    ? await buildFlowBProp({
+        db: createServiceRoleClient(),
+        convert: onboarding.convert,
+        plan,
+        workspace,
+        allowance: actionAllowance,
+        stripePrices,
+      })
+    : null;
+
   // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
   // until {date}" and the ways to keep it. Null for everyone else, and for a
   // member viewing someone else's workspace. Tolerant: a failed read is null.
@@ -1111,6 +1127,8 @@ export default async function DashboardPage({ params, searchParams }) {
           finishSetup: onboarding?.flow === 'new' && !workspace?.onboarding_completed_at && !workspace?.analytics_first_tool_used_at,
           canReset: onboarding?.internal === true && workspace?.owner_id === user.id,
         },
+        // Onboarding Flow B facts for the Overview (flow-b-server.ts), or null.
+        flowB,
         // Whether this workspace has ever made a tool call. The Overview guide
         // shows its "waiting for your first call" step only while it has not.
         firstToolUsed: Boolean(workspace?.analytics_first_tool_used_at),

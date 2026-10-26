@@ -183,7 +183,8 @@
         "supportSent": "Envoyé. Nous vous répondrons par e-mail.",
         "supportFailed": "L'envoi a échoué. Utilisez plutôt la page d'aide.",
         "supportPage": "Ouvrir la page d'aide",
-        "signIn": "Se reconnecter"
+        "signIn": "Se reconnecter",
+        "seePlans": "Voir les forfaits"
       },
       "outlookError": {
         "admin_consent_required": "Votre organisation exige qu'un administrateur approuve MCPEmails avant que vous puissiez vous connecter. Envoyez-lui le lien ci-dessous.",
@@ -262,7 +263,13 @@
       "optIn": "M'envoyer ceci par e-mail demain à 8 h",
       "optInDone": "Nous l'enverrons à {email} demain à 8 h.",
       "optInFailed": "Impossible d'enregistrer. Réessayez.",
-      "finish": "Aller au tableau de bord"
+      "finish": "Aller au tableau de bord",
+      "secondInbox": {
+        "title": "Connectez votre autre boîte mail",
+        "lead": "La plupart des gens connectent une deuxième boîte : pro et perso dans une seule conversation.",
+        "cta": "Connecter une autre boîte",
+        "paidNote": "Free couvre une boîte mail. La suivante ouvre les options de forfait, avec Continuer avec Free juste à côté."
+      }
     }
   },
   "nav": {

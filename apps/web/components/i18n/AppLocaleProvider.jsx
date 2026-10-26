@@ -6,6 +6,7 @@ import enDashboard from '../../messages/en/dashboard.json';
 import enDashboardChrome from '../../messages/en/dashboardChrome.json';
 import enAuth from '../../messages/en/auth.json';
 import enCommon from '../../messages/en/common.json';
+import enConvert from '../../messages/en/convert.json';
 
 /**
  * Client-side locale provider for the authenticated app and auth screens.
@@ -33,7 +34,7 @@ import enCommon from '../../messages/en/common.json';
  * parent ones, so the inner provider has stored the language by the time the
  * outer one reads storage, and both end on it.
  */
-const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common'];
+const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common', 'convert'];
 
 /**
  * English is bundled: it is the server render, the hydration render and the
@@ -41,7 +42,7 @@ const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common'];
  * Auth screens use AuthLocaleProvider instead, which leaves out the two
  * dashboard namespaces.
  */
-const ENGLISH = { dashboard: enDashboard, dashboardChrome: enDashboardChrome, auth: enAuth, common: enCommon };
+const ENGLISH = { dashboard: enDashboard, dashboardChrome: enDashboardChrome, auth: enAuth, common: enCommon, convert: enConvert };
 
 prefetchPreferredLocale(NAMESPACES, ENGLISH);
 

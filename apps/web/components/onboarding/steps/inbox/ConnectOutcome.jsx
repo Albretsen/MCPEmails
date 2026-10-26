@@ -84,7 +84,7 @@ function helpHref(provider, code) {
  * A5 on failure: the classifier's one-line fix, its links, and the named
  * fallbacks. The address stays in the field, so a retry is one paste.
  */
-export function FailurePanel({ failure, failures, kind, funnelProvider, onReadOnly, onDifferentInbox }) {
+export function FailurePanel({ failure, failures, kind, funnelProvider, onReadOnly, onDifferentInbox, onSeePlans = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const [support, setSupport] = useState('idle'); // idle | sending | sent | failed
   const provider = failure.provider || t(`kinds.${kind}`);
@@ -134,6 +134,13 @@ export function FailurePanel({ failure, failures, kind, funnelProvider, onReadOn
       )}
       {failure.passwordProblem && <p className="onb-hint">{t('fail.kept')}</p>}
       <div className="onb-actions">
+        {/* Flow B: the inbox cap opens the dashboard's upgrade panel (with
+            Continue on Free) instead of leaving a dead end. */}
+        {failure.message === 'limit' && onSeePlans && (
+          <button type="button" className="btn btn-primary btn-sm" onClick={onSeePlans} data-testid="onb-see-plans">
+            {t('fail.seePlans')}
+          </button>
+        )}
         {failure.offerReadOnly && (
           <button type="button" className="btn btn-secondary btn-sm" onClick={onReadOnly} data-testid="onb-read-only">
             {t('fail.readOnly')}

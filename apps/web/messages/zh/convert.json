@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "你的方案：Free",
+    "lead": "Free 已经涵盖你刚才所做的一切。需要更多时，各方案增加的内容如下。",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# 个收件箱} other {最多 # 个收件箱}}",
+    "freeGrace": "{date} 之前不限量",
+    "freeCap": "每月 {cap} 次邮件操作",
+    "noCap": "无每月上限",
+    "emailSupport": "邮件支持",
+    "everythingPersonal": "包含 Personal 的全部功能",
+    "perMonth": "{price}/月",
+    "perYear": "{price}/年",
+    "intervalLabel": "计费周期",
+    "monthly": "按月",
+    "annual": "按年",
+    "recommended": "推荐",
+    "choose": "选择 {plan}",
+    "continueFree": "继续使用 Free",
+    "dismiss": "隐藏方案概览"
+  },
+  "graceNote": {
+    "today": "你在 {days} 天里使用了 MCPEmails。从今天起，Free 开始计算你每月的邮件操作次数。",
+    "since": "你在 {days} 天里使用了 MCPEmails。自 {date} 起，Free 开始计算你每月的邮件操作次数。",
+    "seeUsage": "查看用量",
+    "dismiss": "关闭"
+  },
+  "meter": {
+    "level50": "本月 {cap} 次邮件操作已用一半。计数将于 {date} 重置。",
+    "level80": "本月已用 {used}/{cap} 次邮件操作。计数将于 {date} 重置。Personal 没有每月上限。",
+    "level100": "{cap} 次邮件操作已全部用完。{date} 之前读取和写入都会被拒绝。Personal 没有每月上限。",
+    "seePlans": "查看方案"
+  },
+  "multiInbox": {
+    "title": "连接你的另一个收件箱",
+    "desc": "还有另一个 Gmail、iCloud 或 Outlook 账户？连接后，你的 AI 可以在同一个对话中处理两个收件箱。",
+    "descUpgrade": "还有另一个 Gmail、iCloud 或 Outlook 账户？你的 AI 可以在同一个对话中处理两个收件箱。第二个收件箱需要付费方案。"
+  }
+}

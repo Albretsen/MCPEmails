@@ -183,7 +183,8 @@
         "supportSent": "Enviado. Te responderemos por correo.",
         "supportFailed": "No se pudo enviar. Usa la página de ayuda.",
         "supportPage": "Abrir la página de ayuda",
-        "signIn": "Volver a iniciar sesión"
+        "signIn": "Volver a iniciar sesión",
+        "seePlans": "Ver planes"
       },
       "outlookError": {
         "admin_consent_required": "Tu organización necesita que un administrador apruebe MCPEmails antes de que puedas iniciar sesión. Envíale el enlace de abajo.",
@@ -262,7 +263,13 @@
       "optIn": "Enviarme esto por email mañana a las 8",
       "optInDone": "Lo enviaremos a {email} mañana a las 8:00.",
       "optInFailed": "No se pudo guardar. Inténtalo de nuevo.",
-      "finish": "Ir al panel"
+      "finish": "Ir al panel",
+      "secondInbox": {
+        "title": "Conecta tu otra bandeja",
+        "lead": "La mayoría conecta una segunda bandeja: trabajo y personal en un mismo chat.",
+        "cta": "Conectar otra bandeja",
+        "paidNote": "Free incluye una bandeja. La siguiente abre las opciones de plan, con Seguir con Free justo al lado."
+      }
     }
   },
   "nav": {

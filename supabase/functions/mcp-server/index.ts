@@ -496,6 +496,13 @@ import {
 } from "./inbox-instructions.ts";
 import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { maybeAttachOnboardingWelcome } from "./onboarding-welcome.ts";
+import {
+  frameCapRefusal,
+  loadCapSummary,
+  maybeAttachUsageMeterNote,
+  type MeterReading,
+  type MonthSummary,
+} from "./usage-meter-note.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates, smtpFilesSentCopyItself } from "./sent-copy.ts";
 import { DRAFT_KEPT_AFTER_SEND_NOTE, DRAFT_KEPT_RECEIPT_DETAIL, removeSentDraft } from "./draft-removal.ts";
 import {
@@ -4258,6 +4265,8 @@ interface ActionLimitCheck {
   /** A ready-to-return isError tool result, or null when the call may proceed. */
   response: JsonRpcSuccessResponse | null;
   reservationId: string | null;
+  /** What a metered reservation knew, for the Flow B usage line (usage-meter-note.ts). */
+  meter?: MeterReading | null;
 }
 
 /**
@@ -4277,25 +4286,29 @@ function usageLimitResult(
   refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
   wording: PlanLimitWording = "standard",
   checkout: MintedCheckoutLink | null = null,
+  // Flow B (onb_convert = on): this month's reads, drafts and sends. Null
+  // leaves the text exactly as it was (usage-meter-note.ts frameCapRefusal).
+  monthSummary: MonthSummary | null = null,
 ): JsonRpcSuccessResponse {
   const { plan, usedActions, cap, periodEnd } = refusal;
   // The link rides only with the wording that prints it, and only for Free.
   const link = plan === "free" && wording === "checkout" ? checkout : null;
+  const baseText = buildUsageLimitText(
+    plan,
+    usedActions,
+    cap,
+    periodEnd,
+    APP_URL,
+    wording,
+    link ? { url: link.url, minutes: link.minutes } : null,
+  );
   return {
     jsonrpc: "2.0",
     id: requestId,
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(
-          plan,
-          usedActions,
-          cap,
-          periodEnd,
-          APP_URL,
-          wording,
-          link ? { url: link.url, minutes: link.minutes } : null,
-        ),
+        text: plan === "free" ? frameCapRefusal(baseText, monthSummary, wording, APP_URL) : baseText,
       }],
       isError: true,
       _meta: {
@@ -4376,11 +4389,26 @@ async function actionLimitResponse(
     case "unmetered":
       return { response: null, reservationId: null };
     case "reserved":
-      return { response: null, reservationId: reservation.reservationId };
+      return {
+        response: null,
+        reservationId: reservation.reservationId,
+        meter: {
+          plan: reservation.plan,
+          usedActions: reservation.usedActions,
+          cap: reservation.cap,
+          periodStart: reservation.periodStart,
+          periodEnd: reservation.periodEnd,
+        },
+      };
     case "refused": {
       const { wording, checkout } = await freeCapRefusalWording(apiKey, reservation, toolName);
+      // Flow B only (the database gate answers null for everyone else). The
+      // checkout-link experiment's arm was decided above and is not touched.
+      const monthSummary = reservation.plan === "free"
+        ? await loadCapSummary(supabase, workspaceId, reservation.periodStart)
+        : null;
       return {
-        response: usageLimitResult(requestId, reservation, wording, checkout),
+        response: usageLimitResult(requestId, reservation, wording, checkout, monthSummary),
         reservationId: null,
       };
     }
@@ -35356,6 +35384,22 @@ async function handleToolsCall(
       (toolResult.result as { isError?: unknown } | null)?.isError !== true,
     inboxId: resolvedInboxId,
     toolName: dispatchName,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
+  // Flow B (onb_convert = on): one short usage line at 80% and at 100% of the
+  // Free allowance, once per level per period (usage-meter-note.ts). No query
+  // unless this call's own reservation landed in the band; never a plan or a
+  // price for an OpenAI client; never fails the call.
+  await maybeAttachUsageMeterNote({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    reading: actionLimit.meter ?? null,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    wording: () => planLimitWording(apiKey),
+    appOrigin: APP_URL,
     attach: (note) => appendResultNote(toolResult, note),
   });
 

@@ -138,6 +138,44 @@ test('reset: internal owners only', async () => {
   assert.equal((await post({ action: 'reset' })).status, 500);
 });
 
+test('flow_b: shown rows, dismiss stamps, Continue on Free stamps, junk refused', async () => {
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'plan_summary_shown', surface: 'overview' })).status, 200);
+  assert.deepEqual(funnel, [{ workspaceId: 'ws-1', stage: 'plan_summary_shown', outcome: 'success', category: 'surface_overview' }]);
+  assert.equal(updates.length, 0);
+
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'plan_summary_dismissed', surface: 'onboarding' })).status, 200);
+  assert.ok('plan_summary_dismissed_at' in (updates[0] ?? {}));
+  assert.equal(funnel[0]?.category, 'surface_onboarding');
+
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'plan_summary_clicked', plan: 'free' })).status, 200);
+  assert.ok('plan_summary_dismissed_at' in (updates[0] ?? {}));
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'plan_summary_clicked', plan: 'solo' })).status, 200);
+  assert.equal(updates.length, 0, 'a buy click does not hide the card');
+  assert.equal(funnel[0]?.category, 'solo');
+
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'grace_end_note_dismissed' })).status, 200);
+  assert.ok('grace_end_note_seen_at' in (updates[0] ?? {}));
+  assert.equal(funnel.length, 0, 'a stamp-only event writes no funnel row');
+
+  reset();
+  assert.equal((await post({ action: 'flow_b', event: 'usage_meter_shown', level: 80, since: '2026-11-01T00:00:00Z' })).status, 200);
+  assert.equal(funnel[0]?.category, 'level_80');
+  for (const junk of [
+    { event: 'usage_meter_shown', level: 70, since: '2026-11-01' },
+    { event: 'usage_meter_shown', level: 80 },
+    { event: 'plan_summary_shown', surface: 'pricing' },
+    { event: 'plan_summary_clicked', plan: 'pro' },
+    { event: 'drop_tables' },
+  ]) {
+    assert.equal((await post({ action: 'flow_b', ...junk })).status, 400, JSON.stringify(junk));
+  }
+});
+
 test('signed out is 401; unknown actions and bad JSON are 400', async () => {
   reset();
   user = null;

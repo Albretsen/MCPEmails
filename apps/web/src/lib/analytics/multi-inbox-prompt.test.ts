@@ -106,6 +106,12 @@ test('the closed list in the app is the closed list in the migration', () => {
   const sql = readFileSync(new URL('../../../../../supabase/migrations/20261005120000_funnel_entry_point.sql', import.meta.url), 'utf8');
   const check = sql.slice(sql.indexOf('CHECK (entry_point IS NULL OR entry_point IN ('), sql.indexOf('COMMENT ON COLUMN'));
   const inSql = [...check.matchAll(/^\s*'([a-z_]+)',?\s*$/gm)].map((m) => m[1]);
+  // Later migrations append through the extend-in-check helper. Only the
+  // connect-modal openers are read here (chat_link and the app-password links
+  // are entry points of other surfaces).
+  const flowB = readFileSync(new URL('../../../../../supabase/migrations/20261026233917_onboarding_flow_b.sql', import.meta.url), 'utf8');
+  const appended = /'product_funnel_events_entry_point_check', 'entry_point',\s*ARRAY\[([^\]]*)\]/.exec(flowB)?.[1] ?? '';
+  for (const m of appended.matchAll(/'([a-z_]+)'/g)) inSql.push(m[1]);
   assert.deepEqual([...inSql].sort(), [...CONNECT_ENTRY_POINTS].sort());
 });
 

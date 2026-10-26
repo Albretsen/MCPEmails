@@ -183,3 +183,91 @@ test('a read-only key never gets a draft prompt', async (t) => {
   const text = view.container.querySelector('[data-testid="onb-draft-prompt"]').textContent;
   assert.ok(text.includes('here in the chat') && !text.includes('Drafts folder'));
 });
+
+// ── Flow B on It works (WP-H) ────────────────────────────────────────────────
+
+const FLOW_B = {
+  plan: 'free',
+  createdAt: T0,
+  firstCallAt: T0,
+  summaryDismissedAt: null,
+  graceNoteSeenAt: null,
+  graceEndsAt: later(3 * 86400),
+  inGrace: true,
+  freeCap: 150,
+  triedSecondInbox: false,
+  inboxCaps: { free: 1, personal: 3, solo: 10 },
+  prices: {
+    personal: { monthlyCents: 900, yearlyCents: 8640 },
+    solo: { monthlyCents: 1500, yearlyCents: 14400 },
+  },
+};
+
+function itWorks(overrides = {}) {
+  return props({
+    step: 'it_works',
+    status: baseStatus({ firstCall: { at: T0, tool: 'email_read' }, inboxes: { count: 1, sinceReset: 1, items: [{ id: 'i1', address: 'me@gmail.com' }] } }),
+    userEmail: 'me@gmail.com',
+    flowB: FLOW_B,
+    ...overrides,
+  });
+}
+
+test('B1: at the Free inbox cap the second-inbox card opens the dashboard upgrade panel', async (t) => {
+  const calls = stubFetch(t);
+  const finishedWith = [];
+  let started = 0;
+  const { view } = await render(t, ItWorksStep, itWorks({ finish: (href) => { finishedWith.push(href); }, startSecondInbox: () => { started += 1; } }));
+  const card = await waitFor(() => view.container.querySelector('[data-testid="onb-second-inbox"]'), { message: 'card (lazy)' });
+  assert.equal(card.getAttribute('data-at-cap'), 'true');
+  assert.ok(card.textContent.includes('Most people connect a second inbox'));
+  await flush(() => view.container.querySelector('[data-testid="onb-second-inbox-open"]').click());
+  assert.deepEqual(finishedWith, ['/dashboard/inboxes?connect=second_inbox']);
+  assert.equal(started, 0);
+  const events = calls.filter((c) => c.body?.action === 'flow_b').map((c) => c.body.event);
+  assert.ok(events.includes('second_inbox_prompt_clicked'));
+});
+
+test('B1: below the cap the card reopens the inbox step', async (t) => {
+  stubFetch(t);
+  let started = 0;
+  const { view } = await render(t, ItWorksStep, itWorks({
+    flowB: { ...FLOW_B, inboxCaps: { ...FLOW_B.inboxCaps, free: 3 } },
+    startSecondInbox: () => { started += 1; },
+  }));
+  const open = await waitFor(() => view.container.querySelector('[data-testid="onb-second-inbox-open"]'), { message: 'card (lazy)' });
+  await flush(() => open.click());
+  assert.equal(started, 1);
+});
+
+test('B2: plan summary, monthly first, annual beside it, Continue on Free hides it', async (t) => {
+  const calls = stubFetch(t);
+  const { view } = await render(t, ItWorksStep, itWorks());
+  const card = await waitFor(() => view.container.querySelector('[data-plan-summary="onboarding"]'), { message: 'card shown (lazy)' });
+  assert.ok(card.textContent.includes('Unlimited until'));
+  assert.ok(card.textContent.includes('Charged today. Cancel any time. 14-day refund.'));
+  assert.equal(card.getAttribute('data-plan-summary-recommended'), 'none', 'a consumer who never tried a second inbox gets no badge');
+  const personal = card.querySelector('[data-plan-summary-plan="personal"]');
+  assert.equal(personal.getAttribute('data-plan-summary-interval'), 'month');
+  assert.ok(personal.getAttribute('href').includes('plan=personal&interval=month'));
+  assert.ok(card.textContent.includes('$9/mo'));
+  await flush(() => card.querySelector('[data-testid="plan-summary-interval-year"]').click());
+  const annual = view.container.querySelector('[data-plan-summary-plan="personal"]');
+  assert.ok(annual.getAttribute('href').includes('interval=year'));
+  assert.ok(view.container.querySelector('[data-plan-summary="onboarding"]').textContent.includes('$86.40/yr'));
+  await flush(() => view.container.querySelector('[data-testid="plan-summary-free"]').click());
+  assert.equal(view.container.querySelectorAll('[data-plan-summary="onboarding"]').length, 0);
+  const clicked = calls.find((c) => c.body?.event === 'plan_summary_clicked');
+  assert.equal(clicked.body.plan, 'free');
+});
+
+test('B2: a work domain is recommended Pro; nothing Flow B shows with convert off', async (t) => {
+  stubFetch(t);
+  const work = itWorks({ userEmail: 'ops@acme-widgets.example' });
+  work.status.inboxes.items = [{ id: 'i1', address: 'ops@acme-widgets.example' }];
+  const { view } = await render(t, ItWorksStep, work);
+  const workCard = await waitFor(() => view.container.querySelector('[data-plan-summary="onboarding"]'), { message: 'card shown (lazy)' });
+  assert.equal(workCard.getAttribute('data-plan-summary-recommended'), 'solo');
+  const off = await render(t, ItWorksStep, itWorks({ variant: { flow: 'new', convert: 'off' } }));
+  assert.equal(off.view.container.querySelectorAll('[data-plan-summary], [data-testid="onb-second-inbox"]').length, 0);
+});

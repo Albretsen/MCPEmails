@@ -47,6 +47,9 @@ export function onboardingResetPatch(nowIso: string): WorkspaceUpdate {
     analytics_first_inbox_provider: null,
     analytics_first_credential_created_at: null,
     analytics_first_credential_method: null,
+    // Flow B (WP-H): the plan summary and the grace-end note come back too.
+    plan_summary_dismissed_at: null,
+    grace_end_note_seen_at: null,
   };
 }
 

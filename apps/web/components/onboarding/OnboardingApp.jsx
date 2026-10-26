@@ -27,6 +27,7 @@ import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return
  *   userEmail       signed-in address
  *   statusPromise   Promise<OnboardingStatus | null>
  *   requestedStep   ?step= when valid (QA: jump straight to a step), else null
+ *   flowB           Flow B facts (flow-b-server.ts) or null (WP-H)
  *   chatReturn      { client, provider } | null: a verified chat connect link
  *                   (from=chat). Only the inbox step, then ChatReturnPanel.
  *
@@ -38,10 +39,11 @@ import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return
  *   userEmail?: string,
  *   statusPromise: Promise<unknown>,
  *   requestedStep?: string | null,
+ *   flowB?: object | null,
  *   chatReturn?: { client: string | null, provider: string | null } | null,
  * }} props
  */
-export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, chatReturn = null }) {
+export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null }) {
   const t = useTranslations('onboarding');
   const [client, setClient] = useState(normalizeChipClient(initialClient) ?? 'claude');
 
@@ -77,6 +79,7 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
             variant={variant}
             mcpUrl={mcpUrl}
             userEmail={userEmail}
+            flowB={flowB}
             chatReturn={chatReturn}
           />
         </Suspense>
@@ -85,7 +88,7 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
   );
 }
 
-function OnboardingSteps({ statusPromise, requestedStep, client, provider, variant, mcpUrl, userEmail, chatReturn = null }) {
+function OnboardingSteps({ statusPromise, requestedStep, client, provider, variant, mcpUrl, userEmail, flowB, chatReturn = null }) {
   const t = useTranslations('onboarding');
   const router = useRouter();
   const initialStatus = use(statusPromise);
@@ -120,7 +123,10 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
     stepViewed(step);
   }, [step]);
 
+  // Flow B, B1: the inbox step opened again from It works for a second inbox.
+  const [secondInbox, setSecondInbox] = useState(false);
   const goNext = useCallback(() => {
+    setSecondInbox(false);
     if (chatReturn) {
       setPolling(null);
       takeChatReturn();
@@ -130,12 +136,20 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
     setStep((current) => nextStep(current) ?? current);
   }, [chatReturn, setPolling]);
   const goTo = useCallback((id) => {
-    if (isOnboardingStep(id)) setStep(id);
+    if (!isOnboardingStep(id)) return;
+    if (id !== 'inbox') setSecondInbox(false);
+    setStep(id);
   }, []);
-  const finish = useCallback(async () => {
+  const startSecondInbox = useCallback(() => {
+    setSecondInbox(true);
+    setStep('inbox');
+  }, []);
+  // `href` is a /dashboard path (B1 at the inbox cap opens the dashboard's
+  // upgrade panel); anything else, such as a click event, is /dashboard.
+  const finish = useCallback(async (href) => {
     setPolling(null);
     await onboardingCompleted();
-    router.push('/dashboard');
+    router.push(typeof href === 'string' && href.startsWith('/dashboard') ? href : '/dashboard');
   }, [setPolling, router]);
 
   const Panel = STEP_PANELS[step];
@@ -163,6 +177,9 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
         goNext={goNext}
         goTo={goTo}
         finish={finish}
+        flowB={flowB}
+        secondInbox={secondInbox}
+        startSecondInbox={startSecondInbox}
       />
     </>
   );

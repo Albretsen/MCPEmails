@@ -32,7 +32,7 @@ async function serverHtml(element) {
 
 for (const [Provider, name, ns, key] of [
   [AuthLocaleProvider, 'AuthLocaleProvider', ['auth', 'common'], ['auth', 'login', 'title']],
-  [AppLocaleProvider, 'AppLocaleProvider', ['dashboard', 'dashboardChrome', 'auth', 'common'], ['dashboard', 'settings', 'languageHeading']],
+  [AppLocaleProvider, 'AppLocaleProvider', ['dashboard', 'dashboardChrome', 'auth', 'common', 'convert'], ['dashboard', 'settings', 'languageHeading']],
 ]) {
   for (const locale of ['nb', 'fr']) {
     test(`${name}: a cold server render in ${locale} waits for the ${locale} catalog`, async () => {

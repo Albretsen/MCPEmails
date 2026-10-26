@@ -140,6 +140,18 @@ CREATE INDEX IF NOT EXISTS idx_workspaces_owner_id ON public.workspaces (owner_i
 CREATE OR REPLACE FUNCTION public.claim_onboarding_welcome(p_workspace_id uuid) RETURNS boolean
     LANGUAGE sql STABLE
     AS $$ SELECT false; $$;
+-- Onboarding Flow B (hosted: 20261026233917_onboarding_flow_b.sql). Hosted, it
+-- runs for workspaces in the onb_convert experiment arm; self-host has none.
+CREATE OR REPLACE FUNCTION public.onboarding_convert_on(p_workspace_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE
+    AS $$ SELECT false; $$;
+CREATE OR REPLACE FUNCTION public.claim_usage_meter_note(p_workspace_id uuid, p_level integer, p_period_start timestamptz) RETURNS boolean
+    LANGUAGE sql STABLE
+    AS $$ SELECT false; $$;
+CREATE OR REPLACE FUNCTION public.usage_month_summary(p_workspace_id uuid, p_since timestamptz)
+    RETURNS TABLE (reads integer, drafts integer, sends integer)
+    LANGUAGE sql STABLE
+    AS $$ SELECT 0, 0, 0 WHERE false; $$;
 CREATE OR REPLACE TRIGGER workspaces_updated_at
   BEFORE UPDATE ON public.workspaces
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

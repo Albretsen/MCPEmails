@@ -37,6 +37,9 @@ export const CONNECT_ENTRY_POINTS = Object.freeze([
   'reconnect',
   // The command palette's "Connect inbox".
   'command_palette',
+  // Onboarding Flow B, B1: "Connect your other inbox" on It works, at the
+  // Free inbox cap (/dashboard/inboxes?connect=second_inbox). 20261026233917.
+  'second_inbox',
   // Every other known opener: the Usage page's empty state, the re-open after
   // an OAuth callback refused at the cap, the admin-consent toast.
   'other',

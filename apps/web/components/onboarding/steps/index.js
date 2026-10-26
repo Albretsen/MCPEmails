@@ -30,8 +30,13 @@
  *                   address" chip; never prefill the field with it)
  *   goNext()        advance to the next step (no-op after the last)
  *   goTo(stepId)    jump to any step (ONBOARDING_STEPS in src/lib/onboarding/flow.ts)
- *   finish()        the flow is done: stamps onboarding_completed_at and
- *                   navigates to /dashboard
+ *   finish(href?)   the flow is done: stamps onboarding_completed_at and
+ *                   navigates to /dashboard (or `href`, a /dashboard path)
+ *   flowB           Flow B facts (src/lib/onboarding/flow-b-server.ts), or
+ *                   null outside onb_convert = on or off Free (WP-H)
+ *   secondInbox     true when the inbox step was opened from It works'
+ *                   "Connect your other inbox" (WP-H, plan B1)
+ *   startSecondInbox()  open the inbox step in that mode
  *   returnTo        optional, InboxStep only: the /authorize URL a Microsoft
  *                   sign-in returns to when the step runs inside OAuth consent
  *                   (components/auth/AuthorizeInboxStep.jsx); null on /onboarding

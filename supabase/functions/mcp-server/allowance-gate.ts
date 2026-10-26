@@ -195,7 +195,16 @@ export type BillableActionReservation =
   /** No reservation was made and none is owed: the bare insert in writeActionUsage is correct. */
   | { outcome: "unmetered"; reason: string }
   /** Reserved. `usedActions` counts this reservation, so 120 here IS the 80% crossing. */
-  | { outcome: "reserved"; reservationId: string; usedActions: number }
+  | {
+    outcome: "reserved";
+    reservationId: string;
+    usedActions: number;
+    /** The terms it was reserved under, for the Flow B usage line (usage-meter-note.ts). */
+    plan: string;
+    cap: number;
+    periodStart: string;
+    periodEnd: string;
+  }
   /** Refused by the cap. Everything the refusal text and `_meta` need. */
   | {
     outcome: "refused";
@@ -312,7 +321,10 @@ export async function reserveBillableAction(
         payload: usagePayload(allowance, decision, result.used_actions),
       });
     }
-    return { outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions };
+    return {
+      outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions,
+      plan: allowance.plan, cap: decision.cap, periodStart: decision.periodStart, periodEnd: decision.periodEnd,
+    };
   }
 
   const usedActions = result?.used_actions ?? decision.cap;

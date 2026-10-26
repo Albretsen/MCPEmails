@@ -56,7 +56,7 @@ const { DashboardApp } = await import('../dashboard/App.jsx');
 const { LoginApp } = await import('../auth/LoginApp.jsx');
 
 const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
-const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common'];
+const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common', 'convert'];
 const STORAGE_KEY = 'mcpe-locale';
 /** The language buttons on the Settings page, by their own-language names. */
 const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
@@ -268,7 +268,7 @@ test('bundle: only the English catalogs are imported statically', () => {
   const read = (file) => readFileSync(new URL(file, import.meta.url), 'utf8');
   const staticImports = (file) => [...read(file).matchAll(STATIC_CATALOG)].map((m) => `${m[1]}/${m[2]}`);
   assert.deepEqual(staticImports('./AppLocaleProvider.jsx'),
-    ['en/dashboard', 'en/dashboardChrome', 'en/auth', 'en/common']);
+    ['en/dashboard', 'en/dashboardChrome', 'en/auth', 'en/common', 'en/convert']);
   assert.deepEqual(staticImports('./AuthLocaleProvider.jsx'), ['en/auth', 'en/common']);
   assert.deepEqual(staticImports('./LocaleCore.jsx'), []);
   // Every other language is reachable on demand, all four files of it.

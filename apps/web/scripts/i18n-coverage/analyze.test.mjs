@@ -38,7 +38,7 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.deepEqual(byFile.get('app/(auth)/login/page.js')?.needs, ['auth']);
   assert.deepEqual(byFile.get('app/signup/page.js')?.needs, ['auth']);
   assert.deepEqual(byFile.get('app/authorize/page.js')?.needs, ['auth', 'onboarding']);
-  assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['dashboard', 'dashboardChrome']);
+  assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['convert', 'dashboard', 'dashboardChrome']);
   assert.deepEqual(byFile.get('app/[locale]/page.tsx')?.needs, ['compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/pricing/page.js')?.needs, ['compare', 'home', 'pricing']);
   assert.deepEqual(byFile.get('app/[locale]/docs/(catalogue)/page.js')?.needs, ['compare', 'docs', 'home']);
@@ -91,7 +91,7 @@ test('the app: sign-up, login and OAuth consent get the auth-only provider, the 
   assert.equal(byFile.get('app/dashboard/[[...section]]/page.js')?.provider, 'AppLocaleProvider');
   // /onboarding has its own budget: none of the dashboard's copy.
   assert.equal(byFile.get('app/onboarding/page.tsx')?.provider, 'OnboardingLocaleProvider');
-  assert.deepEqual(real.onboardingNamespaces, ['common', 'onboarding']);
+  assert.deepEqual(real.onboardingNamespaces, ['common', 'convert', 'onboarding']);
 });
 
 // ---------------------------------------------------------------------------

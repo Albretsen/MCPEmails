@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { normalizeOnboardingClient, onboardingActionPayload } from '@/lib/onboarding/state';
-import { connectEntryPoint, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { connectEntryPoint, recordProductFunnelEvent, type ProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { parseFlowBEvent } from '@/lib/onboarding/flow-b.mjs';
 import { STEP_FUNNEL_CATEGORY, isOnboardingStep } from '@/lib/onboarding/flow';
 import { normalizeChipClient } from '@/lib/onboarding/clients.mjs';
 import { resetOnboarding } from '@/lib/onboarding/reset';
@@ -39,6 +40,12 @@ export async function GET(): Promise<NextResponse> {
  *                             setup" link disappears)
  *   reset           {}        internal accounts, owner only: Settings > Reset
  *                             onboarding (src/lib/onboarding/reset.ts)
+ *
+ * Flow B (onb_convert = on, src/lib/onboarding/flow-b.mjs parseFlowBEvent):
+ *   flow_b          {event, surface?, plan?, level?, since?}  the second-inbox
+ *                             card, the plan summary, the usage meter and the
+ *                             grace-end note; "shown" rows are deduplicated,
+ *                             dismissals stamp a workspaces column
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
@@ -96,6 +103,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!result.ok) return NextResponse.json({ error: 'Could not reset onboarding.' }, { status: 500 });
     await recordProductFunnelEvent(db, { workspaceId, stage: 'onboarding_reset', outcome: 'success', category: 'unknown' });
     return NextResponse.json({ ok: true, resetAt: result.resetAt });
+  }
+
+  if (action === 'flow_b') {
+    const parsed = parseFlowBEvent(body);
+    if (!parsed) return NextResponse.json({ error: 'Invalid event.' }, { status: 400 });
+    const db = createServiceRoleClient();
+    if (parsed.stamp === 'plan_summary_dismissed_at') {
+      await db.from('workspaces').update({ plan_summary_dismissed_at: now }).eq('id', workspaceId).is('plan_summary_dismissed_at', null);
+    } else if (parsed.stamp === 'grace_end_note_seen_at') {
+      await db.from('workspaces').update({ grace_end_note_seen_at: now }).eq('id', workspaceId).is('grace_end_note_seen_at', null);
+    }
+    if (parsed.stage) {
+      let record = true;
+      if (parsed.dedupe) {
+        let existing = db.from('product_funnel_events').select('id')
+          .eq('workspace_id', workspaceId).eq('stage', parsed.stage).eq('category', parsed.category);
+        if (parsed.dedupe === 'since' && parsed.since) existing = existing.gte('occurred_at', parsed.since);
+        const { data } = await existing.limit(1);
+        record = !(data && data.length > 0);
+      }
+      if (record) {
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: parsed.stage as ProductFunnelEvent['stage'],
+          outcome: 'success',
+          category: parsed.category as FunnelCategory,
+        });
+      }
+    }
+    return NextResponse.json({ ok: true });
   }
 
   if (action !== 'started' && action !== 'client_selected' && action !== 'provider_selected') {
