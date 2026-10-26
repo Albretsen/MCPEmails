@@ -111,17 +111,51 @@ const GUESS_GROUPS: readonly GuessGroup[] = [
           "comes from reading it by its message_id"
         : "",
   },
+  {
+    // email_attachment, read-out of 2026-10-26: attachment_id, attachment_name.
+    names: [
+      "attachment_id", "attachment_name", "attachment", "attachment_filename",
+      "file_name", "file_id", "part_id", "content_id", "attachment_number",
+    ],
+    fact: (allowed) =>
+      allowed.has("attachment_index") && allowed.has("filename")
+        ? "an attachment is chosen by attachment_index or filename, as reading " +
+          "its message lists them"
+        : "",
+  },
 ];
 
 const GUESS_BY_NAME: ReadonlyMap<string, GuessGroup> = new Map(
   GUESS_GROUPS.flatMap((group) => group.names.map((name) => [name, group] as const)),
 );
 
+/** Marks the inbox listing fact as stated, beside the groups. */
+const INBOX_LISTING = Symbol("inbox_listing");
+
 /** Facts for a required argument, by name, when it is missing. */
 const REQUIRED_FACTS: Readonly<Record<string, string>> = {
   message_id: "it is the id each message carries in a list or search result",
   message_ids: "they are the ids messages carry in a list or search result",
 };
+
+/**
+ * inbox_list's own arguments. Any other argument on it (limit, query,
+ * include_stats: 16 refusals in 30 days to 2026-10-26, most of them `limit`,
+ * and several in a workspace's first hour) gets this fact: there is nothing
+ * to page or search, and three arguments narrow the list.
+ */
+function inboxListingFact(allowed: ReadonlySet<string>): string {
+  return allowed.has("inbox") && allowed.has("provider") && allowed.has("service") &&
+      !allowed.has("message_id")
+    ? "it returns every inbox in one call, and inbox (an email address or " +
+      "inbox_id), provider or service narrow it"
+    : "";
+}
+
+/** The date arguments, for a value of the wrong JSON type (a number, an object). */
+const DATE_ARGUMENTS = new Set(["since", "before"]);
+const DATE_TYPE_FACT = "it takes a string with the year first, such as " +
+  "\"2026-10-01\", \"today\" or \"7 days ago\"";
 
 function normalise(name: string): string {
   return name.trim().replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase().replace(/[\s-]+/g, "_");
@@ -146,17 +180,24 @@ export function withGuessedArgumentHints<T extends SchemaErrorLike>(
   const allowedSet = new Set(allowed);
   const prefix = `${rootPath}.`;
   // start_date and end_date in one call get the fact once, not twice.
-  const stated = new Set<GuessGroup>();
+  const stated = new Set<GuessGroup | typeof INBOX_LISTING>();
   return errors.map((error) => {
     if (!error.path.startsWith(prefix)) return error;
     const property = error.path.slice(prefix.length);
     if (property.includes(".") || property.includes("[")) return error;
 
     if (error.keyword === "required") {
-      const fact = REQUIRED_FACTS[property];
+      // On email_attachment the id is the message's, not the attachment's.
+      const fact = property === "message_id" && allowedSet.has("attachment_index")
+        ? "it is the id of the message that carries the attachment, from a list or search result"
+        : REQUIRED_FACTS[property];
       return fact && error.message === "is required"
         ? { ...error, message: `is required; ${fact}` }
         : error;
+    }
+
+    if (error.keyword === "type" && DATE_ARGUMENTS.has(property) && allowedSet.has(property)) {
+      return { ...error, message: `${error.message}; ${DATE_TYPE_FACT}` };
     }
 
     // Only the validator's bare wording: a refusal another rewrite already
@@ -165,6 +206,12 @@ export function withGuessedArgumentHints<T extends SchemaErrorLike>(
       return error;
     }
     const group = GUESS_BY_NAME.get(normalise(property));
+    const listing = inboxListingFact(allowedSet);
+    if (listing && (!group || !group.fact(allowedSet))) {
+      if (stated.has(INBOX_LISTING)) return { ...error, message: `is not an argument of ${subject} either` };
+      stated.add(INBOX_LISTING);
+      return { ...error, message: `is not an argument of ${subject}; ${listing}` };
+    }
     if (!group) return error;
     const fact = group.fact(allowedSet);
     if (fact) {

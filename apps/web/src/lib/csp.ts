@@ -23,10 +23,11 @@ import { THEME_BOOTSTRAP_SCRIPT } from '@/lib/theme-bootstrap';
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT IS ALLOWED TO RUN, AND WHY
  * ─────────────────────────────────────────────────────────────────────────────
- *  'self'            — /_next/static/** chunks and /_vercel/insights/script.js
- *                      (Vercel Analytics injects that one from a useEffect with
- *                      document.createElement, so it is a same-origin src load,
- *                      not an inline script, and needs no nonce).
+ *  'self'            — /_next/static/** chunks, /_vercel/insights/script.js
+ *                      and /_vercel/speed-insights/script.js (Vercel Analytics
+ *                      and Speed Insights inject those from a useEffect with
+ *                      document.createElement, so they are same-origin src
+ *                      loads, not inline scripts, and need no nonce).
  *  'nonce-<random>'  — Next's inline bootstrap + RSC flight scripts. Next reads
  *                      the nonce back out of the CSP on the REQUEST (see
  *                      proxy.ts) and stamps it onto the tags it emits. No app
@@ -43,8 +44,9 @@ import { THEME_BOOTSTRAP_SCRIPT } from '@/lib/theme-bootstrap';
  *                      today (checkout is a server-side redirect to Stripe's
  *                      hosted page), but the allowlist is harmless and Elements
  *                      has been on and off the roadmap.
- *  va.vercel-scripts.com — @vercel/analytics loads its DEBUG build from there in
- *                      development; in production the script is same-origin.
+ *  va.vercel-scripts.com — @vercel/analytics and @vercel/speed-insights load
+ *                      their DEBUG builds from there in development; in
+ *                      production the scripts are same-origin.
  *
  * A nonce and a hash coexist happily: a script runs if it matches ANY source
  * expression. Note that the presence of either one makes browsers IGNORE

@@ -461,7 +461,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const adminConsentParam = readQuery(searchParams, 'admin_consent');
     const signupMethod = readQuery(searchParams, 'signup_method');
 
-    if (signupMethod === 'google' || signupMethod === 'github') {
+    // A browser beacon only; signups are counted from the database
+    // (product_funnel_events stage 'signup_completed'), see src/lib/analytics.mjs.
+    if (signupMethod === 'google' || signupMethod === 'github' || signupMethod === 'microsoft') {
       trackProductEvent('signup_completed', { method: signupMethod });
     }
 

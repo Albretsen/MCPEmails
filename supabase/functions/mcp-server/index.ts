@@ -612,6 +612,7 @@ import {
   type UsageEmailInput,
 } from "./allowance-gate.ts";
 import {
+  countsAsFirstProductUse,
   type FirstUseMarkers,
   firstUseAlreadyRecorded,
   settleAfterResponse,
@@ -719,6 +720,7 @@ import {
 } from "./validation-observability.ts";
 import { remediesFor, withSiblingOperations } from "./argument-remedies.ts";
 import { withGuessedArgumentHints } from "./argument-guesses.ts";
+import { emailSearchTimeoutText } from "./search-timeout-message.ts";
 import {
   closeDraftLine,
   draftIdIsRecordable,
@@ -4457,6 +4459,17 @@ async function freeCapRefusalWording(
  * It is an aggregate funnel marker, never analytics request data. The client
  * is a fixed label (client-label.ts), never the User-Agent itself. */
 async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
+  // A call with no resolved inbox only counts when the workspace has a
+  // mailbox at all. Without this, an `inbox_list` that answered an empty list
+  // to a workspace that never connected anything wrote the activation marker
+  // (26 workspaces in 60 days, about 2% of signups). A failed lookup counts
+  // as "no inbox": missing one activation beats inventing one, and the next
+  // call retries. See countsAsFirstProductUse.
+  if (!inboxId) {
+    const { data: anyInbox, error: anyInboxError } = await supabase.from("inboxes").select("id").eq("workspace_id", workspaceId).limit(1);
+    if (anyInboxError) console.error("[mcp-server] first_product_use_inbox_check_failed", { workspace_id: workspaceId, error: anyInboxError.message });
+    if (!countsAsFirstProductUse(inboxId, (anyInbox ?? []).length > 0)) return;
+  }
   const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
   const rawProvider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
   const provider = rawProvider === "imap" || rawProvider === "generic" ? "generic_imap" : rawProvider;
@@ -21533,8 +21546,9 @@ async function executeSearchEmails(
           result: {
             content: [{
               type: "text",
-              text:
-                "Search timed out after 30 seconds. Try a simpler or more specific query.",
+              // On IMAP it also names the list operation and a cheaper search:
+              // see search-timeout-message.ts.
+              text: emailSearchTimeoutText(inbox.provider, Math.round(SEARCH_TIMEOUT_MS / 1000)),
             }],
             isError: true,
           },

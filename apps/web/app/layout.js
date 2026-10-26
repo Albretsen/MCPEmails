@@ -6,6 +6,7 @@ import { preloadFonts } from './fonts';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import AcquisitionCapture from '../components/analytics/AcquisitionCapture';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
 import { isStaging } from '../src/lib/env/app-env';
@@ -108,6 +109,13 @@ export default async function RootLayout({ children }) {
           lands in production numbers. Production renders neither branch.
         */}
         {isStaging() ? <StagingRibbon /> : <Analytics />}
+        {/*
+          Real-user page speed per route and device, production only like
+          Analytics. It injects a same-origin /_vercel/speed-insights/script.js
+          and posts to the same origin, so script-src/connect-src 'self' cover
+          it with no nonce (see src/lib/csp.ts).
+        */}
+        {isStaging() ? null : <SpeedInsights />}
       </body>
     </html>
   );
