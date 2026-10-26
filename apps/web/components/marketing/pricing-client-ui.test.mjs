@@ -233,6 +233,18 @@ test('logged out: the plan cards show four plans in ladder order, the featured o
   ]);
 });
 
+test('every paid card says charged today, cancel any time, 14-day refund under its button; Free does not', async (t) => {
+  const view = await renderPricing(t);
+  const cards = [...view.container.querySelectorAll('.price-grid .price')];
+  const lines = cards.map((c) => c.querySelector('[data-checkout-reassurance]')?.textContent ?? null);
+  const line = 'Charged today. Cancel any time. 14-day refund.';
+  assert.deepEqual(lines, [null, line, line, line]);
+  // Directly after the button, inside the card.
+  for (const card of cards.slice(1)) {
+    assert.equal(card.querySelector('a.btn').nextElementSibling?.dataset.checkoutReassurance, 'subscription');
+  }
+});
+
 // ===========================================================================
 // Logged in
 // ===========================================================================

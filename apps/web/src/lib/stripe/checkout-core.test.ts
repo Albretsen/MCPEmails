@@ -2521,6 +2521,30 @@ test('a pass holder subscribing to Personal yearly is anchored to the pass end, 
   assert.deepEqual(data.metadata, { user_id: USER_ID });
 });
 
+test('the hosted page says charged today, cancel any time, 14-day refund, after the payment obligation', async () => {
+  const en = (await checkout({ planId: 'personal', entitlement: null })).sessionsCreated[0];
+  const enText = (en.custom_text as SubmitText).submit.message;
+  assert.match(
+    enText,
+    /^By subscribing you agree to pay the price shown, every billing period until you cancel\. Charged today\. Cancel any time\. 14-day refund\. Cancel from your dashboard/,
+  );
+  const de = (await checkout({ planId: 'personal', entitlement: null, locale: 'de' })).sessionsCreated[0];
+  const deText = (de.custom_text as SubmitText).submit.message;
+  assert.match(deText, /bis Sie kündigen\. Heute abgebucht\. Jederzeit kündbar\. 14 Tage volle Erstattung\. Kündigen Sie/);
+  for (const message of [enText, deText]) {
+    assert.ok(message.length <= 1200, 'Stripe caps custom_text.submit at 1200 characters');
+    assert.doesNotMatch(message, /30 days|30 Tage|trial|Testphase/i);
+  }
+});
+
+test('a pass holder anchored to the pass end is told nothing is charged today', async () => {
+  const passes = [livePass('a', -10, 80)];
+  const { sessionsCreated } = await checkout({ planId: 'personal', interval: 'year', entitlement: null, passes });
+  const text = (sessionsCreated[0].custom_text as SubmitText).submit.message;
+  assert.match(text, /No charge today\. Cancel any time\. 14-day refund\./);
+  assert.doesNotMatch(text, /Charged today/);
+});
+
 test('a pass holder asking for monthly Personal before the last month is refused, with no session', async () => {
   const passes = [livePass('a', -10, 80)];
   const { outcome, sessionsCreated } = await checkout({ planId: 'personal', interval: 'month', entitlement: null, passes });
