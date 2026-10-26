@@ -3,6 +3,25 @@
 Raw idea capture. Nothing here is decided, scoped or scheduled. One heading per
 idea, newest first, with the date it was captured.
 
+## Guided onboarding to the first tool call (2026-10-26)
+
+Rework onboarding so a new user connects an inbox, connects an AI assistant and
+makes their first tool calls from that assistant before they ever see the
+dashboard. People who connect an inbox and start using the product early stick
+around far more.
+
+- Step 1: connect an inbox. Step 2: connect an AI assistant (Claude, ChatGPT
+  and the other supported clients). Step 3: run a first prompt in the
+  assistant, and the onboarding page confirms the tool call arrived.
+- The dashboard comes after step 3, or after an explicit skip.
+- A/B test it against the current flow with the existing experiments system.
+  Primary metric: share of signups with a first tool call within 24 hours.
+  Secondary: week-4 retention and paid conversion.
+
+Open questions: how the page detects the first tool call live (poll usage rows
+or a realtime channel), what to do for clients that cannot connect from a
+browser handoff, and whether skip should be visible from step 1.
+
 ## Affiliate program, invite-only pilot (2026-10-24)
 
 Pay a small group of hand-picked partners (AI workflow creators, AI tool
