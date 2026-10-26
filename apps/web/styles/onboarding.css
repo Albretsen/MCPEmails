@@ -1,0 +1,120 @@
+/* /onboarding: one narrow column, design tokens only (theme.css). */
+
+.onb-root {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+}
+
+.onb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 0;
+}
+
+.onb-brand {
+  font-weight: 600;
+  color: var(--fg-1);
+  text-decoration: none;
+}
+
+.onb-exit {
+  font-size: 13.5px;
+  color: var(--fg-3);
+}
+
+.onb-exit:hover { color: var(--fg-1); }
+
+.onb-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.onb-progress {
+  margin: 20px 0 4px;
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+
+.onb-panel { margin-top: 4px; }
+
+.onb-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.onb-muted { color: var(--fg-3); margin: 0 0 16px; }
+.onb-strong { font-weight: 600; margin: 0 0 8px; }
+.onb-loading { margin-top: 20px; }
+.onb-error { color: var(--red-700); margin: 16px 0 0; }
+
+.onb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* The client chip: "Using Claude · Change" */
+.onb-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  font-size: 13px;
+}
+
+.onb-chip-dot { color: var(--fg-4); }
+
+.onb-chip-change {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.onb-chip-change:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: 4px; }
+
+.onb-chip-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.onb-chip-option {
+  border: 0;
+  background: none;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font: inherit;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+
+.onb-chip-option:hover,
+.onb-chip-option:focus-visible { background: var(--ink-100); outline: none; }
+.onb-chip-option.is-selected { font-weight: 600; }
+.onb-chip-more { color: var(--fg-3); }

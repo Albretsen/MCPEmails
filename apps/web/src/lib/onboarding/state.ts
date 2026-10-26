@@ -1,6 +1,9 @@
 export const ONBOARDING_CLIENTS = [
   'claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini',
   'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown',
+  // The /onboarding client chip offers Claude Code as its own choice
+  // (migration 20261026152301 added it to both CHECKs).
+  'claude_code',
 ] as const;
 
 export type OnboardingClient = typeof ONBOARDING_CLIENTS[number];

@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "Set up MCPEmails",
+    "progress": "Step {current} of {total}",
+    "exit": "Go to dashboard",
+    "loading": "Loading your setup",
+    "statusError": "Could not load your setup. Reload the page to try again."
+  },
+  "chip": {
+    "using": "Using {client}",
+    "change": "Change",
+    "label": "The AI app you use with MCPEmails",
+    "more": "More apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Which inbox should your AI use?",
+      "reuseTitle": "An inbox is already connected",
+      "reuse": "Use {address}",
+      "connectAnother": "Connect another inbox"
+    },
+    "add_to_ai": {
+      "title": "Add MCPEmails to {client}"
+    },
+    "first_prompt": {
+      "title": "Ask {client} something"
+    },
+    "wait": {
+      "title": "Waiting for {client}"
+    },
+    "it_works": {
+      "title": "It works"
+    }
+  },
+  "nav": {
+    "continue": "Continue",
+    "back": "Back",
+    "done": "Done"
+  },
+  "placeholder": "This step is still being built."
+}

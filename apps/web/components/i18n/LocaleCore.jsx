@@ -35,30 +35,35 @@ const LOADERS = {
     dashboardChrome: () => import('../../messages/nb/dashboardChrome.json'),
     auth: () => import('../../messages/nb/auth.json'),
     common: () => import('../../messages/nb/common.json'),
+    onboarding: () => import('../../messages/nb/onboarding.json'),
   },
   es: {
     dashboard: () => import('../../messages/es/dashboard.json'),
     dashboardChrome: () => import('../../messages/es/dashboardChrome.json'),
     auth: () => import('../../messages/es/auth.json'),
     common: () => import('../../messages/es/common.json'),
+    onboarding: () => import('../../messages/es/onboarding.json'),
   },
   fr: {
     dashboard: () => import('../../messages/fr/dashboard.json'),
     dashboardChrome: () => import('../../messages/fr/dashboardChrome.json'),
     auth: () => import('../../messages/fr/auth.json'),
     common: () => import('../../messages/fr/common.json'),
+    onboarding: () => import('../../messages/fr/onboarding.json'),
   },
   zh: {
     dashboard: () => import('../../messages/zh/dashboard.json'),
     dashboardChrome: () => import('../../messages/zh/dashboardChrome.json'),
     auth: () => import('../../messages/zh/auth.json'),
     common: () => import('../../messages/zh/common.json'),
+    onboarding: () => import('../../messages/zh/onboarding.json'),
   },
   de: {
     dashboard: () => import('../../messages/de/dashboard.json'),
     dashboardChrome: () => import('../../messages/de/dashboardChrome.json'),
     auth: () => import('../../messages/de/auth.json'),
     common: () => import('../../messages/de/common.json'),
+    onboarding: () => import('../../messages/de/onboarding.json'),
   },
 };
 

@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "Configurer MCPEmails",
+    "progress": "Étape {current} sur {total}",
+    "exit": "Aller au tableau de bord",
+    "loading": "Chargement de votre configuration",
+    "statusError": "Impossible de charger votre configuration. Rechargez la page pour réessayer."
+  },
+  "chip": {
+    "using": "Avec {client}",
+    "change": "Modifier",
+    "label": "L'app d'IA que vous utilisez avec MCPEmails",
+    "more": "Plus d'apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Quelle boîte de réception votre IA doit-elle utiliser ?",
+      "reuseTitle": "Une boîte de réception est déjà connectée",
+      "reuse": "Utiliser {address}",
+      "connectAnother": "Connecter une autre boîte"
+    },
+    "add_to_ai": {
+      "title": "Ajouter MCPEmails à {client}"
+    },
+    "first_prompt": {
+      "title": "Posez une question à {client}"
+    },
+    "wait": {
+      "title": "En attente de {client}"
+    },
+    "it_works": {
+      "title": "Ça marche"
+    }
+  },
+  "nav": {
+    "continue": "Continuer",
+    "back": "Retour",
+    "done": "Terminé"
+  },
+  "placeholder": "Cette étape est encore en construction."
+}

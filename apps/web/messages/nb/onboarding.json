@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "Kom i gang med MCPEmails",
+    "progress": "Steg {current} av {total}",
+    "exit": "Gå til dashbordet",
+    "loading": "Laster oppsettet ditt",
+    "statusError": "Kunne ikke laste oppsettet. Last inn siden på nytt for å prøve igjen."
+  },
+  "chip": {
+    "using": "Bruker {client}",
+    "change": "Endre",
+    "label": "AI-appen du bruker med MCPEmails",
+    "more": "Flere apper"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Hvilken innboks skal AI-en din bruke?",
+      "reuseTitle": "En innboks er allerede koblet til",
+      "reuse": "Bruk {address}",
+      "connectAnother": "Koble til en annen innboks"
+    },
+    "add_to_ai": {
+      "title": "Legg til MCPEmails i {client}"
+    },
+    "first_prompt": {
+      "title": "Spør {client} om noe"
+    },
+    "wait": {
+      "title": "Venter på {client}"
+    },
+    "it_works": {
+      "title": "Det virker"
+    }
+  },
+  "nav": {
+    "continue": "Fortsett",
+    "back": "Tilbake",
+    "done": "Ferdig"
+  },
+  "placeholder": "Dette steget er fortsatt under arbeid."
+}

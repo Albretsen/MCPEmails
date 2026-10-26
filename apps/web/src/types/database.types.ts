@@ -1507,27 +1507,6 @@ export type Database = {
           },
         ]
       }
-      business_founder_places: {
-        Row: {
-          created_at: string
-          interval: string
-          owner_id: string
-          stripe_subscription_id: string
-        }
-        Insert: {
-          created_at?: string
-          interval: string
-          owner_id: string
-          stripe_subscription_id: string
-        }
-        Update: {
-          created_at?: string
-          interval?: string
-          owner_id?: string
-          stripe_subscription_id?: string
-        }
-        Relationships: []
-      }
       bulk_plans: {
         Row: {
           action: string
@@ -1722,6 +1701,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      business_founder_places: {
+        Row: {
+          created_at: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          interval?: string
+          owner_id?: string
+          stripe_subscription_id?: string
+        }
+        Relationships: []
       }
       cancellation_feedback: {
         Row: {
@@ -3522,146 +3522,6 @@ export type Database = {
         }
         Relationships: []
       }
-      reminders: {
-        Row: {
-          api_key_id: string | null
-          claimed_at: string | null
-          completed_at: string | null
-          condition: string
-          consecutive_failures: number
-          created_at: string
-          due_at: string
-          folder: string | null
-          id: string
-          inbox_id: string
-          kind: string
-          last_checked_at: string | null
-          last_error_code: string | null
-          lease_token: string | null
-          message_digest: string
-          message_ref: Json
-          next_check_at: string | null
-          replied_at: string | null
-          returned_at: string | null
-          status: string
-          summary: Json | null
-          updated_at: string
-          workspace_id: string
-        }
-        Insert: {
-          api_key_id?: string | null
-          claimed_at?: string | null
-          completed_at?: string | null
-          condition?: string
-          consecutive_failures?: number
-          created_at?: string
-          due_at: string
-          folder?: string | null
-          id?: string
-          inbox_id: string
-          kind: string
-          last_checked_at?: string | null
-          last_error_code?: string | null
-          lease_token?: string | null
-          message_digest: string
-          message_ref: Json
-          next_check_at?: string | null
-          replied_at?: string | null
-          returned_at?: string | null
-          status?: string
-          summary?: Json | null
-          updated_at?: string
-          workspace_id: string
-        }
-        Update: {
-          api_key_id?: string | null
-          claimed_at?: string | null
-          completed_at?: string | null
-          condition?: string
-          consecutive_failures?: number
-          created_at?: string
-          due_at?: string
-          folder?: string | null
-          id?: string
-          inbox_id?: string
-          kind?: string
-          last_checked_at?: string | null
-          last_error_code?: string | null
-          lease_token?: string | null
-          message_digest?: string
-          message_ref?: Json
-          next_check_at?: string | null
-          replied_at?: string | null
-          returned_at?: string | null
-          status?: string
-          summary?: Json | null
-          updated_at?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reminders_api_key_id_fkey"
-            columns: ["api_key_id"]
-            isOneToOne: false
-            referencedRelation: "api_keys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reminders_inbox_id_fkey"
-            columns: ["inbox_id"]
-            isOneToOne: false
-            referencedRelation: "inboxes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reminders_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "billing_funnel_by_workspace"
-            referencedColumns: ["workspace_id"]
-          },
-          {
-            foreignKeyName: "reminders_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      retention_switches: {
-        Row: {
-          auto_go_live_at: string | null
-          decided_at: string | null
-          decision: string | null
-          decision_detail: Json | null
-          key: string
-          last_probe_at: string | null
-          mode: string
-          updated_at: string
-        }
-        Insert: {
-          auto_go_live_at?: string | null
-          decided_at?: string | null
-          decision?: string | null
-          decision_detail?: Json | null
-          key: string
-          last_probe_at?: string | null
-          mode?: string
-          updated_at?: string
-        }
-        Update: {
-          auto_go_live_at?: string | null
-          decided_at?: string | null
-          decision?: string | null
-          decision_detail?: Json | null
-          key?: string
-          last_probe_at?: string | null
-          mode?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       referral_codes: {
         Row: {
           code: string
@@ -3811,6 +3671,146 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reminders: {
+        Row: {
+          api_key_id: string | null
+          claimed_at: string | null
+          completed_at: string | null
+          condition: string
+          consecutive_failures: number
+          created_at: string
+          due_at: string
+          folder: string | null
+          id: string
+          inbox_id: string
+          kind: string
+          last_checked_at: string | null
+          last_error_code: string | null
+          lease_token: string | null
+          message_digest: string
+          message_ref: Json
+          next_check_at: string | null
+          replied_at: string | null
+          returned_at: string | null
+          status: string
+          summary: Json | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          condition?: string
+          consecutive_failures?: number
+          created_at?: string
+          due_at: string
+          folder?: string | null
+          id?: string
+          inbox_id: string
+          kind: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          lease_token?: string | null
+          message_digest: string
+          message_ref: Json
+          next_check_at?: string | null
+          replied_at?: string | null
+          returned_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          condition?: string
+          consecutive_failures?: number
+          created_at?: string
+          due_at?: string
+          folder?: string | null
+          id?: string
+          inbox_id?: string
+          kind?: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          lease_token?: string | null
+          message_digest?: string
+          message_ref?: Json
+          next_check_at?: string | null
+          replied_at?: string | null
+          returned_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "reminders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retention_switches: {
+        Row: {
+          auto_go_live_at: string | null
+          decided_at: string | null
+          decision: string | null
+          decision_detail: Json | null
+          key: string
+          last_probe_at: string | null
+          mode: string
+          updated_at: string
+        }
+        Insert: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key?: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       scheduled_sends: {
         Row: {
@@ -5585,10 +5585,12 @@ export type Database = {
           inbox_swapped_at: string | null
           onboarding_client: string | null
           onboarding_client_selected_at: string | null
+          onboarding_completed_at: string | null
           onboarding_connection_verified_at: string | null
           onboarding_credential_issued_at: string | null
           onboarding_inbox_connected_at: string | null
           onboarding_provider: string | null
+          onboarding_reset_at: string | null
           onboarding_stage: string
           onboarding_started_at: string | null
           onboarding_technical_activated_at: string | null
@@ -5644,10 +5646,12 @@ export type Database = {
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
           onboarding_client_selected_at?: string | null
+          onboarding_completed_at?: string | null
           onboarding_connection_verified_at?: string | null
           onboarding_credential_issued_at?: string | null
           onboarding_inbox_connected_at?: string | null
           onboarding_provider?: string | null
+          onboarding_reset_at?: string | null
           onboarding_stage?: string
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
@@ -5703,10 +5707,12 @@ export type Database = {
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
           onboarding_client_selected_at?: string | null
+          onboarding_completed_at?: string | null
           onboarding_connection_verified_at?: string | null
           onboarding_credential_issued_at?: string | null
           onboarding_inbox_connected_at?: string | null
           onboarding_provider?: string | null
+          onboarding_reset_at?: string | null
           onboarding_stage?: string
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
@@ -5914,6 +5920,7 @@ export type Database = {
         Returns: undefined
       }
       dispatch_black_week_email: { Args: never; Returns: undefined }
+      dispatch_eur_launch: { Args: never; Returns: undefined }
       dispatch_first_30_days: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_morning_briefs: { Args: never; Returns: undefined }
@@ -5923,6 +5930,7 @@ export type Database = {
       dispatch_referrals: { Args: never; Returns: undefined }
       dispatch_reminders: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
+      dispatch_site_feed: { Args: { p_job: string }; Returns: undefined }
       dispatch_subscription_followup: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
       draft_lineage_record: {
@@ -6734,7 +6742,11 @@ export type Database = {
         Returns: boolean
       }
       record_business_founder_place: {
-        Args: { p_interval: string; p_owner_id: string; p_subscription_id: string }
+        Args: {
+          p_interval: string
+          p_owner_id: string
+          p_subscription_id: string
+        }
         Returns: boolean
       }
       record_inbox_cap_event: {

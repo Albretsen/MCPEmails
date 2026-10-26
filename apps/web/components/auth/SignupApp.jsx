@@ -10,6 +10,7 @@ import { rememberOAuthConsent, signupConsentMetadata } from '@/lib/marketing-con
 import {
   connectIntentStorage,
   rememberConnectIntent,
+  withClientIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
@@ -17,7 +18,7 @@ import { isSsoRequiredError } from '@/lib/sso/enforcement';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
-export function SignupApp({ redirectTo = null, connectProvider = null }) {
+export function SignupApp({ redirectTo = null, connectProvider = null, connectClient = null }) {
   const t = useTranslations('auth');
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
@@ -94,18 +95,25 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     return callbackUrl.toString();
   }
 
+  // The first-run dashboard, with the provider and AI-app hints this visitor
+  // came with (`?provider=`, `?client=`). A workspace in the new onboarding
+  // flow is sent on from there to /onboarding (src/lib/onboarding/entry.ts).
+  function firstRunDestination() {
+    return withClientIntent(withConnectIntent('/dashboard?firstrun=1', connectProvider), connectClient);
+  }
+
   // Where a freshly-signed-up user lands once they have a session. Honor an
   // invite/`?redirect=` target if present; otherwise drop them into the
   // first-run connect flow (`firstrun=1` auto-opens the Connect Inbox modal).
   function getRedirectDestination() {
-    return getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
+    return getSafeRedirect() ?? firstRunDestination();
   }
 
   function buildOAuthUrl(provider) {
     const url = new URL(`/auth/${provider}`, window.location.origin);
     // The connect hint, unlike attribution, belongs INSIDE `next`: the
     // dashboard is the thing that reads it, and the callback has no use for it.
-    const redirect = getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
+    const redirect = getSafeRedirect() ?? firstRunDestination();
     const destination = new URL(redirect, window.location.origin);
     destination.searchParams.set('signup_method', provider);
     const acquisition = readAcquisitionContext();

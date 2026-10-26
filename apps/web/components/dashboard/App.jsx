@@ -13,6 +13,7 @@ import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs'
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
+import { FinishSetupLink, ResetOnboardingCard } from './OnboardingEntry';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
@@ -1302,6 +1303,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
           lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
         />
+        {/* The /onboarding flow, not finished yet: a way back (OnboardingEntry.jsx). */}
+        <FinishSetupLink onboarding={serverWorkspace?.onboarding} />
         {cancelledPlan === 'personal' && (
           <CheckoutReturnPassCard
             workspaceId={workspace?.id}
@@ -1327,6 +1330,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
         {route === "invite" && workspace?.referralEnabled === true && <InvitePage />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} inboxes={inboxes} proFeatures={workspace?.proFeatures ?? null} stripePrices={stripePrices} passState={passState} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} onGoToInvite={() => setRoute("invite")} />}
+        {route === "settings" && serverWorkspace?.onboarding?.canReset && (
+          <div className="page" style={{ paddingTop: 0 }}>
+            <ResetOnboardingCard onboarding={serverWorkspace.onboarding} />
+          </div>
+        )}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
       </div>
 

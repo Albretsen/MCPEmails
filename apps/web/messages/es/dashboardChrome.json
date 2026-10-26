@@ -567,5 +567,12 @@
     "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
     "places": "Plazas disponibles: {left} de {total}",
     "priceChanged": "El precio cambió antes de que confirmaras, así que no se cobró nada. Los importes de arriba son el precio que se aplica ahora."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Terminar la configuración",
+    "resetTitle": "Restablecer la configuración inicial",
+    "resetBody": "Solo cuentas internas. Borra el progreso de la configuración y las marcas de la primera llamada de este espacio de trabajo para repetir el proceso. Las bandejas de entrada y las claves siguen conectadas.",
+    "resetButton": "Restablecer la configuración inicial",
+    "resetFailed": "No se pudo restablecer la configuración inicial. Inténtalo de nuevo."
   }
 }

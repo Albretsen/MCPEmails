@@ -93,6 +93,19 @@
         "brotli": 159823
       },
       "absent": []
+    },
+    "onboarding": {
+      "ceiling": {
+        "raw": 640000,
+        "gzip": 198000,
+        "brotli": 174080
+      },
+      "absent": [
+        "tiptap",
+        "dompurify",
+        "supabase-js",
+        "catalog-en"
+      ]
     }
   }
 }

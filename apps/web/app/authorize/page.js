@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import { after } from 'next/server';
+import { noteConnectorFirstWorkspace } from '@/lib/onboarding/entry';
 import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
@@ -308,6 +310,21 @@ export default async function AuthorizePage({ searchParams }) {
       .is('deleted_at', null)
       .order('created_at', { ascending: true });
     inboxes = inboxRows ?? [];
+  }
+
+  // ── 7c. Connector-first onboarding ────────────────────────────────────────
+  //    A workspace created in the last day reaching consent is a
+  //    connector-first signup: assign its onboarding arms and remember which
+  //    AI app this client is (src/lib/onboarding/entry.ts). After the
+  //    response, so consent never waits on it; it never throws.
+  if (workspace) {
+    const workspaceId = workspace.id;
+    after(() => noteConnectorFirstWorkspace({
+      workspaceId,
+      userId: user.id,
+      userEmail: user.email ?? null,
+      redirectUri: resolvedRedirectUri,
+    }));
   }
 
   // ── 8. Store state nonce server-side ──────────────────────────────────────

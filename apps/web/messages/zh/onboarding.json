@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "设置 MCPEmails",
+    "progress": "第 {current} 步，共 {total} 步",
+    "exit": "前往控制台",
+    "loading": "正在加载你的设置",
+    "statusError": "无法加载你的设置。请刷新页面重试。"
+  },
+  "chip": {
+    "using": "使用 {client}",
+    "change": "更改",
+    "label": "你与 MCPEmails 一起使用的 AI 应用",
+    "more": "更多应用"
+  },
+  "steps": {
+    "inbox": {
+      "title": "你的 AI 应该使用哪个收件箱？",
+      "reuseTitle": "已连接一个收件箱",
+      "reuse": "使用 {address}",
+      "connectAnother": "连接另一个收件箱"
+    },
+    "add_to_ai": {
+      "title": "将 MCPEmails 添加到 {client}"
+    },
+    "first_prompt": {
+      "title": "向 {client} 提个问题"
+    },
+    "wait": {
+      "title": "正在等待 {client}"
+    },
+    "it_works": {
+      "title": "已成功"
+    }
+  },
+  "nav": {
+    "continue": "继续",
+    "back": "返回",
+    "done": "完成"
+  },
+  "placeholder": "此步骤仍在建设中。"
+}

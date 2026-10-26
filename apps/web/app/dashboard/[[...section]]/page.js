@@ -30,6 +30,8 @@ import {
 } from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
+import { getOnboardingVariant } from '@/lib/onboarding/variant';
+import { onboardingEntryPath } from '@/lib/onboarding/entry';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -689,7 +691,7 @@ async function fetchPendingInvites(supabase, workspaceId) {
   }));
 }
 
-export default async function DashboardPage({ params }) {
+export default async function DashboardPage({ params, searchParams }) {
   // Optional catch-all: `/dashboard` → section undefined; `/dashboard/inboxes`
   // → section ['inboxes']. Resolve to a valid route id, or 404 on an unknown
   // segment / extra path depth so bad URLs don't silently render the overview.
@@ -723,7 +725,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
+      .select('id, slug, display_name, plan, owner_id, created_at, onboarding_completed_at, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -762,6 +764,25 @@ export default async function DashboardPage({ params }) {
     userId: user.id,
     userCreatedAt: user.created_at,
   });
+
+  // Onboarding arms (src/lib/onboarding/variant.ts). For a password signup this
+  // render is the first server request, so it is also where the workspace is
+  // assigned (idempotent; OAuth signups were assigned in /auth/callback). A
+  // workspace in the new flow that lands on the first-run dashboard
+  // (`?firstrun=1`) goes to /onboarding instead, hints kept.
+  const onboarding = workspace
+    ? await getOnboardingVariant(workspace.id, {
+        ownerEmail: workspace.owner_id === user.id ? (user.email ?? null) : null,
+        workspaceCreatedAt: workspace.created_at ?? null,
+      })
+    : null;
+  if (onboarding?.flow === 'new') {
+    const query = (await searchParams) ?? {};
+    const qs = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) if (typeof value === 'string') qs.set(key, value);
+    const entry = onboardingEntryPath(`/dashboard?${qs.toString()}`);
+    if (entry) redirect(entry);
+  }
 
   // Record which segment the owner's signup email falls in (business, consumer,
   // academic), so the business-domain onboarding and paywall changes can be
@@ -1056,6 +1077,18 @@ export default async function DashboardPage({ params }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // The /onboarding flow for this workspace (components/dashboard/
+        // OnboardingEntry.jsx): `flow`/`convert` are the arms; `finishSetup`
+        // shows the "Finish setup" link (new flow, not completed, no first
+        // call yet, so an internal owner's long-active workspace stays quiet
+        // until it is reset); `canReset`
+        // shows Settings > Reset onboarding (internal owner only).
+        onboarding: {
+          flow: onboarding?.flow ?? 'control',
+          convert: onboarding?.convert ?? 'off',
+          finishSetup: onboarding?.flow === 'new' && !workspace?.onboarding_completed_at && !workspace?.analytics_first_tool_used_at,
+          canReset: onboarding?.internal === true && workspace?.owner_id === user.id,
+        },
         // Whether this workspace has ever made a tool call. The Overview guide
         // shows its "waiting for your first call" step only while it has not.
         firstToolUsed: Boolean(workspace?.analytics_first_tool_used_at),
