@@ -1221,6 +1221,8 @@ export function DraftEditor(props: Props) {
   // Save must be pressable for it so that pressing it either commits it or says
   // why it cannot (`readyToWrite`), instead of doing nothing.
   const typedPending = FIELDS.some((f) => edit.typed[f].trim().length > 0);
+  /** Anything here a Save would act on, including text it would refuse. */
+  const pending = dirty || typedPending;
   const patchKey = JSON.stringify(patch);
 
   // The server content and version of the LATEST render, readable from a
@@ -1408,7 +1410,7 @@ export function DraftEditor(props: Props) {
   // working here. It stays open with Send off until a Save here
   // (`openAnyway`; reset by the effect above if nothing newer turned up).
   const refreshHere = () => {
-    if (dirty || typedPending || restored) setOpenAnyway(true);
+    if (pending || restored) setOpenAnyway(true);
     actions.refresh();
   };
 
@@ -2083,7 +2085,7 @@ export function DraftEditor(props: Props) {
   if (
     props.superseded === true && !openAnyway && editVersion.current === version && busy === null
   ) {
-    const kept = dirty || typedPending || restored;
+    const kept = pending || restored;
     return (
       <Superseded
         fullscreen={fullscreen}
@@ -2113,7 +2115,14 @@ export function DraftEditor(props: Props) {
   // "Still saving. … · Saved to Drafts" during a save (live QA, 2026-10-17).
   // Both now read this one word. The header carries the WHEN ("Saved 12:45 by
   // the assistant") when there is nothing newer to say.
-  const unsaved = dirty || typedPending;
+  // Text left in an address field after a commit is only what was refused (a
+  // commit turns every good address into a chip), and while the refusal is on
+  // screen it is not unsaved work: a save would write nothing new. It used to
+  // flip the status to "Unsaved changes" over a recipient that was NOT added
+  // (persona test, 2026-10-26). Typing in the field again clears the warning
+  // and counts. Save stays pressable throughout (`pending`), so
+  // pressing it says why it cannot.
+  const unsaved = dirty || (typedPending && !addrWarning);
   const statusWord = saving
     ? "Saving…"
     : sending
@@ -2711,7 +2720,7 @@ export function DraftEditor(props: Props) {
           {failed?.action === "refresh" && failed.at !== undefined && (
             <> Last checked {formatClockSeconds(failed.at)}.</>
           )}
-          {err.retry && canEdit && verified && (dirty || typedPending) && (
+          {err.retry && canEdit && verified && pending && (
             <>
               {" "}
               <TextLink soft disabled={busy !== null} onClick={onSave}>
@@ -2884,7 +2893,7 @@ export function DraftEditor(props: Props) {
             soft
             slot
             disabled={
-              !canEdit || !unsaved || !verified || pendingSend !== null || confirm !== null
+              !canEdit || !pending || !verified || pendingSend !== null || confirm !== null
             }
             busy={saving}
             title={
