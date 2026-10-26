@@ -35,6 +35,8 @@ import {
   DEFERRED_BODY_SCHEMA_VERSION,
   DRAFT_BODY_META_KEY,
   DRAFT_CARD_NOTICE,
+  DRAFT_NO_CARD_NOTICE,
+  draftIsThreaded,
   buildDraftEditorEnvelope,
   buildPlainDraftRead,
   clipDraftBody,
@@ -2933,8 +2935,9 @@ Deno.test("a card-envelope result says the card is on screen, on both channels; 
   assert(!/whether/i.test(DRAFT_CARD_NOTICE), "no hedge about whether the card showed");
   assert(!DRAFT_CARD_NOTICE.includes("—"), "no em dash");
 
-  // No envelope (gate off, hidden inbox, Outlook reply, a failed build): the
-  // result is exactly what it was before the card existed. No note anywhere.
+  // No envelope (gate off, hidden inbox): the result is exactly what it was
+  // before the card existed. No note anywhere. (A failed build in a card-on
+  // inbox is "unavailable" and says so; see the Outlook reply tests.)
   const without = draftCardToolResult(WRITE_PAYLOAD, null);
   assertEquals(without.content, [{ type: "text", text: JSON.stringify(WRITE_PAYLOAD) }]);
   assertEquals(without.structuredContent, WRITE_PAYLOAD);
@@ -3553,4 +3556,107 @@ Deno.test("draft_editor_save advertises the two file arguments without loosening
   assertEquals(props.add_attachments.type, "array");
   assertEquals(props.remove_attachments.type, "array");
   assertEquals(props.to.type, "array");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Outlook reply drafts (persona test, 2026-10-26)
+//
+// 1. An Outlook reply mounted "Draft: no preview for this result." because
+//    its branch returned no envelope, and the model still said "in the card".
+// 2. Creation said threading "native"; draft_read said threaded: false.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("Outlook reply: a native reply reads back as threaded in both channels", async () => {
+  const { deps } = fakeDeps({
+    inbox: OUTLOOK_INBOX,
+    stored: {
+      subject: "RE: Card test",
+      to: ["Asgeir <asgeir@example.com>"],
+      cc: [],
+      bcc: [],
+      threadId: "AAQkAD-conversation",
+      bodyText: "Reply.\r\n\r\n________________________________________\r\nFrom: Asgeir <asgeir@example.com>\r\nSent: Monday\r\n\r\nHi",
+      bodyHtml: null,
+      attachments: [],
+      nativeReply: true,
+    },
+  });
+  const read = await runDraftRead(deps, caller(), { draft_id: "AAkALg-draft" });
+  const sc = read.result.structuredContent as Record<string, unknown>;
+  assertEquals(sc["card"], "draft_editor", "a card-renderable envelope");
+  assertEquals((sc["draft"] as Record<string, unknown>)["threaded"], true);
+  const plain = JSON.parse(read.result.content[0].text) as Record<string, unknown>;
+  assertEquals(plain["threaded"], true, "the plain read agrees with creation's threading: native");
+});
+
+Deno.test("Outlook: a new (non-reply) draft still reads as unthreaded", async () => {
+  const { deps } = fakeDeps({
+    inbox: OUTLOOK_INBOX,
+    stored: {
+      subject: "Hello",
+      to: ["a@x.com"],
+      cc: [],
+      bcc: [],
+      // Every Graph message has a conversationId; it is not evidence of a reply.
+      threadId: "AAQkAD-conversation",
+      bodyText: "Hi",
+      bodyHtml: null,
+      attachments: [],
+    },
+  });
+  const read = await runDraftRead(deps, caller(), { draft_id: "AAkALg-new" });
+  const sc = read.result.structuredContent as Record<string, unknown>;
+  assertEquals((sc["draft"] as Record<string, unknown>)["threaded"], false);
+  assertEquals((JSON.parse(read.result.content[0].text) as Record<string, unknown>)["threaded"], false);
+});
+
+Deno.test("draftIsThreaded: server id, RFC header or native reply, nothing else", () => {
+  assertEquals(draftIsThreaded(normalized()), false);
+  assertEquals(draftIsThreaded(normalized({ thread_id: "conv" })), false);
+  assertEquals(draftIsThreaded(normalized({ native_reply: true })), true);
+  assertEquals(draftIsThreaded(normalized({ in_reply_to_header: "<a@b>" })), true);
+  assertEquals(
+    draftIsThreaded(normalized({ in_reply_to: { message_id: "m1", subject: null, from: null } })),
+    true,
+  );
+});
+
+Deno.test("Outlook reply: the reply envelope is card-renderable and threaded", () => {
+  const envelope = buildDraftEditorEnvelope({
+    appUrl: APP_URL,
+    draft: normalized({
+      draft_id: "AAkALg-draft",
+      subject: "RE: Card test",
+      in_reply_to: { message_id: "AAkALg-original", subject: "Card test", from: "Asgeir" },
+      native_reply: true,
+    }),
+    inbox: OUTLOOK_INBOX,
+    origin: "reply",
+    lastSavedBy: "agent",
+    canSend: true,
+  });
+  const result = draftCardToolResult({ draft_id: "AAkALg-draft", threading: "native" }, envelope);
+  const sc = result.structuredContent;
+  assertEquals(sc["card"], "draft_editor");
+  assertEquals(sc["threading"], "native");
+  const draft = sc["draft"] as Record<string, unknown>;
+  assertEquals(draft["threaded"], true);
+  assertEquals(draft["origin"], "reply");
+  assert(
+    result.content.some((c) => c.text.includes(DRAFT_CARD_NOTICE)),
+    "the model is told the card is shown",
+  );
+});
+
+Deno.test("a card that could not be built says so, and never claims a card", () => {
+  const payload = { draft_id: "AAkALg-draft", untrusted_content: true };
+  const result = draftCardToolResult(payload, "unavailable");
+  assert(
+    result.content.some((c) => c.text.includes(DRAFT_NO_CARD_NOTICE)),
+    "the no-card note is in content",
+  );
+  assert(!result.content.some((c) => c.text.includes(DRAFT_CARD_NOTICE)));
+  assertEquals("schema_version" in result.structuredContent, false, "no envelope for the card to mount");
+  assertEquals("_meta" in result, false);
+  assert(!DRAFT_NO_CARD_NOTICE.includes("—"), "no em dash");
 });

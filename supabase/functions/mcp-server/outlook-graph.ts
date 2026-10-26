@@ -1986,6 +1986,28 @@ export async function graphPrepareResponseDraft(
   };
 }
 
+/**
+ * Whether a Graph message is a reply or forward, from its `conversationIndex`.
+ *
+ * Graph exposes no In-Reply-To header on a draft (internetMessageHeaders is
+ * empty until it is sent), so a draft made by createReply looked unthreaded to
+ * every reader here, although Exchange threads it natively and adds the RFC
+ * headers on send (persona test, 2026-10-26). The PidTagConversationIndex
+ * layout is a 22-byte header for the first message of a conversation plus one
+ * 5-byte block per response, so anything longer than 22 bytes answers a
+ * message. Unknown or unreadable is false: never claim a thread on a guess.
+ */
+export function graphConversationIndexIsResponse(value: unknown): boolean {
+  if (typeof value !== "string" || value.length === 0) return false;
+  let bytes: number;
+  try {
+    bytes = atob(value).length;
+  } catch {
+    return false;
+  }
+  return bytes > 22 && (bytes - 22) % 5 === 0;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
