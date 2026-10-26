@@ -46,6 +46,8 @@
 //     https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow#refresh-the-access-token
 // ---------------------------------------------------------------------------
 
+import { assertOutboundRecipientsAllowed, outboundAllowlist } from "./outbound-allowlist.ts";
+
 export const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
 /**
@@ -1777,12 +1779,32 @@ export async function graphPatchMessage(
   await resp.body?.cancel().catch(() => {});
 }
 
+/** The to, cc and bcc addresses on a Graph message (a draft about to be sent). */
+export async function graphDraftRecipients(accessToken: string, draftId: string): Promise<string[]> {
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(draftId)}?$select=toRecipients,ccRecipients,bccRecipients`,
+  );
+  if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook read draft recipients");
+  type Recipient = { emailAddress?: { address?: string } };
+  const body = (await resp.json()) as Record<string, Recipient[] | undefined>;
+  return ["toRecipients", "ccRecipients", "bccRecipients"]
+    .flatMap((key) => body[key] ?? [])
+    .map((r) => r.emailAddress?.address ?? "")
+    .filter(Boolean);
+}
+
 /**
  * `POST /me/messages/{id}/send`. Returns the raw response so the caller keeps
  * its own status mapping: this is the transmission step, and what a failure
  * here means for delivery is the caller's to say.
  */
-export function graphSendDraft(accessToken: string, draftId: string): Promise<Response> {
+export async function graphSendDraft(accessToken: string, draftId: string): Promise<Response> {
+  // Every Outlook send (new mail, reply, forward, a saved draft) ends here, so
+  // this is where a test deploy's recipient allowlist is checked. Graph built
+  // the recipients of a reply or forward itself, so they are read back first.
+  const allowlist = outboundAllowlist();
+  if (allowlist) assertOutboundRecipientsAllowed(await graphDraftRecipients(accessToken, draftId), allowlist);
   return graphFetch(accessToken, `/me/messages/${encodeURIComponent(draftId)}/send`, {
     method: "POST",
     headers: { "Content-Length": "0" },

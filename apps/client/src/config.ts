@@ -45,8 +45,27 @@ export const config: AppConfig = resolveConfig(
   typeof location === "undefined" ? "" : location.search,
 );
 
+/**
+ * The web app's origin (VITE_WEB_APP_URL) and this client's own origin
+ * (VITE_APP_ORIGIN). Both default to production; a staging build sets them.
+ */
+export function resolveOrigins(env: { VITE_WEB_APP_URL?: string; VITE_APP_ORIGIN?: string }): {
+  webAppUrl: string;
+  appOrigin: string;
+} {
+  return {
+    webAppUrl: trim(env.VITE_WEB_APP_URL) || "https://mcpemails.com",
+    appOrigin: trim(env.VITE_APP_ORIGIN) || "https://app.mcpemails.com",
+  };
+}
+
+const origins = resolveOrigins(import.meta.env as { VITE_WEB_APP_URL?: string; VITE_APP_ORIGIN?: string });
+export const WEB_APP_URL = origins.webAppUrl;
+/** Used only where there is no window to read the origin from. */
+export const APP_ORIGIN = origins.appOrigin;
+
 /** Where accounts, mailboxes and billing are managed. */
-export const DASHBOARD_URL = "https://mcpemails.com/dashboard";
-export const DASHBOARD_SETTINGS_URL = "https://mcpemails.com/dashboard/settings";
-export const SIGNUP_URL = "https://mcpemails.com/signup";
-export const PASSWORD_RESET_URL = "https://mcpemails.com/forgot-password";
+export const DASHBOARD_URL = `${WEB_APP_URL}/dashboard`;
+export const DASHBOARD_SETTINGS_URL = `${WEB_APP_URL}/dashboard/settings`;
+export const SIGNUP_URL = `${WEB_APP_URL}/signup`;
+export const PASSWORD_RESET_URL = `${WEB_APP_URL}/forgot-password`;

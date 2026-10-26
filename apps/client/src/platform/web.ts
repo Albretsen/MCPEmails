@@ -1,4 +1,5 @@
 import { del, get, set } from "idb-keyval";
+import { APP_ORIGIN } from "../config";
 import type {
   AppNotification,
   BackgroundPushConfig,
@@ -311,7 +312,7 @@ export function createWebPlatform(): PlatformAdapter {
         };
       },
       buildUrl(path: string): string {
-        const origin = hasWindow ? window.location.origin : "https://app.mcpemails.com";
+        const origin = hasWindow ? window.location.origin : APP_ORIGIN;
         return origin + (path.startsWith("/") ? path : `/${path}`);
       },
     },

@@ -17,6 +17,7 @@
  */
 
 import { connectGuardedTcp } from "./host-guard.ts";
+import { assertOutboundRecipientsAllowed } from "./outbound-allowlist.ts";
 import {
   connectThroughRelay,
   guardRelayTarget,
@@ -196,6 +197,9 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
   if (msg.recipients.length === 0) {
     throw new Error("SMTP send: no recipients");
   }
+  // A test deploy's recipient allowlist (outbound-allowlist.ts). Every SMTP
+  // send passes here; unset in production, where this does nothing.
+  assertOutboundRecipientsAllowed(msg.recipients);
   // Before any connection: an address that could break its command line is
   // refused here, deterministically and with nothing written to a socket.
   assertEnvelopeSafe(msg);

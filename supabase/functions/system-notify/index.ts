@@ -9,9 +9,10 @@ const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https
 // connection until 2026-09-01 and is now Gmail over IMAP with an app password;
 // the send path is whatever that inbox is connected as on the day, which is
 // exactly the assumption resolveThreadAnchor exists to stop this file making.
-const SEND_FROM_INBOX_EMAIL = "bjellanda@gmail.com";
-// Where the notification is delivered TO.
-const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
+// ALERT_SENDER overrides it (staging points it at a test inbox).
+const SEND_FROM_INBOX_EMAIL = Deno.env.get("ALERT_SENDER")?.trim() || "bjellanda@gmail.com";
+// Where the notification is delivered TO. ALERT_RECIPIENT overrides it.
+const NOTIFY_TO_EMAIL = Deno.env.get("ALERT_RECIPIENT")?.trim() || "bjellanda@gmail.com";
 
 // Signup emails are disabled indefinitely at the owner's request. Remove the
 // entry to turn them back on.
