@@ -1,4 +1,4 @@
-// CORS: an allow-list of exactly two origins, no cookies.
+// CORS: an allow-list of origins, no cookies.
 //
 // The browser sends `Authorization: Bearer <Supabase access token>`, never a
 // cookie, so `Access-Control-Allow-Credentials` is deliberately absent. An
@@ -6,10 +6,20 @@
 // the browser then refuses to hand the response to the page, which is the
 // enforcement. (CORS is not authentication; the bearer check is.)
 
-export const ALLOWED_ORIGINS: readonly string[] = [
+// Production's list. A staging deploy sets CLIENT_ALLOWED_ORIGINS (comma
+// separated) to its own client origin instead.
+export const DEFAULT_ALLOWED_ORIGINS: readonly string[] = [
   "https://app.mcpemails.com",
   "http://localhost:5183",
 ];
+
+/** Parses CLIENT_ALLOWED_ORIGINS; unset or blank falls back to the production list. */
+export function parseAllowedOrigins(raw: string | undefined): readonly string[] {
+  const parsed = (raw ?? "").split(",").map((entry) => entry.trim().replace(/\/+$/, "")).filter(Boolean);
+  return parsed.length > 0 ? parsed : DEFAULT_ALLOWED_ORIGINS;
+}
+
+export const ALLOWED_ORIGINS: readonly string[] = parseAllowedOrigins(Deno.env.get("CLIENT_ALLOWED_ORIGINS"));
 
 const ALLOW_HEADERS = "authorization, content-type, x-workspace-id, x-request-id";
 const EXPOSE_HEADERS = "server-timing, x-request-id, retry-after, content-disposition";

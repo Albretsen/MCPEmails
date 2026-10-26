@@ -5,13 +5,15 @@ const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYNTHETIC_MCP_ENDPOINT") ?? "https://m
 // The IMAP-connected mailbox the health-check steps (initialize/tools_list/
 // inbox_list/email_read) exercise -- this is the thing actually being
 // monitored and must keep running against hello@mcpemails.com unchanged.
-const ALERT_RECIPIENT = "hello@mcpemails.com";
+// SYNTHETIC_EXPECT_INBOX overrides it for a staging deploy.
+const EXPECT_INBOX = Deno.env.get("SYNTHETIC_EXPECT_INBOX")?.trim() || "hello@mcpemails.com";
 // Where alert/recovery notification emails are sent FROM and TO. Migadu
 // (hello@mcpemails.com's SMTP provider) has a measured ~5.6% intermittent
 // send failure rate, so outbound alerting uses a Gmail-connected inbox
 // instead, which sends via the Gmail API rather than the flaky raw SMTP
-// client. Self-send: FROM and TO are both this address.
-const ALERT_EMAIL = "bjellanda@gmail.com";
+// client. Self-send: FROM and TO are both this address. ALERT_RECIPIENT
+// overrides it (staging points it at a test inbox).
+const ALERT_EMAIL = Deno.env.get("ALERT_RECIPIENT")?.trim() || "bjellanda@gmail.com";
 // IMAP/SMTP delivery occasionally takes longer than the read-only MCP calls.
 // Keep the synthetic request alive long enough to receive the definitive MCP
 // result rather than classifying a completed delivery as a timeout.
@@ -158,7 +160,7 @@ Deno.serve(async (request) => {
     await runStep("initialize", "initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcpemails-synthetic-monitor", version: "1.0" } });
     if (!failureClass) await runStep("tools_list", "tools/list");
     const inboxes = !failureClass ? await runStep("inbox_list", "tools/call", { name: "inbox_list", arguments: {} }) : null;
-    const dedicatedInboxId = inboxes ? findInboxId(inboxes, ALERT_RECIPIENT) : null;
+    const dedicatedInboxId = inboxes ? findInboxId(inboxes, EXPECT_INBOX) : null;
     if (!failureClass && !dedicatedInboxId) fail("mcp_protocol", "inbox_list", "monitor_inbox_not_found");
     if (!failureClass) await runStep("email_read", "tools/call", { name: "email_read", arguments: { action: "list", limit: 1 } });
   }

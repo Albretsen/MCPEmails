@@ -5,7 +5,7 @@
 import { assert, assertEquals, assertMatch, assertStringIncludes } from "jsr:@std/assert@1";
 import type { AssistantDeps } from "../assistant-deps.ts";
 import { contentDisposition } from "../app.ts";
-import { ALLOWED_ORIGINS } from "../cors.ts";
+import { ALLOWED_ORIGINS, parseAllowedOrigins } from "../cors.ts";
 import { OP_NAMES, OPS } from "../mail/ops.ts";
 import { RateLimiter } from "../rate-limit.ts";
 import { ListenGuardError, loadMcpSeam } from "../seam.ts";
@@ -41,6 +41,15 @@ async function errorOf(response: Response): Promise<{ code: string; message: str
 
 Deno.test("CORS: the allow-list is exactly the production app and the dev server", () => {
   assertEquals([...ALLOWED_ORIGINS], ["https://app.mcpemails.com", "http://localhost:5183"]);
+});
+
+Deno.test("CORS: CLIENT_ALLOWED_ORIGINS replaces the list, and unset or blank keeps production's", () => {
+  assertEquals([...parseAllowedOrigins(undefined)], ["https://app.mcpemails.com", "http://localhost:5183"]);
+  assertEquals([...parseAllowedOrigins(" , ")], ["https://app.mcpemails.com", "http://localhost:5183"]);
+  assertEquals(
+    [...parseAllowedOrigins("https://app-staging.mcpemails.com/, http://localhost:5183")],
+    ["https://app-staging.mcpemails.com", "http://localhost:5183"],
+  );
 });
 
 Deno.test("CORS: a preflight from an allowed origin is answered 204 with the headers the client sends", async () => {

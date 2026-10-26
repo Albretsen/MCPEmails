@@ -443,6 +443,8 @@ import {
   preTransmissionSync,
   TargetUnresolvedError,
 } from "./send-stages.ts";
+import { assertOutboundRecipientsAllowed, outboundAllowlist } from "./outbound-allowlist.ts";
+import { resolveAppUrl } from "./app-env.ts";
 import {
   addressList,
   type BrakeDb,
@@ -972,8 +974,11 @@ function noteForResult(note: string): void {
 // Reconnect / auth-failure helpers
 // ---------------------------------------------------------------------------
 
-/** Canonical app origin (apex domain). Override via APP_URL for previews. */
-const APP_URL = (Deno.env.get("APP_URL") ?? "https://mcpemails.com").replace(/\/+$/, "");
+/**
+ * Canonical app origin (apex domain). APP_URL overrides it, and is required
+ * when APP_ENV is not production: a missing one throws here, at boot (app-env.ts).
+ */
+const APP_URL = resolveAppUrl({ APP_ENV: Deno.env.get("APP_ENV"), APP_URL: Deno.env.get("APP_URL") });
 
 /**
  * Build the URL the user should open to reconnect a broken inbox.
@@ -17115,6 +17120,7 @@ async function sendGmailMessage(
   // throw from in here is not_sent — the fetch below is the first byte on the
   // wire and the only thing that can make delivery genuinely unknown.
   const { accessToken, messageId, rawBase64url } = await preTransmission("compose", async () => {
+    assertOutboundRecipientsAllowed([...params.to, ...params.cc, ...params.bcc]);
     const accessToken = await withFreshGmailToken(inbox);
     const messageId = crypto.randomUUID();
     const embedded = await withSignatureImages(inbox, params.htmlBody);
@@ -17214,6 +17220,8 @@ async function sendOutlookMessage(
   // STAGE "compose" (see send-stages.ts): the token, the Graph message body and
   // the draft. The /send POST below is transmission; nothing above it is.
   const { accessToken, message } = await preTransmission("compose", async () => {
+    // Checked again on the draft by graphSendDraft; here so no draft is left behind.
+    assertOutboundRecipientsAllowed([...params.to, ...params.cc, ...params.bcc]);
     const accessToken = await withFreshOutlookToken(inbox);
 
     const toRecipients = params.to.map((email) => {
@@ -17548,6 +17556,7 @@ async function replyGmailMessage(
         : `Re: ${origSubject}`;
 
       // ── Step 4: Construct MIME reply with threading headers ───────────────────
+      assertOutboundRecipientsAllowed([...replyAddresses, ...(params.cc ?? []), ...(params.bcc ?? [])]);
       const newMessageId = crypto.randomUUID();
       const embedded = await withSignatureImages(inbox, params.htmlBody);
       const mimeMessage = buildMimeMessage({
@@ -18134,7 +18143,10 @@ async function transmitRawMessage(
       return { message_id: fullId, thread_id: fullId, sent_at: new Date().toISOString() };
     }
     case "gmail": {
-      const accessToken = await preTransmission("compose", () => withFreshGmailToken(inbox));
+      const accessToken = await preTransmission("compose", () => {
+        assertOutboundRecipientsAllowed([...params.to, ...params.cc, ...params.bcc]);
+        return withFreshGmailToken(inbox);
+      });
       // The upload form of messages.send, not the JSON `raw` field: the JSON
       // body is capped well below the 35 MB this endpoint accepts, and the
       // octets go over as they are instead of growing by a third in base64.
@@ -28544,6 +28556,27 @@ async function gmailUpdateDraft(
   };
 }
 
+/** The To, Cc and Bcc header values of a Gmail draft, read only when an allowlist is set. */
+async function gmailDraftRecipients(token: string, draftId: string): Promise<string[]> {
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}` +
+      "?format=metadata&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Bcc",
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    await resp.body?.cancel();
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new MessageBuildError(`Gmail drafts.get error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as {
+    message?: { payload?: { headers?: Array<{ name?: string; value?: string }> } };
+  };
+  return (data.message?.payload?.headers ?? [])
+    .filter((h) => /^(to|cc|bcc)$/i.test(h.name ?? ""))
+    .map((h) => h.value ?? "");
+}
+
 async function gmailSendDraft(
   inbox: InboxRow,
   draftId: string,
@@ -28552,6 +28585,11 @@ async function gmailSendDraft(
   // holds the draft, so drafts.send below is both compose and transmit. A token
   // failure here sent nothing (see send-stages.ts).
   const token = await preTransmission("compose", () => withFreshGmailToken(inbox));
+  // A test deploy's recipient allowlist: Gmail holds the recipients, so read them back.
+  const allowlist = outboundAllowlist();
+  if (allowlist) {
+    assertOutboundRecipientsAllowed(await gmailDraftRecipients(token, draftId), allowlist);
+  }
   const resp = await fetch(
     "https://gmail.googleapis.com/gmail/v1/users/me/drafts/send",
     {
