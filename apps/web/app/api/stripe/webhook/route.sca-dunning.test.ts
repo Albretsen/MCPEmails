@@ -45,7 +45,7 @@ function ledgerTable() {
     error: null,
   };
   const builder: Record<string, unknown> = {};
-  for (const name of ['select', 'eq', 'neq', 'gt', 'limit', 'delete']) {
+  for (const name of ['select', 'eq', 'neq', 'not', 'gt', 'limit', 'delete']) {
     builder[name] = () => builder;
   }
   builder.insert = (row: { event_id: string }) => {

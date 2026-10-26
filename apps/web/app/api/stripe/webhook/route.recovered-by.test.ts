@@ -41,7 +41,7 @@ function ledgerTable() {
   };
   let patch: Record<string, unknown> | null = null;
   const builder: Record<string, unknown> = {};
-  for (const name of ['select', 'neq', 'gt', 'limit', 'delete']) {
+  for (const name of ['select', 'neq', 'not', 'gt', 'limit', 'delete']) {
     builder[name] = () => builder;
   }
   builder.update = (p: Record<string, unknown>) => {

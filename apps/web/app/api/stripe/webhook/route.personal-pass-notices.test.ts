@@ -36,7 +36,7 @@ let ledger = new Set<string>();
 function ledgerTable() {
   let outcome: { data: unknown; error: { code: string; message: string } | null } = { data: null, error: null };
   const builder: Record<string, unknown> = {};
-  for (const name of ['select', 'eq', 'neq', 'gt', 'limit', 'delete']) builder[name] = () => builder;
+  for (const name of ['select', 'eq', 'neq', 'not', 'gt', 'limit', 'delete']) builder[name] = () => builder;
   builder.insert = (row: { event_id: string }) => {
     if (ledger.has(row.event_id)) {
       outcome = { data: null, error: { code: '23505', message: 'duplicate key' } };
