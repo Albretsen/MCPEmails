@@ -1,32 +1,44 @@
 // node --test scripts/staging-lib.test.mjs
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
+  CONTENT_MAILBOX,
   COUPONS,
   PERSONAS,
   PRICES,
   PRODUCTS,
+  SEED_INBOXES,
   WEBHOOK_EVENTS,
   assertStagingAccount,
+  assertStagingAppUrl,
+  assertStagingMailbox,
   assertStagingSupabase,
   assertTestKey,
   couponDrift,
   eurOptionFor,
   formEncode,
+  imapConnectBody,
   internalAccountEmail,
+  mailboxContentEnv,
   missingWebhookEvents,
   parseEnv,
   planPriceReconcile,
   priceCreateParams,
   resolveSwitches,
+  seedAllowlist,
   seedEmail,
+  supabaseSessionCookie,
   upsertEnvText,
   writeEnvFile,
 } from './staging-lib.mjs';
+
+const hasPython = spawnSync('python3', ['--version']).status === 0;
 
 test('refuses live and malformed Stripe keys', () => {
   assert.doesNotThrow(() => assertTestKey('sk_test_abc123'));
@@ -161,16 +173,101 @@ test('env file stays chmod 600', () => {
   assert.equal(readFileSync(path, 'utf8'), 'A=1\nB=2\n');
 });
 
-test('seed personas live on the test domain only', () => {
-  assert.equal(seedEmail('pro', 'staging.mcpemails.com'), 'owner+pro@staging.mcpemails.com');
-  assert.throws(() => seedEmail('pro', 'gmail.com'), /not an allowlisted test domain/);
-  assert.throws(() => internalAccountEmail('mcpemails.com'), /not a test domain/);
+test('seed personas are plus-addresses of a staging test mailbox only', () => {
+  assert.equal(seedEmail('pro'), 'staging-a+pro@mcpemails.com');
+  assert.equal(internalAccountEmail(), 'staging-a@mcpemails.com');
+  assert.equal(seedEmail('pro', 'staging-b+<tier>@mcpemails.com'), 'staging-b+pro@mcpemails.com');
+  assert.equal(seedEmail('pro', 'owner+<tier>@staging.mcpemails.com'), 'owner+pro@staging.mcpemails.com');
+  assert.equal(internalAccountEmail('owner+<tier>@staging.mcpemails.com'), 'owner@staging.mcpemails.com');
+  for (const bad of [
+    'demo+<tier>@mcpemails.com',
+    'hello+<tier>@mcpemails.com',
+    'staging-a+<tier>@gmail.com',
+    'staging-a+<tier>@mcpemails.com.evil.com',
+    'staging-a@mcpemails.com',
+    'staging-a+<tier>+x@mcpemails.com',
+    '',
+    null,
+  ]) {
+    assert.throws(() => seedEmail('pro', bad), /Refusing/, String(bad));
+  }
+  assert.throws(() => seedEmail('Pro x'), /bad persona tier/);
   const tiers = PERSONAS.map((p) => p.tier);
   for (const tier of ['free', 'personal', 'pro', 'business', 'pass', 'grace', 'admin']) assert.ok(tiers.includes(tier), tier);
   assert.equal(PERSONAS.filter((p) => p.admin).length, 1);
   for (const persona of PERSONAS.filter((p) => p.priceEnv)) {
     assert.ok(PRICES.some((price) => price.env === persona.priceEnv), persona.priceEnv);
   }
+});
+
+test('seed allowlist lists every persona exactly, plus both test mailboxes', () => {
+  const list = seedAllowlist();
+  assert.equal(list.length, PERSONAS.length + 2);
+  for (const persona of PERSONAS) assert.ok(list.includes(`staging-a+${persona.tier}@mcpemails.com`), persona.tier);
+  assert.ok(list.includes('staging-a@mcpemails.com'));
+  assert.ok(list.includes('staging-b@mcpemails.com'));
+  assert.ok(list.every((address) => !address.startsWith('@')), 'no domain entries');
+});
+
+test('inbox step only targets the staging Migadu mailboxes', () => {
+  assert.deepEqual(SEED_INBOXES.map((i) => i.email), ['staging-a@mcpemails.com', 'staging-b@mcpemails.com']);
+  const body = imapConnectBody('Staging-B@mcpemails.com', 'pw');
+  assert.equal(body.email, 'staging-b@mcpemails.com');
+  assert.equal(body.imapHost, 'imap.migadu.com');
+  assert.equal(body.imapPort, 993);
+  assert.equal(body.smtpHost, 'smtp.migadu.com');
+  assert.equal(body.smtpPort, 465);
+  assert.equal(body.mode, 'both');
+  for (const bad of ['demo@mcpemails.com', 'hello@harborknowledge.com', 'staging-a+pro@mcpemails.com', '']) {
+    assert.throws(() => imapConnectBody(bad, 'pw'), /Refusing/, bad);
+  }
+  assert.throws(() => imapConnectBody('staging-a@mcpemails.com', ''), /No password/);
+  assert.throws(() => assertStagingMailbox('staging-b@mcpemails.com', 'imap.gmail.com'), /Refusing/);
+  assert.equal(CONTENT_MAILBOX, 'staging-b@mcpemails.com');
+  const childEnv = mailboxContentEnv({ PATH: '/bin', REVIEWER_IMAP_PASSWORD: 'x' }, CONTENT_MAILBOX, 'pw');
+  assert.equal(childEnv.MAILBOX_SEED_USER, 'staging-b@mcpemails.com');
+  assert.equal(childEnv.MAILBOX_SEED_HOST, 'imap.migadu.com');
+  assert.equal(childEnv.MAILBOX_SEED_PASSWORD, 'pw');
+  assert.equal(childEnv.REVIEWER_IMAP_PASSWORD, undefined);
+  assert.throws(() => mailboxContentEnv({}, 'demo@mcpemails.com', 'pw'), /Refusing/);
+});
+
+test('inbox step posts to the staging app only', () => {
+  assert.doesNotThrow(() => assertStagingAppUrl('https://staging.mcpemails.com'));
+  assert.doesNotThrow(() => assertStagingAppUrl('https://staging.mcpemails.com/'));
+  for (const bad of ['https://mcpemails.com', 'https://staging.mcpemails.com.evil.com', 'http://staging.mcpemails.com', '', undefined]) {
+    assert.throws(() => assertStagingAppUrl(bad), /Refusing/, String(bad));
+  }
+});
+
+test('session cookie matches the @supabase/ssr shape and chunks long values', () => {
+  const url = 'https://wwsstwvvkjfqmuuasecu.supabase.co';
+  const short = supabaseSessionCookie(url, { a: 1 });
+  assert.match(short, /^sb-wwsstwvvkjfqmuuasecu-auth-token=base64-/);
+  const value = short.split('=').slice(1).join('=');
+  assert.deepEqual(JSON.parse(Buffer.from(value.slice(7), 'base64url').toString()), { a: 1 });
+  const long = supabaseSessionCookie(url, { t: 'x'.repeat(5000) });
+  assert.match(long, /^sb-wwsstwvvkjfqmuuasecu-auth-token\.0=base64-.*; sb-wwsstwvvkjfqmuuasecu-auth-token\.1=/);
+});
+
+test('seed-reviewer-mailbox.py refuses every mailbox but the staging ones before connecting', { skip: !hasPython }, () => {
+  const script = join(dirname(fileURLToPath(import.meta.url)), 'seed-reviewer-mailbox.py');
+  const run = (extra) =>
+    spawnSync('python3', [script, '--check'], {
+      env: { PATH: process.env.PATH, ...extra },
+      encoding: 'utf8',
+    });
+  for (const user of ['demo@mcpemails.com', 'DEMO@mcpemails.com', 'hello@mcpemails.com', 'someone@gmail.com', 'staging-a+pro@mcpemails.com']) {
+    const result = run({ MAILBOX_SEED_USER: user });
+    assert.notEqual(result.status, 0, user);
+    assert.match(result.stderr, /Refusing/, user);
+  }
+  const wrongHost = run({ MAILBOX_SEED_USER: 'staging-b@mcpemails.com', MAILBOX_SEED_HOST: 'imap.gmail.com' });
+  assert.notEqual(wrongHost.status, 0);
+  assert.match(wrongHost.stderr, /Refusing/);
+  const ok = run({ MAILBOX_SEED_USER: 'staging-b@mcpemails.com', MAILBOX_SEED_HOST: 'imap.migadu.com' });
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /target ok: staging-b@mcpemails\.com on imap\.migadu\.com/);
 });
 
 test('switch overrides', () => {

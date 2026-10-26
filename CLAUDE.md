@@ -41,7 +41,7 @@ A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) an
 - Migrations reach staging through `migrate-staging.yml` (push to `staging`), the only place `db push` is allowed. It refuses the prod ref. Production keeps the manual apply under Database.
 - Edge functions: `gh workflow run deploy-edge-function.yml --ref staging -f function=<fn>` (staging is the default target). If it fails 403, the repo token lacks staging access: deploy with the CLI from a clean worktree at `origin/staging`, passing the staging ref.
 - Never put a production key, secret or webhook in staging. Staging secrets live in `~/.config/mcpemails-staging/staging.env`, outside the repo.
-- Seed test users with `node scripts/seed-staging.mjs` (dry run, then `--apply`). Set up the Stripe sandbox catalog and webhook with `node scripts/stripe-staging-setup.mjs`. Both read `staging.env`, never `apps/web/.env.local`.
+- Seed test users with `node scripts/seed-staging.mjs` (dry run, then `--apply`). Personas are `staging-a+<tier>@mcpemails.com` on the Migadu test mailbox, and the seed connects `staging-a@` and `staging-b@` as IMAP inboxes. The staging allowlists compare whole addresses, so a new persona must be added to each of them by its exact address. Set up the Stripe sandbox catalog and webhook with `node scripts/stripe-staging-setup.mjs`. Both read `staging.env`, never `apps/web/.env.local`.
 
 ## Sessions and hand-off
 

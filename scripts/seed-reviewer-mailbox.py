@@ -15,6 +15,17 @@ emptied first. That is safe because this mailbox exists only to hold fixtures.
 Do NOT "improve" the clearing step into a HEADER search: Migadu's SEARCH HEADER
 returns nothing even when messages match, and it fails silently, so a re-run
 would silently double the corpus.
+
+STAGING. The same corpus can fill a staging test mailbox instead, for the
+staging seed (scripts/seed-staging.mjs --mailbox-content):
+
+    MAILBOX_SEED_USER=staging-b@mcpemails.com MAILBOX_SEED_HOST=imap.migadu.com \
+    MAILBOX_SEED_PASSWORD=... python3 scripts/seed-reviewer-mailbox.py
+
+With MAILBOX_SEED_USER set, only the staging test mailboxes on imap.migadu.com
+are accepted (STAGING_MAILBOXES below); anything else, demo@ above all, is
+refused before a connection is opened. `--check` validates the target and
+exits without connecting.
 """
 
 import imaplib
@@ -24,11 +35,43 @@ import time
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
 
-HOST = "imap.migadu.com"
-USER = "hello@harborknowledge.com"
-PASSWORD = os.environ.get("REVIEWER_IMAP_PASSWORD") or sys.exit(
-    "Set REVIEWER_IMAP_PASSWORD. It is the IMAP password for hello@harborknowledge.com,\n"
-    "stored encrypted in inboxes.imap_password and decryptable with ENCRYPTION_KEY."
+REVIEWER_HOST = "imap.migadu.com"
+REVIEWER_USER = "hello@harborknowledge.com"
+
+# The only mailboxes a MAILBOX_SEED_USER override may name: the Migadu test
+# mailboxes of the staging environment. Clearing a mailbox is part of seeding,
+# so a wrong target would wipe real mail. demo@ (the reviewer fixture the
+# product's directory listing points at) is refused by name as well.
+STAGING_MAILBOXES = ("staging-a@mcpemails.com", "staging-b@mcpemails.com")
+STAGING_HOST = "imap.migadu.com"
+NEVER_TOUCH = ("demo@mcpemails.com",)
+
+
+def resolve_target(env):
+    """(host, user, password env name) for this run, or SystemExit on a refusal."""
+    user = (env.get("MAILBOX_SEED_USER") or "").strip().lower()
+    if not user:
+        return REVIEWER_HOST, REVIEWER_USER, "REVIEWER_IMAP_PASSWORD"
+    host = (env.get("MAILBOX_SEED_HOST") or STAGING_HOST).strip().lower()
+    if user in NEVER_TOUCH or user.startswith("demo@"):
+        raise SystemExit(f"Refusing: {user} is never seeded by this script.")
+    if user not in STAGING_MAILBOXES:
+        raise SystemExit(
+            f"Refusing: {user} is not a staging test mailbox ({', '.join(STAGING_MAILBOXES)})."
+        )
+    if host != STAGING_HOST:
+        raise SystemExit(f"Refusing: host {host} is not {STAGING_HOST}.")
+    return host, user, "MAILBOX_SEED_PASSWORD"
+
+
+HOST, USER, PASSWORD_ENV = resolve_target(os.environ)
+if "--check" in sys.argv[1:]:
+    print(f"target ok: {USER} on {HOST}")
+    sys.exit(0)
+PASSWORD = os.environ.get(PASSWORD_ENV) or sys.exit(
+    f"Set {PASSWORD_ENV}. It is the IMAP password for {USER}.\n"
+    "For the reviewer mailbox it is stored encrypted in inboxes.imap_password and\n"
+    "decryptable with ENCRYPTION_KEY; for staging mailboxes it is in staging.env."
 )
 
 # Anchor every date off one base so the corpus keeps its shape whenever it is
@@ -67,7 +110,7 @@ def msg(sender, to, subject, body, days_ago, hour_offset=0, attachments=None, in
     m["To"] = to
     m["Subject"] = subject
     m["Date"] = when(days_ago, hour_offset)
-    m["Message-ID"] = make_msgid(domain="harborknowledge.com")
+    m["Message-ID"] = make_msgid(domain=USER.split("@", 1)[1])
     if in_reply_to:
         m["In-Reply-To"] = in_reply_to
         m["References"] = in_reply_to
@@ -82,7 +125,7 @@ def msg(sender, to, subject, body, days_ago, hour_offset=0, attachments=None, in
     return m
 
 
-NORA = "Nora Lindqvist <hello@harborknowledge.com>"
+NORA = f"Nora Lindqvist <{USER}>"
 
 # ── INBOX: 13 messages, of which 5 stay unread ────────────────────────────────
 # `seen` decides whether the message is marked read after APPEND. Migadu does not

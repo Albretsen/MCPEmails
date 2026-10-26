@@ -85,6 +85,37 @@ export function assertStagingSupabase(url) {
   }
 }
 
+/** The staging web app. The inbox step posts credentials to it, so nothing else is accepted. */
+export const STAGING_APP_ORIGIN = 'https://staging.mcpemails.com';
+
+/** Throws unless NEXT_PUBLIC_APP_URL is the staging web app. */
+export function assertStagingAppUrl(url) {
+  let origin = '';
+  try {
+    origin = new URL(url).origin;
+  } catch {
+    // fall through to the refusal
+  }
+  if (origin !== STAGING_APP_ORIGIN) {
+    throw new Error(`Refusing: NEXT_PUBLIC_APP_URL is not ${STAGING_APP_ORIGIN}.`);
+  }
+}
+
+/**
+ * The @supabase/ssr auth cookie for a password-grant session:
+ * "base64-" + base64url(JSON), split into .0/.1/... chunks past 3180 chars.
+ */
+export function supabaseSessionCookie(supabaseUrl, session) {
+  const ref = new URL(supabaseUrl).hostname.split('.')[0];
+  const name = `sb-${ref}-auth-token`;
+  const value = `base64-${Buffer.from(JSON.stringify(session)).toString('base64url')}`;
+  const MAX = 3180;
+  if (value.length <= MAX) return `${name}=${value}`;
+  const parts = [];
+  for (let i = 0, n = 0; i < value.length; i += MAX, n++) parts.push(`${name}.${n}=${value.slice(i, i + MAX)}`);
+  return parts.join('; ');
+}
+
 // ---------------------------------------------------------------------------
 // Env file handling (the staging secrets file, chmod 600, outside the repo)
 // ---------------------------------------------------------------------------
@@ -338,8 +369,30 @@ export function couponDrift(existing, spec) {
 // Seed plan (PLAN.md section 10)
 // ---------------------------------------------------------------------------
 
-/** Domains test users may live on. No inbound mail, owned by us, not a person. */
-export const SEED_TEST_DOMAINS = Object.freeze(['staging.mcpemails.com']);
+/**
+ * Real test mailboxes (Migadu) of the staging environment. Seed personas are
+ * plus-addresses of one of them, so mail to a persona lands in a mailbox we
+ * can read over IMAP instead of bouncing (D38). `owner@staging.mcpemails.com`
+ * is the pre-D38 base (no inbound mail), kept so the old seed can still be
+ * reproduced on purpose.
+ */
+export const SEED_TEST_MAILBOXES = Object.freeze(['staging-a@mcpemails.com', 'staging-b@mcpemails.com']);
+export const SEED_PERSONA_BASES = Object.freeze([...SEED_TEST_MAILBOXES, 'owner@staging.mcpemails.com']);
+/** Override with --persona-pattern or SEED_PERSONA_PATTERN. `<tier>` is replaced by the persona tier. */
+export const DEFAULT_PERSONA_PATTERN = 'staging-a+<tier>@mcpemails.com';
+
+/** Splits a persona pattern into its base mailbox, refusing anything off the allowlist. */
+function patternBase(pattern) {
+  const match = /^([a-z0-9._-]+)\+<tier>@([a-z0-9.-]+)$/.exec(String(pattern ?? '').trim().toLowerCase());
+  if (!match) {
+    throw new Error(`Refusing: persona pattern "${pattern}" must look like local+<tier>@domain.`);
+  }
+  const base = `${match[1]}@${match[2]}`;
+  if (!SEED_PERSONA_BASES.includes(base)) {
+    throw new Error(`Refusing: ${base} is not a staging test mailbox (${SEED_PERSONA_BASES.join(', ')}).`);
+  }
+  return base;
+}
 
 /**
  * One row per seeded persona. `plan` is the workspaces.plan id (solo = Pro,
@@ -355,17 +408,83 @@ export const PERSONAS = Object.freeze([
   { tier: 'admin', plan: 'free', admin: true },
 ]);
 
-export function seedEmail(tier, domain) {
-  if (!SEED_TEST_DOMAINS.includes(domain)) {
-    throw new Error(`Refusing: ${domain} is not an allowlisted test domain (${SEED_TEST_DOMAINS.join(', ')}).`);
-  }
-  return `owner+${tier}@${domain}`;
+export function seedEmail(tier, pattern = DEFAULT_PERSONA_PATTERN) {
+  patternBase(pattern);
+  if (!/^[a-z0-9-]+$/.test(tier)) throw new Error(`Refusing: bad persona tier "${tier}".`);
+  return String(pattern).trim().toLowerCase().replace('<tier>', tier);
 }
 
-/** The untagged address for internal_accounts (plus variants match in SQL). */
-export function internalAccountEmail(domain) {
-  if (!SEED_TEST_DOMAINS.includes(domain)) throw new Error(`Refusing: ${domain} is not a test domain.`);
-  return `owner@${domain}`;
+/** The untagged base address for internal_accounts (plus variants match in SQL). */
+export function internalAccountEmail(pattern = DEFAULT_PERSONA_PATTERN) {
+  return patternBase(pattern);
+}
+
+/**
+ * Every address the staging allowlists must hold for the seed to work: each
+ * persona exactly (the web and edge matchers compare whole addresses and do
+ * not strip a +tag) plus the test mailboxes themselves.
+ */
+export function seedAllowlist(pattern = DEFAULT_PERSONA_PATTERN, personas = PERSONAS) {
+  return [...personas.map((p) => seedEmail(p.tier, pattern)), ...SEED_TEST_MAILBOXES];
+}
+
+// ---------------------------------------------------------------------------
+// Inboxes (plan section 10, steps 5-6)
+// ---------------------------------------------------------------------------
+
+/** Migadu servers for the test mailboxes. */
+export const MIGADU = Object.freeze({
+  imapHost: 'imap.migadu.com',
+  imapPort: 993,
+  imapSecurity: 'tls',
+  smtpHost: 'smtp.migadu.com',
+  smtpPort: 465,
+  smtpSecurity: 'tls',
+});
+
+/** Mailboxes the seed connects, with the staging.env key holding each password. */
+export const SEED_INBOXES = Object.freeze([
+  { email: 'staging-a@mcpemails.com', passwordEnv: 'STAGING_A_PASSWORD' },
+  { email: 'staging-b@mcpemails.com', passwordEnv: 'STAGING_B_PASSWORD' },
+]);
+
+/** The mailbox scripts/seed-reviewer-mailbox.py fills (it clears it first). */
+export const CONTENT_MAILBOX = 'staging-b@mcpemails.com';
+
+/** Throws unless (email, host) is a staging test mailbox on Migadu. */
+export function assertStagingMailbox(email, host = MIGADU.imapHost) {
+  const address = String(email ?? '').trim().toLowerCase();
+  if (!SEED_TEST_MAILBOXES.includes(address)) {
+    throw new Error(`Refusing: ${address || '(empty)'} is not a staging test mailbox.`);
+  }
+  if (host !== MIGADU.imapHost) throw new Error(`Refusing: ${host} is not ${MIGADU.imapHost}.`);
+  return address;
+}
+
+/** Body for POST /api/inboxes/imap, the route the dashboard's connect form uses. */
+export function imapConnectBody(email, password) {
+  const address = assertStagingMailbox(email);
+  if (!password) throw new Error(`No password for ${address} in staging.env.`);
+  return {
+    email: address,
+    appPassword: password,
+    mode: 'both',
+    imapHost: MIGADU.imapHost,
+    imapPort: MIGADU.imapPort,
+    imapSecurity: MIGADU.imapSecurity,
+    smtpHost: MIGADU.smtpHost,
+    smtpPort: MIGADU.smtpPort,
+    smtpSecurity: MIGADU.smtpSecurity,
+  };
+}
+
+/** Env for scripts/seed-reviewer-mailbox.py pointed at a staging mailbox. */
+export function mailboxContentEnv(baseEnv, email, password) {
+  const address = assertStagingMailbox(email);
+  if (!password) throw new Error(`No password for ${address} in staging.env.`);
+  const out = { ...baseEnv, MAILBOX_SEED_USER: address, MAILBOX_SEED_HOST: MIGADU.imapHost, MAILBOX_SEED_PASSWORD: password };
+  delete out.REVIEWER_IMAP_PASSWORD;
+  return out;
 }
 
 /** Switch states under test. Override any with --switch key=true|false. */

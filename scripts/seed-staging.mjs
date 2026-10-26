@@ -2,36 +2,49 @@
 /**
  * Seeds the STAGING database (Supabase project wwsstwvvkjfqmuuasecu) with
  * synthetic test accounts. Never copies a production row. Implements the
- * staging plan, section 10, steps 1-4 and 7:
+ * staging plan, section 10:
  *
- *   1. auth users on an allowlisted test domain, one per persona:
- *      owner+free@ (past the 3-day grace), owner+grace@ (inside it),
- *      owner+personal@, owner+pro@, owner+business@ (real sandbox
- *      subscriptions), owner+pass@ (an active 3-month pass) and owner+admin@
- *      (for ADMIN_EMAILS). The signup trigger creates their workspaces.
+ *   1. auth users, one per persona, as plus-addresses of a real staging test
+ *      mailbox (D38, default staging-a+<tier>@mcpemails.com), so mail to a
+ *      persona arrives somewhere readable: +free (past the 3-day grace),
+ *      +grace (inside it), +personal, +pro, +business (real sandbox
+ *      subscriptions), +pass (an active 3-month pass) and +admin (for
+ *      ADMIN_EMAILS). The signup trigger creates their workspaces.
  *   2. plans and entitlements: workspaces.plan, user_billing, user_passes and
  *      the rollout flags. Paid personas get a real subscription in the Stripe
  *      sandbox (card pm_card_visa), optionally on a test clock, carrying
  *      metadata.user_id, so the staging webhook re-applies the same state the
  *      real way. The rows are also written here, so the seed is complete even
  *      before the webhook is wired.
- *   3. internal_accounts: the untagged owner@ address (plus variants match).
+ *   3. internal_accounts: the untagged base address (plus variants match).
  *   4. pricing_switches and retention_switches.first30.
+ *   5. connect staging-a@ and staging-b@mcpemails.com (Migadu) as IMAP inboxes
+ *      of one persona (default pro) through the app's real POST
+ *      /api/inboxes/imap, signed in as that persona, so the credentials are
+ *      encrypted with the STAGING ENCRYPTION_KEY. Never inserts inbox rows.
+ *   6. optional (--mailbox-content): fill staging-b@ with the reviewer corpus
+ *      by running scripts/seed-reviewer-mailbox.py against it. That script
+ *      clears the mailbox first and refuses any mailbox but the staging ones.
  *   7. one API key per persona (all scopes), raw keys written to the env file.
  *
- *   Steps 5 (connect test inboxes through /api/inboxes/imap) and 6 (seed
- *   mailbox content) come later: see connectInboxes() below.
- *
- * SAFETY. Refuses unless NEXT_PUBLIC_SUPABASE_URL is the staging project, the
- * email domain is in SEED_TEST_DOMAINS, and (for subscriptions) the Stripe key
- * is a test key of the staging sandbox. Reads only the staging env file
- * (default ~/.config/mcpemails-staging/staging.env) and the process
- * environment, never apps/web/.env.local, which points at production.
+ * SAFETY. Refuses unless NEXT_PUBLIC_SUPABASE_URL is the staging project,
+ * NEXT_PUBLIC_APP_URL is https://staging.mcpemails.com, the persona base
+ * address is a staging test mailbox (SEED_PERSONA_BASES), and (for
+ * subscriptions) the Stripe key is a test key of the staging sandbox. Reads
+ * only the staging env file (default ~/.config/mcpemails-staging/staging.env)
+ * and the process environment, never apps/web/.env.local, which points at
+ * production.
  *
  * Usage, from the repo root:
  *   node scripts/seed-staging.mjs                 # dry run: print the plan
  *   node scripts/seed-staging.mjs --apply         # write
- *     [--env-file <path>] [--domain staging.mcpemails.com]
+ *     [--env-file <path>]
+ *     [--persona-pattern 'staging-a+<tier>@mcpemails.com']   (or SEED_PERSONA_PATTERN)
+ *     [--migrate-from 'owner+<tier>@staging.mcpemails.com']  rename personas seeded
+ *                                    under an older pattern (auth user + Stripe customer email)
+ *     [--inbox-persona pro]          persona that owns the connected test inboxes
+ *     [--skip-inboxes]               do not (re)connect the test inboxes
+ *     [--mailbox-content]            reseed staging-b@ content (clears it first)
  *     [--test-clock]                 new paid customers go on a test clock
  *     [--switch pro_inbox_cap=false] override a pricing switch (repeatable)
  *     [--rotate-keys]                mint fresh API keys even if the stored ones work
@@ -41,25 +54,35 @@
  * now on every run so it stays inside its grace window.
  */
 
+import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   API_KEY_NAME,
   API_KEY_SCOPES,
+  CONTENT_MAILBOX,
+  DEFAULT_PERSONA_PATTERN,
   DEFAULT_STAGING_ENV,
   PERSONAS,
   ROLLOUT_FLAGS,
-  SEED_TEST_DOMAINS,
+  SEED_INBOXES,
   WEBHOOK_API_VERSION,
   apiKeyEnvName,
   assertStagingAccount,
+  assertStagingAppUrl,
   assertStagingSupabase,
   assertTestKey,
   formEncode,
+  imapConnectBody,
   internalAccountEmail,
+  mailboxContentEnv,
   readEnvFile,
   resolveSwitches,
+  seedAllowlist,
   seedEmail,
+  supabaseSessionCookie,
   writeEnvFile,
 } from './staging-lib.mjs';
 
@@ -82,7 +105,14 @@ assertStagingSupabase(supabaseUrl);
 const serviceKey = env('SUPABASE_SERVICE_ROLE_KEY');
 if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.');
 
-const domain = option('--domain') ?? env('SEED_EMAIL_DOMAIN') ?? SEED_TEST_DOMAINS[0];
+const personaPattern = option('--persona-pattern') ?? env('SEED_PERSONA_PATTERN') ?? DEFAULT_PERSONA_PATTERN;
+seedEmail('free', personaPattern); // validates the pattern before anything runs
+const migrateFrom = option('--migrate-from');
+if (migrateFrom) seedEmail('free', migrateFrom);
+const inboxPersonaTier = option('--inbox-persona') ?? 'pro';
+if (!PERSONAS.some((p) => p.tier === inboxPersonaTier)) throw new Error(`Unknown --inbox-persona ${inboxPersonaTier}.`);
+const skipInboxes = flag('--skip-inboxes');
+const mailboxContent = flag('--mailbox-content');
 const switches = resolveSwitches(argv);
 const envUpdates = {};
 
@@ -171,9 +201,14 @@ if (!password) {
 }
 
 async function ensureUser(persona, existing) {
-  const email = seedEmail(persona.tier, domain);
+  const email = seedEmail(persona.tier, personaPattern);
   const found = existing.find((u) => u.email?.toLowerCase() === email);
   if (found) return found;
+  if (migrateFrom) {
+    const oldEmail = seedEmail(persona.tier, migrateFrom);
+    const old = existing.find((u) => u.email?.toLowerCase() === oldEmail);
+    if (old) return migrateUser(persona, old, oldEmail, email);
+  }
   log(`create auth user ${email}`);
   if (!apply) return { id: `(new:${persona.tier})`, email };
   return authAdmin('users', {
@@ -185,6 +220,26 @@ async function ensureUser(persona, existing) {
       user_metadata: { full_name: `Staging ${persona.tier}`, staging_seed: persona.tier },
     }),
   });
+}
+
+/**
+ * Moves a persona seeded under an older pattern to the new address, keeping
+ * its user id, workspace, subscription and API key. The admin API confirms the
+ * new address directly, so no change-of-email mail is sent. The Stripe
+ * customer's email moves too, since ensureSubscription finds customers by it.
+ */
+async function migrateUser(persona, user, oldEmail, email) {
+  log(`rename auth user ${oldEmail} -> ${email}`);
+  if (persona.priceEnv) {
+    await initStripe();
+    const customers = await stripe('GET', 'customers', { email: oldEmail, limit: 10 });
+    for (const customer of customers.data.filter((c) => c.metadata?.user_id === user.id)) {
+      log(`Stripe customer ${customer.id} email -> ${email}`);
+      if (apply) await stripe('POST', `customers/${customer.id}`, { email });
+    }
+  }
+  if (!apply) return { ...user, email };
+  return authAdmin(`users/${user.id}`, { method: 'PUT', body: JSON.stringify({ email, email_confirm: true }) });
 }
 
 async function workspaceFor(userId) {
@@ -203,7 +258,7 @@ async function workspaceFor(userId) {
 
 async function ensureSubscription(persona, user) {
   await initStripe();
-  const email = seedEmail(persona.tier, domain);
+  const email = seedEmail(persona.tier, personaPattern);
   const priceId = env(persona.priceEnv);
   if (!priceId) throw new Error(`${persona.priceEnv} is not set: run scripts/stripe-staging-setup.mjs --write-env first.`);
 
@@ -320,7 +375,7 @@ async function applyPlan(persona, user, workspace) {
 // ── 3 + 4. internal_accounts and switches ───────────────────────────────────
 
 async function applyAccountsAndSwitches() {
-  const internal = internalAccountEmail(domain);
+  const internal = internalAccountEmail(personaPattern);
   log(`internal_accounts: ${internal}`);
   for (const [key, enabled] of Object.entries(switches)) log(`pricing_switches.${key} = ${enabled}`);
   log('retention_switches.first30 = dry_run, no auto go-live');
@@ -382,23 +437,73 @@ async function ensureApiKey(persona, user, workspace) {
   envUpdates[envName] = raw;
 }
 
-// ── 5 + 6. Later ────────────────────────────────────────────────────────────
+// ── 5 + 6. Inboxes and mailbox content ──────────────────────────────────────
+
+const appUrl = env('NEXT_PUBLIC_APP_URL');
+
+async function signInAs(email) {
+  const anonKey = env('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!anonKey) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.');
+  return http(
+    `${supabaseUrl}/auth/v1/token?grant_type=password`,
+    { method: 'POST', headers: { apikey: anonKey, 'content-type': 'application/json' }, body: JSON.stringify({ email, password }) },
+    `sign in ${email}`,
+  );
+}
 
 /**
- * TODO(E-SEED, plan section 10 steps 5-6): connect the Migadu test mailboxes
- * (staging-a@, staging-b@) through the real POST /api/inboxes/imap route as
- * the seeded users, so credentials are encrypted with the STAGING
- * ENCRYPTION_KEY (never insert inbox rows directly), then seed their content
- * with scripts/seed-reviewer-mailbox.py. Blocked on O-MIGADU. Gmail and
+ * Step 5. Connects the Migadu test mailboxes through the same route the
+ * dashboard's connect form posts to, as the signed-in persona, so the route
+ * validates the login and encrypts the password with the staging key. A
+ * re-run reconnects (the route upserts on workspace + address). Gmail and
  * Outlook are connected by hand (E-OWNER).
  */
-async function connectInboxes(_seeded) {
-  console.error('TODO: inbox connection and mailbox content are not seeded yet (steps 5-6).');
+async function connectInboxes(seeded) {
+  if (skipInboxes) return log('inboxes: skipped (--skip-inboxes)');
+  assertStagingAppUrl(appUrl);
+  const owner = seeded.find((s) => s.persona.tier === inboxPersonaTier);
+  for (const inbox of SEED_INBOXES) {
+    const body = imapConnectBody(inbox.email, env(inbox.passwordEnv));
+    log(`connect ${inbox.email} (IMAP ${body.imapHost}:${body.imapPort}, SMTP ${body.smtpHost}:${body.smtpPort}) as ${owner.user.email}`);
+  }
+  if (!apply) return;
+  const session = await signInAs(owner.user.email);
+  for (const inbox of SEED_INBOXES) {
+    const response = await fetch(new URL('/api/inboxes/imap', appUrl), {
+      method: 'POST',
+      redirect: 'manual',
+      headers: {
+        cookie: supabaseSessionCookie(supabaseUrl, session),
+        origin: new URL(appUrl).origin,
+        referer: new URL('/dashboard', appUrl).toString(),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(imapConnectBody(inbox.email, env(inbox.passwordEnv))),
+    });
+    const text = await response.text();
+    if (!response.ok) throw new Error(`connect ${inbox.email} -> ${response.status} ${text.slice(0, 300)}`);
+    console.error(`connected ${inbox.email}: ${response.status}`);
+  }
+}
+
+/**
+ * Step 6 (opt-in, --mailbox-content). Fills staging-b@ with the reviewer
+ * corpus. The Python script clears INBOX, Archive, Sent, Trash and Drafts
+ * first and refuses any mailbox that is not a staging test mailbox.
+ */
+function seedMailboxContent() {
+  if (!mailboxContent) return;
+  const childEnv = mailboxContentEnv(process.env, CONTENT_MAILBOX, env('STAGING_B_PASSWORD'));
+  log(`mailbox content: scripts/seed-reviewer-mailbox.py -> ${CONTENT_MAILBOX} (clears it first)`);
+  if (!apply) return;
+  const script = join(dirname(fileURLToPath(import.meta.url)), 'seed-reviewer-mailbox.py');
+  const result = spawnSync('python3', [script], { env: childEnv, stdio: ['ignore', 'inherit', 'inherit'] });
+  if (result.status !== 0) throw new Error(`seed-reviewer-mailbox.py exited ${result.status}`);
 }
 
 // ── Run ─────────────────────────────────────────────────────────────────────
 
-console.error(`Staging seed for ${new URL(supabaseUrl).hostname}, domain ${domain}.${apply ? '' : ' Dry run: nothing is written.'}`);
+console.error(`Staging seed for ${new URL(supabaseUrl).hostname}, personas ${personaPattern}.${apply ? '' : ' Dry run: nothing is written.'}`);
 const existingUsers = await listAuthUsers();
 const seeded = [];
 for (const persona of PERSONAS) {
@@ -409,6 +514,7 @@ for (const persona of PERSONAS) {
   seeded.push({ persona, user, workspace });
 }
 await applyAccountsAndSwitches();
+seedMailboxContent();
 await connectInboxes(seeded);
 
 if (apply && Object.keys(envUpdates).length) {
@@ -417,7 +523,8 @@ if (apply && Object.keys(envUpdates).length) {
 }
 
 const admin = seeded.find((s) => s.persona.admin);
-console.log('# Vercel env for mcp-emails-web-staging, to match the seed:');
-console.log(`ADMIN_EMAILS=${seedEmail(admin.persona.tier, domain)}`);
-console.log(`GROWTH_INTERNAL_EMAILS=${internalAccountEmail(domain)}`);
-console.log(`# EMAIL_RECIPIENT_ALLOWLIST must include @${domain} for these users to sign in.`);
+console.log('# Staging env to match the seed (web: Vercel mcp-emails-web-staging; edge: mcp-server secrets; auth hook):');
+console.log(`ADMIN_EMAILS=${seedEmail(admin.persona.tier, personaPattern)}`);
+console.log(`GROWTH_INTERNAL_EMAILS=${internalAccountEmail(personaPattern)}`);
+console.log('# EMAIL_RECIPIENT_ALLOWLIST and OUTBOUND_RECIPIENT_ALLOWLIST compare whole addresses, so list each one:');
+console.log(`# ${seedAllowlist(personaPattern).join(',')}`);
