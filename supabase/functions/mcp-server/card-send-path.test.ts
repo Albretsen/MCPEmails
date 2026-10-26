@@ -139,16 +139,17 @@ Deno.test("sent draft: a draft left behind is told to the model and on the card"
 
 // ── 2. One Sent copy on Gmail ─────────────────────────────────────────────
 
-Deno.test("Sent copy: Gmail's SMTP files its own, other servers do not", () => {
-  for (const host of ["smtp.gmail.com", "SMTP.GMAIL.COM", " smtp.googlemail.com "]) {
+Deno.test("Sent copy: Gmail's and Microsoft's SMTP file their own, other servers do not", () => {
+  for (const host of ["smtp.gmail.com", "SMTP.GMAIL.COM", " smtp.googlemail.com ", "smtp.office365.com", "smtp-mail.outlook.com"]) {
     assertEquals(smtpFilesSentCopyItself(host), true, host);
   }
-  for (const host of ["smtp-relay.gmail.com", "smtp.fastmail.com", "mail.gmail.com.evil.test", "", null, undefined]) {
+  const others = ["smtp-relay.gmail.com", "smtp.fastmail.com", "mail.gmail.com.evil.test", "contoso-com.mail.protection.outlook.com"];
+  for (const host of [...others, "smtp.office365.com.evil.test", "", null, undefined]) {
     assertEquals(smtpFilesSentCopyItself(host), false, String(host));
   }
 });
 
-Deno.test("Sent copy: appendToSentFolder skips Gmail SMTP, so every APPEND site does", () => {
+Deno.test("Sent copy: appendToSentFolder skips self-filing SMTP, so every APPEND site does", () => {
   const body = fnBody("appendToSentFolder");
   assertStringIncludes(body, "if (smtpFilesSentCopyItself(inbox.smtp_host)) return;");
   assert(body.indexOf("smtpFilesSentCopyItself") < body.indexOf("ImapClient.connect"));

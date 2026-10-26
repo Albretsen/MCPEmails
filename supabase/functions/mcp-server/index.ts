@@ -14038,9 +14038,9 @@ async function imapSmtpSend(
 /**
  * Best-effort: file a copy of an outgoing message in the Sent folder via IMAP
  * APPEND. SMTP submission generally does not do this (unlike the Gmail /
- * Graph / JMAP send APIs), but Gmail's SMTP server does, so a send through it
- * is skipped here (smtpFilesSentCopyItself): an APPEND there made a second
- * Sent copy, and for a sent draft it stuck the draft in Drafts
+ * Graph / JMAP send APIs), but Gmail's and Microsoft's SMTP servers do, so a
+ * send through them is skipped here (smtpFilesSentCopyItself): an APPEND there
+ * made a second Sent copy, and on Gmail a sent draft stuck in Drafts
  * (draft-removal.ts). Never throws — a failed Sent copy must not fail the
  * send itself — but a copy that was not saved is disclosed on the tool result
  * (see sent-copy.ts), so the caller is not told "sent" with a silent gap in
