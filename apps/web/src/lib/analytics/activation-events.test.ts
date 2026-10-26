@@ -48,10 +48,15 @@ function fakeDb({ recent = null as unknown, count = 0, lookupError = null as nul
   return { db: db as never, inserts, dedupeLookups, countLookups };
 }
 
-test('only the four activation stages are accepted', () => {
+test('only the five activation stages are accepted', () => {
   assert.deepEqual([...ACTIVATION_EVENT_STAGES], [
     'connect_fix_shown', 'connect_fix_link_clicked', 'first_call_prompt_copied', 'waiting_state_shown',
+    'install_link_clicked',
   ]);
+  assert.deepEqual(parseActivationEvent({ stage: 'install_link_clicked', client: 'cursor' }), {
+    stage: 'install_link_clicked', category: 'cursor', authReason: null, phase: null,
+  });
+  assert.equal(parseActivationEvent({ stage: 'install_link_clicked', client: 'not-a-client' }), null);
   for (const stage of ['inbox_connection', 'checkout_completed', 'first_tool_call', 'CONNECT_FIX_SHOWN', '', null, 1]) {
     assert.equal(parseActivationEvent({ stage, provider: 'gmail', client: 'claude' }), null, String(stage));
   }

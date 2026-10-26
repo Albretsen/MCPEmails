@@ -225,6 +225,23 @@ test('every locale has every new key, without < or an em dash', async () => {
   }
 });
 
+test('a client tile opens its guide with the one-click install button above the steps', async (t) => {
+  const net = stubFetch(t, [{}]);
+  const view = await render(t, { inboxes: [], inboxCount: 0, pollMs: 60_000 });
+  view.container.querySelector('[data-client-tile="claude"]').click();
+  await flush();
+  const action = () => document.querySelector('[data-install-action] a.btn-primary');
+  await waitFor(() => action() !== null, { message: 'the Claude install button' });
+  const href = action().getAttribute('href');
+  assert.equal(new URL(href).searchParams.get('connectorUrl'), 'https://mcpemails.com/api/mcp');
+  assert.equal(action().getAttribute('target'), '_blank');
+  assert.match(document.querySelector('[data-install-action]').textContent, /one custom connector/);
+  action().addEventListener('click', (e) => e.preventDefault());
+  action().click();
+  await waitFor(() => net.events('install_link_clicked').length === 1, { message: 'the install_link_clicked beacon' });
+  assert.equal(net.events('install_link_clicked')[0].body.client, 'claude');
+});
+
 test('the key reveal modal reads the shared prompt list', () => {
   const source = readFileSync(new URL('./Pages.jsx', import.meta.url), 'utf8');
   assert.ok(source.includes('t(FIRST_CALL_PROMPT_KEYS[0])'));

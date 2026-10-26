@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-26',
+    kind: 'improved',
+    title: 'One-click setup for Claude, Cursor and VS Code',
+    body:
+      'The setup guide in your dashboard now has an Add to Claude, Add to Cursor or Install in VS Code button that opens the app with MCPEmails already filled in. Gemini CLI gets a single command to copy.',
+  },
+  {
     date: '2026-10-25',
     kind: 'improved',
     title: 'Automations can file mail into Junk or Spam',
