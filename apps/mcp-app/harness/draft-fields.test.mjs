@@ -544,6 +544,32 @@ async function main() {
     await c.done();
   }
 
+  group("D5. a refused address leaves the draft Saved, in To, Cc and Bcc (persona test, 2026-10-26)");
+  {
+    for (const field of ["to", "cc", "bcc"]) {
+      const c = await editor();
+      if (field !== "to") c.press(c.btn(/^Cc Bcc$/));
+      await settle();
+      expect(`${field}: Saved before`, unsaved(c), false);
+      const el = c.root.querySelector(`#d-${field}`);
+      c.input(`d-${field}`, "ola.nordmann@example");
+      c.key(el, "Enter");
+      await settle();
+      expect(`${field}: the refusal is said`, /ola\.nordmann@example does not look like an email address, so it was not added\./.test(warn(c, field) ?? ""), true);
+      expectJson(`${field}: nothing was added`, chipsIn(c, field), field === "to" ? ["dana@x.example"] : []);
+      expect(`${field}: the text stays for fixing`, el.value, "ola.nordmann@example");
+      expect(`${field}: still Saved, no Unsaved changes`, unsaved(c), false);
+      expect(`${field}: Save still pressable, to say why`, c.softOff(c.btn(/^Save$/)), false);
+      c.input(`d-${field}`, "");
+      await settle();
+      expect(`${field}: cleared, still Saved`, unsaved(c), false);
+      c.input(`d-${field}`, "ola.nordmann@example.com");
+      await settle();
+      expect(`${field}: a whole address typed is unsaved work`, unsaved(c), true);
+      await c.done();
+    }
+  }
+
   // ── L. Layout of the recipient rows ───────────────────────────────────────
 
   group("L1. a long list folds to its first row and a +N more button");
