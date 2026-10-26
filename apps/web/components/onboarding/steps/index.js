@@ -32,6 +32,9 @@
  *   goTo(stepId)    jump to any step (ONBOARDING_STEPS in src/lib/onboarding/flow.ts)
  *   finish()        the flow is done: stamps onboarding_completed_at and
  *                   navigates to /dashboard
+ *   returnTo        optional, InboxStep only: the /authorize URL a Microsoft
+ *                   sign-in returns to when the step runs inside OAuth consent
+ *                   (components/auth/AuthorizeInboxStep.jsx); null on /onboarding
  *
  * Panels must not import from components/dashboard/*: /onboarding has its own
  * JS budget (under 170 KB brotli first load, plan A9). Strings go in the

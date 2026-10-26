@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
@@ -8,6 +9,23 @@ import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { resolveDefaultAccess, resolvePresets } from '@/lib/oauth/consent-presets';
 import { isRedirectToForRegisteredUri, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+
+// The onboarding inbox step, only for a consent that shows it (inboxStep prop).
+const AuthorizeInboxStep = dynamic(() => import('./AuthorizeInboxStep'), { ssr: false });
+
+/** One connector-first funnel row (POST /api/onboarding/authorize-event); never throws. */
+function reportAuthorizeEvent(stage, client) {
+  try {
+    fetch('/api/onboarding/authorize-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage, client }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics never blocks consent.
+  }
+}
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -455,6 +473,14 @@ function DestinationPanel({ identity }) {
  *  - codeChallenge  string: PKCE code_challenge
  *  - challengeMethod string: must be 'S256'
  *  - resource       string|null: RFC 8707 resource indicator (validated by page.js)
+ *  - preferStandard boolean: a connector-first consent from claude.ai; opens on
+ *                     Standard (lib/oauth/consent-presets.ts, owner decision F3).
+ *  - inboxStep      { client, userEmail, returnTo } | null: the workspace is in
+ *                     the new onboarding flow and has no mailbox, so the screen
+ *                     first shows the inbox step (AuthorizeInboxStep), with
+ *                     "Skip, connect later", then the permissions card.
+ *  - connectedOnStep boolean: back from a Microsoft sign-in started on that
+ *                     step, mailbox connected; the card says so.
  *
  * The "Allow access" button posts to /api/oauth/authorize (task 15.2).
  * Until that endpoint exists it shows a granting spinner and transitions
@@ -477,6 +503,9 @@ export function AuthorizeApp({
   resource = null,
   csrfToken,
   preApproved = false,
+  preferStandard = false,
+  inboxStep = null,
+  connectedOnStep = false,
 }) {
   const router = useRouter();
   const t = useTranslations('auth');
@@ -506,6 +535,7 @@ export function AuthorizeApp({
       offeredScopes: offeredScopeIds,
       requestedScopes: clientRequestedScopes,
       clientCannotStepUp,
+      preferStandard,
     }),
   );
 
@@ -565,11 +595,68 @@ export function AuthorizeApp({
     return initial;
   });
 
+  // A mailbox connected on the inbox step arrives with router.refresh().
+  useEffect(() => {
+    // Syncs the per-inbox toggles with a list the server just refreshed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGrantedInboxes((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const ib of inboxes) {
+        if (!(ib.id in next)) {
+          next[ib.id] = ib.status === 'connected' || ib.status === 'active';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [inboxes]);
+
   const [keyLabel, setKeyLabel] = useState(
     `${client.client_name} · ${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
   );
 
-  const [step, setStep] = useState('review'); // review | granting | done | error
+  // inbox | review | granting | done | error. `inbox` only when page.js sent
+  // `inboxStep` (new onboarding flow, no mailbox yet).
+  const [step, setStep] = useState(inboxStep ? 'inbox' : 'review');
+  // The step was offered on this page load: "Connect an inbox" under
+  // Specific inboxes then goes back to it instead of leaving the OAuth flow.
+  const [inboxStepOffered] = useState(Boolean(inboxStep));
+  const [justConnected, setJustConnected] = useState(connectedOnStep);
+  const funnelClient = inboxStep?.client ?? null;
+
+  // One authorize_inbox_step_viewed per page load (the server keeps one per workspace).
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (step !== 'inbox' || viewedRef.current) return;
+    viewedRef.current = true;
+    reportAuthorizeEvent('authorize_inbox_step_viewed', funnelClient);
+  }, [step, funnelClient]);
+
+  // Back from a Microsoft sign-in: drop ?connected= so a reload is a plain consent.
+  useEffect(() => {
+    if (!connectedOnStep) return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('connected');
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {
+      // Cosmetic only.
+    }
+  }, [connectedOnStep]);
+
+  const inboxConnected = () => {
+    reportAuthorizeEvent('authorize_inbox_connected', funnelClient);
+    setJustConnected(true);
+    setStep('review');
+    // The new mailbox, for "Specific inboxes" and the footer count.
+    router.refresh();
+  };
+
+  const skipInboxStep = () => {
+    reportAuthorizeEvent('authorize_skipped', funnelClient);
+    setStep('review');
+  };
   const [errorMsg, setErrorMsg] = useState('');
 
   const selectedScopes = requestedScopes.filter((s) => enabledScopes[s.scope]);
@@ -685,10 +772,42 @@ export function AuthorizeApp({
             </div>
           )}
 
+          {/* ── Inbox step (new onboarding flow, no mailbox yet) ───────── */}
+          {step === 'inbox' && inboxStep && (
+            <div className="az-body" data-testid="az-inbox-stage">
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-2)', margin: '0 0 8px' }}>
+                {t('authorize.inboxStepLead', { clientName: client.client_name })}
+              </p>
+              <AuthorizeInboxStep
+                client={inboxStep.client}
+                userEmail={inboxStep.userEmail}
+                returnTo={inboxStep.returnTo}
+                onConnected={inboxConnected}
+              />
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
+                  {t('authorize.skipConnectLater')}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Review step ────────────────────────────────────────────── */}
           {step === 'review' && (
             <>
               <div className="az-body">
+                {justConnected && (
+                  <div role="status" data-testid="az-inbox-connected" style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                    borderRadius: 8, marginBottom: 12,
+                    background: 'var(--mint-50, #f0fdf4)', border: '1px solid var(--mint-200, #bbf7d0)',
+                  }}>
+                    <Icon name="check" size={14} color="var(--mint-700, #15803d)" strokeWidth={2.2} />
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--mint-700, #15803d)' }}>
+                      {t('authorize.inboxStepConnected', { clientName: client.client_name })}
+                    </span>
+                  </div>
+                )}
                 <h1>{t('authorize.title', { clientName: client.client_name })}</h1>
                 <div className="who">
                   {t.rich('authorize.who', {
@@ -897,9 +1016,17 @@ export function AuthorizeApp({
                       fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     }}>
                       {t('authorize.noInboxesPrefix')}
-                      <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
-                        {t('authorize.connectInbox')}
-                      </a>
+                      {inboxStepOffered ? (
+                        // Back to the inbox step: the OAuth request stays alive.
+                        <button type="button" onClick={() => setStep('inbox')} data-testid="az-back-to-inbox-step"
+                          style={{ color: 'var(--brand)', background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }}>
+                          {t('authorize.connectInbox')}
+                        </button>
+                      ) : (
+                        <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
+                          {t('authorize.connectInbox')}
+                        </a>
+                      )}
                       {t('authorize.noInboxesSuffix')}
                     </div>
                   )

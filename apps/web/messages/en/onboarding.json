@@ -350,5 +350,15 @@
       "intro": "Good morning. Paste this into {client} to get your morning brief:"
     },
     "footer": "You asked for this email while setting up MCPEmails. It is sent once."
+  },
+  "chatReturn": {
+    "title": "Connected. Go back to {client} and ask again.",
+    "lead": "Your mailbox is ready. Ask {client} the same question again, or start with this:",
+    "prompt": "Look at my inbox from the last 24 hours and tell me which emails need a reply from me.",
+    "copy": "Copy prompt",
+    "copied": "Copied",
+    "open": "Open {client}",
+    "yourApp": "your AI app",
+    "dashboard": "Go to the dashboard"
   }
 }

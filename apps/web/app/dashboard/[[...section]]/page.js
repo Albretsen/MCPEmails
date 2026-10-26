@@ -33,6 +33,7 @@ import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import { getOnboardingVariant } from '@/lib/onboarding/variant';
 import { onboardingEntryPath } from '@/lib/onboarding/entry';
+import { verifyChatConnectLink, withChatLinkParams } from '@/lib/onboarding/chat-connect-link';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -777,6 +778,15 @@ export default async function DashboardPage({ params, searchParams }) {
         workspaceCreatedAt: workspace.created_at ?? null,
       })
     : null;
+  // A connect link from a chat (the MCP server's no-inbox answer), signed for
+  // THIS workspace: connect only, then "Go back to <client> and ask again".
+  // A workspace in the new onboarding flow does that on /onboarding instead.
+  // A link that does not verify is an ordinary visit (its ?provider= still
+  // preselects the card). src/lib/onboarding/chat-connect-link.ts.
+  const chatQuery = (await searchParams) ?? {};
+  const chatReturn = workspace ? verifyChatConnectLink(chatQuery, workspace.id) : null;
+  if (chatReturn && onboarding?.flow === 'new') redirect(withChatLinkParams('/onboarding', chatQuery));
+
   if (onboarding?.flow === 'new') {
     const query = (await searchParams) ?? {};
     const qs = new URLSearchParams();
@@ -1151,6 +1161,7 @@ export default async function DashboardPage({ params, searchParams }) {
       pendingInvites={pendingInvites}
       supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       referralTileFacts={referralTileFacts}
+      chatReturn={chatReturn}
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );

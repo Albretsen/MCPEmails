@@ -487,6 +487,7 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import { enrichNoInboxResult, type ConnectFailure } from "./no-inbox-answer.ts";
 import {
   carriesInboxInstructionsNote,
   inboxInstructionsNote,
@@ -11697,10 +11698,10 @@ async function executeListInboxes(
         message:
           "No mailbox is connected to this account yet, so there is nothing to " +
           "read or send from. Tell the user this and give them the setup_url as " +
-          "a clickable link so they can connect one. Gmail, Outlook, Fastmail, " +
-          "iCloud, Yahoo and Zoho connect in about a minute; any other provider " +
-          "takes IMAP and SMTP details. Once a mailbox is connected, call " +
-          "inbox_list again.",
+          "a clickable link so they can connect one. Outlook is a Microsoft " +
+          "sign-in; Gmail, iCloud and Yahoo take an app password, about 2 " +
+          "minutes; any other provider takes its IMAP and SMTP details. Once a " +
+          "mailbox is connected, call inbox_list again.",
       }),
       logStatus: "success",
       logErrorCode: null,
@@ -12155,9 +12156,10 @@ function inboxResolutionError(
         "No mailbox is connected to this account yet, so this tool has nothing " +
         "to act on. Tell the user this and give them this link, rendered so they " +
         "can click it, to connect one: " +
-        `${APP_URL}/dashboard/inboxes . Gmail, Outlook, Fastmail, iCloud, ` +
-        "Yahoo and Zoho take about a minute; any other provider needs IMAP and " +
-        "SMTP details. Retry this tool once they confirm a mailbox is connected.";
+        `${APP_URL}/dashboard/inboxes . Outlook is a Microsoft sign-in; Gmail, ` +
+        "iCloud and Yahoo take an app password, about 2 minutes; any other " +
+        "provider needs its IMAP and SMTP details. Retry this tool once they " +
+        "confirm a mailbox is connected.";
       errorCode = "no_inbox_connected";
       break;
   }
@@ -34209,6 +34211,51 @@ async function runExecutor(
  * @see Documents/Architecture/mcp-server-architecture.md §3 Steps 5–7
  * @see Documents/Architecture/mcp-server-architecture.md §6 Tool Registry
  */
+/**
+ * What no-inbox-answer.ts reads for this key: the account email (the key's
+ * creator, else the workspace owner) and the latest failed inbox connect.
+ * Both reads run only when a call was answered "no mailbox yet".
+ */
+function noInboxContext(apiKey: ApiKeyRow, ctx: RequestContext) {
+  return {
+    appUrl: APP_URL,
+    workspaceId: apiKey.workspace_id,
+    userAgent: ctx.userAgent,
+    keyName: apiKey.name ?? null,
+    keyHex: Deno.env.get("ENCRYPTION_KEY"),
+    nowMs: Date.now(),
+    deps: {
+      async accountEmail(): Promise<string | null> {
+        let userId = apiKey.created_by ?? null;
+        if (!userId) {
+          const { data: ws } = await supabase
+            .from("workspaces").select("owner_id").eq("id", apiKey.workspace_id).maybeSingle();
+          userId = (ws as { owner_id?: string } | null)?.owner_id ?? null;
+        }
+        if (!userId) return null;
+        const { data: user } = await supabase.from("users").select("email").eq("id", userId).maybeSingle();
+        return (user as { email?: string } | null)?.email ?? null;
+      },
+      async recentFailure(sinceIso: string): Promise<ConnectFailure | null> {
+        const { data } = await supabase
+          .from("product_funnel_events")
+          .select("category, error_category, auth_reason, occurred_at")
+          .eq("workspace_id", apiKey.workspace_id)
+          .eq("stage", "inbox_connection")
+          .eq("outcome", "failure")
+          .gte("occurred_at", sinceIso)
+          .order("occurred_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const row = data as { category?: string; error_category?: string | null; auth_reason?: string | null } | null;
+        return row
+          ? { provider: row.category ?? null, errorCategory: row.error_category ?? null, authReason: row.auth_reason ?? null }
+          : null;
+      },
+    },
+  };
+}
+
 async function handleToolsCall(
   req: JsonRpcRequest,
   id: string | number | null,
@@ -35141,6 +35188,11 @@ async function handleToolsCall(
   // Notes the provider layer raised during dispatch (a Sent copy that was not
   // saved). Successful results only, like every other note.
   attachResultNotes(toolResult, logCtx.resultNotes);
+
+  // No mailbox yet: name the provider guessed from the account email, give a
+  // signed connect URL and the last failed connect's fix (no-inbox-answer.ts).
+  // Touches only the empty inbox_list and the no_inbox_connected error.
+  await enrichNoInboxResult(toolResult, logErrorCode, noInboxContext(apiKey, ctx));
 
   // The inbox's standing instructions (Pro feature inbox_instructions), on a
   // successful draft create/reply or email_compose result only. HERE, on the

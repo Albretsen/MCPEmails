@@ -350,5 +350,15 @@
       "intro": "早上好。把这段粘贴到 {client} 中，获取你的晨间简报："
     },
     "footer": "你在设置 MCPEmails 时请求了这封邮件。它只发送一次。"
+  },
+  "chatReturn": {
+    "title": "已连接。回到 {client} 再问一次。",
+    "lead": "你的邮箱已就绪。再向 {client} 问一次同样的问题，或者从这句开始：",
+    "prompt": "查看我过去 24 小时的收件箱，告诉我哪些邮件需要我回复。",
+    "copy": "复制提示词",
+    "copied": "已复制",
+    "open": "打开 {client}",
+    "yourApp": "你的 AI 应用",
+    "dashboard": "前往控制台"
   }
 }

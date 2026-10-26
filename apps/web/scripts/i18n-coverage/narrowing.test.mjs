@@ -24,6 +24,7 @@ test('the root layout sends no messages: a route outside app/[locale] gets only 
     if (route.provider === 'AppLocaleProvider') assert.deepEqual(route.provided, real.appNamespaces, route.file);
     else if (route.provider === 'AuthLocaleProvider') assert.deepEqual(route.provided, real.authNamespaces, route.file);
     else if (route.provider === 'OnboardingLocaleProvider') assert.deepEqual(route.provided, real.onboardingNamespaces, route.file);
+    else if (route.provider === 'AuthorizeLocaleProvider') assert.deepEqual(route.provided, real.authorizeNamespaces, route.file);
     else assert.deepEqual(route.provided, [], `${route.file} (${route.provider})`);
   }
 });

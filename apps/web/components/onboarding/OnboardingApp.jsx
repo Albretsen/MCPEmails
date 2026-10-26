@@ -9,6 +9,8 @@ import { ClientChip } from './ClientChip';
 import { STEP_PANELS } from './steps';
 import { useOnboardingStatus } from './useOnboardingStatus';
 import { clientChanged, onboardingCompleted, stepViewed } from './onboarding-actions';
+import { ChatReturnPanel } from './ChatReturnPanel';
+import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return.mjs';
 
 /**
  * The /onboarding client island (app/onboarding/page.tsx renders it).
@@ -25,6 +27,8 @@ import { clientChanged, onboardingCompleted, stepViewed } from './onboarding-act
  *   userEmail       signed-in address
  *   statusPromise   Promise<OnboardingStatus | null>
  *   requestedStep   ?step= when valid (QA: jump straight to a step), else null
+ *   chatReturn      { client, provider } | null: a verified chat connect link
+ *                   (from=chat). Only the inbox step, then ChatReturnPanel.
  *
  * @param {{
  *   variant: { flow: string, convert: string },
@@ -34,9 +38,10 @@ import { clientChanged, onboardingCompleted, stepViewed } from './onboarding-act
  *   userEmail?: string,
  *   statusPromise: Promise<unknown>,
  *   requestedStep?: string | null,
+ *   chatReturn?: { client: string | null, provider: string | null } | null,
  * }} props
  */
-export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null }) {
+export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, chatReturn = null }) {
   const t = useTranslations('onboarding');
   const [client, setClient] = useState(normalizeChipClient(initialClient) ?? 'claude');
 
@@ -72,6 +77,7 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
             variant={variant}
             mcpUrl={mcpUrl}
             userEmail={userEmail}
+            chatReturn={chatReturn}
           />
         </Suspense>
       </main>
@@ -79,12 +85,32 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
   );
 }
 
-function OnboardingSteps({ statusPromise, requestedStep, client, provider, variant, mcpUrl, userEmail }) {
+function OnboardingSteps({ statusPromise, requestedStep, client, provider, variant, mcpUrl, userEmail, chatReturn = null }) {
   const t = useTranslations('onboarding');
   const router = useRouter();
   const initialStatus = use(statusPromise);
   const { status, refreshStatus, setPolling } = useOnboardingStatus(initialStatus);
-  const [step, setStep] = useState(() => (isOnboardingStep(requestedStep) ? requestedStep : initialStep(initialStatus)));
+  const [step, setStep] = useState(() => (chatReturn ? 'inbox' : isOnboardingStep(requestedStep) ? requestedStep : initialStep(initialStatus)));
+  // From a chat link: the inbox step is the whole flow, then back to the chat.
+  // `chatDone` holds the client to send them back to.
+  const [chatDone, setChatDone] = useState(null);
+  // Kept across the Microsoft sign-in, which returns to /onboarding?connected=outlook
+  // without the link's parameters (src/lib/onboarding/chat-return.mjs).
+  useEffect(() => {
+    if (chatReturn) {
+      rememberChatReturn(chatReturn);
+      return;
+    }
+    try {
+      if (new URL(window.location.href).searchParams.get('connected') !== 'outlook') return;
+    } catch {
+      return;
+    }
+    const back = takeChatReturn();
+    // Read once, after a full-page return from Microsoft.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (back) setChatDone({ client: back.client });
+  }, [chatReturn]);
 
   // One onboarding_step_viewed per step per page load.
   const seen = useRef(new Set());
@@ -95,8 +121,14 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
   }, [step]);
 
   const goNext = useCallback(() => {
+    if (chatReturn) {
+      setPolling(null);
+      takeChatReturn();
+      setChatDone({ client: chatReturn.client });
+      return;
+    }
     setStep((current) => nextStep(current) ?? current);
-  }, []);
+  }, [chatReturn, setPolling]);
   const goTo = useCallback((id) => {
     if (isOnboardingStep(id)) setStep(id);
   }, []);
@@ -109,10 +141,14 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
   const Panel = STEP_PANELS[step];
   const index = ONBOARDING_STEPS.indexOf(step);
 
+  if (chatDone) {
+    return <ChatReturnPanel client={chatDone.client ?? client} dashboardHref="/dashboard" />;
+  }
+
   return (
     <>
       {initialStatus === null && <p className="onb-error" role="alert">{t('shell.statusError')}</p>}
-      <p className="onb-progress">{t('shell.progress', { current: index + 1, total: ONBOARDING_STEPS.length })}</p>
+      {!chatReturn && <p className="onb-progress">{t('shell.progress', { current: index + 1, total: ONBOARDING_STEPS.length })}</p>}
       <Panel
         step={step}
         status={status}

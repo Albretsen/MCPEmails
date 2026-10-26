@@ -46,7 +46,7 @@ import { ConnectProgress, ProofCard, FailurePanel } from './inbox/ConnectOutcome
 const CHOOSER_KINDS = ['gmail', 'icloud', 'yahoo', 'outlook', 'microsoft365', 'gmx', 'imap'];
 const DEFAULT_MANUAL = { imapHost: '', imapPort: 993, smtpHost: '', smtpPort: 465, username: '' };
 
-export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext }) {
+export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext, returnTo = null }) {
   const t = useTranslations('onboarding');
   const [connectAnother, setConnectAnother] = useState(false);
   const reusable = !connectAnother && hasReusableInbox(status) ? status.inboxes.items[0] : null;
@@ -68,7 +68,7 @@ export function InboxStep({ step, status, refreshStatus, provider, userEmail, go
   }
 
   return (
-    <ConnectInbox step={step} refreshStatus={refreshStatus} provider={provider} userEmail={userEmail} goNext={goNext} />
+    <ConnectInbox step={step} refreshStatus={refreshStatus} provider={provider} userEmail={userEmail} goNext={goNext} returnTo={returnTo} />
   );
 }
 
@@ -103,7 +103,7 @@ function readOutlookError() {
   }
 }
 
-function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext }) {
+function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, returnTo = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const urlKind = useMemo(() => kindFromProviderSlug(provider), [provider]);
   const [outlookError, setOutlookError] = useState(null);
@@ -382,6 +382,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext }) {
             funnelProvider={funnelProvider}
             onDifferentInbox={differentInbox}
             outlookError={outlookError}
+            returnTo={returnTo}
           />
         )}
 

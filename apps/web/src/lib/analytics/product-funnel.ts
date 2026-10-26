@@ -142,7 +142,10 @@ export type ProductFunnelEvent = {
     // client and its send 'unknown'.
     | 'onboarding_handshake_seen' | 'onboarding_help_shown' | 'onboarding_prompt_copied'
     | 'onboarding_open_client_clicked' | 'onboarding_link_emailed'
-    | 'morning_brief_opt_in' | 'morning_brief_sent';
+    | 'morning_brief_opt_in' | 'morning_brief_sent'
+    // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
+    // At most one of each per workspace; category = the AI app's chip id.
+    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
