@@ -4,7 +4,9 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { CLIENT_LOGOS } from '../dashboard/clientLogos';
-import { MCP_URL, relatedClients } from '@/lib/clients/clients.mjs';
+import { MCP_URL, getClient, relatedClients } from '@/lib/clients/clients.mjs';
+import { orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
+import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 
 /**
@@ -58,9 +60,26 @@ function CodeBlock({ label, code }) {
   );
 }
 
-export default function ClientSetupView({ locale, client, content }) {
+/**
+ * The sibling links, with the visitor's AI assistant (src/lib/clients/preferred.mjs)
+ * first: moved up when it is already in the list, otherwise put in front of a
+ * list one shorter. Never the page's own client, never a client without copy
+ * in this locale.
+ */
+export function relatedForVisitor(slug, locale, preferred) {
+  const related = relatedClients(slug, locale);
+  if (!preferred || preferred === slug) return related;
+  if (related.some((c) => c.slug === preferred)) return orderClients(related, preferred, (c) => c.slug);
+  const extra = getClient(preferred);
+  if (!extra || !extra.locales.includes(locale)) return related;
+  return [extra, ...related.slice(0, Math.max(0, related.length - 1))];
+}
+
+export default function ClientSetupView({ locale, client, content, preferred = null }) {
   const ui = clientUi(locale).page;
-  const related = relatedClients(client.slug, locale);
+  const related = relatedForVisitor(client.slug, locale, preferred);
+  // The signup buttons name this page's client, so onboarding starts on it.
+  const signupHref = withClientIntent(withReadingLang('/signup', locale), signupClientParam(client.slug));
   const name = client.shortName ?? client.name;
   const isTerminal = client.configFile === 'terminal';
   const configLabel = isTerminal ? ui.config.terminal : (client.configFile ?? ui.config.json);
@@ -85,7 +104,7 @@ export default function ClientSetupView({ locale, client, content }) {
           */}
           {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
           <div className="hero-meta" style={{ justifyContent: 'center' }}>
@@ -276,7 +295,7 @@ export default function ClientSetupView({ locale, client, content }) {
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
         </div>

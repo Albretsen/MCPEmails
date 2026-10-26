@@ -10,7 +10,7 @@ import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
-import { ONBOARDING_RETURN_COOKIE, onboardingReturnLocation } from '@/lib/onboarding/outlook-return';
+import { ONBOARDING_RETURN_COOKIE, onboardingReturnLocation, onboardingReturnTarget } from '@/lib/onboarding/outlook-return';
 import {
   ADMIN_CONSENT_STATE_COOKIE,
   adminConsentCallbackRedirect,
@@ -178,8 +178,13 @@ async function handleAdminConsent(request: NextRequest, searchParams: URLSearchP
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const response = await handleCallback(request);
-  if (!request.cookies.get(ONBOARDING_RETURN_COOKIE)?.value) return response;
-  const target = onboardingReturnLocation(response.headers.get('location'), process.env.NEXT_PUBLIC_APP_URL!);
+  const returnCookie = request.cookies.get(ONBOARDING_RETURN_COOKIE)?.value;
+  if (!returnCookie) return response;
+  const target = onboardingReturnLocation(
+    response.headers.get('location'),
+    process.env.NEXT_PUBLIC_APP_URL!,
+    onboardingReturnTarget(returnCookie),
+  );
   if (!target) return response;
   const redirect = NextResponse.redirect(target);
   for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);

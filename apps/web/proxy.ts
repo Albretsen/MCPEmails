@@ -6,6 +6,9 @@ import { buildContentSecurityPolicy, generateNonce } from '@/lib/csp';
 import { SUBJECT_COOKIE, SUBJECT_HEADER, SUBJECT_ID_PATTERN } from '@/lib/experiments/constants';
 import { generateSubjectId, serializeSubjectCookie } from '@/lib/experiments/cookies';
 import { routing } from '@/i18n/routing';
+import {
+  AI_CLIENT_COOKIE, AI_CLIENT_HEADER, aiClientFromRequest, normalizeAiClient, serializeAiClientCookie,
+} from '@/lib/clients/preferred.mjs';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -190,6 +193,24 @@ export default async function proxy(request: NextRequest) {
   const subjectId = hasSubject ? (existingSubject as string) : generateSubjectId();
   request.headers.set(SUBJECT_HEADER, subjectId);
 
+  // The visitor's AI assistant (src/lib/clients/preferred.mjs), on marketing
+  // pages only. Same mechanism as the subject id: a request header for the
+  // render happening now, a cookie for the next page views. Only an AI signal
+  // on THIS request sets either; a later direct or search visit never clears
+  // an earlier one, and a newer AI signal replaces it. An incoming header is
+  // dropped first so only the proxy can set it.
+  request.headers.delete(AI_CLIENT_HEADER);
+  let aiClientCookie: string | null = null;
+  if (isLocalizedRoute(request.nextUrl.pathname)) {
+    const aiClient = aiClientFromRequest(request.nextUrl, request.headers.get('referer'));
+    if (aiClient) {
+      request.headers.set(AI_CLIENT_HEADER, aiClient);
+      if (normalizeAiClient(request.cookies.get(AI_CLIENT_COOKIE)?.value) !== aiClient) {
+        aiClientCookie = serializeAiClientCookie(aiClient, request.nextUrl.protocol === 'https:');
+      }
+    }
+  }
+
   const response = await routeRequest(request);
 
   // The policy the browser enforces. It has to carry the same nonce as the
@@ -215,6 +236,9 @@ export default async function proxy(request: NextRequest) {
       serializeSubjectCookie(subjectId, request.nextUrl.protocol === 'https:'),
     );
   }
+  // The second carve-out from the marketing set-cookie strip, appended the
+  // same way and for the same reason. Only when the AI client changed.
+  if (aiClientCookie) response.headers.append('set-cookie', aiClientCookie);
   return response;
 }
 

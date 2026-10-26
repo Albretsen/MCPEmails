@@ -8,6 +8,8 @@ import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { MIcon } from '../../../../components/MarketingPrimitives';
 import { requireLocale } from '@/i18n/require-locale';
+import { orderClients } from '@/lib/clients/preferred.mjs';
+import { getPreferredClient } from '@/lib/clients/preferred-request';
 
 /**
  * The hub for the per-client setup pages.
@@ -66,9 +68,14 @@ export default async function ClientHubPage({ params }) {
   const ui = clientUi(locale).hub;
   const count = available.length;
   const oauth = available.filter((c) => c.auth === 'oauth').length;
+  // The visible list puts the visitor's AI assistant first in its group
+  // (src/lib/clients/preferred.mjs). The JSON-LD ItemList below keeps the
+  // registry order for everyone, so crawlers and visitors without one see the
+  // same page.
+  const preferred = await getPreferredClient();
   const groups = CLIENT_CATEGORIES.map((c) => ({
     ...c,
-    clients: available.filter((x) => x.category === c.id),
+    clients: orderClients(available.filter((x) => x.category === c.id), preferred, (x) => x.slug),
   })).filter((g) => g.clients.length > 0);
   const url = localePath(locale, '/docs/clients');
   const title = fill(ui.meta.title, { count });

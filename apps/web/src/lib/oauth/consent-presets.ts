@@ -46,6 +46,15 @@
 // validated client_id / redirect_uri HOST, never from the self-asserted
 // DCR client_name.
 //
+// CONNECTOR-FIRST ON CLAUDE.AI (2026-10-26, owner feedback F3). A user who
+// starts in claude.ai (adds the connector, signs up inside the OAuth detour,
+// no mailbox yet or a workspace under a day old) used to get Read-only, then a
+// SECOND consent screen at their first draft or send. The owner approved
+// opening that consent on "Standard" (read, drafts, send) for everyone. Only
+// when the request is no wider than Standard; every narrower card and every
+// toggle is still there. `preferStandard` below; `identifyClaudeAiClient`
+// decides the client from the validated redirect_uri host.
+//
 // Run the tests: npm run test:oauth-presets (from apps/web).
 // ---------------------------------------------------------------------------
 
@@ -160,7 +169,7 @@ export interface DefaultAccess {
    * step-up (see the header and `identifyStepUpLimitedClient`), so the request
    * was deliberately not honoured narrowly.
    */
-  basis: 'request' | 'no-request' | 'client-cannot-step-up';
+  basis: 'request' | 'no-request' | 'client-cannot-step-up' | 'connector-first';
 }
 
 export interface DefaultAccessInput {
@@ -176,6 +185,12 @@ export interface DefaultAccessInput {
    * available preset, because a narrow grant is unrecoverable for this client.
    */
   clientCannotStepUp?: boolean;
+  /**
+   * Open on "Standard" when the request is no wider than it (a connector-first
+   * consent from claude.ai, owner decision F3). Ignored when Standard is not
+   * wholly on offer, and outranked by `clientCannotStepUp`.
+   */
+  preferStandard?: boolean;
 }
 
 const VALID = new Set<string>(VALID_SCOPES);
@@ -218,6 +233,7 @@ export function resolveDefaultAccess({
   offeredScopes,
   requestedScopes,
   clientCannotStepUp = false,
+  preferStandard = false,
 }: DefaultAccessInput): DefaultAccess {
   const offered = offeredScopes.filter((s) => VALID.has(s));
   const offeredSet = new Set(offered);
@@ -241,6 +257,14 @@ export function resolveDefaultAccess({
   // scopes_allowed again anyway, so a default built from anything else would be
   // a default the server then refuses.
   const requested = (requestedScopes ?? []).filter((s) => offeredSet.has(s));
+
+  // Connector-first on claude.ai: Standard, unless the client asked for more.
+  if (preferStandard) {
+    const standard = presets.find((p) => p.id === 'standard' && p.available);
+    if (standard && requested.every((s) => standard.effectiveScopes.includes(s))) {
+      return { mode: 'standard', scopes: [...standard.effectiveScopes], recommendedMode: 'standard', basis: 'connector-first' };
+    }
+  }
 
   if (requested.length === 0) {
     const fallback =
@@ -342,4 +366,22 @@ export function identifyStepUpLimitedClient({
   const redirect = parseOpenAiUrl(redirectUri);
   if (redirect && isChatGptRedirectPath(redirect.pathname)) return 'chatgpt';
   return null;
+}
+
+/**
+ * claude.ai (or claude.com) as the authorizing client, from the VALIDATED
+ * redirect_uri: https, exact host, the connector callback path. Never from the
+ * self-asserted client_name, for the same reason as identifyStepUpLimitedClient.
+ */
+export function identifyClaudeAiClient(redirectUri: string | null | undefined): boolean {
+  if (typeof redirectUri !== 'string' || redirectUri === '') return false;
+  let url: URL;
+  try {
+    url = new URL(redirectUri);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:' || url.port !== '' || url.username !== '' || url.password !== '') return false;
+  if (url.hostname !== 'claude.ai' && url.hostname !== 'claude.com') return false;
+  return url.pathname.startsWith('/api/mcp/');
 }

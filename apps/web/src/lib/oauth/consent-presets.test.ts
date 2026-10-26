@@ -17,6 +17,7 @@ import test from 'node:test';
 import {
   ACCESS_PRESETS,
   canonicalScopes,
+  identifyClaudeAiClient,
   identifyStepUpLimitedClient,
   resolveDefaultAccess,
   resolvePresets,
@@ -300,4 +301,37 @@ test('every preset scope is a scope the server actually enforces', () => {
   for (const p of ACCESS_PRESETS) {
     for (const s of p.scopes) assert.ok(ALL.includes(s), `${s} is not a real scope`);
   }
+});
+
+// ─── Connector-first on claude.ai (owner decision F3) ─────────────────────────
+
+test('preferStandard: read:email from claude.ai opens on Standard', () => {
+  const d = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: ['read:email'], preferStandard: true });
+  assert.equal(d.mode, 'standard');
+  assert.equal(d.recommendedMode, 'standard');
+  assert.equal(d.basis, 'connector-first');
+  assert.deepEqual(d.scopes, [...preset('standard').scopes]);
+});
+
+test('preferStandard never narrows a wider request, and step-up-limited still wins', () => {
+  const wide = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: ['read:email', 'delete:email'], preferStandard: true });
+  assert.equal(wide.mode, 'custom');
+  const openai = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: ['read:email'], preferStandard: true, clientCannotStepUp: true });
+  assert.equal(openai.mode, 'full');
+});
+
+test('preferStandard is ignored when Standard is not wholly offered', () => {
+  const d = resolveDefaultAccess({ offeredScopes: FIRST_PARTY, requestedScopes: ['read:email'], preferStandard: true });
+  assert.equal(d.mode, 'readOnly');
+});
+
+test('identifyClaudeAiClient: exact claude hosts on the connector callback only', () => {
+  assert.equal(identifyClaudeAiClient('https://claude.ai/api/mcp/auth_callback'), true);
+  assert.equal(identifyClaudeAiClient('https://claude.com/api/mcp/auth_callback'), true);
+  assert.equal(identifyClaudeAiClient('https://evilclaude.ai/api/mcp/auth_callback'), false);
+  assert.equal(identifyClaudeAiClient('https://claude.ai.attacker.net/api/mcp/auth_callback'), false);
+  assert.equal(identifyClaudeAiClient('http://claude.ai/api/mcp/auth_callback'), false);
+  assert.equal(identifyClaudeAiClient('https://claude.ai/other'), false);
+  assert.equal(identifyClaudeAiClient('cursor://anysphere.cursor-retrieval/oauth/callback'), false);
+  assert.equal(identifyClaudeAiClient(null), false);
 });

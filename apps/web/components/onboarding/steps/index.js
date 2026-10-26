@@ -37,6 +37,9 @@
  *   secondInbox     true when the inbox step was opened from It works'
  *                   "Connect your other inbox" (WP-H, plan B1)
  *   startSecondInbox()  open the inbox step in that mode
+ *   returnTo        optional, InboxStep only: the /authorize URL a Microsoft
+ *                   sign-in returns to when the step runs inside OAuth consent
+ *                   (components/auth/AuthorizeInboxStep.jsx); null on /onboarding
  *
  * Panels must not import from components/dashboard/*: /onboarding has its own
  * JS budget (under 170 KB brotli first load, plan A9). Strings go in the

@@ -357,5 +357,15 @@
       "intro": "God morgen. Lim inn dette i {client} for å få morgenoppsummeringen din:"
     },
     "footer": "Du ba om denne e-posten da du satte opp MCPEmails. Den sendes én gang."
+  },
+  "chatReturn": {
+    "title": "Tilkoblet. Gå tilbake til {client} og spør på nytt.",
+    "lead": "Innboksen din er klar. Still {client} det samme spørsmålet igjen, eller start med dette:",
+    "prompt": "Se på innboksen min fra de siste 24 timene og si hvilke e-poster jeg må svare på.",
+    "copy": "Kopier ledetekst",
+    "copied": "Kopiert",
+    "open": "Åpne {client}",
+    "yourApp": "KI-appen din",
+    "dashboard": "Gå til dashbordet"
   }
 }

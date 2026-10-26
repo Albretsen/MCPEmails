@@ -357,5 +357,15 @@
       "intro": "Buenos días. Pega esto en {client} para recibir tu resumen de la mañana:"
     },
     "footer": "Pediste este email al configurar MCPEmails. Se envía una sola vez."
+  },
+  "chatReturn": {
+    "title": "Conectado. Vuelve a {client} y pregunta de nuevo.",
+    "lead": "Tu buzón está listo. Hazle a {client} la misma pregunta otra vez, o empieza con esto:",
+    "prompt": "Revisa mi bandeja de entrada de las últimas 24 horas y dime qué correos necesitan una respuesta mía.",
+    "copy": "Copiar prompt",
+    "copied": "Copiado",
+    "open": "Abrir {client}",
+    "yourApp": "tu app de IA",
+    "dashboard": "Ir al panel"
   }
 }

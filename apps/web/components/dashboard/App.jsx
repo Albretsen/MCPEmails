@@ -31,6 +31,7 @@ import {
   withoutConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { findMailHostPreset } from '@/lib/email-providers/host-presets';
+import { backToChatPath, rememberChatReturn, takeChatReturn, withoutChatLinkParams } from '@/lib/onboarding/chat-return.mjs';
 
 
 /* App.jsx: dashboard root. Owns state, route, modals.
@@ -142,7 +143,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -156,6 +157,20 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   );
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
+  // A signed chat connect link (`from=chat`, page.js verified it): connect
+  // only, then "Go back to <client> and ask again" on /onboarding/back-to-chat.
+  const [chatDone, setChatDone] = useState(null);
+  useEffect(() => {
+    if (chatDone) router.push(backToChatPath(chatDone.client));
+  }, [chatDone, router]);
+  useEffect(() => {
+    if (!chatReturn) return;
+    rememberChatReturn(chatReturn);
+    try {
+      const stripped = withoutChatLinkParams(window.location.href);
+      if (stripped !== window.location.href) window.history.replaceState(window.history.state, '', stripped);
+    } catch { /* cosmetic */ }
+  }, [chatReturn]);
   const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
   const upgradePlan = readQuery(searchParams, 'upgrade');
   const upgradeInterval = readQuery(searchParams, 'interval');
@@ -414,8 +429,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const carried = connectIntentSettings.current;
 
     if (!slug && !carried) {
-      if (firstrun) {
-        const id = setTimeout(() => openConnect('first_run'), 400);
+      if (firstrun || chatReturn) {
+        const id = setTimeout(() => openConnect(firstrun ? 'first_run' : 'other'), 400);
         return () => clearTimeout(id);
       }
       return;
@@ -445,8 +460,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       if (preselect && !atCap) {
         setConnectPreselect(preselect);
         openConnect('provider_intent');
-      } else if (firstrun) {
-        openConnect('first_run');
+      } else if (firstrun || chatReturn) {
+        openConnect(firstrun ? 'first_run' : 'other');
       }
     });
     return () => { cancelled = true; };
@@ -478,6 +493,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Routes once off the ?connected= param the OAuth callback redirects back with.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
+      // Came from a chat link before the Microsoft sign-in: back to the chat.
+      const fromChat = takeChatReturn();
+      if (fromChat) setChatDone(fromChat);
     } else if (readQuery(searchParams, 'connect') === 'second_inbox') {
       // Onboarding Flow B, B1: "Connect your other inbox" on It works, for a
       // workspace already at its inbox cap. The modal opens on the existing
@@ -1093,6 +1111,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       }
       return [...xs, next];
     });
+    // Came from a chat link: the next step is the chat, not the client guide.
+    if (reconnectInbox == null) {
+      const fromChat = takeChatReturn();
+      if (fromChat) setChatDone(fromChat);
+    }
     setReconnectInbox(null);
     // `keepOpen`: a first inbox, and the modal moves on to its "Now connect
     // your AI app" screen; it closes from there (onOpenClientGuide or Later).
@@ -1375,7 +1398,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           reconnect={reconnectInbox}
           onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); setConnectNotice(null); }}
           returnNotice={reconnectInbox == null ? connectNotice : null}
-          showNextStepAfterConnect={reconnectInbox == null && inboxes.length === 0}
+          showNextStepAfterConnect={reconnectInbox == null && inboxes.length === 0 && !chatReturn}
           onboardingClient={onboardingClient}
           onOpenClientGuide={(client) => {
             setShowConnect(false);

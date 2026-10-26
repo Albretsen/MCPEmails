@@ -150,7 +150,10 @@ export type ProductFunnelEvent = {
     // (level_* on the dashboard, chat_* written by mcp-server).
     | 'second_inbox_prompt_shown' | 'second_inbox_prompt_clicked'
     | 'plan_summary_shown' | 'plan_summary_dismissed' | 'plan_summary_clicked'
-    | 'usage_meter_shown' | 'grace_end_note_shown';
+    | 'usage_meter_shown' | 'grace_end_note_shown'
+    // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
+    // At most one of each per workspace; category = the AI app's chip id.
+    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

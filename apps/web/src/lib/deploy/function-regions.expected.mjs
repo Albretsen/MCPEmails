@@ -251,6 +251,7 @@ export const ROUTES = [
   ['app/api/onboarding/assist/route.ts', 'arn1', '3-5', 'Resend for the two email actions'],
   // "Send this error to support" from the onboarding inbox step: the ticket
   // path of app/api/support/tickets, so the same region.
+  ['app/api/onboarding/authorize-event/route.ts', 'arn1', '4 (auth, workspace, dedupe read, insert)', '-'],
   ['app/api/onboarding/connect-help/route.ts', 'arn1', '4-8', 'Resend x2'],
   // Onboarding provider detection: the same lookups as inboxes/autodiscover.
   ['app/api/onboarding/detect/route.ts', 'arn1', '1', 'DNS MX/SRV + autoconfig.thunderbird.net (fixed origin)'],
@@ -322,6 +323,7 @@ export const ROUTES = [
   ['app/data/imap-providers.json/route.ts', 'iad1', '0', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],
   ['app/onboarding/page.tsx', 'arn1', '4 serial (auth, workspace, member, variant); status streams', '-'],
+  ['app/onboarding/back-to-chat/page.js', 'arn1', '1 (auth)', '-'],
   ['app/opengraph-image.tsx', 'iad1', '0', 'prerendered at build; static'],
   ['app/r/[code]/route.ts', 'arn1', '2', '-'],
   ['app/robots.ts', 'iad1', '0', '-'],

@@ -2,6 +2,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import { requireLocale } from '@/i18n/require-locale';
 import ClientMessages from '../../components/i18n/ClientMessages';
+import { PreferredClientProvider } from '../../components/marketing/PreferredClient';
+import { getPreferredClient } from '@/lib/clients/preferred-request';
 
 /**
  * Layout for the localized marketing routes. The <html>/<body> shell and the
@@ -29,5 +31,12 @@ export default async function LocaleLayout({
   const { locale } = await params;
   requireLocale(locale);
   setRequestLocale(locale);
-  return <ClientMessages namespaces={['home', 'compare']}>{children}</ClientMessages>;
+  // The visitor's AI assistant, if they came from one (src/lib/clients/preferred.mjs).
+  // Only reorders client lists in the body; never reaches metadata or JSON-LD.
+  const preferredClient = await getPreferredClient();
+  return (
+    <ClientMessages namespaces={['home', 'compare']}>
+      <PreferredClientProvider value={preferredClient}>{children}</PreferredClientProvider>
+    </ClientMessages>
+  );
 }

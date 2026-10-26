@@ -32,26 +32,60 @@ const nodeMock = mock as unknown as {
 
 let db = new FakeSupabase();
 let ledger = new Set<string>();
+type LedgerRow = { event_id: string; event_type: string; event_created: string; stripe_customer_id: string | null };
+let ledgerRows: LedgerRow[] = [];
 
+/**
+ * `stripe_webhook_events` with the two properties the route relies on: a
+ * repeated event id is a 23505, and the out-of-order guard's newer-event
+ * query (eq customer, neq id, not event_type in (...), gt created) really
+ * filters the stored rows.
+ */
 function ledgerTable() {
   let outcome: { data: unknown; error: { code: string; message: string } | null } = {
     data: null,
     error: null,
   };
+  const filters: ((row: LedgerRow) => boolean)[] = [];
+  let querying = false;
   const builder: Record<string, unknown> = {};
-  for (const name of ['select', 'eq', 'neq', 'gt', 'limit', 'delete']) {
+  for (const name of ['select', 'limit', 'delete']) {
     builder[name] = () => builder;
   }
-  builder.insert = (row: { event_id: string }) => {
+  builder.eq = (column: keyof LedgerRow, value: unknown) => {
+    querying = true;
+    filters.push((row) => row[column] === value);
+    return builder;
+  };
+  builder.neq = (column: keyof LedgerRow, value: unknown) => {
+    filters.push((row) => row[column] !== value);
+    return builder;
+  };
+  builder.gt = (column: keyof LedgerRow, value: string) => {
+    filters.push((row) => String(row[column]) > value);
+    return builder;
+  };
+  builder.not = (column: keyof LedgerRow, operator: string, value: string) => {
+    assert.equal(operator, 'in');
+    const list = value.replace(/^\(|\)$/g, '').split(',');
+    filters.push((row) => row[column] !== null && !list.includes(String(row[column])));
+    return builder;
+  };
+  builder.insert = (row: LedgerRow) => {
     if (ledger.has(row.event_id)) {
       outcome = { data: null, error: { code: '23505', message: 'duplicate key' } };
     } else {
       ledger.add(row.event_id);
+      ledgerRows.push(row);
       outcome = { data: { event_id: row.event_id }, error: null };
     }
     return builder;
   };
-  builder.maybeSingle = async () => outcome;
+  builder.maybeSingle = async () => {
+    if (!querying) return outcome;
+    const hit = ledgerRows.find((row) => filters.every((f) => f(row)));
+    return { data: hit ? { event_id: hit.event_id } : null, error: null };
+  };
   builder.then = (resolve: (value: unknown) => unknown) => resolve(outcome);
   return builder;
 }
@@ -123,6 +157,7 @@ const CUSTOMER = 'cus_payment_issue';
 function seed() {
   db = new FakeSupabase();
   ledger = new Set();
+  ledgerRows = [];
   live.invoiceStatus = 'open';
   live.declineCode = 'insufficient_funds';
   live.subscriptionStatus = 'active';
@@ -157,12 +192,16 @@ function billing() {
 
 let seq = 0;
 
-async function deliver(type: string, object: Record<string, unknown>, options: { id?: string } = {}) {
+async function deliver(
+  type: string,
+  object: Record<string, unknown>,
+  options: { id?: string; created?: number } = {},
+) {
   seq += 1;
   const event = {
     id: options.id ?? `evt_payment_issue_${seq}`,
     type,
-    created: 1_790_000_000 + seq,
+    created: options.created ?? 1_790_000_000 + seq,
     data: { object },
   };
   const request = new Request('https://mcpemails.test/api/stripe/webhook', {
@@ -330,4 +369,91 @@ test('a failing state write never fails the webhook', async () => {
   db.failTimes('workspaces', { message: 'timeout' }, 5);
   const cleared = await deliver('invoice.payment_succeeded', { id: 'in_payment_issue', customer: CUSTOMER });
   assert.equal(cleared.status, 200);
+});
+
+// ---------------------------------------------------------------------------
+// Staging E2E bugs B1 and B2 (2026-10-26)
+// ---------------------------------------------------------------------------
+
+test('B1: a past_due update processed after its sibling payment_failed is not stale', async () => {
+  seed();
+  // Stripe: subscription.updated (past_due) at T, invoice.payment_failed at
+  // T+1, and the invoice event is processed first.
+  const t = 1_795_000_000;
+  live.subscriptionStatus = 'past_due';
+  await deliver('invoice.payment_failed', failedInvoice(), { created: t + 1 });
+  const result = await deliver('customer.subscription.updated', subscription('past_due'), { created: t });
+
+  assert.equal(result.status, 200);
+  assert.notEqual(result.body.stale, true, 'the invoice event does not make it stale');
+  assert.equal(billing().subscription_status, 'past_due');
+  assert.equal(ws('ws-1').payment_issue_kind, 'declined', 'the marker stays while past_due');
+});
+
+test('B1: a newer subscription event still makes an older one stale', async () => {
+  seed();
+  const t = 1_795_100_000;
+  await deliver('customer.subscription.updated', subscription('active'), { created: t + 5 });
+  const result = await deliver('customer.subscription.updated', subscription('past_due'), { created: t });
+  assert.equal(result.body.stale, true);
+  assert.equal(billing().subscription_status, 'active');
+});
+
+function invoiceOfSubscription(overrides: Record<string, unknown> = {}) {
+  return failedInvoice({
+    parent: { subscription_details: { subscription: 'sub_payment_issue' } },
+    attempt_count: 4,
+    next_payment_attempt: null,
+    ...overrides,
+  });
+}
+
+test('B2: a late payment_failed after the deletion leaves no marker', async () => {
+  seed();
+  const t = 1_795_200_000;
+  await deliver('invoice.payment_failed', invoiceOfSubscription({ attempt_count: 1 }), { created: t });
+  assert.equal(typeof ws('ws-1').payment_issue_since, 'string');
+
+  live.subscriptionStatus = 'canceled';
+  await deliver('customer.subscription.deleted', subscription('canceled'), { created: t + 101 });
+  assert.equal(ws('ws-1').payment_issue_since, null, 'the deletion cleared it');
+
+  // The last decline, emitted a second before the deletion, processed after it.
+  const result = await deliver('invoice.payment_failed', invoiceOfSubscription(), { created: t + 100 });
+  assert.equal(result.status, 200);
+  for (const id of ['ws-1', 'ws-2']) {
+    assert.equal(ws(id).payment_issue_since, null, id);
+    assert.equal(ws(id).payment_issue_kind, null, id);
+  }
+  assert.equal(billing().last_decline_code, null);
+  assert.equal(billing().subscription_status, 'canceled');
+});
+
+test('B2: a decline on an ended subscription clears a marker the deletion missed', async () => {
+  seed();
+  await deliver('invoice.payment_failed', invoiceOfSubscription({ attempt_count: 1 }));
+  assert.equal(ws('ws-1').payment_issue_kind, 'declined');
+
+  live.subscriptionStatus = 'canceled';
+  await deliver('invoice.payment_failed', invoiceOfSubscription());
+  assert.equal(ws('ws-1').payment_issue_since, null);
+  assert.equal(billing().last_decline_code, null);
+});
+
+test('B2: a decline on a live past_due subscription is still recorded', async () => {
+  seed();
+  live.subscriptionStatus = 'past_due';
+  await deliver('invoice.payment_failed', invoiceOfSubscription({ attempt_count: 1 }));
+  assert.equal(ws('ws-1').payment_issue_kind, 'declined');
+});
+
+test('B2: an ended old subscription does not clear a newer failing one', async () => {
+  seed();
+  await deliver('invoice.payment_failed', failedInvoice());
+  billing().stripe_subscription_id = 'sub_newer';
+  billing().subscription_status = 'past_due';
+
+  live.subscriptionStatus = 'canceled';
+  await deliver('invoice.payment_failed', invoiceOfSubscription());
+  assert.equal(ws('ws-1').payment_issue_kind, 'declined');
 });

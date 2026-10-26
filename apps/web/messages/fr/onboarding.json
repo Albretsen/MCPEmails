@@ -357,5 +357,15 @@
       "intro": "Bonjour. Collez ceci dans {client} pour obtenir votre point du matin :"
     },
     "footer": "Vous avez demandé cet e-mail en configurant MCPEmails. Il n'est envoyé qu'une fois."
+  },
+  "chatReturn": {
+    "title": "Connecté. Retournez sur {client} et posez à nouveau votre question.",
+    "lead": "Votre boîte mail est prête. Posez à nouveau la même question à {client}, ou commencez par ceci :",
+    "prompt": "Regarde ma boîte de réception des dernières 24 heures et dis-moi quels e-mails attendent une réponse de ma part.",
+    "copy": "Copier le prompt",
+    "copied": "Copié",
+    "open": "Ouvrir {client}",
+    "yourApp": "votre app d'IA",
+    "dashboard": "Aller au tableau de bord"
   }
 }

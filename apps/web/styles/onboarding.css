@@ -191,3 +191,19 @@
 .onb-second-inbox .onb-strong { margin: 0 0 4px; }
 .onb-second-inbox .onb-muted { margin: 0; }
 .onb-second-inbox .onb-actions { margin-top: 10px; }
+
+/* "Connected. Go back to Claude and ask again." (ChatReturnPanel) */
+.onb-chat-prompt {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  font-size: 14px;
+  line-height: 1.5;
+  user-select: all;
+}
+
+/* The inbox step inside the OAuth consent card (components/auth/AuthorizeInboxStep.jsx). */
+.az-onb { margin-top: 4px; }
+.az-onb .onb-title { font-size: 20px; }

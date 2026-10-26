@@ -357,5 +357,15 @@
       "intro": "Guten Morgen. Fügen Sie das in {client} ein, um Ihr Morgen-Briefing zu bekommen:"
     },
     "footer": "Sie haben diese E-Mail bei der Einrichtung von MCPEmails angefordert. Sie wird einmal gesendet."
+  },
+  "chatReturn": {
+    "title": "Verbunden. Gehen Sie zurück zu {client} und fragen Sie noch einmal.",
+    "lead": "Ihr Postfach ist bereit. Stellen Sie {client} dieselbe Frage noch einmal oder beginnen Sie hiermit:",
+    "prompt": "Sieh dir meinen Posteingang der letzten 24 Stunden an und sag mir, welche E-Mails eine Antwort von mir brauchen.",
+    "copy": "Prompt kopieren",
+    "copied": "Kopiert",
+    "open": "{client} öffnen",
+    "yourApp": "Ihre KI-App",
+    "dashboard": "Zum Dashboard"
   }
 }

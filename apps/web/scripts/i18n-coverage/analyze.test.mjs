@@ -37,7 +37,7 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.ok(real.routes.length >= 50, `only ${real.routes.length} route files found`);
   assert.deepEqual(byFile.get('app/(auth)/login/page.js')?.needs, ['auth']);
   assert.deepEqual(byFile.get('app/signup/page.js')?.needs, ['auth']);
-  assert.deepEqual(byFile.get('app/authorize/page.js')?.needs, ['auth']);
+  assert.deepEqual(byFile.get('app/authorize/page.js')?.needs, ['auth', 'onboarding']);
   assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['convert', 'dashboard', 'dashboardChrome']);
   assert.deepEqual(byFile.get('app/[locale]/page.tsx')?.needs, ['compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/pricing/page.js')?.needs, ['compare', 'home', 'pricing']);
@@ -67,10 +67,10 @@ test('the app: nothing outside app/[locale] reads a marketing namespace', () => 
   assert.deepEqual(offenders, []);
 });
 
-test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider, AuthLocaleProvider or OnboardingLocaleProvider', () => {
+test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider, AuthLocaleProvider, OnboardingLocaleProvider or AuthorizeLocaleProvider', () => {
   const offenders = real.routes
     .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0)
-    .filter((r) => !['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider'].includes(r.provider))
+    .filter((r) => !['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider', 'AuthorizeLocaleProvider'].includes(r.provider))
     .map((r) => `${r.file} (${r.provider})`);
   assert.deepEqual(offenders, []);
 });
@@ -80,9 +80,14 @@ test('the app: sign-up, login and OAuth consent get the auth-only provider, the 
   // dashboard namespaces (~82 KB a language) stay out of them.
   const byFile = new Map(real.routes.map((r) => [r.file, r]));
   assert.deepEqual(real.authNamespaces, ['auth', 'common']);
-  for (const file of ['app/signup/page.js', 'app/(auth)/login/page.js', 'app/(auth)/forgot-password/page.js', 'app/authorize/page.js', 'app/invite/[token]/page.js']) {
+  for (const file of ['app/signup/page.js', 'app/(auth)/login/page.js', 'app/(auth)/forgot-password/page.js', 'app/invite/[token]/page.js']) {
     assert.equal(byFile.get(file)?.provider, 'AuthLocaleProvider', file);
   }
+  // OAuth consent adds `onboarding` for the inbox step a connector-first user
+  // in the new flow sees there (components/auth/AuthorizeInboxStep.jsx), and
+  // still none of the dashboard's copy.
+  assert.equal(byFile.get('app/authorize/page.js')?.provider, 'AuthorizeLocaleProvider');
+  assert.deepEqual(real.authorizeNamespaces, ['auth', 'common', 'onboarding']);
   assert.equal(byFile.get('app/dashboard/[[...section]]/page.js')?.provider, 'AppLocaleProvider');
   // /onboarding has its own budget: none of the dashboard's copy.
   assert.equal(byFile.get('app/onboarding/page.tsx')?.provider, 'OnboardingLocaleProvider');
