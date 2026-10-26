@@ -111,6 +111,28 @@ if (!SKIP_VALIDATION) {
 
 const path = require('path');
 
+// ---------------------------------------------------------------------------
+// /api/mcp → the mcp-server Edge Function
+// ---------------------------------------------------------------------------
+// The MCP endpoint is not a Next route. It is an external rewrite to the
+// Supabase Edge Function, proxied by Vercel's edge (an external rewrite in
+// next.config.js compiles to the same Vercel route a vercel.json rewrite does).
+// It lived in vercel.json until 2026-10-26; it moved here so the target can
+// come from MCP_EDGE_URL and a staging project can point at its own Supabase.
+// Unset, it is exactly the production URL it always was.
+//
+// `beforeFiles` matters: without it the request would first match the
+// app/api/[[...unmatched]] catch-all and 404. proxy.ts excludes api/mcp in its
+// matcher, so no session or CSP work runs on these requests either.
+// Keep `?forceFunctionRegion=us-east-1` on any override: it pins the function
+// to the region it has always run in.
+const MCP_EDGE_URL =
+  process.env.MCP_EDGE_URL ||
+  'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1';
+if (!/^https:\/\/[^/]+\/\S*$/.test(MCP_EDGE_URL)) {
+  throw new Error(`MCP_EDGE_URL must be an absolute https URL, got: ${MCP_EDGE_URL}`);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ---------------------------------------------------------------------------
@@ -183,6 +205,12 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Never let the edge cache a rewritten /api/mcp response: every MCP
+        // call is authenticated and per-user.
+        source: '/api/mcp',
+        headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }],
+      },
+      {
         source: '/(.*)',
         headers: [
           {
@@ -208,6 +236,11 @@ const nextConfig = {
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
+      // Staging only (APP_ENV=staging at build): nothing on that host may be
+      // indexed, including API answers and files robots.txt cannot cover.
+      ...(process.env.APP_ENV === 'staging'
+        ? [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+        : []),
     ];
   },
 
@@ -217,6 +250,14 @@ const nextConfig = {
   // /home is a legacy path that never existed in this app. It 404s today
   // because the redirect declaring it lived in the same dead repo-root
   // vercel.json as the HSTS value above.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/api/mcp', destination: MCP_EDGE_URL }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+
   async redirects() {
     return [
       { source: '/home', destination: '/', permanent: true },

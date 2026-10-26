@@ -8,6 +8,8 @@ import { getLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
 import AcquisitionCapture from '../components/analytics/AcquisitionCapture';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
+import { isStaging } from '../src/lib/env/app-env';
+import StagingRibbon from '../components/StagingRibbon';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 // This value is generated in Google Search Console. It is public by design
@@ -100,7 +102,12 @@ export default async function RootLayout({ children }) {
           {children}
         </NextIntlClientProvider>
         <AcquisitionCapture />
-        <Analytics />
+        {/*
+          APP_ENV=staging only: a fixed ribbon so nobody mistakes the staging
+          copy for production, and no Web Analytics so staging traffic never
+          lands in production numbers. Production renders neither branch.
+        */}
+        {isStaging() ? <StagingRibbon /> : <Analytics />}
       </body>
     </html>
   );

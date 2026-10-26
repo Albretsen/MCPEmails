@@ -155,7 +155,12 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: buildCallbackUrl() },
+      // Staging never creates an account from a magic link, so a stranger's
+      // address gets no email from it. NEXT_PUBLIC_APP_ENV is inlined at build.
+      options: {
+        emailRedirectTo: buildCallbackUrl(),
+        ...(process.env.NEXT_PUBLIC_APP_ENV === 'staging' ? { shouldCreateUser: false } : {}),
+      },
     });
 
     if (error) {

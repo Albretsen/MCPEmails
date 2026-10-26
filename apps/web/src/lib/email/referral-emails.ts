@@ -24,7 +24,7 @@
  * no durations in days.
  */
 
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import { planDisplayName } from '@/lib/stripe/plans';
 import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
@@ -129,7 +129,7 @@ export async function sendReferralEmail(input: ReferralEmailInput): Promise<Refe
     const composed = composeReferralEmail(input);
     if (!composed) return { ok: false, reason: 'not_composable' };
 
-    const { error } = await new Resend(key).emails.send(
+    const { error } = await createResend(key).emails.send(
       {
         from: process.env.BILLING_EMAIL_FROM ?? DEFAULT_FROM,
         to,

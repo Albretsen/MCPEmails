@@ -54,6 +54,8 @@ export function trackProductEvent(name, properties = {}) {
     if (process.env.NODE_ENV !== 'production') throw error;
     return;
   }
+  // Staging sends no product events; NEXT_PUBLIC_APP_ENV is inlined at build.
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'staging') return;
   track(name, properties);
 }
 

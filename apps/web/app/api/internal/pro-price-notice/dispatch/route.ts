@@ -18,7 +18,7 @@
  */
 
 import { timingSafeEqual } from 'node:crypto';
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { lifecycleFrom } from '@/lib/email/lifecycle';
@@ -50,7 +50,7 @@ const resendSender: NoticeSender = async (email) => {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { ok: false, reason: 'no_api_key' };
   try {
-    const { data, error } = await new Resend(key).emails.send(
+    const { data, error } = await createResend(key).emails.send(
       {
         from: lifecycleFrom(),
         to: email.to,

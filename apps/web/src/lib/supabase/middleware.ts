@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import type { Database } from '@/types/database.types';
 import { CONNECT_INTENT_PARAM, withConnectIntent } from '@/lib/connect/intent-carry.mjs';
+import { mayUseThisDeployment, STAGING_RESTRICTED_REASON } from '@/lib/env/app-env';
 
 /**
  * Refreshes the Supabase session on every request and enforces route-level
@@ -50,6 +51,15 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Staging only (APP_ENV=staging): a session whose address is not on
+  // EMAIL_RECIPIENT_ALLOWLIST is refused everywhere except /auth/*, whatever
+  // created it (password signup returns its session in the browser, OAuth and
+  // magic link go through /auth/callback, which also refuses them). Always
+  // true in production.
+  if (user && !mayUseThisDeployment(user.email) && !request.nextUrl.pathname.startsWith('/auth/')) {
+    return stagingRefusal(request);
+  }
+
   if (!user && isProtectedPath(request.nextUrl.pathname)) {
     // Unauthenticated user accessing a protected route → send to /login.
     // Preserve the original path so the callback can redirect back after sign-in.
@@ -88,6 +98,21 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   }
 
   return supabaseResponse;
+}
+
+/**
+ * The staging refusal: a 403 for API calls, otherwise the sign-in error page.
+ * Both drop the Supabase auth cookies so the browser stops presenting them.
+ */
+function stagingRefusal(request: NextRequest): NextResponse {
+  const response = request.nextUrl.pathname.startsWith('/api/')
+    ? NextResponse.json({ error: STAGING_RESTRICTED_REASON }, { status: 403 })
+    : NextResponse.redirect(new URL(`/auth/error?reason=${STAGING_RESTRICTED_REASON}`, request.nextUrl.origin));
+  for (const { name } of request.cookies.getAll()) {
+    if (name.startsWith('sb-')) response.cookies.delete(name);
+  }
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }
 
 /**

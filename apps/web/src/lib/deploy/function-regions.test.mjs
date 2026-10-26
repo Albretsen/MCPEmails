@@ -43,6 +43,7 @@
 // ---------------------------------------------------------------------------
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -237,29 +238,22 @@ test('vercel.json region config stays inside what this test can model', () => {
   // skipped, and production skips only when nothing the web build reads
   // changed since the first parent; a failing diff (no HEAD^) builds.
   //
-  // The other, pinned value for value: /api/mcp is an external rewrite to
-  // the mcp-server edge function (2026-10-20), so no Vercel function runs per
-  // MCP call. It lives here because a vercel.json rewrite is applied by the
-  // platform router; the response contract it relies on is
-  // supabase/functions/mcp-server/web-ingress.ts. us-east-1 keeps the function
-  // next to the US mail hosts, as the iad1 route it replaced did.
+  // /api/mcp is an external rewrite to the mcp-server edge function
+  // (2026-10-20), so no Vercel function runs per MCP call. It lived here until
+  // 2026-10-26 and now lives in next.config.js rewrites(), built from
+  // MCP_EDGE_URL so a staging project can target its own Supabase. An
+  // external rewrite in next.config.js compiles to the same platform route.
+  // The response contract it relies on is
+  // supabase/functions/mcp-server/web-ingress.ts; the pinned default is
+  // checked in the test below.
   assert.deepEqual(
     Object.keys(config).sort(),
-    ['$schema', 'functions', 'headers', 'ignoreCommand', 'rewrites'],
-    'apps/web/vercel.json may contain only "$schema", "functions", "ignoreCommand" and the pinned /api/mcp rewrite',
+    ['$schema', 'functions', 'ignoreCommand'],
+    'apps/web/vercel.json may contain only "$schema", "functions" and "ignoreCommand"',
   );
   // Vercel rejects an ignoreCommand over 256 characters, and the deployment
   // then fails before the step runs: every preview AND production deploy.
   assert.ok(config.ignoreCommand.length <= 256, `ignoreCommand is ${config.ignoreCommand.length} characters; Vercel allows 256`);
-  assert.deepEqual(config.rewrites, [
-    {
-      source: '/api/mcp',
-      destination: 'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1',
-    },
-  ]);
-  assert.deepEqual(config.headers, [
-    { source: '/api/mcp', headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }] },
-  ]);
   // A top-level `regions` overrides the project's Function Region setting for
   // every unmatched function, which would make PROJECT_DEFAULT_REGION a lie.
   assert.equal(config.regions, undefined, 'top-level "regions" is not allowed; pin per function');
@@ -373,4 +367,43 @@ test('the pattern matcher behaves like the builder (minimatch) for the syntax in
   for (const unsupported of ['app/{a,b}/**', 'app/a?/**', 'app/!(x)/**', 'app/api/*.ts', 'app/\\[locale\\]/**']) {
     assert.throws(() => compilePattern(unsupported), unsupported);
   }
+});
+
+test('/api/mcp rewrites to the production edge function unless MCP_EDGE_URL says otherwise', async () => {
+  const require = createRequire(import.meta.url);
+  const configPath = path.join(WEB_ROOT, 'next.config.js');
+  const load = async (edgeUrl) => {
+    const saved = { CI: process.env.CI, VERCEL: process.env.VERCEL, MCP_EDGE_URL: process.env.MCP_EDGE_URL };
+    process.env.CI = '1';
+    delete process.env.VERCEL;
+    if (edgeUrl === undefined) delete process.env.MCP_EDGE_URL;
+    else process.env.MCP_EDGE_URL = edgeUrl;
+    try {
+      delete require.cache[require.resolve(configPath)];
+      const nextConfig = require(configPath);
+      return { rewrites: await nextConfig.rewrites(), headers: await nextConfig.headers() };
+    } finally {
+      for (const [key, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  };
+
+  const prod = await load(undefined);
+  assert.deepEqual(prod.rewrites.beforeFiles, [
+    {
+      source: '/api/mcp',
+      destination: 'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1',
+    },
+  ]);
+  assert.deepEqual(
+    prod.headers.find((h) => h.source === '/api/mcp'),
+    { source: '/api/mcp', headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }] },
+  );
+
+  const staging = await load('https://example.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1');
+  assert.equal(staging.rewrites.beforeFiles[0].destination, 'https://example.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1');
+
+  await assert.rejects(() => load('http://insecure.example/x'), /MCP_EDGE_URL/);
 });

@@ -12,6 +12,7 @@ import {
 } from '@/lib/marketing-consent.mjs';
 import { microsoftSignInRefusal, oauthErrorReason } from '@/lib/auth/microsoft-sign-in';
 import { ssoRouteForEmail, isSsoUser, type SsoLookupRpc } from '@/lib/sso/sign-in';
+import { mayUseThisDeployment, STAGING_RESTRICTED_REASON } from '@/lib/env/app-env';
 import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
 import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
 import { clientIpFromHeaders, recordSsoAuditVia } from '@/lib/sso/audit';
@@ -91,6 +92,19 @@ export async function GET(request: Request) {
       clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
     );
     return refused;
+  }
+
+  // Staging only (APP_ENV=staging): an address outside
+  // EMAIL_RECIPIENT_ALLOWLIST may not sign in or sign up. An account this
+  // exchange just created (first OAuth sign-in, first magic link) is deleted
+  // again, so a stranger leaves nothing behind. Always passes in production.
+  if (exchanged?.user && !mayUseThisDeployment(exchanged.user.email)) {
+    await supabase.auth.signOut({ scope: 'local' });
+    if (isNewAccountSignup(exchanged.user.created_at)) {
+      const { error: deleteError } = await createServiceRoleClient().auth.admin.deleteUser(exchanged.user.id);
+      if (deleteError) console.error('[auth-callback] staging: deleting a refused new user failed:', deleteError.message);
+    }
+    return NextResponse.redirect(`${origin}/auth/error?reason=${STAGING_RESTRICTED_REASON}`);
   }
 
   // SAML SSO: the account has no personal workspace (the new-user trigger

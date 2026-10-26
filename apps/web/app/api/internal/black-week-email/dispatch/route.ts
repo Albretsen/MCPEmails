@@ -23,7 +23,7 @@
  */
 
 import { timingSafeEqual } from 'node:crypto';
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { budgetExhausted } from '@/lib/billing/dispatch-freshness';
@@ -66,7 +66,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const resendBatch: BatchSender = async (emails, idempotencyKey) => {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { ok: false, reason: 'no_api_key' };
-  const resend = new Resend(key);
+  const resend = createResend(key);
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       const { data, error } = await resend.batch.send(
