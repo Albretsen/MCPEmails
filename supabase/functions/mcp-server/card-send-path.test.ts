@@ -274,3 +274,15 @@ Deno.test("deleted: the database accepts the new action", async () => {
   const selfHost = await Deno.readTextFile(new URL("../../../self-host/db/00-schema.sql", import.meta.url));
   assertStringIncludes(selfHost, "ARRAY['saved'::text, 'sent'::text, 'deleted'::text]");
 });
+
+Deno.test("deleted: draft_delete's schema accepts base_revision, so the card's Discard passes validation", () => {
+  // Live re-test 2026-10-26: the card's Discard was refused with -32602
+  // ("not" arguments.base_revision) because the consolidated `draft` tool
+  // forbids, per action, every property that action's own schema lacks.
+  for (const name of ["draft_send", "draft_delete"]) {
+    const start = index.indexOf(`name: "${name}",`);
+    assert(start >= 0, `${name} tool entry`);
+    const entry = index.slice(start, index.indexOf("additionalProperties: false", start));
+    assertStringIncludes(entry, "base_revision: {", `${name} must declare base_revision`);
+  }
+});
