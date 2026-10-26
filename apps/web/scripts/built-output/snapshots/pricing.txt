@@ -49,6 +49,7 @@ No monthly action cap
 2x higher burst rate limit
 Email support
 Get Personal
+Charged today. Cancel any time. 14-day refund.
 Pro
 $12
 /month
@@ -66,6 +67,7 @@ Search every connected inbox at once
 Instructions for your AI, per inbox
 Webhooks for new mail
 Get Pro
+Charged today. Cancel any time. 14-day refund.
 Business
 $31.20
 /month
@@ -78,6 +80,7 @@ Admins approve sends held for review
 Several workspaces on one subscription, one per company or client
 Webhooks for new mail
 Get Business
+Charged today. Cancel any time. 14-day refund.
 All plans include: email fetched live, never stored · credentials encrypted at rest · data stored in the EU (Stockholm)
 One person running several company mailboxes? That is Pro, for up to 10.
 See how every work mailbox runs on one agent

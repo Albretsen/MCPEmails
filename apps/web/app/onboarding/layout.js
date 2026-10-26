@@ -10,7 +10,8 @@ import '../../styles/onboarding-inbox.css';
  * dashboard's copy or code is in this route's first load.
  */
 export const metadata = {
-  title: 'Set up MCPEmails',
+  // Absolute: the root template would add a second ' · MCPEmails'.
+  title: { absolute: 'Set up MCPEmails' },
   robots: { index: false, follow: false },
 };
 

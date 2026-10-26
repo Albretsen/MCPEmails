@@ -6,7 +6,7 @@
     "inboxes": "{count, plural, =1 {# 个收件箱} other {最多 # 个收件箱}}",
     "freeGrace": "{date} 之前不限量",
     "freeCap": "每月 {cap} 次邮件操作",
-    "noCap": "无每月上限",
+    "noCap": "邮件操作不限量",
     "emailSupport": "邮件支持",
     "everythingPersonal": "包含 Personal 的全部功能",
     "perMonth": "{price}/月",

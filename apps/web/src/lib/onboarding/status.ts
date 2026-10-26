@@ -16,8 +16,11 @@
  *   completedAt     the flow was finished (POST /api/onboarding {completed})
  *   client          the stored chip choice (workspaces.onboarding_client) when
  *                   it is one the chip offers, else null
- *   inboxes         { count, sinceReset, items: [{ id, address, provider,
- *                   status, createdAt }] }  live inboxes, oldest first, max 10
+ *   inboxes         { count, sinceReset, chosenAt, items: [{ id, address,
+ *                   provider, status, createdAt }] }  live inboxes, oldest
+ *                   first, max 10. chosenAt: the inbox step was passed since
+ *                   reset (workspaces.onboarding_inbox_connected_at: a new
+ *                   inbox, or "Use <address>" after a reset), else null
  *   credential      { exists, sinceReset, latestAt, scopes }  a connector grant
  *                   or API key (api_keys.kind IS NULL: the web client's own key
  *                   is not one); scopes = the newest one's scopes (the prompt
@@ -28,7 +31,10 @@
  *                   chip id of the newest one (null when unknown).
  *   firstCall       { at, tool }  the first SUCCESSFUL call against a real
  *                   inbox (onboarding_value_activated_at: never inbox_list,
- *                   never a call without a resolved inbox), since reset
+ *                   never a call without a resolved inbox), since reset.
+ *                   `tool` is that call's tool from activity_log (the
+ *                   earliest success with an inbox, not inbox_list, around
+ *                   the marker), never the any-call tool name
  *   anyCall         { at }  the first successful call of any kind
  *                   (analytics_first_tool_used_at), since reset
  *   lastFailure     { at, tool, code } | null  the newest failed tool call in
@@ -36,7 +42,8 @@
  *                   not 'success'; code is activity_log.error_code)
  *
  * Reads go through the CALLER's client (RLS), so a member can only ever read a
- * workspace they belong to. The query count is fixed: five parallel reads.
+ * workspace they belong to. Five parallel reads, plus one small activity_log
+ * read for firstCall.tool once the first real call has happened.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -66,7 +73,7 @@ export interface OnboardingStatus {
   resetAt: string | null;
   completedAt: string | null;
   client: string | null;
-  inboxes: { count: number; sinceReset: number; items: OnboardingInboxItem[] };
+  inboxes: { count: number; sinceReset: number; chosenAt: string | null; items: OnboardingInboxItem[] };
   credential: { exists: boolean; sinceReset: boolean; latestAt: string | null; scopes: string[] | null };
   handshake: { at: string | null; client: string | null; clients: OnboardingHandshake[] };
   firstCall: { at: string | null; tool: string | null };
@@ -86,6 +93,7 @@ export interface OnboardingStatusRows {
     onboarding_client: string | null;
     onboarding_reset_at: string | null;
     onboarding_completed_at: string | null;
+    onboarding_inbox_connected_at?: string | null;
     onboarding_value_activated_at: string | null;
     analytics_first_tool_used_at: string | null;
     analytics_first_tool_name: string | null;
@@ -95,6 +103,8 @@ export interface OnboardingStatusRows {
   latestKey: { created_at: string; scopes?: string[] | null } | null;
   handshakes: Array<{ client_name: string; first_seen: string; last_seen: string }>;
   lastFailure: { created_at: string; tool_name: string; error_code: string | null } | null;
+  /** The activating call (firstCallToolRead), when it was read. */
+  firstCallTool?: string | null;
 }
 
 function after(ts: string | null | undefined, floor: number | null): boolean {
@@ -102,6 +112,34 @@ function after(ts: string | null | undefined, floor: number | null): boolean {
   const t = Date.parse(ts);
   if (!Number.isFinite(t)) return false;
   return floor === null || t >= floor;
+}
+
+/**
+ * firstCall.tool: the activating call read from activity_log, else the
+ * any-call tool name when it is not inbox_list (the two are the same call
+ * whenever the first call of all was a real-inbox one), else null.
+ */
+export function firstCallToolName(activating: string | null | undefined, anyCallTool: string | null): string | null {
+  if (activating) return activating;
+  return anyCallTool && anyCallTool !== 'inbox_list' ? anyCallTool : null;
+}
+
+/** activity_log rows within this much of the value marker can be the activating call. */
+export const FIRST_CALL_WINDOW_MS = 2 * 60 * 1000;
+
+/**
+ * The window to look for the activating call in: from the later of the reset
+ * and (marker - window) to (marker + window), or null when there is no marker
+ * since reset. The marker is stamped after the call; its activity_log row may
+ * land a little before or after it.
+ */
+export function firstCallWindow(valueActivatedAt: string | null | undefined, resetAt: string | null | undefined): { from: string; to: string } | null {
+  const at = valueActivatedAt ? Date.parse(valueActivatedAt) : NaN;
+  if (!Number.isFinite(at)) return null;
+  const reset = resetAt ? Date.parse(resetAt) : NaN;
+  if (Number.isFinite(reset) && at < reset) return null;
+  const from = Math.max(at - FIRST_CALL_WINDOW_MS, Number.isFinite(reset) ? reset : -Infinity);
+  return { from: new Date(from).toISOString(), to: new Date(at + FIRST_CALL_WINDOW_MS).toISOString() };
 }
 
 /** Pure: rows in, OnboardingStatus out. Applies every since-reset rule. */
@@ -145,7 +183,7 @@ export function shapeOnboardingStatus(rows: OnboardingStatusRows): OnboardingSta
     resetAt,
     completedAt: after(ws?.onboarding_completed_at, resetFloor) ? ws!.onboarding_completed_at : null,
     client: normalizeChipClient(ws?.onboarding_client ?? null),
-    inboxes: { count, sinceReset, items },
+    inboxes: { count, sinceReset, chosenAt: after(ws?.onboarding_inbox_connected_at, resetFloor) ? ws!.onboarding_inbox_connected_at! : null, items },
     credential: {
       exists: rows.latestKey !== null,
       sinceReset: after(rows.latestKey?.created_at, resetFloor),
@@ -153,7 +191,7 @@ export function shapeOnboardingStatus(rows: OnboardingStatusRows): OnboardingSta
       scopes: Array.isArray(rows.latestKey?.scopes) ? rows.latestKey.scopes : null,
     },
     handshake: { at: handshakes[0]?.lastSeen ?? null, client: handshakes[0]?.client ?? null, clients: handshakes },
-    firstCall: { at: firstCallAt, tool: firstCallAt ? (ws?.analytics_first_tool_name ?? null) : null },
+    firstCall: { at: firstCallAt, tool: firstCallAt ? firstCallToolName(rows.firstCallTool, ws?.analytics_first_tool_name ?? null) : null },
     anyCall: { at: anyCallAt },
     lastFailure,
   };
@@ -168,7 +206,7 @@ export async function loadOnboardingStatus(db: Db, workspaceId: string, now: num
   const since = new Date(now - FAILURE_LOOKBACK_MS).toISOString();
   const [workspace, inboxes, latestKey, handshakes, lastFailure] = await Promise.all([
     db.from('workspaces')
-      .select('onboarding_client, onboarding_reset_at, onboarding_completed_at, onboarding_value_activated_at, analytics_first_tool_used_at, analytics_first_tool_name')
+      .select('onboarding_client, onboarding_reset_at, onboarding_completed_at, onboarding_inbox_connected_at, onboarding_value_activated_at, analytics_first_tool_used_at, analytics_first_tool_name')
       .eq('id', workspaceId)
       .maybeSingle(),
     db.from('inboxes')
@@ -203,9 +241,29 @@ export async function loadOnboardingStatus(db: Db, workspaceId: string, now: num
   for (const [name, result] of [['inboxes', inboxes], ['api_keys', latestKey], ['mcp_client_capabilities', handshakes], ['activity_log', lastFailure]] as const) {
     if (result.error) console.error(`[onboarding] status: ${name} read failed`, result.error.message);
   }
+  // The activating call's tool (WP-Z m4): the earliest successful call on a
+  // resolved inbox, never inbox_list, around the value marker.
+  let firstCallTool: string | null = null;
+  const callWindow = firstCallWindow(workspace.data?.onboarding_value_activated_at, workspace.data?.onboarding_reset_at);
+  if (callWindow) {
+    const first = await db.from('activity_log')
+      .select('tool_name')
+      .eq('workspace_id', workspaceId)
+      .eq('status', 'success')
+      .not('inbox_id', 'is', null)
+      .neq('tool_name', 'inbox_list')
+      .gte('created_at', callWindow.from)
+      .lte('created_at', callWindow.to)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (first.error) console.error('[onboarding] status: first call read failed', first.error.message);
+    else firstCallTool = first.data?.tool_name ?? null;
+  }
   return shapeOnboardingStatus({
     workspaceId,
     now,
+    firstCallTool,
     workspace: workspace.data ?? null,
     inboxes: inboxes.error ? [] : (inboxes.data ?? []),
     inboxCount: inboxes.error ? 0 : (inboxes.count ?? null),

@@ -35,7 +35,7 @@ Asgeir Albretsen
 Founder & Engineer, MCPEmails
 28 de julio de 2026
 ·
-8 min de lectura
+9 min de lectura
 [alt] Conecta Claude a Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y correo IMAP con MCPEmails
 [aria-label] En esta página
 En esta página
@@ -66,9 +66,8 @@ Outlook
 ·
 Yahoo, Zoho, Yandex o IMAP personalizado
 Lo que necesitas
-Un
-plan o aplicación de Claude compatible con conectores personalizados
-.
+Claude
+en la web (claude.ai) o en Claude Desktop. Todos los planes de Claude pueden añadir conectores personalizados: Free permite uno, y Pro y Max no tienen límite.
 Una cuenta gratuita de
 MCPEmails
 :
@@ -142,20 +141,37 @@ guía de iCloud, Fastmail e IMAP
 Paso 2: Añade MCPEmails a Claude
 En claude.ai o Claude Desktop:
 Abre
-Settings → Connectors
+Customize → Connectors
 .
-Elige
+Haz clic en
++ Add
+y después en
 Add custom connector
 .
-Pega esta URL:
+Llámalo MCPEmails y pega esta URL:
 https://mcpemails.com/api/mcp
-Selecciona
-Connect
-, inicia sesión en MCPEmails y aprueba los permisos que quieras:
+Haz clic en
+Continue
+, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en
+Add
+.
+Inicia sesión en MCPEmails y aprueba los permisos que quieras:
 read:email
 ,
 send:email
 o ambos.
+En un chat, haz clic en
++
+abajo a la izquierda, elige
+Connectors
+y activa MCPEmails.
+En un plan Team o Enterprise, un Owner añade el conector una vez en
+Organization settings → Connectors
+. Después, los miembros abren
+Customize → Connectors
+, buscan MCPEmails y hacen clic en
+Connect
+.
 Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCPEmails cuando quieras. Si usas un cliente sin OAuth, usa una clave de API con permisos limitados;
 OAuth frente a claves de API
 explica esa opción. Para problemas específicos de Claude, consulta la
@@ -312,5 +328,5 @@ Impressum
 © 2026 MCPEmails.
 El correo se obtiene en vivo, nunca se almacena · Credenciales cifradas en reposo
 MCPEmails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.
-[json-ld] {"@context":"https://schema.org","@type":"BlogPosting","headline":"Conecta Claude a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)","description":"Una guía práctica para conectar Claude a Gmail, Outlook y Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o cualquier buzón IMAP mediante MCP. Sin código y sin almacenar correo.","image":["https://mcpemails.com/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg"],"inLanguage":"es","datePublished":"2026-07-28T09:00:00.000Z","dateModified":"2026-09-26T09:00:00.000Z","url":"https://mcpemails.com/es/blog/connect-claude-to-email","mainEntityOfPage":{"@type":"WebPage","@id":"https://mcpemails.com/es/blog/connect-claude-to-email"},"keywords":"Claude, MCP, Email, Tutorial","wordCount":1510,"author":{"@type":"Person","name":"Asgeir Albretsen","description":"Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.","url":"https://mcpemails.com/blog"},"publisher":{"@type":"Organization","name":"MCPEmails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}}}
+[json-ld] {"@context":"https://schema.org","@type":"BlogPosting","headline":"Conecta Claude a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)","description":"Una guía práctica para conectar Claude a Gmail, Outlook y Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o cualquier buzón IMAP mediante MCP. Sin código y sin almacenar correo.","image":["https://mcpemails.com/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg"],"inLanguage":"es","datePublished":"2026-07-28T09:00:00.000Z","dateModified":"2026-09-26T09:00:00.000Z","url":"https://mcpemails.com/es/blog/connect-claude-to-email","mainEntityOfPage":{"@type":"WebPage","@id":"https://mcpemails.com/es/blog/connect-claude-to-email"},"keywords":"Claude, MCP, Email, Tutorial","wordCount":1609,"author":{"@type":"Person","name":"Asgeir Albretsen","description":"Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.","url":"https://mcpemails.com/blog"},"publisher":{"@type":"Organization","name":"MCPEmails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}}}
 [json-ld] {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://mcpemails.com/es/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://mcpemails.com/es/blog"},{"@type":"ListItem","position":3,"name":"Conecta Claude a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)","item":"https://mcpemails.com/es/blog/connect-claude-to-email"}]}

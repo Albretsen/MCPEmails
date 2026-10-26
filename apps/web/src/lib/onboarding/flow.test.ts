@@ -33,6 +33,15 @@ test('initialStep resumes from the furthest server signal', () => {
   assert.equal(initialStep({ inboxes: { count: 1, sinceReset: 1 }, credential: { sinceReset: true } }), 'first_prompt');
   assert.equal(initialStep({ handshake: { at: '2026-10-26T10:00:00Z' } }), 'wait');
   assert.equal(initialStep({ handshake: { at: '2026-10-26T10:00:00Z' }, firstCall: { at: '2026-10-26T10:01:00Z' } }), 'it_works');
+  // A call with no new handshake (claude.ai reuses its session) is past the prompt.
+  assert.equal(initialStep({ handshake: { at: null }, anyCall: { at: '2026-10-26T10:00:00Z' } }), 'wait');
+});
+
+test('"Use <address>" survives a reload (WP-Z m3)', () => {
+  const chosen = { inboxes: { count: 1, sinceReset: 0, chosenAt: '2026-10-26T10:00:00Z' }, credential: { sinceReset: false } };
+  assert.equal(initialStep(chosen), 'add_to_ai');
+  assert.equal(hasReusableInbox(chosen), false);
+  assert.equal(initialStep({ ...chosen, credential: { sinceReset: true } }), 'first_prompt');
 });
 
 test('after a reset an old inbox is offered for reuse, not skipped past', () => {

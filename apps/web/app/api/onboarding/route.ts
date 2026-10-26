@@ -35,6 +35,10 @@ export async function GET(): Promise<NextResponse> {
  *   step_viewed     {step}    funnel onboarding_step_viewed, category step_<id>
  *   client_changed  {client}  the chip: stores workspaces.onboarding_client,
  *                             funnel client_changed, category = client
+ *   inbox_reused    {}        "Use <address>" on the inbox step after a reset:
+ *                             stamps onboarding_inbox_connected_at when it is
+ *                             empty and a live inbox exists, so a reload
+ *                             starts at the next step (status inboxes.chosenAt)
  *   completed       {}        stamps onboarding_completed_at once, funnel
  *                             onboarding_completed (the dashboard's "Finish
  *                             setup" link disappears)
@@ -75,6 +79,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await db.from('workspaces').update({ onboarding_client: client, onboarding_client_selected_at: now }).eq('id', workspaceId);
     await recordProductFunnelEvent(db, { workspaceId, stage: 'client_changed', outcome: 'success', category: client as FunnelCategory });
     return NextResponse.json({ ok: true, client });
+  }
+
+  if (action === 'inbox_reused') {
+    const db = createServiceRoleClient();
+    const { data: inbox } = await db.from('inboxes').select('id').eq('workspace_id', workspaceId).is('deleted_at', null).limit(1);
+    if (!inbox?.length) return NextResponse.json({ error: 'No inbox.' }, { status: 409 });
+    await db.from('workspaces').update({ onboarding_inbox_connected_at: now }).eq('id', workspaceId).is('onboarding_inbox_connected_at', null);
+    return NextResponse.json({ ok: true });
   }
 
   if (action === 'completed') {

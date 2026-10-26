@@ -45,10 +45,11 @@ export function normalizeVariant(value: unknown): OnboardingVariant {
  * reads. Declared here so this file stays client-safe.
  */
 export interface StepSignals {
-  inboxes?: { count?: number; sinceReset?: number } | null;
+  inboxes?: { count?: number; sinceReset?: number; chosenAt?: string | null } | null;
   credential?: { sinceReset?: boolean } | null;
   handshake?: { at?: string | null } | null;
   firstCall?: { at?: string | null } | null;
+  anyCall?: { at?: string | null } | null;
 }
 
 // ── Steps ───────────────────────────────────────────────────────────────────
@@ -90,26 +91,28 @@ export function previousStep(step: OnboardingStep): OnboardingStep | null {
  * so a reset workspace starts over even though its inbox and keys still exist.
  *
  *   a successful call on a real inbox since reset  -> it_works
- *   an MCP handshake since reset                    -> wait
+ *   an MCP handshake or any tool call since reset   -> wait
  *   a credential (connector grant / key) since reset-> first_prompt
- *   an inbox connected since reset                  -> add_to_ai
+ *   an inbox connected, or the connected inbox
+ *   chosen ("Use <address>"), since reset           -> add_to_ai
  *   otherwise                                       -> inbox
  *
  * After a reset with an inbox still connected this returns `inbox`; the inbox
  * panel then offers "use the connected inbox" or "connect another"
- * (status.inboxes.count > 0 && status.inboxes.sinceReset === 0).
+ * (hasReusableInbox). Choosing it is stored (POST /api/onboarding
+ * {inbox_reused}, status.inboxes.chosenAt), so a reload does not ask again.
  *
  */
 export function initialStep(status: StepSignals | null | undefined): OnboardingStep {
   if (!status) return 'inbox';
   if (status.firstCall?.at) return 'it_works';
-  if (status.handshake?.at) return 'wait';
+  if (status.handshake?.at || status.anyCall?.at) return 'wait';
   if (status.credential?.sinceReset) return 'first_prompt';
-  if ((status.inboxes?.sinceReset ?? 0) > 0) return 'add_to_ai';
+  if ((status.inboxes?.sinceReset ?? 0) > 0 || status.inboxes?.chosenAt) return 'add_to_ai';
   return 'inbox';
 }
 
 /** True when a reset left an inbox connected that the inbox step should offer to reuse. */
 export function hasReusableInbox(status: StepSignals | null | undefined): boolean {
-  return Boolean(status && (status.inboxes?.count ?? 0) > 0 && (status.inboxes?.sinceReset ?? 0) === 0);
+  return Boolean(status && (status.inboxes?.count ?? 0) > 0 && (status.inboxes?.sinceReset ?? 0) === 0 && !status.inboxes?.chosenAt);
 }

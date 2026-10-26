@@ -21,6 +21,7 @@ const funnel: Array<Record<string, unknown>> = [];
 const updates: Array<Record<string, unknown>> = [];
 let resets = 0;
 let claimedRows: Array<Record<string, unknown>> = [{ onboarding_client: 'claude' }];
+let inboxRows: Array<Record<string, unknown>> = [{ id: 'i1' }];
 
 function chain(table: string) {
   const q: Record<string, unknown> = {};
@@ -30,7 +31,7 @@ function chain(table: string) {
       if (prop === 'update') return (patch: Record<string, unknown>) => { pendingUpdate = patch; updates.push({ table, ...patch }); return self; };
       if (prop === 'maybeSingle') return async () => ({ data: table === 'workspaces' ? { owner_id: ownerId } : null, error: null });
       if (prop === 'select') return () => (pendingUpdate ? { then: (r: (v: unknown) => void) => r({ data: claimedRows, error: null }) } : self);
-      if (prop === 'then') return (r: (v: unknown) => void) => r({ data: null, error: null });
+      if (prop === 'then') return (r: (v: unknown) => void) => r({ data: table === 'inboxes' ? inboxRows : null, error: null });
       return () => self;
     },
   });
@@ -86,6 +87,7 @@ function reset() {
   updates.length = 0;
   resets = 0;
   claimedRows = [{ onboarding_client: 'claude' }];
+  inboxRows = [{ id: 'i1' }];
 }
 
 test('step_viewed records one funnel row per valid step and refuses others', async () => {
@@ -116,6 +118,18 @@ test('completed stamps once and records the client', async () => {
   funnel.length = 0;
   assert.equal((await post({ action: 'completed' })).status, 200);
   assert.equal(funnel.length, 0, 'second completion records nothing');
+});
+
+test('inbox_reused stamps the inbox marker only when an inbox exists', async () => {
+  reset();
+  assert.equal((await post({ action: 'inbox_reused' })).status, 200);
+  assert.equal(updates.length, 1);
+  assert.equal(updates[0]?.table, 'workspaces');
+  assert.ok('onboarding_inbox_connected_at' in (updates[0] ?? {}));
+  assert.equal(funnel.length, 0);
+  inboxRows = [];
+  assert.equal((await post({ action: 'inbox_reused' })).status, 409);
+  assert.equal(updates.length, 1);
 });
 
 test('reset: internal owners only', async () => {

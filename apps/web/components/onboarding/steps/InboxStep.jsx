@@ -15,7 +15,7 @@ import {
 import { appPasswordFormatWarning, passwordForSubmit, takesAppPassword } from '@/lib/onboarding/app-password-format';
 import { describeConnectFailure } from '@/lib/onboarding/connect-failure';
 import { emailDomain } from '@/lib/email-providers/host-presets';
-import { postOnboardingAction } from '../onboarding-actions';
+import { inboxReused, postOnboardingAction } from '../onboarding-actions';
 import { ProviderPanel } from './inbox/ProviderPanel';
 import { ConnectProgress, ProofCard, FailurePanel } from './inbox/ConnectOutcome';
 import { SECOND_INBOX_DASHBOARD_HREF } from '@/lib/onboarding/second-inbox.mjs';
@@ -38,6 +38,9 @@ import { SECOND_INBOX_DASHBOARD_HREF } from '@/lib/onboarding/second-inbox.mjs';
  *
  * After Settings > Reset onboarding with an inbox still connected, the step
  * first offers "Use <address>" or "Connect another inbox" (kept from WP-C).
+ * "Use" is stored (inbox_reused), so a reload starts at the next step; the
+ * connect form has a Back link to that choice, and to It works when it was
+ * opened from there for a second inbox.
  *
  * The fields are not a sign-in form for this site: autoComplete="off" and
  * names that do not read as a login, so a password manager does not offer the
@@ -52,17 +55,23 @@ export function InboxStep({ step, status, refreshStatus, provider, userEmail, go
   // Flow B, B1: opened from It works for a second inbox, so straight to the
   // form, and back to It works once it is connected.
   const [connectAnother, setConnectAnother] = useState(secondInbox);
-  const reusable = !connectAnother && hasReusableInbox(status) ? status.inboxes.items[0] : null;
+  const canReuse = hasReusableInbox(status) && Boolean(status.inboxes.items?.[0]);
+  const reusable = !connectAnother && canReuse ? status.inboxes.items[0] : null;
+  const useConnected = useCallback(() => {
+    inboxReused();
+    goNext();
+  }, [goNext]);
+  const onBack = secondInbox && goTo ? () => goTo('it_works') : canReuse ? () => setConnectAnother(false) : null;
 
   if (reusable) {
     return (
       <section className="onb-panel" data-step={step} data-testid="onb-reuse-inbox">
         <h1 className="onb-title">{t('steps.inbox.reuseTitle')}</h1>
         <div className="onb-actions">
-          <button type="button" className="btn btn-primary" onClick={goNext}>
+          <button type="button" className="btn btn-primary" onClick={useConnected} data-testid="onb-reuse">
             {t('steps.inbox.reuse', { address: reusable.address })}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => setConnectAnother(true)}>
+          <button type="button" className="btn btn-secondary" onClick={() => setConnectAnother(true)} data-testid="onb-connect-another">
             {t('steps.inbox.connectAnother')}
           </button>
         </div>
@@ -79,6 +88,7 @@ export function InboxStep({ step, status, refreshStatus, provider, userEmail, go
       goNext={secondInbox && goTo ? () => goTo('it_works') : goNext}
       returnTo={returnTo}
       onSeePlans={variant?.convert === 'on' && finish ? () => finish(SECOND_INBOX_DASHBOARD_HREF) : null}
+      onBack={onBack}
     />
   );
 }
@@ -114,8 +124,9 @@ function readOutlookError() {
   }
 }
 
-function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeePlans = null, returnTo = null }) {
+function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeePlans = null, returnTo = null, onBack = null }) {
   const t = useTranslations('onboarding.steps.inbox');
+  const tNav = useTranslations('onboarding.nav');
   const urlKind = useMemo(() => kindFromProviderSlug(provider), [provider]);
   const [outlookError, setOutlookError] = useState(null);
 
@@ -325,6 +336,11 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
 
   return (
     <section className="onb-panel" data-step={step} data-testid="onb-inbox-connect">
+      {onBack && (
+        <button type="button" className="onb-link-btn onb-back" onClick={onBack} data-testid="onb-inbox-back">
+          {tNav('back')}
+        </button>
+      )}
       <h1 className="onb-title">{t('title')}</h1>
       <p className="onb-muted">{t('lead')}</p>
 

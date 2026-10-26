@@ -10,6 +10,7 @@ import {
   canDraftWith,
   clientKind,
   configSnippet,
+  connectedAtMs,
   curlFirstCall,
   docsPath,
   failureKey,
@@ -76,6 +77,32 @@ test('the ladder: waiting, then connected and asking, then works', () => {
   assert.deepEqual(ladderState(null), { rung: 0, connected: false, works: false });
   assert.deepEqual(ladderState({ handshake: { at: iso(T0) } }), { rung: 2, connected: true, works: false });
   assert.deepEqual(ladderState({ handshake: { at: null }, firstCall: { at: iso(T0) } }), { rung: 3, connected: true, works: true });
+});
+
+test('a tool call or a connector grant counts as connected without a new handshake (WP-Z M1)', () => {
+  // claude.ai reuses its MCP session: calls arrive, no initialize does.
+  const calling = { handshake: { at: null }, anyCall: { at: iso(T0) }, firstCall: { at: null } };
+  assert.deepEqual(ladderState(calling, { client: 'claude' }), { rung: 2, connected: true, works: false });
+  const granted = { handshake: { at: null }, credential: { sinceReset: true, latestAt: iso(T0) }, firstCall: { at: null } };
+  assert.deepEqual(ladderState(granted, { client: 'claude' }), { rung: 2, connected: true, works: false });
+  // An API-key client makes its own key on the add step: that is not a connection.
+  assert.deepEqual(ladderState(granted, { client: 'cline' }), { rung: 0, connected: false, works: false });
+  // A grant from before the reset is not new.
+  assert.equal(connectedAtMs({ credential: { sinceReset: false, latestAt: iso(T0) } }, { client: 'claude' }), null);
+  // The earliest signal wins.
+  assert.equal(connectedAtMs({ handshake: { at: iso(T0 + 5_000) }, anyCall: { at: iso(T0) } }, { client: 'claude' }), T0);
+});
+
+test('no restart help while calls arrive or after a grant (WP-Z M1)', () => {
+  const start = T0;
+  const calling = { handshake: { at: null }, anyCall: { at: iso(start + 8_000) }, firstCall: { at: null } };
+  assert.deepEqual(helpTiers(calling, { waitStartedAtMs: start, nowMs: start + NO_HANDSHAKE_HELP_MS + NO_CALL_HELP_MS, client: 'claude' }), []);
+  assert.deepEqual(helpTiers(calling, { waitStartedAtMs: start, nowMs: start + RECONNECT_HELP_MS, client: 'claude' }), ['reconnect']);
+  const granted = { handshake: { at: null }, credential: { sinceReset: true, latestAt: iso(start + 10_000) }, firstCall: { at: null } };
+  assert.deepEqual(helpTiers(granted, { waitStartedAtMs: start, nowMs: start + 10_000 + NO_CALL_HELP_MS - 1, client: 'claude' }), []);
+  assert.deepEqual(helpTiers(granted, { waitStartedAtMs: start, nowMs: start + 10_000 + NO_CALL_HELP_MS, client: 'claude' }), ['no_call']);
+  // An API-key client still gets the restart help on a fresh key alone.
+  assert.deepEqual(helpTiers(granted, { waitStartedAtMs: start, nowMs: start + NO_HANDSHAKE_HELP_MS, client: 'cline' }), ['no_handshake']);
 });
 
 test('timed help opens at 90 s without a handshake, 60 s after a handshake, and 10 min overall', () => {

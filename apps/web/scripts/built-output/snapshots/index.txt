@@ -327,6 +327,7 @@ Everything in Free
 2x higher burst rate limit
 Email support
 Get Personal
+Charged today. Cancel any time. 14-day refund.
 Pro
 $15
 /month
@@ -342,6 +343,7 @@ A daily morning brief, placed straight in your inbox
 Search every connected inbox at once
 Instructions for your AI, per inbox
 Get Pro
+Charged today. Cancel any time. 14-day refund.
 Business
 $39
 /month
@@ -352,6 +354,7 @@ Unlimited members with roles, at no extra cost
 Admins approve sends held for review
 Several workspaces on one subscription, one per company or client
 Get Business
+Charged today. Cancel any time. 14-day refund.
 All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom?
 Contact us
 .
