@@ -31,6 +31,18 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 - After a web deploy, verify a route with `curl -sI <url> | grep -i x-matched-path`, not the status code: an unmatched route can still answer 200.
 - After any change in `apps/mcp-app/src`, or in `supabase/functions/mcp-server/html-text-merge.ts` or `quoted-reply.ts` (the card imports both), run `cd apps/mcp-app && npm run build` and commit the regenerated `review-card.html.ts`, or CI fails.
 
+## Staging
+
+A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) and `app-staging.mcpemails.com` (client) on the Vercel projects `mcp-emails-web-staging` and `mcp-emails-client-staging`, a separate Supabase project and a Stripe sandbox. Both Vercel projects build the long-lived `staging` branch as their production branch.
+
+- A change that needs an end-to-end check (billing, auth, OAuth, mail, cron, the web client) goes to `staging` first, then to `main`. Everything else goes straight to `main` as before.
+- `sync-staging.yml` fast-forwards `staging` to `main` every Monday and fails if staging has commits main lacks. Get those into `main` or drop them before the sync.
+- Name the staging Supabase project only through `vars.SUPABASE_REF_STAGING`; never hardcode its ref.
+- Migrations reach staging through `migrate-staging.yml` (push to `staging`), the only place `db push` is allowed. It refuses the prod ref. Production keeps the manual apply under Database.
+- Edge functions: `gh workflow run deploy-edge-function.yml --ref staging -f function=<fn>` (staging is the default target). If it fails 403, the repo token lacks staging access: deploy with the CLI from a clean worktree at `origin/staging`, passing the staging ref.
+- Never put a production key, secret or webhook in staging. Staging secrets live in `~/.config/mcpemails-staging/staging.env`, outside the repo.
+- Seed test users with `node scripts/seed-staging.mjs` (dry run, then `--apply`). Set up the Stripe sandbox catalog and webhook with `node scripts/stripe-staging-setup.mjs`. Both read `staging.env`, never `apps/web/.env.local`.
+
 ## Sessions and hand-off
 
 Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
