@@ -494,7 +494,8 @@ import {
   withOwnerInstructions,
 } from "./inbox-instructions.ts";
 import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
-import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
+import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates, smtpFilesSentCopyItself } from "./sent-copy.ts";
+import { DRAFT_KEPT_AFTER_SEND_NOTE, DRAFT_KEPT_RECEIPT_DETAIL, removeSentDraft } from "./draft-removal.ts";
 import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
@@ -767,8 +768,11 @@ import {
   alreadySentText,
   type CardActivityScope,
   type CardActivityStore,
+  appendNoteToErrorResult,
+  goneNoteTargetDraftId,
   noteTargetDraftId,
   peekCardActivityNote,
+  peekCardDeletedNote,
   peekTargetDraftId,
   postgrestCardActivityStore,
   recordCardActivity,
@@ -14020,8 +14024,11 @@ async function imapSmtpSend(
 
 /**
  * Best-effort: file a copy of an outgoing message in the Sent folder via IMAP
- * APPEND. SMTP submission does not do this automatically (unlike the Gmail /
- * Graph / JMAP send APIs). Never throws — a failed Sent copy must not fail the
+ * APPEND. SMTP submission generally does not do this (unlike the Gmail /
+ * Graph / JMAP send APIs), but Gmail's SMTP server does, so a send through it
+ * is skipped here (smtpFilesSentCopyItself): an APPEND there made a second
+ * Sent copy, and for a sent draft it stuck the draft in Drafts
+ * (draft-removal.ts). Never throws — a failed Sent copy must not fail the
  * send itself — but a copy that was not saved is disclosed on the tool result
  * (see sent-copy.ts), so the caller is not told "sent" with a silent gap in
  * Sent.
@@ -14030,6 +14037,7 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Ar
   // Not imapConfigured(): a send-only inbox has no Sent folder to file into,
   // and that is not a failure of the send that just succeeded.
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
+  if (smtpFilesSentCopyItself(inbox.smtp_host)) return;
   let client: ImapClient | null = null;
   let saved = false;
   let error: string | null = null;
@@ -28230,12 +28238,14 @@ async function imapSendDraft(
   await imapSmtpSend(inbox, sentMime, recipients);
 
   // Step 4: Append to Sent folder (best-effort). Use the BCC-stripped copy so
-  // the Sent record matches what was actually transmitted.
+  // the Sent record matches what was actually transmitted. Skipped on Gmail
+  // SMTP, which files its own copy (see appendToSentFolder).
   await appendToSentFolder(inbox, sentMime);
 
   // Step 5: Delete the draft (best-effort — failure must not fail the send).
-  // Whether it worked is reported (`draft_removed`), never thrown: a draft
-  // copy left behind under the same id must not be sendable again.
+  // Whether it worked is checked and reported (`draft_removed`), never thrown:
+  // a draft copy left behind under the same id must not be sendable again,
+  // and the caller tells the model and the card it is still there.
   let client: ImapClient | null = null;
   let draftRemoved = false;
   try {
@@ -28248,12 +28258,23 @@ async function imapSendDraft(
     });
     // Same RAW folder as above (not imapFolderName(folder)): the draft lives
     // wherever it was actually created, not at the generic alias's default.
-    await client.selectMailbox(folder);
-    await client.uidStore([uid], ["\\Deleted"], "add");
-    await client.uidExpunge([uid]);
-    draftRemoved = true;
-  } catch {
-    // best-effort
+    const removal = await removeSentDraft(client, folder, uid);
+    draftRemoved = removal.removed;
+    if (removal.via !== "expunge") {
+      console.warn("[mcp-server] imap_sent_draft_removal", {
+        inbox_id: inbox.id,
+        removed: removal.removed,
+        via: removal.via,
+        error: removal.error ?? null,
+      });
+    }
+  } catch (err) {
+    console.warn("[mcp-server] imap_sent_draft_removal", {
+      inbox_id: inbox.id,
+      removed: false,
+      via: "connect",
+      error: err instanceof Error ? err.message : String(err),
+    });
   } finally {
     if (client) await client.logout().catch(() => {});
   }
@@ -31652,12 +31673,15 @@ async function executeSendDraft(
   // now says what is known and nothing else (DRAFT_SENT_RECEIPT_DETAIL).
   // `draft_removed` is bookkeeping for the lineage, never part of the result.
   const { draft_removed: draftRemoved, ...sentPayload } = sendResult;
+  // A draft that outlived its send (draft-removal.ts) is said so, to the model
+  // and on the card, rather than left for someone to find in Drafts.
+  if (draftRemoved === false) noteForResult(DRAFT_KEPT_AFTER_SEND_NOTE);
   const [sentCard] = await Promise.all([
     draftEditorReceiptFor(
       apiKey,
       inbox,
       "sent",
-      DRAFT_SENT_RECEIPT_DETAIL,
+      draftRemoved === false ? DRAFT_KEPT_RECEIPT_DETAIL : DRAFT_SENT_RECEIPT_DETAIL,
       // A label, not a sentence: it sits beside the sender address in the card's
       // header, where "Sent." read as a stray full stop. §4's fallback headline
       // for this outcome has always been the bare word.
@@ -31716,6 +31740,16 @@ async function executeDeleteDraft(
   if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_delete: draft_id is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // `base_revision` marks the draft editor card's Discard, as it marks its
+  // Send. Only a marker here: nothing is refused on it (card-activity.ts).
+  const baseRevision = parseBaseRevision(args["base_revision"]);
+  if (baseRevision === "invalid") {
+    return {
+      result: { content: [{ type: "text", text: "draft_delete: base_revision must be a non-negative integer." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -31779,6 +31813,22 @@ async function executeDeleteDraft(
       "Discarded. Nothing was sent.",
     ),
     closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "deleted"),
+    // A Discard in the draft editor is recorded for the model's next call on
+    // this draft, which would otherwise only meet draft_not_found and could
+    // not say what happened. "Was deleted", never who did it (card-activity.ts).
+    baseRevision !== null && apiKey.internalApprovalDispatch !== true
+      ? recordCardActivity(cardActivityStore(), cardActivityScope(apiKey, inbox.id), {
+        draftId,
+        lineId: draftLine.lineId,
+        action: "deleted",
+        occurredAt: new Date().toISOString(),
+        revision: draftLine.known ? draftLine.revision : null,
+        fields: [],
+        toCount: null,
+        ccCount: null,
+        bccCount: null,
+      })
+      : Promise.resolve(),
   ]);
   return {
     result: draftCardToolResult(deleteResult as unknown as Record<string, unknown>, discardedCard),
@@ -34996,6 +35046,22 @@ async function handleToolsCall(
         { subject: facts.subject },
       );
       if (note) noteForResult(note);
+    }
+    // A model call that FAILED on a draft the editor deleted is told so in its
+    // error text: notes never ride on errors (card-activity.ts, "A draft the
+    // editor deleted"). Read only, never claimed.
+    const goneDraftId = outcome && (outcome.result as { isError?: unknown } | null)?.isError === true &&
+        logCtx.inboxId
+      ? goneNoteTargetDraftId(dispatchName, rawArgs, { approvalDispatch: apiKey.internalApprovalDispatch === true })
+      : null;
+    if (goneDraftId && outcome && logCtx.inboxId) {
+      const line = await resolveDraftLine(apiKey, logCtx.inboxId, goneDraftId);
+      const note = await peekCardDeletedNote(
+        cardActivityStore(),
+        cardActivityScope(apiKey, logCtx.inboxId),
+        { lineId: line.lineId, draftIds: [goneDraftId, line.draftId] },
+      );
+      if (note) appendNoteToErrorResult(outcome.result, note);
     }
     if (outcome) {
       logStatus = outcome.logStatus;

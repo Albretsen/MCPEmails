@@ -1119,7 +1119,7 @@ CREATE TABLE IF NOT EXISTS public.draft_card_activity (
     bcc_count smallint,
     reported_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT draft_card_activity_action_check CHECK ((action = ANY (ARRAY['saved'::text, 'sent'::text]))),
+    CONSTRAINT draft_card_activity_action_check CHECK ((action = ANY (ARRAY['saved'::text, 'sent'::text, 'deleted'::text]))),
     CONSTRAINT draft_card_activity_draft_id_check CHECK (((char_length(draft_id) >= 1) AND (char_length(draft_id) <= 1024))),
     CONSTRAINT draft_card_activity_fields_check CHECK ((fields <@ ARRAY['to'::text, 'cc'::text, 'bcc'::text, 'subject'::text, 'body'::text])),
     CONSTRAINT draft_card_activity_revision_check CHECK (((revision IS NULL) OR (revision >= 0))),

@@ -500,7 +500,8 @@ export function buildDraftMime(params: MimeMessageParams): string {
  */
 /**
  * The octets `draft_send` transmits (and files in Sent) for a stored IMAP
- * draft: the draft as it is in the mailbox, minus its Bcc header.
+ * draft: the draft as it is in the mailbox, minus its Bcc header, dated at
+ * send time (setDateHeader).
  *
  * `rawMime` is a byte string, one character per octet, as the IMAP reader
  * returns it. It goes back to bytes octet for octet. Sending the string
@@ -512,8 +513,8 @@ export function buildDraftMime(params: MimeMessageParams): string {
  * A string holding anything that is not an octet cannot have come from the
  * reader; it is encoded as text, which is what happened to every draft before.
  */
-export function draftSendBytes(rawMime: string): Uint8Array {
-  const stripped = stripBccHeader(rawMime);
+export function draftSendBytes(rawMime: string, sentAt: Date = new Date()): Uint8Array {
+  const stripped = setDateHeader(stripBccHeader(rawMime), sentAt);
   const bytes = new Uint8Array(stripped.length);
   for (let i = 0; i < stripped.length; i++) {
     const code = stripped.charCodeAt(i);
@@ -521,6 +522,38 @@ export function draftSendBytes(rawMime: string): Uint8Array {
     bytes[i] = code;
   }
   return bytes;
+}
+
+/**
+ * Give the message its send time as its Date. A draft keeps the Date it was
+ * saved with, and sending it unchanged (found 2026-10-26) dated the mail, and
+ * its place in the recipient's inbox, to whenever the draft was written.
+ * Only the Date header is touched: Message-ID, In-Reply-To and References stay
+ * as they are, so threading is unchanged. A draft with no Date header is left
+ * alone; the receiving server stamps one.
+ */
+export function setDateHeader(rawMime: string, sentAt: Date): string {
+  const sep = rawMime.search(/\r?\n\r?\n/);
+  if (sep === -1) return rawMime;
+  const headerLines = rawMime.slice(0, sep).split(/\r?\n/);
+  const rest = rawMime.slice(sep);
+  const kept: string[] = [];
+  let replaced = false;
+  let skipping = false;
+  for (const line of headerLines) {
+    if (skipping && /^[ \t]/.test(line)) continue;
+    skipping = false;
+    if (/^date[ \t]*:/i.test(line)) {
+      skipping = true;
+      if (replaced) continue; // a second Date header goes too
+      kept.push(`Date: ${sentAt.toUTCString()}`);
+      replaced = true;
+      continue;
+    }
+    kept.push(line);
+  }
+  if (!replaced) return rawMime;
+  return kept.join("\r\n") + rest;
 }
 
 export function stripBccHeader(rawMime: string): string {

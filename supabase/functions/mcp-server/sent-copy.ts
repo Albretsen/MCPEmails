@@ -56,3 +56,15 @@ export const SENT_COPY_NOT_SAVED_NOTE =
   "The message was sent, but its copy could not be saved to the Sent folder: " +
   "the mail server did not accept it in any Sent mailbox. It will not appear " +
   "in Sent. Do not resend it; the recipients have it.";
+
+/**
+ * Does this SMTP server file the Sent copy itself? Gmail's does (Google
+ * Workspace accounts use the same host), so an APPEND on top makes a second
+ * copy. Worse, Gmail keeps one message per Message-ID: an APPEND of a sent
+ * DRAFT's bytes lands on the draft itself, which then cannot be removed from
+ * Drafts (draft-removal.ts). `smtp-relay.gmail.com` is Workspace's relay
+ * service, which does not file a copy, so it is not matched.
+ */
+export function smtpFilesSentCopyItself(smtpHost: string | null | undefined): boolean {
+  return /^smtp\.(?:gmail|googlemail)\.com$/i.test((smtpHost ?? "").trim());
+}
