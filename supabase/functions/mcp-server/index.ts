@@ -230,9 +230,11 @@ import {
   RESOURCES_CAPABILITY,
   type ReviewCardGates,
   isCardBearingToolName,
+  reviewCardMetaForListing,
   serializeToolForList,
   withListingCardMeta,
 } from "./mcp-app-resources.ts";
+import { isChatGptHost, isStaleListingCardCall, STALE_LISTING_NOTE } from "./stale-listing-hint.ts";
 import {
   acceptsEventStream,
   CARD_LISTING_STALE,
@@ -35333,6 +35335,27 @@ async function handleToolsCall(
   // human, not a model.
   await attachInboxInstructionsNote(toolResult, dispatchName, apiKey, logCtx.inboxId ?? null);
 
+  // ChatGPT calling a consolidated card tool works from a tool list it cached
+  // before the per-operation listing, so the card cannot mount. Say so, but
+  // only where this key's listing would carry the card. Free unless the name
+  // already proves the stale listing. See stale-listing-hint.ts.
+  if (
+    (logStatus as string) === "success" && isOpenAiOAuthKeyName(apiKey.name) &&
+    isStaleListingCardCall(toolName, PER_OPERATION_LISTED_NAMES)
+  ) {
+    const [gates, clientName] = await Promise.all([
+      keyReviewCardGates(apiKey),
+      latestInitializeClientName(apiKey),
+    ]);
+    if (
+      clientName !== undefined && isChatGptHost(apiKey.name, clientName) &&
+      reviewCardMetaForListing(toolName, gates, "consolidated") !== undefined
+    ) {
+      appendResultNote(toolResult, STALE_LISTING_NOTE);
+      console.info("[mcp-server] tools/call: stale_listing_hint", { key_id: apiKey.id, tool_name: toolName });
+    }
+  }
+
   // Disclose any argument leniency dropped. This is not optional bookkeeping:
   // dropping a filter instead of refusing the call is only defensible because
   // the result says which filter went unapplied, so a caller that meant it can
@@ -39774,6 +39797,9 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     // Read from the row fetched at authentication time, so it is the value
     // BEFORE this request's own fire-and-forget last_used_at write.
     keyUsedBefore: apiKey.last_used_at != null,
+    // ChatGPT keeps its cached listing across a fresh OAuth link, so a new key
+    // reading NULL may still hold one. See clientReusesListings.
+    clientReusesListings: isOpenAiOAuthKeyName(apiKey.name),
   });
 
   if (notifyDecision.notify && notifyDecision.record !== null) {

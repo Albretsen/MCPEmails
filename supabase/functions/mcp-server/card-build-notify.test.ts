@@ -1462,3 +1462,32 @@ Deno.test("a stale marker on a non-card tool still says nothing", () => {
     "still only card-bearing calls",
   );
 });
+
+Deno.test("an OpenAI key reading NULL is notified even when the key is new", () => {
+  // 2026-10-26: a fresh ChatGPT OAuth link sent no initialize and no tools/list
+  // on the new key and called tools from the listing cached under the old one.
+  // New key, NULL column: the age rule alone stays silent.
+  const fresh = { ...BASE, notifiedBuild: null, keyPredatesBuildTracking: false, keyUsedBefore: false };
+  assertEquals(decideBuildNotification(fresh), { notify: false, record: null }, "non-OpenAI unchanged");
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true }),
+    { notify: true, record: "bbbbbbbbbbbb" },
+    "OpenAI key with NULL notifies",
+  );
+  // The other gates still hold for it.
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, acceptsEventStream: false }),
+    { notify: false, record: null },
+    "no stream, no notification",
+  );
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, cardBearingTool: false }),
+    { notify: false, record: null },
+    "not card-bearing, no notification",
+  );
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, method: "tools/list" }),
+    { notify: false, record: "bbbbbbbbbbbb" },
+    "tools/list still records only",
+  );
+});
