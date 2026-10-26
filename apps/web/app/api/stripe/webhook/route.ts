@@ -525,12 +525,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'charge.refunded',
   ]);
 
+  // Events that never make a LATER event stale. These change no subscription
+  // or plan state, so being newer than a subscription event says nothing about
+  // whether that subscription event is out of date. Without this, the
+  // `invoice.payment_failed` Stripe emits a second after the
+  // `customer.subscription.updated` (status -> past_due) for the same decline
+  // made the subscription event read as stale whenever it was processed
+  // second, and user_billing.subscription_status stayed `active` through the
+  // whole dunning window (staging E2E bug B1, 2026-10-26).
+  //
+  // Narrower than EXEMPT_FROM_STALENESS on purpose: checkout.session.completed
+  // and the async_payment events do write plan state, so they still count as
+  // newer.
+  const NEVER_NEWER_FOR_STALENESS: readonly string[] = [
+    'checkout.session.expired',
+    'charge.dispute.created',
+    'invoice.payment_failed',
+    'invoice.payment_action_required',
+    'invoice.payment_succeeded',
+    'invoice.paid',
+  ];
+
   if (customerIdForEvent && !EXEMPT_FROM_STALENESS.has(event.type)) {
     const { data: newer } = await supabase
       .from('stripe_webhook_events')
       .select('event_id')
       .eq('stripe_customer_id', customerIdForEvent)
       .neq('event_id', event.id)
+      .not('event_type', 'in', `(${NEVER_NEWER_FOR_STALENESS.join(',')})`)
       .gt('event_created', new Date(event.created * 1000).toISOString())
       .limit(1)
       .maybeSingle();
@@ -2420,12 +2442,72 @@ async function recordPaymentIssueForInvoice(
         });
       }
     }
+
+    // The subscription is gone. Stripe sends the last `payment_failed` next to
+    // `customer.subscription.deleted` and leaves the invoice `open`, so the
+    // invoice check above lets it through; written after the deletion cleared
+    // the marker, it told a canceled Free customer "payment failed" once a day
+    // (staging E2E bug B2, 2026-10-26). Nothing is left to pay for: record
+    // nothing, and clear whatever an earlier event left behind.
+    const subscriptionId = invoiceSubscriptionId(invoice);
+    if (subscriptionId) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        if (ENDED_SUBSCRIPTION_STATUSES.has(sub.status)) {
+          console.log(
+            '[stripe-webhook] %s: subscription %s is %s; no payment issue recorded.',
+            invoice.id, subscriptionId, sub.status,
+          );
+          await clearPaymentIssueAfterEnd(customerId, subscriptionId);
+          return;
+        }
+      } catch (err) {
+        console.error('[stripe-webhook] could not re-read subscription %s:', subscriptionId, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
     await recordPaymentIssue(createServiceRoleClient(), {
       stripeCustomerId: customerId,
       declineCode,
     });
   } catch (err) {
     console.error('[stripe-webhook] recordPaymentIssueForInvoice failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/** Subscription statuses with nothing left to pay for. */
+const ENDED_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['canceled', 'incomplete_expired']);
+
+/**
+ * A decline arrived for a subscription that has ended. Clear the stored state,
+ * unless user_billing says the customer has a different subscription that is
+ * failing right now (its own marker must stay). Never throws.
+ */
+async function clearPaymentIssueAfterEnd(customerId: string, subscriptionId: string): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    if (!(await hasPaymentIssue(db, customerId))) return;
+    const { data } = await db
+      .from('user_billing')
+      .select('stripe_subscription_id, subscription_status')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+    const row = data as { stripe_subscription_id?: string | null; subscription_status?: string | null } | null;
+    const otherFailing =
+      row?.stripe_subscription_id &&
+      row.stripe_subscription_id !== subscriptionId &&
+      PAYMENT_ISSUE_STATUSES.has(row.subscription_status ?? '');
+    if (otherFailing) return;
+    await clearPaymentIssue(db, {
+      stripeCustomerId: customerId,
+      source: `invoice.payment_failed after end (${subscriptionId})`,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] clearPaymentIssueAfterEnd failed, swallowed:', {
       error: err instanceof Error ? err.message : String(err),
     });
   }
