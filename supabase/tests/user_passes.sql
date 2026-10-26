@@ -173,10 +173,12 @@ SELECT is(
 
 -- With the secret: one request to the web route. (Rolled back, never sent.)
 SELECT vault.create_secret('pass-test-dispatch-secret', 'dispatch_secret');
+DELETE FROM vault.secrets WHERE name = 'app_base_url';
+SELECT vault.create_secret('https://app.pass-test.invalid', 'app_base_url');
 SELECT public.dispatch_pass_expiry();
 SELECT is(
   (SELECT count(*) FROM net.http_request_queue
-    WHERE url = 'https://mcpemails.com/api/internal/pass-expiry'),
+    WHERE url = 'https://app.pass-test.invalid/api/internal/pass-expiry'),
   1::bigint,
   'an ended pass with the secret: exactly one POST to /api/internal/pass-expiry');
 

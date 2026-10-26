@@ -203,7 +203,7 @@ production. The only differences are operational, not behavioral:
 | | Hosted (mcpemails.com) | Self-host |
 | --- | --- | --- |
 | Backend | Supabase (Postgres + PostgREST + Auth + Vault + cron) | Postgres + PostgREST only |
-| Schema | 44 migrations (auth, billing, OAuth clients, partitioned logs) | one consolidated, dependency-free schema |
+| Schema | 200+ migrations (auth, billing, OAuth clients, partitioned logs) | one consolidated, dependency-free schema |
 | Connect a mailbox | Web dashboard | `make provision` |
 | Mint a key | Web dashboard | `make key` |
 | Scheduled-send cron | `pg_cron` + Vault | a 60-second `curl` loop (or your own cron) |

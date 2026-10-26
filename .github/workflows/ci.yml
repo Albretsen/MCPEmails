@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, staging]
   # WHY A PUSH TRIGGER (2026-09-17). With `pull_request` alone this pipeline
   # had never run for any change that reached production, because nothing here
   # goes through a PR: work is integrated locally and pushed straight to main.
@@ -16,8 +16,11 @@ on:
   # branches in this repo do not each start a build. The `concurrency` group
   # below keys on `github.ref`, and a push to main (`refs/heads/main`) and a
   # PR (`refs/pull/N/merge`) are different refs, so neither cancels the other.
+  #
+  # `staging` (2026-10-26) is the long-lived branch the staging Vercel projects
+  # build from. They gate on the same "CI passed" check, so it runs there too.
   push:
-    branches: [main]
+    branches: [main, staging]
 
 concurrency:
   group: ci-${{ github.ref }}
