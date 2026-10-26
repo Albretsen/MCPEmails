@@ -228,6 +228,14 @@ export interface ImapSession {
   append(mailbox: string, message: string, flags?: string[]): Promise<void>;
 
   /**
+   * STATUS for one mailbox (RFC 3501 6.3.10), without selecting it, e.g.
+   * status('INBOX', ['MESSAGES', 'UIDNEXT']) -> { MESSAGES: 231, UIDNEXT: 4429 }.
+   * Numeric items only. Used by the onboarding proof card
+   * (app/api/onboarding/inbox-proof).
+   */
+  status(mailbox: string, items: readonly string[]): Promise<Record<string, number>>;
+
+  /**
    * Send LOGOUT and destroy the socket.
    * Always call this (even on error paths) to allow the server to cleanly
    * account for the disconnected session.
@@ -619,6 +627,25 @@ function tokeniseImap(raw: string): Array<string | string[]> {
   }
 
   return result;
+}
+
+/**
+ * The attribute pairs of an untagged `* STATUS <mailbox> (MESSAGES 231 UIDNEXT 4429)`
+ * line, numeric values only. Exported for tests.
+ */
+export function parseStatusResponse(untaggedLines: readonly string[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  const line = untaggedLines.find((l) => /^\* STATUS /i.test(l));
+  if (!line) return out;
+  const open = line.lastIndexOf('(');
+  const close = line.lastIndexOf(')');
+  if (open < 0 || close < open) return out;
+  const tokens = line.slice(open + 1, close).trim().split(/\s+/);
+  for (let i = 0; i + 1 < tokens.length; i += 2) {
+    const value = Number(tokens[i + 1]);
+    if (/^[A-Za-z]+$/.test(tokens[i]) && Number.isFinite(value)) out[tokens[i].toUpperCase()] = value;
+  }
+  return out;
 }
 
 /** Decode IMAP encoded-word in subject etc. (rudimentary; mailparser handles full decode). */
@@ -1158,6 +1185,21 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
       if (result.status === 'BAD') {
         throw new ImapBadError(`APPEND BAD: ${result.text}`);
       }
+    },
+
+    async status(mailbox: string, items: readonly string[]): Promise<Record<string, number>> {
+      const wanted = items.filter((item) => /^[A-Z]+$/.test(item));
+      if (wanted.length === 0) return {};
+      const statusTag = nextTag();
+      await socketWrite(socket, `${statusTag} STATUS ${quoteMailbox(mailbox)} (${wanted.join(' ')})\r\n`);
+      const result = await readTaggedResponse(reader, statusTag, TIMEOUT.COMMAND);
+      if (result.status === 'NO') {
+        throw new ImapNoError(`STATUS NO: ${result.text}`);
+      }
+      if (result.status === 'BAD') {
+        throw new ImapBadError(`STATUS BAD: ${result.text}`);
+      }
+      return parseStatusResponse(result.untagged);
     },
 
     async logout(): Promise<void> {

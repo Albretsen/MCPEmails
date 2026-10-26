@@ -17,7 +17,179 @@
       "title": "Welches Postfach soll Ihre KI nutzen?",
       "reuseTitle": "Ein Postfach ist bereits verbunden",
       "reuse": "{address} verwenden",
-      "connectAnother": "Anderes Postfach verbinden"
+      "connectAnother": "Anderes Postfach verbinden",
+      "lead": "Geben Sie die Adresse ein, die Ihre KI lesen und beantworten soll. Wir zeigen Ihnen die Schritte für Ihren Anbieter.",
+      "emailLabel": "E-Mail-Adresse",
+      "useSignup": "{address} verwenden",
+      "detecting": "Anbieter wird gesucht",
+      "detected": "Anbieter: {provider}",
+      "notRight": "Stimmt nicht? Anbieter wählen",
+      "chooseLead": "Wir konnten Ihren Anbieter nicht an der Adresse erkennen. Wählen Sie einen aus:",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Andere (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Bestätigung in zwei Schritten aktivieren.",
+        "step1Body": "Schon aktiv? Dann überspringen.",
+        "step1Link": "Bestätigung in zwei Schritten öffnen",
+        "step2Title": "App-Passwort erstellen.",
+        "step2Body": "Geben Sie MCPEmails als Namen ein und klicken Sie auf Erstellen. Google zeigt die 16 Buchstaben nur einmal an. Kopieren Sie sie also, bevor Sie die Seite schließen.",
+        "step2Link": "App-Passwort erstellen",
+        "step3Title": "Unten einfügen.",
+        "missingTitle": "Keine Seite für App-Passwörter?",
+        "missingBody": "Dafür gibt es drei Gründe: Die Bestätigung in zwei Schritten ist aus (Schritt 1), ein Admin Ihrer Firma oder Schule hat App-Passwörter abgeschaltet, oder das Konto nutzt das Erweiterte Sicherheitsprogramm oder nur Sicherheitsschlüssel.",
+        "workspace": "Dieses Konto wird von Ihrem Unternehmen verwaltet. Meldet Schritt 2, dass die Einstellung nicht verfügbar ist, muss Ihr Admin die Bestätigung in zwei Schritten und App-Passwörter erlauben."
+      },
+      "icloud": {
+        "step1Title": "Öffnen Sie Ihren Apple Account.",
+        "step1Link": "account.apple.com öffnen",
+        "step2Title": "Wählen Sie Anmeldung und Sicherheit, dann App-spezifische Passwörter.",
+        "step2Body": "Erstellen Sie ein neues und nennen Sie es MCPEmails.",
+        "step3Title": "Unten einfügen.",
+        "step3Body": "Apple zeigt es nur einmal an, im Format xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Option fehlt?",
+        "missingBody": "Die Zwei-Faktor-Authentifizierung muss aktiv sein. Wenn Sie Ihr Apple-Account-Passwort kürzlich zurückgesetzt haben, funktionieren ältere app-spezifische Passwörter nicht mehr. Erstellen Sie dann ein neues."
+      },
+      "yahoo": {
+        "step1Title": "Öffnen Sie die Kontosicherheit von {provider}.",
+        "step1Link": "App-Passwort erstellen",
+        "step2Title": "Wählen Sie unter Externe Verbindungen die Option App-Passwort erstellen.",
+        "step2Body": "Geben Sie MCPEmails ein und klicken Sie dann auf Passwort generieren.",
+        "step3Title": "Fügen Sie die 16 Buchstaben unten ein.",
+        "missingTitle": "Nicht da, oder heißt es, die Funktion sei gerade nicht verfügbar?",
+        "missingBody": "Aktivieren Sie die Bestätigung in zwei Schritten und laden Sie die Seite neu. Bei neuen Konten kann es bis zu zwei Wochen dauern. Nutzen Sie einen Browser, in dem Sie sich sonst anmelden, kein privates Fenster."
+      },
+      "gmx": {
+        "step1Title": "IMAP bei {provider} einschalten.",
+        "step1Body": "Öffnen Sie im Webmail die E-Mail-Einstellungen, dann POP3/IMAP, und aktivieren Sie POP3- und IMAP-Zugriff erlauben.",
+        "step1Link": "So schalten Sie IMAP ein",
+        "step2Title": "Zwei-Faktor-Authentifizierung aktiv?",
+        "step2Body": "Erstellen Sie unter Sicherheit ein anwendungsspezifisches Passwort. Es wird nur einmal angezeigt. Ist die Zwei-Faktor-Authentifizierung aus, nutzen Sie Ihr normales {provider}-Passwort.",
+        "step3Title": "Unten einfügen.",
+        "missingTitle": "Hat funktioniert und geht nicht mehr?",
+        "missingBody": "{provider} kann IMAP wieder abschalten. Prüfen Sie Schritt 1."
+      },
+      "microsoft": {
+        "step1Title": "Klicken Sie auf Mit Microsoft verbinden und melden Sie sich auf der Seite von Microsoft an.",
+        "step2Title": "Bestätigen Sie die Berechtigungen.",
+        "note": "Hier ist kein Passwort nötig. Sie melden sich auf der Seite von Microsoft an.",
+        "connect": "Mit Microsoft verbinden",
+        "adminTitle": "Arbeits- oder Schulkonto?",
+        "adminBody": "In vielen Organisationen muss ein Admin neue Apps freigeben, bevor Sie sich anmelden können. Fragt Microsoft nach einer Admin-Freigabe, schicken Sie Ihrem Admin diesen Link. Ihr Admin braucht kein MCPEmails-Konto.",
+        "adminLink": "Link für Ihren Admin holen",
+        "adminCopy": "Link kopieren",
+        "adminCopied": "Kopiert",
+        "adminError": "Der Link konnte nicht erstellt werden. Versuchen Sie es noch einmal."
+      },
+      "proton": {
+        "title": "Proton Mail braucht Proton Bridge",
+        "body": "Proton Mail funktioniert mit Mail-Apps nur über Proton Bridge, die auf Ihrem eigenen Computer läuft. MCPEmails läuft in der Cloud und erreicht sie nicht, deshalb lässt sich ein Proton-Postfach nicht verbinden."
+      },
+      "imap": {
+        "step1": "Nutzen Sie Ihre vollständige E-Mail-Adresse und das Passwort des Postfachs selbst, nicht den Login für Ihr Hosting oder Kundencenter.",
+        "step2": "Hat das Postfach Zwei-Faktor-Authentifizierung, erstellen Sie in den Sicherheitseinstellungen Ihres Anbieters ein App-Passwort und nutzen Sie dieses.",
+        "appPasswordLink": "App-Passwort bei {provider} erstellen",
+        "servers": "Server: {host}",
+        "manualLead": "Wir konnten Ihre Mailserver nicht finden. Ihr Anbieter nennt sie auf seinen Hilfeseiten.",
+        "imapHost": "Posteingangsserver (IMAP)",
+        "smtpHost": "Postausgangsserver (SMTP)",
+        "port": "Port",
+        "username": "Anmeldename, falls er nicht Ihre E-Mail-Adresse ist",
+        "advanced": "Erweitert"
+      },
+      "password": {
+        "labelApp": "App-Passwort",
+        "labelMailbox": "Passwort",
+        "spaces": "Leerzeichen sind kein Problem.",
+        "show": "Anzeigen",
+        "hide": "Verbergen",
+        "warnAccount": "Das sieht wie ein normales Passwort aus. {provider} braucht hier ein App-Passwort: 16 Buchstaben.",
+        "warnLength": "Ein App-Passwort hat 16 Buchstaben. Prüfen Sie, ob Sie alles kopiert haben.",
+        "warnNote": "Sie können es trotzdem versuchen."
+      },
+      "trust": {
+        "access": "Ihre KI kann in diesem Postfach Mails lesen, suchen, ordnen, entwerfen und senden. Ihr Kontopasswort und Ihre Einstellungen kann sie nicht ändern.",
+        "appPassword": "Ein App-Passwort gilt nur für Mail, und Sie können es jederzeit einzeln widerrufen.",
+        "mailboxPassword": "Sie können das Postfach in MCPEmails jederzeit trennen.",
+        "storage": "Verschlüsselt gespeichert in Stockholm."
+      },
+      "connect": "Verbinden",
+      "progress": {
+        "title": "{address} wird verbunden",
+        "server": "Mailserver gefunden",
+        "signedIn": "Angemeldet",
+        "read": "Postfach gelesen",
+        "slow": "Bei manchen Anbietern dauert das bis zu einer Minute."
+      },
+      "proof": {
+        "title": "Verbunden",
+        "count": "{count, plural, one {# Nachricht} other {# Nachrichten}} in Ihrem Posteingang",
+        "newest": "Neueste",
+        "noSubject": "(kein Betreff)",
+        "private": "Nur für Sie sichtbar, live aus Ihrem Postfach gelesen.",
+        "ready": "Ihr Postfach ist verbunden und bereit.",
+        "continue": "Weiter"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "Bei {provider} ist der IMAP-Zugriff für dieses Postfach ausgeschaltet. Schalten Sie ihn ein und versuchen Sie es noch einmal.",
+          "app_password_required": "{provider} braucht hier ein App-Passwort, nicht Ihr normales Passwort.",
+          "account_password_used": "Das sieht wie Ihr normales {provider}-Passwort aus. Nutzen Sie stattdessen ein App-Passwort.",
+          "app_password_length": "Das App-Passwort scheint unvollständig. Es sollte 16 Buchstaben haben.",
+          "provider_refused_signin": "{provider} hat die Anmeldung selbst abgelehnt, nicht das Passwort. Melden Sie sich im Browser bei {provider} an, bestätigen Sie eventuelle Sicherheitsabfragen und versuchen Sie es dann noch einmal.",
+          "login_username_required": "Dieser Server erwartet einen Anmeldenamen, der nicht Ihre E-Mail-Adresse ist. Sie finden ihn in den Einstellungen Ihres Anbieters. Tragen Sie ihn unter Erweitert ein.",
+          "password_rejected": "{provider} hat dieses Passwort nicht akzeptiert. Prüfen Sie es und fügen Sie es erneut ein."
+        },
+        "network": "MCPEmails ist gerade nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es noch einmal.",
+        "limit": "Dieser Workspace hat bereits alle Postfächer, die sein Plan umfasst.",
+        "sessionExpired": "Sie wurden abgemeldet. Melden Sie sich erneut an und kommen Sie dann auf diese Seite zurück.",
+        "notAllowed": "Nur Workspace-Inhaber und Admins können ein Postfach verbinden.",
+        "alreadyConnected": "Dieses Postfach ist in diesem Workspace schon verbunden.",
+        "useMicrosoft": "Das ist ein Microsoft-Postfach. Es wird über die Microsoft-Anmeldung verbunden, nicht mit einem Passwort.",
+        "smtpRejected": "Lesen funktioniert, aber der Server hat die Anmeldung zum Senden abgelehnt.",
+        "blocked": "Der Mailserver hat unsere Verbindung abgelehnt. Manche Anbieter sperren Cloud-Server.",
+        "hostNotFound": "Wir konnten diesen Mailserver nicht finden. Prüfen Sie den Servernamen.",
+        "unreachable": "Der Mailserver hat nicht geantwortet. Prüfen Sie Servername und Port.",
+        "tls": "Die sichere Verbindung zum Mailserver ist fehlgeschlagen. Versuchen Sie den anderen Port.",
+        "hostRefused": "Mit diesem Servernamen oder Port können wir uns nicht verbinden. Prüfen Sie die Servereinstellungen.",
+        "saveFailed": "Angemeldet, aber das Speichern ist fehlgeschlagen. Versuchen Sie es gleich noch einmal.",
+        "generic": "Das hat nicht geklappt. Versuchen Sie es noch einmal oder verbinden Sie ein anderes Postfach.",
+        "link": {
+          "twoStep": "Bestätigung in zwei Schritten öffnen",
+          "appPasswords": "Seite für App-Passwörter bei {provider} öffnen",
+          "imapSetting": "So schalten Sie IMAP bei {provider} ein",
+          "providerHelp": "Hilfeseite von {provider}",
+          "adminGuide": "Anleitung von Google für Ihren Admin"
+        },
+        "kept": "Ihre Adresse bleibt stehen, ein neuer Versuch ist also nur ein Einfügen.",
+        "readOnly": "Nur zum Lesen verbinden",
+        "readOnlyNote": "Ihre KI kann lesen und suchen, aber nicht senden.",
+        "different": "Anderes Postfach verbinden",
+        "support": "Diesen Fehler an den Support senden",
+        "supportNote": "Wir bekommen den Fehler und Ihren Anbieter, nie Ihr Passwort.",
+        "supportSent": "Gesendet. Wir antworten per E-Mail.",
+        "supportFailed": "Senden hat nicht geklappt. Nutzen Sie stattdessen die Hilfeseite.",
+        "supportPage": "Hilfeseite öffnen",
+        "signIn": "Erneut anmelden"
+      },
+      "outlookError": {
+        "admin_consent_required": "Ihre Organisation braucht eine Admin-Freigabe für MCPEmails, bevor Sie sich anmelden können. Schicken Sie Ihrem Admin den Link unten.",
+        "outlook_cancelled": "Sie haben auf der Seite von Microsoft abgebrochen. Klicken Sie auf Mit Microsoft verbinden, um es noch einmal zu versuchen.",
+        "generic": "Die Microsoft-Anmeldung wurde nicht abgeschlossen. Versuchen Sie es noch einmal."
+      }
     },
     "add_to_ai": {
       "title": "MCPEmails zu {client} hinzufügen"

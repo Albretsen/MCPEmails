@@ -27,7 +27,13 @@ export type ConnectEntryPoint =
  * transcript is only ever recorded by the server; leaving it off the browser's
  * list means no client can forge a chat-link row.
  */
-export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link';
+export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link' | AppPasswordLinkEntryPoint;
+
+/**
+ * On `app_password_link_clicked` rows only: which external link in the
+ * onboarding inbox step was opened (APP_PASSWORD_LINKS in activation-events.ts).
+ */
+export type AppPasswordLinkEntryPoint = 'two_step' | 'app_passwords' | 'imap_setting' | 'account_security' | 'admin_consent';
 
 /** Narrow an untrusted value to the closed list; anything else is null. */
 export function connectEntryPoint(value: unknown): ConnectEntryPoint | null {
@@ -96,6 +102,10 @@ export type ProductFunnelEvent = {
     // /api/analytics/activation-event (lib/analytics/activation-events.ts).
     | 'connect_fix_shown' | 'connect_fix_link_clicked'
     | 'first_call_prompt_copied' | 'waiting_state_shown' | 'install_link_clicked'
+    | 'first_call_prompt_copied' | 'waiting_state_shown'
+    // An external app-password / 2-Step Verification link on the onboarding
+    // inbox step (20261026214313). entry_point = which link.
+    | 'app_password_link_clicked'
     // Pause and switch to Personal (migration 20261024233000). Category is the
     // plan the customer was on, except pause_resumed (early | auto) and
     // retention_option_clicked (pause | downgrade).
@@ -128,6 +138,7 @@ export type ProductFunnelEvent = {
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
+    | 'aol' | 'gmx' | 'web_de'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory

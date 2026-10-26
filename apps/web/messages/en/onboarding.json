@@ -17,7 +17,179 @@
       "title": "Which inbox should your AI use?",
       "reuseTitle": "An inbox is already connected",
       "reuse": "Use {address}",
-      "connectAnother": "Connect another inbox"
+      "connectAnother": "Connect another inbox",
+      "lead": "Type the address you want your AI to read and answer. We show the steps for your provider.",
+      "emailLabel": "Email address",
+      "useSignup": "Use {address}",
+      "detecting": "Looking up your provider",
+      "detected": "Provider: {provider}",
+      "notRight": "Not right? Choose your provider",
+      "chooseLead": "We could not tell your provider from the address. Pick one:",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Other (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Turn on 2-Step Verification.",
+        "step1Body": "Already on? Skip this.",
+        "step1Link": "Open 2-Step Verification",
+        "step2Title": "Create an app password.",
+        "step2Body": "Type MCPEmails as the name and press Create. Google shows 16 letters once, so copy them before you close the page.",
+        "step2Link": "Create app password",
+        "step3Title": "Paste it below.",
+        "missingTitle": "No App passwords page?",
+        "missingBody": "One of three things: 2-Step Verification is off (step 1), a work or school admin has turned app passwords off, or the account uses Advanced Protection or security keys only.",
+        "workspace": "Your company manages this account. If step 2 says the setting is not available, your admin must allow 2-Step Verification and app passwords."
+      },
+      "icloud": {
+        "step1Title": "Open your Apple Account.",
+        "step1Link": "Open account.apple.com",
+        "step2Title": "Choose Sign-In and Security, then App-Specific Passwords.",
+        "step2Body": "Generate a new one and name it MCPEmails.",
+        "step3Title": "Paste it below.",
+        "step3Body": "Apple shows it once, as xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Option missing?",
+        "missingBody": "Two-factor authentication must be on. If you reset your Apple Account password recently, older app-specific passwords stopped working, so make a new one."
+      },
+      "yahoo": {
+        "step1Title": "Open {provider} Account Security.",
+        "step1Link": "Create app password",
+        "step2Title": "Under External connections, choose Create app password.",
+        "step2Body": "Type MCPEmails, then Generate password.",
+        "step3Title": "Paste the 16 letters below.",
+        "missingTitle": "Not there, or it says not available right now?",
+        "missingBody": "Turn on two-step verification and reload. New accounts can wait up to two weeks. Use a browser you normally sign in with, not a private window."
+      },
+      "gmx": {
+        "step1Title": "Turn on IMAP in {provider}.",
+        "step1Body": "In webmail, open E-Mail-Einstellungen, then POP3/IMAP, and switch on POP3- und IMAP-Zugriff erlauben (allow POP3 and IMAP access).",
+        "step1Link": "How to turn on IMAP",
+        "step2Title": "Two-factor authentication on?",
+        "step2Body": "Create an application-specific password under Sicherheit (security). It is shown once. If two-factor authentication is off, use your normal {provider} password.",
+        "step3Title": "Paste it below.",
+        "missingTitle": "Worked before and stopped?",
+        "missingBody": "{provider} can switch IMAP off again. Check step 1."
+      },
+      "microsoft": {
+        "step1Title": "Press Connect with Microsoft and sign in on Microsoft's page.",
+        "step2Title": "Accept the permissions screen.",
+        "note": "No password needed here. You sign in on Microsoft's own page.",
+        "connect": "Connect with Microsoft",
+        "adminTitle": "Work or school account?",
+        "adminBody": "Many organisations need an admin to approve new apps before you can sign in. If Microsoft asks for admin approval, send your admin this link. They do not need an MCPEmails account.",
+        "adminLink": "Get the link for your admin",
+        "adminCopy": "Copy link",
+        "adminCopied": "Copied",
+        "adminError": "Could not create the link. Try again."
+      },
+      "proton": {
+        "title": "Proton Mail needs Proton Bridge",
+        "body": "Proton Mail works with mail apps only through Proton Bridge, which runs on your own computer. MCPEmails runs in the cloud and cannot reach it, so a Proton mailbox cannot be connected."
+      },
+      "imap": {
+        "step1": "Use your full email address and the password of the mailbox itself, not your hosting or control panel login.",
+        "step2": "If the mailbox has two-factor authentication, create an app password in your provider's security settings and use that.",
+        "appPasswordLink": "Create a {provider} app password",
+        "servers": "Servers: {host}",
+        "manualLead": "We could not find your mail servers. Your provider lists them in its help pages.",
+        "imapHost": "Incoming server (IMAP)",
+        "smtpHost": "Outgoing server (SMTP)",
+        "port": "Port",
+        "username": "Login name, if it is not your email address",
+        "advanced": "Advanced"
+      },
+      "password": {
+        "labelApp": "App password",
+        "labelMailbox": "Password",
+        "spaces": "Spaces are fine.",
+        "show": "Show",
+        "hide": "Hide",
+        "warnAccount": "This looks like a normal password. {provider} needs an app password here: 16 letters.",
+        "warnLength": "An app password has 16 letters. Check that you copied all of it.",
+        "warnNote": "You can still try it."
+      },
+      "trust": {
+        "access": "Your AI can read, search, organise, draft and send mail in this inbox. It cannot change your account password or settings.",
+        "appPassword": "An app password works only for mail, and you can revoke it on its own at any time.",
+        "mailboxPassword": "You can disconnect the inbox in MCPEmails at any time.",
+        "storage": "Stored encrypted in Stockholm."
+      },
+      "connect": "Connect",
+      "progress": {
+        "title": "Connecting {address}",
+        "server": "Mail server found",
+        "signedIn": "Signed in",
+        "read": "Mailbox read",
+        "slow": "Some providers take up to a minute."
+      },
+      "proof": {
+        "title": "Connected",
+        "count": "{count, plural, one {# message} other {# messages}} in your inbox",
+        "newest": "Newest",
+        "noSubject": "(no subject)",
+        "private": "Shown only to you, read live from your mailbox.",
+        "ready": "Your inbox is connected and ready.",
+        "continue": "Continue"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} has IMAP access turned off for this mailbox. Turn it on, then try again.",
+          "app_password_required": "{provider} needs an app password here, not your normal password.",
+          "account_password_used": "That looks like your normal {provider} password. Use an app password instead.",
+          "app_password_length": "That app password looks incomplete. It should be 16 letters.",
+          "provider_refused_signin": "{provider} refused the sign-in itself, not the password. Sign in to {provider} in your browser, clear any security prompt, then try again.",
+          "login_username_required": "This server wants a login name that is not your email address. Find it in your provider's settings and enter it under Advanced.",
+          "password_rejected": "{provider} did not accept that password. Check it and paste it again."
+        },
+        "network": "We could not reach MCPEmails. Check your connection and try again.",
+        "limit": "This workspace already has all the inboxes its plan includes.",
+        "sessionExpired": "You were signed out. Sign in again, then come back to this page.",
+        "notAllowed": "Only workspace owners and admins can connect an inbox.",
+        "alreadyConnected": "This mailbox is already connected in this workspace.",
+        "useMicrosoft": "This is a Microsoft mailbox. It connects with Microsoft sign-in, not a password.",
+        "smtpRejected": "Reading works, but the server refused the login for sending.",
+        "blocked": "The mail server refused our connection. Some providers block cloud servers.",
+        "hostNotFound": "We could not find that mail server. Check the server name.",
+        "unreachable": "The mail server did not answer. Check the server name and port.",
+        "tls": "The secure connection to the mail server failed. Try the other port.",
+        "hostRefused": "We cannot connect to that server name or port. Check the server settings.",
+        "saveFailed": "Signed in, but saving failed. Try again in a moment.",
+        "generic": "That did not work. Try again, or connect a different inbox.",
+        "link": {
+          "twoStep": "Open 2-Step Verification",
+          "appPasswords": "Open the {provider} app password page",
+          "imapSetting": "How to turn on IMAP at {provider}",
+          "providerHelp": "{provider} help page",
+          "adminGuide": "Google's guide for your admin"
+        },
+        "kept": "Your address is kept, so trying again is one paste.",
+        "readOnly": "Connect for reading only",
+        "readOnlyNote": "Your AI can read and search, but not send.",
+        "different": "Connect a different inbox",
+        "support": "Send this error to support",
+        "supportNote": "We get the error and your provider, never your password.",
+        "supportSent": "Sent. We will reply by email.",
+        "supportFailed": "Could not send it. Use the help page instead.",
+        "supportPage": "Open the help page",
+        "signIn": "Sign in again"
+      },
+      "outlookError": {
+        "admin_consent_required": "Your organisation needs an admin to approve MCPEmails before you can sign in. Send your admin the link below.",
+        "outlook_cancelled": "You cancelled on Microsoft's page. Press Connect with Microsoft to try again.",
+        "generic": "Microsoft sign-in did not finish. Try again."
+      }
     },
     "add_to_ai": {
       "title": "Add MCPEmails to {client}"

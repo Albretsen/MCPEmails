@@ -2,6 +2,7 @@ import OnboardingLocaleProvider from '../../components/i18n/OnboardingLocaleProv
 import '../../styles/theme.css';
 import '../../styles/dashboard.css';
 import '../../styles/onboarding.css';
+import '../../styles/onboarding-inbox.css';
 
 /**
  * /onboarding: the new post-signup setup flow (onb_flow = new). Its own

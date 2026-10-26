@@ -59,6 +59,13 @@ export const ENTRIES = [
       'The setup guide in your dashboard now has an Add to Claude, Add to Cursor or Install in VS Code button that opens the app with MCPEmails already filled in. Gemini CLI gets a single command to copy.',
   },
   {
+    date: '2026-10-26',
+    kind: 'improved',
+    title: 'Server settings filled in for more custom domains',
+    body:
+      'When you connect a mailbox on your own domain hosted at Strato, one.com or Rackspace, the IMAP and SMTP servers are now filled in for you. Before, those fields stayed empty for these hosts.',
+  },
+  {
     date: '2026-10-25',
     kind: 'improved',
     title: 'Automations can file mail into Junk or Spam',

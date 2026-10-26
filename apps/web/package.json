@@ -144,6 +144,8 @@
     "test:install-links": "node --test src/lib/clients/install-links.test.mjs scripts/client-docs-drift.test.mjs",
     "test:onboarding-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/onboarding-ui.test.mjs",
     "test:onboarding-routes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/onboarding/onboarding-routes.test.ts",
+    "test:onboarding-inbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/inbox-detect.test.ts src/lib/onboarding/inbox-checks.test.ts",
+    "test:onboarding-inbox-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/inbox-step-ui.test.mjs",
     "test:first-week-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/first-week-checklist-ui.test.mjs",
     "test:first-week-route": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/onboarding/first-week/route.test.ts",
     "test:activation-events": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/analytics/activation-events.test.ts",

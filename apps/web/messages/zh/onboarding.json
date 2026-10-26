@@ -17,7 +17,179 @@
       "title": "你的 AI 应该使用哪个收件箱？",
       "reuseTitle": "已连接一个收件箱",
       "reuse": "使用 {address}",
-      "connectAnother": "连接另一个收件箱"
+      "connectAnother": "连接另一个收件箱",
+      "lead": "输入你希望 AI 读取和回复的邮箱地址。我们会显示该服务商的设置步骤。",
+      "emailLabel": "邮箱地址",
+      "useSignup": "使用 {address}",
+      "detecting": "正在识别你的邮箱服务商",
+      "detected": "服务商：{provider}",
+      "notRight": "不对？选择你的服务商",
+      "chooseLead": "无法从地址识别你的服务商。请选择一个：",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "其他（IMAP）"
+      },
+      "gmail": {
+        "step1Title": "开启两步验证。",
+        "step1Body": "已经开启？跳过此步。",
+        "step1Link": "打开两步验证",
+        "step2Title": "创建应用专用密码。",
+        "step2Body": "名称填写 MCPEmails，然后点击创建。Google 只显示一次这 16 个字母，请在关闭页面前复制。",
+        "step2Link": "创建应用专用密码",
+        "step3Title": "粘贴到下方。",
+        "missingTitle": "找不到应用专用密码页面？",
+        "missingBody": "原因有三种：两步验证未开启（第 1 步），工作或学校的管理员关闭了应用专用密码，或者该帐号使用了高级保护或仅使用安全密钥。",
+        "workspace": "此帐号由你的公司管理。如果第 2 步提示该设置不可用，需要管理员允许两步验证和应用专用密码。"
+      },
+      "icloud": {
+        "step1Title": "打开你的 Apple 账户。",
+        "step1Link": "打开 account.apple.com",
+        "step2Title": "选择登录与安全，然后选择 App 专用密码。",
+        "step2Body": "生成一个新密码，并命名为 MCPEmails。",
+        "step3Title": "粘贴到下方。",
+        "step3Body": "Apple 只显示一次，格式为 xxxx-xxxx-xxxx-xxxx。",
+        "missingTitle": "找不到该选项？",
+        "missingBody": "必须开启双重认证。如果你最近重设过 Apple 账户密码，旧的 App 专用密码已失效，请重新生成一个。"
+      },
+      "yahoo": {
+        "step1Title": "打开 {provider} 帐号安全页面。",
+        "step1Link": "创建应用密码",
+        "step2Title": "在外部连接下，选择创建应用密码。",
+        "step2Body": "输入 MCPEmails，然后点击生成密码。",
+        "step3Title": "将 16 个字母粘贴到下方。",
+        "missingTitle": "没有这个选项，或提示暂时不可用？",
+        "missingBody": "开启两步验证后刷新页面。新帐号可能需要等待最多两周。请使用你平时登录的浏览器，不要用无痕窗口。"
+      },
+      "gmx": {
+        "step1Title": "在 {provider} 中开启 IMAP。",
+        "step1Body": "在网页邮箱中打开 E-Mail-Einstellungen，然后进入 POP3/IMAP，开启 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。",
+        "step1Link": "如何开启 IMAP",
+        "step2Title": "开启了双重认证？",
+        "step2Body": "在 Sicherheit（安全）下创建应用专用密码。它只显示一次。如果未开启双重认证，请使用你平时的 {provider} 密码。",
+        "step3Title": "粘贴到下方。",
+        "missingTitle": "以前能用，现在不行了？",
+        "missingBody": "{provider} 可能会再次关闭 IMAP。请检查第 1 步。"
+      },
+      "microsoft": {
+        "step1Title": "点击使用 Microsoft 连接，并在 Microsoft 页面上登录。",
+        "step2Title": "接受权限页面。",
+        "note": "这里不需要密码。你会在 Microsoft 自己的页面上登录。",
+        "connect": "使用 Microsoft 连接",
+        "adminTitle": "工作或学校帐户？",
+        "adminBody": "许多组织要求管理员先批准新应用，你才能登录。如果 Microsoft 要求管理员批准，请把这个链接发给管理员。管理员不需要 MCPEmails 帐户。",
+        "adminLink": "获取给管理员的链接",
+        "adminCopy": "复制链接",
+        "adminCopied": "已复制",
+        "adminError": "无法创建链接。请重试。"
+      },
+      "proton": {
+        "title": "Proton Mail 需要 Proton Bridge",
+        "body": "Proton Mail 只能通过 Proton Bridge 与邮件应用配合使用，而 Bridge 运行在你自己的电脑上。MCPEmails 运行在云端，无法连接到它，因此无法连接 Proton 邮箱。"
+      },
+      "imap": {
+        "step1": "使用完整的邮箱地址和该邮箱本身的密码，而不是主机或控制面板的登录密码。",
+        "step2": "如果邮箱开启了双重认证，请在服务商的安全设置中创建应用专用密码并使用它。",
+        "appPasswordLink": "创建 {provider} 应用专用密码",
+        "servers": "服务器：{host}",
+        "manualLead": "没有找到你的邮件服务器。你的服务商会在帮助页面中列出。",
+        "imapHost": "收件服务器（IMAP）",
+        "smtpHost": "发件服务器（SMTP）",
+        "port": "端口",
+        "username": "登录名（如果不是你的邮箱地址）",
+        "advanced": "高级"
+      },
+      "password": {
+        "labelApp": "应用专用密码",
+        "labelMailbox": "密码",
+        "spaces": "包含空格也没关系。",
+        "show": "显示",
+        "hide": "隐藏",
+        "warnAccount": "这看起来像普通密码。{provider} 在这里需要应用专用密码：16 个字母。",
+        "warnLength": "应用专用密码有 16 个字母。请确认已完整复制。",
+        "warnNote": "你仍然可以试试。"
+      },
+      "trust": {
+        "access": "你的 AI 可以在此邮箱中读取、搜索、整理、起草和发送邮件。它不能更改你的帐号密码或设置。",
+        "appPassword": "应用专用密码只能用于邮件，你可以随时单独撤销它。",
+        "mailboxPassword": "你可以随时在 MCPEmails 中断开此邮箱。",
+        "storage": "加密存储在斯德哥尔摩。"
+      },
+      "connect": "连接",
+      "progress": {
+        "title": "正在连接 {address}",
+        "server": "已找到邮件服务器",
+        "signedIn": "已登录",
+        "read": "已读取邮箱",
+        "slow": "部分服务商最多需要一分钟。"
+      },
+      "proof": {
+        "title": "已连接",
+        "count": "收件箱中有 {count} 封邮件",
+        "newest": "最新",
+        "noSubject": "（无主题）",
+        "private": "仅你可见，直接从你的邮箱实时读取。",
+        "ready": "你的邮箱已连接并可以使用。",
+        "continue": "继续"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} 已为此邮箱关闭 IMAP 访问。请开启后重试。",
+          "app_password_required": "{provider} 在这里需要应用专用密码，而不是你的普通密码。",
+          "account_password_used": "这看起来像你的普通 {provider} 密码。请改用应用专用密码。",
+          "app_password_length": "这个应用专用密码似乎不完整。它应该有 16 个字母。",
+          "provider_refused_signin": "{provider} 拒绝的是这次登录本身，而不是密码。请在浏览器中登录 {provider}，处理任何安全提示后重试。",
+          "login_username_required": "此服务器需要一个不同于邮箱地址的登录名。请在服务商的设置中找到它，并填写在高级中。",
+          "password_rejected": "{provider} 没有接受这个密码。请检查后重新粘贴。"
+        },
+        "network": "无法连接到 MCPEmails。请检查网络后重试。",
+        "limit": "此工作区已达到其套餐包含的邮箱数量。",
+        "sessionExpired": "你已退出登录。请重新登录，然后回到此页面。",
+        "notAllowed": "只有工作区所有者和管理员可以连接邮箱。",
+        "alreadyConnected": "此邮箱已在该工作区中连接。",
+        "useMicrosoft": "这是 Microsoft 邮箱，需要通过 Microsoft 登录连接，而不是密码。",
+        "smtpRejected": "读取正常，但服务器拒绝了用于发送的登录。",
+        "blocked": "邮件服务器拒绝了我们的连接。部分服务商会屏蔽云服务器。",
+        "hostNotFound": "找不到该邮件服务器。请检查服务器名称。",
+        "unreachable": "邮件服务器没有响应。请检查服务器名称和端口。",
+        "tls": "与邮件服务器的安全连接失败。请尝试另一个端口。",
+        "hostRefused": "无法连接到该服务器名称或端口。请检查服务器设置。",
+        "saveFailed": "已登录，但保存失败。请稍后重试。",
+        "generic": "没有成功。请重试，或连接其他邮箱。",
+        "link": {
+          "twoStep": "打开两步验证",
+          "appPasswords": "打开 {provider} 应用专用密码页面",
+          "imapSetting": "如何在 {provider} 开启 IMAP",
+          "providerHelp": "{provider} 帮助页面",
+          "adminGuide": "Google 给管理员的指南"
+        },
+        "kept": "你的地址已保留，重试只需再粘贴一次。",
+        "readOnly": "仅以只读方式连接",
+        "readOnlyNote": "你的 AI 可以读取和搜索，但不能发送。",
+        "different": "连接其他邮箱",
+        "support": "将此错误发送给支持团队",
+        "supportNote": "我们只会收到错误信息和你的服务商，绝不会收到你的密码。",
+        "supportSent": "已发送。我们会通过邮件回复。",
+        "supportFailed": "发送失败。请改用帮助页面。",
+        "supportPage": "打开帮助页面",
+        "signIn": "重新登录"
+      },
+      "outlookError": {
+        "admin_consent_required": "你的组织需要管理员批准 MCPEmails 后你才能登录。请把下面的链接发给管理员。",
+        "outlook_cancelled": "你在 Microsoft 页面上取消了。点击使用 Microsoft 连接即可重试。",
+        "generic": "Microsoft 登录未完成。请重试。"
+      }
     },
     "add_to_ai": {
       "title": "将 MCPEmails 添加到 {client}"

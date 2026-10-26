@@ -17,7 +17,179 @@
       "title": "Quelle boîte de réception votre IA doit-elle utiliser ?",
       "reuseTitle": "Une boîte de réception est déjà connectée",
       "reuse": "Utiliser {address}",
-      "connectAnother": "Connecter une autre boîte"
+      "connectAnother": "Connecter une autre boîte",
+      "lead": "Saisissez l'adresse que votre IA doit lire et à laquelle elle doit répondre. Nous affichons les étapes pour votre fournisseur.",
+      "emailLabel": "Adresse e-mail",
+      "useSignup": "Utiliser {address}",
+      "detecting": "Recherche de votre fournisseur",
+      "detected": "Fournisseur : {provider}",
+      "notRight": "Ce n'est pas le bon ? Choisissez votre fournisseur",
+      "chooseLead": "Nous n'avons pas pu reconnaître votre fournisseur à partir de l'adresse. Choisissez-en un :",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Autre (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Activez la validation en deux étapes.",
+        "step1Body": "Déjà activée ? Passez cette étape.",
+        "step1Link": "Ouvrir la validation en deux étapes",
+        "step2Title": "Créez un mot de passe d'application.",
+        "step2Body": "Saisissez MCPEmails comme nom et cliquez sur Créer. Google n'affiche les 16 lettres qu'une seule fois : copiez-les avant de fermer la page.",
+        "step2Link": "Créer un mot de passe d'application",
+        "step3Title": "Collez-le ci-dessous.",
+        "missingTitle": "Pas de page Mots de passe des applications ?",
+        "missingBody": "Il y a trois raisons possibles : la validation en deux étapes est désactivée (étape 1), un administrateur professionnel ou scolaire a désactivé les mots de passe d'application, ou le compte utilise la Protection avancée ou uniquement des clés de sécurité.",
+        "workspace": "Ce compte est géré par votre entreprise. Si l'étape 2 indique que le paramètre n'est pas disponible, votre administrateur doit autoriser la validation en deux étapes et les mots de passe d'application."
+      },
+      "icloud": {
+        "step1Title": "Ouvrez votre compte Apple.",
+        "step1Link": "Ouvrir account.apple.com",
+        "step2Title": "Choisissez Connexion et sécurité, puis Mots de passe pour app.",
+        "step2Body": "Générez-en un nouveau et nommez-le MCPEmails.",
+        "step3Title": "Collez-le ci-dessous.",
+        "step3Body": "Apple ne l'affiche qu'une fois, au format xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Option introuvable ?",
+        "missingBody": "L'identification à deux facteurs doit être activée. Si vous avez réinitialisé récemment le mot de passe de votre compte Apple, les anciens mots de passe pour app ne fonctionnent plus : créez-en un nouveau."
+      },
+      "yahoo": {
+        "step1Title": "Ouvrez la sécurité du compte {provider}.",
+        "step1Link": "Créer un mot de passe d'application",
+        "step2Title": "Sous Connexions externes, choisissez Créer un mot de passe d'application.",
+        "step2Body": "Saisissez MCPEmails, puis Générer le mot de passe.",
+        "step3Title": "Collez les 16 lettres ci-dessous.",
+        "missingTitle": "Option absente, ou fonction indisponible pour le moment ?",
+        "missingBody": "Activez la validation en deux étapes et rechargez la page. Les nouveaux comptes peuvent devoir attendre jusqu'à deux semaines. Utilisez un navigateur avec lequel vous vous connectez d'habitude, pas une fenêtre privée."
+      },
+      "gmx": {
+        "step1Title": "Activez IMAP chez {provider}.",
+        "step1Body": "Dans le webmail, ouvrez E-Mail-Einstellungen, puis POP3/IMAP, et activez POP3- und IMAP-Zugriff erlauben (autoriser l'accès POP3 et IMAP).",
+        "step1Link": "Comment activer IMAP",
+        "step2Title": "Authentification à deux facteurs activée ?",
+        "step2Body": "Créez un mot de passe spécifique à l'application sous Sicherheit (sécurité). Il n'est affiché qu'une fois. Si l'authentification à deux facteurs est désactivée, utilisez votre mot de passe {provider} habituel.",
+        "step3Title": "Collez-le ci-dessous.",
+        "missingTitle": "Cela marchait et ne marche plus ?",
+        "missingBody": "{provider} peut désactiver IMAP de nouveau. Vérifiez l'étape 1."
+      },
+      "microsoft": {
+        "step1Title": "Cliquez sur Se connecter avec Microsoft et connectez-vous sur la page de Microsoft.",
+        "step2Title": "Acceptez l'écran des autorisations.",
+        "note": "Aucun mot de passe à saisir ici. Vous vous connectez sur la page de Microsoft.",
+        "connect": "Se connecter avec Microsoft",
+        "adminTitle": "Compte professionnel ou scolaire ?",
+        "adminBody": "Dans beaucoup d'organisations, un administrateur doit approuver les nouvelles applications avant que vous puissiez vous connecter. Si Microsoft demande l'approbation d'un administrateur, envoyez-lui ce lien. Il n'a pas besoin de compte MCPEmails.",
+        "adminLink": "Obtenir le lien pour votre administrateur",
+        "adminCopy": "Copier le lien",
+        "adminCopied": "Copié",
+        "adminError": "Impossible de créer le lien. Réessayez."
+      },
+      "proton": {
+        "title": "Proton Mail nécessite Proton Bridge",
+        "body": "Proton Mail ne fonctionne avec les applications de messagerie que via Proton Bridge, qui tourne sur votre propre ordinateur. MCPEmails fonctionne dans le cloud et ne peut pas l'atteindre : une boîte Proton ne peut donc pas être connectée."
+      },
+      "imap": {
+        "step1": "Utilisez votre adresse e-mail complète et le mot de passe de la boîte elle-même, pas celui de votre hébergement ou de votre panneau de contrôle.",
+        "step2": "Si la boîte utilise l'authentification à deux facteurs, créez un mot de passe d'application dans les paramètres de sécurité de votre fournisseur et utilisez-le.",
+        "appPasswordLink": "Créer un mot de passe d'application {provider}",
+        "servers": "Serveurs : {host}",
+        "manualLead": "Nous n'avons pas trouvé vos serveurs de messagerie. Votre fournisseur les indique dans ses pages d'aide.",
+        "imapHost": "Serveur entrant (IMAP)",
+        "smtpHost": "Serveur sortant (SMTP)",
+        "port": "Port",
+        "username": "Identifiant, s'il est différent de votre adresse e-mail",
+        "advanced": "Avancé"
+      },
+      "password": {
+        "labelApp": "Mot de passe d'application",
+        "labelMailbox": "Mot de passe",
+        "spaces": "Les espaces ne posent pas de problème.",
+        "show": "Afficher",
+        "hide": "Masquer",
+        "warnAccount": "On dirait un mot de passe habituel. {provider} demande ici un mot de passe d'application : 16 lettres.",
+        "warnLength": "Un mot de passe d'application compte 16 lettres. Vérifiez que vous avez tout copié.",
+        "warnNote": "Vous pouvez quand même essayer."
+      },
+      "trust": {
+        "access": "Votre IA peut lire, rechercher, classer, rédiger et envoyer des e-mails dans cette boîte. Elle ne peut pas modifier le mot de passe ni les paramètres de votre compte.",
+        "appPassword": "Un mot de passe d'application ne sert qu'à la messagerie, et vous pouvez le révoquer à tout moment, seul.",
+        "mailboxPassword": "Vous pouvez déconnecter la boîte dans MCPEmails à tout moment.",
+        "storage": "Stocké chiffré à Stockholm."
+      },
+      "connect": "Connecter",
+      "progress": {
+        "title": "Connexion de {address}",
+        "server": "Serveur de messagerie trouvé",
+        "signedIn": "Connecté",
+        "read": "Boîte lue",
+        "slow": "Chez certains fournisseurs, cela prend jusqu'à une minute."
+      },
+      "proof": {
+        "title": "Connecté",
+        "count": "{count, plural, one {# message} other {# messages}} dans votre boîte de réception",
+        "newest": "Les plus récents",
+        "noSubject": "(sans objet)",
+        "private": "Visible par vous seul, lu en direct dans votre boîte.",
+        "ready": "Votre boîte est connectée et prête.",
+        "continue": "Continuer"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "L'accès IMAP est désactivé chez {provider} pour cette boîte. Activez-le, puis réessayez.",
+          "app_password_required": "{provider} demande ici un mot de passe d'application, pas votre mot de passe habituel.",
+          "account_password_used": "On dirait votre mot de passe {provider} habituel. Utilisez plutôt un mot de passe d'application.",
+          "app_password_length": "Ce mot de passe d'application semble incomplet. Il doit compter 16 lettres.",
+          "provider_refused_signin": "{provider} a refusé la connexion elle-même, pas le mot de passe. Connectez-vous à {provider} dans votre navigateur, validez toute alerte de sécurité, puis réessayez.",
+          "login_username_required": "Ce serveur attend un identifiant différent de votre adresse e-mail. Trouvez-le dans les paramètres de votre fournisseur et saisissez-le sous Avancé.",
+          "password_rejected": "{provider} n'a pas accepté ce mot de passe. Vérifiez-le et collez-le de nouveau."
+        },
+        "network": "Impossible de joindre MCPEmails. Vérifiez votre connexion et réessayez.",
+        "limit": "Cet espace de travail compte déjà toutes les boîtes incluses dans son offre.",
+        "sessionExpired": "Vous avez été déconnecté. Reconnectez-vous, puis revenez sur cette page.",
+        "notAllowed": "Seuls les propriétaires et administrateurs de l'espace de travail peuvent connecter une boîte.",
+        "alreadyConnected": "Cette boîte est déjà connectée dans cet espace de travail.",
+        "useMicrosoft": "C'est une boîte Microsoft. Elle se connecte avec la connexion Microsoft, pas avec un mot de passe.",
+        "smtpRejected": "La lecture fonctionne, mais le serveur a refusé la connexion pour l'envoi.",
+        "blocked": "Le serveur de messagerie a refusé notre connexion. Certains fournisseurs bloquent les serveurs cloud.",
+        "hostNotFound": "Nous n'avons pas trouvé ce serveur de messagerie. Vérifiez son nom.",
+        "unreachable": "Le serveur de messagerie n'a pas répondu. Vérifiez le nom du serveur et le port.",
+        "tls": "La connexion sécurisée au serveur de messagerie a échoué. Essayez l'autre port.",
+        "hostRefused": "Nous ne pouvons pas nous connecter à ce nom de serveur ou à ce port. Vérifiez les paramètres du serveur.",
+        "saveFailed": "Connecté, mais l'enregistrement a échoué. Réessayez dans un instant.",
+        "generic": "Cela n'a pas fonctionné. Réessayez ou connectez une autre boîte.",
+        "link": {
+          "twoStep": "Ouvrir la validation en deux étapes",
+          "appPasswords": "Ouvrir la page des mots de passe d'application {provider}",
+          "imapSetting": "Comment activer IMAP chez {provider}",
+          "providerHelp": "Page d'aide {provider}",
+          "adminGuide": "Le guide de Google pour votre administrateur"
+        },
+        "kept": "Votre adresse est conservée : réessayer ne demande qu'un collage.",
+        "readOnly": "Connecter en lecture seule",
+        "readOnlyNote": "Votre IA peut lire et rechercher, mais pas envoyer.",
+        "different": "Connecter une autre boîte",
+        "support": "Envoyer cette erreur au support",
+        "supportNote": "Nous recevons l'erreur et votre fournisseur, jamais votre mot de passe.",
+        "supportSent": "Envoyé. Nous vous répondrons par e-mail.",
+        "supportFailed": "L'envoi a échoué. Utilisez plutôt la page d'aide.",
+        "supportPage": "Ouvrir la page d'aide",
+        "signIn": "Se reconnecter"
+      },
+      "outlookError": {
+        "admin_consent_required": "Votre organisation exige qu'un administrateur approuve MCPEmails avant que vous puissiez vous connecter. Envoyez-lui le lien ci-dessous.",
+        "outlook_cancelled": "Vous avez annulé sur la page de Microsoft. Cliquez sur Se connecter avec Microsoft pour réessayer.",
+        "generic": "La connexion Microsoft n'a pas abouti. Réessayez."
+      }
     },
     "add_to_ai": {
       "title": "Ajouter MCPEmails à {client}"
