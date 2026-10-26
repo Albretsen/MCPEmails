@@ -5,6 +5,7 @@ import { getClient, clientLocales } from '@/lib/clients/clients.mjs';
 import { getClientContent, clientParams } from '@/lib/clients/content.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
+import { getPreferredClient } from '@/lib/clients/preferred-request';
 import ClientSetupView from '../../../../components/marketing/ClientSetupView';
 import { requireLocale } from '@/i18n/require-locale';
 
@@ -89,7 +90,7 @@ export default async function ClientSetupPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ClientSetupView locale={locale} client={client} content={content} />
+      <ClientSetupView locale={locale} client={client} content={content} preferred={await getPreferredClient()} />
     </>
   );
 }
