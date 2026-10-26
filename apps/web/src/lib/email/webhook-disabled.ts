@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 /**
  * "We turned off your webhook": sent once to the workspace owner when the
@@ -60,7 +60,7 @@ export async function sendWebhookDisabledEmail(to: string, input: WebhookDisable
     return false;
   }
   const { subject, text, html } = buildWebhookDisabledEmail(input);
-  const { error } = await new Resend(key).emails.send(
+  const { error } = await createResend(key).emails.send(
     { from: process.env.WEBHOOK_EMAIL_FROM ?? DEFAULT_FROM, to, replyTo: SUPPORT_ADDRESS, subject, text, html },
     { idempotencyKey: `webhook-disabled-${input.endpointId}-${input.disabledAt}`.slice(0, 256) },
   );

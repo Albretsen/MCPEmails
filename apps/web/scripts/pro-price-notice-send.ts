@@ -63,8 +63,8 @@ if (!SEND) delete process.env.RESEND_API_KEY;
 
 const sender = SEND
   ? (async () => {
-      const { Resend } = await import('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY!);
+      const { createResend } = await import('@/lib/email/resend');
+      const resend = createResend(process.env.RESEND_API_KEY!);
       return async (email: { to: string; subject: string; html: string; text: string; headers: Record<string, string>; idempotencyKey: string }) => {
         try {
           const { data, error } = await resend.emails.send(

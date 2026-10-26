@@ -1,4 +1,5 @@
-import { Resend } from 'resend';
+import type { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 /**
  * Thin wrapper around Resend for sending workspace invite emails.
@@ -6,20 +7,20 @@ import { Resend } from 'resend';
  * Requires:
  *   RESEND_API_KEY       : API key from resend.com
  *   RESEND_FROM_EMAIL    : Verified sender address (default: invites@mcpemails.com)
- *   NEXT_PUBLIC_APP_URL  : Base URL for building accept links (default: https://www.mcpemails.com)
+ *   NEXT_PUBLIC_APP_URL  : Base URL for building accept links (default: https://mcpemails.com)
  */
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error('RESEND_API_KEY is not set');
-  return new Resend(key);
+  return createResend(key);
 }
 
 const FROM =
   process.env.RESEND_FROM_EMAIL ?? 'MCPEmails <invites@mcpemails.com>';
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mcpemails.com';
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
 export interface SendInviteEmailParams {
   to: string;

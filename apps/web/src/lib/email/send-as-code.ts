@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 /**
  * The Send As verification mail: a 6-digit code sent TO the address being
@@ -60,7 +60,7 @@ export async function sendSendAsCode(params: { to: string; inboxAddress: string;
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error('RESEND_API_KEY is not set');
   const email = buildSendAsCodeEmail(params);
-  const { error } = await new Resend(key).emails.send({
+  const { error } = await createResend(key).emails.send({
     from: FROM,
     to: params.to,
     subject: email.subject,

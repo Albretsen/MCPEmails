@@ -94,7 +94,8 @@
  * they were handed in the payload.
  */
 
-import { Resend } from 'resend';
+import type { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
@@ -1970,7 +1971,7 @@ export function composeBillingEmail(
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
-  return key ? new Resend(key) : null;
+  return key ? createResend(key) : null;
 }
 
 /** Keep anything unexpected out of the logs verbatim; short safe strings only. */

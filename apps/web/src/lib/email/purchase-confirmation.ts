@@ -57,7 +57,8 @@
  * not a pricing lever, and it must not appear in customer-facing copy.
  */
 
-import { Resend } from 'resend';
+import type { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import {
   BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
@@ -381,7 +382,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
  */
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
-  return key ? new Resend(key) : null;
+  return key ? createResend(key) : null;
 }
 
 /** Keep anything unexpected out of the logs verbatim; short safe strings only. */

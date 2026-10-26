@@ -44,7 +44,7 @@
  * testable without a network.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 import type { Database, Json } from '@/types/database.types';
 
@@ -525,7 +525,7 @@ export async function sendViaResend(
       console.error(`[contract-request] no RESEND_API_KEY configured; ${kind} for ${ref} not sent`);
       return false;
     }
-    const { error } = await new Resend(key).emails.send(
+    const { error } = await createResend(key).emails.send(
       {
         from: SUPPORT_FROM,
         to: message.to,

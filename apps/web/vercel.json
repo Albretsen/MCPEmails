@@ -27,17 +27,5 @@
     "app/u/**": { "regions": ["arn1"] },
     "app/upgrade/done/**": { "regions": ["arn1"] },
     "app/**": { "regions": ["iad1"] }
-  },
-  "rewrites": [
-    {
-      "source": "/api/mcp",
-      "destination": "https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/mcp",
-      "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "0" }]
-    }
-  ]
+  }
 }
