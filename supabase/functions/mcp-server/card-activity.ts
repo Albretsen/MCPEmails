@@ -23,8 +23,11 @@
 //   draft{action:"send"} with    recorded as `sent`. The card is the caller
 //   base_revision                that passes base_revision; the dispatcher's
 //                                re-run of an approved send is excluded.
+//   draft{action:"delete"} with  recorded as `deleted` (since 2026-10-26).
+//   base_revision                The card's Discard passes base_revision
+//                                exactly as its Send does.
 //
-// Neither is PROOF that a person acted in a card. `base_revision` is in the
+// None is PROOF that a person acted in a card. `base_revision` is in the
 // model-visible `draft` schema, and `draft_editor_save`'s app-only visibility
 // is a host hint that a host may ignore. An MCP request carries nothing a model
 // cannot also send (the card's calls arrive through the host with the same
@@ -34,9 +37,20 @@
 // editor") and never who did it. That is true whoever the caller was, and it
 // is enough to stop a model saying "I never sent it" or quoting an old subject.
 //
-// A discard (`draft{action:"delete"}`) carries nothing that tells the card's
-// call from the model's, so it is not recorded, and the model's own delete
-// result already says the draft is gone.
+// A discard used to carry nothing that told the card's call from the model's,
+// so it was not recorded, and after a Discard in the card Claude said it could
+// not tell what had happened to the draft (live test 2026-10-26). The card now
+// sends base_revision with it, the same marker as its Send, and the delete is
+// recorded. A model's own delete (no base_revision) is not: its result already
+// says the draft is gone.
+//
+// ── A draft the editor deleted: told on the not-found ERROR ───────────────
+// After a Discard every model call naming the draft fails (draft_not_found),
+// and result notes are never attached to errors (result-notes.ts). So a
+// failed `draft_read`, `draft_update`, `draft_send` or `draft_delete` that
+// names a draft whose line has a recorded `deleted` gets the note appended to
+// its error text (`goneNoteTargetDraftId`). Read only, never claimed, like
+// `draft_read` above: the card's own reads of a discarded draft look the same.
 //
 // ── Which results carry the note ───────────────────────────────────────────
 // `noteTargetDraftId`: draft calls a model makes over MCP that NAME A DRAFT
@@ -111,7 +125,7 @@
 
 import { neutralizeText } from "./text-safety.ts";
 
-export type CardActivityAction = "saved" | "sent";
+export type CardActivityAction = "saved" | "sent" | "deleted";
 
 /** The fields an editor save can change, as `draft_editor_save` takes them. */
 export type CardSavedField = "to" | "cc" | "bcc" | "subject" | "body";
@@ -269,6 +283,7 @@ export function cardActivityNote(
   const sorted = [...rows].sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt));
   const saves = sorted.filter((r) => r.action === "saved");
   const send = sorted.filter((r) => r.action === "sent").at(-1) ?? null;
+  const deleted = sorted.filter((r) => r.action === "deleted").at(-1) ?? null;
   const name = draftName(opts.subject);
   const parts: string[] = [
     `Before this call, the MCPEmails draft editor (the card in which the user can edit, save and ` +
@@ -295,6 +310,12 @@ export function cardActivityNote(
   if (send) {
     const at = instant(send.occurredAt) ?? "an unrecorded time";
     parts.push(`At ${at} it was sent, so it is no longer a draft.`);
+  } else if (deleted) {
+    const at = instant(deleted.occurredAt) ?? "an unrecorded time";
+    parts.push(
+      `At ${at} it was deleted there: it was removed from Drafts without being sent, ` +
+        `so it no longer exists and nothing went out.`,
+    );
   } else if (saves.length > 0) {
     parts.push(
       opts.read
@@ -401,6 +422,56 @@ export function noteTargetDraftId(
 }
 
 /**
+ * The draft a FAILED model draft call names, whose `deleted` record (if any)
+ * its error text is told (see "A draft the editor deleted"), or null. A call
+ * with base_revision is the card's own and is skipped.
+ */
+export function goneNoteTargetDraftId(
+  dispatchName: string,
+  args: unknown,
+  opts: { approvalDispatch: boolean },
+): string | null {
+  if (opts.approvalDispatch) return null;
+  if (!["draft_read", "draft_update", "draft_send", "draft_delete"].includes(dispatchName)) return null;
+  const a = args && typeof args === "object" && !Array.isArray(args) ? args as Record<string, unknown> : {};
+  if (a["base_revision"] !== undefined && a["base_revision"] !== null) return null;
+  return typeof a["draft_id"] === "string" && a["draft_id"].length > 0 ? a["draft_id"] : null;
+}
+
+/**
+ * The note for a failed call on a draft the editor deleted, or null when no
+ * `deleted` is recorded for it. Read, never claimed. Never throws.
+ */
+export async function peekCardDeletedNote(
+  store: CardActivityStore | null | undefined,
+  scope: CardActivityScope,
+  target: CardActivityTarget,
+  opts: { nowMs?: number; log?: Logger } = {},
+): Promise<string | null> {
+  const log = opts.log ?? defaultLog;
+  const nowMs = opts.nowMs ?? Date.now();
+  const draftIds = [...new Set(target.draftIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!store || (!target.lineId && draftIds.length === 0)) return null;
+  try {
+    const since = new Date(nowMs - CARD_ACTIVITY_WINDOW_MS).toISOString();
+    const rows = await store.peek(scope, { lineId: target.lineId, draftIds }, since);
+    if (!rows.some((r) => r.action === "deleted")) return null;
+    return cardActivityNote(rows, {});
+  } catch (error) {
+    log("draft_card_activity_peek_failed", { inbox_id: scope.inboxId, error: message(error) });
+    return null;
+  }
+}
+
+/** Append `note` to an error tool result's text, as its own content block. */
+export function appendNoteToErrorResult(result: unknown, note: string): void {
+  if (!result || typeof result !== "object") return;
+  const r = result as { isError?: unknown; content?: unknown };
+  if (r.isError !== true || !Array.isArray(r.content)) return;
+  r.content.push({ type: "text", text: note });
+}
+
+/**
  * What the current call's own result says about its draft: the id it ended
  * on and its subject, for the target and the note's wording. Reads the flat
  * payload and the draft card's `draft` block; null for what neither carries.
@@ -474,7 +545,7 @@ function cardActivityRowFrom(r: Record<string, unknown>): CardActivityRow {
     id: String(r.id),
     draftId: String(r.draft_id),
     lineId: typeof r.line_id === "string" ? r.line_id : null,
-    action: r.action === "sent" ? "sent" : "saved",
+    action: r.action === "sent" || r.action === "deleted" ? r.action : "saved",
     occurredAt: String(r.occurred_at),
     revision: n(r.revision),
     fields: Array.isArray(r.fields)

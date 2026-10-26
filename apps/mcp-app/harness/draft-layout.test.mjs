@@ -483,6 +483,9 @@ async function main() {
     c.press(c.btn(/^Yes, delete$/));
     await settle();
     expectJson("Yes, delete deletes", c.calls.map((x) => [x.name, x.args.action]), [["draft", "delete"]]);
+    // The card's marker, as on Send: the server records the delete for the
+    // model's next call on this draft (card-activity.ts, 2026-10-26).
+    expect("the delete carries base_revision", Number.isInteger(c.calls[0]?.args.base_revision), true);
     await c.done();
   }
 

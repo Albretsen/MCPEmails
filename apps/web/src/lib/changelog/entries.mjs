@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-26',
+    kind: 'fixed',
+    title: 'Sent drafts leave Drafts, and Gmail keeps one Sent copy',
+    body:
+      "A Gmail account connected with an app password now gets one copy of each sent message in Sent, and a draft sent from it is removed from Drafts. Before, Sent held two copies and a sent draft could stay in Drafts. A sent draft is now also dated when it is sent rather than when it was written.",
+  },
+  {
+    date: '2026-10-26',
     kind: 'improved',
     title: 'One-click setup for Claude, Cursor and VS Code',
     body:

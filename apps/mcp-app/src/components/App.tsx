@@ -1617,9 +1617,12 @@ export function App(props: { bridge: HostBridge }) {
                 how: "discarded" | "gone" | "sent_elsewhere",
                 outcome: "discarded" | "sent",
               ) => endedFrom(held, how, outcome, { screen, provider: envelope.provider?.label });
+              // base_revision marks this as the card's Discard, as it marks
+              // its Send, so the server can tell the model the draft was
+              // deleted here (card-activity.ts). Nothing is refused on it.
               const r = await callDraft("discard", "draft", {
                 action: "delete",
-                ...target(),
+                ...writeTarget(),
               });
               if (r.lost) {
                 tellAction("discard", held, r);
