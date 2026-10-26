@@ -343,6 +343,16 @@ export interface NotifyInput {
    * not "is it serving one now".
    */
   keyUsedBefore: boolean;
+  /**
+   * The key belongs to a client that can hold a tool listing it never read on
+   * THIS key: an OpenAI OAuth key (`OAuth: ChatGPT`, `OAuth: chatgpt.com`, ...).
+   * Found 2026-10-26: after a fresh OAuth link ChatGPT sent no `initialize`
+   * and no `tools/list` on the new key and called tools from the listing it
+   * cached under the old one. So for these keys a NULL `notifiedBuild` is a
+   * cache we cannot see, whatever the key's age. Optional so older callers and
+   * fixtures keep the previous rule.
+   */
+  clientReusesListings?: boolean;
 }
 
 /**
@@ -432,10 +442,11 @@ export function decideBuildNotification(input: NotifyInput): NotifyDecision {
     // Nothing recorded. Either the key has never been served a listing (no
     // cache, say nothing), or it was being served listings before this column
     // existed (a cache we are blind to, and the whole cohort the notification
-    // was written for). Both conditions must hold to call it the second.
-    if (!input.keyPredatesBuildTracking || !input.keyUsedBefore) {
-      return { notify: false, record: null };
-    }
+    // was written for). Both conditions must hold to call it the second, unless
+    // the client is known to carry a listing across keys (OpenAI).
+    const blindCache = (input.keyPredatesBuildTracking && input.keyUsedBefore) ||
+      input.clientReusesListings === true;
+    if (!blindCache) return { notify: false, record: null };
     return { notify: true, record: input.currentBuild };
   }
 
