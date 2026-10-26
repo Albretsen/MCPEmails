@@ -61,6 +61,7 @@ import {
   showUsageCapBanner,
 } from '@/lib/usage/allowance-view.mjs';
 import { PassBillingPanel, PassOfferLine } from './PersonalPass';
+import { CheckoutReassurance } from '../CheckoutReassurance';
 import UpgradeIntervalChoice, {
   IntervalToggle,
   SeasonalOfferNote,
@@ -1646,6 +1647,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // number or the column silently means something different per plan.
   const historyDays = planLimits?.historyDays ?? 30;
   const t = useTranslations('dashboard');
+  const { locale: appLocale } = useAppLocale();
   // The cap notice's interval copy and its annual buy label live beside the
   // modal's, in dashboardChrome, so the two surfaces cannot word the same
   // choice differently. They are read inside UpgradeIntervalChoice,
@@ -1941,6 +1943,12 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 />
               ))}
             </div>
+            {/* Only at the Free cap, where the button opens a new
+                subscription. Above it the click is usually an in-place plan
+                change, which the 14-day refund does not cover. */}
+            {(maxInboxes ?? 1) <= 1 && (
+              <CheckoutReassurance locale={appLocale} align="right" style={{ flexBasis: '100%' }} />
+            )}
           </div>
         );
       })()}
@@ -5222,6 +5230,9 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 })}
               </a>
             </div>
+            {/* The action allowance is a Free-plan limit, so this button
+                always opens a new subscription. */}
+            <CheckoutReassurance locale={locale} align="right" style={{ flexBasis: '100%' }} />
             {/* The 3-month pass, below the subscription offer, only once the
                 server says this workspace has been at a cap for 72 hours and
                 is in the pass arm (PersonalPass.jsx, pass-offer.ts). */}
@@ -7080,6 +7091,12 @@ function BillingSection({
               }}>
                 {t('billing.redirectNote')}
               </p>
+            )}
+            {/* Same rule as the redirect note: only a first subscription.
+                A pass holder's Personal starts at the pass end, so the pass
+                panel above says so instead. */}
+            {!isOnPaidPlan && !passState && (
+              <CheckoutReassurance locale={locale} />
             )}
             {/* The 3-month pass, below every subscription option, for a Free
                 workspace the server says has been at a cap for 72 hours. */}

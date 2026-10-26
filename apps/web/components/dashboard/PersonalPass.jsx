@@ -7,6 +7,8 @@ import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { checkoutReassurance } from '@/lib/billing/checkout-reassurance.mjs';
+import { CheckoutReassurance } from '../CheckoutReassurance';
 
 /**
  * The 3-month Personal pass on the dashboard (plan sections 2 and 3; the
@@ -109,6 +111,12 @@ function PassLine({ answer, surface }) {
       <a href={passStartHref({ locale, arm: answer.arm, surface })} style={linkStyle}>
         {t('billing.pass.offerCta', { price: PASS_PRICE })}
       </a>
+      {/* A block-level <p> cannot nest in this one, so the reassurance is
+          its own sentence on the next line. */}
+      <br />
+      <span data-checkout-reassurance="pass" style={{ fontSize: 11.5, color: 'var(--fg-3)' }}>
+        {checkoutReassurance(locale, 'pass')}
+      </span>
     </p>
   );
 }
@@ -170,6 +178,7 @@ export function CheckoutReturnPassCard({ workspaceId, stripePrices, onDismiss })
           </a>
         )}
       </div>
+      <CheckoutReassurance locale={locale} />
       <PassLine answer={answer} surface="checkout_return" />
     </section>
   );
@@ -243,6 +252,13 @@ export function PassBillingPanel({ passState, stripePrices, onSubscribe, busy = 
           </Btn>
         )}
       </div>
+      {/* A pass holder's Personal starts billing at the pass end (Stripe
+          anchors it there), so nothing is charged today, unless the pass
+          ends within the hour and firstCharge is null for both. */}
+      <CheckoutReassurance
+        locale={locale}
+        kind={passState.firstCharge?.month || passState.firstCharge?.year ? 'deferred' : 'subscription'}
+      />
       {passState.monthlyOpensAt && (
         <p data-pass-monthly="later" style={{ ...lineStyle, margin: 0 }}>
           {t('billing.pass.monthlyFrom', { date: passDate(passState.monthlyOpensAt, locale) })}

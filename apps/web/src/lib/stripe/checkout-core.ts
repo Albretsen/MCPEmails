@@ -20,6 +20,7 @@ import {
 } from '@/lib/stripe/tax-switch';
 import { effectiveStripeEnv } from '@/lib/stripe/eur-launch';
 import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
+import { checkoutReassurance } from '@/lib/billing/checkout-reassurance.mjs';
 import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
 import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
@@ -470,13 +471,21 @@ export function checkoutLocale(value: unknown): CheckoutLocale {
 function checkoutCustomText(
   locale: CheckoutLocale,
   appUrl: string,
+  firstChargeLater = false,
 ): Stripe.Checkout.SessionCreateParams.CustomText {
+  // The same line as under every buy button in the product, from the one
+  // module that holds it (lib/billing/checkout-reassurance.mjs). `deferred`
+  // when a pass holder's subscription is anchored to the pass end: nothing is
+  // charged today. It goes SECOND: the first sentence stays the payment
+  // obligation, next to the button (see the call site).
+  const reassurance = checkoutReassurance(locale, firstChargeLater ? 'deferred' : 'subscription');
   if (locale === 'de') {
     return {
       submit: {
         message:
           'Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis in jedem Abrechnungszeitraum zu zahlen, bis Sie kündigen. ' +
-          `Sie können jederzeit in Ihrem Dashboard oder unter [mcpemails.com/de/cancel](${appUrl}/de/cancel) kündigen. ` +
+          `${reassurance} ` +
+          `Kündigen Sie in Ihrem Dashboard oder unter [mcpemails.com/de/cancel](${appUrl}/de/cancel). ` +
           `Verbraucher können innerhalb von 14 Tagen widerrufen: [Widerrufsrecht](${appUrl}/de/withdrawal). ` +
           'Fragen vor dem Kauf: hello@mcpemails.com',
       },
@@ -490,7 +499,8 @@ function checkoutCustomText(
     submit: {
       message:
         'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
-        `Cancel any time from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
+        `${reassurance} ` +
+        `Cancel from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
         `Consumers can withdraw within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
         'Questions before you buy: hello@mcpemails.com',
     },
@@ -1581,7 +1591,7 @@ async function checkoutFor(
       // "Zahlungspflichtig abonnieren". The first sentence of the message
       // states the payment obligation in words next to the button; it does
       // not replace a compliant label.
-      custom_text: checkoutCustomText(locale, appUrl),
+      custom_text: checkoutCustomText(locale, appUrl, passStart !== null),
       // Pass USER context through to the subscription for the webhook handler.
       // The subscription is tied to the user; the webhook resolves the owner
       // from user_id (or the customer) and propagates to all owned workspaces.

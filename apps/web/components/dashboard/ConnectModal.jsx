@@ -14,6 +14,8 @@ import { inboxCapOffer, splitSharedFeatures } from '@/lib/billing/inbox-cap-offe
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
 import FounderPriceNote from './FounderPriceNote';
+import { CheckoutReassurance } from '../CheckoutReassurance';
+import { useAppLocale } from '../i18n/AppLocaleProvider';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
   PlanCheckoutLink,
@@ -654,6 +656,7 @@ export function ConnectModal({
   onboardingClient = null,
 }) {
   const tr = useTranslations('dashboardChrome');
+  const { locale: appLocale } = useAppLocale();
   /**
    * A check this modal should pick up from a previous one (see checkMemory):
    * read once, on mount, and only for an ordinary connect. Seeds the initial
@@ -1067,6 +1070,11 @@ export function ConnectModal({
   // The Business founder price swaps the $39 sentences for founder ones
   // while it is open; every other offer keeps its own keys.
   const capCopy = founderCapCopy(upgradeCopy, stripePrices);
+  // "Charged today. Cancel any time. 14-day refund." only at the Free cap:
+  // there the buy button opens a new subscription. Above it (Personal or Pro
+  // at their cap) the account usually already pays, the click becomes an
+  // in-place plan change, and the 14-day refund does not cover that.
+  const limitIsNewPurchase = (limitMaxInboxes ?? 1) <= 1;
 
   // MONTHLY, deliberately, and it stays monthly unless the person picks
   // otherwise. This panel used to have no interval at all and always bought
@@ -2841,6 +2849,15 @@ export function ConnectModal({
                   offer={annual}
                   value={upgradeInterval}
                   onChange={setUpgradeInterval}
+                />
+              )}
+
+              {/* Said once for the whole panel, just above the footer's buy
+                  button (or under the two plan cards). */}
+              {limitIsNewPurchase && (
+                <CheckoutReassurance
+                  locale={appLocale}
+                  align={upgradeCopy.dual ? 'center' : 'left'}
                 />
               )}
             </div>

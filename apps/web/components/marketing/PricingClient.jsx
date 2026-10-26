@@ -18,6 +18,7 @@ import {
   shouldFetchSeasonalOffers,
 } from '@/lib/billing/seasonal-offer-view.mjs';
 import ProPriceNotice, { useProPriceNoticeVisible } from '../ProPriceNotice';
+import { CheckoutReassurance } from '../CheckoutReassurance';
 import { proPriceNoticeCopy } from '@/lib/stripe/pro-price-notice-copy.mjs';
 import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
 import { useDisplayCurrency } from './useDisplayCurrency';
@@ -453,14 +454,23 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
                  to point at /dashboard/settings?upgrade=, which server-rendered
                  and hydrated the entire dashboard before a client effect could
                  begin checkout. Keep this a plain <a>: a next/link <Link> would
-                 prefetch the checkout route. */
-              <a
-                className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user), locale), locale)}
-                style={{ textAlign: 'center', justifyContent: 'center' }}
-              >
-                {t(`plans.${plan.key}.cta`)}
-              </a>
+                 prefetch the checkout route.
+
+                 The reassurance line sits under the button only, never in the
+                 page title or description (a snippet test owns those). */
+              <>
+                <a
+                  className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                  href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user), locale), locale)}
+                  style={{ textAlign: 'center', justifyContent: 'center' }}
+                >
+                  {t(`plans.${plan.key}.cta`)}
+                </a>
+                {/* A sibling, not a wrapper: the button stays a direct child
+                    of .price. The negative margin pulls it to 8px under the
+                    button inside the card's 18px gap. */}
+                <CheckoutReassurance locale={locale} align="center" style={{ margin: '-10px 0 0' }} />
+              </>
             )}
           </div>
         );

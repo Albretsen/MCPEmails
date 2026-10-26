@@ -13,6 +13,7 @@ import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { CheckoutReassurance } from '../CheckoutReassurance';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { routing } from '@/i18n/routing';
 import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
@@ -1231,13 +1232,27 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
                     offeredPlans note in dashboard/Pages.jsx: Personal is a
                     strict upgrade for that cohort, not a downgrade, so the
                     status line was withholding the only buy link they had. */}
-                <a
-                  className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
-                  href={tier.ctaHref}
-                  onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
-                >
-                  {t(`pricing.tiers.${tier.msgKey}.cta`)}
-                </a>
+                {tier.priceKey === 'free' ? (
+                  <a
+                    className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                    href={tier.ctaHref}
+                    onClick={onGetStarted}
+                  >
+                    {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                  </a>
+                ) : (
+                  <>
+                    <a
+                      className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                      href={tier.ctaHref}
+                    >
+                      {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                    </a>
+                    {/* A sibling of the button inside .price (18px gap),
+                        pulled up to sit 8px under it. */}
+                    <CheckoutReassurance locale={locale} align="center" style={{ margin: '-10px 0 0' }} />
+                  </>
+                )}
               </div>
             );
           })}
