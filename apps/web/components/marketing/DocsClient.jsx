@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Nav, Footer } from './Sections';
+import { Nav, Footer, useSignupHref } from './Sections';
+import { usePreferredClient } from './PreferredClient';
 import { MIcon } from '../MarketingPrimitives';
 import { MODEL_VISIBLE_TOOL_COUNT, APP_ONLY_TOOL_COUNT, LISTED_TOOL_COUNT } from '@/lib/public-facts.mjs';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
@@ -1086,7 +1087,10 @@ function CodeBlock({ code, lang = '' }) {
 
 function ClientTabs() {
   const t = useTranslations('docs');
-  const [tab, setTab] = useState('oauth');
+  // A visitor from Cursor opens on the Cursor tab (src/lib/clients/preferred.mjs).
+  // Claude and ChatGPT visitors connect by OAuth, the default tab.
+  const preferred = usePreferredClient();
+  const [tab, setTab] = useState(preferred === 'cursor' ? 'cursor' : 'oauth');
   const tabKeys = ['oauth', 'claude', 'cursor', 'raw'];
   return (
     <div style={{ marginTop: 16 }}>
@@ -1109,6 +1113,7 @@ function ClientTabs() {
 function QuickstartStep({ step }) {
   const t = useTranslations('docs');
   const locale = useLocale();
+  const signupHref = useSignupHref();
   const base = `quickstart.steps.${step.id}`;
   return (
     <div className="docs-step">
@@ -1122,7 +1127,7 @@ function QuickstartStep({ step }) {
         {step.tabs && <ClientTabs />}
         {step.code && <CodeBlock code={step.code} />}
         {step.cta && (
-          <a className="btn btn-primary" href={withReadingLang(step.cta.href, locale)} style={{ marginTop: 16 }}>
+          <a className="btn btn-primary" href={step.cta.href === '/signup' ? signupHref : withReadingLang(step.cta.href, locale)} style={{ marginTop: 16 }}>
             {t(`${base}.cta`)}
           </a>
         )}
@@ -1229,7 +1234,7 @@ function ToolSection({ tool }) {
 
 export default function DocsClient() {
   const t = useTranslations('docs');
-  const locale = useLocale();
+  const signupHref = useSignupHref();
   return (
     <div>
       <Nav />
@@ -1663,7 +1668,7 @@ export default function DocsClient() {
             {t('cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('cta.primary')}</a>
+            <a className="btn btn-primary btn-lg" href={signupHref}>{t('cta.primary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</Link>
           </div>
         </div>

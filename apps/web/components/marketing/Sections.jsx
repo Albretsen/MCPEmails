@@ -16,6 +16,9 @@ import { SupportHelpLink } from '../support/SupportHelpLink';
 import { CheckoutReassurance } from '../CheckoutReassurance';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { routing } from '@/i18n/routing';
+import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
+import { AI_CLIENT_NAMES, orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
+import { usePreferredClient } from './PreferredClient';
 import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
@@ -23,6 +26,17 @@ const RICH = {
   code: (chunks) => <code className="t-code-inline">{chunks}</code>,
   b: (chunks) => <strong>{chunks}</strong>,
 };
+
+/**
+ * /signup in the page's language, plus `?client=` when the visitor came from
+ * an AI assistant (src/lib/clients/preferred.mjs), so the onboarding chip
+ * starts on it. Without one it is exactly withReadingLang('/signup', locale).
+ */
+export function useSignupHref() {
+  const locale = useLocale();
+  const preferred = usePreferredClient();
+  return withClientIntent(withReadingLang('/signup', locale), signupClientParam(preferred));
+}
 
 /**
  * @param {{ onSignIn?: () => void, onGetStarted?: () => void, user?: { email: string } | null, minimal?: boolean }} props
@@ -52,6 +66,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
   // /signup and /login are not localized by URL: say which language this page
   // was in, so the form and the dashboard after it open in that language.
   const locale = useLocale();
+  const signupHref = useSignupHref();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = 'mobile-nav-menu';
 
@@ -90,7 +105,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
           ) : (
             <>
               <a className="btn btn-ghost" onClick={onSignIn} href={withReadingLang('/login', locale)}>{t('nav.signIn')}</a>
-              <a className="btn btn-primary" onClick={onGetStarted} href={withReadingLang('/signup', locale)}>{t('nav.getStarted')}</a>
+              <a className="btn btn-primary" onClick={onGetStarted} href={signupHref}>{t('nav.getStarted')}</a>
             </>
           )}
         </div>
@@ -128,7 +143,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
             ) : (
               <>
                 <a className="btn btn-ghost" href={withReadingLang('/login', locale)} onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
-                <a className="btn btn-primary" href={withReadingLang('/signup', locale)} onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+                <a className="btn btn-primary" href={signupHref} onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
               </>
             )}
           </div>
@@ -142,7 +157,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
 
 export function HeroTextBlock({ onGetStarted }) {
   const t = useTranslations('home');
-  const locale = useLocale();
+  const signupHref = useSignupHref();
   return (
     <div>
       {/* The kicker is part of the H1 on purpose: it is the one place the page
@@ -156,7 +171,7 @@ export function HeroTextBlock({ onGetStarted }) {
       </h1>
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
-        <MBtn variant="primary" size="lg" icon="arrow" href={withReadingLang('/signup', locale)} onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
+        <MBtn variant="primary" size="lg" icon="arrow" href={signupHref} onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
         <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
@@ -260,8 +275,25 @@ Token:  mcpe_••••`,
 }
 
 /* Variant B: Agent -> MCPEmails -> Provider pipe diagram (canonical, default hero) */
+/**
+ * "Claude · Cursor · VS Code · ChatGPT · any MCP client", with the visitor's
+ * own assistant moved (or added) to the front. The names are product names and
+ * the same in every locale; the translated tail is the last segment of the
+ * message, so the default order renders the message exactly as written.
+ */
+export function agentSubLine(message, preferred) {
+  const parts = message.split(' · ');
+  if (parts.length < 2) return message;
+  const tail = parts.pop();
+  const name = preferred ? AI_CLIENT_NAMES[preferred] : null;
+  if (!name) return message;
+  const names = parts.includes(name) ? orderClients(parts, name) : [name, ...parts];
+  return [...names, tail].join(' · ');
+}
+
 export function HeroPipeDiagram() {
   const t = useTranslations('home');
+  const preferred = usePreferredClient();
   return (
     <div className="pipe-diagram">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -276,7 +308,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node">
           <MIcon name="cpu" size={22} color="var(--fg-2)"/>
           <div className="h">{t('hero.pipe.agent')}</div>
-          <div className="s">{t('hero.pipe.agentSub')}</div>
+          <div className="s">{agentSubLine(t('hero.pipe.agentSub'), preferred)}</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">MCP</span>
@@ -408,11 +440,24 @@ function MarqueeItem({ name, logo, color }) {
   );
 }
 
+/** Perplexity has no tile of its own; a Perplexity visitor gets one in front. */
+const PERPLEXITY_BRAND = { name: 'Perplexity', logo: 'perplexity', color: '#20808D' };
+
+/**
+ * The marquee's brands with the visitor's assistant first (matched on the logo
+ * key: claude, chatgpt, cursor, gemini). Default order without one.
+ */
+export function marqueeBrands(preferred) {
+  if (preferred === 'perplexity') return [PERPLEXITY_BRAND, ...MCP_CLIENT_BRANDS];
+  return orderClients(MCP_CLIENT_BRANDS, preferred, (b) => b.logo);
+}
+
 export function Trusted() {
   const t = useTranslations('home');
+  const brands = marqueeBrands(usePreferredClient());
   // Repeat the list so a single segment always overflows even ultra-wide screens,
   // then duplicate that segment so the track loops seamlessly under translateX(-50%).
-  const segment = [...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS];
+  const segment = [...brands, ...brands, ...brands];
   const loop = [...segment, ...segment];
   return (
     <section className="trusted">
@@ -443,6 +488,12 @@ export function WhatIs() {
   // /best-email-mcp-servers is English only and 404s elsewhere, same as the
   // footer link to it.
   const isEnglish = useLocale() === 'en';
+  // A ChatGPT visitor gets the ChatGPT guide first; everyone else the default.
+  const guides = orderClients([
+    { client: 'claude', href: '/blog/connect-claude-to-email', key: 'guideClaude' },
+    { client: 'chatgpt', href: '/blog/connect-chatgpt-to-email', key: 'guideChatgpt' },
+    { client: 'imap', href: '/blog/claude-imap-connector', key: 'guideImap' },
+  ], usePreferredClient(), (g) => g.client);
   return (
     <section className="whatis" id="email-mcp-server">
       <div className="container">
@@ -464,9 +515,7 @@ export function WhatIs() {
           posts are translated into every locale, so the Link stays in-locale.
         */}
         <p className="whatis-links">
-          <Link href="/blog/connect-claude-to-email">{t('whatIs.guideClaude')}</Link>
-          <Link href="/blog/connect-chatgpt-to-email">{t('whatIs.guideChatgpt')}</Link>
-          <Link href="/blog/claude-imap-connector">{t('whatIs.guideImap')}</Link>
+          {guides.map((g) => <Link key={g.href} href={g.href}>{t(`whatIs.${g.key}`)}</Link>)}
         </p>
       </div>
     </section>
@@ -1148,6 +1197,7 @@ export function Quote() {
 export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
   const t = useTranslations('home');
   const locale = useLocale();
+  const signupHref = useSignupHref();
   const eur = currency === 'eur';
   const money = (text) => (eur ? euroizeAmounts(text, locale) : text);
   // Static, non-translated attributes per tier. `msgKey` indexes the message
@@ -1171,7 +1221,7 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
   // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Business".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
-    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: withReadingLang('/signup', locale) },
+    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: signupHref },
     { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false, locale), locale) },
     { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false, locale), locale) },
     { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false, locale), locale) },
