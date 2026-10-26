@@ -124,7 +124,7 @@ Non. Codex est une surface en terminal : il utilise une clé API limitée dans u
 Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis supprimé. Seul l'identifiant chiffré du fournisseur est conservé. [Pourquoi ne jamais stocker les e-mails compte](/blog/why-email-never-stored-matters) explique le raisonnement.
 
 **Combien cela coûte-t-il ?**
-L'offre gratuite couvre une boîte connectée et 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce plafond mensuel s'applique aux espaces de travail créés à partir du 2026-09-13 ; ceux créés avant en sont exemptés. Les forfaits payants ajoutent des boîtes et suppriment le plafond : voir les [tarifs](/pricing).
+L'offre gratuite couvre une boîte connectée et 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce quota mensuel s'applique aux espaces de travail créés à partir du 2026-09-13 ; ceux créés avant en sont exemptés. Les forfaits payants ajoutent des boîtes et des actions e-mail illimitées : voir les [tarifs](/pricing).
 
 ## Étape suivante
 

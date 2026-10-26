@@ -114,7 +114,7 @@ Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como
 No. El contenido de los mensajes se obtiene en tiempo real de tu proveedor en cada solicitud y se descarta. Solo se conserva la credencial cifrada del proveedor.
 
 **¿Basta una bandeja en el plan gratuito?**
-El plan Gratis conecta 1 bandeja. Personal cuesta $9/mes por 3 bandejas sin límite mensual de acciones, y Pro $15/mes por hasta 10. Consulta los [precios](/pricing).
+El plan Gratis conecta 1 bandeja. Personal cuesta $9/mes por 3 bandejas con acciones de correo ilimitadas, y Pro $15/mes por hasta 10. Consulta los [precios](/pricing).
 
 ## Siguiente paso
 

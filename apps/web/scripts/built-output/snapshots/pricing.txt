@@ -45,7 +45,7 @@ Billed $86.40/year
 Three mailboxes for one person or one small business: work, personal, or your first company addresses.
 Everything in Free
 3 connected inboxes
-No monthly action cap
+Unlimited email actions
 2x higher burst rate limit
 Email support
 Get Personal
@@ -104,9 +104,9 @@ Up to 10 mailboxes
 10 included, then $3 a month each
 Email actions per month
 150 / month, first 3 days uncounted
-No monthly cap, fair use
-No monthly cap, fair use
-No monthly cap, fair use
+Unlimited, fair use
+Unlimited, fair use
+Unlimited, fair use
 API keys
 Unlimited
 Unlimited

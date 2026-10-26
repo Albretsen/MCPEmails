@@ -45,7 +45,7 @@
       "features": [
         "Alles aus Free",
         "3 verbundene Postfächer",
-        "Kein monatliches Aktionslimit",
+        "Unbegrenzte E-Mail-Aktionen",
         "2x höheres Burst-Ratenlimit",
         "E-Mail-Support"
       ]
@@ -164,7 +164,7 @@
       "tenMailboxes": "Bis zu 10 Postfächer",
       "businessMailboxes": "10 inklusive, dann je $3 pro Monat",
       "actionsFree": "150 / Monat, die ersten 3 Tage zählen nicht",
-      "actionsPaid": "Kein Monatslimit, Fair Use",
+      "actionsPaid": "Unbegrenzt, Fair Use",
       "oneInbox": "1 Postfach",
       "threeInboxes": "3 Postfächer",
       "oneSeat": "1 Person",
@@ -184,19 +184,19 @@
     "items": [
       {
         "q": "Was bekomme ich im Free-Tarif?",
-        "a": "Ein verbundenes Postfach, dauerhaft, ohne Kreditkarte, und 150 E-Mail-Aktionen pro Kalendermonat. Die ersten 3 Tage nach der Registrierung zählen nicht, sodass Sie Ihren Agenten einrichten und alles ausprobieren können, bevor gezählt wird. Ihr Agent kann in diesem Postfach lesen, suchen, organisieren, labeln, entwerfen, planen und senden, und die Versandprüfung und Freigabe pro Postfach sind inklusive. Wenn Sie ein zweites oder drittes Postfach oder kein monatliches Aktionslimit möchten, ist das Personal, für $9 pro Monat."
+        "a": "Ein verbundenes Postfach, dauerhaft, ohne Kreditkarte, und 150 E-Mail-Aktionen pro Kalendermonat. Die ersten 3 Tage nach der Registrierung zählen nicht, sodass Sie Ihren Agenten einrichten und alles ausprobieren können, bevor gezählt wird. Ihr Agent kann in diesem Postfach lesen, suchen, organisieren, labeln, entwerfen, planen und senden, und die Versandprüfung und Freigabe pro Postfach sind inklusive. Wenn Sie ein zweites oder drittes Postfach oder unbegrenzte E-Mail-Aktionen möchten, ist das Personal, für $9 pro Monat."
       },
       {
         "q": "Was bietet Personal zusätzlich zu Free?",
-        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles, was Sie täglich nutzen, ist auch in Free enthalten: lesen, suchen, organisieren, entwerfen, senden und Sendungen planen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Die Funktionen, die bei geschlossenem Chat weiterarbeiten, etwa Nachfass-Erinnerungen, Zurückstellen und das Morgen-Briefing, gehören zu Pro."
+        "a": "Zwei weitere verbundene Postfächer, unbegrenzte E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles, was Sie täglich nutzen, ist auch in Free enthalten: lesen, suchen, organisieren, entwerfen, senden und Sendungen planen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Die Funktionen, die bei geschlossenem Chat weiterarbeiten, etwa Nachfass-Erinnerungen, Zurückstellen und das Morgen-Briefing, gehören zu Pro."
       },
       {
         "q": "Was zählt als E-Mail-Aktion?",
-        "a": "Ein Tool-Aufruf an Ihren /mcp-Endpunkt, der ein Postfach berührt: Lesen, Suchen, Verschieben, Entwurf, Senden. Das Auflisten Ihrer Postfächer (inbox_list) und alles, was Sie im Dashboard tun, wird nie gezählt. Wir sind ein Standard-MCP-Server, also funktioniert derselbe Endpunkt mit Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make und jedem MCP-kompatiblen Client. Free enthält 150 E-Mail-Aktionen pro Kalendermonat; Personal, Pro und Business haben kein Monatslimit, vorbehaltlich Fair Use."
+        "a": "Ein Tool-Aufruf an Ihren /mcp-Endpunkt, der ein Postfach berührt: Lesen, Suchen, Verschieben, Entwurf, Senden. Das Auflisten Ihrer Postfächer (inbox_list) und alles, was Sie im Dashboard tun, wird nie gezählt. Wir sind ein Standard-MCP-Server, also funktioniert derselbe Endpunkt mit Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make und jedem MCP-kompatiblen Client. Free enthält 150 E-Mail-Aktionen pro Kalendermonat; Personal, Pro und Business haben unbegrenzte E-Mail-Aktionen, vorbehaltlich Fair Use."
       },
       {
         "q": "Was passiert, wenn ich 150 E-Mail-Aktionen erreicht habe?",
-        "a": "Jede weitere E-Mail-Aktion in diesem Workspace wird bis zum 1. des Folgemonats (UTC) abgelehnt, dann wird das Kontingent zurückgesetzt. Ihr Agent erhält ein klares Tool-Ergebnis mit der Zahl der verbrauchten Aktionen und dem Zeitpunkt des Zurücksetzens, sodass er weiß, dass erneute Versuche nichts bringen. Unbeaufsichtigte Automatisierungen pausieren und laufen am 1. von selbst weiter. Das Dashboard und inbox_list funktionieren weiter, und wir schicken Ihnen bei 80 % und noch einmal bei 100 % eine E-Mail. Personal hebt das Monatslimit für $9 pro Monat auf. Workspaces, die vor dem 2026-09-12 erstellt wurden, gelten als frühe Mitglieder und werden nicht gegen das Kontingent gezählt."
+        "a": "Jede weitere E-Mail-Aktion in diesem Workspace wird bis zum 1. des Folgemonats (UTC) abgelehnt, dann wird das Kontingent zurückgesetzt. Ihr Agent erhält ein klares Tool-Ergebnis mit der Zahl der verbrauchten Aktionen und dem Zeitpunkt des Zurücksetzens, sodass er weiß, dass erneute Versuche nichts bringen. Unbeaufsichtigte Automatisierungen pausieren und laufen am 1. von selbst weiter. Das Dashboard und inbox_list funktionieren weiter, und wir schicken Ihnen bei 80 % und noch einmal bei 100 % eine E-Mail. Mit Personal sind E-Mail-Aktionen für $9 pro Monat unbegrenzt. Workspaces, die vor dem 2026-09-12 erstellt wurden, gelten als frühe Mitglieder und werden nicht gegen das Kontingent gezählt."
       },
       {
         "q": "Werden meine E-Mail-Inhalte irgendwo gespeichert?",

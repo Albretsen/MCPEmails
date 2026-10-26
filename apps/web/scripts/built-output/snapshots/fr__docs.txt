@@ -1238,7 +1238,7 @@ L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, messag
 Non
 isError: true
 Tool result
-L'espace de travail a épuisé son allocation mensuelle d'actions e-mail : 150 par mois civil sur Free, les 3 premiers jours après l'inscription n'étant pas comptés ; Personal, Pro et Business n'ont aucun plafond mensuel, sous réserve d'un usage équitable. Renvoyé comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC. content[0].text commence par le décompte et la date de remise à zéro (le 1er du mois suivant, UTC), et _meta["com.mcpemails/usage_limit"] porte error_code « usage_limit_reached » et reset_at. inbox_list continue de fonctionner. Réessayer ne peut pas réussir avant reset_at.
+L'espace de travail a épuisé son allocation mensuelle d'actions e-mail : 150 par mois civil sur Free, les 3 premiers jours après l'inscription n'étant pas comptés ; Personal, Pro et Business offrent des actions e-mail illimitées, sous réserve d'un usage équitable. Renvoyé comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC. content[0].text commence par le décompte et la date de remise à zéro (le 1er du mois suivant, UTC), et _meta["com.mcpemails/usage_limit"] porte error_code « usage_limit_reached » et reset_at. inbox_list continue de fonctionner. Réessayer ne peut pas réussir avant reset_at.
 Non
 Exemples de réponses d'erreur
 json
@@ -1325,10 +1325,10 @@ et un compte à rebours
 data.retry_after
 (secondes). Personal, Pro et Business relèvent le plafond.
 Allocation mensuelle
-Free 150 actions e-mail / mois · Personal, Pro et Business sans plafond mensuel
+Free 150 actions e-mail / mois · Personal, Pro et Business illimités
 Un espace de travail Free dispose de 150 actions e-mail par mois civil (UTC). Rien n'est compté pendant les 3 premiers jours après l'inscription, et
 inbox_list
-ainsi que le tableau de bord ne sont jamais comptés. Personal, Pro et Business n'ont aucun plafond mensuel, sous réserve d'un usage équitable. Atteindre l'allocation n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant
+ainsi que le tableau de bord ne sont jamais comptés. Personal, Pro et Business offrent des actions e-mail illimitées, sous réserve d'un usage équitable. Atteindre l'allocation n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant
 isError: true
 . Le texte de
 content[0].text

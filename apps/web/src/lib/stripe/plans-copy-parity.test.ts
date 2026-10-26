@@ -63,7 +63,7 @@ test('every locale states the allowance on the pricing page, with the same two n
 });
 
 test('no paid comparison value answers the actions row with a number', () => {
-  // A paid ceiling is a silent abuse guard. "No monthly cap, fair use" is the
+  // A paid ceiling is a silent abuse guard. "Unlimited, fair use" is the
   // only answer a paid tier may give in that row; a figure there would sell a
   // limit and invite a customer to price-compare against it.
   const copy = readPricingCopy();
