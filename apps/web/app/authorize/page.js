@@ -10,7 +10,11 @@ import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 import { describeClientIdentity } from '@/lib/oauth/client-identity';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
-import { identifyStepUpLimitedClient } from '@/lib/oauth/consent-presets';
+import { identifyClaudeAiClient, identifyStepUpLimitedClient } from '@/lib/oauth/consent-presets';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { getOnboardingVariant, ENROLL_WINDOW_MS } from '@/lib/onboarding/variant';
+import { chipClientFromUrl } from '@/lib/onboarding/clients.mjs';
+import { isYoungWorkspace, recordAuthorizeFunnelOnce, SIGNUP_ENTRY_PARAM, SIGNUP_ENTRY_VALUE } from '@/lib/onboarding/authorize-funnel';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isScopeLimitedRole, lookupWorkspaceRole, scopesAllowedForRole } from '@/lib/oauth/grant-role';
@@ -25,6 +29,22 @@ export const metadata = {
   title: 'Authorize',
   description: 'Authorize an agent to access your inboxes',
 };
+
+/** The OAuth request parameters the consent screen is rebuilt from. */
+const OAUTH_PARAMS = ['client_id', 'redirect_uri', 'scope', 'state', 'code_challenge', 'code_challenge_method', 'resource'];
+
+/**
+ * `/authorize?<the OAuth request>` plus `extra`, as ONE same-origin path: the
+ * value every detour (signup, sign-in, a Microsoft mailbox sign-in) returns to.
+ */
+function authorizeReturnPath(params, extra = {}) {
+  const qs = new URLSearchParams();
+  OAUTH_PARAMS.forEach((k) => {
+    if (typeof params[k] === 'string' && params[k]) qs.set(k, params[k]);
+  });
+  for (const [k, v] of Object.entries(extra)) if (v) qs.set(k, v);
+  return `/authorize?${qs.toString()}`;
+}
 
 const VALID_SCOPES = new Set([
   'read:email',
@@ -259,18 +279,22 @@ export default async function AuthorizePage({ searchParams }) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    const qs = new URLSearchParams();
-    ['client_id','redirect_uri','scope','state','code_challenge','code_challenge_method','resource'].forEach(k => {
-      if (params[k]) qs.set(k, params[k]);
-    });
     // Encode the whole return path as ONE value. Without this, the nested query
-    // string (redirect_uri, scope, state, code_challenge…) leaks into /login's
+    // string (redirect_uri, scope, state, code_challenge…) leaks into /signup's
     // own params and `redirect` truncates at the first `&`, so the user returns
     // to /authorize missing code_challenge etc. and the OAuth flow dies with a
     // "Missing code_challenge" error. This is the common path for a logged-out
-    // user connecting a client (Cursor/VS Code/Glama) before they have a session.
-    const returnTo = `/authorize?${qs.toString()}`;
-    redirect(`/login?redirect=${encodeURIComponent(returnTo)}`);
+    // user connecting a client (Claude/ChatGPT/Cursor/VS Code) before they have
+    // a session.
+    //
+    // /signup, not /login (2026-10-26): 103 of 107 connector-first users had
+    // no account yet. The signup page leads with Google, carries `redirect`
+    // through Google, Microsoft, GitHub and email signup, and links "Have an
+    // account? Sign in" to /login with the same redirect. The marker lets the
+    // consent screen count a new account that came back this way
+    // (authorize_signup_redirect).
+    const returnTo = authorizeReturnPath(params, { [SIGNUP_ENTRY_PARAM]: SIGNUP_ENTRY_VALUE });
+    redirect(`/signup?redirect=${encodeURIComponent(returnTo)}`);
   }
 
   // ── 7. Fetch the active workspace and its inboxes ─────────────────────────
@@ -279,7 +303,7 @@ export default async function AuthorizePage({ searchParams }) {
   const { data: workspace } = activeWorkspaceId
     ? await supabase
         .from('workspaces')
-        .select('id, display_name, slug')
+        .select('id, display_name, slug, owner_id, created_at')
         .eq('id', activeWorkspaceId)
         .is('deleted_at', null)
         .maybeSingle()
@@ -325,6 +349,45 @@ export default async function AuthorizePage({ searchParams }) {
       userEmail: user.email ?? null,
       redirectUri: resolvedRedirectUri,
     }));
+  }
+
+  // ── 7d. Connector-first: inbox step inside consent, Standard default ───────
+  //    A consent that is connector-first (no mailbox yet, or a workspace under
+  //    a day old, which covers the return from connecting one) on claude.ai
+  //    opens on Standard (owner decision F3, every user). A workspace in the
+  //    new onboarding flow (v1: internal accounts) with no mailbox first sees
+  //    the inbox step, then this permissions card; a viewer cannot connect a
+  //    mailbox, so never. Everyone else keeps today's screen.
+  const youngWorkspace = isYoungWorkspace(workspace?.created_at, ENROLL_WINDOW_MS);
+  const connectorFirst = Boolean(workspace) && (inboxes.length === 0 || youngWorkspace);
+  const preferStandard = connectorFirst && identifyClaudeAiClient(resolvedRedirectUri);
+  const chipClient = chipClientFromUrl(resolvedRedirectUri);
+
+  let inboxStepFlow = false;
+  if (workspace && !roleLimited && (inboxes.length === 0 || params.connected === 'outlook')) {
+    try {
+      const variant = await getOnboardingVariant(workspace.id, {
+        ownerEmail: workspace.owner_id === user.id ? (user.email ?? null) : null,
+        workspaceCreatedAt: workspace.created_at ?? null,
+      });
+      inboxStepFlow = variant.flow === 'new';
+    } catch (error) {
+      console.error('[authorize] onboarding variant failed', error instanceof Error ? error.message : String(error));
+    }
+  }
+  const showInboxStep = inboxStepFlow && inboxes.length === 0;
+
+  if (workspace) {
+    const workspaceId = workspace.id;
+    const db = () => createServiceRoleClient();
+    // A new account made through the /signup redirect, back on consent.
+    if (params[SIGNUP_ENTRY_PARAM] === SIGNUP_ENTRY_VALUE && youngWorkspace && workspace.owner_id === user.id) {
+      after(() => recordAuthorizeFunnelOnce(db(), { workspaceId, stage: 'authorize_signup_redirect', client: chipClient }));
+    }
+    // Back from a Microsoft mailbox sign-in started on the inbox step.
+    if (inboxStepFlow && params.connected === 'outlook' && inboxes.length > 0) {
+      after(() => recordAuthorizeFunnelOnce(db(), { workspaceId, stage: 'authorize_inbox_connected', client: chipClient }));
+    }
   }
 
   // ── 8. Store state nonce server-side ──────────────────────────────────────
@@ -412,6 +475,14 @@ export default async function AuthorizePage({ searchParams }) {
       resource={resource}
       csrfToken={csrfToken}
       preApproved={preApproved}
+      preferStandard={preferStandard}
+      inboxStep={showInboxStep ? {
+        client: chipClient,
+        userEmail: user.email ?? '',
+        // Where a Microsoft sign-in started on the step comes back to.
+        returnTo: authorizeReturnPath(params),
+      } : null}
+      connectedOnStep={inboxStepFlow && params.connected === 'outlook' && inboxes.length > 0}
     />
   );
 }

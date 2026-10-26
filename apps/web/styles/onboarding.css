@@ -179,3 +179,20 @@
 .onb-callout-error { border-color: var(--red-100); }
 .onb-callout-body { margin: 0; color: var(--fg-2); }
 .onb-callout .onb-actions { margin-top: 12px; }
+
+
+/* "Connected. Go back to Claude and ask again." (ChatReturnPanel) */
+.onb-chat-prompt {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  font-size: 14px;
+  line-height: 1.5;
+  user-select: all;
+}
+
+/* The inbox step inside the OAuth consent card (components/auth/AuthorizeInboxStep.jsx). */
+.az-onb { margin-top: 4px; }
+.az-onb .onb-title { font-size: 20px; }

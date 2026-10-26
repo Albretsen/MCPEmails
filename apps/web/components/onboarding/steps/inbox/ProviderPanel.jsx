@@ -14,7 +14,7 @@ import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
  * funnelProvider, onDifferentInbox, outlookError (code from the Microsoft
  * return, or null).
  */
-export function ProviderPanel({ kind, label, email, settings, funnelProvider, onDifferentInbox, outlookError = null }) {
+export function ProviderPanel({ kind, label, email, settings, funnelProvider, onDifferentInbox, outlookError = null, returnTo = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const links = panelLinks(kind, email, settings);
   const provider = label || t(`kinds.${kind}`);
@@ -83,7 +83,7 @@ export function ProviderPanel({ kind, label, email, settings, funnelProvider, on
   }
 
   if (kind === 'outlook' || kind === 'microsoft365') {
-    return <MicrosoftPanel kind={kind} funnelProvider={funnelProvider} outlookError={outlookError} />;
+    return <MicrosoftPanel kind={kind} funnelProvider={funnelProvider} outlookError={outlookError} returnTo={returnTo} />;
   }
 
   if (kind === 'proton') {
@@ -111,7 +111,7 @@ export function ProviderPanel({ kind, label, email, settings, funnelProvider, on
   );
 }
 
-function MicrosoftPanel({ kind, funnelProvider, outlookError }) {
+function MicrosoftPanel({ kind, funnelProvider, outlookError, returnTo = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const [admin, setAdmin] = useState({ state: 'idle', url: '' });
   const [copied, setCopied] = useState(false);
@@ -141,9 +141,13 @@ function MicrosoftPanel({ kind, funnelProvider, outlookError }) {
 
   const connect = () => {
     // A whole-document navigation: /auth/outlook answers with a redirect to
-    // Microsoft. `from=onboarding` brings the user back to this flow.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = '/auth/outlook?from=onboarding';
+    // Microsoft. `from=onboarding` brings the user back to this flow;
+    // `return_to` (the OAuth consent screen's inbox step) back to that exact
+    // /authorize URL (lib/onboarding/outlook-return.ts).
+    const start = returnTo
+      ? `/auth/outlook?from=onboarding&return_to=${encodeURIComponent(returnTo)}`
+      : '/auth/outlook?from=onboarding';
+    window.location.href = start;
   };
 
   return (

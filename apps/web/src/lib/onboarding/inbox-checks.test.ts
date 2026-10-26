@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { appPasswordFormatWarning, passwordForSubmit, takesAppPassword } from './app-password-format.ts';
 import { describeConnectFailure, failureCodeOf } from './connect-failure.ts';
 import { buildConnectHelpTicket } from './connect-help.ts';
-import { onboardingReturnLocation } from './outlook-return.ts';
+import { onboardingReturnCookieValue, onboardingReturnLocation, onboardingReturnTarget } from './outlook-return.ts';
 import { decodeMimeWords } from '../email/mime-words.ts';
 import { parseStatusResponse } from '../email/imap.ts';
 import { mxBaseDomain, isMicrosoft365Mx } from '../email-providers/autodiscover.ts';
@@ -103,6 +103,28 @@ test('Outlook return: dashboard redirects become onboarding ones', () => {
   assert.equal(onboardingReturnLocation('https://evil.example/dashboard?connected=outlook', app), null);
   assert.equal(onboardingReturnLocation(`${app}/dashboard?error=%3Cscript%3E`, app), null);
   assert.equal(onboardingReturnLocation(null, app), null);
+});
+
+test('Outlook return: a consent-screen start goes back to the same /authorize URL', () => {
+  const app = 'https://mcpemails.com';
+  const consent = '/authorize?client_id=https%3A%2F%2Fclaude.ai%2Fx&state=s&code_challenge=c';
+  const cookie = onboardingReturnCookieValue(consent);
+  assert.equal(onboardingReturnTarget(cookie), consent);
+  assert.equal(
+    onboardingReturnLocation(`${app}/dashboard?connected=outlook`, app, onboardingReturnTarget(cookie)),
+    `${app}/authorize?client_id=https%3A%2F%2Fclaude.ai%2Fx&state=s&code_challenge=c&connected=outlook`,
+  );
+  assert.equal(
+    onboardingReturnLocation(`${app}/dashboard?error=outlook_cancelled`, app, onboardingReturnTarget(cookie)),
+    `${app}/authorize?client_id=https%3A%2F%2Fclaude.ai%2Fx&state=s&code_challenge=c&outlook_error=outlook_cancelled`,
+  );
+  // Anything but an /authorize path is ignored: plain onboarding return.
+  for (const bad of ['https://evil.example/authorize?x=1', '//evil.example/authorize?x', '/dashboard?x=1', '/authorizex?y', null, 'x'.repeat(4000)]) {
+    assert.equal(onboardingReturnCookieValue(bad), '1', String(bad).slice(0, 40));
+  }
+  assert.equal(onboardingReturnTarget('1'), '/onboarding');
+  assert.equal(onboardingReturnTarget('a:%2F%2Fevil.example%2Fauthorize%3Fx'), '/onboarding');
+  assert.equal(onboardingReturnTarget('a:%E0%A4%A'), '/onboarding');
 });
 
 test('RFC 2047 subjects are decoded for the proof card', () => {

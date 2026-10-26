@@ -144,6 +144,8 @@
     "test:install-links": "node --test src/lib/clients/install-links.test.mjs scripts/client-docs-drift.test.mjs",
     "test:onboarding-connect": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/connect-steps.test.ts",
     "test:onboarding-connect-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/connect-steps-ui.test.mjs",
+    "test:connector-first": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/onboarding/chat-connect-link.test.ts src/lib/onboarding/chat-return.test.mjs app/api/onboarding/authorize-event/route.test.ts",
+    "test:authorize-connector-first-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/authorize-connector-first-ui.test.mjs",
     "test:onboarding-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/onboarding-ui.test.mjs",
     "test:onboarding-routes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/onboarding/onboarding-routes.test.ts",
     "test:onboarding-inbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/inbox-detect.test.ts src/lib/onboarding/inbox-checks.test.ts",

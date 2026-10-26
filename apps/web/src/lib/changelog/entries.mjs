@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-26',
+    kind: 'improved',
+    title: 'Smoother start when you add MCPEmails from Claude or ChatGPT',
+    body:
+      'Adding MCPEmails from your AI app now opens account creation, with Google first, and Claude starts with read, draft and send access so your first draft needs no second approval. If no mailbox is connected yet, the AI names your likely provider and gives you a link that opens straight on connecting it, then sends you back to the chat.',
+  },
+  {
     // Date must be the day this lands on main.
     date: '2026-10-26',
     kind: 'fixed',

@@ -8,6 +8,7 @@ import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/
 import { loadOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding/status';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
 import { isOnboardingStep } from '@/lib/onboarding/flow';
+import { verifyChatConnectLink } from '@/lib/onboarding/chat-connect-link';
 import {
   CLIENT_INTENT_PARAM,
   CONNECT_INTENT_PARAM,
@@ -36,7 +37,10 @@ function one(value: string | string[] | undefined): string | null {
  * streams into the step body (OnboardingApp's Suspense boundary).
  *
  * Query params: ?client= (chip start, see clients.mjs), ?provider= (a
- * /connect/<slug> hint for the inbox step), ?step= (jump to a step, for QA).
+ * /connect/<slug> hint for the inbox step), ?step= (jump to a step, for QA),
+ * and a signed chat connect link (?from=chat&exp=&sig=, from the MCP server's
+ * no-inbox answer): only the inbox step, then "Go back to <client> and ask
+ * again" (src/lib/onboarding/chat-connect-link.ts).
  */
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -86,6 +90,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   });
 
   const requestedStep = one(params.step);
+  const chatReturn = verifyChatConnectLink(params, workspaceId);
   return (
     <OnboardingApp
       variant={clientOnboardingVariant(variant)}
@@ -95,6 +100,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       userEmail={user.email ?? ''}
       statusPromise={statusPromise}
       requestedStep={isOnboardingStep(requestedStep) ? requestedStep : null}
+      chatReturn={chatReturn}
     />
   );
 }
