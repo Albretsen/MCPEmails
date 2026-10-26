@@ -10,6 +10,7 @@ import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
+import { ONBOARDING_RETURN_COOKIE, onboardingReturnLocation } from '@/lib/onboarding/outlook-return';
 import {
   ADMIN_CONSENT_STATE_COOKIE,
   adminConsentCallbackRedirect,
@@ -171,7 +172,23 @@ async function handleAdminConsent(request: NextRequest, searchParams: URLSearchP
   );
 }
 
+/**
+ * A sign-in started on /onboarding (cookie set by /auth/outlook?from=onboarding)
+ * returns there instead of to the dashboard. See lib/onboarding/outlook-return.ts.
+ */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const response = await handleCallback(request);
+  if (!request.cookies.get(ONBOARDING_RETURN_COOKIE)?.value) return response;
+  const target = onboardingReturnLocation(response.headers.get('location'), process.env.NEXT_PUBLIC_APP_URL!);
+  if (!target) return response;
+  const redirect = NextResponse.redirect(target);
+  for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+  redirect.cookies.set(ONBOARDING_RETURN_COOKIE, '', { path: '/auth/outlook', maxAge: 0 });
+  redirect.headers.set('Cache-Control', 'no-store');
+  return redirect;
+}
+
+async function handleCallback(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
 
   // 0. Tenant admin consent shares this redirect URI; route it away first so

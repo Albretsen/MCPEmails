@@ -23,13 +23,20 @@ import { ONBOARDING_CLIENTS } from '@/lib/onboarding/state';
  *   install_link_clicked      a one-click install button (Add to Claude, Add to
  *                             Cursor, Install in VS Code; lib/clients/install-links.mjs)
  *                             was clicked. category = client.
+ *   app_password_link_clicked an external "turn on 2-Step Verification" / "create
+ *                             an app password" link in the onboarding inbox step
+ *                             was opened, BEFORE any failure. category =
+ *                             provider; entry_point = which link
+ *                             (APP_PASSWORD_LINKS). Tells "never went to Google"
+ *                             apart from "went and got stuck".
  *
  * Every row is outcome 'success' with no error_category. The workspace always
  * comes from the session, never from the request body.
  *
  * Keep the stage list in step with the CHECK in
  * supabase/migrations/20261024233717_activation_rescue_stages.sql and
- * 20261026203517_install_link_clicked_stage.sql.
+ * 20261026203517_install_link_clicked_stage.sql and
+ * 20261026214313_app_password_link_clicked.sql.
  */
 export const ACTIVATION_EVENT_STAGES = [
   'connect_fix_shown',
@@ -37,12 +44,15 @@ export const ACTIVATION_EVENT_STAGES = [
   'first_call_prompt_copied',
   'waiting_state_shown',
   'install_link_clicked',
+  'app_password_link_clicked',
 ] as const;
 export type ActivationEventStage = (typeof ACTIVATION_EVENT_STAGES)[number];
 
 /** Providers a connect can be filed under (same list as onboarding provider_selected). */
 export const ACTIVATION_PROVIDERS = [
   'gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'generic_imap', 'unknown',
+  // The onboarding inbox step's own panels (20261026214313).
+  'aol', 'gmx', 'web_de',
 ] as const;
 export type ActivationProvider = (typeof ACTIVATION_PROVIDERS)[number];
 
@@ -52,13 +62,24 @@ export const ACTIVATION_AUTH_REASONS = [
   'provider_refused_signin', 'login_username_required', 'password_rejected',
 ] as const satisfies readonly AuthFailureReason[];
 
-const PROVIDER_STAGES = new Set<ActivationEventStage>(['connect_fix_shown', 'connect_fix_link_clicked']);
+const PROVIDER_STAGES = new Set<ActivationEventStage>(['connect_fix_shown', 'connect_fix_link_clicked', 'app_password_link_clicked']);
+
+/**
+ * Which external link an `app_password_link_clicked` row is about, stored in
+ * product_funnel_events.entry_point (20261026214313).
+ */
+export const APP_PASSWORD_LINKS = [
+  'two_step', 'app_passwords', 'imap_setting', 'account_security', 'admin_consent',
+] as const;
+export type AppPasswordLink = (typeof APP_PASSWORD_LINKS)[number];
 
 export type ActivationEvent = {
   stage: ActivationEventStage;
   category: ProductFunnelEvent['category'];
   authReason: AuthFailureReason | null;
   phase: string | null;
+  /** app_password_link_clicked only. */
+  link?: AppPasswordLink | null;
 };
 
 function member<T extends string>(list: readonly T[], value: unknown): T | null {
@@ -82,6 +103,11 @@ export function parseActivationEvent(body: unknown): ActivationEvent | null {
   if (PROVIDER_STAGES.has(stage)) {
     const provider = member(ACTIVATION_PROVIDERS, input.provider);
     if (!provider) return null;
+    if (stage === 'app_password_link_clicked') {
+      const link = member(APP_PASSWORD_LINKS, input.link);
+      if (!link) return null;
+      return { stage, category: provider, authReason: null, phase: null, link };
+    }
     return {
       stage,
       category: provider,
@@ -110,6 +136,7 @@ export const ACTIVATION_DEDUPE_WINDOW_MS: Record<ActivationEventStage, number> =
   first_call_prompt_copied: 2 * MINUTE,
   waiting_state_shown: DAY,
   install_link_clicked: 2 * MINUTE,
+  app_password_link_clicked: 2 * MINUTE,
 };
 
 /** Hard ceiling per workspace per stage per rolling day, whatever the browser sends. */
@@ -140,6 +167,8 @@ export async function recordActivationEvent(
   if (event.stage === 'connect_fix_shown') {
     dedupe = event.authReason ? dedupe.eq('auth_reason', event.authReason) : dedupe.is('auth_reason', null);
   }
+  // Two different links are two different steps, not a double click.
+  if (event.stage === 'app_password_link_clicked' && event.link) dedupe = dedupe.eq('entry_point', event.link);
   const { data: recent, error: dedupeError } = await dedupe.limit(1).maybeSingle();
   if (dedupeError) {
     console.error('[activation-events] dedupe lookup failed', { stage: event.stage, error: dedupeError.message });
@@ -167,6 +196,7 @@ export async function recordActivationEvent(
     category: event.category,
     authReason: event.authReason,
     phase: event.phase ?? undefined,
+    entryPoint: event.link ?? null,
   });
   return 'recorded';
 }

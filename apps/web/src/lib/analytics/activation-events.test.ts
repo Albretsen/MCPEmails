@@ -48,10 +48,11 @@ function fakeDb({ recent = null as unknown, count = 0, lookupError = null as nul
   return { db: db as never, inserts, dedupeLookups, countLookups };
 }
 
-test('only the five activation stages are accepted', () => {
+test('only the activation stages are accepted', () => {
   assert.deepEqual([...ACTIVATION_EVENT_STAGES], [
     'connect_fix_shown', 'connect_fix_link_clicked', 'first_call_prompt_copied', 'waiting_state_shown',
     'install_link_clicked',
+    'app_password_link_clicked',
   ]);
   assert.deepEqual(parseActivationEvent({ stage: 'install_link_clicked', client: 'cursor' }), {
     stage: 'install_link_clicked', category: 'cursor', authReason: null, phase: null,
@@ -63,6 +64,21 @@ test('only the five activation stages are accepted', () => {
   for (const junk of [null, undefined, 'connect_fix_shown', 42, []]) {
     assert.equal(parseActivationEvent(junk), null);
   }
+});
+
+test('app_password_link_clicked needs a known provider and a known link, stored as entry_point', async () => {
+  assert.deepEqual(
+    parseActivationEvent({ stage: 'app_password_link_clicked', provider: 'gmx', link: 'imap_setting', auth_reason: 'account_password_used' }),
+    { stage: 'app_password_link_clicked', category: 'gmx', authReason: null, phase: null, link: 'imap_setting' },
+  );
+  assert.equal(parseActivationEvent({ stage: 'app_password_link_clicked', provider: 'gmail' }), null, 'link required');
+  assert.equal(parseActivationEvent({ stage: 'app_password_link_clicked', provider: 'gmail', link: 'https://evil' }), null);
+  assert.equal(parseActivationEvent({ stage: 'app_password_link_clicked', provider: 'hotmail', link: 'two_step' }), null);
+
+  const { db, inserts, dedupeLookups } = fakeDb();
+  await recordActivationEvent(db, 'ws-1', { stage: 'app_password_link_clicked', category: 'gmail', authReason: null, phase: null, link: 'two_step' });
+  assert.equal(inserts[0]?.entry_point, 'two_step');
+  assert.ok(dedupeLookups[0].some(([op, col, v]) => op === 'eq' && col === 'entry_point' && v === 'two_step'), 'deduped per link');
 });
 
 test('connect_fix_* need a known provider and keep only known reason and phase', () => {

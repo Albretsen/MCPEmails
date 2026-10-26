@@ -24,6 +24,8 @@ export type ActivationEventFields = {
   authReason?: AuthFailureReason | null;
   /** connect_fix_* only: coarse protocol phase, e.g. 'authentication'. */
   phase?: string | null;
+  /** app_password_link_clicked only: which link (APP_PASSWORD_LINKS). */
+  link?: string | null;
 };
 
 export function recordActivationEvent(stage: ActivationEventStage, fields: ActivationEventFields = {}): void {
@@ -38,6 +40,7 @@ export function recordActivationEvent(stage: ActivationEventStage, fields: Activ
         client: fields.client,
         auth_reason: fields.authReason ?? undefined,
         phase: fields.phase ?? undefined,
+        link: fields.link ?? undefined,
       }),
     }).catch(() => {
       // Analytics is never worth a console error in a user's browser.

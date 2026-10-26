@@ -120,6 +120,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/internal/referrals/dispatch/route.ts': 60,
   'app/api/internal/pass-expiry/route.ts': 60,
   'app/api/internal/site-feed/dispatch/route.ts': 60,
+  'app/api/onboarding/inbox-proof/route.ts': 30, // one IMAP session, capped at 15 s in the handler
   'app/api/stripe/webhook/route.ts': 30,
   'app/api/webhooks/resend/route.ts': 30,
   'app/auth/callback/route.ts': 15,
@@ -245,6 +246,13 @@ export const ROUTES = [
   ['app/api/oauth/revoke/route.ts', 'arn1', '1-2', '-'],
   ['app/api/oauth/token/route.ts', 'arn1', '9 (refresh 6)', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/userinfo/route.ts', 'arn1', '2', '-'],
+  // "Send this error to support" from the onboarding inbox step: the ticket
+  // path of app/api/support/tickets, so the same region.
+  ['app/api/onboarding/connect-help/route.ts', 'arn1', '4-8', 'Resend x2'],
+  // Onboarding provider detection: the same lookups as inboxes/autodiscover.
+  ['app/api/onboarding/detect/route.ts', 'arn1', '1', 'DNS MX/SRV + autoconfig.thunderbird.net (fixed origin)'],
+  // The onboarding proof card logs in to the mail host like inboxes/[id]/check.
+  ['app/api/onboarding/inbox-proof/route.ts', 'iad1', '4', 'IMAP login + STATUS/SEARCH/FETCH to the mail host'],
   ['app/api/onboarding/first-week/route.ts', 'arn1', '4-7 (GET; most owners stop at 4)', '-'],
   ['app/api/onboarding/route.ts', 'arn1', '4', '-'],
   ['app/api/onboarding/status/route.ts', 'arn1', '2 (auth, then 5 parallel reads)', '-'],

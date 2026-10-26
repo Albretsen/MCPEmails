@@ -17,7 +17,179 @@
       "title": "Hvilken innboks skal AI-en din bruke?",
       "reuseTitle": "En innboks er allerede koblet til",
       "reuse": "Bruk {address}",
-      "connectAnother": "Koble til en annen innboks"
+      "connectAnother": "Koble til en annen innboks",
+      "lead": "Skriv inn adressen du vil at AI-en skal lese og svare fra. Vi viser stegene for leverandøren din.",
+      "emailLabel": "E-postadresse",
+      "useSignup": "Bruk {address}",
+      "detecting": "Finner leverandøren din",
+      "detected": "Leverandør: {provider}",
+      "notRight": "Feil? Velg leverandør",
+      "chooseLead": "Vi fant ikke leverandøren ut fra adressen. Velg en:",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Annen (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Slå på totrinnsbekreftelse.",
+        "step1Body": "Allerede på? Hopp over dette.",
+        "step1Link": "Åpne totrinnsbekreftelse",
+        "step2Title": "Lag et app-passord.",
+        "step2Body": "Skriv MCPEmails som navn og trykk Opprett. Google viser de 16 bokstavene bare én gang, så kopier dem før du lukker siden.",
+        "step2Link": "Lag app-passord",
+        "step3Title": "Lim det inn nedenfor.",
+        "missingTitle": "Finner du ikke siden for app-passord?",
+        "missingBody": "Det er én av tre ting: totrinnsbekreftelse er av (steg 1), en administrator på jobb eller skole har slått av app-passord, eller kontoen bruker Avansert beskyttelse eller bare sikkerhetsnøkler.",
+        "workspace": "Denne kontoen styres av bedriften din. Hvis steg 2 sier at innstillingen ikke er tilgjengelig, må administratoren tillate totrinnsbekreftelse og app-passord."
+      },
+      "icloud": {
+        "step1Title": "Åpne Apple-kontoen din.",
+        "step1Link": "Åpne account.apple.com",
+        "step2Title": "Velg Pålogging og sikkerhet, og deretter Appspesifikke passord.",
+        "step2Body": "Lag et nytt og kall det MCPEmails.",
+        "step3Title": "Lim det inn nedenfor.",
+        "step3Body": "Apple viser det bare én gang, som xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Mangler valget?",
+        "missingBody": "Tofaktorautentisering må være på. Har du nylig tilbakestilt passordet til Apple-kontoen, sluttet eldre appspesifikke passord å virke, så lag et nytt."
+      },
+      "yahoo": {
+        "step1Title": "Åpne kontosikkerhet hos {provider}.",
+        "step1Link": "Lag app-passord",
+        "step2Title": "Under Eksterne tilkoblinger velger du Lag app-passord.",
+        "step2Body": "Skriv MCPEmails og trykk Generer passord.",
+        "step3Title": "Lim inn de 16 bokstavene nedenfor.",
+        "missingTitle": "Ikke der, eller står det at det ikke er tilgjengelig nå?",
+        "missingBody": "Slå på totrinnsbekreftelse og last inn siden på nytt. Nye kontoer kan måtte vente opptil to uker. Bruk en nettleser du vanligvis logger inn med, ikke et privat vindu."
+      },
+      "gmx": {
+        "step1Title": "Slå på IMAP hos {provider}.",
+        "step1Body": "I nettposten åpner du E-Mail-Einstellungen, så POP3/IMAP, og slår på POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang).",
+        "step1Link": "Slik slår du på IMAP",
+        "step2Title": "Tofaktorautentisering på?",
+        "step2Body": "Lag et programspesifikt passord under Sicherheit (sikkerhet). Det vises bare én gang. Er tofaktorautentisering av, bruker du det vanlige {provider}-passordet ditt.",
+        "step3Title": "Lim det inn nedenfor.",
+        "missingTitle": "Virket før, men ikke nå?",
+        "missingBody": "{provider} kan slå av IMAP igjen. Sjekk steg 1."
+      },
+      "microsoft": {
+        "step1Title": "Trykk Koble til med Microsoft og logg inn på Microsofts side.",
+        "step2Title": "Godta tillatelsene.",
+        "note": "Her trengs ikke noe passord. Du logger inn på Microsofts egen side.",
+        "connect": "Koble til med Microsoft",
+        "adminTitle": "Jobb- eller skolekonto?",
+        "adminBody": "Mange organisasjoner krever at en administrator godkjenner nye apper før du kan logge inn. Hvis Microsoft ber om godkjenning fra en administrator, send administratoren denne lenken. Administratoren trenger ingen MCPEmails-konto.",
+        "adminLink": "Hent lenken til administratoren",
+        "adminCopy": "Kopier lenke",
+        "adminCopied": "Kopiert",
+        "adminError": "Kunne ikke lage lenken. Prøv igjen."
+      },
+      "proton": {
+        "title": "Proton Mail krever Proton Bridge",
+        "body": "Proton Mail virker med e-postapper bare gjennom Proton Bridge, som kjører på din egen datamaskin. MCPEmails kjører i skyen og når den ikke, så en Proton-innboks kan ikke kobles til."
+      },
+      "imap": {
+        "step1": "Bruk hele e-postadressen og passordet til selve innboksen, ikke innloggingen til webhotellet eller kontrollpanelet.",
+        "step2": "Har innboksen tofaktorautentisering, lager du et app-passord i sikkerhetsinnstillingene hos leverandøren og bruker det.",
+        "appPasswordLink": "Lag et app-passord hos {provider}",
+        "servers": "Servere: {host}",
+        "manualLead": "Vi fant ikke e-postserverne dine. Leverandøren oppgir dem på hjelpesidene sine.",
+        "imapHost": "Innkommende server (IMAP)",
+        "smtpHost": "Utgående server (SMTP)",
+        "port": "Port",
+        "username": "Brukernavn, hvis det ikke er e-postadressen din",
+        "advanced": "Avansert"
+      },
+      "password": {
+        "labelApp": "App-passord",
+        "labelMailbox": "Passord",
+        "spaces": "Mellomrom gjør ingenting.",
+        "show": "Vis",
+        "hide": "Skjul",
+        "warnAccount": "Dette ser ut som et vanlig passord. {provider} trenger et app-passord her: 16 bokstaver.",
+        "warnLength": "Et app-passord har 16 bokstaver. Sjekk at du kopierte alt.",
+        "warnNote": "Du kan likevel prøve."
+      },
+      "trust": {
+        "access": "AI-en kan lese, søke i, sortere, skrive utkast til og sende e-post i denne innboksen. Den kan ikke endre passordet eller innstillingene på kontoen din.",
+        "appPassword": "Et app-passord virker bare for e-post, og du kan trekke det tilbake alene når som helst.",
+        "mailboxPassword": "Du kan koble fra innboksen i MCPEmails når som helst.",
+        "storage": "Lagret kryptert i Stockholm."
+      },
+      "connect": "Koble til",
+      "progress": {
+        "title": "Kobler til {address}",
+        "server": "E-postserver funnet",
+        "signedIn": "Logget inn",
+        "read": "Innboks lest",
+        "slow": "Hos noen leverandører tar dette opptil ett minutt."
+      },
+      "proof": {
+        "title": "Tilkoblet",
+        "count": "{count, plural, one {# melding} other {# meldinger}} i innboksen",
+        "newest": "Nyeste",
+        "noSubject": "(uten emne)",
+        "private": "Vises bare for deg, lest direkte fra innboksen din.",
+        "ready": "Innboksen er tilkoblet og klar.",
+        "continue": "Fortsett"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} har slått av IMAP-tilgang for denne innboksen. Slå det på og prøv igjen.",
+          "app_password_required": "{provider} trenger et app-passord her, ikke det vanlige passordet ditt.",
+          "account_password_used": "Dette ser ut som det vanlige {provider}-passordet ditt. Bruk et app-passord i stedet.",
+          "app_password_length": "App-passordet ser ufullstendig ut. Det skal ha 16 bokstaver.",
+          "provider_refused_signin": "{provider} avviste selve innloggingen, ikke passordet. Logg inn hos {provider} i nettleseren, godkjenn eventuelle sikkerhetsvarsler og prøv igjen.",
+          "login_username_required": "Denne serveren vil ha et brukernavn som ikke er e-postadressen din. Finn det i innstillingene hos leverandøren og skriv det inn under Avansert.",
+          "password_rejected": "{provider} godtok ikke passordet. Sjekk det og lim det inn på nytt."
+        },
+        "network": "Vi fikk ikke kontakt med MCPEmails. Sjekk tilkoblingen og prøv igjen.",
+        "limit": "Dette arbeidsområdet har allerede alle innboksene planen inkluderer.",
+        "sessionExpired": "Du ble logget ut. Logg inn igjen og kom tilbake til denne siden.",
+        "notAllowed": "Bare eiere og administratorer av arbeidsområdet kan koble til en innboks.",
+        "alreadyConnected": "Denne innboksen er allerede koblet til i dette arbeidsområdet.",
+        "useMicrosoft": "Dette er en Microsoft-innboks. Den kobles til med Microsoft-pålogging, ikke med passord.",
+        "smtpRejected": "Lesing virker, men serveren avviste innloggingen for sending.",
+        "blocked": "E-postserveren avviste tilkoblingen vår. Noen leverandører blokkerer skyservere.",
+        "hostNotFound": "Vi fant ikke den e-postserveren. Sjekk servernavnet.",
+        "unreachable": "E-postserveren svarte ikke. Sjekk servernavn og port.",
+        "tls": "Den sikre tilkoblingen til e-postserveren mislyktes. Prøv den andre porten.",
+        "hostRefused": "Vi kan ikke koble til det servernavnet eller den porten. Sjekk serverinnstillingene.",
+        "saveFailed": "Logget inn, men lagringen mislyktes. Prøv igjen om litt.",
+        "generic": "Det virket ikke. Prøv igjen, eller koble til en annen innboks.",
+        "link": {
+          "twoStep": "Åpne totrinnsbekreftelse",
+          "appPasswords": "Åpne siden for app-passord hos {provider}",
+          "imapSetting": "Slik slår du på IMAP hos {provider}",
+          "providerHelp": "Hjelpesiden til {provider}",
+          "adminGuide": "Googles veiledning for administratoren"
+        },
+        "kept": "Adressen står fortsatt, så et nytt forsøk er bare å lime inn.",
+        "readOnly": "Koble til bare for lesing",
+        "readOnlyNote": "AI-en kan lese og søke, men ikke sende.",
+        "different": "Koble til en annen innboks",
+        "support": "Send denne feilen til support",
+        "supportNote": "Vi får feilen og leverandøren, aldri passordet ditt.",
+        "supportSent": "Sendt. Vi svarer på e-post.",
+        "supportFailed": "Kunne ikke sende. Bruk hjelpesiden i stedet.",
+        "supportPage": "Åpne hjelpesiden",
+        "signIn": "Logg inn igjen"
+      },
+      "outlookError": {
+        "admin_consent_required": "Organisasjonen din krever at en administrator godkjenner MCPEmails før du kan logge inn. Send administratoren lenken nedenfor.",
+        "outlook_cancelled": "Du avbrøt på Microsofts side. Trykk Koble til med Microsoft for å prøve igjen.",
+        "generic": "Microsoft-påloggingen ble ikke fullført. Prøv igjen."
+      }
     },
     "add_to_ai": {
       "title": "Legg til MCPEmails i {client}"

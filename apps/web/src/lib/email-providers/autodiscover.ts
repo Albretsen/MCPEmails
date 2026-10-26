@@ -79,7 +79,7 @@ import {
 import { isAllowedMailPort, parseIpv6, parseLooseIpv4 } from '../email/host-guard.ts';
 
 /** Which of the four sources produced the incoming-server half of an answer. */
-export type AutodiscoverSource = 'table' | 'srv' | 'mx' | 'ispdb';
+export type AutodiscoverSource = 'table' | 'srv' | 'mx' | 'ispdb' | 'ispdb_mx';
 
 export interface AutodiscoveredSettings extends MailHostPrefill {
   /** Where the settings came from, so the form can say so. */
@@ -266,6 +266,48 @@ export function presetFromMxRecords(records: readonly MxRecord[] | null | undefi
   return null;
 }
 
+/**
+ * Second-level labels under which a registrable name has THREE labels
+ * (example.co.uk), for the country suffixes our mail hosts actually sit under.
+ * Not a public-suffix list: it only has to be right for MX hosts, and the cost
+ * of a miss is one ISPDB 404.
+ */
+const TWO_LABEL_SUFFIXES = new Set([
+  'co.uk', 'org.uk', 'ac.uk', 'com.au', 'net.au', 'co.nz', 'co.jp', 'ne.jp', 'com.br',
+  'com.cn', 'net.cn', 'com.tw', 'co.kr', 'co.za', 'com.mx', 'com.ar', 'com.tr', 'co.in', 'com.sg',
+]);
+
+/**
+ * The registrable domain of an MX host: mailpod12-cph3.one.com gives one.com,
+ * smtpin.rzone.de gives rzone.de, mx1.emailsrvr.com gives emailsrvr.com.
+ *
+ * Thunderbird asks the ISPDB about this name after the address domain misses,
+ * and so do we: the ISPDB lists provider domains (Strato's entry covers
+ * rzone.de), never the customer's own domain, so a custom domain on Strato,
+ * one.com or Rackspace only becomes recognisable through its MX.
+ */
+export function mxBaseDomain(exchange: string | null | undefined): string | null {
+  const host = normalizeDomain(exchange);
+  if (!host || !isPublicMailDomain(host)) return null;
+  const labels = host.split('.');
+  const lastTwo = labels.slice(-2).join('.');
+  const take = TWO_LABEL_SUFFIXES.has(lastTwo) ? 3 : 2;
+  if (labels.length < take) return null;
+  return labels.slice(-take).join('.');
+}
+
+/**
+ * True for a Microsoft 365 (Exchange Online) MX host. Every tenant publishes
+ * `<tenant>.mail.protection.outlook.com`; nothing else does. Such a mailbox
+ * connects through Microsoft sign-in, because IMAP password sign-in is off in
+ * Exchange Online. A suggestion for the form, never a block: the connect
+ * routes do not refuse by MX (see microsoft-accounts.ts).
+ */
+export function isMicrosoft365Mx(exchange: string | null | undefined): boolean {
+  const host = normalizeDomain(exchange);
+  return host.endsWith('.mail.protection.outlook.com') || host.endsWith('.mail.protection.partner.outlook.cn');
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
  * Mozilla ISPDB
  * ────────────────────────────────────────────────────────────────────────── */
@@ -395,8 +437,10 @@ export async function autodiscoverMailSettings(
   //    carries the provider name and the app-password policy, both of which
   //    survive even when SRV supplied the hosts.
   let preset: MailHostPrefill | null = null;
+  let mxRecords: MxRecord[] = [];
   if (!imap || !smtp) {
-    preset = presetFromMxRecords(await quiet(deps.resolveMx(domain), [] as MxRecord[]));
+    mxRecords = await quiet(deps.resolveMx(domain), [] as MxRecord[]);
+    preset = presetFromMxRecords(mxRecords);
     if (preset) {
       if (!imap) imap = { host: preset.imapHost, port: preset.imapPort, security: preset.imapSecurity, source: 'mx' };
       if (!smtp) smtp = { host: preset.smtpHost, port: preset.smtpPort, security: preset.smtpSecurity, source: 'mx' };
@@ -414,6 +458,25 @@ export async function autodiscoverMailSettings(
       if (!imap && parsed.imap) imap = parsed.imap;
       if (!smtp && parsed.smtp) smtp = parsed.smtp;
       ispdbLabel = parsed.label;
+    }
+  }
+
+  // 5. The ISPDB again, on the MX host's base domain (Thunderbird's
+  //    MX-then-ISPDB step). Same fixed origin; only the path segment differs,
+  //    and it comes from a record that already passed isPublicMailDomain.
+  if ((!imap || !smtp) && deps.fetchIspdb && Array.isArray(mxRecords) && mxRecords.length > 0) {
+    const primary = [...mxRecords]
+      .filter((record) => isPublicMailDomain(normalizeDomain(record?.exchange)))
+      .sort((a, b) => Number(a.priority ?? 0) - Number(b.priority ?? 0))[0];
+    const base = primary ? mxBaseDomain(primary.exchange) : null;
+    if (base && base !== domain) {
+      const body = await quiet(deps.fetchIspdb(`${ISPDB_ORIGIN}${encodeURIComponent(base)}`), null);
+      if (body) {
+        const parsed = parseIspdb(body.slice(0, ISPDB_MAX_BYTES));
+        if (!imap && parsed.imap) imap = { ...parsed.imap, source: 'ispdb_mx' };
+        if (!smtp && parsed.smtp) smtp = { ...parsed.smtp, source: 'ispdb_mx' };
+        ispdbLabel = ispdbLabel ?? parsed.label;
+      }
     }
   }
 
