@@ -115,6 +115,8 @@ jobs:
       # prod, still fails.
       - name: audit script self-test
         run: node --test scripts/audit-with-exceptions.test.mjs
+      - name: staging scripts self-test (Stripe sandbox + seed guards)
+        run: node --test scripts/staging-lib.test.mjs
       - name: npm audit (fails on high or critical, dated exceptions only)
         run: node scripts/audit-with-exceptions.mjs
 
