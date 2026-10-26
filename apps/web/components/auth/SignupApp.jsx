@@ -126,8 +126,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
 
   function handleMicrosoftSignIn() {
     rememberOAuthConsent(marketingConsent);
-    // No signup_started event: its `method` enum (src/lib/analytics.mjs) has no
-    // 'microsoft' yet, and an unlisted value throws.
+    trackProductEvent('signup_started', { method: 'microsoft' });
     setSocialLoading('microsoft');
     window.location.href = buildOAuthUrl('microsoft');
   }

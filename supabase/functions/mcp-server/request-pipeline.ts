@@ -94,6 +94,17 @@ export interface FirstUseMarkers {
 }
 
 /**
+ * Whether a successful call may set the first-use (technical activation)
+ * marker. A call against a resolved inbox always may. A call with no inbox
+ * (inbox_list, contact_search across inboxes, ...) may only when the workspace
+ * has at least one mailbox: an empty `inbox_list` from a workspace that never
+ * connected one is not activation, and used to be counted as one.
+ */
+export function countsAsFirstProductUse(inboxId: string | null, workspaceHasInbox: boolean): boolean {
+  return inboxId !== null || workspaceHasInbox;
+}
+
+/**
  * True when markFirstProductUse has nothing left to write for this call.
  *
  * The first-tool marker must already be set. The value marker must be set too,

@@ -42,7 +42,7 @@
 // ---------------------------------------------------------------------------
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { firstUseAlreadyRecorded, settleAfterResponse } from "./request-pipeline.ts";
+import { countsAsFirstProductUse, firstUseAlreadyRecorded, settleAfterResponse } from "./request-pipeline.ts";
 import { preflightAvailability } from "./tools-call-preflight.ts";
 
 const SUPABASE_URL = "http://postgrest.example.test";
@@ -1576,6 +1576,37 @@ Deno.test("a workspace that only ever listed inboxes is value-activated by its f
   await run(w, rpcRequest("tools/call", SIGNATURE_GET));
   assertEquals((w.inserted.product_funnel_events ?? []).map((event) => event.stage), ["value_activation"]);
   assert(w.workspace.onboarding_value_activated_at);
+});
+
+Deno.test("an empty inbox_list from a workspace with no inbox is not activation", async () => {
+  const w = world({
+    inboxes: [],
+    workspace: activatedWorkspace({ analytics_first_tool_used_at: null, onboarding_value_activated_at: null }),
+  });
+  const listed = await run(w, rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
+  assert(!listed.body.result.isError, JSON.stringify(listed.body));
+  for (const label of FIRST_USE_ROUND_TRIPS) assertEquals(count(listed.labels, label), 0, label);
+  assertEquals(w.workspace.analytics_first_tool_used_at, null);
+  assertEquals(w.inserted.product_funnel_events ?? [], []);
+});
+
+Deno.test("inbox_list from a workspace with an inbox still marks the first tool call", async () => {
+  const w = world({
+    workspace: activatedWorkspace({ analytics_first_tool_used_at: null, onboarding_value_activated_at: null }),
+  });
+  await run(w, rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
+  assertEquals(
+    (w.inserted.product_funnel_events ?? []).map((event) => event.stage),
+    ["first_tool_call", "technical_activation"],
+  );
+  assertEquals(w.workspace.analytics_first_tool_name, "inbox_list");
+});
+
+Deno.test("countsAsFirstProductUse needs an inbox somewhere", () => {
+  assert(countsAsFirstProductUse(INBOX, false));
+  assert(countsAsFirstProductUse(INBOX, true));
+  assert(countsAsFirstProductUse(null, true));
+  assert(!countsAsFirstProductUse(null, false));
 });
 
 Deno.test("a failed call marks nothing", async () => {

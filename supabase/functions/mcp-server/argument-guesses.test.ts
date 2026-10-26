@@ -244,6 +244,43 @@ Deno.test("email_list since/before/include_folders says such a search needs noth
   );
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// First-hour refusals (onboarding read-out, 2026-10-26)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("inbox_list with a paging or search argument says how the list is narrowed", async () => {
+  const text = await call("inbox_list", { limit: 5, query: "work" });
+  assertStringIncludes(
+    text,
+    "arguments.limit is not an argument of inbox_list; it returns every inbox in one call, " +
+      "and inbox (an email address or inbox_id), provider or service narrow it.",
+  );
+  assertStringIncludes(text, "arguments.query is not an argument of inbox_list either.");
+});
+
+Deno.test("the inbox listing fact never reaches a mail tool", () => {
+  const [error] = withGuessedArgumentHints([unknown("limitless")], "action 'search'", SEARCH_ARGS);
+  assertEquals(error.message, "is not allowed");
+});
+
+Deno.test("email_attachment says how an attachment is chosen and whose id message_id is", async () => {
+  const text = await call("email_attachment", { attachment_id: "2" });
+  assertStringIncludes(
+    text,
+    "arguments.message_id is required; it is the id of the message that carries the attachment, from a list or search result.",
+  );
+  assertStringIncludes(
+    text,
+    "arguments.attachment_id is not an argument of email_attachment; an attachment is chosen by attachment_index or filename, as reading its message lists them.",
+  );
+});
+
+Deno.test("a since of the wrong type is told the accepted shape", async () => {
+  const text = await call("email_read", { action: "search", since: 20261001 });
+  assertStringIncludes(text, "arguments.since must be string");
+  assertStringIncludes(text, "it takes a string with the year first, such as \"2026-10-01\", \"today\" or \"7 days ago\".");
+});
+
 Deno.test("the per-operation email_list description says where dates and folders are", () => {
   const tool = PER_OPERATION_LISTING.find((listed) => listed.name === "email_list")!;
   assertStringIncludes(tool.description, "It has no date filter and reads one folder");

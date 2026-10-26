@@ -4,8 +4,13 @@ import { CONNECT_ENTRY_POINTS } from './analytics/connect-entry-point.mjs';
 // This is deliberately a closed schema: callers cannot accidentally attach an
 // identifier, URL, request payload, or mailbox data to a product event.
 export const EVENT_SCHEMA = Object.freeze({
-  signup_started: { method: ['password', 'google', 'github'] },
-  signup_completed: { method: ['password', 'google', 'github'] },
+  // signup_completed is a browser beacon and loses signups (Safari and iOS
+  // drop most Google completions). The source of truth is the database: one
+  // product_funnel_events row with stage 'signup_completed' per account,
+  // written by an auth.users trigger (migration 20261026191717), category
+  // email | google | github | microsoft | unknown.
+  signup_started: { method: ['password', 'google', 'github', 'microsoft'] },
+  signup_completed: { method: ['password', 'google', 'github', 'microsoft'] },
   // `entry_point` is which control opened the connect modal, the same closed
   // list the funnel rows carry (analytics/connect-entry-point.mjs).
   inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'], entry_point: CONNECT_ENTRY_POINTS },
