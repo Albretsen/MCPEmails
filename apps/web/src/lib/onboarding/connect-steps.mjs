@@ -154,16 +154,40 @@ function ms(ts) {
 }
 
 /**
+ * When the AI app was first seen talking to us since reset, on the ms clock,
+ * or null. Several signals count, because claude.ai reuses its MCP session
+ * across chats and often sends no new `initialize` (WP-Z M1):
+ *
+ *   handshake.at                 an MCP `initialize` since reset
+ *   anyCall.at                   any successful tool call since reset
+ *   credential.latestAt          a connector grant since reset (OAuth clients
+ *                                only: an API-key client creates its key on
+ *                                the add step itself, so it proves nothing)
+ *
+ * The earliest one wins: the app was connected from that moment on.
+ */
+export function connectedAtMs(status, { client } = {}) {
+  if (!status) return null;
+  const times = [ms(status.handshake?.at), ms(status.anyCall?.at)];
+  if (status.credential?.sinceReset && !usesApiKey(client)) times.push(ms(status.credential?.latestAt));
+  const seen = times.filter((t) => t !== null);
+  if (seen.length) return Math.min(...seen);
+  // A grant since reset with an unreadable timestamp still counts.
+  if (status.credential?.sinceReset && !usesApiKey(client)) return 0;
+  return null;
+}
+
+/**
  * Where the four-rung ladder stands:
  *   0  Waiting for <client>       nothing yet
- *   1  <client> connected         an MCP handshake since reset
+ *   1  <client> connected         any connected signal (connectedAtMs)
  *   2  Ask it something           (the current rung once connected)
  *   3  It works                   a successful real-inbox call
  * Returns { rung, connected, works }. `rung` is the CURRENT rung.
  */
-export function ladderState(status) {
+export function ladderState(status, { client } = {}) {
   const works = Boolean(status?.firstCall?.at);
-  const connected = works || Boolean(status?.handshake?.at);
+  const connected = works || connectedAtMs(status, { client }) !== null;
   return { rung: works ? 3 : connected ? 2 : 0, connected, works };
 }
 
@@ -172,20 +196,23 @@ export function ladderState(status) {
  * passes the server's clock (status.serverTime plus time since it was read)
  * as `nowMs`, and `waitStartedAtMs` on the same clock.
  *
- *   no handshake, 90 s after the wait started          -> 'no_handshake'
- *   handshake, no call, 60 s after the handshake (or
- *   after the wait started, whichever is later)        -> 'no_call'
+ *   not connected (connectedAtMs), 90 s after the wait
+ *   started                                            -> 'no_handshake'
+ *   connected, no call of any kind, 60 s after the
+ *   connection (or after the wait started, whichever
+ *   is later)                                          -> 'no_call'
+ *   calls arriving but none on a real inbox yet         -> neither
  *   10 min after the wait started, still no call       -> 'reconnect' too
  *
  * Returns the list of open tiers, in display order.
  */
-export function helpTiers(status, { waitStartedAtMs, nowMs }) {
+export function helpTiers(status, { waitStartedAtMs, nowMs, client } = {}) {
   if (!status || status.firstCall?.at || !Number.isFinite(waitStartedAtMs) || !Number.isFinite(nowMs)) return [];
   const tiers = [];
-  const handshakeMs = ms(status.handshake?.at);
-  if (handshakeMs === null) {
+  const connectedMs = connectedAtMs(status, { client });
+  if (connectedMs === null) {
     if (nowMs - waitStartedAtMs >= NO_HANDSHAKE_HELP_MS) tiers.push('no_handshake');
-  } else if (nowMs - Math.max(handshakeMs, waitStartedAtMs) >= NO_CALL_HELP_MS) {
+  } else if (!status.anyCall?.at && nowMs - Math.max(connectedMs, waitStartedAtMs) >= NO_CALL_HELP_MS) {
     tiers.push('no_call');
   }
   if (nowMs - waitStartedAtMs >= RECONNECT_HELP_MS) tiers.push('reconnect');

@@ -326,6 +326,7 @@ Alt i Free
 2x høyere burst-grense
 E-poststøtte
 Velg Personal
+Trekkes i dag. Si opp når som helst. 14 dagers angrerett.
 Pro
 $15
 /måned
@@ -341,6 +342,7 @@ En daglig morgenoppsummering, lagt rett i innboksen din
 Søk i alle tilkoblede innbokser samtidig
 Instruksjoner til AI-en din, per innboks
 Velg Pro
+Trekkes i dag. Si opp når som helst. 14 dagers angrerett.
 Business
 $39
 /måned
@@ -351,6 +353,7 @@ Ubegrenset antall medlemmer med roller, uten ekstra kostnad
 Administratorer godkjenner sendinger som venter
 Flere arbeidsområder på ett abonnement, ett per firma eller kunde
 Velg Business
+Trekkes i dag. Si opp når som helst. 14 dagers angrerett.
 Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset?
 Kontakt oss
 .

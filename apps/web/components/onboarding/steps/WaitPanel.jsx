@@ -23,7 +23,8 @@ import { CopyField, EmailMeButton, PromptBlock } from './ConnectParts';
  * A8 in one screen: the Reply radar prompt to paste, the live ladder
  * (Waiting for X, X connected, Ask it something, It works) and the timed help.
  * FirstPromptStep and WaitStep both render this; the flow moves from
- * first_prompt to wait when the handshake shows up, and to it_works on the
+ * first_prompt to wait once the app is connected (a handshake, any call, or a
+ * connector grant since reset: connectedAtMs), and to it_works on the
  * first successful real-inbox call.
  *
  * "Open in Claude" opens a new chat WITHOUT a prefilled prompt: claude.ai has
@@ -41,7 +42,7 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
   // { nowMs, waitStartedAtMs } on the server clock, refreshed every 5 s.
   const [timing, setTiming] = useState(null);
   const shownHelp = useRef(new Set());
-  const sawHandshake = useRef(Boolean(status?.handshake?.at));
+  const sawHandshake = useRef(ladderState(status, { client }).connected);
 
   useEffect(() => {
     setPolling(adaptiveCadence);
@@ -63,7 +64,7 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
     return () => { clearTimeout(first); clearInterval(id); };
   }, []);
 
-  const ladder = ladderState(status);
+  const ladder = ladderState(status, { client });
 
   // Move along the steps as the signals arrive.
   useEffect(() => {
@@ -78,7 +79,7 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
     if (ladder.connected && step === 'first_prompt') goTo('wait');
   }, [ladder.works, ladder.connected, step, goTo, client, status?.handshake?.client]);
 
-  const tiers = timing ? helpTiers(status, timing) : [];
+  const tiers = timing ? helpTiers(status, { ...timing, client }) : [];
   useEffect(() => {
     for (const tier of tiers) {
       if (shownHelp.current.has(tier)) continue;

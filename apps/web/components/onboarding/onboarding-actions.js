@@ -6,6 +6,8 @@
  *
  *   stepViewed(step)        funnel onboarding_step_viewed (category step_<id>)
  *   clientChanged(client)   stores the chip choice + funnel client_changed
+ *   inboxReused()           "Use <address>" after a reset: remembered, so a
+ *                           reload skips the inbox step
  *   onboardingCompleted()   stamps onboarding_completed_at + funnel event
  *
  * Analytics must never break the flow: errors are swallowed, and `keepalive`
@@ -27,4 +29,5 @@ export function postOnboardingAction(action, data = {}, fetchImpl = globalThis.f
 
 export const stepViewed = (step) => postOnboardingAction('step_viewed', { step });
 export const clientChanged = (client) => postOnboardingAction('client_changed', { client });
+export const inboxReused = () => postOnboardingAction('inbox_reused');
 export const onboardingCompleted = () => postOnboardingAction('completed');

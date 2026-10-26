@@ -187,3 +187,29 @@ test('success ticks the checks and ends on the proof card', async (t) => {
   await flush(() => q(view, '[data-testid="onb-proof-continue"]').click());
   assert.equal(next, 1);
 });
+
+test('after a reset: "Use" is remembered, and "Connect another" has a way back (WP-Z m2, m3)', async (t) => {
+  const calls = stubFetch(t, { '/api/onboarding': () => ({ status: 200, json: { ok: true } }) });
+  let next = 0;
+  const status = { inboxes: { count: 1, sinceReset: 0, items: [{ id: 'i1', address: 'old@example.org', provider: 'imap', status: 'active', createdAt: '2026-10-20T10:00:00Z' }] } };
+  const view = await render(t, { status, goNext: () => { next += 1; } });
+  assert.ok(q(view, '[data-testid="onb-reuse-inbox"]'));
+  await flush(() => q(view, '[data-testid="onb-connect-another"]').click());
+  assert.ok(q(view, '[data-testid="onb-inbox-connect"]'));
+  const back = q(view, '[data-testid="onb-inbox-back"]');
+  assert.equal(back.textContent, 'Back');
+  await flush(() => back.click());
+  await flush(() => q(view, '[data-testid="onb-reuse"]').click());
+  assert.equal(next, 1);
+  assert.equal(calls.some((c) => c.path === '/api/onboarding' && c.body?.action === 'inbox_reused'), true);
+});
+
+test('a first inbox has no Back link; a second one goes back to It works', async (t) => {
+  stubFetch(t, {});
+  const first = await render(t);
+  assert.equal(q(first, '[data-testid="onb-inbox-back"]') === null, true);
+  let went = '';
+  const second = await render(t, { secondInbox: true, goTo: (id) => { went = id; } });
+  await flush(() => q(second, '[data-testid="onb-inbox-back"]').click());
+  assert.equal(went, 'it_works');
+});

@@ -78,7 +78,7 @@ Asgeir Albretsen
 ·
 Jul 28, 2026
 ·
-7 min
+8 min
 [alt] Claude connected to an IMAP and SMTP mailbox through MCPEmails
 Claude
 IMAP

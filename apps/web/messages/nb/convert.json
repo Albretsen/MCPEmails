@@ -6,7 +6,7 @@
     "inboxes": "{count, plural, =1 {# innboks} other {Opptil # innbokser}}",
     "freeGrace": "Ubegrenset frem til {date}",
     "freeCap": "{cap} e-posthandlinger i måneden",
-    "noCap": "Ingen månedlig grense",
+    "noCap": "Ubegrensede e-posthandlinger",
     "emailSupport": "Støtte på e-post",
     "everythingPersonal": "Alt i Personal",
     "perMonth": "{price}/mnd",

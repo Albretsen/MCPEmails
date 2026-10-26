@@ -6,7 +6,7 @@
     "inboxes": "{count, plural, =1 {# Postfach} other {Bis zu # Postfächer}}",
     "freeGrace": "Unbegrenzt bis {date}",
     "freeCap": "{cap} E-Mail-Aktionen pro Monat",
-    "noCap": "Keine monatliche Obergrenze",
+    "noCap": "Unbegrenzte E-Mail-Aktionen",
     "emailSupport": "Support per E-Mail",
     "everythingPersonal": "Alles aus Personal",
     "perMonth": "{price}/Monat",

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { onboardingResetPatch } from './reset.ts';
-import { shapeOnboardingStatus, type OnboardingStatusRows } from './status.ts';
+import { firstCallToolName, firstCallWindow, shapeOnboardingStatus, type OnboardingStatusRows } from './status.ts';
 
 const NOW = Date.parse('2026-10-26T12:00:00Z');
 
@@ -31,7 +31,7 @@ test('a fresh workspace has nothing yet', () => {
   const s = shapeOnboardingStatus(rows());
   assert.equal(s.serverTime, '2026-10-26T12:00:00.000Z');
   assert.equal(s.client, 'chatgpt');
-  assert.deepEqual(s.inboxes, { count: 0, sinceReset: 0, items: [] });
+  assert.deepEqual(s.inboxes, { count: 0, sinceReset: 0, chosenAt: null, items: [] });
   assert.deepEqual(s.credential, { exists: false, sinceReset: false, latestAt: null, scopes: null });
   assert.deepEqual(s.handshake, { at: null, client: null, clients: [] });
   assert.deepEqual(s.firstCall, { at: null, tool: null });
@@ -93,6 +93,35 @@ test('after a reset, older signals are ignored but the inbox is still counted', 
   assert.equal(s.firstCall.at, null);
   assert.equal(s.anyCall.at, null);
   assert.equal(s.lastFailure, null);
+});
+
+test('firstCall.tool is the activating call, never the inbox_list that came first (WP-Z m4)', () => {
+  const workspace = {
+    onboarding_client: null,
+    onboarding_reset_at: '2026-10-26T11:00:00Z',
+    onboarding_completed_at: null,
+    onboarding_value_activated_at: '2026-10-26T11:20:55Z',
+    analytics_first_tool_used_at: '2026-10-26T11:20:32Z',
+    analytics_first_tool_name: 'inbox_list',
+  };
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search' })).firstCall, { at: '2026-10-26T11:20:55Z', tool: 'email_search' });
+  // Activity not readable: never report inbox_list.
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: null })).firstCall, { at: '2026-10-26T11:20:55Z', tool: null });
+  assert.equal(firstCallToolName(null, 'email_read'), 'email_read');
+  assert.equal(firstCallToolName('draft', 'inbox_list'), 'draft');
+  // The search window starts no earlier than the reset and spans the marker.
+  assert.deepEqual(firstCallWindow('2026-10-26T11:20:55Z', '2026-10-26T11:20:00Z'), { from: '2026-10-26T11:20:00.000Z', to: '2026-10-26T11:22:55.000Z' });
+  assert.deepEqual(firstCallWindow('2026-10-26T11:20:55Z', null), { from: '2026-10-26T11:18:55.000Z', to: '2026-10-26T11:22:55.000Z' });
+  assert.equal(firstCallWindow('2026-10-25T10:00:00Z', '2026-10-26T11:00:00Z'), null);
+  assert.equal(firstCallWindow(null, null), null);
+});
+
+test('the chosen inbox is reported since reset only (WP-Z m3)', () => {
+  const base = { onboarding_client: null, onboarding_completed_at: null, onboarding_value_activated_at: null, analytics_first_tool_used_at: null, analytics_first_tool_name: null };
+  const chosen = shapeOnboardingStatus(rows({ workspace: { ...base, onboarding_reset_at: '2026-10-26T11:00:00Z', onboarding_inbox_connected_at: '2026-10-26T11:05:00Z' } }));
+  assert.equal(chosen.inboxes.chosenAt, '2026-10-26T11:05:00Z');
+  const stale = shapeOnboardingStatus(rows({ workspace: { ...base, onboarding_reset_at: '2026-10-26T11:00:00Z', onboarding_inbox_connected_at: '2026-10-20T11:05:00Z' } }));
+  assert.equal(stale.inboxes.chosenAt, null);
 });
 
 test('a failure older than 24 hours is not "the last thing that went wrong"', () => {
