@@ -1908,13 +1908,25 @@ BEGIN
              AND a.tool_name <> 'contact_search'
          END;
 
+  -- Unattended IMAP work: automation runs that got past the provider search.
+  IF p_protocol = 'imap' THEN
+    SELECT v_calls + count(*)
+      INTO v_calls
+      FROM public.triage_runs r
+      JOIN public.triage_rules t ON t.id = r.rule_id
+      JOIN public.inboxes i ON i.id = t.inbox_id
+     WHERE r.started_at > v_since
+       AND r.status IN ('completed', 'completed_with_errors', 'skipped')
+       AND lower(i.imap_host) = v_host;
+  END IF;
+
   -- Successes the relay carried are not evidence that the host works directly.
   SELECT COALESCE(sum(s.count), 0)
     INTO v_rescued
     FROM public.mail_relay_stats s
    WHERE s.host = v_host
      AND s.protocol = p_protocol
-     AND s.route = 'fallback'
+     AND s.route IN ('fallback', 'learned')
      AND s.outcome = 'ok'
      AND s.hour >= date_trunc('hour', v_since);
 
