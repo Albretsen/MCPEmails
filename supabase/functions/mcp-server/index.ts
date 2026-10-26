@@ -494,6 +494,7 @@ import {
   withOwnerInstructions,
 } from "./inbox-instructions.ts";
 import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
+import { maybeAttachOnboardingWelcome } from "./onboarding-welcome.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates, smtpFilesSentCopyItself } from "./sent-copy.ts";
 import { DRAFT_KEPT_AFTER_SEND_NOTE, DRAFT_KEPT_RECEIPT_DETAIL, removeSentDraft } from "./draft-removal.ts";
 import {
@@ -35277,6 +35278,22 @@ async function handleToolsCall(
     succeeded: (logStatus as string) === "success" &&
       "result" in toolResult &&
       (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
+  // The one-time "what to ask next" line on the first real-inbox result
+  // (onboarding-welcome.ts, plan A10). No query unless the markers the plan
+  // check read say this could be the first value call; claimed once per
+  // workspace in the database; internal owners only in v1; never fails the call.
+  await maybeAttachOnboardingWelcome({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    markers: ctx.firstUse,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    inboxId: resolvedInboxId,
+    toolName: dispatchName,
     attach: (note) => appendResultNote(toolResult, note),
   });
 

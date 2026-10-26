@@ -118,3 +118,64 @@
 .onb-chip-option:focus-visible { background: var(--ink-100); outline: none; }
 .onb-chip-option.is-selected { font-weight: 600; }
 .onb-chip-more { color: var(--fg-3); }
+
+/* WP-F: add to AI, prompt + wait, It works */
+.onb-note { font-size: 13.5px; color: var(--fg-3); margin: 8px 0 0; }
+.onb-after { margin: 12px 0 0; }
+.onb-inline-note { margin: 6px 0 0; font-size: 13.5px; align-self: center; }
+.onb-success { font-size: 17px; margin: 0 0 20px; color: var(--mint-700); }
+.onb-finish { margin-top: 28px; }
+
+.onb-steps { margin: 0 0 12px; padding-left: 20px; }
+.onb-steps li { margin: 4px 0; }
+
+.onb-details { margin-top: 12px; }
+.onb-details summary { cursor: pointer; color: var(--fg-3); font-size: 13.5px; }
+
+.onb-link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.onb-copy { margin: 12px 0 0; }
+.onb-copy-label { font-size: 12.5px; color: var(--fg-3); margin-bottom: 4px; }
+.onb-copy-row { display: flex; gap: 8px; align-items: flex-start; }
+.onb-copy-value {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.onb-copy-btn { flex: none; }
+
+.onb-ladder { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.onb-rung { display: flex; align-items: center; gap: 10px; color: var(--fg-4); }
+.onb-rung.is-done { color: var(--fg-2); }
+.onb-rung.is-current { color: var(--fg-1); font-weight: 600; }
+.onb-rung-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border-2); flex: none; }
+.onb-rung.is-done .onb-rung-dot { background: var(--mint-500); border-color: var(--mint-500); }
+.onb-rung.is-current .onb-rung-dot { border-color: var(--brand); }
+
+.onb-callout {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  background: var(--bg-surface);
+}
+.onb-callout-error { border-color: var(--red-100); }
+.onb-callout-body { margin: 0; color: var(--fg-2); }
+.onb-callout .onb-actions { margin-top: 12px; }

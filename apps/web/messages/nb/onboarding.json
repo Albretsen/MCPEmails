@@ -192,16 +192,77 @@
       }
     },
     "add_to_ai": {
-      "title": "Legg til MCPEmails i {client}"
+      "title": "Legg til MCPEmails i {client}",
+      "lead": "Ett steg i {client}, så kommer du tilbake hit. Siden går videre av seg selv når {client} har koblet til.",
+      "urlLabel": "Server-URL for MCPEmails",
+      "linkAfter": "{client} åpnes med MCPEmails ferdig utfylt. Bekreft, og logg inn på MCPEmails når du blir spurt.",
+      "claudeAfter": "Claude åpner vinduet for egendefinert connector med MCPEmails ferdig utfylt. Klikk Legg til, så Koble til, og gi tilgang.",
+      "commandAfter": "Start så {client} og logg inn på MCPEmails når du blir spurt.",
+      "configLead": "Legg dette inn i {file}, last inn {client} på nytt og logg inn på MCPEmails når du blir spurt.",
+      "genericOauth": "Legg til en MCP-server av typen HTTP i {client}, lim inn URL-en under, og logg inn på MCPEmails når du blir spurt.",
+      "manual": "Sett det opp manuelt",
+      "continue": "Lagt til, fortsett",
+      "chatgpt": {
+        "step1": "På chatgpt.com åpner du Plugins og så Personal.",
+        "step2": "Klikk Add, så Add custom MCP server.",
+        "step3": "Kall den MCPEmails, lim inn URL-en under, opprett den og logg inn på MCPEmails når du blir spurt.",
+        "step4": "Skriv @MCPEmails i en chat for å bruke den.",
+        "note": "Egne MCP-servere fungerer på Go-abonnementet og alle betalte abonnementer, i en nettleser på chatgpt.com."
+      },
+      "key": {
+        "creating": "Lager en API-nøkkel for {client}",
+        "ready": "Vi har laget en API-nøkkel for {client} med standardtilgang (lese, utkast, sende). Kopier den nå: den vises bare én gang.",
+        "failed": "Kunne ikke lage en API-nøkkel. Lag en i dashbordet under API-nøkler.",
+        "limit": "Abonnementet ditt har ikke plass til flere API-nøkler. Fjern en i dashbordet og last inn siden på nytt.",
+        "retry": "Prøv igjen",
+        "header": "Header",
+        "label": "API-nøkkel"
+      },
+      "cline": {
+        "step1": "I Cline åpner du MCP Servers og så fanen Remote Servers.",
+        "step2": "Kall den MCPEmails, lim inn URL-en og sett Transport Type til Streamable HTTP.",
+        "step3": "Legg til headeren under og klikk Add Server."
+      },
+      "jetbrains": {
+        "step1": "Åpne Settings, så Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Klikk Add, velg Streamable HTTP og lim inn URL-en.",
+        "step3": "Legg til headeren under og lagre."
+      },
+      "curl": "Kall serveren med denne nøkkelen. Neste steg gir deg en første forespørsel å sende.",
+      "phone": {
+        "claudeTitle": "På mobilen legger du det til i nettleseren",
+        "claudeBody": "Kopier denne lenken og lim den inn i Safari eller Chrome. Trykker du på den, kan Claude-appen åpnes, og der kan du ikke legge til connectors. Når den er lagt til, virker MCPEmails i appen også.",
+        "copyLink": "Kopier lenken",
+        "otherBody": "{client} settes opp på en datamaskin. Vi kan sende deg dette steget på e-post, så du kan åpne det der.",
+        "showHere": "Vis stegene her likevel"
+      }
     },
     "first_prompt": {
-      "title": "Spør {client} om noe"
+      "title": "Spør {client} om noe",
+      "lead": "Lim inn dette i en ny chat i {client}:",
+      "leadCode": "Lim inn dette i {client}:",
+      "leadApi": "Send din første forespørsel:",
+      "open": "Åpne {client}",
+      "openNote": "Åpner en ny chat. Lim inn prompten der."
     },
     "wait": {
       "title": "Venter på {client}"
     },
     "it_works": {
-      "title": "Det virker"
+      "title": "Det virker",
+      "success": {
+        "read": "{client} har nettopp lest innboksen din.",
+        "search": "{client} har nettopp søkt i innboksen din.",
+        "draft": "{client} har nettopp lagret et utkast i postkassen din.",
+        "organize": "{client} har nettopp ryddet i innboksen din.",
+        "generic": "{client} har nettopp brukt postkassen din."
+      },
+      "next": "Lim inn dette som neste:",
+      "ritual": "I morgen tidlig limer du inn dette:",
+      "optIn": "Send meg dette på e-post i morgen kl. 8",
+      "optInDone": "Vi sender det til {email} i morgen kl. 8.00.",
+      "optInFailed": "Kunne ikke lagre. Prøv igjen.",
+      "finish": "Gå til dashbordet"
     }
   },
   "nav": {
@@ -209,5 +270,85 @@
     "back": "Tilbake",
     "done": "Ferdig"
   },
-  "placeholder": "Dette steget er fortsatt under arbeid."
+  "placeholder": "Dette steget er fortsatt under arbeid.",
+  "actions": {
+    "copy": "Kopier",
+    "copied": "Kopiert",
+    "emailMe": "Send meg lenken på e-post",
+    "emailSent": "Sendt til {email}.",
+    "emailFailed": "Kunne ikke sende e-posten. Prøv igjen om et minutt."
+  },
+  "ladder": {
+    "waiting": "Venter på {client}",
+    "connected": "{client} er koblet til",
+    "ask": "Spør den om noe",
+    "works": "Det virker",
+    "listening": "Venter på {client}",
+    "stopped": "Vi venter ikke lenger. Last inn siden på nytt etter at du har prøvd prompten."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} har ikke koblet til ennå",
+      "claude": "Last inn claude.ai på nytt og start en ny chat. I Claude Desktop avslutter du appen helt og åpner den igjen.",
+      "chatgpt": "Åpne en ny chat på chatgpt.com, skriv @ og velg MCPEmails.",
+      "editor": "Last inn {client}-vinduet på nytt og sjekk at MCPEmails står som tilkoblet i MCP-listen. Hvis ikke, lim inn URL-en på nytt.",
+      "cli": "Avslutt og start {client} på nytt, og sjekk at MCPEmails står på listen og er tilkoblet.",
+      "api": "Send forespørselen på nytt og sjekk at Authorization-headeren har nøkkelen din."
+    },
+    "noCall": {
+      "title": "{client} er koblet til, men har ikke brukt MCPEmails ennå",
+      "claude": "Slå på MCPEmails i denne chatten (+ > Connectors) eller start en ny chat, og lim inn prompten på nytt.",
+      "chatgpt": "Skriv @ i chatten og velg MCPEmails, og lim inn prompten på nytt.",
+      "other": "Start en ny chat og lim inn prompten på nytt. Den nevner MCPEmails, så {client} vet hva den skal bruke."
+    },
+    "reconnect": {
+      "title": "Fortsatt ingenting?",
+      "body": "Fjern MCPEmails fra {client}, legg det til på nytt og start en ny chat.",
+      "docs": "Oppsettsguide for {client}",
+      "back": "Vis oppsettssteget igjen",
+      "email": "Send meg stegene på e-post"
+    }
+  },
+  "failure": {
+    "title": "Den siste forespørselen virket ikke",
+    "auth": "E-postleverandøren din avviste passordet til innboksen. Koble til innboksen på nytt i dashbordet.",
+    "timeout": "E-postserveren din brukte for lang tid. Spør på nytt for en kortere periode.",
+    "provider": "E-postleverandøren din svarte med en feil. Prøv igjen om et minutt.",
+    "scope": "Tilgangen du ga {client}, tillater ikke det. Spør om noe annet, eller koble til på nytt med mer tilgang.",
+    "inbox": "{client} fant ingen tilkoblet innboks. Sjekk innboksene dine i dashbordet.",
+    "params": "{client} sendte en forespørsel MCPEmails ikke kunne lese. Vanligvis prøver den igjen av seg selv.",
+    "generic": "Den siste forespørselen fra {client} feilet. Spør på nytt."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Bruk MCPEmails, se på innboksen min fra de siste 2 dagene og si hvilke e-poster som trenger svar fra meg i dag. Én linje per e-post: hvem, hva de vil og innen når. Ikke send, lag utkast, flytt eller slett noe.",
+      "code": "Bruk MCPEmails-verktøyene til å se på innboksen min fra de siste 2 dagene og si hvilke e-poster som trenger svar fra meg i dag. Én linje per e-post: hvem, hva de vil og innen når. Ikke send, lag utkast, flytt eller slett noe."
+    },
+    "draftReplies": {
+      "drafts": "Velg de 3 e-postene på listen som trenger svar mest, og lagre et svarutkast til hver i Utkast-mappen min, skrevet i min vanlige tone. Ikke send noe.",
+      "readOnly": "Velg de 3 e-postene på listen som trenger svar mest, og skriv et kort svar til hver her i chatten. Ikke send eller lagre noe."
+    },
+    "morningBrief": {
+      "chat": "Bruk MCPEmails og gi meg morgenoppsummeringen min: hva som har kommet siden i går, hva som trenger svar i dag, og alt med en frist denne uken. Maks 10 linjer. Ikke endre noe.",
+      "code": "Bruk MCPEmails-verktøyene til å gi meg morgenoppsummeringen min: hva som har kommet siden i går, hva som trenger svar i dag, og alt med en frist denne uken. Maks 10 linjer. Ikke endre noe."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Oppsettslenken din for MCPEmails",
+      "intro": "Åpne denne lenken på datamaskinen for å legge til MCPEmails i {client}:"
+    },
+    "helpSteps": {
+      "subject": "Slik kobler du MCPEmails til {client}",
+      "intro": "Slik får du {client} til å virke med MCPEmails:",
+      "prompt": "Lim så inn denne prompten i den nye chatten:",
+      "guide": "Oppsettsguide:",
+      "resume": "Fortsett der du slapp:"
+    },
+    "morning": {
+      "subject": "Prompten for morgenoppsummeringen",
+      "intro": "God morgen. Lim inn dette i {client} for å få morgenoppsummeringen din:"
+    },
+    "footer": "Du ba om denne e-posten da du satte opp MCPEmails. Den sendes én gang."
+  }
 }

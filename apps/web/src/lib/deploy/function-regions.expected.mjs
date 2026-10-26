@@ -115,6 +115,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/internal/black-week-email/dispatch/route.ts': 60,
   'app/api/internal/eur-launch/dispatch/route.ts': 60,
   'app/api/internal/first-30-days/dispatch/route.ts': 60,
+  'app/api/internal/onboarding-morning-brief/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/internal/pro-price-notice/dispatch/route.ts': 60,
   'app/api/internal/referrals/dispatch/route.ts': 60,
@@ -233,6 +234,7 @@ export const ROUTES = [
   ['app/api/internal/first-30-days/dispatch/route.ts', 'arn1', '2+', 'Resend per email; one IMAP APPEND per stuck-note draft; caller is the scheduler'],
   ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/webhook-disabled/route.ts', 'arn1', '3', 'Resend (one email to the owner); caller is the client-api edge function'],
+  ['app/api/internal/onboarding-morning-brief/dispatch/route.ts', 'arn1', '2-4', 'Resend per email; caller is the scheduler'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/pro-price-notice/dispatch/route.ts', 'arn1', '~6', 'Resend per email, one run on one day; caller is the scheduler'],
   ['app/api/internal/referrals/dispatch/route.ts', 'arn1', '~12 per row', 'Stripe API x4-6 + Resend per due referral; caller is the scheduler'],
@@ -246,6 +248,7 @@ export const ROUTES = [
   ['app/api/oauth/revoke/route.ts', 'arn1', '1-2', '-'],
   ['app/api/oauth/token/route.ts', 'arn1', '9 (refresh 6)', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/userinfo/route.ts', 'arn1', '2', '-'],
+  ['app/api/onboarding/assist/route.ts', 'arn1', '3-5', 'Resend for the two email actions'],
   // "Send this error to support" from the onboarding inbox step: the ticket
   // path of app/api/support/tickets, so the same region.
   ['app/api/onboarding/connect-help/route.ts', 'arn1', '4-8', 'Resend x2'],

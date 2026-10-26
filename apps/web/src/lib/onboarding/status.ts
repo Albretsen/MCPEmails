@@ -18,9 +18,10 @@
  *                   it is one the chip offers, else null
  *   inboxes         { count, sinceReset, items: [{ id, address, provider,
  *                   status, createdAt }] }  live inboxes, oldest first, max 10
- *   credential      { exists, sinceReset, latestAt }  a connector grant or API
- *                   key (api_keys.kind IS NULL: the web client's own key is
- *                   not one)
+ *   credential      { exists, sinceReset, latestAt, scopes }  a connector grant
+ *                   or API key (api_keys.kind IS NULL: the web client's own key
+ *                   is not one); scopes = the newest one's scopes (the prompt
+ *                   step never offers a draft prompt to a read-only key)
  *   handshake       { at, client, clients: [{ client, name, firstSeen,
  *                   lastSeen }] }  MCP `initialize` seen (mcp_client_capabilities),
  *                   newest first, only rows seen since reset. `client` is the
@@ -66,7 +67,7 @@ export interface OnboardingStatus {
   completedAt: string | null;
   client: string | null;
   inboxes: { count: number; sinceReset: number; items: OnboardingInboxItem[] };
-  credential: { exists: boolean; sinceReset: boolean; latestAt: string | null };
+  credential: { exists: boolean; sinceReset: boolean; latestAt: string | null; scopes: string[] | null };
   handshake: { at: string | null; client: string | null; clients: OnboardingHandshake[] };
   firstCall: { at: string | null; tool: string | null };
   anyCall: { at: string | null };
@@ -91,7 +92,7 @@ export interface OnboardingStatusRows {
   } | null;
   inboxes: Array<{ id: string; email_address: string; provider: string; status: string | null; created_at: string }>;
   inboxCount: number | null;
-  latestKey: { created_at: string } | null;
+  latestKey: { created_at: string; scopes?: string[] | null } | null;
   handshakes: Array<{ client_name: string; first_seen: string; last_seen: string }>;
   lastFailure: { created_at: string; tool_name: string; error_code: string | null } | null;
 }
@@ -149,6 +150,7 @@ export function shapeOnboardingStatus(rows: OnboardingStatusRows): OnboardingSta
       exists: rows.latestKey !== null,
       sinceReset: after(rows.latestKey?.created_at, resetFloor),
       latestAt: rows.latestKey?.created_at ?? null,
+      scopes: Array.isArray(rows.latestKey?.scopes) ? rows.latestKey.scopes : null,
     },
     handshake: { at: handshakes[0]?.lastSeen ?? null, client: handshakes[0]?.client ?? null, clients: handshakes },
     firstCall: { at: firstCallAt, tool: firstCallAt ? (ws?.analytics_first_tool_name ?? null) : null },
@@ -176,7 +178,7 @@ export async function loadOnboardingStatus(db: Db, workspaceId: string, now: num
       .order('created_at', { ascending: true })
       .limit(MAX_INBOX_ITEMS),
     db.from('api_keys')
-      .select('created_at')
+      .select('created_at, scopes')
       .eq('workspace_id', workspaceId)
       .is('kind', null)
       .is('deleted_at', null)

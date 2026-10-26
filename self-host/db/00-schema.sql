@@ -131,8 +131,15 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS onboarding_stage                   text NOT NULL DEFAULT 'started',
   ADD COLUMN IF NOT EXISTS onboarding_client                  text,
   ADD COLUMN IF NOT EXISTS onboarding_technical_activated_at  timestamptz,
-  ADD COLUMN IF NOT EXISTS onboarding_value_activated_at      timestamptz;
+  ADD COLUMN IF NOT EXISTS onboarding_value_activated_at      timestamptz,
+  ADD COLUMN IF NOT EXISTS onboarding_welcome_shown_at        timestamptz;
 CREATE INDEX IF NOT EXISTS idx_workspaces_owner_id ON public.workspaces (owner_id);
+
+-- First-result welcome line (hosted: 20261026221917_onboarding_connect_steps.sql).
+-- Hosted, it shows to internal accounts only; self-host has none, so never.
+CREATE OR REPLACE FUNCTION public.claim_onboarding_welcome(p_workspace_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE
+    AS $$ SELECT false; $$;
 CREATE OR REPLACE TRIGGER workspaces_updated_at
   BEFORE UPDATE ON public.workspaces
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

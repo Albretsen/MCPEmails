@@ -8,6 +8,7 @@ import type { AuthFailureReason } from '@/lib/email/auth-failure';
 import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import type { OnboardingStepCategory } from '@/lib/onboarding/flow';
+import type { OnboardingAssistCategory } from '@/lib/onboarding/assist';
 
 /**
  * Which control opened the connect modal. The closed list lives in
@@ -134,7 +135,14 @@ export type ProductFunnelEvent = {
     // The /onboarding flow (20261026152301, src/lib/onboarding/). Step views
     // carry the step as category (OnboardingStepCategory); client_changed and
     // onboarding_completed carry the client; onboarding_reset is 'unknown'.
-    | 'onboarding_step_viewed' | 'client_changed' | 'onboarding_completed' | 'onboarding_reset';
+    | 'onboarding_step_viewed' | 'client_changed' | 'onboarding_completed' | 'onboarding_reset'
+    // /onboarding sub-states (20261026221917, WP-F): handshake and open-client
+    // carry the client, help the tier (help_*), prompt copies the prompt
+    // (prompt_*), emailed links the link (link_*), the morning brief opt-in the
+    // client and its send 'unknown'.
+    | 'onboarding_handshake_seen' | 'onboarding_help_shown' | 'onboarding_prompt_copied'
+    | 'onboarding_open_client_clicked' | 'onboarding_link_emailed'
+    | 'morning_brief_opt_in' | 'morning_brief_sent';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
@@ -143,7 +151,7 @@ export type ProductFunnelEvent = {
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
     | PlanChangeCategory | CancelReason | RetentionOptionCategory
-    | 'claude_code' | OnboardingStepCategory;
+    | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

@@ -192,16 +192,77 @@
       }
     },
     "add_to_ai": {
-      "title": "将 MCPEmails 添加到 {client}"
+      "title": "将 MCPEmails 添加到 {client}",
+      "lead": "在 {client} 中完成一步，然后回到这里。{client} 连接后，此页面会自动继续。",
+      "urlLabel": "MCPEmails 服务器 URL",
+      "linkAfter": "{client} 会打开并已填好 MCPEmails。确认后，在提示时登录 MCPEmails。",
+      "claudeAfter": "Claude 会打开添加自定义连接器的窗口，并已填好 MCPEmails。点击添加，再点击连接，然后允许访问。",
+      "commandAfter": "然后启动 {client}，在提示时登录 MCPEmails。",
+      "configLead": "把这段加入 {file}，重新加载 {client}，在提示时登录 MCPEmails。",
+      "genericOauth": "在 {client} 中添加一个 HTTP 类型的 MCP 服务器，粘贴下面的 URL，在提示时登录 MCPEmails。",
+      "manual": "手动设置",
+      "continue": "已添加，继续",
+      "chatgpt": {
+        "step1": "在 chatgpt.com 上打开 Plugins，然后打开 Personal。",
+        "step2": "点击 Add，然后点击 Add custom MCP server。",
+        "step3": "命名为 MCPEmails，粘贴下面的 URL，创建后在提示时登录 MCPEmails。",
+        "step4": "在对话中输入 @MCPEmails 即可使用。",
+        "note": "自定义 MCP 服务器适用于 Go 方案和所有付费方案，需要在浏览器中打开 chatgpt.com。"
+      },
+      "key": {
+        "creating": "正在为 {client} 创建 API 密钥",
+        "ready": "我们已为 {client} 创建了一个标准权限的 API 密钥（读取、草稿、发送）。请现在复制：它只显示一次。",
+        "failed": "无法创建 API 密钥。请在控制台的 API 密钥页面创建一个。",
+        "limit": "你的方案已没有空间再添加 API 密钥。请先在控制台删除一个，然后刷新此页面。",
+        "retry": "重试",
+        "header": "请求头",
+        "label": "API 密钥"
+      },
+      "cline": {
+        "step1": "在 Cline 中打开 MCP Servers，然后打开 Remote Servers 标签页。",
+        "step2": "命名为 MCPEmails，粘贴 URL，并将 Transport Type 设为 Streamable HTTP。",
+        "step3": "添加下面的请求头，然后点击 Add Server。"
+      },
+      "jetbrains": {
+        "step1": "打开 Settings，然后依次打开 Tools、AI Assistant、Model Context Protocol (MCP)。",
+        "step2": "点击 Add，选择 Streamable HTTP 并粘贴 URL。",
+        "step3": "添加下面的请求头并保存。"
+      },
+      "curl": "用这个密钥调用服务器。下一步会给你第一个可发送的请求。",
+      "phone": {
+        "claudeTitle": "在手机上，请通过浏览器添加",
+        "claudeBody": "复制此链接并粘贴到 Safari 或 Chrome 中。直接点击可能会打开 Claude 应用，而应用中无法添加连接器。添加后，MCPEmails 在应用中也能使用。",
+        "copyLink": "复制链接",
+        "otherBody": "{client} 需要在电脑上设置。我们可以把这一步发到你的邮箱，方便你在电脑上打开。",
+        "showHere": "仍在这里显示步骤"
+      }
     },
     "first_prompt": {
-      "title": "向 {client} 提个问题"
+      "title": "向 {client} 提个问题",
+      "lead": "把这段粘贴到 {client} 的新对话中：",
+      "leadCode": "把这段粘贴到 {client} 中：",
+      "leadApi": "发送你的第一个请求：",
+      "open": "打开 {client}",
+      "openNote": "会打开一个新对话。把提示词粘贴到那里。"
     },
     "wait": {
       "title": "正在等待 {client}"
     },
     "it_works": {
-      "title": "已成功"
+      "title": "已成功",
+      "success": {
+        "read": "{client} 刚刚读取了你的收件箱。",
+        "search": "{client} 刚刚搜索了你的收件箱。",
+        "draft": "{client} 刚刚在你的邮箱中保存了一封草稿。",
+        "organize": "{client} 刚刚整理了你的收件箱。",
+        "generic": "{client} 刚刚使用了你的邮箱。"
+      },
+      "next": "接下来，粘贴这段：",
+      "ritual": "明天早上，粘贴这段：",
+      "optIn": "明天 8 点把这段发到我的邮箱",
+      "optInDone": "我们会在明天 8:00 发送到 {email}。",
+      "optInFailed": "无法保存，请重试。",
+      "finish": "前往控制台"
     }
   },
   "nav": {
@@ -209,5 +270,85 @@
     "back": "返回",
     "done": "完成"
   },
-  "placeholder": "此步骤仍在建设中。"
+  "placeholder": "此步骤仍在建设中。",
+  "actions": {
+    "copy": "复制",
+    "copied": "已复制",
+    "emailMe": "把这个链接发到我的邮箱",
+    "emailSent": "已发送到 {email}。",
+    "emailFailed": "无法发送邮件，请一分钟后重试。"
+  },
+  "ladder": {
+    "waiting": "正在等待 {client}",
+    "connected": "{client} 已连接",
+    "ask": "向它提问",
+    "works": "已成功",
+    "listening": "正在等待 {client}",
+    "stopped": "已停止等待。试过提示词后请刷新此页面。"
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} 尚未连接",
+      "claude": "刷新 claude.ai 并开始新对话。如果使用 Claude Desktop，请完全退出应用后重新打开。",
+      "chatgpt": "在 chatgpt.com 上开始新对话，输入 @ 并选择 MCPEmails。",
+      "editor": "重新加载 {client} 窗口，检查 MCPEmails 在 MCP 列表中显示为已连接。如果没有，请重新粘贴 URL。",
+      "cli": "退出并重新启动 {client}，然后检查 MCPEmails 已列出并已连接。",
+      "api": "重新发送请求，并检查 Authorization 请求头中带有你的密钥。"
+    },
+    "noCall": {
+      "title": "{client} 已连接，但还没有使用 MCPEmails",
+      "claude": "在此对话中开启 MCPEmails（+ > Connectors），或开始新对话，然后重新粘贴提示词。",
+      "chatgpt": "在对话中输入 @ 并选择 MCPEmails，然后重新粘贴提示词。",
+      "other": "开始新对话并重新粘贴提示词。提示词中提到了 MCPEmails，{client} 就知道要使用它。"
+    },
+    "reconnect": {
+      "title": "还是不行？",
+      "body": "从 {client} 中移除 MCPEmails，重新添加，然后开始新对话。",
+      "docs": "{client} 设置指南",
+      "back": "重新显示设置步骤",
+      "email": "把步骤发到我的邮箱"
+    }
+  },
+  "failure": {
+    "title": "上一个请求没有成功",
+    "auth": "你的邮件服务商拒绝了收件箱密码。请在控制台中重新连接收件箱。",
+    "timeout": "你的邮件服务器响应太慢。请缩短时间范围后再问一次。",
+    "provider": "你的邮件服务商返回了错误。请一分钟后重试。",
+    "scope": "你授予 {client} 的权限不允许这样做。请换个请求，或用更多权限重新连接。",
+    "inbox": "{client} 没有找到已连接的收件箱。请在控制台中检查你的收件箱。",
+    "params": "{client} 发送了 MCPEmails 无法读取的请求。它通常会自动重试。",
+    "generic": "{client} 的上一个请求失败了。请再问一次。"
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "使用 MCPEmails，查看我过去 2 天的收件箱，告诉我今天哪些邮件需要我回复。每封一行：谁、想要什么、截止何时。不要发送、起草、移动或删除任何内容。",
+      "code": "使用 MCPEmails 工具查看我过去 2 天的收件箱，告诉我今天哪些邮件需要我回复。每封一行：谁、想要什么、截止何时。不要发送、起草、移动或删除任何内容。"
+    },
+    "draftReplies": {
+      "drafts": "从这个列表中选出最需要回复的 3 封邮件，用我平常的语气为每封写一封回复草稿，保存到我的草稿文件夹。不要发送任何内容。",
+      "readOnly": "从这个列表中选出最需要回复的 3 封邮件，直接在对话中为每封写一段简短回复。不要发送或保存任何内容。"
+    },
+    "morningBrief": {
+      "chat": "使用 MCPEmails，给我今天的晨间简报：从昨天到现在收到了什么、今天需要回复什么、以及本周有截止日期的事项。不超过 10 行。不要更改任何内容。",
+      "code": "使用 MCPEmails 工具给我今天的晨间简报：从昨天到现在收到了什么、今天需要回复什么、以及本周有截止日期的事项。不超过 10 行。不要更改任何内容。"
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "你的 MCPEmails 设置链接",
+      "intro": "在电脑上打开此链接，把 MCPEmails 添加到 {client}："
+    },
+    "helpSteps": {
+      "subject": "如何将 MCPEmails 连接到 {client}",
+      "intro": "让 {client} 与 MCPEmails 正常配合的方法：",
+      "prompt": "然后把这段提示词粘贴到新对话中：",
+      "guide": "设置指南：",
+      "resume": "从上次中断的地方继续："
+    },
+    "morning": {
+      "subject": "你的晨间简报提示词",
+      "intro": "早上好。把这段粘贴到 {client} 中，获取你的晨间简报："
+    },
+    "footer": "你在设置 MCPEmails 时请求了这封邮件。它只发送一次。"
+  }
 }
