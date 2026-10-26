@@ -3,7 +3,7 @@
 // these same functions, in apps/mcp-app/harness/draft-formatting.test.mjs.
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { htmlHasFormatting, mergeTextEditIntoHtml, textPartMatchingHtml } from "./html-text-merge.ts";
+import { hasMarkdownSyntax, htmlHasFormatting, mergeTextEditIntoHtml, textPartMatchingHtml } from "./html-text-merge.ts";
 import {
   applyDraftPatch,
   type DraftEditorProviderInbox,
@@ -114,7 +114,7 @@ const CLAUDE_HTML = "<h2>Quick update</h2>\n<p>We moved the launch to <b>Friday<
   '<a href="https://example.com">example.com</a>.</p>';
 const CLAUDE_TEXT = "Quick update\n\nWe moved the launch to Friday.\n\n* Footer fixed\n* Docs updated\n\n" +
   "Plan: https://example.com/plan\nLearn more: https://example.com";
-const OWN_TEXT = "Quick update\n\nWe moved the launch to Friday.\n\n- Footer fixed\n- Docs updated\n\n" +
+const OWN_TEXT = "Quick update\n\nWe moved the launch to Friday.\n\n• Footer fixed\n• Docs updated\n\n" +
   "Read the plan (https://example.com/plan). Learn more at example.com.";
 
 Deno.test("divergent text: the merge refused it before, which was the live bug", () => {
@@ -144,8 +144,9 @@ Deno.test("textPartMatchingHtml: a formatted HTML part with other words gets its
 });
 
 Deno.test("textPartMatchingHtml: leaves the agent's text alone whenever there is doubt", () => {
-  // Already the same words: untouched, byte for byte.
-  assertEquals(textPartMatchingHtml(TEXT, HTML), TEXT);
+  // Already the same words, with no markdown: untouched, byte for byte.
+  const bulleted = TEXT.replaceAll("- ", "• ");
+  assertEquals(textPartMatchingHtml(bulleted, HTML), bulleted);
   // No formatting: a body edit regenerates it without loss, so nothing to do.
   assertEquals(textPartMatchingHtml("Hi there", "<p>Hello</p><p>Bye</p>"), "Hi there");
   assertEquals(textPartMatchingHtml("Hi there", undefined), "Hi there");
@@ -161,7 +162,7 @@ Deno.test("divergent text: once stored as the HTML's own text, a one-word edit k
     CLAUDE_HTML.replace("moved", "pushed"),
   );
   assertEquals(
-    mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored.replace("- Docs updated", "- Docs rewritten")),
+    mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored.replace("• Docs updated", "• Docs rewritten")),
     CLAUDE_HTML.replace("<li>Docs updated</li>", "<li>Docs rewritten</li>"),
   );
   // A paragraph added at the end becomes a new <p> (2026-10-19)...
@@ -478,4 +479,84 @@ Deno.test("link url: edits inside the address are still refused, never shown as 
     mergeTextEditIntoHtml(URL_HTML, URL_TEXT, "Hi (https://mcpemails.com). " + URL_TEXT),
     "<p>Hi (https://mcpemails.com). " + URL_HTML.slice(3),
   );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A text part written as markdown (live claude.ai test, 2026-10-26)
+// ═══════════════════════════════════════════════════════════════════════════
+// Claude wrote `body` as markdown next to a correct `html_body`. The words
+// matched, so the text was stored as it was and the card's editable body
+// showed "**Deadline Friday**" and "- " bullets.
+
+const MD_HTML = "<p>Hi team,</p>\n<p><strong>Deadline Friday</strong></p>\n<p>Plan:</p>\n" +
+  '<ul><li>Draft the post</li><li>Review it with <a href="https://example.com/doc">the doc</a></li></ul>\n' +
+  "<p>Thanks, <em>Sam</em></p>";
+const MD_TEXT = "Hi team,\n\n**Deadline Friday**\n\nPlan:\n- Draft the post\n" +
+  "- Review it with [the doc](https://example.com/doc)\n\nThanks, *Sam*";
+const MD_OWN = "Hi team,\n\nDeadline Friday\n\nPlan:\n\n• Draft the post\n" +
+  "• Review it with the doc (https://example.com/doc)\n\nThanks, Sam";
+
+Deno.test("markdown text: stored as the HTML's own text, with no markdown left", () => {
+  const stored = textPartMatchingHtml(MD_TEXT, MD_HTML);
+  assertEquals(stored, MD_OWN);
+  assertEquals(hasMarkdownSyntax(stored), false);
+  // Headings, "* " bullets, "__bold__" and inline code too.
+  assertEquals(
+    textPartMatchingHtml(
+      "## Status\n\n* __Done__: the `deploy` step",
+      "<h2>Status</h2><ul><li><b>Done</b>: the <code>deploy</code> step</li></ul>",
+    ),
+    "Status\n\n• Done: the deploy step",
+  );
+  // An HTML part with no formatting still gives plain text for the markers.
+  assertEquals(textPartMatchingHtml("**Deadline** is Friday", "<p>Deadline is Friday</p>"), "Deadline is Friday");
+});
+
+Deno.test("markdown text: other words than the HTML, or no HTML, leave it alone", () => {
+  // Nothing says what the markers meant: the text stays as written.
+  assertEquals(textPartMatchingHtml(MD_TEXT, undefined), MD_TEXT);
+  // Other words in an unformatted HTML part: the old rule, untouched.
+  assertEquals(textPartMatchingHtml("**Deadline** is Friday", "<p>See you</p>"), "**Deadline** is Friday");
+});
+
+Deno.test("markdown text: an edit in the card still keeps bold, bullets and links", () => {
+  const stored = textPartMatchingHtml(MD_TEXT, MD_HTML);
+  // Inside the bold line.
+  assertEquals(
+    mergeTextEditIntoHtml(MD_HTML, stored, stored.replace("Deadline Friday", "Deadline Thursday")),
+    MD_HTML.replace("Deadline Friday", "Deadline Thursday"),
+  );
+  // Inside a bullet.
+  assertEquals(
+    mergeTextEditIntoHtml(MD_HTML, stored, stored.replace("Draft the post", "Draft the blog post")),
+    MD_HTML.replace("Draft the post", "Draft the blog post"),
+  );
+  // At the end of the last line: it joins the run it touches.
+  assertEquals(
+    mergeTextEditIntoHtml(MD_HTML, stored, stored + "!"),
+    MD_HTML.replace("<em>Sam</em></p>", "<em>Sam!</em></p>"),
+  );
+  // A paragraph added at the end.
+  assertEquals(
+    mergeTextEditIntoHtml(MD_HTML, stored, stored + "\n\nOne more thing."),
+    MD_HTML + "<p>One more thing.</p>",
+  );
+  // The markdown text as Claude wrote it would also have merged: the gate
+  // ignores punctuation. What changes is what the person sees and types into.
+  assert(mergeTextEditIntoHtml(MD_HTML, MD_TEXT, MD_TEXT.replace("Friday", "Thursday")) !== null);
+});
+
+Deno.test("hasMarkdownSyntax: markers a model writes, not ordinary punctuation", () => {
+  for (
+    const md of [
+      "**bold**", "a __bold__ word", "an *italic* word", "_italic_", "# Heading", "### Sub",
+      "[docs](https://example.com)", "run `npm ci`", "- item", "  * item", "+ item",
+    ]
+  ) assert(hasMarkdownSyntax(md), md);
+  for (
+    const plain of [
+      "Hi there,\n\nSee you Friday.", "5 * 3 = 15", "a - b", "snake_case_name", "#hashtag",
+      "C# and F#", "• item", "1. First", "Price: $5*", "Re: notes (draft)",
+    ]
+  ) assert(!hasMarkdownSyntax(plain), plain);
 });

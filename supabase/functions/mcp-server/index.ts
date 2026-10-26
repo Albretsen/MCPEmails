@@ -6635,7 +6635,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         body: {
           type: "string",
-          description: "Plain-text draft body.",
+          // Live claude.ai test 2026-10-26: Claude wrote body as markdown,
+          // and the card's editable body showed the ** and - markers.
+          description: "Plain-text draft body, not markdown (no ** or #): formatting goes in html_body.",
         },
         html_body: {
           type: "string",
@@ -6676,7 +6678,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           description: "Message id to reply to.",
         },
-        body: { type: "string", description: "Plain-text content of the reply draft." },
+        body: {
+          type: "string",
+          description: "Plain-text content of the reply draft, not markdown (no ** or #): formatting goes in html_body.",
+        },
         html_body: { type: "string", description: "Optional HTML version of the reply draft." },
         reply_all: {
           type: "boolean",
@@ -6762,7 +6767,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         body: {
           type: "string",
           description: "Updated plain-text body, your text only: a reply's quoted original " +
-            "is kept and the signature added by the server. Omit to keep the stored body text.",
+            "is kept and the signature added by the server. Not markdown (no ** or #): " +
+            "formatting goes in html_body. Omit to keep the stored body text.",
         },
         html_body: {
           type: "string",

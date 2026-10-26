@@ -835,7 +835,7 @@ function bareAddress(s: string): string {
 
 /**
  * The HTML read as plain text the way a person would type it: a line per
- * block with a blank line after a paragraph, "- " or "1. " before a list item,
+ * block with a blank line after a paragraph, "• " or "1. " before a list item,
  * and a link's address after its words when the words are not the address.
  */
 function htmlAsText(html: string): string {
@@ -899,7 +899,9 @@ function htmlAsText(html: string): string {
             owe(1);
           }
           if (list) list.n++;
-          put(list?.ordered ? `${list.n}. ` : "- ");
+          // "• ", not "- ": a "- " line reads as markdown in the card's
+          // plain-text body (live claude.ai test, 2026-10-26).
+          put(list?.ordered ? `${list.n}. ` : "\u2022 ");
           markerOnly = true;
         } else if (PARAGRAPH_ELEMENTS.has(tag.name)) {
           owe(2);
@@ -948,6 +950,12 @@ function htmlAsText(html: string): string {
  */
 export function textPartMatchingHtml(text: string, html: string | null | undefined): string {
   if (typeof html !== "string" || html.trim().length === 0) return text;
+  if (hasMarkdownSyntax(text) && sameWords(html, text)) {
+    // The same words, written as markdown: the HTML's own text, which says
+    // them as plain text (see the block below).
+    const own = htmlAsText(html);
+    return own.length > 0 && sameWords(html, own) ? own : text;
+  }
   if (!htmlHasFormatting(html)) return text;
   if (sameWords(html, text)) {
     // The same words, but links written "label (url)": the HTML's own text,
@@ -961,6 +969,37 @@ export function textPartMatchingHtml(text: string, html: string | null | undefin
   }
   const own = htmlAsText(html);
   return own.length > 0 && sameWords(html, own) ? own : text;
+}
+
+// ── A TEXT PART WRITTEN AS MARKDOWN (live claude.ai test, 2026-10-26) ──────
+// Claude writes the plain `body` next to its `html_body` as markdown:
+// "**Deadline Friday**" next to `<strong>Deadline Friday</strong>`, "- item"
+// next to `<li>item</li>`. `sameWords` ignores punctuation, so the two parts
+// agreed and the text was stored as it was, and the card's editable body
+// showed the asterisks and dashes (the HTML under "Show formatting" was right).
+//
+// So when the text has markdown syntax and says the same words as the HTML,
+// the stored text is the HTML's own text, with bullets written "• ". The
+// HTML need not be "formatted" for this: its own text is what a plain-text
+// reader should see either way. Everything else is as for words that differ:
+// the result is used only when `sameWords` holds for it, and the merge reads
+// the "• " marker like "- " (`BULLET`, `mergeSameLines`), so an edit in the
+// card still keeps every tag. A text part sent with no HTML is left alone:
+// there is nothing to say what the markers meant, and the tool descriptions
+// ask for plain text.
+
+/**
+ * True when `text` has the markdown a model writes for formatting: bold or
+ * italic markers around words, a "#" heading, a "[label](url)" link, inline
+ * code, or a "- ", "* " or "+ " bullet line.
+ */
+export function hasMarkdownSyntax(text: string): boolean {
+  return /\*\*[^*\n]*\S\*\*|__[^_\n]*\S__/.test(text) ||
+    /(?:^|[\s(])[*_][^\s*_][^*_\n]*[*_](?=$|[\s).,;:!?])/m.test(text) ||
+    /^ {0,3}#{1,6}[ \t]+\S/m.test(text) ||
+    /\[[^\]\n]+\]\([^)\s]+\)/.test(text) ||
+    /`[^`\n]+`/.test(text) ||
+    /^[ \t]*[-*+][ \t]+\S/m.test(text);
 }
 
 // ── A LINK'S ADDRESS WRITTEN AFTER ITS WORDS (live claude.ai, v264) ─────────
