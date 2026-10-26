@@ -382,10 +382,12 @@ SELECT is(
 -- With the secret: one request to the client-api dispatch route. (This
 -- transaction is rolled back, so pg_net never sends it.)
 SELECT vault.create_secret('push-test-dispatch-secret', 'dispatch_secret');
+DELETE FROM vault.secrets WHERE name = 'functions_base_url';
+SELECT vault.create_secret('https://fn.push-test.invalid/functions/v1', 'functions_base_url');
 SELECT public.dispatch_inbox_watch();
 SELECT is(
   (SELECT count(*) FROM net.http_request_queue
-    WHERE url = 'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/client-api/push/dispatch'),
+    WHERE url = 'https://fn.push-test.invalid/functions/v1/client-api/push/dispatch'),
   1::bigint,
   'due mailboxes with the secret: exactly one POST to client-api /push/dispatch for a small backlog');
 
