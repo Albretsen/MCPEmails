@@ -32,11 +32,11 @@
 // would put all of it in the bundle of the home page too.
 
 /**
- * The endpoint every one of these pages tells the reader to paste. Built from
- * NEXT_PUBLIC_APP_URL so staging pages point at staging; production sets it to
- * the apex, which gives the same URL as before.
+ * The endpoint every one of these pages tells the reader to paste. Defined in
+ * mcp-url.mjs (built from NEXT_PUBLIC_APP_URL, so staging points at staging)
+ * and shared with install-links.mjs.
  */
-export const MCP_URL = `${(process.env.NEXT_PUBLIC_APP_URL || 'https://mcpemails.com').replace(/\/+$/, '')}/api/mcp`;
+export { MCP_URL } from './mcp-url.mjs';
 
 export const CLIENT_CATEGORIES = [
   { id: 'assistant', label: 'AI assistants', anchor: 'assistants' },

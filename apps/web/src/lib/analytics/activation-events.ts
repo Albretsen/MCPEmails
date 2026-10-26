@@ -20,18 +20,23 @@ import { ONBOARDING_CLIENTS } from '@/lib/onboarding/state';
  *   first_call_prompt_copied  a suggested first prompt was copied. category = client.
  *   waiting_state_shown       the "waiting for your first call" state was shown.
  *                             category = client.
+ *   install_link_clicked      a one-click install button (Add to Claude, Add to
+ *                             Cursor, Install in VS Code; lib/clients/install-links.mjs)
+ *                             was clicked. category = client.
  *
  * Every row is outcome 'success' with no error_category. The workspace always
  * comes from the session, never from the request body.
  *
  * Keep the stage list in step with the CHECK in
- * supabase/migrations/20261024233717_activation_rescue_stages.sql.
+ * supabase/migrations/20261024233717_activation_rescue_stages.sql and
+ * 20261026203517_install_link_clicked_stage.sql.
  */
 export const ACTIVATION_EVENT_STAGES = [
   'connect_fix_shown',
   'connect_fix_link_clicked',
   'first_call_prompt_copied',
   'waiting_state_shown',
+  'install_link_clicked',
 ] as const;
 export type ActivationEventStage = (typeof ACTIVATION_EVENT_STAGES)[number];
 
@@ -104,6 +109,7 @@ export const ACTIVATION_DEDUPE_WINDOW_MS: Record<ActivationEventStage, number> =
   connect_fix_link_clicked: 2 * MINUTE,
   first_call_prompt_copied: 2 * MINUTE,
   waiting_state_shown: DAY,
+  install_link_clicked: 2 * MINUTE,
 };
 
 /** Hard ceiling per workspace per stage per rolling day, whatever the browser sends. */

@@ -16,6 +16,7 @@ import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
 import { startVisiblePoll } from '@/lib/polling/visible-poll';
 import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+import { getInstallAction } from '@/lib/clients/install-links.mjs';
 import {
   FIRST_CALL_POLL_MAX_MS,
   FIRST_CALL_POLL_MS,
@@ -481,6 +482,50 @@ const MCP_CLIENTS = [
 ];
 
 /**
+ * The one-click install action above a client's manual steps
+ * (lib/clients/install-links.mjs): a deep-link button for Claude, Cursor and
+ * VS Code, a copyable command for terminal clients, nothing otherwise. Every
+ * click or copy writes an `install_link_clicked` funnel row for the client.
+ */
+function InstallAction({ client, mcpUrl }) {
+  const locale = useAppLocale()?.locale ?? 'en';
+  const action = getInstallAction(client.k, { locale, mcpUrl });
+  if (!action || action.kind === 'steps') return null;
+  const clientId = onboardingClientOf(client);
+  const record = () => {
+    recordActivationEvent('install_link_clicked', { client: clientId });
+    trackProductEvent('mcp_connection_started', { client: clientId });
+  };
+  if (action.kind === 'command') {
+    return <CopyField value={action.command} label={action.label} onCopy={record} />;
+  }
+  // claude.ai opens in a new tab; cursor:// and vscode: hand off to the app.
+  const external = action.href.startsWith('https:');
+  return (
+    <div data-install-action={action.client} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <a
+          className="btn btn-primary"
+          href={action.href}
+          onClick={record}
+          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {action.label}
+        </a>
+        {action.alt ? (
+          <a href={action.alt.href} onClick={record} style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' }}>
+            {action.alt.label}
+          </a>
+        ) : null}
+      </div>
+      {action.note ? (
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>{action.note}</div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
  * Per-client connection guide modal. Highlights the live MCP URL (copyable),
  * lists the steps to connect, shows a copyable config snippet when relevant,
  * and links to the client's official guide. For non-OAuth clients it surfaces
@@ -526,6 +571,8 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, c
 
         {/* Body */}
         <div className="modal-body">
+          <InstallAction client={client} mcpUrl={mcpUrl} />
+
           <CopyField value={mcpUrl} label={t('clients.mcpServerUrl')} onCopy={() => trackProductEvent('mcp_connection_started', { client: client.k === 'api' ? 'curl' : client.k })} />
 
           <ol style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>

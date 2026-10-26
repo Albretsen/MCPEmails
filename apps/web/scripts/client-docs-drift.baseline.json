@@ -1,0 +1,126 @@
+{
+  "sources": [
+    {
+      "id": "claude-custom-connectors-help",
+      "client": "claude",
+      "url": "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+      "phrases": [
+        "Add custom connector",
+        "Customize",
+        "Connectors"
+      ],
+      "hash": "38af644cbdc0d802",
+      "length": 12597,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "claude-install-link",
+      "client": "claude",
+      "url": "https://claude.com/docs/connectors/building/directory-vs-custom.md",
+      "phrases": [
+        "claude.ai/customize/connectors?modal=add-custom-connector",
+        "connectorName=",
+        "connectorUrl="
+      ],
+      "hash": "fcbd3b6300d9d2f2",
+      "length": 6649,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "claude-add-unlisted",
+      "client": "claude",
+      "url": "https://claude.com/docs/connectors/custom/add-unlisted.md",
+      "phrases": [
+        "one custom connector",
+        "Add custom connector"
+      ],
+      "hash": "a7ab317c3947109f",
+      "length": 14344,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "chatgpt-custom-mcp-help",
+      "client": "chatgpt",
+      "url": "https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt",
+      "phrases": [
+        "Add custom MCP server",
+        "Plugins"
+      ],
+      "hash": "ee9ed03c2ed83f38",
+      "length": 14530,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "cursor-install-links",
+      "client": "cursor",
+      "url": "https://cursor.com/docs/mcp/install-links",
+      "phrases": [
+        "cursor://anysphere.cursor-deeplink/mcp/install?name=",
+        "config=$BASE64_ENCODED_CONFIG"
+      ],
+      "hash": "d3d30d6d766e4b16",
+      "length": 2626,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "vscode-install-url",
+      "client": "vscode",
+      "url": "https://code.visualstudio.com/api/extension-guides/ai/mcp",
+      "phrases": [
+        "vscode:mcp/install?{json-configuration}",
+        "vscode-insiders:mcp/install"
+      ],
+      "hash": "1fa4f7e46fc5cdbd",
+      "length": 20793,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "vscode-mcp-servers",
+      "client": "vscode",
+      "url": "https://code.visualstudio.com/docs/agent-customization/mcp-servers",
+      "phrases": [
+        "MCP: Add Server"
+      ],
+      "hash": "fc422de3c78f313c",
+      "length": 9978,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "devin-desktop-mcp",
+      "client": "windsurf",
+      "url": "https://docs.devin.ai/desktop/cascade/mcp",
+      "phrases": [
+        "mcp_config.json",
+        "serverUrl"
+      ],
+      "hash": "653c5df7f575c5ad",
+      "length": 13334,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "gemini-cli-mcp",
+      "client": "gemini",
+      "url": "https://geminicli.com/docs/tools/mcp-server/",
+      "phrases": [
+        "gemini mcp add",
+        "--transport http",
+        "httpUrl"
+      ],
+      "hash": "cd18cf105d9a90d3",
+      "length": 41831,
+      "checkedAt": "2026-10-26"
+    },
+    {
+      "id": "goose-extensions",
+      "client": "goose",
+      "url": "https://goose-docs.ai/docs/getting-started/using-extensions/",
+      "phrases": [
+        "goose://extension?url=",
+        "type=streamable_http"
+      ],
+      "hash": "703999453f14bbf1",
+      "length": 20014,
+      "checkedAt": "2026-10-26"
+    }
+  ]
+}

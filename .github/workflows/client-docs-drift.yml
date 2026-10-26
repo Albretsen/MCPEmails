@@ -1,0 +1,65 @@
+name: Client docs drift
+
+# Daily check that the vendor docs our client setup steps copy from (Claude
+# custom connectors, ChatGPT custom MCP servers, Cursor and VS Code install
+# links, Devin Desktop, Gemini CLI, Goose) still say what our steps say, and
+# that our own install links still point at the live MCP URL. Opens one issue
+# labelled `client-docs-drift` on drift, updates it on later runs, and closes
+# it on a clean run. How to refresh the baseline: the header of
+# apps/web/scripts/client-docs-drift.mjs.
+#
+# Deliberately a separate workflow and NOT a job in ci.yml: `CI passed` gates
+# every production deploy, and a vendor editing their docs must never block a
+# deploy.
+
+on:
+  schedule:
+    - cron: '17 5 * * *' # daily 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: client-docs-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LABEL: client-docs-drift
+      TITLE: 'Client setup docs drift: vendor docs or install links changed'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Plain .mjs with no dependencies, so no npm ci.
+      - name: Check vendor docs and install links
+        id: check
+        run: |
+          set +e
+          node apps/web/scripts/client-docs-drift.mjs > report.md
+          code=$?
+          cat report.md
+          if [ $code -eq 1 ]; then echo "drift=true" >> "$GITHUB_OUTPUT";
+          elif [ $code -eq 0 ]; then echo "drift=false" >> "$GITHUB_OUTPUT";
+          else echo "The check itself crashed (exit $code)"; exit $code; fi
+      - name: Open, update or close the issue
+        run: |
+          gh label create "$LABEL" --color FBCA04 --description "Vendor docs behind our client setup steps changed" 2>/dev/null || true
+          existing=$(gh issue list --state open --label "$LABEL" --json number --jq '.[0].number // empty')
+          if [ "${{ steps.check.outputs.drift }}" = "true" ]; then
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --body-file report.md
+              gh issue comment "$existing" --body "Still drifting as of $(date -u +%F). The issue body has the latest report."
+            else
+              gh issue create --title "$TITLE" --label "$LABEL" --body-file report.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "No drift as of $(date -u +%F): every page matches the baseline and every install link points at the live MCP URL."
+          fi

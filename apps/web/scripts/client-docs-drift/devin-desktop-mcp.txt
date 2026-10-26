@@ -1,0 +1,266 @@
+MCP (Model Context Protocol) is a protocol that enables LLMs to access custom tools and services.
+An MCP client (Cascade, in this case) can make requests to MCP servers to access tools that they provide.
+Cascade now natively integrates with MCP, allowing you to bring your own selection of MCP servers for Cascade to use.
+See the official MCP docs for more information.
+Enterprise users must manually turn this on via settings
+The MCP configuration on this page applies to the legacy Cascade agent only. The Devin Local agent — the default agent for new tabs — configures MCP servers in the Devin CLI config files instead.
+Adding a new MCP
+Cascade MCP servers are added by editing the raw mcp_config.json file (see the mcp_config.json section below).
+To open the file, click the ... (Actions) menu in the top right of the Cascade panel, then click the
+Open MCP config file icon in the MCPs section. Add an entry for each server under mcpServers and save the file.
+Cascade does not have an MCP Marketplace or one-click install. Those are only available for the Devin Local agent.
+Devin Desktop supports three transport types for MCP
+servers: stdio , Streamable HTTP , and SSE .
+Devin Desktop also supports OAuth for each transport type.
+For http servers, the URL should reflect that of the endpoint and resemble https://<your-server-url>/mcp .
+Configuring MCP tools
+Each MCP has a certain number of tools it has access to. Cascade has a limit of 100 total tools that it has access to at any given time.
+The MCPs section of the Cascade panel’s ... (Actions) menu lists your configured servers and how many tools each has enabled.
+Use the toggle next to a server to enable or disable it.
+To disable individual tools, list their names in the server’s disabledTools array in mcp_config.json :
+"mcpServers" : {
+"github" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@modelcontextprotocol/server-github" ],
+"disabledTools" : [ "create_repository" ]
+mcp_config.json
+The mcp_config.json file is a JSON file that contains a list of servers that Cascade can connect to. It is located at:
+macOS / Linux: ~/.config/devin/mcp_config.json (or $XDG_CONFIG_HOME/devin/mcp_config.json if XDG_CONFIG_HOME is set)
+Windows: %APPDATA%\devin\mcp_config.json
+Here’s an example configuration, which sets up a single server for GitHub:
+"mcpServers" : {
+"github" : {
+"command" : "npx" ,
+"args" : [
+"-y" ,
+"@modelcontextprotocol/server-github"
+],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : "<YOUR_PERSONAL_ACCESS_TOKEN>"
+Be sure to provide the required arguments and environment variables for the servers that you want to use.
+See the official MCP server reference repository or OpenTools for some example servers.
+Popular MCP Server Examples
+Below are configuration examples for some commonly used MCP servers. These can be added to your mcp_config.json file.
+GitHub
+Repository management, file operations, and GitHub API integration.
+The GitHub MCP server provides tools for repository management, file operations, issue tracking, and pull request management. Using npx:
+"mcpServers" : {
+"github" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@modelcontextprotocol/server-github" ],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : "<YOUR_PERSONAL_ACCESS_TOKEN>"
+Using Docker:
+"mcpServers" : {
+"github" : {
+"command" : "docker" ,
+"args" : [
+"run" , "-i" , "--rm" ,
+"-e" , "GITHUB_PERSONAL_ACCESS_TOKEN" ,
+"ghcr.io/github/github-mcp-server"
+],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : "<YOUR_PERSONAL_ACCESS_TOKEN>"
+To create a personal access token, visit GitHub Settings > Developer settings > Personal access tokens .
+Slack
+Channel management and messaging capabilities for Slack workspaces.
+The Slack MCP server enables channel management, messaging, and workspace interactions.
+"mcpServers" : {
+"slack" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@anthropic/mcp-server-slack" ],
+"env" : {
+"SLACK_BOT_TOKEN" : "<YOUR_SLACK_BOT_TOKEN>" ,
+"SLACK_TEAM_ID" : "<YOUR_SLACK_TEAM_ID>"
+To set up a Slack bot token:
+Create a Slack App at api.slack.com/apps
+Add the required OAuth scopes (e.g., channels:read , chat:write , users:read )
+Install the app to your workspace and copy the Bot User OAuth Token
+PostgreSQL
+Read-only database access with schema inspection capabilities.
+The PostgreSQL MCP server provides read-only access to PostgreSQL databases, including schema inspection and query execution.
+"mcpServers" : {
+"postgres" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@modelcontextprotocol/server-postgres" ],
+"env" : {
+"POSTGRES_CONNECTION_STRING" : "postgresql://user:password@localhost:5432/database"
+The PostgreSQL server provides read-only access by default for safety. Ensure your connection string uses appropriate credentials with limited permissions.
+Filesystem
+Secure file operations with configurable access controls.
+The Filesystem MCP server provides secure access to local files and directories with configurable access controls.
+"mcpServers" : {
+"filesystem" : {
+"command" : "npx" ,
+"args" : [
+"-y" , "@modelcontextprotocol/server-filesystem" ,
+"/path/to/allowed/directory"
+You can specify multiple allowed directories by adding additional path arguments. Only files within these directories will be accessible.
+Brave Search
+Web and local search using Brave's Search API.
+The Brave Search MCP server enables web search capabilities using Brave’s Search API.
+"mcpServers" : {
+"brave-search" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@anthropic/mcp-server-brave-search" ],
+"env" : {
+"BRAVE_API_KEY" : "<YOUR_BRAVE_API_KEY>"
+To get a Brave API key, sign up at brave.com/search/api .
+Memory
+Knowledge graph-based persistent memory system.
+The Memory MCP server provides a persistent memory system using a knowledge graph, allowing Cascade to remember information across sessions.
+"mcpServers" : {
+"memory" : {
+"command" : "npx" ,
+"args" : [ "-y" , "@modelcontextprotocol/server-memory" ]
+The memory server stores data locally and persists across sessions, making it useful for maintaining context about projects, preferences, and learned information.
+Remote HTTP MCPs
+It’s important to note that for remote HTTP MCPs, the configuration is slightly
+different and requires a serverUrl or url field.
+Here’s an example configuration for an HTTP server:
+"mcpServers" : {
+"remote-http-mcp" : {
+"serverUrl" : "<your-server-url>/mcp" ,
+"headers" : {
+"API_KEY" : "value"
+Config Interpolation
+The mcp_config.json file supports variable interpolation
+in the following fields: command , args , env , serverUrl , url , and
+headers . This lets you avoid hardcoding secrets directly in the config file.
+Two interpolation patterns are supported:
+${env:VAR_NAME} — replaced with the value of the environment variable VAR_NAME . If the variable is not set, it resolves to an empty string.
+${file:/path/to/file} — replaced with the trimmed contents of the file at the given path. Tilde paths (e.g. ~/secrets/key.txt ) are supported. If the file cannot be read, the pattern is left unchanged.
+Here’s an example using an environment variable in headers :
+"mcpServers" : {
+"remote-http-mcp" : {
+"serverUrl" : "<your-server-url>/mcp" ,
+"headers" : {
+"API_KEY" : "Bearer ${env:AUTH_TOKEN}"
+Here’s an example reading an API key from a file:
+"mcpServers" : {
+"my-server" : {
+"command" : "node" ,
+"args" : [ "server.js" ],
+"env" : {
+"API_KEY" : "${file:~/.secrets/api_key.txt}"
+Admin Controls (Teams & Enterprises)
+Team admins can toggle MCP access for their team, as well as allowlist approved MCP servers for their team to use:
+MCP Registry
+Enterprise teams can configure custom MCP registries to replace the default Devin Desktop MCP marketplace used by the Devin Local agent . Teams can link their own registry URLs to control which MCPs are available to their users. Cascade has no marketplace, so registries do not change what Cascade users see; use the MCP Allowlist to restrict Cascade servers.
+Registries are the preferred approach for managing MCP access, though allowlists will also work.
+Configuring Custom Registries
+Navigate to your team settings
+Find the MCP Registry URLs setting
+Add one or more registry URLs
+When multiple registry URLs are configured, Devin Desktop takes the union of all registries—users will see MCPs from all configured sources combined. The team’s MCP marketplace will then fetch from these internal registries rather than the default Devin Desktop registry.
+Custom registries must follow the official MCP registry schema . This ensures compatibility and standardized server definitions.
+MCP Allowlist
+MCP Team Settings
+Configurable MCP settings for your team.
+The above link will only work if you have admin privileges for your team.
+By default, users within a team will be able to configure their own MCP servers. However, once you allowlist even a single MCP server, all non-allowlisted servers will be blocked for your team.
+The Server ID in the allowlist must match the key name (case-sensitive) used in the user’s mcp_config.json .
+How Server Matching Works
+When you allowlist an MCP server, the system uses regex pattern matching with the following rules:
+Full String Matching : All patterns are automatically anchored (wrapped with ^(?:pattern)$ ) to prevent partial matches
+Command Field : Must match exactly or according to your regex pattern
+Arguments Array : Each argument is matched individually against its corresponding pattern
+Array Length : The number of arguments must match exactly between allowlist and user config
+Special Characters : Characters like $ , . , [ , ] , ( , ) have special regex meaning and should be escaped with \ if you want literal matching
+Configuration Options
+Option 1: Server ID Only (Recommended)
+Leave the Server Config (JSON) field empty to allow any configuration that uses this server ID.
+Admin Allowlist Configuration:
+Server ID : github-mcp-server
+Server Config (JSON) : (leave empty)
+{}
+Matching User Config ( mcp_config.json ):
+"mcpServers" : {
+"github-mcp-server" : {
+"command" : "docker" ,
+"args" : [
+"run" ,
+"-i" ,
+"--rm" ,
+"-e" ,
+"GITHUB_PERSONAL_ACCESS_TOKEN" ,
+"ghcr.io/github/github-mcp-server"
+],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : "ghp_your_token_here"
+This allows users to install the GitHub MCP server with any valid configuration, as long as the server ID matches.
+Option 2: Exact Match Configuration
+Provide the exact configuration that users must use. Users must match this configuration exactly.
+Admin Allowlist Configuration:
+Server ID : github-mcp-server
+Server Config (JSON) :
+"command" : "docker" ,
+"args" : [
+"run" ,
+"-i" ,
+"--rm" ,
+"-e" ,
+"GITHUB_PERSONAL_ACCESS_TOKEN" ,
+"ghcr.io/github/github-mcp-server"
+],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : ""
+Matching User Config ( mcp_config.json ):
+"mcpServers" : {
+"github-mcp-server" : {
+"command" : "docker" ,
+"args" : [
+"run" ,
+"-i" ,
+"--rm" ,
+"-e" ,
+"GITHUB_PERSONAL_ACCESS_TOKEN" ,
+"ghcr.io/github/github-mcp-server"
+],
+"env" : {
+"GITHUB_PERSONAL_ACCESS_TOKEN" : "ghp_your_token_here"
+Users must use this exact configuration - any deviation in command or args will be blocked. The env section can have different values.
+Option 3: Flexible Regex Patterns
+Use regex patterns to allow variations in user configurations while maintaining security controls.
+Admin Allowlist Configuration:
+Server ID : python-mcp-server
+Server Config (JSON) :
+"command" : "python3" ,
+"args" : [ "/.* \\ .py" , "--port" , "[0-9]+" ]
+Matching User Config ( mcp_config.json ):
+"mcpServers" : {
+"python-mcp-server" : {
+"command" : "python3" ,
+"args" : [ "/home/user/my_server.py" , "--port" , "8080" ],
+"env" : {
+"PYTHONPATH" : "/home/user/mcp"
+This example allows users flexibility while maintaining security:
+The regex /.*\\.py matches any Python file path like /home/user/my_server.py
+The regex [0-9]+ matches any numeric port like 8080 or 3000
+Users can customize file paths and ports while admins ensure only Python scripts are executed
+Common Regex Patterns
+Pattern Matches Example
+.* Any string /home/user/script.py
+[0-9]+ Any number 8080 , 3000
+[a-zA-Z0-9_]+ Alphanumeric + underscore api_key_123
+\\$HOME Literal $HOME $HOME (not expanded)
+\\.py Literal .py script.py
+\\[cli\\] Literal [cli] mcp[cli]
+Notes
+Admin Configuration Guidelines
+Environment Variables : The env section is not regex-matched and can be configured freely by users
+Disabled Tools : The disabledTools array is handled separately and not part of allowlist matching
+Case Sensitivity : All matching is case-sensitive
+Error Handling : Invalid regex patterns will be logged and result in access denial
+Testing : Test your regex patterns carefully - overly restrictive patterns may block legitimate use cases
+Troubleshooting
+If users report that their MCP servers aren’t working after allowlisting:
+Check Exact Matching : Ensure the allowlist pattern exactly matches the user’s configuration
+Verify Regex Escaping : Special characters may need escaping (e.g., \. for literal dots)
+Review Logs : Invalid regex patterns are logged with warnings
+Test Patterns : Use a regex tester to verify your patterns work as expected
+Remember: Once you allowlist any server, all other servers are automatically blocked for your team members.
+General Information
+Since MCP tool calls can invoke code written by arbitrary server implementers, we do not assume liability
+for MCP tool call failures. To reiterate:
+We currently support an MCP server’s tools , resources , and prompts .

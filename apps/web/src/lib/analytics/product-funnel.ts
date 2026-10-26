@@ -95,7 +95,7 @@ export type ProductFunnelEvent = {
     // Activation rescue, written from the dashboard through
     // /api/analytics/activation-event (lib/analytics/activation-events.ts).
     | 'connect_fix_shown' | 'connect_fix_link_clicked'
-    | 'first_call_prompt_copied' | 'waiting_state_shown'
+    | 'first_call_prompt_copied' | 'waiting_state_shown' | 'install_link_clicked'
     // Pause and switch to Personal (migration 20261024233000). Category is the
     // plan the customer was on, except pause_resumed (early | auto) and
     // retention_option_clicked (pause | downgrade).
