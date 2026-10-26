@@ -221,6 +221,24 @@ export const DRAFT_CARD_NOTICE =
   "dashboard to see it. draft_read returns its current text.";
 
 /**
+ * The note on a draft write whose editor could not be built although the card
+ * is on for this inbox. The tool descriptions say such drafts show in a card,
+ * so without this a model told the user "the reply draft is in the card" over
+ * a card that said "no preview" (Outlook reply, persona test 2026-10-26).
+ */
+export const DRAFT_NO_CARD_NOTICE =
+  "No editable card is shown for this draft. It is saved in the mailbox's " +
+  "Drafts folder; tell the user that, and do not say it is in a card. " +
+  "draft_read returns its current text.";
+
+/**
+ * What a write passes for its card: the envelope, null when no card applies
+ * (gate off, hidden inbox), or "unavailable" when a card applies and its
+ * envelope could not be built.
+ */
+export type DraftCardOutcome = Record<string, unknown> | null | "unavailable";
+
+/**
  * The tools defined in this module, in `tools/list` order.
  *
  * NOT actions of the consolidated `draft` tool, deliberately. `draft` is a
@@ -312,6 +330,12 @@ export interface NormalizedDraft {
   thread_id?: string;
   in_reply_to_header?: string;
   references_header?: string;
+  /**
+   * The provider threads it as a reply without an RFC header to show for it
+   * (Outlook createReply, see `ProviderDraft.nativeReply`). Counts toward
+   * `threaded` like `in_reply_to_header`; never written back.
+   */
+  native_reply?: boolean;
   /** The stored Reply-To, carried through a rebuild. See draft-rebuild.ts. */
   reply_to_header?: string;
   /**
@@ -406,6 +430,12 @@ export interface ProviderDraft {
   carried?: CarriedAttachments;
   /** The mailbox's own timestamp for the stored draft, ISO 8601, when it has one. */
   savedAt?: string | null;
+  /**
+   * The provider itself threads this draft as a reply, with no RFC header on
+   * it to show for that. Outlook only: a Graph createReply draft carries no
+   * In-Reply-To until it is sent (outlook-graph.ts#graphConversationIndexIsResponse).
+   */
+  nativeReply?: boolean;
 }
 
 /** The parameters `index.ts`'s three update functions take. */
@@ -936,8 +966,7 @@ export function buildDraftEditorEnvelope(input: {
       // update's concluded exactly that (2026-09-17) and deleted a good draft to
       // recreate it. This flag is the answer to the question that comparison
       // was asking.
-      threaded: draft.in_reply_to !== null ||
-        (typeof draft.in_reply_to_header === "string" && draft.in_reply_to_header.length > 0),
+      threaded: draftIsThreaded(draft),
       can_send: input.canSend,
     },
     provider: draftProviderBlock(inbox.provider),
@@ -946,6 +975,21 @@ export function buildDraftEditorEnvelope(input: {
       reason: input.editReason ?? null,
     },
   };
+}
+
+/**
+ * Whether a draft answers a message: a server id from the reply path, the RFC
+ * In-Reply-To header, or a provider that threads it natively with no header to
+ * show (Outlook). The envelope and the plain read both report this, so a
+ * reply's creation result and a later read of it agree (2026-10-26: Outlook
+ * said "native" on create and `threaded: false` on read).
+ */
+export function draftIsThreaded(
+  draft: Pick<NormalizedDraft, "in_reply_to" | "in_reply_to_header" | "native_reply">,
+): boolean {
+  return (draft.in_reply_to ?? null) !== null ||
+    (typeof draft.in_reply_to_header === "string" && draft.in_reply_to_header.length > 0) ||
+    draft.native_reply === true;
 }
 
 /**
@@ -1060,7 +1104,7 @@ export function draftReceiptEnvelope(
  */
 export function draftCardToolResult(
   payload: Record<string, unknown>,
-  envelope: Record<string, unknown> | null,
+  envelope: DraftCardOutcome,
   pretty = false,
 ): {
   content: { type: string; text: string }[];
@@ -1071,6 +1115,11 @@ export function draftCardToolResult(
     type: "text",
     text: pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload),
   }];
+  if (envelope === "unavailable") {
+    const result = { content, structuredContent: { ...payload } };
+    attachResultNote({ result }, DRAFT_NO_CARD_NOTICE);
+    return result;
+  }
   if (!envelope) return { content, structuredContent: payload };
 
   const draft = envelope["draft"];
@@ -1402,6 +1451,7 @@ export async function readStoredDraft(
     in_reply_to_header: stored.inReplyTo,
     references_header: stored.references,
     reply_to_header: stored.replyTo,
+    ...(stored.nativeReply === true ? { native_reply: true } : {}),
     rebuild_blockers: Array.isArray(stored.rebuildBlockers) ? stored.rebuildBlockers : [],
     ...(stored.carried ? { carried: stored.carried } : {}),
   };
@@ -1727,8 +1777,7 @@ export function buildPlainDraftRead(
     })),
     attachment_count: draft.attachments.length,
     signature_embedded: draft.signature_embedded,
-    threaded: typeof draft.in_reply_to_header === "string" &&
-      draft.in_reply_to_header.length > 0,
+    threaded: draftIsThreaded(draft),
     untrusted_content: true,
   };
 }
@@ -2546,8 +2595,8 @@ export async function runBodylessDraftUpdate(
 
   const hasHeader = typeof saved.in_reply_to_header === "string" &&
     saved.in_reply_to_header.length > 0;
-  const hasThread = inbox.provider !== "outlook" && typeof saved.thread_id === "string" &&
-    saved.thread_id.length > 0;
+  const hasThread = (inbox.provider !== "outlook" && typeof saved.thread_id === "string" &&
+    saved.thread_id.length > 0) || saved.native_reply === true;
   const payload = buildDraftMutationEnvelope({
     draft_id: saved.draft_id,
     subject: saved.subject,

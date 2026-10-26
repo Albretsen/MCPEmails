@@ -124,6 +124,7 @@ import {
   OutlookGraphError,
   graphListAttachmentMeta,
   graphPatchMessage,
+  graphConversationIndexIsResponse,
   graphPrepareResponseDraft,
   graphSearchParam,
   graphSendDraft,
@@ -285,6 +286,7 @@ import {
   type DraftEditorDeps,
   type DraftEditorOrigin,
   type DraftEditorProviderInbox,
+  type DraftCardOutcome,
   draftCardToolResult,
   draftProviderBlock,
   DRAFT_SENT_RECEIPT_DETAIL,
@@ -378,7 +380,7 @@ import {
   type SignatureOutcome,
   textCarriesOwnSignature,
 } from "./signature-compose.ts";
-import { bodyKeepingQuote } from "./quoted-reply.ts";
+import { attributionSender, bodyKeepingQuote } from "./quoted-reply.ts";
 import {
   createSignatureImageFetcher,
   embedSignatureImages,
@@ -27746,6 +27748,11 @@ interface DraftContent {
   inReplyTo?: string;
   references?: string;
   /**
+   * Outlook only: Graph threads this draft as a reply (createReply) although
+   * it carries no In-Reply-To yet. See graphConversationIndexIsResponse.
+   */
+  nativeReply?: boolean;
+  /**
    * The draft's own content, for the MCP App draft editor (contract §8).
    *
    * OPTIONAL, and absent from the two Gmail/Outlook readers the update path
@@ -28948,7 +28955,7 @@ async function outlookGetDraftForEditor(
   const resp = await graphFetch(
     token,
     `/me/messages/${encodeURIComponent(draftId)}` +
-      `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,lastModifiedDateTime` +
+      `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,conversationIndex,lastModifiedDateTime` +
       (forApproval ? ",from,replyTo" : ""),
     { headers: {} },
   );
@@ -28968,6 +28975,7 @@ async function outlookGetDraftForEditor(
     body?: { contentType?: string; content?: string };
     hasAttachments?: boolean;
     conversationId?: string;
+    conversationIndex?: string;
     lastModifiedDateTime?: string;
     toRecipients?: { emailAddress: { address: string; name?: string } }[];
     ccRecipients?: { emailAddress: { address: string; name?: string } }[];
@@ -29020,6 +29028,9 @@ async function outlookGetDraftForEditor(
       ? { headerFrom: data.from ? map([data.from]) : [], headerReplyTo: map(data.replyTo) }
       : {}),
     threadId: data.conversationId,
+    // A reply or forward made with createReply/createForward. The draft has
+    // no In-Reply-To until Exchange sends it, so this is the only evidence.
+    ...(graphConversationIndexIsResponse(data.conversationIndex) ? { nativeReply: true } : {}),
     bodyText: isHtml ? stripHtmlToText(content) : content,
     bodyHtml: isHtml ? content : null,
     attachments,
@@ -29920,9 +29931,10 @@ async function resolveSettledDraftLine(
 
 /** Put the lineage revision on a draft_editor envelope built before it was known. */
 function withDraftRevision(
-  card: Record<string, unknown> | null,
+  card: DraftCardOutcome,
   revision: number | null,
-): Record<string, unknown> | null {
+): DraftCardOutcome {
+  if (card === "unavailable") return card;
   const draft = card?.draft as Record<string, unknown> | undefined;
   if (draft && typeof revision === "number" && revision >= 1) draft.revision = revision;
   return card;
@@ -30152,8 +30164,13 @@ async function draftEditorEnvelopeForWrite(
     attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
     /** The stored HTML part could not be kept under the new text (an update only). */
     formattingRemoved?: boolean;
+    /** The provider threads it as a reply with no header to show (Outlook). */
+    nativeReply?: boolean;
   },
-): Promise<Record<string, unknown> | null> {
+): Promise<DraftCardOutcome> {
+  // Set once the gates say a card applies: a build that fails after that is
+  // "unavailable", so the model is told no card is shown (DRAFT_NO_CARD_NOTICE).
+  let cardOn = false;
   try {
     // The per-inbox opt-out. Checked here rather than at tools/list because
     // `_meta.ui` is per TOOL: when only some of a key's inboxes are hidden the
@@ -30174,6 +30191,7 @@ async function draftEditorEnvelopeForWrite(
     ]);
     if (hidden) return null;
     if (!enabled) return null;
+    cardOn = true;
     const draft: NormalizedDraft = {
       draft_id: input.draftId,
       to: input.params.to,
@@ -30199,6 +30217,7 @@ async function draftEditorEnvelopeForWrite(
       thread_id: input.params.threadId,
       in_reply_to_header: input.params.inReplyTo,
       references_header: input.params.references,
+      ...(input.nativeReply === true ? { native_reply: true } : {}),
     };
     const hasRecipient = draft.to.length > 0 || draft.cc.length > 0 || draft.bcc.length > 0;
     return buildDraftEditorEnvelope({
@@ -30217,7 +30236,7 @@ async function draftEditorEnvelopeForWrite(
       origin: input.origin,
       error: error instanceof Error ? error.message : String(error),
     });
-    return null;
+    return cardOn ? "unavailable" : null;
   }
 }
 
@@ -30495,8 +30514,49 @@ async function executeCreateReplyDraft(
         text: signed.textBody,
         ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}),
       });
-      await recordDraftLine(apiKey, inbox, null, draft.id, "agent");
-      return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) }), logStatus: "success", logErrorCode: null };
+      const outlookCreatedAt = draft.createdDateTime ?? new Date().toISOString();
+      const outlookRevision = await recordDraftLine(apiKey, inbox, null, draft.id, "agent", outlookCreatedAt);
+      const outlookOutput = { draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: outlookCreatedAt, in_reply_to: messageId, threading: "native", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) };
+      // The card (2026-10-26). This branch returned bare `jsonOk` since the
+      // card shipped, so an Outlook reply mounted "Draft: no preview for this
+      // result." while the tool description told the model it was in a card.
+      // The envelope is built from the draft read back: Graph wrote the quote
+      // and the subject ("RE: ..."), so only the stored draft says what the
+      // person will see. A failed read-back still gets a card, from what this
+      // call knows; the card adopts the stored text on its first read.
+      const stored = await outlookGetDraftForEditor(inbox, draft.id).catch((err) => {
+        console.warn("[mcp-server] outlook_reply_readback_failed", {
+          inbox_id: inbox.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return null;
+      });
+      const outlookParams: DraftParams = {
+        to: stored?.to ?? draft.toRecipients.map((r) => formatAddressEntry({ name: r.name, email: r.email })),
+        cc: stored?.cc ?? [],
+        bcc: stored?.bcc ?? [],
+        subject: stored?.subject ?? draft.subject ?? "",
+        body: stored?.bodyText ?? signed.textBody,
+        htmlBody: stored ? (stored.bodyHtml ?? undefined) : signed.htmlBody,
+        ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}),
+      };
+      const outlookCard = await draftEditorEnvelopeForWrite(apiKey, inbox, {
+        draftId: draft.id,
+        origin: "reply",
+        params: outlookParams,
+        signatureEmbedded: signed.textBody !== textBody || textCarriesOwnSignature(signed.textBody, inbox),
+        lastSavedAt: stored?.savedAt ?? outlookCreatedAt,
+        revision: outlookRevision,
+        ...(stored?.attachments ? { attachments: stored.attachments } : {}),
+        nativeReply: true,
+        inReplyTo: {
+          message_id: messageId,
+          subject: (stored?.subject ?? draft.subject ?? "").replace(/^\s*(re|sv|aw|vs)\s*:\s*/i, "").trim() || null,
+          from: attributionSender(stored?.bodyText ?? null),
+        },
+      });
+      const outlookPayload = buildDraftMutationEnvelope(outlookOutput as unknown as DraftReplyResult) as unknown as Record<string, unknown>;
+      return { result: draftCardToolResult(outlookPayload, outlookCard), logStatus: "success", logErrorCode: null };
     }
 
     let subject = "";
@@ -30961,6 +31021,8 @@ async function executeUpdateDraft(
   let threadId: string | undefined;
   let inReplyTo: string | undefined;
   let references: string | undefined;
+  // Outlook: a createReply draft, threaded by Exchange with no header yet.
+  let nativeReply = false;
   // Also retrieve threading metadata even when every visible field was supplied:
   // Gmail and IMAP rewrite the MIME message on update, so omitting it would turn
   // a reply draft into a new conversation.
@@ -31000,6 +31062,7 @@ async function executeUpdateDraft(
       if (!bccProvided) effectiveBcc = existing.bcc;
       threadId = existing.threadId;
       inReplyTo = existing.inReplyTo;
+      nativeReply = existing.nativeReply === true;
       references = existing.references;
     }
   } catch (err) {
@@ -31122,7 +31185,7 @@ async function executeUpdateDraft(
   // `threaded` is a fact about the headers this update carried, so it is
   // stamped here rather than in the three provider functions: they are told the
   // headers and do not report them back.
-  updateResult.threaded = Boolean(inReplyTo || threadId);
+  updateResult.threaded = Boolean(inReplyTo || threadId || nativeReply);
   if (signed.quoteKept) updateResult.quote_kept = true;
   // On IMAP and Gmail the full list the message now has; on Outlook only what
   // this call added, since the stored files were not read there.
@@ -31152,6 +31215,7 @@ async function executeUpdateDraft(
     lastSavedAt: updateResult.updated_at,
     revision: updateRevision,
     formattingRemoved: updateFormattingRemoved,
+    nativeReply,
   });
   return {
     result: draftCardToolResult(updatePayload, updateCard),

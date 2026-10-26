@@ -37,6 +37,7 @@ import {
   outlookListTotal,
   OUTLOOK_ARCHIVE_FOLDER_NAMES,
   splitOutlookFolderPath,
+  graphConversationIndexIsResponse,
   graphPrepareResponseDraft,
   graphSearchParam,
   graphSendDraft,
@@ -1521,4 +1522,16 @@ Deno.test("graphCanonicalFanoutFolders: a single folder costs no request; over t
   assertEquals(out.labels.get("INBOX-ID"), "INBOX");
   assertEquals(out.labels.get("F2"), "Kvitteringer/2024");
   assertEquals(out.labels.get("F3"), "Kunder");
+});
+
+// ── conversationIndex: is this Graph message a response? (2026-10-26) ──────
+Deno.test("graphConversationIndexIsResponse: 22 bytes is a new message, 22 + 5n a response", () => {
+  const b64 = (n: number) => btoa(String.fromCharCode(...new Array(n).fill(1)));
+  assertEquals(graphConversationIndexIsResponse(b64(22)), false);
+  assertEquals(graphConversationIndexIsResponse(b64(27)), true);
+  assertEquals(graphConversationIndexIsResponse(b64(32)), true);
+  assertEquals(graphConversationIndexIsResponse(b64(25)), false, "not a valid index length");
+  assertEquals(graphConversationIndexIsResponse(""), false);
+  assertEquals(graphConversationIndexIsResponse(undefined), false);
+  assertEquals(graphConversationIndexIsResponse("not base64!!"), false);
 });
