@@ -19,18 +19,18 @@
     "officialGuide": "{name} 官方指南 ↗",
     "done": "完成",
     "claude": {
-      "step1": "在 claude.ai 或 Claude Desktop 中，打开 设置 → Connectors。",
-      "step2": "点击 \"Add custom connector\"。",
-      "step3": "将上方的 URL 粘贴为 connector URL，然后点击 \"Add\"。",
-      "step4": "点击 \"Connect\" 并使用 MCPEmails 登录以授权。无需 API 密钥。"
+      "step1": "在 claude.ai 或 Claude Desktop 中，打开 Customize → Connectors，点击 \"+ Add\"，再点击 \"Add custom connector\"。",
+      "step2": "将名称设为 MCPEmails，粘贴上方的 URL，然后点击 \"Continue\"。",
+      "step3": "检查登录设置（保留默认值即可），然后点击 \"Add\"。",
+      "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。Free 套餐最多只能添加一个自定义连接器。在 Team 和 Enterprise 上，由 Owner 在 Organization settings → Connectors 中添加，成员再在 Customize → Connectors 中点击 \"Connect\"。"
     },
     "chatgpt": {
-      "step1": "打开 设置 → Apps & Connectors → Advanced settings 并开启 Developer mode。",
-      "step2": "返回 Apps & Connectors，点击 \"Create\"。",
-      "step3": "输入名称并将上方的 URL 粘贴为 Connector URL。",
-      "step4": "选择 OAuth，点击 \"Create\"，然后使用 MCPEmails 授权。",
-      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 MCPEmails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
-      "note": "仅限 chatgpt.com 网页版，适用于 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。在 Business 和 Enterprise 上，可能需要管理员先允许 Developer mode。"
+      "step1": "在 chatgpt.com 上打开 Plugins → Personal，点击右上角的 \"Add\"，再点击 \"Add custom MCP server\"。移动应用中无法添加。",
+      "step2": "将名称设为 MCPEmails，并在 \"Connection\" 下粘贴上方的 URL。",
+      "step3": "选择 OAuth，勾选 \"I understand and want to continue\"，然后点击 \"Create as a plugin\"。",
+      "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。",
+      "step5": "在对话中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。",
+      "note": "ChatGPT Go 和付费套餐都可以添加自定义 MCP 服务器。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
@@ -39,8 +39,8 @@
     },
     "vscode": {
       "step1": "打开命令面板（⇧⌘P）并运行 \"MCP: Add Server\"。",
-      "step2": "选择 \"HTTP\"，粘贴上方的 URL，并为其命名。",
-      "step3": "从 MCP 视图启动服务器，并在提示时授权。"
+      "step2": "选择 \"HTTP (HTTP or Server-Sent Events)\"，粘贴上方的 URL，并输入 MCPEmails 作为服务器 ID。",
+      "step3": "选择 \"Global\"，再选择 \"Copilot Global\"（保存到 ~/.copilot/mcp-config.json），然后在登录提示中授权 MCPEmails。"
     },
     "cline": {
       "step1": "在 Cline 面板中，点击 MCP Servers 图标，然后打开 \"Remote Servers\" 选项卡。",
@@ -49,14 +49,14 @@
       "step4": "使用你的 API 密钥添加一个 \"Authorization: Bearer YOUR_KEY\" 标头。"
     },
     "windsurf": {
-      "step1": "打开 Cascade 的 MCP 设置，或编辑 ~/.codeium/windsurf/mcp_config.json。",
-      "step2": "添加下方的服务器。注意该字段为 \"serverUrl\"，而非 \"url\"。",
-      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 MCPEmails 授权。"
+      "step1": "在 Devin Desktop（原 Windsurf）中，点击 Cascade 面板右上角的 \"...\" 菜单，然后在 MCPs 部分点击 \"Open MCP config file\"。文件位于 ~/.config/devin/mcp_config.json。",
+      "step2": "在 \"mcpServers\" 下添加下方的服务器。注意该字段为 \"serverUrl\"，而非 \"url\"。",
+      "step3": "保存文件，并在提示时使用 MCPEmails 登录。"
     },
     "gemini": {
-      "step1": "编辑 ~/.gemini/settings.json（全局）或 .gemini/settings.json（项目）。",
-      "step2": "在 \"mcpServers\" 下使用 \"httpUrl\" 字段添加下方的服务器。",
-      "step3": "首次连接时，CLI 会自动发现 OAuth 并打开浏览器流程。"
+      "step1": "运行 gemini mcp add --transport http mcpemails，后接上方的 URL；或编辑 ~/.gemini/settings.json（全局）或 .gemini/settings.json（项目）。",
+      "step2": "在文件中，于 \"mcpServers\" 下使用 \"httpUrl\" 字段添加下方的服务器。",
+      "step3": "运行 /mcp auth mcpemails 以使用 MCPEmails 登录。免费层级和 Google One 账户现在改用 Antigravity CLI：在其中输入 /mcp 添加服务器（字段为 \"serverUrl\"）。"
     },
     "zed": {
       "step1": "在 Agent Panel 设置中点击 \"Add Custom Server\"，或编辑 settings.json。",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "在 Claude 中，点击输入框里的 +，打开 Connectors，确认 MCPEmails 在此对话中已开启。否则 Claude 会在不读取你邮件的情况下回答。",
-      "chatgpt": "在 ChatGPT 中，每个新对话都要点击 +，选择 Developer mode，再选择 MCPEmails 应用。否则 ChatGPT 看不到你的邮件。"
+      "chatgpt": "在 ChatGPT 的输入框中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及 MCPEmails。"
     },
     "itWorksTitle": "已生效",
     "itWorksDesc": "你的 AI 应用刚刚第一次调用了 MCPEmails。在同一个对话中继续即可。",
@@ -166,7 +166,7 @@
     "actionsThisMonth": "本月邮件操作",
     "actionsOfCap": "共 {cap} 次 · {date} 重置",
     "actionsCapReached": "已达上限 · 拒绝至 {date}",
-    "actionsGrace": "试用期：{date} 之前无上限",
+    "actionsGrace": "{date} 之前不限量",
     "actionsExempt": "无月度上限（早期成员）",
     "teamMembers": "团队成员",
     "ofSeats": "／共 {cap} 个席位 · 剩余 {remaining} 个",
@@ -418,7 +418,7 @@
       "createdJustNow": "· 刚刚创建",
       "urlLabel": "MCP 客户端配置（使用 Authorization 标头）",
       "nextTitle": "下一步：在 Claude 中连接",
-      "nextStep1": "在 claude.ai 或 Claude Desktop 中，打开设置 → 连接器 → 添加自定义连接器。",
+      "nextStep1": "在 claude.ai 或 Claude Desktop 中，打开 Customize → Connectors，点击 \"+ Add\"，再点击 \"Add custom connector\"。",
       "nextStep2": "粘贴上面的 URL。OAuth 客户端一键连接。",
       "nextStep3": "然后直接问 Claude：",
       "nextGuide": "分步指南",
@@ -537,7 +537,7 @@
     "colAddress": "地址",
     "allowanceCounting": "本月已用 {used} / {cap} 次邮件操作 · {date} 重置",
     "allowanceReached": "{cap} 次邮件操作已全部用完 · 读取和写入将被拒绝至 {date}",
-    "allowanceGrace": "试用期：{date} 之前无上限",
+    "allowanceGrace": "{date} 之前不限量",
     "allowanceExempt": "无月度上限（早期成员）",
     "capTitleNear": "你即将用完本月额度",
     "capBodyNear": "已使用 {used} / {cap} 次邮件操作。达到 {cap} 次后，智能体的读取和写入将被拒绝至 {date}。Personal 每月 9 美元，取消月度上限。",

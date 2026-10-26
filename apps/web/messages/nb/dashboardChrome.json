@@ -3,6 +3,7 @@
     "connectedSuccess": "{provider}-innboks koblet til.",
     "inboxLimitReached": "Du har nådd innboksgrensen på {plan}. Oppgrader for å koble til flere postkasser.",
     "tokenExchangeFailed": "Kunne ikke koble til innboksen. Token-utvekslingen med leverandøren mislyktes. Prøv igjen.",
+    "gmailOauthUnavailable": "Pålogging med Google er ikke tilgjengelig for en ny Gmail-innboks i dette arbeidsområdet. Koble til Gmail med et app-passord i stedet. Det fungerer på alle abonnementer.",
     "connectionCancelled": "Tilkobling av innboks avbrutt.",
     "adminConsentRequired": "Organisasjonen din må godkjenne postkassetilgang før du kan koble til Outlook. Microsoft hindrer ansatte i å godkjenne det selv.",
     "adminConsentAction": "Få en lenke til IT-ansvarlig",

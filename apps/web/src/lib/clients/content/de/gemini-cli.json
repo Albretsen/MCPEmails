@@ -17,7 +17,7 @@
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth wird automatisch erkannt",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Fügen Sie in ~/.gemini/settings.json unter mcpServers einen Eintrag mit dem Feld httpUrl und https://mcpemails.com/api/mcp hinzu. Bei der ersten Verbindung liest die CLI die OAuth-Metadaten aus und öffnet den Ablauf im Browser von selbst."
+    "answer": "Fügen Sie in ~/.gemini/settings.json unter mcpServers einen Eintrag mit dem Feld httpUrl und https://mcpemails.com/api/mcp hinzu. Bei der ersten Verbindung liest die CLI die OAuth-Metadaten aus und öffnet den Ablauf im Browser von selbst. Oder führen Sie gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp aus und melden Sie sich danach mit /mcp auth mcpemails an."
   },
   "method": {
     "title": "So verbindet sich Gemini CLI: OAuth, kein API-Schlüssel",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Server hinzufügen",
-      "p": "Fügen Sie den Eintrag unten unter <code>mcpServers</code> hinzu. Das Feld für einen Streamable-HTTP-Server heißt hier <code>httpUrl</code>."
+      "p": "Fügen Sie den Eintrag unten unter <code>mcpServers</code> hinzu. Das Feld für einen Streamable-HTTP-Server heißt hier <code>httpUrl</code>. Oder fügen Sie ihn in einer Zeile hinzu: <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Verbinden",
-      "p": "Bei der ersten Verbindung erkennt die CLI OAuth automatisch anhand der Server-Metadaten und öffnet den Ablauf im Browser. Geben Sie die Scopes frei, die die CLI erhalten soll."
+      "p": "Bei der ersten Verbindung erkennt die CLI OAuth automatisch anhand der Server-Metadaten und öffnet den Ablauf im Browser. Geben Sie die Scopes frei, die die CLI erhalten soll. Zum Anmelden können Sie in der CLI jederzeit <code>/mcp auth mcpemails</code> ausführen."
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "Eine CLI auf einem geteilten Rechner oder ohne Oberfläche braucht stattdessen den Weg über Schlüssel",
       "p": "Der Ablauf im Browser braucht einen Browser. Auf einem Build-Agenten oder einem geteilten Rechner ist ein Bearer-API-Schlüssel das ehrliche Setup, mit genau den Scopes, die diese Automatisierung braucht, und abgelegt in der Umgebung statt in einer committeten Einstellungsdatei."
+    },
+    {
+      "h": "Kostenlose und Google-One-Konten nutzen jetzt Antigravity CLI",
+      "p": "Seit dem 18. Juni 2026 hat Google Konten im kostenlosen Tarif und Google-One-Konten von Gemini CLI auf Antigravity CLI umgestellt. Dort tippen Sie <code>/mcp</code>, um den MCP-Manager zu öffnen, oder tragen den Server mit dem Feld <code>serverUrl</code> in <code>mcp_config.json</code> ein."
     }
   ],
   "limits": [

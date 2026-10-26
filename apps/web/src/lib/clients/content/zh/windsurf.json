@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://docs.windsurf.com/windsurf/cascade/mcp"
+    "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
     "title": "将邮箱连接到 Windsurf：Cascade MCP 服务器设置",
@@ -12,15 +12,15 @@
     "eyebrow": "Windsurf + 邮件",
     "titleLine1": "把你的收件箱连接到 Windsurf",
     "titleLine2": "以及 Cascade",
-    "lead": "为 Cascade 接入一个真实邮箱。在编辑器中读取、搜索、发送、回复、转发、定时发送和整理邮件，覆盖你已连接的所有收件箱。",
+    "lead": "为 Devin Desktop（原 Windsurf）中的 Cascade 接入一个真实邮箱。在编辑器中读取、搜索、发送、回复、转发、定时发送和整理邮件，覆盖你已连接的所有收件箱。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 ~/.codeium/windsurf/mcp_config.json 的 mcpServers 下添加一个条目，使用 serverUrl 字段（不是 url），值为 https://mcpemails.com/api/mcp 。在 Cascade 中刷新 MCP 服务器，并在提示时完成授权。"
+    "answer": "Devin Desktop 是 Windsurf 的新名称。在 Cascade 面板中打开右上角的 ... 菜单，在 MCPs 部分点击 Open MCP config file。在 mcpServers 下添加一个条目，使用 serverUrl 字段（不是 url），值为 https://mcpemails.com/api/mcp ，保存文件，并在提示时用 MCPEmails 登录。"
   },
   "method": {
     "title": "Windsurf 如何连接：OAuth，无需 API 密钥",
-    "body": "Windsurf 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
+    "body": "Devin Desktop（原 Windsurf） 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
   },
   "setup": [
     {
@@ -28,26 +28,26 @@
       "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
-      "h": "打开 Cascade 的 MCP 设置",
-      "p": "打开 Cascade 的 MCP 设置，或直接编辑 <code>~/.codeium/windsurf/mcp_config.json</code>。"
+      "h": "打开 MCP 配置文件",
+      "p": "在 Cascade 面板中点击右上角的 <b>...</b> 菜单，然后在 <b>MCPs</b> 部分点击 <b>Open MCP config file</b>。在 macOS 和 Linux 上，该文件是 <code>~/.config/devin/mcp_config.json</code>；在 Windows 上是 <code>%APPDATA%\\devin\\mcp_config.json</code>。"
     },
     {
       "h": "添加服务器",
       "p": "添加下面的条目。这里的字段名是 <code>serverUrl</code>，不是 <code>url</code>。"
     },
     {
-      "h": "刷新并授权",
-      "p": "在 Cascade 中刷新 MCP 服务器，并在提示时通过 MCPEmails 授权。批准你希望 Cascade 拥有的权限范围。"
+      "h": "保存并登录",
+      "p": "保存文件，并在提示时用 MCPEmails 登录。批准你希望 Cascade 拥有的权限范围。"
     }
   ],
   "gotchas": [
     {
       "h": "字段是 serverUrl，用 url 会悄无声息地失败",
-      "p": "这是 Windsurf 设置中最常见的错误，而且犯这个错完全情有可原：Cursor、Zed 和 VS Code 都读取 <code>url</code>，所以从它们任何一个复制来的片段看起来都没问题。Windsurf 读取的是 <code>serverUrl</code>。键名写错时，条目能正常解析，服务器也会出现在列表中，但永远不会有工具出现。"
+      "p": "这是 Windsurf 设置中最常见的错误，而且犯这个错完全情有可原：Cursor、Zed 和 VS Code 都读取 <code>url</code>，所以从它们任何一个复制来的片段看起来都没问题。Devin Desktop 读取的是 <code>serverUrl</code>。键名写错时，条目能正常解析，服务器也会出现在列表中，但永远不会有工具出现。"
     },
     {
-      "h": "Cascade 需要手动刷新，它不会监视文件变化",
-      "p": "在编辑器中修改 <code>mcp_config.json</code> 并不会让 Cascade 重新加载它。每次修改后，请使用 MCP 面板中的刷新操作。一个正确但未刷新的条目，看起来和一个坏掉的条目一模一样。"
+      "h": "旧教程仍写着 Windsurf 的路径",
+      "p": "Windsurf 把 MCP 配置放在 <code>~/.codeium/windsurf/mcp_config.json</code>，很多教程至今仍这样写。Devin Desktop 使用 <code>~/.config/devin/mcp_config.json</code>（Windows 上为 <code>%APPDATA%\\devin\\mcp_config.json</code>）。Cascade 的 <b>...</b> 菜单中的 <b>Open MCP config file</b> 会打开它实际读取的文件，所以请从那里开始，而不是手动输入路径。"
     },
     {
       "h": "事先决定 Cascade 是否应该能发送邮件",
@@ -62,15 +62,15 @@
   "faq": [
     {
       "q": "如何将邮箱连接到 Windsurf？",
-      "a": "在 ~/.codeium/windsurf/mcp_config.json 的 mcpServers 下添加一个条目，将 serverUrl 设为 https://mcpemails.com/api/mcp ，在 Cascade 中刷新 MCP 服务器，并在提示时完成授权。之后 Cascade 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+      "a": "在 Devin Desktop（原 Windsurf）中，打开 Cascade 面板的 ... 菜单并点击 Open MCP config file。在 mcpServers 下添加一个条目，将 serverUrl 设为 https://mcpemails.com/api/mcp ，保存后在提示时用 MCPEmails 登录。之后 Cascade 就拥有读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
     },
     {
       "q": "同样的 JSON 在 Cursor 中能用，为什么我的 Windsurf 配置不行？",
-      "a": "几乎总是字段名的问题。Cursor 读取 url，Windsurf 读取 serverUrl。条目的其余部分完全相同，这也正是这个错误即使仔细检查也会被漏掉的原因。"
+      "a": "几乎总是字段名的问题。Cursor 读取 url，Devin Desktop 读取 serverUrl。条目的其余部分完全相同，这也正是这个错误即使仔细检查也会被漏掉的原因。"
     },
     {
       "q": "Windsurf 需要 API 密钥吗？",
-      "a": "不需要。Windsurf 会对本服务器执行 OAuth 流程，所以配置文件里只有一个公开的 URL。bearer API 密钥仍可用于脚本化或无图形界面的场景。"
+      "a": "不需要。Devin Desktop（原 Windsurf） 会对本服务器执行 OAuth 流程，所以配置文件里只有一个公开的 URL。bearer API 密钥仍可用于脚本化或无图形界面的场景。"
     },
     {
       "q": "Windsurf 通过这种方式能访问哪些邮箱？",

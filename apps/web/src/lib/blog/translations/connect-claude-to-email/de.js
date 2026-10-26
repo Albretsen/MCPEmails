@@ -12,7 +12,7 @@ Sie schreiben keinen Code, installieren kein SDK und brauchen keinen API-Schlüs
 
 ## Was Sie brauchen
 
-- Einen **Claude-Tarif oder eine Claude-App, die benutzerdefinierte Konnektoren unterstützt**.
+- **Claude** im Web (claude.ai) oder in Claude Desktop. Benutzerdefinierte Konnektoren gibt es in jedem Claude-Tarif: Free erlaubt einen, Pro und Max haben keine Begrenzung.
 - Ein kostenloses **MCPEmails**-Konto: [hier erstellen](/signup).
 - Ein E-Mail-Postfach. Outlook verbindet sich über „Mit Microsoft anmelden“. Gmail, iCloud, Fastmail, Yahoo, Zoho und die meisten anderen Anbieter nutzen ein App-Passwort.
 
@@ -48,15 +48,19 @@ Sie brauchen Hilfe für einen bestimmten Anbieter? Lesen Sie die [Zwei-Minuten-A
 
 In claude.ai oder Claude Desktop:
 
-1. Öffnen Sie **Einstellungen → Konnektoren**.
-2. Wählen Sie **Benutzerdefinierten Konnektor hinzufügen**.
-3. Fügen Sie diese URL ein:
+1. Öffnen Sie **Anpassen → Konnektoren**.
+2. Klicken Sie auf **+ Hinzufügen** und dann auf **Benutzerdefinierten Konnektor hinzufügen**.
+3. Nennen Sie ihn MCPEmails und fügen Sie diese URL ein:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Wählen Sie **Verbinden**, melden Sie sich bei MCPEmails an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+4. Klicken Sie auf **Weiter**, prüfen Sie die erkannten Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie auf **Hinzufügen**.
+5. Melden Sie sich bei MCPEmails an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+6. Klicken Sie in einem Chat unten links auf **+**, wählen Sie **Konnektoren** und schalten Sie MCPEmails ein.
+
+In einem Team- oder Enterprise-Tarif fügt ein Owner den Konnektor einmal unter **Organisationseinstellungen → Konnektoren** hinzu. Mitglieder öffnen dann **Anpassen → Konnektoren**, suchen MCPEmails und klicken auf **Verbinden**.
 
 Mehr ist auf der Claude-Seite nicht nötig. OAuth beschränkt die Verbindung auf die Berechtigungen, die Sie genehmigen, und Sie können sie jederzeit in MCPEmails widerrufen. Nutzen Sie einen Client ohne OAuth-Unterstützung, verwenden Sie stattdessen einen API-Schlüssel mit eingeschränkten Berechtigungen; [OAuth oder API-Schlüssel](/blog/oauth-vs-api-keys-ai-email-access) erklärt diesen Weg. Bei Problemen speziell mit Claude hilft die [Einrichtungsseite für Claude](/docs/claude).
 

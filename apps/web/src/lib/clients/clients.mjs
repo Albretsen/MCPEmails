@@ -13,7 +13,7 @@
 // Two things follow from that rule and must be kept:
 //
 //  1. `auth` is per client and is not guessable. Claude, ChatGPT, Cursor,
-//     VS Code, Windsurf, Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
+//     VS Code, Devin Desktop (formerly Windsurf), Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
 //     browser flow against /.well-known/oauth-authorization-server (RFC 7591
 //     dynamic registration, authorization code + PKCE with S256, public
 //     clients only). Cline, JetBrains, n8n and raw HTTP callers do not, and paste a
@@ -23,8 +23,10 @@
 //
 //  2. The config field names differ per client and are not interchangeable:
 //     Cursor wants `url` under `mcpServers`, VS Code wants `type` + `url`
-//     under `servers`, Windsurf wants `serverUrl`, Gemini CLI wants `httpUrl`,
-//     and Zed wants `url` under `context_servers`.
+//     under `mcpServers` in ~/.copilot/mcp-config.json (the older
+//     .vscode/mcp.json used `servers` and is now labelled deprecated),
+//     Devin Desktop (formerly Windsurf) wants `serverUrl`, Gemini CLI wants
+//     `httpUrl`, and Zed wants `url` under `context_servers`.
 //
 // Prose lives in src/lib/clients/content/<locale>/<slug>.json, deliberately
 // NOT in a next-intl namespace: src/i18n/request.ts hands every marketing
@@ -89,7 +91,7 @@ export const ALL_CLIENTS = [
   {
     slug: 'chatgpt',
     name: 'ChatGPT',
-    surface: 'ChatGPT Apps and connectors, developer mode',
+    surface: 'ChatGPT plugins, custom MCP server on chatgpt.com',
     category: 'assistant',
     logo: 'chatgpt',
     color: '#000000',
@@ -193,9 +195,9 @@ export const ALL_CLIENTS = [
     logo: 'vscode',
     color: '#0078D4',
     auth: 'oauth',
-    configFile: '.vscode/mcp.json',
+    configFile: '~/.copilot/mcp-config.json',
     config: (url) => `{
-  "servers": {
+  "mcpServers": {
     "mcpemails": {
       "type": "http",
       "url": "${url}"
@@ -223,12 +225,14 @@ export const ALL_CLIENTS = [
   {
     slug: 'windsurf',
     name: 'Windsurf',
-    surface: 'Cascade in Windsurf',
+    surface: 'Cascade in Devin Desktop, formerly Windsurf',
     category: 'editor',
     logo: 'windsurf',
     color: '#0B100F',
     auth: 'oauth',
-    configFile: '~/.codeium/windsurf/mcp_config.json',
+    // macOS and Linux path; on Windows it is %APPDATA%\devin\mcp_config.json.
+    // Windsurf was renamed Devin Desktop on 2026-06-02; the slug stays.
+    configFile: '~/.config/devin/mcp_config.json',
     config: (url) => `{
   "mcpServers": {
     "mcpemails": {
@@ -236,7 +240,7 @@ export const ALL_CLIENTS = [
     }
   }
 }`,
-    guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
+    guide: 'https://docs.devin.ai/desktop/cascade/mcp',
     post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },

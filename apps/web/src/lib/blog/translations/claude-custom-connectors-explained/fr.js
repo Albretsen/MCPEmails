@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Les connecteurs personnalisés Claude expliqués : un serveur MCP distant ajouté à Claude par URL',
   content: `Les **connecteurs personnalisés Claude** permettent d’ajouter à Claude n’importe quel serveur [Model Context Protocol](https://modelcontextprotocol.io) distant en collant simplement son URL. Une fois le connecteur ajouté, Claude peut appeler les outils de ce serveur dans vos conversations : interroger une base de données, créer un ticket ou, dans l’exemple complet à la fin de ce guide, lire et envoyer vos e-mails.
 
-Les informations sur les forfaits et les menus ci-dessous proviennent des pages d’aide d’Anthropic, vérifiées le 20 octobre 2026. L’interface de Claude évolue souvent : si un libellé diffère, le [guide des connecteurs personnalisés](https://support.claude.com/fr/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) d’Anthropic fait foi. Les libellés de l’interface sont donnés tels qu’ils apparaissent dans Claude en français.
+Les informations sur les forfaits et les menus ci-dessous proviennent des pages d’aide d’Anthropic, vérifiées le 26 octobre 2026. L’interface de Claude évolue souvent : si un libellé diffère, le [guide des connecteurs personnalisés](https://support.claude.com/fr/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) d’Anthropic fait foi. Les libellés de l’interface sont donnés tels qu’ils apparaissent dans Claude en français.
 
 ## Qu’est-ce qu’un connecteur personnalisé Claude ?
 
@@ -33,7 +33,7 @@ Claude Code ajoute le même type de serveur distant depuis le terminal ; la [pag
 
 D’après le centre d’aide d’Anthropic, en octobre 2026 :
 
-- **Forfaits :** les connecteurs personnalisés sont disponibles sur les forfaits Free, Pro, Max, Team et Enterprise. Le forfait Free est limité à un seul connecteur personnalisé.
+- **Forfaits :** les connecteurs personnalisés sont disponibles sur les forfaits Free, Pro, Max, Team et Enterprise. Le forfait Free est limité à un seul connecteur personnalisé ; Pro et Max n'ont pas de limite.
 - **Applications où on les ajoute :** claude.ai sur le web, Claude Desktop et Cowork.
 - **Mobile :** un connecteur connecté sur le web ou dans Claude Desktop devient disponible dans Claude pour iOS et Android à votre prochaine connexion sur ces applications. Anthropic présente l’installation de connecteurs sur mobile comme une bêta et considère le web et l’application de bureau comme la voie principale pour les connecteurs personnalisés : configurez-le donc d’abord sur un ordinateur.
 - **Qui peut en ajouter un sur un forfait professionnel :** sur Team, uniquement les propriétaires et propriétaires principaux. Sur Enterprise, les propriétaires, les propriétaires principaux et les personnes dotées d’un rôle personnalisé qui inclut la gestion des bibliothèques de l’organisation.
@@ -41,10 +41,10 @@ D’après le centre d’aide d’Anthropic, en octobre 2026 :
 ## Ajouter un connecteur personnalisé sur Free, Pro ou Max
 
 1. Ouvrez **Personnaliser → Connecteurs** dans claude.ai ou Claude Desktop.
-2. Cliquez sur **Ajouter un connecteur personnalisé**. Selon la mise en page, cette option se trouve derrière un bouton **+ Ajouter**.
+2. Cliquez sur **+ Ajouter**, puis sur **Ajouter un connecteur personnalisé**.
 3. Saisissez un nom et l’URL du serveur, puis cliquez sur **Continuer**.
-4. Vérifiez les paramètres d’authentification détectés par Claude et cliquez sur **Continuer**. La section suivante explique les différents choix.
-5. Cliquez sur **Ajouter**, puis sur **Connecter** pour vous connecter au service.
+4. Vérifiez les paramètres de connexion détectés par Claude. Les valeurs par défaut conviennent généralement, et la section suivante explique les différents choix.
+5. Cliquez sur **Ajouter**, puis connectez-vous au service.
 
 Les paramètres d’authentification d’un connecteur ne peuvent plus être modifiés une fois celui-ci ajouté. Pour les changer, supprimez le connecteur et ajoutez-le de nouveau. Pour en supprimer un, ouvrez **Personnaliser → Connecteurs** et utilisez **Supprimer** ou le menu à trois points à côté du connecteur.
 
@@ -103,7 +103,7 @@ L’e-mail met tout ce qui précède à l’épreuve : une boîte de réception 
 
 **1. Connectez une boîte à MCPEmails.** [Créez un compte](/signup), puis, dans le tableau de bord, ouvrez **Boîtes → Connecter une boîte**. Outlook et Microsoft 365 utilisent **Se connecter avec Microsoft**, la plupart des autres fournisseurs un mot de passe d’application, et les [pages fournisseurs](/connect) indiquent les réglages de chacun. La [page de configuration Claude](/docs/claude) résume les étapes 1 et 2.
 
-**2. Ajoutez le connecteur dans Claude.** Sous **Personnaliser → Connecteurs**, choisissez **Ajouter un connecteur personnalisé**, nommez-le MCPEmails et saisissez :
+**2. Ajoutez le connecteur dans Claude.** Sous **Personnaliser → Connecteurs**, cliquez sur **+ Ajouter**, puis sur **Ajouter un connecteur personnalisé**, nommez-le MCPEmails, saisissez l’URL ci-dessous et cliquez sur **Continuer** :
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -111,7 +111,7 @@ https://mcpemails.com/api/mcp
 
 **3. Choisissez les paramètres de connexion.** Sélectionnez **Se connecter maintenant**. Pour le client OAuth, les deux premières options fonctionnent : MCPEmails prend en charge l’identité publiée de Claude et l’enregistrement automatique. Laissez les en-têtes de requête vides, puisque OAuth ne nécessite aucune clé API.
 
-**4. Connectez-vous et choisissez les accès.** Cliquez sur **Connecter**, connectez-vous à MCPEmails et approuvez les autorisations sur l’écran de consentement. Claude ne demande d’abord que \`read:email\`, et l’écran s’ouvre sur l’option en lecture seule correspondante. N’ajoutez \`send:email\`, \`manage:drafts\`, \`manage:folders\` ou \`delete:email\` que lorsqu’un workflow en a besoin. Un jeton sans \`send:email\` ne peut pas envoyer, quoi qu’on demande à Claude. Si une requête ultérieure nécessite une autorisation que vous n’avez pas accordée, MCPEmails répond par une erreur \`insufficient_scope\` qui nomme le scope manquant. Lors de la reconnexion, cochez cette autorisation sur l’écran de consentement. La [page sur l’accès en lecture seule](/docs/read-only-access) détaille ce qu’un accès en lecture seule permet et ne permet pas.
+**4. Connectez-vous et choisissez les accès.** Cliquez sur **Ajouter**, connectez-vous à MCPEmails et approuvez les autorisations sur l’écran de consentement. Claude ne demande d’abord que \`read:email\`, et l’écran s’ouvre sur l’option en lecture seule correspondante. N’ajoutez \`send:email\`, \`manage:drafts\`, \`manage:folders\` ou \`delete:email\` que lorsqu’un workflow en a besoin. Un jeton sans \`send:email\` ne peut pas envoyer, quoi qu’on demande à Claude. Si une requête ultérieure nécessite une autorisation que vous n’avez pas accordée, MCPEmails répond par une erreur \`insufficient_scope\` qui nomme le scope manquant. Lors de la reconnexion, cochez cette autorisation sur l’écran de consentement. La [page sur l’accès en lecture seule](/docs/read-only-access) détaille ce qu’un accès en lecture seule permet et ne permet pas.
 
 **5. Réglez les autorisations des outils dans Claude.** MCPEmails sépare la lecture et l’écriture en outils distincts. \`email_read\`, \`inbox_list\`, \`folder_list\` et \`draft_list\` se contentent de lire, tandis que \`email_compose\` envoie, répond et transfère, et que \`email_delete\` supprime. Cette séparation vous permet de régler \`email_compose\` sur **Needs approval** et \`email_delete\` sur **Blocked**, tout en laissant la lecture sur **Toujours autoriser**. La [référence des outils](/docs#tools) les liste tous.
 

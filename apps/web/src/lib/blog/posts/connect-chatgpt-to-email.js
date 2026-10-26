@@ -19,11 +19,11 @@ Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT run
 
 ## What you need
 
-- **ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web.** Custom MCP connectors live behind developer mode, which OpenAI offers on chatgpt.com to those plans. Free and Go accounts cannot add one, and the mobile and desktop apps do not show the option. On Business and Enterprise an admin may need to allow developer mode first.
+- **ChatGPT Go or a paid plan, on the web.** OpenAI lets Go and paid plans add custom MCP servers on chatgpt.com. You cannot add one in the mobile app. On Business and Enterprise, an admin or owner may need to add it for the workspace.
 - **A free MCPEmails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
 - **One mailbox.** Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
 
-If you are on Free or Go, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
+If your ChatGPT plan cannot add a custom MCP server, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
 
 ## Step 1: Connect your inbox to MCPEmails
 
@@ -49,18 +49,19 @@ Connect more than one mailbox if your plan allows it. ChatGPT discovers them wit
 
 ## Step 2: Add the connector in ChatGPT
 
-1. Turn on **developer mode** in ChatGPT settings, under the apps and connectors advanced settings.
-2. Create a new connector and give it a name.
-3. Paste this connector URL:
+1. On chatgpt.com, open **Plugins**, then **Personal**, and click **Add** at the top right.
+2. Choose **Add custom MCP server** and name it MCPEmails.
+3. Under **Connection**, paste this URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Choose **OAuth** as the authentication method, create the connector, then authorize with MCPEmails.
-5. Open a new chat, click **+**, choose **Developer mode** and select the MCPEmails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation.
+4. Choose **OAuth**, tick **I understand and want to continue**, and click **Create as a plugin**.
+5. Sign in with MCPEmails and approve.
+6. In a chat, type **@** and pick MCPEmails. The pick applies to that message, so @mention MCPEmails again when a follow-up needs your email.
 
-Pick OAuth, not "no authentication". This server refuses anonymous calls, so a connector created without authentication looks fine at setup and then fails on its first tool call, which is the confusing way round. With OAuth, ChatGPT registers itself and completes an authorization code flow with PKCE: no client id to create, no client secret anywhere. The menu wording moves as OpenAI iterates on the beta, so check the [ChatGPT setup page](/docs/chatgpt) for the current path.
+Pick OAuth, not "no authentication". This server refuses anonymous calls, so a connector created without authentication looks fine at setup and then fails on its first tool call, which is the confusing way round. With OAuth, ChatGPT registers itself and completes an authorization code flow with PKCE: no client id to create, no client secret anywhere. OpenAI moves these menus from time to time, so check the [ChatGPT setup page](/docs/chatgpt) for the current path.
 
 ## Step 3: Approve only the scopes you need
 
@@ -108,9 +109,9 @@ Scope the key tightly. Read-only is usually correct for a coding agent: one that
 
 ## Troubleshooting
 
-- **No option to create a custom connector.** Developer mode needs Plus, Pro, Business, Enterprise or Edu, on chatgpt.com in a browser. Free and Go accounts do not have it. On a Business or Enterprise workspace, an admin has to allow it.
+- **No option to add a custom MCP server.** Custom MCP servers are added on chatgpt.com in a browser, not in the mobile app, and need Go or a paid plan. On a Business or Enterprise workspace, an admin or owner may need to add it.
 - **The connector fails on its first tool call.** It was probably created with no authentication. Delete it and recreate it with OAuth.
-- **The connector is created, but ChatGPT answers without touching your mail.** It is not switched on in this chat. Click **+**, choose **Developer mode** and select the MCPEmails app, then ask again.
+- **The connector is created, but ChatGPT answers without touching your mail.** MCPEmails was not picked for that message. Type **@**, pick MCPEmails, and ask again.
 - **The provider rejects your password.** Use a provider-generated app password, not your web sign-in password. Some providers only issue one once two-factor authentication is on.
 - **A custom IMAP connection times out.** Confirm the host, port and TLS mode. Port 993 normally uses implicit TLS; port 143 normally uses STARTTLS.
 - **ChatGPT connects but sees no mail.** Check the inbox is active in the dashboard, confirm the connection holds \`read:email\`, and ask ChatGPT to call \`inbox_list\` first.

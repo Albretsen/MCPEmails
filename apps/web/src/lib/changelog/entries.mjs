@@ -44,6 +44,14 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    // Date must be the day this lands on main.
+    date: '2026-10-26',
+    kind: 'fixed',
+    title: 'Current setup steps for ChatGPT, Claude and other AI apps',
+    body:
+      'The setup guides now follow the menus Claude and ChatGPT show today: Customize, Connectors in Claude, and Plugins, Add custom MCP server in ChatGPT, which no longer needs developer mode and works on the Go plan too. Before, they pointed to menus that had moved. The Devin Desktop (formerly Windsurf), Gemini CLI and VS Code steps are current as well.',
+  },
+  {
     date: '2026-10-26',
     kind: 'improved',
     title: 'One-click setup for Claude, Cursor and VS Code',

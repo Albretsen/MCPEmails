@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google shows an unverified app screen",
-    "body": "Google reviews apps that request Gmail access, and mcpemails.com has not been through that review. You will see an <b>unverified app</b> screen during sign-in, with the steps to continue. The connection itself is not time-limited: once connected, an inbox stays connected until you revoke it."
+    "body": "This applies only to Google sign-in, which is offered on Pro and Business; the default app password connection shows no Google screen. Google reviews apps that request Gmail access, and mcpemails.com has not been through that review, so Google sign-in shows an <b>unverified app</b> screen, with the steps to continue. The connection itself is not time-limited: once connected, an inbox stays connected until you revoke it."
   },
   "hub": {
     "meta": {

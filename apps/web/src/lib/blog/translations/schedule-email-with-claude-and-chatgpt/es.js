@@ -24,7 +24,7 @@ Un envío programado con MCPEmails es un mensaje terminado: lees ahora el texto 
 ## Cómo programar un correo con Claude o ChatGPT
 
 1. **Conecta tu buzón a MCPEmails.** En el panel, abre **Bandejas de entrada**, luego **Conectar bandeja**, y elige tu proveedor. Hay una página por proveedor en [conectar](/connect).
-2. **Añade MCPEmails a tu asistente.** En Claude, abre **Settings**, luego **Connectors**, elige **Add custom connector** y pega \`https://mcpemails.com/api/mcp\`. La [guía de Claude](/blog/connect-claude-to-email) tiene todos los pasos. En ChatGPT, MCPEmails se añade como conector MCP personalizado; qué planes lo ofrecen y dónde está el menú han cambiado más de una vez este año, así que sigue los pasos actuales de la [guía de configuración de ChatGPT](/docs/chatgpt).
+2. **Añade MCPEmails a tu asistente.** En Claude, abre **Customize**, luego **Connectors**, haz clic en **+ Add**, elige **Add custom connector** y pega \`https://mcpemails.com/api/mcp\`. La [guía de Claude](/blog/connect-claude-to-email) tiene todos los pasos. En ChatGPT, MCPEmails se añade como conector MCP personalizado; qué planes lo ofrecen y dónde está el menú han cambiado más de una vez este año, así que sigue los pasos actuales de la [guía de configuración de ChatGPT](/docs/chatgpt).
 3. **Concede la programación al autorizar.** La pantalla de consentimiento de MCPEmails ofrece niveles de acceso. Elige **Acceso completo**, o **Personalizado** con la programación marcada. **Estándar** deja fuera la programación, así que una solicitud de programación se rechaza.
 4. **Pide el correo y la hora.** Indica los destinatarios, qué decir, la fecha y la hora, y tu zona horaria.
 

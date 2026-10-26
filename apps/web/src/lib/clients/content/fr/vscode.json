@@ -16,7 +16,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Lancez MCP: Add Server depuis la palette de commandes, choisissez HTTP et collez https://mcpemails.com/api/mcp. Démarrez le serveur depuis la vue MCP et autorisez quand on vous le demande. Aucune clé API n'intervient."
+    "answer": "Lancez MCP: Add Server depuis la palette de commandes, choisissez HTTP (HTTP or Server-Sent Events), collez https://mcpemails.com/api/mcp, puis choisissez Global et Copilot Global. Acceptez l'invite de connexion pour autoriser avec MCPEmails. Aucune clé API n'intervient."
   },
   "method": {
     "title": "Comment VS Code se connecte : OAuth, sans clé API",
@@ -32,12 +32,12 @@
       "p": "Ouvrez la palette de commandes avec Shift Cmd P, ou Shift Ctrl P sous Windows et Linux, et lancez <b>MCP: Add Server</b>."
     },
     {
-      "h": "Choisissez HTTP",
-      "p": "Sélectionnez <b>HTTP</b>, collez <code>https://mcpemails.com/api/mcp</code> et donnez-lui un nom. VS Code écrit l'entrée ci-dessous dans <code>.vscode/mcp.json</code>."
+      "h": "Choisissez HTTP et Global",
+      "p": "Choisissez <b>HTTP (HTTP or Server-Sent Events)</b>, collez <code>https://mcpemails.com/api/mcp</code> et saisissez <code>mcpemails</code> comme identifiant du serveur. Pour la destination, choisissez <b>Global</b>, puis <b>Copilot Global</b>. VS Code écrit l'entrée ci-dessous dans <code>~/.copilot/mcp-config.json</code>."
     },
     {
-      "h": "Démarrez-le et autorisez",
-      "p": "Démarrez le serveur depuis la vue MCP et terminez la connexion quand VS Code vous y invite. Approuvez les autorisations que Copilot doit détenir."
+      "h": "Autorisez",
+      "p": "Acceptez l'invite de connexion et autorisez avec MCPEmails. Approuvez les autorisations que Copilot doit détenir."
     }
   ],
   "gotchas": [
@@ -50,8 +50,8 @@
       "p": "Les outils MCP sont disponibles pour Copilot en mode agent. Si les outils e-mail manquent dans le sélecteur d'outils après une connexion réussie, la cause habituelle est d'être en mode ask ou edit plutôt qu'en mode agent. C'est dans la vue MCP qu'on vérifie que le serveur tourne vraiment."
     },
     {
-      "h": "Un .vscode/mcp.json est une configuration de dépôt, attention à ce que vous committez",
-      "p": "L'emplacement par défaut se trouve dans le projet, ce qui veut dire qu'il peut être commité et partagé. L'URL est publique et les jetons OAuth ne sont pas écrits ici, donc la configuration par défaut peut être partagée sans risque. Ce n'est plus le cas dès que quelqu'un y écrit à la place une clé API bearer en clair. Toute clé qui atteint un dépôt doit être révoquée depuis Dashboard, API Keys."
+      "h": "Choisissez Global, et gardez les clés hors des dépôts",
+      "p": "La destination Global écrit <code>~/.copilot/mcp-config.json</code> dans votre dossier personnel, hors de tout projet. L'ancien <code>.vscode/mcp.json</code>, avec un objet <code>servers</code> au premier niveau, fonctionne encore, mais le flux guidé le marque comme obsolète, et il se trouve dans le projet, où il peut être commité. L'URL est publique et les jetons OAuth ne sont écrits dans aucun des deux fichiers. Ce n'est plus le cas dès que quelqu'un y écrit à la place une clé API bearer en clair. Toute clé qui atteint un dépôt doit être révoquée depuis Dashboard, API Keys."
     }
   ],
   "limits": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Comment connecter l'e-mail à VS Code ?",
-      "a": "Lancez MCP: Add Server depuis la palette de commandes, choisissez HTTP, collez https://mcpemails.com/api/mcp, puis démarrez le serveur et autorisez quand on vous le demande. Le mode agent de Copilot dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+      "a": "Lancez MCP: Add Server depuis la palette de commandes, choisissez HTTP, collez https://mcpemails.com/api/mcp, choisissez Global puis Copilot Global, et acceptez l'invite de connexion. Le mode agent de Copilot dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
     },
     {
       "q": "Ai-je besoin d'une clé API pour VS Code ?",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Est-ce que ça marche avec Copilot dans d'autres éditeurs ?",
-      "a": "Cette page concerne spécifiquement VS Code, car le flux Add Server et le schéma de mcp.json sont des fonctionnalités de VS Code. JetBrains AI Assistant se configure séparément et utilise une clé API bearer au lieu d'OAuth ; il a sa propre page."
+      "a": "Cette page concerne spécifiquement VS Code, car le flux Add Server est une fonctionnalité de VS Code. JetBrains AI Assistant se configure séparément et utilise une clé API bearer au lieu d'OAuth ; il a sa propre page."
     },
     {
       "q": "Quelles boîtes VS Code peut-il atteindre ainsi ?",

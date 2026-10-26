@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google 会显示应用未经验证的提示",
-    "body": "Google 会审核请求 Gmail 访问权限的应用，而 mcpemails.com 尚未通过该审核。登录时会看到<b>应用未经验证</b>的提示页面，并附有继续操作的步骤。连接本身没有有效期：一旦连接成功，邮箱会保持连接，直到你撤销授权。"
+    "body": "这只适用于 Pro 和 Business 套餐提供的 Google 登录方式；默认的应用专用密码连接不会出现任何 Google 页面。Google 会审核请求 Gmail 访问权限的应用，而 mcpemails.com 尚未通过该审核，因此使用 Google 登录时会看到<b>应用未经验证</b>的提示页面，并附有继续操作的步骤。连接本身没有有效期：一旦连接成功，邮箱会保持连接，直到你撤销授权。"
   },
   "hub": {
     "meta": {

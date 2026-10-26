@@ -12,7 +12,7 @@ const translation = {
 
 ## 你需要准备什么
 
-- 支持自定义连接器的 **Claude 计划或应用**。
+- 网页版 **Claude**（claude.ai）或 Claude Desktop。所有 Claude 计划都可以添加自定义连接器：Free 最多一个，Pro 和 Max 不限数量。
 - 一个免费的 **MCPEmails** 账户：[在此创建](/signup)。
 - 一个邮件收件箱。Outlook 通过**使用 Microsoft 登录**连接。Gmail、iCloud、Fastmail、Yahoo、Zoho 以及多数其他服务商使用应用专用密码。
 
@@ -48,15 +48,19 @@ const translation = {
 
 在 claude.ai 或 Claude Desktop 中：
 
-1. 打开 **Settings → Connectors**。
-2. 选择 **Add custom connector**。
-3. 粘贴此 URL：
+1. 打开 **Customize → Connectors**。
+2. 点击 **+ Add**，然后选择 **Add custom connector**。
+3. 将其命名为 MCPEmails，并粘贴此 URL：
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. 选择 **Connect**，登录 MCPEmails，并批准所需范围：\`read:email\`、\`send:email\` 或两者。
+4. 点击 **Continue**，检查 Claude 检测到的登录设置（保持默认即可），然后点击 **Add**。
+5. 登录 MCPEmails，并批准所需范围：\`read:email\`、\`send:email\` 或两者。
+6. 在对话中点击左下角的 **+**，选择 **Connectors**，然后打开 MCPEmails。
+
+在 Team 或 Enterprise 计划中，由 Owner 在 **Organization settings → Connectors** 下添加一次连接器。之后成员打开 **Customize → Connectors**，找到 MCPEmails 并点击 **Connect**。
 
 这就是 Claude 端的全部设置。OAuth 会将连接限制在你批准的范围内，你可以随时在 MCPEmails 中撤销它。如果你使用的客户端不支持 OAuth，请改用受限 API 密钥；[OAuth 与 API 密钥](/blog/oauth-vs-api-keys-ai-email-access)介绍了这种方式。如遇 Claude 端的问题，请参阅[Claude 设置页面](/docs/claude)。
 

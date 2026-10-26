@@ -10,6 +10,7 @@ import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inbox
 import { captureError } from '@/lib/errors/capture';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
+import { alertGmailOAuthCapClosed, loadGmailOAuthCapState } from '@/lib/oauth/gmail-oauth-gate';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 
 // ---------------------------------------------------------------------------
@@ -268,6 +269,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // Business bills mailboxes past ten: bring the add-on quantity in step.
   // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
   if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(oauthState.workspace_id).then(() => undefined));
+  // A new address may have been a new Google grant against the unverified
+  // client's 100-user lifetime cap. Recount after the response and alert the
+  // owner once if this grant closed the gate (src/lib/oauth/gmail-oauth-gate.ts).
+  if (!alreadyConnected) {
+    after(async () => {
+      const cap = await loadGmailOAuthCapState(serviceClient);
+      if (cap.closed) await alertGmailOAuthCapClosed(serviceClient, cap);
+    });
+  }
   const { data: onboarding } = await serviceClient.from('workspaces').select('onboarding_client').eq('id', oauthState.workspace_id).maybeSingle();
   const guide = new URL(clientGuidePath(onboarding?.onboarding_client), DASHBOARD_INBOXES);
   guide.searchParams.set('connected', 'gmail');

@@ -19,18 +19,18 @@
     "officialGuide": "Official {name} guide ↗",
     "done": "Done",
     "claude": {
-      "step1": "In claude.ai or Claude Desktop, open Settings → Connectors.",
-      "step2": "Click \"Add custom connector\".",
-      "step3": "Paste the URL above as the connector URL, then click \"Add\".",
-      "step4": "Click \"Connect\" and sign in with MCPEmails to authorize. No API key needed."
+      "step1": "In claude.ai or Claude Desktop, open Customize → Connectors, click \"+ Add\", then \"Add custom connector\".",
+      "step2": "Name it MCPEmails, paste the URL above and click \"Continue\".",
+      "step3": "Review the sign-in settings (the defaults are fine), then click \"Add\".",
+      "step4": "Sign in with MCPEmails to authorize. No API key needed. The Free plan allows one custom connector. On Team and Enterprise, an Owner adds it under Organization settings → Connectors, then members click \"Connect\" under Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.",
-      "step2": "Back in Apps & Connectors, click \"Create\".",
-      "step3": "Enter a name and paste the URL above as the Connector URL.",
-      "step4": "Pick OAuth, click \"Create\", then authorize with MCPEmails.",
-      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the MCPEmails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
-      "note": "Works on chatgpt.com (web only) with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors. On Business and Enterprise, an admin may need to allow developer mode first."
+      "step1": "On chatgpt.com, open Plugins → Personal, click \"Add\" at the top right, then \"Add custom MCP server\". This cannot be done in the mobile app.",
+      "step2": "Name it MCPEmails and paste the URL above under \"Connection\".",
+      "step3": "Choose OAuth, tick \"I understand and want to continue\", then click \"Create as a plugin\".",
+      "step4": "Sign in with MCPEmails to authorize. No API key needed.",
+      "step5": "In a chat, type @ and pick MCPEmails. The pick applies to that message, so @mention it again when a follow-up needs your email.",
+      "note": "Custom MCP servers can be added on ChatGPT Go and paid plans. On Business and Enterprise, an admin or owner may need to add it."
     },
     "cursor": {
       "step1": "Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
@@ -39,8 +39,8 @@
     },
     "vscode": {
       "step1": "Open the Command Palette (⇧⌘P) and run \"MCP: Add Server\".",
-      "step2": "Choose \"HTTP\", paste the URL above, and give it a name.",
-      "step3": "Start the server from the MCP view and authorize when prompted."
+      "step2": "Choose \"HTTP (HTTP or Server-Sent Events)\", paste the URL above and enter MCPEmails as the server ID.",
+      "step3": "Pick \"Global\", then \"Copilot Global\" (saved to ~/.copilot/mcp-config.json), and approve the sign-in prompt with MCPEmails."
     },
     "cline": {
       "step1": "In the Cline panel, click the MCP Servers icon, then open the \"Remote Servers\" tab.",
@@ -49,14 +49,14 @@
       "step4": "Add an \"Authorization: Bearer YOUR_KEY\" header using your API key."
     },
     "windsurf": {
-      "step1": "Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.",
-      "step2": "Add the server below. Note the field is \"serverUrl\", not \"url\".",
-      "step3": "Refresh MCP servers in Cascade and authorize with MCPEmails when prompted."
+      "step1": "In Devin Desktop (formerly Windsurf), click the \"...\" menu at the top right of the Cascade panel, then \"Open MCP config file\" in the MCPs section. The file is ~/.config/devin/mcp_config.json.",
+      "step2": "Add the server below under \"mcpServers\". Note the field is \"serverUrl\", not \"url\".",
+      "step3": "Save the file and sign in with MCPEmails when prompted."
     },
     "gemini": {
-      "step1": "Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).",
-      "step2": "Add the server below under \"mcpServers\" using the \"httpUrl\" field.",
-      "step3": "On first connect the CLI auto-discovers OAuth and opens the browser flow."
+      "step1": "Run gemini mcp add --transport http mcpemails followed by the URL above, or edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).",
+      "step2": "In the file, add the server below under \"mcpServers\" using the \"httpUrl\" field.",
+      "step3": "Run /mcp auth mcpemails to sign in with MCPEmails. Free-tier and Google One accounts now use Antigravity CLI instead: type /mcp there to add the server, with the field \"serverUrl\"."
     },
     "zed": {
       "step1": "In the Agent Panel settings click \"Add Custom Server\", or edit settings.json.",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "In Claude, click + in the message box, open Connectors and check that MCPEmails is switched on for the chat. If it is off, Claude answers without your email.",
-      "chatgpt": "In ChatGPT, click + in each new chat, choose Developer mode and select the MCPEmails app. Without that, ChatGPT cannot see your email."
+      "chatgpt": "In ChatGPT, type @ in the message box and pick MCPEmails. The pick covers only that message, so @mention MCPEmails again when a follow-up needs your email."
     },
     "itWorksTitle": "It works",
     "itWorksDesc": "Your AI app just made its first call to MCPEmails. Keep going in the same chat.",
@@ -166,7 +166,7 @@
     "actionsThisMonth": "Email actions this month",
     "actionsOfCap": "of {cap} · resets {date}",
     "actionsCapReached": "Cap reached · refused until {date}",
-    "actionsGrace": "Trial period: no cap until {date}",
+    "actionsGrace": "Unlimited until {date}",
     "actionsExempt": "No monthly cap (early member)",
     "teamMembers": "Team members",
     "ofSeats": "of {cap} seats · {remaining} remaining",
@@ -509,7 +509,7 @@
       "createdJustNow": "· created just now",
       "urlLabel": "MCP client configuration (uses an Authorization header)",
       "nextTitle": "Next: connect it in Claude",
-      "nextStep1": "In claude.ai or Claude Desktop, open Settings → Connectors → Add custom connector.",
+      "nextStep1": "In claude.ai or Claude Desktop, open Customize → Connectors, click \"+ Add\", then \"Add custom connector\".",
       "nextStep2": "Paste the URL above. OAuth clients connect in one click.",
       "nextStep3": "Then just ask Claude:",
       "nextGuide": "Step-by-step guide",
@@ -628,7 +628,7 @@
     "colAddress": "Address",
     "allowanceCounting": "{used} of {cap} email actions used this month · resets {date}",
     "allowanceReached": "All {cap} email actions used · reads and writes are refused until {date}",
-    "allowanceGrace": "Trial period: no cap until {date}",
+    "allowanceGrace": "Unlimited until {date}",
     "allowanceExempt": "No monthly cap (early member)",
     "capTitleNear": "You're close to this month's allowance",
     "capBodyNear": "{used} of {cap} email actions used. At {cap}, your agent's reads and writes are refused until {date}. Personal removes the monthly cap for $9 a month.",

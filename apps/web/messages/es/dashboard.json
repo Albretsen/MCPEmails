@@ -19,18 +19,18 @@
     "officialGuide": "Guía oficial de {name} ↗",
     "done": "Listo",
     "claude": {
-      "step1": "En claude.ai o Claude Desktop, abre Configuración → Conectores.",
-      "step2": "Haz clic en «Añadir conector personalizado».",
-      "step3": "Pega la URL de arriba como la URL del conector, luego haz clic en «Añadir».",
-      "step4": "Haz clic en «Conectar» e inicia sesión con MCPEmails para autorizar. No se necesita clave de API."
+      "step1": "En claude.ai o Claude Desktop, abre Customize → Connectors, haz clic en «+ Add» y luego en «Add custom connector».",
+      "step2": "Ponle el nombre MCPEmails, pega la URL de arriba y haz clic en «Continue».",
+      "step3": "Revisa los ajustes de inicio de sesión (los valores por defecto sirven) y haz clic en «Add».",
+      "step4": "Inicia sesión con MCPEmails para autorizar. No se necesita clave de API. El plan Free permite un solo conector personalizado. En Team y Enterprise, un Owner lo añade en Organization settings → Connectors, y después los miembros hacen clic en «Connect» en Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "Abre Configuración → Apps y conectores → Configuración avanzada y activa el modo de desarrollador.",
-      "step2": "De vuelta en Apps y conectores, haz clic en «Crear».",
-      "step3": "Introduce un nombre y pega la URL de arriba como la URL del conector.",
-      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con MCPEmails.",
-      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de MCPEmails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
-      "note": "Funciona en chatgpt.com (solo web) con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador."
+      "step1": "En chatgpt.com, abre Plugins → Personal, haz clic en «Add» arriba a la derecha y luego en «Add custom MCP server». No se puede hacer desde la app móvil.",
+      "step2": "Ponle el nombre MCPEmails y pega la URL de arriba en «Connection».",
+      "step3": "Elige OAuth, marca «I understand and want to continue» y haz clic en «Create as a plugin».",
+      "step4": "Inicia sesión con MCPEmails para autorizar. No se necesita clave de API.",
+      "step5": "En un chat, escribe @ y elige MCPEmails. La elección vale solo para ese mensaje, así que vuelve a mencionarlo con @ cuando una pregunta de seguimiento necesite tu correo.",
+      "note": "Los servidores MCP personalizados se pueden añadir con ChatGPT Go y los planes de pago. En Business y Enterprise, puede que tenga que añadirlo un administrador o propietario."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",
@@ -39,8 +39,8 @@
     },
     "vscode": {
       "step1": "Abre la Paleta de comandos (⇧⌘P) y ejecuta «MCP: Add Server».",
-      "step2": "Elige «HTTP», pega la URL de arriba y ponle un nombre.",
-      "step3": "Inicia el servidor desde la vista MCP y autoriza cuando se te solicite."
+      "step2": "Elige «HTTP (HTTP or Server-Sent Events)», pega la URL de arriba y escribe MCPEmails como ID del servidor.",
+      "step3": "Elige «Global» y luego «Copilot Global» (se guarda en ~/.copilot/mcp-config.json), y acepta la solicitud de inicio de sesión con MCPEmails."
     },
     "cline": {
       "step1": "En el panel de Cline, haz clic en el icono de Servidores MCP, luego abre la pestaña «Remote Servers».",
@@ -49,14 +49,14 @@
       "step4": "Añade un encabezado «Authorization: Bearer YOUR_KEY» usando tu clave de API."
     },
     "windsurf": {
-      "step1": "Abre la configuración de MCP de Cascade, o edita ~/.codeium/windsurf/mcp_config.json.",
-      "step2": "Añade el servidor de abajo. Nota que el campo es «serverUrl», no «url».",
-      "step3": "Actualiza los servidores MCP en Cascade y autoriza con MCPEmails cuando se te solicite."
+      "step1": "En Devin Desktop (antes Windsurf), haz clic en el menú «...» arriba a la derecha del panel de Cascade y luego en «Open MCP config file» en la sección MCPs. El archivo es ~/.config/devin/mcp_config.json.",
+      "step2": "Añade el servidor de abajo bajo «mcpServers». Ten en cuenta que el campo es «serverUrl», no «url».",
+      "step3": "Guarda el archivo e inicia sesión con MCPEmails cuando se te solicite."
     },
     "gemini": {
-      "step1": "Edita ~/.gemini/settings.json (global) o .gemini/settings.json (proyecto).",
-      "step2": "Añade el servidor de abajo bajo «mcpServers» usando el campo «httpUrl».",
-      "step3": "En la primera conexión, la CLI descubre OAuth automáticamente y abre el flujo del navegador."
+      "step1": "Ejecuta gemini mcp add --transport http mcpemails seguido de la URL de arriba, o edita ~/.gemini/settings.json (global) o .gemini/settings.json (proyecto).",
+      "step2": "En el archivo, añade el servidor de abajo bajo «mcpServers» usando el campo «httpUrl».",
+      "step3": "Ejecuta /mcp auth mcpemails para iniciar sesión con MCPEmails. Las cuentas gratuitas y las de Google One usan ahora Antigravity CLI: escribe /mcp allí para añadir el servidor (campo «serverUrl»)."
     },
     "zed": {
       "step1": "En la configuración del Panel de agentes haz clic en «Add Custom Server», o edita settings.json.",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "En Claude, haz clic en + en el cuadro de mensaje, abre Conectores y comprueba que MCPEmails está activado en el chat. Si no, Claude responde sin tu correo.",
-      "chatgpt": "En ChatGPT, haz clic en + en cada chat nuevo, elige modo de desarrollador y selecciona la app de MCPEmails. Si no, ChatGPT no puede ver tu correo."
+      "chatgpt": "En ChatGPT, escribe @ en el cuadro de mensaje y elige MCPEmails. La elección vale solo para ese mensaje, así que vuelve a mencionar MCPEmails con @ cuando una pregunta de seguimiento necesite tu correo."
     },
     "itWorksTitle": "Funciona",
     "itWorksDesc": "Tu app de IA acaba de hacer su primera llamada a MCPEmails. Sigue en el mismo chat.",
@@ -166,7 +166,7 @@
     "actionsThisMonth": "Acciones de correo este mes",
     "actionsOfCap": "de {cap} · se reinicia el {date}",
     "actionsCapReached": "Límite alcanzado · rechazadas hasta el {date}",
-    "actionsGrace": "Periodo de prueba: sin límite hasta el {date}",
+    "actionsGrace": "Sin límite hasta el {date}",
     "actionsExempt": "Sin límite mensual (miembro temprano)",
     "teamMembers": "Miembros del equipo",
     "ofSeats": "de {cap} puestos · {remaining} restantes",
@@ -509,7 +509,7 @@
       "createdJustNow": "· creada justo ahora",
       "urlLabel": "Configuración del cliente MCP (usa un encabezado Authorization)",
       "nextTitle": "Siguiente: conéctalo en Claude",
-      "nextStep1": "En claude.ai o Claude Desktop, abre Ajustes → Conectores → Añadir conector personalizado.",
+      "nextStep1": "En claude.ai o Claude Desktop, abre Customize → Connectors, haz clic en «+ Add» y luego en «Add custom connector».",
       "nextStep2": "Pega la URL de arriba. Los clientes con OAuth se conectan con un clic.",
       "nextStep3": "Luego solo pide a Claude:",
       "nextGuide": "Guía paso a paso",
@@ -628,7 +628,7 @@
     "colAddress": "Dirección",
     "allowanceCounting": "{used} de {cap} acciones de correo usadas este mes · se reinicia el {date}",
     "allowanceReached": "Las {cap} acciones de correo ya se han usado · lecturas y escrituras rechazadas hasta el {date}",
-    "allowanceGrace": "Periodo de prueba: sin límite hasta el {date}",
+    "allowanceGrace": "Sin límite hasta el {date}",
     "allowanceExempt": "Sin límite mensual (miembro temprano)",
     "capTitleNear": "Te acercas al límite de este mes",
     "capBodyNear": "{used} de {cap} acciones de correo usadas. Al llegar a {cap}, las lecturas y escrituras de tu agente se rechazan hasta el {date}. Personal elimina el límite mensual por 9 $ al mes.",

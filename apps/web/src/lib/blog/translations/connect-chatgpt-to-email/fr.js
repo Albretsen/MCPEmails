@@ -12,11 +12,11 @@ Deux surfaces OpenAI sont concernées, et elles s'authentifient différemment. C
 
 ## Ce dont vous avez besoin
 
-- **ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web.** Les connecteurs MCP personnalisés passent par le mode développeur, qu'OpenAI propose sur chatgpt.com pour ces abonnements. Les comptes Free et Go ne peuvent pas en ajouter, et les apps mobile et de bureau n'affichent pas l'option. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur.
+- **ChatGPT Go ou un abonnement payant, sur le web.** OpenAI permet d'ajouter des serveurs MCP personnalisés sur chatgpt.com avec Go et les abonnements payants. Impossible d'en ajouter un depuis l'app mobile. Sur Business et Enterprise, un administrateur ou propriétaire doit parfois l'ajouter pour l'espace de travail.
 - **Un compte MCPEmails gratuit.** [Créez-le ici](/signup). L'offre gratuite accepte une boîte connectée et ne demande pas de carte.
 - **Une boîte e-mail.** Gmail, Outlook ou Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, ou tout service parlant IMAP et SMTP.
 
-Si vous êtes sur Free ou Go, la même boîte et la même URL fonctionnent déjà dans [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) et les autres [clients pris en charge](/docs/clients).
+Si votre abonnement ChatGPT ne permet pas d'ajouter un serveur MCP personnalisé, la même boîte et la même URL fonctionnent déjà dans [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) et les autres [clients pris en charge](/docs/clients).
 
 ## Étape 1 : Connecter votre boîte à MCPEmails
 
@@ -42,18 +42,19 @@ Connectez plusieurs boîtes si votre forfait le permet. ChatGPT les découvre av
 
 ## Étape 2 : Ajouter le connecteur dans ChatGPT
 
-1. Activez le **mode développeur** dans les réglages de ChatGPT, sous les paramètres avancés des applications et connecteurs.
-2. Créez un nouveau connecteur et donnez-lui un nom.
-3. Collez cette URL de connecteur :
+1. Sur chatgpt.com, ouvrez **Plugins**, puis **Personal**, et cliquez sur **Add** en haut à droite.
+2. Choisissez **Add custom MCP server** et nommez-le MCPEmails.
+3. Sous **Connection**, collez cette URL :
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Choisissez **OAuth** comme méthode d'authentification, créez le connecteur, puis autorisez avec MCPEmails.
-5. Ouvrez une nouvelle conversation, cliquez sur **+**, choisissez **Developer mode** et sélectionnez l'app MCPEmails. ChatGPT ne voit les outils que dans une conversation où vous l'avez fait, donc recommencez dans chaque nouvelle conversation.
+4. Choisissez **OAuth**, cochez **I understand and want to continue** et cliquez sur **Create as a plugin**.
+5. Connectez-vous avec MCPEmails et approuvez.
+6. Dans une conversation, tapez **@** et choisissez MCPEmails. Ce choix vaut pour ce message : mentionnez à nouveau MCPEmails avec @ quand une question de suivi a besoin de vos e-mails.
 
-Choisissez OAuth, pas l'option sans authentification. Ce serveur refuse les appels anonymes : un connecteur créé sans authentification semble correct à la configuration puis échoue à son premier appel d'outil, ce qui est l'ordre le plus déroutant. Avec OAuth, ChatGPT s'enregistre lui-même et réalise un flux de code d'autorisation avec PKCE : aucun client id à créer, aucun secret nulle part. La formulation des menus évolue au fil de la bêta, alors consultez la [page de configuration ChatGPT](/docs/chatgpt) pour le chemin actuel.
+Choisissez OAuth, pas l'option sans authentification. Ce serveur refuse les appels anonymes : un connecteur créé sans authentification semble correct à la configuration puis échoue à son premier appel d'outil, ce qui est l'ordre le plus déroutant. Avec OAuth, ChatGPT s'enregistre lui-même et réalise un flux de code d'autorisation avec PKCE : aucun client id à créer, aucun secret nulle part. OpenAI déplace ces menus de temps en temps, alors consultez la [page de configuration ChatGPT](/docs/chatgpt) pour le chemin actuel.
 
 ## Étape 3 : N'accordez que les scopes nécessaires
 
@@ -101,9 +102,9 @@ Limitez la clé au strict nécessaire. La lecture seule est généralement le bo
 
 ## Dépannage
 
-- **Aucune option pour créer un connecteur personnalisé.** Le mode développeur exige Plus, Pro, Business, Enterprise ou Edu, sur chatgpt.com dans un navigateur. Les comptes Free et Go ne l'ont pas. Dans un espace Business ou Enterprise, un administrateur doit l'autoriser.
+- **Aucune option pour ajouter un serveur MCP personnalisé.** Les serveurs MCP personnalisés s'ajoutent sur chatgpt.com dans un navigateur, pas dans l'app mobile, et demandent Go ou un abonnement payant. Dans un espace Business ou Enterprise, un administrateur ou propriétaire doit parfois l'ajouter.
 - **Le connecteur échoue à son premier appel d'outil.** Il a probablement été créé sans authentification. Supprimez-le et recréez-le avec OAuth.
-- **Le connecteur est créé, mais ChatGPT répond sans toucher à vos e-mails.** Il n'est pas activé dans cette conversation. Cliquez sur **+**, choisissez **Developer mode**, sélectionnez l'app MCPEmails, puis reposez la question.
+- **Le connecteur est créé, mais ChatGPT répond sans toucher à vos e-mails.** MCPEmails n'a pas été choisi pour ce message. Tapez **@**, choisissez MCPEmails, puis reposez la question.
 - **Le fournisseur refuse votre mot de passe.** Utilisez un mot de passe d'application généré par le fournisseur, pas votre mot de passe web. Certains fournisseurs n'en délivrent qu'une fois l'authentification à deux facteurs activée.
 - **Une connexion IMAP personnalisée expire.** Vérifiez l'hôte, le port et le mode TLS. Le port 993 utilise normalement TLS implicite ; le port 143 utilise généralement STARTTLS.
 - **ChatGPT se connecte mais ne voit aucun e-mail.** Vérifiez que la boîte est active dans le tableau de bord, que la connexion détient \`read:email\`, et demandez à ChatGPT d'appeler d'abord \`inbox_list\`.

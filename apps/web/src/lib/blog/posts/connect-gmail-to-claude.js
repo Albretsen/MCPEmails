@@ -8,7 +8,7 @@ const post = {
     'How to connect Gmail to Claude in two minutes over MCP: a Google app password, one endpoint URL, no email stored',
   authorId: 'asgeir',
   publishedAt: '2026-06-23T09:00:00.000Z',
-  updatedAt: '2026-09-26T09:00:00.000Z',
+  updatedAt: '2026-10-26T09:00:00.000Z',
   tags: ['Tutorial', 'Gmail', 'Claude', 'MCP'],
   featured: false,
   content: `To connect Gmail to Claude, you do two things: connect your Gmail inbox once in the MCPEmails dashboard with a Google app password, then paste a single endpoint URL into Claude's connector settings and approve a sign-in. That's the whole job: no code, no SDK, no API key. It takes about two minutes, and Claude never stores your email: every read and send goes to Gmail live and is discarded the moment Claude has it.
@@ -18,7 +18,7 @@ This is the focused, Gmail-only walkthrough. If you run several mailboxes or a n
 ## What you'll need
 
 - A **Gmail or Google Workspace** account.
-- A version of **Claude that supports custom connectors**: claude.ai on a paid plan, or Claude Desktop. (Connectors are how Claude talks to MCP servers.)
+- **Claude** on the web (claude.ai) or in Claude Desktop. Every Claude plan can add custom connectors, which are how Claude talks to MCP servers. The Free plan allows one, and Pro and Max have no limit.
 - A free **MCPEmails** account. No credit card, one connected inbox, forever. [Start free](/signup) and keep this tab open.
 
 MCPEmails is the bridge in the middle: it speaks the Model Context Protocol to Claude on one side and talks to Gmail on the other over IMAP and SMTP. If you want the background on what that means, see [what an MCP email server actually is](/blog/what-is-an-mcp-email-server).
@@ -41,15 +41,19 @@ A Google Workspace administrator can switch app passwords off for the whole doma
 
 Now point Claude at the same endpoint. Because Claude is an OAuth client, you don't need an API key at all: you paste one URL and approve a sign-in.
 
-1. In **claude.ai or Claude Desktop**, open **Settings → Connectors**.
-2. Click **Add custom connector**.
-3. Paste this as the connector URL, then click **Add**:
+1. In **claude.ai or Claude Desktop**, open **Customize → Connectors**.
+2. Click **+ Add**, then **Add custom connector**.
+3. Name it MCPEmails and paste this as the connector URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Click **Connect**, sign in with your MCPEmails account, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+4. Click **Continue**, review the sign-in settings Claude detected (the defaults are fine), and click **Add**.
+5. Sign in with your MCPEmails account and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+6. In a chat, click **+** at the lower left, choose **Connectors** and switch MCPEmails on.
+
+On a Team or Enterprise plan, an Owner adds the connector once under **Organization settings → Connectors**. Members then open **Customize → Connectors**, find MCPEmails and click **Connect**.
 
 That's the entire client side. The connection is scoped to exactly what you approved, and you can revoke it from the dashboard in one click. If you'd rather understand the API-key path (for clients without built-in OAuth, like Cline or a custom script), read [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). Connecting a different inbox too? The [step-by-step Claude email setup](/blog/connect-claude-to-email) covers Outlook, iCloud, Fastmail and IMAP.
 
@@ -101,7 +105,7 @@ No. Email is fetched live from Gmail on every request and discarded right after 
 Yes, if you grant the \`send:email\` scope. Sends go out through Gmail as normal messages from your own account. Grant read-only if you'd rather Claude never send.
 
 **Does this work with the free Claude plan?**
-Custom connectors require a Claude plan that supports them (claude.ai paid or Claude Desktop). The MCPEmails side is free with no card.
+Yes. Claude's Free plan can add one custom connector, which is enough for MCPEmails, and Pro and Max have no limit. The MCPEmails side is free with no card.
 
 **Will MCPEmails see my Google password?**
 No. You paste an app password, a separate credential that Google generates and you can revoke at any time. Your normal Google password is never entered anywhere in MCPEmails.

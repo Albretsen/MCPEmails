@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://docs.windsurf.com/windsurf/cascade/mcp"
+    "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
     "title": "Connecter l'e-mail à Windsurf : serveur MCP Cascade",
@@ -12,15 +12,15 @@
     "eyebrow": "Windsurf + e-mail",
     "titleLine1": "Connectez votre boîte à Windsurf",
     "titleLine2": "et à Cascade",
-    "lead": "Ajoutez une vraie boîte à Cascade. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails depuis l'éditeur, dans toutes les boîtes que vous avez connectées.",
+    "lead": "Ajoutez une vraie boîte à Cascade dans Devin Desktop, anciennement Windsurf. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails depuis l'éditeur, dans toutes les boîtes que vous avez connectées.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Ajoutez une entrée sous mcpServers dans ~/.codeium/windsurf/mcp_config.json avec le champ serverUrl, et non url, et https://mcpemails.com/api/mcp. Rafraîchissez les serveurs MCP dans Cascade et autorisez quand on vous le demande."
+    "answer": "Devin Desktop est le nouveau nom de Windsurf. Dans le panneau Cascade, ouvrez le menu ... en haut à droite et cliquez sur Open MCP config file dans la section MCPs. Ajoutez une entrée sous mcpServers avec le champ serverUrl, et non url, et https://mcpemails.com/api/mcp, enregistrez le fichier et connectez-vous avec MCPEmails quand on vous le demande."
   },
   "method": {
     "title": "Comment Windsurf se connecte : OAuth, sans clé API",
-    "body": "Windsurf exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+    "body": "Devin Desktop (anciennement Windsurf) exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
   },
   "setup": [
     {
@@ -28,26 +28,26 @@
       "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
-      "h": "Ouvrez les réglages MCP de Cascade",
-      "p": "Ouvrez les réglages MCP de Cascade, ou modifiez directement <code>~/.codeium/windsurf/mcp_config.json</code>."
+      "h": "Ouvrez le fichier de configuration MCP",
+      "p": "Dans le panneau Cascade, cliquez sur le menu <b>...</b> en haut à droite, puis, dans la section <b>MCPs</b>, sur <b>Open MCP config file</b>. Le fichier est <code>~/.config/devin/mcp_config.json</code> sous macOS et Linux, et <code>%APPDATA%\\devin\\mcp_config.json</code> sous Windows."
     },
     {
       "h": "Ajoutez le serveur",
       "p": "Ajoutez l'entrée ci-dessous. Ici, le nom du champ est <code>serverUrl</code>, et non <code>url</code>."
     },
     {
-      "h": "Rafraîchissez et autorisez",
-      "p": "Rafraîchissez les serveurs MCP dans Cascade et autorisez avec MCPEmails quand on vous le demande. Approuvez les autorisations que Cascade doit détenir."
+      "h": "Enregistrez et connectez-vous",
+      "p": "Enregistrez le fichier et connectez-vous avec MCPEmails quand on vous le demande. Approuvez les autorisations que Cascade doit détenir."
     }
   ],
   "gotchas": [
     {
       "h": "Le champ est serverUrl, et url échoue sans bruit",
-      "p": "C'est l'erreur de configuration Windsurf la plus courante, et elle est tout à fait compréhensible : Cursor, Zed et VS Code lisent tous <code>url</code>, donc un extrait copié de l'un d'eux a l'air correct. Windsurf lit <code>serverUrl</code>. Avec la mauvaise clé, l'entrée est bien lue, le serveur apparaît dans la liste, et aucun outil n'arrive jamais."
+      "p": "C'est l'erreur de configuration Windsurf la plus courante, et elle est tout à fait compréhensible : Cursor, Zed et VS Code lisent tous <code>url</code>, donc un extrait copié de l'un d'eux a l'air correct. Devin Desktop lit <code>serverUrl</code>. Avec la mauvaise clé, l'entrée est bien lue, le serveur apparaît dans la liste, et aucun outil n'arrive jamais."
     },
     {
-      "h": "Cascade doit être rafraîchi, il ne surveille pas le fichier",
-      "p": "Modifier <code>mcp_config.json</code> dans un éditeur ne pousse pas Cascade à le recharger. Utilisez l'action de rafraîchissement du panneau MCP après chaque changement. Une entrée correcte non rafraîchie ressemble exactement à une entrée cassée."
+      "h": "Les anciens guides indiquent le chemin de Windsurf",
+      "p": "Windsurf rangeait sa configuration MCP dans <code>~/.codeium/windsurf/mcp_config.json</code>, et beaucoup de guides l'indiquent encore. Devin Desktop utilise <code>~/.config/devin/mcp_config.json</code> (<code>%APPDATA%\\devin\\mcp_config.json</code> sous Windows). L'entrée <b>Open MCP config file</b> du menu <b>...</b> de Cascade ouvre le fichier qu'il lit vraiment : partez de là plutôt que de taper un chemin."
     },
     {
       "h": "Décidez d'emblée si Cascade doit pouvoir envoyer",
@@ -62,15 +62,15 @@
   "faq": [
     {
       "q": "Comment connecter l'e-mail à Windsurf ?",
-      "a": "Ajoutez une entrée sous mcpServers dans ~/.codeium/windsurf/mcp_config.json avec serverUrl défini sur https://mcpemails.com/api/mcp, rafraîchissez les serveurs MCP dans Cascade et autorisez quand on vous le demande. Cascade dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+      "a": "Dans Devin Desktop, anciennement Windsurf, ouvrez le menu ... du panneau Cascade et cliquez sur Open MCP config file. Ajoutez une entrée sous mcpServers avec serverUrl défini sur https://mcpemails.com/api/mcp, enregistrez et connectez-vous avec MCPEmails quand on vous le demande. Cascade dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier les e-mails."
     },
     {
       "q": "Pourquoi ma configuration Windsurf ne marche-t-elle pas alors que le même JSON marche dans Cursor ?",
-      "a": "Presque toujours à cause du nom du champ. Cursor lit url, Windsurf lit serverUrl. Le reste de l'entrée est identique, et c'est précisément pour cela que l'erreur résiste à une relecture attentive."
+      "a": "Presque toujours à cause du nom du champ. Cursor lit url, Devin Desktop lit serverUrl. Le reste de l'entrée est identique, et c'est précisément pour cela que l'erreur résiste à une relecture attentive."
     },
     {
       "q": "Ai-je besoin d'une clé API pour Windsurf ?",
-      "a": "Non. Windsurf exécute le flux OAuth auprès de ce serveur, donc le fichier de configuration ne contient qu'une URL publique. Une clé API bearer reste disponible pour un usage scripté ou sans interface graphique."
+      "a": "Non. Devin Desktop (anciennement Windsurf) exécute le flux OAuth auprès de ce serveur, donc le fichier de configuration ne contient qu'une URL publique. Une clé API bearer reste disponible pour un usage scripté ou sans interface graphique."
     },
     {
       "q": "Quelles boîtes Windsurf peut-il atteindre ainsi ?",

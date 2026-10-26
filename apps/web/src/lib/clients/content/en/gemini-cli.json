@@ -17,7 +17,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth discovered automatically",
     "meta2": "Email fetched live, never stored",
-    "answer": "Add one entry under mcpServers in ~/.gemini/settings.json using the field httpUrl with https://mcpemails.com/api/mcp. On first connect the CLI discovers the OAuth metadata and opens the browser flow by itself."
+    "answer": "Add one entry under mcpServers in ~/.gemini/settings.json using the field httpUrl with https://mcpemails.com/api/mcp. On first connect the CLI discovers the OAuth metadata and opens the browser flow by itself. Or run gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp, then /mcp auth mcpemails to sign in."
   },
   "method": {
     "title": "How Gemini CLI connects: OAuth, no API key",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Add the server",
-      "p": "Add the entry below under <code>mcpServers</code>. The field for a Streamable HTTP server here is <code>httpUrl</code>."
+      "p": "Add the entry below under <code>mcpServers</code>. The field for a Streamable HTTP server here is <code>httpUrl</code>. Or add it in one line with <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Connect",
-      "p": "On the first connect the CLI auto-discovers OAuth from the server metadata and opens the browser flow. Approve the scopes you want the CLI to hold."
+      "p": "On the first connect the CLI auto-discovers OAuth from the server metadata and opens the browser flow. Approve the scopes you want the CLI to hold. To sign in at any time, run <code>/mcp auth mcpemails</code> inside the CLI."
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "A CLI on a shared or headless machine wants the key path instead",
       "p": "The browser flow needs a browser. On a build agent or a shared box, the honest setup is a bearer API key scoped to precisely what that automation should do, kept in the environment rather than in a committed settings file."
+    },
+    {
+      "h": "Unpaid and Google One accounts now use Antigravity CLI",
+      "p": "Since 18 June 2026, Google has moved unpaid-tier and Google One accounts from Gemini CLI to Antigravity CLI. There, type <code>/mcp</code> to open the MCP manager, or add the server to <code>mcp_config.json</code> using the <code>serverUrl</code> field."
     }
   ],
   "limits": [

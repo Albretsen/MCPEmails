@@ -1,18 +1,18 @@
 {
   "eyebrow": "ChatGPT",
   "title": "Usa {provider} en ChatGPT",
-  "sub": "ChatGPT accede a {provider} mediante un conector MCP personalizado. Para eso necesita el modo desarrollador, disponible en chatgpt.com con Plus, Pro, Business, Enterprise y Edu.",
+  "sub": "ChatGPT accede a {provider} mediante un servidor MCP personalizado, que añades en chatgpt.com con ChatGPT Go o un plan de pago.",
   "steps": [
     "Conecta {provider} a MCPEmails con los pasos de arriba.",
-    "En ChatGPT, abre Settings, Apps and Connectors, Advanced settings, y activa el modo desarrollador.",
-    "En Apps and Connectors, haz clic en Create, pega <code>https://mcpemails.com/api/mcp</code> como URL del conector, elige OAuth e inicia sesión en MCPEmails.",
-    "En cada chat nuevo, haz clic en <b>+</b>, elige el modo desarrollador y selecciona tu conector."
+    "En chatgpt.com, abre Plugins, Personal, haz clic en Add y luego en Add custom MCP server.",
+    "Ponle el nombre MCPEmails, pega <code>https://mcpemails.com/api/mcp</code> en Connection, elige OAuth, confirma, haz clic en Create as a plugin e inicia sesión en MCPEmails.",
+    "En un chat, escribe <b>@</b> y elige MCPEmails. Repítelo cuando una pregunta de seguimiento necesite tu correo."
   ],
   "docsLink": "Guía completa de configuración de ChatGPT",
   "blogLink": "Cómo conectar ChatGPT a tu correo",
   "faqQ": "¿Puede ChatGPT leer mi correo de {provider}?",
   "faqQMailName": "¿Puede ChatGPT leer mi correo de {provider}?",
-  "faqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. En ChatGPT, añade un conector MCP personalizado con la URL https://mcpemails.com/api/mcp e inicio de sesión OAuth. Los conectores personalizados requieren el modo desarrollador, disponible en chatgpt.com con Plus, Pro, Business, Enterprise y Edu. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena.",
+  "faqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. En chatgpt.com, añade un servidor MCP personalizado con la URL https://mcpemails.com/api/mcp e inicio de sesión OAuth. Funciona con ChatGPT Go y los planes de pago. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena.",
   "directorySub": "ChatGPT accede a {provider} mediante la app Any Mailbox de MCPEmails.",
   "directorySteps": [
     "Conecta {provider} a MCPEmails con los pasos de arriba.",

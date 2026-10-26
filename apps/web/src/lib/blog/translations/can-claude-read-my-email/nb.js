@@ -74,7 +74,7 @@ E-posten hentes direkte fra leverandøren din for hver forespørsel og lagres ik
 ### Legg den til i Claude
 
 1. [Opprett en gratis MCPEmails-konto](/signup) og koble til en postkasse under **Innbokser**, deretter **Koble til innboks**.
-2. I claude.ai eller Claude Desktop legger du til \`https://mcpemails.com/api/mcp\` som en egendefinert kobling (custom connector).
+2. I claude.ai eller Claude Desktop åpner du **Customize → Connectors**, klikker **+ Add** og deretter **Add custom connector**. Kall den MCPEmails, skriv inn \`https://mcpemails.com/api/mcp\`, klikk **Continue**, behold innloggingsinnstillingene Claude fant, og klikk **Add**.
 3. Logg på MCPEmails når Claude ber om det, og velg hvor mye tilgang Claude skal få: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting).
 
 [Steg-for-steg-guiden for oppsett i Claude](/blog/connect-claude-to-email) går gjennom hvert skjermbilde og hver leverandør, og [oppsettsiden for Claude](/docs/claude) tar for seg feil med koblingen.

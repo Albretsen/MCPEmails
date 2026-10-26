@@ -10,7 +10,7 @@ Esta es la guía centrada exclusivamente en Gmail. Si gestionas varias bandejas 
 ## Lo que necesitarás
 
 - Una cuenta de **Gmail o Google Workspace**.
-- Una versión de **Claude que admita conectores personalizados**: claude.ai en un plan de pago, o Claude Desktop. (Los conectores son la forma en que Claude se comunica con los servidores MCP.)
+- **Claude** en la web (claude.ai) o en Claude Desktop. Todos los planes de Claude pueden añadir conectores personalizados, que son la forma en que Claude se comunica con los servidores MCP. El plan Free permite uno, y Pro y Max no tienen límite.
 - Una cuenta gratuita de **MCPEmails**. Sin tarjeta de crédito, una bandeja conectada para siempre. [Empieza gratis](/signup) y mantén esta pestaña abierta.
 
 MCPEmails es el puente que está en medio: habla el Model Context Protocol con Claude por un lado y se comunica con Gmail por el otro mediante IMAP y SMTP. Si quieres el contexto sobre lo que eso significa, consulta [qué es realmente un servidor de correo MCP](/blog/what-is-an-mcp-email-server).
@@ -33,15 +33,19 @@ Un administrador de Google Workspace puede desactivar las contraseñas de aplica
 
 Ahora apunta Claude al mismo endpoint. Como Claude es un cliente OAuth, no necesitas ninguna clave de API: pegas una URL y apruebas un inicio de sesión.
 
-1. En **claude.ai o Claude Desktop**, abre **Settings → Connectors**.
-2. Haz clic en **Add custom connector**.
-3. Pega esto como la URL del conector y luego haz clic en **Add**:
+1. En **claude.ai o Claude Desktop**, abre **Customize → Connectors**.
+2. Haz clic en **+ Add** y después en **Add custom connector**.
+3. Llámalo MCPEmails y pega esto como la URL del conector:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Haz clic en **Connect**, inicia sesión con tu cuenta de MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\`, o ambos.
+4. Haz clic en **Continue**, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en **Add**.
+5. Inicia sesión con tu cuenta de MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\`, o ambos.
+6. En un chat, haz clic en **+** abajo a la izquierda, elige **Connectors** y activa MCPEmails.
+
+En un plan Team o Enterprise, un Owner añade el conector una vez en **Organization settings → Connectors**. Después, los miembros abren **Customize → Connectors**, buscan MCPEmails y hacen clic en **Connect**.
 
 Eso es todo lo que hay del lado del cliente. La conexión queda limitada exactamente a lo que aprobaste, y puedes revocarla desde el panel con un solo clic. Si quieres entender la opción con clave de API (para clientes sin OAuth integrado, como Cline o un script personalizado), lee [OAuth frente a claves de API para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access). ¿También quieres conectar otra bandeja? La [configuración del correo en Claude paso a paso](/blog/connect-claude-to-email) cubre Outlook, iCloud, Fastmail e IMAP.
 
@@ -93,7 +97,7 @@ No. El correo se obtiene en directo desde Gmail en cada solicitud y se descarta 
 Sí, si concedes el permiso \`send:email\`. Los envíos salen a través de Gmail como mensajes normales desde tu propia cuenta. Concede solo lectura si prefieres que Claude no envíe nunca.
 
 **¿Funciona con el plan gratuito de Claude?**
-Los conectores personalizados requieren un plan de Claude que los admita (claude.ai de pago o Claude Desktop). La parte de MCPEmails es gratuita y sin tarjeta.
+Sí. El plan Free de Claude permite añadir un conector personalizado, suficiente para MCPEmails, y Pro y Max no tienen límite. La parte de MCPEmails es gratuita y sin tarjeta.
 
 **¿Verá MCPEmails mi contraseña de Google?**
 No. Pegas una contraseña de aplicación, una credencial aparte que genera Google y que puedes revocar cuando quieras. Tu contraseña normal de Google nunca se introduce en ningún lugar de MCPEmails.

@@ -17,7 +17,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "自动发现 OAuth",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 ~/.gemini/settings.json 的 mcpServers 下添加一个条目，使用 httpUrl 字段，值为 https://mcpemails.com/api/mcp 。首次连接时，CLI 会发现 OAuth 元数据并自行打开浏览器授权流程。"
+    "answer": "在 ~/.gemini/settings.json 的 mcpServers 下添加一个条目，使用 httpUrl 字段，值为 https://mcpemails.com/api/mcp 。首次连接时，CLI 会发现 OAuth 元数据并自行打开浏览器授权流程。也可以运行 gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp ，然后运行 /mcp auth mcpemails 登录。"
   },
   "method": {
     "title": "Gemini CLI 如何连接：OAuth，无需 API 密钥",
@@ -34,11 +34,11 @@
     },
     {
       "h": "添加服务器",
-      "p": "在 <code>mcpServers</code> 下添加下面的条目。这里用于 Streamable HTTP 服务器的字段是 <code>httpUrl</code>。"
+      "p": "在 <code>mcpServers</code> 下添加下面的条目。这里用于 Streamable HTTP 服务器的字段是 <code>httpUrl</code>。也可以用一行命令添加：<code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>。"
     },
     {
       "h": "连接",
-      "p": "首次连接时，CLI 会从服务器元数据中自动发现 OAuth 并打开浏览器授权流程。批准你希望 CLI 拥有的权限范围。"
+      "p": "首次连接时，CLI 会从服务器元数据中自动发现 OAuth 并打开浏览器授权流程。批准你希望 CLI 拥有的权限范围。如需随时登录，可在 CLI 中运行 <code>/mcp auth mcpemails</code>。"
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "共享机器或无图形界面机器上的 CLI 更适合走密钥路线",
       "p": "浏览器授权流程需要浏览器。在构建代理或共享机器上，稳妥的做法是使用一个 bearer API 密钥，其权限范围精确限定为该自动化任务应做的事，并保存在环境变量中，而不是放在会被提交的设置文件里。"
+    },
+    {
+      "h": "免费层和 Google One 账户现在使用 Antigravity CLI",
+      "p": "自 2026 年 6 月 18 日起，Google 已将免费层账户和 Google One 账户从 Gemini CLI 迁移到 Antigravity CLI。在那里，输入 <code>/mcp</code> 打开 MCP 管理器，或使用 <code>serverUrl</code> 字段把服务器添加到 <code>mcp_config.json</code>。"
     }
   ],
   "limits": [

@@ -46,19 +46,23 @@ Gi hver postkasse et tydelig visningsnavn, for eksempel «Acme Salg» i stedet f
 
 I claude.ai eller Claude Desktop:
 
-1. Åpne **Settings** og deretter **Connectors**.
-2. Velg **Add custom connector** og lim inn \`https://mcpemails.com/api/mcp\`.
-3. Velg **Connect**, logg inn på MCPEmails og godkjenn.
+1. Åpne **Customize → Connectors**.
+2. Klikk **+ Add**, deretter **Add custom connector**. Kall den MCPEmails, lim inn \`https://mcpemails.com/api/mcp\` og klikk **Continue**.
+3. Behold innloggingsinnstillingene Claude fant, klikk **Add**, logg inn på MCPEmails og godkjenn.
+4. I en samtale klikker du **+** nede til venstre, velger **Connectors** og slår på MCPEmails.
+
+Claudes Free-abonnement tillater én egendefinert kobling, mens Pro og Max ikke har noen grense. På Team og Enterprise legger en Owner den til under **Organization settings → Connectors**, og medlemmene klikker **Connect** under **Customize → Connectors**.
 
 Alle postkassene du har koblet til, er nå tilgjengelige. [Claude-guiden](/blog/connect-claude-to-email) har detaljene.
 
 ## Legg den til i ChatGPT
 
-Egendefinerte koblinger krever ChatGPT Plus, Pro, Business, Enterprise eller Edu i nettleseren, med utviklermodus slått på. På Business og Enterprise må en administrator kanskje tillate det først.
+ChatGPT Go og betalte abonnementer kan legge til en egen MCP-server på chatgpt.com i en nettleser; mobilappen kan ikke legge til en. På Business og Enterprise må en administrator eller eier kanskje legge den til.
 
-1. Slå på **utviklermodus** i ChatGPT-innstillingene, under de avanserte innstillingene for apper og koblinger.
-2. Opprett en kobling, lim inn \`https://mcpemails.com/api/mcp\`, velg **OAuth** og autoriser med MCPEmails.
-3. I hver nye samtale klikker du **+**, velger **Developer mode** og velger MCPEmails-appen.
+1. Åpne **Plugins**, deretter **Personal**, klikk **Add** øverst til høyre og velg **Add custom MCP server**.
+2. Kall den MCPEmails, lim inn \`https://mcpemails.com/api/mcp\` under **Connection**, velg **OAuth**, kryss av for **I understand and want to continue**, og klikk **Create as a plugin**.
+3. Logg inn med MCPEmails og godkjenn.
+4. I en samtale skriver du **@** og velger MCPEmails. Valget gjelder den ene meldingen, så @-nevn MCPEmails igjen når et oppfølgingsspørsmål trenger e-posten din.
 
 [ChatGPT-guiden](/blog/connect-chatgpt-to-email) går gjennom menyene og de vanlige feilene.
 

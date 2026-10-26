@@ -7,12 +7,12 @@ const post = {
   coverAlt: 'Claude custom connectors explained: a remote MCP server added to Claude by URL',
   authorId: 'asgeir',
   publishedAt: '2026-10-20T09:00:00.000Z',
-  updatedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-26T09:00:00.000Z',
   tags: ['Claude', 'Connectors', 'MCP', 'OAuth'],
   featured: false,
   content: `**Claude custom connectors** let you add any remote [Model Context Protocol](https://modelcontextprotocol.io) server to Claude by pasting its URL. Once you add one, Claude can call that server's tools in your chats: read a database, file a ticket, or, in the worked example at the end of this guide, read and send your email.
 
-Plan and menu details below come from Anthropic's own help pages, checked on 20 October 2026. Claude's interface changes often, so if a label differs, Anthropic's [custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) is the reference.
+Plan and menu details below come from Anthropic's own help pages, checked on 26 October 2026. Claude's interface changes often, so if a label differs, Anthropic's [custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) is the reference.
 
 ## What is a Claude custom connector?
 
@@ -40,7 +40,7 @@ Claude Code adds the same kind of remote server from the terminal; the [Claude C
 
 According to Anthropic's help center, as of October 2026:
 
-- **Plans:** custom connectors are available on Free, Pro, Max, Team, and Enterprise. The Free plan is limited to one custom connector.
+- **Plans:** custom connectors are available on Free, Pro, Max, Team, and Enterprise. The Free plan is limited to one custom connector; Pro and Max have no limit.
 - **Apps where you add them:** claude.ai on the web, Claude Desktop, and Cowork.
 - **Mobile:** a connector you connect on the web or in Claude Desktop becomes available in Claude for iOS and Android the next time you sign in there. Anthropic describes installing connectors on mobile as a beta and calls the web and desktop apps the primary path for custom connectors, so set it up on a computer first.
 - **Who can add one on a business plan:** on Team plans, only Owners and Primary Owners. On Enterprise plans, Owners, Primary Owners, and people with a custom role that includes managing the organization's libraries.
@@ -48,10 +48,10 @@ According to Anthropic's help center, as of October 2026:
 ## How to add a custom connector on Free, Pro, or Max
 
 1. Open **Customize → Connectors** in claude.ai or Claude Desktop.
-2. Click **Add custom connector**. In some layouts it sits behind a **+ Add** button.
+2. Click **+ Add**, then **Add custom connector**.
 3. Enter a name and the server's URL, then click **Continue**.
-4. Review the authentication settings Claude detected and click **Continue**. The next section explains the choices.
-5. Click **Add**, then **Connect** to sign in to the service.
+4. Review the sign-in settings Claude detected. The defaults are usually right, and the next section explains the choices.
+5. Click **Add**, then sign in to the service.
 
 You cannot change a connector's authentication settings after adding it. To change them, remove the connector and add it again. To remove one, open **Customize → Connectors** and use **Remove** or the three-dot menu next to it.
 
@@ -110,7 +110,7 @@ Email tests all of the above: a mailbox holds private data, and sending is a rea
 
 **1. Connect a mailbox to MCPEmails.** [Create an account](/signup), then open **Dashboard → Inboxes → Connect inbox**. Outlook and Microsoft 365 use Sign in with Microsoft, most other providers use an app-specific password, and the [provider pages](/connect) list the settings for each. The [Claude setup page](/docs/claude) has the short version of steps 1 and 2.
 
-**2. Add the connector in Claude.** Under **Customize → Connectors**, choose **Add custom connector**, name it MCPEmails, and enter:
+**2. Add the connector in Claude.** Under **Customize → Connectors**, click **+ Add**, then **Add custom connector**, name it MCPEmails, enter the URL below and click **Continue**:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -118,7 +118,7 @@ https://mcpemails.com/api/mcp
 
 **3. Pick the sign-in settings.** Choose **Sign in now**. For the OAuth client, either of the first two options works: MCPEmails supports Claude's published identity and automatic registration. Leave request headers empty, since OAuth needs no API key.
 
-**4. Sign in and choose the access.** Click **Connect**, sign in to MCPEmails, and approve permissions on the consent screen. Claude first asks only for \`read:email\`, and the screen opens on the matching read-only option. Add \`send:email\`, \`manage:drafts\`, \`manage:folders\`, or \`delete:email\` only when a workflow needs them. A token without \`send:email\` cannot send, whatever Claude is asked to do. If a later request needs a permission you did not grant, MCPEmails answers with an \`insufficient_scope\` error that names the missing scope. When you reconnect, tick that permission on the consent screen. The [read-only access page](/docs/read-only-access) shows exactly what a read-only grant can and cannot do.
+**4. Sign in and choose the access.** Click **Add**, sign in to MCPEmails, and approve permissions on the consent screen. Claude first asks only for \`read:email\`, and the screen opens on the matching read-only option. Add \`send:email\`, \`manage:drafts\`, \`manage:folders\`, or \`delete:email\` only when a workflow needs them. A token without \`send:email\` cannot send, whatever Claude is asked to do. If a later request needs a permission you did not grant, MCPEmails answers with an \`insufficient_scope\` error that names the missing scope. When you reconnect, tick that permission on the consent screen. The [read-only access page](/docs/read-only-access) shows exactly what a read-only grant can and cannot do.
 
 **5. Set tool permissions in Claude.** MCPEmails splits reading and writing into separate tools. \`email_read\`, \`inbox_list\`, \`folder_list\`, and \`draft_list\` only read, while \`email_compose\` sends, replies, and forwards, and \`email_delete\` deletes. That split lets you put \`email_compose\` on **Needs approval** and \`email_delete\` on **Blocked** while reading stays on **Always allow**. The [tool reference](/docs#tools) lists every tool.
 

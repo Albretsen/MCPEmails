@@ -393,6 +393,23 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     const reason = typeof payload.reason === "string" ? payload.reason : null;
     return renderCheckoutFeedbackEmail(await fetchCheckoutFeedbackContext(supabase, feedbackId, workspaceId, reason));
   }
+  if (eventType === "gmail.oauth_cap_closed") {
+    // apps/web/src/lib/oauth/gmail-oauth-gate.ts: the unverified Google OAuth
+    // client is close to Google's 100-user lifetime cap, so the web app has
+    // stopped offering Gmail sign-in for NEW connections. Counts only.
+    const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? String(value) : "unknown");
+    return {
+      subject: `Gmail sign-in closed to new connections (${num(payload.used)}/${num(payload.cap)})`,
+      body: [
+        `Gmail OAuth grants counted: ${num(payload.used)} of ${num(payload.cap)} (${num(payload.remaining)} left, reserve ${num(payload.reserve)}).`,
+        "The dashboard no longer offers Google sign-in for new Gmail inboxes, and /auth/gmail refuses new connections. Reconnects of existing Gmail inboxes still work. App password stays the Gmail path.",
+        "",
+        "Our count is a floor. To use the real Cloud Console figure, insert it into admin_oauth_cap_snapshots (provider 'gmail').",
+        "",
+        "Board: https://mcpemails.com/admin/growth",
+      ].join("\n"),
+    };
+  }
   if (eventType === "billing.eur_launch") {
     // The EUR launch dispatcher on the web app: a failed preflight (once a
     // day), a launch that stopped part way, the launch going live, or legacy

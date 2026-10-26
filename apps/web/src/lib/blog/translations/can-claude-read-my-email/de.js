@@ -74,7 +74,7 @@ E-Mails werden für jede Anfrage live bei Ihrem Anbieter abgerufen und nicht ges
 ### In Claude hinzufügen
 
 1. [Kostenloses Konto bei MCPEmails erstellen](/signup) und unter **Postfächer** mit **Postfach verbinden** ein Postfach hinzufügen.
-2. In claude.ai oder Claude Desktop \`https://mcpemails.com/api/mcp\` als benutzerdefinierten Konnektor hinzufügen.
+2. In claude.ai oder Claude Desktop **Anpassen → Konnektoren** öffnen, auf **+ Hinzufügen** und dann auf **Benutzerdefinierten Konnektor hinzufügen** klicken. Den Namen MCPEmails und \`https://mcpemails.com/api/mcp\` eingeben, auf **Weiter** klicken, die erkannten Anmeldeeinstellungen übernehmen und auf **Hinzufügen** klicken.
 3. Bei MCPEmails anmelden, wenn Claude danach fragt, und festlegen, wie viel Zugriff Claude bekommt: **Nur-Lese-Zugriff**, **Standard** (dazu Senden und Entwürfe) oder **Vollzugriff** (dazu Planen, Ordner und Löschen).
 
 Die [Schritt-für-Schritt-Anleitung für Claude](/blog/connect-claude-to-email) geht jeden Bildschirm und jeden Anbieter durch, und die [Einrichtungsseite für Claude](/docs/claude) behandelt Fehler beim Konnektor.

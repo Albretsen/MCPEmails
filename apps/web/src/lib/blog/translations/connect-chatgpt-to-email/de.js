@@ -12,11 +12,11 @@ Zwei Oberflächen von OpenAI sind beteiligt, und sie authentifizieren sich unter
 
 ## Was Sie brauchen
 
-- **ChatGPT Plus, Pro, Business, Enterprise oder Edu, im Web.** Benutzerdefinierte MCP-Konnektoren liegen hinter dem Entwicklermodus, den OpenAI diesen Tarifen auf chatgpt.com anbietet. Mit Free- und Go-Konten lässt sich keiner hinzufügen, und die Mobil- und Desktop-Apps zeigen die Option nicht. Bei Business und Enterprise muss unter Umständen zuerst ein Admin den Entwicklermodus erlauben.
+- **ChatGPT Go oder ein kostenpflichtiger Tarif, im Web.** OpenAI erlaubt Go und den kostenpflichtigen Tarifen, auf chatgpt.com benutzerdefinierte MCP-Server hinzuzufügen. In der Mobil-App lässt sich keiner hinzufügen. Bei Business und Enterprise muss ihn unter Umständen ein Admin oder Owner für den Workspace hinzufügen.
 - **Ein kostenloses MCPEmails-Konto.** [Hier erstellen](/signup). Der kostenlose Tarif umfasst ein verbundenes Postfach und braucht keine Karte.
 - **Ein Postfach.** Gmail, Outlook oder Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex oder alles, was IMAP und SMTP spricht.
 
-Wenn Sie Free oder Go nutzen, funktionieren dasselbe Postfach und dieselbe URL bereits in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) und den anderen [unterstützten Clients](/docs/clients).
+Wenn Ihr ChatGPT-Tarif keinen benutzerdefinierten MCP-Server hinzufügen kann, funktionieren dasselbe Postfach und dieselbe URL bereits in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) und den anderen [unterstützten Clients](/docs/clients).
 
 ## Schritt 1: Postfach mit MCPEmails verbinden
 
@@ -42,18 +42,19 @@ Verbinden Sie mehr als ein Postfach, wenn Ihr Tarif das erlaubt. ChatGPT findet 
 
 ## Schritt 2: Konnektor in ChatGPT hinzufügen
 
-1. Schalten Sie in den ChatGPT-Einstellungen unter **Apps und Konnektoren** in den erweiterten Einstellungen den **Entwicklermodus** ein.
-2. Erstellen Sie einen neuen Konnektor und geben Sie ihm einen Namen.
-3. Fügen Sie diese Konnektor-URL ein:
+1. Öffnen Sie auf chatgpt.com **Plugins**, dann **Personal**, und klicken Sie oben rechts auf **Add**.
+2. Wählen Sie **Add custom MCP server** und nennen Sie ihn MCPEmails.
+3. Fügen Sie unter **Connection** diese URL ein:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Wählen Sie **OAuth** als Authentifizierungsmethode, erstellen Sie den Konnektor und autorisieren Sie ihn dann bei MCPEmails.
-5. Öffnen Sie einen neuen Chat, klicken Sie auf **+**, wählen Sie **Entwicklermodus** und dann die App MCPEmails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, wiederholen Sie es also in jeder neuen Unterhaltung.
+4. Wählen Sie **OAuth**, setzen Sie das Häkchen bei **I understand and want to continue** und klicken Sie auf **Create as a plugin**.
+5. Melden Sie sich bei MCPEmails an und bestätigen Sie.
+6. Tippen Sie in einem Chat **@** und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht. Erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.
 
-Wählen Sie OAuth, nicht „keine Authentifizierung“. Dieser Server lehnt anonyme Aufrufe ab. Ein Konnektor ohne Authentifizierung sieht bei der Einrichtung also gut aus und scheitert dann beim ersten Tool-Aufruf, was verwirrend ist. Mit OAuth registriert sich ChatGPT selbst und durchläuft einen Authorization-Code-Ablauf mit PKCE: keine Client-ID zu erstellen, nirgends ein Client-Secret. Die Menübezeichnungen ändern sich, während OpenAI an der Beta arbeitet. Den aktuellen Weg finden Sie auf der [Einrichtungsseite für ChatGPT](/docs/chatgpt).
+Wählen Sie OAuth, nicht „keine Authentifizierung“. Dieser Server lehnt anonyme Aufrufe ab. Ein Konnektor ohne Authentifizierung sieht bei der Einrichtung also gut aus und scheitert dann beim ersten Tool-Aufruf, was verwirrend ist. Mit OAuth registriert sich ChatGPT selbst und durchläuft einen Authorization-Code-Ablauf mit PKCE: keine Client-ID zu erstellen, nirgends ein Client-Secret. OpenAI verschiebt diese Menüs von Zeit zu Zeit. Den aktuellen Weg finden Sie auf der [Einrichtungsseite für ChatGPT](/docs/chatgpt).
 
 ## Schritt 3: Nur die nötigen Berechtigungen genehmigen
 
@@ -101,9 +102,9 @@ Schränken Sie den Schlüssel eng ein. Für einen Coding-Agenten ist Nur-Lese-Zu
 
 ## Fehlerbehebung
 
-- **Keine Option, einen benutzerdefinierten Konnektor zu erstellen.** Der Entwicklermodus erfordert Plus, Pro, Business, Enterprise oder Edu, auf chatgpt.com im Browser. Free- und Go-Konten haben ihn nicht. In einem Business- oder Enterprise-Workspace muss ein Admin ihn erlauben.
+- **Keine Option, einen benutzerdefinierten MCP-Server hinzuzufügen.** Benutzerdefinierte MCP-Server werden auf chatgpt.com im Browser hinzugefügt, nicht in der Mobil-App, und brauchen Go oder einen kostenpflichtigen Tarif. In einem Business- oder Enterprise-Workspace muss ihn unter Umständen ein Admin oder Owner hinzufügen.
 - **Der Konnektor scheitert beim ersten Tool-Aufruf.** Er wurde vermutlich ohne Authentifizierung erstellt. Löschen Sie ihn und erstellen Sie ihn mit OAuth neu.
-- **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** Er ist in diesem Chat nicht eingeschaltet. Klicken Sie auf **+**, wählen Sie **Entwicklermodus** und die App MCPEmails, und fragen Sie dann erneut.
+- **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** MCPEmails wurde für diese Nachricht nicht ausgewählt. Tippen Sie **@**, wählen Sie MCPEmails und fragen Sie erneut.
 - **Der Anbieter lehnt Ihr Passwort ab.** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht Ihr Passwort für die Anmeldung im Web. Manche Anbieter stellen eines erst aus, wenn die Zwei-Faktor-Authentifizierung aktiv ist.
 - **Eine eigene IMAP-Verbindung läuft in ein Timeout.** Prüfen Sie Host, Port und TLS-Modus. Port 993 nutzt normalerweise implizites TLS, Port 143 normalerweise STARTTLS.
 - **ChatGPT ist verbunden, sieht aber keine E-Mails.** Prüfen Sie, ob das Postfach im Dashboard aktiv ist, ob die Verbindung \`read:email\` hat, und bitten Sie ChatGPT, zuerst \`inbox_list\` aufzurufen.

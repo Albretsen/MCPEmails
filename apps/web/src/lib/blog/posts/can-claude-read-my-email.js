@@ -19,8 +19,10 @@
 //     but no send tool ("review and send it from Gmail"); Claude needs your
 //     own OAuth client ID and secret.
 //   - support.claude.com/en/articles/11175166 (custom connectors): Customize,
-//     Connectors, "+ Add", "Add custom connector". Settings > Connectors is
-//     the old path; do not reintroduce it.
+//     Connectors, "+ Add", "Add custom connector", name and URL, "Continue",
+//     review the detected sign-in settings, "Add", then sign in. Free allows one
+//     custom connector, Pro and Max unlimited. Re-checked 2026-10-26.
+//     Settings > Connectors is the old path; do not reintroduce it.
 //   - fastmail.help/hc/en-us/articles/15869557281295 and
 //     zoho.com/mail/help/mcp/getting-started.html: both run their own MCP
 //     server that can be added to Claude as a custom connector.
@@ -113,7 +115,7 @@ Mail is fetched live from your provider for each request and is not stored. What
 ### Add it to Claude
 
 1. [Create a free MCPEmails account](/signup) and connect a mailbox under **Inboxes**, then **Connect Inbox**.
-2. In claude.ai or Claude Desktop, add \`https://mcpemails.com/api/mcp\` as a custom connector.
+2. In claude.ai or Claude Desktop, open **Customize → Connectors**, click **+ Add**, then **Add custom connector**. Name it MCPEmails, enter \`https://mcpemails.com/api/mcp\`, click **Continue**, keep the detected sign-in settings and click **Add**.
 3. Sign in to MCPEmails when Claude asks, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
 
 The [step-by-step Claude setup guide](/blog/connect-claude-to-email) walks through each screen and each provider, and the [Claude setup page](/docs/claude) covers connector errors.

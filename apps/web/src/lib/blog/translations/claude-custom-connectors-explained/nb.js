@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Claude custom connectors forklart: en ekstern MCP-server lagt til i Claude med URL',
   content: `**Claude custom connectors**, eller egendefinerte koblinger, lar deg legge til en hvilken som helst ekstern [Model Context Protocol](https://modelcontextprotocol.io)-server i Claude ved å lime inn URL-en til serveren. Når koblingen er lagt til, kan Claude kalle verktøyene til serveren i samtalene dine: lese en database, opprette en sak, eller, som i eksempelet på slutten av denne guiden, lese og sende e-posten din.
 
-Detaljene om abonnementer og menyer nedenfor er hentet fra Anthropics egne hjelpesider, kontrollert 20. oktober 2026. Claude-grensesnittet endres ofte, så hvis en etikett ser annerledes ut, er det Anthropics [veiledning for egendefinerte koblinger](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) som gjelder.
+Detaljene om abonnementer og menyer nedenfor er hentet fra Anthropics egne hjelpesider, kontrollert 26. oktober 2026. Claude-grensesnittet endres ofte, så hvis en etikett ser annerledes ut, er det Anthropics [veiledning for egendefinerte koblinger](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) som gjelder.
 
 ## Hva er en egendefinert kobling i Claude?
 
@@ -33,7 +33,7 @@ Claude Code legger til samme type ekstern server fra terminalen; [oppsettsiden f
 
 Ifølge Anthropics hjelpesenter, per oktober 2026:
 
-- **Abonnementer:** egendefinerte koblinger er tilgjengelige på Free, Pro, Max, Team og Enterprise. Free-abonnementet er begrenset til én egendefinert kobling.
+- **Abonnementer:** egendefinerte koblinger er tilgjengelige på Free, Pro, Max, Team og Enterprise. Free-abonnementet er begrenset til én egendefinert kobling, mens Pro og Max ikke har noen grense.
 - **Apper der du legger dem til:** claude.ai på nettet, Claude Desktop og Cowork.
 - **Mobil:** en kobling du kobler til på nettet eller i Claude Desktop, blir tilgjengelig i Claude for iOS og Android neste gang du logger inn der. Anthropic beskriver installasjon av koblinger på mobil som beta og kaller nett- og skrivebordsappene hovedveien for egendefinerte koblinger, så sett den opp på en datamaskin først.
 - **Hvem som kan legge til en kobling på et bedriftsabonnement:** på Team bare eiere (Owners) og primæreiere (Primary Owners). På Enterprise eiere, primæreiere og personer med en egendefinert rolle som inkluderer administrasjon av organisasjonens biblioteker.
@@ -41,10 +41,10 @@ Ifølge Anthropics hjelpesenter, per oktober 2026:
 ## Slik legger du til en egendefinert kobling på Free, Pro eller Max
 
 1. Åpne **Customize → Connectors** i claude.ai eller Claude Desktop.
-2. Klikk **Add custom connector**. I noen oppsett ligger den bak en **+ Add**-knapp.
+2. Klikk **+ Add**, deretter **Add custom connector**.
 3. Skriv inn et navn og URL-en til serveren, og klikk **Continue**.
-4. Se over autentiseringsinnstillingene Claude fant, og klikk **Continue**. Avsnittet om innloggingsvalg lenger ned forklarer valgene.
-5. Klikk **Add** og deretter **Connect** for å logge inn på tjenesten.
+4. Se over innloggingsinnstillingene Claude fant. Standardvalgene er som regel riktige, og avsnittet om innloggingsvalg lenger ned forklarer valgene.
+5. Klikk **Add**, og logg deretter inn på tjenesten.
 
 Du kan ikke endre autentiseringsinnstillingene til en kobling etter at den er lagt til. Vil du endre dem, fjerner du koblingen og legger den til på nytt. For å fjerne en kobling åpner du **Customize → Connectors** og bruker **Remove** eller menyen med tre prikker ved siden av den.
 
@@ -103,7 +103,7 @@ E-post setter alt det ovenfor på prøve: en postkasse inneholder private data, 
 
 **1. Koble en postkasse til MCPEmails.** [Opprett en konto](/signup), og åpne **Dashboard → Inboxes → Connect inbox**. Outlook og Microsoft 365 bruker Logg inn med Microsoft, de fleste andre leverandører bruker et app-passord, og [leverandørsidene](/connect) viser innstillingene for hver av dem. [Oppsettsiden for Claude](/docs/claude) har kortversjonen av steg 1 og 2.
 
-**2. Legg til koblingen i Claude.** Under **Customize → Connectors** velger du **Add custom connector**, gir den navnet MCPEmails og skriver inn:
+**2. Legg til koblingen i Claude.** Under **Customize → Connectors** klikker du **+ Add** og deretter **Add custom connector**, gir den navnet MCPEmails, skriver inn URL-en nedenfor og klikker **Continue**:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -111,7 +111,7 @@ https://mcpemails.com/api/mcp
 
 **3. Velg innloggingsinnstillinger.** Velg **Sign in now**. For OAuth-klienten fungerer begge de to første valgene: MCPEmails støtter Claudes publiserte identitet og automatisk registrering. La request headers stå tomme, siden OAuth ikke trenger noen API-nøkkel.
 
-**4. Logg inn og velg tilgang.** Klikk **Connect**, logg inn på MCPEmails og godkjenn tilganger på samtykkeskjermen. Claude ber først bare om \`read:email\`, og skjermen åpnes på det tilsvarende skrivebeskyttede valget. Legg til \`send:email\`, \`manage:drafts\`, \`manage:folders\` eller \`delete:email\` bare når en arbeidsflyt trenger dem. Et token uten \`send:email\` kan ikke sende, uansett hva Claude blir bedt om. Hvis en senere forespørsel trenger en tilgang du ikke har gitt, svarer MCPEmails med en \`insufficient_scope\`-feil som navngir scopet som mangler. Når du kobler til på nytt, krysser du av for den tilgangen på samtykkeskjermen. [Siden om skrivebeskyttet tilgang](/docs/read-only-access) viser nøyaktig hva en skrivebeskyttet tilgang kan og ikke kan gjøre.
+**4. Logg inn og velg tilgang.** Klikk **Add**, logg inn på MCPEmails og godkjenn tilganger på samtykkeskjermen. Claude ber først bare om \`read:email\`, og skjermen åpnes på det tilsvarende skrivebeskyttede valget. Legg til \`send:email\`, \`manage:drafts\`, \`manage:folders\` eller \`delete:email\` bare når en arbeidsflyt trenger dem. Et token uten \`send:email\` kan ikke sende, uansett hva Claude blir bedt om. Hvis en senere forespørsel trenger en tilgang du ikke har gitt, svarer MCPEmails med en \`insufficient_scope\`-feil som navngir scopet som mangler. Når du kobler til på nytt, krysser du av for den tilgangen på samtykkeskjermen. [Siden om skrivebeskyttet tilgang](/docs/read-only-access) viser nøyaktig hva en skrivebeskyttet tilgang kan og ikke kan gjøre.
 
 **5. Angi verktøytilganger i Claude.** MCPEmails deler lesing og skriving i separate verktøy. \`email_read\`, \`inbox_list\`, \`folder_list\` og \`draft_list\` leser bare, mens \`email_compose\` sender, svarer og videresender, og \`email_delete\` sletter. Den inndelingen lar deg sette \`email_compose\` på **Needs approval** og \`email_delete\` på **Blocked** mens lesing står på **Always allow**. [Verktøyreferansen](/docs#tools) viser alle verktøyene.
 

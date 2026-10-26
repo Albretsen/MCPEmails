@@ -17,7 +17,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth descubierto automáticamente",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "Añade una entrada en mcpServers de ~/.gemini/settings.json usando el campo httpUrl con https://mcpemails.com/api/mcp. En la primera conexión, la CLI descubre los metadatos OAuth y abre por sí sola el flujo en el navegador."
+    "answer": "Añade una entrada en mcpServers de ~/.gemini/settings.json usando el campo httpUrl con https://mcpemails.com/api/mcp. En la primera conexión, la CLI descubre los metadatos OAuth y abre por sí sola el flujo en el navegador. O ejecuta gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp y luego /mcp auth mcpemails para iniciar sesión."
   },
   "method": {
     "title": "Cómo se conecta Gemini CLI: OAuth, sin clave de API",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Añade el servidor",
-      "p": "Añade la entrada de abajo en <code>mcpServers</code>. Aquí, el campo para un servidor Streamable HTTP es <code>httpUrl</code>."
+      "p": "Añade la entrada de abajo en <code>mcpServers</code>. Aquí, el campo para un servidor Streamable HTTP es <code>httpUrl</code>. O añádelo en una sola línea: <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Conecta",
-      "p": "En la primera conexión, la CLI descubre OAuth automáticamente a partir de los metadatos del servidor y abre el flujo en el navegador. Aprueba los permisos que quieres que tenga la CLI."
+      "p": "En la primera conexión, la CLI descubre OAuth automáticamente a partir de los metadatos del servidor y abre el flujo en el navegador. Aprueba los permisos que quieres que tenga la CLI. Para iniciar sesión cuando quieras, ejecuta <code>/mcp auth mcpemails</code> dentro de la CLI."
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "Una CLI en una máquina compartida o sin interfaz gráfica pide la vía de la clave",
       "p": "El flujo en el navegador necesita un navegador. En un agente de compilación o una máquina compartida, la configuración honesta es una clave de API bearer limitada exactamente a lo que debe hacer esa automatización, guardada en el entorno y no en un archivo de configuración confirmado en el repo."
+    },
+    {
+      "h": "Las cuentas gratuitas y de Google One ahora usan Antigravity CLI",
+      "p": "Desde el 18 de junio de 2026, Google ha pasado las cuentas del nivel gratuito y las de Google One de Gemini CLI a Antigravity CLI. Allí, escribe <code>/mcp</code> para abrir el gestor de MCP, o añade el servidor a <code>mcp_config.json</code> con el campo <code>serverUrl</code>."
     }
   ],
   "limits": [

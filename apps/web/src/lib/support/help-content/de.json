@@ -100,10 +100,10 @@
       "id": "assistant-sees-nothing",
       "title": "Verbunden, aber der Assistent sieht keine E-Mails",
       "summary": "Das Postfach ist verbunden, aber Ihr Assistent sagt, er habe keine E-Mail-Tools oder finde nichts.",
-      "keywords": "keine tools nichts leer konnektor funktioniert nicht claude chatgpt cursor entwicklermodus berechtigung scope inbox_list no tools developer mode",
+      "keywords": "keine tools nichts leer konnektor funktioniert nicht claude chatgpt cursor entwicklermodus berechtigung scope inbox_list no tools developer mode plugin @",
       "steps": [
         "Öffnen Sie im Dashboard die Postfächer und prüfen Sie, ob das Postfach ohne Fehler aufgeführt ist. Zeigt es einen Fehler, verbinden Sie es neu.",
-        "Starten Sie nach dem Hinzufügen des Konnektors einen neuen Chat. Wählen Sie in ChatGPT außerdem in jedem neuen Chat über das Menü + den Entwicklermodus und die App MCPEmails.",
+        "Starten Sie nach dem Hinzufügen des Konnektors einen neuen Chat. Prüfen Sie in Claude unter + und Konnektoren, ob MCPEmails eingeschaltet ist. Tippen Sie in ChatGPT @ und wählen Sie MCPEmails, und erwähnen Sie MCPEmails erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.",
         "Autorisieren Sie den Konnektor mit demselben MCPEmails-Konto, zu dem das Postfach gehört.",
         "Ihr Assistent sieht nur die Tools, für die Ihr Konnektor oder API-Schlüssel freigegeben ist. Haben Sie eine Berechtigung nicht angehakt, entfernen Sie den Konnektor und fügen Sie ihn erneut hinzu.",
         "Bitten Sie den Assistenten zuerst, Ihre Postfächer aufzulisten. E-Mails werden abgerufen, wenn der Assistent danach fragt. Von allein kommt nichts an."

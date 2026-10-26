@@ -358,9 +358,9 @@ const MCP_CLIENTS = [
     oauth: true,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
     stepKeys: ['clients.vscode.step1', 'clients.vscode.step2', 'clients.vscode.step3'],
-    config: (url) => `// .vscode/mcp.json
+    config: (url) => `// ~/.copilot/mcp-config.json
 {
-  "servers": {
+  "mcpServers": {
     "mcpemails": {
       "type": "http",
       "url": "${url}"
@@ -381,14 +381,14 @@ const MCP_CLIENTS = [
   },
   {
     k: 'windsurf',
-    name: 'Windsurf',
+    name: 'Devin Desktop (Windsurf)',
     sub: 'Cascade',
     color: '#0B100F',
     logo: 'windsurf',
     oauth: true,
-    guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
+    guide: 'https://docs.devin.ai/desktop/cascade/mcp',
     stepKeys: ['clients.windsurf.step1', 'clients.windsurf.step2', 'clients.windsurf.step3'],
-    config: (url) => `// ~/.codeium/windsurf/mcp_config.json
+    config: (url) => `// ~/.config/devin/mcp_config.json (Windows: %APPDATA%\\devin\\mcp_config.json)
 {
   "mcpServers": {
     "mcpemails": {

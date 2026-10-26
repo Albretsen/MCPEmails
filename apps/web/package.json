@@ -90,6 +90,7 @@
     "test:oauth-revoke": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/revocation.test.ts",
     "test:oauth-identity": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/client-identity.test.ts src/lib/oauth/connector-source.test.ts",
     "test:oauth-identity-verify": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/client-identity.verify.test.ts",
+    "test:gmail-oauth-gate": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/gmail-oauth-gate.test.ts",
     "test:oauth-register": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/oauth/register/route.test.ts",
     "test:authorize-identity-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/authorize-identity-ui.test.mjs",
     "test:oauth-authorize-post": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/oauth/authorize/route.scheme.test.ts",

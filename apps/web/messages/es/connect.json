@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google muestra una pantalla de aplicación no verificada",
-    "body": "Google revisa las aplicaciones que solicitan acceso a Gmail, y mcpemails.com no ha pasado por esa revisión. Al iniciar sesión verás una pantalla de <b>aplicación no verificada</b>, con los pasos para continuar. La conexión en sí no caduca: una vez conectada, la bandeja sigue conectada hasta que revoques el acceso."
+    "body": "Esto solo afecta al inicio de sesión con Google, disponible en los planes Pro y Business; la conexión predeterminada con contraseña de aplicación no muestra ninguna pantalla de Google. Google revisa las aplicaciones que solicitan acceso a Gmail, y mcpemails.com no ha pasado por esa revisión, así que al iniciar sesión con Google verás una pantalla de <b>aplicación no verificada</b>, con los pasos para continuar. La conexión en sí no caduca: una vez conectada, la bandeja sigue conectada hasta que revoques el acceso."
   },
   "hub": {
     "meta": {

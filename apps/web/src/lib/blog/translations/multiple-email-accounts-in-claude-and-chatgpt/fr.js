@@ -46,19 +46,23 @@ Donnez à chaque boîte un nom affiché clair, par exemple « Acme Ventes » plu
 
 Dans claude.ai ou Claude Desktop :
 
-1. Ouvrez **Settings**, puis **Connectors**.
-2. Choisissez **Add custom connector** et collez \`https://mcpemails.com/api/mcp\`.
-3. Sélectionnez **Connect**, connectez-vous à MCPEmails et approuvez.
+1. Ouvrez **Customize → Connectors**.
+2. Cliquez sur **+ Add**, puis sur **Add custom connector**. Nommez-le MCPEmails, collez \`https://mcpemails.com/api/mcp\` et cliquez sur **Continue**.
+3. Gardez les paramètres de connexion détectés, cliquez sur **Add**, connectez-vous à MCPEmails et approuvez.
+4. Dans une conversation, cliquez sur **+** en bas à gauche, choisissez **Connectors** et activez MCPEmails.
+
+Le forfait Free de Claude autorise un connecteur personnalisé, Pro et Max n'ont pas de limite. Sur Team et Enterprise, un Owner l'ajoute sous **Organization settings → Connectors** et les membres cliquent sur **Connect** sous **Customize → Connectors**.
 
 Toutes les boîtes que vous avez connectées sont maintenant disponibles. Le [guide Claude](/blog/connect-claude-to-email) donne les détails.
 
 ## L'ajouter à ChatGPT
 
-Les connecteurs personnalisés exigent ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web, avec le mode développeur activé. Sur Business et Enterprise, un administrateur doit parfois d'abord l'autoriser.
+ChatGPT Go et les abonnements payants peuvent ajouter un serveur MCP personnalisé sur chatgpt.com dans un navigateur ; l'app mobile ne le permet pas. Sur Business et Enterprise, un administrateur ou propriétaire doit parfois l'ajouter.
 
-1. Activez le **mode développeur** dans les réglages de ChatGPT, sous les paramètres avancés des applications et connecteurs.
-2. Créez un connecteur, collez \`https://mcpemails.com/api/mcp\`, choisissez **OAuth** et autorisez avec MCPEmails.
-3. Dans chaque nouvelle conversation, cliquez sur **+**, choisissez **Developer mode** et sélectionnez l'app MCPEmails.
+1. Ouvrez **Plugins**, puis **Personal**, cliquez sur **Add** en haut à droite et choisissez **Add custom MCP server**.
+2. Nommez-le MCPEmails, collez \`https://mcpemails.com/api/mcp\` sous **Connection**, choisissez **OAuth**, cochez **I understand and want to continue** et cliquez sur **Create as a plugin**.
+3. Connectez-vous avec MCPEmails et approuvez.
+4. Dans une conversation, tapez **@** et choisissez MCPEmails. Ce choix vaut pour ce message : mentionnez à nouveau MCPEmails avec @ quand une question de suivi a besoin de vos e-mails.
 
 Le [guide ChatGPT](/blog/connect-chatgpt-to-email) détaille les menus et les erreurs courantes.
 

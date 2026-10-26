@@ -58,7 +58,7 @@ A scheduled send through MCPEmails is a finished message: you read the exact tex
 ## How to schedule an email with Claude or ChatGPT
 
 1. **Connect your mailbox to MCPEmails.** In the dashboard, open **Inboxes**, then **Connect inbox**, and pick your provider. There is a page per provider under [connect](/connect).
-2. **Add MCPEmails to your assistant.** In Claude, open **Settings**, then **Connectors**, choose **Add custom connector** and paste \`https://mcpemails.com/api/mcp\`. The [Claude guide](/blog/connect-claude-to-email) has every step. In ChatGPT, MCPEmails is added as a custom MCP connector; which plans offer that and where the menu sits have changed more than once this year, so follow the current steps in the [ChatGPT setup guide](/docs/chatgpt).
+2. **Add MCPEmails to your assistant.** In Claude, open **Customize**, then **Connectors**, click **+ Add**, choose **Add custom connector** and paste \`https://mcpemails.com/api/mcp\`. The [Claude guide](/blog/connect-claude-to-email) has every step. In ChatGPT, MCPEmails is added as a custom MCP connector; which plans offer that and where the menu sits have changed more than once this year, so follow the current steps in the [ChatGPT setup guide](/docs/chatgpt).
 3. **Grant scheduling when you authorize.** The MCPEmails consent screen offers access levels. Choose **Full access**, or **Custom** with scheduling ticked. **Standard** leaves scheduling out, so a schedule request is refused.
 4. **Ask for the email and the time.** Give the recipients, what to say, the date and time, and your time zone.
 

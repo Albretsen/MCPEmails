@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google affiche un écran d'application non vérifiée",
-    "body": "Google examine les applications qui demandent l'accès à Gmail, et mcpemails.com n'a pas suivi cet examen. Un écran <b>application non vérifiée</b> s'affiche à la connexion, avec les étapes pour continuer. La connexion elle-même n'expire pas : une fois établie, la boîte reste connectée jusqu'à ce que vous révoquiez l'accès."
+    "body": "Cela ne concerne que la connexion avec Google, proposée avec les offres Pro et Business ; la connexion par défaut avec un mot de passe d'application n'affiche aucun écran Google. Google examine les applications qui demandent l'accès à Gmail, et mcpemails.com n'a pas suivi cet examen : la connexion avec Google affiche donc un écran <b>application non vérifiée</b>, avec les étapes pour continuer. La connexion elle-même n'expire pas : une fois établie, la boîte reste connectée jusqu'à ce que vous révoquiez l'accès."
   },
   "hub": {
     "meta": {

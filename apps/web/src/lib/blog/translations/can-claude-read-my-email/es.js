@@ -74,7 +74,7 @@ El correo se obtiene en directo de tu proveedor en cada solicitud y no se almace
 ### Añádelo a Claude
 
 1. [Crea una cuenta gratuita de MCPEmails](/signup) y conecta un buzón en **Bandejas de entrada** y luego **Conectar bandeja de entrada**.
-2. En claude.ai o Claude Desktop, añade \`https://mcpemails.com/api/mcp\` como conector personalizado.
+2. En claude.ai o Claude Desktop, abre **Customize → Connectors**, haz clic en **+ Add** y después en **Add custom connector**. Llámalo MCPEmails, introduce \`https://mcpemails.com/api/mcp\`, haz clic en **Continue**, deja los ajustes de inicio de sesión detectados y haz clic en **Add**.
 3. Inicia sesión en MCPEmails cuando Claude te lo pida y elige cuánto acceso le das a Claude: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 
 La [guía paso a paso para configurar Claude](/blog/connect-claude-to-email) recorre cada pantalla y cada proveedor, y la [página de configuración de Claude](/docs/claude) cubre los errores del conector.

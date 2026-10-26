@@ -10,7 +10,7 @@ Dette er den fokuserte gjennomgangen kun for Gmail. Hvis du kjører flere postka
 ## Hva du trenger
 
 - En **Gmail- eller Google Workspace**-konto.
-- En versjon av **Claude som støtter egendefinerte connectors**: claude.ai på et betalt abonnement, eller Claude Desktop. (Connectors er måten Claude snakker med MCP-servere på.)
+- **Claude** i nettleseren (claude.ai) eller i Claude Desktop. Alle Claude-abonnementer kan legge til egendefinerte connectors, som er måten Claude snakker med MCP-servere på. Free tillater én, Pro og Max har ingen grense.
 - En gratis **MCPEmails**-konto. Ingen kredittkort, én tilkoblet innboks for alltid. [Start gratis](/signup) og hold denne fanen åpen.
 
 MCPEmails er broen i midten: den snakker Model Context Protocol til Claude på den ene siden og snakker med Gmail på den andre over IMAP og SMTP. Hvis du vil ha bakgrunnen for hva det betyr, se [hva en MCP-e-postserver faktisk er](/blog/what-is-an-mcp-email-server).
@@ -33,15 +33,19 @@ En Google Workspace-administrator kan slå av apppassord for hele domenet. Hvis 
 
 Nå peker du Claude mot det samme endepunktet. Fordi Claude er en OAuth-klient, trenger du ikke en API-nøkkel i det hele tatt: du limer inn én URL og godkjenner en innlogging.
 
-1. I **claude.ai eller Claude Desktop** åpner du **Settings → Connectors**.
-2. Klikk **Add custom connector**.
-3. Lim inn dette som connector-URL, og klikk deretter **Add**:
+1. I **claude.ai eller Claude Desktop** åpner du **Customize → Connectors**.
+2. Klikk **+ Add**, deretter **Add custom connector**.
+3. Kall den MCPEmails og lim inn dette som connector-URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Klikk **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
+4. Klikk **Continue**, se over innloggingsinnstillingene Claude fant (standardvalgene holder), og klikk **Add**.
+5. Logg inn med MCPEmails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
+6. I en samtale klikker du **+** nede til venstre, velger **Connectors** og slår på MCPEmails.
+
+På et Team- eller Enterprise-abonnement legger en Owner til connectoren én gang under **Organization settings → Connectors**. Medlemmene åpner deretter **Customize → Connectors**, finner MCPEmails og klikker **Connect**.
 
 Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Skal du koble til en annen innboks også? [Steg-for-steg-oppsettet for e-post i Claude](/blog/connect-claude-to-email) dekker Outlook, iCloud, Fastmail og IMAP.
 
@@ -93,7 +97,7 @@ Nei. E-post hentes live fra Gmail ved hver forespørsel og forkastes rett etter 
 Ja, hvis du gir \`send:email\`-scopet. Sendinger går ut gjennom Gmail som vanlige meldinger fra din egen konto. Gi kun lesetilgang hvis du heller vil at Claude aldri skal sende.
 
 **Fungerer dette med det gratis Claude-abonnementet?**
-Egendefinerte connectors krever et Claude-abonnement som støtter dem (betalt claude.ai eller Claude Desktop). MCPEmails-siden er gratis uten kort.
+Ja. Claudes Free-abonnement kan legge til én egendefinert connector, og det holder for MCPEmails. Pro og Max har ingen grense. MCPEmails-siden er gratis uten kort.
 
 **Vil MCPEmails se Google-passordet mitt?**
 Nei. Du limer inn et apppassord, en egen legitimasjon som Google genererer og som du kan tilbakekalle når som helst. Det vanlige Google-passordet ditt skrives aldri inn noe sted i MCPEmails.

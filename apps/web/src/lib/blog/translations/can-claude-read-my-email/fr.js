@@ -74,7 +74,7 @@ Les e-mails sont récupérés en direct chez votre fournisseur à chaque requêt
 ### L'ajouter à Claude
 
 1. [Créez un compte MCPEmails gratuit](/signup) et connectez une boîte sous **Boîtes**, puis **Connecter la boîte**.
-2. Dans claude.ai ou Claude Desktop, ajoutez \`https://mcpemails.com/api/mcp\` comme connecteur personnalisé.
+2. Dans claude.ai ou Claude Desktop, ouvrez **Customize → Connectors**, cliquez sur **+ Add**, puis sur **Add custom connector**. Nommez-le MCPEmails, saisissez \`https://mcpemails.com/api/mcp\`, cliquez sur **Continue**, gardez les paramètres de connexion détectés et cliquez sur **Add**.
 3. Connectez-vous à MCPEmails quand Claude vous le demande, et choisissez le niveau d'accès de Claude : **Lecture seule**, **Standard** (ajoute l'envoi et les brouillons) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression).
 
 Le [guide pas à pas pour configurer Claude](/blog/connect-claude-to-email) passe en revue chaque écran et chaque fournisseur, et la [page de configuration de Claude](/docs/claude) traite les erreurs de connecteur.

@@ -18,7 +18,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 Claude 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，点击 Connect，然后用你的 MCPEmails 账户登录。Claude 会自动注册，并申请你批准的权限范围。不需要创建 API 密钥，也不需要编辑配置文件。"
+    "answer": "在 claude.ai 或 Claude Desktop 中依次打开 Customize、Connectors，点击 + Add，然后点击 Add custom connector。将其命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp ，点击 Continue，保留检测到的登录设置，点击 Add，然后用 MCPEmails 登录。不需要创建 API 密钥，也不需要编辑配置文件。"
   },
   "method": {
     "title": "Claude 如何连接：OAuth，无需 API 密钥",
@@ -30,16 +30,16 @@
       "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
-      "h": "打开连接器设置",
-      "p": "在 claude.ai 或 Claude Desktop 中，打开 Settings，然后打开 Connectors。"
+      "h": "打开连接器页面",
+      "p": "在 claude.ai 或 Claude Desktop 中，打开 <b>Customize</b>，然后打开 <b>Connectors</b>。点击 <b>+ Add</b>，再点击 <b>Add custom connector</b>。"
     },
     {
-      "h": "添加自定义连接器",
-      "p": "点击 Add custom connector，将 <code>https://mcpemails.com/api/mcp</code> 粘贴为连接器 URL，然后点击 Add。"
+      "h": "添加服务器",
+      "p": "输入名称（例如 MCPEmails），将 <code>https://mcpemails.com/api/mcp</code> 粘贴为 URL，然后点击 <b>Continue</b>。检查检测到的登录设置（保持默认即可），然后点击 <b>Add</b>。"
     },
     {
-      "h": "连接并授权",
-      "p": "点击 Connect，并用 MCPEmails 登录以完成授权。批准你希望 Claude 拥有的权限范围。无需 API 密钥。"
+      "h": "登录并启用",
+      "p": "用 MCPEmails 登录，并批准你希望 Claude 拥有的权限范围。无需 API 密钥。在对话中点击左下角的 <b>+</b>，选择 <b>Connectors</b>，然后打开 MCPEmails 的开关。"
     }
   ],
   "gotchas": [
@@ -54,6 +54,10 @@
     {
       "h": "连接基于轮询，所以 Claude 不会自己注意到新邮件",
       "p": "没有 webhook，也没有推送。Claude 只有在发起调用时才会看到新邮件，也就是在你提出要求时。像“开始之前先看看有没有财务发来的邮件”这样的固定指令，才能把它变成例行操作；不请求就什么都不会到来。"
+    },
+    {
+      "h": "Free 最多一个自定义连接器，Team 和 Enterprise 由 Owner 添加",
+      "p": "Free 套餐最多只能添加一个自定义连接器；Pro 和 Max 可以按需添加。在 Team 和 Enterprise 中，由 Owner 在 <b>Organization settings</b>、<b>Connectors</b> 下添加 MCPEmails。成员随后打开 <b>Customize</b>、<b>Connectors</b>，找到它并点击 <b>Connect</b> 登录。"
     }
   ],
   "limits": [
@@ -84,7 +88,7 @@
     },
     {
       "q": "除了 claude.ai，在 Claude Desktop 中也能用吗？",
-      "a": "能。两者都从同一个 Settings、Connectors 页面访问自定义连接器，并共享同一个连接，所以在其中一个里添加的邮箱在另一个里也能用。终端用法请参阅单独的 Claude Code 指南。"
+      "a": "能。两者都从同一个 Customize、Connectors 页面访问自定义连接器，并共享同一个连接，所以在其中一个里添加的邮箱在另一个里也能用。终端用法请参阅单独的 Claude Code 指南。"
     }
   ],
   "ctaBand": {

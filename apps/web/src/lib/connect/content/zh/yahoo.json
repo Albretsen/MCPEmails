@@ -75,7 +75,7 @@
     },
     {
       "q": "ChatGPT 能连接 Yahoo Mail 吗？",
-      "a": "可以，把 MCPEmails 添加为自定义连接器即可。在 ChatGPT（chatgpt.com，Plus、Pro、Business、Enterprise 和 Edu）中开启开发者模式，用 MCPEmails 的 URL 创建连接器，选择 OAuth 并登录。之后，在开启了开发者模式的每个对话中都能使用你在这里连接的 Yahoo 收件箱，同一个应用密码也可同时用于 Claude。"
+      "a": "可以，把 MCPEmails 添加为自定义 MCP 服务器即可。在 chatgpt.com 上（需 ChatGPT Go 或付费套餐）打开 Plugins、Personal、Add、Add custom MCP server，粘贴 MCPEmails 的 URL，选择 OAuth 并登录。之后在对话中输入 @ 并选择 MCPEmails，即可使用你在这里连接的 Yahoo 收件箱，同一个应用密码也可同时用于 Claude。"
     },
     {
       "q": "Yahoo Mail 的 IMAP 和 SMTP 设置是什么？",

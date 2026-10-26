@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google zeigt einen Hinweis auf eine nicht verifizierte App",
-    "body": "Google prüft Apps, die Zugriff auf Gmail anfordern, und mcpemails.com hat diese Prüfung nicht durchlaufen. Bei der Anmeldung sehen Sie einen Hinweis auf eine <b>nicht verifizierte App</b>, mit den Schritten zum Fortfahren. Die Verbindung selbst ist nicht zeitlich begrenzt: Einmal verbunden, bleibt ein Postfach verbunden, bis Sie den Zugriff widerrufen."
+    "body": "Das betrifft nur die Anmeldung mit Google, die es in den Tarifen Pro und Business gibt; die Standardverbindung mit App-Passwort zeigt keinen Google-Bildschirm. Google prüft Apps, die Zugriff auf Gmail anfordern, und mcpemails.com hat diese Prüfung nicht durchlaufen. Bei der Anmeldung mit Google sehen Sie daher einen Hinweis auf eine <b>nicht verifizierte App</b>, mit den Schritten zum Fortfahren. Die Verbindung selbst ist nicht zeitlich begrenzt: Einmal verbunden, bleibt ein Postfach verbunden, bis Sie den Zugriff widerrufen."
   },
   "hub": {
     "meta": {

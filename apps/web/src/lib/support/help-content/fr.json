@@ -100,10 +100,10 @@
       "id": "assistant-sees-nothing",
       "title": "Connecté, mais l’assistant ne voit aucun e-mail",
       "summary": "La boîte est connectée, mais votre assistant dit qu’il n’a pas d’outils de messagerie ou ne trouve rien.",
-      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list",
+      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list plugin @",
       "steps": [
         "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
-        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application MCPEmails dans le menu + de chaque nouvelle conversation.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans Claude, vérifiez que MCPEmails est activé sous + et Connecteurs. Dans ChatGPT, tapez @ et choisissez MCPEmails, puis mentionnez-le à nouveau avec @ quand une question de suivi porte sur vos e-mails.",
         "Autorisez le connecteur avec le même compte MCPEmails que celui qui détient la boîte.",
         "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
         "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."

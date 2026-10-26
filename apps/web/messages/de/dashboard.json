@@ -19,18 +19,18 @@
     "officialGuide": "Offizielle Anleitung für {name} ↗",
     "done": "Fertig",
     "claude": {
-      "step1": "Öffnen Sie in claude.ai oder Claude Desktop „Einstellungen“ → „Konnektoren“.",
-      "step2": "Klicken Sie auf „Benutzerdefinierten Konnektor hinzufügen“.",
-      "step3": "Fügen Sie die obige URL als Konnektor-URL ein und klicken Sie auf „Hinzufügen“.",
-      "step4": "Klicken Sie auf „Verbinden“ und melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig."
+      "step1": "Öffnen Sie in claude.ai oder Claude Desktop „Customize“ → „Connectors“, klicken Sie auf „+ Add“ und dann auf „Add custom connector“.",
+      "step2": "Geben Sie als Namen MCPEmails ein, fügen Sie die obige URL ein und klicken Sie auf „Continue“.",
+      "step3": "Prüfen Sie die Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie dann auf „Add“.",
+      "step4": "Melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig. Im Free-Tarif ist ein benutzerdefinierter Konnektor möglich. Bei Team und Enterprise fügt ein Owner ihn unter „Organization settings“ → „Connectors“ hinzu, danach klicken Mitglieder unter „Customize“ → „Connectors“ auf „Connect“."
     },
     "chatgpt": {
-      "step1": "Öffnen Sie „Einstellungen“ → „Apps und Konnektoren“ → „Erweiterte Einstellungen“ und aktivieren Sie den Entwicklermodus.",
-      "step2": "Klicken Sie zurück unter „Apps und Konnektoren“ auf „Erstellen“.",
-      "step3": "Geben Sie einen Namen ein und fügen Sie die obige URL als Konnektor-URL ein.",
-      "step4": "Wählen Sie OAuth, klicken Sie auf „Erstellen“ und autorisieren Sie dann mit MCPEmails.",
-      "step5": "Klicken Sie in einem Chat auf chatgpt.com auf + → Entwicklermodus und wählen Sie die App MCPEmails. Wiederholen Sie das in jedem neuen Chat, sonst sieht ChatGPT die Tools nicht.",
-      "note": "Funktioniert auf chatgpt.com (nur im Web) mit Plus, Pro, Business, Enterprise und Edu. Free- und Go-Konten können keine benutzerdefinierten Konnektoren hinzufügen. Bei Business und Enterprise muss ein Admin den Entwicklermodus eventuell erst freigeben."
+      "step1": "Öffnen Sie auf chatgpt.com „Plugins“ → „Personal“, klicken Sie oben rechts auf „Add“ und dann auf „Add custom MCP server“. In der mobilen App geht das nicht.",
+      "step2": "Geben Sie als Namen MCPEmails ein und fügen Sie die obige URL unter „Connection“ ein.",
+      "step3": "Wählen Sie OAuth, setzen Sie das Häkchen bei „I understand and want to continue“ und klicken Sie auf „Create as a plugin“.",
+      "step4": "Melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig.",
+      "step5": "Tippen Sie im Chat @ und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.",
+      "note": "Benutzerdefinierte MCP-Server lassen sich mit ChatGPT Go und den kostenpflichtigen Tarifen hinzufügen. Bei Business und Enterprise muss das eventuell ein Admin oder Owner übernehmen."
     },
     "cursor": {
       "step1": "Bearbeiten Sie ~/.cursor/mcp.json (global) oder .cursor/mcp.json (Projekt).",
@@ -39,8 +39,8 @@
     },
     "vscode": {
       "step1": "Öffnen Sie die Befehlspalette (⇧⌘P) und führen Sie „MCP: Add Server“ aus.",
-      "step2": "Wählen Sie „HTTP“, fügen Sie die obige URL ein und vergeben Sie einen Namen.",
-      "step3": "Starten Sie den Server in der MCP-Ansicht und autorisieren Sie, wenn Sie dazu aufgefordert werden."
+      "step2": "Wählen Sie „HTTP (HTTP or Server-Sent Events)“, fügen Sie die obige URL ein und geben Sie MCPEmails als Server-ID ein.",
+      "step3": "Wählen Sie „Global“ und dann „Copilot Global“ (gespeichert in ~/.copilot/mcp-config.json) und bestätigen Sie die Anmeldung bei MCPEmails."
     },
     "cline": {
       "step1": "Klicken Sie im Cline-Panel auf das Symbol „MCP Servers“ und öffnen Sie den Tab „Remote Servers“.",
@@ -49,14 +49,14 @@
       "step4": "Fügen Sie mit Ihrem API-Schlüssel einen Header „Authorization: Bearer YOUR_KEY“ hinzu."
     },
     "windsurf": {
-      "step1": "Öffnen Sie die MCP-Einstellungen von Cascade oder bearbeiten Sie ~/.codeium/windsurf/mcp_config.json.",
-      "step2": "Fügen Sie den unten stehenden Server hinzu. Das Feld heißt „serverUrl“, nicht „url“.",
-      "step3": "Aktualisieren Sie die MCP-Server in Cascade und autorisieren Sie mit MCPEmails, wenn Sie dazu aufgefordert werden."
+      "step1": "Klicken Sie in Devin Desktop (früher Windsurf) oben rechts im Cascade-Bereich auf das Menü „...“ und im Abschnitt „MCPs“ auf „Open MCP config file“. Die Datei ist ~/.config/devin/mcp_config.json.",
+      "step2": "Fügen Sie den unten stehenden Server unter „mcpServers“ hinzu. Das Feld heißt „serverUrl“, nicht „url“.",
+      "step3": "Speichern Sie die Datei und melden Sie sich bei MCPEmails an, wenn Sie dazu aufgefordert werden."
     },
     "gemini": {
-      "step1": "Bearbeiten Sie ~/.gemini/settings.json (global) oder .gemini/settings.json (Projekt).",
-      "step2": "Fügen Sie den unten stehenden Server unter „mcpServers“ mit dem Feld „httpUrl“ hinzu.",
-      "step3": "Beim ersten Verbinden erkennt die CLI OAuth automatisch und öffnet den Ablauf im Browser."
+      "step1": "Führen Sie gemini mcp add --transport http mcpemails gefolgt von der obigen URL aus, oder bearbeiten Sie ~/.gemini/settings.json (global) bzw. .gemini/settings.json (Projekt).",
+      "step2": "Fügen Sie in der Datei den unten stehenden Server unter „mcpServers“ mit dem Feld „httpUrl“ hinzu.",
+      "step3": "Führen Sie /mcp auth mcpemails aus, um sich bei MCPEmails anzumelden. Konten im kostenlosen Tarif und Google-One-Konten nutzen stattdessen die Antigravity CLI: Geben Sie dort /mcp ein, um den Server hinzuzufügen (Feld „serverUrl“)."
     },
     "zed": {
       "step1": "Klicken Sie in den Einstellungen des Agent Panel auf „Add Custom Server“ oder bearbeiten Sie settings.json.",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "Klicken Sie in Claude im Eingabefeld auf +, öffnen Sie Konnektoren und prüfen Sie, ob MCPEmails für den Chat eingeschaltet ist. Sonst antwortet Claude ohne Ihre E-Mails.",
-      "chatgpt": "Klicken Sie in ChatGPT in jedem neuen Chat auf +, wählen Sie Entwicklermodus und dann die App MCPEmails. Sonst sieht ChatGPT Ihre E-Mails nicht."
+      "chatgpt": "Tippen Sie in ChatGPT @ ins Eingabefeld und wählen Sie MCPEmails. Die Auswahl gilt nur für diese Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht."
     },
     "itWorksTitle": "Es funktioniert",
     "itWorksDesc": "Ihre KI-App hat gerade ihren ersten Aufruf an MCPEmails gemacht. Machen Sie im selben Chat weiter.",
@@ -166,7 +166,7 @@
     "actionsThisMonth": "E-Mail-Aktionen diesen Monat",
     "actionsOfCap": "von {cap} · Zurücksetzung am {date}",
     "actionsCapReached": "Limit erreicht · gesperrt bis {date}",
-    "actionsGrace": "Testphase: kein Limit bis {date}",
+    "actionsGrace": "Unbegrenzt bis {date}",
     "actionsExempt": "Kein Monatslimit (früher Nutzer)",
     "teamMembers": "Teammitglieder",
     "ofSeats": "von {cap} Plätzen · {remaining} frei",
@@ -509,7 +509,7 @@
       "createdJustNow": "· gerade erstellt",
       "urlLabel": "MCP-Client-Konfiguration (mit Authorization-Header)",
       "nextTitle": "Weiter: in Claude verbinden",
-      "nextStep1": "Öffnen Sie in claude.ai oder Claude Desktop „Einstellungen“ → „Konnektoren“ → „Benutzerdefinierten Konnektor hinzufügen“.",
+      "nextStep1": "Öffnen Sie in claude.ai oder Claude Desktop „Customize“ → „Connectors“, klicken Sie auf „+ Add“ und dann auf „Add custom connector“.",
       "nextStep2": "Fügen Sie die obige URL ein. OAuth-Clients verbinden sich mit einem Klick.",
       "nextStep3": "Dann fragen Sie Claude einfach:",
       "nextGuide": "Schritt-für-Schritt-Anleitung",
@@ -628,7 +628,7 @@
     "colAddress": "Adresse",
     "allowanceCounting": "{used} von {cap} E-Mail-Aktionen diesen Monat genutzt · Zurücksetzung am {date}",
     "allowanceReached": "Alle {cap} E-Mail-Aktionen genutzt · Lese- und Schreibzugriffe sind bis {date} gesperrt",
-    "allowanceGrace": "Testphase: kein Limit bis {date}",
+    "allowanceGrace": "Unbegrenzt bis {date}",
     "allowanceExempt": "Kein Monatslimit (früher Nutzer)",
     "capTitleNear": "Ihr Monatskontingent ist fast aufgebraucht",
     "capBodyNear": "{used} von {cap} E-Mail-Aktionen genutzt. Bei {cap} werden Lese- und Schreibzugriffe Ihres Agenten bis {date} abgelehnt. Personal hebt das Monatslimit für $9 pro Monat auf.",
