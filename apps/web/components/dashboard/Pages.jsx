@@ -49,6 +49,9 @@ import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
 import FounderPriceNote from './FounderPriceNote';
 import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
+import { graceEndNote, showPlanSummary, usageMeterLevel as flowBMeterLevel } from '@/lib/onboarding/flow-b.mjs';
+import { PlanSummaryCard } from '../convert/PlanSummaryCard';
+import { GraceEndNote, UsageMeterNote } from '../convert/FlowBNotes';
 import {
   usageCapCheckoutHref,
   usageCapCompareHref,
@@ -1048,13 +1051,20 @@ function useMultiInboxSeenBeacon(ref) {
  */
 function MultiInboxInvite({ variant, placement, onConnect }) {
   const t = useTranslations('dashboard');
+  const tc = useTranslations('convert.multiInbox');
   const ref = useRef(null);
   useMultiInboxSeenBeacon(ref);
   const compact = placement === 'overview';
-  const upgrade = variant === 'upgrade';
-  const desc = compact
-    ? t(upgrade ? 'guide.multiInboxCompactUpgrade' : 'guide.multiInboxCompact')
-    : t(upgrade ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc');
+  // Flow B's consumer variants (multi-inbox-prompt.mjs): their own wording,
+  // the same quiet row.
+  const consumer = variant === 'consumer_open' || variant === 'consumer_upgrade';
+  const upgrade = variant === 'upgrade' || variant === 'consumer_upgrade';
+  const title = consumer ? tc('title') : t('guide.multiInboxTitle');
+  const desc = consumer
+    ? tc(upgrade ? 'descUpgrade' : 'desc')
+    : compact
+      ? t(upgrade ? 'guide.multiInboxCompactUpgrade' : 'guide.multiInboxCompact')
+      : t(upgrade ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc');
   return (
     <div
       ref={ref}
@@ -1073,7 +1083,7 @@ function MultiInboxInvite({ variant, placement, onConnect }) {
       <Icon name="plus" size={compact ? 14 : 16} color="var(--fg-3)" />
       <div style={{ flex: '1 1 260px', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: 'var(--font-sans)', fontSize: compact ? 13 : 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-          {t('guide.multiInboxTitle')}
+          {title}
           <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
         </div>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: compact ? 12 : 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
@@ -1115,8 +1125,12 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage }) {
   const t = useTranslations('dashboard');
+  // Onboarding Flow B (src/lib/onboarding/flow-b.mjs): `flowB` is null unless
+  // this workspace is in the onb_convert arm and on Free. The clock is read
+  // once per mount so a render stays pure.
+  const [flowBNow] = useState(() => Date.now());
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
   // at page load, so the moment a mailbox was connected (or removed) without a
@@ -1184,7 +1198,14 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   // `showGuide`, so it is still here after the first tool call.
   // A viewer cannot connect a mailbox (the connect routes refuse it), so a
   // viewer is never invited to.
-  const multiInbox = userRole === 'viewer' ? null : multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
+  const multiInbox = userRole === 'viewer' ? null : multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit, convert: flowB ? 'on' : 'off' });
+
+  // Flow B's three quiet surfaces, each null outside the convert arm: the
+  // plan summary for the first 3 days after the first call (B2), the one
+  // grace-end note (B3a), and the usage meter at 50/80/100% (B3b).
+  const planSummaryVisible = userRole !== 'viewer' && showPlanSummary({ flowB, now: flowBNow });
+  const graceNote = graceEndNote({ flowB, allowance: actionAllowance, dailyCounts: usageData?.dailyCounts ?? [], now: flowBNow });
+  const meterLevel = flowB ? flowBMeterLevel(allowance) : null;
 
   return (
     <div className="page">
@@ -1199,6 +1220,19 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       />
 
       {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
+
+      {graceNote && <GraceEndNote note={graceNote} onGoToUsage={onGoToUsage} />}
+      {meterLevel && (
+        <UsageMeterNote
+          level={meterLevel}
+          used={allowance.used}
+          cap={allowance.cap}
+          resetsAt={actionAllowance.monthly.resets_at}
+          periodStart={actionAllowance.monthly.period_start}
+          onSeePlans={onGoToUsage}
+        />
+      )}
+      {planSummaryVisible && <PlanSummaryCard flowB={flowB} surface="overview" businessShaped={businessShaped} />}
 
       {/* First 14 days after the first payment, owner only. Renders nothing
           otherwise; see lib/onboarding/first-week-checklist.ts. */}

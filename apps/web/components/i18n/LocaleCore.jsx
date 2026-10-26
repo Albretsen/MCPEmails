@@ -36,6 +36,7 @@ const LOADERS = {
     auth: () => import('../../messages/nb/auth.json'),
     common: () => import('../../messages/nb/common.json'),
     onboarding: () => import('../../messages/nb/onboarding.json'),
+    convert: () => import('../../messages/nb/convert.json'),
   },
   es: {
     dashboard: () => import('../../messages/es/dashboard.json'),
@@ -43,6 +44,7 @@ const LOADERS = {
     auth: () => import('../../messages/es/auth.json'),
     common: () => import('../../messages/es/common.json'),
     onboarding: () => import('../../messages/es/onboarding.json'),
+    convert: () => import('../../messages/es/convert.json'),
   },
   fr: {
     dashboard: () => import('../../messages/fr/dashboard.json'),
@@ -50,6 +52,7 @@ const LOADERS = {
     auth: () => import('../../messages/fr/auth.json'),
     common: () => import('../../messages/fr/common.json'),
     onboarding: () => import('../../messages/fr/onboarding.json'),
+    convert: () => import('../../messages/fr/convert.json'),
   },
   zh: {
     dashboard: () => import('../../messages/zh/dashboard.json'),
@@ -57,6 +60,7 @@ const LOADERS = {
     auth: () => import('../../messages/zh/auth.json'),
     common: () => import('../../messages/zh/common.json'),
     onboarding: () => import('../../messages/zh/onboarding.json'),
+    convert: () => import('../../messages/zh/convert.json'),
   },
   de: {
     dashboard: () => import('../../messages/de/dashboard.json'),
@@ -64,6 +68,7 @@ const LOADERS = {
     auth: () => import('../../messages/de/auth.json'),
     common: () => import('../../messages/de/common.json'),
     onboarding: () => import('../../messages/de/onboarding.json'),
+    convert: () => import('../../messages/de/convert.json'),
   },
 };
 

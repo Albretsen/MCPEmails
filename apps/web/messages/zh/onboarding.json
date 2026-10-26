@@ -183,7 +183,8 @@
         "supportSent": "已发送。我们会通过邮件回复。",
         "supportFailed": "发送失败。请改用帮助页面。",
         "supportPage": "打开帮助页面",
-        "signIn": "重新登录"
+        "signIn": "重新登录",
+        "seePlans": "查看方案"
       },
       "outlookError": {
         "admin_consent_required": "你的组织需要管理员批准 MCPEmails 后你才能登录。请把下面的链接发给管理员。",
@@ -262,7 +263,13 @@
       "optIn": "明天 8 点把这段发到我的邮箱",
       "optInDone": "我们会在明天 8:00 发送到 {email}。",
       "optInFailed": "无法保存，请重试。",
-      "finish": "前往控制台"
+      "finish": "前往控制台",
+      "secondInbox": {
+        "title": "连接你的另一个收件箱",
+        "lead": "大多数人会再连接一个收件箱：工作和个人邮件在同一个对话里。",
+        "cta": "再连接一个收件箱",
+        "paidNote": "Free 包含一个收件箱。连接下一个时会显示方案选项，旁边就是“继续使用 Free”。"
+      }
     }
   },
   "nav": {

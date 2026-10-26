@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Planen din: Free",
+    "lead": "Free dekker det du nettopp gjorde. Her er hva hver plan legger til når du vil ha mer.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# innboks} other {Opptil # innbokser}}",
+    "freeGrace": "Ubegrenset frem til {date}",
+    "freeCap": "{cap} e-posthandlinger i måneden",
+    "noCap": "Ingen månedlig grense",
+    "emailSupport": "Støtte på e-post",
+    "everythingPersonal": "Alt i Personal",
+    "perMonth": "{price}/mnd",
+    "perYear": "{price}/år",
+    "intervalLabel": "Faktureringsintervall",
+    "monthly": "Månedlig",
+    "annual": "Årlig",
+    "recommended": "Anbefalt",
+    "choose": "Velg {plan}",
+    "continueFree": "Fortsett med Free",
+    "dismiss": "Skjul planoversikten"
+  },
+  "graceNote": {
+    "today": "Du brukte MCPEmails {days, plural, one {# dag} other {# dager}}. Fra i dag teller Free de månedlige e-posthandlingene dine.",
+    "since": "Du brukte MCPEmails {days, plural, one {# dag} other {# dager}}. Fra {date} teller Free de månedlige e-posthandlingene dine.",
+    "seeUsage": "Se bruk",
+    "dismiss": "Lukk"
+  },
+  "meter": {
+    "level50": "Halvparten av månedens {cap} e-posthandlinger er brukt. Telleren nullstilles {date}.",
+    "level80": "{used} av {cap} e-posthandlinger brukt denne måneden. Telleren nullstilles {date}. Personal fjerner den månedlige grensen.",
+    "level100": "Alle {cap} e-posthandlinger er brukt. Lesing og skriving avvises frem til {date}. Personal fjerner den månedlige grensen.",
+    "seePlans": "Se planer"
+  },
+  "multiInbox": {
+    "title": "Koble til den andre innboksen din",
+    "desc": "Har du også en annen Gmail-, iCloud- eller Outlook-konto? Koble den til, så jobber AI-en din med begge innboksene i samme chat.",
+    "descUpgrade": "Har du også en annen Gmail-, iCloud- eller Outlook-konto? AI-en din kan jobbe med begge innboksene i samme chat. En innboks nummer to krever en betalt plan."
+  }
+}

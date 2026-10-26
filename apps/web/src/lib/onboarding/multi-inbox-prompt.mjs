@@ -30,11 +30,20 @@
  * pulls people to a paywall seconds after their first connect, before they
  * have used the product once. See OverviewPage's `atInboxLimit` comment.
  *
- * @param {{businessShaped?: boolean, inboxCount?: number, atInboxLimit?: boolean}} state
- * @returns {null|'upgrade'|'open'}
+ * ONBOARDING FLOW B (onb_convert = on, src/lib/onboarding/flow-b.mjs): a
+ * consumer workspace is invited too, with consumer wording ("your other
+ * Gmail or iCloud"): 'consumer_upgrade' at the cap, 'consumer_open' below it.
+ * Measured: the prompt converts 22-24% of viewers and 43% of signups try a
+ * second inbox, but only business domains were shown it (plan B1, report 37).
+ *
+ * @param {{businessShaped?: boolean, inboxCount?: number, atInboxLimit?: boolean, convert?: string}} state
+ * @returns {null|'upgrade'|'open'|'consumer_upgrade'|'consumer_open'}
  */
-export function multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit } = {}) {
-  if (businessShaped !== true) return null;
+export function multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit, convert } = {}) {
   if (inboxCount !== 1) return null;
+  if (businessShaped !== true) {
+    if (convert !== 'on') return null;
+    return atInboxLimit === true ? 'consumer_upgrade' : 'consumer_open';
+  }
   return atInboxLimit === true ? 'upgrade' : 'open';
 }

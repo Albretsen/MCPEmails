@@ -183,7 +183,8 @@
         "supportSent": "Sent. We will reply by email.",
         "supportFailed": "Could not send it. Use the help page instead.",
         "supportPage": "Open the help page",
-        "signIn": "Sign in again"
+        "signIn": "Sign in again",
+        "seePlans": "See plans"
       },
       "outlookError": {
         "admin_consent_required": "Your organisation needs an admin to approve MCPEmails before you can sign in. Send your admin the link below.",
@@ -262,7 +263,13 @@
       "optIn": "Email me this tomorrow at 8",
       "optInDone": "We will email it to {email} tomorrow at 8:00.",
       "optInFailed": "Could not save that. Try again.",
-      "finish": "Go to your dashboard"
+      "finish": "Go to your dashboard",
+      "secondInbox": {
+        "title": "Connect your other inbox",
+        "lead": "Most people connect a second inbox: work and personal in one chat.",
+        "cta": "Connect another inbox",
+        "paidNote": "Free covers one inbox. The next one opens the plan options, with Continue on Free right beside them."
+      }
     }
   },
   "nav": {

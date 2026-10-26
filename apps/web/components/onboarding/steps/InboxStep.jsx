@@ -18,6 +18,7 @@ import { emailDomain } from '@/lib/email-providers/host-presets';
 import { postOnboardingAction } from '../onboarding-actions';
 import { ProviderPanel } from './inbox/ProviderPanel';
 import { ConnectProgress, ProofCard, FailurePanel } from './inbox/ConnectOutcome';
+import { SECOND_INBOX_DASHBOARD_HREF } from '@/lib/onboarding/second-inbox.mjs';
 
 /**
  * A3-A5: which inbox, the provider's steps, connecting, then proof.
@@ -46,9 +47,11 @@ import { ConnectProgress, ProofCard, FailurePanel } from './inbox/ConnectOutcome
 const CHOOSER_KINDS = ['gmail', 'icloud', 'yahoo', 'outlook', 'microsoft365', 'gmx', 'imap'];
 const DEFAULT_MANUAL = { imapHost: '', imapPort: 993, smtpHost: '', smtpPort: 465, username: '' };
 
-export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext }) {
+export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext, goTo, variant, secondInbox = false, finish }) {
   const t = useTranslations('onboarding');
-  const [connectAnother, setConnectAnother] = useState(false);
+  // Flow B, B1: opened from It works for a second inbox, so straight to the
+  // form, and back to It works once it is connected.
+  const [connectAnother, setConnectAnother] = useState(secondInbox);
   const reusable = !connectAnother && hasReusableInbox(status) ? status.inboxes.items[0] : null;
 
   if (reusable) {
@@ -68,7 +71,14 @@ export function InboxStep({ step, status, refreshStatus, provider, userEmail, go
   }
 
   return (
-    <ConnectInbox step={step} refreshStatus={refreshStatus} provider={provider} userEmail={userEmail} goNext={goNext} />
+    <ConnectInbox
+      step={step}
+      refreshStatus={refreshStatus}
+      provider={provider}
+      userEmail={userEmail}
+      goNext={secondInbox && goTo ? () => goTo('it_works') : goNext}
+      onSeePlans={variant?.convert === 'on' && finish ? () => finish(SECOND_INBOX_DASHBOARD_HREF) : null}
+    />
   );
 }
 
@@ -103,7 +113,7 @@ function readOutlookError() {
   }
 }
 
-function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext }) {
+function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeePlans = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const urlKind = useMemo(() => kindFromProviderSlug(provider), [provider]);
   const [outlookError, setOutlookError] = useState(null);
@@ -453,6 +463,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext }) {
                 funnelProvider={funnelProvider}
                 onReadOnly={() => submit(true)}
                 onDifferentInbox={differentInbox}
+                onSeePlans={onSeePlans}
               />
             )}
 

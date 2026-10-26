@@ -179,3 +179,15 @@
 .onb-callout-error { border-color: var(--red-100); }
 .onb-callout-body { margin: 0; color: var(--fg-2); }
 .onb-callout .onb-actions { margin-top: 12px; }
+
+/* Flow B, B1: "Connect your other inbox" on It works (WP-H). */
+.onb-second-inbox {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-2, var(--border-1));
+  border-radius: 10px;
+  background: var(--bg-surface);
+}
+.onb-second-inbox .onb-strong { margin: 0 0 4px; }
+.onb-second-inbox .onb-muted { margin: 0; }
+.onb-second-inbox .onb-actions { margin-top: 10px; }

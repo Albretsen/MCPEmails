@@ -183,7 +183,8 @@
         "supportSent": "Gesendet. Wir antworten per E-Mail.",
         "supportFailed": "Senden hat nicht geklappt. Nutzen Sie stattdessen die Hilfeseite.",
         "supportPage": "Hilfeseite öffnen",
-        "signIn": "Erneut anmelden"
+        "signIn": "Erneut anmelden",
+        "seePlans": "Pläne ansehen"
       },
       "outlookError": {
         "admin_consent_required": "Ihre Organisation braucht eine Admin-Freigabe für MCPEmails, bevor Sie sich anmelden können. Schicken Sie Ihrem Admin den Link unten.",
@@ -262,7 +263,13 @@
       "optIn": "Schicken Sie mir das morgen um 8 Uhr per E-Mail",
       "optInDone": "Wir schicken es morgen um 8:00 Uhr an {email}.",
       "optInFailed": "Das konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
-      "finish": "Zum Dashboard"
+      "finish": "Zum Dashboard",
+      "secondInbox": {
+        "title": "Ihr anderes Postfach verbinden",
+        "lead": "Die meisten verbinden ein zweites Postfach: Arbeit und Privates in einem Chat.",
+        "cta": "Weiteres Postfach verbinden",
+        "paidNote": "Free umfasst ein Postfach. Beim nächsten sehen Sie die Planoptionen, mit Mit Free weitermachen direkt daneben."
+      }
     }
   },
   "nav": {

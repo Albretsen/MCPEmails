@@ -183,7 +183,8 @@
         "supportSent": "Sendt. Vi svarer på e-post.",
         "supportFailed": "Kunne ikke sende. Bruk hjelpesiden i stedet.",
         "supportPage": "Åpne hjelpesiden",
-        "signIn": "Logg inn igjen"
+        "signIn": "Logg inn igjen",
+        "seePlans": "Se planer"
       },
       "outlookError": {
         "admin_consent_required": "Organisasjonen din krever at en administrator godkjenner MCPEmails før du kan logge inn. Send administratoren lenken nedenfor.",
@@ -262,7 +263,13 @@
       "optIn": "Send meg dette på e-post i morgen kl. 8",
       "optInDone": "Vi sender det til {email} i morgen kl. 8.00.",
       "optInFailed": "Kunne ikke lagre. Prøv igjen.",
-      "finish": "Gå til dashbordet"
+      "finish": "Gå til dashbordet",
+      "secondInbox": {
+        "title": "Koble til den andre innboksen din",
+        "lead": "De fleste kobler til en innboks til: jobb og privat i samme chat.",
+        "cta": "Koble til en innboks til",
+        "paidNote": "Free dekker én innboks. Den neste åpner planvalgene, med Fortsett med Free rett ved siden av."
+      }
     }
   },
   "nav": {

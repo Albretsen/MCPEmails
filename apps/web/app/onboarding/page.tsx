@@ -15,6 +15,9 @@ import {
   withClientIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
+import { buildFlowBProp, type FlowBProp } from '@/lib/onboarding/flow-b-server';
+import { fetchWorkspaceActionAllowance } from '@/lib/usage/allowance';
+import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { OnboardingApp } from '../../components/onboarding/OnboardingApp';
 
 export const dynamic = 'force-dynamic';
@@ -85,6 +88,30 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     return null;
   });
 
+  // Flow B (onb_convert = on, WP-H): the plan summary and second-inbox card
+  // on It works. Owner only, Free only, null (and no query) for everyone else.
+  let flowB: FlowBProp | null = null;
+  if (variant.convert === 'on' && workspace.owner_id === user.id) {
+    const service = createServiceRoleClient();
+    const [allowance, prices, { data: facts }] = await Promise.all([
+      fetchWorkspaceActionAllowance(service, workspaceId),
+      fetchStripePrices().catch(() => null),
+      service
+        .from('workspaces')
+        .select('analytics_first_tool_used_at, plan_summary_dismissed_at, grace_end_note_seen_at')
+        .eq('id', workspaceId)
+        .maybeSingle(),
+    ]);
+    flowB = await buildFlowBProp({
+      db: service,
+      convert: variant.convert,
+      plan: allowance?.plan ?? null,
+      workspace: { id: workspaceId, created_at: workspace.created_at, ...(facts ?? {}) },
+      allowance,
+      stripePrices: prices,
+    });
+  }
+
   const requestedStep = one(params.step);
   return (
     <OnboardingApp
@@ -95,6 +122,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       userEmail={user.email ?? ''}
       statusPromise={statusPromise}
       requestedStep={isOnboardingStep(requestedStep) ? requestedStep : null}
+      flowB={flowB}
     />
   );
 }

@@ -631,6 +631,9 @@ export function ConnectModal({
   stripePrices = null,
   reconnect = null,
   businessShaped = false,
+  // Onboarding Flow B (onb_convert = on): the cap panel's dismiss reads
+  // "Continue on Free" at full button weight.
+  continueOnFree = false,
   // Whether "Prefer to sign in with Google?" is offered on the Gmail card:
   // Pro and Business only, and only while the unverified Google client has
   // lifetime slots left (src/lib/oauth/gmail-oauth-gate.ts, decided by the
@@ -656,6 +659,7 @@ export function ConnectModal({
   onboardingClient = null,
 }) {
   const tr = useTranslations('dashboardChrome');
+  const tConvert = useTranslations('convert');
   const { locale: appLocale } = useAppLocale();
   /**
    * A check this modal should pick up from a previous one (see checkMemory):
@@ -4207,7 +4211,14 @@ export function ConnectModal({
               can be routed at Personal from here. */}
           {showLimitPanel && (
             <>
-              <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
+              {/* Onboarding Flow B: "Continue on Free" as visible as the buy
+                  button (same size, outlined), where the click would start a
+                  new purchase. Everyone else keeps the ghost Cancel. */}
+              {continueOnFree && limitIsNewPurchase ? (
+                <Btn variant="secondary" className="continue-on-free" onClick={onClose}>{tConvert('planSummary.continueFree')}</Btn>
+              ) : (
+                <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
+              )}
               {/* Locale-aware Link, unlike the checkout CTA below, and the
                   same treatment the identical link on the Inboxes page already
                   had: /pricing is an ordinary page with no side effects, so

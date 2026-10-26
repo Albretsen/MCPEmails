@@ -478,6 +478,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Routes once off the ?connected= param the OAuth callback redirects back with.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
+    } else if (readQuery(searchParams, 'connect') === 'second_inbox') {
+      // Onboarding Flow B, B1: "Connect your other inbox" on It works, for a
+      // workspace already at its inbox cap. The modal opens on the existing
+      // upgrade panel (consumer or business wording, monthly with annual
+      // beside it, Continue on Free). No toast: nothing went wrong.
+      setRouteState('inboxes');
+      openConnect('second_inbox');
     } else if (errorParam === 'inbox_limit_reached') {
       // The provider OAuth callbacks redirect here carrying the error code and
       // nothing else, so this path must not depend on a count or a max.
@@ -595,9 +602,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setRouteState('inboxes');
     }
 
-    if (connectedParam || errorParam || adminConsentParam || signupMethod) {
+    if (connectedParam || errorParam || adminConsentParam || signupMethod || readQuery(searchParams, 'connect') === 'second_inbox') {
       try {
         const url = new URL(window.location.href);
+        url.searchParams.delete('connect');
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
         url.searchParams.delete('admin_consent');
@@ -1336,7 +1344,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
@@ -1389,6 +1397,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
+          // Onboarding Flow B: at the Free cap the panel's dismiss button
+          // reads "Continue on Free" at the buy button's size.
+          continueOnFree={serverWorkspace?.onboarding?.convert === 'on'}
           gmailOauthAllowed={workspace?.gmailOAuthAllowed === true}
           onAdminConsentLink={() => setShowAdminLink(true)}
           supportVisible={supportVisible} // SUPPORT_RELEASE_GATE

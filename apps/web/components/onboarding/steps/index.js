@@ -30,8 +30,13 @@
  *                   address" chip; never prefill the field with it)
  *   goNext()        advance to the next step (no-op after the last)
  *   goTo(stepId)    jump to any step (ONBOARDING_STEPS in src/lib/onboarding/flow.ts)
- *   finish()        the flow is done: stamps onboarding_completed_at and
- *                   navigates to /dashboard
+ *   finish(href?)   the flow is done: stamps onboarding_completed_at and
+ *                   navigates to /dashboard (or `href`, a /dashboard path)
+ *   flowB           Flow B facts (src/lib/onboarding/flow-b-server.ts), or
+ *                   null outside onb_convert = on or off Free (WP-H)
+ *   secondInbox     true when the inbox step was opened from It works'
+ *                   "Connect your other inbox" (WP-H, plan B1)
+ *   startSecondInbox()  open the inbox step in that mode
  *
  * Panels must not import from components/dashboard/*: /onboarding has its own
  * JS budget (under 170 KB brotli first load, plan A9). Strings go in the

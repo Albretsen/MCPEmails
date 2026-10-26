@@ -5695,6 +5695,7 @@ export type Database = {
           draft_editor_enabled: boolean
           draft_editor_hidden: boolean
           free_action_cap_exempt: boolean
+          grace_end_note_seen_at: string | null
           grandfathered: boolean
           id: string
           inbox_swapped_at: string | null
@@ -5716,6 +5717,7 @@ export type Database = {
           payment_issue_since: string | null
           payment_notice_shown_on: string | null
           plan: string
+          plan_summary_dismissed_at: string | null
           pro_features_enabled: boolean
           pro_unlimited_inboxes_exempt: boolean
           referral_enabled: boolean
@@ -5757,6 +5759,7 @@ export type Database = {
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
           free_action_cap_exempt?: boolean
+          grace_end_note_seen_at?: string | null
           grandfathered?: boolean
           id?: string
           inbox_swapped_at?: string | null
@@ -5778,6 +5781,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          plan_summary_dismissed_at?: string | null
           pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           referral_enabled?: boolean
@@ -5819,6 +5823,7 @@ export type Database = {
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
           free_action_cap_exempt?: boolean
+          grace_end_note_seen_at?: string | null
           grandfathered?: boolean
           id?: string
           inbox_swapped_at?: string | null
@@ -5840,6 +5845,7 @@ export type Database = {
           payment_issue_since?: string | null
           payment_notice_shown_on?: string | null
           plan?: string
+          plan_summary_dismissed_at?: string | null
           pro_features_enabled?: boolean
           pro_unlimited_inboxes_exempt?: boolean
           referral_enabled?: boolean
@@ -6027,6 +6033,14 @@ export type Database = {
       }
       claim_onboarding_welcome: {
         Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      claim_usage_meter_note: {
+        Args: {
+          p_level: number
+          p_period_start: string
+          p_workspace_id: string
+        }
         Returns: boolean
       }
       create_workspace: {
@@ -6817,6 +6831,10 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      onboarding_convert_on: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
       outbound_send_gate: {
         Args: {
           p_commit: boolean
@@ -7028,6 +7046,14 @@ export type Database = {
       sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
       sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
       sync_inbox_watch_state: { Args: never; Returns: undefined }
+      usage_month_summary: {
+        Args: { p_since: string; p_workspace_id: string }
+        Returns: {
+          drafts: number
+          reads: number
+          sends: number
+        }[]
+      }
       user_active_pass: {
         Args: { p_user: string }
         Returns: {

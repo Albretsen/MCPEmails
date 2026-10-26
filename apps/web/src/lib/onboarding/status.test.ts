@@ -111,8 +111,10 @@ test('reset rewinds every onboarding and first-use marker and stamps reset_at', 
     'analytics_first_tool_used_at', 'analytics_first_tool_name', 'analytics_first_inbox_connected_at',
     'analytics_first_credential_created_at',
   ]) assert.ok(cleared.includes(column), column);
-  // Nothing outside the markers.
-  for (const key of Object.keys(patch)) assert.match(key, /^(onboarding_|analytics_first_)/);
+  // Nothing outside the markers (and Flow B's two dismissal stamps, WP-H).
+  for (const key of Object.keys(patch)) assert.match(key, /^(onboarding_|analytics_first_|plan_summary_dismissed_at$|grace_end_note_seen_at$)/);
+  assert.equal(patch.plan_summary_dismissed_at, null);
+  assert.equal(patch.grace_end_note_seen_at, null);
 });
 
 test('the newest key carries its scopes, so the prompt step can tell a read-only key', () => {

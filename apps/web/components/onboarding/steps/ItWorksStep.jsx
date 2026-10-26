@@ -1,19 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { canDraftWith, promptKeys, successKey } from '@/lib/onboarding/connect-steps.mjs';
 import { morningBriefOptIn } from './assist-actions';
 import { PromptBlock } from './ConnectParts';
+
+// Flow B, loaded on this last step only, so its cards stay out of
+// /onboarding's first load (components/convert/OnboardingFlowB.jsx).
+const OnboardingFlowB = lazy(() => import('../../convert/OnboardingFlowB'));
 
 /**
  * A9, "It works": a specific success line (from the first call's tool), the
  * Draft my replies prompt, tomorrow's Morning brief prompt with an opt-in
  * "Email me this tomorrow at 8", then the dashboard through finish(), which
  * stamps onboarding_completed_at.
+ *
+ * Flow B (variant.convert = 'on', WP-H, plan section 5), before the finish
+ * button and nothing restructured above it:
+ *   B1  "Connect your other inbox". One tap reopens the inbox step for a
+ *       second inbox; at the Free inbox cap it opens the dashboard's existing
+ *       upgrade panel instead (ConnectModal, entry point second_inbox).
+ *   B2  The plan summary card (components/convert/PlanSummaryCard.jsx).
  * Props: the panel contract in ./index.js.
  */
-export function ItWorksStep({ step, status, client, clientLabel, finish }) {
+export function ItWorksStep({ step, status, client, clientLabel, finish, variant, flowB = null, userEmail = '', startSecondInbox }) {
   const t = useTranslations('onboarding');
   const locale = useLocale();
   const vars = { client: clientLabel };
@@ -53,6 +64,12 @@ export function ItWorksStep({ step, status, client, clientLabel, finish }) {
           </div>
           {optIn.phase === 'failed' && <p className="onb-error" role="alert">{t('steps.it_works.optInFailed')}</p>}
         </>
+      )}
+
+      {variant?.convert === 'on' && (
+        <Suspense fallback={null}>
+          <OnboardingFlowB status={status} flowB={flowB} userEmail={userEmail} finish={finish} startSecondInbox={startSecondInbox} />
+        </Suspense>
       )}
 
       <div className="onb-actions onb-finish">
