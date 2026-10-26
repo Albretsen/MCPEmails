@@ -314,6 +314,16 @@ import {
   scheduledSendBlockedByParking,
 } from "./parked-inbox.ts";
 import {
+  allInboxesBrokenChoice,
+  buildInboxChoice,
+  inboxHealthHint,
+  inboxHealthStatus,
+  inboxHealthWrite,
+  LOGIN_REFUSED_LIKE,
+  loginRefusedAt,
+  loginRefusedMarker,
+} from "./inbox-health.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -937,6 +947,13 @@ if (!INTROSPECTION_ONLY) {
  */
 interface ActivityContext {
   inboxId: string | null;
+  /**
+   * The resolved inbox's provider, and whether its row carried the
+   * refused-login marker. The dispatcher uses both after the call to record or
+   * clear that marker (inboxHealthWrite in inbox-health.ts).
+   */
+  inboxProvider?: string;
+  inboxLoginRefused?: boolean;
   outlookNoMailbox?: boolean;
   /**
    * Set when a tool reached for the half of a receive-only or send-only
@@ -3902,6 +3919,33 @@ interface ActivityLogParams {
  *
  * @see Documents/Architecture/mcp-server-architecture.md §3 Step 7
  */
+/**
+ * Write or clear the refused-login marker on one inbox (inbox-health.ts).
+ *
+ * "mark" never overwrites another `last_error` (a person or another function
+ * wrote it, and it says more) and never touches a row that is not 'active'.
+ * "clear" only removes a marker, never any other text.
+ */
+async function writeInboxHealth(workspaceId: string, inboxId: string, action: "mark" | "clear"): Promise<void> {
+  if (INTROSPECTION_ONLY) return;
+  const scoped = () =>
+    supabase.from("inboxes")
+      .update({ last_error: action === "mark" ? loginRefusedMarker(Date.now()) : null })
+      .eq("id", inboxId)
+      .eq("workspace_id", workspaceId)
+      .eq("status", "active");
+  if (action === "clear") {
+    const { error } = await scoped().like("last_error", LOGIN_REFUSED_LIKE);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const { error: nullError } = await scoped().is("last_error", null);
+  if (nullError) throw new Error(nullError.message);
+  // Renew an older marker too, so its timestamp says when it was last refused.
+  const { error: renewError } = await scoped().like("last_error", LOGIN_REFUSED_LIKE);
+  if (renewError) throw new Error(renewError.message);
+}
+
 async function writeActivityLog(params: ActivityLogParams): Promise<void> {
   const row: Record<string, unknown> = {
     workspace_id: params.workspaceId,
@@ -8068,6 +8112,15 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
               },
             },
             sender_identity_status: { type: "string", enum: ["available", "reconnect_required", "unavailable"] },
+            status: {
+              type: "string",
+              description:
+                "Absent when the inbox is usable. \"reconnect_required\" or \"unavailable\": " +
+                "do not offer it as a choice; tell the user (see hint and reconnect_url). " +
+                "\"parked\": outside the plan's inbox cap.",
+            },
+            reconnect_url: { type: "string" },
+            hint: { type: "string" },
           },
           required: ["inbox_id", "email_address", "provider"],
           additionalProperties: true,
@@ -11282,6 +11335,11 @@ interface InboxRow {
   smtp_tls: boolean;
   smtp_security: "tls" | "starttls" | null;
   status: string;
+  /**
+   * Last provider failure the row recorded, or the refused-login marker
+   * (inbox-health.ts). Optional: a row cached by client-api may lack it.
+   */
+  last_error?: string | null;
   /** Optional HTML signature appended server-side on send. Plaintext (not secret). */
   signature_html: string | null;
   /** Optional plain-text signature appended server-side on send. Plaintext (not secret). */
@@ -11333,7 +11391,7 @@ const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
   "imap_host, imap_port, imap_tls, imap_security, imap_username, imap_password, " +
-  "smtp_host, smtp_port, smtp_tls, smtp_security, status, " +
+  "smtp_host, smtp_port, smtp_tls, smtp_security, status, last_error, " +
   "signature_html, signature_text, signature_enabled, " +
   "signature_reply_mode, signature_source, signature_updated_at, send_approval_required";
 
@@ -11501,10 +11559,12 @@ async function executeListInboxes(
   // missing. Only active entries get sender identities and capabilities.
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host, parked_at")
+    .select("id, email_address, display_name, provider, service, status, last_error, imap_host, smtp_host, parked_at")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
-    .eq("status", "active")
+    // 'error' rows too: listed after the active ones, flagged as needing a
+    // reconnect, so the user can learn which mailbox to fix (inbox-health.ts).
+    .in("status", ["active", "error"])
     .order("created_at", { ascending: true });
 
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
@@ -11562,10 +11622,32 @@ async function executeListInboxes(
     imap_host: string | null;
     smtp_host: string | null;
     parked_at?: string | null;
+    status?: string;
+    last_error?: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
-  const matchedRows = allRows.filter((row) => !inboxIsParked(row) && matchesInboxFilter(row, filter));
+  const matchedRows = allRows.filter((row) =>
+    !inboxIsParked(row) && row.status !== "error" && matchesInboxFilter(row, filter)
+  );
+  // Not parked and in 'error': connected, but no tool can use it until the
+  // user reconnects. No identities or capabilities, like a parked entry.
+  const erroredEntries = allRows
+    .filter((row) => !inboxIsParked(row) && row.status === "error" && matchesInboxFilter(row, filter))
+    .map((row) => {
+      const health = inboxHealthStatus(row, OUTLOOK_NO_MAILBOX_MESSAGE) ?? "reconnect_required";
+      const url = reconnectUrl(row.provider, row.id);
+      return {
+        inbox_id: row.id,
+        email_address: row.email_address,
+        display_name: row.display_name ?? row.email_address,
+        provider: row.provider,
+        service: row.service ?? null,
+        status: health,
+        ...(health === "reconnect_required" ? { reconnect_url: url } : {}),
+        hint: inboxHealthHint(health, url),
+      };
+    });
   const parkedEntries = allRows
     .filter((row) => inboxIsParked(row) && matchesInboxFilter(row, filter))
     .map((row) => ({
@@ -11624,12 +11706,19 @@ async function executeListInboxes(
       }
     }
     const access = inboxAccess(row);
+    // Active, but its last login was refused (inbox-health.ts). Still listed in
+    // full: the refusal may have been transient, and a call can still try it.
+    const health = inboxHealthStatus(row);
+    const healthUrl = health ? reconnectUrl(row.provider, row.id) : null;
     return {
       inbox_id: row.id,
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
       provider: row.provider,
       service: row.service ?? null,
+      ...(health && healthUrl
+        ? { status: health, reconnect_url: healthUrl, hint: inboxHealthHint(health, healthUrl) }
+        : {}),
       // Only on a partial connection: "send_only" or "receive_only". Every
       // other inbox does both, and an agent should not have to read a field on
       // each of them to learn that. See connection-access.ts.
@@ -11645,8 +11734,13 @@ async function executeListInboxes(
     };
   }));
 
-  // Active first, then parked, each in connection order.
-  const inboxes: Array<Record<string, unknown> & { inbox_id: string }> = [...activeEntries, ...parkedEntries];
+  // Active first, then those needing a reconnect, then parked, each in
+  // connection order.
+  const inboxes: Array<Record<string, unknown> & { inbox_id: string }> = [
+    ...activeEntries,
+    ...erroredEntries,
+    ...parkedEntries,
+  ];
 
   // A filter that selected none of several connected mailboxes is NOT the
   // onboarding case, and answering it with the onboarding prompt below is the
@@ -11839,7 +11933,7 @@ type InboxResolution =
   | { ok: true; inbox: InboxRow }
   | {
       ok: false;
-      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
       inboxes?: InboxRow[];
       conflict?: InboxSelectorConflict;
       /** reason "parked": the parked inbox(es) the call named or could have used. */
@@ -11884,7 +11978,11 @@ async function resolveInboxArg(
   // inbox). No-op when called outside an activity-log async context.
   if (resolved.ok) {
     const store = activityInboxStore.getStore();
-    if (store) store.inboxId = resolved.inbox.id;
+    if (store) {
+      store.inboxId = resolved.inbox.id;
+      store.inboxProvider = resolved.inbox.provider;
+      store.inboxLoginRefused = loginRefusedAt(resolved.inbox.last_error) !== null;
+    }
 
     // A receive-only or send-only inbox asked for the half it does not have.
     // Refused here, at resolution, rather than where the connection would be
@@ -12024,14 +12122,16 @@ async function resolveInboxArgInner(
 
   // Neither provided — auto-resolve only when exactly one inbox is accessible.
   // Parked inboxes are not accessible: one active inbox beside parked ones
-  // still auto-resolves to the active one.
+  // still auto-resolves to the active one. Rows in 'error' are fetched too, but
+  // only to be named as needing reconnection (inbox-health.ts): which inbox a
+  // call lands on is still decided by the active rows alone.
   let query = supabase
     .from("inboxes")
     .select(INBOX_SELECT_COLUMNS)
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .is("parked_at", null)
-    .eq("status", "active")
+    .in("status", ["active", "error"])
     .order("created_at", { ascending: true });
 
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
@@ -12041,18 +12141,23 @@ async function resolveInboxArgInner(
   const { data, error } = await query;
   if (error) return { ok: false, reason: "none" };
 
-  const rows = (data ?? []) as unknown as InboxRow[];
+  const fetched = (data ?? []) as unknown as InboxRow[];
+  const rows = fetched.filter((row) => row.status === "active");
+  const errored = fetched.filter((row) => row.status !== "active");
   if (rows.length === 1) return { ok: true, inbox: rows[0] };
   if (rows.length === 0) {
     // Nothing active, but parked inboxes exist: "no mailbox is connected"
     // would be false, and would send the user to connect one they already have.
     const parked = await listParkedInboxes(supabase, apiKey);
-    return parked.length > 0 ? { ok: false, reason: "parked", parked } : { ok: false, reason: "none" };
+    if (parked.length > 0) return { ok: false, reason: "parked", parked };
+    // Same for inboxes that are connected but need reconnecting.
+    return errored.length > 0 ? { ok: false, reason: "needs_reconnect", inboxes: errored } : { ok: false, reason: "none" };
   }
   // Carry the accessible inboxes back so the error can name them inline, sparing
   // the caller a separate inbox_list round-trip (which some MCP clients fail to
-  // surface on demand — see inboxResolutionError).
-  return { ok: false, reason: "ambiguous", inboxes: rows };
+  // surface on demand — see inboxResolutionError). The 'error' rows ride along
+  // so the error can say not to offer them.
+  return { ok: false, reason: "ambiguous", inboxes: [...rows, ...errored] };
 }
 
 /**
@@ -12063,7 +12168,7 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
     parked?: ParkedInboxMatch[];
@@ -12092,21 +12197,21 @@ function inboxResolutionError(
       // with an inbox_id — without having to discover and call inbox_list. That
       // separate tool is not always surfaced by a client's on-demand tool index,
       // which otherwise dead-ends every inbox-bound call (the "catch-22").
-      const inboxes = (failure.inboxes ?? []).map((ib) => ({
-        inbox_id: ib.id,
-        email_address: ib.email_address,
-        display_name: ib.display_name ?? null,
-        provider: ib.provider,
-      }));
-      const lines = inboxes
-        .map((ib) => `  • ${ib.email_address} — inbox_id: ${ib.inbox_id}`)
-        .join("\n");
-      text =
-        "Multiple inboxes are accessible, so inbox_id (or inbox) is required. " +
-        "Retry this same tool with one of the inbox_id values below — you do " +
-        "not need to call any other tool first:\n" + lines;
-      structuredContent = { inboxes };
+      // Inboxes that need reconnecting are split out and marked, so the model
+      // never offers one as a choice (inbox-health.ts, 2026-10-26).
+      const choice = buildInboxChoice(failure.inboxes ?? [], reconnectUrl, OUTLOOK_NO_MAILBOX_MESSAGE);
+      text = choice.text;
+      structuredContent = choice.structuredContent;
       errorCode = "inbox_ambiguous";
+      break;
+    }
+    case "needs_reconnect": {
+      // Every inbox the key can reach is in 'error'. "No mailbox is connected"
+      // would be false and would send the user to connect one they have.
+      const choice = allInboxesBrokenChoice(failure.inboxes ?? [], reconnectUrl, OUTLOOK_NO_MAILBOX_MESSAGE);
+      text = choice.text;
+      structuredContent = choice.structuredContent;
+      errorCode = "inbox_needs_reconnect";
       break;
     }
     case "selector_conflict": {
@@ -35283,6 +35388,21 @@ async function handleToolsCall(
     // useless as a filter for operators asking "which errors can I read?".
     ...(logErrorDetails ? { errorDetails: logErrorDetails } : {}),
   })]);
+  // Keep the refused-login marker true to the last call (inbox-health.ts): an
+  // auth failure on a password mailbox writes it, so lists stop offering that
+  // inbox; a success on a marked inbox clears it. Most calls queue nothing.
+  const healthWrite = logCtx.inboxId
+    ? inboxHealthWrite({
+      logStatus,
+      logErrorCode,
+      provider: logCtx.inboxProvider,
+      rowHadMarker: logCtx.inboxLoginRefused === true,
+    })
+    : null;
+  if (healthWrite && logCtx.inboxId) {
+    const healthInboxId = logCtx.inboxId;
+    postResponseWrites.push(["inbox_health", () => writeInboxHealth(apiKey.workspace_id, healthInboxId, healthWrite)]);
+  }
   // Settle the meter. With a reservation this finalises it (success books the
   // row, anything else releases it); without one, a successful call writes a
   // bare row and a failed or rate-limited call writes nothing.
@@ -36776,7 +36896,7 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  */
 function automationInboxFailureMessage(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
     parked?: ParkedInboxMatch[];
@@ -36789,14 +36909,28 @@ function automationInboxFailureMessage(
       return text.charAt(0).toLowerCase() + text.slice(1);
     }
     case "ambiguous": {
-      const listed = (failure.inboxes ?? [])
+      // Inboxes that need reconnecting are not offered (inbox-health.ts).
+      const all = failure.inboxes ?? [];
+      const listed = all
+        .filter((ib) => inboxHealthStatus(ib, OUTLOOK_NO_MAILBOX_MESSAGE) === null)
         .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
         .join("; ");
+      const broken = all
+        .filter((ib) => inboxHealthStatus(ib, OUTLOOK_NO_MAILBOX_MESSAGE) !== null)
+        .map((ib) => ib.email_address);
       return (
         "several inboxes are accessible, so this action needs one named. " +
-        `Retry passing inbox_id (or inbox): ${listed}.`
+        `Retry passing inbox_id (or inbox): ${listed}.` +
+        (broken.length > 0
+          ? ` Do not offer ${broken.join(", ")}: it needs reconnecting at ${APP_URL}/dashboard/inboxes .`
+          : "")
       );
     }
+    case "needs_reconnect":
+      return (
+        `${(failure.inboxes ?? []).map((ib) => ib.email_address).join(", ")} needs reconnecting ` +
+        `before it can be automated. Reconnect it at ${APP_URL}/dashboard/inboxes .`
+      );
     case "selector_conflict":
       return failure.conflict
         ? inboxSelectorConflictMessage(failure.conflict)
