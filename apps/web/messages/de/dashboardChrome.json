@@ -3,6 +3,7 @@
     "connectedSuccess": "{provider}-Postfach erfolgreich verbunden.",
     "inboxLimitReached": "Sie haben das Postfach-Limit im Tarif {plan} erreicht. Upgraden Sie, um weitere Postfächer mit demselben Agenten zu verbinden.",
     "tokenExchangeFailed": "Das Postfach konnte nicht verbunden werden. Der Token-Austausch mit dem Anbieter ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "gmailOauthUnavailable": "Die Anmeldung mit Google ist für ein neues Gmail-Postfach in diesem Workspace nicht verfügbar. Verbinden Sie Gmail stattdessen mit einem App-Passwort, das in jedem Tarif funktioniert.",
     "connectionCancelled": "Verbindung des Postfachs abgebrochen.",
     "adminConsentRequired": "Ihre Organisation muss den Postfachzugriff freigeben, bevor Sie Outlook verbinden können. Microsoft erlaubt Mitarbeitenden nicht, das selbst zu genehmigen.",
     "adminConsentAction": "Link für Ihre IT-Abteilung holen",

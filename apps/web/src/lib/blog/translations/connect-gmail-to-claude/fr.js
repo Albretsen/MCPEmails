@@ -10,7 +10,7 @@ Voici le guide ciblé, dédié uniquement à Gmail. Si vous gérez plusieurs bo�
 ## Ce dont vous aurez besoin
 
 - Un compte **Gmail ou Google Workspace**.
-- Une version de **Claude qui prend en charge les connecteurs personnalisés** : claude.ai avec un forfait payant, ou Claude Desktop. (Les connecteurs sont le moyen par lequel Claude communique avec les serveurs MCP.)
+- **Claude** sur le web (claude.ai) ou dans Claude Desktop. Tous les forfaits Claude peuvent ajouter des connecteurs personnalisés, le moyen par lequel Claude communique avec les serveurs MCP. Le forfait Free en autorise un, Pro et Max n'ont pas de limite.
 - Un compte **MCPEmails** gratuit. Aucune carte bancaire, une boîte connectée pour toujours. [Commencez gratuitement](/signup) et gardez cet onglet ouvert.
 
 MCPEmails est le pont au milieu : il parle le Model Context Protocol avec Claude d'un côté et communique avec Gmail de l'autre en IMAP et SMTP. Si vous voulez comprendre ce que cela signifie, consultez [ce qu'est réellement un serveur e-mail MCP](/blog/what-is-an-mcp-email-server).
@@ -33,15 +33,19 @@ Un administrateur Google Workspace peut désactiver les mots de passe d'applicat
 
 Pointez maintenant Claude vers le même endpoint. Comme Claude est un client OAuth, vous n'avez besoin d'aucune clé API : vous collez une URL et approuvez une connexion.
 
-1. Dans **claude.ai ou Claude Desktop**, ouvrez **Paramètres → Connecteurs**.
-2. Cliquez sur **Ajouter un connecteur personnalisé**.
-3. Collez ceci comme URL du connecteur, puis cliquez sur **Ajouter** :
+1. Dans **claude.ai ou Claude Desktop**, ouvrez **Personnaliser → Connecteurs**.
+2. Cliquez sur **+ Ajouter**, puis sur **Ajouter un connecteur personnalisé**.
+3. Nommez-le MCPEmails et collez ceci comme URL du connecteur :
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Cliquez sur **Se connecter**, identifiez-vous avec votre compte MCPEmails, et approuvez les portées que vous souhaitez : \`read:email\`, \`send:email\`, ou les deux.
+4. Cliquez sur **Continuer**, vérifiez les paramètres de connexion détectés par Claude (les valeurs par défaut conviennent) et cliquez sur **Ajouter**.
+5. Identifiez-vous avec votre compte MCPEmails et approuvez les portées que vous souhaitez : \`read:email\`, \`send:email\`, ou les deux.
+6. Dans une conversation, cliquez sur **+** en bas à gauche, choisissez **Connecteurs** et activez MCPEmails.
+
+Sur un forfait Team ou Enterprise, un propriétaire ajoute le connecteur une fois sous **Paramètres de l’organisation → Connecteurs**. Les membres ouvrent ensuite **Personnaliser → Connecteurs**, trouvent MCPEmails et cliquent sur **Connecter**.
 
 Voilà tout ce qu'il faut faire côté client. La connexion est limitée exactement à ce que vous avez approuvé, et vous pouvez la révoquer depuis le tableau de bord en un clic. Si vous préférez comprendre l'approche par clé API (pour les clients sans OAuth intégré, comme Cline ou un script personnalisé), lisez [OAuth ou clés API pour l'accès e-mail par IA](/blog/oauth-vs-api-keys-ai-email-access). Vous connectez aussi une autre boîte ? La [configuration pas à pas des e-mails dans Claude](/blog/connect-claude-to-email) couvre Outlook, iCloud, Fastmail et IMAP.
 
@@ -93,7 +97,7 @@ Non. Les e-mails sont récupérés en direct depuis Gmail à chaque requête et 
 Oui, si vous accordez la portée \`send:email\`. Les envois partent via Gmail comme des messages normaux depuis votre propre compte. Accordez la lecture seule si vous préférez que Claude n'envoie jamais.
 
 **Est-ce que cela fonctionne avec le forfait Claude gratuit ?**
-Les connecteurs personnalisés nécessitent un forfait Claude qui les prend en charge (claude.ai payant ou Claude Desktop). Côté MCPEmails, c'est gratuit et sans carte bancaire.
+Oui. Le forfait Free de Claude permet d'ajouter un connecteur personnalisé, ce qui suffit pour MCPEmails, et Pro et Max n'ont pas de limite. Côté MCPEmails, c'est gratuit et sans carte bancaire.
 
 **MCPEmails verra-t-il mon mot de passe Google ?**
 Non. Vous collez un mot de passe d'application, un identifiant distinct généré par Google et révocable à tout moment. Votre mot de passe Google habituel n'est jamais saisi nulle part dans MCPEmails.

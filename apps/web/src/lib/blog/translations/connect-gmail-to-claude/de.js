@@ -11,7 +11,7 @@ Dies ist die Anleitung nur für Gmail. Wenn Sie mehrere Postfächer oder einen a
 ## Was Sie brauchen
 
 - Ein Konto bei **Gmail oder Google Workspace**.
-- Eine Version von **Claude, die benutzerdefinierte Konnektoren unterstützt**: claude.ai mit einem kostenpflichtigen Tarif oder Claude Desktop. (Über Konnektoren spricht Claude mit MCP-Servern.)
+- **Claude** im Web (claude.ai) oder in Claude Desktop. Jeder Claude-Tarif kann benutzerdefinierte Konnektoren hinzufügen, über die Claude mit MCP-Servern spricht. Der Free-Tarif erlaubt einen, Pro und Max haben keine Begrenzung.
 - Ein kostenloses **MCPEmails**-Konto. Keine Kreditkarte, ein verbundenes Postfach, dauerhaft. [Kostenlos starten](/signup) und diesen Tab geöffnet lassen.
 
 MCPEmails ist die Brücke dazwischen: Auf der einen Seite spricht es das Model Context Protocol mit Claude, auf der anderen spricht es mit Gmail über IMAP und SMTP. Wenn Sie den Hintergrund dazu wissen möchten, lesen Sie, [was ein MCP-E-Mail-Server eigentlich ist](/blog/what-is-an-mcp-email-server).
@@ -34,15 +34,19 @@ Ein Google-Workspace-Administrator kann App-Passwörter für die gesamte Domain 
 
 Richten Sie Claude jetzt auf denselben Endpunkt aus. Da Claude ein OAuth-Client ist, brauchen Sie überhaupt keinen API-Schlüssel: Sie fügen eine URL ein und bestätigen eine Anmeldung.
 
-1. Öffnen Sie in **claude.ai oder Claude Desktop** **Einstellungen → Konnektoren**.
-2. Klicken Sie auf **Benutzerdefinierten Konnektor hinzufügen**.
-3. Fügen Sie dies als Konnektor-URL ein und klicken Sie auf **Hinzufügen**:
+1. Öffnen Sie in **claude.ai oder Claude Desktop** **Anpassen → Konnektoren**.
+2. Klicken Sie auf **+ Hinzufügen** und dann auf **Benutzerdefinierten Konnektor hinzufügen**.
+3. Nennen Sie ihn MCPEmails und fügen Sie dies als Konnektor-URL ein:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Klicken Sie auf **Verbinden**, melden Sie sich mit Ihrem MCPEmails-Konto an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+4. Klicken Sie auf **Weiter**, prüfen Sie die erkannten Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie auf **Hinzufügen**.
+5. Melden Sie sich mit Ihrem MCPEmails-Konto an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+6. Klicken Sie in einem Chat unten links auf **+**, wählen Sie **Konnektoren** und schalten Sie MCPEmails ein.
+
+In einem Team- oder Enterprise-Tarif fügt ein Owner den Konnektor einmal unter **Organisationseinstellungen → Konnektoren** hinzu. Mitglieder öffnen dann **Anpassen → Konnektoren**, suchen MCPEmails und klicken auf **Verbinden**.
 
 Das ist die gesamte Client-Seite. Die Verbindung ist genau auf das beschränkt, was Sie genehmigt haben, und Sie können sie mit einem Klick im Dashboard widerrufen. Wenn Sie den Weg über API-Schlüssel verstehen möchten (für Clients ohne eingebautes OAuth, etwa Cline oder ein eigenes Skript), lesen Sie [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access). Sie möchten auch ein anderes Postfach verbinden? Die [Schritt-für-Schritt-Anleitung für E-Mail in Claude](/blog/connect-claude-to-email) behandelt Outlook, iCloud, Fastmail und IMAP.
 
@@ -94,7 +98,7 @@ Nein. E-Mails werden bei jeder Anfrage live von Gmail abgerufen und direkt verwo
 Ja, wenn Sie die Berechtigung \`send:email\` gewähren. Gesendet wird über Gmail als normale Nachricht von Ihrem eigenen Konto. Gewähren Sie nur Lesezugriff, wenn Claude nie senden soll.
 
 **Funktioniert das mit dem kostenlosen Claude-Tarif?**
-Benutzerdefinierte Konnektoren erfordern einen Claude-Tarif, der sie unterstützt (claude.ai kostenpflichtig oder Claude Desktop). Die Seite von MCPEmails ist kostenlos und ohne Karte.
+Ja. Im Free-Tarif von Claude können Sie einen benutzerdefinierten Konnektor hinzufügen, und das reicht für MCPEmails. Pro und Max haben keine Begrenzung. Die Seite von MCPEmails ist kostenlos und ohne Karte.
 
 **Sieht MCPEmails mein Google-Passwort?**
 Nein. Sie fügen ein App-Passwort ein, eine separate Zugangsberechtigung, die Google erzeugt und die Sie jederzeit widerrufen können. Ihr normales Google-Passwort wird nirgends in MCPEmails eingegeben.

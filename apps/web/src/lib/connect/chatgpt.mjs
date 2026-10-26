@@ -18,18 +18,18 @@
  * namespace: that namespace is serialised into every marketing page (see
  * MARKETING_NAMESPACES in src/i18n/request.ts), and this is page-only copy.
  *
- * WHAT IT CLAIMS, and where each claim is from (src/lib/clients/content/en/
- * chatgpt.json, which is /docs/chatgpt, and the connect-chatgpt-to-email post):
- *   - custom MCP connector behind developer mode, under Settings, Apps and
- *     Connectors, Advanced settings
- *   - connector URL https://mcpemails.com/api/mcp, OAuth authentication
- *   - developer mode on chatgpt.com with Plus, Pro, Business, Enterprise, Edu
- *   - switched on per chat from the + menu
+ * WHAT IT CLAIMS (OpenAI's help pages, checked 2026-10-26; /docs/chatgpt and
+ * the connect-chatgpt-to-email post say the same):
+ *   - a custom MCP server added on chatgpt.com (not the mobile app) under
+ *     Plugins, Personal, Add, Add custom MCP server; no developer mode needed
+ *   - server URL https://mcpemails.com/api/mcp, OAuth authentication
+ *   - available on ChatGPT Go and paid plans (never claim Free)
+ *   - used by typing @ in a chat and picking MCPEmails, once per message
  *   - mail fetched live, never stored
  *
  * WHEN THE CHATGPT APP DIRECTORY LISTS US. Set CHATGPT_DIRECTORY_LISTING_URL to
  * the listing's URL. The block then shows the `directory*` copy (install the
- * app from the directory) instead of the developer-mode steps, links to the
+ * app from the directory) instead of the custom-server steps, links to the
  * listing, and the FAQ answer switches to `directoryFaqA`. Every locale already
  * carries those keys. Re-read them against the live listing before flipping it.
  */

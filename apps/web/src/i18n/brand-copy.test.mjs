@@ -44,6 +44,7 @@ const ALLOWED = [
   /--transport http mcpemails\b/g, // CLI server name
   /\b(?:codex|openclaw) mcp (?:add|login|logout|remove|get|show|status) mcpemails\b/g, // CLI server name (Codex, OpenClaw)
   /\\?"mcpemails\\?"\s*:/g, // server key in a JSON config sample
+  /\/mcp auth mcpemails\b/g, // Gemini CLI sign-in command for the server named above
 ];
 
 const BAD = /MCP[ -]Emails|(?<![\w./@-])[Mm]cpemails(?![\w/@]|\.\w)/g;

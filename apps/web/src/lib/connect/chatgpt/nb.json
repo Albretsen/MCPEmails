@@ -1,18 +1,18 @@
 {
   "eyebrow": "ChatGPT",
   "title": "Bruk {provider} i ChatGPT",
-  "sub": "ChatGPT når {provider} gjennom en egendefinert MCP-kobling. Det krever utviklermodus, som fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu.",
+  "sub": "ChatGPT når {provider} gjennom en egendefinert MCP-server, som du legger til på chatgpt.com med ChatGPT Go eller et betalt abonnement.",
   "steps": [
     "Koble {provider} til MCPEmails med stegene over.",
-    "I ChatGPT åpner du Settings, Apps and Connectors, Advanced settings, og slår på utviklermodus.",
-    "I Apps and Connectors klikker du Create, limer inn <code>https://mcpemails.com/api/mcp</code> som koblings-URL, velger OAuth og logger inn hos MCPEmails.",
-    "I hver nye samtale klikker du <b>+</b>, velger utviklermodus og velger koblingen din."
+    "På chatgpt.com åpner du Plugins, Personal, klikker Add og så Add custom MCP server.",
+    "Gi den navnet MCPEmails, lim inn <code>https://mcpemails.com/api/mcp</code> under Connection, velg OAuth, bekreft, klikk Create as a plugin og logg inn hos MCPEmails.",
+    "I en samtale skriver du <b>@</b> og velger MCPEmails. Gjør det igjen når et oppfølgingsspørsmål trenger e-posten din."
   ],
   "docsLink": "Fullstendig oppsettguide for ChatGPT",
   "blogLink": "Slik kobler du ChatGPT til e-posten din",
   "faqQ": "Kan ChatGPT lese e-posten min i {provider}?",
   "faqQMailName": "Kan ChatGPT lese e-posten min i {provider}?",
-  "faqA": "Ja, når {provider} er koblet til MCPEmails. Legg til en egendefinert MCP-kobling i ChatGPT med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Egendefinerte koblinger krever utviklermodus, som fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
+  "faqA": "Ja, når {provider} er koblet til MCPEmails. Legg til en egendefinert MCP-server på chatgpt.com med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Det fungerer med ChatGPT Go og betalte abonnementer. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
   "directorySub": "ChatGPT når {provider} gjennom Any Mailbox-appen fra MCPEmails.",
   "directorySteps": [
     "Koble {provider} til MCPEmails med stegene over.",

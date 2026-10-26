@@ -39,13 +39,13 @@ const hostsIn = (text) =>
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const copy = (locale) => JSON.parse(readFileSync(path.join(here, 'chatgpt', `${locale}.json`), 'utf8'));
-const docs = (locale) =>
-  JSON.parse(readFileSync(path.join(here, '../clients/content', locale, 'chatgpt.json'), 'utf8'));
 const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
-const PLAN_LIST = /Plus.{1,3}Pro.{1,3}Business.{1,3}Enterprise.{1,6}Edu/;
-// English UI labels in most locales, as /docs/chatgpt writes them; German
-// /docs/chatgpt uses the German labels, and so does this copy.
-const MENU_PATH = /Settings[,、]\s*Apps and Connectors[,、]\s*Advanced settings|Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen/;
+// OpenAI's help pages, checked 2026-10-26: custom MCP servers are added on
+// ChatGPT Go and paid plans, under Plugins, Personal, Add, with no developer
+// mode. Menu labels stay in English in every locale.
+const GO_PLAN = /ChatGPT Go\b/;
+const MENU_PATH = /Plugins[,、]\s*Personal/;
+const STALE = /developer mode|Developer mode|Entwicklermodus|mode développeur|modo desarrollador|utviklermodus|开发者模式|Plus.{1,3}Pro.{1,3}Business/;
 const MCP_URL = 'https://mcpemails.com/api/mcp';
 
 test('the copy covers every routed locale', () => {
@@ -94,23 +94,19 @@ test('every locale has the same keys, filled, and actually translated', () => {
   }
 });
 
-test('the claims match /docs/chatgpt in every locale', () => {
+test('the claims match how ChatGPT adds a custom MCP server today, in every locale', () => {
   for (const locale of CHATGPT_LOCALES) {
     const c = copy(locale);
-    const answer = docs(locale).hero.answer;
-    // The plan list is the one /docs/chatgpt states, in the same order.
-    assert.ok(PLAN_LIST.test(answer), `${locale}: /docs/chatgpt lost its plan list`);
     for (const key of ['sub', 'faqA']) {
-      assert.ok(PLAN_LIST.test(c[key]), `${locale} ${key} must name the docs' plans`);
+      assert.ok(GO_PLAN.test(c[key]), `${locale} ${key} must say ChatGPT Go and paid plans`);
       assert.ok(hostsIn(c[key]).some((h) => h === 'chatgpt.com'), `${locale} ${key} must say it is on chatgpt.com`);
     }
+    for (const v of [c.sub, c.faqA, ...c.steps]) assert.ok(!STALE.test(v), `${locale}: stale developer-mode or plan-list claim`);
     assert.deepEqual(c.steps.flatMap(codeUrlsIn), [MCP_URL], `${locale}: connector URL`);
     assert.deepEqual(urlsIn(c.faqA), [MCP_URL], `${locale}: FAQ connector URL`);
     assert.ok(c.steps.some((s) => s.includes('OAuth')) && c.faqA.includes('OAuth'), `${locale}: OAuth`);
-    // The menu path is written the way /docs/chatgpt writes it in that locale.
     assert.ok(c.steps.some((s) => MENU_PATH.test(s)), locale);
-    assert.ok(MENU_PATH.test(answer), locale);
-    assert.ok(c.steps.some((s) => s.includes('<b>+</b>')), `${locale}: the per-chat + menu step`);
+    assert.ok(c.steps.some((s) => s.includes('<b>@</b>')), `${locale}: the per-message @ step`);
   }
 });
 

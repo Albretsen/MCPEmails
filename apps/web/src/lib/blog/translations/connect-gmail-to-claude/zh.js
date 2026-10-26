@@ -10,7 +10,7 @@ const translation = {
 ## 你需要准备
 
 - 一个 **Gmail 或 Google Workspace** 账户。
-- 一个**支持自定义连接器的 Claude** 版本：付费方案下的 claude.ai，或 Claude Desktop。（连接器是 Claude 与 MCP 服务器对话的方式。）
+- 网页版 **Claude**（claude.ai）或 Claude Desktop。所有 Claude 方案都可以添加自定义连接器（连接器是 Claude 与 MCP 服务器对话的方式）。Free 方案最多一个，Pro 和 Max 不限数量。
 - 一个免费的 **MCPEmails** 账户。无需信用卡，可永久连接一个邮箱。[免费开始](/signup)，并保持此标签页打开。
 
 MCPEmails 是中间的桥梁：它一侧用 Model Context Protocol 与 Claude 对话，另一侧通过 IMAP 和 SMTP 与 Gmail 通信。如果你想了解这意味着什么的背景知识，请参阅[MCP 邮件服务器究竟是什么](/blog/what-is-an-mcp-email-server)。
@@ -33,15 +33,19 @@ Google Workspace 管理员可以为整个域关闭应用专用密码。如果你
 
 现在把 Claude 指向同一个端点。由于 Claude 是一个 OAuth 客户端，你完全不需要 API 密钥：只需粘贴一个 URL 并批准一次登录。
 
-1. 在 **claude.ai 或 Claude Desktop** 中，打开**设置 → 连接器（Settings → Connectors）**。
-2. 点击**添加自定义连接器（Add custom connector）**。
-3. 把以下内容粘贴为连接器 URL，然后点击**添加（Add）**：
+1. 在 **claude.ai 或 Claude Desktop** 中，打开**自定义 → 连接器（Customize → Connectors）**。
+2. 点击 **+ Add**，然后选择**添加自定义连接器（Add custom connector）**。
+3. 将其命名为 MCPEmails，并把以下内容粘贴为连接器 URL：
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. 点击**连接（Connect）**，用你的 MCPEmails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
+4. 点击**继续（Continue）**，检查 Claude 检测到的登录设置（保持默认即可），然后点击**添加（Add）**。
+5. 用你的 MCPEmails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
+6. 在对话中点击左下角的 **+**，选择**连接器（Connectors）**，然后打开 MCPEmails。
+
+在 Team 或 Enterprise 方案中，由 Owner 在 **Organization settings → Connectors** 下添加一次连接器。之后成员打开 **Customize → Connectors**，找到 MCPEmails 并点击 **Connect**。
 
 这就是客户端的全部工作。该连接的范围严格限定于你所批准的内容，你可以在控制台中一键撤销。如果你更想了解 API 密钥的方式（适用于没有内置 OAuth 的客户端，如 Cline 或自定义脚本），请阅读[AI 邮件访问中 OAuth 与 API 密钥的对比](/blog/oauth-vs-api-keys-ai-email-access)。还要连接其他邮箱？[Claude 邮箱分步设置指南](/blog/connect-claude-to-email)涵盖 Outlook、iCloud、Fastmail 和 IMAP。
 
@@ -93,7 +97,7 @@ https://mcpemails.com/api/mcp
 可以，前提是你授予了 \`send:email\` 范围。发送通过 Gmail 以来自你自己账户的普通邮件形式进行。如果你更希望 Claude 永不发送，可只授予只读权限。
 
 **这在免费版 Claude 方案下能用吗？**
-自定义连接器需要一个支持它们的 Claude 方案（付费版 claude.ai 或 Claude Desktop）。MCPEmails 这一侧是免费的，无需信用卡。
+可以。Claude 的 Free 方案可以添加一个自定义连接器，足够用于 MCPEmails，Pro 和 Max 不限数量。MCPEmails 这一侧是免费的，无需信用卡。
 
 **MCPEmails 会看到我的 Google 密码吗？**
 不会。你粘贴的是应用专用密码，这是 Google 生成、可以随时吊销的独立凭据。你的常规 Google 密码从不会在 MCPEmails 的任何地方输入。

@@ -1,9 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { resolveEffectiveWorkspacePlan } from '@/lib/plans/effective-plan';
+import {
+  alertGmailOAuthCapClosed,
+  decideGmailOAuthAccess,
+  loadGmailOAuthCapState,
+} from '@/lib/oauth/gmail-oauth-gate';
 
 /**
  * GET /auth/gmail
@@ -27,7 +33,14 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
  *                    user's active workspace, its email address is passed to
  *                    Google as `login_hint` so the account chooser pre-selects
  *                    the correct account. Used by the deep link the MCP server
- *                    surfaces to agents when an inbox's token is revoked.
+ *                    surfaces to agents when an inbox's token is revoked, and
+ *                    by the dashboard's Reconnect button.
+ *
+ * Gate (src/lib/oauth/gmail-oauth-gate.ts): a reconnect of an existing Gmail
+ * OAuth inbox always proceeds. A NEW connection needs Pro or Business and
+ * enough slots left on Google's 100-user lifetime cap for the unverified
+ * client; otherwise the user goes back to the dashboard with
+ * ?error=gmail_oauth_unavailable, where the app password path is offered.
  *
  * References:
  *   https://developers.google.com/identity/protocols/oauth2/web-server
@@ -88,6 +101,27 @@ export async function GET(request: Request) {
       .eq('provider', 'gmail')
       .maybeSingle();
     loginHint = inbox?.email_address ?? null;
+  }
+
+  // New connections only: Pro or Business, and the unverified client's
+  // lifetime cap not nearly spent. A reconnect (loginHint resolved to an
+  // existing Gmail inbox here) uses no new slot and is never refused.
+  if (!loginHint) {
+    const serviceClient = createServiceRoleClient();
+    const [plan, cap] = await Promise.all([
+      resolveEffectiveWorkspacePlan(supabase, workspaceId),
+      loadGmailOAuthCapState(serviceClient),
+    ]);
+    const access = decideGmailOAuthAccess({
+      plan: plan.resolved ? plan.plan : null,
+      capClosed: cap.closed,
+    });
+    if (!access.allowed) {
+      if (access.refusal === 'cap') after(() => alertGmailOAuthCapClosed(serviceClient, cap).then(() => undefined));
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?error=gmail_oauth_unavailable`
+      );
+    }
   }
 
   // Generate a 32-byte cryptographically random state nonce.

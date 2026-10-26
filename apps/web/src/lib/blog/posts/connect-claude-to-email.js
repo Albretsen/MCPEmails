@@ -19,7 +19,7 @@ There is no code to write, no SDK to install, and no API key when you connect th
 
 ## What you need
 
-- A **Claude plan or app that supports custom connectors**.
+- **Claude** on the web (claude.ai) or in Claude Desktop. Every Claude plan can add custom connectors: Free allows one, Pro and Max have no limit.
 - A free **MCPEmails** account: [create one here](/signup).
 - One email inbox. Outlook connects with Sign in with Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho, and most other providers use an app-specific password.
 
@@ -55,15 +55,19 @@ Need provider-by-provider help? See the [two-minute multi-provider setup guide](
 
 In claude.ai or Claude Desktop:
 
-1. Open **Settings → Connectors**.
-2. Choose **Add custom connector**.
-3. Paste this URL:
+1. Open **Customize → Connectors**.
+2. Click **+ Add**, then **Add custom connector**.
+3. Name it MCPEmails and paste this URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Select **Connect**, sign in to MCPEmails, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+4. Click **Continue**, review the sign-in settings Claude detected (the defaults are fine), and click **Add**.
+5. Sign in to MCPEmails and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+6. In a chat, click **+** at the lower left, choose **Connectors** and switch MCPEmails on.
+
+On a Team or Enterprise plan, an Owner adds the connector once under **Organization settings → Connectors**. Members then open **Customize → Connectors**, find MCPEmails and click **Connect**.
 
 That is the entire Claude setup. OAuth limits the connection to the scopes you approve, and you can revoke it from MCPEmails whenever you want. If you use a client without OAuth support, use a scoped API key instead; [OAuth vs. API keys](/blog/oauth-vs-api-keys-ai-email-access) explains that path. For Claude-specific problems, see the [Claude setup page](/docs/claude).
 

@@ -100,10 +100,10 @@
       "id": "assistant-sees-nothing",
       "title": "Connected, but the assistant sees no mail",
       "summary": "The mailbox is connected, but your assistant says it has no email tools or finds nothing.",
-      "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list",
+      "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list plugin @",
       "steps": [
         "Open Inboxes in the dashboard and check that the mailbox is listed without an error. If it shows one, reconnect it.",
-        "Start a new chat after adding the connector. In ChatGPT, also choose Developer mode and the MCPEmails app from the + menu in every new chat.",
+        "Start a new chat after adding the connector. In Claude, check that MCPEmails is switched on under + and Connectors. In ChatGPT, type @ and pick MCPEmails, and @mention it again when a follow-up needs your mail.",
         "Authorize the connector with the same MCPEmails account that holds the mailbox.",
         "Your assistant only sees the tools your connector or API key is scoped for. If you left a scope unticked, remove the connector and add it again.",
         "Ask the assistant to list your inboxes first. Mail is fetched when the assistant asks for it, so nothing arrives on its own."

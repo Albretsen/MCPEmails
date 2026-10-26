@@ -3,7 +3,8 @@ import { after } from 'next/server';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { decideProFeatureAccess, PRO_FEATURES_PUBLIC_SWITCH } from '@/lib/plans/pro-features';
+import { decideProFeatureAccess, isProFeaturePlan, PRO_FEATURES_PUBLIC_SWITCH } from '@/lib/plans/pro-features';
+import { decideGmailOAuthAccess, loadGmailOAuthCapState } from '@/lib/oauth/gmail-oauth-gate';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
@@ -894,6 +895,17 @@ export default async function DashboardPage({ params, searchParams }) {
     plan: effectiveWorkspacePlan?.plan ?? null,
     ...proGateSwitches,
   });
+  // Gmail via Google sign-in for NEW connections (src/lib/oauth/gmail-oauth-gate.ts):
+  // Pro or Business only, and only while the unverified Google client has
+  // slots left. The cap is read only for a plan that could pass, so Free and
+  // Personal dashboards pay no extra query. Reconnects are not affected.
+  const gmailOAuthPlan = effectiveWorkspacePlan?.plan ?? null;
+  const gmailOAuthAccess = decideGmailOAuthAccess({
+    plan: gmailOAuthPlan,
+    capClosed: isProFeaturePlan(gmailOAuthPlan)
+      ? (await loadGmailOAuthCapState(createServiceRoleClient())).closed
+      : true,
+  });
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -1108,6 +1120,9 @@ export default async function DashboardPage({ params, searchParams }) {
         referralEnabled,
         // The Pro feature gate for this workspace: { visible, allowed }.
         proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
+        // Whether the connect modal offers "Prefer to sign in with Google?"
+        // for a new Gmail inbox.
+        gmailOAuthAllowed: gmailOAuthAccess.allowed,
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,

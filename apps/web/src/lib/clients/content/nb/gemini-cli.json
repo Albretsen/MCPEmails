@@ -17,7 +17,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth oppdages automatisk",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Legg til én oppføring under mcpServers i ~/.gemini/settings.json med feltet httpUrl satt til https://mcpemails.com/api/mcp. Ved første tilkobling finner CLI-en OAuth-metadataene og åpner innloggingen i nettleseren av seg selv."
+    "answer": "Legg til én oppføring under mcpServers i ~/.gemini/settings.json med feltet httpUrl satt til https://mcpemails.com/api/mcp. Ved første tilkobling finner CLI-en OAuth-metadataene og åpner innloggingen i nettleseren av seg selv. Eller kjør gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp og deretter /mcp auth mcpemails for å logge inn."
   },
   "method": {
     "title": "Slik kobler Gemini CLI seg til: OAuth, ingen API-nøkkel",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Legg til serveren",
-      "p": "Legg til oppføringen nedenfor under <code>mcpServers</code>. Feltet for en Streamable HTTP-server her er <code>httpUrl</code>."
+      "p": "Legg til oppføringen nedenfor under <code>mcpServers</code>. Feltet for en Streamable HTTP-server her er <code>httpUrl</code>. Eller legg den til på én linje: <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Koble til",
-      "p": "Ved første tilkobling finner CLI-en OAuth automatisk fra servermetadataene og åpner innloggingen i nettleseren. Godkjenn tilgangene du vil at CLI-en skal ha."
+      "p": "Ved første tilkobling finner CLI-en OAuth automatisk fra servermetadataene og åpner innloggingen i nettleseren. Godkjenn tilgangene du vil at CLI-en skal ha. Du kan når som helst logge inn ved å kjøre <code>/mcp auth mcpemails</code> i CLI-en."
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "En CLI på en delt maskin eller en maskin uten skjerm bør heller bruke nøkkelveien",
       "p": "Nettleserflyten trenger en nettleser. På en byggeagent eller en delt maskin er det ærlige oppsettet en bearer-API-nøkkel avgrenset til nøyaktig det automatiseringen skal gjøre, lagret i miljøet i stedet for i en innstillingsfil som committes."
+    },
+    {
+      "h": "Gratis- og Google One-kontoer bruker nå Antigravity CLI",
+      "p": "Siden 18. juni 2026 har Google flyttet kontoer på gratisnivået og Google One-kontoer fra Gemini CLI til Antigravity CLI. Der skriver du <code>/mcp</code> for å åpne MCP-behandleren, eller legger serveren til i <code>mcp_config.json</code> med feltet <code>serverUrl</code>."
     }
   ],
   "limits": [

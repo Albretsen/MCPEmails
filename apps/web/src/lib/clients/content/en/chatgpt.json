@@ -12,11 +12,11 @@
     "eyebrow": "ChatGPT + email",
     "titleLine1": "Connect your inbox to ChatGPT",
     "titleLine2": "as a custom MCP connector",
-    "lead": "Turn on developer mode, create a connector pointing at one URL, and ChatGPT can read, search, send, reply, forward, schedule and organize your real mail.",
+    "lead": "Add a custom MCP server that points at one URL, and ChatGPT can read, search, send, reply, forward, schedule and organize your real mail.",
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "In ChatGPT, turn on developer mode under Settings, Apps and Connectors, Advanced settings. Create a connector, paste https://mcpemails.com/api/mcp as the connector URL, choose OAuth, and authorize with MCPEmails. Developer mode works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu, and in each chat you switch it on from the + menu."
+    "answer": "On chatgpt.com, open Plugins, Personal, Add, then Add custom MCP server. Name it MCPEmails, paste https://mcpemails.com/api/mcp under Connection, choose OAuth, tick the confirmation box, click Create as a plugin and sign in with MCPEmails. Custom MCP servers can be added on Go and paid plans. In a chat, type @ and pick MCPEmails."
   },
   "method": {
     "title": "How ChatGPT connects: OAuth, no API key",
@@ -28,26 +28,26 @@
       "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
-      "h": "Turn on developer mode",
-      "p": "Open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode."
+      "h": "Open Add custom MCP server",
+      "p": "On chatgpt.com, open <b>Plugins</b>, then <b>Personal</b>, click <b>Add</b> at the top right and choose <b>Add custom MCP server</b>. This works on the web only: the mobile app cannot add one."
     },
     {
-      "h": "Create the connector",
-      "p": "Back in Apps and Connectors, click Create. Enter a name and paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL."
+      "h": "Fill in the server",
+      "p": "Name it MCPEmails and paste <code>https://mcpemails.com/api/mcp</code> under <b>Connection</b>."
     },
     {
-      "h": "Choose OAuth and authorize",
-      "p": "Pick OAuth, click Create, then authorize with MCPEmails and approve the scopes you want the connector to hold."
+      "h": "Choose OAuth and sign in",
+      "p": "Choose <b>OAuth</b>, tick <b>I understand and want to continue</b>, click <b>Create as a plugin</b>, then sign in with MCPEmails and approve the scopes you want ChatGPT to hold."
     },
     {
-      "h": "Switch it on in each chat",
-      "p": "Open a new chat on chatgpt.com, click <b>+</b>, choose Developer mode and select the MCPEmails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation. The connector stays listed under Apps and Connectors in between."
+      "h": "Mention it in the chat",
+      "p": "In a chat, type <b>@</b> and pick MCPEmails. The pick applies to that message, so @mention it again when a follow-up needs your email."
     }
   ],
   "gotchas": [
     {
-      "h": "Developer mode needs a paid plan, the web, and a switch in every chat",
-      "p": "Custom MCP connectors are available on chatgpt.com to Plus, Pro, Business, Enterprise and Edu accounts. Free and Go accounts cannot add one, and the mobile and desktop apps do not offer developer mode. On Business and Enterprise an admin may have to allow developer mode for the workspace first. The step people miss is the last one: the connector does nothing until you pick Developer mode and the MCPEmails app from the <b>+</b> menu in the chat you are using."
+      "h": "Added on the web, picked per message",
+      "p": "Custom MCP servers can be added on chatgpt.com on Go and paid plans; the mobile app cannot add one. On Business and Enterprise, an admin or owner may need to add it for the workspace. The step people miss is the last one: ChatGPT uses MCPEmails for a message only when you type <b>@</b> and pick it, so @mention it again when a follow-up needs your email."
     },
     {
       "h": "Pick OAuth, not no-authentication, when you create the connector",
@@ -69,8 +69,8 @@
       "a": "Through a custom MCP connector, yes. ChatGPT cannot reach a mailbox on its own; pointing a connector at MCPEmails gives it tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail, limited to the scopes you approve during setup."
     },
     {
-      "q": "Why can I not create a connector in my ChatGPT account?",
-      "a": "Developer mode needs ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web. Free and Go accounts cannot add custom connectors, and the mobile and desktop apps do not show the option. On a Business or Enterprise workspace, ask an admin to allow developer mode. If the connector is created but ChatGPT ignores it, open the <b>+</b> menu in the chat and select Developer mode and the MCPEmails app."
+      "q": "Why can I not add a custom MCP server in ChatGPT?",
+      "a": "Custom MCP servers can be added on Go and paid plans, on chatgpt.com: the mobile app does not offer it. On a Business or Enterprise workspace, an admin or owner may need to add it. If MCPEmails is added but ChatGPT does not use it, type <b>@</b> in the chat and pick MCPEmails; the pick applies to one message at a time."
     },
     {
       "q": "Do I need an API key for ChatGPT?",

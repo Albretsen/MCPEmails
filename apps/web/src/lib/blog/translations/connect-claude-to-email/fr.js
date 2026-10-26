@@ -12,7 +12,7 @@ Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à 
 
 ## Ce dont vous avez besoin
 
-- D'un **forfait ou d'une application Claude qui prend en charge les connecteurs personnalisés**.
+- De **Claude** sur le web (claude.ai) ou dans Claude Desktop. Tous les forfaits Claude peuvent ajouter des connecteurs personnalisés : Free en autorise un, Pro et Max n'ont pas de limite.
 - D'un compte gratuit **MCPEmails** : [créez-le ici](/signup).
 - D'une boîte e-mail. Outlook se connecte avec la connexion Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application.
 
@@ -48,15 +48,19 @@ Besoin d'aide selon le fournisseur ? Consultez la [configuration multi-fournisse
 
 Dans claude.ai ou Claude Desktop :
 
-1. Ouvrez **Settings → Connectors**.
-2. Choisissez **Add custom connector**.
-3. Collez cette URL :
+1. Ouvrez **Customize → Connectors**.
+2. Cliquez sur **+ Add**, puis sur **Add custom connector**.
+3. Nommez-le MCPEmails et collez cette URL :
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Sélectionnez **Connect**, connectez-vous à MCPEmails et approuvez les scopes souhaités : \`read:email\`, \`send:email\`, ou les deux.
+4. Cliquez sur **Continue**, vérifiez les paramètres de connexion détectés par Claude (les valeurs par défaut conviennent) et cliquez sur **Add**.
+5. Connectez-vous à MCPEmails et approuvez les scopes souhaités : \`read:email\`, \`send:email\`, ou les deux.
+6. Dans une conversation, cliquez sur **+** en bas à gauche, choisissez **Connectors** et activez MCPEmails.
+
+Sur un forfait Team ou Enterprise, un Owner ajoute le connecteur une fois sous **Organization settings → Connectors**. Les membres ouvrent ensuite **Customize → Connectors**, trouvent MCPEmails et cliquent sur **Connect**.
 
 C'est toute la configuration côté Claude. OAuth limite la connexion aux scopes approuvés et vous pouvez la révoquer depuis MCPEmails à tout moment. Pour un client sans OAuth intégré, utilisez plutôt une clé API limitée ; [OAuth ou clés API](/blog/oauth-vs-api-keys-ai-email-access) explique cette option. Pour un problème propre à Claude, consultez la [page de configuration Claude](/docs/claude).
 

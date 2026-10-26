@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Claude Custom Connectors erklärt: ein Remote-MCP-Server, der Claude per URL hinzugefügt wird',
   content: `Mit **benutzerdefinierten Konnektoren in Claude** (englisch Custom Connectors) fügen Sie Claude einen beliebigen Remote-Server des [Model Context Protocol](https://modelcontextprotocol.io) hinzu, indem Sie seine URL einfügen. Danach kann Claude die Tools dieses Servers in Ihren Chats aufrufen: eine Datenbank abfragen, ein Ticket anlegen oder, wie im Praxisbeispiel am Ende dieser Anleitung, Ihre E-Mails lesen und senden.
 
-Die Angaben zu Tarifen und Menüs stammen aus den Hilfeseiten von Anthropic, geprüft am 20. Oktober 2026. Die Oberfläche von Claude ändert sich häufig. Weicht eine Bezeichnung ab, gilt Anthropics [Anleitung zu benutzerdefinierten Konnektoren](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
+Die Angaben zu Tarifen und Menüs stammen aus den Hilfeseiten von Anthropic, geprüft am 26. Oktober 2026. Die Oberfläche von Claude ändert sich häufig. Weicht eine Bezeichnung ab, gilt Anthropics [Anleitung zu benutzerdefinierten Konnektoren](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
 
 ## Was ist ein benutzerdefinierter Konnektor in Claude?
 
@@ -33,7 +33,7 @@ In Claude Code fügen Sie dieselbe Art von Remote-Server über das Terminal hinz
 
 Laut Hilfecenter von Anthropic, Stand Oktober 2026:
 
-- **Tarife:** Benutzerdefinierte Konnektoren gibt es in den Tarifen Free, Pro, Max, Team und Enterprise. Der Free-Tarif ist auf einen benutzerdefinierten Konnektor begrenzt.
+- **Tarife:** Benutzerdefinierte Konnektoren gibt es in den Tarifen Free, Pro, Max, Team und Enterprise. Der Free-Tarif ist auf einen benutzerdefinierten Konnektor begrenzt, Pro und Max haben keine Begrenzung.
 - **Apps, in denen Sie sie hinzufügen:** claude.ai im Browser, Claude Desktop und Cowork.
 - **Mobil:** Ein Konnektor, den Sie im Web oder in Claude Desktop verbinden, steht in Claude für iOS und Android zur Verfügung, sobald Sie sich dort das nächste Mal anmelden. Anthropic bezeichnet die Installation von Konnektoren auf Mobilgeräten als Beta und nennt Web und Desktop-App den primären Weg für benutzerdefinierte Konnektoren. Richten Sie ihn also zuerst am Computer ein.
 - **Wer ihn in einem Business-Tarif hinzufügen darf:** Im Team-Tarif nur Besitzer und Hauptbesitzer. Im Enterprise-Tarif Besitzer, Hauptbesitzer und Personen mit einer benutzerdefinierten Rolle, die die Verwaltung der Bibliotheken der Organisation umfasst.
@@ -41,10 +41,10 @@ Laut Hilfecenter von Anthropic, Stand Oktober 2026:
 ## So fügen Sie in Free, Pro oder Max einen benutzerdefinierten Konnektor hinzu
 
 1. Öffnen Sie in claude.ai oder Claude Desktop **Anpassen → Konnektoren**.
-2. Klicken Sie auf **Benutzerdefinierten Konnektor hinzufügen**. In manchen Ansichten liegt die Option hinter einer Schaltfläche **+ Hinzufügen**.
+2. Klicken Sie auf **+ Hinzufügen** und dann auf **Benutzerdefinierten Konnektor hinzufügen**.
 3. Geben Sie einen Namen und die URL des Servers ein und klicken Sie auf **Weiter**.
-4. Prüfen Sie die Authentifizierungseinstellungen, die Claude erkannt hat, und klicken Sie auf **Weiter**. Der nächste Abschnitt erklärt die Auswahl.
-5. Klicken Sie auf **Hinzufügen** und dann auf **Verbinden**, um sich beim Dienst anzumelden.
+4. Prüfen Sie die Anmeldeeinstellungen, die Claude erkannt hat. Die Standardwerte passen meist, und der nächste Abschnitt erklärt die Auswahl.
+5. Klicken Sie auf **Hinzufügen** und melden Sie sich dann beim Dienst an.
 
 Die Authentifizierungseinstellungen eines Konnektors lassen sich nach dem Hinzufügen nicht mehr ändern. Um sie zu ändern, entfernen Sie den Konnektor und fügen ihn neu hinzu. Zum Entfernen öffnen Sie **Anpassen → Konnektoren** und wählen **Entfernen** oder das Drei-Punkte-Menü daneben.
 
@@ -103,7 +103,7 @@ An E-Mail zeigt sich all das besonders deutlich: Ein Postfach enthält private D
 
 **1. Postfach mit MCPEmails verbinden.** [Erstellen Sie ein Konto](/signup) und öffnen Sie dann **Dashboard → Postfächer → Postfach verbinden**. Outlook und Microsoft 365 nutzen „Mit Microsoft anmelden“, die meisten anderen Anbieter ein app-spezifisches Passwort, und die [Anbieterseiten](/connect) führen die Einstellungen für jeden Anbieter auf. Die [Einrichtungsseite für Claude](/docs/claude) enthält die Kurzfassung der Schritte 1 und 2.
 
-**2. Konnektor in Claude hinzufügen.** Wählen Sie unter **Anpassen → Konnektoren** die Option **Benutzerdefinierten Konnektor hinzufügen**, nennen Sie ihn MCPEmails und geben Sie ein:
+**2. Konnektor in Claude hinzufügen.** Klicken Sie unter **Anpassen → Konnektoren** auf **+ Hinzufügen** und dann auf **Benutzerdefinierten Konnektor hinzufügen**, nennen Sie ihn MCPEmails, geben Sie die folgende URL ein und klicken Sie auf **Weiter**:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -111,7 +111,7 @@ https://mcpemails.com/api/mcp
 
 **3. Anmeldeeinstellungen wählen.** Wählen Sie **Jetzt anmelden**. Beim OAuth-Client funktioniert jede der ersten beiden Optionen: MCPEmails unterstützt die Claude-Identität und die automatische Registrierung. Lassen Sie die Anforderungsheader leer, denn OAuth braucht keinen API-Schlüssel.
 
-**4. Anmelden und Zugriff festlegen.** Klicken Sie auf **Verbinden**, melden Sie sich bei MCPEmails an und genehmigen Sie die Berechtigungen auf dem Zustimmungsbildschirm. Claude fragt zunächst nur nach \`read:email\`, und auf dem Bildschirm ist die passende Nur-Lesen-Option bereits ausgewählt. Fügen Sie \`send:email\`, \`manage:drafts\`, \`manage:folders\` oder \`delete:email\` erst hinzu, wenn ein Workflow sie braucht. Ein Token ohne \`send:email\` kann nicht senden, egal worum Claude gebeten wird. Braucht eine spätere Anfrage eine Berechtigung, die Sie nicht erteilt haben, antwortet MCPEmails mit einem \`insufficient_scope\`-Fehler, der die fehlende Berechtigung nennt. Setzen Sie beim erneuten Verbinden auf dem Zustimmungsbildschirm den Haken bei dieser Berechtigung. Die [Seite zum Nur-Lese-Zugriff](/docs/read-only-access) zeigt genau, was eine reine Leseberechtigung kann und was nicht.
+**4. Anmelden und Zugriff festlegen.** Klicken Sie auf **Hinzufügen**, melden Sie sich bei MCPEmails an und genehmigen Sie die Berechtigungen auf dem Zustimmungsbildschirm. Claude fragt zunächst nur nach \`read:email\`, und auf dem Bildschirm ist die passende Nur-Lesen-Option bereits ausgewählt. Fügen Sie \`send:email\`, \`manage:drafts\`, \`manage:folders\` oder \`delete:email\` erst hinzu, wenn ein Workflow sie braucht. Ein Token ohne \`send:email\` kann nicht senden, egal worum Claude gebeten wird. Braucht eine spätere Anfrage eine Berechtigung, die Sie nicht erteilt haben, antwortet MCPEmails mit einem \`insufficient_scope\`-Fehler, der die fehlende Berechtigung nennt. Setzen Sie beim erneuten Verbinden auf dem Zustimmungsbildschirm den Haken bei dieser Berechtigung. Die [Seite zum Nur-Lese-Zugriff](/docs/read-only-access) zeigt genau, was eine reine Leseberechtigung kann und was nicht.
 
 **5. Tool-Berechtigungen in Claude festlegen.** MCPEmails trennt Lesen und Schreiben in eigene Tools. \`email_read\`, \`inbox_list\`, \`folder_list\` und \`draft_list\` lesen nur, während \`email_compose\` sendet, antwortet und weiterleitet und \`email_delete\` löscht. Dank dieser Trennung können Sie \`email_compose\` auf **Genehmigung erforderlich** und \`email_delete\` auf **Blockiert** setzen, während das Lesen auf **Immer zulassen** bleibt. Die [Tool-Referenz](/docs#tools) listet alle Tools auf.
 

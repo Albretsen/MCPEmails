@@ -18,7 +18,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Legg til https://mcpemails.com/api/mcp som en egendefinert kobling i Claude, klikk Connect og logg inn med MCPEmails-kontoen din. Claude registrerer seg selv automatisk og ber om tilgangene du godkjenner. Det er ingen API-nøkkel å opprette og ingen konfigurasjonsfil å redigere."
+    "answer": "I claude.ai eller Claude Desktop åpner du Customize, Connectors, klikker + Add og deretter Add custom connector. Gi den navnet MCPEmails, lim inn https://mcpemails.com/api/mcp, klikk Continue, behold de oppdagede innloggingsinnstillingene, klikk Add og logg inn med MCPEmails. Du trenger verken å lage en API-nøkkel eller redigere en konfigurasjonsfil."
   },
   "method": {
     "title": "Slik kobler Claude seg til: OAuth, ingen API-nøkkel",
@@ -30,16 +30,16 @@
       "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
-      "h": "Åpne koblingsinnstillingene",
-      "p": "I claude.ai eller Claude Desktop åpner du Settings og deretter Connectors."
+      "h": "Åpne koblingssiden",
+      "p": "I claude.ai eller Claude Desktop åpner du <b>Customize</b> og deretter <b>Connectors</b>. Klikk <b>+ Add</b> og deretter <b>Add custom connector</b>."
     },
     {
-      "h": "Legg til en egendefinert kobling",
-      "p": "Klikk Add custom connector, lim inn <code>https://mcpemails.com/api/mcp</code> som koblings-URL, og klikk Add."
+      "h": "Legg til serveren",
+      "p": "Skriv inn et navn, for eksempel MCPEmails, lim inn <code>https://mcpemails.com/api/mcp</code> som URL og klikk <b>Continue</b>. Se over de oppdagede innloggingsinnstillingene (standardvalgene holder), og klikk deretter <b>Add</b>."
     },
     {
-      "h": "Koble til og autoriser",
-      "p": "Klikk Connect og logg inn med MCPEmails for å autorisere. Godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel nødvendig."
+      "h": "Logg inn og slå den på",
+      "p": "Logg inn med MCPEmails og godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel trengs. I en samtale klikker du <b>+</b> nede til venstre, velger <b>Connectors</b> og slår på MCPEmails."
     }
   ],
   "gotchas": [
@@ -54,6 +54,10 @@
     {
       "h": "Tilkoblingen baserer seg på polling, så Claude merker ikke ny e-post av seg selv",
       "p": "Det finnes ingen webhooks og ingen push. Claude ser ny e-post når den gjør et kall, altså når du spør. En fast instruks som \"sjekk om det har kommet noe fra økonomi før vi starter\" er det som gjør dette til en rutine; ingenting kommer uten at du ber om det."
+    },
+    {
+      "h": "Free gir én egen kobling, og på Team og Enterprise legger en Owner den til",
+      "p": "Free-abonnementet tillater høyst én egen kobling; med Pro og Max kan du legge til så mange du trenger. På Team og Enterprise legger en Owner til MCPEmails under <b>Organization settings</b>, <b>Connectors</b>. Medlemmene åpner deretter <b>Customize</b>, <b>Connectors</b>, finner den og klikker <b>Connect</b> for å logge inn."
     }
   ],
   "limits": [
@@ -84,7 +88,7 @@
     },
     {
       "q": "Fungerer dette i Claude Desktop i tillegg til claude.ai?",
-      "a": "Ja. Begge når egendefinerte koblinger fra den samme skjermen Settings, Connectors, og begge deler den samme tilkoblingen, så en postkasse du legger til i den ene er tilgjengelig i den andre. For terminalen, se den egne guiden for Claude Code."
+      "a": "Ja. Begge når egendefinerte koblinger fra den samme siden Customize, Connectors, og begge deler den samme tilkoblingen, så en postkasse du legger til i den ene er tilgjengelig i den andre. For terminalen, se den egne guiden for Claude Code."
     }
   ],
   "ctaBand": {

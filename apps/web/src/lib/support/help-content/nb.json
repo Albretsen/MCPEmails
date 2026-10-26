@@ -100,10 +100,10 @@
       "id": "assistant-sees-nothing",
       "title": "Tilkoblet, men assistenten ser ingen e-post",
       "summary": "Postkassen er koblet til, men assistenten sier at den ikke har e-postverktøy eller ikke finner noe.",
-      "keywords": "ingen verktøy ingenting tom connector virker ikke claude chatgpt cursor utviklermodus tilgang inbox_list",
+      "keywords": "ingen verktøy ingenting tom connector virker ikke claude chatgpt cursor utviklermodus tilgang inbox_list plugin @",
       "steps": [
         "Åpne Innbokser i dashbordet og sjekk at postkassen står oppført uten feil. Viser den en feil, koble den til på nytt.",
-        "Start en ny chat etter at du har lagt til connectoren. I ChatGPT må du også velge Utviklermodus og MCPEmails-appen fra +-menyen i hver nye chat.",
+        "Start en ny chat etter at du har lagt til connectoren. I Claude sjekker du at MCPEmails er slått på under + og Connectors. I ChatGPT skriver du @ og velger MCPEmails, og nevner den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
         "Godkjenn connectoren med den samme MCPEmails-kontoen som har postkassen.",
         "Assistenten ser bare verktøyene connectoren eller API-nøkkelen har tilgang til. Lot du en tilgang stå uten hake, fjern connectoren og legg den til på nytt.",
         "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."

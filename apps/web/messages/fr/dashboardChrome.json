@@ -3,6 +3,7 @@
     "connectedSuccess": "Boîte {provider} connectée avec succès.",
     "inboxLimitReached": "Vous avez atteint la limite de boîtes sur {plan}. Passez à la formule supérieure pour en connecter davantage.",
     "tokenExchangeFailed": "Impossible de connecter la boîte. L'échange de jeton avec le fournisseur a échoué. Veuillez réessayer.",
+    "gmailOauthUnavailable": "La connexion avec Google n'est pas disponible pour une nouvelle boîte Gmail dans cet espace de travail. Connectez plutôt Gmail avec un mot de passe d'application, qui fonctionne avec toutes les offres.",
     "connectionCancelled": "Connexion de la boîte annulée.",
     "adminConsentRequired": "Votre organisation doit autoriser l'accès à la boîte avant que vous puissiez connecter Outlook. Microsoft empêche les employés de l'autoriser eux-mêmes.",
     "adminConsentAction": "Obtenir un lien pour votre administrateur informatique",

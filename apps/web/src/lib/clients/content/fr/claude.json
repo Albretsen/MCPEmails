@@ -18,7 +18,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans Claude, cliquez sur Connect et connectez-vous avec votre compte MCPEmails. Claude s'enregistre automatiquement et demande les autorisations que vous approuvez. Aucune clé API à créer, aucun fichier de configuration à modifier."
+    "answer": "Dans claude.ai ou Claude Desktop, ouvrez Customize, Connectors, cliquez sur + Add, puis sur Add custom connector. Nommez-le MCPEmails, collez https://mcpemails.com/api/mcp, cliquez sur Continue, gardez les réglages de connexion détectés, cliquez sur Add et connectez-vous avec MCPEmails. Aucune clé API à créer, aucun fichier de configuration à modifier."
   },
   "method": {
     "title": "Comment Claude se connecte : OAuth, sans clé API",
@@ -30,16 +30,16 @@
       "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
-      "h": "Ouvrez les réglages des connecteurs",
-      "p": "Dans claude.ai ou Claude Desktop, ouvrez Settings, puis Connectors."
+      "h": "Ouvrez la page des connecteurs",
+      "p": "Dans claude.ai ou Claude Desktop, ouvrez <b>Customize</b>, puis <b>Connectors</b>. Cliquez sur <b>+ Add</b>, puis sur <b>Add custom connector</b>."
     },
     {
-      "h": "Ajoutez un connecteur personnalisé",
-      "p": "Cliquez sur Add custom connector, collez <code>https://mcpemails.com/api/mcp</code> comme URL du connecteur, puis cliquez sur Add."
+      "h": "Ajoutez le serveur",
+      "p": "Saisissez un nom comme MCPEmails, collez <code>https://mcpemails.com/api/mcp</code> comme URL et cliquez sur <b>Continue</b>. Vérifiez les réglages de connexion détectés (les valeurs par défaut conviennent), puis cliquez sur <b>Add</b>."
     },
     {
-      "h": "Connectez et autorisez",
-      "p": "Cliquez sur Connect et connectez-vous avec MCPEmails pour autoriser. Approuvez les autorisations que Claude doit détenir. Aucune clé API nécessaire."
+      "h": "Connectez-vous et activez-le",
+      "p": "Connectez-vous avec MCPEmails et approuvez les autorisations que Claude doit détenir. Aucune clé API nécessaire. Dans une conversation, cliquez sur <b>+</b> en bas à gauche, choisissez <b>Connectors</b> et activez MCPEmails."
     }
   ],
   "gotchas": [
@@ -54,6 +54,10 @@
     {
       "h": "La connexion fonctionne par interrogation, donc Claude ne remarquera pas le courrier de lui-même",
       "p": "Il n'y a ni webhooks ni push. Claude voit le nouveau courrier quand il fait un appel, c'est-à-dire quand vous le lui demandez. Une consigne permanente comme « vérifie s'il y a quelque chose de la compta avant qu'on commence » est ce qui en fait une routine ; rien n'arrive sans qu'on le demande."
+    },
+    {
+      "h": "Free permet un seul connecteur personnalisé, et sur Team et Enterprise un Owner l'ajoute",
+      "p": "Le plan Free permet au plus un connecteur personnalisé ; avec Pro et Max, vous pouvez en ajouter autant que nécessaire. Sur Team et Enterprise, un Owner ajoute MCPEmails dans <b>Organization settings</b>, <b>Connectors</b>. Les membres ouvrent ensuite <b>Customize</b>, <b>Connectors</b>, le trouvent et cliquent sur <b>Connect</b> pour se connecter."
     }
   ],
   "limits": [
@@ -84,7 +88,7 @@
     },
     {
       "q": "Est-ce que ça marche dans Claude Desktop comme dans claude.ai ?",
-      "a": "Oui. Les deux accèdent aux connecteurs personnalisés depuis le même écran Settings, Connectors et partagent la même connexion : une boîte ajoutée dans l'un est disponible dans l'autre. Pour le terminal, voyez le guide Claude Code séparé."
+      "a": "Oui. Les deux accèdent aux connecteurs personnalisés depuis la même page Customize, Connectors et partagent la même connexion : une boîte ajoutée dans l'un est disponible dans l'autre. Pour le terminal, voyez le guide Claude Code séparé."
     }
   ],
   "ctaBand": {

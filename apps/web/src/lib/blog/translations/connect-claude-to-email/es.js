@@ -12,7 +12,7 @@ No hay código que escribir, ningún SDK que instalar ni clave de API que usar c
 
 ## Lo que necesitas
 
-- Un **plan o aplicación de Claude compatible con conectores personalizados**.
+- **Claude** en la web (claude.ai) o en Claude Desktop. Todos los planes de Claude pueden añadir conectores personalizados: Free permite uno, y Pro y Max no tienen límite.
 - Una cuenta gratuita de **MCPEmails**: [créala aquí](/signup).
 - Una bandeja de correo. Outlook se conecta con Iniciar sesión con Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho y la mayoría de los demás proveedores usan una contraseña específica de aplicación.
 
@@ -48,15 +48,19 @@ Puedes conectar más de una bandeja. Claude los descubre con \`inbox_list\`, as�
 
 En claude.ai o Claude Desktop:
 
-1. Abre **Settings → Connectors**.
-2. Elige **Add custom connector**.
-3. Pega esta URL:
+1. Abre **Customize → Connectors**.
+2. Haz clic en **+ Add** y después en **Add custom connector**.
+3. Llámalo MCPEmails y pega esta URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Selecciona **Connect**, inicia sesión en MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+4. Haz clic en **Continue**, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en **Add**.
+5. Inicia sesión en MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+6. En un chat, haz clic en **+** abajo a la izquierda, elige **Connectors** y activa MCPEmails.
+
+En un plan Team o Enterprise, un Owner añade el conector una vez en **Organization settings → Connectors**. Después, los miembros abren **Customize → Connectors**, buscan MCPEmails y hacen clic en **Connect**.
 
 Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCPEmails cuando quieras. Si usas un cliente sin OAuth, usa una clave de API con permisos limitados; [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica esa opción. Para problemas específicos de Claude, consulta la [página de configuración de Claude](/docs/claude).
 

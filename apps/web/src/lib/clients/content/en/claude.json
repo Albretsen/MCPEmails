@@ -18,7 +18,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Add https://mcpemails.com/api/mcp as a custom connector in Claude, click Connect, and sign in with your MCPEmails account. Claude registers itself automatically and asks for the scopes you approve. There is no API key to create and no config file to edit."
+    "answer": "In claude.ai or Claude Desktop, open Customize, Connectors, click + Add, then Add custom connector. Name it MCPEmails, paste https://mcpemails.com/api/mcp, click Continue, keep the detected sign-in settings, click Add and sign in with MCPEmails. There is no API key to create and no config file to edit."
   },
   "method": {
     "title": "How Claude connects: OAuth, no API key",
@@ -30,16 +30,16 @@
       "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
-      "h": "Open the connector settings",
-      "p": "In claude.ai or Claude Desktop, open Settings, then Connectors."
+      "h": "Open the connector page",
+      "p": "In claude.ai or Claude Desktop, open <b>Customize</b>, then <b>Connectors</b>. Click <b>+ Add</b>, then <b>Add custom connector</b>."
     },
     {
-      "h": "Add a custom connector",
-      "p": "Click Add custom connector, paste <code>https://mcpemails.com/api/mcp</code> as the connector URL, then click Add."
+      "h": "Add the server",
+      "p": "Enter a name such as MCPEmails, paste <code>https://mcpemails.com/api/mcp</code> as the URL and click <b>Continue</b>. Review the detected sign-in settings (the defaults are fine), then click <b>Add</b>."
     },
     {
-      "h": "Connect and authorize",
-      "p": "Click Connect and sign in with MCPEmails to authorize. Approve the scopes you want Claude to hold. No API key needed."
+      "h": "Sign in and turn it on",
+      "p": "Sign in with MCPEmails and approve the scopes you want Claude to hold. No API key needed. In a chat, click <b>+</b> at the lower left, choose <b>Connectors</b> and toggle MCPEmails on."
     }
   ],
   "gotchas": [
@@ -54,6 +54,10 @@
     {
       "h": "The connection is polled, so Claude will not notice mail on its own",
       "p": "There are no webhooks and no push. Claude sees new mail when it makes a call, which means when you ask. A standing instruction like \"check for anything from finance before we start\" is what turns that into a routine; nothing arrives unprompted."
+    },
+    {
+      "h": "Free holds one custom connector, and on Team and Enterprise an Owner adds it",
+      "p": "The Free plan allows one custom connector at most; on Pro and Max you can add as many as you need. On Team and Enterprise, an Owner adds MCPEmails under <b>Organization settings</b>, <b>Connectors</b>. Members then open <b>Customize</b>, <b>Connectors</b>, find it and click <b>Connect</b> to sign in."
     }
   ],
   "limits": [
@@ -84,7 +88,7 @@
     },
     {
       "q": "Does this work in Claude Desktop as well as claude.ai?",
-      "a": "Yes. Both reach custom connectors from the same Settings, Connectors screen and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide."
+      "a": "Yes. Both reach custom connectors from the same Customize, Connectors page and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide."
     }
   ],
   "ctaBand": {

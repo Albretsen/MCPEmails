@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google viser et skjermbilde om en ikke-verifisert app",
-    "body": "Google går gjennom apper som ber om Gmail-tilgang, og mcpemails.com har ikke vært gjennom den gjennomgangen. Du får et skjermbilde om en <b>ikke-verifisert app</b> under innlogging, med stegene for å fortsette. Selve tilkoblingen har ingen utløpstid: når den først er koblet til, står postkassen tilkoblet til du trekker tilbake tilgangen."
+    "body": "Dette gjelder bare pålogging med Google, som tilbys på Pro og Business; standardtilkoblingen med app-passord viser ingen Google-skjerm. Google går gjennom apper som ber om Gmail-tilgang, og mcpemails.com har ikke vært gjennom den gjennomgangen, så pålogging med Google viser et skjermbilde om en <b>ikke-verifisert app</b>, med stegene for å fortsette. Selve tilkoblingen har ingen utløpstid: når den først er koblet til, står postkassen tilkoblet til du trekker tilbake tilgangen."
   },
   "hub": {
     "meta": {

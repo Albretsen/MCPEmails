@@ -16,7 +16,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Kjør MCP: Add Server fra Command Palette, velg HTTP og lim inn https://mcpemails.com/api/mcp. Start serveren fra MCP-visningen og autoriser når du blir bedt om det. Ingen API-nøkkel er involvert."
+    "answer": "Kjør MCP: Add Server fra Command Palette, velg HTTP (HTTP or Server-Sent Events), lim inn https://mcpemails.com/api/mcp og velg Global og deretter Copilot Global. Godkjenn innloggingsforespørselen for å autorisere med MCPEmails. Ingen API-nøkkel er involvert."
   },
   "method": {
     "title": "Slik kobler VS Code seg til: OAuth, ingen API-nøkkel",
@@ -32,12 +32,12 @@
       "p": "Åpne Command Palette med Shift Cmd P, eller Shift Ctrl P på Windows og Linux, og kjør <b>MCP: Add Server</b>."
     },
     {
-      "h": "Velg HTTP",
-      "p": "Velg <b>HTTP</b>, lim inn <code>https://mcpemails.com/api/mcp</code> og gi den et navn. VS Code skriver oppføringen nedenfor inn i <code>.vscode/mcp.json</code>."
+      "h": "Velg HTTP og Global",
+      "p": "Velg <b>HTTP (HTTP or Server-Sent Events)</b>, lim inn <code>https://mcpemails.com/api/mcp</code> og skriv inn <code>mcpemails</code> som server-ID. Som mål velger du <b>Global</b> og deretter <b>Copilot Global</b>. VS Code skriver oppføringen nedenfor til <code>~/.copilot/mcp-config.json</code>."
     },
     {
-      "h": "Start den og autoriser",
-      "p": "Start serveren fra MCP-visningen og fullfør innloggingen når VS Code ber om det. Godkjenn tilgangene du vil at Copilot skal ha."
+      "h": "Autoriser",
+      "p": "Godkjenn innloggingsforespørselen og autoriser med MCPEmails. Godkjenn tilgangene du vil at Copilot skal ha."
     }
   ],
   "gotchas": [
@@ -50,8 +50,8 @@
       "p": "MCP-verktøy er tilgjengelige for Copilot i agentmodus. Mangler e-postverktøyene i verktøyvelgeren etter en vellykket tilkobling, er den vanlige årsaken at du er i ask- eller edit-modus og ikke i agentmodus. MCP-visningen er stedet der du bekrefter at serveren faktisk kjører."
     },
     {
-      "h": "En .vscode/mcp.json er repositoriekonfigurasjon, så pass på hva du committer",
-      "p": "Standardplasseringen er inne i prosjektet, som betyr at den kan committes og deles. URL-en er offentlig, og OAuth-tokens skrives ikke hit, så standardoppsettet er trygt å dele. Det slutter å være trygt i det øyeblikket noen legger inn en bearer-API-nøkkel direkte i stedet. Enhver nøkkel som havner i et repositorium, bør tilbakekalles fra Dashboard, API Keys."
+      "h": "Velg Global, og hold nøkler unna repositorier",
+      "p": "Målet Global skriver <code>~/.copilot/mcp-config.json</code> i hjemmemappen din, utenfor alle prosjekter. Den eldre <code>.vscode/mcp.json</code>, med et <code>servers</code>-objekt på toppnivå, virker fortsatt, men den veiledede flyten merker den som utfaset, og den ligger inne i prosjektet, der den kan committes. URL-en er offentlig, og OAuth-tokens skrives ikke til noen av filene. Det slutter å gjelde i det øyeblikket noen legger inn en bearer-API-nøkkel direkte i stedet. Enhver nøkkel som havner i et repositorium, bør tilbakekalles fra Dashboard, API Keys."
     }
   ],
   "limits": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Hvordan kobler jeg e-post til VS Code?",
-      "a": "Kjør MCP: Add Server fra Command Palette, velg HTTP, lim inn https://mcpemails.com/api/mcp, start deretter serveren og autoriser når du blir bedt om det. Da har agentmodusen i Copilot verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+      "a": "Kjør MCP: Add Server fra Command Palette, velg HTTP, lim inn https://mcpemails.com/api/mcp, velg Global og deretter Copilot Global, og godkjenn innloggingsforespørselen. Da har agentmodusen i Copilot verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
     },
     {
       "q": "Trenger jeg en API-nøkkel for VS Code?",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Fungerer dette med Copilot i andre editorer?",
-      "a": "Denne siden dekker VS Code spesifikt, fordi Add Server-flyten og mcp.json-skjemaet er funksjoner i VS Code. JetBrains AI Assistant er et eget oppsett og bruker en bearer-API-nøkkel i stedet for OAuth; det finnes en egen side for det."
+      "a": "Denne siden dekker VS Code spesifikt, fordi Add Server-flyten er en funksjon i VS Code. JetBrains AI Assistant er et eget oppsett og bruker en bearer-API-nøkkel i stedet for OAuth; det finnes en egen side for det."
     },
     {
       "q": "Hvilke postkasser kan VS Code nå på denne måten?",

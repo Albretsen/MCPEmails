@@ -17,7 +17,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth découvert automatiquement",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Ajoutez une entrée sous mcpServers dans ~/.gemini/settings.json avec le champ httpUrl et https://mcpemails.com/api/mcp. À la première connexion, la CLI découvre les métadonnées OAuth et ouvre d'elle-même le flux dans le navigateur."
+    "answer": "Ajoutez une entrée sous mcpServers dans ~/.gemini/settings.json avec le champ httpUrl et https://mcpemails.com/api/mcp. À la première connexion, la CLI découvre les métadonnées OAuth et ouvre d'elle-même le flux dans le navigateur. Ou lancez gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp, puis /mcp auth mcpemails pour vous connecter."
   },
   "method": {
     "title": "Comment Gemini CLI se connecte : OAuth, sans clé API",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Ajoutez le serveur",
-      "p": "Ajoutez l'entrée ci-dessous sous <code>mcpServers</code>. Ici, le champ pour un serveur Streamable HTTP est <code>httpUrl</code>."
+      "p": "Ajoutez l'entrée ci-dessous sous <code>mcpServers</code>. Ici, le champ pour un serveur Streamable HTTP est <code>httpUrl</code>. Ou ajoutez-le en une ligne : <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Connectez-vous",
-      "p": "À la première connexion, la CLI découvre automatiquement OAuth à partir des métadonnées du serveur et ouvre le flux dans le navigateur. Approuvez les autorisations que la CLI doit détenir."
+      "p": "À la première connexion, la CLI découvre automatiquement OAuth à partir des métadonnées du serveur et ouvre le flux dans le navigateur. Approuvez les autorisations que la CLI doit détenir. Pour vous connecter à tout moment, lancez <code>/mcp auth mcpemails</code> dans la CLI."
     }
   ],
   "gotchas": [
@@ -53,6 +53,10 @@
     {
       "h": "Une CLI sur une machine partagée ou sans interface graphique préfère la voie de la clé",
       "p": "Le flux dans le navigateur a besoin d'un navigateur. Sur un agent de build ou une machine partagée, la configuration honnête est une clé API bearer limitée précisément à ce que cette automatisation doit faire, gardée dans l'environnement plutôt que dans un fichier de réglages commité."
+    },
+    {
+      "h": "Les comptes gratuits et Google One passent à Antigravity CLI",
+      "p": "Depuis le 18 juin 2026, Google a transféré les comptes de l'offre gratuite et les comptes Google One de Gemini CLI vers Antigravity CLI. Là, tapez <code>/mcp</code> pour ouvrir le gestionnaire MCP, ou ajoutez le serveur dans <code>mcp_config.json</code> avec le champ <code>serverUrl</code>."
     }
   ],
   "limits": [

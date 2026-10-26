@@ -562,6 +562,16 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         },
       });
       setRouteState('inboxes');
+    } else if (errorParam === 'gmail_oauth_unavailable') {
+      // /auth/gmail refused a NEW Gmail connection through Google sign-in: it
+      // is Pro and Business only, and closes when the unverified Google
+      // client's lifetime cap is nearly spent (src/lib/oauth/gmail-oauth-gate.ts).
+      // Open the modal on the Gmail card, where the app password path works on
+      // every plan.
+      toast({ message: tr('app.gmailOauthUnavailable'), variant: 'info', duration: 0 });
+      setConnectPreselect({ card: 'gmail' });
+      openConnect('other');
+      setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
@@ -965,7 +975,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setReconnectInbox(inbox);
       openConnect('reconnect');
     } else {
-      window.location.href = oauthRoutes[inbox.provider] ?? '/auth/gmail';
+      // The inbox id marks this as a reconnect: /auth/gmail pre-selects the
+      // account and skips the gate that applies to NEW Gmail sign-in
+      // connections (src/lib/oauth/gmail-oauth-gate.ts).
+      const route = oauthRoutes[inbox.provider] ?? '/auth/gmail';
+      window.location.href = route === '/auth/gmail' && inbox.id
+        ? `${route}?inbox=${encodeURIComponent(inbox.id)}`
+        : route;
     }
   };
 
@@ -1373,6 +1389,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
+          gmailOauthAllowed={workspace?.gmailOAuthAllowed === true}
           onAdminConsentLink={() => setShowAdminLink(true)}
           supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         />

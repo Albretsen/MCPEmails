@@ -629,6 +629,11 @@ export function ConnectModal({
   stripePrices = null,
   reconnect = null,
   businessShaped = false,
+  // Whether "Prefer to sign in with Google?" is offered on the Gmail card:
+  // Pro and Business only, and only while the unverified Google client has
+  // lifetime slots left (src/lib/oauth/gmail-oauth-gate.ts, decided by the
+  // dashboard page). /auth/gmail enforces the same rule server-side.
+  gmailOauthAllowed = false,
   onAdminConsentLink = null,
   preselect = null,
   // Which control opened this modal: one name from the closed list in
@@ -2871,11 +2876,13 @@ export function ConnectModal({
                   The app password above is the default because OAuth here has
                   a hard ceiling: an unverified Google app may only ever be
                   granted consent by 100 accounts in its lifetime, the counter
-                  cannot be reset, and 71 of those are already spent. Removing
-                  OAuth would strand the people who prefer it and the 56
-                  inboxes already connected that way, so it stays, one click
-                  down, with the walkthrough of Google's screens intact. */}
-              {provider === 'gmail' && (
+                  cannot be reset, and 95 of those were already spent on
+                  2026-10-26. Since then it is offered only on Pro and Business,
+                  and hidden for everyone once fewer than 5 slots remain
+                  (`gmailOauthAllowed`, src/lib/oauth/gmail-oauth-gate.ts).
+                  Inboxes already connected this way keep working and
+                  reconnect from the Inboxes page. */}
+              {provider === 'gmail' && gmailOauthAllowed && (
                 <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border-1)' }}>
                   <button
                     type="button"

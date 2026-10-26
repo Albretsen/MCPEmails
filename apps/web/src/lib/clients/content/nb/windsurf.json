@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://docs.windsurf.com/windsurf/cascade/mcp"
+    "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
     "title": "Koble e-post til Windsurf: MCP-server for Cascade",
@@ -12,15 +12,15 @@
     "eyebrow": "Windsurf + e-post",
     "titleLine1": "Koble innboksen din til Windsurf",
     "titleLine2": "og Cascade",
-    "lead": "Legg til en ekte postkasse i Cascade. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra editoren, på tvers av alle innboksene du har koblet til.",
+    "lead": "Legg til en ekte postkasse i Cascade i Devin Desktop, tidligere Windsurf. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra editoren, på tvers av alle innboksene du har koblet til.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Legg til én oppføring under mcpServers i ~/.codeium/windsurf/mcp_config.json med feltet serverUrl, ikke url, satt til https://mcpemails.com/api/mcp. Oppdater MCP-serverne i Cascade og autoriser når du blir bedt om det."
+    "answer": "Devin Desktop er det nye navnet på Windsurf. I Cascade-panelet åpner du ...-menyen øverst til høyre og klikker Open MCP config file i MCPs-delen. Legg til én oppføring under mcpServers med feltet serverUrl, ikke url, og https://mcpemails.com/api/mcp, lagre filen og logg inn med MCPEmails når du blir bedt om det."
   },
   "method": {
     "title": "Slik kobler Windsurf seg til: OAuth, ingen API-nøkkel",
-    "body": "Windsurf kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+    "body": "Devin Desktop (tidligere Windsurf) kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
   },
   "setup": [
     {
@@ -28,26 +28,26 @@
       "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
-      "h": "Åpne MCP-innstillingene i Cascade",
-      "p": "Åpne MCP-innstillingene i Cascade, eller rediger <code>~/.codeium/windsurf/mcp_config.json</code> direkte."
+      "h": "Åpne MCP-konfigurasjonsfilen",
+      "p": "I Cascade-panelet klikker du <b>...</b>-menyen øverst til høyre, og i <b>MCPs</b>-delen klikker du <b>Open MCP config file</b>. Filen er <code>~/.config/devin/mcp_config.json</code> på macOS og Linux, og <code>%APPDATA%\\devin\\mcp_config.json</code> på Windows."
     },
     {
       "h": "Legg til serveren",
       "p": "Legg til oppføringen nedenfor. Feltnavnet her er <code>serverUrl</code>, ikke <code>url</code>."
     },
     {
-      "h": "Oppdater og autoriser",
-      "p": "Oppdater MCP-serverne i Cascade og autoriser med MCPEmails når du blir bedt om det. Godkjenn tilgangene du vil at Cascade skal ha."
+      "h": "Lagre og logg inn",
+      "p": "Lagre filen og logg inn med MCPEmails når du blir bedt om det. Godkjenn tilgangene du vil at Cascade skal ha."
     }
   ],
   "gotchas": [
     {
       "h": "Feltet heter serverUrl, og url feiler i det stille",
-      "p": "Dette er den aller vanligste feilen ved oppsett av Windsurf, og den er helt forståelig: Cursor, Zed og VS Code leser alle <code>url</code>, så en snutt kopiert fra hvilken som helst av dem ser riktig ut. Windsurf leser <code>serverUrl</code>. Med feil nøkkel blir oppføringen tolket, serveren dukker opp i listen, og ingen verktøy kommer noen gang."
+      "p": "Dette er den aller vanligste feilen ved oppsett av Windsurf, og den er helt forståelig: Cursor, Zed og VS Code leser alle <code>url</code>, så en snutt kopiert fra hvilken som helst av dem ser riktig ut. Devin Desktop leser <code>serverUrl</code>. Med feil nøkkel blir oppføringen tolket, serveren dukker opp i listen, og ingen verktøy kommer noen gang."
     },
     {
-      "h": "Cascade må oppdateres, den følger ikke med på filen",
-      "p": "Å redigere <code>mcp_config.json</code> i en editor får ikke Cascade til å laste den inn på nytt. Bruk oppdateringshandlingen i MCP-panelet etter hver endring. En riktig oppføring som ikke er oppdatert, ser nøyaktig ut som en ødelagt en."
+      "h": "Eldre guider viser til Windsurf-stien",
+      "p": "Windsurf hadde MCP-konfigurasjonen sin i <code>~/.codeium/windsurf/mcp_config.json</code>, og mange guider sier det fortsatt. Devin Desktop bruker <code>~/.config/devin/mcp_config.json</code> (<code>%APPDATA%\\devin\\mcp_config.json</code> på Windows). Valget <b>Open MCP config file</b> i <b>...</b>-menyen i Cascade åpner filen den faktisk leser, så start der i stedet for å skrive inn en sti."
     },
     {
       "h": "Bestem på forhånd om Cascade skal kunne sende",
@@ -62,15 +62,15 @@
   "faq": [
     {
       "q": "Hvordan kobler jeg e-post til Windsurf?",
-      "a": "Legg til en oppføring under mcpServers i ~/.codeium/windsurf/mcp_config.json med serverUrl satt til https://mcpemails.com/api/mcp, oppdater MCP-serverne i Cascade, og autoriser når du blir bedt om det. Da har Cascade verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+      "a": "I Devin Desktop, tidligere Windsurf, åpner du ...-menyen i Cascade-panelet og klikker Open MCP config file. Legg til en oppføring under mcpServers med serverUrl satt til https://mcpemails.com/api/mcp, lagre og logg inn med MCPEmails når du blir bedt om det. Cascade har da verktøy for å lese, søke i, sende, svare på, videresende, organisere og planlegge e-post."
     },
     {
       "q": "Hvorfor fungerer ikke Windsurf-konfigurasjonen min når den samme JSON-en fungerer i Cursor?",
-      "a": "Nesten alltid feltnavnet. Cursor leser url, Windsurf leser serverUrl. Resten av oppføringen er identisk, og det er nettopp derfor feilen overlever en nøye gjennomlesning."
+      "a": "Nesten alltid feltnavnet. Cursor leser url, Devin Desktop leser serverUrl. Resten av oppføringen er identisk, og det er nettopp derfor feilen overlever en nøye gjennomlesning."
     },
     {
       "q": "Trenger jeg en API-nøkkel for Windsurf?",
-      "a": "Nei. Windsurf kjører OAuth-flyten mot denne serveren, så konfigurasjonsfilen inneholder bare en offentlig URL. En bearer-API-nøkkel er fortsatt tilgjengelig for bruk i skript eller uten skjerm."
+      "a": "Nei. Devin Desktop (tidligere Windsurf) kjører OAuth-flyten mot denne serveren, så konfigurasjonsfilen inneholder bare en offentlig URL. En bearer-API-nøkkel er fortsatt tilgjengelig for bruk i skript eller uten skjerm."
     },
     {
       "q": "Hvilke postkasser kan Windsurf nå på denne måten?",

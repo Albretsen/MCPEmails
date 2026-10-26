@@ -3,6 +3,7 @@
     "connectedSuccess": "Bandeja de entrada de {provider} conectada correctamente.",
     "inboxLimitReached": "Has alcanzado el límite de bandejas en {plan}. Mejora tu plan para conectar más buzones.",
     "tokenExchangeFailed": "No se pudo conectar la bandeja de entrada. Falló el intercambio de token con el proveedor. Inténtalo de nuevo.",
+    "gmailOauthUnavailable": "El inicio de sesión con Google no está disponible para una nueva bandeja de Gmail en este espacio de trabajo. Conecta Gmail con una contraseña de aplicación, que funciona en todos los planes.",
     "connectionCancelled": "Conexión de la bandeja de entrada cancelada.",
     "adminConsentRequired": "Tu organización debe aprobar el acceso al buzón antes de que puedas conectar Outlook. Microsoft impide que los empleados lo aprueben por su cuenta.",
     "adminConsentAction": "Obtener un enlace para tu administrador de TI",

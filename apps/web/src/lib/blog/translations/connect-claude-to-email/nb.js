@@ -12,7 +12,7 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 
 ## Dette trenger du
 
-- Et **Claude-abonnement eller en app som støtter egendefinerte connectors**.
+- **Claude** i nettleseren (claude.ai) eller i Claude Desktop. Alle Claude-abonnementer kan legge til egendefinerte connectors: Free tillater én, Pro og Max har ingen grense.
 - En gratis **MCPEmails**-konto: [opprett en her](/signup).
 - En e-postinnboks. Outlook kobles til med Logg inn med Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord.
 
@@ -48,15 +48,19 @@ Trenger du hjelp med hver enkelt leverandør? Se [oppsettet for flere leverandø
 
 I claude.ai eller Claude Desktop:
 
-1. Åpne **Settings → Connectors**.
-2. Velg **Add custom connector**.
-3. Lim inn denne URL-en:
+1. Åpne **Customize → Connectors**.
+2. Klikk **+ Add**, deretter **Add custom connector**.
+3. Kall den MCPEmails og lim inn denne URL-en:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Velg **Connect**, logg inn på MCPEmails og godkjenn scopene du ønsker: \`read:email\`, \`send:email\` eller begge.
+4. Klikk **Continue**, se over innloggingsinnstillingene Claude fant (standardvalgene holder), og klikk **Add**.
+5. Logg inn på MCPEmails og godkjenn scopene du ønsker: \`read:email\`, \`send:email\` eller begge.
+6. I en samtale klikker du **+** nede til venstre, velger **Connectors** og slår på MCPEmails.
+
+På et Team- eller Enterprise-abonnement legger en Owner til connectoren én gang under **Organization settings → Connectors**. Medlemmene åpner deretter **Customize → Connectors**, finner MCPEmails og klikker **Connect**.
 
 Det er hele oppsettet i Claude. OAuth begrenser tilkoblingen til scopene du godkjenner, og du kan tilbakekalle den fra MCPEmails når som helst. Hvis du bruker en klient uten OAuth-støtte, bruker du en begrenset API-nøkkel i stedet; [OAuth vs. API-nøkler](/blog/oauth-vs-api-keys-ai-email-access) forklarer den veien. Ved problemer som gjelder Claude, se [oppsettsiden for Claude](/docs/claude).
 

@@ -44,19 +44,23 @@ https://mcpemails.com/api/mcp
 
 在 claude.ai 或 Claude Desktop 中：
 
-1. 打开 **Settings**，再打开 **Connectors**。
-2. 选择 **Add custom connector**，粘贴 \`https://mcpemails.com/api/mcp\`。
-3. 选择 **Connect**，登录 MCPEmails 并批准。
+1. 打开 **Customize → Connectors**。
+2. 点击 **+ Add**，然后选择 **Add custom connector**。将其命名为 MCPEmails，粘贴 \`https://mcpemails.com/api/mcp\`，再点击 **Continue**。
+3. 保留检测到的登录设置，点击 **Add**，登录 MCPEmails 并批准。
+4. 在对话中点击左下角的 **+**，选择 **Connectors**，然后打开 MCPEmails。
+
+Claude 的 Free 方案允许一个自定义连接器，Pro 和 Max 不限数量。在 Team 和 Enterprise 上，由 Owner 在 **Organization settings → Connectors** 下添加，成员再到 **Customize → Connectors** 中点击 **Connect**。
 
 你连接的每个邮箱现在都可以使用了。详细步骤见 [Claude 指南](/blog/connect-claude-to-email)。
 
 ## 添加到 ChatGPT
 
-自定义连接器需要网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu，并开启开发者模式。在 Business 和 Enterprise 上，可能需要管理员先允许。
+ChatGPT Go 和付费方案可以在浏览器中的 chatgpt.com 上添加自定义 MCP 服务器；移动端应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。
 
-1. 在 ChatGPT 设置中打开**开发者模式**，位置在应用与连接器的高级设置里。
-2. 新建一个连接器，粘贴 \`https://mcpemails.com/api/mcp\`，认证方式选择 **OAuth**，然后用 MCPEmails 完成授权。
-3. 在每个新对话中，点击 **+**，选择 **Developer mode** 并选中 MCPEmails 应用。
+1. 依次打开 **Plugins** 和 **Personal**，点击右上角的 **Add**，然后选择 **Add custom MCP server**。
+2. 命名为 MCPEmails，在 **Connection** 下粘贴 \`https://mcpemails.com/api/mcp\`，选择 **OAuth**，勾选 **I understand and want to continue**，然后点击 **Create as a plugin**。
+3. 使用 MCPEmails 登录并批准。
+4. 在对话中输入 **@** 并选择 MCPEmails。这个选择只对当前这条消息有效，所以后续问题需要用到邮件时，请再次 @ MCPEmails。
 
 [ChatGPT 指南](/blog/connect-chatgpt-to-email)介绍了各个菜单和常见错误。
 

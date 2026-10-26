@@ -18,7 +18,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth, sin clave de API",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "Añade https://mcpemails.com/api/mcp como conector personalizado en Claude, haz clic en Connect e inicia sesión con tu cuenta de MCPEmails. Claude se registra automáticamente y pide los permisos que tú apruebas. No hay clave de API que crear ni archivo de configuración que editar."
+    "answer": "En claude.ai o Claude Desktop, abre Customize, Connectors, haz clic en + Add y luego en Add custom connector. Llámalo MCPEmails, pega https://mcpemails.com/api/mcp, haz clic en Continue, deja los ajustes de inicio de sesión detectados, haz clic en Add e inicia sesión con MCPEmails. No hay clave de API que crear ni archivo de configuración que editar."
   },
   "method": {
     "title": "Cómo se conecta Claude: OAuth, sin clave de API",
@@ -30,16 +30,16 @@
       "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
     },
     {
-      "h": "Abre los ajustes de conectores",
-      "p": "En claude.ai o Claude Desktop, abre Settings y luego Connectors."
+      "h": "Abre la página de conectores",
+      "p": "En claude.ai o Claude Desktop, abre <b>Customize</b> y luego <b>Connectors</b>. Haz clic en <b>+ Add</b> y luego en <b>Add custom connector</b>."
     },
     {
-      "h": "Añade un conector personalizado",
-      "p": "Haz clic en Add custom connector, pega <code>https://mcpemails.com/api/mcp</code> como URL del conector y haz clic en Add."
+      "h": "Añade el servidor",
+      "p": "Escribe un nombre como MCPEmails, pega <code>https://mcpemails.com/api/mcp</code> como URL y haz clic en <b>Continue</b>. Revisa los ajustes de inicio de sesión detectados (los valores por defecto sirven) y haz clic en <b>Add</b>."
     },
     {
-      "h": "Conecta y autoriza",
-      "p": "Haz clic en Connect e inicia sesión con MCPEmails para autorizar. Aprueba los permisos que quieres que tenga Claude. No necesitas clave de API."
+      "h": "Inicia sesión y actívalo",
+      "p": "Inicia sesión con MCPEmails y aprueba los permisos que quieres que tenga Claude. No necesitas clave de API. En un chat, haz clic en <b>+</b> abajo a la izquierda, elige <b>Connectors</b> y activa MCPEmails."
     }
   ],
   "gotchas": [
@@ -54,6 +54,10 @@
     {
       "h": "La conexión funciona por consulta, así que Claude no verá el correo por su cuenta",
       "p": "No hay webhooks ni notificaciones push. Claude ve el correo nuevo cuando hace una llamada, es decir, cuando tú se lo pides. Una instrucción fija como \"revisa si hay algo de finanzas antes de empezar\" es lo que lo convierte en una rutina; nada llega sin que se pida."
+    },
+    {
+      "h": "Free admite un conector personalizado, y en Team y Enterprise lo añade un Owner",
+      "p": "El plan Free admite como máximo un conector personalizado; con Pro y Max puedes añadir todos los que necesites. En Team y Enterprise, un Owner añade MCPEmails en <b>Organization settings</b>, <b>Connectors</b>. Después, los miembros abren <b>Customize</b>, <b>Connectors</b>, lo buscan y hacen clic en <b>Connect</b> para iniciar sesión."
     }
   ],
   "limits": [
@@ -84,7 +88,7 @@
     },
     {
       "q": "¿Funciona en Claude Desktop además de en claude.ai?",
-      "a": "Sí. Ambos acceden a los conectores personalizados desde la misma pantalla Settings, Connectors y ambos comparten la misma conexión, así que un buzón añadido en uno está disponible en el otro. Para la terminal, consulta la guía aparte de Claude Code."
+      "a": "Sí. Ambos acceden a los conectores personalizados desde la misma página Customize, Connectors y ambos comparten la misma conexión, así que un buzón añadido en uno está disponible en el otro. Para la terminal, consulta la guía aparte de Claude Code."
     }
   ],
   "ctaBand": {

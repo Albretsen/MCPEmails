@@ -10,11 +10,11 @@ const translation = {
 
 ## 你需要准备什么
 
-- **网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。** 自定义 MCP 连接器位于开发者模式之后，OpenAI 在 chatgpt.com 上向这些方案提供该模式。Free 和 Go 账户无法添加，移动端和桌面端应用也不显示该选项。在 Business 和 Enterprise 上，可能需要管理员先允许开发者模式。
+- **网页版的 ChatGPT Go 或付费方案。** OpenAI 允许 Go 和付费方案在 chatgpt.com 上添加自定义 MCP 服务器。移动端应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者为工作区添加。
 - **一个免费的 MCPEmails 账户。** [在此创建](/signup)。免费方案可连接一个收件箱，无需信用卡。
 - **一个邮箱。** Gmail、Outlook 或 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho、Yandex，或任何支持 IMAP 与 SMTP 的邮箱。
 
-如果你使用的是 Free 或 Go，同一个邮箱和同一个 URL 已经可以在 [Claude](/docs/claude)、[Cursor](/docs/cursor)、[VS Code](/docs/vscode) 以及其他[支持的客户端](/docs/clients)中使用。
+如果你的 ChatGPT 方案无法添加自定义 MCP 服务器，同一个邮箱和同一个 URL 已经可以在 [Claude](/docs/claude)、[Cursor](/docs/cursor)、[VS Code](/docs/vscode) 以及其他[支持的客户端](/docs/clients)中使用。
 
 ## 第 1 步：把收件箱连接到 MCPEmails
 
@@ -40,18 +40,19 @@ Outlook 通过使用 Microsoft 登录连接，而不是应用专用密码：选�
 
 ## 第 2 步：在 ChatGPT 中添加连接器
 
-1. 在 ChatGPT 设置中打开**开发者模式**，位置在应用与连接器的高级设置里。
-2. 新建一个连接器并为它命名。
-3. 粘贴这个连接器 URL：
+1. 在 chatgpt.com 上依次打开 **Plugins** 和 **Personal**，点击右上角的 **Add**。
+2. 选择 **Add custom MCP server**，命名为 MCPEmails。
+3. 在 **Connection** 下粘贴这个 URL：
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. 认证方式选择 **OAuth**，创建连接器，然后用 MCPEmails 完成授权。
-5. 打开一个新对话，点击 **+**，选择 **Developer mode** 并选中 MCPEmails 应用。ChatGPT 只在完成这一步的对话中看得到这些工具，所以每个新对话都要重复。
+4. 选择 **OAuth**，勾选 **I understand and want to continue**，然后点击 **Create as a plugin**。
+5. 使用 MCPEmails 登录并批准。
+6. 在对话中输入 **@** 并选择 MCPEmails。这个选择只对当前这条消息有效，所以后续问题需要用到邮件时，请再次 @ MCPEmails。
 
-请选择 OAuth，不要选"无需认证"。本服务器会拒绝匿名调用，因此一个在创建时未配置认证的连接器，设置阶段看起来一切正常，却会在第一次工具调用时失败，这种先后顺序最容易让人困惑。使用 OAuth 时，ChatGPT 会自行注册并完成带 PKCE 的授权码流程：不需要创建 client id，任何地方都不需要客户端密钥。OpenAI 在测试期间会不断调整菜单措辞，因此请查看 [ChatGPT 设置页](/docs/chatgpt)获取当前路径。
+请选择 OAuth，不要选"无需认证"。本服务器会拒绝匿名调用，因此一个在创建时未配置认证的连接器，设置阶段看起来一切正常，却会在第一次工具调用时失败，这种先后顺序最容易让人困惑。使用 OAuth 时，ChatGPT 会自行注册并完成带 PKCE 的授权码流程：不需要创建 client id，任何地方都不需要客户端密钥。OpenAI 会不时调整这些菜单，因此请查看 [ChatGPT 设置页](/docs/chatgpt)获取当前路径。
 
 ## 第 3 步：只授予你需要的权限
 
@@ -99,9 +100,9 @@ Codex 与 ChatGPT 连接器是不同的平台，浏览器 OAuth 流程在这里�
 
 ## 常见问题排查
 
-- **没有创建自定义连接器的选项。** 开发者模式需要在浏览器中使用 chatgpt.com，并且是 Plus、Pro、Business、Enterprise 或 Edu。Free 和 Go 账户没有该模式。在 Business 或 Enterprise 工作区中，需要管理员允许。
+- **没有添加自定义 MCP 服务器的选项。** 自定义 MCP 服务器需要在浏览器中的 chatgpt.com 上添加，移动端应用不行，并且需要 Go 或付费方案。在 Business 或 Enterprise 工作区中，可能需要管理员或所有者来添加。
 - **连接器在第一次工具调用时失败。** 它多半是在未配置认证的情况下创建的。删除它，用 OAuth 重新创建。
-- **连接器已创建，但 ChatGPT 回答时没有读取你的邮件。** 它在这个对话中没有开启。点击 **+**，选择 **Developer mode** 并选中 MCPEmails 应用，然后再问一次。
+- **连接器已创建，但 ChatGPT 回答时没有读取你的邮件。** 这条消息没有选择 MCPEmails。输入 **@**，选择 MCPEmails，然后再问一次。
 - **服务商拒绝你的密码。** 请使用服务商生成的应用专用密码，而不是网页登录密码。部分服务商只有在开启双重验证后才会签发。
 - **自定义 IMAP 连接超时。** 确认主机、端口和 TLS 模式。993 端口通常使用隐式 TLS，143 端口通常使用 STARTTLS。
 - **ChatGPT 连上了却看不到邮件。** 检查该收件箱在控制台中是否处于启用状态，确认连接拥有 \`read:email\` 权限，并让 ChatGPT 先调用 \`inbox_list\`。

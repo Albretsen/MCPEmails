@@ -19,18 +19,18 @@
     "officialGuide": "Guide officiel {name} ↗",
     "done": "Terminé",
     "claude": {
-      "step1": "Dans claude.ai ou Claude Desktop, ouvrez Settings → Connectors.",
-      "step2": "Cliquez sur « Add custom connector ».",
-      "step3": "Collez l'URL ci-dessus comme URL du connecteur, puis cliquez sur « Add ».",
-      "step4": "Cliquez sur « Connect » et connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire."
+      "step1": "Dans claude.ai ou Claude Desktop, ouvrez Customize → Connectors, cliquez sur « + Add », puis sur « Add custom connector ».",
+      "step2": "Nommez-le MCPEmails, collez l'URL ci-dessus et cliquez sur « Continue ».",
+      "step3": "Vérifiez les paramètres de connexion (les valeurs par défaut conviennent), puis cliquez sur « Add ».",
+      "step4": "Connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire. Sur Team et Enterprise, un Owner l'ajoute dans Organization settings → Connectors, puis les membres cliquent sur « Connect » dans Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "Ouvrez Settings → Apps & Connectors → Advanced settings et activez le mode développeur.",
-      "step2": "De retour dans Apps & Connectors, cliquez sur « Create ».",
-      "step3": "Saisissez un nom et collez l'URL ci-dessus comme Connector URL.",
-      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec MCPEmails.",
-      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app MCPEmails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
-      "note": "Fonctionne sur chatgpt.com (web uniquement) avec Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur."
+      "step1": "Sur chatgpt.com, ouvrez Plugins → Personal, cliquez sur « Add » en haut à droite, puis sur « Add custom MCP server ». Ce n'est pas possible dans l'application mobile.",
+      "step2": "Nommez-le MCPEmails et collez l'URL ci-dessus sous « Connection ».",
+      "step3": "Choisissez OAuth, cochez « I understand and want to continue », puis cliquez sur « Create as a plugin ».",
+      "step4": "Connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire.",
+      "step5": "Dans une conversation, tapez @ et choisissez MCPEmails. Ce choix ne vaut que pour ce message : mentionnez-le à nouveau avec @ quand une question de suivi porte sur vos e-mails.",
+      "note": "Les serveurs MCP personnalisés peuvent être ajoutés avec ChatGPT Go et les offres payantes. Sur Business et Enterprise, il faut parfois qu'un administrateur ou un propriétaire l'ajoute."
     },
     "cursor": {
       "step1": "Modifiez ~/.cursor/mcp.json (global) ou .cursor/mcp.json (projet).",
@@ -39,8 +39,8 @@
     },
     "vscode": {
       "step1": "Ouvrez la palette de commandes (⇧⌘P) et exécutez « MCP: Add Server ».",
-      "step2": "Choisissez « HTTP », collez l'URL ci-dessus et donnez-lui un nom.",
-      "step3": "Démarrez le serveur depuis la vue MCP et autorisez lorsque demandé."
+      "step2": "Choisissez « HTTP (HTTP or Server-Sent Events) », collez l'URL ci-dessus et saisissez MCPEmails comme identifiant du serveur.",
+      "step3": "Choisissez « Global », puis « Copilot Global » (enregistré dans ~/.copilot/mcp-config.json), et acceptez la demande de connexion à MCPEmails."
     },
     "cline": {
       "step1": "Dans le panneau Cline, cliquez sur l'icône MCP Servers, puis ouvrez l'onglet « Remote Servers ».",
@@ -49,14 +49,14 @@
       "step4": "Ajoutez un en-tête « Authorization: Bearer YOUR_KEY » à l'aide de votre clé API."
     },
     "windsurf": {
-      "step1": "Ouvrez les paramètres MCP de Cascade, ou modifiez ~/.codeium/windsurf/mcp_config.json.",
-      "step2": "Ajoutez le serveur ci-dessous. Notez que le champ est « serverUrl », et non « url ».",
-      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec MCPEmails lorsque demandé."
+      "step1": "Dans Devin Desktop (anciennement Windsurf), cliquez sur le menu « ... » en haut à droite du panneau Cascade, puis sur « Open MCP config file » dans la section MCPs. Le fichier est ~/.config/devin/mcp_config.json.",
+      "step2": "Ajoutez le serveur ci-dessous sous « mcpServers ». Notez que le champ est « serverUrl », et non « url ».",
+      "step3": "Enregistrez le fichier et connectez-vous avec MCPEmails lorsque demandé."
     },
     "gemini": {
-      "step1": "Modifiez ~/.gemini/settings.json (global) ou .gemini/settings.json (projet).",
-      "step2": "Ajoutez le serveur ci-dessous sous « mcpServers » en utilisant le champ « httpUrl ».",
-      "step3": "À la première connexion, le CLI découvre automatiquement OAuth et ouvre le flux dans le navigateur."
+      "step1": "Exécutez gemini mcp add --transport http mcpemails suivi de l'URL ci-dessus, ou modifiez ~/.gemini/settings.json (global) ou .gemini/settings.json (projet).",
+      "step2": "Dans le fichier, ajoutez le serveur ci-dessous sous « mcpServers » avec le champ « httpUrl ».",
+      "step3": "Exécutez /mcp auth mcpemails pour vous connecter avec MCPEmails. Les comptes gratuits et Google One utilisent désormais Antigravity CLI : tapez /mcp pour y ajouter le serveur (champ « serverUrl »)."
     },
     "zed": {
       "step1": "Dans les paramètres du panneau Agent, cliquez sur « Add Custom Server », ou modifiez settings.json.",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "Dans Claude, cliquez sur + dans la zone de message, ouvrez Connecteurs et vérifiez que MCPEmails est activé pour la conversation. Sinon, Claude répond sans vos e-mails.",
-      "chatgpt": "Dans ChatGPT, cliquez sur + dans chaque nouvelle conversation, choisissez le mode développeur et sélectionnez l'app MCPEmails. Sinon, ChatGPT ne voit pas vos e-mails."
+      "chatgpt": "Dans ChatGPT, tapez @ dans la zone de message et choisissez MCPEmails. Ce choix ne vaut que pour ce message : mentionnez MCPEmails à nouveau avec @ quand une question de suivi porte sur vos e-mails."
     },
     "itWorksTitle": "Ça marche",
     "itWorksDesc": "Votre app d'IA vient de faire son premier appel à MCPEmails. Continuez dans la même conversation.",
@@ -166,7 +166,7 @@
     "actionsThisMonth": "Actions e-mail ce mois-ci",
     "actionsOfCap": "sur {cap} · remise à zéro le {date}",
     "actionsCapReached": "Plafond atteint · refusées jusqu'au {date}",
-    "actionsGrace": "Période d'essai : aucun plafond avant le {date}",
+    "actionsGrace": "Illimité jusqu'au {date}",
     "actionsExempt": "Aucun plafond mensuel (membre de la première heure)",
     "teamMembers": "Membres d'équipe",
     "ofSeats": "sur {cap} sièges · {remaining} restants",
@@ -509,7 +509,7 @@
       "createdJustNow": "· créée à l'instant",
       "urlLabel": "Configuration du client MCP (utilise un en-tête Authorization)",
       "nextTitle": "Ensuite : connectez-le dans Claude",
-      "nextStep1": "Dans claude.ai ou Claude Desktop, ouvrez Paramètres → Connecteurs → Ajouter un connecteur personnalisé.",
+      "nextStep1": "Dans claude.ai ou Claude Desktop, ouvrez Customize → Connectors, cliquez sur « + Add », puis sur « Add custom connector ».",
       "nextStep2": "Collez l'URL ci-dessus. Les clients OAuth se connectent en un clic.",
       "nextStep3": "Demandez ensuite à Claude :",
       "nextGuide": "Guide étape par étape",
@@ -628,7 +628,7 @@
     "colAddress": "Adresse",
     "allowanceCounting": "{used} actions e-mail sur {cap} utilisées ce mois-ci · remise à zéro le {date}",
     "allowanceReached": "Les {cap} actions e-mail sont épuisées · lectures et écritures refusées jusqu'au {date}",
-    "allowanceGrace": "Période d'essai : aucun plafond avant le {date}",
+    "allowanceGrace": "Illimité jusqu'au {date}",
     "allowanceExempt": "Aucun plafond mensuel (membre de la première heure)",
     "capTitleNear": "Vous approchez du quota de ce mois-ci",
     "capBodyNear": "{used} actions e-mail sur {cap} utilisées. À {cap}, les lectures et écritures de votre agent sont refusées jusqu'au {date}. Personal supprime le plafond mensuel pour 9 $ par mois.",

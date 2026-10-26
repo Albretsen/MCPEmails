@@ -1,18 +1,18 @@
 {
   "eyebrow": "ChatGPT",
   "title": "Use {provider} in ChatGPT",
-  "sub": "ChatGPT reaches {provider} through a custom MCP connector. That needs developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu.",
+  "sub": "ChatGPT reaches {provider} through a custom MCP server, which you add on chatgpt.com with ChatGPT Go or a paid plan.",
   "steps": [
     "Connect {provider} to MCPEmails with the steps above.",
-    "In ChatGPT, open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode.",
-    "In Apps and Connectors, click Create, paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL, choose OAuth and sign in to MCPEmails.",
-    "In each new chat, click <b>+</b>, choose Developer mode and select your connector."
+    "On chatgpt.com, open Plugins, Personal, click Add, then Add custom MCP server.",
+    "Name it MCPEmails, paste <code>https://mcpemails.com/api/mcp</code> under Connection, choose OAuth, confirm, click Create as a plugin and sign in to MCPEmails.",
+    "In a chat, type <b>@</b> and pick MCPEmails. Do it again when a follow-up needs your mail."
   ],
   "docsLink": "Full ChatGPT setup guide",
   "blogLink": "How to connect ChatGPT to your email",
   "faqQ": "Can ChatGPT read my {provider} mail?",
   "faqQMailName": "Can ChatGPT read my {provider}?",
-  "faqA": "Yes, once {provider} is connected to MCPEmails. In ChatGPT, add a custom MCP connector with the URL https://mcpemails.com/api/mcp and OAuth sign-in. Custom connectors need developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu. ChatGPT gets only the access you approve, and your mail is fetched live, never stored.",
+  "faqA": "Yes, once {provider} is connected to MCPEmails. On chatgpt.com, add a custom MCP server with the URL https://mcpemails.com/api/mcp and OAuth sign-in. That works with ChatGPT Go and paid plans. ChatGPT gets only the access you approve, and your mail is fetched live, never stored.",
   "directorySub": "ChatGPT reaches {provider} through the Any Mailbox app from MCPEmails.",
   "directorySteps": [
     "Connect {provider} to MCPEmails with the steps above.",

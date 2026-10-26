@@ -24,7 +24,7 @@ En planlagt sending gjennom MCPEmails er en ferdig melding: du leser den nøyakt
 ## Slik planlegger du en e-post med Claude eller ChatGPT
 
 1. **Koble postkassen din til MCPEmails.** I dashbordet åpner du **Innbokser**, deretter **Koble til innboks**, og velger leverandøren din. Det finnes en side per leverandør under [connect](/connect).
-2. **Legg til MCPEmails i assistenten din.** I Claude åpner du **Settings**, deretter **Connectors**, velger **Add custom connector** og limer inn \`https://mcpemails.com/api/mcp\`. [Claude-guiden](/blog/connect-claude-to-email) har alle stegene. I ChatGPT legges MCPEmails til som en egendefinert MCP-kobling. Hvilke planer som tilbyr det, og hvor menyen ligger, har endret seg flere ganger i år, så følg de gjeldende stegene i [oppsettsguiden for ChatGPT](/docs/chatgpt).
+2. **Legg til MCPEmails i assistenten din.** I Claude åpner du **Customize**, deretter **Connectors**, klikker **+ Add**, velger **Add custom connector** og limer inn \`https://mcpemails.com/api/mcp\`. [Claude-guiden](/blog/connect-claude-to-email) har alle stegene. I ChatGPT legges MCPEmails til som en egendefinert MCP-kobling. Hvilke planer som tilbyr det, og hvor menyen ligger, har endret seg flere ganger i år, så følg de gjeldende stegene i [oppsettsguiden for ChatGPT](/docs/chatgpt).
 3. **Gi tilgang til planlegging når du godkjenner.** Samtykkeskjermen til MCPEmails tilbyr ulike tilgangsnivåer. Velg **Full tilgang**, eller **Tilpasset** med planlegging krysset av. **Standard** utelater planlegging, så en forespørsel om å planlegge blir avvist.
 4. **Be om e-posten og tidspunktet.** Oppgi mottakerne, hva som skal stå i meldingen, dato og klokkeslett, og tidssonen din.
 

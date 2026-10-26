@@ -156,7 +156,7 @@ export const USAGE_CAP_STATE_WORDS: Record<GrowthUsageCapState, string> = {
   exempt_early: 'Early member, never metered',
   exempt_support: 'Exempt by support or a comp',
   paid: 'Paid plan, no monthly cap',
-  grace: 'In the trial period',
+  grace: 'In the unlimited first days (grace)',
   under_half: 'Under half',
   half: '50 to 79%',
   warn: '80 to 99%, warned',
