@@ -620,6 +620,7 @@ import {
   settleAfterResponse,
 } from "./request-pipeline.ts";
 import { kickBillingDispatch } from "./billing-dispatch-kick.ts";
+import { acknowledgeThenRun } from "./dispatch-ack.ts";
 import {
   GATE_RPC,
   gateParams,
@@ -38816,7 +38817,13 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
         { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
-    return handleTriageDispatch(triageDeps());
+    // Answered 202 at once, run behind the response: the run takes up to its
+    // 40 s budget and pg_net waits only 5 s (dispatch-ack.ts).
+    return acknowledgeThenRun(
+      "triage_dispatch",
+      () => handleTriageDispatch(triageDeps()),
+      (name, error) => console.error(`[triage-dispatch] ${name} failed`, error instanceof Error ? error.message.slice(0, 200) : "unknown"),
+    );
   }
 
   // ── Subscription cleanup follow-up route ──────────────────────────────────
