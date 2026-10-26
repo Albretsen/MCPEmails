@@ -612,7 +612,8 @@ Deno.test("draft_update is listed with body optional, and says what an update wi
   assertEquals(
     schema.properties.body.description,
     "Updated plain-text body, your text only: a reply's quoted original " +
-      "is kept and the signature added by the server. Omit to keep the stored body text.",
+      "is kept and the signature added by the server. Not markdown (no ** or #): " +
+      "formatting goes in html_body. Omit to keep the stored body text.",
   );
   const description = update.description as string;
   assert(

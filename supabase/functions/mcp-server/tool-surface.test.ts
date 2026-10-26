@@ -1156,7 +1156,8 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   assert(!/unless it includes one/.test(description), "no invitation to paste the quote back");
   assertEquals(
     draft.inputSchema.properties.body.description,
-    "Plain-text draft body. Your message text only: never paste the signature or quoted original; the server adds them.",
+    "Plain-text draft body, not markdown (no ** or #): formatting goes in html_body. " +
+      "Your message text only: never paste the signature or quoted original; the server adds them.",
   );
   assert(!/exactly/.test(description), "no description promises an exact copy");
   assert(/Any inbox signature is embedded on create and on an update that passes body/.test(description));
