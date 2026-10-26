@@ -6884,6 +6884,16 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description: "Draft id from the most recent draft call. On IMAP it " +
             "changes after every update, so a stale one fails.",
         },
+        // The card's Discard sends it, as its Send does, so the delete is
+        // recorded for the model (card-activity.ts). Without it here the
+        // consolidated `draft` tool forbade it on 'delete' and the card's
+        // Discard failed schema validation (live test 2026-10-26).
+        base_revision: {
+          type: "integer",
+          minimum: 0,
+          description: "Set by the draft editor card: the revision it shows. A draft " +
+            "changed since is refused as draft_changed. Omit it.",
+        },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["draft_id"],
