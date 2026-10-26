@@ -45,7 +45,7 @@
       "features": [
         "Tout ce que contient Free",
         "3 boîtes connectées",
-        "Aucun plafond mensuel d'actions",
+        "Actions e-mail illimitées",
         "Limite de pointe 2x plus élevée",
         "Support par e-mail"
       ]
@@ -164,7 +164,7 @@
       "tenMailboxes": "Jusqu'à 10 boîtes",
       "businessMailboxes": "10 incluses, puis 3 $ par mois chacune",
       "actionsFree": "150 / mois, 3 premiers jours non comptés",
-      "actionsPaid": "Aucun plafond mensuel, usage équitable",
+      "actionsPaid": "Illimité, usage équitable",
       "oneInbox": "1 boîte",
       "threeInboxes": "3 boîtes",
       "oneSeat": "1 personne",
@@ -184,19 +184,19 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent peut lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer dans cette boîte, et la validation avant envoi, réglable par boîte, est incluse. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent peut lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer dans cette boîte, et la validation avant envoi, réglable par boîte, est incluse. Dès que vous voulez une deuxième ou une troisième boîte, ou des actions e-mail illimitées, c'est Personal, à 9 $ par mois."
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
+        "a": "Deux boîtes connectées de plus, des actions e-mail illimitées (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
-        "a": "Un appel d'outil sur votre point de terminaison /mcp qui touche une boîte : une lecture, une recherche, un déplacement, un brouillon, un envoi. Lister vos boîtes (inbox_list) et tout ce que vous faites dans le tableau de bord n'est jamais compté. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP. Free comprend 150 actions e-mail par mois civil ; Personal, Pro et Business n'ont aucun plafond mensuel, sous réserve d'un usage équitable."
+        "a": "Un appel d'outil sur votre point de terminaison /mcp qui touche une boîte : une lecture, une recherche, un déplacement, un brouillon, un envoi. Lister vos boîtes (inbox_list) et tout ce que vous faites dans le tableau de bord n'est jamais compté. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP. Free comprend 150 actions e-mail par mois civil ; Personal, Pro et Business offrent des actions e-mail illimitées, sous réserve d'un usage équitable."
       },
       {
         "q": "Que se passe-t-il quand j'atteins 150 actions e-mail ?",
-        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Personal supprime le plafond mensuel pour 9 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
+        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Avec Personal, les actions e-mail sont illimitées pour 9 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",

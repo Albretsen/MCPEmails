@@ -124,7 +124,7 @@ Nein. Codex ist eine Terminal-Oberfläche und nutzt deshalb einen API-Schlüssel
 Nein. Jede Nachricht wird für die Anfrage, die sie braucht, live von Ihrem Anbieter abgerufen und danach verworfen. Gespeichert bleibt nur die verschlüsselte Zugangsberechtigung für den Anbieter. [Warum es wichtig ist, E-Mails nie zu speichern](/blog/why-email-never-stored-matters), erklärt die Gründe.
 
 **Was kostet es?**
-Free umfasst ein verbundenes Postfach und 150 abrechenbare E-Mail-Aktionen pro Kalendermonat (UTC), wobei die ersten 3 Tage nicht mitzählen. Diese monatliche Obergrenze gilt für Workspaces, die am oder nach dem 2026-09-13 erstellt wurden; früher erstellte Workspaces sind ausgenommen. Kostenpflichtige Tarife bieten mehr Postfächer und heben die Obergrenze auf: siehe [Preise](/pricing).
+Free umfasst ein verbundenes Postfach und 150 abrechenbare E-Mail-Aktionen pro Kalendermonat (UTC), wobei die ersten 3 Tage nicht mitzählen. Dieses monatliche Kontingent gilt für Workspaces, die am oder nach dem 2026-09-13 erstellt wurden; früher erstellte Workspaces sind ausgenommen. Kostenpflichtige Tarife bieten mehr Postfächer und unbegrenzte E-Mail-Aktionen: siehe [Preise](/pricing).
 
 ## Nächster Schritt
 

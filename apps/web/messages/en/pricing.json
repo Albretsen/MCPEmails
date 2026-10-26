@@ -45,7 +45,7 @@
       "features": [
         "Everything in Free",
         "3 connected inboxes",
-        "No monthly action cap",
+        "Unlimited email actions",
         "2x higher burst rate limit",
         "Email support"
       ]
@@ -164,7 +164,7 @@
       "tenMailboxes": "Up to 10 mailboxes",
       "businessMailboxes": "10 included, then $3 a month each",
       "actionsFree": "150 / month, first 3 days uncounted",
-      "actionsPaid": "No monthly cap, fair use",
+      "actionsPaid": "Unlimited, fair use",
       "oneInbox": "1 inbox",
       "threeInboxes": "3 inboxes",
       "oneSeat": "1 person",
@@ -184,19 +184,19 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 3 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent can read, search, organise, label, draft, schedule and send in that mailbox, and the per-inbox send review and approval hold are included. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
+        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 3 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent can read, search, organise, label, draft, schedule and send in that mailbox, and the per-inbox send review and approval hold are included. When you want a second or third mailbox, or unlimited email actions, that is Personal, at $9 a month."
       },
       {
         "q": "What does Personal add over Free?",
-        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), 90 days of analytics history instead of 30, and email support instead of the community forum. That is the whole list. Everything else you use day to day is on Free too: reading, searching, organising, drafting, sending and scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. The features that keep working when the chat is closed, such as follow-up reminders, snooze and the morning brief, are on Pro."
+        "a": "Two more connected inboxes, unlimited email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), 90 days of analytics history instead of 30, and email support instead of the community forum. That is the whole list. Everything else you use day to day is on Free too: reading, searching, organising, drafting, sending and scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. The features that keep working when the chat is closed, such as follow-up reminders, snooze and the morning brief, are on Pro."
       },
       {
         "q": "What counts as an email action?",
-        "a": "One tool call against your /mcp endpoint that touches a mailbox: a read, a search, a move, a draft, a send. Listing your inboxes (inbox_list) and anything you do in the dashboard are never counted. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Free includes 150 email actions a calendar month; Personal, Pro and Business have no monthly cap, subject to fair use."
+        "a": "One tool call against your /mcp endpoint that touches a mailbox: a read, a search, a move, a draft, a send. Listing your inboxes (inbox_list) and anything you do in the dashboard are never counted. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Free includes 150 email actions a calendar month; Personal, Pro and Business have unlimited email actions, subject to fair use."
       },
       {
         "q": "What happens when I reach 150 email actions?",
-        "a": "Every other email action in that workspace is refused until the 1st of the next month (UTC), when the allowance resets. Your agent sees a plain tool result saying how many actions were used and when the counter resets, so it knows retrying will not help. Unattended automations pause and resume by themselves on the 1st. The dashboard and inbox_list keep working, and we email you at 80% and again at 100%. Personal removes the monthly cap for $9 a month. Workspaces created before 2026-09-12 are early members and are not metered against the allowance."
+        "a": "Every other email action in that workspace is refused until the 1st of the next month (UTC), when the allowance resets. Your agent sees a plain tool result saying how many actions were used and when the counter resets, so it knows retrying will not help. Unattended automations pause and resume by themselves on the 1st. The dashboard and inbox_list keep working, and we email you at 80% and again at 100%. Personal gives you unlimited email actions for $9 a month. Workspaces created before 2026-09-12 are early members and are not metered against the allowance."
       },
       {
         "q": "Is my email content stored anywhere?",

@@ -45,7 +45,7 @@
       "features": [
         "Todo lo de Free",
         "3 bandejas conectadas",
-        "Sin tope mensual de acciones",
+        "Acciones de correo ilimitadas",
         "Límite de ráfaga 2x más alto",
         "Soporte por correo"
       ]
@@ -164,7 +164,7 @@
       "tenMailboxes": "Hasta 10 buzones",
       "businessMailboxes": "10 incluidos, luego $3 al mes cada uno",
       "actionsFree": "150 / mes, los primeros 3 días no cuentan",
-      "actionsPaid": "Sin tope mensual, uso justo",
+      "actionsPaid": "Ilimitadas, uso justo",
       "oneInbox": "1 bandeja",
       "threeInboxes": "3 bandejas",
       "oneSeat": "1 persona",
@@ -184,19 +184,19 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente puede leer, buscar, organizar, etiquetar, redactar, programar y enviar en ese buzón, y la aprobación antes de enviar, configurable por bandeja, está incluida. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente puede leer, buscar, organizar, etiquetar, redactar, programar y enviar en ese buzón, y la aprobación antes de enviar, configurable por bandeja, está incluida. Cuando quieras un segundo o un tercer buzón, o acciones de correo ilimitadas, eso es Personal, por $9 al mes."
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
-        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
+        "a": "Dos bandejas conectadas más, acciones de correo ilimitadas (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
       },
       {
         "q": "¿Qué cuenta como una acción de correo?",
-        "a": "Una llamada de herramienta contra tu endpoint /mcp que toca un buzón: una lectura, una búsqueda, un movimiento, un borrador, un envío. Listar tus bandejas (inbox_list) y todo lo que hagas en el panel no cuenta nunca. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP. Free incluye 150 acciones de correo por mes natural; Personal, Pro y Business no tienen tope mensual, sujeto a uso justo."
+        "a": "Una llamada de herramienta contra tu endpoint /mcp que toca un buzón: una lectura, una búsqueda, un movimiento, un borrador, un envío. Listar tus bandejas (inbox_list) y todo lo que hagas en el panel no cuenta nunca. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP. Free incluye 150 acciones de correo por mes natural; Personal, Pro y Business tienen acciones de correo ilimitadas, sujeto a uso justo."
       },
       {
         "q": "¿Qué pasa cuando llego a 150 acciones de correo?",
-        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Personal elimina el tope mensual por $9 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
+        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Con Personal, las acciones de correo son ilimitadas por $9 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",

@@ -131,7 +131,7 @@ No. Codex is a terminal surface, so it uses a scoped API key on an \`Authorizati
 No. Every message is fetched live from your provider for the request that asked for it, then discarded. Only the encrypted provider credential is retained. [Why never storing email matters](/blog/why-email-never-stored-matters) explains the reasoning.
 
 **What does it cost?**
-Free covers one connected inbox and 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. Paid plans add inboxes and remove the cap: see [pricing](/pricing).
+Free covers one connected inbox and 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly allowance applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. Paid plans add inboxes and unlimited email actions: see [pricing](/pricing).
 
 ## Next step
 
