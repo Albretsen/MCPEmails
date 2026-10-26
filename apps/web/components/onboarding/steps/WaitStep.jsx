@@ -1,11 +1,12 @@
 'use client';
 
-import { StepPlaceholder } from './StepPlaceholder';
+import { WaitPanel } from './WaitPanel';
 
 /**
- * A8, the live wait ladder (setPolling(adaptiveCadence)) and timed help. WP-F fills this in.
+ * A8, the live wait after the handshake: the ladder, setPolling(adaptiveCadence)
+ * and the timed help (WaitPanel). Moves to it_works on the first real call.
  * Props: the panel contract in ./index.js.
  */
-export function WaitStep({ step, clientLabel, goNext }) {
-  return <StepPlaceholder step={step} clientLabel={clientLabel} onContinue={goNext} />;
+export function WaitStep(props) {
+  return <WaitPanel {...props} />;
 }

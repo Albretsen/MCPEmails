@@ -32,7 +32,7 @@ test('a fresh workspace has nothing yet', () => {
   assert.equal(s.serverTime, '2026-10-26T12:00:00.000Z');
   assert.equal(s.client, 'chatgpt');
   assert.deepEqual(s.inboxes, { count: 0, sinceReset: 0, items: [] });
-  assert.deepEqual(s.credential, { exists: false, sinceReset: false, latestAt: null });
+  assert.deepEqual(s.credential, { exists: false, sinceReset: false, latestAt: null, scopes: null });
   assert.deepEqual(s.handshake, { at: null, client: null, clients: [] });
   assert.deepEqual(s.firstCall, { at: null, tool: null });
   assert.equal(s.lastFailure, null);
@@ -60,7 +60,7 @@ test('every signal is reported, newest handshake first, mapped to a chip id', ()
   assert.equal(s.client, null, 'unknown is not a chip id');
   assert.deepEqual(s.inboxes.items, [{ id: 'i1', address: 'me@example.com', provider: 'imap', status: 'active', createdAt: '2026-10-26T11:00:00Z' }]);
   assert.equal(s.inboxes.sinceReset, 1);
-  assert.deepEqual(s.credential, { exists: true, sinceReset: true, latestAt: '2026-10-26T11:30:00Z' });
+  assert.deepEqual(s.credential, { exists: true, sinceReset: true, latestAt: '2026-10-26T11:30:00Z', scopes: null });
   assert.equal(s.handshake.at, '2026-10-26T11:45:00Z');
   assert.equal(s.handshake.client, 'claude');
   assert.deepEqual(s.handshake.clients.map((c) => c.client), ['claude', 'cursor']);
@@ -88,7 +88,7 @@ test('after a reset, older signals are ignored but the inbox is still counted', 
   assert.equal(s.resetAt, '2026-10-26T11:00:00Z');
   assert.equal(s.completedAt, null);
   assert.deepEqual({ count: s.inboxes.count, sinceReset: s.inboxes.sinceReset }, { count: 1, sinceReset: 0 });
-  assert.deepEqual(s.credential, { exists: true, sinceReset: false, latestAt: '2026-10-20T11:30:00Z' });
+  assert.deepEqual(s.credential, { exists: true, sinceReset: false, latestAt: '2026-10-20T11:30:00Z', scopes: null });
   assert.equal(s.handshake.at, null);
   assert.equal(s.firstCall.at, null);
   assert.equal(s.anyCall.at, null);
@@ -113,4 +113,11 @@ test('reset rewinds every onboarding and first-use marker and stamps reset_at', 
   ]) assert.ok(cleared.includes(column), column);
   // Nothing outside the markers.
   for (const key of Object.keys(patch)) assert.match(key, /^(onboarding_|analytics_first_)/);
+});
+
+test('the newest key carries its scopes, so the prompt step can tell a read-only key', () => {
+  const s = shapeOnboardingStatus(rows({ latestKey: { created_at: '2026-10-26T11:30:00Z', scopes: ['read:email', 'search:email'] } }));
+  assert.deepEqual(s.credential.scopes, ['read:email', 'search:email']);
+  const none = shapeOnboardingStatus(rows({ latestKey: { created_at: '2026-10-26T11:30:00Z', scopes: null } }));
+  assert.equal(none.credential.scopes, null);
 });

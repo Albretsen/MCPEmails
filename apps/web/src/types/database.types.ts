@@ -129,6 +129,60 @@ export type Database = {
           },
         ]
       }
+      activation_marker_corrections_20261026: {
+        Row: {
+          corrected_at: string
+          new_first_tool_used_at: string | null
+          old_first_tool_client: string | null
+          old_first_tool_name: string | null
+          old_first_tool_path: string | null
+          old_first_tool_provider: string | null
+          old_first_tool_used_at: string | null
+          old_onboarding_stage: string | null
+          old_technical_activated_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          corrected_at?: string
+          new_first_tool_used_at?: string | null
+          old_first_tool_client?: string | null
+          old_first_tool_name?: string | null
+          old_first_tool_path?: string | null
+          old_first_tool_provider?: string | null
+          old_first_tool_used_at?: string | null
+          old_onboarding_stage?: string | null
+          old_technical_activated_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          corrected_at?: string
+          new_first_tool_used_at?: string | null
+          old_first_tool_client?: string | null
+          old_first_tool_name?: string | null
+          old_first_tool_path?: string | null
+          old_first_tool_provider?: string | null
+          old_first_tool_used_at?: string | null
+          old_onboarding_stage?: string | null
+          old_technical_activated_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_marker_corrections_20261026_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "activation_marker_corrections_20261026_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           api_key_id: string | null
@@ -3193,6 +3247,67 @@ export type Database = {
           },
         ]
       }
+      onboarding_morning_brief_optins: {
+        Row: {
+          client: string | null
+          created_at: string
+          locale: string
+          send_at: string
+          sent_at: string | null
+          status: string
+          time_zone: string
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          locale?: string
+          send_at: string
+          sent_at?: string | null
+          status?: string
+          time_zone: string
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          locale?: string
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+          time_zone?: string
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outbound_idempotency: {
         Row: {
           api_key_id: string
@@ -5595,6 +5710,7 @@ export type Database = {
           onboarding_started_at: string | null
           onboarding_technical_activated_at: string | null
           onboarding_value_activated_at: string | null
+          onboarding_welcome_shown_at: string | null
           owner_id: string
           payment_issue_kind: string | null
           payment_issue_since: string | null
@@ -5656,6 +5772,7 @@ export type Database = {
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
+          onboarding_welcome_shown_at?: string | null
           owner_id: string
           payment_issue_kind?: string | null
           payment_issue_since?: string | null
@@ -5717,6 +5834,7 @@ export type Database = {
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
+          onboarding_welcome_shown_at?: string | null
           owner_id?: string
           payment_issue_kind?: string | null
           payment_issue_since?: string | null
@@ -5767,6 +5885,8 @@ export type Database = {
       }
     }
     Functions: {
+      _app_base_url: { Args: never; Returns: string }
+      _functions_base_url: { Args: never; Returns: string }
       accept_workspace_invite: {
         Args: { p_token_hash: string }
         Returns: {
@@ -5905,6 +6025,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_onboarding_welcome: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
       create_workspace: {
         Args: { p_name: string }
         Returns: {
@@ -5924,6 +6048,7 @@ export type Database = {
       dispatch_first_30_days: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_morning_briefs: { Args: never; Returns: undefined }
+      dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
       dispatch_pass_expiry: { Args: never; Returns: undefined }
       dispatch_paywall_followup: { Args: never; Returns: undefined }
       dispatch_pro_price_notice: { Args: never; Returns: undefined }
@@ -6871,6 +6996,7 @@ export type Database = {
         }[]
       }
       scheduled_sends_operator_workspace_ids: { Args: never; Returns: string[] }
+      signup_method_category: { Args: { p_provider: string }; Returns: string }
       signup_scoreboard: {
         Args: never
         Returns: {

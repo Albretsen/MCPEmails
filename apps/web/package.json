@@ -142,6 +142,8 @@
     "test:first-call-guide-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/first-call-guide-ui.test.mjs",
     "test:onboarding": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/state.test.ts src/lib/onboarding/multi-inbox-prompt.test.mjs src/lib/onboarding/first-week-checklist.test.ts src/lib/onboarding/clients.test.mjs src/lib/onboarding/flow.test.ts src/lib/onboarding/status.test.ts src/lib/onboarding/variant.test.ts",
     "test:install-links": "node --test src/lib/clients/install-links.test.mjs scripts/client-docs-drift.test.mjs",
+    "test:onboarding-connect": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/connect-steps.test.ts",
+    "test:onboarding-connect-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/connect-steps-ui.test.mjs",
     "test:onboarding-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/onboarding/onboarding-ui.test.mjs",
     "test:onboarding-routes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/onboarding/onboarding-routes.test.ts",
     "test:onboarding-inbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/onboarding/inbox-detect.test.ts src/lib/onboarding/inbox-checks.test.ts",

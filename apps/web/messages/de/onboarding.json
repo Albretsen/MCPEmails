@@ -192,16 +192,77 @@
       }
     },
     "add_to_ai": {
-      "title": "MCPEmails zu {client} hinzufügen"
+      "title": "MCPEmails zu {client} hinzufügen",
+      "lead": "Ein Schritt in {client}, dann kommen Sie hierher zurück. Diese Seite geht von selbst weiter, sobald {client} verbunden ist.",
+      "urlLabel": "Server-URL von MCPEmails",
+      "linkAfter": "{client} öffnet sich mit MCPEmails bereits eingetragen. Bestätigen Sie und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "claudeAfter": "Claude öffnet das Fenster für einen benutzerdefinierten Konnektor, MCPEmails ist schon eingetragen. Klicken Sie auf Hinzufügen, dann auf Verbinden, und erlauben Sie den Zugriff.",
+      "commandAfter": "Starten Sie dann {client} und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "configLead": "Fügen Sie dies in {file} ein, laden Sie {client} neu und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "genericOauth": "Fügen Sie in {client} einen MCP-Server vom Typ HTTP hinzu, fügen Sie die URL unten ein und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "manual": "Von Hand einrichten",
+      "continue": "Hinzugefügt, weiter",
+      "chatgpt": {
+        "step1": "Öffnen Sie auf chatgpt.com Plugins und dann Personal.",
+        "step2": "Klicken Sie auf Add und dann auf Add custom MCP server.",
+        "step3": "Nennen Sie ihn MCPEmails, fügen Sie die URL unten ein, legen Sie ihn an und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+        "step4": "Tippen Sie in einem Chat @MCPEmails, um es zu nutzen.",
+        "note": "Eigene MCP-Server funktionieren mit dem Go-Tarif und allen bezahlten Tarifen, im Browser auf chatgpt.com."
+      },
+      "key": {
+        "creating": "API-Schlüssel für {client} wird erstellt",
+        "ready": "Wir haben einen API-Schlüssel für {client} mit Standardzugriff erstellt (lesen, Entwürfe, senden). Kopieren Sie ihn jetzt: Er wird nur einmal angezeigt.",
+        "failed": "Der API-Schlüssel konnte nicht erstellt werden. Erstellen Sie einen im Dashboard unter API-Schlüssel.",
+        "limit": "Ihr Tarif hat keinen Platz für einen weiteren API-Schlüssel. Entfernen Sie einen im Dashboard und laden Sie diese Seite neu.",
+        "retry": "Noch einmal versuchen",
+        "header": "Header",
+        "label": "API-Schlüssel"
+      },
+      "cline": {
+        "step1": "Öffnen Sie in Cline MCP Servers und dann den Tab Remote Servers.",
+        "step2": "Nennen Sie ihn MCPEmails, fügen Sie die URL ein und setzen Sie Transport Type auf Streamable HTTP.",
+        "step3": "Fügen Sie den Header unten hinzu und klicken Sie auf Add Server."
+      },
+      "jetbrains": {
+        "step1": "Öffnen Sie Settings, dann Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Klicken Sie auf Add, wählen Sie Streamable HTTP und fügen Sie die URL ein.",
+        "step3": "Fügen Sie den Header unten hinzu und speichern Sie."
+      },
+      "curl": "Rufen Sie den Server mit diesem Schlüssel auf. Im nächsten Schritt bekommen Sie eine erste Anfrage zum Senden.",
+      "phone": {
+        "claudeTitle": "Auf dem Handy im Browser hinzufügen",
+        "claudeBody": "Kopieren Sie diesen Link und fügen Sie ihn in Safari oder Chrome ein. Ein Antippen öffnet vielleicht die Claude-App, und dort lassen sich keine Konnektoren hinzufügen. Danach funktioniert MCPEmails auch in der App.",
+        "copyLink": "Link kopieren",
+        "otherBody": "{client} wird an einem Computer eingerichtet. Wir können Ihnen diesen Schritt per E-Mail schicken, damit Sie ihn dort öffnen.",
+        "showHere": "Schritte trotzdem hier zeigen"
+      }
     },
     "first_prompt": {
-      "title": "Fragen Sie {client} etwas"
+      "title": "Fragen Sie {client} etwas",
+      "lead": "Fügen Sie das in einen neuen Chat in {client} ein:",
+      "leadCode": "Fügen Sie das in {client} ein:",
+      "leadApi": "Senden Sie Ihre erste Anfrage:",
+      "open": "{client} öffnen",
+      "openNote": "Öffnet einen neuen Chat. Fügen Sie den Prompt dort ein."
     },
     "wait": {
       "title": "Warten auf {client}"
     },
     "it_works": {
-      "title": "Es funktioniert"
+      "title": "Es funktioniert",
+      "success": {
+        "read": "{client} hat gerade Ihren Posteingang gelesen.",
+        "search": "{client} hat gerade Ihren Posteingang durchsucht.",
+        "draft": "{client} hat gerade einen Entwurf in Ihrem Postfach gespeichert.",
+        "organize": "{client} hat gerade Ihren Posteingang aufgeräumt.",
+        "generic": "{client} hat gerade Ihr Postfach genutzt."
+      },
+      "next": "Fügen Sie als Nächstes das ein:",
+      "ritual": "Morgen früh fügen Sie das ein:",
+      "optIn": "Schicken Sie mir das morgen um 8 Uhr per E-Mail",
+      "optInDone": "Wir schicken es morgen um 8:00 Uhr an {email}.",
+      "optInFailed": "Das konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
+      "finish": "Zum Dashboard"
     }
   },
   "nav": {
@@ -209,5 +270,85 @@
     "back": "Zurück",
     "done": "Fertig"
   },
-  "placeholder": "Dieser Schritt ist noch in Arbeit."
+  "placeholder": "Dieser Schritt ist noch in Arbeit.",
+  "actions": {
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "emailMe": "Diesen Link per E-Mail schicken",
+    "emailSent": "An {email} gesendet.",
+    "emailFailed": "Die E-Mail konnte nicht gesendet werden. Versuchen Sie es in einer Minute noch einmal."
+  },
+  "ladder": {
+    "waiting": "Warten auf {client}",
+    "connected": "{client} verbunden",
+    "ask": "Etwas fragen",
+    "works": "Es funktioniert",
+    "listening": "Warten auf {client}",
+    "stopped": "Wir warten nicht mehr. Laden Sie diese Seite neu, nachdem Sie den Prompt ausprobiert haben."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} hat sich noch nicht verbunden",
+      "claude": "Laden Sie claude.ai neu und starten Sie einen neuen Chat. Beenden Sie Claude Desktop ganz und öffnen Sie es neu.",
+      "chatgpt": "Öffnen Sie einen neuen Chat auf chatgpt.com, tippen Sie @ und wählen Sie MCPEmails.",
+      "editor": "Laden Sie das Fenster von {client} neu und prüfen Sie, ob MCPEmails in der MCP-Liste als verbunden erscheint. Wenn nicht, fügen Sie die URL noch einmal ein.",
+      "cli": "Beenden Sie {client}, starten Sie es neu und prüfen Sie, ob MCPEmails aufgeführt und verbunden ist.",
+      "api": "Senden Sie die Anfrage noch einmal und prüfen Sie, ob der Authorization-Header Ihren Schlüssel enthält."
+    },
+    "noCall": {
+      "title": "{client} ist verbunden, hat MCPEmails aber noch nicht genutzt",
+      "claude": "Schalten Sie MCPEmails in diesem Chat ein (+ > Connectors) oder starten Sie einen neuen Chat und fügen Sie den Prompt erneut ein.",
+      "chatgpt": "Tippen Sie im Chat @ und wählen Sie MCPEmails, dann fügen Sie den Prompt erneut ein.",
+      "other": "Starten Sie einen neuen Chat und fügen Sie den Prompt erneut ein. Er nennt MCPEmails, damit {client} weiß, was zu tun ist."
+    },
+    "reconnect": {
+      "title": "Immer noch nichts?",
+      "body": "Entfernen Sie MCPEmails aus {client}, fügen Sie es erneut hinzu und starten Sie einen neuen Chat.",
+      "docs": "Anleitung für {client}",
+      "back": "Einrichtungsschritt noch einmal zeigen",
+      "email": "Schritte per E-Mail schicken"
+    }
+  },
+  "failure": {
+    "title": "Die letzte Anfrage hat nicht funktioniert",
+    "auth": "Ihr Mailanbieter hat das Passwort des Postfachs abgelehnt. Verbinden Sie das Postfach im Dashboard neu.",
+    "timeout": "Ihr Mailserver hat zu lange gebraucht. Fragen Sie noch einmal nach einem kürzeren Zeitraum.",
+    "provider": "Ihr Mailanbieter hat einen Fehler gemeldet. Versuchen Sie es in einer Minute noch einmal.",
+    "scope": "Der Zugriff, den Sie {client} gegeben haben, erlaubt das nicht. Fragen Sie nach etwas anderem oder verbinden Sie neu mit mehr Zugriff.",
+    "inbox": "{client} hat kein verbundenes Postfach gefunden. Prüfen Sie Ihre Postfächer im Dashboard.",
+    "params": "{client} hat eine Anfrage gesendet, die MCPEmails nicht lesen konnte. Meistens wird sie automatisch wiederholt.",
+    "generic": "Die letzte Anfrage von {client} ist fehlgeschlagen. Fragen Sie noch einmal."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Sieh dir mit MCPEmails meinen Posteingang der letzten 2 Tage an und sag mir, welche E-Mails heute eine Antwort von mir brauchen. Eine Zeile pro E-Mail: wer, was die Person will und bis wann. Nichts senden, entwerfen, verschieben oder löschen.",
+      "code": "Nutze die MCPEmails-Tools, um meinen Posteingang der letzten 2 Tage anzusehen, und sag mir, welche E-Mails heute eine Antwort von mir brauchen. Eine Zeile pro E-Mail: wer, was die Person will und bis wann. Nichts senden, entwerfen, verschieben oder löschen."
+    },
+    "draftReplies": {
+      "drafts": "Wähle aus dieser Liste die 3 E-Mails, die am dringendsten eine Antwort brauchen, und speichere zu jeder einen Antwortentwurf in meinem Entwürfe-Ordner, in meinem üblichen Ton. Nichts senden.",
+      "readOnly": "Wähle aus dieser Liste die 3 E-Mails, die am dringendsten eine Antwort brauchen, und schreib zu jeder hier im Chat eine kurze Antwort. Nichts senden oder speichern."
+    },
+    "morningBrief": {
+      "chat": "Gib mir mit MCPEmails mein Morgen-Briefing: was seit gestern gekommen ist, was heute eine Antwort braucht und alles mit einer Frist diese Woche. Höchstens 10 Zeilen. Nichts ändern.",
+      "code": "Nutze die MCPEmails-Tools für mein Morgen-Briefing: was seit gestern gekommen ist, was heute eine Antwort braucht und alles mit einer Frist diese Woche. Höchstens 10 Zeilen. Nichts ändern."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Ihr Einrichtungslink für MCPEmails",
+      "intro": "Öffnen Sie diesen Link an Ihrem Computer, um MCPEmails zu {client} hinzuzufügen:"
+    },
+    "helpSteps": {
+      "subject": "So verbinden Sie MCPEmails mit {client}",
+      "intro": "So bringen Sie {client} mit MCPEmails zum Laufen:",
+      "prompt": "Fügen Sie dann diesen Prompt in den neuen Chat ein:",
+      "guide": "Anleitung:",
+      "resume": "Hier geht es weiter:"
+    },
+    "morning": {
+      "subject": "Ihr Prompt für das Morgen-Briefing",
+      "intro": "Guten Morgen. Fügen Sie das in {client} ein, um Ihr Morgen-Briefing zu bekommen:"
+    },
+    "footer": "Sie haben diese E-Mail bei der Einrichtung von MCPEmails angefordert. Sie wird einmal gesendet."
+  }
 }

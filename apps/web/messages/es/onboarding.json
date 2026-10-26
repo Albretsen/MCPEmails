@@ -192,16 +192,77 @@
       }
     },
     "add_to_ai": {
-      "title": "Añade MCPEmails a {client}"
+      "title": "Añade MCPEmails a {client}",
+      "lead": "Un paso en {client} y vuelves aquí. Esta página avanza sola en cuanto {client} se conecte.",
+      "urlLabel": "URL del servidor de MCPEmails",
+      "linkAfter": "{client} se abre con MCPEmails ya rellenado. Confírmalo e inicia sesión en MCPEmails cuando te lo pida.",
+      "claudeAfter": "Claude abre su ventana para añadir un conector personalizado con MCPEmails ya rellenado. Haz clic en Añadir, luego en Conectar, y permite el acceso.",
+      "commandAfter": "Después abre {client} e inicia sesión en MCPEmails cuando te lo pida.",
+      "configLead": "Añade esto a {file}, recarga {client} e inicia sesión en MCPEmails cuando te lo pida.",
+      "genericOauth": "En {client}, añade un servidor MCP de tipo HTTP, pega la URL de abajo e inicia sesión en MCPEmails cuando te lo pida.",
+      "manual": "Configurarlo a mano",
+      "continue": "Ya lo añadí, continuar",
+      "chatgpt": {
+        "step1": "En chatgpt.com, abre Plugins y luego Personal.",
+        "step2": "Haz clic en Add y luego en Add custom MCP server.",
+        "step3": "Llámalo MCPEmails, pega la URL de abajo, créalo e inicia sesión en MCPEmails cuando te lo pida.",
+        "step4": "En un chat, escribe @MCPEmails para usarlo.",
+        "note": "Los servidores MCP personalizados funcionan con el plan Go y todos los planes de pago, en un navegador en chatgpt.com."
+      },
+      "key": {
+        "creating": "Creando una clave API para {client}",
+        "ready": "Hemos creado una clave API para {client} con acceso Estándar (leer, borradores, enviar). Cópiala ahora: solo se muestra una vez.",
+        "failed": "No se pudo crear la clave API. Crea una en el panel, en Claves API.",
+        "limit": "Tu plan no tiene sitio para otra clave API. Elimina una en el panel y recarga esta página.",
+        "retry": "Reintentar",
+        "header": "Cabecera",
+        "label": "Clave API"
+      },
+      "cline": {
+        "step1": "En Cline, abre MCP Servers y luego la pestaña Remote Servers.",
+        "step2": "Llámalo MCPEmails, pega la URL y pon Transport Type en Streamable HTTP.",
+        "step3": "Añade la cabecera de abajo y haz clic en Add Server."
+      },
+      "jetbrains": {
+        "step1": "Abre Settings y luego Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Haz clic en Add, elige Streamable HTTP y pega la URL.",
+        "step3": "Añade la cabecera de abajo y guarda."
+      },
+      "curl": "Llama al servidor con esta clave. El siguiente paso te da una primera petición para enviar.",
+      "phone": {
+        "claudeTitle": "En el móvil, añádelo desde el navegador",
+        "claudeBody": "Copia este enlace y pégalo en Safari o Chrome. Si lo tocas, puede abrirse la app de Claude, que no permite añadir conectores. Una vez añadido, MCPEmails también funciona en la app.",
+        "copyLink": "Copiar enlace",
+        "otherBody": "{client} se configura en un ordenador. Podemos enviarte este paso por email para que lo abras allí.",
+        "showHere": "Mostrar los pasos aquí de todos modos"
+      }
     },
     "first_prompt": {
-      "title": "Pregúntale algo a {client}"
+      "title": "Pregúntale algo a {client}",
+      "lead": "Pega esto en un chat nuevo de {client}:",
+      "leadCode": "Pega esto en {client}:",
+      "leadApi": "Envía tu primera petición:",
+      "open": "Abrir {client}",
+      "openNote": "Abre un chat nuevo. Pega ahí el prompt."
     },
     "wait": {
       "title": "Esperando a {client}"
     },
     "it_works": {
-      "title": "Funciona"
+      "title": "Funciona",
+      "success": {
+        "read": "{client} acaba de leer tu bandeja de entrada.",
+        "search": "{client} acaba de buscar en tu bandeja de entrada.",
+        "draft": "{client} acaba de guardar un borrador en tu buzón.",
+        "organize": "{client} acaba de ordenar tu bandeja de entrada.",
+        "generic": "{client} acaba de usar tu buzón."
+      },
+      "next": "Ahora, pega esto:",
+      "ritual": "Mañana por la mañana, pega esto:",
+      "optIn": "Enviarme esto por email mañana a las 8",
+      "optInDone": "Lo enviaremos a {email} mañana a las 8:00.",
+      "optInFailed": "No se pudo guardar. Inténtalo de nuevo.",
+      "finish": "Ir al panel"
     }
   },
   "nav": {
@@ -209,5 +270,85 @@
     "back": "Atrás",
     "done": "Listo"
   },
-  "placeholder": "Este paso aún está en construcción."
+  "placeholder": "Este paso aún está en construcción.",
+  "actions": {
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "emailMe": "Enviarme este enlace por email",
+    "emailSent": "Enviado a {email}.",
+    "emailFailed": "No se pudo enviar el email. Inténtalo de nuevo en un minuto."
+  },
+  "ladder": {
+    "waiting": "Esperando a {client}",
+    "connected": "{client} conectado",
+    "ask": "Pregúntale algo",
+    "works": "Funciona",
+    "listening": "Esperando a {client}",
+    "stopped": "Ya no estamos esperando. Recarga esta página después de probar el prompt."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} todavía no se ha conectado",
+      "claude": "Recarga claude.ai y abre un chat nuevo. En Claude Desktop, cierra la app del todo y vuelve a abrirla.",
+      "chatgpt": "Abre un chat nuevo en chatgpt.com, escribe @ y elige MCPEmails.",
+      "editor": "Recarga la ventana de {client} y comprueba que MCPEmails aparece como conectado en su lista MCP. Si no, vuelve a pegar la URL.",
+      "cli": "Cierra y vuelve a abrir {client}, y comprueba que MCPEmails aparece en la lista y conectado.",
+      "api": "Vuelve a enviar la petición y comprueba que la cabecera Authorization lleva tu clave."
+    },
+    "noCall": {
+      "title": "{client} está conectado pero aún no ha usado MCPEmails",
+      "claude": "Activa MCPEmails en este chat (+ > Connectors) o abre un chat nuevo, y vuelve a pegar el prompt.",
+      "chatgpt": "En el chat, escribe @ y elige MCPEmails, y vuelve a pegar el prompt.",
+      "other": "Abre un chat nuevo y vuelve a pegar el prompt. Menciona MCPEmails, así {client} sabe qué usar."
+    },
+    "reconnect": {
+      "title": "¿Sigue sin funcionar?",
+      "body": "Quita MCPEmails de {client}, vuelve a añadirlo y abre un chat nuevo.",
+      "docs": "Guía de configuración de {client}",
+      "back": "Ver de nuevo el paso de configuración",
+      "email": "Enviarme los pasos por email"
+    }
+  },
+  "failure": {
+    "title": "La última petición no funcionó",
+    "auth": "Tu proveedor de correo rechazó la contraseña del buzón. Vuelve a conectar el buzón en el panel.",
+    "timeout": "Tu servidor de correo tardó demasiado en responder. Vuelve a preguntar por un periodo más corto.",
+    "provider": "Tu proveedor de correo devolvió un error. Inténtalo de nuevo en un minuto.",
+    "scope": "El acceso que diste a {client} no permite eso. Pide otra cosa o vuelve a conectar con más acceso.",
+    "inbox": "{client} no encontró ningún buzón conectado. Revisa tus buzones en el panel.",
+    "params": "{client} envió una petición que MCPEmails no pudo leer. Normalmente lo vuelve a intentar solo.",
+    "generic": "La última petición de {client} falló. Vuelve a preguntar."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Usando MCPEmails, mira mi bandeja de entrada de los últimos 2 días y dime qué emails necesitan una respuesta mía hoy. Una línea por email: quién, qué quiere y para cuándo. No envíes, redactes, muevas ni borres nada.",
+      "code": "Usa las herramientas de MCPEmails para mirar mi bandeja de entrada de los últimos 2 días y dime qué emails necesitan una respuesta mía hoy. Una línea por email: quién, qué quiere y para cuándo. No envíes, redactes, muevas ni borres nada."
+    },
+    "draftReplies": {
+      "drafts": "Elige de esa lista los 3 emails que más necesitan respuesta y guarda un borrador de respuesta para cada uno en mi carpeta de Borradores, con mi tono habitual. No envíes nada.",
+      "readOnly": "Elige de esa lista los 3 emails que más necesitan respuesta y escribe aquí en el chat una respuesta corta para cada uno. No envíes ni guardes nada."
+    },
+    "morningBrief": {
+      "chat": "Usando MCPEmails, dame mi resumen de la mañana: qué ha llegado desde ayer, qué necesita respuesta hoy y todo lo que tenga un plazo esta semana. Máximo 10 líneas. No cambies nada.",
+      "code": "Usa las herramientas de MCPEmails para darme mi resumen de la mañana: qué ha llegado desde ayer, qué necesita respuesta hoy y todo lo que tenga un plazo esta semana. Máximo 10 líneas. No cambies nada."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Tu enlace de configuración de MCPEmails",
+      "intro": "Abre este enlace en tu ordenador para añadir MCPEmails a {client}:"
+    },
+    "helpSteps": {
+      "subject": "Cómo conectar MCPEmails a {client}",
+      "intro": "Así haces que {client} funcione con MCPEmails:",
+      "prompt": "Después pega este prompt en el chat nuevo:",
+      "guide": "Guía de configuración:",
+      "resume": "Sigue donde lo dejaste:"
+    },
+    "morning": {
+      "subject": "Tu prompt para el resumen de la mañana",
+      "intro": "Buenos días. Pega esto en {client} para recibir tu resumen de la mañana:"
+    },
+    "footer": "Pediste este email al configurar MCPEmails. Se envía una sola vez."
+  }
 }
