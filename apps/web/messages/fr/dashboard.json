@@ -22,7 +22,7 @@
       "step1": "Dans claude.ai ou Claude Desktop, ouvrez Customize → Connectors, cliquez sur « + Add », puis sur « Add custom connector ».",
       "step2": "Nommez-le MCPEmails, collez l'URL ci-dessus et cliquez sur « Continue ».",
       "step3": "Vérifiez les paramètres de connexion (les valeurs par défaut conviennent), puis cliquez sur « Add ».",
-      "step4": "Connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire. L'offre Free permet un seul connecteur personnalisé. Sur Team et Enterprise, un Owner l'ajoute dans Organization settings → Connectors, puis les membres cliquent sur « Connect » dans Customize → Connectors."
+      "step4": "Connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire. Sur Team et Enterprise, un Owner l'ajoute dans Organization settings → Connectors, puis les membres cliquent sur « Connect » dans Customize → Connectors."
     },
     "chatgpt": {
       "step1": "Sur chatgpt.com, ouvrez Plugins → Personal, cliquez sur « Add » en haut à droite, puis sur « Add custom MCP server ». Ce n'est pas possible dans l'application mobile.",

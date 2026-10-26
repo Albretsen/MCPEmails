@@ -22,7 +22,7 @@
       "step1": "在 claude.ai 或 Claude Desktop 中，打开 Customize → Connectors，点击 \"+ Add\"，再点击 \"Add custom connector\"。",
       "step2": "将名称设为 MCPEmails，粘贴上方的 URL，然后点击 \"Continue\"。",
       "step3": "检查登录设置（保留默认值即可），然后点击 \"Add\"。",
-      "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。Free 套餐最多只能添加一个自定义连接器。在 Team 和 Enterprise 上，由 Owner 在 Organization settings → Connectors 中添加，成员再在 Customize → Connectors 中点击 \"Connect\"。"
+      "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。在 Team 和 Enterprise 上，由 Owner 在 Organization settings → Connectors 中添加，成员再在 Customize → Connectors 中点击 \"Connect\"。"
     },
     "chatgpt": {
       "step1": "在 chatgpt.com 上打开 Plugins → Personal，点击右上角的 \"Add\"，再点击 \"Add custom MCP server\"。移动应用中无法添加。",
