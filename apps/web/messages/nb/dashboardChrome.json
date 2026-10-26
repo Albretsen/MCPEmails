@@ -567,5 +567,12 @@
     "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",
     "places": "{left} av {total} plasser igjen",
     "priceChanged": "Prisen endret seg før du bekreftet, så ingenting ble belastet. Beløpene over er prisen som gjelder nå."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Fullfør oppsettet",
+    "resetTitle": "Tilbakestill oppstarten",
+    "resetBody": "Kun for interne kontoer. Nullstiller fremdriften i oppsettet og markørene for første kall i dette arbeidsområdet, slik at du kan gå gjennom oppsettet på nytt. Innbokser og nøkler forblir tilkoblet.",
+    "resetButton": "Tilbakestill oppstarten",
+    "resetFailed": "Kunne ikke tilbakestille oppstarten. Prøv igjen."
   }
 }

@@ -567,5 +567,12 @@
     "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
     "places": "Places restantes : {left} sur {total}",
     "priceChanged": "Le prix a changé avant votre confirmation, rien n'a donc été facturé. Les montants ci-dessus sont le prix qui s'applique maintenant."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Terminer la configuration",
+    "resetTitle": "Réinitialiser la prise en main",
+    "resetBody": "Comptes internes uniquement. Efface la progression de la configuration et les marqueurs du premier appel de cet espace de travail pour refaire le parcours. Les boîtes de réception et les clés restent connectées.",
+    "resetButton": "Réinitialiser la prise en main",
+    "resetFailed": "Impossible de réinitialiser la prise en main. Réessayez."
   }
 }

@@ -58,6 +58,9 @@ export const ROUTES = {
   pricing: '/[locale]/pricing/page',
   home: '/[locale]/page',
   docs: '/[locale]/docs/(catalogue)/page',
+  // The post-signup setup flow. Plan budget: under 170 KB brotli first load,
+  // and none of the dashboard (src/lib/onboarding/flow.ts).
+  onboarding: '/onboarding/page',
 };
 
 /** One long sentence per language that exists only in that language's catalog. */

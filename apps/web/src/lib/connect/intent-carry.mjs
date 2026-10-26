@@ -246,3 +246,36 @@ export function takeConnectSettings(storage, now = Date.now()) {
   if (age < 0 || age >= CONNECT_INTENT_TTL_MS) return null;
   return connectSettingsShape(record.settings);
 }
+
+// ── The AI app (`?client=`) ──────────────────────────────────────────────────
+//
+// The same carry for "which AI app did this person come for" (owner feedback
+// F1): /docs/<client> pages, blog posts and referrers put `?client=claude` on
+// the signup link, and the /onboarding client chip starts from it
+// (src/lib/onboarding/clients.mjs inferOnboardingClient). Only the shape is
+// checked here, a short lowercase id; the chip ignores ids it does not offer.
+// A UI hint, never attribution, never stored in the browser.
+
+/** The query parameter, on /signup, /login, /dashboard and /onboarding alike. */
+export const CLIENT_INTENT_PARAM = 'client';
+
+const CLIENT_SHAPE = /^[a-z][a-z0-9_]{1,23}$/;
+
+/** The value if it is shaped like a client id, otherwise null. */
+export function clientIntentShape(value) {
+  return typeof value === 'string' && CLIENT_SHAPE.test(value) ? value : null;
+}
+
+/** `path` with `client=<id>` appended, or `path` unchanged when there is none. */
+export function withClientIntent(path, client) {
+  const clean = clientIntentShape(client);
+  if (!clean) return path;
+  const hashAt = path.indexOf('#');
+  const hash = hashAt === -1 ? '' : path.slice(hashAt);
+  const beforeHash = hashAt === -1 ? path : path.slice(0, hashAt);
+  const queryAt = beforeHash.indexOf('?');
+  const pathname = queryAt === -1 ? beforeHash : beforeHash.slice(0, queryAt);
+  const params = new URLSearchParams(queryAt === -1 ? '' : beforeHash.slice(queryAt + 1));
+  params.set(CLIENT_INTENT_PARAM, clean);
+  return `${pathname}?${params.toString()}${hash}`;
+}

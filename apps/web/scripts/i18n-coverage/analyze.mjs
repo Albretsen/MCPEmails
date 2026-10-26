@@ -20,6 +20,8 @@
 //                                          components/i18n/AppLocaleProvider.jsx
 //   <AuthLocaleProvider>                   the NAMESPACES list in
 //                                          components/i18n/AuthLocaleProvider.jsx
+//   <OnboardingLocaleProvider>             the NAMESPACES list in
+//                                          components/i18n/OnboardingLocaleProvider.jsx
 //                                          (both load every non-English file
 //                                          through LocaleCore.jsx's LOADERS)
 //   <ClientMessages namespaces={[...]}>    exactly the listed namespaces
@@ -54,6 +56,7 @@ const LAYOUT_FILE = /^layout\.(js|jsx|ts|tsx)$/;
 const PROVIDER_MODULES = [
   'components/i18n/AppLocaleProvider.jsx',
   'components/i18n/AuthLocaleProvider.jsx',
+  'components/i18n/OnboardingLocaleProvider.jsx',
   'components/i18n/LocaleCore.jsx',
   'components/i18n/ClientMessages.jsx',
 ];
@@ -220,7 +223,7 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   // them in English, and loads every other language through LocaleCore.jsx's
   // LOADERS table, which must therefore have every one of them for every locale.
   const localeProviders = {};
-  for (const kind of ['AppLocaleProvider', 'AuthLocaleProvider']) {
+  for (const kind of ['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider']) {
     const file = path.join(webRoot, `components/i18n/${kind}.jsx`);
     if (!existsSync(file)) continue;
     const source = read(file);
@@ -237,6 +240,7 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   }
   const appNamespaces = localeProviders.AppLocaleProvider ?? null;
   const authNamespaces = localeProviders.AuthLocaleProvider ?? null;
+  const onboardingNamespaces = localeProviders.OnboardingLocaleProvider ?? null;
   const coreFile = path.join(webRoot, 'components/i18n/LocaleCore.jsx');
   if (Object.keys(localeProviders).length > 0) {
     const table = existsSync(coreFile) && /const LOADERS\s*=\s*\{([\s\S]*?)\n\};/.exec(read(coreFile));
@@ -261,7 +265,7 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   function providerOf(layoutFile) {
     const source = read(layoutFile);
     const declared = [];
-    for (const [kind, namespaces] of Object.entries({ AppLocaleProvider: appNamespaces, AuthLocaleProvider: authNamespaces })) {
+    for (const [kind, namespaces] of Object.entries({ AppLocaleProvider: appNamespaces, AuthLocaleProvider: authNamespaces, OnboardingLocaleProvider: onboardingNamespaces })) {
       if (!new RegExp(`<${kind}[\\s>]`).test(source)) continue;
       if (!namespaces) throw new Error(`${rel(layoutFile)} uses ${kind}, which was not found`);
       declared.push({ kind, namespaces });
@@ -330,7 +334,7 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   for (const file of allSource) {
     if (layouts.get(path.dirname(file)) === file) continue;
     if (PROVIDER_MODULES.includes(rel(file))) continue;
-    if (/<(NextIntlClientProvider|ClientMessages|AppLocaleProvider|AuthLocaleProvider|LocaleRoot)[\s>]/.test(read(file))) {
+    if (/<(NextIntlClientProvider|ClientMessages|AppLocaleProvider|AuthLocaleProvider|OnboardingLocaleProvider|LocaleRoot)[\s>]/.test(read(file))) {
       violations.push({ type: 'provider-outside-layout', file: rel(file), detail: 'a message provider is rendered outside a layout file, where this analysis cannot place it' });
     }
   }
@@ -400,5 +404,5 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
     return true;
   });
 
-  return { requestNamespaces, appNamespaces, authNamespaces, locales, requiredLocales, routes, violations: unique };
+  return { requestNamespaces, appNamespaces, authNamespaces, onboardingNamespaces, locales, requiredLocales, routes, violations: unique };
 }

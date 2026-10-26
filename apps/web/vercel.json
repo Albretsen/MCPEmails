@@ -22,6 +22,7 @@
     "app/approvals/**": { "regions": ["arn1"] },
     "app/invite/**": { "regions": ["arn1"] },
     "app/signup/**": { "regions": ["arn1"] },
+    "app/onboarding/**": { "regions": ["arn1"] },
     "app/r/**": { "regions": ["arn1"] },
     "app/(auth)/**": { "regions": ["arn1"] },
     "app/u/**": { "regions": ["arn1"] },

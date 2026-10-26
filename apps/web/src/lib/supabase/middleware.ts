@@ -2,7 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import type { Database } from '@/types/database.types';
-import { CONNECT_INTENT_PARAM, withConnectIntent } from '@/lib/connect/intent-carry.mjs';
+import {
+  CLIENT_INTENT_PARAM,
+  CONNECT_INTENT_PARAM,
+  withClientIntent,
+  withConnectIntent,
+} from '@/lib/connect/intent-carry.mjs';
 import { mayUseThisDeployment, STAGING_RESTRICTED_REASON } from '@/lib/env/app-env';
 
 /**
@@ -88,9 +93,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
             // A signed-in visitor who pressed "Connect IONOS free" on a provider
             // page is bounced from /signup?provider=ionos to here. Keep the
             // hint on the way (shape-checked; the dashboard validates it).
-            withConnectIntent(
-              '/dashboard',
-              request.nextUrl.searchParams.get(CONNECT_INTENT_PARAM),
+            // The AI app hint (?client=) rides along the same way.
+            withClientIntent(
+              withConnectIntent(
+                '/dashboard',
+                request.nextUrl.searchParams.get(CONNECT_INTENT_PARAM),
+              ),
+              request.nextUrl.searchParams.get(CLIENT_INTENT_PARAM),
             ),
             request.nextUrl.origin,
           ).toString();
@@ -128,7 +137,8 @@ function isProtectedPath(pathname: string): boolean {
   // link inside an AI conversation, so the redirect-to-login behaviour matters:
   // an unauthenticated visitor (or a preview bot) must never see the review.
   // The page re-checks auth itself; this is the outer layer, not the only one.
-  const protectedPrefixes = ['/dashboard', '/settings', '/approvals'];
+  // /onboarding is the post-signup setup flow; it re-checks auth itself.
+  const protectedPrefixes = ['/dashboard', '/settings', '/approvals', '/onboarding'];
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 

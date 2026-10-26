@@ -57,18 +57,20 @@ test('the app: every full locale is required, the frozen ones are not', () => {
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {
   // The fact that makes it safe to stop sending marketing messages to the app
   // and auth routes: their client code reads only what AppLocaleProvider
-  // bundles (AuthLocaleProvider's set is a subset of it), or nothing at all.
+  // bundles (AuthLocaleProvider's set is a subset of it), or, under /onboarding,
+  // what OnboardingLocaleProvider bundles, or nothing at all.
+  const appSide = new Set([...real.appNamespaces, ...(real.onboardingNamespaces ?? [])]);
   const offenders = real.routes
     .filter((r) => !r.file.startsWith('app/[locale]/'))
-    .filter((r) => r.needs.some((namespace) => !real.appNamespaces.includes(namespace)))
+    .filter((r) => r.needs.some((namespace) => !appSide.has(namespace)))
     .map((r) => `${r.file} needs [${r.needs}]`);
   assert.deepEqual(offenders, []);
 });
 
-test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider or AuthLocaleProvider', () => {
+test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider, AuthLocaleProvider or OnboardingLocaleProvider', () => {
   const offenders = real.routes
     .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0)
-    .filter((r) => r.provider !== 'AppLocaleProvider' && r.provider !== 'AuthLocaleProvider')
+    .filter((r) => !['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider'].includes(r.provider))
     .map((r) => `${r.file} (${r.provider})`);
   assert.deepEqual(offenders, []);
 });
@@ -82,6 +84,9 @@ test('the app: sign-up, login and OAuth consent get the auth-only provider, the 
     assert.equal(byFile.get(file)?.provider, 'AuthLocaleProvider', file);
   }
   assert.equal(byFile.get('app/dashboard/[[...section]]/page.js')?.provider, 'AppLocaleProvider');
+  // /onboarding has its own budget: none of the dashboard's copy.
+  assert.equal(byFile.get('app/onboarding/page.tsx')?.provider, 'OnboardingLocaleProvider');
+  assert.deepEqual(real.onboardingNamespaces, ['common', 'onboarding']);
 });
 
 // ---------------------------------------------------------------------------

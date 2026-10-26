@@ -550,5 +550,12 @@
     "unavailableBody": "我们无法启动批准流程。请几分钟后重试。",
     "closeHint": "有疑问？请发邮件至 hello@mcpemails.com。",
     "openApp": "打开 MCPEmails"
+  },
+  "onboardingEntry": {
+    "finishSetup": "完成设置",
+    "resetTitle": "重置入门流程",
+    "resetBody": "仅限内部账户。清除此工作区的设置进度和首次调用标记，以便重新运行设置流程。收件箱和密钥保持连接。",
+    "resetButton": "重置入门流程",
+    "resetFailed": "无法重置入门流程。请重试。"
   }
 }

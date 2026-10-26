@@ -17,6 +17,8 @@ import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
 import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
 import { clientIpFromHeaders, recordSsoAuditVia } from '@/lib/sso/audit';
 import { attachReferral } from '@/lib/referrals/attach';
+import { assignOnboardingAtSignup } from '@/lib/onboarding/variant';
+import { onboardingEntryPath } from '@/lib/onboarding/entry';
 import {
   clearReferralCookieString,
   referralCookieFromHeader,
@@ -242,7 +244,38 @@ export async function GET(request: Request) {
   // passes a bare startsWith('/') check but resolves to an external origin.
   const isSafeNext =
     next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
-  const redirectPath = isSafeNext ? next : '/dashboard';
+  let redirectPath = isSafeNext ? next : '/dashboard';
+
+  // Onboarding arms (src/lib/onboarding/variant.ts), assigned the moment an
+  // OAuth signup creates its workspace. A workspace in the new flow goes to
+  // /onboarding instead of the first-run dashboard; any other destination
+  // (an invite, a checkout redirect) is kept. SSO joins are not new
+  // workspaces. Never blocks the sign-in.
+  if (exchangedUser && !isSsoUser(exchangedUser) && isNewAccountSignup(exchangedUser.created_at)) {
+    try {
+      const service = createServiceRoleClient();
+      const { data: ownWorkspace } = await service
+        .from('workspaces')
+        .select('id, created_at')
+        .eq('owner_id', exchangedUser.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (ownWorkspace) {
+        const variant = await assignOnboardingAtSignup(ownWorkspace.id, {
+          ownerEmail: exchangedUser.email ?? null,
+          workspaceCreatedAt: ownWorkspace.created_at,
+          db: service,
+        });
+        const entry = variant.flow === 'new' ? onboardingEntryPath(redirectPath) : null;
+        if (entry) redirectPath = entry;
+      }
+    } catch (err) {
+      console.error('[auth-callback] onboarding assignment failed:', err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const response = NextResponse.redirect(`${origin}${redirectPath}`);
   if (consentVersion) {
     response.headers.append(

@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "MCPEmails einrichten",
+    "progress": "Schritt {current} von {total}",
+    "exit": "Zum Dashboard",
+    "loading": "Ihre Einrichtung wird geladen",
+    "statusError": "Ihre Einrichtung konnte nicht geladen werden. Laden Sie die Seite neu, um es noch einmal zu versuchen."
+  },
+  "chip": {
+    "using": "Mit {client}",
+    "change": "Ändern",
+    "label": "Die KI-App, die Sie mit MCPEmails nutzen",
+    "more": "Weitere Apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Welches Postfach soll Ihre KI nutzen?",
+      "reuseTitle": "Ein Postfach ist bereits verbunden",
+      "reuse": "{address} verwenden",
+      "connectAnother": "Anderes Postfach verbinden"
+    },
+    "add_to_ai": {
+      "title": "MCPEmails zu {client} hinzufügen"
+    },
+    "first_prompt": {
+      "title": "Fragen Sie {client} etwas"
+    },
+    "wait": {
+      "title": "Warten auf {client}"
+    },
+    "it_works": {
+      "title": "Es funktioniert"
+    }
+  },
+  "nav": {
+    "continue": "Weiter",
+    "back": "Zurück",
+    "done": "Fertig"
+  },
+  "placeholder": "Dieser Schritt ist noch in Arbeit."
+}

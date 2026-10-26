@@ -145,11 +145,10 @@ test('every place a signed-in user is sent to is built with the hint', () => {
   const read = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
   const signup = read('./SignupApp.jsx');
-  // Password signup with a session, and both OAuth buttons.
-  assert.equal(
-    signup.match(/getSafeRedirect\(\) \?\? withConnectIntent\('\/dashboard\?firstrun=1', connectProvider\)/g)?.length,
-    2,
-  );
+  // Password signup with a session, and both OAuth buttons, all through the
+  // one first-run builder, which also carries ?client= (the onboarding chip).
+  assert.equal(signup.match(/getSafeRedirect\(\) \?\? firstRunDestination\(\)/g)?.length, 2);
+  assert.ok(signup.includes("return withClientIntent(withConnectIntent('/dashboard?firstrun=1', connectProvider), connectClient);"));
   assert.ok(!signup.includes("?? '/dashboard?firstrun=1'"), 'a signup destination is built without the hint');
 
   const login = read('./LoginApp.jsx');

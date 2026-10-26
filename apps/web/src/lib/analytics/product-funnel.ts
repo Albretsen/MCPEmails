@@ -7,6 +7,7 @@ import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
 import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
+import type { OnboardingStepCategory } from '@/lib/onboarding/flow';
 
 /**
  * Which control opened the connect modal. The closed list lives in
@@ -119,14 +120,19 @@ export type ProductFunnelEvent = {
     // `checkout_completed`, for the same reason a plan change does not: those
     // stages are the subscription conversion every read-out is built on.
     | 'pass_offer_shown' | 'pass_checkout_started' | 'pass_checkout_completed'
-    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed';
+    | 'pass_reminder_sent' | 'pass_expired' | 'pass_refunded' | 'pass_renewed'
+    // The /onboarding flow (20261026152301, src/lib/onboarding/). Step views
+    // carry the step as category (OnboardingStepCategory); client_changed and
+    // onboarding_completed carry the client; onboarding_reset is 'unknown'.
+    | 'onboarding_step_viewed' | 'client_changed' | 'onboarding_completed' | 'onboarding_reset';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
     | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
     | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
     | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory | PassFunnelCategory
-    | PlanChangeCategory | CancelReason | RetentionOptionCategory;
+    | PlanChangeCategory | CancelReason | RetentionOptionCategory
+    | 'claude_code' | OnboardingStepCategory;
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

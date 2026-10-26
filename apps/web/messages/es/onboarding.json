@@ -1,0 +1,41 @@
+{
+  "shell": {
+    "title": "Configura MCPEmails",
+    "progress": "Paso {current} de {total}",
+    "exit": "Ir al panel",
+    "loading": "Cargando tu configuración",
+    "statusError": "No se pudo cargar tu configuración. Recarga la página para intentarlo de nuevo."
+  },
+  "chip": {
+    "using": "Con {client}",
+    "change": "Cambiar",
+    "label": "La app de IA que usas con MCPEmails",
+    "more": "Más apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "¿Qué bandeja de entrada debe usar tu IA?",
+      "reuseTitle": "Ya hay una bandeja de entrada conectada",
+      "reuse": "Usar {address}",
+      "connectAnother": "Conectar otra bandeja"
+    },
+    "add_to_ai": {
+      "title": "Añade MCPEmails a {client}"
+    },
+    "first_prompt": {
+      "title": "Pregúntale algo a {client}"
+    },
+    "wait": {
+      "title": "Esperando a {client}"
+    },
+    "it_works": {
+      "title": "Funciona"
+    }
+  },
+  "nav": {
+    "continue": "Continuar",
+    "back": "Atrás",
+    "done": "Listo"
+  },
+  "placeholder": "Este paso aún está en construcción."
+}

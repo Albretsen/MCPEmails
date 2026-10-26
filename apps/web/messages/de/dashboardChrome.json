@@ -567,5 +567,12 @@
     "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",
     "places": "Noch {left} von {total} Plätzen frei",
     "priceChanged": "Der Preis hat sich geändert, bevor Sie bestätigt haben, daher wurde nichts berechnet. Die Beträge oben sind der Preis, der jetzt gilt."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Einrichtung abschließen",
+    "resetTitle": "Einrichtung zurücksetzen",
+    "resetBody": "Nur für interne Konten. Setzt den Einrichtungsfortschritt und die Markierungen für den ersten Aufruf in diesem Workspace zurück, damit Sie die Einrichtung erneut durchlaufen können. Postfächer und Schlüssel bleiben verbunden.",
+    "resetButton": "Einrichtung zurücksetzen",
+    "resetFailed": "Die Einrichtung konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut."
   }
 }
