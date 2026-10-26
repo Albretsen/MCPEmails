@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-26',
+    kind: 'fixed',
+    title: 'Your AI only offers mailboxes that work',
+    body:
+      "When your AI asks which mailbox to use, a mailbox that needs reconnecting is now marked as such, with its reconnect link, instead of being offered as a choice. Before, picking one led to a failed draft or send.",
+  },
+  {
+    date: '2026-10-26',
     kind: 'improved',
     title: 'Smoother start when you add MCPEmails from Claude or ChatGPT',
     body:
