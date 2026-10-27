@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import type { Receipt as ReceiptData } from "../contract";
 import { CARD_LANGUAGE, receiptDetail } from "../format";
 import { Head, Line, TextLink } from "./ui";
@@ -64,6 +65,8 @@ export function Receipt(props: {
   receipt: ReceiptData;
   busy: string | null;
   onOpenDashboard: () => void;
+  /** Right of the headline, after the link: a bulk result's Undo. */
+  children?: ComponentChildren;
 }) {
   const r = props.receipt;
   const tone = TONES[r.outcome] ?? "neutral";
@@ -89,6 +92,7 @@ export function Receipt(props: {
         extra={r.subline && <span class="muted">· {r.subline}</span>}
       >
         {link && <TextLink onClick={props.onOpenDashboard}>{link}</TextLink>}
+        {props.children}
       </Head>
       {detail && <Line>{detail}</Line>}
     </>

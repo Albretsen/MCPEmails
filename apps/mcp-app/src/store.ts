@@ -14,7 +14,7 @@ import type {
   ToolCancelledParams,
   ToolResultParams,
 } from "./bridge";
-import { DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
+import { BULK_SAMPLE_META_KEY, DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
 import {
   cardKey,
   isRestoreStub,
@@ -453,7 +453,13 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
 
 /** Everything an envelope goes through on its way in. See `classifyResult`. */
 function admit(env: Envelope, result: ToolResultParams): Envelope {
-  return resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+  const next = resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+  // A bulk result card's sample rides in result `_meta` (card-only); a host
+  // that drops it just shows no sample.
+  const rows = result._meta?.[BULK_SAMPLE_META_KEY];
+  return next.undo && Array.isArray(rows)
+    ? { ...next, bulk_sample: neutralizeDeep(rows.slice(0, 5)) }
+    : next;
 }
 
 // ---------------------------------------------------------------------------
