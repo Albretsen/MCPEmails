@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
@@ -139,11 +140,18 @@ export function DashboardApp(props) {
   );
 }
 
+// The setup flow (onboarding), a dialog over the dashboard. Loaded only when
+// the page came with `?setup=1` for a workspace in the new flow.
+const SetupModal = dynamic(() => import('../onboarding/SetupModal'), { ssr: false });
+
+/** Query params that belong to the setup dialog, dropped when it closes. */
+const SETUP_PARAMS = ['setup', 'client', 'provider', 'step', 'from', 'exp', 'sig', 'connected', 'outlook_error'];
+
 /**
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null, setup = null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -171,6 +179,24 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       if (stripped !== window.location.href) window.history.replaceState(window.history.state, '', stripped);
     } catch { /* cosmetic */ }
   }, [chatReturn]);
+  // The setup dialog: open while `setup` came from the server and it has not
+  // been closed. Closing drops its params and re-reads the server props, so
+  // an inbox connected inside it shows up here.
+  const [setupOpen, setSetupOpen] = useState(Boolean(setup));
+  const closeSetup = useCallback((href) => {
+    setSetupOpen(false);
+    if (typeof href === 'string') {
+      router.push(href);
+      return;
+    }
+    try {
+      const url = new URL(window.location.href);
+      for (const key of SETUP_PARAMS) url.searchParams.delete(key);
+      router.replace(url.pathname + url.search, { scroll: false });
+    } catch {
+      router.refresh();
+    }
+  }, [router]);
   const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
   const upgradePlan = readQuery(searchParams, 'upgrade');
   const upgradeInterval = readQuery(searchParams, 'interval');
@@ -494,7 +520,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
       // Came from a chat link before the Microsoft sign-in: back to the chat.
-      const fromChat = takeChatReturn();
+      // The setup dialog handles a chat link's return itself.
+      const fromChat = setup ? null : takeChatReturn();
       if (fromChat) setChatDone(fromChat);
     } else if (readQuery(searchParams, 'connect') === 'second_inbox') {
       // Onboarding Flow B, B1: "Connect your other inbox" on It works, for a
@@ -1327,6 +1354,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
+      {setupOpen && setup && <SetupModal setup={setup} mcpUrl={mcpUrl} flowB={serverWorkspace?.flowB ?? null} onClose={closeSetup} />}
       <Sidebar
         route={route}
         setRoute={setRoute}

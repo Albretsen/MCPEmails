@@ -2,9 +2,10 @@
   "shell": {
     "title": "MCPEmails einrichten",
     "progress": "Schritt {current} von {total}",
-    "exit": "Zum Dashboard",
+    "exit": "Einrichtung schließen",
     "loading": "Ihre Einrichtung wird geladen",
-    "statusError": "Ihre Einrichtung konnte nicht geladen werden. Laden Sie die Seite neu, um es noch einmal zu versuchen."
+    "statusError": "Ihre Einrichtung konnte nicht geladen werden. Laden Sie die Seite neu, um es noch einmal zu versuchen.",
+    "skip": "Überspringen"
   },
   "chip": {
     "using": "Mit {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "Welches Postfach soll Ihre KI nutzen?",
+      "title": "Postfach verbinden",
       "reuseTitle": "Ein Postfach ist bereits verbunden",
       "reuse": "{address} verwenden",
       "connectAnother": "Anderes Postfach verbinden",
-      "lead": "Geben Sie die Adresse ein, die Ihre KI lesen und beantworten soll. Wir zeigen Ihnen die Schritte für Ihren Anbieter.",
+      "lead": "Das Postfach, das Ihre KI lesen und beantworten soll.",
       "emailLabel": "E-Mail-Adresse",
       "useSignup": "{address} verwenden",
       "detecting": "Anbieter wird gesucht",
-      "detected": "Anbieter: {provider}",
-      "notRight": "Stimmt nicht? Anbieter wählen",
-      "chooseLead": "Wir konnten Ihren Anbieter nicht an der Adresse erkennen. Wählen Sie einen aus:",
+      "detected": "{provider}",
+      "notRight": "Ändern",
+      "chooseLead": "Welcher Anbieter ist es?",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "Sie können es trotzdem versuchen."
       },
       "trust": {
-        "access": "Ihre KI kann in diesem Postfach Mails lesen, suchen, ordnen, entwerfen und senden. Ihr Kontopasswort und Ihre Einstellungen kann sie nicht ändern.",
-        "appPassword": "Ein App-Passwort gilt nur für Mail, und Sie können es jederzeit einzeln widerrufen.",
-        "mailboxPassword": "Sie können das Postfach in MCPEmails jederzeit trennen.",
-        "storage": "Verschlüsselt gespeichert in Stockholm."
+        "appPassword": "Ein App-Passwort öffnet nur Ihre Mail. Verschlüsselt in Stockholm gespeichert und jederzeit widerrufbar.",
+        "mailboxPassword": "Verschlüsselt in Stockholm gespeichert. Jederzeit trennbar."
       },
       "connect": "Verbinden",
       "progress": {
         "title": "{address} wird verbunden",
         "server": "Mailserver gefunden",
         "signedIn": "Angemeldet",
-        "read": "Postfach gelesen",
-        "slow": "Bei manchen Anbietern dauert das bis zu einer Minute."
+        "read": "Postfach gelesen"
       },
       "proof": {
         "title": "Verbunden",
@@ -187,19 +185,20 @@
         "admin_consent_required": "Ihre Organisation braucht eine Admin-Freigabe für MCPEmails, bevor Sie sich anmelden können. Schicken Sie Ihrem Admin den Link unten.",
         "outlook_cancelled": "Sie haben auf der Seite von Microsoft abgebrochen. Klicken Sie auf Mit Microsoft verbinden, um es noch einmal zu versuchen.",
         "generic": "Die Microsoft-Anmeldung wurde nicht abgeschlossen. Versuchen Sie es noch einmal."
-      }
+      },
+      "emailPlaceholder": "sie@beispiel.de"
     },
     "add_to_ai": {
       "title": "MCPEmails zu {client} hinzufügen",
-      "lead": "Ein Schritt in {client}, dann kommen Sie hierher zurück. Diese Seite geht von selbst weiter, sobald {client} verbunden ist.",
+      "lead": "Öffnet sich in einem neuen Tab. Es geht von selbst weiter, sobald {client} verbunden ist.",
       "urlLabel": "Server-URL von MCPEmails",
-      "linkAfter": "{client} öffnet sich mit MCPEmails bereits eingetragen. Bestätigen Sie und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
-      "claudeAfter": "Claude öffnet das Fenster für einen benutzerdefinierten Konnektor, MCPEmails ist schon eingetragen. Klicken Sie auf Hinzufügen, dann auf Verbinden, und erlauben Sie den Zugriff.",
+      "linkAfter": "Bestätigen Sie in {client} und melden Sie sich bei MCPEmails an.",
+      "claudeAfter": "Klicken Sie in Claude auf Hinzufügen, dann auf Verbinden.",
       "commandAfter": "Starten Sie dann {client} und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
       "configLead": "Fügen Sie dies in {file} ein, laden Sie {client} neu und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
       "genericOauth": "Fügen Sie in {client} einen MCP-Server vom Typ HTTP hinzu, fügen Sie die URL unten ein und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
       "manual": "Von Hand einrichten",
-      "continue": "Hinzugefügt, weiter",
+      "continue": "Ist hinzugefügt",
       "chatgpt": {
         "step1": "Öffnen Sie auf chatgpt.com Plugins und dann Personal.",
         "step2": "Klicken Sie auf Add und dann auf Add custom MCP server.",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "Fragen Sie {client} etwas",
-      "lead": "Fügen Sie das in einen neuen Chat in {client} ein:",
-      "leadCode": "Fügen Sie das in {client} ein:",
+      "title": "In {client} ausprobieren",
+      "lead": "Fügen Sie das in einen neuen Chat ein.",
+      "leadCode": "Fügen Sie das in {client} ein.",
       "leadApi": "Senden Sie Ihre erste Anfrage:",
-      "open": "{client} öffnen",
-      "openNote": "Öffnet einen neuen Chat. Fügen Sie den Prompt dort ein."
+      "open": "{client} öffnen"
     },
     "wait": {
       "title": "Warten auf {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} hat gerade Ihren Posteingang aufgeräumt.",
         "generic": "{client} hat gerade Ihr Postfach genutzt."
       },
-      "next": "Fügen Sie als Nächstes das ein:",
-      "ritual": "Morgen früh fügen Sie das ein:",
-      "optIn": "Schicken Sie mir das morgen um 8 Uhr per E-Mail",
-      "optInDone": "Wir schicken es morgen um 8:00 Uhr an {email}.",
-      "optInFailed": "Das konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
-      "finish": "Zum Dashboard",
+      "finish": "Fertig",
       "secondInbox": {
         "title": "Ihr anderes Postfach verbinden",
         "lead": "Die meisten verbinden ein zweites Postfach: Arbeit und Privates in einem Chat.",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "Die letzte Anfrage hat nicht funktioniert",
     "auth": "Ihr Mailanbieter hat das Passwort des Postfachs abgelehnt. Verbinden Sie das Postfach im Dashboard neu.",
     "timeout": "Ihr Mailserver hat zu lange gebraucht. Fragen Sie noch einmal nach einem kürzeren Zeitraum.",
     "provider": "Ihr Mailanbieter hat einen Fehler gemeldet. Versuchen Sie es in einer Minute noch einmal.",

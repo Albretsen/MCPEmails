@@ -319,7 +319,7 @@ export const ROUTES = [
   ['app/data/imap-providers.csv/route.ts', 'iad1', '0', '-'],
   ['app/data/imap-providers.json/route.ts', 'iad1', '0', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],
-  ['app/onboarding/page.tsx', 'arn1', '4 serial (auth, workspace, member, variant); status streams', '-'],
+  ['app/onboarding/page.tsx', 'arn1', '4 serial (auth, workspace, member, variant); then a redirect to /dashboard?setup=1', '-'],
   ['app/onboarding/back-to-chat/page.js', 'arn1', '1 (auth)', '-'],
   ['app/opengraph-image.tsx', 'iad1', '0', 'prerendered at build; static'],
   ['app/r/[code]/route.ts', 'arn1', '2', '-'],

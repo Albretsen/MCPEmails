@@ -2,9 +2,10 @@
   "shell": {
     "title": "Set up MCPEmails",
     "progress": "Step {current} of {total}",
-    "exit": "Go to dashboard",
+    "exit": "Close setup",
     "loading": "Loading your setup",
-    "statusError": "Could not load your setup. Reload the page to try again."
+    "statusError": "Could not load your setup. Reload the page to try again.",
+    "skip": "Skip setup"
   },
   "chip": {
     "using": "Using {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "Which inbox should your AI use?",
+      "title": "Connect your inbox",
       "reuseTitle": "An inbox is already connected",
       "reuse": "Use {address}",
       "connectAnother": "Connect another inbox",
-      "lead": "Type the address you want your AI to read and answer. We show the steps for your provider.",
+      "lead": "The one your AI should read and answer.",
       "emailLabel": "Email address",
       "useSignup": "Use {address}",
       "detecting": "Looking up your provider",
-      "detected": "Provider: {provider}",
-      "notRight": "Not right? Choose your provider",
-      "chooseLead": "We could not tell your provider from the address. Pick one:",
+      "detected": "{provider}",
+      "notRight": "Change",
+      "chooseLead": "Which provider is it?",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "You can still try it."
       },
       "trust": {
-        "access": "Your AI can read, search, organise, draft and send mail in this inbox. It cannot change your account password or settings.",
-        "appPassword": "An app password works only for mail, and you can revoke it on its own at any time.",
-        "mailboxPassword": "You can disconnect the inbox in MCPEmails at any time.",
-        "storage": "Stored encrypted in Stockholm."
+        "appPassword": "An app password opens only your mail. Stored encrypted in Stockholm, and you can revoke it any time.",
+        "mailboxPassword": "Stored encrypted in Stockholm. Disconnect any time."
       },
       "connect": "Connect",
       "progress": {
         "title": "Connecting {address}",
         "server": "Mail server found",
         "signedIn": "Signed in",
-        "read": "Mailbox read",
-        "slow": "Some providers take up to a minute."
+        "read": "Mailbox read"
       },
       "proof": {
         "title": "Connected",
@@ -187,19 +185,20 @@
         "admin_consent_required": "Your organisation needs an admin to approve MCPEmails before you can sign in. Send your admin the link below.",
         "outlook_cancelled": "You cancelled on Microsoft's page. Press Connect with Microsoft to try again.",
         "generic": "Microsoft sign-in did not finish. Try again."
-      }
+      },
+      "emailPlaceholder": "you@example.com"
     },
     "add_to_ai": {
       "title": "Add MCPEmails to {client}",
-      "lead": "One step in {client}, then come back here. This page moves on by itself once {client} connects.",
+      "lead": "Opens in a new tab. This moves on by itself once {client} connects.",
       "urlLabel": "MCPEmails server URL",
-      "linkAfter": "{client} opens with MCPEmails filled in. Confirm it, then sign in to MCPEmails when asked.",
-      "claudeAfter": "Claude opens its Add custom connector window with MCPEmails filled in. Click Add, then Connect, and allow access.",
+      "linkAfter": "Confirm in {client}, then sign in to MCPEmails.",
+      "claudeAfter": "In Claude, click Add, then Connect.",
       "commandAfter": "Then start {client} and sign in to MCPEmails when it asks.",
       "configLead": "Add this to {file}, then reload {client} and sign in to MCPEmails when it asks.",
       "genericOauth": "In {client}, add an MCP server of type HTTP, paste the URL below, and sign in to MCPEmails when it asks.",
       "manual": "Set it up by hand",
-      "continue": "I added it, continue",
+      "continue": "I added it",
       "chatgpt": {
         "step1": "On chatgpt.com, open Plugins, then Personal.",
         "step2": "Click Add, then Add custom MCP server.",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "Ask {client} something",
-      "lead": "Paste this into a new chat in {client}:",
-      "leadCode": "Paste this into {client}:",
+      "title": "Try it in {client}",
+      "lead": "Paste this into a new chat.",
+      "leadCode": "Paste this into {client}.",
       "leadApi": "Send your first request:",
-      "open": "Open {client}",
-      "openNote": "Opens a new chat. Paste the prompt there."
+      "open": "Open {client}"
     },
     "wait": {
       "title": "Waiting for {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} just organized your inbox.",
         "generic": "{client} just used your inbox."
       },
-      "next": "Next, paste this:",
-      "ritual": "Tomorrow morning, paste this:",
-      "optIn": "Email me this tomorrow at 8",
-      "optInDone": "We will email it to {email} tomorrow at 8:00.",
-      "optInFailed": "Could not save that. Try again.",
-      "finish": "Go to your dashboard",
+      "finish": "Done",
       "secondInbox": {
         "title": "Connect your other inbox",
         "lead": "Most people connect a second inbox: work and personal in one chat.",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "The last request did not work",
     "auth": "Your mail provider rejected the inbox password. Reconnect the inbox in the dashboard.",
     "timeout": "Your mail server took too long to answer. Ask again for a shorter time range.",
     "provider": "Your mail provider returned an error. Try again in a minute.",

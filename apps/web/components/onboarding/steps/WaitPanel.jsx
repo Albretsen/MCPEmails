@@ -7,21 +7,21 @@ import {
   clientKind,
   curlFirstCall,
   docsPath,
-  failureKey,
   helpTiers,
   ladderState,
   openClientHref,
   promptKeys,
   restartKind,
-  visibleFailure,
 } from '@/lib/onboarding/connect-steps.mjs';
 import { adaptiveCadence } from '../useOnboardingStatus';
 import { assistEvent, memory, noteServerTime, serverNow } from './assist-actions';
 import { CopyField, EmailMeButton, PromptBlock } from './ConnectParts';
 
 /**
- * A8 in one screen: the Reply radar prompt to paste, the live ladder
- * (Waiting for X, X connected, Ask it something, It works) and the timed help.
+ * Step 3 in one screen: the Reply radar prompt to paste, one live status line
+ * (Waiting for X, X connected, Ask it something) and the timed help.
+ * A failed request is not shown here: the AI app usually fixes its own
+ * arguments and tries again, so it would only alarm.
  * FirstPromptStep and WaitStep both render this; the flow moves from
  * first_prompt to wait once the app is connected (a handshake, any call, or a
  * connector grant since reset: connectedAtMs), and to it_works on the
@@ -91,20 +91,19 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
   const kind = clientKind(client);
   const prompts = promptKeys(client, { canDraft: canDraftWith(status?.credential?.scopes ?? null) });
   const open = openClientHref(client);
-  const failure = visibleFailure(status, timing?.waitStartedAtMs ?? NaN);
   const lead = kind === 'api' ? 'steps.first_prompt.leadApi' : kind === 'code' ? 'steps.first_prompt.leadCode' : 'steps.first_prompt.lead';
 
   return (
     <section className="onb-panel" data-step={step} data-testid="onb-wait">
       <h1 className="onb-title">{t(ladder.connected ? 'steps.wait.title' : 'steps.first_prompt.title', vars)}</h1>
-      <p className="onb-muted">{t(lead, vars)}</p>
+      <p className="onb-sub">{t(lead, vars)}</p>
       {prompts.replyRadar ? (
         <PromptBlock text={t(prompts.replyRadar)} kind="reply_radar" testId="onb-prompt" />
       ) : (
         <CopyField value={curlFirstCall(mcpUrl, memory.revealedKeys.get(client))} multiline testId="onb-prompt" />
       )}
       {open && (
-        <div className="onb-actions">
+        <div className="onb-actions onb-actions-wide">
           <a
             className="btn btn-primary"
             href={open}
@@ -115,19 +114,12 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
           >
             {t('steps.first_prompt.open', vars)}
           </a>
-          <span className="onb-muted onb-inline-note">{t('steps.first_prompt.openNote')}</span>
         </div>
       )}
 
-      <Ladder rung={ladder.rung} clientLabel={clientLabel} />
-      {!ladder.works && timing && timing.nowMs - timing.waitStartedAtMs >= LISTEN_MS && <p className="onb-muted">{t('ladder.stopped')}</p>}
-
-      {failure && (
-        <div className="onb-callout onb-callout-error" role="status" data-testid="onb-failure">
-          <p className="onb-strong">{t('failure.title')}</p>
-          <p className="onb-callout-body">{t(failureKey(failure.code), vars)}</p>
-        </div>
-      )}
+      {!ladder.works && timing && timing.nowMs - timing.waitStartedAtMs >= LISTEN_MS
+        ? <p className="onb-hint onb-listen">{t('ladder.stopped')}</p>
+        : <Listening rung={ladder.rung} clientLabel={clientLabel} />}
 
       {tiers.includes('no_handshake') && (
         <HelpCallout title={t('help.noHandshake.title', vars)} body={t(`help.noHandshake.${restartKind(client)}`, vars)} tier="no_handshake" />
@@ -167,19 +159,16 @@ const RUNGS = ['waiting', 'connected', 'ask', 'works'];
 /** adaptiveCadence stops polling after an hour. */
 const LISTEN_MS = 60 * 60 * 1000;
 
-function Ladder({ rung, clientLabel }) {
+/** One live line for where the wait is: Waiting for X, X connected, Ask it something. */
+function Listening({ rung, clientLabel }) {
   const t = useTranslations('onboarding');
+  const id = RUNGS[Math.min(rung, RUNGS.length - 1)];
   return (
-    <ol className="onb-ladder" aria-label={t('ladder.listening', { client: clientLabel })} data-testid="onb-ladder" data-rung={rung}>
-      {RUNGS.map((id, index) => {
-        const state = index < rung ? 'done' : index === rung ? 'current' : 'todo';
-        return (
-          <li key={id} className={`onb-rung is-${state}`} aria-current={state === 'current' ? 'step' : undefined}>
-            <span className="onb-rung-dot" aria-hidden="true" />
-            {t(`ladder.${id}`, { client: clientLabel })}
-          </li>
-        );
-      })}
-    </ol>
+    <div className="onb-listen" data-testid="onb-ladder" data-rung={rung}>
+      <span className="onb-listen-status" role="status">
+        <span className={`onb-pulse${rung > 0 ? ' is-live' : ''}`} aria-hidden="true" />
+        <span key={id} className="onb-fade">{t(`ladder.${id}`, { client: clientLabel })}</span>
+      </span>
+    </div>
   );
 }

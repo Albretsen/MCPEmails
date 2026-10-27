@@ -2,9 +2,10 @@
   "shell": {
     "title": "Kom i gang med MCPEmails",
     "progress": "Steg {current} av {total}",
-    "exit": "Gå til dashbordet",
+    "exit": "Lukk oppsettet",
     "loading": "Laster oppsettet ditt",
-    "statusError": "Kunne ikke laste oppsettet. Last inn siden på nytt for å prøve igjen."
+    "statusError": "Kunne ikke laste oppsettet. Last inn siden på nytt for å prøve igjen.",
+    "skip": "Hopp over"
   },
   "chip": {
     "using": "Bruker {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "Hvilken innboks skal AI-en din bruke?",
+      "title": "Koble til innboksen din",
       "reuseTitle": "En innboks er allerede koblet til",
       "reuse": "Bruk {address}",
       "connectAnother": "Koble til en annen innboks",
-      "lead": "Skriv inn adressen du vil at AI-en skal lese og svare fra. Vi viser stegene for leverandøren din.",
+      "lead": "Den AI-en din skal lese og svare fra.",
       "emailLabel": "E-postadresse",
       "useSignup": "Bruk {address}",
       "detecting": "Finner leverandøren din",
-      "detected": "Leverandør: {provider}",
-      "notRight": "Feil? Velg leverandør",
-      "chooseLead": "Vi fant ikke leverandøren ut fra adressen. Velg en:",
+      "detected": "{provider}",
+      "notRight": "Endre",
+      "chooseLead": "Hvilken leverandør er det?",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "Du kan likevel prøve."
       },
       "trust": {
-        "access": "AI-en kan lese, søke i, sortere, skrive utkast til og sende e-post i denne innboksen. Den kan ikke endre passordet eller innstillingene på kontoen din.",
-        "appPassword": "Et app-passord virker bare for e-post, og du kan trekke det tilbake alene når som helst.",
-        "mailboxPassword": "Du kan koble fra innboksen i MCPEmails når som helst.",
-        "storage": "Lagret kryptert i Stockholm."
+        "appPassword": "Et app-passord gir bare tilgang til e-posten. Lagres kryptert i Stockholm, og du kan trekke det tilbake når som helst.",
+        "mailboxPassword": "Lagres kryptert i Stockholm. Koble fra når som helst."
       },
       "connect": "Koble til",
       "progress": {
         "title": "Kobler til {address}",
         "server": "E-postserver funnet",
         "signedIn": "Logget inn",
-        "read": "Innboks lest",
-        "slow": "Hos noen leverandører tar dette opptil ett minutt."
+        "read": "Innboks lest"
       },
       "proof": {
         "title": "Tilkoblet",
@@ -187,19 +185,20 @@
         "admin_consent_required": "Organisasjonen din krever at en administrator godkjenner MCPEmails før du kan logge inn. Send administratoren lenken nedenfor.",
         "outlook_cancelled": "Du avbrøt på Microsofts side. Trykk Koble til med Microsoft for å prøve igjen.",
         "generic": "Microsoft-påloggingen ble ikke fullført. Prøv igjen."
-      }
+      },
+      "emailPlaceholder": "deg@eksempel.no"
     },
     "add_to_ai": {
       "title": "Legg til MCPEmails i {client}",
-      "lead": "Ett steg i {client}, så kommer du tilbake hit. Siden går videre av seg selv når {client} har koblet til.",
+      "lead": "Åpnes i en ny fane. Dette går videre av seg selv når {client} har koblet til.",
       "urlLabel": "Server-URL for MCPEmails",
-      "linkAfter": "{client} åpnes med MCPEmails ferdig utfylt. Bekreft, og logg inn på MCPEmails når du blir spurt.",
-      "claudeAfter": "Claude åpner vinduet for egendefinert connector med MCPEmails ferdig utfylt. Klikk Legg til, så Koble til, og gi tilgang.",
+      "linkAfter": "Bekreft i {client}, og logg inn på MCPEmails.",
+      "claudeAfter": "I Claude klikker du Legg til, så Koble til.",
       "commandAfter": "Start så {client} og logg inn på MCPEmails når du blir spurt.",
       "configLead": "Legg dette inn i {file}, last inn {client} på nytt og logg inn på MCPEmails når du blir spurt.",
       "genericOauth": "Legg til en MCP-server av typen HTTP i {client}, lim inn URL-en under, og logg inn på MCPEmails når du blir spurt.",
       "manual": "Sett det opp manuelt",
-      "continue": "Lagt til, fortsett",
+      "continue": "Jeg har lagt det til",
       "chatgpt": {
         "step1": "På chatgpt.com åpner du Plugins og så Personal.",
         "step2": "Klikk Add, så Add custom MCP server.",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "Spør {client} om noe",
-      "lead": "Lim inn dette i en ny chat i {client}:",
-      "leadCode": "Lim inn dette i {client}:",
+      "title": "Prøv det i {client}",
+      "lead": "Lim inn dette i en ny chat.",
+      "leadCode": "Lim inn dette i {client}.",
       "leadApi": "Send din første forespørsel:",
-      "open": "Åpne {client}",
-      "openNote": "Åpner en ny chat. Lim inn prompten der."
+      "open": "Åpne {client}"
     },
     "wait": {
       "title": "Venter på {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} har nettopp ryddet i innboksen din.",
         "generic": "{client} har nettopp brukt postkassen din."
       },
-      "next": "Lim inn dette som neste:",
-      "ritual": "I morgen tidlig limer du inn dette:",
-      "optIn": "Send meg dette på e-post i morgen kl. 8",
-      "optInDone": "Vi sender det til {email} i morgen kl. 8.00.",
-      "optInFailed": "Kunne ikke lagre. Prøv igjen.",
-      "finish": "Gå til dashbordet",
+      "finish": "Ferdig",
       "secondInbox": {
         "title": "Koble til den andre innboksen din",
         "lead": "De fleste kobler til en innboks til: jobb og privat i samme chat.",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "Den siste forespørselen virket ikke",
     "auth": "E-postleverandøren din avviste passordet til innboksen. Koble til innboksen på nytt i dashbordet.",
     "timeout": "E-postserveren din brukte for lang tid. Spør på nytt for en kortere periode.",
     "provider": "E-postleverandøren din svarte med en feil. Prøv igjen om et minutt.",

@@ -33,6 +33,12 @@
 //                                          src/i18n/request.ts loads.
 //                                          X = null: none.
 //
+// PROVIDER ISLANDS. A component listed in PROVIDER_ISLANDS wraps everything it
+// renders in its own provider (the setup dialog, lazy-loaded by the dashboard,
+// brings OnboardingLocaleProvider). A route's import closure stops at an
+// island, and the island's own closure is checked against its provider
+// instead, as if it were a route of its own.
+//
 // WHAT COUNTS AS A READ. `useTranslations('<ns>...')` anywhere in the import
 // closure of the route file (static imports, re-exports, `import()` and
 // `require()`), which over-approximates: a component that is imported but never
@@ -63,6 +69,14 @@ const PROVIDER_MODULES = [
   'components/i18n/LocaleCore.jsx',
   'components/i18n/ClientMessages.jsx',
 ];
+
+/**
+ * Files that render their whole subtree inside their own provider, and which
+ * one (see PROVIDER ISLANDS above).
+ */
+const PROVIDER_ISLANDS = {
+  'components/onboarding/SetupModal.jsx': 'OnboardingLocaleProvider',
+};
 
 function isFile(p) {
   try {
@@ -176,7 +190,13 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
     return null;
   }
 
+  // Islands absent from this tree (the synthetic fixtures) are skipped.
+  const islandFiles = new Map(Object.entries(PROVIDER_ISLANDS)
+    .map(([file, kind]) => [path.join(webRoot, file), kind])
+    .filter(([file]) => isFile(file)));
+
   const closures = new Map();
+  /** Everything `entry` imports, stopping at (but including) any provider island other than itself. */
   function closure(entry) {
     if (closures.has(entry)) return closures.get(entry);
     const seen = new Set([entry]);
@@ -187,7 +207,7 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
         const target = resolve(file, specifier);
         if (target && !seen.has(target)) {
           seen.add(target);
-          queue.push(target);
+          if (!islandFiles.has(target)) queue.push(target);
         }
       }
     }
@@ -337,21 +357,30 @@ export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
     .filter((file) => SOURCE_EXT.includes(path.extname(file)) && !/\.test\.[a-z]+$/.test(file));
   for (const file of allSource) {
     if (layouts.get(path.dirname(file)) === file) continue;
-    if (PROVIDER_MODULES.includes(rel(file))) continue;
+    if (PROVIDER_MODULES.includes(rel(file)) || islandFiles.has(file)) continue;
     if (/<(NextIntlClientProvider|ClientMessages|AppLocaleProvider|AuthLocaleProvider|OnboardingLocaleProvider|AuthorizeLocaleProvider|LocaleRoot)[\s>]/.test(read(file))) {
       violations.push({ type: 'provider-outside-layout', file: rel(file), detail: 'a message provider is rendered outside a layout file, where this analysis cannot place it' });
     }
   }
 
+  const islandNamespaces = { AppLocaleProvider: appNamespaces, AuthLocaleProvider: authNamespaces, OnboardingLocaleProvider: onboardingNamespaces, AuthorizeLocaleProvider: authorizeNamespaces };
+  for (const [file, kind] of islandFiles) {
+    if (!new RegExp(`<${kind}[\\s>]`).test(read(file))) {
+      violations.push({ type: 'unrecognised-provider', file: rel(file), detail: `listed as a ${kind} island but does not render <${kind}>` });
+    }
+  }
+
   const routes = [];
-  for (const file of routeFiles) {
+  for (const file of [...routeFiles, ...islandFiles.keys()]) {
     const name = path.basename(file);
-    const isLayout = LAYOUT_FILE.test(name);
+    const island = islandFiles.get(file) ?? null;
+    const isLayout = !island && LAYOUT_FILE.test(name);
     const own = isLayout ? providers.get(file) : null;
     // global-error replaces the root layout, so nothing above it applies. A
     // layout's own imports render outside the provider it declares.
     let scope;
-    if (/^global-error\./.test(name)) scope = { layout: null, kind: 'none', namespaces: [] };
+    if (island) scope = { layout: rel(file), kind: island, namespaces: islandNamespaces[island] ?? [] };
+    else if (/^global-error\./.test(name)) scope = { layout: null, kind: 'none', namespaces: [] };
     else if (isLayout && own) scope = file === layouts.get(appDir) ? { layout: null, kind: 'none', namespaces: [] } : scopeFrom(path.dirname(path.dirname(file)));
     else scope = scopeFrom(path.dirname(file));
 

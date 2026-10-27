@@ -31,7 +31,10 @@ import {
 } from '../../../src/lib/stripe/founder-display';
 import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
-import { getOnboardingVariant } from '@/lib/onboarding/variant';
+import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
+import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
+import { isOnboardingStep } from '@/lib/onboarding/flow';
+import { CLIENT_INTENT_PARAM, CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 import { buildFlowBProp } from '@/lib/onboarding/flow-b-server';
 import { onboardingEntryPath } from '@/lib/onboarding/entry';
 import { verifyChatConnectLink, withChatLinkParams } from '@/lib/onboarding/chat-connect-link';
@@ -728,7 +731,7 @@ export default async function DashboardPage({ params, searchParams }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, created_at, onboarding_completed_at, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at, plan_summary_dismissed_at, grace_end_note_seen_at')
+      .select('id, slug, display_name, plan, owner_id, created_at, onboarding_completed_at, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, referral_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at, analytics_first_tool_used_at, plan_summary_dismissed_at, grace_end_note_seen_at, onboarding_client, acquisition_source, acquisition_referrer')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -786,9 +789,13 @@ export default async function DashboardPage({ params, searchParams }) {
   // preselects the card). src/lib/onboarding/chat-connect-link.ts.
   const chatQuery = (await searchParams) ?? {};
   const chatReturn = workspace ? verifyChatConnectLink(chatQuery, workspace.id) : null;
-  if (chatReturn && onboarding?.flow === 'new') redirect(withChatLinkParams('/onboarding', chatQuery));
+  // `?setup=1` (where /onboarding redirects): the setup flow opens as a modal
+  // over this dashboard (components/onboarding/SetupModal.jsx), so neither
+  // redirect below applies.
+  const setupRequested = chatQuery.setup === '1';
+  if (chatReturn && onboarding?.flow === 'new' && !setupRequested) redirect(withChatLinkParams('/onboarding', chatQuery));
 
-  if (onboarding?.flow === 'new') {
+  if (onboarding?.flow === 'new' && !setupRequested) {
     const query = (await searchParams) ?? {};
     const qs = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) if (typeof value === 'string') qs.set(key, value);
@@ -1095,6 +1102,25 @@ export default async function DashboardPage({ params, searchParams }) {
       })
     : null;
 
+  // The setup modal's facts, only for a workspace in the new onboarding flow
+  // that asked for it. The modal reads its status itself, after it loads.
+  const queryOne = (key) => (typeof chatQuery[key] === 'string' ? chatQuery[key] : null);
+  const setup = setupRequested && workspace && onboarding?.flow === 'new'
+    ? {
+        variant: clientOnboardingVariant(onboarding),
+        initialClient: inferOnboardingClient({
+          param: queryOne(CLIENT_INTENT_PARAM),
+          stored: workspace.onboarding_client,
+          acquisitionSource: workspace.acquisition_source,
+          acquisitionReferrer: workspace.acquisition_referrer,
+        }).client,
+        provider: connectIntentSlugShape(queryOne(CONNECT_INTENT_PARAM)),
+        requestedStep: isOnboardingStep(queryOne('step')) ? queryOne('step') : null,
+        chatReturn,
+        userEmail: user.email ?? '',
+      }
+    : null;
+
   // The 3-month Personal pass the OWNER holds, if any: Billing shows "Personal
   // until {date}" and the ways to keep it. Null for everyone else, and for a
   // member viewing someone else's workspace. Tolerant: a failed read is null.
@@ -1179,7 +1205,8 @@ export default async function DashboardPage({ params, searchParams }) {
       pendingInvites={pendingInvites}
       supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       referralTileFacts={referralTileFacts}
-      chatReturn={chatReturn}
+      chatReturn={setup ? null : chatReturn}
+      setup={setup}
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );

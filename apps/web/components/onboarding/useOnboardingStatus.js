@@ -13,16 +13,19 @@ import { startVisiblePoll } from '@/lib/polling/visible-poll';
  *   setPolling(cadence)    start polling; `cadence(elapsedMs)` returns the
  *                          delay before the next poll in ms, or null to stop.
  *                          setPolling(null) stops. Polls only while the tab is
- *                          visible (visible-poll.ts). `adaptiveCadence` is the
- *                          plan's default (A8: 3 s for 3 min, then 15 s, stop
- *                          after 60 min).
+ *                          visible (visible-poll.ts), and at once when the
+ *                          window gets focus back (a desktop app in front
+ *                          leaves the tab visible). `adaptiveCadence` is the
+ *                          default: 1.5 s for 3 min, 5 s to 10 min, then 15 s,
+ *                          stop after 60 min.
  *
  * The wait step (WP-F) owns when to poll; nothing polls by default.
  */
 
-/** Plan A8 / report 11 R1: fast at first, then slower, listening for an hour. */
+/** Fast while someone is most likely watching, then slower, listening for an hour. */
 export function adaptiveCadence(elapsedMs) {
-  if (elapsedMs < 3 * 60 * 1000) return 3000;
+  if (elapsedMs < 3 * 60 * 1000) return 1500;
+  if (elapsedMs < 10 * 60 * 1000) return 5000;
   if (elapsedMs < 60 * 60 * 1000) return 15000;
   return null;
 }
@@ -70,7 +73,14 @@ export function useOnboardingStatus(initialStatus) {
     pollRef.current = poll;
   }, [refreshStatus]);
 
-  useEffect(() => () => pollRef.current?.stop(), []);
+  useEffect(() => {
+    const onFocus = () => pollRef.current?.now();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      pollRef.current?.stop();
+    };
+  }, []);
 
   return { status, refreshStatus, setPolling };
 }

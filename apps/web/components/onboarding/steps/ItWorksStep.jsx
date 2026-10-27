@@ -1,74 +1,40 @@
 'use client';
 
-import { Suspense, lazy, useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
-import { canDraftWith, promptKeys, successKey } from '@/lib/onboarding/connect-steps.mjs';
+import { Suspense, lazy } from 'react';
+import { useTranslations } from 'next-intl';
+import { successKey } from '@/lib/onboarding/connect-steps.mjs';
 import { chipClientLabel, normalizeChipClient } from '@/lib/onboarding/clients.mjs';
-import { morningBriefOptIn } from './assist-actions';
-import { PromptBlock } from './ConnectParts';
+import { SuccessMark } from './inbox/ConnectOutcome';
 
-// Flow B, loaded on this last step only, so its cards stay out of
-// /onboarding's first load (components/convert/OnboardingFlowB.jsx).
+// Flow B, loaded on this last step only, so its cards stay out of the
+// dialog's first load (components/convert/OnboardingFlowB.jsx).
 const OnboardingFlowB = lazy(() => import('../../convert/OnboardingFlowB'));
 
 /**
- * A9, "It works": a specific success line (from the first call's tool), the
- * Draft my replies prompt, tomorrow's Morning brief prompt with an opt-in
- * "Email me this tomorrow at 8", then the dashboard through finish(), which
- * stamps onboarding_completed_at.
+ * The finish, "It works": a check that draws itself, a specific success line
+ * (from the first call's tool), then Done through finish(), which stamps
+ * onboarding_completed_at and closes the dialog onto the dashboard. Nothing
+ * else to paste: the user has seen it work and wants to move on.
  *
- * Flow B (variant.convert = 'on', WP-H, plan section 5), before the finish
- * button and nothing restructured above it:
+ * Flow B (variant.convert = 'on', WP-H, plan section 5), before Done:
  *   B1  "Connect your other inbox". One tap reopens the inbox step for a
  *       second inbox; at the Free inbox cap it opens the dashboard's existing
  *       upgrade panel instead (ConnectModal, entry point second_inbox).
  *   B2  The plan summary card (components/convert/PlanSummaryCard.jsx).
  * Props: the panel contract in ./index.js.
  */
-export function ItWorksStep({ step, status, client, clientLabel, finish, variant, flowB = null, userEmail = '', startSecondInbox }) {
+export function ItWorksStep({ step, status, clientLabel, finish, variant, flowB = null, userEmail = '', startSecondInbox }) {
   const t = useTranslations('onboarding');
-  const locale = useLocale();
   // The success line names the app that made the call, which can differ
   // from the chip (a ChatGPT call while the chip says Claude).
   const caller = normalizeChipClient(status?.firstCall?.client ?? null);
   const vars = { client: caller ? chipClientLabel(caller) : clientLabel };
-  const prompts = promptKeys(client, { canDraft: canDraftWith(status?.credential?.scopes ?? null) });
-  const [optIn, setOptIn] = useState({ phase: 'idle', email: null });
-
-  const subscribe = async () => {
-    setOptIn({ phase: 'saving', email: null });
-    const res = await morningBriefOptIn(client, locale);
-    setOptIn({ phase: res.ok ? 'done' : 'failed', email: res.email });
-  };
 
   return (
-    <section className="onb-panel" data-step={step} data-testid="onb-it-works">
+    <section className="onb-panel onb-done" data-step={step} data-testid="onb-it-works">
+      <SuccessMark size={48} />
       <h1 className="onb-title">{t('steps.it_works.title')}</h1>
-      <p className="onb-success" data-testid="onb-success">{t(successKey(status?.firstCall?.tool ?? null), vars)}</p>
-
-      {prompts.draftReplies && (
-        <>
-          <p className="onb-strong">{t('steps.it_works.next')}</p>
-          <PromptBlock text={t(prompts.draftReplies)} kind="draft_replies" testId="onb-draft-prompt" />
-        </>
-      )}
-
-      {prompts.morningBrief && (
-        <>
-          <p className="onb-strong">{t('steps.it_works.ritual')}</p>
-          <PromptBlock text={t(prompts.morningBrief)} kind="morning_brief" testId="onb-morning-prompt" />
-          <div className="onb-actions">
-            {optIn.phase === 'done' ? (
-              <p className="onb-muted" data-testid="onb-optin-done">{t('steps.it_works.optInDone', { email: optIn.email ?? '' })}</p>
-            ) : (
-              <button type="button" className="btn btn-secondary" onClick={subscribe} disabled={optIn.phase === 'saving'} data-testid="onb-optin">
-                {t('steps.it_works.optIn')}
-              </button>
-            )}
-          </div>
-          {optIn.phase === 'failed' && <p className="onb-error" role="alert">{t('steps.it_works.optInFailed')}</p>}
-        </>
-      )}
+      <p className="onb-sub" data-testid="onb-success">{t(successKey(status?.firstCall?.tool ?? null), vars)}</p>
 
       {variant?.convert === 'on' && (
         <Suspense fallback={null}>
@@ -76,7 +42,7 @@ export function ItWorksStep({ step, status, client, clientLabel, finish, variant
         </Suspense>
       )}
 
-      <div className="onb-actions onb-finish">
+      <div className="onb-actions onb-actions-wide">
         <button type="button" className="btn btn-primary" onClick={finish} data-testid="onb-finish">
           {t('steps.it_works.finish')}
         </button>

@@ -17,10 +17,11 @@ const CLIENT_HOME = Object.freeze({
  * /onboarding and on the dashboard. A copyable first prompt, and a button back
  * to the chat app when it has a web page.
  *
- * Props: client (chip id or null), dashboardHref (optional "Go to the dashboard").
+ * Props: client (chip id or null), dashboardHref (optional "Go to the dashboard"
+ * link), or onClose (the same as a button, inside the setup dialog).
  * Strings: onboarding.chatReturn.*
  */
-export function ChatReturnPanel({ client = null, dashboardHref = null }) {
+export function ChatReturnPanel({ client = null, dashboardHref = null, onClose = null }) {
   const t = useTranslations('onboarding.chatReturn');
   const id = normalizeChipClient(client);
   const label = id ? chipClientLabel(id) : t('yourApp');
@@ -54,6 +55,9 @@ export function ChatReturnPanel({ client = null, dashboardHref = null }) {
         )}
         {dashboardHref && (
           <a className="btn btn-ghost" href={dashboardHref}>{t('dashboard')}</a>
+        )}
+        {!dashboardHref && onClose && (
+          <button type="button" className="btn btn-ghost" onClick={() => onClose()}>{t('dashboard')}</button>
         )}
       </div>
     </section>

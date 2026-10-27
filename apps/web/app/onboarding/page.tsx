@@ -4,11 +4,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
-import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
-import { loadOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding/status';
+import { getOnboardingVariant } from '@/lib/onboarding/variant';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
-import { isOnboardingStep } from '@/lib/onboarding/flow';
-import { verifyChatConnectLink } from '@/lib/onboarding/chat-connect-link';
 import {
   CLIENT_INTENT_PARAM,
   CONNECT_INTENT_PARAM,
@@ -16,10 +13,6 @@ import {
   withClientIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
-import { buildFlowBProp, type FlowBProp } from '@/lib/onboarding/flow-b-server';
-import { fetchWorkspaceActionAllowance } from '@/lib/usage/allowance';
-import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { OnboardingApp } from '../../components/onboarding/OnboardingApp';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,21 +22,22 @@ function one(value: string | string[] | undefined): string | null {
   return typeof value === 'string' ? value : null;
 }
 
+/** Params that only mean something to the dashboard's first-run entry. */
+const DROPPED_PARAMS = new Set(['setup', 'firstrun']);
+
 /**
- * /onboarding: the setup flow for workspaces in onb_flow = new (v1: internal
- * accounts only, src/lib/onboarding/variant.ts). Everyone else is sent to the
- * dashboard with their hints intact, so a stray link never strands anyone.
+ * /onboarding: the entry to the setup flow for workspaces in onb_flow = new
+ * (v1: internal accounts only, src/lib/onboarding/variant.ts). The flow itself
+ * is a modal over the dashboard (components/onboarding/SetupModal.jsx), so this
+ * route only checks the arm, keeps a ?client= choice, and redirects to
+ * /dashboard?setup=1 with every other param intact. Everyone else goes to the
+ * dashboard with their hints, so a stray link never strands anyone.
  *
- * Server work before the first byte of the page (loading.js has already
- * painted the shell): the session, the active workspace, and its arm. The
- * status read is NOT awaited: it is handed to the client as a promise and
- * streams into the step body (OnboardingApp's Suspense boundary).
- *
- * Query params: ?client= (chip start, see clients.mjs), ?provider= (a
- * /connect/<slug> hint for the inbox step), ?step= (jump to a step, for QA),
- * and a signed chat connect link (?from=chat&exp=&sig=, from the MCP server's
- * no-inbox answer): only the inbox step, then "Go back to <client> and ask
- * again" (src/lib/onboarding/chat-connect-link.ts).
+ * Params the modal reads: ?client= (chip start, see clients.mjs), ?provider= (a
+ * /connect/<slug> hint for the inbox step), ?step= (jump to a step, for QA), a
+ * signed chat connect link (?from=chat&exp=&sig=, only the inbox step, then
+ * "Go back to <client> and ask again"), and the Microsoft sign-in's return
+ * (?connected=outlook, ?outlook_error=).
  */
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -87,48 +81,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     });
   }
 
-  const statusPromise: Promise<OnboardingStatus | null> = loadOnboardingStatus(supabase, workspaceId).catch((error) => {
-    console.error('[onboarding] initial status failed', error instanceof Error ? error.message : String(error));
-    return null;
-  });
-
-  // Flow B (onb_convert = on, WP-H): the plan summary and second-inbox card
-  // on It works. Owner only, Free only, null (and no query) for everyone else.
-  let flowB: FlowBProp | null = null;
-  if (variant.convert === 'on' && workspace.owner_id === user.id) {
-    const service = createServiceRoleClient();
-    const [allowance, prices, { data: facts }] = await Promise.all([
-      fetchWorkspaceActionAllowance(service, workspaceId),
-      fetchStripePrices().catch(() => null),
-      service
-        .from('workspaces')
-        .select('analytics_first_tool_used_at, plan_summary_dismissed_at, grace_end_note_seen_at')
-        .eq('id', workspaceId)
-        .maybeSingle(),
-    ]);
-    flowB = await buildFlowBProp({
-      db: service,
-      convert: variant.convert,
-      plan: allowance?.plan ?? null,
-      workspace: { id: workspaceId, created_at: workspace.created_at, ...(facts ?? {}) },
-      allowance,
-      stripePrices: prices,
-    });
+  const query = new URLSearchParams({ setup: '1' });
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string' && !DROPPED_PARAMS.has(key)) query.set(key, value);
   }
-
-  const requestedStep = one(params.step);
-  const chatReturn = verifyChatConnectLink(params, workspaceId);
-  return (
-    <OnboardingApp
-      variant={clientOnboardingVariant(variant)}
-      initialClient={inferred.client}
-      provider={provider}
-      mcpUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`}
-      userEmail={user.email ?? ''}
-      statusPromise={statusPromise}
-      requestedStep={isOnboardingStep(requestedStep) ? requestedStep : null}
-      flowB={flowB}
-      chatReturn={chatReturn}
-    />
-  );
+  redirect(`/dashboard?${query.toString()}`);
 }
