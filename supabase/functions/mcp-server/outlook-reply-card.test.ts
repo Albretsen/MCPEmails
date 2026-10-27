@@ -35,7 +35,7 @@ Deno.test("the Outlook editor reader asks Graph for conversationIndex", () => {
 });
 
 Deno.test("an envelope that fails in a card-on inbox reports unavailable", () => {
-  const body = fnBody("draftEditorEnvelopeForWrite");
+  const body = fnBody("buildDraftEditorEnvelopeForWrite");
   assert(body.includes('return cardOn ? "unavailable" : null;'));
 });
 
