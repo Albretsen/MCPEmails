@@ -1,6 +1,6 @@
 -- ===========================================================================
 -- The bulk result card with Undo (mcp-server/mcp-app-undo.ts).
--- 20261027190000_bulk_undo_card
+-- 20261027201500_bulk_undo_card
 --
 -- After a bulk move or delete (email_organize move_batch / search_and_move,
 -- email_delete delete_batch / search_and_delete) the MCP Apps card shows one
