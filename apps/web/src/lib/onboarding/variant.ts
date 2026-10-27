@@ -26,7 +26,8 @@
  *      ONBOARDING_EXPERIMENT_PUBLIC=1 is set on Vercel AND the experiment row
  *      is `running` in /admin/growth/experiments (seeded `draft` by
  *      20261026152301). Two switches on purpose: flipping the admin panel
- *      early must not show customers an unfinished flow.
+ *      early must not show customers an unfinished flow. Both switched on
+ *      2026-10-27 16:04 UTC (the test start).
  *   3. When both are on, a workspace younger than ENROLL_WINDOW_MS is bucketed
  *      and stored through the experiments system (cyrb53 on key:subject, so
  *      the two keys are independent splits). An older workspace is only READ:
