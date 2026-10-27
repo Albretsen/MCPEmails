@@ -38,6 +38,12 @@ const OUT = resolve(repoRoot, "supabase/functions/mcp-server/ui/review-card.html
 // 166.6 KB with no product change. The largest remaining contributors are
 // product code: DraftEditor (~26 KB minified), App (~16 KB), the shared
 // html-text-merge.ts (~12 KB) and Preact (~13 KB with hooks).
+//
+// 2026-10-27: the automation card (components/Automation.tsx) added 1.9 KB,
+// 170.8 -> 172.7 KB, with no new CSS: it reuses Head, Line, Segmented, Notice
+// and the bulk plan's `.samples` list, and the server writes the rule's
+// sentence so the card does not have to. Two other cards were being built at
+// the same time against the same 4.2 KB of headroom.
 const TARGET_RAW = 50 * 1024;
 const MAX_RAW = 175 * 1024;
 

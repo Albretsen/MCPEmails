@@ -144,6 +144,7 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       // drops both for a workspace without subscription_cleanup_enabled.
       "subscriptions_scan",
       "subscriptions_cleanup",
+      "card_automation",
     ],
   );
 });

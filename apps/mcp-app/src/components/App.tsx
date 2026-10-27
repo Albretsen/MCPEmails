@@ -62,6 +62,7 @@ import {
   subscribe,
   supersededBy,
 } from "../store";
+import { Automation } from "./Automation";
 import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
 import { DraftReadLine } from "./DraftReadLine";
@@ -1128,6 +1129,14 @@ export function App(props: { bridge: HostBridge }) {
       // `email_compose` too. `resultNote` (plain-result.ts) words the ones it
       // recognises; a plain successful send never gets here, it is a receipt.
       if (store.resultStatus === "foreign") {
+        if (store.automation) {
+          return (
+            <Automation
+              seed={store.automation}
+              call={(args) => bridge.callServerTool("card_automation", args)}
+            />
+          );
+        }
         return toolLine(store.resultNote ?? "no preview for this result.");
       }
       if (store.resultStatus === "cancelled") {
