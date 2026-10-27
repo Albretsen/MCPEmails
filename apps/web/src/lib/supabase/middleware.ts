@@ -25,7 +25,7 @@ import { mayUseThisDeployment, STAGING_RESTRICTED_REASON } from '@/lib/env/app-e
  *    the user back after a successful sign-in
  */
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
-  const supabaseResponse = NextResponse.next({ request });
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,8 +36,15 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
           return request.cookies.getAll();
         },
         setAll(cookiesToSet, headers) {
+          // NextResponse.next({ request }) copies the request headers at the
+          // moment it is called, so the response must be rebuilt AFTER the
+          // refreshed cookies are on the request. Built once up front, the
+          // page render got the cookies the browser sent: an expired access
+          // token and a refresh token Supabase had just rotated, so every
+          // Server Component calling getUser() refreshed with a used token.
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
             supabaseResponse.cookies.set(name, value, options);
           });
           // Apply cache-control headers so CDNs never cache auth responses.
