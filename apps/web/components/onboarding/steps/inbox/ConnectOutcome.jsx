@@ -19,12 +19,11 @@ export function ConnectProgress({ address, checks }) {
       <ul className="onb-checks" aria-live="polite">
         {rows.map(([key, text], i) => (
           <li key={key} className={checks[key] ? 'is-done' : i === current ? 'is-active' : 'is-waiting'} data-check={key}>
-            <span className="onb-check-mark" aria-hidden="true">{checks[key] ? '✓' : i === current ? '…' : '·'}</span>
+            <span className="onb-check-mark" aria-hidden="true" />
             {text}
           </li>
         ))}
       </ul>
-      <p className="onb-hint">{t('slow')}</p>
     </div>
   );
 }
@@ -36,12 +35,7 @@ export function ProofCard({ address, proof, readOnly, onContinue }) {
   const subjects = available && Array.isArray(proof.subjects) ? proof.subjects : [];
   return (
     <div className="onb-proof">
-      <h1 className="onb-title">{t('proof.title')}</h1>
-      <ul className="onb-checks">
-        <li className="is-done"><span className="onb-check-mark" aria-hidden="true">✓</span>{t('progress.server')}</li>
-        <li className="is-done"><span className="onb-check-mark" aria-hidden="true">✓</span>{t('progress.signedIn')}</li>
-        {available && <li className="is-done"><span className="onb-check-mark" aria-hidden="true">✓</span>{t('progress.read')}</li>}
-      </ul>
+      <h1 className="onb-title onb-title-check"><SuccessMark />{t('proof.title')}</h1>
       <div className="onb-proof-card" data-testid="onb-proof-card">
         <p className="onb-strong">{address}</p>
         {available ? (
@@ -64,12 +58,22 @@ export function ProofCard({ address, proof, readOnly, onContinue }) {
         )}
         {readOnly && <p className="onb-hint">{t('fail.readOnlyNote')}</p>}
       </div>
-      <div className="onb-actions">
+      <div className="onb-actions onb-actions-wide">
         <button type="button" className="btn btn-primary" onClick={onContinue} data-testid="onb-proof-continue">
           {t('proof.continue')}
         </button>
       </div>
     </div>
+  );
+}
+
+/** A check in a circle that draws itself once (onboarding.css, .onb-success-mark). */
+export function SuccessMark({ size = 22 }) {
+  return (
+    <svg className="onb-success-mark" width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="var(--mint-500)" />
+      <path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

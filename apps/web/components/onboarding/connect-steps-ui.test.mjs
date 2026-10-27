@@ -84,6 +84,7 @@ test('Claude gets one Add to Claude button with the prefilled connector link and
   assert.ok(link, 'install link');
   assert.ok(link.getAttribute('href').startsWith('https://claude.ai/customize/connectors?modal=add-custom-connector'));
   assert.equal(link.textContent, 'Add to Claude');
+  assert.equal(link.getAttribute('target'), '_blank', 'Claude opens in a new tab, so the setup stays open');
   assert.ok(view.container.textContent.includes('Claude Free allows one custom connector'));
   assert.equal(typeof polls[0], 'function', 'polls with a cadence');
 });
@@ -138,6 +139,18 @@ test('the prompt step: Reply radar, Open Claude without a prefill, the ladder, a
   assert.deepEqual(moves, ['wait', 'it_works']);
 });
 
+test('a failed request from the AI app is not shown: it usually retries by itself', async (t) => {
+  stubFetch(t);
+  const p = props({ step: 'wait', goTo: () => {} });
+  const { view } = await render(t, FirstPromptStep, {
+    ...p,
+    status: baseStatus({ handshake: { at: later(2), client: 'claude', clients: [] }, lastFailure: { at: later(3), code: 'invalid_params' } }),
+  });
+  assert.ok(view.container.querySelector('[data-testid="onb-ladder"]'));
+  assert.equal(view.container.textContent.includes('did not work'), false);
+  assert.equal(view.container.textContent.includes('could not read'), false);
+});
+
 test('the no-call help says to switch MCPEmails on in this chat', async (t) => {
   stubFetch(t);
   // A handshake 2 minutes before "now" on the server clock, and a wait that
@@ -161,10 +174,8 @@ test('It works names the app that made the call, even when the chip says another
   assert.equal(view.container.querySelector('[data-testid="onb-success"]').textContent, 'ChatGPT just searched your inbox.');
 });
 
-test('It works names the tool, offers the next prompts, the morning email, then the dashboard', async (t) => {
-  const calls = stubFetch(t, {
-    '/api/onboarding/assist': () => ({ status: 200, json: { ok: true, email: 'me@example.org' } }),
-  });
+test('It works names the tool, offers nothing more to paste, then Done', async (t) => {
+  const calls = stubFetch(t);
   let finished = 0;
   const { view } = await render(t, ItWorksStep, props({
     step: 'it_works',
@@ -172,25 +183,10 @@ test('It works names the tool, offers the next prompts, the morning email, then 
     finish: () => { finished += 1; },
   }));
   assert.equal(view.container.querySelector('[data-testid="onb-success"]').textContent, 'Claude just read your inbox.');
-  assert.ok(view.container.querySelector('[data-testid="onb-draft-prompt"]').textContent.includes('save a draft reply'));
-  assert.ok(view.container.querySelector('[data-testid="onb-morning-prompt"]').textContent.includes('morning brief'));
-  await flush(() => view.container.querySelector('[data-testid="onb-optin"]').click());
-  await waitFor(() => view.container.querySelector('[data-testid="onb-optin-done"]'), { message: 'opt-in saved' });
-  const optIn = calls.find((c) => c.body?.action === 'morning_brief');
-  assert.equal(optIn.body.client, 'claude');
-  assert.equal(typeof optIn.body.timeZone, 'string');
+  assert.equal(view.container.querySelectorAll('[data-testid="onb-draft-prompt"], [data-testid="onb-morning-prompt"], [data-testid="onb-optin"]').length, 0);
   await flush(() => view.container.querySelector('[data-testid="onb-finish"]').click());
   assert.equal(finished, 1);
-});
-
-test('a read-only key never gets a draft prompt', async (t) => {
-  stubFetch(t);
-  const { view } = await render(t, ItWorksStep, props({
-    step: 'it_works',
-    status: baseStatus({ firstCall: { at: T0, tool: 'email_read' }, credential: { exists: true, sinceReset: true, latestAt: T0, scopes: ['read:email', 'search:email'] } }),
-  }));
-  const text = view.container.querySelector('[data-testid="onb-draft-prompt"]').textContent;
-  assert.ok(text.includes('here in the chat') && !text.includes('Drafts folder'));
+  assert.equal(calls.some((c) => c.body?.action === 'morning_brief'), false);
 });
 
 // ── Flow B on It works (WP-H) ────────────────────────────────────────────────

@@ -50,8 +50,10 @@ test('every locale has every onboarding key, without < or an em dash', async () 
 test('the chip says which app is in use and swaps without a blocking screen', async (t) => {
   const picked = [];
   const view = await render(t, createElement(ClientChip, { client: 'claude', onChange: (id) => picked.push(id) }));
-  const text = view.container.textContent;
-  assert.ok(text.includes('Using Claude'), text);
+  const chip = view.container.querySelector('[data-testid="onb-chip"]');
+  assert.ok(chip.textContent.includes('Claude'), chip.textContent);
+  assert.ok(chip.getAttribute('aria-label').includes('Using Claude'));
+  assert.ok(chip.querySelector('.onb-logo svg'), 'the Claude logo');
   assert.equal(view.container.querySelectorAll('[role="menu"]').length, 0);
 
   await flush(() => view.container.querySelector('.onb-chip-change').click());
@@ -96,7 +98,7 @@ test('a fresh workspace sees no reuse offer', async (t) => {
 test('dashboard: Finish setup only while the new flow is unfinished', async (t) => {
   const on = await render(t, createElement(FinishSetupLink, { onboarding: { flow: 'new', finishSetup: true } }), AppLocaleProvider);
   const link = on.container.querySelector('[data-testid="finish-setup-link"]');
-  assert.equal(link?.getAttribute('href'), '/onboarding');
+  assert.equal(link?.getAttribute('href'), '/dashboard?setup=1');
   const off = await render(t, createElement(FinishSetupLink, { onboarding: { flow: 'control', finishSetup: false } }), AppLocaleProvider);
   assert.equal(off.container.querySelectorAll('[data-testid="finish-setup-link"]').length, 0);
 });

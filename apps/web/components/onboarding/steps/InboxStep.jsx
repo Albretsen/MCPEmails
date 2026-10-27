@@ -106,10 +106,6 @@ async function detectRemote(domain) {
   return data.detection;
 }
 
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function readOutlookError() {
   if (typeof window === 'undefined') return null;
   try {
@@ -287,8 +283,6 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
     }
 
     // Signed in. The route verified both halves before saving.
-    setChecks({ server: true, signedIn: false, read: false });
-    await wait(400);
     setChecks({ server: true, signedIn: true, read: false });
     const address = String(request.body.email);
     setConnected({ address, readOnly });
@@ -309,7 +303,6 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
       proofData = null;
     }
     setChecks({ server: true, signedIn: true, read: Boolean(proofData?.available) });
-    await wait(400);
     setProof(proofData?.available ? proofData : { available: false });
     setPhase('proof');
   };
@@ -352,7 +345,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
           if (canSubmit) submit(false);
         }}
       >
-        <label className="onb-label" htmlFor="onb-mailbox-address">{t('emailLabel')}</label>
+        <label className="onb-label onb-sr" htmlFor="onb-mailbox-address">{t('emailLabel')}</label>
         <input
           id="onb-mailbox-address"
           ref={emailRef}
@@ -362,6 +355,8 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
           autoComplete="off"
           inputMode="email"
           spellCheck={false}
+          placeholder={t('emailPlaceholder')}
+          autoFocus
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -383,7 +378,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
           {detecting
             ? t('detecting')
             : kind && !chooserVisible
-              ? <>{t('detected', { provider: label })}{' '}<button type="button" className="onb-link-btn" onClick={() => setShowChooser(true)}>{t('notRight')}</button></>
+              ? <span className="onb-detected"><span className="onb-detected-dot" aria-hidden="true" />{t('detected', { provider: label })}{' '}<button type="button" className="onb-link-btn" onClick={() => setShowChooser(true)}>{t('notRight')}</button></span>
               : null}
         </p>
 
@@ -454,11 +449,10 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
               </p>
             )}
 
-            <ul className="onb-trust" data-testid="onb-trust">
-              <li>{t('trust.access')}</li>
-              <li>{takesAppPassword(kind) ? t('trust.appPassword') : t('trust.mailboxPassword')}</li>
-              <li>{t('trust.storage')}</li>
-            </ul>
+            <p className="onb-trust" data-testid="onb-trust">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+              {takesAppPassword(kind) ? t('trust.appPassword') : t('trust.mailboxPassword')}
+            </p>
 
             {kind === 'imap' && (
               <div className="onb-advanced">
@@ -485,7 +479,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
               />
             )}
 
-            <div className="onb-actions">
+            <div className="onb-actions onb-actions-wide">
               <button type="submit" className="btn btn-primary" disabled={!canSubmit} data-testid="onb-connect">
                 {t('connect')}
               </button>

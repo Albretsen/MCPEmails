@@ -8,9 +8,9 @@ import { useTranslations } from 'next-intl';
  * `workspace.onboarding` from the dashboard page (app/dashboard/[[...section]]/page.js):
  *   { flow, convert, finishSetup, canReset }
  *
- * FinishSetupLink: a small link back to /onboarding while a workspace in the
- * new flow has not finished it ("Go to dashboard" exits the flow; this is how
- * they get back).
+ * FinishSetupLink: a small link that reopens the setup dialog while a workspace
+ * in the new flow has not finished it (closing the dialog leaves the flow; this
+ * is how they get back).
  *
  * ResetOnboardingCard: Settings, internal owners only. POST /api/onboarding
  * {reset} clears the onboarding and first-call markers
@@ -21,7 +21,7 @@ export function FinishSetupLink({ onboarding }) {
   if (!onboarding?.finishSetup) return null;
   return (
     <div style={{ padding: '12px 32px 0' }}>
-      <a href="/onboarding" data-testid="finish-setup-link" style={{ fontSize: 13.5, color: 'var(--brand)' }}>
+      <a href="/dashboard?setup=1" data-testid="finish-setup-link" style={{ fontSize: 13.5, color: 'var(--brand)' }}>
         {t('onboardingEntry.finishSetup')}
       </a>
     </div>

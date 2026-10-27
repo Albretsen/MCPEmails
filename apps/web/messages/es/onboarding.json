@@ -2,9 +2,10 @@
   "shell": {
     "title": "Configura MCPEmails",
     "progress": "Paso {current} de {total}",
-    "exit": "Ir al panel",
+    "exit": "Cerrar la configuración",
     "loading": "Cargando tu configuración",
-    "statusError": "No se pudo cargar tu configuración. Recarga la página para intentarlo de nuevo."
+    "statusError": "No se pudo cargar tu configuración. Recarga la página para intentarlo de nuevo.",
+    "skip": "Omitir"
   },
   "chip": {
     "using": "Con {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "¿Qué bandeja de entrada debe usar tu IA?",
+      "title": "Conecta tu bandeja de entrada",
       "reuseTitle": "Ya hay una bandeja de entrada conectada",
       "reuse": "Usar {address}",
       "connectAnother": "Conectar otra bandeja",
-      "lead": "Escribe la dirección que quieres que tu IA lea y responda. Te mostramos los pasos para tu proveedor.",
+      "lead": "La que tu IA debe leer y responder.",
       "emailLabel": "Dirección de correo",
       "useSignup": "Usar {address}",
       "detecting": "Buscando tu proveedor",
-      "detected": "Proveedor: {provider}",
-      "notRight": "¿No es correcto? Elige tu proveedor",
-      "chooseLead": "No pudimos reconocer tu proveedor por la dirección. Elige uno:",
+      "detected": "{provider}",
+      "notRight": "Cambiar",
+      "chooseLead": "¿Qué proveedor es?",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "Puedes probarla igualmente."
       },
       "trust": {
-        "access": "Tu IA puede leer, buscar, organizar, redactar y enviar correo en este buzón. No puede cambiar la contraseña ni los ajustes de tu cuenta.",
-        "appPassword": "Una contraseña de aplicación solo sirve para el correo, y puedes revocarla por separado cuando quieras.",
-        "mailboxPassword": "Puedes desconectar el buzón en MCPEmails cuando quieras.",
-        "storage": "Guardada cifrada en Estocolmo."
+        "appPassword": "Una contraseña de aplicación solo abre tu correo. Se guarda cifrada en Estocolmo y puedes revocarla cuando quieras.",
+        "mailboxPassword": "Se guarda cifrada en Estocolmo. Desconéctala cuando quieras."
       },
       "connect": "Conectar",
       "progress": {
         "title": "Conectando {address}",
         "server": "Servidor de correo encontrado",
         "signedIn": "Sesión iniciada",
-        "read": "Buzón leído",
-        "slow": "Con algunos proveedores tarda hasta un minuto."
+        "read": "Buzón leído"
       },
       "proof": {
         "title": "Conectado",
@@ -187,19 +185,20 @@
         "admin_consent_required": "Tu organización necesita que un administrador apruebe MCPEmails antes de que puedas iniciar sesión. Envíale el enlace de abajo.",
         "outlook_cancelled": "Cancelaste en la página de Microsoft. Pulsa Conectar con Microsoft para volver a intentarlo.",
         "generic": "El inicio de sesión con Microsoft no terminó. Vuelve a intentarlo."
-      }
+      },
+      "emailPlaceholder": "tu@ejemplo.com"
     },
     "add_to_ai": {
       "title": "Añade MCPEmails a {client}",
-      "lead": "Un paso en {client} y vuelves aquí. Esta página avanza sola en cuanto {client} se conecte.",
+      "lead": "Se abre en una pestaña nueva. Esto avanza solo cuando {client} se conecte.",
       "urlLabel": "URL del servidor de MCPEmails",
-      "linkAfter": "{client} se abre con MCPEmails ya rellenado. Confírmalo e inicia sesión en MCPEmails cuando te lo pida.",
-      "claudeAfter": "Claude abre su ventana para añadir un conector personalizado con MCPEmails ya rellenado. Haz clic en Añadir, luego en Conectar, y permite el acceso.",
+      "linkAfter": "Confirma en {client} e inicia sesión en MCPEmails.",
+      "claudeAfter": "En Claude, haz clic en Añadir y luego en Conectar.",
       "commandAfter": "Después abre {client} e inicia sesión en MCPEmails cuando te lo pida.",
       "configLead": "Añade esto a {file}, recarga {client} e inicia sesión en MCPEmails cuando te lo pida.",
       "genericOauth": "En {client}, añade un servidor MCP de tipo HTTP, pega la URL de abajo e inicia sesión en MCPEmails cuando te lo pida.",
       "manual": "Configurarlo a mano",
-      "continue": "Ya lo añadí, continuar",
+      "continue": "Ya lo añadí",
       "chatgpt": {
         "step1": "En chatgpt.com, abre Plugins y luego Personal.",
         "step2": "Haz clic en Add y luego en Add custom MCP server.",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "Pregúntale algo a {client}",
-      "lead": "Pega esto en un chat nuevo de {client}:",
-      "leadCode": "Pega esto en {client}:",
+      "title": "Pruébalo en {client}",
+      "lead": "Pega esto en un chat nuevo.",
+      "leadCode": "Pega esto en {client}.",
       "leadApi": "Envía tu primera petición:",
-      "open": "Abrir {client}",
-      "openNote": "Abre un chat nuevo. Pega ahí el prompt."
+      "open": "Abrir {client}"
     },
     "wait": {
       "title": "Esperando a {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} acaba de ordenar tu bandeja de entrada.",
         "generic": "{client} acaba de usar tu buzón."
       },
-      "next": "Ahora, pega esto:",
-      "ritual": "Mañana por la mañana, pega esto:",
-      "optIn": "Enviarme esto por email mañana a las 8",
-      "optInDone": "Lo enviaremos a {email} mañana a las 8:00.",
-      "optInFailed": "No se pudo guardar. Inténtalo de nuevo.",
-      "finish": "Ir al panel",
+      "finish": "Listo",
       "secondInbox": {
         "title": "Conecta tu otra bandeja",
         "lead": "La mayoría conecta una segunda bandeja: trabajo y personal en un mismo chat.",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "La última petición no funcionó",
     "auth": "Tu proveedor de correo rechazó la contraseña del buzón. Vuelve a conectar el buzón en el panel.",
     "timeout": "Tu servidor de correo tardó demasiado en responder. Vuelve a preguntar por un periodo más corto.",
     "provider": "Tu proveedor de correo devolvió un error. Inténtalo de nuevo en un minuto.",

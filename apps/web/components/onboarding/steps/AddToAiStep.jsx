@@ -19,8 +19,9 @@ import { CopyField, EmailMeButton } from './ConnectParts';
  * On a phone, Claude gets the claude.ai browser path; other clients get
  * "Email me this link", which reopens this step on a computer.
  *
- * Polls the status and moves on by itself once a connector grant or MCP
- * handshake appears that is newer than this step (addToAiDone).
+ * Links open in a new tab, so this dialog stays put. It polls the status and
+ * moves on by itself once a connector grant or MCP handshake appears that is
+ * newer than this step (addToAiDone); coming back to the tab checks at once.
  */
 export function AddToAiStep({ step, status, setPolling, client, clientLabel, mcpUrl, goNext }) {
   const t = useTranslations('onboarding');
@@ -68,10 +69,14 @@ export function AddToAiStep({ step, status, setPolling, client, clientLabel, mcp
   return (
     <section className="onb-panel" data-step={step} data-testid="onb-add-to-ai">
       <h1 className="onb-title">{t('steps.add_to_ai.title', vars)}</h1>
-      <p className="onb-muted">{t('steps.add_to_ai.lead', vars)}</p>
+      <p className="onb-sub">{t('steps.add_to_ai.lead', vars)}</p>
       {body}
-      <div className="onb-actions">
-        <button type="button" className="btn btn-secondary" onClick={goNext} data-testid="onb-added">
+      <div className="onb-listen">
+        <span className="onb-listen-status" role="status">
+          <span className="onb-pulse" aria-hidden="true" />
+          {t('ladder.waiting', vars)}
+        </span>
+        <button type="button" className="onb-link-btn" onClick={goNext} data-testid="onb-added">
           {t('steps.add_to_ai.continue')}
         </button>
       </div>
@@ -83,6 +88,14 @@ const subscribeNothing = () => () => {};
 const phoneSnapshot = () => isPhone(navigator.userAgent);
 const desktopSnapshot = () => false;
 
+/**
+ * A web link opens in a new tab so this dialog stays open; an app link
+ * (cursor://, vscode:) opens the app and leaves no empty tab behind.
+ */
+function newTab(href) {
+  return /^https?:/i.test(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+}
+
 function InstallAction({ client, clientLabel, mcpUrl, locale }) {
   const t = useTranslations('onboarding');
   const vars = { client: clientLabel };
@@ -93,12 +106,12 @@ function InstallAction({ client, clientLabel, mcpUrl, locale }) {
   if (action?.kind === 'link') {
     return (
       <>
-        <div className="onb-actions">
-          <a className="btn btn-primary" href={action.href} onClick={clicked} data-testid="onb-install-link">{action.label}</a>
-          {action.alt && <a className="btn btn-secondary" href={action.alt.href} onClick={clicked}>{action.alt.label}</a>}
+        <div className="onb-actions onb-actions-wide">
+          <a className="btn btn-primary" href={action.href} {...newTab(action.href)} onClick={clicked} data-testid="onb-install-link">{action.label}</a>
+          {action.alt && <a className="btn btn-secondary" href={action.alt.href} {...newTab(action.alt.href)} onClick={clicked}>{action.alt.label}</a>}
         </div>
-        <p className="onb-muted onb-after">{client === 'claude' ? t('steps.add_to_ai.claudeAfter') : t('steps.add_to_ai.linkAfter', vars)}</p>
-        {action.note && <p className="onb-note">{action.note}</p>}
+        <p className="onb-hint onb-after">{client === 'claude' ? t('steps.add_to_ai.claudeAfter') : t('steps.add_to_ai.linkAfter', vars)}</p>
+        {action.note && <p className="onb-hint">{action.note}</p>}
         <details className="onb-details">
           <summary>{t('steps.add_to_ai.manual')}</summary>
           {urlField}
@@ -110,7 +123,7 @@ function InstallAction({ client, clientLabel, mcpUrl, locale }) {
     return (
       <>
         <CopyField label={action.label} value={action.command} testId="onb-command" onCopy={clicked} />
-        <p className="onb-muted onb-after">{t('steps.add_to_ai.commandAfter', vars)}</p>
+        <p className="onb-hint onb-after">{t('steps.add_to_ai.commandAfter', vars)}</p>
       </>
     );
   }

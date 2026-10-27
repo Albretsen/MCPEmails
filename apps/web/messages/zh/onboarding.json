@@ -2,9 +2,10 @@
   "shell": {
     "title": "设置 MCPEmails",
     "progress": "第 {current} 步，共 {total} 步",
-    "exit": "前往控制台",
+    "exit": "关闭设置",
     "loading": "正在加载你的设置",
-    "statusError": "无法加载你的设置。请刷新页面重试。"
+    "statusError": "无法加载你的设置。请刷新页面重试。",
+    "skip": "跳过设置"
   },
   "chip": {
     "using": "使用 {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "你的 AI 应该使用哪个收件箱？",
+      "title": "连接你的收件箱",
       "reuseTitle": "已连接一个收件箱",
       "reuse": "使用 {address}",
       "connectAnother": "连接另一个收件箱",
-      "lead": "输入你希望 AI 读取和回复的邮箱地址。我们会显示该服务商的设置步骤。",
+      "lead": "你希望 AI 读取和回复的那个。",
       "emailLabel": "邮箱地址",
       "useSignup": "使用 {address}",
       "detecting": "正在识别你的邮箱服务商",
-      "detected": "服务商：{provider}",
-      "notRight": "不对？选择你的服务商",
-      "chooseLead": "无法从地址识别你的服务商。请选择一个：",
+      "detected": "{provider}",
+      "notRight": "更改",
+      "chooseLead": "是哪个服务商？",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "你仍然可以试试。"
       },
       "trust": {
-        "access": "你的 AI 可以在此邮箱中读取、搜索、整理、起草和发送邮件。它不能更改你的帐号密码或设置。",
-        "appPassword": "应用专用密码只能用于邮件，你可以随时单独撤销它。",
-        "mailboxPassword": "你可以随时在 MCPEmails 中断开此邮箱。",
-        "storage": "加密存储在斯德哥尔摩。"
+        "appPassword": "应用专用密码只能访问你的邮件。加密存储在斯德哥尔摩，可随时撤销。",
+        "mailboxPassword": "加密存储在斯德哥尔摩。可随时断开。"
       },
       "connect": "连接",
       "progress": {
         "title": "正在连接 {address}",
         "server": "已找到邮件服务器",
         "signedIn": "已登录",
-        "read": "已读取邮箱",
-        "slow": "部分服务商最多需要一分钟。"
+        "read": "已读取邮箱"
       },
       "proof": {
         "title": "已连接",
@@ -187,19 +185,20 @@
         "admin_consent_required": "你的组织需要管理员批准 MCPEmails 后你才能登录。请把下面的链接发给管理员。",
         "outlook_cancelled": "你在 Microsoft 页面上取消了。点击使用 Microsoft 连接即可重试。",
         "generic": "Microsoft 登录未完成。请重试。"
-      }
+      },
+      "emailPlaceholder": "you@example.com"
     },
     "add_to_ai": {
       "title": "将 MCPEmails 添加到 {client}",
-      "lead": "在 {client} 中完成一步，然后回到这里。{client} 连接后，此页面会自动继续。",
+      "lead": "在新标签页中打开。{client} 连接后会自动继续。",
       "urlLabel": "MCPEmails 服务器 URL",
-      "linkAfter": "{client} 会打开并已填好 MCPEmails。确认后，在提示时登录 MCPEmails。",
-      "claudeAfter": "Claude 会打开添加自定义连接器的窗口，并已填好 MCPEmails。点击添加，再点击连接，然后允许访问。",
+      "linkAfter": "在 {client} 中确认，然后登录 MCPEmails。",
+      "claudeAfter": "在 Claude 中点击添加，再点击连接。",
       "commandAfter": "然后启动 {client}，在提示时登录 MCPEmails。",
       "configLead": "把这段加入 {file}，重新加载 {client}，在提示时登录 MCPEmails。",
       "genericOauth": "在 {client} 中添加一个 HTTP 类型的 MCP 服务器，粘贴下面的 URL，在提示时登录 MCPEmails。",
       "manual": "手动设置",
-      "continue": "已添加，继续",
+      "continue": "我已添加",
       "chatgpt": {
         "step1": "在 chatgpt.com 上打开 Plugins，然后打开 Personal。",
         "step2": "点击 Add，然后点击 Add custom MCP server。",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "向 {client} 提个问题",
-      "lead": "把这段粘贴到 {client} 的新对话中：",
-      "leadCode": "把这段粘贴到 {client} 中：",
+      "title": "在 {client} 中试一试",
+      "lead": "把这段粘贴到新对话中。",
+      "leadCode": "把这段粘贴到 {client} 中。",
       "leadApi": "发送你的第一个请求：",
-      "open": "打开 {client}",
-      "openNote": "会打开一个新对话。把提示词粘贴到那里。"
+      "open": "打开 {client}"
     },
     "wait": {
       "title": "正在等待 {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} 刚刚整理了你的收件箱。",
         "generic": "{client} 刚刚使用了你的邮箱。"
       },
-      "next": "接下来，粘贴这段：",
-      "ritual": "明天早上，粘贴这段：",
-      "optIn": "明天 8 点把这段发到我的邮箱",
-      "optInDone": "我们会在明天 8:00 发送到 {email}。",
-      "optInFailed": "无法保存，请重试。",
-      "finish": "前往控制台",
+      "finish": "完成",
       "secondInbox": {
         "title": "连接你的另一个收件箱",
         "lead": "大多数人会再连接一个收件箱：工作和个人邮件在同一个对话里。",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "上一个请求没有成功",
     "auth": "你的邮件服务商拒绝了收件箱密码。请在控制台中重新连接收件箱。",
     "timeout": "你的邮件服务器响应太慢。请缩短时间范围后再问一次。",
     "provider": "你的邮件服务商返回了错误。请一分钟后重试。",

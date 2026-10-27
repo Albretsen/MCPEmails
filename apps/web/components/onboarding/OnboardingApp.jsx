@@ -2,10 +2,10 @@
 
 import { Suspense, use, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { ONBOARDING_STEPS, initialStep, isOnboardingStep, nextStep } from '@/lib/onboarding/flow';
+import { initialStep, isOnboardingStep, nextStep } from '@/lib/onboarding/flow';
 import { chipClientLabel, normalizeChipClient } from '@/lib/onboarding/clients.mjs';
 import { ClientChip } from './ClientChip';
+import { ClientLogo, InboxLogo, MarkLogo } from './ClientLogo';
 import { STEP_PANELS } from './steps';
 import { useOnboardingStatus } from './useOnboardingStatus';
 import { clientChanged, onboardingCompleted, stepViewed } from './onboarding-actions';
@@ -13,13 +13,17 @@ import { ChatReturnPanel } from './ChatReturnPanel';
 import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return.mjs';
 
 /**
- * The /onboarding client island (app/onboarding/page.tsx renders it).
+ * The setup flow, as a dialog over the dashboard (SetupModal.jsx mounts it).
  *
- * The header (title, step count, client chip, "Go to dashboard") paints at
- * once; the step body waits for the one streamed status read
- * (`statusPromise`, src/lib/onboarding/status.ts) inside a Suspense boundary.
+ * The frame (close button, scrim) paints at once; the step body waits for the
+ * one status read (`statusPromise`, src/lib/onboarding/status.ts) inside a
+ * Suspense boundary.
  *
- * Props (all from the server page):
+ * Three steps the user sees, five step ids underneath (flow.ts, unchanged so
+ * the funnel categories keep their meaning):
+ *   1 inbox · 2 add_to_ai · 3 first_prompt and wait · then it_works, the finish.
+ *
+ * Props:
  *   variant         { flow, convert }  clientOnboardingVariant()
  *   initialClient   chip id, inferred server-side (clients.mjs)
  *   provider        ?provider= slug or null
@@ -30,22 +34,12 @@ import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return
  *   flowB           Flow B facts (flow-b-server.ts) or null (WP-H)
  *   chatReturn      { client, provider } | null: a verified chat connect link
  *                   (from=chat). Only the inbox step, then ChatReturnPanel.
- *
- * @param {{
- *   variant: { flow: string, convert: string },
- *   initialClient: string,
- *   provider?: string | null,
- *   mcpUrl: string,
- *   userEmail?: string,
- *   statusPromise: Promise<unknown>,
- *   requestedStep?: string | null,
- *   flowB?: object | null,
- *   chatReturn?: { client: string | null, provider: string | null } | null,
- * }} props
+ *   onClose(href?)  close the dialog; `href` is a /dashboard path to open.
  */
-export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null }) {
+export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null, onClose }) {
   const t = useTranslations('onboarding');
   const [client, setClient] = useState(normalizeChipClient(initialClient) ?? 'claude');
+  const dialogRef = useRef(null);
 
   const changeClient = useCallback((id) => {
     const next = normalizeChipClient(id);
@@ -62,43 +56,59 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
     }
   }, []);
 
+  // Escape closes, unless something inside (the chip's menu) used it first.
+  useEffect(() => {
+    dialogRef.current?.focus({ preventScroll: true });
+    const onKey = (event) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) onClose?.();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
-    <div className="onb-root">
-      <header className="onb-header">
-        <a className="onb-brand" href="/dashboard">MCPEmails</a>
-        <a className="onb-exit" href="/dashboard" data-testid="onb-exit">{t('shell.exit')}</a>
-      </header>
-      <main className="onb-main">
-        <ClientChip client={client} onChange={changeClient} />
-        <Suspense fallback={<p className="onb-muted onb-loading">{t('shell.loading')}</p>}>
+    <div className="onb-overlay">
+      <div className="onb-scrim" aria-hidden="true" />
+      <div className="onb-dialog" role="dialog" aria-modal="true" aria-label={t('shell.title')} tabIndex={-1} ref={dialogRef} data-testid="onb-dialog">
+        <button type="button" className="onb-close" onClick={() => onClose?.()} aria-label={t('shell.exit')} data-testid="onb-exit">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+        <Suspense fallback={<div className="onb-loading" aria-busy="true" />}>
           <OnboardingSteps
             statusPromise={statusPromise}
             requestedStep={requestedStep}
             client={client}
+            changeClient={changeClient}
             provider={provider}
             variant={variant}
             mcpUrl={mcpUrl}
             userEmail={userEmail}
             flowB={flowB}
             chatReturn={chatReturn}
+            onClose={onClose}
           />
         </Suspense>
-      </main>
+      </div>
     </div>
   );
 }
 
-function OnboardingSteps({ statusPromise, requestedStep, client, provider, variant, mcpUrl, userEmail, flowB, chatReturn = null }) {
+/** Step id -> the 0-based place in the three steps the user sees; 3 is done. */
+const STAGE = { inbox: 0, add_to_ai: 1, first_prompt: 2, wait: 2, it_works: 3 };
+const STAGES = 3;
+
+function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, provider, variant, mcpUrl, userEmail, flowB, chatReturn = null, onClose }) {
   const t = useTranslations('onboarding');
-  const router = useRouter();
   const initialStatus = use(statusPromise);
   const { status, refreshStatus, setPolling } = useOnboardingStatus(initialStatus);
   const [step, setStep] = useState(() => (chatReturn ? 'inbox' : isOnboardingStep(requestedStep) ? requestedStep : initialStep(initialStatus)));
   // From a chat link: the inbox step is the whole flow, then back to the chat.
   // `chatDone` holds the client to send them back to.
   const [chatDone, setChatDone] = useState(null);
-  // Kept across the Microsoft sign-in, which returns to /onboarding?connected=outlook
-  // without the link's parameters (src/lib/onboarding/chat-return.mjs).
+  // Kept across the Microsoft sign-in, which returns with ?connected=outlook
+  // but without the link's parameters (src/lib/onboarding/chat-return.mjs).
   useEffect(() => {
     if (chatReturn) {
       rememberChatReturn(chatReturn);
@@ -145,42 +155,86 @@ function OnboardingSteps({ statusPromise, requestedStep, client, provider, varia
     setStep('inbox');
   }, []);
   // `href` is a /dashboard path (B1 at the inbox cap opens the dashboard's
-  // upgrade panel); anything else, such as a click event, is /dashboard.
+  // upgrade panel); anything else, such as a click event, closes onto the
+  // dashboard behind.
   const finish = useCallback(async (href) => {
     setPolling(null);
     await onboardingCompleted();
-    router.push(typeof href === 'string' && href.startsWith('/dashboard') ? href : '/dashboard');
-  }, [setPolling, router]);
-
-  const Panel = STEP_PANELS[step];
-  const index = ONBOARDING_STEPS.indexOf(step);
+    onClose?.(typeof href === 'string' && href.startsWith('/dashboard') ? href : undefined);
+  }, [setPolling, onClose]);
 
   if (chatDone) {
-    return <ChatReturnPanel client={chatDone.client ?? client} dashboardHref="/dashboard" />;
+    return <ChatReturnPanel client={chatDone.client ?? client} onClose={onClose} />;
   }
+
+  const Panel = STEP_PANELS[step];
+  const stage = STAGE[step];
+  const clientLabel = chipClientLabel(client);
 
   return (
     <>
+      <div className="onb-top">
+        {!chatReturn && (
+          <div
+            className="onb-bars"
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={STAGES}
+            aria-valuenow={Math.min(stage + 1, STAGES)}
+            aria-label={t('shell.progress', { current: Math.min(stage + 1, STAGES), total: STAGES })}
+            data-testid="onb-progress-bars"
+          >
+            {Array.from({ length: STAGES }, (_, i) => (
+              <span key={i} className={i < stage ? 'is-done' : i === stage ? 'is-current' : ''} />
+            ))}
+          </div>
+        )}
+      </div>
+      <Chain stage={chatReturn ? 0 : stage} client={client} />
       {initialStatus === null && <p className="onb-error" role="alert">{t('shell.statusError')}</p>}
-      {!chatReturn && <p className="onb-progress">{t('shell.progress', { current: index + 1, total: ONBOARDING_STEPS.length })}</p>}
-      <Panel
-        step={step}
-        status={status}
-        refreshStatus={refreshStatus}
-        setPolling={setPolling}
-        client={client}
-        clientLabel={chipClientLabel(client)}
-        provider={provider}
-        variant={variant}
-        mcpUrl={mcpUrl}
-        userEmail={userEmail}
-        goNext={goNext}
-        goTo={goTo}
-        finish={finish}
-        flowB={flowB}
-        secondInbox={secondInbox}
-        startSecondInbox={startSecondInbox}
-      />
+      <div className="onb-stage" key={secondInbox ? 'inbox-2' : step}>
+        <Panel
+          step={step}
+          status={status}
+          refreshStatus={refreshStatus}
+          setPolling={setPolling}
+          client={client}
+          clientLabel={clientLabel}
+          provider={provider}
+          variant={variant}
+          mcpUrl={mcpUrl}
+          userEmail={userEmail}
+          goNext={goNext}
+          goTo={goTo}
+          finish={finish}
+          flowB={flowB}
+          secondInbox={secondInbox}
+          startSecondInbox={startSecondInbox}
+        />
+      </div>
+      {step !== 'it_works' && (
+        <div className="onb-foot">
+          <ClientChip client={client} onChange={changeClient} />
+          <button type="button" className="onb-skip" onClick={() => onClose?.()} data-testid="onb-skip">{t('shell.skip')}</button>
+        </div>
+      )}
     </>
+  );
+}
+
+/**
+ * Inbox, MCPEmails, the AI app: what this flow wires together. Each link
+ * fills in as its step is done; the one being made animates.
+ */
+function Chain({ stage, client }) {
+  const link = (i) => (stage > i ? 'is-done' : stage === i ? 'is-current' : '');
+  return (
+    <div className="onb-chain" aria-hidden="true" data-stage={stage}>
+      <span className={`onb-node${stage > 0 ? ' is-done' : ''}`}><InboxLogo size={44} /></span>
+      <span className={`onb-link ${link(0)}`} />
+      <span className={`onb-node${stage > 1 ? ' is-done' : ''}`}><MarkLogo size={44} /></span>
+      <span className={`onb-link ${link(1)}`} />
+      <span className={`onb-node${stage > 2 ? ' is-done' : ''}`}><ClientLogo client={client} size={44} /></span>
+    </div>
   );
 }

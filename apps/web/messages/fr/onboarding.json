@@ -2,9 +2,10 @@
   "shell": {
     "title": "Configurer MCPEmails",
     "progress": "Étape {current} sur {total}",
-    "exit": "Aller au tableau de bord",
+    "exit": "Fermer la configuration",
     "loading": "Chargement de votre configuration",
-    "statusError": "Impossible de charger votre configuration. Rechargez la page pour réessayer."
+    "statusError": "Impossible de charger votre configuration. Rechargez la page pour réessayer.",
+    "skip": "Passer"
   },
   "chip": {
     "using": "Avec {client}",
@@ -14,17 +15,17 @@
   },
   "steps": {
     "inbox": {
-      "title": "Quelle boîte de réception votre IA doit-elle utiliser ?",
+      "title": "Connectez votre boîte de réception",
       "reuseTitle": "Une boîte de réception est déjà connectée",
       "reuse": "Utiliser {address}",
       "connectAnother": "Connecter une autre boîte",
-      "lead": "Saisissez l'adresse que votre IA doit lire et à laquelle elle doit répondre. Nous affichons les étapes pour votre fournisseur.",
+      "lead": "Celle que votre IA doit lire et à laquelle elle répond.",
       "emailLabel": "Adresse e-mail",
       "useSignup": "Utiliser {address}",
       "detecting": "Recherche de votre fournisseur",
-      "detected": "Fournisseur : {provider}",
-      "notRight": "Ce n'est pas le bon ? Choisissez votre fournisseur",
-      "chooseLead": "Nous n'avons pas pu reconnaître votre fournisseur à partir de l'adresse. Choisissez-en un :",
+      "detected": "{provider}",
+      "notRight": "Modifier",
+      "chooseLead": "Quel est votre fournisseur ?",
       "kinds": {
         "gmail": "Gmail",
         "google_workspace": "Google Workspace",
@@ -121,18 +122,15 @@
         "warnNote": "Vous pouvez quand même essayer."
       },
       "trust": {
-        "access": "Votre IA peut lire, rechercher, classer, rédiger et envoyer des e-mails dans cette boîte. Elle ne peut pas modifier le mot de passe ni les paramètres de votre compte.",
-        "appPassword": "Un mot de passe d'application ne sert qu'à la messagerie, et vous pouvez le révoquer à tout moment, seul.",
-        "mailboxPassword": "Vous pouvez déconnecter la boîte dans MCPEmails à tout moment.",
-        "storage": "Stocké chiffré à Stockholm."
+        "appPassword": "Un mot de passe d'application n'ouvre que votre messagerie. Stocké chiffré à Stockholm, révocable à tout moment.",
+        "mailboxPassword": "Stocké chiffré à Stockholm. Déconnectable à tout moment."
       },
       "connect": "Connecter",
       "progress": {
         "title": "Connexion de {address}",
         "server": "Serveur de messagerie trouvé",
         "signedIn": "Connecté",
-        "read": "Boîte lue",
-        "slow": "Chez certains fournisseurs, cela prend jusqu'à une minute."
+        "read": "Boîte lue"
       },
       "proof": {
         "title": "Connecté",
@@ -187,19 +185,20 @@
         "admin_consent_required": "Votre organisation exige qu'un administrateur approuve MCPEmails avant que vous puissiez vous connecter. Envoyez-lui le lien ci-dessous.",
         "outlook_cancelled": "Vous avez annulé sur la page de Microsoft. Cliquez sur Se connecter avec Microsoft pour réessayer.",
         "generic": "La connexion Microsoft n'a pas abouti. Réessayez."
-      }
+      },
+      "emailPlaceholder": "vous@exemple.fr"
     },
     "add_to_ai": {
       "title": "Ajouter MCPEmails à {client}",
-      "lead": "Une étape dans {client}, puis revenez ici. Cette page avance toute seule dès que {client} est connecté.",
+      "lead": "S'ouvre dans un nouvel onglet. La suite s'affiche dès que {client} est connecté.",
       "urlLabel": "URL du serveur MCPEmails",
-      "linkAfter": "{client} s'ouvre avec MCPEmails déjà rempli. Confirmez, puis connectez-vous à MCPEmails quand on vous le demande.",
-      "claudeAfter": "Claude ouvre sa fenêtre d'ajout de connecteur personnalisé avec MCPEmails déjà rempli. Cliquez sur Ajouter, puis Connecter, et autorisez l'accès.",
+      "linkAfter": "Confirmez dans {client}, puis connectez-vous à MCPEmails.",
+      "claudeAfter": "Dans Claude, cliquez sur Ajouter, puis Connecter.",
       "commandAfter": "Lancez ensuite {client} et connectez-vous à MCPEmails quand on vous le demande.",
       "configLead": "Ajoutez ceci dans {file}, rechargez {client} et connectez-vous à MCPEmails quand on vous le demande.",
       "genericOauth": "Dans {client}, ajoutez un serveur MCP de type HTTP, collez l'URL ci-dessous et connectez-vous à MCPEmails quand on vous le demande.",
       "manual": "Configurer à la main",
-      "continue": "C'est ajouté, continuer",
+      "continue": "C'est ajouté",
       "chatgpt": {
         "step1": "Sur chatgpt.com, ouvrez Plugins, puis Personal.",
         "step2": "Cliquez sur Add, puis sur Add custom MCP server.",
@@ -236,12 +235,11 @@
       }
     },
     "first_prompt": {
-      "title": "Posez une question à {client}",
-      "lead": "Collez ceci dans une nouvelle conversation dans {client} :",
-      "leadCode": "Collez ceci dans {client} :",
+      "title": "Essayez dans {client}",
+      "lead": "Collez ceci dans une nouvelle conversation.",
+      "leadCode": "Collez ceci dans {client}.",
       "leadApi": "Envoyez votre première requête :",
-      "open": "Ouvrir {client}",
-      "openNote": "Ouvre une nouvelle conversation. Collez-y le prompt."
+      "open": "Ouvrir {client}"
     },
     "wait": {
       "title": "En attente de {client}"
@@ -255,12 +253,7 @@
         "organize": "{client} vient de ranger votre boîte de réception.",
         "generic": "{client} vient d'utiliser votre boîte mail."
       },
-      "next": "Ensuite, collez ceci :",
-      "ritual": "Demain matin, collez ceci :",
-      "optIn": "M'envoyer ceci par e-mail demain à 8 h",
-      "optInDone": "Nous l'enverrons à {email} demain à 8 h.",
-      "optInFailed": "Impossible d'enregistrer. Réessayez.",
-      "finish": "Aller au tableau de bord",
+      "finish": "Terminé",
       "secondInbox": {
         "title": "Connectez votre autre boîte mail",
         "lead": "La plupart des gens connectent une deuxième boîte : pro et perso dans une seule conversation.",
@@ -314,7 +307,6 @@
     }
   },
   "failure": {
-    "title": "La dernière requête n'a pas fonctionné",
     "auth": "Votre fournisseur de messagerie a refusé le mot de passe de la boîte. Reconnectez la boîte dans le tableau de bord.",
     "timeout": "Votre serveur de messagerie a mis trop de temps à répondre. Redemandez sur une période plus courte.",
     "provider": "Votre fournisseur de messagerie a renvoyé une erreur. Réessayez dans une minute.",
