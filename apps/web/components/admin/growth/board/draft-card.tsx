@@ -125,7 +125,8 @@ export function DraftCardFamilyTable({
         means the result carried the card, not that the client drew it. A card send is one that carried the
         card&apos;s base_revision, which a model could also pass. Other clients (Cursor, Codex and the like) draw no
         card and are the comparison. The before window has no card sends: until the release only our own
-        workspaces had it, and they are excluded. Bars: {formatPercent(BARS.touched, 0)} touched, share sent within a day down at most{' '}
+        workspaces had it, and they are excluded. Tool failures leave out draft_read answering draft_not_found: a
+        card re-reads its draft when the chat is reopened, and a sent or discarded one answers that. Bars: {formatPercent(BARS.touched, 0)} touched, share sent within a day down at most{' '}
         {formatPercent(BARS.sendDrop, 0)} net of other clients, under {formatPercent(BARS.optOut, 0)} turned off,
         failures up at most {Math.round(BARS.errorRise * 100)} point.
       </p>
