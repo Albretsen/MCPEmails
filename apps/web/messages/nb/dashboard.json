@@ -889,7 +889,7 @@
       "seeOptions": "Se valgene",
       "close": "Lukk",
       "started": "Betaling mottatt. Personal-passet ditt for 3 måneder vises her om et øyeblikk."
-  },
+    },
     "planChange": {
       "title": "Endre eller sett abonnementet på pause",
       "sub": "Sett et månedsabonnement på pause i opptil 3 måneder, eller bytt til et mindre abonnement når den nåværende perioden er over.",
@@ -1055,11 +1055,9 @@
   },
   "approvals": {
     "review": {
-      "kicker": "Venter på godkjenning",
-      "kickerSettled": "Utsendingsgjennomgang",
-      "title": "Godkjenn denne e-posten før den sendes",
-      "titleSettled": "Denne utsendingen er allerede avgjort",
-      "subtitle": "En KI-assistent har forberedt denne e-posten. Den er ikke sendt, og den sendes bare hvis du godkjenner den her.",
+      "kicker": "Venter på godkjenningen din",
+      "title": "Sende denne e-posten?",
+      "subtitle": "AI-assistenten din har laget denne e-posten. Ingenting sendes før du godkjenner den.",
       "from": "Fra",
       "to": "Til",
       "cc": "Kopi",
@@ -1096,7 +1094,7 @@
       "working": "Jobber…",
       "toDashboard": "Åpne dashbordet",
       "readOnly": "Du kan se gjennom denne utsendingen, men bare en eier eller administrator av arbeidsområdet kan godkjenne eller avvise den.",
-      "footnote": "Godkjenning er bare mulig fra denne siden, innlogget som eier eller administrator av arbeidsområdet. En assistent kan forberede en utsending og avvise en, men den har ingen nettleserøkt og kan derfor ikke godkjenne noe.",
+      "footnote": "Bare en innlogget eier eller administrator av arbeidsområdet kan godkjenne. Assistenten kan forberede eller avvise en sending, men aldri godkjenne den.",
       "backToConversation": "Du kan lukke denne fanen og gå tilbake til samtalen.",
       "notFoundTitle": "Denne gjennomgangen er ikke tilgjengelig",
       "notFoundBody": "Lenken kan være utdatert, eller den kan høre til et arbeidsområde du ikke er medlem av. Sjekk at du er logget inn med riktig konto.",
@@ -1139,8 +1137,8 @@
         "changedLoading": "Ingenting ble sendt. Laster inn den gjeldende versjonen…"
       },
       "done": {
-        "approvedTitle": "Godkjent. E-posten er på vei.",
-        "approvedBody": "Den er lagt i kø for levering fra innboksen din.",
+        "approvedTitle": "Godkjent. Sendes nå.",
+        "approvedBody": "Den går ut fra innboksen din om noen sekunder.",
         "rejectedTitle": "Avvist. Ingenting ble sendt.",
         "rejectedBody": "Denne forespørselen er lukket, og e-posten blir ikke levert."
       },
@@ -1148,17 +1146,18 @@
         "csrf": "Denne siden har vært åpen for lenge. Last den inn på nytt og bestem deg igjen.",
         "role": "Bare en eier eller administrator av arbeidsområdet kan avgjøre denne utsendingen.",
         "generic": "Avgjørelsen kunne ikke registreres. Ingenting ble sendt. Prøv igjen."
-      }
+      },
+      "details": "Detaljer"
     },
     "mode": {
       "label": "Gjennomgang før sending",
       "off": "Send umiddelbart",
       "offHint": "Assistenten sender uten å spørre. Riktig valg for en innboks du bruker til mindre viktig e-post.",
-      "chat": "Bekreft i chatten",
+      "chat": "Spør i chatten først",
       "chatHint": "Før sending viser assistenten deg e-posten, i utkastkortet når AI-appen din viser det, og ber deg si ja i chatten. Dette hindrer en velmenende assistent i å sende for tidlig; det er ikke en godkjenning med innlogging som de to valgene under.",
-      "inline": "Gjennomgangskort i samtalen",
-      "inlineHint": "Et kort vises i KI-samtalen med nøyaktig hva som blir sendt. Du kan avvise der; godkjenning åpner en side du må være innlogget for å bruke.",
-      "dashboard": "Gjennomgang bare i dashbordet",
+      "inline": "Godkjenn på mcpemails.com, med et kort i chatten",
+      "inlineHint": "Et kort i AI-samtalen viser nøyaktig hva som blir sendt. Du kan avvise det der. Å godkjenne åpner mcpemails.com, der du må være logget inn.",
+      "dashboard": "Godkjenn bare på mcpemails.com",
       "dashboardHint": "Ingen kort i samtalen. Assistenten får beskjed om at utsendingen venter, og du bestemmer her.",
       "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense.",
       "ownerAdminOnly": "Bare eiere og administratorer i arbeidsområdet kan endre gjennomgangsinnstillingen."
@@ -1176,7 +1175,10 @@
       "changedGone": "Denne forespørselen ble endret og venter ikke lenger på en avgjørelse. Ingenting ble sendt.",
       "openReview": "Åpne hele gjennomgangen, med meldingsteksten",
       "detailsFailed": "Kunne ikke laste inn detaljene for denne forespørselen. Ingenting ble sendt. Du kan fortsatt avvise den, eller lukke dette og prøve igjen.",
-      "loadingDetails": "Laster inn…"
+      "loadingDetails": "Laster inn…",
+      "approveAndSend": "Godkjenn og send",
+      "approveSub": "Dette sender den forberedte e-posten nå.",
+      "approvedToast": "E-posten er godkjent. Sendes nå."
     }
   },
   "automations": {

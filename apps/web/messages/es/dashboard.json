@@ -889,7 +889,7 @@
       "seeOptions": "Ver las opciones",
       "close": "Cerrar",
       "started": "Pago recibido. Tu pase Personal de 3 meses aparecerá aquí en un momento."
-  },
+    },
     "planChange": {
       "title": "Cambiar o pausar tu plan",
       "sub": "Pausa un plan mensual hasta 3 meses o cambia a un plan más pequeño cuando termine tu periodo actual.",
@@ -1055,11 +1055,9 @@
   },
   "approvals": {
     "review": {
-      "kicker": "Pendiente de aprobación",
-      "kickerSettled": "Revisión de envío",
-      "title": "Aprueba este correo antes de que se envíe",
-      "titleSettled": "Este envío ya se ha decidido",
-      "subtitle": "Un asistente de IA preparó este correo. No se ha entregado y solo se enviará si lo apruebas aquí.",
+      "kicker": "Esperando tu aprobación",
+      "title": "¿Enviar este correo?",
+      "subtitle": "Tu asistente de IA preparó este correo. No se envía nada hasta que lo apruebes.",
       "from": "De",
       "to": "Para",
       "cc": "Cc",
@@ -1096,7 +1094,7 @@
       "working": "Procesando…",
       "toDashboard": "Abrir el panel",
       "readOnly": "Puedes revisar este envío, pero solo un propietario o administrador del espacio puede aprobarlo o rechazarlo.",
-      "footnote": "La aprobación solo es posible desde esta página, con la sesión iniciada como propietario o administrador del espacio. Un asistente puede preparar un envío y puede rechazarlo, pero no tiene sesión de navegador, así que no puede aprobarlo.",
+      "footnote": "Solo un propietario o administrador del espacio de trabajo con la sesión iniciada puede aprobar. Tu asistente puede preparar o rechazar un envío, pero nunca aprobarlo.",
       "backToConversation": "Puedes cerrar esta pestaña y volver a tu conversación.",
       "notFoundTitle": "Esta revisión no está disponible",
       "notFoundBody": "Puede que el enlace esté obsoleto o que pertenezca a un espacio del que no eres miembro. Comprueba que has iniciado sesión con la cuenta correcta.",
@@ -1139,8 +1137,8 @@
         "changedLoading": "No se envió nada. Cargando la versión actual…"
       },
       "done": {
-        "approvedTitle": "Aprobado. Este correo va en camino.",
-        "approvedBody": "Está en cola para entregarse desde tu buzón.",
+        "approvedTitle": "Aprobado. Enviando ahora.",
+        "approvedBody": "Sale de tu bandeja de entrada en unos segundos.",
         "rejectedTitle": "Rechazado. No se envió nada.",
         "rejectedBody": "Esta solicitud está cerrada y el correo no se entregará."
       },
@@ -1148,17 +1146,18 @@
         "csrf": "Esta página lleva demasiado tiempo abierta. Recarga y vuelve a decidir.",
         "role": "Solo un propietario o administrador del espacio puede decidir este envío.",
         "generic": "No se ha podido registrar esa decisión. No se envió nada: inténtalo de nuevo."
-      }
+      },
+      "details": "Detalles"
     },
     "mode": {
       "label": "Revisión antes de enviar",
       "off": "Enviar de inmediato",
       "offHint": "El asistente envía sin preguntar. La opción adecuada para un buzón que usas para correo de poco riesgo.",
-      "chat": "Confirmar en el chat",
+      "chat": "Preguntar primero en el chat",
       "chatHint": "Antes de enviar, el asistente te muestra el correo, en la tarjeta de borrador si tu app de IA la muestra, y te pide un sí en el chat. Esto evita que un asistente bienintencionado envíe demasiado pronto; no es una aprobación con inicio de sesión como las dos opciones de abajo.",
-      "inline": "Tarjeta de revisión en la conversación",
-      "inlineHint": "Aparece una tarjeta en la conversación con exactamente lo que se enviará. Puedes rechazarlo ahí; aprobar abre una página que requiere sesión iniciada.",
-      "dashboard": "Revisar solo en el panel",
+      "inline": "Aprobar en mcpemails.com, con una tarjeta en el chat",
+      "inlineHint": "Una tarjeta en la conversación con la IA muestra exactamente lo que se enviará. Puedes rechazarlo ahí; para aprobarlo se abre mcpemails.com, donde tienes que haber iniciado sesión.",
+      "dashboard": "Aprobar solo en mcpemails.com",
       "dashboardHint": "Sin tarjeta en la conversación. Se informa al asistente de que el envío está esperando y tú decides aquí.",
       "guarantee": "En ambos modos de revisión el correo se prepara pero no se entrega. La aprobación solo ocurre en una sesión de navegador iniciada por un propietario o administrador del espacio, algo que el asistente no tiene. La tarjeta de revisión es una comodidad, no un límite de permisos.",
       "ownerAdminOnly": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el ajuste de revisión."
@@ -1176,7 +1175,10 @@
       "changedGone": "Esta solicitud cambió y ya no está esperando una decisión. No se envió nada.",
       "openReview": "Abrir la revisión completa, con el texto del mensaje",
       "detailsFailed": "No se pudieron cargar los detalles de esta solicitud. No se envió nada. Puedes rechazarla igualmente, o cerrar esto e intentarlo de nuevo.",
-      "loadingDetails": "Cargando…"
+      "loadingDetails": "Cargando…",
+      "approveAndSend": "Aprobar y enviar",
+      "approveSub": "Esto envía ahora el correo preparado.",
+      "approvedToast": "Correo aprobado. Enviando ahora."
     }
   },
   "automations": {

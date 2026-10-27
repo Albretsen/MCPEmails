@@ -80,6 +80,12 @@ class FakeDb {
     this.tables = tables;
   }
   from(table: string) { return new FakeQuery(this, table); }
+  rpcCalls: string[] = [];
+  rpcError: { message: string } | null = null;
+  async rpc(name: string) {
+    this.rpcCalls.push(name);
+    return { data: null, error: this.rpcError };
+  }
 }
 
 const WS = 'ws-0001';
@@ -143,6 +149,29 @@ test('approving the revision that was rendered approves it and queues the send',
   assert.equal(fake.tables.send_approvals[0].status, 'approved');
   assert.equal(fake.tables.scheduled_sends.length, 1);
   assert.deepEqual(fake.tables.scheduled_sends[0].payload, { approval_id: ID });
+});
+
+test('approving sends now: the dispatcher is asked to run straight away', async () => {
+  const fake = db();
+  await decide(fake, 'approve', 1);
+  assert.deepEqual(fake.rpcCalls, ['dispatch_scheduled_sends']);
+});
+
+test('a scheduled send is not dispatched early, and a reject dispatches nothing', async () => {
+  const later = db(approval({ send_at: new Date(Date.now() + 3600_000).toISOString() }));
+  await decide(later, 'approve', 1);
+  assert.deepEqual(later.rpcCalls, []);
+  const rejected = db();
+  await decide(rejected, 'reject', null);
+  assert.deepEqual(rejected.rpcCalls, []);
+});
+
+test('a failed dispatch kick still approves: the queued row is sent by the cron', async () => {
+  const fake = db();
+  fake.rpcError = { message: 'boom' };
+  const outcome = await decide(fake, 'approve', 1);
+  assert.deepEqual(outcome, { ok: true, decision: 'approve' });
+  assert.equal(fake.tables.scheduled_sends.length, 1);
 });
 
 test('F-04-02: approval_update after the page rendered: the stale approve is refused as changed', async () => {

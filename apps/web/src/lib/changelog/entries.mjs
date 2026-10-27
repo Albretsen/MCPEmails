@@ -51,6 +51,13 @@ export const ENTRIES = [
       "Drafts your AI writes now open in an editable card in Claude and ChatGPT, where you can change the recipients, subject and text, save, or send with a few seconds to undo. You can turn the card off for one mailbox or for the whole workspace in your dashboard.",
   },
   {
+    date: '2026-10-27',
+    kind: 'improved',
+    title: 'Approving an email your AI prepared is quicker',
+    body:
+      "The approval page now shows the email the way your mail client would, with the technical details folded away, and the email goes out the moment you approve it instead of up to a minute later. Signing in from an approval link now says why you are being asked to.",
+  },
+  {
     date: '2026-10-26',
     kind: 'fixed',
     title: 'Your AI only offers mailboxes that work',
