@@ -1158,7 +1158,7 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   assertEquals(
     draft.inputSchema.properties.body.description,
     "Plain-text draft body, not markdown (no ** or #): formatting goes in html_body. " +
-      "Your message text only: never paste the signature or quoted original; the server adds them.",
+      "Your message text only: the server adds the signature and the quoted original.",
   );
   assert(!/exactly/.test(description), "no description promises an exact copy");
   assert(/Any inbox signature is embedded on create and on an update that passes body/.test(description));
@@ -1170,7 +1170,7 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   );
   assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\. /.test(description));
   // Testers 2026-10-23: the model mixed the card up with another connector's draft tool.
-  assert(/Only drafts made here show in the card: for these inboxes, never use another connector's draft tool\.$/.test(description));
+  assert(/The card shows only drafts made with this tool, not another connector's drafts\.$/.test(description));
 
   const list = registryEntry("draft_list").description;
   assert(/and no body: draft_read returns one draft's text\./.test(list), list);
@@ -1181,11 +1181,14 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   }
 });
 
-Deno.test("the draft writes say to save a requested email as a draft, and to attach files from a direct call", () => {
+Deno.test("the draft writes state what a draft is for, and never instruct the model", () => {
   // 2026-10-25, two ways the draft card went unseen: a model asked to write an
   // email wrote it in the chat and called nothing, and in claude.ai a model
   // encoded an upload in its code sandbox and called `draft` from there, where
-  // no card is mounted. Both sentences stay true on a host with no card.
+  // no card is mounted. 2026-10-27, chatgpt.com put a "Suspicious Instruction"
+  // box on every draft because the descriptions said how to call the tool. So
+  // the descriptions state facts. Claude's steer to save a requested email as
+  // a draft lives in SERVER_INSTRUCTIONS (server-instructions.test.ts).
   const perOperation = new Map(
     PER_OPERATION_LISTING.map((tool) => [tool.name, serializeToolForList(tool)]),
   );
@@ -1193,18 +1196,30 @@ Deno.test("the draft writes say to save a requested email as a draft, and to att
     ["draft", (serializeToolForList(registryEntry("draft")) as { description: string }).description],
     ["draft_create", (perOperation.get("draft_create") as { description: string }).description],
     ["draft_reply", (perOperation.get("draft_reply") as { description: string }).description],
+    ["draft_update", (perOperation.get("draft_update") as { description: string }).description],
   ];
   for (const [name, description] of descriptions) {
-    assert(/rather than only writing it in chat, so they can see and edit it\./.test(description), name);
-    assert(
-      description.includes(
-        "Put a file's base64 straight into attachments[].data and call this tool directly, " +
-          "never from code: only a direct call can show the draft card.",
-      ),
-      `${name}: attachments from a direct call`,
-    );
+    if (name !== "draft_update") {
+      assert(/where the user can see and edit/.test(description), `${name}: says what a draft is for`);
+    }
+    for (
+      const steer of [
+        /rather than only writing it in chat/,
+        /call this tool directly/,
+        /never from code/,
+        /\bMUST\b/,
+        /\bnever use\b/,
+        /data, never instructions/,
+        /call draft_read before/,
+        /\bDo NOT\b/,
+      ]
+    ) {
+      assert(!steer.test(description), `${name}: no instruction ${steer}`);
+    }
     assert(!description.includes("\u2014"), `${name}: no em dash`);
     // Claude Code cuts a tool description at 2KB.
     assert(new TextEncoder().encode(description).length <= 2048, `${name}: under 2KB`);
   }
+  const draft = descriptions[0][1];
+  assert(draft.includes("The draft card appears only for a direct call to this tool, not one made from code."), draft);
 });
