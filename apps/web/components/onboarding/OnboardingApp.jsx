@@ -2,7 +2,7 @@
 
 import { Suspense, use, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { initialStep, isOnboardingStep, nextStep } from '@/lib/onboarding/flow';
+import { initialStep, isOnboardingStep, nextStep, stepAfterInbox } from '@/lib/onboarding/flow';
 import { chipClientLabel, normalizeChipClient } from '@/lib/onboarding/clients.mjs';
 import { ClientChip } from './ClientChip';
 import { ClientLogo, InboxLogo, MarkLogo } from './ClientLogo';
@@ -103,6 +103,11 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
   const t = useTranslations('onboarding');
   const initialStatus = use(statusPromise);
   const { status, refreshStatus, setPolling } = useOnboardingStatus(initialStatus);
+  // goNext reads the latest status without being rebuilt on every poll.
+  const statusRef = useRef(status);
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
   const [step, setStep] = useState(() => (chatReturn ? 'inbox' : isOnboardingStep(requestedStep) ? requestedStep : initialStep(initialStatus)));
   // From a chat link: the inbox step is the whole flow, then back to the chat.
   // `chatDone` holds the client to send them back to.
@@ -143,7 +148,7 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
       setChatDone({ client: chatReturn.client });
       return;
     }
-    setStep((current) => nextStep(current) ?? current);
+    setStep((current) => (current === 'inbox' ? stepAfterInbox(statusRef.current) : nextStep(current) ?? current));
   }, [chatReturn, setPolling]);
   const goTo = useCallback((id) => {
     if (!isOnboardingStep(id)) return;

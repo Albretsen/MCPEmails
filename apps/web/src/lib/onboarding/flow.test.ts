@@ -12,6 +12,7 @@ import {
   nextStep,
   normalizeVariant,
   previousStep,
+  stepAfterInbox,
 } from './flow.ts';
 import { onboardingEntryPath } from './entry.ts';
 
@@ -73,4 +74,18 @@ test('only a first-run dashboard destination is sent to /onboarding, hints kept'
   assert.equal(onboardingEntryPath('/api/stripe/checkout/start?plan=pro'), null);
   assert.equal(onboardingEntryPath('//evil.example/dashboard?firstrun=1'), null);
   assert.equal(onboardingEntryPath(null), null);
+});
+
+test('a grant or call with no inbox opens on the inbox step, then skips past what already happened', () => {
+  const grantNoInbox = { inboxes: { count: 0, sinceReset: 0 }, credential: { sinceReset: true }, handshake: { at: '2026-10-27T10:00:00Z' } };
+  assert.equal(initialStep(grantNoInbox), 'inbox');
+  assert.equal(initialStep({ inboxes: { count: 0, sinceReset: 0 }, anyCall: { at: '2026-10-27T10:00:00Z' } }), 'inbox');
+  // Continue after connecting: the connector is already there, so wait for the call.
+  assert.equal(stepAfterInbox(grantNoInbox), 'wait');
+  assert.equal(stepAfterInbox({ inboxes: { count: 0, sinceReset: 0 }, credential: { sinceReset: true } }), 'first_prompt');
+  // Nothing from the connector yet: the usual next step.
+  assert.equal(stepAfterInbox({ inboxes: { count: 0, sinceReset: 0 } }), 'add_to_ai');
+  assert.equal(stepAfterInbox(null), 'add_to_ai');
+  // After a reset with the old inbox reused, earlier signals do not count.
+  assert.equal(stepAfterInbox({ inboxes: { count: 1, sinceReset: 0 }, credential: { sinceReset: false } }), 'add_to_ai');
 });
