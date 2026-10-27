@@ -180,9 +180,6 @@
         "different": "Koble til en annen innboks",
         "support": "Send denne feilen til support",
         "supportNote": "Vi får feilen og leverandøren, aldri passordet ditt.",
-        "supportSent": "Sendt. Vi svarer på e-post.",
-        "supportFailed": "Kunne ikke sende. Bruk hjelpesiden i stedet.",
-        "supportPage": "Åpne hjelpesiden",
         "signIn": "Logg inn igjen",
         "seePlans": "Se planer"
       },

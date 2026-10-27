@@ -180,9 +180,6 @@
         "different": "Conectar otro buzón",
         "support": "Enviar este error a soporte",
         "supportNote": "Recibimos el error y tu proveedor, nunca tu contraseña.",
-        "supportSent": "Enviado. Te responderemos por correo.",
-        "supportFailed": "No se pudo enviar. Usa la página de ayuda.",
-        "supportPage": "Abrir la página de ayuda",
         "signIn": "Volver a iniciar sesión",
         "seePlans": "Ver planes"
       },

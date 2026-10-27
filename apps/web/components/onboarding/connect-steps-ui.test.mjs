@@ -152,6 +152,15 @@ test('the no-call help says to switch MCPEmails on in this chat', async (t) => {
   assert.ok(view.container.querySelector('[data-testid="onb-help-no_call"]').textContent.includes('+ > Connectors'));
 });
 
+test('It works names the app that made the call, even when the chip says another', async (t) => {
+  stubFetch(t, {});
+  const { view } = await render(t, ItWorksStep, props({
+    step: 'it_works',
+    status: baseStatus({ firstCall: { at: T0, tool: 'email_search', client: 'chatgpt' } }),
+  }));
+  assert.equal(view.container.querySelector('[data-testid="onb-success"]').textContent, 'ChatGPT just searched your inbox.');
+});
+
 test('It works names the tool, offers the next prompts, the morning email, then the dashboard', async (t) => {
   const calls = stubFetch(t, {
     '/api/onboarding/assist': () => ({ status: 200, json: { ok: true, email: 'me@example.org' } }),
