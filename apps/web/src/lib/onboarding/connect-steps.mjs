@@ -160,6 +160,8 @@ function ms(ts) {
  *
  *   handshake.at                 an MCP `initialize` since reset
  *   anyCall.at                   any successful tool call since reset
+ *   firstCall.at, lastFailure.at a call that reached MCPEmails, even one
+ *                                that failed
  *   credential.latestAt          a connector grant since reset (OAuth clients
  *                                only: an API-key client creates its key on
  *                                the add step itself, so it proves nothing)
@@ -168,7 +170,7 @@ function ms(ts) {
  */
 export function connectedAtMs(status, { client } = {}) {
   if (!status) return null;
-  const times = [ms(status.handshake?.at), ms(status.anyCall?.at)];
+  const times = [ms(status.handshake?.at), ms(status.anyCall?.at), ms(status.firstCall?.at), ms(status.lastFailure?.at)];
   if (status.credential?.sinceReset && !usesApiKey(client)) times.push(ms(status.credential?.latestAt));
   const seen = times.filter((t) => t !== null);
   if (seen.length) return Math.min(...seen);
@@ -200,7 +202,7 @@ export function ladderState(status, { client } = {}) {
  *   started                                            -> 'no_handshake'
  *   connected, no call of any kind, 60 s after the
  *   connection (or after the wait started, whichever
- *   is later)                                          -> 'no_call'
+ *   is later), and no blocking failure on show        -> 'no_call'
  *   calls arriving but none on a real inbox yet         -> neither
  *   10 min after the wait started, still no call       -> 'reconnect' too
  *
@@ -212,7 +214,7 @@ export function helpTiers(status, { waitStartedAtMs, nowMs, client } = {}) {
   const connectedMs = connectedAtMs(status, { client });
   if (connectedMs === null) {
     if (nowMs - waitStartedAtMs >= NO_HANDSHAKE_HELP_MS) tiers.push('no_handshake');
-  } else if (!status.anyCall?.at && nowMs - Math.max(connectedMs, waitStartedAtMs) >= NO_CALL_HELP_MS) {
+  } else if (!status.anyCall?.at && !blockingFailure(status, waitStartedAtMs) && nowMs - Math.max(connectedMs, waitStartedAtMs) >= NO_CALL_HELP_MS) {
     tiers.push('no_call');
   }
   if (nowMs - waitStartedAtMs >= RECONNECT_HELP_MS) tiers.push('reconnect');
@@ -233,6 +235,22 @@ export function visibleFailure(status, waitStartedAtMs) {
   const first = ms(status.firstCall?.at);
   if (first !== null && first >= at) return null;
   return failure;
+}
+
+/**
+ * Failed calls the user has to fix before the AI app can do anything: the
+ * inbox password was rejected, the grant lacks the scope, or no inbox is
+ * connected. Any other failure (bad arguments, a message that is not there,
+ * a timeout, a limit) still proves the app reached MCPEmails: the status
+ * counts it as working (firstCall.reached) and the dialog says nothing about
+ * it, since the AI app retries or explains by itself.
+ */
+export const BLOCKING_FAILURE_CODES = Object.freeze(['auth_failed', 'imap_auth_failed', 'reauth_required', 'insufficient_scope', '-32004', 'no_inbox_connected']);
+
+/** The visible failure (visibleFailure) when it is a blocking one, else null. */
+export function blockingFailure(status, waitStartedAtMs) {
+  const failure = visibleFailure(status, waitStartedAtMs);
+  return failure && BLOCKING_FAILURE_CODES.includes(failure.code) ? failure : null;
 }
 
 /** Message key for a failed call's error code, in plain words. */
@@ -264,8 +282,13 @@ export function failureKey(code) {
   }
 }
 
-/** Message key for the success line, from the first call's tool name. */
-export function successKey(tool) {
+/**
+ * Message key for the success line, from the first call's tool name. A call
+ * that reached MCPEmails but failed (firstCall.reached) only proves the
+ * connection.
+ */
+export function successKey(tool, { reached = false } = {}) {
+  if (reached) return 'steps.it_works.success.connected';
   if (typeof tool !== 'string') return 'steps.it_works.success.generic';
   if (tool === 'draft' || tool.startsWith('draft_')) return 'steps.it_works.success.draft';
   if (tool === 'email_search' || tool === 'contact_search') return 'steps.it_works.success.search';

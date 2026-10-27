@@ -251,7 +251,8 @@
         "search": "{client} 刚刚搜索了你的收件箱。",
         "draft": "{client} 刚刚在你的邮箱中保存了一封草稿。",
         "organize": "{client} 刚刚整理了你的收件箱。",
-        "generic": "{client} 刚刚使用了你的邮箱。"
+        "generic": "{client} 刚刚使用了你的邮箱。",
+        "connected": "{client} 已连接到你的邮箱。"
       },
       "finish": "完成",
       "secondInbox": {

@@ -6,7 +6,9 @@ import {
   NO_HANDSHAKE_HELP_MS,
   ONBOARDING_KEY_SCOPES,
   RECONNECT_HELP_MS,
+  BLOCKING_FAILURE_CODES,
   addToAiDone,
+  blockingFailure,
   canDraftWith,
   clientKind,
   configSnippet,
@@ -218,4 +220,20 @@ test('service emails: the right link, the prompt, the client, every locale', () 
   }
   // HTML escapes what it interpolates.
   assert.ok(!setupLinkEmail('en', 'claude', 'https://x.test/"><script>').html.includes('<script>'));
+});
+
+test('only blocking failures are shown, and they replace the no-call help', () => {
+  const start = T0;
+  const failed = (code: string) => ({ handshake: { at: iso(start + 5_000) }, firstCall: { at: null }, lastFailure: { at: iso(start + 10_000), tool: 'email_search', code } });
+  for (const code of BLOCKING_FAILURE_CODES) assert.equal(blockingFailure(failed(code), start)?.code, code);
+  for (const code of ['-32602', 'search_timeout', 'message_not_found', 'usage_limit_reached']) assert.equal(blockingFailure(failed(code), start), null);
+  const later = start + 5_000 + NO_CALL_HELP_MS;
+  assert.deepEqual(helpTiers(failed('auth_failed'), { waitStartedAtMs: start, nowMs: later, client: 'claude' }), []);
+  // A failed call alone (no handshake row) still means the app is connected.
+  assert.equal(connectedAtMs({ lastFailure: { at: iso(start) } }, { client: 'claude' }), start);
+});
+
+test('a call that reached MCPEmails but failed says connected, not what it did', () => {
+  assert.equal(successKey(null, { reached: true }), 'steps.it_works.success.connected');
+  assert.equal(successKey('email_read'), 'steps.it_works.success.read');
 });

@@ -251,7 +251,8 @@
         "search": "{client} har nettopp søkt i innboksen din.",
         "draft": "{client} har nettopp lagret et utkast i postkassen din.",
         "organize": "{client} har nettopp ryddet i innboksen din.",
-        "generic": "{client} har nettopp brukt postkassen din."
+        "generic": "{client} har nettopp brukt postkassen din.",
+        "connected": "{client} er koblet til postkassen din."
       },
       "finish": "Ferdig",
       "secondInbox": {

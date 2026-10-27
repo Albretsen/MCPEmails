@@ -251,7 +251,8 @@
         "search": "{client} just searched your inbox.",
         "draft": "{client} just saved a draft in your inbox.",
         "organize": "{client} just organized your inbox.",
-        "generic": "{client} just used your inbox."
+        "generic": "{client} just used your inbox.",
+        "connected": "{client} is connected to your inbox."
       },
       "finish": "Done",
       "secondInbox": {
