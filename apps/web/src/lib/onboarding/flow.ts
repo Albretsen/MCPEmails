@@ -90,6 +90,7 @@ export function previousStep(step: OnboardingStep): OnboardingStep | null {
  * Every signal used here already ignores what happened before the last reset,
  * so a reset workspace starts over even though its inbox and keys still exist.
  *
+ *   no inbox connected at all                      -> inbox
  *   a successful call on a real inbox since reset  -> it_works
  *   an MCP handshake or any tool call since reset   -> wait
  *   a credential (connector grant / key) since reset-> first_prompt
@@ -105,11 +106,25 @@ export function previousStep(step: OnboardingStep): OnboardingStep | null {
  */
 export function initialStep(status: StepSignals | null | undefined): OnboardingStep {
   if (!status) return 'inbox';
+  // A connector grant or a call without any inbox (connector-first "Skip,
+  // connect later") still needs the inbox step first.
+  if (status.inboxes?.count === 0) return 'inbox';
   if (status.firstCall?.at) return 'it_works';
   if (status.handshake?.at || status.anyCall?.at) return 'wait';
   if (status.credential?.sinceReset) return 'first_prompt';
   if ((status.inboxes?.sinceReset ?? 0) > 0 || status.inboxes?.chosenAt) return 'add_to_ai';
   return 'inbox';
+}
+
+/**
+ * Where the inbox step's Continue leads: the next step, or further on when the
+ * connector already reported in (a grant or call made before the inbox was
+ * connected), so the dialog does not wait for a signal that already arrived.
+ */
+export function stepAfterInbox(status: StepSignals | null | undefined): OnboardingStep {
+  const withInbox: StepSignals = { ...status, inboxes: { ...status?.inboxes, count: Math.max(1, status?.inboxes?.count ?? 1) } };
+  const resumed = initialStep(withInbox);
+  return ONBOARDING_STEPS.indexOf(resumed) > ONBOARDING_STEPS.indexOf('add_to_ai') ? resumed : 'add_to_ai';
 }
 
 /** True when a reset left an inbox connected that the inbox step should offer to reuse. */
