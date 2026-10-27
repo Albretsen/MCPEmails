@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-27',
+    kind: 'improved',
+    title: 'Review settings show their card in the chat right away',
+    body:
+      "Turning on approvals, bulk review or the draft card now shows the card in a chat that is already open, without reconnecting MCPEmails in your AI app.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'added',
     title: 'Have your AI ask before it sends',
     body:
