@@ -327,7 +327,7 @@ const MCP_CLIENTS = [
   {
     k: 'chatgpt',
     name: 'ChatGPT',
-    sub: 'Apps · dev mode',
+    sub: 'Plugins',
     color: '#000000',
     logo: 'chatgpt',
     oauth: true,
