@@ -18,9 +18,10 @@ const VARIANT = Object.freeze({ flow: 'new', convert: 'off' });
  *
  * It renders the step through the same panel contract /onboarding uses
  * (components/onboarding/steps/index.js), plus `returnTo`: the /authorize URL
- * a Microsoft sign-in comes back to. `onConnected` is the step's goNext().
+ * a Microsoft sign-in comes back to. `onConnected` is the step's goNext();
+ * `onProof` runs when the connected inbox's proof card shows.
  */
-export default function AuthorizeInboxStep({ client = null, userEmail = '', returnTo, onConnected }) {
+export default function AuthorizeInboxStep({ client = null, userEmail = '', returnTo, onConnected, onProof = null }) {
   const [status, setStatus] = useState(null);
   const refreshStatus = useCallback(async () => {
     try {
@@ -50,6 +51,7 @@ export default function AuthorizeInboxStep({ client = null, userEmail = '', retu
         goTo={noop}
         finish={onConnected}
         returnTo={returnTo}
+        onProof={onProof}
       />
     </div>
   );
