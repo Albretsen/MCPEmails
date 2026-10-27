@@ -1122,8 +1122,13 @@ export function App(props: { bridge: HostBridge }) {
       // now say so in one quiet line, the same shape as every other
       // nothing-to-show state. Still never a warning: the operation succeeded
       // and the message above carries it.
+      //
+      // 2026-10-27: the outbound card is now listed for every send-capable key,
+      // so this line sits under errors, refusals and batch forwards on
+      // `email_compose` too. `resultNote` (plain-result.ts) words the ones it
+      // recognises; a plain successful send never gets here, it is a receipt.
       if (store.resultStatus === "foreign") {
-        return toolLine("no preview for this result.");
+        return toolLine(store.resultNote ?? "no preview for this result.");
       }
       if (store.resultStatus === "cancelled") {
         return toolLine("cancelled.");

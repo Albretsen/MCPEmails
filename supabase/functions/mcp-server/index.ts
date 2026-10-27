@@ -235,7 +235,12 @@ import {
   serializeToolForList,
   withListingCardMeta,
 } from "./mcp-app-resources.ts";
-import { isChatGptHost, isStaleListingCardCall, STALE_LISTING_NOTE } from "./stale-listing-hint.ts";
+import {
+  isChatGptHost,
+  isStaleListingCardCall,
+  STALE_LISTING_NOTE,
+  staleHintHasCardToMiss,
+} from "./stale-listing-hint.ts";
 import {
   acceptsEventStream,
   CARD_LISTING_STALE,
@@ -20062,7 +20067,13 @@ function pendingApprovalPayload(
   const message = approval.reviewMode === "inline"
     ? `This ${noun} has not been sent. It is waiting for a person to approve it: ` +
       `open ${approval.reviewUrl} to approve (sign-in required), or call approval_decide ` +
-      `with decision "reject" to discard it.`
+      `with decision "reject" to discard it. ` +
+      // The card is listed for every send-capable key now, but a host may still
+      // hold a tool list without it, or fail to mount it. The model already has
+      // the message it wrote, so this asks it to show it; nothing new reaches
+      // the model channel.
+      `If no review card is showing in this chat, show the user the message ` +
+      `(to, subject and body) and give them the approval link.`
     // Default wording, unchanged from before this feature, for every inbox
     // whose review mode is 'dashboard' (which is what the migration backfills
     // for every inbox that already had the gate switched on).
@@ -26139,9 +26150,14 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
  * inbox, only on seeing at least one opted-in one, and an unfiltered scan would
  * have been a correctness trap waiting for a large workspace.
  *
- * Fails closed on error (both false = today's behaviour, no card metadata). The
+ * Fails closed on error (bulk false = today's behaviour, no card metadata). The
  * `inbox_ids` allowlist is applied the same way it is everywhere else: a
  * non-null allowlist restricts the query, and an empty one denies everything.
+ *
+ * The OUTBOUND gate is not read from these rows any more (2026-10-27): it is a
+ * scope fact, see `keyCanSendOutbound`. The query still returns
+ * `send_approval_required` because `reviewCardOptInsFromRows` rolls it up and
+ * its parity tests pin that, but the rolled-up value is overridden here.
  */
 async function keyReviewCardGates(
   apiKey: ApiKeyRow,
@@ -26175,6 +26191,8 @@ async function keyReviewCardGates(
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) {
     return { ...denied, drafts: await draftsGate };
   }
+  // Not from the rows below: see keyCanSendOutbound.
+  const outbound = keyCanSendOutbound(apiKey);
   // `deleted_at`/`status` close the mirror image of the draft-editor rollup's
   // bug: this one is a `.some()`, so a SOFT-DELETED inbox that still carries
   // `send_approval_required` used to turn the OUTBOUND card gate on for a key
@@ -26205,12 +26223,38 @@ async function keyReviewCardGates(
     });
     // The inbox opt-ins are unknown and therefore closed. The workspace flag
     // came back from its own query and is unaffected by this one's failure.
-    return { ...denied, drafts };
+    // The outbound gate does not depend on this query, so it stays as it is.
+    return { ...denied, outbound, drafts };
   }
   return {
     ...reviewCardOptInsFromRows((data ?? []) as ReviewCardOptInRow[]),
+    // Overrides the rollup's `outbound`: see keyCanSendOutbound.
+    outbound,
     drafts,
   };
+}
+
+/**
+ * The outbound card gate: true for every key that can send or schedule.
+ *
+ * ── Why this is no longer the `send_approval_required` rollup ──────────────
+ * It used to be "some inbox this key reaches holds sends for approval", read
+ * at `tools/list` time. Claude and ChatGPT keep the tool list a chat started
+ * with, so a user who switched approvals on mid-chat (or any time after the
+ * host fetched the list) got a plain-text approval link and never the card.
+ * The gate existed only because the card had nothing to show for an ordinary
+ * send. Now it has: an ordinary send, reply, forward or schedule result renders
+ * as a one-line receipt (apps/mcp-app/src/plain-result.ts), and every other
+ * result (an error, a refusal, a batch forward) ends in one line too. So the
+ * gate is a scope fact, the same for the life of the key, and no database read
+ * can close it.
+ *
+ * `schedule:email` counts on its own because `schedule` (and per-operation
+ * `schedule_create`) is on this gate too. A key with neither scope cannot
+ * produce an outbound result, so it is still listed without the card.
+ */
+function keyCanSendOutbound(apiKey: ApiKeyRow): boolean {
+  return apiKey.scopes.includes("send:email") || apiKey.scopes.includes("schedule:email");
 }
 
 /**
@@ -33780,7 +33824,9 @@ async function handleToolsList(
   //
   //   • email_delete / email_organize / email_search_and_move
   //                                    ← an inbox with bulk_review_mode='plan'
-  //   • email_compose / draft / schedule ← an inbox with send_approval_required
+  //   • email_compose / schedule       ← a key that can send or schedule
+  //                                      (since 2026-10-27, see below)
+  //   • draft                          ← the draft editor's workspace flag
   //
   // The reason is a hard constraint, not a preference: `_meta.ui` is per-tool,
   // not per-call, so a host mounts and renders the card for EVERY result of a
@@ -33809,6 +33855,13 @@ async function handleToolsList(
   // rather than merely any key — but it is the same gap. Fixing it properly
   // needs the card to fall back to the text result on a non-envelope payload,
   // which is a frontend change.
+  //
+  // DONE for the outbound half, 2026-10-27: the card now renders an ordinary
+  // send/reply/forward/schedule result as a one-line receipt and every other
+  // non-envelope result as one line (apps/mcp-app/src/plain-result.ts), so the
+  // outbound gate no longer waits on send_approval_required. It was read once
+  // per chat, and Claude and ChatGPT keep that listing, so approvals switched
+  // on mid-chat never got the card. See keyCanSendOutbound.
   // Both reads below are independent pure reads, so they share one round trip:
   // `perOperation` is started here and only taken further down.
   // The Pro gate joins them only when some Pro tool or argument exists to hide;
@@ -35476,7 +35529,13 @@ async function handleToolsCall(
   // already proves the stale listing. See stale-listing-hint.ts.
   if (
     (logStatus as string) === "success" && isOpenAiOAuthKeyName(apiKey.name) &&
-    isStaleListingCardCall(toolName, PER_OPERATION_LISTED_NAMES)
+    isStaleListingCardCall(toolName, PER_OPERATION_LISTED_NAMES) &&
+    staleHintHasCardToMiss(
+      toolName,
+      "result" in toolResult
+        ? (toolResult.result as { structuredContent?: unknown } | undefined)?.structuredContent
+        : undefined,
+    )
   ) {
     const [gates, clientName] = await Promise.all([
       keyReviewCardGates(apiKey),

@@ -1,7 +1,12 @@
 // Tests for stale-listing-hint.ts: which ChatGPT calls prove a stale tool
 // list, and that the note reads as customer-safe copy.
 
-import { isChatGptHost, isStaleListingCardCall, STALE_LISTING_NOTE } from "./stale-listing-hint.ts";
+import {
+  isChatGptHost,
+  isStaleListingCardCall,
+  STALE_LISTING_NOTE,
+  staleHintHasCardToMiss,
+} from "./stale-listing-hint.ts";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -55,4 +60,17 @@ Deno.test("the note follows the copy rules", () => {
   assert(!STALE_LISTING_NOTE.includes("MCP Emails"), "never two words");
   assert(!STALE_LISTING_NOTE.includes("—"), "no em dash");
   assert(!/[<>]/.test(STALE_LISTING_NOTE), "no angle brackets");
+});
+
+Deno.test("an outbound tool gets the note only on a held send", () => {
+  // The outbound card is listed for every send-capable key since 2026-10-27,
+  // so an ordinary ChatGPT send must not carry the reload note.
+  assert(!staleHintHasCardToMiss("email_compose", { message_id: "m", sent_at: "x", status: "sent" }), "ordinary send");
+  assert(!staleHintHasCardToMiss("schedule", { scheduled: true, send_at: "x", status: "pending" }), "ordinary schedule");
+  assert(!staleHintHasCardToMiss("email_compose", undefined), "no structured content");
+  assert(staleHintHasCardToMiss("email_compose", { status: "pending_approval" }), "held send");
+  assert(staleHintHasCardToMiss("schedule", { status: "pending_approval" }), "held schedule");
+  // Every other card-bearing tool is decided by the card gate alone, as before.
+  assert(staleHintHasCardToMiss("draft", { draft_id: "d" }), "draft unchanged");
+  assert(staleHintHasCardToMiss("email_organize", undefined), "bulk unchanged");
 });

@@ -917,3 +917,66 @@ export const draftDeleteReceiptMerged = {
     error_code: null,
   },
 };
+
+// ---------------------------------------------------------------------------
+// Plain (non-envelope) outbound results, exactly the published payloads. The
+// outbound card is listed for every send-capable key since 2026-10-27, so the
+// card is mounted under these too (src/plain-result.ts).
+// ---------------------------------------------------------------------------
+
+/** `email_compose{action:"send"}` / `email_send`, not held. */
+export const plainSent = {
+  message_id: "18c2f0a1b2c3d4e5",
+  thread_id: "18c2f0a1b2c3d4e5",
+  sent_at: "2026-10-27T10:04:00.000Z",
+  to: [
+    { name: "Dana Reyes", email: "dana@northwind.example" },
+    { name: "", email: "lee@northwind.example" },
+    { name: "", email: "kim@northwind.example" },
+  ],
+  subject: "Quarterly numbers",
+  status: "sent",
+};
+
+/** `email_forward`, one message. */
+export const plainForwarded = {
+  ...plainSent,
+  forwarded_from: "INBOX:4411",
+  to: [{ name: "", email: "lee@northwind.example" }],
+  subject: "Fwd: Quarterly numbers",
+};
+
+/** `schedule{action:"create"}` / `schedule_create`, not held. */
+export const plainScheduled = {
+  scheduled: true,
+  id: "5b1f6c2e-8a0d-4f7e-9b51-2f9d6a3c1e70",
+  inbox_id: "c0ffee00-0000-4000-8000-000000000001",
+  to: ["dana@northwind.example"],
+  subject: "Quarterly numbers",
+  send_at: "2026-10-28T08:00:00.000Z",
+  status: "pending",
+  created_at: "2026-10-27T10:04:00.000Z",
+};
+
+/** `email_forward` with `message_ids`: counts, no single message. */
+export const plainForwardBatch = {
+  operation: "email_forward",
+  count: 3,
+  succeeded: 2,
+  failed: 1,
+  partial: true,
+  results: [
+    { message_id: "INBOX:1", status: "sent" },
+    { message_id: "INBOX:2", status: "sent" },
+    { message_id: "INBOX:3", status: "not_sent", error: "message_not_found" },
+  ],
+};
+
+/** A held send whose envelope could not be built: the old flat payload. */
+export const plainPendingApproval = {
+  status: "pending_approval",
+  approval_id: "a1b2c3d4-0000-4000-8000-000000000009",
+  inbox_id: "c0ffee00-0000-4000-8000-000000000001",
+  review_url: "https://mcpemails.com/dashboard/approvals/a1b2c3d4",
+  message: "This email has not been sent. It is waiting for a person to approve it.",
+};

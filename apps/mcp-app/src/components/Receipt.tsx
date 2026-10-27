@@ -83,7 +83,11 @@ export function Receipt(props: {
 
   return (
     <>
-      <Head tone={tone} title={headline}>
+      <Head
+        tone={tone}
+        title={headline}
+        extra={r.subline && <span class="muted">· {r.subline}</span>}
+      >
         {link && <TextLink onClick={props.onOpenDashboard}>{link}</TextLink>}
       </Head>
       {detail && <Line>{detail}</Line>}
