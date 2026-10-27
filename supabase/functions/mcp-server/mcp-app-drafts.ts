@@ -221,6 +221,21 @@ export const DRAFT_CARD_NOTICE =
   "dashboard to see it. draft_read returns its current text.";
 
 /**
+ * The note on a draft write in place of DRAFT_CARD_NOTICE when this key's last
+ * tool list did not carry the card (`api_keys.card_listed = false`, written on
+ * tools/list). Hosts draw the card only from the tool list they cached for the
+ * chat, so a chat opened before the card was turned on shows none, and saying
+ * "the user is shown this draft in an editable card" there sent the user
+ * looking for a card that was not on screen (release prep 2026-10-27).
+ */
+export const DRAFT_CARD_UNLISTED_NOTICE =
+  "This chat may not show an editable card for this draft, because the app " +
+  "loaded its tools before the card was available. The draft is saved in the " +
+  "mailbox's Drafts folder. If the user sees no card, tell them that and that " +
+  "a new chat shows the card (in ChatGPT, after reloading the app's tools). " +
+  "draft_read returns its current text.";
+
+/**
  * The note on a draft write whose editor could not be built although the card
  * is on for this inbox. The tool descriptions say such drafts show in a card,
  * so without this a model told the user "the reply draft is in the card" over
@@ -606,6 +621,8 @@ export interface DraftEditorCaller {
    * production key carries one, verified 2026-09-16).
    */
   user_id: string | null;
+  /** `api_keys.card_listed`: false when this key's last tool list had no card. */
+  card_listed?: boolean | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1106,6 +1123,8 @@ export function draftCardToolResult(
   payload: Record<string, unknown>,
   envelope: DraftCardOutcome,
   pretty = false,
+  /** False when this key's last tool list did not carry the card. */
+  cardListed = true,
 ): {
   content: { type: string; text: string }[];
   structuredContent: Record<string, unknown>;
@@ -1157,7 +1176,7 @@ export function draftCardToolResult(
   // On both channels a model reads: the second `content` block (the first,
   // the payload JSON, is left byte for byte) and `structuredContent.notes`.
   // Only here, so only on a result that carries an editor envelope.
-  attachResultNote({ result }, DRAFT_CARD_NOTICE);
+  attachResultNote({ result }, cardListed ? DRAFT_CARD_NOTICE : DRAFT_CARD_UNLISTED_NOTICE);
   return result;
 }
 
@@ -2552,7 +2571,7 @@ export async function runBodylessDraftUpdate(
     DraftEditorDeps,
     "appUrl" | "workspaceGate" | "inboxHidden" | "getDraft" | "updateDraft" | "now" | "lineage"
   >,
-  caller: Pick<DraftEditorCaller, "workspace_id" | "scopes">,
+  caller: Pick<DraftEditorCaller, "workspace_id" | "scopes" | "card_listed">,
   inbox: DraftEditorProviderInbox,
   draftId: string,
   patch: DraftPatch,
@@ -2643,7 +2662,7 @@ export async function runBodylessDraftUpdate(
       envelope = null;
     }
   }
-  return { ok: true, result: draftCardToolResult(payload, envelope) };
+  return { ok: true, result: draftCardToolResult(payload, envelope, false, caller.card_listed !== false) };
 }
 
 // ---------------------------------------------------------------------------

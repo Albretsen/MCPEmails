@@ -35,6 +35,7 @@ import {
   DEFERRED_BODY_SCHEMA_VERSION,
   DRAFT_BODY_META_KEY,
   DRAFT_CARD_NOTICE,
+  DRAFT_CARD_UNLISTED_NOTICE,
   DRAFT_NO_CARD_NOTICE,
   draftIsThreaded,
   buildDraftEditorEnvelope,
@@ -2912,6 +2913,16 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
   const sent = draftCardToolResult({ draft_id: "Drafts:2", message_id: "m-1", sent_at: "t" }, receipt);
   assertEquals((sent.structuredContent as any).schema_version, "review-card-v1");
   assertEquals(sent._meta, undefined);
+});
+
+Deno.test("a key whose tool list had no card is told the card may not show, not that it is on screen", () => {
+  const result = draftCardToolResult(WRITE_PAYLOAD, editorEnvelope(), false, false);
+  assertEquals(result.content[1], { type: "text", text: DRAFT_CARD_UNLISTED_NOTICE });
+  assertEquals((result.structuredContent as any).notes, [DRAFT_CARD_UNLISTED_NOTICE]);
+  // The envelope still rides along, so a host that does draw it has its data.
+  assertEquals((result.structuredContent as any).card, "draft_editor");
+  assert(/new chat/.test(DRAFT_CARD_UNLISTED_NOTICE));
+  assert(!DRAFT_CARD_UNLISTED_NOTICE.includes("is shown this draft"));
 });
 
 Deno.test("a card-envelope result says the card is on screen, on both channels; no envelope, no note", () => {

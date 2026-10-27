@@ -1939,7 +1939,10 @@ Deno.test("tools/list reads its card gates and its client identity in the same w
     waves[3],
     ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces", "GET workspaces", "RPC workspace_pro_features"].sort(),
   );
-  assertEquals(waves[4], ["PATCH api_keys"]);
+  // Two writes, neither awaited by the handler: the card-build bookkeeping and,
+  // when it moved, api_keys.card_listed (whether this list carried the draft
+  // card, 2026-10-27).
+  assertEquals(waves[4], ["PATCH api_keys", "PATCH api_keys"]);
 });
 
 Deno.test("initialize still waits for its capabilities upsert before answering", async () => {

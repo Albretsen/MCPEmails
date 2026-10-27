@@ -345,6 +345,7 @@ CREATE TABLE IF NOT EXISTS public.api_keys (
 -- Columns the server reads or writes that postdate the first self-host release.
 ALTER TABLE public.api_keys
   ADD COLUMN IF NOT EXISTS card_build_notified text,  -- card build last announced on tools/list
+  ADD COLUMN IF NOT EXISTS card_listed         boolean,  -- last tools/list carried the draft card
   ADD COLUMN IF NOT EXISTS kind                text
     CONSTRAINT api_keys_kind_check CHECK (kind IS NULL OR kind = 'web_client');
 CREATE INDEX IF NOT EXISTS idx_api_keys_workspace_id_active ON public.api_keys (workspace_id) WHERE deleted_at IS NULL;
