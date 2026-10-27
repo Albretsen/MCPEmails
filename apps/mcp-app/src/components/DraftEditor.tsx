@@ -2039,6 +2039,8 @@ export function DraftEditor(props: Props) {
           removed: cur.removed.filter((r) => !went.has(r.id)),
           added: cur.added.filter((f) => !went.has(f.id)),
         });
+        // A note about an earlier pick (too large) is stale once saved.
+        setFileNote(null);
         // Saved on purpose, so they are no longer "put back" edits.
         restoredKeys.current = [];
         setRestored(false);

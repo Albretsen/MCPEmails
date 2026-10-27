@@ -14,8 +14,10 @@ import { TextLink } from "./ui";
  *   - a removed file STAYS in its place, struck through, with "Undo" where its
  *     remove button was, until Save. So nothing moves under the pointer, and
  *     the second click of a double-click lands on Undo, the safe choice;
- *   - "Attach file" opens the system file picker; a file picked is a chip
- *     marked "not saved" until Save.
+ *   - "Attach file" opens the system file picker; a file picked is a dashed
+ *     chip until Save. It shows only its size, like a stored file: Send saves
+ *     first, so it goes out either way, and a "not saved" mark read as "will
+ *     not be sent" (2026-10-27).
  *
  * Every change here is an edit like a changed subject: the footer says
  * "Unsaved changes" and Save writes it (attachments.ts says what is not kept).
@@ -75,9 +77,9 @@ export function AttachmentList(props: {
             );
           })}
           {edits.added.map((f) => (
-            <span class="chip att" role="listitem" key={f.id} data-new="true" title={`${f.filename}, ${humanSize(f.size_bytes)}, not saved yet`}>
+            <span class="chip att" role="listitem" key={f.id} data-new="true" title={`${f.filename}, ${humanSize(f.size_bytes)}`}>
               <span class="name">{f.filename}</span>
-              <span class="att-size">{humanSize(f.size_bytes)}, not saved</span>
+              <span class="att-size">{humanSize(f.size_bytes)}</span>
               {canEdit && (
                 <button type="button" class="chip-x" aria-label={`Remove ${f.filename}`} onClick={() => props.onDropAdded(f.id)}>
                   &#215;
