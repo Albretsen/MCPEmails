@@ -2028,6 +2028,74 @@ export type Database = {
           },
         ]
       }
+      draft_events: {
+        Row: {
+          api_key_id: string | null
+          card_offered: boolean | null
+          event: string
+          id: string
+          inbox_id: string | null
+          line_id: string | null
+          occurred_at: string
+          source: string
+          via_card: boolean
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          card_offered?: boolean | null
+          event: string
+          id?: string
+          inbox_id?: string | null
+          line_id?: string | null
+          occurred_at?: string
+          source?: string
+          via_card?: boolean
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          card_offered?: boolean | null
+          event?: string
+          id?: string
+          inbox_id?: string | null
+          line_id?: string | null
+          occurred_at?: string
+          source?: string
+          via_card?: boolean
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_events_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_events_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       draft_lineage: {
         Row: {
           closed_at: string | null
@@ -6252,6 +6320,7 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      growth_client_family: { Args: { p_client_name: string }; Returns: string }
       growth_client_mix: {
         Args: never
         Returns: {
@@ -6281,6 +6350,60 @@ export type Database = {
           successes: number
           technical_activations: number
           value_activations: number
+        }[]
+      }
+      growth_draft_card_daily: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          day: string
+          drafted: number
+          hidden: number
+          saved: number
+          sent_agent: number
+          sent_card: number
+        }[]
+      }
+      growth_draft_card_reach: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          enabled: number
+          enabled_inboxes: number
+          hidden_inboxes: number
+          hidden_workspaces: number
+          workspaces: number
+        }[]
+      }
+      growth_draft_card_stats: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+          p_release_at?: string
+        }
+        Returns: {
+          calls: number
+          card_lines: number
+          card_workspaces: number
+          deleted_agent: number
+          deleted_card: number
+          drafted: number
+          drafted_card: number
+          eligible_card: number
+          eligible_plain: number
+          errors: number
+          family: string
+          hidden: number
+          period: string
+          returned_card: number
+          returned_plain: number
+          saved: number
+          sent_agent: number
+          sent_card: number
+          workspaces: number
         }[]
       }
       growth_engagement_bands: {
