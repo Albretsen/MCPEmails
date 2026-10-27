@@ -85,7 +85,7 @@ export function ApprovalsPanel({ userRole }) {
       void load();
       toast({
         message: decisionItem.decision === 'approve'
-          ? 'Email approved and queued for sending.'
+          ? t('approvals.panel.approvedToast')
           : 'Email request rejected.',
         variant: 'success',
       });
@@ -327,7 +327,7 @@ function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfi
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <h2 id="approval-decision-title" style={{ margin: 0 }}>{approving ? 'Approve email send?' : 'Reject email send?'}</h2>
-              <div className="sub" style={{ marginTop: 4 }}>{approving ? 'This will queue the prepared email to be sent.' : 'This prepared email will not be sent.'}</div>
+              <div className="sub" style={{ marginTop: 4 }}>{approving ? t('approvals.panel.approveSub') : 'This prepared email will not be sent.'}</div>
             </div>
             <button type="button" onClick={onCancel} disabled={submitting} aria-label="Close" style={{ background: 'transparent', border: 0, color: 'var(--fg-3)', cursor: submitting ? 'not-allowed' : 'pointer', padding: 4 }}><Icon name="x" size={16} /></button>
           </div>
@@ -368,7 +368,7 @@ function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfi
         <div className="modal-foot">
           <Btn variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Btn>
           <Btn variant={approving ? 'primary' : 'danger'} onClick={() => onConfirm(details)} disabled={confirmDisabled}>
-            {submitting ? 'Saving…' : approving && !details && !detailsFailed ? t('approvals.panel.loadingDetails') : approving ? 'Approve & queue' : 'Reject request'}
+            {submitting ? 'Saving…' : approving && !details && !detailsFailed ? t('approvals.panel.loadingDetails') : approving ? t('approvals.panel.approveAndSend') : 'Reject request'}
           </Btn>
         </div>
       </div>

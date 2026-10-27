@@ -207,7 +207,7 @@ test('dashboard: the queue loads no Bcc; the dialog fetches this one approval an
   const link = [...dialog.querySelectorAll('a')].find((a) => a.getAttribute('href') === `/approvals/${ID}`);
   assert.ok(link, 'links to the full review');
 
-  await click(button(dialog, 'Approve & queue'));
+  await click(button(dialog, dashboard.approvals.panel.approveAndSend));
   await waitFor(() => calls.some((c) => c.method === 'PATCH'), { message: 'the PATCH' });
   // The revision of the details shown, not the (older) queue row's.
   assert.deepEqual(calls.find((c) => c.method === 'PATCH').body, { id: ID, decision: 'approve', revision: 4 });
@@ -242,7 +242,7 @@ test('dashboard: a legacy draft send cannot be approved from the dialog, and say
       : isDetails(url) ? { body: details({ approvable: false }) }
       : { body: { success: true } });
   await waitFor(() => dialog.textContent.includes(dashboard.approvals.review.bodyStoredWithProvider), { message: 'the explanation' });
-  assert.equal(button(dialog, 'Approve & queue').disabled, true);
+  assert.equal(button(dialog, dashboard.approvals.panel.approveAndSend).disabled, true);
 });
 
 test('dashboard: a changed request reloads, stays open on the current version, and says so', async (t) => {
@@ -265,9 +265,9 @@ test('dashboard: a changed request reloads, stays open on the current version, a
   });
   let dialog = await waitFor(() => {
     const d = view.container.querySelector('[role="dialog"]');
-    return d && !button(d, 'Approve & queue')?.disabled ? d : null;
+    return d && !button(d, dashboard.approvals.panel.approveAndSend)?.disabled ? d : null;
   }, { message: 'details loaded' });
-  await click(button(dialog, 'Approve & queue'));
+  await click(button(dialog, dashboard.approvals.panel.approveAndSend));
 
   dialog = await waitFor(() => {
     const d = view.container.querySelector('[role="dialog"]');
@@ -275,7 +275,7 @@ test('dashboard: a changed request reloads, stays open on the current version, a
   }, { message: 'the changed notice with the current details' });
   assert.match(dialog.textContent, /Edited/, 'the current subject');
 
-  await click(button(dialog, 'Approve & queue'));
+  await click(button(dialog, dashboard.approvals.panel.approveAndSend));
   await waitFor(() => patches === 2, { message: 'the second PATCH' });
   const last = calls.filter((c) => c.method === 'PATCH').at(-1);
   assert.deepEqual(last.body, { id: ID, decision: 'approve', revision: 2 });

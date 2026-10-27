@@ -889,7 +889,7 @@
       "seeOptions": "Voir les options",
       "close": "Fermer",
       "started": "Paiement reçu. Votre pass Personal de 3 mois apparaît ici dans un instant."
-  },
+    },
     "planChange": {
       "title": "Modifier ou mettre en pause votre abonnement",
       "sub": "Mettez un abonnement mensuel en pause jusqu'à 3 mois, ou passez à une formule plus petite à la fin de la période en cours.",
@@ -1055,11 +1055,9 @@
   },
   "approvals": {
     "review": {
-      "kicker": "En attente d'approbation",
-      "kickerSettled": "Revue d'envoi",
-      "title": "Approuvez cet e-mail avant son envoi",
-      "titleSettled": "Cet envoi a déjà été traité",
-      "subtitle": "Un assistant IA a préparé cet e-mail. Il n'a pas été remis et ne partira que si vous l'approuvez ici.",
+      "kicker": "En attente de votre approbation",
+      "title": "Envoyer cet e-mail ?",
+      "subtitle": "Votre assistant IA a préparé cet e-mail. Rien n'est envoyé tant que vous ne l'avez pas approuvé.",
       "from": "De",
       "to": "À",
       "cc": "Cc",
@@ -1096,7 +1094,7 @@
       "working": "En cours…",
       "toDashboard": "Ouvrir le tableau de bord",
       "readOnly": "Vous pouvez consulter cet envoi, mais seul un propriétaire ou un administrateur de l'espace peut l'approuver ou le rejeter.",
-      "footnote": "L'approbation n'est possible que depuis cette page, connecté en tant que propriétaire ou administrateur de l'espace. Un assistant peut préparer un envoi et le rejeter, mais il n'a pas de session de navigateur : il ne peut donc pas l'approuver.",
+      "footnote": "Seul un propriétaire ou un administrateur de l'espace de travail connecté peut approuver. Votre assistant peut préparer ou refuser un envoi, mais jamais l'approuver.",
       "backToConversation": "Vous pouvez fermer cet onglet et revenir à votre conversation.",
       "notFoundTitle": "Cette revue n'est pas disponible",
       "notFoundBody": "Le lien est peut-être périmé, ou il appartient à un espace dont vous n'êtes pas membre. Vérifiez que vous êtes connecté avec le bon compte.",
@@ -1139,8 +1137,8 @@
         "changedLoading": "Rien n’a été envoyé. Chargement de la version actuelle…"
       },
       "done": {
-        "approvedTitle": "Approuvé. Cet e-mail est en route.",
-        "approvedBody": "Il est en file d'attente pour être remis depuis votre boîte.",
+        "approvedTitle": "Approuvé. Envoi en cours.",
+        "approvedBody": "Il part de votre boîte de réception dans quelques secondes.",
         "rejectedTitle": "Rejeté. Rien n'a été envoyé.",
         "rejectedBody": "Cette demande est close et l'e-mail ne sera pas remis."
       },
@@ -1148,17 +1146,18 @@
         "csrf": "Cette page est ouverte depuis trop longtemps. Rechargez-la et décidez à nouveau.",
         "role": "Seul un propriétaire ou un administrateur de l'espace peut trancher cet envoi.",
         "generic": "Cette décision n'a pas pu être enregistrée. Rien n'a été envoyé. Réessayez."
-      }
+      },
+      "details": "Détails"
     },
     "mode": {
       "label": "Revue avant envoi",
       "off": "Envoyer immédiatement",
       "offHint": "L'assistant envoie sans demander. Le bon choix pour une boîte servant à du courrier sans enjeu.",
-      "chat": "Confirmer dans le chat",
+      "chat": "Demander d'abord dans le chat",
       "chatHint": "Avant l'envoi, l'assistant vous montre l'e-mail, dans la carte de brouillon si votre app d'IA en affiche une, et vous demande un oui dans le chat. Cela empêche un assistant bien intentionné d'envoyer trop tôt ; ce n'est pas une approbation avec connexion comme les deux options ci-dessous.",
-      "inline": "Carte de revue dans la conversation",
-      "inlineHint": "Une carte apparaît dans la conversation et montre exactement ce qui sera envoyé. Vous pouvez rejeter depuis la carte ; approuver ouvre une page qui exige d'être connecté.",
-      "dashboard": "Revue uniquement dans le tableau de bord",
+      "inline": "Approuver sur mcpemails.com, avec une carte dans le chat",
+      "inlineHint": "Une carte dans la conversation avec l'IA montre exactement ce qui sera envoyé. Vous pouvez le refuser depuis la carte ; pour approuver, mcpemails.com s'ouvre et vous devez y être connecté.",
+      "dashboard": "Approuver uniquement sur mcpemails.com",
       "dashboardHint": "Aucune carte dans la conversation. L'assistant est informé que l'envoi attend, et vous décidez ici.",
       "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions.",
       "ownerAdminOnly": "Seuls les propriétaires et administrateurs de l’espace de travail peuvent modifier le réglage de revue."
@@ -1176,7 +1175,10 @@
       "changedGone": "Cette demande a changé et n’attend plus de décision. Rien n’a été envoyé.",
       "openReview": "Ouvrir la vérification complète, avec le texte du message",
       "detailsFailed": "Impossible de charger les détails de cette demande. Rien n’a été envoyé. Vous pouvez quand même la rejeter, ou fermer et réessayer.",
-      "loadingDetails": "Chargement…"
+      "loadingDetails": "Chargement…",
+      "approveAndSend": "Approuver et envoyer",
+      "approveSub": "Cela envoie l'e-mail préparé maintenant.",
+      "approvedToast": "E-mail approuvé. Envoi en cours."
     }
   },
   "automations": {

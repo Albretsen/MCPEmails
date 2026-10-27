@@ -19,6 +19,11 @@ import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function LoginApp({ redirectTo = null, connectProvider = null, initialMode = 'password' }) {
   const t = useTranslations('auth');
+  // Arriving from an approval link in an AI chat: say why sign-in is needed,
+  // so the person knows they are in the right place.
+  const approvalContext = typeof redirectTo === 'string' && redirectTo.startsWith('/approvals/')
+    ? <p className="sub auth-context">{t('login.approvalContext')}</p>
+    : null;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -330,6 +335,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
         {!isSubmitting && step !== 'sent' && mode === 'password' && (
           <div className="auth-card">
             <h1>{t('login.title')}</h1>
+            {approvalContext}
             {socialButtons}
             {errorBanner}
             <form className="auth-fields" onSubmit={handlePasswordSubmit} noValidate>
@@ -388,6 +394,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
         {!isSubmitting && step !== 'sent' && mode === 'magic-link' && (
           <div className="auth-card">
             <h1>{t('login.title')}</h1>
+            {approvalContext}
             {socialButtons}
             <p className="sub" style={{ margin: '0 0 12px' }}>
               {t('login.magicLinkIntro')}

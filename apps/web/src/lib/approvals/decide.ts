@@ -76,6 +76,16 @@ export function isExpired(approval: { expires_at?: string | null } | null): bool
   return Number.isFinite(at) && at <= Date.now();
 }
 
+/** Ask the scheduled-send dispatcher to run now. Never throws. */
+export async function kickDispatch(db: any): Promise<void> {
+  try {
+    const { error } = await db.rpc('dispatch_scheduled_sends');
+    if (error) console.warn('[approvals] dispatch_kick_failed', error.message);
+  } catch (err) {
+    console.warn('[approvals] dispatch_kick_failed', err instanceof Error ? err.message : String(err));
+  }
+}
+
 export interface DecideArgs {
   /** Service-role client. RLS would reject the status write from a user client. */
   db: any;
@@ -225,6 +235,15 @@ export async function decideApproval({
         status: 500,
         error: 'Could not queue this approved email.',
       };
+    }
+
+    // Send now rather than on the next per-minute cron tick: the person just
+    // pressed Approve and is watching. `dispatch_scheduled_sends()` is what the
+    // cron calls (pg_net POST to the mcp-server dispatcher, returns at once),
+    // and the dispatcher's pending -> sending claim makes racing the cron safe.
+    // A failure here is logged only: the row is queued and the cron sends it.
+    if (!approval.send_at || Date.parse(approval.send_at) <= Date.now()) {
+      await kickDispatch(db);
     }
 
     return { ok: true, decision: 'approve' };

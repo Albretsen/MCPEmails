@@ -889,7 +889,7 @@
       "seeOptions": "Optionen ansehen",
       "close": "Schließen",
       "started": "Zahlung erhalten. Ihr 3-Monats-Pass für Personal erscheint hier in einem Moment."
-  },
+    },
     "planChange": {
       "title": "Tarif ändern oder pausieren",
       "sub": "Pausieren Sie einen Monatstarif für bis zu 3 Monate oder wechseln Sie zum Ende des laufenden Zeitraums in einen kleineren Tarif.",
@@ -1055,11 +1055,9 @@
   },
   "approvals": {
     "review": {
-      "kicker": "Wartet auf Freigabe",
-      "kickerSettled": "Sendeprüfung",
-      "title": "Diese E-Mail vor dem Senden freigeben",
-      "titleSettled": "Über diese Sendung wurde bereits entschieden",
-      "subtitle": "Ein KI-Assistent hat diese E-Mail vorbereitet. Sie wurde noch nicht zugestellt und wird nur gesendet, wenn Sie sie hier freigeben.",
+      "kicker": "Wartet auf deine Freigabe",
+      "title": "Diese E-Mail senden?",
+      "subtitle": "Dein KI-Assistent hat diese E-Mail vorbereitet. Nichts wird gesendet, bevor du sie freigibst.",
       "from": "Von",
       "to": "An",
       "cc": "Cc",
@@ -1096,7 +1094,7 @@
       "working": "Wird verarbeitet…",
       "toDashboard": "Dashboard öffnen",
       "readOnly": "Sie können diese Sendung prüfen, aber nur ein Inhaber oder Admin des Workspace kann sie freigeben oder ablehnen.",
-      "footnote": "Freigeben ist nur auf dieser Seite möglich, angemeldet als Inhaber oder Admin des Workspace. Ein Assistent kann eine Sendung vorbereiten und ablehnen, aber nicht freigeben, da er keine Browsersitzung hat.",
+      "footnote": "Nur angemeldete Inhaber oder Admins des Arbeitsbereichs können freigeben. Dein Assistent kann einen Versand vorbereiten oder ablehnen, aber nie freigeben.",
       "backToConversation": "Sie können diesen Tab schließen und zu Ihrer Unterhaltung zurückkehren.",
       "notFoundTitle": "Diese Prüfung ist nicht verfügbar",
       "notFoundBody": "Der Link ist möglicherweise veraltet oder gehört zu einem Workspace, in dem Sie kein Mitglied sind. Prüfen Sie, ob Sie mit dem richtigen Konto angemeldet sind.",
@@ -1139,8 +1137,8 @@
         "changedLoading": "Es wurde nichts gesendet. Aktuelle Version wird geladen…"
       },
       "done": {
-        "approvedTitle": "Freigegeben. Diese E-Mail ist unterwegs.",
-        "approvedBody": "Sie wurde zur Zustellung aus Ihrem Postfach eingereiht.",
+        "approvedTitle": "Freigegeben. Wird jetzt gesendet.",
+        "approvedBody": "Sie geht in wenigen Sekunden aus deinem Postfach raus.",
         "rejectedTitle": "Abgelehnt. Es wurde nichts gesendet.",
         "rejectedBody": "Diese Anfrage ist geschlossen, und die E-Mail wird nicht zugestellt."
       },
@@ -1148,17 +1146,18 @@
         "csrf": "Diese Seite war zu lange geöffnet. Laden Sie sie neu und entscheiden Sie erneut.",
         "role": "Nur ein Inhaber oder Admin des Workspace kann über diese Sendung entscheiden.",
         "generic": "Diese Entscheidung konnte nicht gespeichert werden. Es wurde nichts gesendet. Bitte versuchen Sie es erneut."
-      }
+      },
+      "details": "Details"
     },
     "mode": {
       "label": "Vor dem Senden prüfen",
       "off": "Sofort senden",
       "offHint": "Der Assistent sendet ohne Rückfrage. Die richtige Wahl für ein Postfach mit unkritischen E-Mails.",
-      "chat": "Im Chat bestätigen",
+      "chat": "Zuerst im Chat fragen",
       "chatHint": "Vor dem Senden zeigt dir der Assistent die E-Mail, in der Entwurfskarte, wenn deine KI-App eine anzeigt, und bittet dich im Chat um ein Ja. Das hält einen gutwilligen Assistenten davon ab, zu früh zu senden; es ist keine Freigabe mit Anmeldung wie die beiden Optionen darunter.",
-      "inline": "Prüfkarte in der Unterhaltung",
-      "inlineHint": "In der KI-Unterhaltung erscheint eine Karte, die genau zeigt, was gesendet wird. Dort können Sie ablehnen. Zum Freigeben öffnet sich eine Seite, für die Sie angemeldet sein müssen.",
-      "dashboard": "Nur im Dashboard prüfen",
+      "inline": "Auf mcpemails.com freigeben, mit Karte im Chat",
+      "inlineHint": "Eine Karte in der KI-Unterhaltung zeigt genau, was gesendet wird. Dort kannst du ablehnen; zum Freigeben öffnet sich mcpemails.com, wo du angemeldet sein musst.",
+      "dashboard": "Nur auf mcpemails.com freigeben",
       "dashboardHint": "Keine Karte in der Unterhaltung. Der Assistent erfährt, dass die Sendung wartet, und Sie entscheiden hier.",
       "guarantee": "In beiden Prüfmodi wird die E-Mail vorbereitet, aber nicht zugestellt. Freigeben ist nur in einer angemeldeten Browsersitzung eines Inhabers oder Admins des Workspace möglich, die der Assistent nicht hat. Die Prüfkarte dient der Bequemlichkeit und ist keine Berechtigungsgrenze.",
       "ownerAdminOnly": "Nur Inhaber und Admins des Workspace können die Prüfeinstellung ändern."
@@ -1176,7 +1175,10 @@
       "changedGone": "Diese Anfrage hat sich geändert und wartet nicht mehr auf eine Entscheidung. Es wurde nichts gesendet.",
       "openReview": "Vollständige Prüfung mit Nachrichtentext öffnen",
       "detailsFailed": "Die Details dieser Anfrage konnten nicht geladen werden. Es wurde nichts gesendet. Sie können sie trotzdem ablehnen oder schließen und es erneut versuchen.",
-      "loadingDetails": "Wird geladen…"
+      "loadingDetails": "Wird geladen…",
+      "approveAndSend": "Freigeben und senden",
+      "approveSub": "Damit wird die vorbereitete E-Mail jetzt gesendet.",
+      "approvedToast": "E-Mail freigegeben. Wird jetzt gesendet."
     }
   },
   "automations": {

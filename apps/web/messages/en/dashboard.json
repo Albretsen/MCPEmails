@@ -889,7 +889,7 @@
       "seeOptions": "See the options",
       "close": "Close",
       "started": "Payment received. Your 3-month Personal pass shows here in a moment."
-  },
+    },
     "planChange": {
       "title": "Change or pause your plan",
       "sub": "Pause a monthly plan for up to 3 months, or move to a smaller plan when your current period ends.",
@@ -1055,11 +1055,9 @@
   },
   "approvals": {
     "review": {
-      "kicker": "Awaiting approval",
-      "kickerSettled": "Send review",
-      "title": "Approve this email before it is sent",
-      "titleSettled": "This send has already been decided",
-      "subtitle": "An AI assistant prepared this email. It has not been delivered, and it will only be sent if you approve it here.",
+      "kicker": "Waiting for your approval",
+      "title": "Send this email?",
+      "subtitle": "Your AI assistant prepared this email. Nothing is sent until you approve it.",
       "from": "From",
       "to": "To",
       "cc": "Cc",
@@ -1096,7 +1094,7 @@
       "working": "Working…",
       "toDashboard": "Open the dashboard",
       "readOnly": "You can review this send, but only a workspace owner or admin can approve or reject it.",
-      "footnote": "Approving is possible only from this page, signed in as a workspace owner or admin. An assistant can prepare a send and can reject one, but it has no browser session, so it cannot approve one.",
+      "footnote": "Only a signed-in workspace owner or admin can approve. Your assistant can prepare or reject a send, but never approve one.",
       "backToConversation": "You can close this tab and go back to your conversation.",
       "notFoundTitle": "This review is not available",
       "notFoundBody": "The link may be out of date, or it may belong to a workspace you are not a member of. Check that you are signed in with the right account.",
@@ -1139,8 +1137,8 @@
         "changedLoading": "Nothing was sent. Loading the current version…"
       },
       "done": {
-        "approvedTitle": "Approved. This email is on its way.",
-        "approvedBody": "It has been queued for delivery from your inbox.",
+        "approvedTitle": "Approved. Sending now.",
+        "approvedBody": "It goes out from your inbox in a few seconds.",
         "rejectedTitle": "Rejected. Nothing was sent.",
         "rejectedBody": "This request is closed and the email will not be delivered."
       },
@@ -1148,17 +1146,18 @@
         "csrf": "This page has been open too long. Reload it and decide again.",
         "role": "Only a workspace owner or admin can decide this send.",
         "generic": "That decision could not be recorded. Nothing was sent. Please try again."
-      }
+      },
+      "details": "Details"
     },
     "mode": {
       "label": "Review before sending",
       "off": "Send immediately",
       "offHint": "The assistant sends without asking. The right choice for an inbox you use for low-stakes mail.",
-      "chat": "Confirm in chat",
+      "chat": "Ask in the chat first",
       "chatHint": "Before sending, the assistant shows you the email, in the draft card when your AI app shows one, and asks you to say yes in the chat. This keeps a well-meaning assistant from sending too early; it is not a sign-in approval like the two options below.",
-      "inline": "Review card in the conversation",
-      "inlineHint": "A card appears in the AI conversation showing exactly what will be sent. You can reject it there; approving opens a page you have to be signed in to use.",
-      "dashboard": "Review in the dashboard only",
+      "inline": "Approve on mcpemails.com, with a card in the chat",
+      "inlineHint": "A card in the AI conversation shows exactly what will be sent. You can reject it there; approving opens mcpemails.com, where you have to be signed in.",
+      "dashboard": "Approve on mcpemails.com only",
       "dashboardHint": "No card in the conversation. The assistant is told the send is waiting, and you decide here.",
       "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary.",
       "ownerAdminOnly": "Only workspace owners and admins can change the review setting."
@@ -1176,7 +1175,10 @@
       "changedGone": "This request changed and is no longer waiting for a decision. Nothing was sent.",
       "openReview": "Open the full review, including the message text",
       "detailsFailed": "Could not load this request's details. Nothing was sent. You can still reject it, or close this and try again.",
-      "loadingDetails": "Loading…"
+      "loadingDetails": "Loading…",
+      "approveAndSend": "Approve & send",
+      "approveSub": "This sends the prepared email now.",
+      "approvedToast": "Email approved. Sending now."
     }
   },
   "automations": {

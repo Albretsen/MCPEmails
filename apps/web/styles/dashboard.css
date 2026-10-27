@@ -2056,43 +2056,45 @@ select.input:disabled {
 .review-shell {
   min-height: 100vh;
   background: var(--bg-page);
-  padding: 32px 16px 64px;
+  padding: 40px 16px 64px;
 }
-.review-wrap { max-width: 680px; margin: 0 auto; }
-.review-brand { display: inline-flex; margin-bottom: 20px; }
-.review-brand img { height: 26px; }
+.review-wrap { max-width: 640px; margin: 0 auto; }
+.review-brand { display: inline-flex; margin-bottom: 28px; }
+.review-brand img { height: 24px; }
 .review-card { padding: 24px; }
 .review-card-narrow { padding: 20px; }
 
 .review-head { margin-bottom: 20px; }
 .review-kicker {
-  display: inline-block; margin-bottom: 8px;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand);
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; color: var(--brand);
+}
+.review-kicker::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand);
 }
 .review-head h1 {
-  margin: 0; font-family: var(--font-sans); font-size: 21px; font-weight: 650;
-  letter-spacing: -0.01em; line-height: 1.25; color: var(--fg-1);
+  margin: 0; font-family: var(--font-sans); font-size: 26px; font-weight: 650;
+  letter-spacing: -0.02em; line-height: 1.2; color: var(--fg-1);
 }
 .review-head .sub {
-  margin: 8px 0 0; font-family: var(--font-sans); font-size: 13.5px;
+  margin: 8px 0 0; font-family: var(--font-sans); font-size: 14.5px;
   line-height: 1.55; color: var(--fg-3);
 }
 .review-provenance {
-  margin: -8px 0 20px; font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3);
+  margin: -8px 0 16px; font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3);
 }
 
 .review-banner {
   display: flex; gap: 12px; align-items: flex-start;
-  padding: 12px 14px; margin-bottom: 20px; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 16px; border-radius: 12px;
   border: 1px solid var(--border-1); background: var(--ink-50);
 }
 .review-banner strong {
-  display: block; font-family: var(--font-sans); font-size: 14px;
+  display: block; font-family: var(--font-sans); font-size: 15px;
   font-weight: 600; color: var(--fg-1);
 }
 .review-banner p {
-  margin: 4px 0 0; font-family: var(--font-sans); font-size: 13px;
+  margin: 4px 0 0; font-family: var(--font-sans); font-size: 13.5px;
   line-height: 1.5; color: var(--fg-2);
 }
 .review-banner-icon { flex-shrink: 0; margin-top: 1px; }
@@ -2100,68 +2102,95 @@ select.input:disabled {
 .review-banner-warn { background: var(--amber-100); border-color: rgba(240,165,62,0.36); }
 .review-banner-neutral { background: var(--ink-50); }
 
-.review-rows { margin: 0; display: grid; gap: 0; }
-.review-row {
-  display: grid; grid-template-columns: 132px minmax(0, 1fr);
-  gap: 16px; padding: 11px 0; border-top: 1px solid var(--border-1);
+/* The email itself, laid out the way a mail client shows one. */
+.review-mail { padding: 20px 24px 24px; }
+.review-envelope { margin: 0; display: grid; gap: 6px; }
+.review-envelope .review-row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px;
 }
-.review-row:first-child { border-top: 0; padding-top: 0; }
-.review-row dt {
-  font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3);
-}
-.review-row dd {
+.review-envelope dt { font-family: var(--font-sans); font-size: 13px; color: var(--fg-3); }
+.review-envelope dd {
   margin: 0; min-width: 0;
   font-family: var(--font-sans); font-size: 13.5px; line-height: 1.5; color: var(--fg-2);
 }
+.review-hint { font-size: 12.5px; margin-top: 2px; }
+.review-subject {
+  margin: 18px 0 0; padding-top: 18px; border-top: 1px solid var(--border-1);
+  font-family: var(--font-sans); font-size: 19px; font-weight: 650;
+  letter-spacing: -0.01em; line-height: 1.3; color: var(--fg-1);
+}
+.review-subject.review-muted { color: var(--fg-3); font-weight: 500; }
+/* Plain text only, never rendered HTML: rendering would load remote images and
+   report the reviewer's IP and read-time back to whoever composed the message. */
+.review-body {
+  margin: 12px 0 0; max-height: 480px; overflow: auto;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.65; color: var(--fg-1);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.review-body-note {
+  margin: 10px 0 0; font-family: var(--font-sans); font-size: 12.5px;
+  line-height: 1.5; color: var(--fg-3);
+}
+.review-attachments { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.review-file {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%;
+  padding: 6px 10px; border: 1px solid var(--border-1); border-radius: 8px;
+  font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-2);
+}
+
 .review-strong { color: var(--fg-1); font-weight: 550; }
 .review-muted { color: var(--fg-3); }
 .review-wrapany { overflow-wrap: anywhere; }
+
+/* Facts for the curious, folded away so the email is what the page is about. */
+.review-details { margin-top: 12px; }
+.review-details summary {
+  cursor: pointer; padding: 6px 2px; width: fit-content;
+  font-family: var(--font-sans); font-size: 13px; color: var(--fg-3);
+}
+.review-details summary:hover { color: var(--fg-2); }
+.review-details[open] summary { margin-bottom: 4px; }
+.review-rows { margin: 0; padding: 4px 2px 0; display: grid; }
+.review-rows .review-row {
+  display: grid; grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px; padding: 8px 0; border-top: 1px solid var(--border-1);
+}
+.review-rows .review-row:first-child { border-top: 0; }
+.review-rows dt { font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3); }
+.review-rows dd {
+  margin: 0; min-width: 0;
+  font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--fg-2);
+}
 .review-route { margin-top: 2px; font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
 .review-caveats {
   margin: 6px 0 0; padding-left: 16px;
   font-size: 12.5px; line-height: 1.5; color: var(--fg-3);
 }
-.review-attachments { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
-.review-attachments li {
-  display: flex; align-items: center; gap: 6px; min-width: 0;
-  font-size: 13px; color: var(--fg-2);
-}
-
-.review-message { margin-top: 22px; }
-.review-message h2 {
-  margin: 0 0 8px; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
-  letter-spacing: 0.02em; text-transform: uppercase; color: var(--fg-3);
-}
-/* Plain text only, never rendered HTML: rendering would load remote images and
-   report the reviewer's IP and read-time back to whoever composed the message. */
-.review-body {
-  margin: 0; padding: 14px 16px; max-height: 420px; overflow: auto;
-  background: var(--bg-sunken, var(--ink-50)); border: 1px solid var(--border-1);
-  border-radius: 10px;
-  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: var(--fg-1);
+.review-html { margin-top: 12px; }
+.review-source {
+  margin: 8px 0 0; padding: 12px 14px; max-height: 260px; overflow: auto;
+  background: var(--bg-sunken, var(--ink-50)); border: 1px solid var(--border-1); border-radius: 10px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--fg-2);
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
-.review-body-source { margin-top: 8px; max-height: 260px; color: var(--fg-2); }
-.review-body-note {
-  margin: 8px 0 0; font-family: var(--font-sans); font-size: 12.5px;
-  line-height: 1.5; color: var(--fg-3);
-}
-.review-html { margin-top: 12px; }
 
+.review-wrap > .alert { margin-top: 16px; }
 .review-actions {
-  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px;
-  margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-1);
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 20px;
 }
+.review-actions .btn { min-height: 42px; padding-left: 18px; padding-right: 18px; }
 .review-note {
-  margin: 14px 0 0; font-family: var(--font-sans); font-size: 12.5px;
-  line-height: 1.55; color: var(--fg-3);
+  margin: 16px 0 0; font-family: var(--font-sans); font-size: 12.5px;
+  line-height: 1.55; color: var(--fg-3); text-align: right;
 }
 
 @media (max-width: 560px) {
-  .review-shell { padding: 20px 12px 48px; }
+  .review-shell { padding: 24px 16px 48px; }
   .review-card { padding: 18px 16px; }
-  .review-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .review-head h1 { font-size: 19px; }
+  .review-mail { padding: 16px; }
+  .review-rows .review-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .review-head h1 { font-size: 22px; }
+  .review-note { text-align: left; }
   /* Full-width targets on a phone; the buttons must never be pushed off-screen
      the way the signature Save button once was. */
   .review-actions { flex-direction: column-reverse; align-items: stretch; }
