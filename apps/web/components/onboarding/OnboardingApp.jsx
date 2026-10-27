@@ -201,7 +201,8 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
           </div>
         )}
       </div>
-      <Chain stage={chatReturn ? 0 : stage} client={client} />
+      {/* Once a call lands, the last node shows the app that made it, like It works's line. */}
+      <Chain stage={chatReturn ? 0 : stage} client={(step === 'it_works' && normalizeChipClient(status?.firstCall?.client ?? null)) || client} />
       {initialStatus === null && <p className="onb-error" role="alert">{t('shell.statusError')}</p>}
       <div className="onb-stage" key={secondInbox ? 'inbox-2' : step}>
         <Panel

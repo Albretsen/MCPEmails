@@ -36,6 +36,12 @@ export default function OnboardingFlowB({ status, flowB = null, userEmail = '', 
  * than a form that can only be refused.
  */
 function SecondInboxCard({ status, flowB, finish, startSecondInbox }) {
+  const inboxCount = status?.inboxes?.count ?? 0;
+  // A workspace that already has two inboxes has done what the card asks.
+  return inboxCount >= 2 ? null : <SecondInboxPrompt status={status} flowB={flowB} finish={finish} startSecondInbox={startSecondInbox} />;
+}
+
+function SecondInboxPrompt({ status, flowB, finish, startSecondInbox }) {
   const t = useTranslations('onboarding.steps.it_works.secondInbox');
   const atCap = Boolean(flowB) && nextInboxNeedsUpgrade(status?.inboxes?.count ?? 0, flowB.inboxCaps?.free ?? 1);
   useEffect(() => {
