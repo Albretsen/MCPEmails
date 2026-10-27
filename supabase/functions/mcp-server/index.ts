@@ -1496,6 +1496,12 @@ interface ApiKeyRow {
    * notify a brand-new connection about a listing it has not read yet.
    */
   card_build_notified?: string | null;
+  /**
+   * Whether the last `tools/list` served to this key carried the draft card.
+   * NULL (never recorded) counts as true. See
+   * 20261027140000_api_keys_card_listed.sql and `keyListedDraftCard`.
+   */
+  card_listed?: boolean | null;
   internalApprovalDispatch?: boolean;
   /**
    * The caller is a signed-in human using the first-party web mail client
@@ -2639,7 +2645,7 @@ async function lookupApiKey(
   const { data: row, error } = await supabase
     .from("api_keys")
     .select(
-      "id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified",
+      "id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified, card_listed",
     )
     .eq("key_hash", incomingHash)
     .is("deleted_at", null)
@@ -29868,6 +29874,11 @@ function cardActivityScope(apiKey: ApiKeyRow, inboxId: string): CardActivityScop
   return { workspaceId: apiKey.workspace_id, inboxId, apiKeyId: apiKey.id };
 }
 
+/** False only when this key's last tool list is known to lack the draft card. */
+function keyListedDraftCard(apiKey: ApiKeyRow): boolean {
+  return apiKey.card_listed !== false;
+}
+
 // Draft events (draft-events.ts): durable, content-free counts for the growth
 // board's draft card band. Never throws.
 const draftEventStoreImpl = postgrestDraftEventStore(supabase);
@@ -30147,6 +30158,7 @@ function draftEditorCallerFor(apiKey: ApiKeyRow): DraftEditorCaller {
     // nullable — every live production key carries one (verified 2026-09-16),
     // and a key without one is refused workspace scope rather than waved past.
     user_id: apiKey.created_by ?? null,
+    card_listed: apiKey.card_listed ?? null,
   };
 }
 
@@ -30595,7 +30607,7 @@ async function executeCreateReplyDraft(
         },
       });
       const outlookPayload = buildDraftMutationEnvelope(outlookOutput as unknown as DraftReplyResult) as unknown as Record<string, unknown>;
-      return { result: draftCardToolResult(outlookPayload, outlookCard), logStatus: "success", logErrorCode: null };
+      return { result: draftCardToolResult(outlookPayload, outlookCard, false, keyListedDraftCard(apiKey)), logStatus: "success", logErrorCode: null };
     }
 
     let subject = "";
@@ -30703,7 +30715,7 @@ async function executeCreateReplyDraft(
         from: originalFrom || null,
       },
     });
-    return { result: draftCardToolResult(replyPayload, replyCard), logStatus: "success", logErrorCode: null };
+    return { result: draftCardToolResult(replyPayload, replyCard, false, keyListedDraftCard(apiKey)), logStatus: "success", logErrorCode: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") return authFailedResult(inbox.provider, inbox.id, "access");
@@ -30872,7 +30884,7 @@ async function executeCreateDraft(
     recordDraftLine(apiKey, inbox, null, draftResult.draft_id, "agent", draftResult.created_at),
   ]);
   return {
-    result: draftCardToolResult(createPayload, withDraftRevision(cardEnvelope, createRevision)),
+    result: draftCardToolResult(createPayload, withDraftRevision(cardEnvelope, createRevision), false, keyListedDraftCard(apiKey)),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -31257,7 +31269,7 @@ async function executeUpdateDraft(
     nativeReply,
   });
   return {
-    result: draftCardToolResult(updatePayload, updateCard),
+    result: draftCardToolResult(updatePayload, updateCard, false, keyListedDraftCard(apiKey)),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -33811,6 +33823,16 @@ async function handleToolsList(
   ]);
   const uiGates = { ...baseGates, subscriptions };
 
+  // Record whether this listing carries the draft card, so a draft result can
+  // tell a chat that cached a card-less list (keyListedDraftCard). Fire and
+  // forget like last_used_at, and only when it changed.
+  if (!INTROSPECTION_ONLY && (apiKey.card_listed ?? null) !== baseGates.drafts) {
+    void supabase.from("api_keys").update({ card_listed: baseGates.drafts }).eq("id", apiKey.id)
+      .then(({ error }) => {
+        if (error) console.warn("[mcp-server] card_listed_write_failed", { key_id: apiKey.id, error: error.message });
+      }, () => {});
+  }
+
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
   // an OAuth token is shown the whole advertised catalogue so it can step up
@@ -36200,7 +36222,7 @@ async function handleScheduledDispatch(
         }
 
         const { data: key, error: keyErr } = await db.from("api_keys")
-          .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
+          .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified, card_listed")
           .eq("id", approval.api_key_id)
           .eq("workspace_id", row.workspace_id)
           .is("deleted_at", null)
