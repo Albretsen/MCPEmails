@@ -8,6 +8,7 @@
 import type { GrowthDraftCardReachRow, GrowthDraftCardStatsRow } from '@/lib/analytics/growth-types';
 import {
   BARS,
+  CARD_FAMILIES,
   FAMILY_NAMES,
   rates,
   totals,
@@ -80,9 +81,9 @@ export function DraftCardFamilyTable({
               <th scope="col">Client</th>
               <th scope="col">Workspaces</th>
               <th scope="col">Drafts</th>
-              <th scope="col">With card</th>
+              <th scope="col">Card offered</th>
               <th scope="col">Touched in card</th>
-              <th scope="col">Sent per draft</th>
+              <th scope="col">Sent within a day</th>
               {released && <th scope="col">Before</th>}
               <th scope="col">Sent from card</th>
               <th scope="col">Discarded</th>
@@ -95,16 +96,19 @@ export function DraftCardFamilyTable({
               const t = totals(rows, period, [family]);
               const r = rates(t);
               const before = rates(totals(rows, 'before', [family]));
+              // Other clients cannot draw the card, so card columns stay empty
+              // there: a "card" send from them is a model passing base_revision.
+              const drawsCard = CARD_FAMILIES.includes(family);
               return (
                 <tr key={family} className={t.drafted === 0 ? 'is-quiet' : undefined}>
                   <th scope="row" className="bd-cell-text">{FAMILY_NAMES[family]}</th>
                   <td>{formatCount(t.workspaces)}</td>
                   <td>{formatCount(t.drafted)}</td>
-                  <td>{formatCount(t.drafted_card)}</td>
-                  <td>{pct(r.touched)}</td>
+                  <td>{drawsCard ? formatCount(t.drafted_card) : ''}</td>
+                  <td>{drawsCard ? pct(r.touched) : ''}</td>
                   <td>{pct(r.sent)}</td>
                   {released && <td>{pct(before.sent)}</td>}
-                  <td>{pct(r.sentFromCard)}</td>
+                  <td>{drawsCard ? pct(r.sentFromCard) : ''}</td>
                   <td>{pct(r.discarded)}</td>
                   <td>{pct(r.errors)}</td>
                   <td>{formatCount(t.hidden)}</td>
@@ -115,11 +119,13 @@ export function DraftCardFamilyTable({
         </table>
       </div>
       <p className="bd-note">
-        Touched means saved, sent or discarded in the card. Sent per draft counts every send against new drafts,
-        so it can pass 100% when older drafts are sent. A card send is one that carried the card&apos;s
-        base_revision, which a model could also pass. Other clients (Cursor, Codex and the like) draw no card and
-        are the comparison. The before window has no card sends: until the release only our own workspaces had it,
-        and they are excluded. Bars: {formatPercent(BARS.touched, 0)} touched, send rate down at most{' '}
+        Rates follow each new draft: touched means saved, sent or discarded in the card; sent within a day counts
+        drafts at least 24 hours old, so it stays empty for the first day after the release. Each workspace weighs at
+        most 20 drafts, so one busy account cannot set a client&apos;s rate; Drafts is the raw count. Card offered
+        means the result carried the card, not that the client drew it. A card send is one that carried the
+        card&apos;s base_revision, which a model could also pass. Other clients (Cursor, Codex and the like) draw no
+        card and are the comparison. The before window has no card sends: until the release only our own
+        workspaces had it, and they are excluded. Bars: {formatPercent(BARS.touched, 0)} touched, share sent within a day down at most{' '}
         {formatPercent(BARS.sendDrop, 0)} net of other clients, under {formatPercent(BARS.optOut, 0)} turned off,
         failures up at most {Math.round(BARS.errorRise * 100)} point.
       </p>

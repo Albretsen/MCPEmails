@@ -13,6 +13,12 @@
  *     card), after the release. Different people use different clients.
  * When both point the same way, believe it. When they disagree, it is too
  * early or the effect is small.
+ *
+ * PER DRAFT, PER WORKSPACE. Rates follow each draft through draft_lineage
+ * (sent within 24 hours of being written, discarded, touched in the card), so
+ * sends of older drafts never count against new ones. Each workspace weighs at
+ * most 20 drafts (50 tool calls), so one bulk-drafting account cannot stand in
+ * for a whole client. See 20261027200000_draft_card_stats_linked.sql.
  */
 
 import type { GrowthDraftCardReachRow, GrowthDraftCardStatsRow } from './growth-types';
@@ -36,7 +42,10 @@ export const FAMILY_NAMES: Record<Family, string> = {
   other: 'Other clients',
 };
 
-/** Below this many card drafts since the release, the checks say "too early". */
+/**
+ * Below this many card drafts since the release, the checks say "too early".
+ * The send check also needs this many drafts at least a day old.
+ */
 export const MIN_CARD_DRAFTS = 100;
 
 export type Totals = Omit<GrowthDraftCardStatsRow, 'period' | 'family'>;
@@ -44,7 +53,6 @@ export type Totals = Omit<GrowthDraftCardStatsRow, 'period' | 'family'>;
 const ZERO: Totals = {
   drafted: 0,
   drafted_card: 0,
-  card_lines: 0,
   saved: 0,
   sent_card: 0,
   sent_agent: 0,
@@ -55,6 +63,15 @@ const ZERO: Totals = {
   card_workspaces: 0,
   calls: 0,
   errors: 0,
+  lines: 0,
+  w_lines: 0,
+  w_touched: 0,
+  w_deleted: 0,
+  mature_lines: 0,
+  w_mature: 0,
+  w_sent_day: 0,
+  w_calls: 0,
+  w_errors: 0,
   eligible_card: 0,
   returned_card: 0,
   eligible_plain: 0,
@@ -78,13 +95,13 @@ export function totals(
 const rate = (num: number, den: number): number | null => (den > 0 ? num / den : null);
 
 export type Rates = {
-  /** Of the drafts that carried the card, the share saved, sent or discarded in it. */
+  /** Of the new drafts, the share saved, sent or discarded in the card. */
   touched: number | null;
-  /** Sends per new draft. Can pass 1 when old drafts are sent. */
+  /** Of the new drafts at least a day old, the share sent within 24 hours. */
   sent: number | null;
-  /** Of the sends, the share made from the card. */
+  /** Of the sends (any draft), the share made from the card. */
   sentFromCard: number | null;
-  /** Discards per new draft. */
+  /** Of the new drafts, the share discarded. */
   discarded: number | null;
   /** Share of draft tool calls that failed. */
   errors: number | null;
@@ -95,11 +112,11 @@ export type Rates = {
 
 export function rates(t: Totals): Rates {
   return {
-    touched: rate(t.card_lines, t.drafted_card),
-    sent: rate(t.sent_card + t.sent_agent, t.drafted),
+    touched: rate(t.w_touched, t.w_lines),
+    sent: rate(t.w_sent_day, t.w_mature),
     sentFromCard: rate(t.sent_card, t.sent_card + t.sent_agent),
-    discarded: rate(t.deleted_card + t.deleted_agent, t.drafted),
-    errors: rate(t.errors, t.calls),
+    discarded: rate(t.w_deleted, t.w_lines),
+    errors: rate(t.w_errors, t.w_calls),
     returnedCard: rate(t.returned_card, t.eligible_card),
     returnedPlain: rate(t.returned_plain, t.eligible_plain),
   };
@@ -146,8 +163,10 @@ export function releaseChecks(
   const after = rates(afterTotals);
   const otherBefore = rates(totals(rows, 'before', ['other']));
   const otherAfter = rates(totals(rows, 'after', ['other']));
-  const enough = released && afterTotals.drafted_card >= MIN_CARD_DRAFTS;
-  const judge = (ok: boolean | null): CheckState => (!enough || ok === null ? 'wait' : ok ? 'pass' : 'fail');
+  const enough = released && afterTotals.lines >= MIN_CARD_DRAFTS;
+  const judgeWhen = (ready: boolean, ok: boolean | null): CheckState =>
+    !ready || ok === null ? 'wait' : ok ? 'pass' : 'fail';
+  const judge = (ok: boolean | null) => judgeWhen(enough, ok);
 
   const enabled = Number(reach?.enabled ?? 0);
   const optOut = enabled > 0 ? Number(reach?.hidden_workspaces ?? 0) / enabled : null;
@@ -166,14 +185,17 @@ export function releaseChecks(
       question: 'Do people use it?',
       bar: `${pct(BARS.touched)}+ of card drafts touched in the card`,
       state: judge(after.touched === null ? null : after.touched >= BARS.touched),
-      detail: `${pct(after.touched)} of ${afterTotals.drafted_card} card drafts`,
+      detail: `${pct(after.touched)} of ${afterTotals.lines} card drafts`,
     },
     {
       key: 'harm',
       question: 'Are as many drafts sent?',
-      bar: `send rate down no more than ${pct(BARS.sendDrop)}, net of other clients`,
-      state: judge(netChange === null ? null : netChange >= -BARS.sendDrop),
-      detail: `${pct(before.sent)} before, ${pct(after.sent)} after${otherChange === null ? '' : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
+      bar: `share sent within a day down no more than ${pct(BARS.sendDrop)}, net of other clients`,
+      state: judgeWhen(
+        released && afterTotals.mature_lines >= MIN_CARD_DRAFTS,
+        netChange === null ? null : netChange >= -BARS.sendDrop,
+      ),
+      detail: `${pct(before.sent)} sent within a day before, ${pct(after.sent)} after (${afterTotals.mature_lines} drafts a day old)${otherChange === null ? '' : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
     },
     {
       key: 'rejected',

@@ -582,12 +582,10 @@ export type GrowthMailRelayDayRow = {
 export type GrowthDraftCardStatsRow = {
   period: 'before' | 'after';
   family: 'claude' | 'claude_code' | 'chatgpt' | 'other';
-  /** New drafts (create + reply). */
+  /** New drafts (create + reply), raw. */
   drafted: number;
-  /** New drafts whose result carried the card. */
+  /** New drafts whose result carried the card (offered; whether it was drawn depends on the client). */
   drafted_card: number;
-  /** Distinct drafts saved, sent or discarded in the card. */
-  card_lines: number;
   saved: number;
   sent_card: number;
   sent_agent: number;
@@ -597,9 +595,24 @@ export type GrowthDraftCardStatsRow = {
   hidden: number;
   workspaces: number;
   card_workspaces: number;
-  /** activity_log rows for draft* tools, and how many failed. */
+  /** activity_log rows for draft* tools, and how many failed. Raw. */
   calls: number;
   errors: number;
+  /**
+   * Per draft: draft_lineage lines opened in the window. `lines` is raw; the
+   * `w_` fields weight each workspace to at most 20 lines (50 tool calls).
+   */
+  lines: number;
+  w_lines: number;
+  /** Lines saved, sent or discarded in the card at any time. */
+  w_touched: number;
+  w_deleted: number;
+  /** Lines at least 24 hours old, and of those, sent within 24 hours. */
+  mature_lines: number;
+  w_mature: number;
+  w_sent_day: number;
+  w_calls: number;
+  w_errors: number;
   eligible_card: number;
   returned_card: number;
   eligible_plain: number;
