@@ -228,10 +228,12 @@ Deno.test("no other client is listed a per-operation tool", async () => {
     // Pro tools are hidden until the features are visible (the gate's read
     // fails closed here), exactly as for every customer before launch; and
     // minus the subscription tools: tools/list drops them for a workspace
-    // without subscription_cleanup_enabled, which introspection mode is.
+    // without subscription_cleanup_enabled, which introspection mode is. And
+    // minus card_automation, listed only while the automation card is (its
+    // gate is closed in introspection mode).
     hideProFeaturesFromListing(toolsForListing(claude(["read:email"])), decideProFeatureAccess(CLOSED_PRO_GATE))
       .map((tool) => tool.name)
-      .filter((name) => !name.startsWith("subscriptions_")),
+      .filter((name) => !name.startsWith("subscriptions_") && name !== "card_automation"),
   );
   const names = (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name);
   for (const name of PER_OPERATION_ONLY_TOOLS.keys()) {

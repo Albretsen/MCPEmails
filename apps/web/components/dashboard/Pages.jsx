@@ -2689,7 +2689,8 @@ export function resolveReviewMode(inbox) {
  */
 function ReviewModeSelector({ value, onChange, disabled, lockedNote = null, chatRolledOut = false }) {
   const t = useTranslations('dashboard');
-  // 'chat' is internal-only for now (workspaces.chat_send_confirm_enabled).
+  // 'chat' follows workspaces.chat_send_confirm_enabled, on for every workspace
+  // since 2026-10-27 and kept as a kill switch.
   // Still shown when it is the stored value, so the radio never lies.
   const modes = REVIEW_MODES.filter(mode => mode !== 'chat' || chatRolledOut || value === 'chat');
   return (

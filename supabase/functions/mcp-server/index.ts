@@ -301,14 +301,10 @@ import {
   runDraftEditorTool,
 } from "./mcp-app-drafts.ts";
 import {
-  allInboxesHideDraftEditor,
-  type DraftEditorHiddenRow,
   type InboxQueryClient,
   inboxIsReachable,
   type InboxReachabilityRow,
   reachableInboxSelect,
-  type ReviewCardOptInRow,
-  reviewCardOptInsFromRows,
 } from "./reachable-inbox.ts";
 import {
   findParkedInbox,
@@ -332,6 +328,11 @@ import {
   loginRefusedAt,
   loginRefusedMarker,
 } from "./inbox-health.ts";
+import {
+  AUTOMATION_CARD_TOOL,
+  AUTOMATION_CARD_TOOL_DEFINITION,
+  runAutomationCard,
+} from "./mcp-app-automation.ts";
 import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
@@ -10413,6 +10414,20 @@ for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
 }
 
 // ---------------------------------------------------------------------------
+// The automation card's own tool (`card_automation`, mcp-app-automation.ts).
+//
+// Registered with NO `_meta`, like the draft-editor tools: its app-only
+// metadata is attached per key in `handleToolsList` on the card's gate, and
+// the tool is DROPPED from the listing while the card is off (and from the
+// per-operation surface always, see PER_OPERATION_UNLISTED), so a model never
+// sees it as a plain tool. Still callable, and safe to call: it is the
+// `automation` get / preview / enable / disable a key with manage:automations
+// can already call, through the same handler. Not in BILLABLE_TOOL_NAMES:
+// the person switching a rule in the card is not spending an action.
+// ---------------------------------------------------------------------------
+TOOL_REGISTRY.push({ ...AUTOMATION_CARD_TOOL_DEFINITION } as ToolDefinition);
+
+// ---------------------------------------------------------------------------
 // The per-operation surface: one tool per operation, for OpenAI clients.
 //
 // OpenAI's plugin scan (2026-10-13) flagged every consolidated tool, the
@@ -10524,6 +10539,9 @@ const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
   "automation_create",
   "automation_update",
   "automation_enable",
+  // The automation card's switch, which can enable a rule. The card itself is
+  // consolidated-only (mcp-app-resources.ts#AUTOMATION_CARD_TOOL_NAMES).
+  AUTOMATION_CARD_TOOL,
 ]);
 
 /** Every per-operation tool, listed or not, in listing order. */
@@ -19862,7 +19880,8 @@ async function inboxWantsChatConfirmation(inboxId: string): Promise<boolean> {
 
 /**
  * `workspaces.chat_send_confirm_enabled`: OUR rollout gate for "Confirm in
- * chat", internal only for now (seeded by 20261023200000). The dashboard and
+ * chat", on for every workspace since 20261027190000 (seeded for our own by
+ * 20261023200000) and kept as a kill switch. The dashboard and
  * the PATCH route only offer 'chat' where it is on; this is the server half,
  * so a mode set some other way does nothing until the rollout reaches it.
  * Read only for an inbox already in 'chat' mode. Fails to "off" on an error,
@@ -20120,8 +20139,8 @@ function pendingApprovalPayload(
  *
  * ── WHY THIS EXISTS ─────────────────────────────────────────────────────────
  * The MCP Apps review card could not render on an outbound send. `tools/list`
- * gates `_meta.ui` onto email_compose / draft / schedule for any key that can
- * reach an inbox with `send_approval_required` (see `keyReviewCardGates`), so
+ * gates `_meta.ui` onto email_compose / draft / schedule (see
+ * `keyReviewCardGates`), so
  * the host mounts the card, and then the tool returned the flat
  * `pendingApprovalPayload` object, which carries no `schema_version`, so the
  * card classified it "foreign" and drew nothing. The only producer of an
@@ -26163,104 +26182,40 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
 }
 
 /**
- * Both MCP Apps opt-ins for one key, resolved in a single round trip.
+ * Which card-bearing tools this key's `tools/list` stamps with `_meta.ui`.
  *
- * ── Why one query and not two ───────────────────────────────────────────────
- * `tools/list` is on the connect path — it runs once per host page load
- * (Phase 0 Q5) and the user is staring at a spinner while it runs. Two gates
- * used to mean one query because only the bulk gate existed; adding a second
- * serialised await would have doubled the latency of the whole method for a
- * pair of booleans. So both flags come back from one `.or()`-filtered select
- * and the booleans are derived here in TypeScript.
+ * ── Scope facts only, since 2026-10-28 ──────────────────────────────────────
+ * Every gate used to be a setting read at `tools/list` time: approvals on an
+ * inbox (outbound), `bulk_review_mode = 'plan'` (bulk), and the draft editor's
+ * rollout and opt-outs (drafts). Claude and ChatGPT keep the tool list a chat
+ * started with, and claude.ai keeps it across new chats until the connector
+ * reconnects, so a setting switched on later never got its card. The card now
+ * answers every result of these tools in one line when it has nothing richer
+ * (apps/mcp-app/src/plain-result.ts), so the listing no longer has to guess:
+ * a key that can call the tool gets the card, and the SETTING decides, per
+ * call, whether the result is a full card or that one line. The draft write
+ * and bulk handlers still read their settings at call time exactly as before.
  *
- * The filter is what keeps the result small: it returns only inboxes that have
- * actually opted into something, which for almost every workspace is zero rows.
- * That matters because PostgREST silently truncates any row-returning select at
- * 1000 rows with no error whatsoever — nothing below relies on seeing every
- * inbox, only on seeing at least one opted-in one, and an unfiltered scan would
- * have been a correctness trap waiting for a large workspace.
+ * So no database read here, and nothing a setting can change: the listing is
+ * the same for the life of the key. Introspection and an empty inbox
+ * allowlist stay card-less, as before.
  *
- * Fails closed on error (bulk false = today's behaviour, no card metadata). The
- * `inbox_ids` allowlist is applied the same way it is everywhere else: a
- * non-null allowlist restricts the query, and an empty one denies everything.
- *
- * The OUTBOUND gate is not read from these rows any more (2026-10-27): it is a
- * scope fact, see `keyCanSendOutbound`. The query still returns
- * `send_approval_required` because `reviewCardOptInsFromRows` rolls it up and
- * its parity tests pin that, but the rolled-up value is overridden here.
+ * `db` is kept so callers and tests that pass a client still type-check, and
+ * so introspection mode's guard can tell the default client apart.
  */
 async function keyReviewCardGates(
   apiKey: ApiKeyRow,
   db: InboxQueryClient = supabase,
 ): Promise<ReviewCardGates> {
   const denied: ReviewCardGates = { outbound: false, bulk: false, drafts: false };
-  // Introspection mode has no database to ask. Return the plain pre-MCP-Apps
-  // surface immediately rather than attempting a connection that cannot succeed.
-  //
-  // The guard is about the DEFAULT client specifically: under
-  // MCP_INTROSPECTION_ONLY the module-level `supabase` points at a placeholder
-  // URL with no project behind it, so every query it issues is a guaranteed
-  // failure. A caller that handed in its own client handed in one that works,
-  // and skipping its queries would be answering a question nobody asked. That
-  // is what lets `reachable-inbox.test.ts` drive these rollups for real in the
-  // same process that `mcp-app-resources.test.ts` uses introspection mode for.
+  // Introspection mode: a directory scanner gets the plain pre-MCP-Apps surface.
   if (INTROSPECTION_ONLY && db === supabase) return denied;
-  // The draft-editor gate is a WORKSPACE flag, not an inbox opt-in, so it
-  // cannot join the `.or()` below and needs its own read. Issued in parallel
-  // rather than awaited in sequence, for the reason in the note above: this
-  // runs on the connect path with the user watching a spinner, and a second
-  // serialised round trip would show up there.
-  // Both halves of the draft gate, issued together: the workspace switch (our
-  // rollout AND the user's workspace-level opt-out) and the per-inbox opt-out
-  // rolled up to "are they ALL hidden". Parallel for the reason in the note
-  // above — this is the connect path with the user watching a spinner.
-  const draftsGate = Promise.all([
-    workspaceDraftEditorEnabled(apiKey.workspace_id, db),
-    allReachableInboxesHideDraftEditor(apiKey, db),
-  ]).then(([enabled, allHidden]) => enabled && !allHidden);
-  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) {
-    return { ...denied, drafts: await draftsGate };
-  }
-  // Not from the rows below: see keyCanSendOutbound.
-  const outbound = keyCanSendOutbound(apiKey);
-  // `deleted_at`/`status` close the mirror image of the draft-editor rollup's
-  // bug: this one is a `.some()`, so a SOFT-DELETED inbox that still carries
-  // `send_approval_required` used to turn the OUTBOUND card gate on for a key
-  // whose calls can never land on it. Same missing filter, opposite direction,
-  // and it predates the draft editor. `reviewCardOptInsFromRows` applies the
-  // same predicate to the returned rows, and `reachableInboxSelect` is what
-  // stops the projection and that predicate drifting apart: the two columns it
-  // appends are exactly the two the predicate reads, so they cannot be tidied
-  // away here without the helper going too.
-  let query = db
-    .from("inboxes")
-    .select(reachableInboxSelect("bulk_review_mode", "send_approval_required"))
-    .eq("workspace_id", apiKey.workspace_id)
-    .is("deleted_at", null)
-    // A parked inbox (parked-inbox.ts) is as unreachable as a revoked one.
-    .is("parked_at", null)
-    .eq("status", "active")
-    .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
-  if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
-  const [{ data, error }, drafts] = await Promise.all([query, draftsGate]);
-  if (error) {
-    // Almost certainly "column does not exist" against a database where one of
-    // these phases' migrations has not landed yet. Silent and safe: no
-    // metadata, which is exactly the pre-MCP-Apps tool surface.
-    console.warn("[mcp-server] review_card_gate_query_failed", {
-      key_id: apiKey.id,
-      error: error.message,
-    });
-    // The inbox opt-ins are unknown and therefore closed. The workspace flag
-    // came back from its own query and is unaffected by this one's failure.
-    // The outbound gate does not depend on this query, so it stays as it is.
-    return { ...denied, outbound, drafts };
-  }
+  // A key allowed no inbox can never produce a card result.
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return denied;
   return {
-    ...reviewCardOptInsFromRows((data ?? []) as ReviewCardOptInRow[]),
-    // Overrides the rollup's `outbound`: see keyCanSendOutbound.
-    outbound,
-    drafts,
+    outbound: keyCanSendOutbound(apiKey),
+    bulk: apiKey.scopes.includes("manage:folders") || apiKey.scopes.includes("delete:email"),
+    drafts: apiKey.scopes.includes("manage:drafts"),
   };
 }
 
@@ -26298,21 +26253,10 @@ function attachSentCardMeta(
 /**
  * The outbound card gate: true for every key that can send or schedule.
  *
- * ── Why this is no longer the `send_approval_required` rollup ──────────────
  * It used to be "some inbox this key reaches holds sends for approval", read
- * at `tools/list` time. Claude and ChatGPT keep the tool list a chat started
- * with, so a user who switched approvals on mid-chat (or any time after the
- * host fetched the list) got a plain-text approval link and never the card.
- * The gate existed only because the card had nothing to show for an ordinary
- * send. Now it has: an ordinary send, reply, forward or schedule result renders
- * as a one-line receipt (apps/mcp-app/src/plain-result.ts), and every other
- * result (an error, a refusal, a batch forward) ends in one line too. So the
- * gate is a scope fact, the same for the life of the key, and no database read
- * can close it.
- *
- * `schedule:email` counts on its own because `schedule` (and per-operation
- * `schedule_create`) is on this gate too. A key with neither scope cannot
- * produce an outbound result, so it is still listed without the card.
+ * at `tools/list` time; see keyReviewCardGates for why every gate is now a
+ * scope fact. `schedule:email` counts on its own because `schedule` (and
+ * per-operation `schedule_create`) is on this gate too.
  */
 function keyCanSendOutbound(apiKey: ApiKeyRow): boolean {
   return apiKey.scopes.includes("send:email") || apiKey.scopes.includes("schedule:email");
@@ -29777,108 +29721,6 @@ async function invalidateCardListings(workspaceId: string): Promise<void> {
   }
 }
 
-/**
- * True when EVERY inbox this key can reach has the draft editor hidden.
- *
- * The per-inbox opt-out has an awkward shape and this function is where it is
- * made honest. `_meta.ui` is per TOOL, not per call, so the host mounts the
- * card for every `draft` result once the tool carries it — there is no way to
- * advertise "card for this inbox, none for that one".
- *
- * So the opt-out lands in three places. When every reachable inbox is hidden
- * the metadata is withheld here and the surface is byte-identical to
- * pre-MCP-Apps. When only SOME are, the tool keeps its metadata and a hidden
- * inbox instead returns no envelope (see `draftEditorEnvelopeForWrite`, which
- * checks the flag per call), which the card classifies as a payload that is not
- * its own and renders as nothing at all, collapsing the shell. And in either
- * case the three app-only tools REFUSE for a hidden inbox (`gateDraftTool`) —
- * that third place was missing until 2026-09-16, which is what let a restoring
- * card re-open a live editor for an inbox the user had switched off.
- *
- * The cost of the mixed case is a mounted iframe and one cached resource read
- * for a card that draws nothing. That is invisible to the user and is the price
- * of a per-tool metadata field.
- *
- * ── Fail direction, and why it stays OPEN here ────────────────────────────
- * This one rollup fails open (unreadable → "not all hidden" → keep the
- * metadata), unlike everything else in this section. It is a preference rather
- * than a permission, and its blast radius on failure is one invisible iframe
- * that mounts and renders nothing — because the per-call check that actually
- * withholds the envelope reads its flag separately and refuses on ITS failure.
- * Not a redesign candidate.
- */
-async function allReachableInboxesHideDraftEditor(
-  apiKey: ApiKeyRow,
-  db: InboxQueryClient = supabase,
-): Promise<boolean> {
-  // See the same guard on `keyReviewCardGates`: it is the DEFAULT client that
-  // has no project behind it under introspection, not an injected one.
-  if (INTROSPECTION_ONLY && db === supabase) return false;
-  // A key scoped to zero inboxes reaches nothing; there is no "every inbox"
-  // to be hidden, and vacuous truth here would withhold the card from a key
-  // whose owner never asked for that.
-  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return false;
-  try {
-    // `deleted_at is null` is the bug this query used to have. Without it the
-    // rollup counted soft-deleted rows, which keep `draft_editor_hidden = false`
-    // forever, so `.every()` could never reach true and the user's opt-out
-    // could never suppress `_meta.ui`. Confirmed in the owner's own workspace
-    // 2026-09-16: one revoked `hello@mcpemails.com` row beside one active
-    // inbox. `reachableInboxSelect` appends exactly the columns the predicate
-    // in reachable-inbox.ts reads, so the projection cannot drift away from it.
-    //
-    // ── AND WHY `status` IS DELIBERATELY *NOT* FILTERED HERE ────────────────
-    // This is the one inboxes query in the server that does not, and it is a
-    // fix rather than an omission (2026-09-17). `allInboxesHideDraftEditor`
-    // falls back to the key's own rows when NONE of them is reachable, so that
-    // a stated preference survives a mailbox going unreachable — an expired
-    // OAuth token used to hand the user back a card they had switched off.
-    // Filtering `status = 'active'` in SQL would delete exactly the evidence
-    // that fallback reads, so status is decided in TypeScript, over rows this
-    // query was careful to hand over. See the long note on
-    // `allInboxesHideDraftEditor`; the `.some()` rollup in `keyReviewCardGates`
-    // is the opposite case and keeps both filters.
-    //
-    // ── THE 1000-ROW TRAP, NAMED BUT NOT CLOSED ────────────────────────────
-    // `keyReviewCardGates` narrows with an `.or()` so its result is near-empty
-    // for almost every workspace. This one has no equivalent narrowing: it asks
-    // for every live inbox the key can see, and PostgREST silently truncates a
-    // row-returning select at 1000 with no error. A workspace past 1000 live
-    // inboxes would have `.every()` evaluated over a prefix. The blast radius
-    // is one invisible iframe not mounted for a key whose first 1000 inboxes
-    // are all hidden, which is why this is documented rather than guarded; the
-    // largest production workspace on 2026-09-16 has single digits.
-    let query = db
-      .from("inboxes")
-      .select(reachableInboxSelect("draft_editor_hidden"))
-      .eq("workspace_id", apiKey.workspace_id)
-      .is("deleted_at", null)
-      // A parked inbox is outside the plan and no call can land on it; its
-      // stale default must not decide the rollup any more than a deleted one's.
-      .is("parked_at", null);
-    if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
-    const { data, error } = await query;
-    if (error) {
-      // Fail OPEN, unlike the rollout gate. This is a preference, not a
-      // permission: the safe direction when we cannot read it is to keep
-      // showing what the workspace already opted into, not to silently
-      // withdraw a feature because one query failed.
-      console.warn("[mcp-server] draft_editor_hidden_query_failed", {
-        key_id: apiKey.id,
-        error: error.message,
-      });
-      return false;
-    }
-    return allInboxesHideDraftEditor((data ?? []) as DraftEditorHiddenRow[]);
-  } catch (error) {
-    console.warn("[mcp-server] draft_editor_hidden_unavailable", {
-      key_id: apiKey.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return false;
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Draft lineage (draft-lineage.ts): the `public.draft_lineage` store.
 //
@@ -30331,9 +30173,9 @@ async function buildDraftEditorEnvelopeForWrite(
     // The per-inbox opt-out. Checked here rather than at tools/list because
     // `_meta.ui` is per TOOL: when only some of a key's inboxes are hidden the
     // tool must keep its metadata for the others, so a hidden inbox opts out by
-    // returning no envelope. The card classifies a payload without
-    // `schema_version` as not its own and renders nothing, collapsing the
-    // shell. See allReachableInboxesHideDraftEditor.
+    // returning no envelope. Since 2026-10-28 every key with manage:drafts is
+    // listed with the card (keyReviewCardGates), so a hidden workspace or inbox
+    // lands here too, and the card answers the plain result with one line.
     //
     // The two reads are issued together: the inbox flag no longer rides on the
     // resolved row (see INBOX_SELECT_COLUMNS), so this is one extra round trip
@@ -33879,50 +33721,22 @@ async function handleToolsList(
 ): Promise<JsonRpcSuccessResponse> {
   // ── MCP Apps: conditional card metadata on every card-bearing tool ───────
   //
-  // Two gates, one rule. A tool gets `_meta.ui` ONLY when this key can actually
-  // reach an inbox whose opt-in lets that tool produce something the card can
-  // render:
+  // A tool gets `_meta.ui` when this key's scopes let it call that tool
+  // (keyReviewCardGates, scope facts only since 2026-10-28):
   //
   //   • email_delete / email_organize / email_search_and_move
-  //                                    ← an inbox with bulk_review_mode='plan'
-  //   • email_compose / schedule       ← a key that can send or schedule
-  //                                      (since 2026-10-27, see below)
-  //   • draft                          ← the draft editor's workspace flag
+  //                                    ← manage:folders or delete:email
+  //   • email_compose / schedule       ← send:email or schedule:email
+  //   • draft                          ← manage:drafts
   //
-  // The reason is a hard constraint, not a preference: `_meta.ui` is per-tool,
-  // not per-call, so a host mounts and renders the card for EVERY result of a
-  // UI-bearing tool — and for an inbox that has not opted in, those tools
-  // return today's plain payload, which is not an envelope. The card's honest
-  // response to that is a skeleton it never fills, or its "this review could
-  // not be displayed" notice. Gating on the opt-in is what makes the brief "a
-  // client that has not opted in must see byte-identical behaviour to today"
-  // literally true, tools/list included.
+  // Hosts keep the tool list a chat started with (claude.ai even across new
+  // chats), so a listing gated on a SETTING never caught up with that setting.
+  // The settings (approvals, bulk review, the draft editor and its opt-outs)
+  // are read per call instead: an opted-in call returns a full card, any other
+  // returns the plain payload, which the card answers in one line
+  // (apps/mcp-app/src/plain-result.ts). Introspection and a key allowed no
+  // inbox still get no metadata.
   //
-  // The outbound half of this is a fix, not a design. Those three tools were
-  // stamped with `_meta.ui` unconditionally at module load, and because
-  // send_approval_required is set on 3 of 204 production inboxes, ~99% of all
-  // sends mounted a card with nothing in it — the stuck loading skeleton under
-  // email_compose. Bringing them under the same gate closes it.
-  //
-  // Cost is one query per session (`tools/list` runs once per host page load,
-  // Phase 0 Q5) for BOTH gates together — see keyReviewCardGates, which is
-  // deliberately a single round trip — and it fails closed: any error means no
-  // metadata, which is the pre-MCP-Apps behaviour.
-  //
-  // KNOWN GAP, reported rather than hidden: this is a per-key gate, not a
-  // per-inbox one, so a key spanning one opted-in and one opted-out inbox gets
-  // the metadata and a call against the opted-out inbox still shows the empty
-  // card. It is now a much smaller gap than it was — it needs a mixed key
-  // rather than merely any key — but it is the same gap. Fixing it properly
-  // needs the card to fall back to the text result on a non-envelope payload,
-  // which is a frontend change.
-  //
-  // DONE for the outbound half, 2026-10-27: the card now renders an ordinary
-  // send/reply/forward/schedule result as a one-line receipt and every other
-  // non-envelope result as one line (apps/mcp-app/src/plain-result.ts), so the
-  // outbound gate no longer waits on send_approval_required. It was read once
-  // per chat, and Claude and ChatGPT keep that listing, so approvals switched
-  // on mid-chat never got the card. See keyCanSendOutbound.
   // Both reads below are independent pure reads, so they share one round trip:
   // `perOperation` is started here and only taken further down.
   // The Pro gate joins them only when some Pro tool or argument exists to hide;
@@ -33935,7 +33749,14 @@ async function handleToolsList(
     // listing changes of its own; memoised, so one read per request.
     proFeatureAccess(apiKey),
   ]);
-  const uiGates = { ...baseGates, subscriptions };
+  // The automation card is a scope fact like every other gate here: any key
+  // that can call the automation tools (mcp-app-resources.ts#ReviewCardGates).
+  const uiGates = {
+    ...baseGates,
+    subscriptions,
+    automations: !INTROSPECTION_ONLY && apiKey.scopes.includes("manage:automations") &&
+      (apiKey.inbox_ids === null || apiKey.inbox_ids.length > 0),
+  };
 
   // Record whether this listing carries the draft card, so a draft result can
   // tell a chat that cached a card-less list (keyListedDraftCard). Fire and
@@ -33970,7 +33791,10 @@ async function handleToolsList(
   //
   // New Pro tools and arguments are left out until the features are visible to
   // this workspace (pro-features.ts), so customers see no change before launch.
-  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions);
+  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions)
+    // The card's own tool is listed only while the card is: without the card's
+    // metadata it would read to a model as one more plain tool.
+    .filter((tool) => tool.name !== AUTOMATION_CARD_TOOL || uiGates.automations);
   const visibleTools = withListingCardMeta(
     advertiseCrossInboxSearch(
       withProArgumentsListed(hideProFeaturesFromListing(listed, proAccess), proAccess),
@@ -34470,6 +34294,12 @@ async function runExecutor(
   if (dispatchName === "reminder_list") return await executeReminderList(rawArgs, apiKey);
   if (dispatchName === "signature_get") return await executeGetSignature(rawArgs, apiKey);
   if (dispatchName === "signature_set") return await executeSetSignature(rawArgs, apiKey);
+  if (dispatchName === AUTOMATION_CARD_TOOL) {
+    // The automation card's switch and read (mcp-app-automation.ts). Every
+    // read and write inside goes through runAutomationTool with this key's
+    // deps, so tenancy and scope are re-checked exactly as below.
+    return await runAutomationCard(rawArgs, automationDepsFor(apiKey));
+  }
   if (dispatchName.startsWith("automation_")) {
     // All nine automation actions share one handler in triage-engine.ts. The
     // scope gate above has already checked manage:automations; everything
