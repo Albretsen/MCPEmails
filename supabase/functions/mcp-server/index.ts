@@ -333,6 +333,11 @@ import {
   loginRefusedMarker,
 } from "./inbox-health.ts";
 import {
+  AUTOMATION_CARD_TOOL,
+  AUTOMATION_CARD_TOOL_DEFINITION,
+  runAutomationCard,
+} from "./mcp-app-automation.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -10394,6 +10399,20 @@ for (const definition of SUBSCRIPTION_TOOL_DEFINITIONS) {
 }
 
 // ---------------------------------------------------------------------------
+// The automation card's own tool (`card_automation`, mcp-app-automation.ts).
+//
+// Registered with NO `_meta`, like the draft-editor tools: its app-only
+// metadata is attached per key in `handleToolsList` on the card's gate, and
+// the tool is DROPPED from the listing while the card is off (and from the
+// per-operation surface always, see PER_OPERATION_UNLISTED), so a model never
+// sees it as a plain tool. Still callable, and safe to call: it is the
+// `automation` get / preview / enable / disable a key with manage:automations
+// can already call, through the same handler. Not in BILLABLE_TOOL_NAMES:
+// the person switching a rule in the card is not spending an action.
+// ---------------------------------------------------------------------------
+TOOL_REGISTRY.push({ ...AUTOMATION_CARD_TOOL_DEFINITION } as ToolDefinition);
+
+// ---------------------------------------------------------------------------
 // The per-operation surface: one tool per operation, for OpenAI clients.
 //
 // OpenAI's plugin scan (2026-10-13) flagged every consolidated tool, the
@@ -10505,6 +10524,9 @@ const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
   "automation_create",
   "automation_update",
   "automation_enable",
+  // The automation card's switch, which can enable a rule. The card itself is
+  // consolidated-only (mcp-app-resources.ts#AUTOMATION_CARD_TOOL_NAMES).
+  AUTOMATION_CARD_TOOL,
 ]);
 
 /** Every per-operation tool, listed or not, in listing order. */
@@ -33874,7 +33896,9 @@ async function handleToolsList(
     // listing changes of its own; memoised, so one read per request.
     proFeatureAccess(apiKey),
   ]);
-  const uiGates = { ...baseGates, subscriptions };
+  // The automation card rides the draft editor's gate: same rollout, same
+  // "hide the card" switches (mcp-app-resources.ts#ReviewCardGates).
+  const uiGates = { ...baseGates, subscriptions, automations: baseGates.drafts };
 
   // Record whether this listing carries the draft card, so a draft result can
   // tell a chat that cached a card-less list (keyListedDraftCard). Fire and
@@ -33909,7 +33933,10 @@ async function handleToolsList(
   //
   // New Pro tools and arguments are left out until the features are visible to
   // this workspace (pro-features.ts), so customers see no change before launch.
-  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions);
+  const listed = subscriptionToolsVisible(toolsForListing(apiKey, perOperation), subscriptions)
+    // The card's own tool is listed only while the card is: without the card's
+    // metadata it would read to a model as one more plain tool.
+    .filter((tool) => tool.name !== AUTOMATION_CARD_TOOL || uiGates.automations);
   const visibleTools = withListingCardMeta(
     advertiseCrossInboxSearch(
       withProArgumentsListed(hideProFeaturesFromListing(listed, proAccess), proAccess),
@@ -34409,6 +34436,12 @@ async function runExecutor(
   if (dispatchName === "reminder_list") return await executeReminderList(rawArgs, apiKey);
   if (dispatchName === "signature_get") return await executeGetSignature(rawArgs, apiKey);
   if (dispatchName === "signature_set") return await executeSetSignature(rawArgs, apiKey);
+  if (dispatchName === AUTOMATION_CARD_TOOL) {
+    // The automation card's switch and read (mcp-app-automation.ts). Every
+    // read and write inside goes through runAutomationTool with this key's
+    // deps, so tenancy and scope are re-checked exactly as below.
+    return await runAutomationCard(rawArgs, automationDepsFor(apiKey));
+  }
   if (dispatchName.startsWith("automation_")) {
     // All nine automation actions share one handler in triage-engine.ts. The
     // scope gate above has already checked manage:automations; everything

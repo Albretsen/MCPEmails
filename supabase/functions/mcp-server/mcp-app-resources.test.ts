@@ -40,6 +40,8 @@ import {
   modelAndAppUnmountedToolMeta,
   DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES,
   SUBSCRIPTION_CARD_TOOL_NAMES,
+  AUTOMATION_APP_TOOL_NAMES,
+  AUTOMATION_CARD_TOOL_NAMES,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -1255,5 +1257,29 @@ Deno.test("the tools/list on the wire drops the subscription tools when the work
   const tools = await realToolsListResponse();
   for (const name of SUBSCRIPTION_CARD_TOOL_NAMES) {
     assert(!tools.some((tool) => tool.name === name), `${name} is hidden with the flag off`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// The automation card
+// ---------------------------------------------------------------------------
+
+Deno.test("automation card: on its gate, consolidated surface only", () => {
+  const off = { outbound: true, bulk: true, drafts: true, automations: false };
+  const on = { ...off, automations: true };
+  for (const name of AUTOMATION_CARD_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, on), reviewCardToolMeta(), `${name} mounts the card`);
+    assertEquals(reviewCardMetaForListing(name, off), undefined, `${name} gated out`);
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} not per-operation`);
+    assert(isCardBearingToolName(name), `${name} is card-bearing`);
+  }
+  for (const name of AUTOMATION_APP_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, on), appOnlyReviewCardToolMeta(), `${name} is app-only`);
+    assertEquals(reviewCardMetaForListing(name, off), undefined, `${name} gated out`);
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} never per-operation`);
+  }
+  // The per-operation spellings of the automation tools stay card-less.
+  for (const name of ["automation_preview", "automation_get", "automation_disable"]) {
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} card-less`);
   }
 });

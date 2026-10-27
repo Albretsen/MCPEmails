@@ -98,7 +98,45 @@ export function plainResultReceipt(result: ToolResultParams | undefined): Envelo
  */
 export function plainResultNote(result: ToolResultParams | undefined): string | null {
   if (result?.isError) return "did not complete. The reply above says why.";
-  return plain(result)?.status === "pending_approval"
+  const p = plain(result);
+  // automation_read 'list': the card is listed on it because `_meta.ui` is per tool.
+  if (Array.isArray(p?.automations)) {
+    const on = p.automations.filter((a: Plain) => a?.enabled === true).length;
+    return `${p.automations.length} ${p.automations.length === 1 ? "rule" : "rules"}, ${on} on.`;
+  }
+  return p?.status === "pending_approval"
     ? "waiting for approval. The reply above has the link."
     : null;
+}
+
+/** What the automation card starts from (components/Automation.tsx). */
+export interface AutomationSeed {
+  /** The rule. Null for a dry run of an unsaved filter: matches only, no switch. */
+  id: string | null;
+  matched?: number;
+  capped?: boolean;
+  matches?: Array<{ from: string; subject: string }>;
+}
+
+/**
+ * An `automation` / `automation_read` result the automation card can show, or
+ * null. One rule (`automation.id`: create, get, update, enable, disable) or a
+ * dry run (`applied: false` + `matches`). A dry run's rule id is the one thing
+ * read from the arguments, because the published result does not repeat it;
+ * the card only ever asks the server about that id, which re-checks it.
+ */
+export function automationSeed(
+  result: ToolResultParams | undefined,
+  input: Record<string, unknown> | null,
+): AutomationSeed | null {
+  const p = plain(result);
+  if (typeof p?.automation?.id === "string") return { id: p.automation.id };
+  if (p?.applied !== false || !Array.isArray(p.matches)) return null;
+  const id = input?.automation_id;
+  return neutralizeDeep({
+    id: typeof id === "string" ? id : null,
+    matched: Number(p.matched) || 0,
+    capped: p.matched >= p.capped_at,
+    matches: p.matches.slice(0, 5),
+  });
 }

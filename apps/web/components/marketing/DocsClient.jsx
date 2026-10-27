@@ -133,11 +133,12 @@ const SCOPE_STYLES = {
 // t('tools.<name>.desc') and t('tools.<name>.params.<param>').
 //
 // WHAT THIS PAGE LEAVES OUT, and why it is a subset rather than an oversight:
-// a full-scope key gets LISTED_TOOL_COUNT tools from tools/list. The seven that
+// a full-scope key gets LISTED_TOOL_COUNT tools from tools/list. The eight that
 // are missing here (approval_review, approval_decide, approval_update,
-// approval_schedule, bulk_execute, bulk_cancel, draft_editor_save) all carry
-// _meta.ui.visibility: ["app"] and exist to drive the cards an MCP client
-// renders for a held send, a previewed bulk operation or the draft editor.
+// approval_schedule, bulk_execute, bulk_cancel, draft_editor_save,
+// card_automation) all carry _meta.ui.visibility: ["app"] and exist to drive
+// the cards an MCP client renders for a held send, a previewed bulk operation,
+// the draft editor or an automation rule.
 // draft_read and draft_editor_hide are listed to the model as well, so they are
 // documented here. public-facts.test.mjs checks this list against the server.
 // The seven are reached from their cards, not composed by hand from

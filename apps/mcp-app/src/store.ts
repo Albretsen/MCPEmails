@@ -23,7 +23,7 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
-import { plainResultNote, plainResultReceipt } from "./plain-result";
+import { type AutomationSeed, automationSeed, plainResultNote, plainResultReceipt } from "./plain-result";
 import { announceDraft } from "./draft-signal";
 import { draftShownContextLine } from "./model-context";
 
@@ -164,6 +164,8 @@ export interface CardStore {
    * (plain-result.ts#plainResultNote), or null for the generic line.
    */
   resultNote: string | null;
+  /** For a `foreign` FIRST result: an automation the card can show. */
+  automation: AutomationSeed | null;
   hostContext: HostContext;
   connected: boolean;
   connectError: string | null;
@@ -234,6 +236,7 @@ let state: CardStore = {
   priorReceipt: null,
   resultStatus: "waiting",
   resultNote: null,
+  automation: null,
   hostContext: {},
   connected: false,
   connectError: null,
@@ -1591,6 +1594,7 @@ export function wireResultHandlers(bridge: HostBridge) {
     // result must never replace a card the user is looking at, which is the
     // rule the `foreign` branch below keeps for everything else.
     let note: string | null = null;
+    let automation: AutomationSeed | null = null;
     if (!envelope && status === "foreign" && !pushAccepted) {
       const receipt = plainResultReceipt(params);
       if (receipt) {
@@ -1598,6 +1602,7 @@ export function wireResultHandlers(bridge: HostBridge) {
         status = "envelope";
       } else {
         note = plainResultNote(params);
+        automation = automationSeed(params, getState().toolInput);
       }
     }
     // Recorded before the disarm, because "did this beat the watchdog" is
@@ -1614,7 +1619,7 @@ export function wireResultHandlers(bridge: HostBridge) {
       // Unchanged and deliberately so: a foreign or malformed SECOND result
       // moves the status and leaves the card alone. App.tsx renders on
       // envelope presence, so nothing blanks.
-      setState(pushAccepted ? timing : { ...timing, resultNote: note });
+      setState(pushAccepted ? timing : { ...timing, resultNote: note, automation });
       return;
     }
 
