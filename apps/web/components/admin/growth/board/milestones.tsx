@@ -96,6 +96,7 @@ export function Milestones({ report }: { report: AchievementReport }) {
               {later.map((badge) => (
                 <li key={badge.id} title={badge.detail}>
                   <b>{badge.title}</b> {formatPercent(clampFraction(badge.progress))}
+                  {badge.daysToGo !== null && <> &middot; about {formatCount(badge.daysToGo)} days</>}
                 </li>
               ))}
             </ul>
