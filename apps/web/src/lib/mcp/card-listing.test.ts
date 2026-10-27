@@ -370,6 +370,10 @@ const SQL_ALLOWED = new Set([
   // column into the key row as before and never writes it. Keep in step with
   // the Deno twin.
   'supabase/migrations/20261027150000_tools_call_gate_card_listed.sql',
+  // The draft card rollout marks every live key's listing stale in one
+  // statement, the same write invalidateCardListings() makes per workspace.
+  // Keep in step with the Deno twin.
+  'supabase/migrations/20261027160000_draft_editor_for_everyone.sql',
 ]);
 
 /**

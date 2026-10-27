@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-27',
+    kind: 'added',
+    title: 'Edit drafts right in the chat',
+    body:
+      "Drafts your AI writes now open in an editable card in Claude and ChatGPT, where you can change the recipients, subject and text, save, or send with a few seconds to undo. You can turn the card off for one mailbox or for the whole workspace in your dashboard.",
+  },
+  {
     date: '2026-10-26',
     kind: 'fixed',
     title: 'Your AI only offers mailboxes that work',
