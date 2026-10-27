@@ -19,9 +19,10 @@ import type { GrowthDraftCardReachRow, GrowthDraftCardStatsRow } from './growth-
 
 /**
  * When the card went on for every workspace, as an ISO timestamp, or null
- * before that. Set in the rollout PR, to the minute the rollout migration ran.
+ * before that: the minute 20261027160000_draft_editor_for_everyone.sql ran in
+ * production.
  */
-export const DRAFT_CARD_RELEASE_AT: string | null = null;
+export const DRAFT_CARD_RELEASE_AT: string | null = '2026-10-27T09:57:00Z';
 
 export type Family = GrowthDraftCardStatsRow['family'];
 
