@@ -190,7 +190,7 @@
     },
     "add_to_ai": {
       "title": "Legg til MCPEmails i {client}",
-      "lead": "Åpnes i en ny fane. Dette går videre av seg selv når {client} har koblet til.",
+      "lead": "Dette går videre av seg selv når {client} har koblet til.",
       "urlLabel": "Server-URL for MCPEmails",
       "linkAfter": "Bekreft i {client}, og logg inn på MCPEmails.",
       "claudeAfter": "I Claude klikker du Legg til, så Koble til.",
