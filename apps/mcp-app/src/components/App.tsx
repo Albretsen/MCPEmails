@@ -637,6 +637,17 @@ export function App(props: { bridge: HostBridge }) {
         }),
       );
       if (seq !== callSeq.current || busyNow.current !== null) return;
+      // The draft was sent or discarded since this card last looked. Say so,
+      // with the text kept, and stop checking: left `trusted`, every later
+      // focus, scroll and sibling hint read the gone draft again, and each
+      // read is a failed call in activity_log (up to ~40 an hour from one
+      // chat, 2026-10-27). A folded card is not the current one, so it stays
+      // as it is.
+      if (!folding && isFailure(next) && next!.receipt?.error_code === "draft_not_found") {
+        setFailure({ action: "refresh", code: "draft_not_found", headline: next!.receipt?.headline ?? null, at: Date.now() });
+        setState({ draftCheck: "unverified" });
+        return;
+      }
       if (!draftStored(next) || isFailure(next)) return;
       const got = next!.draft!;
       if (got.draft_id !== asked && got.resolved_from !== asked) return;

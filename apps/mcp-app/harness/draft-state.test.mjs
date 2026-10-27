@@ -645,6 +645,27 @@ async function main() {
     await e.done();
   }
 
+  group("5d. a silent read that finds the draft gone says so once and stops asking");
+  {
+    const c = await editor({ revision: 1 });
+    c.tools.draft_read = () => failedResult("draft_not_found", "This draft was already sent.");
+    await later(c.mod.REPLAY_AGE_MS + 1000, async () => {
+      c.attend();
+      await settle();
+    });
+    expect("one read", c.calls.length, 1);
+    expect("the card says it was sent", /This draft was already sent/.test(c.text()), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
+    for (const k of [2, 3, 4]) {
+      await later(k * c.mod.REPLAY_AGE_MS + 1000, async () => {
+        c.attend();
+        await settle();
+      });
+    }
+    expect("later focus reads nothing more", c.calls.length, 1);
+    await c.done();
+  }
+
   // ── 6. Leaving fullscreen when the card ends ─────────────────────────────
 
   group("6. a card that ends while fullscreen asks for inline again");
