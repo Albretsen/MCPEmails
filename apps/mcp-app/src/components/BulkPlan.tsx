@@ -7,7 +7,7 @@ import {
   plural,
   relativeExpiry,
 } from "../format";
-import { Btn, Notice, ProviderLine, TextLink } from "./ui";
+import { Btn, FsLink, Head, Line, Notice, ProviderLine } from "./ui";
 
 export interface BulkActions {
   execute: () => void;
@@ -56,38 +56,30 @@ export function BulkPlan(props: Props) {
 
   return (
     <>
-      <div class="hdr">
-        <div class="hdr-l">
-          <span
-            class="dot"
-            data-tone={pending ? "warning" : "neutral"}
-            aria-hidden="true"
-          />
-          <b>
+      <Head
+        tone={pending ? "warning" : "neutral"}
+        title={
+          <>
             <span class="count">{count.toLocaleString(CARD_LANGUAGE)}</span>{" "}
             {plural(count, "message", "messages")} to {verb.toLowerCase()}
             {plan.scope?.destination ? ` into ${plan.scope.destination}` : ""}
-          </b>
-        </div>
-        <div class="hdr-r">
-          {fullscreen ? (
-            <TextLink onClick={() => actions.setFullscreen(false)}>
-              Collapse
-            </TextLink>
-          ) : props.canExpand && (hiddenSamples > 0 || caveats.length > 2) ? (
-            <TextLink onClick={() => actions.setFullscreen(true)}>
-              Details
-            </TextLink>
-          ) : null}
-          <span class="muted">{expiry}</span>
-        </div>
-      </div>
+          </>
+        }
+      >
+        <FsLink
+          on={fullscreen}
+          can={props.canExpand && (hiddenSamples > 0 || caveats.length > 2)}
+          set={actions.setFullscreen}
+          label="Details"
+        />
+        <span class="muted">{expiry}</span>
+      </Head>
 
-      <p class="line">
+      <Line>
         {plan.inbox?.email_address ?? "unknown"} ·{" "}
         {plan.scope?.description || "(no description)"}
         {plan.scope?.folder ? ` · in ${plan.scope.folder}` : ""}
-      </p>
+      </Line>
 
       {shown.length > 0 && (
         <>
@@ -100,13 +92,13 @@ export function BulkPlan(props: Props) {
               </li>
             ))}
           </ul>
-          <p class="line">
+          <Line>
             Sample of what matches
             {plan.sample_truncated ? ` (${shown.length} of ${count})` : ""}
             {hiddenSamples > 0
               ? `. ${hiddenSamples} more in the sample, open Details for the rest.`
               : ""}
-          </p>
+          </Line>
         </>
       )}
 

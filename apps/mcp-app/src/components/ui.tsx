@@ -94,6 +94,55 @@ export function TextLink(props: {
   );
 }
 
+/**
+ * The header row every one-line card starts with: a status dot and the bold
+ * headline on the left, then `extra` beside them. `children` go in the right
+ * half, `.hdr-r`, which is left out when there are none (null or false).
+ * Shared so the markup is written once in the bundle.
+ */
+export function Head(props: {
+  tone: string;
+  title: ComponentChildren;
+  extra?: ComponentChildren;
+  children?: ComponentChildren;
+}) {
+  return (
+    <div class="hdr">
+      <div class="hdr-l">
+        <span class="dot" data-tone={props.tone} aria-hidden="true" />
+        <b>{props.title}</b>
+        {props.extra}
+      </div>
+      {props.children ? <div class="hdr-r">{props.children}</div> : null}
+    </div>
+  );
+}
+
+/** A `.line` paragraph: the small secondary text under a header. */
+export function Line(props: { children: ComponentChildren }) {
+  return <p class="line">{props.children}</p>;
+}
+
+/**
+ * The header's fullscreen link: "Collapse" in fullscreen, otherwise `label`
+ * (Expand, Details) when `can` says the card has more to show.
+ */
+export function FsLink(props: {
+  on: boolean;
+  can: boolean;
+  set: (on: boolean) => void;
+  label: string;
+  title?: string;
+}) {
+  return props.on ? (
+    <TextLink onClick={() => props.set(false)}>Collapse</TextLink>
+  ) : props.can ? (
+    <TextLink onClick={() => props.set(true)} title={props.title}>
+      {props.label}
+    </TextLink>
+  ) : null;
+}
+
 /** How long a one-word answer ("Copied", "Up to date") stays on a link. */
 export const FLASH_MS = 2000;
 

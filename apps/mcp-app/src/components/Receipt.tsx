@@ -1,6 +1,6 @@
 import type { Receipt as ReceiptData } from "../contract";
 import { CARD_LANGUAGE, receiptDetail } from "../format";
-import { TextLink } from "./ui";
+import { Head, Line, TextLink } from "./ui";
 
 type Tone = "success" | "danger" | "warning" | "neutral";
 
@@ -83,18 +83,10 @@ export function Receipt(props: {
 
   return (
     <>
-      <div class="hdr">
-        <div class="hdr-l">
-          <span class="dot" data-tone={tone} aria-hidden="true" />
-          <b>{headline}</b>
-        </div>
-        {link && (
-          <div class="hdr-r">
-            <TextLink onClick={props.onOpenDashboard}>{link}</TextLink>
-          </div>
-        )}
-      </div>
-      {detail && <p class="line">{detail}</p>}
+      <Head tone={tone} title={headline}>
+        {link && <TextLink onClick={props.onOpenDashboard}>{link}</TextLink>}
+      </Head>
+      {detail && <Line>{detail}</Line>}
     </>
   );
 }

@@ -11,7 +11,10 @@ import {
   AutoTextarea,
   Btn,
   Fields,
+  FsLink,
+  Head,
   HtmlBody,
+  Line,
   Notice,
   ProviderLine,
   Segmented,
@@ -116,40 +119,28 @@ export function OutboundReview(props: Props) {
         : null;
 
   const header = (
-    <div class="hdr">
-      <div class="hdr-l">
-        <span
-          class="dot"
-          data-tone={pending ? "warning" : "neutral"}
-          aria-hidden="true"
-        />
-        <b>{operationLabel(o.operation)}</b>
-        <span class="muted">{identityLine(o)}</span>
-      </div>
-      <div class="hdr-r">
-        {fullscreen ? (
-          <TextLink onClick={() => actions.setFullscreen(false)}>
-            Collapse
-          </TextLink>
-        ) : props.canExpand ? (
-          <TextLink
-            onClick={() => actions.setFullscreen(true)}
-            title="Full message, edit and send later"
-          >
-            Details
-          </TextLink>
-        ) : null}
-        <span class="muted">{expiry}</span>
-      </div>
-    </div>
+    <Head
+      tone={pending ? "warning" : "neutral"}
+      title={operationLabel(o.operation)}
+      extra={<span class="muted">{identityLine(o)}</span>}
+    >
+      <FsLink
+        on={fullscreen}
+        can={props.canExpand}
+        set={actions.setFullscreen}
+        label="Details"
+        title="Full message, edit and send later"
+      />
+      <span class="muted">{expiry}</span>
+    </Head>
   );
 
   const primaryActions = (
     <>
-      <p class="line">
+      <Line>
         Approval happens on mcpemails.com in your own browser. No agent,
         including this one, can approve a send.
-      </p>
+      </Line>
       <div class="acts">
         <Btn
           variant="danger"
@@ -182,7 +173,7 @@ export function OutboundReview(props: Props) {
   const shownAttachments = attachments.slice(0, fullscreen ? 8 : 3);
   const attachmentLine =
     attachments.length > 0 ? (
-      <p class="line">
+      <Line>
         {attachments.length} attachment{attachments.length === 1 ? "" : "s"}:{" "}
         {shownAttachments
           .map((a) => `${a.filename || "(unnamed)"} ${formatBytes(a.size_bytes)}`)
@@ -190,7 +181,7 @@ export function OutboundReview(props: Props) {
         {attachments.length > shownAttachments.length
           ? `, +${attachments.length - shownAttachments.length} more`
           : ""}
-      </p>
+      </Line>
     ) : null;
 
   // ---- inline -------------------------------------------------------------
@@ -215,9 +206,9 @@ export function OutboundReview(props: Props) {
         {attachmentLine}
         {providerBlock}
         {o.send_at && (
-          <p class="line">
+          <Line>
             Scheduled to send {formatDateTime(o.send_at)} once approved.
-          </p>
+          </Line>
         )}
         {blockedReason && <Notice tone="warning">{blockedReason}</Notice>}
         {props.error && <Notice tone="danger">{props.error}</Notice>}
@@ -271,11 +262,11 @@ export function OutboundReview(props: Props) {
       )}
 
       {hasHtml && (
-        <p class="line">
+        <Line>
           <TextLink onClick={() => setShowHtml(!showHtml)}>
             {showHtml ? "Show plain text" : "Show original formatting"}
           </TextLink>
-        </p>
+        </Line>
       )}
 
       {o.body?.truncated && (
@@ -288,10 +279,10 @@ export function OutboundReview(props: Props) {
       )}
 
       {o.signature?.will_append && (
-        <p class="line">
+        <Line>
           Signature appended at send time:{" "}
           {o.signature.preview_text || "(signature)"}
-        </p>
+        </Line>
       )}
 
       {providerBlock}
@@ -333,15 +324,15 @@ export function OutboundReview(props: Props) {
             onInput={setBodyText}
           />
           {hasHtml && (
-            <p class="line">
+            <Line>
               Saving replaces the plain-text body. The formatted version is
               regenerated from it.
-            </p>
+            </Line>
           )}
-          <p class="line">
+          <Line>
             Saving does not send anything. The message still needs the browser
             approval step.
-          </p>
+          </Line>
           <div class="acts">
             <Btn
               variant="quiet"
@@ -392,10 +383,10 @@ export function OutboundReview(props: Props) {
               />
             </span>
           </div>
-          <p class="line">
+          <Line>
             Scheduling does not send anything either. The message is queued for
             that time and still needs the browser approval step.
-          </p>
+          </Line>
           <div class="acts">
             <Btn variant="quiet" onClick={() => setPanel("none")}>
               Cancel
@@ -416,10 +407,10 @@ export function OutboundReview(props: Props) {
       )}
 
       {primaryActions}
-      <p class="line">
+      <Line>
         {expiry}
         {o.approval_id ? ` · ${o.approval_id}` : ""}
-      </p>
+      </Line>
     </>
   );
 }
