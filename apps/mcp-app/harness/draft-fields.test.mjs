@@ -914,14 +914,14 @@ async function main() {
     await c.done();
   }
 
-  group("F2. Attach file: a chip marked not saved, sent as base64 on Save");
+  group("F2. Attach file: a dashed chip with its size, sent as base64 on Save");
   {
     const c = await editor({ attachments: [] });
     const link = c.btn(/^Attach file$/);
     expect("Attach file is offered on a draft with no files", !!link, true);
     pickFiles(c, [new c.w.File(["hello"], "hi.txt", { type: "text/plain" })]);
     await after(80);
-    expectJson("the new chip", fileChips(c), [{ name: "hi.txt", size: "5 bytes, not saved", removed: false, added: true }]);
+    expectJson("the new chip", fileChips(c), [{ name: "hi.txt", size: "5 bytes", removed: false, added: true }]);
     expect("an unsaved change", unsaved(c), true);
     let saved = null;
     c.tools.draft_editor_save = (args) => {
@@ -949,6 +949,21 @@ async function main() {
     await settle();
     expectJson("an added file is dropped by its remove button", fileChips(c), []);
     expect("nothing unsaved", unsaved(c), false);
+    await c.done();
+  }
+
+  group("F3b. the too-large note goes once the files that were attached are saved");
+  {
+    const c = await editor({ attachments: [] });
+    const big = new c.w.File([new Uint8Array(c.mod.CARD_UPLOAD_MAX_BYTES + 1)], "big.bin");
+    pickFiles(c, [big, new c.w.File(["ok"], "ok.txt", { type: "text/plain" })]);
+    await after(120);
+    expect("the note is shown", !!c.root.querySelector("#d-files-note"), true);
+    c.tools.draft_editor_save = () => draftResult({ attachments: [{ filename: "ok.txt", size_bytes: 2, mime_type: "text/plain" }] });
+    c.press(c.btn(/^Save$/));
+    await settle();
+    await settle();
+    expect("after Save it is gone", !!c.root.querySelector("#d-files-note"), false);
     await c.done();
   }
 
