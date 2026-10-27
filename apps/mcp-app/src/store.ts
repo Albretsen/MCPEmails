@@ -23,7 +23,7 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
-import { plainResultNote, plainResultReceipt } from "./plain-result";
+import { plainResultFailure, plainResultNote, plainResultReceipt } from "./plain-result";
 import { announceDraft } from "./draft-signal";
 import { draftShownContextLine } from "./model-context";
 
@@ -1592,7 +1592,7 @@ export function wireResultHandlers(bridge: HostBridge) {
     // rule the `foreign` branch below keeps for everything else.
     let note: string | null = null;
     if (!envelope && status === "foreign" && !pushAccepted) {
-      const receipt = plainResultReceipt(params);
+      const receipt = plainResultReceipt(params) ?? plainResultFailure(params);
       if (receipt) {
         envelope = receipt;
         status = "envelope";
