@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-27',
+    kind: 'added',
+    title: 'Undo a bulk move or delete from the chat',
+    body:
+      "After your AI moves or deletes a batch of emails, Claude now shows a card with what changed, a few of the messages, and an Undo button that puts them back where they were. Undo works for 24 hours on mailboxes connected with IMAP.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'improved',
     title: 'Review settings show their card in the chat right away',
     body:

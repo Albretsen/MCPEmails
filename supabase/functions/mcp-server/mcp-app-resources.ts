@@ -485,6 +485,8 @@ export const DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES: readonly string[] = [
  * that asymmetry is gone.)
  *
  * These emit a plan only when the target inbox has `bulk_review_mode = 'plan'`.
+ * Every bulk move/delete result also carries the result card with Undo
+ * (mcp-app-undo.ts) unless the workspace set `bulk_undo_hidden`.
  *
  * `email_search_and_move` is here because it is the same handler under a second
  * name: since 2026-09-09 it is advertised on its own as well as reachable as

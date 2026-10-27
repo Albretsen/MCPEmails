@@ -70,7 +70,7 @@ import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { SentMessage } from "./SentMessage";
 import { SubscriptionPlan } from "./SubscriptionPlan";
-import { Head, Line, Loading, Notice, TextLink } from "./ui";
+import { Btn, Head, Line, Loading, Notice, TextLink } from "./ui";
 
 /**
  * `ui/open-link` requires an absolute URL, so the server sends one: contract §4
@@ -1728,12 +1728,47 @@ export function App(props: { bridge: HostBridge }) {
           />
         );
       }
+      // A bulk move/delete result (mcp-server/mcp-app-undo.ts): the receipt,
+      // Undo while the server offers it, and the sample folded underneath.
+      // Undo runs the server-held undo plan through bulk_execute; its answer
+      // replaces this envelope and carries no `undo`, so the button goes away.
+      const undo = envelope.undo;
+      const rows = envelope.bulk_sample ?? [];
       return (
-        <Receipt
-          receipt={envelope.receipt}
-          busy={busy}
-          onOpenDashboard={() => openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)}
-        />
+        <>
+          <Receipt
+            receipt={envelope.receipt}
+            busy={busy}
+            onOpenDashboard={() => openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)}
+          >
+            {typeof undo?.undo_id === "string" && (
+              <Btn
+                busy={busy === "undo"}
+                onClick={() =>
+                  run("undo", "bulk_execute", { plan_id: undo.undo_id }, (a) =>
+                    a?.receipt?.headline ? `The user pressed Undo on the bulk result: ${a.receipt.headline}` : null)}
+              >
+                {busy === "undo" ? "Undoing…" : "Undo"}
+              </Btn>
+            )}
+          </Receipt>
+          {rows.length > 0 && (
+            <details>
+              <summary class="line">
+                Show {rows.length < (envelope.receipt.affected_count ?? 0) ? `${rows.length} of them` : "them"}
+              </summary>
+              <ul class="samples">
+                {rows.map((s, i) => (
+                  <li key={i}>
+                    <span class="s-from">{s.from || "(unknown sender)"}</span>
+                    <span class="s-subject">{s.subject || "(no subject)"}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {error && <Notice tone="danger">{error}</Notice>}
+        </>
       );
     }
 

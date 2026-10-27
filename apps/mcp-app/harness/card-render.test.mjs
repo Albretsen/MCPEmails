@@ -1052,6 +1052,89 @@ async function main() {
     await c.done();
   }
 
+  // ---- the bulk result card with Undo (mcp-server/mcp-app-undo.ts) ---------
+
+  const UNDO_ID = "aaaaaaaa-aaaa-4aaa-8aaa-000000000001";
+  const bulkMoved = {
+    succeeded: 3,
+    failed: 0,
+    operation: "email_search_and_move",
+    results: [],
+    schema_version: "review-card-v1",
+    card: "receipt",
+    state: "executed",
+    receipt: {
+      outcome: "executed",
+      headline: "Moved 3 messages from Inbox to Archive",
+      detail: "",
+      affected_count: 3,
+      dashboard_url: "https://app.example/dashboard",
+    },
+    undo: { undo_id: UNDO_ID, expires_at: "2026-10-28T12:00:00Z" },
+  };
+  const sampleMeta = {
+    "mcpemails/bulk_sample": [
+      { from: "news@example.com", subject: "Weekly digest" },
+      { from: "shop@example.com", subject: "Your receipt" },
+    ],
+  };
+
+  group("a bulk move shows one line, an Undo button and the sample folded");
+  {
+    const c = await boot({
+      onToolCall: (tool, args) =>
+        tool === "bulk_execute" && args.plan_id === UNDO_ID
+          ? {
+            result: {
+              content: [{ type: "text", text: "Undone." }],
+              structuredContent: {
+                schema_version: "review-card-v1",
+                card: "receipt",
+                state: "executed",
+                receipt: {
+                  outcome: "executed",
+                  headline: "Undone. 3 messages moved back to Inbox.",
+                  detail: "",
+                  affected_count: 3,
+                },
+              },
+            },
+          }
+          : null,
+    });
+    await c.settled();
+    c.deliver(toolResult(bulkMoved, JSON.stringify({ succeeded: 3 }), sampleMeta));
+    await settle();
+    expect("headline", c.text().startsWith("Moved 3 messages from Inbox to Archive"), true);
+    expect("Undo button", !!c.button("Undo"), true);
+    expect("sample folded behind Show", c.text().includes("Show 2 of them"), true);
+    expect("sample rows present", c.text().includes("Weekly digest"), true);
+    c.button("Undo").click();
+    await after(50);
+    expect("calls bulk_execute with the undo id only", JSON.stringify(c.calls.map((x) => [x.name, x.args])), JSON.stringify([["bulk_execute", { plan_id: UNDO_ID }]]));
+    expect("says Undone", c.text().startsWith("Undone. 3 messages moved back to Inbox."), true);
+    expect("the button is gone", !!c.button("Undo"), false);
+    await c.done();
+  }
+
+  group("a bulk result without an undo id has no button, and a flag result says done");
+  {
+    const c = await boot();
+    await c.settled();
+    const { undo: _u, ...noUndo } = bulkMoved;
+    c.deliver(toolResult(noUndo, "{}"));
+    await settle();
+    expect("no button", !!c.button("Undo"), false);
+    expect("no sample without _meta", c.text().includes("Show"), false);
+    await c.done();
+    const f = await boot();
+    await f.settled();
+    f.deliver(toolResult({ succeeded: 2, failed: 0, operation: "email_flag", results: [] }, "{}"));
+    await settle();
+    expect("one line", f.text(), "MCPEmails: done. The reply above has the details.");
+    await f.done();
+  }
+
   // ---- report ---------------------------------------------------------------
 
   let failed = 0;

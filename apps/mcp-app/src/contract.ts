@@ -35,6 +35,9 @@ export const DEFERRED_BODY_SCHEMA_VERSION = "review-card-v2";
  */
 export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
 
+/** Result `_meta` key: up to five `{ from, subject }` rows under a bulk result card. */
+export const BULK_SAMPLE_META_KEY = "mcpemails/bulk_sample";
+
 export type CardKind =
   | "outbound_review"
   | "bulk_plan"
@@ -481,6 +484,14 @@ export interface Envelope {
    */
   draft?: DraftEditorData;
   receipt?: Receipt;
+  /**
+   * On a bulk move/delete receipt (mcp-server/mcp-app-undo.ts): present means
+   * the card offers Undo, which calls `bulk_undo` with this id. Every answer
+   * that has nothing left to undo comes without it, so the button goes away.
+   */
+  undo?: { undo_id: string; expires_at?: string };
+  /** CLIENT-SIDE: the result `_meta` sample rows, grafted on by store.ts#admit. */
+  bulk_sample?: Array<{ from?: string; subject?: string }>;
   /**
    * Not an envelope field: a published key of the `draft{action:"send"}`
    * payload, which §8 merges with the receipt envelope at the top level, so it
