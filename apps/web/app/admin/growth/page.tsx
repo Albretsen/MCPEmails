@@ -80,6 +80,11 @@
  * against the window before the release and against the clients that draw no
  * card. It reads draft_events, which is not purged with activity_log.
  *
+ * THE ONBOARDING BAND (2026-10-27) is the read-out for the onb_flow x
+ * onb_convert test: whether it is switched on, whether assignment is sound,
+ * whether either arm is doing harm, and the arms side by side until the
+ * pre-registered read-out decides.
+ *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
  *   - A jump nav. It was a patch on a page that was too long and too uniform.
  *   - A cumulative-signups curve under a signups bar chart, which restated it.
@@ -99,6 +104,7 @@ import {
   GrowthSection,
   MilestoneSection,
   MoneySection,
+  OnboardingSection,
   RelaySection,
   StickinessSection,
   TablesSection,
@@ -157,6 +163,7 @@ const BANDS = [
   { id: 'money', title: 'Money', question: 'what have we earned' },
   { id: 'usage-cap', title: 'Usage cap', question: 'who is near the wall' },
   { id: 'draft-card', title: 'Draft card', question: 'is it used, and is it worth keeping' },
+  { id: 'onboarding', title: 'Onboarding', question: 'does the new setup help, and is the test sound' },
   { id: 'milestones', title: 'Milestones', question: 'how far, and how fast' },
   { id: 'growth', title: 'Growth', question: 'who is arriving' },
   { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
@@ -273,6 +280,20 @@ export default async function GrowthBoardPage({
             }
           >
             <DraftCardSection days={days} />
+          </Suspense>
+
+          <Band id="onboarding" title="Onboarding" question="does the new setup help, and is the test sound" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+              </>
+            }
+          >
+            <OnboardingSection days={days} />
           </Suspense>
 
           <Band id="milestones" title="Milestones" question="how far, and how fast" />

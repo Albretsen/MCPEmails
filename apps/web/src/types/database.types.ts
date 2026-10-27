@@ -5778,6 +5778,7 @@ export type Database = {
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
+          bulk_undo_hidden: boolean
           card_diagnostics: boolean
           chat_checkout_link_enabled: boolean
           chat_send_confirm_enabled: boolean
@@ -5842,6 +5843,7 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
           chat_send_confirm_enabled?: boolean
@@ -5906,6 +5908,7 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
           chat_send_confirm_enabled?: boolean
@@ -6527,6 +6530,55 @@ export type Database = {
           abandoned: number
           connected: number
           provider: string
+        }[]
+      }
+      growth_onboarding_arms: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          assigned: number
+          completed: number
+          connect_failed_ws: number
+          connect_ws: number
+          convert: string
+          draft_3d: number
+          first_assigned_at: string
+          flow: string
+          habit_7d: number
+          inbox_1d: number
+          mature_1d: number
+          mature_30d: number
+          mature_3d: number
+          mature_7d: number
+          paid_30d: number
+          paid_any: number
+          value_1d: number
+        }[]
+      }
+      growth_onboarding_daily: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          convert_off: number
+          convert_on: number
+          created: number
+          day: string
+          flow_control: number
+          flow_new: number
+          mature_1d: number
+          value_1d: number
+        }[]
+      }
+      growth_onboarding_steps: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          category: string
+          convert: string
+          flow: string
+          stage: string
+          workspaces: number
         }[]
       }
       growth_people_counts: {

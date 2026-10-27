@@ -637,3 +637,45 @@ export type GrowthDraftCardReachRow = {
   hidden_inboxes: number;
   enabled_inboxes: number;
 };
+
+/** growth_onboarding_arms: one arm of the onb_flow x onb_convert test, enrolled customers only. */
+export type GrowthOnboardingArmRow = {
+  flow: string;
+  convert: string;
+  assigned: number;
+  first_assigned_at: string | null;
+  mature_1d: number;
+  inbox_1d: number;
+  value_1d: number;
+  mature_3d: number;
+  draft_3d: number;
+  mature_7d: number;
+  habit_7d: number;
+  mature_30d: number;
+  paid_30d: number;
+  paid_any: number;
+  connect_ws: number;
+  connect_failed_ws: number;
+  completed: number;
+};
+
+/** growth_onboarding_steps: category null is the stage's total over every category. */
+export type GrowthOnboardingStepRow = {
+  flow: string;
+  convert: string;
+  stage: string;
+  category: string | null;
+  workspaces: number;
+};
+
+/** growth_onboarding_daily: new customer workspaces per UTC day and how many were enrolled. */
+export type GrowthOnboardingDayRow = {
+  day: string;
+  created: number;
+  flow_control: number;
+  flow_new: number;
+  convert_off: number;
+  convert_on: number;
+  mature_1d: number;
+  value_1d: number;
+};
