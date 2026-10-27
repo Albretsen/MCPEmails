@@ -19836,7 +19836,8 @@ async function inboxWantsChatConfirmation(inboxId: string): Promise<boolean> {
 
 /**
  * `workspaces.chat_send_confirm_enabled`: OUR rollout gate for "Confirm in
- * chat", internal only for now (seeded by 20261023200000). The dashboard and
+ * chat", on for every workspace since 20261027190000 (seeded for our own by
+ * 20261023200000) and kept as a kill switch. The dashboard and
  * the PATCH route only offer 'chat' where it is on; this is the server half,
  * so a mode set some other way does nothing until the rollout reaches it.
  * Read only for an inbox already in 'chat' mode. Fails to "off" on an error,

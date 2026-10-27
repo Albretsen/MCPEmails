@@ -46,6 +46,13 @@ export const ENTRIES = [
   {
     date: '2026-10-27',
     kind: 'added',
+    title: 'Have your AI ask before it sends',
+    body:
+      "A new review setting for each mailbox, Ask in the chat first, makes your AI show you the email in the conversation and wait for your yes before it sends. Open a mailbox on the Inboxes page and pick it under Review before sending.",
+  },
+  {
+    date: '2026-10-27',
+    kind: 'added',
     title: 'Edit drafts right in the chat',
     body:
       "Drafts your AI writes now open in an editable card in Claude and ChatGPT, where you can change the recipients, subject and text, save, or send with a few seconds to undo. You can turn the card off for one mailbox or for the whole workspace in your dashboard.",
