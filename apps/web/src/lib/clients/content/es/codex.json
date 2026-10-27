@@ -10,7 +10,8 @@
     "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
     "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
-    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
     "title": "Conecta el correo a OpenAI Codex: servidor MCP",
@@ -53,6 +54,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "App de escritorio: si Authenticate no aparece nunca",
+      "p": "A fecha de 27 de octubre de 2026, la app de escritorio no siempre inicia sesión en un servidor que añades a mano (en las versiones actuales, en <b>Plugins</b>, <b>Add</b>, <b>Add MCP server</b>). El formulario no tiene ningún paso de inicio de sesión y, en algunas versiones, no aparece el botón <b>Authenticate</b> tras el reinicio o las herramientas nunca llegan a un chat. OpenAI tiene informes abiertos sobre esto, así que puede que ya esté resuelto cuando leas esto. Mientras tanto, inicia sesión desde una terminal: instala la CLI con <code>npm i -g @openai/codex</code> si no la tienes, ejecuta <code>codex mcp login mcpemails</code> (usa el nombre que escribiste en el campo <b>Name</b>), aprueba el acceso en el navegador y después reinicia la app y abre un chat nuevo. La app y la CLI comparten la misma configuración, así que la app usa ese inicio de sesión."
+    },
     {
       "h": "Fíjate en qué tarjeta abre la pantalla de consentimiento",
       "p": "Codex pide los permisos que indica nuestro desafío 401, que es <code>read:email</code>, así que en algunos registros la pantalla de consentimiento se abre en <b>Solo lectura</b>. Para clasificar correo está bien. Si quieres que Codex redacte o envíe, elige <b>Estándar</b> o <b>Acceso completo</b> antes de hacer clic en Permitir acceso. Para ampliarlo más adelante, vuelve a ejecutar <code>codex mcp login mcpemails</code> y elige la tarjeta más amplia, o indica los permisos con <code>--scopes</code>, por ejemplo <code>--scopes read:email,search:email,manage:drafts</code>."

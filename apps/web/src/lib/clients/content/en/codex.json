@@ -10,7 +10,8 @@
     "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
     "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
-    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
     "title": "Connect Email to OpenAI Codex: MCP Server Setup",
@@ -53,6 +54,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "Desktop app: if Authenticate never shows up",
+      "p": "As of 27 October 2026, the desktop app does not always sign in to a server you add by hand (in current builds under <b>Plugins</b>, <b>Add</b>, <b>Add MCP server</b>). The form has no sign-in step, and on some builds no <b>Authenticate</b> button appears after the restart, or the tools never reach a chat. OpenAI has open reports about this, so it may be fixed by the time you read this. Until then, sign in from a terminal: install the CLI with <code>npm i -g @openai/codex</code> if you do not have it, run <code>codex mcp login mcpemails</code> (use the name you typed in the <b>Name</b> field), approve access in the browser, then restart the app and start a new chat. The app and the CLI share one config, so the app uses that sign-in."
+    },
     {
       "h": "Check which card the consent screen opens on",
       "p": "Codex asks for the scopes in our 401 challenge, which is <code>read:email</code>, so on some registrations the consent screen opens on <b>Read-only</b>. That is fine for triage. If you want Codex to draft or send, pick <b>Standard</b> or <b>Full access</b> before you click Allow. To widen it later, run <code>codex mcp login mcpemails</code> again and choose the wider card, or name the scopes with <code>--scopes</code>, for example <code>--scopes read:email,search:email,manage:drafts</code>."
