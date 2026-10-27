@@ -18,7 +18,7 @@ import { isSsoRequiredError } from '@/lib/sso/enforcement';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
-export function SignupApp({ redirectTo = null, connectProvider = null, connectClient = null }) {
+export function SignupApp({ redirectTo = null, connectProvider = null, connectClient = null, authorizing = null }) {
   const t = useTranslations('auth');
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
@@ -278,10 +278,13 @@ export function SignupApp({ redirectTo = null, connectProvider = null, connectCl
     <div className="auth-shell">
       <ThemeBtn />
       <div className="auth-wrap">
-        <a className="auth-back" href="/">
-          <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          {t('shared.backToHome')}
-        </a>
+        {/* Inside an AI app's connect flow, Back to home would drop the request. */}
+        {!authorizing && (
+          <a className="auth-back" href="/">
+            <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
+            {t('shared.backToHome')}
+          </a>
+        )}
 
         <div className="auth-brand">
           <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" />
@@ -292,6 +295,11 @@ export function SignupApp({ redirectTo = null, connectProvider = null, connectCl
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
             <h1>{t('signup.title')}</h1>
+            {authorizing && (
+              <p className="sub" data-testid="signup-authorize-lead">
+                {authorizing.app ? t('signup.authorizeLead', { app: authorizing.app }) : t('signup.authorizeLeadAny')}
+              </p>
+            )}
             {socialButtons}
             {serverError && (
               <div

@@ -19,9 +19,10 @@ import '../../styles/onboarding-inbox.css';
  *
  * Props: `setup` from app/dashboard/[[...section]]/page.js
  * ({ variant, initialClient, provider, requestedStep, chatReturn, userEmail }),
- * plus mcpUrl, flowB and onClose(href?).
+ * plus mcpUrl, flowB, onClose(href?) and onMounted() (called once the dialog is
+ * on screen, so the dashboard can drop its placeholder scrim).
  */
-export default function SetupModal({ setup, mcpUrl, flowB = null, onClose }) {
+export default function SetupModal({ setup, mcpUrl, flowB = null, onClose, onMounted }) {
   // One status read, started when the dialog mounts; never rejects.
   const [statusPromise] = useState(() => fetchOnboardingStatus().catch((error) => {
     console.error('[onboarding] initial status failed', error instanceof Error ? error.message : String(error));
@@ -61,6 +62,7 @@ export default function SetupModal({ setup, mcpUrl, flowB = null, onClose }) {
         flowB={flowB}
         chatReturn={setup.chatReturn}
         onClose={onClose}
+        onMounted={onMounted}
       />
     </OnboardingLocaleProvider>,
     host,

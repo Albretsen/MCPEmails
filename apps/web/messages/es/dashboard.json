@@ -179,6 +179,7 @@
     "pro": "Business",
     "recentActivityTitle": "Actividad reciente",
     "recentActivitySub": "Llamadas a herramientas MCP en vivo",
+    "recentActivityAllInboxes": "todas las bandejas",
     "noActivityTitle": "Aún no hay actividad",
     "noActivityDesc": "Las llamadas a herramientas MCP aparecerán aquí en tiempo real.",
     "noCallData": "No hay datos de llamadas para este período."

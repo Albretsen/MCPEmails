@@ -8,6 +8,7 @@ import {
   clientIntentShape,
   connectIntentSlugShape,
 } from '@/lib/connect/intent-carry.mjs';
+import { authorizeSignupContext } from '@/lib/onboarding/clients.mjs';
 
 export const metadata = {
   title: 'Create your account',
@@ -41,5 +42,9 @@ export default async function SignupPage({ searchParams }) {
   // into the first run; the /onboarding chip starts from it.
   const connectClient = clientIntentShape(params?.[CLIENT_INTENT_PARAM]);
 
-  return <SignupApp redirectTo={safeRedirect} connectProvider={connectProvider} connectClient={connectClient} />;
+  // Sent here by an AI app's connect flow (/authorize): say which app, from
+  // its OAuth redirect_uri or client_id, so the page is not a dead end.
+  const authorizing = authorizeSignupContext(safeRedirect);
+
+  return <SignupApp redirectTo={safeRedirect} connectProvider={connectProvider} connectClient={connectClient} authorizing={authorizing} />;
 }

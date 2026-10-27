@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-27',
+    kind: 'improved',
+    title: 'Signing up from Claude or ChatGPT says where you came from',
+    body:
+      "When you connect MCPEmails from Claude or ChatGPT and create your account on the way, the sign-up page now names the app you are connecting and keeps you in that flow. The dashboard's recent activity also shows all inboxes for calls that cover every inbox, instead of an unknown inbox.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'added',
     title: 'Undo a bulk move or delete from the chat',
     body:

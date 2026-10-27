@@ -179,6 +179,7 @@
     "pro": "Business",
     "recentActivityTitle": "Recent activity",
     "recentActivitySub": "Live MCP tool calls",
+    "recentActivityAllInboxes": "all inboxes",
     "noActivityTitle": "No activity yet",
     "noActivityDesc": "MCP tool calls will appear here in real time.",
     "noCallData": "No call data for this period."

@@ -183,6 +183,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // been closed. Closing drops its params and re-reads the server props, so
   // an inbox connected inside it shows up here.
   const [setupOpen, setSetupOpen] = useState(Boolean(setup));
+  // The dialog's code loads after the page paints. Until it has mounted, a
+  // server-rendered scrim covers the dashboard so it does not flash first.
+  const [setupMounted, setSetupMounted] = useState(false);
+  const onSetupMounted = useCallback(() => setSetupMounted(true), []);
   const closeSetup = useCallback((href) => {
     setSetupOpen(false);
     if (typeof href === 'string') {
@@ -1354,7 +1358,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
-      {setupOpen && setup && <SetupModal setup={setup} mcpUrl={mcpUrl} flowB={serverWorkspace?.flowB ?? null} onClose={closeSetup} />}
+      {setupOpen && setup && !setupMounted && <div className="scrim scrim-setup" aria-hidden="true" data-testid="setup-pending" />}
+      {setupOpen && setup && <SetupModal setup={setup} mcpUrl={mcpUrl} flowB={serverWorkspace?.flowB ?? null} onClose={closeSetup} onMounted={onSetupMounted} />}
       <Sidebar
         route={route}
         setRoute={setRoute}

@@ -179,6 +179,7 @@
     "pro": "Business",
     "recentActivityTitle": "近期活动",
     "recentActivitySub": "实时 MCP 工具调用",
+    "recentActivityAllInboxes": "所有收件箱",
     "noActivityTitle": "暂无活动",
     "noActivityDesc": "MCP 工具调用将在此处实时显示。",
     "noCallData": "此期间没有调用数据。"

@@ -124,6 +124,24 @@ export function chipClientFromUrl(value) {
 }
 
 /**
+ * The signup page's context when an AI app's connect flow sent the visitor
+ * there (`/signup?redirect=/authorize?...`): { app } with the app's display
+ * name from the OAuth redirect_uri or client_id, or app null when unknown.
+ * Null when `redirect` is not an /authorize URL.
+ */
+export function authorizeSignupContext(redirect) {
+  if (typeof redirect !== 'string' || !redirect.startsWith('/authorize')) return null;
+  let params;
+  try {
+    params = new URL(redirect, 'https://mcpemails.com').searchParams;
+  } catch {
+    return { app: null };
+  }
+  const id = chipClientFromUrl(params.get('redirect_uri') ?? '') ?? chipClientFromUrl(params.get('client_id') ?? '');
+  return { app: id ? chipClientLabel(id) : null };
+}
+
+/**
  * The chip id for an MCP `initialize` clientInfo.name, as stored in
  * `mcp_client_capabilities.client_name` ("claude-ai", "Claude Code",
  * "openai-mcp", "Visual Studio Code", "cursor-vscode", ...). Null when it names

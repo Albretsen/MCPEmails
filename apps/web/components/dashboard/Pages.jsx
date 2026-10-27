@@ -1419,7 +1419,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
                   <div className="act-row" key={a.id ?? a.tool + a.time}>
                     <span className={"dot " + (a.ok ? "live" : "red")}></span>
                     <span className="tool">{a.tool}()</span>
-                    <span className="meta">· {a.account}</span>
+                    <span className="meta">· {a.account ?? t('overview.recentActivityAllInboxes')}</span>
                     <span className="time">{a.time}</span>
                   </div>
                 ))
