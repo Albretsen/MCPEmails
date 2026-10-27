@@ -343,6 +343,7 @@ import {
   runBulkTool,
   shouldPlanForMode,
 } from "./mcp-app-bulk.ts";
+import { type BulkCardInput, buildBulkResultCard } from "./mcp-app-undo.ts";
 import {
   computeReplyRecipients,
   draftIsSendable,
@@ -972,6 +973,12 @@ if (!INTROSPECTION_ONLY) {
  */
 interface ActivityContext {
   inboxId: string | null;
+  /**
+   * Left by the four bulk move/delete handlers for the result card with Undo
+   * (mcp-app-undo.ts), stamped by `stampBulkResultCard` at the end of
+   * tools/call. Never set on the client-api path, which has no such context.
+   */
+  bulkCard?: BulkCardInput;
   /**
    * The resolved inbox's provider, and whether its row carried the
    * refused-login marker. The dispatcher uses both after the call to record or
@@ -25103,6 +25110,12 @@ interface BulkOpResult {
    * "not reported", never "not moved". See imap-copyuid.ts.
    */
   newMessageIds?: Record<string, string>;
+  /**
+   * IMAP delete-to-trash only: old id -> id in Trash, for the result card's
+   * Undo (mcp-app-undo.ts). Kept apart from `newMessageIds` because that one is
+   * rendered into the model's result by formatBulkResult and this must not be.
+   */
+  undoIds?: Record<string, string>;
 }
 
 /**
@@ -25723,7 +25736,9 @@ function imapBulkDelete(
   let trash: ImapRoleTarget | null = null;
   // client-api only (first-party.ts `trashIds`): where each message landed in
   // Trash, so the client can undo. Read once, up front. For MCP traffic it is
-  // false, nothing is collected, and the result has no `newMessageIds` key.
+  // false and the result has no `newMessageIds` key. Where each message landed
+  // is still collected (from the COPYUID the move already returned, no extra
+  // command) and handed back as `undoIds`, for the result card's Undo only.
   const reportIds = wantsTrashIds() && !permanent;
   const newMessageIds: Record<string, string> = {};
   return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
@@ -25743,11 +25758,13 @@ function imapBulkDelete(
         client, inbox, "trash", uids, trash, () => automaticImapTrashMailbox(client),
       );
       trash = result.target;
-      if (reportIds) {
-        Object.assign(newMessageIds, newMessageIdsFor(group.items, result.moved, trash.name, encodeImapId));
-      }
+      Object.assign(newMessageIds, newMessageIdsFor(group.items, result.moved, trash.name, encodeImapId));
     }
-  }).then((result) => (reportIds ? { ...result, newMessageIds } : result));
+  }).then((result) => ({
+    ...result,
+    ...(reportIds ? { newMessageIds } : {}),
+    ...(permanent ? {} : { undoIds: newMessageIds }),
+  }));
 }
 
 /** Groups IMAP message IDs by source folder and runs a bulk UID STORE per group. */
@@ -26263,6 +26280,29 @@ function keyCanSendOutbound(apiKey: ApiKeyRow): boolean {
 }
 
 /**
+ * `workspaces.bulk_undo_hidden`: the workspace turned the bulk result card off.
+ * Read per call, like every card opt-out since the listing became a scope fact
+ * (keyReviewCardGates). Fails OPEN (false) on any error, like every opt-out
+ * here: a missing column before its migration, or a blip, shows the card.
+ */
+async function workspaceBulkUndoHidden(
+  workspaceId: string,
+  db: InboxQueryClient = supabase,
+): Promise<boolean> {
+  try {
+    const { data, error } = await db
+      .from("workspaces")
+      .select("bulk_undo_hidden")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) return false;
+    return (data as { bulk_undo_hidden?: unknown } | null)?.bulk_undo_hidden === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The ONE way this server deletes mail in bulk.
  *
  * Extracted so that executing a plan and executing immediately are literally
@@ -26486,6 +26526,64 @@ function bulkCallerFor(apiKey: ApiKeyRow) {
   };
 }
 
+/**
+ * Leave a finished bulk move or delete for the result card (mcp-app-undo.ts).
+ * A no-op off the MCP tools/call path: client-api runs these handlers with no
+ * activity context, and the web client has its own Undo.
+ */
+function noteBulkCard(input: {
+  action: BulkCardInput["action"];
+  inbox: InboxRow;
+  requested: number;
+  bulkResult: BulkOpResult;
+  permanent: boolean;
+  destination: string | null;
+  sample?: PlanSampleRow[];
+}): void {
+  const store = activityInboxStore.getStore();
+  if (!store) return;
+  const r = input.bulkResult;
+  store.bulkCard = {
+    action: input.action,
+    inbox: { id: input.inbox.id, provider: input.inbox.provider },
+    requested: input.requested,
+    succeeded: r.succeeded,
+    failed: r.failed.length,
+    newIds: r.undoIds ?? r.newMessageIds,
+    permanent: input.permanent,
+    destination: input.destination,
+    stopped: r.cancelled === true,
+    sample: input.sample,
+  };
+}
+
+/**
+ * Merge the bulk result card into a finished tool result: the envelope into
+ * `structuredContent` (a superset; `content` is not touched) and the sample
+ * rows into result `_meta`. Called last in tools/call, after every note, so
+ * the content/structuredContent mirror the notes rely on is already settled.
+ * Skipped for an error result and for one that is already an envelope (a plan).
+ */
+async function stampBulkResultCard(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  apiKey: ApiKeyRow,
+  input: BulkCardInput | undefined,
+): Promise<void> {
+  if (!input || !("result" in response) || !response.result || typeof response.result !== "object") return;
+  const result = response.result as {
+    isError?: unknown;
+    structuredContent?: unknown;
+    _meta?: Record<string, unknown>;
+  };
+  const sc = result.structuredContent;
+  if (result.isError === true || !sc || typeof sc !== "object" || Array.isArray(sc) || cardEnvelopeIn(sc)) return;
+  // Hidden: no envelope, so the card shows its one plain line (plain-result.ts).
+  if (await workspaceBulkUndoHidden(apiKey.workspace_id)) return;
+  const card = await buildBulkResultCard(bulkDepsFor(apiKey), bulkCallerFor(apiKey), input);
+  result.structuredContent = { ...(sc as Record<string, unknown>), ...card.envelope };
+  if (card.meta) result._meta = { ...(result._meta ?? {}), ...card.meta };
+}
+
 // ── Bulk execute functions ────────────────────────────────────────────────────
 
 /**
@@ -26607,6 +26705,16 @@ async function executeBulkMove(
   }
 
   await finishBulkRun(runId, messageIds.length, bulkResult);
+  noteBulkCard({
+    action: "move_batch",
+    inbox,
+    requested: messageIds.length,
+    bulkResult,
+    permanent: false,
+    // The resolved name on IMAP ("archive" -> "INBOX.Archive"); elsewhere it is
+    // an opaque id, so the caller's own words.
+    destination: inbox.provider === "imap" ? resolvedDest : destinationFolderId,
+  });
 
   const batchResult = formatBulkResult(
     bulkResult.succeeded,
@@ -26814,6 +26922,14 @@ async function executeBulkDelete(
     });
   }
 
+  noteBulkCard({
+    action: "delete_batch",
+    inbox,
+    requested: messageIds.length,
+    bulkResult,
+    permanent,
+    destination: null,
+  });
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
@@ -27237,6 +27353,14 @@ async function executeSearchAndMove(
         logStatus: "success" as const,
         logErrorCode: null,
       };
+      noteBulkCard({
+        action: "search_and_move",
+        inbox,
+        requested: 0,
+        bulkResult: { succeeded: [], failed: [] },
+        permanent: false,
+        destination: destinationFolderId,
+      });
       // A zero-match sweep is exactly where the search's own note matters most:
       // "nothing matched" reads as a fact about the mailbox, and on a capped
       // Outlook fan-out it is only a fact about the folders that were reached.
@@ -27288,6 +27412,15 @@ async function executeSearchAndMove(
     }
 
     await finishBulkRun(runId, messageIds.length, bulkResult);
+    noteBulkCard({
+      action: "search_and_move",
+      inbox,
+      requested: messageIds.length,
+      bulkResult,
+      permanent: false,
+      destination: inbox.provider === "imap" ? resolvedDest : destinationFolderId,
+      sample: planSampleFromSearch(searchResult.messages),
+    });
 
     const moveResult = formatBulkResult(
       bulkResult.succeeded,
@@ -27604,6 +27737,14 @@ async function executeSearchAndDelete(
         logStatus: "success" as const,
         logErrorCode: null,
       };
+      noteBulkCard({
+        action: "search_and_delete",
+        inbox,
+        requested: 0,
+        bulkResult: { succeeded: [], failed: [] },
+        permanent,
+        destination: null,
+      });
       // Same reason as the matching branch in executeSearchAndMove: "nothing
       // matched" must not be read as "nothing is there" when the fan-out cap
       // left folders unsearched.
@@ -27633,6 +27774,15 @@ async function executeSearchAndDelete(
       });
     }
 
+    noteBulkCard({
+      action: "search_and_delete",
+      inbox,
+      requested: messageIds.length,
+      bulkResult,
+      permanent,
+      destination: null,
+      sample: planSampleFromSearch(searchResult.messages),
+    });
     const deleteResult = formatBulkResult(
       bulkResult.succeeded,
       bulkResult.failed,
@@ -35646,6 +35796,7 @@ async function handleToolsCall(
   // protocol diagnostics line. Deliberately after the audit log and the
   // idempotency snapshot, so a rendering hint can never appear in either.
   // See card-diagnostics.ts.
+  await stampBulkResultCard(toolResult, apiKey, logCtx.bulkCard);
   await stampCardDiagnostics(toolResult, apiKey.workspace_id, ctx.cardDiagnostics);
 
   return toolResult;

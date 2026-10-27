@@ -907,6 +907,34 @@ async function loadPendingPlan(
 
   const at = nowMs(deps);
 
+  if (row.status !== "pending" && isUndoRow(row)) {
+    // An Undo (mcp-app-undo.ts) in plain words: no "preview", no "plan".
+    const done = row.status === "executed";
+    return {
+      ok: false,
+      failure: failureResult(
+        done ? "executed" : row.status === "expired" ? "expired" : "decided_elsewhere",
+        {
+          outcome: done ? "executed" : row.status === "expired" ? "expired" : "decided_elsewhere",
+          headline: done
+            ? "Already undone."
+            : row.status === "expired"
+            ? "Undo expired."
+            : row.status === "executing"
+            ? "Undo is already running."
+            : "This can no longer be undone.",
+          detail: "Nothing more was changed.",
+          affected_count: 0,
+          dashboard_url: dashboardUrl(deps),
+          error_code: null,
+        },
+        "not_pending",
+        row.status === "expired" ? "bulk_plan_expired" : "bulk_plan_not_pending",
+        row.id,
+      ),
+    };
+  }
+
   if (row.status !== "pending") {
     // Every terminal status needs its own branch. `cancelled` fell through to
     // the "already executed" default here, so declining a plan and then
@@ -955,7 +983,7 @@ async function loadPendingPlan(
       .update({ status: "expired" })
       .eq("id", row.id)
       .eq("status", "pending");
-    return { ok: false, failure: expiredPlanFailure(deps, row.id) };
+    return { ok: false, failure: expiredPlanFailure(deps, row.id, isUndoRow(row)) };
   }
 
   return { ok: true, row };
@@ -972,16 +1000,22 @@ export function isPlanExpired(
   return Number.isFinite(parsed) && parsed <= atMs;
 }
 
-function expiredPlanFailure(deps: BulkDeps, planId: string): BulkToolResult {
+/** An Undo row, written by mcp-app-undo.ts rather than by a preview. */
+function isUndoRow(row: { scope_kind?: unknown }): boolean {
+  return row.scope_kind === "undo";
+}
+
+function expiredPlanFailure(deps: BulkDeps, planId: string, undo = false): BulkToolResult {
   return failureResult(
     "expired",
     {
       outcome: "expired",
-      headline: "This preview expired before it was run.",
-      detail:
-        "A bulk preview stays runnable for 15 minutes, because it is a frozen snapshot of the " +
-        "mailbox and stops describing it accurately soon after. Nothing was changed. " +
-        "Ask for the operation again to get a fresh preview.",
+      headline: undo ? "Undo expired." : "This preview expired before it was run.",
+      detail: undo
+        ? "Undo is available for 24 hours after the change. Nothing was changed."
+        : "A bulk preview stays runnable for 15 minutes, because it is a frozen snapshot of the " +
+          "mailbox and stops describing it accurately soon after. Nothing was changed. " +
+          "Ask for the operation again to get a fresh preview.",
       affected_count: 0,
       dashboard_url: dashboardUrl(deps),
       error_code: null,
@@ -1185,7 +1219,7 @@ export async function runBulkExecute(
       "decided_elsewhere",
       {
         outcome: "decided_elsewhere",
-        headline: "This preview was already run.",
+        headline: isUndoRow(row) ? "Already undone." : "This preview was already run.",
         detail:
           "A plan runs exactly once, and another call claimed this one first. " +
           "Nothing was done a second time.",
@@ -1259,6 +1293,25 @@ export async function runBulkExecute(
     ? ` ${outcome.failed} could not be changed and were left alone.`
     : "";
 
+  if (totalFailure && isUndoRow(row)) {
+    return failureResult(
+      "error",
+      {
+        outcome: "failed",
+        headline: "Nothing to undo.",
+        detail: outcome.error_code === "message_not_found"
+          ? "None of the messages are still where they were moved, so nothing was moved back."
+          : `The mailbox did not let them move back${outcome.error_code ? ` (${outcome.error_code})` : ""}. Nothing was changed.`,
+        affected_count: 0,
+        dashboard_url: dashboardUrl(deps),
+        error_code: outcome.error_code ?? "provider_error",
+      },
+      "not_pending",
+      outcome.error_code ?? "provider_error",
+      row.id,
+    );
+  }
+
   if (totalFailure) {
     return failureResult(
       "error",
@@ -1280,7 +1333,16 @@ export async function runBulkExecute(
     );
   }
 
-  const receipt: BulkReceiptFields = {
+  const receipt: BulkReceiptFields = isUndoRow(row)
+    ? {
+      outcome: "executed",
+      headline: `Undone. ${outcome.succeeded} ${noun} moved back to ${scope.destination_label ?? "where they were"}.`,
+      detail: outcome.failed > 0 ? `${outcome.failed} had moved again since and were left alone.` : "",
+      affected_count: outcome.succeeded,
+      dashboard_url: dashboardUrl(deps),
+      error_code: null,
+    }
+    : {
     outcome: "executed",
     headline: `${verb} ${outcome.succeeded} ${noun}${destination}.`,
     detail: isDelete && !scope.permanent
