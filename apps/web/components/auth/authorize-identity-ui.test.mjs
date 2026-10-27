@@ -154,6 +154,16 @@ test('LEGIT: ChatGPT on chatgpt.com keeps its name and is Verified', async (t) =
   assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
 });
 
+test('the mark without a logo shows the client name\'s first letter, not the D of every dyn_ client_id', async (t) => {
+  for (const [clientName, redirectUri, letter] of [
+    ['Claude', 'https://claude.ai/api/mcp/auth_callback', 'C'],
+    ['ChatGPT', 'https://chatgpt.com/connector_platform_oauth_redirect', 'C'],
+  ]) {
+    const { container } = await render(t, propsFor({ clientId: 'dyn_0123456789abcdef01234567', clientName, redirectUri }));
+    assert.equal(container.querySelector('.az-head svg text').textContent, letter);
+  }
+});
+
 for (const host of [
   'oauth-redirect.googleusercontent.com',
   'oauth-redirect-test.googleusercontent.com',
