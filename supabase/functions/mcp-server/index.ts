@@ -21776,20 +21776,21 @@ async function executeSearchEmails(
         // socket the OS reaps, not one of the five slots the account is allowed.
         session ? () => session.abort() : null,
       );
-    } catch (err) {
-      // A folder-resolution failure, answered as it was before resolution moved
-      // inside the race: a named folder error, an auth failure, or a rethrow.
+    } catch (caught) {
+      // A folder-resolution failure: a named folder error is answered here, and
+      // anything else is unwrapped and classified below like a search failure.
+      //
+      // It used to be rethrown (2026-10-27). The LIST that resolution sends is
+      // usually the call's first IMAP command, so it is where the connect fails:
+      // Yahoo's "[LIMIT] AUTHENTICATE Rate limit hit" after three connect
+      // attempts (32 calls in one day) and Outlook's 429 on mailFolders (9)
+      // escaped the handler and were logged as -32603 internal errors, at about
+      // 30 seconds, which read as miscounted timeouts.
+      let err = caught;
       if (err instanceof IncludeFoldersFailure) {
         const cause = err.cause;
         if (cause instanceof FolderTargetError) return folderTargetErrorResult(cause);
-        const causeMessage = cause instanceof Error ? cause.message : String(cause);
-        if (
-          causeMessage === "gmail_auth_failed" || causeMessage === "outlook_auth_failed" ||
-          causeMessage === "fastmail_auth_failed" || causeMessage === "imap_auth_failed"
-        ) {
-          return authFailedResult(inbox.provider, inbox.id, "access");
-        }
-        throw cause;
+        err = cause;
       }
 
       const message = err instanceof Error ? err.message : String(err);

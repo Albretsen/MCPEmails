@@ -30,6 +30,8 @@ import {
   IMAP_SEARCH_FINISH_RESERVE_MS,
   imapSearchStoppedEarlyNote,
 } from "./imap-search-budget.ts";
+import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts";
+import { ImapConnectionLimitError } from "./imap-client.ts";
 
 const INDEX_SOURCE = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 const CLIENT_SOURCE = await Deno.readTextFile(new URL("./imap-client.ts", import.meta.url));
@@ -75,18 +77,32 @@ Deno.test("email_search resolves include_folders inside the timeout race", () =>
   assertStringIncludes(body, "throw new IncludeFoldersFailure(err)");
 });
 
-Deno.test("a resolution failure is answered exactly as it was before it moved", () => {
+Deno.test("a resolution failure is unwrapped into the search's own classification", () => {
   const body = functionSource("executeSearchEmails");
   const failureAt = body.indexOf("if (err instanceof IncludeFoldersFailure)");
   const timeoutAt = body.indexOf('if (message === "search_timeout")');
   assert(failureAt > 0 && failureAt < timeoutAt, "checked first, before any provider classification");
   const branch = body.slice(failureAt, timeoutAt);
   assertStringIncludes(branch, "if (cause instanceof FolderTargetError) return folderTargetErrorResult(cause);");
-  assertStringIncludes(branch, "return authFailedResult(inbox.provider, inbox.id, \"access\");");
-  assertStringIncludes(branch, "throw cause;");
+  assertStringIncludes(branch, "err = cause;");
+  // A rethrow escapes to tools/call and logs -32603. That is how Yahoo's connect
+  // refusals and Outlook's 429s on mailFolders were miscounted (2026-10-27).
+  assert(!branch.includes("throw cause"), "a resolution failure must never escape the handler");
+  // Auth failures are still answered as auth failures, now by the shared check.
+  const authAt = body.indexOf("const isAuthFailure =");
+  assert(authAt > timeoutAt, "the shared auth check runs on the unwrapped cause");
   for (const sentinel of ["gmail_auth_failed", "outlook_auth_failed", "fastmail_auth_failed", "imap_auth_failed"]) {
-    assertStringIncludes(branch, `"${sentinel}"`);
+    assertStringIncludes(body.slice(authAt), `"${sentinel}"`);
   }
+});
+
+Deno.test("the Yahoo connect refusal that escaped now logs as connection_limit", () => {
+  // The message from the 2026-10-27 production logs, thrown as connect throws it.
+  const error = new ImapConnectionLimitError(
+    "IMAP connection limit reached for imap.mail.yahoo.com after 3 attempts: " +
+      "IMAP connection refused at auth: [LIMIT] AUTHENTICATE Rate limit hit.",
+  );
+  assertEquals(providerErrorLogCode(classifyProviderError(error), "read"), "connection_limit");
 });
 
 // ---------------------------------------------------------------------------
