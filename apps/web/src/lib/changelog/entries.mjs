@@ -52,6 +52,20 @@ export const ENTRIES = [
   },
   {
     date: '2026-10-27',
+    kind: 'improved',
+    title: 'Review settings show their card in the chat right away',
+    body:
+      "Turning on approvals, bulk review or the draft card now shows the card in a chat that is already open, without reconnecting MCPEmails in your AI app.",
+  },
+  {
+    date: '2026-10-27',
+    kind: 'added',
+    title: 'Have your AI ask before it sends',
+    body:
+      "A new review setting for each mailbox, Ask in the chat first, makes your AI show you the email in the conversation and wait for your yes before it sends. Open a mailbox on the Inboxes page and pick it under Review before sending.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'added',
     title: 'See an automation rule before you turn it on',
     body:
