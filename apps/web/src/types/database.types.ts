@@ -2321,6 +2321,27 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_milestone_unlocks: {
+        Row: {
+          day: string
+          id: string
+          note: string
+          recorded_at: string
+        }
+        Insert: {
+          day: string
+          id: string
+          note: string
+          recorded_at?: string
+        }
+        Update: {
+          day?: string
+          id?: string
+          note?: string
+          recorded_at?: string
+        }
+        Relationships: []
+      }
       inbox_grandfather_revocations_20260901: {
         Row: {
           distinct_addresses_ever: number

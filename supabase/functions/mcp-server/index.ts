@@ -524,6 +524,13 @@ import {
   type MonthSummary,
 } from "./usage-meter-note.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates, smtpFilesSentCopyItself } from "./sent-copy.ts";
+import {
+  SENT_CARD_META_KEY,
+  SENT_CARD_OPERATIONS,
+  sentCardForError,
+  sentCardForSuccess,
+  type SentCardFacts,
+} from "./sent-card.ts";
 import { DRAFT_KEPT_AFTER_SEND_NOTE, DRAFT_KEPT_RECEIPT_DETAIL, removeSentDraft } from "./draft-removal.ts";
 import {
   buildUsageLimitText,
@@ -1002,9 +1009,21 @@ interface ActivityContext {
    * PRO_LISTED_ARGUMENTS.
    */
   proArguments?: Record<string, unknown>;
+  /**
+   * What a send, reply or single forward is about to transmit, noted by the
+   * handler (noteSentCard) and turned into the card's `_meta` after dispatch
+   * by attachSentCardMeta. Read only on a successful result.
+   */
+  sentCard?: SentCardFacts;
 }
 
 const activityInboxStore = new AsyncLocalStorage<ActivityContext>();
+
+/** Record what this call is about to send, for the sent card (sent-card.ts). */
+function noteSentCard(facts: SentCardFacts): void {
+  const store = activityInboxStore.getStore();
+  if (store) store.sentCard = facts;
+}
 
 /** Queue a note for the current tool result; once per distinct note. */
 function noteForResult(note: string): void {
@@ -18993,6 +19012,10 @@ async function executeForwardEmail(
     });
   }
 
+  // The note only: the forwarded original is relayed byte for byte and its
+  // attachments are not known here.
+  noteSentCard({ from: senderInbox.email_address, text: body ?? "", html: htmlBody, cc, bcc });
+
   let fwdResult: ForwardEmailResult;
   try {
     fwdResult = await forwardOne(messageId);
@@ -19349,6 +19372,9 @@ async function executeReplyToEmail(
     }
     throw err;
   }
+
+  // The reply's own text, without the quote or signature the provider path adds.
+  noteSentCard({ from: senderInbox.email_address, text: body, html: htmlBody, cc: extraCc, bcc: extraBcc, attachments });
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   const replyParams: ReplyToEmailParams = {
@@ -20459,6 +20485,10 @@ async function executeSendEmail(
   // `includeSignatureForSend`, with both halves of it written down.
   const includeSignature = includeSignatureForSend(args, apiKey.internalApprovalDispatch);
   applySignature(sendParams, senderInbox, { include_signature: includeSignature });
+  noteSentCard({
+    from: senderInbox.email_address, text: sendParams.textBody, html: sendParams.htmlBody,
+    cc: sendParams.cc, bcc: sendParams.bcc, attachments,
+  });
 
   const chatRefusal = await chatConfirmGate({
     apiKey, operation: "email_send", inboxes: [inbox, senderInbox], args,
@@ -26187,6 +26217,37 @@ async function keyReviewCardGates(
     bulk: apiKey.scopes.includes("manage:folders") || apiKey.scopes.includes("delete:email"),
     drafts: apiKey.scopes.includes("manage:drafts"),
   };
+}
+
+/**
+ * Put the sent card's facts (sent-card.ts) in a send / reply / forward
+ * result's `_meta`. The content and structuredContent are untouched, so the
+ * model reads exactly what it did before. A success needs the handler's noted
+ * facts and a single sent message (a batch forward and a held send carry no
+ * `message_id` + `sent_at` pair); a failure needs a code the card can word.
+ */
+function attachSentCardMeta(
+  toolResult: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  ctx: ActivityContext,
+  errorCode: string | null,
+): void {
+  if (!("result" in toolResult)) return;
+  const result = toolResult.result as {
+    isError?: boolean;
+    content?: Array<{ type: string; text?: string }>;
+    structuredContent?: Record<string, unknown>;
+    _meta?: Record<string, unknown>;
+  } | undefined;
+  if (!result || typeof result !== "object") return;
+  let card;
+  if (result.isError === true) {
+    card = sentCardForError(errorCode, result.content?.[0]?.text ?? "");
+  } else {
+    const sc = result.structuredContent;
+    if (!ctx.sentCard || !sc || !sc.message_id || typeof sc.sent_at !== "string" || (sc.status ?? "sent") !== "sent") return;
+    card = sentCardForSuccess(ctx.sentCard, !!ctx.resultNotes?.includes(SENT_COPY_NOT_SAVED_NOTE));
+  }
+  if (card) result._meta = { ...(result._meta ?? {}), [SENT_CARD_META_KEY]: card };
 }
 
 /**
@@ -35032,11 +35093,15 @@ async function handleToolsCall(
     // can correct on its next call. `errors` still rides in `_meta` for
     // programmatic clients; unlike the persisted audit payload it keeps the
     // messages, which are derived from the schema and echo no request content.
-    return invalidArgumentsResult(
+    const invalid = invalidArgumentsResult(
       id,
       buildInvalidArgumentsText(toolName, reportedErrors),
       { tool: toolName, action: rejectedAction, errors: reportedErrors },
     );
+    if (SENT_CARD_OPERATIONS.has(dispatchName) && keyCanSendOutbound(apiKey)) {
+      attachSentCardMeta(invalid, { inboxId: null }, "invalid_arguments");
+    }
+    return invalid;
   }
 
   const actionLimit = await actionLimitResponse(apiKey, dispatchName, id, ctx.allowance);
@@ -35432,6 +35497,12 @@ async function handleToolsCall(
     isPartialToolResult(toolResult),
     replaySnapshotFromToolResult(toolResult),
   );
+
+  // The sent card's facts, after the idempotency snapshot so a replay returns
+  // exactly what it did before. See sent-card.ts.
+  if (SENT_CARD_OPERATIONS.has(dispatchName) && keyCanSendOutbound(apiKey)) {
+    attachSentCardMeta(toolResult, logCtx, logErrorCode);
+  }
 
   // Prefer the inbox the tool actually resolved (handles email aliases and
   // single-inbox auto-resolution); fall back to an explicit inbox_id UUID from

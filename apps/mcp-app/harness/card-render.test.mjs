@@ -554,6 +554,98 @@ async function main() {
     await h.done();
   }
 
+  // ── 3c. The sent card (2026-10-27) ───────────────────────────────────────
+  // With `_meta["mcpemails/sent_card"]` the receipt opens as the message that
+  // went out, and a failure says "Not sent" and why. Without it (a host that
+  // drops result `_meta`) the one-liners above stand.
+
+  const sentMeta = {
+    "mcpemails/sent_card": {
+      outcome: "sent",
+      from: "me@acme.example",
+      cc: ["boss@acme.example"],
+      bcc: [],
+      body_text: "Hi Dana,\nThe numbers are attached.\nBest",
+      truncated: false,
+      attachments: [{ filename: "q3.pdf", size_bytes: 180000 }],
+      sent_copy: true,
+    },
+  };
+
+  group("a send with the sent card shows the message, From, attachments and the Sent copy");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent), sentMeta));
+    await settle();
+    const t = c.text();
+    expect("headline", t.startsWith("Sent to Dana Reyes +2"), true);
+    expect("from", t.includes("me@acme.example"), true);
+    expect("to and cc", t.includes("dana@northwind.example") && t.includes("+2 more · 1 cc"), true);
+    expect("subject", t.includes("Quarterly numbers"), true);
+    expect("body preview", t.includes("The numbers are attached."), true);
+    expect("attachment", t.includes("1 attachment: q3.pdf"), true);
+    expect("sent copy", t.includes("A copy is in your Sent folder."), true);
+    expect(
+      "nothing to act on but look",
+      [...c.root.querySelectorAll("button")].some((b) => /^(Send|Save|Undo|Resend)$/.test(b.textContent.trim())),
+      false,
+    );
+    expect("no warning", c.root.querySelectorAll(".notice").length, 0);
+    await c.done();
+  }
+
+  group("a refused Sent copy is said, the message still shown");
+  {
+    const c = await boot();
+    await c.settled();
+    const meta = { "mcpemails/sent_card": { ...sentMeta["mcpemails/sent_card"], sent_copy: false } };
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent), meta));
+    await settle();
+    expect("says so", c.text().includes("No copy was saved to your Sent folder."), true);
+    await c.done();
+  }
+
+  group("a failed send says Not sent and why");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: {
+        content: [{ type: "text", text: "email_reply failed ..." }],
+        isError: true,
+        _meta: {
+          "mcpemails/sent_card": {
+            outcome: "not_sent",
+            headline: "Not sent",
+            detail: "The original email could not be found. It may have been moved or deleted.",
+          },
+        },
+      },
+    });
+    await settle();
+    expect("one header", c.root.querySelectorAll(".hdr").length, 1);
+    expect("text", c.text(), "Not sentThe original email could not be found. It may have been moved or deleted.");
+    expect("failure tone", c.root.querySelector(".dot")?.getAttribute("data-tone"), "danger");
+    await c.done();
+  }
+
+  group("a success-shaped sent card on an isError result is not a receipt");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: { structuredContent: F.plainSent, isError: true, _meta: sentMeta },
+    });
+    await settle();
+    expect("generic line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    await c.done();
+  }
+
   group("a plain send after a real card does not replace it");
   {
     const c = await boot();

@@ -58,10 +58,12 @@ function ThemeBtn() {
 
 // ─── Client logo ──────────────────────────────────────────────────────────────
 // Renders a logo_url image if provided, otherwise falls back to a generic
-// agent mark derived from the client_id. This avoids hard-coding real product
-// logos for clients we don't control.
+// agent mark: the first letter of the client's display name, coloured from
+// the client_id. This avoids hard-coding real product logos for clients we
+// don't control. Every dynamically registered client_id starts with "dyn_",
+// so its letter would be a D for Claude and ChatGPT alike.
 
-function ClientMark({ clientId, logoUrl, size = 36 }) {
+function ClientMark({ clientId, clientName = '', logoUrl, size = 36 }) {
   if (logoUrl) {
     return (
       <img
@@ -80,7 +82,7 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
     clientId.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
   ) % 360;
 
-  const firstLetter = clientId.replace(/[^a-z]/gi, '')[0]?.toUpperCase() ?? '?';
+  const firstLetter = (clientName.match(/\p{L}|\p{N}/u)?.[0] ?? clientId.replace(/^dyn_/, '').replace(/[^a-z]/gi, '')[0])?.toUpperCase() ?? '?';
 
   return (
     <svg width={size} height={size} viewBox="0 0 36 36">
@@ -623,6 +625,9 @@ export function AuthorizeApp({
   // Specific inboxes then goes back to it instead of leaving the OAuth flow.
   const [inboxStepOffered] = useState(Boolean(inboxStep));
   const [justConnected, setJustConnected] = useState(connectedOnStep);
+  // Once the inbox step shows its proof card the mailbox is connected, so
+  // "Skip, connect later" would only contradict it.
+  const [inboxProofShown, setInboxProofShown] = useState(false);
   const funnelClient = inboxStep?.client ?? null;
 
   // One authorize_inbox_step_viewed per page load (the server keeps one per workspace).
@@ -761,6 +766,7 @@ export function AuthorizeApp({
               <div className="blob">
                 <ClientMark
                   clientId={client.client_id}
+                  clientName={client.client_name}
                   logoUrl={client.logo_url}
                   size={36}
                 />
@@ -783,12 +789,15 @@ export function AuthorizeApp({
                 userEmail={inboxStep.userEmail}
                 returnTo={inboxStep.returnTo}
                 onConnected={inboxConnected}
+                onProof={() => setInboxProofShown(true)}
               />
-              <div style={{ marginTop: 16, textAlign: 'center' }}>
-                <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
-                  {t('authorize.skipConnectLater')}
-                </button>
-              </div>
+              {!inboxProofShown && (
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
+                    {t('authorize.skipConnectLater')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

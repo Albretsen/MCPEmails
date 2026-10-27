@@ -23,7 +23,13 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
-import { type AutomationSeed, automationSeed, plainResultNote, plainResultReceipt } from "./plain-result";
+import {
+  type AutomationSeed,
+  automationSeed,
+  plainResultFailure,
+  plainResultNote,
+  plainResultReceipt,
+} from "./plain-result";
 import { announceDraft } from "./draft-signal";
 import { draftShownContextLine } from "./model-context";
 
@@ -1596,7 +1602,7 @@ export function wireResultHandlers(bridge: HostBridge) {
     let note: string | null = null;
     let automation: AutomationSeed | null = null;
     if (!envelope && status === "foreign" && !pushAccepted) {
-      const receipt = plainResultReceipt(params);
+      const receipt = plainResultReceipt(params) ?? plainResultFailure(params);
       if (receipt) {
         envelope = receipt;
         status = "envelope";

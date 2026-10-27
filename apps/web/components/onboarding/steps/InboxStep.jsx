@@ -50,7 +50,7 @@ import { SECOND_INBOX_DASHBOARD_HREF } from '@/lib/onboarding/second-inbox.mjs';
 const CHOOSER_KINDS = ['gmail', 'icloud', 'yahoo', 'outlook', 'microsoft365', 'gmx', 'imap'];
 const DEFAULT_MANUAL = { imapHost: '', imapPort: 993, smtpHost: '', smtpPort: 465, username: '' };
 
-export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext, goTo, variant, secondInbox = false, finish, returnTo = null }) {
+export function InboxStep({ step, status, refreshStatus, provider, userEmail, goNext, goTo, variant, secondInbox = false, finish, returnTo = null, onProof = null }) {
   const t = useTranslations('onboarding');
   // Flow B, B1: opened from It works for a second inbox, so straight to the
   // form, and back to It works once it is connected.
@@ -87,6 +87,7 @@ export function InboxStep({ step, status, refreshStatus, provider, userEmail, go
       userEmail={userEmail}
       goNext={secondInbox && goTo ? () => goTo('it_works') : goNext}
       returnTo={returnTo}
+      onProof={onProof}
       onSeePlans={variant?.convert === 'on' && finish ? () => finish(SECOND_INBOX_DASHBOARD_HREF) : null}
       onBack={onBack}
     />
@@ -120,7 +121,7 @@ function readOutlookError() {
   }
 }
 
-function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeePlans = null, returnTo = null, onBack = null }) {
+function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeePlans = null, returnTo = null, onBack = null, onProof = null }) {
   const t = useTranslations('onboarding.steps.inbox');
   const tNav = useTranslations('onboarding.nav');
   const urlKind = useMemo(() => kindFromProviderSlug(provider), [provider]);
@@ -305,6 +306,7 @@ function ConnectInbox({ step, refreshStatus, provider, userEmail, goNext, onSeeP
     setChecks({ server: true, signedIn: true, read: Boolean(proofData?.available) });
     setProof(proofData?.available ? proofData : { available: false });
     setPhase('proof');
+    onProof?.();
   };
 
   if (phase === 'proof') {
