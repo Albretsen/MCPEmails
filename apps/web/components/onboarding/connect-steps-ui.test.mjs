@@ -245,6 +245,15 @@ test('B1: below the cap the card reopens the inbox step', async (t) => {
   assert.equal(started, 1);
 });
 
+test('B1: a workspace with two inboxes gets no second-inbox card', async (t) => {
+  stubFetch(t);
+  const two = itWorks();
+  two.status.inboxes = { count: 2, sinceReset: 1, items: [{ id: 'i1', address: 'me@gmail.com' }, { id: 'i2', address: 'me@work.example' }] };
+  const { view } = await render(t, ItWorksStep, two);
+  await waitFor(() => view.container.querySelector('[data-plan-summary="onboarding"]'), { message: 'Flow B loaded (lazy)' });
+  assert.equal(view.container.querySelectorAll('[data-testid="onb-second-inbox"]').length, 0);
+});
+
 test('B2: plan summary, monthly first, annual beside it, Continue on Free hides it', async (t) => {
   const calls = stubFetch(t);
   const { view } = await render(t, ItWorksStep, itWorks());
