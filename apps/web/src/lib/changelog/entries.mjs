@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-27',
+    kind: 'fixed',
+    title: 'Folder searches explain a busy mail server',
+    body:
+      "When a search across named folders hit a mail server that was limiting connections, such as Yahoo, your AI app got a generic internal error. It now gets an error that says what the mail provider refused, so it can tell you or try again later.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'improved',
     title: 'Signing up from Claude or ChatGPT says where you came from',
     body:
