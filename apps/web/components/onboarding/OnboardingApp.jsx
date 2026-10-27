@@ -35,8 +35,9 @@ import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return
  *   chatReturn      { client, provider } | null: a verified chat connect link
  *                   (from=chat). Only the inbox step, then ChatReturnPanel.
  *   onClose(href?)  close the dialog; `href` is a /dashboard path to open.
+ *   onMounted()     called once the dialog renders (SetupModal's placeholder).
  */
-export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null, onClose }) {
+export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null, onClose, onMounted }) {
   const t = useTranslations('onboarding');
   const [client, setClient] = useState(normalizeChipClient(initialClient) ?? 'claude');
   const dialogRef = useRef(null);
@@ -55,6 +56,11 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
       // A URL we cannot rewrite only loses the reload convenience.
     }
   }, []);
+
+  // The dialog is on screen: the dashboard can drop its placeholder scrim.
+  useEffect(() => {
+    onMounted?.();
+  }, [onMounted]);
 
   // Escape closes, unless something inside (the chip's menu) used it first.
   useEffect(() => {

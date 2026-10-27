@@ -41,13 +41,12 @@ export default function SetupModal({ setup, mcpUrl, flowB = null, onClose, onMou
     // The portal target exists only after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost(el);
-    onMounted?.();
     return () => {
       for (const node of others) node.inert = false;
       document.body.style.overflow = overflow;
       el.remove();
     };
-  }, [onMounted]);
+  }, []);
 
   if (!host) return null;
   return createPortal(
@@ -63,6 +62,7 @@ export default function SetupModal({ setup, mcpUrl, flowB = null, onClose, onMou
         flowB={flowB}
         chatReturn={setup.chatReturn}
         onClose={onClose}
+        onMounted={onMounted}
       />
     </OnboardingLocaleProvider>,
     host,
