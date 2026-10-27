@@ -559,9 +559,9 @@ Deno.test("index.ts claims the note on the MCP tools/call path only, scoped to t
   // The `draft` tool tells the model the card can act without it, and to re-read.
   assert(
     src.includes(
-      '"change it. The user can also save, send or discard it there, and you " +\n' +
-        '      "may not be told, so call draft_read before stating a draft\'s current " +\n' +
-        '      "subject, recipients or whether it was sent. " +',
+      '"change it. The user can also save, send or discard it there with no " +\n' +
+        '      "notice to this tool, so its current subject, recipients and sent state " +\n' +
+        '      "are what draft_read reports. " +',
     ),
     "the draft description carries the re-read guidance",
   );
