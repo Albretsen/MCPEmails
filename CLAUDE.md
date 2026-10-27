@@ -45,7 +45,9 @@ A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) an
 
 ## Sessions and hand-off
 
-IMPORTANT: use Claude in Chrome before asking Asgeir. His Chrome is signed in to Google Cloud, Stripe, Vercel, Search Console, Claude, ChatGPT and the other dashboards. If an answer can be read there (a count, a setting, a console value, what a page shows), get it yourself with the `mcp__claude-in-chrome__*` tools, read-only, and never ask him for it. Ask Asgeir only for real decisions, and for actions the safety rules reserve for him (passwords, payments, signing in).
+IMPORTANT: use the built-in Claude browser before asking Asgeir. That is the Browser pane in the Claude app, driven with the `mcp__Claude_Browser__*` tools, and it keeps Asgeir's sign-ins (mcpemails.com, the dashboards, Claude, ChatGPT). Do not use Claude in Chrome (`mcp__claude-in-chrome__*`) unless he asks for it by name. If an answer can be read in the browser (a count, a setting, a console value, what a page shows), get it yourself, read-only, and never ask him for it. Ask Asgeir only for real decisions, and for actions the safety rules reserve for him (passwords, payments, signing in).
+
+- Keep the Browser pane shown while you test. When it is hidden its pages run as background tabs, and a page can stall half-loaded: the dashboard with `?setup=1` once sat on its loading skeleton until the pane was opened.
 
 Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
 

@@ -190,7 +190,7 @@
     },
     "add_to_ai": {
       "title": "MCPEmails zu {client} hinzufügen",
-      "lead": "Öffnet sich in einem neuen Tab. Es geht von selbst weiter, sobald {client} verbunden ist.",
+      "lead": "Es geht von selbst weiter, sobald {client} verbunden ist.",
       "urlLabel": "Server-URL von MCPEmails",
       "linkAfter": "Bestätigen Sie in {client} und melden Sie sich bei MCPEmails an.",
       "claudeAfter": "Klicken Sie in Claude auf Hinzufügen, dann auf Verbinden.",

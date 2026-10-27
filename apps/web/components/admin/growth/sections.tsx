@@ -76,7 +76,7 @@ import {
 import { fetchRevenueDetail } from '@/lib/analytics/operator-revenue';
 import { fetchPassSummary, passSummaryLine } from '@/lib/analytics/pass-summary';
 import { fetchRecentIncidents, fetchSystemHealth } from '@/lib/analytics/kiosk-health';
-import { achievementReport } from '@/lib/analytics/growth-achievements';
+import { fetchStoredUnlocks, datedMilestoneReport } from '@/lib/analytics/growth-milestone-store';
 import { agoLabel, formatDayKey, recordDay, streak } from '@/lib/analytics/growth-records';
 import { valuationFromArr } from '@/lib/analytics/revenue-math';
 import { GMAIL_OAUTH_USER_CAP } from '@/lib/analytics/growth-types';
@@ -788,23 +788,25 @@ export async function UsageCapSection({ days }: { days: number }) {
 /* ======================================================== milestones band */
 
 export async function MilestoneSection() {
-  const [signups, daily, revenue, cash, checkout, lifecycle] = await Promise.all([
+  const [signups, daily, revenue, cash, checkout, lifecycle, stored] = await Promise.all([
     fetchUserSignupDays(DURABLE_DAYS),
     fetchDailyMetrics(DAILY_DAYS),
     fetchRecurringRevenue(DAILY_DAYS),
     fetchCashCollected(),
     fetchCheckoutFunnel(),
     fetchLifecycleCounts(),
+    fetchStoredUnlocks(),
   ]);
 
-  const report = achievementReport({
+  const input = {
     signups: orNull(signups),
     daily: orNull(daily),
     revenue: orNull(revenue),
     cash: orNull(cash),
     checkout: orNull(checkout),
     lifecycle: orNull(lifecycle),
-  });
+  };
+  const report = await datedMilestoneReport(input, stored);
 
   return (
     <Cell span={12} tall={3}>
@@ -814,11 +816,9 @@ export async function MilestoneSection() {
       >
         {/* No caption. Every caveat that used to be printed here is now where
             it belongs: the tool call rungs say "last 90 days" in their own
-            detail line because the log is purged there, and the MRR rungs
-            simply carry no date because Stripe is a snapshot and the month it
-            first crossed a threshold is not available at any price. Repeating
-            all three under the panel was four lines of prose explaining what
-            the rungs already say. */}
+            detail line because the log is purged there. Repeating caveats
+            under the panel was four lines of prose explaining what the rungs
+            already say. */}
         <Milestones report={report} />
       </Tile>
     </Cell>

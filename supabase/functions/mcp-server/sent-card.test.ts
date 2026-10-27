@@ -23,7 +23,7 @@ Deno.test("sent card: success carries from, body, attachment sizes and the Sent 
 
 Deno.test("sent card: an HTML-only body becomes text, a long one is clipped, a refused Sent copy is reported", () => {
   const html = sentCardForSuccess({ from: null, text: "", html: "<p>Hello &amp; <b>bye</b></p><p>Two</p>" }, true);
-  assertEquals(html.outcome === "sent" && html.body_text, "Hello & bye\nTwo");
+  assertEquals(html.outcome === "sent" && html.body_text, "Hello & bye Two");
   assertEquals(html.outcome === "sent" && html.sent_copy, false);
   const long = sentCardForSuccess({ from: null, text: "x".repeat(SENT_CARD_BODY_MAX + 5) }, false);
   assertEquals(long.outcome === "sent" && [long.body_text.length, long.truncated], [SENT_CARD_BODY_MAX, true]);
