@@ -631,30 +631,60 @@ Deno.test("the workspace switch still overrides the per-inbox rollup", async () 
   assertEquals(notRolledOut.gates.drafts, false, "and so does the rollout flag");
 });
 
-Deno.test("a soft-deleted inbox no longer turns on the outbound or bulk card", async () => {
+Deno.test("a soft-deleted inbox no longer turns on the bulk card", async () => {
   // The mirror-image bug: a `.some()` over the same unfiltered rows mounted a
-  // review card under every send for a key that cannot reach the opted-in row.
+  // review card under every op for a key that cannot reach the opted-in row.
+  // (The outbound gate no longer reads these rows at all: see the next tests.)
   const { gates } = await driveGates([
     activeRow("a", { send_approval_required: false, bulk_review_mode: "off" }),
     revokedRow("b", { send_approval_required: true, bulk_review_mode: "plan" }),
   ]);
-  assertEquals(gates.outbound, false, "a revoked inbox opens no outbound gate");
-  assertEquals(gates.bulk, false, "nor the bulk one");
+  assertEquals(gates.bulk, false, "a revoked inbox opens no bulk gate");
 });
 
-Deno.test("a reachable opted-in inbox still opens exactly its own gate", async () => {
-  const outbound = await driveGates([
-    activeRow("a", { send_approval_required: true, bulk_review_mode: "off" }),
-    revokedRow("b", { send_approval_required: false, bulk_review_mode: "plan" }),
-  ]);
-  assertEquals(outbound.gates.outbound, true, "the live opt-in still counts");
-  assertEquals(outbound.gates.bulk, false, "and does not open the other gate");
-
+Deno.test("a reachable opted-in inbox still opens the bulk gate, and only it", async () => {
   const bulk = await driveGates([
     activeRow("a", { send_approval_required: false, bulk_review_mode: "plan" }),
   ]);
-  assertEquals(bulk.gates.outbound, false, "read independently");
   assertEquals(bulk.gates.bulk, true, "read independently");
+  const held = await driveGates([
+    activeRow("a", { send_approval_required: true, bulk_review_mode: "off" }),
+  ]);
+  assertEquals(held.gates.bulk, false, "the send opt-in does not open the bulk gate");
+});
+
+// ── The outbound gate is a scope fact (2026-10-27) ──────────────────────────
+//
+// It used to be the `send_approval_required` rollup, read once per chat at
+// tools/list, so approvals switched on mid-chat never got the card (Claude and
+// ChatGPT keep the listing). The card now renders an ordinary send as a
+// one-line receipt, so the gate opens for every key that can send or schedule,
+// whatever the inboxes' approval settings, and closes for one that cannot.
+
+Deno.test("the outbound gate opens for a send-capable key whatever the approval settings", async () => {
+  for (
+    const rows of [
+      [activeRow("a", { send_approval_required: false, bulk_review_mode: "off" })],
+      [activeRow("a", { send_approval_required: true })],
+      [revokedRow("a", { send_approval_required: true })],
+      [erroredRow("a", { send_approval_required: true })],
+      [],
+    ]
+  ) {
+    const { gates } = await driveGates(rows);
+    assertEquals(gates.outbound, true, `send:email opens the outbound gate: ${JSON.stringify(rows)}`);
+  }
+});
+
+Deno.test("the outbound gate follows the send and schedule scopes", async () => {
+  const gatesFor = async (scopes: string[]) => {
+    const { client } = recordingClient([activeRow("a", { send_approval_required: true })], ROLLED_OUT);
+    // deno-lint-ignore no-explicit-any
+    return await keyReviewCardGates({ ...gateKey(), scopes } as any, client);
+  };
+  assertEquals((await gatesFor(["read:email", "manage:drafts"])).outbound, false, "no send scope, no card");
+  assertEquals((await gatesFor(["read:email", "schedule:email"])).outbound, true, "schedule alone counts");
+  assertEquals((await gatesFor(["send:email"])).outbound, true, "send alone counts");
 });
 
 function erroredRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
@@ -673,7 +703,7 @@ Deno.test("a status='error' inbox opens nothing either", async () => {
       draft_editor_hidden: false,
     }),
   ]);
-  assertEquals(gates.outbound, false, "an errored inbox is not reachable");
+  // (outbound is a scope fact now; the tests above cover it.)
   assertEquals(gates.bulk, false, "an errored inbox is not reachable");
   // The case where nothing is at stake, kept for the other direction: the user
   // never hid anything, so there is no preference to honour and the card stays.
@@ -757,8 +787,10 @@ Deno.test("an unreadable database closes the card gates and leaves the draft gat
   }
 
   // Permissions: unknown is closed. This is the pre-MCP-Apps tool surface.
-  assertEquals(gates.outbound, false, "an unreadable opt-in must not mount a review card");
-  assertEquals(gates.bulk, false, "nor a bulk plan card");
+  // The outbound gate never read this query (2026-10-27): the card handles
+  // every outbound result, so a send-capable key keeps it.
+  assertEquals(gates.outbound, true, "the outbound card does not depend on the opt-in query");
+  assertEquals(gates.bulk, false, "an unreadable opt-in must not mount a bulk plan card");
   // The workspace ROLLOUT flag also fails closed, and it is ANDed in, so the
   // drafts gate closes with it. That is the rollout gate deciding, not the
   // preference rollup — which independently fails OPEN, as its own note says.

@@ -23,6 +23,7 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
+import { plainResultNote, plainResultReceipt } from "./plain-result";
 import { announceDraft } from "./draft-signal";
 import { draftShownContextLine } from "./model-context";
 
@@ -158,6 +159,11 @@ export interface CardStore {
   priorReceipt: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
   resultStatus: ResultStatus;
+  /**
+   * For a `foreign` FIRST result: what the card can say about it in one line
+   * (plain-result.ts#plainResultNote), or null for the generic line.
+   */
+  resultNote: string | null;
   hostContext: HostContext;
   connected: boolean;
   connectError: string | null;
@@ -227,6 +233,7 @@ let state: CardStore = {
   mountedRevision: null,
   priorReceipt: null,
   resultStatus: "waiting",
+  resultNote: null,
   hostContext: {},
   connected: false,
   connectError: null,
@@ -1578,7 +1585,21 @@ export function wireResultHandlers(bridge: HostBridge) {
     // `status` matters as much as `envelope`: a result that is not ours at all
     // (an opted-out inbox, a non-plannable email_organize action) must leave
     // the card silent rather than warn under a successful operation.
-    const { envelope, status } = classifyResult(params);
+    let { envelope, status } = classifyResult(params);
+    // A plain send/schedule result as the MOUNTING call's answer becomes a
+    // one-line receipt (plain-result.ts). Only the first push: a later plain
+    // result must never replace a card the user is looking at, which is the
+    // rule the `foreign` branch below keeps for everything else.
+    let note: string | null = null;
+    if (!envelope && status === "foreign" && !pushAccepted) {
+      const receipt = plainResultReceipt(params);
+      if (receipt) {
+        envelope = receipt;
+        status = "envelope";
+      } else {
+        note = plainResultNote(params);
+      }
+    }
     // Recorded before the disarm, because "did this beat the watchdog" is
     // exactly the fact the diagnostics line exists to collect from the real
     // host: `late` would mean remounts DO get a result and the budget is wrong.
@@ -1593,7 +1614,7 @@ export function wireResultHandlers(bridge: HostBridge) {
       // Unchanged and deliberately so: a foreign or malformed SECOND result
       // moves the status and leaves the card alone. App.tsx renders on
       // envelope presence, so nothing blanks.
-      setState(timing);
+      setState(pushAccepted ? timing : { ...timing, resultNote: note });
       return;
     }
 

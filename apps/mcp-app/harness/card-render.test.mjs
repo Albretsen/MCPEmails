@@ -455,6 +455,111 @@ async function main() {
     await c.done();
   }
 
+  // ── 3b. Ordinary outbound results (2026-10-27) ───────────────────────────
+  // The outbound card is listed for every send-capable key now, so the host
+  // mounts it under every plain send. Each must end in one calm line: a
+  // receipt for a send or schedule, a neutral line for anything else.
+
+  group("an ordinary send is a one-line receipt, from the result alone");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent)));
+    await settle();
+    expect("classified as an envelope", c.state().resultStatus, "envelope");
+    expect("a receipt", c.state().envelope?.card, "receipt");
+    expect("one header", c.root.querySelectorAll(".hdr").length, 1);
+    expect("one line", c.text(), "Sent to Dana Reyes +2· Quarterly numbers");
+    expect("no body paragraph", c.root.querySelectorAll("p").length, 0);
+    expect("no warning", c.root.querySelectorAll(".notice").length, 0);
+    await c.done();
+  }
+
+  group("a single forward says forwarded");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainForwarded, JSON.stringify(F.plainForwarded)));
+    await settle();
+    expect("one line", c.text(), "Forwarded to lee@northwind.example· Fwd: Quarterly numbers");
+    await c.done();
+  }
+
+  group("an ordinary schedule names the time");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainScheduled, JSON.stringify(F.plainScheduled)));
+    await settle();
+    expect("a scheduled receipt", c.state().envelope?.receipt?.outcome, "scheduled");
+    expect("headline starts with the time", c.text().startsWith("Scheduled for "), true);
+    expect("then who and what", c.text().endsWith("· to dana@northwind.example · Quarterly numbers"), true);
+    await c.done();
+  }
+
+  group("a refused send is one neutral line, not a failure block");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: {
+        content: [{ type: "text", text: "Confirm in chat first. Nothing was sent." }],
+        isError: true,
+      },
+    });
+    await settle();
+    expect("still foreign", c.state().resultStatus, "foreign");
+    expect("one line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    expect("neutral tone", c.root.querySelector(".dot")?.getAttribute("data-tone"), "neutral");
+    await c.done();
+  }
+
+  group("an isError result shaped like a send is still not a receipt");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: { structuredContent: F.plainSent, isError: true },
+    });
+    await settle();
+    expect("no envelope", c.state().envelope, null);
+    expect("one line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    await c.done();
+  }
+
+  group("a batch forward and an envelope-less held send each get their own line");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainForwardBatch, JSON.stringify(F.plainForwardBatch)));
+    await settle();
+    expect("batch: the generic line, never a receipt", c.text(), "MCPEmails: no preview for this result.");
+    await c.done();
+    const h = await boot();
+    await h.settled();
+    h.deliver(toolResult(F.plainPendingApproval, JSON.stringify(F.plainPendingApproval)));
+    await settle();
+    expect("held", h.text(), "MCPEmails: waiting for approval. The reply above has the link.");
+    await h.done();
+  }
+
+  group("a plain send after a real card does not replace it");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await settle();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent)));
+    await settle();
+    expect("the editor stayed", c.state().envelope?.card, "draft_editor");
+    expect("status moved only", c.state().resultStatus, "foreign");
+    await c.done();
+  }
+
   // ── 4. The regression guard ──────────────────────────────────────────────
   // The point of all of the above is that nothing renders empty any more. A
   // real envelope must still render the editor rather than one of these lines.

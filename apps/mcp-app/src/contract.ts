@@ -403,6 +403,13 @@ export interface Receipt {
     // question from whether the tool exists, and is open.
     | "cancelled";
   headline: string;
+  /**
+   * CLIENT-AUTHORED, never sent by the server: the muted text beside the
+   * headline on a receipt the card built from a plain send or schedule result
+   * (plain-result.ts), e.g. the subject. Not persisted (persist.ts keeps only
+   * the outcome).
+   */
+  subline?: string | null;
   detail?: string | null;
   affected_count?: number | null;
   dashboard_url?: string | null;

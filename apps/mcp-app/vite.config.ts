@@ -4,7 +4,8 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 // One self-contained HTML file. Every byte here is re-transferred out of the
 // Supabase edge function on *every* tool call (phase-0 findings Q4: the host
 // caches nothing), so the bundle budget is hard: <50 KB raw is the target,
-// >175 KB is a build failure (raised from 150 KB on 2026-10-17, see codegen.mjs).
+// >177 KB is a build failure (150 KB until 2026-10-17, 175 KB until 2026-10-27,
+// see codegen.mjs).
 export default defineConfig({
   // The CLASSIC JSX transform (preact's `h`) rather than the automatic
   // runtime: `h("p", {class}, a, b)` instead of `jsx("p", {class, children:

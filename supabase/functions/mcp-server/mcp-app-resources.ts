@@ -313,6 +313,14 @@ export function buildResourceTemplatesListResult(): {
  * The list is therefore applied at `tools/list` time, per key, through
  * `reviewCardMetaForListing` below — see the gate note in `handleToolsList`.
  *
+ * UPDATED 2026-10-27: the gate for these two is now "this key can send or
+ * schedule" (index.ts#keyCanSendOutbound), not the approval opt-in. The card
+ * renders an ordinary non-held result as a one-line receipt, and every other
+ * non-envelope result as one line (apps/mcp-app/src/plain-result.ts), so the
+ * empty-card problem above no longer needs the opt-in to avoid it. The opt-in
+ * gate was read once per chat, and hosts keep that listing, so approvals
+ * switched on mid-chat never got the card.
+ *
  * The `approval_*` tools are not listed here: they are defined in
  * `mcp-app-approvals.ts` and carry `appOnlyReviewCardToolMeta()` instead,
  * which adds `visibility: ["app"]` on top of the same resource URI. They are
@@ -685,7 +693,10 @@ export function modelAndAppUnmountedToolMeta(): {
  * decision below stays pure and testable while the query stays in `index.ts`.
  */
 export interface ReviewCardGates {
-  /** True when the key can reach an inbox with `send_approval_required`. */
+  /**
+   * True when the key can send or schedule (index.ts#keyCanSendOutbound).
+   * Until 2026-10-27: "can reach an inbox with `send_approval_required`".
+   */
   outbound: boolean;
   /** True when the key can reach an inbox with `bulk_review_mode = 'plan'`. */
   bulk: boolean;

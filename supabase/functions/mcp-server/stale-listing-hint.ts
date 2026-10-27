@@ -59,6 +59,25 @@ export function isStaleListingCardCall(
 }
 
 /**
+ * True when this result is one the user actually loses something on without
+ * the card.
+ *
+ * Since 2026-10-27 the outbound card is listed for every key that can send
+ * (index.ts#keyCanSendOutbound), so the card gate alone would now attach the
+ * reload note to every ordinary ChatGPT send. On an ordinary send the card is a
+ * one-line receipt and the model's reply already says the same, so telling the
+ * user to reload for it is noise. For `email_compose` and `schedule` the note is
+ * kept to a HELD send (`status: "pending_approval"`), which is what the
+ * outbound card exists to review, exactly the case the note was written for.
+ * Every other card-bearing tool is unchanged.
+ */
+export function staleHintHasCardToMiss(toolName: string, structuredContent: unknown): boolean {
+  if (!REVIEW_CARD_TOOL_NAMES.includes(toolName)) return true;
+  return !!structuredContent && typeof structuredContent === "object" &&
+    (structuredContent as Record<string, unknown>).status === "pending_approval";
+}
+
+/**
  * True when the client on this key is ChatGPT, not Codex or Agent Builder.
  *
  * `clientName` is the latest name sent at `initialize`, or null when the key

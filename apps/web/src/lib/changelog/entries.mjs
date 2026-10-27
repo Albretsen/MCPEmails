@@ -58,6 +58,13 @@ export const ENTRIES = [
       "The approval page now shows the email the way your mail client would, with the technical details folded away, and the email goes out the moment you approve it instead of up to a minute later. Signing in from an approval link now says why you are being asked to.",
   },
   {
+    date: '2026-10-27',
+    kind: 'fixed',
+    title: 'The approval card shows up even when you turn approvals on mid-chat',
+    body:
+      "When a send waits for your approval, Claude and ChatGPT now show the review card in any chat, including one that started before you turned approvals on. Ordinary sends and scheduled sends show a one-line confirmation. Before, those chats only got a text link.",
+  },
+  {
     date: '2026-10-26',
     kind: 'fixed',
     title: 'Your AI only offers mailboxes that work',

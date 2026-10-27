@@ -44,6 +44,11 @@ const FIXTURES = {
   outbound: F.outboundGmail,
   bulk: F.bulkDelete,
   receipt: F.receiptSent,
+  // Ordinary (not held) outbound results, which mount the card since the
+  // outbound gate became "can send" (2026-10-27). One line each.
+  plain_sent: F.plainSent,
+  plain_scheduled: F.plainScheduled,
+  plain_forward_batch: F.plainForwardBatch,
   // The two hostile pushes from the audit.
   draftless: { schema_version: "review-card-v1", card: "draft_editor" },
   someone_else: {
