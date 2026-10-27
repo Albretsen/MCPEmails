@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
+  blockingFailure,
   canDraftWith,
   clientKind,
   curlFirstCall,
   docsPath,
+  failureKey,
   helpTiers,
   ladderState,
   openClientHref,
@@ -20,8 +22,11 @@ import { CopyField, EmailMeButton, PromptBlock } from './ConnectParts';
 /**
  * Step 3 in one screen: the Reply radar prompt to paste, one live status line
  * (Waiting for X, X connected, Ask it something) and the timed help.
- * A failed request is not shown here: the AI app usually fixes its own
- * arguments and tries again, so it would only alarm.
+ * A failed request is shown only when the user has to fix it (a rejected
+ * inbox password, too little access, no inbox: BLOCKING_FAILURE_CODES), in
+ * place of the "has not used MCPEmails yet" help. Any other failure counts
+ * as working (status.firstCall.reached): the AI app reached MCPEmails and
+ * fixes its own arguments or explains by itself.
  * FirstPromptStep and WaitStep both render this; the flow moves from
  * first_prompt to wait once the app is connected (a handshake, any call, or a
  * connector grant since reset: connectedAtMs), and to it_works on the
@@ -80,6 +85,7 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
   }, [ladder.works, ladder.connected, step, goTo, client, status?.handshake?.client]);
 
   const tiers = timing ? helpTiers(status, { ...timing, client }) : [];
+  const blocked = timing ? blockingFailure(status, timing.waitStartedAtMs) : null;
   useEffect(() => {
     for (const tier of tiers) {
       if (shownHelp.current.has(tier)) continue;
@@ -121,6 +127,7 @@ export function WaitPanel({ step, status, setPolling, client, clientLabel, mcpUr
         ? <p className="onb-hint onb-listen">{t('ladder.stopped')}</p>
         : <Listening rung={ladder.rung} clientLabel={clientLabel} />}
 
+      {blocked && <HelpCallout title={t(failureKey(blocked.code), vars)} tier="blocked" />}
       {tiers.includes('no_handshake') && (
         <HelpCallout title={t('help.noHandshake.title', vars)} body={t(`help.noHandshake.${restartKind(client)}`, vars)} tier="no_handshake" />
       )}
@@ -150,7 +157,7 @@ function HelpCallout({ title, body, tier }) {
   return (
     <div className="onb-callout" data-testid={`onb-help-${tier}`}>
       <p className="onb-strong">{title}</p>
-      <p className="onb-callout-body">{body}</p>
+      {body && <p className="onb-callout-body">{body}</p>}
     </div>
   );
 }

@@ -251,7 +251,8 @@
         "search": "{client} acaba de buscar en tu bandeja de entrada.",
         "draft": "{client} acaba de guardar un borrador en tu buzón.",
         "organize": "{client} acaba de ordenar tu bandeja de entrada.",
-        "generic": "{client} acaba de usar tu buzón."
+        "generic": "{client} acaba de usar tu buzón.",
+        "connected": "{client} está conectado a tu buzón."
       },
       "finish": "Listo",
       "secondInbox": {

@@ -34,7 +34,7 @@ test('a fresh workspace has nothing yet', () => {
   assert.deepEqual(s.inboxes, { count: 0, sinceReset: 0, chosenAt: null, items: [] });
   assert.deepEqual(s.credential, { exists: false, sinceReset: false, latestAt: null, scopes: null });
   assert.deepEqual(s.handshake, { at: null, client: null, clients: [] });
-  assert.deepEqual(s.firstCall, { at: null, tool: null, client: null });
+  assert.deepEqual(s.firstCall, { at: null, tool: null, client: null, reached: false });
   assert.equal(s.lastFailure, null);
 });
 
@@ -64,7 +64,7 @@ test('every signal is reported, newest handshake first, mapped to a chip id', ()
   assert.equal(s.handshake.at, '2026-10-26T11:45:00Z');
   assert.equal(s.handshake.client, 'claude');
   assert.deepEqual(s.handshake.clients.map((c) => c.client), ['claude', 'cursor']);
-  assert.deepEqual(s.firstCall, { at: '2026-10-26T11:50:00Z', tool: 'email_read', client: null });
+  assert.deepEqual(s.firstCall, { at: '2026-10-26T11:50:00Z', tool: 'email_read', client: null, reached: false });
   assert.deepEqual(s.anyCall, { at: '2026-10-26T11:49:00Z' });
   assert.deepEqual(s.lastFailure, { at: '2026-10-26T11:48:00Z', tool: 'email_search', code: 'search_timeout' });
 });
@@ -104,9 +104,9 @@ test('firstCall.tool is the activating call, never the inbox_list that came firs
     analytics_first_tool_used_at: '2026-10-26T11:20:32Z',
     analytics_first_tool_name: 'inbox_list',
   };
-  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search' })).firstCall, { at: '2026-10-26T11:20:55Z', tool: 'email_search', client: null });
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search' })).firstCall, { at: '2026-10-26T11:20:55Z', tool: 'email_search', client: null, reached: false });
   // Activity not readable: never report inbox_list.
-  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: null })).firstCall, { at: '2026-10-26T11:20:55Z', tool: null, client: null });
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: null })).firstCall, { at: '2026-10-26T11:20:55Z', tool: null, client: null, reached: false });
   assert.equal(firstCallToolName(null, 'email_read'), 'email_read');
   assert.equal(firstCallToolName('draft', 'inbox_list'), 'draft');
   // The search window starts no earlier than the reset and spans the marker.
@@ -168,4 +168,32 @@ test('the newest key carries its scopes, so the prompt step can tell a read-only
   assert.deepEqual(s.credential.scopes, ['read:email', 'search:email']);
   const none = shapeOnboardingStatus(rows({ latestKey: { created_at: '2026-10-26T11:30:00Z', scopes: null } }));
   assert.equal(none.credential.scopes, null);
+});
+
+test('a failed call that reached MCPEmails counts as the first call until a success lands', () => {
+  const inbox = { inboxes: [{ id: 'i1', email_address: 'me@example.com', provider: 'imap', status: 'active', created_at: '2026-10-26T11:00:00Z' }], inboxCount: 1 };
+  const reached = shapeOnboardingStatus(rows({
+    ...inbox,
+    reachedCall: { created_at: '2026-10-26T11:40:00Z', tool_name: 'email_search' },
+    reachedCallClientName: 'claude-ai',
+  }));
+  assert.deepEqual(reached.firstCall, { at: '2026-10-26T11:40:00Z', tool: null, client: 'claude', reached: true });
+
+  // A real success wins over it.
+  const success = shapeOnboardingStatus(rows({
+    ...inbox,
+    workspace: { ...rows().workspace!, onboarding_value_activated_at: '2026-10-26T11:50:00Z' },
+    reachedCall: { created_at: '2026-10-26T11:40:00Z', tool_name: 'email_search' },
+  }));
+  assert.equal(success.firstCall.reached, false);
+  assert.equal(success.firstCall.at, '2026-10-26T11:50:00Z');
+
+  // Not without an inbox, and not from before a reset.
+  assert.equal(shapeOnboardingStatus(rows({ reachedCall: { created_at: '2026-10-26T11:40:00Z', tool_name: 'email_search' } })).firstCall.at, null);
+  const reset = shapeOnboardingStatus(rows({
+    ...inbox,
+    workspace: { ...rows().workspace!, onboarding_reset_at: '2026-10-26T11:45:00Z' },
+    reachedCall: { created_at: '2026-10-26T11:40:00Z', tool_name: 'email_search' },
+  }));
+  assert.equal(reset.firstCall.at, null);
 });

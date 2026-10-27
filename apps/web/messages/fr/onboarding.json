@@ -251,7 +251,8 @@
         "search": "{client} vient de chercher dans votre boîte de réception.",
         "draft": "{client} vient d'enregistrer un brouillon dans votre boîte mail.",
         "organize": "{client} vient de ranger votre boîte de réception.",
-        "generic": "{client} vient d'utiliser votre boîte mail."
+        "generic": "{client} vient d'utiliser votre boîte mail.",
+        "connected": "{client} est connecté à votre boîte mail."
       },
       "finish": "Terminé",
       "secondInbox": {

@@ -34,7 +34,7 @@ export function ItWorksStep({ step, status, clientLabel, finish, variant, flowB 
     <section className="onb-panel onb-done" data-step={step} data-testid="onb-it-works">
       <SuccessMark size={48} />
       <h1 className="onb-title">{t('steps.it_works.title')}</h1>
-      <p className="onb-sub" data-testid="onb-success">{t(successKey(status?.firstCall?.tool ?? null), vars)}</p>
+      <p className="onb-sub" data-testid="onb-success">{t(successKey(status?.firstCall?.tool ?? null, { reached: Boolean(status?.firstCall?.reached) }), vars)}</p>
 
       {variant?.convert === 'on' && (
         <Suspense fallback={null}>

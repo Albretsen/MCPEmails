@@ -251,7 +251,8 @@
         "search": "{client} hat gerade Ihren Posteingang durchsucht.",
         "draft": "{client} hat gerade einen Entwurf in Ihrem Postfach gespeichert.",
         "organize": "{client} hat gerade Ihren Posteingang aufgeräumt.",
-        "generic": "{client} hat gerade Ihr Postfach genutzt."
+        "generic": "{client} hat gerade Ihr Postfach genutzt.",
+        "connected": "{client} ist mit Ihrem Postfach verbunden."
       },
       "finish": "Fertig",
       "secondInbox": {
