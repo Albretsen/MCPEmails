@@ -47,6 +47,8 @@ A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) an
 
 IMPORTANT: use the built-in Claude browser before asking Asgeir. That is the Browser pane in the Claude app, driven with the `mcp__Claude_Browser__*` tools, and it keeps Asgeir's sign-ins (mcpemails.com, the dashboards, Claude, ChatGPT). Do not use Claude in Chrome (`mcp__claude-in-chrome__*`) unless he asks for it by name. If an answer can be read in the browser (a count, a setting, a console value, what a page shows), get it yourself, read-only, and never ask him for it. Ask Asgeir only for real decisions, and for actions the safety rules reserve for him (passwords, payments, signing in).
 
+IMPORTANT: NEVER ask Asgeir for information that a Google search can find (a company, a product, a person's public work, docs, a competitor's listing). Search the web and open the pages in the built-in browser yourself.
+
 - Keep the Browser pane shown while you test. When it is hidden its pages run as background tabs, and a page can stall half-loaded: the dashboard with `?setup=1` once sat on its loading skeleton until the pane was opened.
 
 Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
