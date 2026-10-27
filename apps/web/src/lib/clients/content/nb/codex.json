@@ -10,7 +10,8 @@
     "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
     "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
-    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
     "title": "Koble e-post til OpenAI Codex: oppsett av MCP-server",
@@ -53,6 +54,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "Skrivebordsappen: hvis Autentiser aldri dukker opp",
+      "p": "Per 27. oktober 2026 logger ikke skrivebordsappen alltid inn på en server du legger til for hånd (i nyere versjoner under <b>Plugins</b>, <b>Add</b>, <b>Add MCP server</b>). Skjemaet har ikke noe innloggingssteg, og i enkelte versjoner dukker det ikke opp noen <b>Authenticate</b>-knapp etter omstarten, eller verktøyene kommer aldri frem i en chat. OpenAI har åpne feilrapporter om dette, så det kan være rettet når du leser dette. Inntil videre logger du inn fra en terminal: installer CLI-en med <code>npm i -g @openai/codex</code> hvis du ikke har den, kjør <code>codex mcp login mcpemails</code> (bruk navnet du skrev i <b>Name</b>-feltet), godkjenn tilgangen i nettleseren, og start så appen på nytt og åpne en ny chat. Appen og CLI-en deler samme konfigurasjon, så appen bruker den innloggingen."
+    },
     {
       "h": "Sjekk hvilket kort samtykkeskjermen åpner på",
       "p": "Codex ber om tilgangene i 401-utfordringen vår, som er <code>read:email</code>, så ved enkelte registreringer åpner samtykkeskjermen på <b>Skrivebeskyttet</b>. Det holder for sortering. Vil du at Codex skal skrive utkast eller sende, velger du <b>Standard</b> eller <b>Full tilgang</b> før du klikker Gi tilgang. Vil du utvide senere, kjører du <code>codex mcp login mcpemails</code> på nytt og velger det bredere kortet, eller angir tilgangene med <code>--scopes</code>, for eksempel <code>--scopes read:email,search:email,manage:drafts</code>."

@@ -10,7 +10,8 @@
     "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
     "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
-    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
     "title": "E-Mail mit OpenAI Codex verbinden: MCP-Server einrichten",
@@ -53,6 +54,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "Desktop-App: wenn Authenticate nie erscheint",
+      "p": "Stand 27. Oktober 2026 meldet sich die Desktop-App nicht immer bei einem Server an, den Sie von Hand hinzufügen (in aktuellen Versionen unter <b>Plugins</b>, <b>Add</b>, <b>Add MCP server</b>). Das Formular hat keinen Anmeldeschritt, und in manchen Versionen erscheint nach dem Neustart keine Schaltfläche <b>Authenticate</b>, oder die Tools kommen nie in einem Chat an. OpenAI hat dazu offene Fehlerberichte, es kann also behoben sein, wenn Sie dies lesen. Bis dahin melden Sie sich im Terminal an: Installieren Sie die CLI mit <code>npm i -g @openai/codex</code>, falls sie fehlt, führen Sie <code>codex mcp login mcpemails</code> aus (mit dem Namen, den Sie im Feld <b>Name</b> eingegeben haben), erlauben Sie den Zugriff im Browser, und starten Sie dann die App neu und öffnen Sie einen neuen Chat. App und CLI teilen sich eine Konfiguration, die App nutzt also diese Anmeldung."
+    },
     {
       "h": "Prüfen Sie, welche Karte der Zustimmungsbildschirm zuerst anzeigt",
       "p": "Codex fordert die Scopes aus unserer 401-Challenge an, und das ist <code>read:email</code>. Bei manchen Registrierungen zeigt der Zustimmungsbildschirm deshalb zuerst <b>Nur-Lese-Zugriff</b> an. Zum Sichten genügt das. Soll Codex auch entwerfen oder senden, wählen Sie <b>Standard</b> oder <b>Vollzugriff</b>, bevor Sie auf Zugriff erlauben klicken. Um den Zugriff später zu erweitern, führen Sie <code>codex mcp login mcpemails</code> erneut aus und wählen die umfassendere Karte, oder Sie nennen die Scopes mit <code>--scopes</code>, zum Beispiel <code>--scopes read:email,search:email,manage:drafts</code>."
