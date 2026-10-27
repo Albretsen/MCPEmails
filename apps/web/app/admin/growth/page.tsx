@@ -75,6 +75,11 @@
  * behind it, and that is what the "Usage cap" band measures. Connected
  * inboxes remain the other value metric and keep their own tiles.
  *
+ * THE DRAFT CARD BAND (2026-10-27) is the release read-out for the in-chat
+ * draft editor: whether customers use it, and whether drafts still get sent,
+ * against the window before the release and against the clients that draw no
+ * card. It reads draft_events, which is not purged with activity_log.
+ *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
  *   - A jump nav. It was a patch on a page that was too long and too uniform.
  *   - A cumulative-signups curve under a signups bar chart, which restated it.
@@ -90,6 +95,7 @@
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/admin/require-admin';
 import {
+  DraftCardSection,
   GrowthSection,
   MilestoneSection,
   MoneySection,
@@ -150,6 +156,7 @@ function Band({ id, title, question }: { id: string; title: string; question: st
 const BANDS = [
   { id: 'money', title: 'Money', question: 'what have we earned' },
   { id: 'usage-cap', title: 'Usage cap', question: 'who is near the wall' },
+  { id: 'draft-card', title: 'Draft card', question: 'is it used, and is it worth keeping' },
   { id: 'milestones', title: 'Milestones', question: 'how far, and how fast' },
   { id: 'growth', title: 'Growth', question: 'who is arriving' },
   { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
@@ -252,6 +259,20 @@ export default async function GrowthBoardPage({
             }
           >
             <UsageCapSection days={days} />
+          </Suspense>
+
+          <Band id="draft-card" title="Draft card" question="is it used, and is it worth keeping" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+              </>
+            }
+          >
+            <DraftCardSection days={days} />
           </Suspense>
 
           <Band id="milestones" title="Milestones" question="how far, and how fast" />

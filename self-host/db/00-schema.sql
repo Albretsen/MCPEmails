@@ -664,7 +664,7 @@ $$;
 --                    usage_limit_events, workspace_usage_exemptions,
 --                    user_usage_entitlements, user_billing
 --   send review      send_approvals, outbound_idempotency
---   drafts           draft_lineage, draft_card_activity
+--   drafts           draft_lineage, draft_card_activity, draft_events
 --   bulk operations  bulk_plans, bulk_runs
 --   subscriptions    subscription_plans, unsubscribe_requests
 --   automations      triage_rules, triage_runs, triage_run_items,
@@ -1153,6 +1153,29 @@ CREATE TABLE IF NOT EXISTS public.draft_card_activity (
 CREATE INDEX IF NOT EXISTS draft_card_activity_unreported_idx ON public.draft_card_activity (api_key_id, inbox_id, occurred_at) WHERE reported_at IS NULL;
 CREATE INDEX IF NOT EXISTS draft_card_activity_occurred_idx ON public.draft_card_activity (occurred_at);
 CREATE INDEX IF NOT EXISTS draft_card_activity_workspace_idx ON public.draft_card_activity (workspace_id);
+
+-- Draft events (hosted migration 20261027120000): drafted / saved / sent /
+-- deleted / hidden, with via_card, for the hosted growth board. Ids only.
+CREATE TABLE IF NOT EXISTS public.draft_events (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    workspace_id uuid NOT NULL,
+    inbox_id uuid,
+    api_key_id uuid,
+    line_id uuid,
+    event text NOT NULL,
+    via_card boolean DEFAULT false NOT NULL,
+    card_offered boolean,
+    source text DEFAULT 'live'::text NOT NULL,
+    CONSTRAINT draft_events_event_check CHECK ((event = ANY (ARRAY['drafted'::text, 'saved'::text, 'sent'::text, 'deleted'::text, 'hidden'::text]))),
+    CONSTRAINT draft_events_source_check CHECK ((source = ANY (ARRAY['live'::text, 'backfill'::text]))),
+    CONSTRAINT draft_events_pkey PRIMARY KEY (id),
+    CONSTRAINT draft_events_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE,
+    CONSTRAINT draft_events_inbox_id_fkey FOREIGN KEY (inbox_id) REFERENCES public.inboxes(id) ON DELETE SET NULL,
+    CONSTRAINT draft_events_api_key_id_fkey FOREIGN KEY (api_key_id) REFERENCES public.api_keys(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS draft_events_occurred_idx ON public.draft_events (occurred_at);
+CREATE INDEX IF NOT EXISTS draft_events_workspace_idx ON public.draft_events (workspace_id, occurred_at);
 
 -- Mail relay registry (hosted migration 20261015180000). Read and written only
 -- when the server has a relay configured (SMTP_RELAY_URL), which a self-hosted

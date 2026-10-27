@@ -52,6 +52,9 @@ import {
   fetchMailRelayDaily,
   fetchMailRelayHosts,
   fetchSignupTrend,
+  fetchDraftCardDaily,
+  fetchDraftCardReach,
+  fetchDraftCardStats,
   gmailCapProjection,
   type GrowthResult,
 } from '@/lib/analytics/growth-queries';
@@ -116,6 +119,8 @@ import { RelayHostTable, RelayHostsTile, RelayStatusTile, RelayWorkingTile } fro
 import { relayHealth } from '@/lib/analytics/mail-relay-health';
 import { FETCH_WEEKS, signupTrend } from '@/lib/analytics/signup-trend';
 import { SignupTrendTile } from './board/signup-trend';
+import { DraftCardFamilyTable, DraftCardReachTile, DraftCardVerdictTile } from './board/draft-card';
+import { DRAFT_CARD_RELEASE_AT, releaseChecks, releaseVerdict } from '@/lib/analytics/draft-card';
 
 /** Ninety is a ceiling, not a taste: activity_log is purged past 90 days. */
 const DAILY_DAYS = 90;
@@ -1312,6 +1317,69 @@ export async function RelaySection({ days }: { days: number }) {
       </Cell>
       <Cell span={12}>
         <RelayHostTable rows={hosts.data} />
+      </Cell>
+    </>
+  );
+}
+
+/* ============================================================= draft card */
+
+/**
+ * The draft editor card's release read-out. Reads draft_events through three
+ * RPCs; the window applies to the baseline and the daily chart, and the
+ * after-release half runs from DRAFT_CARD_RELEASE_AT to now (90 days at most).
+ */
+export async function DraftCardSection({ days }: { days: number }) {
+  const released = DRAFT_CARD_RELEASE_AT !== null;
+  const [stats, daily, reach] = await Promise.all([
+    fetchDraftCardStats(days, DRAFT_CARD_RELEASE_AT),
+    fetchDraftCardDaily(days),
+    fetchDraftCardReach(),
+  ]);
+  if (!stats.ok) {
+    return (
+      <Cell span={12}>
+        <TileError label="Draft card" message={stats.error} />
+      </Cell>
+    );
+  }
+  const reachRow = reach.ok ? reach.data : null;
+  const checks = releaseChecks(stats.data, reachRow, released);
+  const rows = daily.ok ? daily.data : [];
+  return (
+    <>
+      <Cell span={4} tall={2}>
+        <DraftCardVerdictTile verdict={releaseVerdict(checks, released)} checks={checks} />
+      </Cell>
+      <Cell span={8} tall={2}>
+        <DraftCardFamilyTable rows={stats.data} released={released} days={days} />
+      </Cell>
+      <Cell span={8} tall={2}>
+        {daily.ok ? (
+          <BarSeries
+            title="Customer drafts, and how they were sent"
+            subtitle="Every client. Sends are counted on the day they happened."
+            labels={rows.map((row) => row.day.slice(5))}
+            series={[
+              { key: 'card', name: 'Sent from the card', values: rows.map((row) => Number(row.sent_card)) },
+              { key: 'agent', name: 'Sent by the assistant', values: rows.map((row) => Number(row.sent_agent)) },
+              { key: 'saved', name: 'Saved in the card', values: rows.map((row) => Number(row.saved)) },
+            ]}
+            overlay={[{ key: 'drafted', name: 'New drafts', values: rows.map((row) => Number(row.drafted)) }]}
+            stacked
+            height={190}
+            tickEvery={Math.max(1, Math.round(rows.length / 8))}
+          />
+        ) : (
+          <FailedCard title="Customer drafts" error={daily.error} />
+        )}
+      </Cell>
+      <Cell span={4} tall={2}>
+        {reachRow ? (
+          <DraftCardReachTile reach={reachRow} />
+        ) : (
+          <TileError label="Who has it" message={reach.ok ? 'unavailable' : reach.error} />
+        )}
       </Cell>
     </>
   );
