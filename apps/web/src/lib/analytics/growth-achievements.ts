@@ -225,7 +225,7 @@ export function achievementReport(
   record: MilestoneUnlockRecord = MILESTONE_UNLOCK_RECORD,
 ): AchievementReport {
   const all: Achievement[] = [];
-  for (const ladder of ladders(input, now)) all.push(...buildLadder(ladder, record));
+  for (const ladder of ladders(input, now)) all.push(...buildLadder(ladder, record, now));
 
   const unlocked = all.filter((entry) => entry.unlocked).sort(byRecency);
   const next = all.filter((entry) => !entry.unlocked).sort(byCloseness);
@@ -245,8 +245,14 @@ type Ladder = {
   detail: string;
   /** Dates the crossing of `target`, for the ladders with a series behind them. */
   dateFor?: (target: number) => string | null;
-  /** Days to cover `remaining`, for the two ladders with an honest pace. */
+  /**
+   * Days to cover `remaining`, for the ladders with a pace series of their
+   * own. Every other ladder is paced from its own dated rungs, see
+   * `paceFromDatedRungs`.
+   */
   paceFor?: (remaining: number) => number | null;
+  /** True for a ladder whose rungs are not a running total, so no pace exists. */
+  unpaced?: boolean;
   /** Defaults to a plain count. Set only by the ladders stored in minor units. */
   format?: Achievement['format'];
 };
@@ -342,6 +348,8 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
       current: streak(newUsers).current,
       title: (target) => `${formatCount(target)}-day signup streak`,
       detail: 'Consecutive days with at least one signup, ending today.',
+      // A streak that is still running grows by exactly one a day.
+      paceFor: (remaining) => daysToTarget(remaining, 1),
       // A streak is a length, not an event: the day it reached 30 is knowable
       // in principle but is not what `streak()` returns, and re-deriving it
       // here would be a second, disagreeing implementation of the same rule.
@@ -354,6 +362,8 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
       current: recordDay(newUsers)?.count ?? 0,
       title: (target) => `${formatCount(target)} signups in one day`,
       detail: 'Most signups on any single UTC day in the series read.',
+      // A best single day is not a running total, so it has no pace.
+      unpaced: true,
       // Deliberately undated. `recordDay` knows which day set the record, but
       // that is the day of the CURRENT best, not the day this rung was first
       // cleared, and the two differ the moment the record is beaten.
@@ -392,6 +402,7 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
       current: streak(dailyRows.map((row) => ({ day: row.day, count: finite(row.successes) > 0 ? 1 : 0 }))).current,
       title: (target) => `${formatCount(target)} days serving calls`,
       detail: 'Consecutive days with a successful call, last 90 days only.',
+      paceFor: (remaining) => daysToTarget(remaining, 1),
     });
   }
 
@@ -418,9 +429,9 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
 }
 
 /** One ladder into its rungs. Every rung is the same fact at a different height. */
-function buildLadder(ladder: Ladder, record: MilestoneUnlockRecord): Achievement[] {
+function buildLadder(ladder: Ladder, record: MilestoneUnlockRecord, now: number): Achievement[] {
   const current = finite(ladder.current);
-  return ladder.targets.map((target) => {
+  const rungs = ladder.targets.map((target) => {
     const unlocked = current >= target;
     const id = `${ladder.idPrefix}-${target}`;
     // The ladder's own series first. Only when it cannot answer is the record
@@ -446,6 +457,39 @@ function buildLadder(ladder: Ladder, record: MilestoneUnlockRecord): Achievement
       format: ladder.format ?? { kind: 'count' },
     };
   });
+
+  // Ladders with no pace series of their own (Stripe snapshots, lifecycle
+  // counts) are paced from the climb they have already made: the distance
+  // from the last dated rung to today, over the days that took.
+  if (!ladder.paceFor && !ladder.unpaced) {
+    const perDay = paceFromDatedRungs(rungs, current, now);
+    if (perDay !== null) {
+      for (const rung of rungs) {
+        if (!rung.unlocked) rung.daysToGo = daysToTarget(rung.target - current, perDay);
+      }
+    }
+  }
+  return rungs;
+}
+
+/**
+ * Per-day climb since the most recent dated rung that is at least
+ * `MIN_PACE_SPAN_DAYS` old. A rung crossed yesterday would make a pace out of
+ * one day's noise, so the anchor steps back until the span is long enough.
+ * Null when no rung qualifies or the ladder has not moved since.
+ */
+const MIN_PACE_SPAN_DAYS = 7;
+
+function paceFromDatedRungs(rungs: readonly Achievement[], current: number, now: number): number | null {
+  const anchors = rungs
+    .filter((rung) => rung.unlocked && rung.unlockedOn)
+    .map((rung) => ({ target: rung.target, span: daysBetween(`${rung.unlockedOn!.slice(0, 10)}T00:00:00Z`, now) }))
+    .filter((anchor): anchor is { target: number; span: number } => anchor.span !== null && anchor.span >= MIN_PACE_SPAN_DAYS)
+    .sort((a, b) => a.span - b.span || b.target - a.target);
+  const anchor = anchors[0];
+  if (!anchor) return null;
+  const perDay = (current - anchor.target) / anchor.span;
+  return perDay > 0 ? perDay : null;
 }
 
 /* ------------------------------------------------------------------- dating */

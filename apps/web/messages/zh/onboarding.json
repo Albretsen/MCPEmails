@@ -190,7 +190,7 @@
     },
     "add_to_ai": {
       "title": "将 MCPEmails 添加到 {client}",
-      "lead": "在新标签页中打开。{client} 连接后会自动继续。",
+      "lead": "{client} 连接后会自动继续。",
       "urlLabel": "MCPEmails 服务器 URL",
       "linkAfter": "在 {client} 中确认，然后登录 MCPEmails。",
       "claudeAfter": "在 Claude 中点击添加，再点击连接。",

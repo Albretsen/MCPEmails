@@ -263,12 +263,14 @@ test('progress is a clamped fraction and never exceeds one', () => {
   assert.ok((nextCalls?.progress ?? 0) > 0.6 && (nextCalls?.progress ?? 0) < 0.7);
 });
 
-test('only the two paced ladders project a date, and the money ladders never do', () => {
+test('a ladder with no dated rung and no series of its own does not project', () => {
   const report = achievementReport(CALM, NOW, NO_RECORD);
 
-  for (const id of ['mrr-5000', 'mrr-10000', 'cash-50000', 'paying-10', 'activated-250', 'active-7d-250']) {
-    assert.equal(find(report, id)?.daysToGo, null, `${id} must not extrapolate`);
+  for (const id of ['mrr-5000', 'mrr-10000', 'paying-10', 'activated-250', 'active-7d-250']) {
+    assert.equal(find(report, id)?.daysToGo, null, `${id} has nothing to pace from`);
   }
+  // A best single day is not a running total, so it never gets a pace.
+  assert.equal(find(report, 'record-signup-day-25')?.daysToGo, null);
 
   // Three signups a day, 161 to go: a real number of days, not a guess.
   const nextSignups = find(report, 'signups-500');
@@ -276,6 +278,33 @@ test('only the two paced ladders project a date, and the money ladders never do'
   assert.equal(typeof find(report, 'tool-calls-250000')?.daysToGo, 'number');
   // An unlocked rung has no distance left to report.
   assert.equal(find(report, 'signups-250')?.daysToGo, null);
+});
+
+test('a running streak projects one day per day', () => {
+  const report = achievementReport(CALM, NOW, NO_RECORD);
+  // 32 days long, 60 is 28 days away.
+  assert.equal(find(report, 'signup-streak-60')?.daysToGo, 28);
+});
+
+test('a snapshot ladder is paced from its own dated rungs', () => {
+  // $10 MRR dated 30 days ago and $35 now: $25 over 30 days, so the $15 left
+  // to $50 takes 18 days.
+  const record: MilestoneUnlockRecord = {
+    'mrr-1000': { day: '2026-08-04', note: 'test' },
+    'activated-50': { day: '2026-08-04', note: 'test' },
+  };
+  const report = achievementReport(CALM, NOW, record);
+  assert.equal(find(report, 'mrr-5000')?.daysToGo, 18);
+  // 119 activations in 30 days, 81 to go to 250.
+  assert.equal(find(report, 'activated-250')?.daysToGo, 21);
+
+  // The cash ladder dates itself by month: $100 in August, $250 now.
+  assert.equal(find(achievementReport(CALM, NOW, NO_RECORD), 'cash-50000')?.daysToGo, 55);
+});
+
+test('a rung dated under a week ago is too short a span to pace from', () => {
+  const record: MilestoneUnlockRecord = { 'mrr-2500': { day: '2026-08-31', note: 'test' } };
+  assert.equal(find(achievementReport(CALM, NOW, record), 'mrr-5000')?.daysToGo, null);
 });
 
 test('a stalled series refuses to forecast rather than promising a date', () => {
@@ -410,7 +439,7 @@ test('every recorded id is a rung that exists, and every day is a real ISO day',
     assert.equal(unlock.day, new Date(`${unlock.day}T00:00:00Z`).toISOString().slice(0, 10));
     assert.ok(unlock.note.trim().length > 0, `${id} records a day with no evidence`);
     // The day the record was last extended. Bump it with the next batch.
-    assert.ok(unlock.day <= '2026-10-15', `${id} is dated in the future`);
+    assert.ok(unlock.day <= '2026-10-27', `${id} is dated in the future`);
   }
 });
 

@@ -141,8 +141,9 @@ export function Milestones({ report }: { report: AchievementReport }) {
         {/* A rung nothing can date: not its own series, and not the recorded
             crossings either. It gets a chip below the track rather than a
             guessed month, because inventing a date is the one edit here that
-            would turn a record into a story. Empty as of 2026-09-17 and kept
-            anyway: the next rung up any snapshot-backed ladder lands here. */}
+            would turn a record into a story. Since 2026-10-27 the board stores
+            the day it first sees a rung reached (growth-milestone-store.ts), so
+            this only shows when that write fails. */}
         {undated.length > 0 && (
           <>
             <h4 className="gb-miles-label" style={{ margin: '14px 0 8px' }}>Reached, day unknown</h4>

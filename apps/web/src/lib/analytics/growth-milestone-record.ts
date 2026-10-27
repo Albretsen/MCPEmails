@@ -47,6 +47,12 @@
  * Personal reprice and in-place upgrades made list-price reconstruction from
  * `user_billing` wrong. The working is in the same note.
  *
+ * EXTENDED 2026-10-27 with the five rungs crossed since, the last batch dated
+ * by hand. From then on a rung nothing else can date is written to the
+ * `growth_milestone_unlocks` table the first time the board sees it unlocked
+ * (`growth-milestone-store.ts`), so the undated pile no longer fills up while
+ * waiting for someone to rerun these queries.
+ *
  * PURE DATA, NO I/O. Imported by `growth-achievements.ts` and by its test.
  */
 
@@ -91,6 +97,10 @@ export const MILESTONE_UNLOCK_RECORD: MilestoneUnlockRecord = Object.freeze({
     day: '2026-10-10',
     note: 'Stripe: the 50th live paying subscription, 15:54 UTC',
   },
+  'paying-100': {
+    day: '2026-10-21',
+    note: 'Stripe subscriptions and invoices: the 100th live paying subscription, 07:06 UTC',
+  },
   'mrr-1000': {
     day: '2026-08-31',
     note: 'user_billing at list price: the 3rd subscription took MRR to $14',
@@ -115,6 +125,10 @@ export const MILESTONE_UNLOCK_RECORD: MilestoneUnlockRecord = Object.freeze({
     day: '2026-10-11',
     note: 'Stripe subscriptions and invoices: MRR reached $507.20 at 16:55 UTC',
   },
+  'mrr-100000': {
+    day: '2026-10-22',
+    note: 'Stripe subscriptions and invoices: MRR reached $1,002.18 at 05:41 UTC',
+  },
 
   /* ------------------------------------------------------------ people */
 
@@ -133,6 +147,10 @@ export const MILESTONE_UNLOCK_RECORD: MilestoneUnlockRecord = Object.freeze({
   'activated-500': {
     day: '2026-10-01',
     note: 'workspaces.onboarding_value_activated_at: the 500th first activation',
+  },
+  'activated-1000': {
+    day: '2026-10-25',
+    note: 'workspaces.onboarding_value_activated_at: the 1,000th first activation',
   },
   'active-7d-50': {
     day: '2026-08-17',
@@ -177,12 +195,20 @@ export const MILESTONE_UNLOCK_RECORD: MilestoneUnlockRecord = Object.freeze({
     day: '2026-09-07',
     note: 'users.created_at: the first UTC day with 25 or more signups',
   },
+  'record-signup-day-50': {
+    day: '2026-10-15',
+    note: 'users.created_at: the first UTC day with 50 or more signups',
+  },
 
   /* ------------------------------------------------------- reliability */
 
   'success-streak-30': {
     day: '2026-07-18',
     note: 'activity_log, earliest provable: the log keeps only 90 days',
+  },
+  'success-streak-90': {
+    day: '2026-10-27',
+    note: 'activity_log: the unbroken run that began 2026-07-30 reached 90 days',
   },
 });
 
