@@ -466,6 +466,11 @@ function admit(env: Envelope, result: ToolResultParams): Envelope {
 // on the first keystroke, and that save would write the blank over the draft.
 // ---------------------------------------------------------------------------
 
+/** The draft of a draft-editor envelope; undefined for every other card. */
+export function editorDraft(env: Envelope | null | undefined): Envelope["draft"] {
+  return env?.card === "draft_editor" ? env.draft : undefined;
+}
+
 /** Is this a draft envelope whose body the card does not have yet? */
 export function isBodyDeferred(env: Envelope | null | undefined): boolean {
   return !!env && env.card === "draft_editor" && env.draft?.body?.deferred === true;
@@ -702,8 +707,8 @@ function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
  * held context stays until an answer says the draft no longer answers one.
  */
 function keepReplyContext(current: Envelope | null | undefined, next: Envelope): Envelope {
-  const held = current?.card === "draft_editor" ? current.draft?.in_reply_to : null;
-  const n = next.card === "draft_editor" ? next.draft : null;
+  const held = editorDraft(current)?.in_reply_to;
+  const n = editorDraft(next);
   // Since 2026-10-19 those answers carry a context read back from the stored
   // draft (`message_id: null`, mcp-app-drafts.ts#storedReplyContext). The one
   // already held came from the reply itself and is the better copy, so it
@@ -1659,10 +1664,10 @@ export function wireResultHandlers(bridge: HostBridge) {
     // Decided by the FIRST result accepted, which is the mounting call's.
     const firstResult = !pushAccepted;
     if (!pushAccepted) {
-      const rev = envelope.card === "draft_editor" ? envelope.draft?.revision : null;
+      const rev = editorDraft(envelope)?.revision;
       check = {
         ...check,
-        mountedForRead: envelope.card === "draft_editor" && envelope.draft?.origin === "read",
+        mountedForRead: editorDraft(envelope)?.origin === "read",
         mountedRevision: typeof rev === "number" ? rev : null,
       };
     }

@@ -16,6 +16,11 @@ import { modelContextParams } from "./model-context";
 
 export const UI_PROTOCOL_VERSION = "2026-01-26";
 
+/** A thrown value as text: its message when it is an Error. */
+export function errorText(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 export type DisplayMode = "inline" | "fullscreen" | "pip";
 export type Theme = "light" | "dark";
 
@@ -598,7 +603,7 @@ export class HostBridge {
       },
       (e) => {
         this.modelContext.failed++;
-        this.modelContextLastError = e instanceof Error ? e.message : String(e);
+        this.modelContextLastError = errorText(e);
         this.modelContextChanged();
         return null;
       },

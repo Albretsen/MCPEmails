@@ -1,5 +1,5 @@
 import type { DraftEditorData } from "../contract";
-import { TextLink } from "./ui";
+import { Head, TextLink } from "./ui";
 
 /**
  * The whole of a card mounted for the MODEL's `draft_read`, until the person
@@ -37,17 +37,10 @@ export function DraftReadLine(props: { draft: DraftEditorData; onOpen: () => voi
   const others = to.length - 1 + (d.recipients?.cc?.length ?? 0) + (d.recipients?.bcc?.length ?? 0);
   const who = to[0] ? (others > 0 ? `to ${to[0]} +${others}` : `to ${to[0]}`) : null;
   return (
-    <div class="hdr">
-      <div class="hdr-l">
-        <span class="dot" data-tone="neutral" aria-hidden="true" />
-        <b>Draft: {shown}</b>
-        {who && <span class="muted">{who}</span>}
-      </div>
-      <div class="hdr-r">
-        <TextLink onClick={props.onOpen} title="Open this draft in the editor here">
-          Open editor
-        </TextLink>
-      </div>
-    </div>
+    <Head tone="neutral" title={<>Draft: {shown}</>} extra={who && <span class="muted">{who}</span>}>
+      <TextLink onClick={props.onOpen} title="Open this draft in the editor here">
+        Open editor
+      </TextLink>
+    </Head>
   );
 }

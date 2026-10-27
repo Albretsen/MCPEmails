@@ -1,6 +1,6 @@
 import type { VNode } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { HostBridge, ToolResultParams } from "../bridge";
+import { errorText, type HostBridge, type ToolResultParams } from "../bridge";
 import {
   isSupportedVersion,
   SCHEMA_VERSION,
@@ -48,6 +48,7 @@ import {
   awaitsBodyOf,
   clearDraftError,
   deferredBodyCall,
+  editorDraft,
   deferredBodyKey,
   envelopeFrom,
   getState,
@@ -68,7 +69,7 @@ import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { SentMessage } from "./SentMessage";
 import { SubscriptionPlan } from "./SubscriptionPlan";
-import { Loading, Notice, TextLink } from "./ui";
+import { Head, Line, Loading, Notice, TextLink } from "./ui";
 
 /**
  * `ui/open-link` requires an absolute URL, so the server sends one: contract §4
@@ -348,7 +349,7 @@ export function App(props: { bridge: HostBridge }) {
       const line = contextLine?.(next);
       if (line) void bridge.updateModelContext(line);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorText(e));
     } finally {
       setBusy(null);
     }
@@ -466,7 +467,7 @@ export function App(props: { bridge: HostBridge }) {
       }
       return told({ env: applied, lost: null });
     } catch (e) {
-      thrown = e instanceof Error ? e.message : String(e);
+      thrown = errorText(e);
       return lose("transport");
     } finally {
       setBusy(null);
@@ -502,8 +503,8 @@ export function App(props: { bridge: HostBridge }) {
     opts: { quiet?: boolean; failAs?: DraftAction; auto?: boolean } = {},
   ): Promise<Envelope | null> => {
     const s = getState();
-    const d = s.envelope?.draft;
-    if (!d || s.envelope?.card !== "draft_editor") return null;
+    const d = editorDraft(s.envelope);
+    if (!d) return null;
     if (s.draftCheck !== "trusted") setState({ draftCheck: "checking" });
     const ids = [...new Set([s.draftIdHint, d.draft_id])].filter(
       (id): id is string => !!id,
@@ -614,8 +615,8 @@ export function App(props: { bridge: HostBridge }) {
   const lastHinted = useRef(0);
   const attentionCheck = async (hinted = false, foldedFor: number | null = null) => {
     const s = getState();
-    const d = s.envelope?.draft;
-    if (!d || s.envelope?.card !== "draft_editor" || isRestoreStub(s.envelope)) return;
+    const d = editorDraft(s.envelope);
+    if (!d || isRestoreStub(s.envelope)) return;
     const folding = foldedFor !== null;
     if (s.draftCheck !== "trusted" || (s.draftSuperseded && !folding) || busyNow.current !== null) return;
     if (hinted) {
@@ -656,7 +657,7 @@ export function App(props: { bridge: HostBridge }) {
   // all (draft-signal.ts#claimDraft).
   const heldIds = useRef<string[]>([]);
   {
-    const d = store.envelope?.card === "draft_editor" ? store.envelope.draft : null;
+    const d = editorDraft(store.envelope);
     for (const id of [d?.resolved_from, d?.draft_id]) {
       if (id && !heldIds.current.includes(id)) heldIds.current.push(id);
     }
@@ -669,8 +670,8 @@ export function App(props: { bridge: HostBridge }) {
    */
   const claim = (opts: { pending?: boolean; release?: boolean } = {}) => {
     const s = getState();
-    const d = s.envelope?.draft;
-    if (!d || s.envelope?.card !== "draft_editor") return;
+    const d = editorDraft(s.envelope);
+    if (!d) return;
     claimDraft({
       ids: [...heldIds.current, d.resolved_from, d.draft_id],
       revision: d.revision ?? null,
@@ -726,8 +727,8 @@ export function App(props: { bridge: HostBridge }) {
     // took it over.
     const off = onDraftSignal((sig) => {
       const st = getState();
-      const d = st.envelope?.draft;
-      if (!d || st.envelope?.card !== "draft_editor") return;
+      const d = editorDraft(st.envelope);
+      if (!d) return;
       const mine = [d.draft_id, d.resolved_from, st.draftIdHint, ...heldIds.current]
         .map((id) => signalTag(id))
         .filter((t): t is string => !!t);
@@ -850,7 +851,7 @@ export function App(props: { bridge: HostBridge }) {
     setBusy("dashboard");
     bridge
       .openLink(url)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorText(e)))
       .finally(() => setBusy(null));
   };
 
@@ -1057,23 +1058,17 @@ export function App(props: { bridge: HostBridge }) {
   const fallbackDashboard = () => {
     const url = absoluteUrl(getState().envelope?.dashboard_url) ?? lastDashboardUrl();
     if (!url) return null;
-    return (
-      <div class="hdr-r">
-        <TextLink onClick={() => openDashboard(url)}>Open dashboard</TextLink>
-      </div>
-    );
+    return <TextLink onClick={() => openDashboard(url)}>Open dashboard</TextLink>;
   };
 
   /** One line, a dot and a link. Never a wall, never a skeleton. */
   const oneLine = (text: string) => (
-    <div class="hdr">
-      <div class="hdr-l">
-        <span class="dot" data-tone="neutral" aria-hidden="true" />
-        <b>{text}</b>
-      </div>
+    <Head tone="neutral" title={text}>
       {fallbackDashboard()}
-    </div>
+    </Head>
   );
+  /** `oneLine` led by the name of the tool this card was mounted for. */
+  const toolLine = (what: string) => oneLine(`${toolLabel(store.toolInfo?.tool)}: ${what}`);
 
   const body = ((): VNode | null => {
     // ---- connection / loading ----------------------------------------------
@@ -1083,7 +1078,7 @@ export function App(props: { bridge: HostBridge }) {
     // one-liner with a way out rather than a red block announcing a failure the
     // user cannot act on and that cost them nothing.
     if (store.connectError) {
-      return oneLine(`${toolLabel(store.toolInfo?.tool)}: not shown here.`);
+      return toolLine("not shown here.");
     }
 
     // A restored card whose subject the server says is gone. One line, not the
@@ -1128,10 +1123,10 @@ export function App(props: { bridge: HostBridge }) {
       // nothing-to-show state. Still never a warning: the operation succeeded
       // and the message above carries it.
       if (store.resultStatus === "foreign") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: no preview for this result.`);
+        return toolLine("no preview for this result.");
       }
       if (store.resultStatus === "cancelled") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: cancelled.`);
+        return toolLine("cancelled.");
       }
 
       // OUR PAYLOAD, UNREADABLE -> LOUD. Something that identified itself as our
@@ -1153,7 +1148,7 @@ export function App(props: { bridge: HostBridge }) {
       // means "this host keeps nothing", and a user who scrolled back to a card
       // deserves to be told which tool it was and where the record lives.
       if (store.restored === "none") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: nothing to show here.`);
+        return toolLine("nothing to show here.");
       }
 
       // Still genuinely waiting. At most RESULT_WATCHDOG_MS of this.
@@ -1201,23 +1196,17 @@ export function App(props: { bridge: HostBridge }) {
     if (!isSupportedVersion(envelope.schema_version)) {
       return (
         <>
-          <div class="hdr">
-            <div class="hdr-l">
-              <span class="dot" data-tone="neutral" aria-hidden="true" />
-              <b>Update the MCPEmails connector</b>
-            </div>
-            <div class="hdr-r">
-              <TextLink onClick={() => openDashboard(envelope.dashboard_url)}>
-                Open dashboard
-              </TextLink>
-            </div>
-          </div>
-          <p class="line">
+          <Head tone="neutral" title="Update the MCPEmails connector">
+            <TextLink onClick={() => openDashboard(envelope.dashboard_url)}>
+              Open dashboard
+            </TextLink>
+          </Head>
+          <Line>
             This card understands <span class="mono">{SCHEMA_VERSION}</span>, but
             the server sent{" "}
             <span class="mono">{String(envelope.schema_version).slice(0, 40)}</span>
             . Rather than guess at the contents, it will not render them.
-          </p>
+          </Line>
         </>
       );
     }
@@ -1249,7 +1238,7 @@ export function App(props: { bridge: HostBridge }) {
       return hydrating ? (
         <Loading />
       ) : (
-        oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+        toolLine("open the dashboard to see this.")
       );
     }
 
@@ -1268,7 +1257,7 @@ export function App(props: { bridge: HostBridge }) {
     // the message above this card says so.
     if (isBodyDeferred(envelope)) {
       return bodyFailed === bodyKey
-        ? oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+        ? toolLine("open the dashboard to see this.")
         : <Loading />;
     }
 
@@ -1308,9 +1297,7 @@ export function App(props: { bridge: HostBridge }) {
                     setApproveOpened(true);
                     void bridge.updateModelContext(outboundApproveOpenedContextLine(o));
                   })
-                  .catch((e) =>
-                    setError(e instanceof Error ? e.message : String(e)),
-                  )
+                  .catch((e) => setError(errorText(e)))
                   .finally(() => setBusy(null));
               },
               update: (patch) =>

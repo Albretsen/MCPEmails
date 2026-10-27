@@ -6,7 +6,7 @@ import type {
   Subscriptions,
 } from "../contract";
 import { CARD_LANGUAGE, plural, relativeExpiry } from "../format";
-import { Btn, Notice, TextLink } from "./ui";
+import { Btn, FsLink, Head, Line, Notice, TextLink } from "./ui";
 
 // §9 `subscription_plan`. Every name, address and `detail` here came from email
 // or from the server's account of it: JSX text only, never innerHTML. The card
@@ -134,27 +134,27 @@ function Picker(props: Props) {
 
   return (
     <>
-      <div class="hdr">
-        <div class="hdr-l">
-          <span class="dot" data-tone={pending ? "warning" : "neutral"} aria-hidden="true" />
-          <b>
+      <Head
+        tone={pending ? "warning" : "neutral"}
+        title={
+          <>
             {fmt(senders.length)} {plural(senders.length, "sender", "senders")},{" "}
             {fmt(sub.scanned)} messages scanned, last {fmt(sub.window_days)} days
-          </b>
-        </div>
-        <div class="hdr-r">
-          {props.fullscreen ? (
-            <TextLink onClick={() => actions.setFullscreen(false)}>Collapse</TextLink>
-          ) : props.canExpand && senders.length > 6 ? (
-            <TextLink onClick={() => actions.setFullscreen(true)}>Expand</TextLink>
-          ) : null}
-          <span class="muted">{expiry}</span>
-        </div>
-      </div>
-      <p class="line">
+          </>
+        }
+      >
+        <FsLink
+          on={props.fullscreen}
+          can={props.canExpand && senders.length > 6}
+          set={actions.setFullscreen}
+          label="Expand"
+        />
+        <span class="muted">{expiry}</span>
+      </Head>
+      <Line>
         {sub.inbox?.email_address ?? "unknown"}
         {sub.truncated ? ". Only the newest messages were scanned." : ""}
-      </p>
+      </Line>
 
       <div class="links line">
         <span>
@@ -214,9 +214,9 @@ function Picker(props: Props) {
         </select>
       </label>
 
-      <p class="line">
+      <Line>
         Nothing is sent from your address. Senders that only take an email get a draft for you to send yourself.
-      </p>
+      </Line>
 
       {blocked && <Notice tone="warning">{blocked}</Notice>}
       {props.error && <Notice tone="danger">{props.error}</Notice>}
@@ -246,19 +246,12 @@ function Results(props: Props & { results: SubscriptionResult[] }) {
   const busy = props.busy === "continue";
   return (
     <>
-      <div class="hdr">
-        <div class="hdr-l">
-          <span class="dot" data-tone="success" aria-hidden="true" />
-          <b>
-            Cleaned up {fmt(results.length)} {plural(results.length, "sender", "senders")}
-          </b>
-        </div>
-        {props.fullscreen ? (
-          <div class="hdr-r">
-            <TextLink onClick={() => actions.setFullscreen(false)}>Collapse</TextLink>
-          </div>
-        ) : null}
-      </div>
+      <Head
+        tone="success"
+        title={<>Cleaned up {fmt(results.length)} {plural(results.length, "sender", "senders")}</>}
+      >
+        {props.fullscreen && <FsLink on can={false} set={actions.setFullscreen} label="" />}
+      </Head>
 
       <ul class="subs" aria-label="Results">
         {results.map((r) => {
@@ -294,13 +287,13 @@ function Results(props: Props & { results: SubscriptionResult[] }) {
       </ul>
 
       {b && (
-        <p class="line">
+        <Line>
           {b.action === "archive"
             ? `${fmt(b.moved)} ${plural(num(b.moved), "message", "messages")} archived${b.has_more ? `, ${fmt(b.remaining)} left` : ""}.`
             : "Existing mail kept."}
-        </p>
+        </Line>
       )}
-      <p class="line">Senders usually stop within 2 days. We check again in 3 days.</p>
+      <Line>Senders usually stop within 2 days. We check again in 3 days.</Line>
       {props.error && <Notice tone="danger">{props.error}</Notice>}
 
       {b?.has_more && (

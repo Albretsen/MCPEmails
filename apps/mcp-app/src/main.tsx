@@ -1,5 +1,5 @@
 import { render } from "preact";
-import { HostBridge } from "./bridge";
+import { errorText, HostBridge } from "./bridge";
 import { App } from "./components/App";
 import { setLocale } from "./format";
 import "./styles.css";
@@ -101,7 +101,7 @@ bridge
   })
   .catch((e: unknown) => {
     setState({
-      connectError: e instanceof Error ? e.message : String(e),
+      connectError: errorText(e),
     });
   });
 
