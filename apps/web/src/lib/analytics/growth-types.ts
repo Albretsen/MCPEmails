@@ -574,3 +574,53 @@ export type GrowthMailRelayDayRow = {
   relay_down: number;
   host_refused: number;
 };
+
+/**
+ * One (period, client family) row of `growth_draft_card_stats`. Customer
+ * workspaces only. See supabase/migrations/20261027120000_draft_events.sql.
+ */
+export type GrowthDraftCardStatsRow = {
+  period: 'before' | 'after';
+  family: 'claude' | 'claude_code' | 'chatgpt' | 'other';
+  /** New drafts (create + reply). */
+  drafted: number;
+  /** New drafts whose result carried the card. */
+  drafted_card: number;
+  /** Distinct drafts saved, sent or discarded in the card. */
+  card_lines: number;
+  saved: number;
+  sent_card: number;
+  sent_agent: number;
+  deleted_card: number;
+  deleted_agent: number;
+  /** draft_editor_hide calls that turned the card off. */
+  hidden: number;
+  workspaces: number;
+  card_workspaces: number;
+  /** activity_log rows for draft* tools, and how many failed. */
+  calls: number;
+  errors: number;
+  eligible_card: number;
+  returned_card: number;
+  eligible_plain: number;
+  returned_plain: number;
+};
+
+/** Customer drafts per UTC day, zero-filled. `growth_draft_card_daily`. */
+export type GrowthDraftCardDayRow = {
+  day: string;
+  drafted: number;
+  saved: number;
+  sent_card: number;
+  sent_agent: number;
+  hidden: number;
+};
+
+/** Who can get the card now. `growth_draft_card_reach`. */
+export type GrowthDraftCardReachRow = {
+  workspaces: number;
+  enabled: number;
+  hidden_workspaces: number;
+  hidden_inboxes: number;
+  enabled_inboxes: number;
+};

@@ -60,6 +60,9 @@ import type {
   GrowthUsageCapWorkspaceRow,
   GrowthMailRelayHostRow,
   GrowthMailRelayDayRow,
+  GrowthDraftCardStatsRow,
+  GrowthDraftCardDayRow,
+  GrowthDraftCardReachRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
@@ -85,6 +88,7 @@ export const GROWTH_TAGS = {
   revenue: 'growth:revenue',
   usageCap: 'growth:usage-cap',
   relay: 'growth:relay',
+  draftCard: 'growth:draft-card',
 } as const;
 
 /**
@@ -165,10 +169,11 @@ export async function cachedSection<T>(
 }
 
 /**
- * RPC arguments: numbers, the plan-cap map passed to the bands function, and
- * the internal-account lists passed to the retention curve.
+ * RPC arguments: numbers, the plan-cap map passed to the bands function, the
+ * internal-account lists passed to the retention curve, and the draft card's
+ * release timestamp.
  */
-type RpcArgs = Record<string, number | string[] | Record<string, number>>;
+type RpcArgs = Record<string, number | string | string[] | Record<string, number>>;
 
 /** Every RPC the generated schema knows about. A typo is a compile error. */
 type RpcName = keyof Database['public']['Functions'];
@@ -611,4 +616,39 @@ export async function fetchMailRelayHosts(days: number): Promise<GrowthResult<Gr
 /** Relayed connections per day over the window, by outcome. */
 export async function fetchMailRelayDaily(days: number): Promise<GrowthResult<GrowthMailRelayDayRow[]>> {
   return rpcRows<GrowthMailRelayDayRow>('growth_mail_relay_daily', GROWTH_TAGS.relay, { p_days: clampDays(days) });
+}
+
+/**
+ * The draft card band: drafts and what became of them, per client family,
+ * before and after the release. `releaseAt` null means not released yet, and
+ * only the 'before' rows (the last `days` days) come back.
+ */
+export async function fetchDraftCardStats(
+  days: number,
+  releaseAt: string | null,
+): Promise<GrowthResult<GrowthDraftCardStatsRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthDraftCardStatsRow>('growth_draft_card_stats', GROWTH_TAGS.draftCard, {
+    p_days: clampDays(days),
+    ...(releaseAt ? { p_release_at: releaseAt } : {}),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchDraftCardDaily(days: number): Promise<GrowthResult<GrowthDraftCardDayRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthDraftCardDayRow>('growth_draft_card_daily', GROWTH_TAGS.draftCard, {
+    p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchDraftCardReach(): Promise<GrowthResult<GrowthDraftCardReachRow>> {
+  const internal = internalAccountMatchers();
+  return rpcSingleRow<GrowthDraftCardReachRow>('growth_draft_card_reach', GROWTH_TAGS.draftCard, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
 }

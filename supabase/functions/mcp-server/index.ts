@@ -802,6 +802,7 @@ import {
   resultDraftFacts,
   takeCardActivityNote,
 } from "./card-activity.ts";
+import { postgrestDraftEventStore, recordDraftEvent, type DraftEvent } from "./draft-events.ts";
 import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
 import { textPartMatchingHtml } from "./html-text-merge.ts";
 import { configureRelayRegistry } from "./relay-registry.ts";
@@ -29867,6 +29868,18 @@ function cardActivityScope(apiKey: ApiKeyRow, inboxId: string): CardActivityScop
   return { workspaceId: apiKey.workspace_id, inboxId, apiKeyId: apiKey.id };
 }
 
+// Draft events (draft-events.ts): durable, content-free counts for the growth
+// board's draft card band. Never throws.
+const draftEventStoreImpl = postgrestDraftEventStore(supabase);
+
+function noteDraftEvent(apiKey: ApiKeyRow, inboxId: string | null, ev: DraftEvent): Promise<void> {
+  return recordDraftEvent(
+    INTROSPECTION_ONLY ? null : draftEventStoreImpl,
+    { workspaceId: apiKey.workspace_id, inboxId, apiKeyId: apiKey.id },
+    ev,
+  );
+}
+
 /** Any id of a draft -> its current id. Never throws; unknown resolves to itself. */
 function resolveDraftLine(
   apiKey: ApiKeyRow,
@@ -30088,7 +30101,12 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
       // never makes an MCP call, so nothing it records is ever claimed; the
       // rows expire after 7 days (card-activity.ts, "Which results carry it").
       record: (inbox, event) =>
-        recordCardActivity(cardActivityStore(), cardActivityScope(apiKey, inbox.id), event),
+        Promise.all([
+          recordCardActivity(cardActivityStore(), cardActivityScope(apiKey, inbox.id), event),
+          event.action === "saved"
+            ? noteDraftEvent(apiKey, inbox.id, { event: "saved", viaCard: true, lineId: event.lineId })
+            : Promise.resolve(),
+        ]).then(() => undefined),
     },
     setDraftEditorHidden: async (scope, ids, hidden) => {
       // Scoped by workspace on BOTH branches, not just by id. The inbox id
@@ -30111,6 +30129,9 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
       // would leave the card hidden on screen and showing on the next turn.
       if (error) throw new Error(error.message);
       await invalidateCardListings(ids.workspaceId);
+      if (hidden) {
+        await noteDraftEvent(apiKey, scope === "workspace" ? null : ids.inboxId, { event: "hidden", viaCard: true });
+      }
     },
   };
 }
@@ -30146,6 +30167,24 @@ function draftEditorCallerFor(apiKey: ApiKeyRow): DraftEditorCaller {
  * failure rule at the top of this section.
  */
 async function draftEditorEnvelopeForWrite(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  input: Parameters<typeof buildDraftEditorEnvelopeForWrite>[2],
+): Promise<DraftCardOutcome> {
+  const outcome = await buildDraftEditorEnvelopeForWrite(apiKey, inbox, input);
+  // A new draft is counted here, where the handler knows whether the result
+  // carries the card. An update is not a new draft.
+  if (input.origin !== "update") {
+    await noteDraftEvent(apiKey, inbox.id, {
+      event: "drafted",
+      viaCard: false,
+      cardOffered: outcome !== null && outcome !== "unavailable",
+    });
+  }
+  return outcome;
+}
+
+async function buildDraftEditorEnvelopeForWrite(
   apiKey: ApiKeyRow,
   inbox: InboxRow,
   input: {
@@ -31908,6 +31947,11 @@ async function executeSendDraft(
       draftLine,
       draftRemoved === false ? "sent_kept" : "sent",
     ),
+    noteDraftEvent(apiKey, inbox.id, {
+      event: "sent",
+      viaCard: baseRevision !== null && apiKey.internalApprovalDispatch !== true,
+      lineId: draftLine.lineId,
+    }),
     // A send through the draft editor's path (base_revision; an approved re-run
     // is excluded) is recorded for the next draft result on this key, because the card's own model-context line may never reach the
     // model. Recorded as "was sent", never as who sent it (card-activity.ts).
@@ -32025,6 +32069,11 @@ async function executeDeleteDraft(
       "Discarded. Nothing was sent.",
     ),
     closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "deleted"),
+    noteDraftEvent(apiKey, inbox.id, {
+      event: "deleted",
+      viaCard: baseRevision !== null && apiKey.internalApprovalDispatch !== true,
+      lineId: draftLine.lineId,
+    }),
     // A Discard in the draft editor is recorded for the model's next call on
     // this draft, which would otherwise only meet draft_not_found and could
     // not say what happened. "Was deleted", never who did it (card-activity.ts).
