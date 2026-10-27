@@ -1184,6 +1184,7 @@ export type Database = {
       api_keys: {
         Row: {
           card_build_notified: string | null
+          card_listed: boolean | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -1201,6 +1202,7 @@ export type Database = {
         }
         Insert: {
           card_build_notified?: string | null
+          card_listed?: boolean | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1218,6 +1220,7 @@ export type Database = {
         }
         Update: {
           card_build_notified?: string | null
+          card_listed?: boolean | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
