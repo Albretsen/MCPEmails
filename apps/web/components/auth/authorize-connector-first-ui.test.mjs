@@ -5,7 +5,8 @@
 //
 //   - preferStandard (claude.ai, no mailbox yet): opens on Standard, and the
 //     narrower Read-only card is still selectable;
-//   - inboxStep: the inbox step comes first, with "Skip, connect later";
+//   - inboxStep: the inbox step comes first, with "Skip, connect later"
+//     until the connected inbox's proof card shows;
 //     skipping or connecting reports one funnel event and shows the
 //     permissions card; "Connect an inbox" under Specific inboxes goes back;
 //   - without inboxStep the screen opens on the permissions card as before.
@@ -22,7 +23,9 @@ const window = installDom();
 
 mock.module('next/dynamic', {
   defaultExport: () => function InboxStepStub(props) {
-    return createElement('button', { type: 'button', 'data-testid': 'stub-inbox-step', onClick: props.onConnected }, 'connect');
+    return createElement('div', null,
+      createElement('button', { type: 'button', 'data-testid': 'stub-inbox-step', onClick: props.onConnected }, 'connect'),
+      createElement('button', { type: 'button', 'data-testid': 'stub-inbox-proof', onClick: props.onProof }, 'proof'));
   },
 });
 
@@ -121,4 +124,14 @@ test('connecting on the step reports authorize_inbox_connected and says so on th
   await flush();
   assert.ok(container.querySelector('[data-testid="az-inbox-connected"]'));
   assert.deepEqual(events.map((e) => e.stage), ['authorize_inbox_step_viewed', 'authorize_inbox_connected']);
+});
+
+test('once the proof card shows, "Skip, connect later" is gone', async (t) => {
+  const { container } = await render(t, { inboxStep: { client: 'claude', userEmail: '', returnTo: '/authorize?client_id=x' } });
+  await flush();
+  assert.ok(container.querySelector('[data-testid="az-skip-inbox"]'));
+  container.querySelector('[data-testid="stub-inbox-proof"]').click();
+  await flush();
+  assert.equal(Boolean(container.querySelector('[data-testid="az-skip-inbox"]')), false);
+  assert.ok(container.querySelector('[data-testid="az-inbox-stage"]'), 'still on the inbox step until Continue');
 });

@@ -625,6 +625,9 @@ export function AuthorizeApp({
   // Specific inboxes then goes back to it instead of leaving the OAuth flow.
   const [inboxStepOffered] = useState(Boolean(inboxStep));
   const [justConnected, setJustConnected] = useState(connectedOnStep);
+  // Once the inbox step shows its proof card the mailbox is connected, so
+  // "Skip, connect later" would only contradict it.
+  const [inboxProofShown, setInboxProofShown] = useState(false);
   const funnelClient = inboxStep?.client ?? null;
 
   // One authorize_inbox_step_viewed per page load (the server keeps one per workspace).
@@ -786,12 +789,15 @@ export function AuthorizeApp({
                 userEmail={inboxStep.userEmail}
                 returnTo={inboxStep.returnTo}
                 onConnected={inboxConnected}
+                onProof={() => setInboxProofShown(true)}
               />
-              <div style={{ marginTop: 16, textAlign: 'center' }}>
-                <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
-                  {t('authorize.skipConnectLater')}
-                </button>
-              </div>
+              {!inboxProofShown && (
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
+                    {t('authorize.skipConnectLater')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
