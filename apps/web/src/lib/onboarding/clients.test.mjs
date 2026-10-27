@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  authorizeSignupContext,
   CHIP_CLIENTS,
   CHIP_CLIENT_LABELS,
   PRIMARY_CHIP_CLIENTS,
@@ -86,4 +87,14 @@ test('?client= is carried like ?provider=, shape-checked only', () => {
     withClientIntent(withConnectIntent('/dashboard?firstrun=1', 'gmail'), 'claude'),
     '/dashboard?firstrun=1&provider=gmail&client=claude',
   );
+});
+
+test('the signup page names the AI app that sent the visitor from /authorize', () => {
+  const claude = '/authorize?client_id=' + encodeURIComponent('https://claude.ai/oauth/mcp-oauth-client-metadata') + '&redirect_uri=' + encodeURIComponent('https://claude.ai/api/mcp/auth_callback');
+  assert.deepEqual(authorizeSignupContext(claude), { app: 'Claude' });
+  const chatgpt = '/authorize?client_id=' + encodeURIComponent('https://chatgpt.com/oauth/abc/client.json') + '&redirect_uri=' + encodeURIComponent('https://chatgpt.com/connector/oauth/abc');
+  assert.deepEqual(authorizeSignupContext(chatgpt), { app: 'ChatGPT' });
+  assert.deepEqual(authorizeSignupContext('/authorize?client_id=dyn_123&redirect_uri=' + encodeURIComponent('https://example.org/cb')), { app: null });
+  assert.equal(authorizeSignupContext('/dashboard'), null);
+  assert.equal(authorizeSignupContext(null), null);
 });

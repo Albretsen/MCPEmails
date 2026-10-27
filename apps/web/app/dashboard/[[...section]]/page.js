@@ -152,8 +152,9 @@ async function fetchActivityFeed(supabase, workspaceId) {
 
   return data.map((row) => {
     const inbox = row.inboxes;
-    // Prefer display_name (e.g. "work-gmail"), fall back to email address, then generic label.
-    const account = inbox?.display_name || inbox?.email_address || 'unknown inbox';
+    // Prefer display_name (e.g. "work-gmail"), then the email address. Null for
+    // a call not tied to one inbox (inbox_list); the page shows "all inboxes".
+    const account = inbox?.display_name || inbox?.email_address || null;
     return {
       id: row.id,
       tool: row.tool_name,

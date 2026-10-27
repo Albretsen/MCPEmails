@@ -179,6 +179,7 @@
     "pro": "Business",
     "recentActivityTitle": "Letzte Aktivität",
     "recentActivitySub": "MCP-Tool-Aufrufe live",
+    "recentActivityAllInboxes": "alle Postfächer",
     "noActivityTitle": "Noch keine Aktivität",
     "noActivityDesc": "MCP-Tool-Aufrufe erscheinen hier in Echtzeit.",
     "noCallData": "Keine Aufrufdaten für diesen Zeitraum."

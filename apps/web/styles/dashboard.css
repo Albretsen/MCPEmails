@@ -300,6 +300,7 @@ body { background: var(--bg-page); }
   display: flex; align-items: center; justify-content: center; z-index: 50;
   animation: fade 200ms var(--ease-out);
 }
+.scrim-setup { z-index: 1000; background: rgba(11,16,32,0.38); backdrop-filter: blur(3px); }
 .modal {
   width: 480px; max-width: 92vw;
   /* Cap height so a tall modal never clips its title or action buttons off

@@ -212,3 +212,22 @@ test('a first inbox has no Back link; a second one goes back to It works', async
   await flush(() => q(second, '[data-testid="onb-inbox-back"]').click());
   assert.equal(went, 'it_works');
 });
+
+test('onProof fires once the inbox connects (a chat link skips straight to "Go back")', async (t) => {
+  let proofs = 0;
+  stubFetch(t, {
+    '/api/inboxes/app-password': () => ({ status: 200, json: { success: true } }),
+    '/api/onboarding/inbox-proof': () => ({ status: 200, json: { available: true, count: 3, subjects: ['Hi'] } }),
+  });
+  const view = await render(t, {
+    refreshStatus: async () => ({ inboxes: { count: 1, sinceReset: 1, items: [{ id: '00000000-0000-0000-0000-000000000001', address: 'me@icloud.com' }] } }),
+    onProof: () => { proofs += 1; },
+  });
+  await typeInto(q(view, '[data-testid="onb-email"]'), 'me@icloud.com');
+  await waitFor(() => q(view, '[data-testid="onb-password"]'), { message: 'password field' });
+  await typeInto(q(view, '[data-testid="onb-password"]'), 'abcd-efgh-ijkl-mnop');
+  assert.equal(proofs, 0);
+  await flush(() => q(view, '[data-testid="onb-connect"]').click());
+  await waitFor(() => proofs === 1, { message: 'onProof', timeout: 6000 });
+  assert.equal(proofs, 1);
+});

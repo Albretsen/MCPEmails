@@ -215,6 +215,9 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
           flowB={flowB}
           secondInbox={secondInbox}
           startSecondInbox={startSecondInbox}
+          // From a chat link the return panel says "Connected", so the proof
+          // card and its Continue are skipped.
+          onProof={chatReturn ? goNext : null}
         />
       </div>
       {step !== 'it_works' && (

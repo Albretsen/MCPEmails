@@ -179,6 +179,7 @@
     "pro": "Business",
     "recentActivityTitle": "Nylig aktivitet",
     "recentActivitySub": "Direkte MCP-verktøykall",
+    "recentActivityAllInboxes": "alle innbokser",
     "noActivityTitle": "Ingen aktivitet ennå",
     "noActivityDesc": "MCP-verktøykall vil vises her i sanntid.",
     "noCallData": "Ingen kalldata for denne perioden."
