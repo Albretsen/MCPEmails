@@ -507,9 +507,10 @@ export async function PATCH(
     );
   }
 
-  // "Confirm in chat" is internal-only for now: a change TO it needs the
-  // workspace's rollout flag (`workspaces.chat_send_confirm_enabled`). An
-  // unchanged 'chat' was dropped above, so this never blocks a signature save.
+  // "Ask in the chat first": a change TO it needs the workspace's rollout flag
+  // (`workspaces.chat_send_confirm_enabled`), on for every workspace since
+  // 2026-10-27 and kept as a kill switch. An unchanged 'chat' was dropped
+  // above, so this never blocks a signature save.
   if (reviewUpdate.send_review_mode === 'chat') {
     const { data: ws } = await supabase
       .from('workspaces')

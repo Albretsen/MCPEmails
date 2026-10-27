@@ -435,8 +435,15 @@ async function main() {
     await settle();
     expect("classified foreign", c.state().resultStatus, "foreign");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCPEmails: no preview for this result.");
+    expect("one line", c.text(), "MCPEmails: done. The reply above has the details.");
     await c.done();
+    // A draft write on an inbox with the editor hidden (listed since 2026-10-28).
+    const d = await boot();
+    await d.settled();
+    d.deliver(toolResult({ draft_id: "Drafts:9", subject: "Hi" }, '{"draft_id":"Drafts:9"}'));
+    await settle();
+    expect("draft: one line", d.text(), "MCPEmails: saved.");
+    await d.done();
   }
 
   group("a cancelled call says so in one line");
@@ -537,7 +544,7 @@ async function main() {
     await c.settled();
     c.deliver(toolResult(F.plainForwardBatch, JSON.stringify(F.plainForwardBatch)));
     await settle();
-    expect("batch: the generic line, never a receipt", c.text(), "MCPEmails: no preview for this result.");
+    expect("batch: the generic line, never a receipt", c.text(), "MCPEmails: done. The reply above has the details.");
     await c.done();
     const h = await boot();
     await h.settled();

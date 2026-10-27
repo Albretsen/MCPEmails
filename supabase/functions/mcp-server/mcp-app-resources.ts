@@ -742,9 +742,9 @@ export interface ReviewCardGates {
    */
   subscriptions?: boolean;
   /**
-   * The automation card. The caller passes the `drafts` gate: the card shipped
-   * on the draft editor's rollout (on for every workspace since 2026-10-27)
-   * and honours the same "hide the card" switches. Absent reads as false.
+   * The automation card: the key holds `manage:automations` and may reach an
+   * inbox. A scope fact, like the other gates since 2026-10-27 (#357); there is
+   * no setting for this card. Absent reads as false.
    */
   automations?: boolean;
 }
