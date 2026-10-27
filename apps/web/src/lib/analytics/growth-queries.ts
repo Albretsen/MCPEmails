@@ -63,10 +63,14 @@ import type {
   GrowthDraftCardStatsRow,
   GrowthDraftCardDayRow,
   GrowthDraftCardReachRow,
+  GrowthOnboardingArmRow,
+  GrowthOnboardingDayRow,
+  GrowthOnboardingStepRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
 import type { SignupTrendRow } from '@/lib/analytics/signup-trend';
+import type { OnboardingExperimentRow } from '@/lib/analytics/onboarding-test';
 
 // The cap projection is implemented next to the other pure helpers so it can be
 // unit tested without dragging in the Supabase client, and re-exported here
@@ -89,6 +93,7 @@ export const GROWTH_TAGS = {
   usageCap: 'growth:usage-cap',
   relay: 'growth:relay',
   draftCard: 'growth:draft-card',
+  onboarding: 'growth:onboarding',
 } as const;
 
 /**
@@ -650,5 +655,44 @@ export async function fetchDraftCardReach(): Promise<GrowthResult<GrowthDraftCar
   return rpcSingleRow<GrowthDraftCardReachRow>('growth_draft_card_reach', GROWTH_TAGS.draftCard, {
     p_internal_emails: internal.emails,
     p_internal_domains: internal.domains,
+  });
+}
+
+/* The onboarding test (onb_flow x onb_convert): enrolled customer workspaces only. */
+
+export async function fetchOnboardingArms(): Promise<GrowthResult<GrowthOnboardingArmRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingArmRow>('growth_onboarding_arms', GROWTH_TAGS.onboarding, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchOnboardingSteps(): Promise<GrowthResult<GrowthOnboardingStepRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingStepRow>('growth_onboarding_steps', GROWTH_TAGS.onboarding, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchOnboardingDaily(days: number): Promise<GrowthResult<GrowthOnboardingDayRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingDayRow>('growth_onboarding_daily', GROWTH_TAGS.onboarding, {
+    p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/** The two experiment rows, for the band's release state. */
+export async function fetchOnboardingExperiments(): Promise<GrowthResult<OnboardingExperimentRow[]>> {
+  return cachedSection<OnboardingExperimentRow[]>(['onboarding-experiments'], GROWTH_TAGS.onboarding, async () => {
+    const { data, error } = await createServiceRoleClient()
+      .from('experiments')
+      .select('key, status, started_at, concluded_at, winner_variant_id')
+      .in('key', ['onb_flow', 'onb_convert']);
+    if (error) throw new Error(error.message);
+    return data ?? [];
   });
 }

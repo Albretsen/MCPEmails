@@ -55,6 +55,10 @@ import {
   fetchDraftCardDaily,
   fetchDraftCardReach,
   fetchDraftCardStats,
+  fetchOnboardingArms,
+  fetchOnboardingDaily,
+  fetchOnboardingExperiments,
+  fetchOnboardingSteps,
   gmailCapProjection,
   type GrowthResult,
 } from '@/lib/analytics/growth-queries';
@@ -121,6 +125,15 @@ import { FETCH_WEEKS, signupTrend } from '@/lib/analytics/signup-trend';
 import { SignupTrendTile } from './board/signup-trend';
 import { DraftCardFamilyTable, DraftCardReachTile, DraftCardVerdictTile } from './board/draft-card';
 import { DRAFT_CARD_RELEASE_AT, releaseChecks, releaseVerdict } from '@/lib/analytics/draft-card';
+import { OnboardingArmsTile, OnboardingStepsTile, OnboardingVerdictTile } from './board/onboarding';
+import {
+  armTotals,
+  baseline,
+  onboardingChecks,
+  onboardingVerdict,
+  releaseState,
+} from '@/lib/analytics/onboarding-test';
+import { onboardingPublicEnrollment } from '@/lib/onboarding/variant';
 
 /** Ninety is a ceiling, not a taste: activity_log is purged past 90 days. */
 const DAILY_DAYS = 90;
@@ -1379,6 +1392,82 @@ export async function DraftCardSection({ days }: { days: number }) {
           <DraftCardReachTile reach={reachRow} />
         ) : (
           <TileError label="Who has it" message={reach.ok ? 'unavailable' : reach.error} />
+        )}
+      </Cell>
+    </>
+  );
+}
+
+/* ============================================================= onboarding */
+
+/**
+ * The onboarding test's read-out (onb_flow x onb_convert). Before the start it
+ * says what is still switched off and shows the baseline; while it runs it
+ * checks for harm and broken assignment; the arms are all-time. The window
+ * applies to the daily chart and the baseline only.
+ */
+export async function OnboardingSection({ days }: { days: number }) {
+  const [experiments, arms, steps, daily] = await Promise.all([
+    fetchOnboardingExperiments(),
+    fetchOnboardingArms(),
+    fetchOnboardingSteps(),
+    fetchOnboardingDaily(days),
+  ]);
+  if (!experiments.ok || !arms.ok) {
+    const message = !experiments.ok ? experiments.error : !arms.ok ? arms.error : '';
+    return (
+      <Cell span={12}>
+        <TileError label="Onboarding" message={message} />
+      </Cell>
+    );
+  }
+  const state = releaseState(experiments.data, onboardingPublicEnrollment());
+  const dailyRows = daily.ok ? daily.data : [];
+  const today = new Date().toISOString().slice(0, 10);
+  const checks = onboardingChecks(arms.data, dailyRows, state.kind === 'running' ? state.startedAt : null, today);
+  const enrolled = dailyRows.some((row) => Number(row.flow_control) + Number(row.flow_new) > 0);
+  return (
+    <>
+      <Cell span={4} tall={2}>
+        <OnboardingVerdictTile
+          verdict={onboardingVerdict(state, checks)}
+          checks={checks}
+          state={state}
+          baseline={baseline(dailyRows)}
+          days={days}
+        />
+      </Cell>
+      <Cell span={8} tall={2}>
+        <OnboardingArmsTile rows={arms.data} />
+      </Cell>
+      <Cell span={8} tall={2}>
+        {daily.ok ? (
+          <BarSeries
+            title="New customer workspaces, by arm"
+            subtitle={enrolled ? 'By onb_flow arm, UTC days.' : 'Nobody enrolled yet, so every bar is unenrolled.'}
+            labels={dailyRows.map((row) => row.day.slice(5))}
+            series={[
+              { key: 'control', name: 'Today', values: dailyRows.map((row) => Number(row.flow_control)) },
+              { key: 'new', name: 'Setup dialog', values: dailyRows.map((row) => Number(row.flow_new)) },
+              {
+                key: 'none',
+                name: 'Not enrolled',
+                values: dailyRows.map((row) => Math.max(0, Number(row.created) - Number(row.flow_control) - Number(row.flow_new))),
+              },
+            ]}
+            stacked
+            height={190}
+            tickEvery={Math.max(1, Math.round(dailyRows.length / 8))}
+          />
+        ) : (
+          <FailedCard title="New customer workspaces" error={daily.error} />
+        )}
+      </Cell>
+      <Cell span={4} tall={2}>
+        {steps.ok ? (
+          <OnboardingStepsTile steps={steps.data} assignedNew={armTotals(arms.data, 'flow', 'new').assigned} />
+        ) : (
+          <TileError label="Setup dialog, step by step" message={steps.error} />
         )}
       </Cell>
     </>
