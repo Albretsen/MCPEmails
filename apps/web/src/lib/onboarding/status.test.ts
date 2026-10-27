@@ -34,7 +34,7 @@ test('a fresh workspace has nothing yet', () => {
   assert.deepEqual(s.inboxes, { count: 0, sinceReset: 0, chosenAt: null, items: [] });
   assert.deepEqual(s.credential, { exists: false, sinceReset: false, latestAt: null, scopes: null });
   assert.deepEqual(s.handshake, { at: null, client: null, clients: [] });
-  assert.deepEqual(s.firstCall, { at: null, tool: null });
+  assert.deepEqual(s.firstCall, { at: null, tool: null, client: null });
   assert.equal(s.lastFailure, null);
 });
 
@@ -64,7 +64,7 @@ test('every signal is reported, newest handshake first, mapped to a chip id', ()
   assert.equal(s.handshake.at, '2026-10-26T11:45:00Z');
   assert.equal(s.handshake.client, 'claude');
   assert.deepEqual(s.handshake.clients.map((c) => c.client), ['claude', 'cursor']);
-  assert.deepEqual(s.firstCall, { at: '2026-10-26T11:50:00Z', tool: 'email_read' });
+  assert.deepEqual(s.firstCall, { at: '2026-10-26T11:50:00Z', tool: 'email_read', client: null });
   assert.deepEqual(s.anyCall, { at: '2026-10-26T11:49:00Z' });
   assert.deepEqual(s.lastFailure, { at: '2026-10-26T11:48:00Z', tool: 'email_search', code: 'search_timeout' });
 });
@@ -104,9 +104,9 @@ test('firstCall.tool is the activating call, never the inbox_list that came firs
     analytics_first_tool_used_at: '2026-10-26T11:20:32Z',
     analytics_first_tool_name: 'inbox_list',
   };
-  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search' })).firstCall, { at: '2026-10-26T11:20:55Z', tool: 'email_search' });
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search' })).firstCall, { at: '2026-10-26T11:20:55Z', tool: 'email_search', client: null });
   // Activity not readable: never report inbox_list.
-  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: null })).firstCall, { at: '2026-10-26T11:20:55Z', tool: null });
+  assert.deepEqual(shapeOnboardingStatus(rows({ workspace, firstCallTool: null })).firstCall, { at: '2026-10-26T11:20:55Z', tool: null, client: null });
   assert.equal(firstCallToolName(null, 'email_read'), 'email_read');
   assert.equal(firstCallToolName('draft', 'inbox_list'), 'draft');
   // The search window starts no earlier than the reset and spans the marker.
@@ -114,6 +114,23 @@ test('firstCall.tool is the activating call, never the inbox_list that came firs
   assert.deepEqual(firstCallWindow('2026-10-26T11:20:55Z', null), { from: '2026-10-26T11:18:55.000Z', to: '2026-10-26T11:22:55.000Z' });
   assert.equal(firstCallWindow('2026-10-25T10:00:00Z', '2026-10-26T11:00:00Z'), null);
   assert.equal(firstCallWindow(null, null), null);
+});
+
+test('firstCall.client is the app behind the activating call, not the chip', () => {
+  const workspace = {
+    onboarding_client: 'claude',
+    onboarding_reset_at: '2026-10-26T11:00:00Z',
+    onboarding_completed_at: null,
+    onboarding_value_activated_at: '2026-10-26T11:20:55Z',
+    analytics_first_tool_used_at: '2026-10-26T11:20:55Z',
+    analytics_first_tool_name: 'email_search',
+  };
+  assert.equal(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search', firstCallClientName: 'openai-mcp' })).firstCall.client, 'chatgpt');
+  assert.equal(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search', firstCallClientName: 'Claude Code' })).firstCall.client, 'claude_code');
+  assert.equal(shapeOnboardingStatus(rows({ workspace, firstCallTool: 'email_search', firstCallClientName: 'some-new-agent' })).firstCall.client, null);
+  // No activating call yet: no client either.
+  const waiting = { ...workspace, onboarding_value_activated_at: null };
+  assert.equal(shapeOnboardingStatus(rows({ workspace: waiting, firstCallClientName: 'openai-mcp' })).firstCall.client, null);
 });
 
 test('the chosen inbox is reported since reset only (WP-Z m3)', () => {

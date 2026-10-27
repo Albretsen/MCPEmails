@@ -1,8 +1,9 @@
 /**
- * The support ticket behind "Send this error to support" on the onboarding
- * inbox step (app/api/onboarding/connect-help). Pure: closed-list facts in,
- * the /help form's body out. The password is never an input, and nothing the
- * mail server said is either: only the route's own codes and the host name.
+ * The email behind "Send this error to support" on the onboarding inbox step:
+ * a mailto: link to support@mcpemails.com with the subject and body filled in.
+ * Pure: closed-list facts in, the message out. The password is never an
+ * input, and nothing the mail server said is either: only the route's own
+ * codes and the host name.
  */
 import { INBOX_KINDS } from './inbox-detect.ts';
 import { FAILURE_REASONS } from './connect-failure.ts';
@@ -11,6 +12,9 @@ const SAFE_PHASES = new Set([
   'tcp', 'tls', 'greeting', 'authentication', 'smtp_tcp', 'smtp_tls', 'smtp_greeting', 'smtp_authentication',
 ]);
 const NOTE_MAX = 1000;
+
+/** Same inbox as SUPPORT_EMAIL in support/help-content.mjs, which loads every help article. */
+export const SUPPORT_EMAIL = 'support@mcpemails.com';
 
 export interface ConnectHelpTicket {
   category: 'connect';
@@ -62,4 +66,12 @@ export function buildConnectHelpTicket(body: unknown): ConnectHelpTicket | null 
     provider,
     code,
   };
+}
+
+/** The mailto: href for the ticket, or null when the facts do not validate. */
+export function connectHelpMailto(body: unknown): string | null {
+  const ticket = buildConnectHelpTicket(body);
+  if (!ticket) return null;
+  const query = `subject=${encodeURIComponent(ticket.subject)}&body=${encodeURIComponent(ticket.message)}`;
+  return `mailto:${SUPPORT_EMAIL}?${query}`;
 }

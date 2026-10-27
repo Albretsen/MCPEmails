@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+import { SUPPORT_EMAIL, connectHelpMailto } from '@/lib/onboarding/connect-help';
 
 /** A5: the checks, each ticked as it passes. */
 export function ConnectProgress({ address, checks }) {
@@ -73,41 +73,23 @@ export function ProofCard({ address, proof, readOnly, onContinue }) {
   );
 }
 
-function helpHref(provider, code) {
-  const params = new URLSearchParams({ topic: 'connect' });
-  if (provider) params.set('provider', provider);
-  if (code) params.set('code', code);
-  return `/help?${params.toString()}#contact`;
-}
-
 /**
  * A5 on failure: the classifier's one-line fix, its links, and the named
  * fallbacks. The address stays in the field, so a retry is one paste.
  */
 export function FailurePanel({ failure, failures, kind, funnelProvider, onReadOnly, onDifferentInbox, onSeePlans = null }) {
   const t = useTranslations('onboarding.steps.inbox');
-  const [support, setSupport] = useState('idle'); // idle | sending | sent | failed
   const provider = failure.provider || t(`kinds.${kind}`);
 
-  const sendToSupport = async () => {
-    setSupport('sending');
-    try {
-      const res = await fetch('/api/onboarding/connect-help', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: kind,
-          code: failure.code,
-          reason: failure.reason ?? undefined,
-          phase: failure.phase ?? undefined,
-          attempts: failures,
-        }),
-      });
-      setSupport(res.ok ? 'sent' : 'failed');
-    } catch {
-      setSupport('failed');
-    }
-  };
+  // An email the user sends from their own mail app: error facts only,
+  // never the password.
+  const supportHref = connectHelpMailto({
+    provider: kind,
+    code: failure.code,
+    reason: failure.reason ?? undefined,
+    phase: failure.phase ?? undefined,
+    attempts: failures,
+  }) ?? `mailto:${SUPPORT_EMAIL}`;
 
   return (
     <div className="onb-failure" role="alert" data-testid="onb-failure" data-message={failure.message}>
@@ -152,21 +134,13 @@ export function FailurePanel({ failure, failures, kind, funnelProvider, onReadOn
       </div>
       {failures >= 2 && (
         <div className="onb-support" data-testid="onb-support">
-          {support === 'sent' ? (
-            <p className="onb-hint">{t('fail.supportSent')}</p>
-          ) : support === 'failed' ? (
-            <p className="onb-hint">
-              {t('fail.supportFailed')}{' '}
-              <a className="onb-ext-link" href={helpHref(kind, failure.code)}>{t('fail.supportPage')}</a>
-            </p>
-          ) : (
-            <>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={sendToSupport} disabled={support === 'sending'} data-testid="onb-support-send">
-                {t('fail.support')}
-              </button>
-              <p className="onb-hint">{t('fail.supportNote')}</p>
-            </>
-          )}
+          <a className="btn btn-secondary btn-sm" href={supportHref} data-testid="onb-support-send">
+            {t('fail.support')}
+          </a>
+          <p className="onb-hint">
+            {t('fail.supportNote')}{' '}
+            <a className="onb-ext-link" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+          </p>
         </div>
       )}
     </div>

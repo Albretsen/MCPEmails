@@ -180,9 +180,6 @@
         "different": "Connect a different inbox",
         "support": "Send this error to support",
         "supportNote": "We get the error and your provider, never your password.",
-        "supportSent": "Sent. We will reply by email.",
-        "supportFailed": "Could not send it. Use the help page instead.",
-        "supportPage": "Open the help page",
         "signIn": "Sign in again",
         "seePlans": "See plans"
       },

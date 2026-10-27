@@ -180,9 +180,6 @@
         "different": "Connecter une autre boîte",
         "support": "Envoyer cette erreur au support",
         "supportNote": "Nous recevons l'erreur et votre fournisseur, jamais votre mot de passe.",
-        "supportSent": "Envoyé. Nous vous répondrons par e-mail.",
-        "supportFailed": "L'envoi a échoué. Utilisez plutôt la page d'aide.",
-        "supportPage": "Ouvrir la page d'aide",
         "signIn": "Se reconnecter",
         "seePlans": "Voir les forfaits"
       },

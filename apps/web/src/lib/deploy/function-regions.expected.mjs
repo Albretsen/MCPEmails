@@ -249,10 +249,7 @@ export const ROUTES = [
   ['app/api/oauth/token/route.ts', 'arn1', '9 (refresh 6)', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/userinfo/route.ts', 'arn1', '2', '-'],
   ['app/api/onboarding/assist/route.ts', 'arn1', '3-5', 'Resend for the two email actions'],
-  // "Send this error to support" from the onboarding inbox step: the ticket
-  // path of app/api/support/tickets, so the same region.
   ['app/api/onboarding/authorize-event/route.ts', 'arn1', '4 (auth, workspace, dedupe read, insert)', '-'],
-  ['app/api/onboarding/connect-help/route.ts', 'arn1', '4-8', 'Resend x2'],
   // Onboarding provider detection: the same lookups as inboxes/autodiscover.
   ['app/api/onboarding/detect/route.ts', 'arn1', '1', 'DNS MX/SRV + autoconfig.thunderbird.net (fixed origin)'],
   // The onboarding proof card logs in to the mail host like inboxes/[id]/check.

@@ -3,6 +3,7 @@
 import { Suspense, lazy, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { canDraftWith, promptKeys, successKey } from '@/lib/onboarding/connect-steps.mjs';
+import { chipClientLabel, normalizeChipClient } from '@/lib/onboarding/clients.mjs';
 import { morningBriefOptIn } from './assist-actions';
 import { PromptBlock } from './ConnectParts';
 
@@ -27,7 +28,10 @@ const OnboardingFlowB = lazy(() => import('../../convert/OnboardingFlowB'));
 export function ItWorksStep({ step, status, client, clientLabel, finish, variant, flowB = null, userEmail = '', startSecondInbox }) {
   const t = useTranslations('onboarding');
   const locale = useLocale();
-  const vars = { client: clientLabel };
+  // The success line names the app that made the call, which can differ
+  // from the chip (a ChatGPT call while the chip says Claude).
+  const caller = normalizeChipClient(status?.firstCall?.client ?? null);
+  const vars = { client: caller ? chipClientLabel(caller) : clientLabel };
   const prompts = promptKeys(client, { canDraft: canDraftWith(status?.credential?.scopes ?? null) });
   const [optIn, setOptIn] = useState({ phase: 'idle', email: null });
 

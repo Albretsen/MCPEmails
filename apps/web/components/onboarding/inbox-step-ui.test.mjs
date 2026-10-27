@@ -136,10 +136,9 @@ test('?provider= preselects a panel before an address is typed', async (t) => {
   assert.ok(q(view, '.onb-provider[data-kind="yahoo"]'));
 });
 
-test('failures keep the address, show the fix, and offer support after the second', async (t) => {
+test('failures keep the address, show the fix, and offer a support email after the second', async (t) => {
   const calls = stubFetch(t, {
     '/api/inboxes/app-password': () => ({ status: 422, json: { error_code: 'auth_failed', auth_reason: 'account_password_used', phase: 'authentication' } }),
-    '/api/onboarding/connect-help': () => ({ status: 201, json: { ok: true, ref: 'T-1' } }),
   });
   const view = await render(t);
   await typeInto(q(view, '[data-testid="onb-email"]'), 'me@gmail.com');
@@ -159,11 +158,11 @@ test('failures keep the address, show the fix, and offer support after the secon
   await typeInto(q(view, '[data-testid="onb-password"]'), 'Sommer2025!');
   await flush(() => q(view, '[data-testid="onb-connect"]').click());
   await waitFor(() => q(view, '[data-testid="onb-support"]'), { message: 'support offer' });
-  await flush(() => q(view, '[data-testid="onb-support-send"]').click());
-  await waitFor(() => text(view).includes('We will reply by email'), { message: 'sent' });
-  const ticket = calls.find((c) => c.path === '/api/onboarding/connect-help');
-  assert.deepEqual(ticket.body, { provider: 'gmail', code: 'auth_failed', reason: 'account_password_used', phase: 'authentication', attempts: 2 });
-  assert.equal(JSON.stringify(ticket.body).includes('Sommer'), false, 'never the password');
+  const mail = q(view, '[data-testid="onb-support-send"]').getAttribute('href');
+  assert.ok(mail.startsWith('mailto:support@mcpemails.com?subject='), mail);
+  const body = decodeURIComponent(mail.slice(mail.indexOf('&body=') + 6));
+  assert.ok(body.includes('Error code: auth_failed') && body.includes('Auth reason: account_password_used') && body.includes('Failed attempts: 2'), body);
+  assert.equal(mail.includes('Sommer'), false, 'never the password');
 });
 
 test('success ticks the checks and ends on the proof card', async (t) => {

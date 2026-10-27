@@ -29,12 +29,14 @@
  *                   lastSeen }] }  MCP `initialize` seen (mcp_client_capabilities),
  *                   newest first, only rows seen since reset. `client` is the
  *                   chip id of the newest one (null when unknown).
- *   firstCall       { at, tool }  the first SUCCESSFUL call against a real
+ *   firstCall       { at, tool, client }  the first SUCCESSFUL call against a real
  *                   inbox (onboarding_value_activated_at: never inbox_list,
  *                   never a call without a resolved inbox), since reset.
  *                   `tool` is that call's tool from activity_log (the
  *                   earliest success with an inbox, not inbox_list, around
- *                   the marker), never the any-call tool name
+ *                   the marker), never the any-call tool name. `client` is
+ *                   the chip id of the app that made that call (the newest
+ *                   handshake on its API key), null when unknown
  *   anyCall         { at }  the first successful call of any kind
  *                   (analytics_first_tool_used_at), since reset
  *   lastFailure     { at, tool, code } | null  the newest failed tool call in
@@ -43,7 +45,8 @@
  *
  * Reads go through the CALLER's client (RLS), so a member can only ever read a
  * workspace they belong to. Five parallel reads, plus one small activity_log
- * read for firstCall.tool once the first real call has happened.
+ * read for firstCall.tool once the first real call has happened, and one
+ * mcp_client_capabilities read for the app behind it.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -76,7 +79,7 @@ export interface OnboardingStatus {
   inboxes: { count: number; sinceReset: number; chosenAt: string | null; items: OnboardingInboxItem[] };
   credential: { exists: boolean; sinceReset: boolean; latestAt: string | null; scopes: string[] | null };
   handshake: { at: string | null; client: string | null; clients: OnboardingHandshake[] };
-  firstCall: { at: string | null; tool: string | null };
+  firstCall: { at: string | null; tool: string | null; client: string | null };
   anyCall: { at: string | null };
   lastFailure: { at: string; tool: string; code: string | null } | null;
 }
@@ -105,6 +108,8 @@ export interface OnboardingStatusRows {
   lastFailure: { created_at: string; tool_name: string; error_code: string | null } | null;
   /** The activating call (firstCallToolRead), when it was read. */
   firstCallTool?: string | null;
+  /** The handshake client_name on the activating call's API key, when known. */
+  firstCallClientName?: string | null;
 }
 
 function after(ts: string | null | undefined, floor: number | null): boolean {
@@ -191,7 +196,11 @@ export function shapeOnboardingStatus(rows: OnboardingStatusRows): OnboardingSta
       scopes: Array.isArray(rows.latestKey?.scopes) ? rows.latestKey.scopes : null,
     },
     handshake: { at: handshakes[0]?.lastSeen ?? null, client: handshakes[0]?.client ?? null, clients: handshakes },
-    firstCall: { at: firstCallAt, tool: firstCallAt ? firstCallToolName(rows.firstCallTool, ws?.analytics_first_tool_name ?? null) : null },
+    firstCall: {
+      at: firstCallAt,
+      tool: firstCallAt ? firstCallToolName(rows.firstCallTool, ws?.analytics_first_tool_name ?? null) : null,
+      client: firstCallAt ? chipClientFromHandshakeName(rows.firstCallClientName ?? null) : null,
+    },
     anyCall: { at: anyCallAt },
     lastFailure,
   };
@@ -244,10 +253,11 @@ export async function loadOnboardingStatus(db: Db, workspaceId: string, now: num
   // The activating call's tool (WP-Z m4): the earliest successful call on a
   // resolved inbox, never inbox_list, around the value marker.
   let firstCallTool: string | null = null;
+  let firstCallClientName: string | null = null;
   const callWindow = firstCallWindow(workspace.data?.onboarding_value_activated_at, workspace.data?.onboarding_reset_at);
   if (callWindow) {
     const first = await db.from('activity_log')
-      .select('tool_name')
+      .select('tool_name, api_key_id')
       .eq('workspace_id', workspaceId)
       .eq('status', 'success')
       .not('inbox_id', 'is', null)
@@ -259,11 +269,25 @@ export async function loadOnboardingStatus(db: Db, workspaceId: string, now: num
       .maybeSingle();
     if (first.error) console.error('[onboarding] status: first call read failed', first.error.message);
     else firstCallTool = first.data?.tool_name ?? null;
+    // Which app made it: "It works" names that app, not the chip choice.
+    const keyId = first.data?.api_key_id ?? null;
+    if (keyId) {
+      const caller = await db.from('mcp_client_capabilities')
+        .select('client_name')
+        .eq('workspace_id', workspaceId)
+        .eq('api_key_id', keyId)
+        .order('last_seen', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (caller.error) console.error('[onboarding] status: first call client read failed', caller.error.message);
+      else firstCallClientName = caller.data?.client_name ?? null;
+    }
   }
   return shapeOnboardingStatus({
     workspaceId,
     now,
     firstCallTool,
+    firstCallClientName,
     workspace: workspace.data ?? null,
     inboxes: inboxes.error ? [] : (inboxes.data ?? []),
     inboxCount: inboxes.error ? 0 : (inboxes.count ?? null),
