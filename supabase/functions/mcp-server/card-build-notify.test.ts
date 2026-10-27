@@ -1059,6 +1059,9 @@ const SQL_ALLOWED = new Set([
   // referral_personal_until); it reads the column the same way and never
   // writes it.
   "supabase/migrations/20261025090000_referrals.sql",
+  // Re-creates mcp_tools_call_gate to return card_listed as well; reads this
+  // column into the key row as before and never writes it.
+  "supabase/migrations/20261027150000_tools_call_gate_card_listed.sql",
 ]);
 
 /**

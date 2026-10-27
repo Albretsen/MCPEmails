@@ -67,7 +67,7 @@ SELECT public.mcp_tools_call_gate(
   now() - interval '1 minute', true, 'email_list', 1) AS a;
 
 SELECT is((SELECT a->'key'->>'id' FROM g_open), 'be000000-0000-0000-0000-000000000001', 'a live key is returned');
-SELECT is((SELECT count(*)::int FROM g_open, jsonb_object_keys(a->'key')), 13, 'with the 13 columns lookupApiKey selects');
+SELECT is((SELECT count(*)::int FROM g_open, jsonb_object_keys(a->'key')), 14, 'with the 14 columns lookupApiKey selects');
 SELECT is((SELECT a->'key_counts' FROM g_open), '[1, 2]'::jsonb, 'window counts in caller order');
 SELECT is((SELECT (a->>'workspace_count')::int FROM g_open), 2, 'the workspace minute count');
 SELECT is((SELECT a->'workspace'->>'plan' FROM g_open), 'free', 'the workspace row');
