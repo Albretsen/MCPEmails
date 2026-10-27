@@ -21,6 +21,8 @@
  * test, so the decisions live here.
  */
 
+import { htmlPreviewText } from "./text-extract.ts";
+
 export const SENT_CARD_META_KEY = "mcpemails/sent_card";
 
 /** Dispatch names whose results get the sent card. */
@@ -53,22 +55,6 @@ export type SentCard =
   }
   | { outcome: "not_sent" | "unknown" | "waiting"; headline: string; detail: string };
 
-/** A rough text view of an HTML-only body, for the preview only. */
-function htmlPreviewText(html: string): string {
-  return html
-    .replace(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, "")
-    .replace(/<br\s*\/?>|<\/(p|div|li|h\d|tr)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
 /** Decoded size of a base64 payload, without decoding it. */
 function base64Bytes(data: string): number {
   const clean = data.replace(/[^A-Za-z0-9+/_-]/g, "");
@@ -76,7 +62,7 @@ function base64Bytes(data: string): number {
 }
 
 export function sentCardForSuccess(facts: SentCardFacts, sentCopyMissing: boolean): SentCard {
-  const raw = (facts.text && facts.text.trim()) ? facts.text : facts.html ? htmlPreviewText(facts.html) : "";
+  const raw = (facts.text && facts.text.trim()) ? facts.text : facts.html ? htmlPreviewText(facts.html).replace(/\s+/g, " ").trim() : "";
   const text = raw.replace(/\r\n/g, "\n");
   return {
     outcome: "sent",
