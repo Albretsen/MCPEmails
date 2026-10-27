@@ -90,7 +90,8 @@ export function plainResultReceipt(result: ToolResultParams | undefined): Envelo
 
 /**
  * The words after "<Tool>: " for a non-envelope result the card cannot turn
- * into a receipt, or null for the generic "no preview for this result".
+ * into a receipt, or null for the generic "no preview for this result" (a
+ * result with no `structuredContent`).
  *
  * Errors and refusals (scope, cap paywall, chat confirmation, a provider
  * failure) are deliberately not "nothing was sent": a send whose delivery is
@@ -98,7 +99,10 @@ export function plainResultReceipt(result: ToolResultParams | undefined): Envelo
  */
 export function plainResultNote(result: ToolResultParams | undefined): string | null {
   if (result?.isError) return "did not complete. The reply above says why.";
-  return plain(result)?.status === "pending_approval"
-    ? "waiting for approval. The reply above has the link."
-    : null;
+  const p = plain(result);
+  if (!p) return null;
+  if (p.status === "pending_approval") return "waiting for approval. The reply above has the link.";
+  // Listed on every draft and bulk tool since 2026-10-28 (keyReviewCardGates),
+  // so an inbox with the editor hidden or bulk review off lands here too.
+  return typeof p.draft_id === "string" ? "saved." : "done. The reply above has the details.";
 }
