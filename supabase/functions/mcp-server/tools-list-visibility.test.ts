@@ -503,6 +503,7 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     // handler (a key without it gets the mailto link back instead).
     "subscriptions_scan": ["read:email"],
     "subscriptions_cleanup": ["manage:folders"],
+    "card_automation": ["manage:automations"],
   };
   const actual: Record<string, string[]> = {};
   for (const tool of TOOL_REGISTRY) {

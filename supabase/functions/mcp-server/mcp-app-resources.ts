@@ -204,7 +204,8 @@ const MCP_APP_RESOURCES: readonly McpAppResource[] = [
     description:
       "Interactive review surface for outbound and bulk mailbox operations: " +
       "shows exactly what will be sent, deleted, or moved before it happens. " +
-      "Also the draft editor, where the user reads and edits an unsent draft.",
+      "Also the draft editor, where the user reads and edits an unsent draft, " +
+      "and the automation card, which shows a rule and switches it on or off.",
     html: REVIEW_CARD_HTML,
   },
 ];
@@ -544,6 +545,22 @@ export const PER_OPERATION_CARD_TOOL_NAMES: Readonly<
   drafts: ["draft_create", "draft_reply", "draft_update", "draft_send", "draft_delete"],
 };
 
+/**
+ * The automation card (mcp-app-automation.ts), on the CONSOLIDATED surface only.
+ *
+ * Both tools, because `_meta.ui` is per tool and the rule a person most wants
+ * to see is the one they are about to enable (`automation_read` 'preview') or
+ * just created or switched (`automation`). Every other result of these two
+ * (list, runs, delete, an error) gets one line in the card, never an empty
+ * frame. Not on the per-operation surface: OpenAI clients are not shown
+ * create, update or enable at all (index.ts#PER_OPERATION_UNLISTED), and an
+ * app tool that switches a rule on would put that back.
+ */
+export const AUTOMATION_CARD_TOOL_NAMES: readonly string[] = ["automation", "automation_read"];
+
+/** The card's own tool. App-only, listed only while the card is. */
+export const AUTOMATION_APP_TOOL_NAMES: readonly string[] = ["card_automation"];
+
 /** Which listing a tool is being serialised for. See PER_OPERATION_LISTING. */
 export type ToolSurface = "consolidated" | "per_operation";
 
@@ -591,6 +608,8 @@ export function isCardBearingToolName(name: string): boolean {
     SUBSCRIPTION_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_APP_TOOL_NAMES.includes(name) ||
+    AUTOMATION_CARD_TOOL_NAMES.includes(name) ||
+    AUTOMATION_APP_TOOL_NAMES.includes(name) ||
     Object.values(PER_OPERATION_CARD_TOOL_NAMES).some((names) => names.includes(name))
   );
 }
@@ -722,6 +741,12 @@ export interface ReviewCardGates {
    * reads as false. See SUBSCRIPTION_CARD_TOOL_NAMES.
    */
   subscriptions?: boolean;
+  /**
+   * The automation card. The caller passes the `drafts` gate: the card shipped
+   * on the draft editor's rollout (on for every workspace since 2026-10-27)
+   * and honours the same "hide the card" switches. Absent reads as false.
+   */
+  automations?: boolean;
 }
 
 /**
@@ -754,6 +779,11 @@ export function reviewCardMetaForListing(
   if (SUBSCRIPTION_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.subscriptions === true ? modelAndAppReviewCardToolMeta() : undefined;
   }
+  if (AUTOMATION_APP_TOOL_NAMES.includes(toolName)) {
+    return surface === "consolidated" && gates.automations === true
+      ? appOnlyReviewCardToolMeta()
+      : undefined;
+  }
   if (surface === "per_operation") {
     // Checked INSTEAD of the consolidated lists, not as well as them:
     // `email_delete` is on the bulk list above as the consolidated tool, and
@@ -780,6 +810,9 @@ export function reviewCardMetaForListing(
   }
   if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.drafts ? reviewCardToolMeta() : undefined;
+  }
+  if (AUTOMATION_CARD_TOOL_NAMES.includes(toolName)) {
+    return gates.automations === true ? reviewCardToolMeta() : undefined;
   }
   // The draft editor's own three: same gate, plus a `visibility` list. They
   // are no longer stamped in the registry, so `undefined` here really does mean

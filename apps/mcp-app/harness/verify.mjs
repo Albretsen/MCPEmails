@@ -135,6 +135,10 @@ const SUITES = [
   // senders, Select all / none, Confirm sending only ticked plan keys once,
   // every result status, Continue archiving, expired and hostile names.
   ["subscription plan", "subscription-plan.test.mjs"],
+  // The automation card: a plain automation result mounts it, the rule and
+  // its matches render, "nothing matches" is plain, the switch sends one
+  // `card_automation` call per click, and list / error results are one line.
+  ["automation", "automation.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

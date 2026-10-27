@@ -96,6 +96,7 @@ function serverSurface() {
     ...definitionNames(read(path.join(server, 'mcp-app-approvals.ts')), 'APPROVAL_TOOL_DEFINITIONS'),
     ...definitionNames(read(path.join(server, 'mcp-app-bulk.ts')), 'BULK_TOOL_DEFINITIONS'),
     ...editorTools.filter((name) => !editorModelVisible.includes(name)),
+    ...stringArray(resources, 'AUTOMATION_APP_TOOL_NAMES'),
   ];
   return { listed, appOnly, modelVisible: listed.filter((name) => !appOnly.includes(name)) };
 }

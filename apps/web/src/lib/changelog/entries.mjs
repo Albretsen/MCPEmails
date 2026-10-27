@@ -53,6 +53,13 @@ export const ENTRIES = [
   {
     date: '2026-10-27',
     kind: 'added',
+    title: 'See an automation rule before you turn it on',
+    body:
+      "When your AI creates, changes or previews an automation rule in Claude, a card now shows the rule in one plain sentence, the messages it would act on right now, and an On/Off switch. If a rule matches nothing yet, the card says so.",
+  },
+  {
+    date: '2026-10-27',
+    kind: 'added',
     title: 'Edit drafts right in the chat',
     body:
       "Drafts your AI writes now open in an editable card in Claude and ChatGPT, where you can change the recipients, subject and text, save, or send with a few seconds to undo. You can turn the card off for one mailbox or for the whole workspace in your dashboard.",

@@ -133,7 +133,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | `draft_read` | *(single action)* | `manage:drafts` and `read:email` |
 | `draft_editor_hide` | *(single action)* | `manage:drafts` |
 
-A full-scope key sees **28** tools in `tools/list`: the 21 above plus seven app-only tools that drive the in-chat cards rather than being composed by hand: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule` (a held send), `bulk_execute`, `bulk_cancel` (a previewed bulk operation) and `draft_editor_save` (the draft editor's Save button). The six `approval_*` and `bulk_*` tools always carry `_meta.ui.visibility: ["app"]`; `draft_editor_save` carries it where the draft editor is on and refuses every call where it is off.
+A full-scope key sees **29** tools in `tools/list`: the 21 above plus eight app-only tools that drive the in-chat cards rather than being composed by hand: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule` (a held send), `bulk_execute`, `bulk_cancel` (a previewed bulk operation), `draft_editor_save` (the draft editor's Save button) and `card_automation` (the automation card's On/Off switch). The six `approval_*` and `bulk_*` tools always carry `_meta.ui.visibility: ["app"]`; `draft_editor_save` carries it where the draft editor is on and refuses every call where it is off; `card_automation` is listed only where the card is on.
 
 `prompts/list` holds 7 user-invoked workflow prompts (`morning_inbox_triage`, `find_and_brief`, `follow_up_radar`, `decision_tracker`, `prepare_reply_drafts`, `clean_up_safely`, `review_scheduled_sends`), each listed only to a key holding its scopes.
 

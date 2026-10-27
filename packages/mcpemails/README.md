@@ -162,7 +162,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `draft_read` - Reads one unsent draft in full, for example after the user edited it in the draft editor card. Read-only.
 - `draft_editor_hide` - Hides or shows the in-chat draft editor card for one inbox or the whole workspace. A display preference only.
 
-A full-scope key sees 28 tools in `tools/list`: the 21 above plus seven app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`) that drive the cards your MCP client renders for a held send, a previewed bulk operation or a draft being edited. There are also 7 workflow prompts in `prompts/list`.
+A full-scope key sees 29 tools in `tools/list`: the 21 above plus eight app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`, `card_automation`) that drive the cards your MCP client renders for a held send, a previewed bulk operation, a draft being edited or an automation rule. There are also 7 workflow prompts in `prompts/list`.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 
