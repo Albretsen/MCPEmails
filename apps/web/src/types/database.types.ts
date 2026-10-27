@@ -6410,7 +6410,6 @@ export type Database = {
         }
         Returns: {
           calls: number
-          card_lines: number
           card_workspaces: number
           deleted_agent: number
           deleted_card: number
@@ -6421,12 +6420,21 @@ export type Database = {
           errors: number
           family: string
           hidden: number
+          lines: number
+          mature_lines: number
           period: string
           returned_card: number
           returned_plain: number
           saved: number
           sent_agent: number
           sent_card: number
+          w_calls: number
+          w_deleted: number
+          w_errors: number
+          w_lines: number
+          w_mature: number
+          w_sent_day: number
+          w_touched: number
           workspaces: number
         }[]
       }
