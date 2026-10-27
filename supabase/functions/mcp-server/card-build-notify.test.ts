@@ -1062,6 +1062,10 @@ const SQL_ALLOWED = new Set([
   // Re-creates mcp_tools_call_gate to return card_listed as well; reads this
   // column into the key row as before and never writes it.
   "supabase/migrations/20261027150000_tools_call_gate_card_listed.sql",
+  // The draft card rollout marks every live key's listing stale in one
+  // statement, the same write invalidateCardListings() makes per workspace.
+  // It writes the literal 'stale', which must equal CARD_LISTING_STALE.
+  "supabase/migrations/20261027160000_draft_editor_for_everyone.sql",
 ]);
 
 /**
