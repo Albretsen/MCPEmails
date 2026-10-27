@@ -29,6 +29,14 @@
 // `neutralizeDeep` because reply and forward recipients' display names come
 // from third-party headers.
 //
+// The sent card (2026-10-27). A send, reply or forward result also carries
+// `_meta["mcpemails/sent_card"]` (mcp-server/sent-card.ts), invisible to the
+// model: on success the From address, Cc/Bcc, the text that went out,
+// attachment names and whether a copy reached Sent, so the receipt opens as
+// the read-only message (SentMessage.tsx) instead of one line; on a failure
+// one sentence saying it was not sent and why, in the user's words. A host
+// that drops result `_meta` gets the one-liners above, unchanged.
+//
 // Kept deliberately small: the bundle sits at its 175 KB cap (codegen.mjs).
 // ---------------------------------------------------------------------------
 
@@ -38,6 +46,12 @@ import { formatDateTime } from "./format";
 import { neutralizeDeep } from "./sanitize";
 
 type Plain = Record<string, any>;
+
+const sentCard = (r: ToolResultParams | undefined): Plain | null => {
+  const m = r?._meta?.["mcpemails/sent_card"];
+  return m && typeof m === "object" ? (m as Plain) : null;
+};
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
 
 const plain = (r: ToolResultParams | undefined): Plain | null =>
   r && !r.isError && r.structuredContent && typeof r.structuredContent === "object"
@@ -80,12 +94,64 @@ export function plainResultReceipt(result: ToolResultParams | undefined): Envelo
   } else {
     return null;
   }
+  const m = sentCard(result);
+  const full = outcome === "sent" && m?.outcome === "sent" && typeof m.body_text === "string";
   return neutralizeDeep({
     schema_version: SCHEMA_VERSION,
     card: "receipt",
     state: outcome,
-    receipt: { outcome, headline, subline },
-  });
+    receipt: {
+      outcome,
+      headline,
+      subline,
+      // Where the copy is; SentMessage prints the detail under the message.
+      detail: full
+        ? m.sent_copy === false ? "No copy was saved to your Sent folder." : "A copy is in your Sent folder."
+        : null,
+    },
+    // The shape App.tsx#endedView turns into SentMessage, open on arrival.
+    ...(full
+      ? {
+        sent_at: p.sent_at,
+        draft: {
+          identity: { email_address: typeof m.from === "string" ? m.from : null },
+          recipients: {
+            to: (Array.isArray(p.to) ? p.to : []).map((e: any) => String((typeof e === "string" ? e : e?.email) ?? "")),
+            cc: strings(m.cc),
+            bcc: strings(m.bcc),
+          },
+          subject,
+          body: { text: m.body_text || (p.forwarded_from ? "(no note added)" : ""), html: null, truncated: m.truncated === true },
+          attachments: (Array.isArray(m.attachments) ? m.attachments : []).map((a: any) => ({
+            filename: String(a?.filename ?? ""),
+            size_bytes: Number(a?.size_bytes) || 0,
+          })),
+        },
+      }
+      : {}),
+  } as Envelope);
+}
+
+/**
+ * A failed send the server could word (`_meta` sent card, outcome
+ * "not_sent" or "unknown"): "Not sent" and the reason, in the failure tone;
+ * or one waiting for the user's OK in chat ("waiting"), in the neutral one.
+ * Null for every other result, which keeps the neutral line below.
+ */
+export function plainResultFailure(result: ToolResultParams | undefined): Envelope | null {
+  const m = sentCard(result);
+  if (!result?.isError || !m || !["not_sent", "unknown", "waiting"].includes(m.outcome)) return null;
+  return neutralizeDeep({
+    schema_version: SCHEMA_VERSION,
+    card: "receipt",
+    state: "error",
+    receipt: {
+      // "waiting" (confirm in chat first) is not a failure: the neutral tone.
+      outcome: m.outcome === "waiting" ? "rejected" : "failed",
+      headline: String(m.headline || "Not sent"),
+      detail: String(m.detail || ""),
+    },
+  } as Envelope);
 }
 
 /**

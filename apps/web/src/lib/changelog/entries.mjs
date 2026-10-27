@@ -59,6 +59,13 @@ export const ENTRIES = [
   },
   {
     date: '2026-10-27',
+    kind: 'improved',
+    title: 'See what your AI sent, right in the chat',
+    body:
+      "After your AI sends, replies to or forwards an email, Claude and ChatGPT now show a receipt with the sending address, recipients, subject, the start of the message and its attachments, and whether a copy is in your Sent folder. When an email could not be sent, the card says so in one sentence, with the reason.",
+  },
+  {
+    date: '2026-10-27',
     kind: 'added',
     title: 'Edit drafts right in the chat',
     body:
