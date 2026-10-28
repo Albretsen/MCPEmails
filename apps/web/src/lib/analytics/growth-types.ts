@@ -625,6 +625,10 @@ export type GrowthDraftCardStatsRow = {
   lines_listed: number;
   w_lines_listed: number;
   w_touched_listed: number;
+  /** The day-old counts again, for the same workspaces as lines_listed. */
+  mature_listed: number;
+  w_mature_listed: number;
+  w_sent_day_listed: number;
 };
 
 /** Customer drafts per UTC day, zero-filled. `growth_draft_card_daily`. */

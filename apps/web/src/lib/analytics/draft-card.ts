@@ -86,6 +86,9 @@ const ZERO: Totals = {
   lines_listed: 0,
   w_lines_listed: 0,
   w_touched_listed: 0,
+  mature_listed: 0,
+  w_mature_listed: 0,
+  w_sent_day_listed: 0,
 };
 
 /** Sum the rows that match. PostgREST returns bigint as number or string. */
@@ -113,6 +116,8 @@ export type Rates = {
   touched: number | null;
   /** Of the new drafts at least a day old, the share sent within 24 hours. */
   sent: number | null;
+  /** The same, only for drafts from connections whose tool list carried the card. */
+  sentListed: number | null;
   /** Of the sends (any draft), the share made from the card. */
   sentFromCard: number | null;
   /** Of the new drafts, the share discarded. */
@@ -128,6 +133,7 @@ export function rates(t: Totals): Rates {
   return {
     touched: rate(t.w_touched_listed, t.w_lines_listed),
     sent: rate(t.w_sent_day, t.w_mature),
+    sentListed: rate(t.w_sent_day_listed, t.w_mature_listed),
     sentFromCard: rate(t.sent_card, t.sent_card + t.sent_agent),
     discarded: rate(t.w_deleted, t.w_lines),
     errors: rate(t.w_errors, t.w_calls),
@@ -190,9 +196,12 @@ export function releaseChecks(
 
   // Change in the card clients' send rate, net of the change in other clients
   // over the same dates when they have enough data, so a quiet week is not
-  // blamed on the card.
+  // blamed on the card. After the release only drafts where the card could
+  // show count: a connection loaded before the release draws no card, and on
+  // 2026-10-28 eight such ChatGPT workspaces sent none of 858 drafts. Before
+  // the release no connection carried the card, so that side keeps every draft.
   const change = (b: number | null, a: number | null) => (b !== null && a !== null && b > 0 ? a / b - 1 : null);
-  const cardChange = change(before.sent, after.sent);
+  const cardChange = change(before.sent, after.sentListed);
   const otherChange = otherMature >= MIN_OTHER_DRAFTS ? change(otherBefore.sent, otherAfter.sent) : null;
   const netChange = cardChange === null ? null : cardChange - (otherChange ?? 0);
 
@@ -212,10 +221,10 @@ export function releaseChecks(
       question: 'Are as many drafts sent?',
       bar: `share sent within a day down no more than ${pct(BARS.sendDrop)}, net of other clients`,
       state: judgeWhen(
-        released && afterTotals.mature_lines >= MIN_CARD_DRAFTS,
+        released && afterTotals.mature_listed >= MIN_CARD_DRAFTS,
         netChange === null ? null : netChange >= -BARS.sendDrop,
       ),
-      detail: `${pct(before.sent)} sent within a day before, ${pct(after.sent)} after (${afterTotals.mature_lines} drafts a day old)${otherChange === null ? `; other clients too few to compare (${otherMature} of ${MIN_OTHER_DRAFTS} drafts a day old)` : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
+      detail: `${pct(before.sent)} sent within a day before, ${pct(after.sentListed)} after (${afterTotals.mature_listed} drafts a day old where the card could show, ${afterTotals.mature_lines} in all)${otherChange === null ? `; other clients too few to compare (${otherMature} of ${MIN_OTHER_DRAFTS} drafts a day old)` : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
     },
     {
       key: 'rejected',

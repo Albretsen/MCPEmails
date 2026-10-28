@@ -6502,6 +6502,7 @@ export type Database = {
           lines: number
           lines_listed: number
           mature_lines: number
+          mature_listed: number
           period: string
           returned_card: number
           returned_plain: number
@@ -6514,7 +6515,9 @@ export type Database = {
           w_lines: number
           w_lines_listed: number
           w_mature: number
+          w_mature_listed: number
           w_sent_day: number
+          w_sent_day_listed: number
           w_touched: number
           w_touched_listed: number
           workspaces: number
