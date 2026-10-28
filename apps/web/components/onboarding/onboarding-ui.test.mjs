@@ -116,3 +116,61 @@ test('dashboard: Reset onboarding is internal-owner only and posts reset', async
   assert.deepEqual(calls, [['/api/onboarding', { action: 'reset' }]]);
   assert.deepEqual(went, ['/onboarding']);
 });
+
+// ── Closing the dialog ──────────────────────────────────────────────────────
+
+const { OnboardingApp } = await import('./OnboardingApp.jsx');
+
+const waitStatus = {
+  workspaceId: 'ws-1',
+  serverTime: new Date().toISOString(),
+  resetAt: null,
+  completedAt: null,
+  client: 'claude',
+  inboxes: { count: 1, sinceReset: 1, chosenAt: new Date().toISOString(), items: [{ id: 'i1', address: 'me@example.org', provider: 'imap', status: 'active', createdAt: new Date().toISOString() }] },
+  credential: { exists: true, sinceReset: true, latestAt: new Date().toISOString(), scopes: null },
+  handshake: { at: null, client: null, clients: [] },
+  firstCall: { at: null, tool: null, client: null, reached: false },
+  anyCall: { at: null },
+  lastFailure: null,
+};
+
+/** Mounts the dialog on the wait step; returns the actions it posted and the closes. */
+async function mountDialog(t) {
+  const posted = [];
+  const closes = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    if (init.method === 'POST' && String(url) === '/api/onboarding') posted.push(JSON.parse(init.body));
+    return new Response(JSON.stringify(waitStatus), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  t.after(() => { globalThis.fetch = realFetch; });
+  const view = await render(t, createElement(OnboardingApp, {
+    variant: { flow: 'new', convert: 'off' },
+    initialClient: 'claude',
+    mcpUrl: 'https://mcpemails.com/api/mcp',
+    statusPromise: Promise.resolve(waitStatus),
+    requestedStep: 'wait',
+    onClose: (href) => closes.push(href),
+  }));
+  await flush(() => {});
+  return { view, posted, closes };
+}
+
+const exits = (posted) => posted.filter((body) => body.action === 'exited');
+
+test('closing the dialog with X, Skip or Escape records the step it was closed on', async (t) => {
+  const { view, posted, closes } = await mountDialog(t);
+  assert.ok(view.container.ownerDocument.querySelector('[data-testid="onb-wait"]'), 'on the wait step');
+
+  await flush(() => view.container.ownerDocument.querySelector('[data-testid="onb-exit"]').click());
+  await flush(() => view.container.ownerDocument.querySelector('[data-testid="onb-skip"]').click());
+  await flush(() => document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' })));
+
+  assert.deepEqual(exits(posted), [
+    { action: 'exited', step: 'wait' },
+    { action: 'exited', step: 'wait' },
+    { action: 'exited', step: 'wait' },
+  ]);
+  assert.equal(closes.length, 3);
+});

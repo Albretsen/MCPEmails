@@ -98,6 +98,15 @@ test('step_viewed records one funnel row per valid step and refuses others', asy
   assert.equal(funnel.length, 1);
 });
 
+test('exited records the step the dialog was closed on and refuses others', async () => {
+  reset();
+  assert.equal((await post({ action: 'exited', step: 'wait' })).status, 200);
+  assert.deepEqual(funnel, [{ workspaceId: 'ws-1', stage: 'onboarding_exited', outcome: 'success', category: 'step_wait' }]);
+  assert.equal((await post({ action: 'exited', step: 'dashboard' })).status, 400);
+  assert.equal((await post({ action: 'exited' })).status, 400);
+  assert.equal(funnel.length, 1);
+});
+
 test('client_changed stores the chip choice and records it', async () => {
   reset();
   const res = await post({ action: 'client_changed', client: 'claude_code' });

@@ -197,6 +197,11 @@ export function OnboardingStepsTile({ steps, assignedNew }: { steps: GrowthOnboa
     })),
     { label: 'Finished', value: count((r) => r.flow === 'new' && r.stage === 'onboarding_completed' && r.category === null) },
   ];
+  // Where the dialog was closed (X, Skip or Escape) without finishing.
+  const exits = STEP_LABELS.map(([category, label]) => ({
+    label: `Closed on ${label}`,
+    value: count((r) => r.flow === 'new' && r.stage === 'onboarding_exited' && r.category === category),
+  }));
   const flowB = FLOW_B.map(([stage, label]) => ({
     label,
     value: count((r) => r.convert === 'on' && r.stage === stage && r.category === null),
@@ -206,7 +211,7 @@ export function OnboardingStepsTile({ steps, assignedNew }: { steps: GrowthOnboa
       <FunnelSteps steps={funnel} />
       <table className="bd-table">
         <tbody>
-          {flowB.map((row) => (
+          {[...exits, ...flowB].map((row) => (
             <tr key={row.label} className={row.value === 0 ? 'is-quiet' : undefined}>
               <th scope="row" className="bd-cell-text">{row.label}</th>
               <td>{formatCount(row.value)}</td>
@@ -216,7 +221,9 @@ export function OnboardingStepsTile({ steps, assignedNew }: { steps: GrowthOnboa
       </table>
       <p className="bd-note">
         A step counts once it was seen. A chat link opens straight on the inbox step, so later steps can be
-        smaller without anyone leaving. Flow B rows are workspaces in onb_convert = on, across both flows.
+        smaller without anyone leaving. Closed on counts workspaces that closed the dialog on that step
+        (recorded from 2026-10-28); someone who leaves for their AI app and never comes back to the tab is in
+        neither. Flow B rows are workspaces in onb_convert = on, across both flows.
       </p>
     </Tile>
   );

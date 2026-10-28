@@ -5,6 +5,8 @@
  * Every action and what it records: app/api/onboarding/route.ts.
  *
  *   stepViewed(step)        funnel onboarding_step_viewed (category step_<id>)
+ *   onboardingExited(step)  funnel onboarding_exited: the dialog was closed
+ *                           on that step without finishing
  *   clientChanged(client)   stores the chip choice + funnel client_changed
  *   inboxReused()           "Use <address>" after a reset: remembered, so a
  *                           reload skips the inbox step
@@ -28,6 +30,7 @@ export function postOnboardingAction(action, data = {}, fetchImpl = globalThis.f
 }
 
 export const stepViewed = (step) => postOnboardingAction('step_viewed', { step });
+export const onboardingExited = (step) => postOnboardingAction('exited', { step });
 export const clientChanged = (client) => postOnboardingAction('client_changed', { client });
 export const inboxReused = () => postOnboardingAction('inbox_reused');
 export const onboardingCompleted = () => postOnboardingAction('completed');
