@@ -136,7 +136,10 @@ export type ProductFunnelEvent = {
     // The /onboarding flow (20261026152301, src/lib/onboarding/). Step views
     // carry the step as category (OnboardingStepCategory); client_changed and
     // onboarding_completed carry the client; onboarding_reset is 'unknown'.
+    // onboarding_exited (20261028090000) carries the step the dialog was
+    // closed on, as a step view does.
     | 'onboarding_step_viewed' | 'client_changed' | 'onboarding_completed' | 'onboarding_reset'
+    | 'onboarding_exited'
     // /onboarding sub-states (20261026221917, WP-F): handshake and open-client
     // carry the client, help the tier (help_*), prompt copies the prompt
     // (prompt_*), emailed links the link (link_*), the morning brief opt-in the

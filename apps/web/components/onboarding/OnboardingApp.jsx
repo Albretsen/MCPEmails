@@ -8,7 +8,7 @@ import { ClientChip } from './ClientChip';
 import { ClientLogo, InboxLogo, MarkLogo } from './ClientLogo';
 import { STEP_PANELS } from './steps';
 import { useOnboardingStatus } from './useOnboardingStatus';
-import { clientChanged, onboardingCompleted, stepViewed } from './onboarding-actions';
+import { clientChanged, onboardingCompleted, onboardingExited, stepViewed } from './onboarding-actions';
 import { ChatReturnPanel } from './ChatReturnPanel';
 import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return.mjs';
 
@@ -35,12 +35,21 @@ import { rememberChatReturn, takeChatReturn } from '@/lib/onboarding/chat-return
  *   chatReturn      { client, provider } | null: a verified chat connect link
  *                   (from=chat). Only the inbox step, then ChatReturnPanel.
  *   onClose(href?)  close the dialog; `href` is a /dashboard path to open.
+ *                   Closing with X, Skip or Escape first records
+ *                   onboarding_exited with the step it was closed on.
  *   onMounted()     called once the dialog renders (SetupModal's placeholder).
  */
 export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl, userEmail = '', statusPromise, requestedStep = null, flowB = null, chatReturn = null, onClose, onMounted }) {
   const t = useTranslations('onboarding');
   const [client, setClient] = useState(normalizeChipClient(initialClient) ?? 'claude');
   const dialogRef = useRef(null);
+  // The step on screen, kept by OnboardingSteps; null once there is no step
+  // to leave (the chat-return panel, or before the status has loaded).
+  const stepRef = useRef(null);
+  const exit = useCallback(() => {
+    if (stepRef.current) onboardingExited(stepRef.current);
+    onClose?.();
+  }, [onClose]);
 
   const changeClient = useCallback((id) => {
     const next = normalizeChipClient(id);
@@ -66,17 +75,17 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
   useEffect(() => {
     dialogRef.current?.focus({ preventScroll: true });
     const onKey = (event) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) onClose?.();
+      if (event.key === 'Escape' && !event.defaultPrevented) exit();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [exit]);
 
   return (
     <div className="onb-overlay">
       <div className="onb-scrim" aria-hidden="true" />
       <div className="onb-dialog" role="dialog" aria-modal="true" aria-label={t('shell.title')} tabIndex={-1} ref={dialogRef} data-testid="onb-dialog">
-        <button type="button" className="onb-close" onClick={() => onClose?.()} aria-label={t('shell.exit')} data-testid="onb-exit">
+        <button type="button" className="onb-close" onClick={exit} aria-label={t('shell.exit')} data-testid="onb-exit">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
             <path d="M4 4l8 8M12 4l-8 8" />
           </svg>
@@ -94,6 +103,8 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
             flowB={flowB}
             chatReturn={chatReturn}
             onClose={onClose}
+            onExit={exit}
+            stepRef={stepRef}
           />
         </Suspense>
       </div>
@@ -105,7 +116,7 @@ export function OnboardingApp({ variant, initialClient, provider = null, mcpUrl,
 const STAGE = { inbox: 0, add_to_ai: 1, first_prompt: 2, wait: 2, it_works: 3 };
 const STAGES = 3;
 
-function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, provider, variant, mcpUrl, userEmail, flowB, chatReturn = null, onClose }) {
+function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, provider, variant, mcpUrl, userEmail, flowB, chatReturn = null, onClose, onExit, stepRef }) {
   const t = useTranslations('onboarding');
   const initialStatus = use(statusPromise);
   const { status, refreshStatus, setPolling } = useOnboardingStatus(initialStatus);
@@ -138,6 +149,9 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
 
   // One onboarding_step_viewed per step per page load.
   const seen = useRef(new Set());
+  useEffect(() => {
+    stepRef.current = chatDone ? null : step;
+  }, [step, chatDone, stepRef]);
   useEffect(() => {
     if (seen.current.has(step)) return;
     seen.current.add(step);
@@ -230,7 +244,7 @@ function OnboardingSteps({ statusPromise, requestedStep, client, changeClient, p
       {step !== 'it_works' && (
         <div className="onb-foot">
           <ClientChip client={client} onChange={changeClient} />
-          <button type="button" className="onb-skip" onClick={() => onClose?.()} data-testid="onb-skip">{t('shell.skip')}</button>
+          <button type="button" className="onb-skip" onClick={onExit} data-testid="onb-skip">{t('shell.skip')}</button>
         </div>
       )}
     </>

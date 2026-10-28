@@ -33,6 +33,8 @@ export async function GET(): Promise<NextResponse> {
  *
  * /onboarding flow actions (src/lib/onboarding/, WP-C):
  *   step_viewed     {step}    funnel onboarding_step_viewed, category step_<id>
+ *   exited          {step}    the dialog was closed (X, Skip or Escape) on that
+ *                             step: funnel onboarding_exited, category step_<id>
  *   client_changed  {client}  the chip: stores workspaces.onboarding_client,
  *                             funnel client_changed, category = client
  *   inbox_reused    {}        "Use <address>" on the inbox step after a reset:
@@ -68,6 +70,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!isOnboardingStep(body.step)) return NextResponse.json({ error: 'Invalid step.' }, { status: 400 });
     await recordProductFunnelEvent(createServiceRoleClient(), {
       workspaceId, stage: 'onboarding_step_viewed', outcome: 'success', category: STEP_FUNNEL_CATEGORY[body.step],
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'exited') {
+    if (!isOnboardingStep(body.step)) return NextResponse.json({ error: 'Invalid step.' }, { status: 400 });
+    await recordProductFunnelEvent(createServiceRoleClient(), {
+      workspaceId, stage: 'onboarding_exited', outcome: 'success', category: STEP_FUNNEL_CATEGORY[body.step],
     });
     return NextResponse.json({ ok: true });
   }
