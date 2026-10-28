@@ -266,9 +266,6 @@ test('no em dash in any locale, on any surface this change touched', () => {
       }
     }
   }
-  const grid = readText('components/marketing/Sections.jsx').match(/const EXAMPLES = \[[\s\S]*?\n\];/);
-  assert.ok(grid, 'Sections.jsx no longer declares EXAMPLES');
-  assert.ok(!EM_DASH.test(grid[0]), 'the homepage prompt grid contains an em dash');
 });
 
 test('none of the new copy makes a claim the product cannot support', () => {
@@ -290,8 +287,11 @@ test('none of the new copy makes a claim the product cannot support', () => {
       }
     }
   }
-  const grid = readText('components/marketing/Sections.jsx').match(/const EXAMPLES = \[[\s\S]*?\n\];/);
-  assert.ok(grid && !BANNED_CLAIMS.test(grid[0]), 'the homepage prompt grid names a banned claim');
+  for (const locale of LOCALES) {
+    for (const [key, value] of leaves(at(messages(locale, 'home'), 'examples.items') ?? [])) {
+      assert.ok(!BANNED_CLAIMS.test(value), `${locale}: the homepage prompt grid ${key} names a banned claim`);
+    }
+  }
 });
 
 test('forBusiness offers Microsoft 365 only with the admin-approval caveat', () => {
@@ -458,21 +458,28 @@ test('the comparison table wires Pro to the seat count and the company-mailbox v
 /* ─── The homepage prompt grid ──────────────────────────────── */
 
 test('the homepage prompt grid keeps at least two company-mailbox prompts', () => {
+  // Prompts and outcomes live in home.examples.items; the tool chips are
+  // EXAMPLE_TOOLS in Sections.jsx, one entry per card.
   const source = readText('components/marketing/Sections.jsx');
-  const grid = source.match(/const EXAMPLES = \[[\s\S]*?\n\];/);
-  assert.ok(grid, 'Sections.jsx no longer declares EXAMPLES');
-  const prompts = [...grid[0].matchAll(/prompt: "([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(prompts.length, 6, 'the grid is laid out for six cards');
-  const departmental = prompts.filter((p) => /\b(sales|info|invoices|support|billing|accounts)@/.test(p));
-  assert.ok(departmental.length >= 2, `only ${departmental.length} prompt(s) name a company role address`);
+  const grid = source.match(/const EXAMPLE_TOOLS = \[[\s\S]*?\n\];/);
+  assert.ok(grid, 'Sections.jsx no longer declares EXAMPLE_TOOLS');
+  const cards = [...grid[0].matchAll(/\[([^\[\]]*)\]/g)];
+  assert.equal(cards.length, 6, 'the grid is laid out for six cards');
+  for (const locale of LOCALES) {
+    const items = at(messages(locale, 'home'), 'examples.items');
+    assert.ok(Array.isArray(items) && items.length === 6, `${locale}: home.examples.items needs six cards`);
+    const prompts = items.map((item, i) => str(item, 'prompt', `${locale} examples.items.${i}`));
+    const departmental = prompts.filter((p) => /\b(sales|info|invoices|support|billing|accounts)@/.test(p));
+    assert.ok(departmental.length >= 2, `${locale}: only ${departmental.length} prompt(s) name a company role address`);
+  }
   // Tool chips must be real tool names.
   const REAL_TOOLS = new Set([
     'inbox_list', 'email_read', 'email_organize', 'email_delete', 'email_compose',
     'email_search_and_move', 'folder', 'folder_list', 'draft', 'draft_list',
     'schedule', 'schedule_list', 'contact_search', 'automation', 'automation_read',
   ]);
-  for (const match of grid[0].matchAll(/tools: \[([^\]]*)\]/g)) {
-    for (const tool of match[1].matchAll(/"([^"]+)"/g)) {
+  for (const card of cards) {
+    for (const tool of card[1].matchAll(/"([^"]+)"/g)) {
       assert.ok(REAL_TOOLS.has(tool[1]), `the grid shows a tool that does not exist: ${tool[1]}`);
     }
   }
