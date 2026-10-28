@@ -509,55 +509,20 @@
 
 /* ── Test read-outs (onboarding, draft card) ─────────────────────────────── */
 
-/* One check per row: the question and its state on one line, the numbers
-   behind it underneath, so nothing has to be read out of a paragraph. */
-.gb-checks { list-style: none; margin: 8px 0 0; padding: 0; }
-.gb-checks li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  column-gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border-1);
+/* A verdict line, then a few large numbers. Each number carries one line of
+   context and one state word; nothing else is on these tiles. */
+.gb-big { display: grid; gap: 0; margin-top: 14px; }
+.gb-big-stat { padding: 2px 18px; border-left: 1px solid var(--border-1); min-width: 0; }
+.gb-big-stat:first-child { padding-left: 0; border-left: 0; }
+.gb-big-label { margin: 0 0 6px; font-size: 11px; font-weight: 600; color: var(--fg-3); }
+.gb-big-value { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg-1); }
+.gb-big-note { margin: 6px 0 0; font-size: 11.5px; color: var(--fg-4); }
+.gb-big-state { margin: 8px 0 0; font-size: 12px; font-weight: 650; color: var(--fg-3); }
+.gb-big-state.is-pass, .gb-big-state.is-good { color: var(--kiosk-good); }
+.gb-big-state.is-fail, .gb-big-state.is-bad { color: var(--kiosk-bad); }
+.gb-big-state.is-warn { color: var(--kiosk-warn); }
+.gb-big-state.is-wait, .gb-big-state.is-quiet { color: var(--fg-4); font-weight: 500; }
+@media (max-width: 720px) {
+  .gb-big { grid-template-columns: 1fr !important; gap: 14px; }
+  .gb-big-stat { padding: 0; border-left: 0; }
 }
-.gb-checks li:last-child { border-bottom: 0; }
-.gb-check-q { font-size: 12px; font-weight: 500; color: var(--fg-2); }
-.gb-check-state { font-size: 11px; font-weight: 650; color: var(--fg-3); text-align: right; }
-.gb-check-detail { grid-column: 1 / -1; font-size: 11px; line-height: 1.45; color: var(--fg-4); }
-.gb-check-bar { opacity: 0.8; }
-.gb-checks li.is-pass .gb-check-state { color: var(--kiosk-good); }
-.gb-checks li.is-fail .gb-check-state { color: var(--kiosk-bad); }
-.gb-checks li.is-fail .gb-check-q { color: var(--kiosk-bad); }
-.gb-checks li.is-quiet .gb-check-q,
-.gb-checks li.is-quiet .gb-check-state { color: var(--fg-4); }
-
-.gb-arms { display: flex; flex-direction: column; gap: 14px; }
-.gb-arm + .gb-arm, .kiosk-funnel + .gb-arm { margin-top: 12px; }
-.gb-arms .gb-arm + .gb-arm { margin-top: 0; }
-.gb-arm-title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 4px;
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--fg-2);
-}
-.gb-arm-title span { font-size: 11px; font-weight: 500; color: var(--fg-4); }
-.gb-arm-n { margin-left: 4px; font-size: 10.5px; color: var(--fg-4); }
-.gb-arm-tag {
-  margin-left: 6px;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: var(--bg-sunken);
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
-.gb-arm-read { font-weight: 600; }
-.gb-arm-read.is-good { color: var(--kiosk-good); }
-.gb-arm-read.is-warn { color: var(--kiosk-warn); }
-.gb-arm-read.is-bad { color: var(--kiosk-bad); }
-.gb-arm-read.is-quiet { font-weight: 500; color: var(--fg-4); }

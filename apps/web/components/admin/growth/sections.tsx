@@ -52,7 +52,6 @@ import {
   fetchMailRelayDaily,
   fetchMailRelayHosts,
   fetchSignupTrend,
-  fetchDraftCardDaily,
   fetchDraftCardReach,
   fetchDraftCardStats,
   fetchOnboardingArms,
@@ -123,12 +122,11 @@ import { RelayHostTable, RelayHostsTile, RelayStatusTile, RelayWorkingTile } fro
 import { relayHealth } from '@/lib/analytics/mail-relay-health';
 import { FETCH_WEEKS, signupTrend } from '@/lib/analytics/signup-trend';
 import { SignupTrendTile } from './board/signup-trend';
-import { DraftCardFamilyTable, DraftCardReachTile, DraftCardVerdictTile } from './board/draft-card';
+import { DraftCardTile } from './board/draft-card';
 import { DRAFT_CARD_RELEASE_AT, releaseChecks, releaseVerdict } from '@/lib/analytics/draft-card';
-import { OnboardingArmsTile, OnboardingStepsTile, OnboardingVerdictTile } from './board/onboarding';
+import { OnboardingStepsTile, OnboardingTestTile } from './board/onboarding';
 import {
   armTotals,
-  baseline,
   onboardingChecks,
   onboardingVerdict,
   releaseState,
@@ -1338,17 +1336,13 @@ export async function RelaySection({ days }: { days: number }) {
 /* ============================================================= draft card */
 
 /**
- * The draft editor card's release read-out. Reads draft_events through three
- * RPCs; the window applies to the baseline and the daily chart, and the
- * after-release half runs from DRAFT_CARD_RELEASE_AT to now (90 days at most).
+ * The draft editor card's release read-out: one answer and three numbers.
+ * The window applies to the before-release baseline; the after-release half
+ * runs from DRAFT_CARD_RELEASE_AT to now (90 days at most).
  */
 export async function DraftCardSection({ days }: { days: number }) {
   const released = DRAFT_CARD_RELEASE_AT !== null;
-  const [stats, daily, reach] = await Promise.all([
-    fetchDraftCardStats(days, DRAFT_CARD_RELEASE_AT),
-    fetchDraftCardDaily(days),
-    fetchDraftCardReach(),
-  ]);
+  const [stats, reach] = await Promise.all([fetchDraftCardStats(days, DRAFT_CARD_RELEASE_AT), fetchDraftCardReach()]);
   if (!stats.ok) {
     return (
       <Cell span={12}>
@@ -1358,53 +1352,19 @@ export async function DraftCardSection({ days }: { days: number }) {
   }
   const reachRow = reach.ok ? reach.data : null;
   const checks = releaseChecks(stats.data, reachRow, released);
-  const rows = daily.ok ? daily.data : [];
   return (
-    <>
-      <Cell span={4} tall={2}>
-        <DraftCardVerdictTile verdict={releaseVerdict(checks, released)} checks={checks} />
-      </Cell>
-      <Cell span={8} tall={2}>
-        <DraftCardFamilyTable rows={stats.data} released={released} days={days} />
-      </Cell>
-      <Cell span={8} tall={2}>
-        {daily.ok ? (
-          <BarSeries
-            title="Customer drafts, and how they were sent"
-            subtitle="Every client. Sends are counted on the day they happened."
-            labels={rows.map((row) => row.day.slice(5))}
-            series={[
-              { key: 'card', name: 'Sent from the card', values: rows.map((row) => Number(row.sent_card)) },
-              { key: 'agent', name: 'Sent by the assistant', values: rows.map((row) => Number(row.sent_agent)) },
-              { key: 'saved', name: 'Saved in the card', values: rows.map((row) => Number(row.saved)) },
-            ]}
-            overlay={[{ key: 'drafted', name: 'New drafts', values: rows.map((row) => Number(row.drafted)) }]}
-            stacked
-            height={190}
-            tickEvery={Math.max(1, Math.round(rows.length / 8))}
-          />
-        ) : (
-          <FailedCard title="Customer drafts" error={daily.error} />
-        )}
-      </Cell>
-      <Cell span={4} tall={2}>
-        {reachRow ? (
-          <DraftCardReachTile reach={reachRow} />
-        ) : (
-          <TileError label="Who has it" message={reach.ok ? 'unavailable' : reach.error} />
-        )}
-      </Cell>
-    </>
+    <Cell span={12}>
+      <DraftCardTile verdict={releaseVerdict(checks, released)} checks={checks} rows={stats.data} reach={reachRow} />
+    </Cell>
   );
 }
 
 /* ============================================================= onboarding */
 
 /**
- * The onboarding test's read-out (onb_flow x onb_convert). Before the start it
- * says what is still switched off and shows the baseline; while it runs it
- * checks for harm and broken assignment; the arms are all-time. The window
- * applies to the daily chart and the baseline only.
+ * The onboarding test's read-out (onb_flow x onb_convert): one answer, the
+ * deciding number per test, and the setup dialog's funnel. The window applies
+ * to the coverage check only; the arms are all-time.
  */
 export async function OnboardingSection({ days }: { days: number }) {
   const [experiments, arms, steps, daily] = await Promise.all([
@@ -1422,53 +1382,19 @@ export async function OnboardingSection({ days }: { days: number }) {
     );
   }
   const state = releaseState(experiments.data, onboardingPublicEnrollment());
-  const dailyRows = daily.ok ? daily.data : [];
   const today = new Date().toISOString().slice(0, 10);
-  const checks = onboardingChecks(arms.data, dailyRows, state.kind === 'running' ? state.startedAt : null, today);
-  const enrolled = dailyRows.some((row) => Number(row.flow_control) + Number(row.flow_new) > 0);
+  // The checks still run (split, coverage, harm); they only surface in the verdict when one fails.
+  const checks = onboardingChecks(arms.data, daily.ok ? daily.data : [], state.kind === 'running' ? state.startedAt : null, today);
   return (
     <>
-      <Cell span={4} tall={2}>
-        <OnboardingVerdictTile
-          verdict={onboardingVerdict(state, checks)}
-          checks={checks}
-          state={state}
-          baseline={baseline(dailyRows)}
-          days={days}
-          rows={arms.data}
-        />
+      <Cell span={8}>
+        <OnboardingTestTile verdict={onboardingVerdict(state, checks)} state={state} rows={arms.data} />
       </Cell>
-      <Cell span={8} tall={2}>
-        <OnboardingArmsTile rows={arms.data} />
-      </Cell>
-      <Cell span={8} tall={2}>
-        {daily.ok ? (
-          <BarSeries
-            title="New customer workspaces, by arm"
-            subtitle={enrolled ? 'By onb_flow arm, UTC days.' : 'Nobody enrolled yet, so every bar is unenrolled.'}
-            labels={dailyRows.map((row) => row.day.slice(5))}
-            series={[
-              { key: 'control', name: "Today's flow", values: dailyRows.map((row) => Number(row.flow_control)) },
-              { key: 'new', name: 'Setup dialog', values: dailyRows.map((row) => Number(row.flow_new)) },
-              {
-                key: 'none',
-                name: 'Not enrolled',
-                values: dailyRows.map((row) => Math.max(0, Number(row.created) - Number(row.flow_control) - Number(row.flow_new))),
-              },
-            ]}
-            stacked
-            height={190}
-            tickEvery={Math.max(1, Math.round(dailyRows.length / 8))}
-          />
-        ) : (
-          <FailedCard title="New customer workspaces" error={daily.error} />
-        )}
-      </Cell>
-      <Cell span={4} tall={2}>
+      <Cell span={4}>
         {steps.ok ? (
           <OnboardingStepsTile steps={steps.data} assignedNew={armTotals(arms.data, 'flow', 'new').assigned} />
         ) : (
-          <TileError label="Setup dialog, step by step" message={steps.error} />
+          <TileError label="Where people stop" message={steps.error} />
         )}
       </Cell>
     </>
