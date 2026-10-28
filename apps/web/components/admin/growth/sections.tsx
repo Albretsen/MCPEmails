@@ -1435,6 +1435,7 @@ export async function OnboardingSection({ days }: { days: number }) {
           state={state}
           baseline={baseline(dailyRows)}
           days={days}
+          rows={arms.data}
         />
       </Cell>
       <Cell span={8} tall={2}>
@@ -1447,7 +1448,7 @@ export async function OnboardingSection({ days }: { days: number }) {
             subtitle={enrolled ? 'By onb_flow arm, UTC days.' : 'Nobody enrolled yet, so every bar is unenrolled.'}
             labels={dailyRows.map((row) => row.day.slice(5))}
             series={[
-              { key: 'control', name: 'Today', values: dailyRows.map((row) => Number(row.flow_control)) },
+              { key: 'control', name: "Today's flow", values: dailyRows.map((row) => Number(row.flow_control)) },
               { key: 'new', name: 'Setup dialog', values: dailyRows.map((row) => Number(row.flow_new)) },
               {
                 key: 'none',

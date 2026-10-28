@@ -18,9 +18,9 @@ import {
 } from '@/lib/analytics/draft-card';
 import { formatCount, formatPercent } from '../../charts';
 import { Tile } from '../../kiosk/primitives';
+import { CheckList, HowCounted } from './checks';
 import { Verdict } from './panels';
 
-const STATE_WORDS = { pass: 'Pass', fail: 'Fail', wait: 'Waiting' } as const;
 const FAMILIES: Family[] = ['claude', 'chatgpt', 'claude_code', 'other'];
 
 const pct = (value: number | null) => (value === null ? '' : formatPercent(value, 1));
@@ -33,26 +33,7 @@ export function DraftCardVerdictTile({ verdict, checks }: { verdict: ReleaseVerd
       tone={verdict.level === 'ok' ? 'good' : verdict.level === 'down' ? 'bad' : verdict.level === 'degraded' ? 'warn' : 'default'}
     >
       <Verdict level={verdict.level} headline={verdict.headline} reason={verdict.reason} />
-      <table className="bd-table">
-        <tbody>
-          {checks.map((check) => (
-            <tr key={check.key} className={check.key === 'retention' ? 'is-quiet' : undefined}>
-              <th scope="row" className="bd-cell-text" title={check.bar}>
-                {check.question}
-              </th>
-              <td className="bd-cell-text" title={check.detail}>
-                {STATE_WORDS[check.state]}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="bd-note">
-        {checks
-          .filter((c) => c.key !== 'retention')
-          .map((c) => `${c.question} ${c.detail}.`)
-          .join(' ')}
-      </p>
+      <CheckList checks={checks.map((check) => ({ ...check, quiet: check.key === 'retention' }))} />
     </Tile>
   );
 }
@@ -60,7 +41,7 @@ export function DraftCardVerdictTile({ verdict, checks }: { verdict: ReleaseVerd
 /**
  * Every client family side by side, so the card clients can be read against
  * the ones that draw no card. After the release when there is one, else the
- * baseline window.
+ * baseline window. The core columns only; the rest sit in a drawer.
  */
 export function DraftCardFamilyTable({
   rows,
@@ -72,64 +53,89 @@ export function DraftCardFamilyTable({
   days: number;
 }) {
   const period = released ? 'after' : 'before';
+  const lines = FAMILIES.map((family) => {
+    const t = totals(rows, period, [family]);
+    // Other clients cannot draw the card, so card columns stay empty there: a
+    // "card" send from them is a model passing base_revision.
+    return { family, t, r: rates(t), before: rates(totals(rows, 'before', [family])), drawsCard: CARD_FAMILIES.includes(family) };
+  });
   return (
-    <Tile label="By client" aside={released ? 'since release, vs the window before' : `last ${days}d, before release`}>
+    <Tile label="By client" aside={released ? 'since release' : `last ${days}d, before release`}>
       <div className="bd-scroll">
         <table className="bd-table">
           <thead>
             <tr>
               <th scope="col">Client</th>
-              <th scope="col">Workspaces</th>
               <th scope="col">Drafts</th>
-              <th scope="col">Card offered</th>
-              <th scope="col">Touched in card</th>
-              <th scope="col">Sent within a day</th>
-              {released && <th scope="col">Before</th>}
-              <th scope="col">Sent from card</th>
-              <th scope="col">Discarded</th>
-              <th scope="col">Tool failures</th>
-              <th scope="col">Turned off</th>
+              <th scope="col" title="Saved, sent or discarded in the card">Used the card</th>
+              <th scope="col" title="Of the sends, how many came from the card's Send button">Sent from card</th>
+              <th scope="col" title="Share of drafts sent within 24 hours, now and in the window before">
+                Sent within a day{released ? ', now vs before' : ''}
+              </th>
+              <th scope="col" title="Draft tool calls that failed">Failures</th>
             </tr>
           </thead>
           <tbody>
-            {FAMILIES.map((family) => {
-              const t = totals(rows, period, [family]);
-              const r = rates(t);
-              const before = rates(totals(rows, 'before', [family]));
-              // Other clients cannot draw the card, so card columns stay empty
-              // there: a "card" send from them is a model passing base_revision.
-              const drawsCard = CARD_FAMILIES.includes(family);
-              return (
-                <tr key={family} className={t.drafted === 0 ? 'is-quiet' : undefined}>
-                  <th scope="row" className="bd-cell-text">{FAMILY_NAMES[family]}</th>
-                  <td>{formatCount(t.workspaces)}</td>
-                  <td>{formatCount(t.drafted)}</td>
-                  <td>{drawsCard ? formatCount(t.drafted_card) : ''}</td>
-                  <td>{drawsCard ? pct(r.touched) : ''}</td>
-                  <td>{pct(r.sent)}</td>
-                  {released && <td>{pct(before.sent)}</td>}
-                  <td>{drawsCard ? pct(r.sentFromCard) : ''}</td>
-                  <td>{pct(r.discarded)}</td>
-                  <td>{pct(r.errors)}</td>
-                  <td>{formatCount(t.hidden)}</td>
-                </tr>
-              );
-            })}
+            {lines.map(({ family, t, r, before, drawsCard }) => (
+              <tr key={family} className={t.drafted === 0 ? 'is-quiet' : undefined}>
+                <th scope="row" className="bd-cell-text">
+                  {FAMILY_NAMES[family]}
+                  {!drawsCard && <span className="gb-arm-n"> no card</span>}
+                </th>
+                <td title={`${formatCount(t.workspaces)} workspaces`}>{formatCount(t.drafted)}</td>
+                <td>{drawsCard ? pct(r.touched) : ''}</td>
+                <td>{drawsCard ? pct(r.sentFromCard) : ''}</td>
+                <td title={`${formatCount(t.mature_lines)} drafts a day old`}>
+                  {pct(r.sent) || 'n/a'}
+                  {released && <span className="gb-arm-n"> vs {pct(before.sent) || 'n/a'}</span>}
+                </td>
+                <td>{pct(r.errors)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-      <p className="bd-note">
-        Rates follow each new draft: touched means saved, sent or discarded in the card; sent within a day counts
-        drafts at least 24 hours old, so it stays empty for the first day after the release. Each workspace weighs at
-        most 20 drafts, so one busy account cannot set a client&apos;s rate; Drafts is the raw count. Card offered
-        means the result carried the card, not that the client drew it. A card send is one that carried the
-        card&apos;s base_revision, which a model could also pass. Other clients (Cursor, Codex and the like) draw no
-        card and are the comparison. The before window has no card sends: until the release only our own
-        workspaces had it, and they are excluded. Tool failures leave out draft_read answering draft_not_found: a
-        card re-reads its draft when the chat is reopened, and a sent or discarded one answers that. Bars: {formatPercent(BARS.touched, 0)} touched, share sent within a day down at most{' '}
+      <details className="gb-drawer">
+        <summary>More columns</summary>
+        <div className="bd-scroll">
+          <table className="bd-table">
+            <thead>
+              <tr>
+                <th scope="col">Client</th>
+                <th scope="col">Workspaces</th>
+                <th scope="col">Card offered</th>
+                <th scope="col">Discarded</th>
+                <th scope="col">Drafts a day old</th>
+                <th scope="col">Turned off</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map(({ family, t, r, drawsCard }) => (
+                <tr key={family}>
+                  <th scope="row" className="bd-cell-text">{FAMILY_NAMES[family]}</th>
+                  <td>{formatCount(t.workspaces)}</td>
+                  <td>{drawsCard ? formatCount(t.drafted_card) : ''}</td>
+                  <td>{pct(r.discarded)}</td>
+                  <td>{formatCount(t.mature_lines)}</td>
+                  <td>{formatCount(t.hidden)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <HowCounted>
+        Rates follow each new draft. Used the card means saved, sent or discarded in it. Sent within a day counts
+        only drafts at least 24 hours old, so it is thin for the first days after the release. Each workspace
+        weighs at most 20 drafts, so one busy account cannot set a client&apos;s rate; Drafts is the raw count.
+        Card offered means the result carried the card, not that the client drew it. A card send is one that
+        carried the card&apos;s base_revision, which a model could also pass. Other clients (Cursor, Codex and the
+        like) draw no card and are the comparison. Failures leave out draft_read answering draft_not_found: a card
+        re-reads its draft when the chat is reopened, and a sent or discarded one answers that. Bars:{' '}
+        {formatPercent(BARS.touched, 0)} used the card, share sent within a day down at most{' '}
         {formatPercent(BARS.sendDrop, 0)} net of other clients, under {formatPercent(BARS.optOut, 0)} turned off,
         failures up at most {Math.round(BARS.errorRise * 100)} point.
-      </p>
+      </HowCounted>
     </Tile>
   );
 }

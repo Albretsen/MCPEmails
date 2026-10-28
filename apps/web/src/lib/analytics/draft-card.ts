@@ -244,11 +244,12 @@ export function releaseVerdict(checks: Check[], released: boolean): ReleaseVerdi
       reason: `Failing: ${failed.map((c) => c.question).join(' ')}`,
     };
   }
-  if (decisive.some((c) => c.state === 'wait')) {
+  const waiting = decisive.filter((c) => c.state === 'wait');
+  if (waiting.length > 0) {
     return {
       level: 'unknown',
       headline: 'Too early',
-      reason: `Judged once ${MIN_CARD_DRAFTS} customer drafts have carried the card.`,
+      reason: `Still waiting on: ${waiting.map((c) => c.question).join(' ')}`,
     };
   }
   return { level: 'ok', headline: 'Keep it', reason: 'All four checks pass.' };

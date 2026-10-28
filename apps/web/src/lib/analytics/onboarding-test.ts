@@ -34,9 +34,9 @@ export const ARM_NAMES: Record<OnbKey, [control: string, variant: string]> = {
 };
 
 export const ARM_LABELS: Record<string, string> = {
-  control: 'Today',
+  control: "Today's flow",
   new: 'Setup dialog',
-  off: 'Off',
+  off: 'No Flow B',
   on: 'Flow B',
 };
 
@@ -261,7 +261,7 @@ export function onboardingChecks(
     const p = sampleRatioP(a, b);
     checks.push({
       key: `srm_${key}`,
-      question: `Is onb_${key} split 50/50?`,
+      question: key === 'flow' ? 'Is the setup dialog split 50/50?' : 'Is Flow B split 50/50?',
       state: a + b < 2 * ONB_BARS.minPerArm || p === null ? 'wait' : p < ONB_BARS.srmP ? 'fail' : 'pass',
       detail: `${a} ${ARM_LABELS[c]} vs ${b} ${ARM_LABELS[v]}${p === null ? '' : `, p = ${p < 0.001 ? '<0.001' : p.toFixed(3)}`}`,
     });
