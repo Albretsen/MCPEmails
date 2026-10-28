@@ -31,6 +31,9 @@ const row = (p: Partial<GrowthDraftCardStatsRow>): GrowthDraftCardStatsRow => ({
   returned_card: 0,
   eligible_plain: 0,
   returned_plain: 0,
+  lines_listed: 0,
+  w_lines_listed: 0,
+  w_touched_listed: 0,
   ...p,
 });
 
@@ -39,6 +42,8 @@ const per = (n: number, sent: number, extra: Partial<GrowthDraftCardStatsRow> = 
   drafted: n,
   lines: n,
   w_lines: n,
+  lines_listed: n,
+  w_lines_listed: n,
   mature_lines: n,
   w_mature: n,
   w_sent_day: sent,
@@ -71,14 +76,14 @@ test('not released: verdict says so, checks wait', () => {
 });
 
 test('too few card drafts: too early', () => {
-  const rows = [row({ ...per(20, 10), w_touched: 10 })];
+  const rows = [row({ ...per(20, 10), w_touched: 10, w_touched_listed: 10 })];
   assert.equal(releaseVerdict(releaseChecks(rows, reach, true), true).headline, 'Too early');
 });
 
 test('enough drafts but none a day old yet: the send check waits', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 0), mature_lines: 0, w_mature: 0, w_touched: 60 }),
+    row({ ...per(200, 0), mature_lines: 0, w_mature: 0, w_touched: 60, w_touched_listed: 60 }),
   ];
   const checks = releaseChecks(rows, reach, true);
   assert.equal(checks.find((c) => c.key === 'harm')?.state, 'wait');
@@ -95,7 +100,7 @@ test('the rates use the workspace-weighted counts, not the raw ones', () => {
 test('healthy release: keep it', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100), w_calls: 1000, w_errors: 20 }),
-    row({ ...per(200, 100), drafted_card: 200, w_touched: 60, sent_card: 40, sent_agent: 60, w_calls: 1000, w_errors: 25 }),
+    row({ ...per(200, 100), drafted_card: 200, w_touched: 60, w_touched_listed: 60, sent_card: 40, sent_agent: 60, w_calls: 1000, w_errors: 25 }),
   ];
   const checks = releaseChecks(rows, reach, true);
   assert.deepEqual(
@@ -108,7 +113,7 @@ test('healthy release: keep it', () => {
 test('send rate falls, other clients flat: harm fails, verdict down', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 60), w_touched: 60 }),
+    row({ ...per(200, 60), w_touched: 60, w_touched_listed: 60 }),
     row({ period: 'before', family: 'other', ...per(100, 50) }),
     row({ family: 'other', ...per(100, 50) }),
   ];
@@ -120,7 +125,7 @@ test('send rate falls, other clients flat: harm fails, verdict down', () => {
 test('send rate falls everywhere alike: harm passes (net of other clients)', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 60), w_touched: 60 }),
+    row({ ...per(200, 60), w_touched: 60, w_touched_listed: 60 }),
     row({ period: 'before', family: 'other', ...per(100, 50) }),
     row({ family: 'other', ...per(100, 30) }),
   ];
@@ -130,7 +135,7 @@ test('send rate falls everywhere alike: harm passes (net of other clients)', () 
 test('many workspaces hide it: rejected fails, verdict degraded', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 100), w_touched: 60 }),
+    row({ ...per(200, 100), w_touched: 60, w_touched_listed: 60 }),
   ];
   const checks = releaseChecks(rows, { ...reach, hidden_workspaces: 10 }, true);
   assert.equal(checks.find((c) => c.key === 'rejected')?.state, 'fail');
@@ -140,7 +145,7 @@ test('many workspaces hide it: rejected fails, verdict degraded', () => {
 test('too few other-client drafts: harm is judged on the card clients alone', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 95), w_touched: 60 }),
+    row({ ...per(200, 95), w_touched: 60, w_touched_listed: 60 }),
     row({ period: 'before', family: 'other', ...per(100, 50) }),
     // Five day-old drafts, all sent: +100% if it were netted out, which
     // would fail the card's 5% drop.
@@ -149,4 +154,24 @@ test('too few other-client drafts: harm is judged on the card clients alone', ()
   const harm = releaseChecks(rows, reach, true).find((c) => c.key === 'harm');
   assert.equal(harm?.state, 'pass');
   assert.match(harm?.detail ?? '', /other clients too few to compare \(5 of 30/);
+});
+
+test('used the card counts only drafts where the card could show', () => {
+  const rows = [
+    row({ period: 'before', ...per(200, 100) }),
+    // Claude.ai: every draft from a connection that carried the card.
+    row({ ...per(150, 75), w_touched: 30, w_touched_listed: 30 }),
+    // ChatGPT on a tool list from before the release: no card drawn.
+    row({ family: 'chatgpt', ...per(300, 150), lines_listed: 0, w_lines_listed: 0 }),
+  ];
+  const used = releaseChecks(rows, reach, true).find((c) => c.key === 'used');
+  // 30 of 150, not 30 of 450.
+  assert.equal(rates(totals(rows, 'after', CARD_FAMILIES)).touched, 0.2);
+  assert.equal(used?.state, 'pass');
+  assert.match(used?.detail ?? '', /of 150 drafts where the card could show \(450 in all\)/);
+});
+
+test('used the card waits until enough drafts could show it', () => {
+  const rows = [row({ ...per(300, 150), lines_listed: 40, w_lines_listed: 40, w_touched_listed: 20 })];
+  assert.equal(releaseChecks(rows, reach, true).find((c) => c.key === 'used')?.state, 'wait');
 });

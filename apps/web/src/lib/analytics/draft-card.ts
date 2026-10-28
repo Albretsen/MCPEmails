@@ -83,6 +83,9 @@ const ZERO: Totals = {
   returned_card: 0,
   eligible_plain: 0,
   returned_plain: 0,
+  lines_listed: 0,
+  w_lines_listed: 0,
+  w_touched_listed: 0,
 };
 
 /** Sum the rows that match. PostgREST returns bigint as number or string. */
@@ -102,7 +105,11 @@ export function totals(
 const rate = (num: number, den: number): number | null => (den > 0 ? num / den : null);
 
 export type Rates = {
-  /** Of the new drafts, the share saved, sent or discarded in the card. */
+  /**
+   * Of the new drafts from connections whose tool list carried the card, the
+   * share saved, sent or discarded in the card. A connection loaded before the
+   * release draws no card, so its drafts are left out.
+   */
   touched: number | null;
   /** Of the new drafts at least a day old, the share sent within 24 hours. */
   sent: number | null;
@@ -119,7 +126,7 @@ export type Rates = {
 
 export function rates(t: Totals): Rates {
   return {
-    touched: rate(t.w_touched, t.w_lines),
+    touched: rate(t.w_touched_listed, t.w_lines_listed),
     sent: rate(t.w_sent_day, t.w_mature),
     sentFromCard: rate(t.sent_card, t.sent_card + t.sent_agent),
     discarded: rate(t.w_deleted, t.w_lines),
@@ -193,9 +200,12 @@ export function releaseChecks(
     {
       key: 'used',
       question: 'Do people use it?',
-      bar: `${pct(BARS.touched)}+ of card drafts touched in the card`,
-      state: judge(after.touched === null ? null : after.touched >= BARS.touched),
-      detail: `${pct(after.touched)} of ${afterTotals.lines} card drafts`,
+      bar: `${pct(BARS.touched)}+ of drafts touched in the card, where the card could show`,
+      state: judgeWhen(
+        released && afterTotals.lines_listed >= MIN_CARD_DRAFTS,
+        after.touched === null ? null : after.touched >= BARS.touched,
+      ),
+      detail: `${pct(after.touched)} of ${afterTotals.lines_listed} drafts where the card could show (${afterTotals.lines} in all)`,
     },
     {
       key: 'harm',

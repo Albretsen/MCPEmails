@@ -38,6 +38,9 @@ export function DraftCardTile({
   const afterTotals = totals(rows, 'after', CARD_FAMILIES);
   const after = rates(afterTotals);
   const before = rates(totals(rows, 'before', CARD_FAMILIES));
+  // Claude.ai on its own: the client the card was built for.
+  const claudeTotals = totals(rows, 'after', ['claude']);
+  const claude = rates(claudeTotals);
   const enabled = Number(reach?.enabled ?? 0);
   const hidden = Number(reach?.hidden_workspaces ?? 0);
   const failing = checks.some((c) => c.state === 'fail');
@@ -58,7 +61,7 @@ export function DraftCardTile({
           {
             label: 'Used the card',
             value: pct(after.touched),
-            note: `of ${formatCount(afterTotals.lines)} drafts · needs ${formatPercent(BARS.touched, 0)}`,
+            note: `of ${formatCount(afterTotals.lines_listed)} drafts where it shows · Claude.ai ${pct(claude.touched)} of ${formatCount(claudeTotals.lines_listed)} · needs ${formatPercent(BARS.touched, 0)}`,
             state: state('used'),
           },
           {

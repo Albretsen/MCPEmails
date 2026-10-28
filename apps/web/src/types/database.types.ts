@@ -2321,6 +2321,54 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_activity_daily: {
+        Row: {
+          calls: number
+          day: string
+          errors: number
+          first_success_at: string | null
+          first_success_starts: boolean | null
+          last_call_at: string
+          last_success_at: string | null
+          last_value_success_at: string | null
+          rate_limited: number
+          session_starts: number
+          successes: number
+          value_successes: number
+          workspace_id: string
+        }
+        Insert: {
+          calls: number
+          day: string
+          errors: number
+          first_success_at?: string | null
+          first_success_starts?: boolean | null
+          last_call_at: string
+          last_success_at?: string | null
+          last_value_success_at?: string | null
+          rate_limited: number
+          session_starts: number
+          successes: number
+          value_successes: number
+          workspace_id: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          errors?: number
+          first_success_at?: string | null
+          first_success_starts?: boolean | null
+          last_call_at?: string
+          last_success_at?: string | null
+          last_value_success_at?: string | null
+          rate_limited?: number
+          session_starts?: number
+          successes?: number
+          value_successes?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       growth_milestone_unlocks: {
         Row: {
           day: string
@@ -2339,6 +2387,30 @@ export type Database = {
           id?: string
           note?: string
           recorded_at?: string
+        }
+        Relationships: []
+      }
+      growth_tool_daily: {
+        Row: {
+          calls: number
+          day: string
+          error_code: string | null
+          status: string
+          tool_name: string
+        }
+        Insert: {
+          calls: number
+          day: string
+          error_code?: string | null
+          status: string
+          tool_name: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          error_code?: string | null
+          status?: string
+          tool_name?: string
         }
         Relationships: []
       }
@@ -6347,6 +6419,10 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      growth_activity_rollup_refresh: {
+        Args: { p_from?: string }
+        Returns: number
+      }
       growth_client_family: { Args: { p_client_name: string }; Returns: string }
       growth_client_mix: {
         Args: never
@@ -6424,6 +6500,7 @@ export type Database = {
           family: string
           hidden: number
           lines: number
+          lines_listed: number
           mature_lines: number
           period: string
           returned_card: number
@@ -6435,9 +6512,11 @@ export type Database = {
           w_deleted: number
           w_errors: number
           w_lines: number
+          w_lines_listed: number
           w_mature: number
           w_sent_day: number
           w_touched: number
+          w_touched_listed: number
           workspaces: number
         }[]
       }
@@ -6937,6 +7016,10 @@ export type Database = {
           band: string
           workspaces: number
         }[]
+      }
+      growth_window_sessions: {
+        Args: { p_first_starts: boolean[]; p_starts: number[] }
+        Returns: number
       }
       inbox_folder_overrides_valid: {
         Args: { overrides: Json }
