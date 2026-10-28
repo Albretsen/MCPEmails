@@ -48,6 +48,13 @@ export const FAMILY_NAMES: Record<Family, string> = {
  */
 export const MIN_CARD_DRAFTS = 100;
 
+/**
+ * The send check nets out other clients only when they have at least this
+ * many drafts a day old in both windows. Below it their rate is noise (a
+ * handful of drafts reads as -100%), so the card clients are judged alone.
+ */
+export const MIN_OTHER_DRAFTS = 30;
+
 export type Totals = Omit<GrowthDraftCardStatsRow, 'period' | 'family'>;
 
 const ZERO: Totals = {
@@ -161,8 +168,11 @@ export function releaseChecks(
   const before = rates(totals(rows, 'before', CARD_FAMILIES));
   const afterTotals = totals(rows, 'after', CARD_FAMILIES);
   const after = rates(afterTotals);
-  const otherBefore = rates(totals(rows, 'before', ['other']));
-  const otherAfter = rates(totals(rows, 'after', ['other']));
+  const otherBeforeTotals = totals(rows, 'before', ['other']);
+  const otherAfterTotals = totals(rows, 'after', ['other']);
+  const otherBefore = rates(otherBeforeTotals);
+  const otherAfter = rates(otherAfterTotals);
+  const otherMature = Math.min(otherBeforeTotals.mature_lines, otherAfterTotals.mature_lines);
   const enough = released && afterTotals.lines >= MIN_CARD_DRAFTS;
   const judgeWhen = (ready: boolean, ok: boolean | null): CheckState =>
     !ready || ok === null ? 'wait' : ok ? 'pass' : 'fail';
@@ -172,11 +182,11 @@ export function releaseChecks(
   const optOut = enabled > 0 ? Number(reach?.hidden_workspaces ?? 0) / enabled : null;
 
   // Change in the card clients' send rate, net of the change in other clients
-  // over the same dates when they have data, so a quiet week is not blamed on
-  // the card.
+  // over the same dates when they have enough data, so a quiet week is not
+  // blamed on the card.
   const change = (b: number | null, a: number | null) => (b !== null && a !== null && b > 0 ? a / b - 1 : null);
   const cardChange = change(before.sent, after.sent);
-  const otherChange = change(otherBefore.sent, otherAfter.sent);
+  const otherChange = otherMature >= MIN_OTHER_DRAFTS ? change(otherBefore.sent, otherAfter.sent) : null;
   const netChange = cardChange === null ? null : cardChange - (otherChange ?? 0);
 
   return [
@@ -195,7 +205,7 @@ export function releaseChecks(
         released && afterTotals.mature_lines >= MIN_CARD_DRAFTS,
         netChange === null ? null : netChange >= -BARS.sendDrop,
       ),
-      detail: `${pct(before.sent)} sent within a day before, ${pct(after.sent)} after (${afterTotals.mature_lines} drafts a day old)${otherChange === null ? '' : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
+      detail: `${pct(before.sent)} sent within a day before, ${pct(after.sent)} after (${afterTotals.mature_lines} drafts a day old)${otherChange === null ? `; other clients too few to compare (${otherMature} of ${MIN_OTHER_DRAFTS} drafts a day old)` : `; other clients ${otherChange >= 0 ? '+' : ''}${pct(otherChange)}`}`,
     },
     {
       key: 'rejected',

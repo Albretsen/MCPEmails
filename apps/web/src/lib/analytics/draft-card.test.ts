@@ -136,3 +136,17 @@ test('many workspaces hide it: rejected fails, verdict degraded', () => {
   assert.equal(checks.find((c) => c.key === 'rejected')?.state, 'fail');
   assert.equal(releaseVerdict(checks, true).level, 'degraded');
 });
+
+test('too few other-client drafts: harm is judged on the card clients alone', () => {
+  const rows = [
+    row({ period: 'before', ...per(200, 100) }),
+    row({ ...per(200, 95), w_touched: 60 }),
+    row({ period: 'before', family: 'other', ...per(100, 50) }),
+    // Five day-old drafts, all sent: +100% if it were netted out, which
+    // would fail the card's 5% drop.
+    row({ family: 'other', ...per(5, 5) }),
+  ];
+  const harm = releaseChecks(rows, reach, true).find((c) => c.key === 'harm');
+  assert.equal(harm?.state, 'pass');
+  assert.match(harm?.detail ?? '', /other clients too few to compare \(5 of 30/);
+});
