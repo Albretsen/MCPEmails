@@ -200,38 +200,38 @@ Se hele MCP-driften din med ett blikk.
 Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør.
 app.mcpemails.com/dashboard
 MCPEmails
-Overview
-Inboxes
+Oversikt
+Innbokser
 4
-API keys
+API-nøkler
 3
-Usage
+Bruk
 J
 jordan
-Pro plan
-Overview
-Real-time view of your connected inboxes and MCP traffic.
-Inboxes connected
+Pro-plan
+Oversikt
+Sanntidsvisning av tilkoblede innbokser og MCP-trafikk.
+Tilkoblede innbokser
 4
-MCP calls (30d)
-12,484
-Avg. response
+MCP-kall (30 d)
+12 484
+Snitt svartid
 214ms
 Plan
 Business
-Recent activity
+Siste aktivitet
 email_read()
 · work-gmail
-just now
+akkurat nå
 email_compose()
 · work-gmail
-12s ago
+for 12 s siden
 email_organize()
 · ops-fastmail
-1m ago
+for 1 min siden
 email_read()
 · support-imap
-3m ago
+for 3 min siden
 Slik fungerer det
 Du er brukeren. Vi er røret.
 Tre steg fra registrering til at agenten din leser og sender e-post.
@@ -273,32 +273,32 @@ Bare spør.
 Den leser, skriver og rydder.
 Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den MCPEmails til å få det gjort.
 >_
-Go through sales@ and info@ and list every enquiry from this week nobody has answered
+Gå gjennom sales@ og info@ og list opp alle henvendelser fra denne uka som ingen har svart på
 inbox_list()
 email_read()
-7 open enquiries across both inboxes, oldest first. Two have waited since Monday.
+7 åpne henvendelser i begge innboksene, eldste først. To har ventet siden mandag.
 >_
-Unsubscribe me from every newsletter I haven’t opened in 3 months
+Meld meg av alle nyhetsbrev jeg ikke har åpnet på 3 måneder
 email_read()
 email_organize()
-Archived 14 newsletters you haven’t touched since April.
+Arkiverte 14 nyhetsbrev du ikke har rørt siden april.
 >_
-Forward this month’s invoices from invoices@ to our accountant
+Videresend denne månedens fakturaer fra invoices@ til regnskapsføreren vår
 email_read()
 email_compose()
-Forwarded 9 invoices from invoices@, PDFs attached.
+Videresendte 9 fakturaer fra invoices@, med PDF-ene vedlagt.
 >_
-Move every receipt from this month into a Receipts folder
+Flytt alle kvitteringer fra denne måneden til en mappe som heter Kvitteringer
 email_organize()
-Moved 23 receipts into Receipts/2026.
+Flyttet 23 kvitteringer til Kvitteringer/2026.
 >_
-Send this at 8am Monday, not now
+Send denne mandag kl. 8, ikke nå
 schedule()
-Scheduled for Mon 8:00 AM. Nothing goes out before then.
+Planlagt til man. kl. 08:00. Ingenting går ut før det.
 >_
-What did the doctor’s office say about my appointment?
+Hva sa legekontoret om timen min?
 email_read()
-Confirmed for Thursday at 2:15 PM.
+Bekreftet torsdag kl. 14:15.
 “Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.”
 Asgeir Albretsen
 · grunnlegger, MCPEmails

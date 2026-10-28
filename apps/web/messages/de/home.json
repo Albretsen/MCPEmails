@@ -128,7 +128,33 @@
     "eyebrow": "Echte Prompts",
     "titleLine1": "Einfach fragen.",
     "titleLine2": "Er liest, schreibt und sortiert.",
-    "sub": "Kein Dashboard, das Sie erst lernen müssen. Sagen Sie Ihrem KI-Assistenten in normaler Sprache, was Sie wollen, und er erledigt es mit MCPEmails."
+    "sub": "Kein Dashboard, das Sie erst lernen müssen. Sagen Sie Ihrem KI-Assistenten in normaler Sprache, was Sie wollen, und er erledigt es mit MCPEmails.",
+    "items": [
+      {
+        "prompt": "Geh sales@ und info@ durch und liste jede Anfrage dieser Woche auf, die noch niemand beantwortet hat",
+        "outcome": "7 offene Anfragen in beiden Postfächern, die älteste zuerst. Zwei warten seit Montag."
+      },
+      {
+        "prompt": "Melde mich von jedem Newsletter ab, den ich seit 3 Monaten nicht geöffnet habe",
+        "outcome": "14 Newsletter archiviert, die Sie seit April nicht angerührt haben."
+      },
+      {
+        "prompt": "Leite die Rechnungen dieses Monats aus invoices@ an unseren Steuerberater weiter",
+        "outcome": "9 Rechnungen aus invoices@ weitergeleitet, PDFs angehängt."
+      },
+      {
+        "prompt": "Verschieb alle Belege dieses Monats in einen Ordner Belege",
+        "outcome": "23 Belege nach Belege/2026 verschoben."
+      },
+      {
+        "prompt": "Schick das am Montag um 8 Uhr, nicht jetzt",
+        "outcome": "Geplant für Mo., 8:00 Uhr. Vorher geht nichts raus."
+      },
+      {
+        "prompt": "Was hat die Arztpraxis zu meinem Termin geschrieben?",
+        "outcome": "Bestätigt für Donnerstag um 14:15 Uhr."
+      }
+    ]
   },
   "quote": {
     "text": "Ich wollte, dass meine Agenten mein Postfach bearbeiten, aber jede Lösung bedeutete, einem Dritten eine Kopie meiner E-Mails zu überlassen. Also habe ich die Leitung gebaut, die ich mir gewünscht hatte: einmal verbinden, das Postfach wird live abgerufen und nie gespeichert, und jeden Agenten können Sie mit einem Klick abklemmen. Diesem Produkt vertraue ich mein eigenes Postfach an.",
@@ -316,7 +342,28 @@
   "preview": {
     "eyebrow": "Produktvorschau",
     "title": "Ihr gesamter MCP-Betrieb auf einen Blick.",
-    "sub": "Ein Echtzeit-Dashboard für jedes verbundene Postfach, jeden API-Schlüssel und jeden Tool-Aufruf, damit Sie immer wissen, was Ihre Agenten tun."
+    "sub": "Ein Echtzeit-Dashboard für jedes verbundene Postfach, jeden API-Schlüssel und jeden Tool-Aufruf, damit Sie immer wissen, was Ihre Agenten tun.",
+    "mock": {
+      "nav": {
+        "overview": "Übersicht",
+        "inboxes": "Postfächer",
+        "apiKeys": "API-Schlüssel",
+        "usage": "Nutzung"
+      },
+      "stats": {
+        "inboxes": "Verbundene Postfächer",
+        "calls": "MCP-Aufrufe (30 T.)",
+        "avgResponse": "Ø Antwortzeit",
+        "plan": "Tarif"
+      },
+      "userPlan": "Pro-Tarif",
+      "title": "Übersicht",
+      "subtitle": "Ihre verbundenen Postfächer und der MCP-Verkehr in Echtzeit.",
+      "recentActivity": "Letzte Aktivität",
+      "justNow": "gerade eben",
+      "secondsAgo": "vor {count} s",
+      "minutesAgo": "vor {count} Min."
+    }
   },
   "referralBanner": {
     "text": "Ein Freund hat Sie zu MCPEmails eingeladen. Ihr zweiter bezahlter Monat ist gratis.",

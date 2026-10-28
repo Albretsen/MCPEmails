@@ -128,7 +128,33 @@
     "eyebrow": "Peticiones reales",
     "titleLine1": "Solo pídelo.",
     "titleLine2": "Lee, escribe y organiza.",
-    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCPEmails para hacerlo."
+    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCPEmails para hacerlo.",
+    "items": [
+      {
+        "prompt": "Revisa sales@ e info@ y haz una lista de todas las consultas de esta semana que nadie ha respondido",
+        "outcome": "7 consultas abiertas en ambas bandejas, la más antigua primero. Dos esperan desde el lunes."
+      },
+      {
+        "prompt": "Date de baja de todas las newsletters que no he abierto en 3 meses",
+        "outcome": "14 newsletters archivadas que no tocas desde abril."
+      },
+      {
+        "prompt": "Reenvía las facturas de este mes de invoices@ a nuestro contable",
+        "outcome": "9 facturas reenviadas desde invoices@, con los PDF adjuntos."
+      },
+      {
+        "prompt": "Mueve todos los recibos de este mes a una carpeta Recibos",
+        "outcome": "23 recibos movidos a Recibos/2026."
+      },
+      {
+        "prompt": "Envía esto el lunes a las 8, no ahora",
+        "outcome": "Programado para el lun. a las 8:00. No sale nada antes."
+      },
+      {
+        "prompt": "¿Qué dijo la consulta del médico sobre mi cita?",
+        "outcome": "Confirmada para el jueves a las 14:15."
+      }
+    ]
   },
   "quote": {
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
@@ -316,7 +342,28 @@
   "preview": {
     "eyebrow": "Vista del producto",
     "title": "Ve toda tu operación MCP de un vistazo.",
-    "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes."
+    "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes.",
+    "mock": {
+      "nav": {
+        "overview": "Resumen",
+        "inboxes": "Bandejas",
+        "apiKeys": "Claves de API",
+        "usage": "Uso"
+      },
+      "stats": {
+        "inboxes": "Bandejas conectadas",
+        "calls": "Llamadas MCP (30 d)",
+        "avgResponse": "Respuesta media",
+        "plan": "Plan"
+      },
+      "userPlan": "Plan Pro",
+      "title": "Resumen",
+      "subtitle": "Tus bandejas conectadas y el tráfico MCP en tiempo real.",
+      "recentActivity": "Actividad reciente",
+      "justNow": "ahora mismo",
+      "secondsAgo": "hace {count} s",
+      "minutesAgo": "hace {count} min"
+    }
   },
   "referralBanner": {
     "text": "Un amigo te ha invitado a MCPEmails. Tu segundo mes de pago es gratis.",

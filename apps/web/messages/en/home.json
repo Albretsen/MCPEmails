@@ -128,7 +128,33 @@
     "eyebrow": "Real prompts",
     "titleLine1": "Just ask.",
     "titleLine2": "It reads, writes, and files.",
-    "sub": "No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses MCPEmails to get it done."
+    "sub": "No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses MCPEmails to get it done.",
+    "items": [
+      {
+        "prompt": "Go through sales@ and info@ and list every enquiry from this week nobody has answered",
+        "outcome": "7 open enquiries across both inboxes, oldest first. Two have waited since Monday."
+      },
+      {
+        "prompt": "Unsubscribe me from every newsletter I haven’t opened in 3 months",
+        "outcome": "Archived 14 newsletters you haven’t touched since April."
+      },
+      {
+        "prompt": "Forward this month’s invoices from invoices@ to our accountant",
+        "outcome": "Forwarded 9 invoices from invoices@, PDFs attached."
+      },
+      {
+        "prompt": "Move every receipt from this month into a Receipts folder",
+        "outcome": "Moved 23 receipts into Receipts/2026."
+      },
+      {
+        "prompt": "Send this at 8am Monday, not now",
+        "outcome": "Scheduled for Mon 8:00 AM. Nothing goes out before then."
+      },
+      {
+        "prompt": "What did the doctor’s office say about my appointment?",
+        "outcome": "Confirmed for Thursday at 2:15 PM."
+      }
+    ]
   },
   "quote": {
     "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
@@ -316,7 +342,28 @@
   "preview": {
     "eyebrow": "Product preview",
     "title": "See your whole MCP operation at a glance.",
-    "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing."
+    "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing.",
+    "mock": {
+      "nav": {
+        "overview": "Overview",
+        "inboxes": "Inboxes",
+        "apiKeys": "API keys",
+        "usage": "Usage"
+      },
+      "stats": {
+        "inboxes": "Inboxes connected",
+        "calls": "MCP calls (30d)",
+        "avgResponse": "Avg. response",
+        "plan": "Plan"
+      },
+      "userPlan": "Pro plan",
+      "title": "Overview",
+      "subtitle": "Real-time view of your connected inboxes and MCP traffic.",
+      "recentActivity": "Recent activity",
+      "justNow": "just now",
+      "secondsAgo": "{count}s ago",
+      "minutesAgo": "{count}m ago"
+    }
   },
   "referralBanner": {
     "text": "A friend invited you to MCPEmails. Your second paid month is free.",

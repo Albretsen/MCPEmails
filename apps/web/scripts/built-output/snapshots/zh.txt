@@ -200,38 +200,38 @@ OAuth 令牌和应用密码在写入数据库前会经过 AES-256-GCM 加密。�
 为每个已连接的收件箱、API 密钥和工具调用提供实时仪表板，让你随时掌握智能体的动向。
 app.mcpemails.com/dashboard
 MCPEmails
-Overview
-Inboxes
+概览
+收件箱
 4
-API keys
+API 密钥
 3
-Usage
+用量
 J
 jordan
-Pro plan
-Overview
-Real-time view of your connected inboxes and MCP traffic.
-Inboxes connected
+Pro 套餐
+概览
+实时查看已连接的收件箱和 MCP 流量。
+已连接收件箱
 4
-MCP calls (30d)
+MCP 调用（30 天）
 12,484
-Avg. response
+平均响应
 214ms
-Plan
+套餐
 Business
-Recent activity
+最近活动
 email_read()
 · work-gmail
-just now
+刚刚
 email_compose()
 · work-gmail
-12s ago
+12 秒前
 email_organize()
 · ops-fastmail
-1m ago
+1 分钟前
 email_read()
 · support-imap
-3m ago
+3 分钟前
 工作原理
 你是用户。我们是管道。
 从注册到你的智能体开始阅读和发送邮件，只需三步。
@@ -273,32 +273,32 @@ contact_search()
 它会读、会写、会归档。
 无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 MCPEmails 完成。
 >_
-Go through sales@ and info@ and list every enquiry from this week nobody has answered
+查看 sales@ 和 info@，列出本周所有还没人回复的咨询
 inbox_list()
 email_read()
-7 open enquiries across both inboxes, oldest first. Two have waited since Monday.
+两个收件箱共 7 条未回复咨询，按时间从早到晚排列。其中两条从周一等到现在。
 >_
-Unsubscribe me from every newsletter I haven’t opened in 3 months
+帮我退订 3 个月内没打开过的所有通讯邮件
 email_read()
 email_organize()
-Archived 14 newsletters you haven’t touched since April.
+已归档 14 份你自 4 月以来没碰过的通讯邮件。
 >_
-Forward this month’s invoices from invoices@ to our accountant
+把 invoices@ 里本月的发票转发给我们的会计
 email_read()
 email_compose()
-Forwarded 9 invoices from invoices@, PDFs attached.
+已从 invoices@ 转发 9 张发票，附带 PDF。
 >_
-Move every receipt from this month into a Receipts folder
+把本月所有收据移到“收据”文件夹
 email_organize()
-Moved 23 receipts into Receipts/2026.
+已将 23 张收据移至 收据/2026。
 >_
-Send this at 8am Monday, not now
+周一早上 8 点再发，现在先别发
 schedule()
-Scheduled for Mon 8:00 AM. Nothing goes out before then.
+已安排在周一 8:00 发送。在此之前不会发出任何内容。
 >_
-What did the doctor’s office say about my appointment?
+诊所关于我的预约说了什么？
 email_read()
-Confirmed for Thursday at 2:15 PM.
+已确认周四下午 2:15。
 “我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。”
 Asgeir Albretsen
 · 创始人，MCPEmails
