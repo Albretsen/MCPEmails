@@ -6,8 +6,9 @@ import { expireGrowthCache } from '@/lib/analytics/growth-queries';
  * POST /api/internal/growth-expire
  *
  * Expires the cached growth reads behind /admin/growth and the kiosk. Called
- * by the system-notify edge function when a signup lands, so the board counts
- * it on its next tick instead of up to ten minutes later. Stripe events expire
+ * by the system-notify edge function when a signup lands. The cached rows stay
+ * on screen while the next tick reads fresh ones in the background, so the
+ * board counts the signup a tick later instead of up to ten minutes later. Stripe events expire
  * the same cache in-process from the webhook and do not come through here.
  *
  * AUTH. `X-Dispatch-Secret`, constant-time compared against DISPATCH_SECRET,
