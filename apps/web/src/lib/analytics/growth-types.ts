@@ -617,6 +617,14 @@ export type GrowthDraftCardStatsRow = {
   returned_card: number;
   eligible_plain: number;
   returned_plain: number;
+  /**
+   * The line counts again, only for workspaces that drafted through a key whose
+   * tool list carried the card (api_keys.card_listed). Old connections loaded
+   * before the release draw no card, so they are left out of "used the card".
+   */
+  lines_listed: number;
+  w_lines_listed: number;
+  w_touched_listed: number;
 };
 
 /** Customer drafts per UTC day, zero-filled. `growth_draft_card_daily`. */
