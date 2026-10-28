@@ -34,6 +34,9 @@ const row = (p: Partial<GrowthDraftCardStatsRow>): GrowthDraftCardStatsRow => ({
   lines_listed: 0,
   w_lines_listed: 0,
   w_touched_listed: 0,
+  mature_listed: 0,
+  w_mature_listed: 0,
+  w_sent_day_listed: 0,
   ...p,
 });
 
@@ -47,6 +50,9 @@ const per = (n: number, sent: number, extra: Partial<GrowthDraftCardStatsRow> = 
   mature_lines: n,
   w_mature: n,
   w_sent_day: sent,
+  mature_listed: n,
+  w_mature_listed: n,
+  w_sent_day_listed: sent,
   ...extra,
 });
 
@@ -83,7 +89,7 @@ test('too few card drafts: too early', () => {
 test('enough drafts but none a day old yet: the send check waits', () => {
   const rows = [
     row({ period: 'before', ...per(200, 100) }),
-    row({ ...per(200, 0), mature_lines: 0, w_mature: 0, w_touched: 60, w_touched_listed: 60 }),
+    row({ ...per(200, 0), mature_lines: 0, w_mature: 0, mature_listed: 0, w_mature_listed: 0, w_touched: 60, w_touched_listed: 60 }),
   ];
   const checks = releaseChecks(rows, reach, true);
   assert.equal(checks.find((c) => c.key === 'harm')?.state, 'wait');
@@ -174,4 +180,25 @@ test('used the card counts only drafts where the card could show', () => {
 test('used the card waits until enough drafts could show it', () => {
   const rows = [row({ ...per(300, 150), lines_listed: 40, w_lines_listed: 40, w_touched_listed: 20 })];
   assert.equal(releaseChecks(rows, reach, true).find((c) => c.key === 'used')?.state, 'wait');
+});
+
+test('send check: after the release only drafts where the card could show count', () => {
+  const rows = [
+    row({ period: 'before', ...per(200, 60) }),
+    // Card clients sent 30%: 60 of 200.
+    row({ ...per(200, 60), w_touched: 40, w_touched_listed: 40 }),
+    // An old ChatGPT connection: 300 day-old drafts, none sent, no card drawn.
+    row({ family: 'chatgpt', ...per(300, 0), lines_listed: 0, w_lines_listed: 0, mature_listed: 0, w_mature_listed: 0, w_sent_day_listed: 0 }),
+  ];
+  const harm = releaseChecks(rows, reach, true).find((c) => c.key === 'harm');
+  assert.equal(harm?.state, 'pass');
+  assert.match(harm?.detail ?? '', /30\.0% after \(200 drafts a day old where the card could show, 500 in all\)/);
+});
+
+test('send check waits until enough day-old drafts could show the card', () => {
+  const rows = [
+    row({ period: 'before', ...per(200, 60) }),
+    row({ ...per(300, 0), mature_listed: 50, w_mature_listed: 50, w_sent_day_listed: 15 }),
+  ];
+  assert.equal(releaseChecks(rows, reach, true).find((c) => c.key === 'harm')?.state, 'wait');
 });

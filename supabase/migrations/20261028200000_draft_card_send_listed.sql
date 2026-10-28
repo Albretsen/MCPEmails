@@ -1,0 +1,279 @@
+-- ===========================================================================
+-- Draft card band: the send check reads drafts where the card could show.
+-- 20261028200000_draft_card_send_listed
+--
+-- On 2026-10-28 the "Are as many drafts sent?" check failed, 19% against 22%,
+-- when it first had 100 day-old drafts after the release. The drop was 8
+-- ChatGPT workspaces on tool lists from before the release: they draw no card,
+-- and sent none of their 858 day-old drafts (0 of 29 weighted). Without them
+-- the card clients sent about 25%.
+--
+-- New columns, per period and family: the day-old counts again, restricted to
+-- the same workspaces as lines_listed (drafted through a key whose tool list
+-- carried the card; 20261028180000_draft_card_stats_listed). The band reads
+-- them for the card clients after the release. The before window and the
+-- other clients keep the full counts: before the release no key carried the
+-- card, and other clients never draw it.
+--
+-- The return type grows, so DROP and CREATE in one transaction. Everything
+-- else is 20261028180000 as it is live. Forward-only, re-runnable. Apply with
+-- `npx supabase db query --linked -f` and `migration repair` (never db push).
+-- ===========================================================================
+
+BEGIN;
+
+DROP FUNCTION IF EXISTS public.growth_draft_card_stats(integer, timestamptz, text[], text[]);
+
+CREATE FUNCTION public.growth_draft_card_stats(
+  p_days             integer,
+  p_release_at       timestamptz DEFAULT NULL,
+  p_internal_emails  text[] DEFAULT '{}',
+  p_internal_domains text[] DEFAULT '{}'
+)
+RETURNS TABLE (
+  period          text,
+  family          text,
+  -- Raw event counts, as before.
+  drafted         bigint,
+  drafted_card    bigint,
+  saved           bigint,
+  sent_card       bigint,
+  sent_agent      bigint,
+  deleted_card    bigint,
+  deleted_agent   bigint,
+  hidden          bigint,
+  workspaces      bigint,
+  card_workspaces bigint,
+  calls           bigint,
+  errors          bigint,
+  -- Per draft (draft_lineage lines opened in the window), each workspace
+  -- weighted to at most 20 lines. `lines` is the raw count.
+  lines           bigint,
+  w_lines         numeric,
+  w_touched       numeric,
+  w_deleted       numeric,
+  mature_lines    bigint,
+  w_mature        numeric,
+  w_sent_day      numeric,
+  -- Tool calls, each workspace weighted to at most 50.
+  w_calls         numeric,
+  w_errors        numeric,
+  eligible_card   bigint,
+  returned_card   bigint,
+  eligible_plain  bigint,
+  returned_plain  bigint,
+  -- The line counts again, only for workspaces that drafted through a key
+  -- whose tool list carried the card (see the header).
+  lines_listed    bigint,
+  w_lines_listed  numeric,
+  w_touched_listed numeric,
+  mature_listed   bigint,
+  w_mature_listed numeric,
+  w_sent_day_listed numeric
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  WITH bounds AS (
+    SELECT 'before'::text AS period,
+           COALESCE(p_release_at, now()) - make_interval(days => GREATEST(LEAST(p_days, 90), 1)) AS t0,
+           COALESCE(p_release_at, now()) AS t1
+    UNION ALL
+    SELECT 'after', GREATEST(p_release_at, now() - interval '90 days'), now()
+    WHERE p_release_at IS NOT NULL AND p_release_at < now()
+  ),
+  customer AS (
+    SELECT w.id
+    FROM public.workspaces w
+    JOIN public.users u ON u.id = w.owner_id
+    WHERE NOT public.growth_is_internal_email(u.email, p_internal_emails, p_internal_domains)
+  ),
+  key_family AS (
+    SELECT DISTINCT ON (c.api_key_id)
+           c.api_key_id, public.growth_client_family(c.client_name) AS family
+    FROM public.mcp_client_capabilities c
+    ORDER BY c.api_key_id, c.last_seen DESC
+  ),
+  ev AS (
+    SELECT b.period, COALESCE(kf.family, 'other') AS family, e.*
+    FROM bounds b
+    JOIN public.draft_events e ON e.occurred_at >= b.t0 AND e.occurred_at < b.t1
+    JOIN customer c ON c.id = e.workspace_id
+    LEFT JOIN key_family kf ON kf.api_key_id = e.api_key_id
+  ),
+  counts AS (
+    SELECT
+      period, family,
+      count(*) FILTER (WHERE event = 'drafted') AS drafted,
+      count(*) FILTER (WHERE event = 'drafted' AND card_offered) AS drafted_card,
+      count(*) FILTER (WHERE event = 'saved') AS saved,
+      count(*) FILTER (WHERE event = 'sent' AND via_card) AS sent_card,
+      count(*) FILTER (WHERE event = 'sent' AND NOT via_card) AS sent_agent,
+      count(*) FILTER (WHERE event = 'deleted' AND via_card) AS deleted_card,
+      count(*) FILTER (WHERE event = 'deleted' AND NOT via_card) AS deleted_agent,
+      count(*) FILTER (WHERE event = 'hidden') AS hidden,
+      count(DISTINCT workspace_id) FILTER (WHERE event = 'drafted') AS workspaces,
+      count(DISTINCT workspace_id) FILTER (WHERE via_card) AS card_workspaces
+    FROM ev
+    GROUP BY period, family
+  ),
+  -- The family each workspace drafted with most in the window.
+  ws_family AS (
+    SELECT DISTINCT ON (period, workspace_id) period, workspace_id, family
+    FROM ev
+    WHERE event = 'drafted'
+    GROUP BY period, workspace_id, family
+    ORDER BY period, workspace_id, count(*) DESC, family
+  ),
+  -- Workspaces that drafted in the window through a key whose tool list
+  -- carried the card.
+  ws_listed AS (
+    SELECT DISTINCT ev.period, ev.workspace_id
+    FROM ev
+    JOIN public.api_keys k ON k.id = ev.api_key_id
+    WHERE ev.event = 'drafted' AND k.card_listed
+  ),
+  line_first AS (
+    SELECT DISTINCT ON (l.line_id) l.line_id, l.workspace_id, l.written_at, l.written_by
+    FROM public.draft_lineage l
+    JOIN customer c ON c.id = l.workspace_id
+    WHERE l.written_at >= (SELECT min(t0) FROM bounds)
+    ORDER BY l.line_id, l.revision
+  ),
+  line_end AS (
+    SELECT l.line_id, max(l.closed_at) AS closed_at, max(l.closed_reason) AS closed_reason
+    FROM public.draft_lineage l
+    WHERE l.line_id IN (SELECT line_id FROM line_first)
+    GROUP BY l.line_id
+  ),
+  card_touched AS (
+    SELECT DISTINCT e.line_id
+    FROM public.draft_events e
+    WHERE e.via_card AND e.line_id IS NOT NULL
+  ),
+  lines AS (
+    SELECT b.period, COALESCE(wf.family, 'other') AS family, f.workspace_id,
+           (f.written_at <= now() - interval '24 hours') AS mature,
+           (le.closed_reason LIKE 'sent%' AND le.closed_at <= f.written_at + interval '24 hours') AS sent_day,
+           (le.closed_reason = 'deleted') AS deleted,
+           (ct.line_id IS NOT NULL) AS touched,
+           (wl.workspace_id IS NOT NULL) AS listed
+    FROM line_first f
+    JOIN line_end le USING (line_id)
+    JOIN bounds b ON f.written_at >= b.t0 AND f.written_at < b.t1
+    LEFT JOIN ws_family wf ON wf.period = b.period AND wf.workspace_id = f.workspace_id
+    LEFT JOIN card_touched ct ON ct.line_id = f.line_id
+    LEFT JOIN ws_listed wl ON wl.period = b.period AND wl.workspace_id = f.workspace_id
+    WHERE f.written_by = 'agent'
+      AND f.written_at IS DISTINCT FROM le.closed_at
+  ),
+  lines_ws AS (
+    SELECT period, family, workspace_id, listed,
+           count(*) AS n,
+           count(*) FILTER (WHERE touched) AS touched,
+           count(*) FILTER (WHERE deleted) AS deleted,
+           count(*) FILTER (WHERE mature) AS mature,
+           count(*) FILTER (WHERE mature AND sent_day) AS sent_day
+    FROM lines
+    GROUP BY 1, 2, 3, 4
+  ),
+  lines_agg AS (
+    SELECT period, family,
+           sum(n) AS lines,
+           sum(n * LEAST(1, 20.0 / n)) AS w_lines,
+           sum(touched * LEAST(1, 20.0 / n)) AS w_touched,
+           sum(deleted * LEAST(1, 20.0 / n)) AS w_deleted,
+           sum(mature) AS mature_lines,
+           sum(mature * LEAST(1, 20.0 / NULLIF(mature, 0))) AS w_mature,
+           sum(sent_day * LEAST(1, 20.0 / NULLIF(mature, 0))) AS w_sent_day,
+           sum(n) FILTER (WHERE listed) AS lines_listed,
+           sum(n * LEAST(1, 20.0 / n)) FILTER (WHERE listed) AS w_lines_listed,
+           sum(touched * LEAST(1, 20.0 / n)) FILTER (WHERE listed) AS w_touched_listed,
+           sum(mature) FILTER (WHERE listed) AS mature_listed,
+           sum(mature * LEAST(1, 20.0 / NULLIF(mature, 0))) FILTER (WHERE listed) AS w_mature_listed,
+           sum(sent_day * LEAST(1, 20.0 / NULLIF(mature, 0))) FILTER (WHERE listed) AS w_sent_day_listed
+    FROM lines_ws
+    GROUP BY 1, 2
+  ),
+  calls_ws AS (
+    SELECT b.period, COALESCE(kf.family, 'other') AS family, a.workspace_id,
+           count(*) AS calls,
+           count(*) FILTER (WHERE a.status = 'error') AS errors
+    FROM bounds b
+    JOIN public.activity_log a ON a.created_at >= b.t0 AND a.created_at < b.t1
+    JOIN customer c ON c.id = a.workspace_id
+    LEFT JOIN key_family kf ON kf.api_key_id = a.api_key_id
+    WHERE a.tool_name LIKE 'draft%'
+      -- The card's re-read of a sent or discarded draft (see the header).
+      AND NOT (a.tool_name = 'draft_read' AND a.error_code IS NOT DISTINCT FROM 'draft_not_found')
+    GROUP BY 1, 2, 3
+  ),
+  calls AS (
+    SELECT period, family,
+           sum(calls) AS calls,
+           sum(errors) AS errors,
+           sum(calls * LEAST(1, 50.0 / calls)) AS w_calls,
+           sum(errors * LEAST(1, 50.0 / calls)) AS w_errors
+    FROM calls_ws
+    GROUP BY 1, 2
+  ),
+  ws AS (
+    SELECT period, family, workspace_id,
+           min(occurred_at) FILTER (WHERE event = 'drafted') AS first_draft,
+           bool_or(via_card) AS used_card
+    FROM ev
+    GROUP BY period, family, workspace_id
+  ),
+  returned AS (
+    SELECT ws.period, ws.family,
+           count(*) FILTER (WHERE ws.used_card) AS eligible_card,
+           count(*) FILTER (WHERE ws.used_card AND r.back) AS returned_card,
+           count(*) FILTER (WHERE NOT ws.used_card) AS eligible_plain,
+           count(*) FILTER (WHERE NOT ws.used_card AND r.back) AS returned_plain
+    FROM ws
+    CROSS JOIN LATERAL (
+      SELECT EXISTS (
+        SELECT 1 FROM public.activity_log a
+        WHERE a.workspace_id = ws.workspace_id
+          AND a.created_at >= ws.first_draft + interval '7 days'
+          AND a.created_at < ws.first_draft + interval '14 days'
+      ) AS back
+    ) r
+    WHERE ws.first_draft IS NOT NULL AND ws.first_draft <= now() - interval '14 days'
+    GROUP BY 1, 2
+  )
+  SELECT
+    k.period, k.family,
+    COALESCE(n.drafted, 0), COALESCE(n.drafted_card, 0),
+    COALESCE(n.saved, 0), COALESCE(n.sent_card, 0), COALESCE(n.sent_agent, 0),
+    COALESCE(n.deleted_card, 0), COALESCE(n.deleted_agent, 0), COALESCE(n.hidden, 0),
+    COALESCE(n.workspaces, 0), COALESCE(n.card_workspaces, 0),
+    COALESCE(cl.calls, 0), COALESCE(cl.errors, 0),
+    COALESCE(li.lines, 0)::bigint, round(COALESCE(li.w_lines, 0), 2), round(COALESCE(li.w_touched, 0), 2),
+    round(COALESCE(li.w_deleted, 0), 2), COALESCE(li.mature_lines, 0)::bigint,
+    round(COALESCE(li.w_mature, 0), 2), round(COALESCE(li.w_sent_day, 0), 2),
+    round(COALESCE(cl.w_calls, 0), 2), round(COALESCE(cl.w_errors, 0), 2),
+    COALESCE(r.eligible_card, 0), COALESCE(r.returned_card, 0),
+    COALESCE(r.eligible_plain, 0), COALESCE(r.returned_plain, 0),
+    COALESCE(li.lines_listed, 0)::bigint, round(COALESCE(li.w_lines_listed, 0), 2),
+    round(COALESCE(li.w_touched_listed, 0), 2),
+    COALESCE(li.mature_listed, 0)::bigint, round(COALESCE(li.w_mature_listed, 0), 2),
+    round(COALESCE(li.w_sent_day_listed, 0), 2)
+  FROM (
+    SELECT period, family FROM counts
+    UNION SELECT period, family FROM calls
+    UNION SELECT period, family FROM lines_agg
+  ) k
+  LEFT JOIN counts n USING (period, family)
+  LEFT JOIN calls cl USING (period, family)
+  LEFT JOIN lines_agg li USING (period, family)
+  LEFT JOIN returned r USING (period, family)
+  ORDER BY k.period, k.family;
+$$;
+
+REVOKE ALL ON FUNCTION public.growth_draft_card_stats(integer, timestamptz, text[], text[]) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.growth_draft_card_stats(integer, timestamptz, text[], text[]) TO service_role;
+
+COMMIT;

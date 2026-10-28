@@ -47,7 +47,7 @@ export function DraftCardTile({
   // While it waits, say what for in numbers, not which check.
   const reason =
     verdict.headline === 'Too early' && !failing
-      ? `Judged once ${MIN_CARD_DRAFTS} card drafts are a day old (${formatCount(afterTotals.mature_lines)} so far).`
+      ? `Judged once ${MIN_CARD_DRAFTS} card drafts are a day old (${formatCount(afterTotals.mature_listed)} so far).`
       : verdict.reason;
   return (
     <Tile
@@ -66,7 +66,7 @@ export function DraftCardTile({
           },
           {
             label: 'Sent within a day',
-            value: pct(after.sent),
+            value: pct(after.sentListed),
             note: `was ${pct(before.sent)} · may drop ${formatPercent(BARS.sendDrop, 0)}`,
             state: state('harm'),
           },
