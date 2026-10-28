@@ -562,24 +562,25 @@ export function Features() {
  */
 export function DashboardPreview() {
   const t = useTranslations('home');
+  const locale = useLocale();
 
   const navItems = [
-    { label: 'Overview', icon: 'cpu', active: true },
-    { label: 'Inboxes', icon: 'inbox', count: 4 },
-    { label: 'API keys', icon: 'lock', count: 3 },
-    { label: 'Usage', icon: 'zap' },
+    { label: t('preview.mock.nav.overview'), icon: 'cpu', active: true },
+    { label: t('preview.mock.nav.inboxes'), icon: 'inbox', count: 4 },
+    { label: t('preview.mock.nav.apiKeys'), icon: 'lock', count: 3 },
+    { label: t('preview.mock.nav.usage'), icon: 'zap' },
   ];
   const stats = [
-    { label: 'Inboxes connected', value: '4' },
-    { label: 'MCP calls (30d)', value: '12,484' },
-    { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Business' },
+    { label: t('preview.mock.stats.inboxes'), value: '4' },
+    { label: t('preview.mock.stats.calls'), value: new Intl.NumberFormat(locale).format(12484) },
+    { label: t('preview.mock.stats.avgResponse'), value: '214ms' },
+    { label: t('preview.mock.stats.plan'), value: 'Business' },
   ];
   const activity = [
-    { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
-    { tool: 'email_compose', inbox: 'work-gmail', time: '12s ago' },
-    { tool: 'email_organize', inbox: 'ops-fastmail', time: '1m ago' },
-    { tool: 'email_read', inbox: 'support-imap', time: '3m ago' },
+    { tool: 'email_read', inbox: 'work-gmail', time: t('preview.mock.justNow') },
+    { tool: 'email_compose', inbox: 'work-gmail', time: t('preview.mock.secondsAgo', { count: 12 }) },
+    { tool: 'email_organize', inbox: 'ops-fastmail', time: t('preview.mock.minutesAgo', { count: 1 }) },
+    { tool: 'email_read', inbox: 'support-imap', time: t('preview.mock.minutesAgo', { count: 3 }) },
   ];
 
   return (
@@ -645,16 +646,16 @@ export function DashboardPreview() {
                 <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Pro plan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>{t('preview.mock.userPlan')}</div>
                 </div>
               </div>
             </div>
 
             {/* Main */}
             <div style={{ flex: 1, padding: '22px 24px', minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)' }}>Overview</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)' }}>{t('preview.mock.title')}</div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 2, marginBottom: 18 }}>
-                Real-time view of your connected inboxes and MCP traffic.
+                {t('preview.mock.subtitle')}
               </div>
 
               {/* Stat cards */}
@@ -670,7 +671,7 @@ export function DashboardPreview() {
               {/* Recent activity */}
               <div style={{ border: '1px solid var(--border-1)', borderRadius: 10, overflow: 'hidden', background: 'var(--bg-surface, #fff)' }}>
                 <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-1)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
-                  Recent activity
+                  {t('preview.mock.recentActivity')}
                 </div>
                 {activity.map((a, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderTop: i === 0 ? 'none' : '1px solid var(--border-1)' }}>
@@ -728,10 +729,9 @@ export function HowItWorks() {
 /* ============== EXAMPLES ============== */
 /**
  * Concrete, mass-appeal prompts a person could hand their AI assistant once
- * connected: everyday inbox chores, not developer jargon. The prompts/
- * outcomes are untranslated (like the terminal/endpoint hero mockups above)
- * since the literal tool-call fragments are part of the visual rather than
- * prose to localize; the section head text is translated as usual.
+ * connected: everyday inbox chores, not developer jargon. Prompts and outcomes
+ * are translated (home.examples.items, same index as EXAMPLE_TOOLS); the tool
+ * chips are real tool names and stay as they are in every locale.
  *
  * The first and third cards are departmental on purpose (role addresses on a
  * company domain). The grid used to be six personal-life prompts, and the
@@ -740,37 +740,13 @@ export function HowItWorks() {
  * only show things the tools really do: reading several inboxes is one
  * email_read call per inbox, and a forward carries the original attachments.
  */
-const EXAMPLES = [
-  {
-    prompt: "Go through sales@ and info@ and list every enquiry from this week nobody has answered",
-    tools: ["inbox_list", "email_read"],
-    outcome: "7 open enquiries across both inboxes, oldest first. Two have waited since Monday.",
-  },
-  {
-    prompt: "Unsubscribe me from every newsletter I haven’t opened in 3 months",
-    tools: ["email_read", "email_organize"],
-    outcome: "Archived 14 newsletters you haven’t touched since April.",
-  },
-  {
-    prompt: "Forward this month’s invoices from invoices@ to our accountant",
-    tools: ["email_read", "email_compose"],
-    outcome: "Forwarded 9 invoices from invoices@, PDFs attached.",
-  },
-  {
-    prompt: "Move every receipt from this month into a Receipts folder",
-    tools: ["email_organize"],
-    outcome: "Moved 23 receipts into Receipts/2026.",
-  },
-  {
-    prompt: "Send this at 8am Monday, not now",
-    tools: ["schedule"],
-    outcome: "Scheduled for Mon 8:00 AM. Nothing goes out before then.",
-  },
-  {
-    prompt: "What did the doctor’s office say about my appointment?",
-    tools: ["email_read"],
-    outcome: "Confirmed for Thursday at 2:15 PM.",
-  },
+const EXAMPLE_TOOLS = [
+  ["inbox_list", "email_read"],
+  ["email_read", "email_organize"],
+  ["email_read", "email_compose"],
+  ["email_organize"],
+  ["schedule"],
+  ["email_read"],
 ];
 
 export function Examples() {
@@ -784,21 +760,21 @@ export function Examples() {
           <p className="sub">{t('examples.sub')}</p>
         </div>
         <div className="example-grid">
-          {EXAMPLES.map((ex, i) => (
+          {EXAMPLE_TOOLS.map((tools, i) => (
             <div className="example-card" key={i}>
               <div className="example-user">
                 <span className="example-user-mark">{'>_'}</span>
-                <p>{ex.prompt}</p>
+                <p>{t(`examples.items.${i}.prompt`)}</p>
               </div>
               <div className="example-reply">
                 <div className="example-tools">
-                  {ex.tools.map((tool) => (
+                  {tools.map((tool) => (
                     <span className="example-tool-chip" key={tool}>{tool}()</span>
                   ))}
                 </div>
                 <p className="example-outcome">
                   <MIcon name="check" size={13} color="var(--mint-600)" />
-                  <span>{ex.outcome}</span>
+                  <span>{t(`examples.items.${i}.outcome`)}</span>
                 </p>
               </div>
             </div>

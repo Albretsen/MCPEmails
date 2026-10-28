@@ -128,7 +128,33 @@
     "eyebrow": "De vraies demandes",
     "titleLine1": "Demandez, simplement.",
     "titleLine2": "Il lit, écrit et classe.",
-    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCPEmails pour le faire."
+    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCPEmails pour le faire.",
+    "items": [
+      {
+        "prompt": "Parcours sales@ et info@ et liste toutes les demandes de cette semaine restées sans réponse",
+        "outcome": "7 demandes ouvertes dans les deux boîtes, la plus ancienne en premier. Deux attendent depuis lundi."
+      },
+      {
+        "prompt": "Désabonne-moi de toutes les newsletters que je n’ai pas ouvertes depuis 3 mois",
+        "outcome": "14 newsletters archivées, intactes depuis avril."
+      },
+      {
+        "prompt": "Transfère les factures du mois depuis invoices@ à notre comptable",
+        "outcome": "9 factures transférées depuis invoices@, PDF joints."
+      },
+      {
+        "prompt": "Range tous les reçus de ce mois dans un dossier Reçus",
+        "outcome": "23 reçus déplacés dans Reçus/2026."
+      },
+      {
+        "prompt": "Envoie ça lundi à 8 h, pas maintenant",
+        "outcome": "Programmé pour lun. 8:00. Rien ne part avant."
+      },
+      {
+        "prompt": "Qu’a dit le cabinet médical à propos de mon rendez-vous ?",
+        "outcome": "Confirmé pour jeudi à 14 h 15."
+      }
+    ]
   },
   "quote": {
     "text": "Je voulais que mes agents travaillent ma boîte de réception, mais chaque option impliquait de confier une copie de mes e-mails à un tiers. Alors j'ai construit le tuyau dont je rêvais : connectez-vous une fois, votre boîte de réception est récupérée en direct et jamais stockée, et vous pouvez couper l'accès à n'importe quel agent en un clic. C'est le produit auquel je confie ma propre boîte de réception.",
@@ -316,7 +342,28 @@
   "preview": {
     "eyebrow": "Aperçu du produit",
     "title": "Visualisez toute votre opération MCP en un coup d'œil.",
-    "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents."
+    "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents.",
+    "mock": {
+      "nav": {
+        "overview": "Vue d’ensemble",
+        "inboxes": "Boîtes de réception",
+        "apiKeys": "Clés API",
+        "usage": "Utilisation"
+      },
+      "stats": {
+        "inboxes": "Boîtes connectées",
+        "calls": "Appels MCP (30 j)",
+        "avgResponse": "Réponse moy.",
+        "plan": "Offre"
+      },
+      "userPlan": "Offre Pro",
+      "title": "Vue d’ensemble",
+      "subtitle": "Vos boîtes connectées et le trafic MCP en temps réel.",
+      "recentActivity": "Activité récente",
+      "justNow": "à l’instant",
+      "secondsAgo": "il y a {count} s",
+      "minutesAgo": "il y a {count} min"
+    }
   },
   "referralBanner": {
     "text": "Un ami vous a invité sur MCPEmails. Votre deuxième mois payant est offert.",

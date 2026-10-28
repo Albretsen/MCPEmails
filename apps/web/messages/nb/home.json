@@ -128,7 +128,33 @@
     "eyebrow": "Ekte forespørsler",
     "titleLine1": "Bare spør.",
     "titleLine2": "Den leser, skriver og rydder.",
-    "sub": "Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den MCPEmails til å få det gjort."
+    "sub": "Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den MCPEmails til å få det gjort.",
+    "items": [
+      {
+        "prompt": "Gå gjennom sales@ og info@ og list opp alle henvendelser fra denne uka som ingen har svart på",
+        "outcome": "7 åpne henvendelser i begge innboksene, eldste først. To har ventet siden mandag."
+      },
+      {
+        "prompt": "Meld meg av alle nyhetsbrev jeg ikke har åpnet på 3 måneder",
+        "outcome": "Arkiverte 14 nyhetsbrev du ikke har rørt siden april."
+      },
+      {
+        "prompt": "Videresend denne månedens fakturaer fra invoices@ til regnskapsføreren vår",
+        "outcome": "Videresendte 9 fakturaer fra invoices@, med PDF-ene vedlagt."
+      },
+      {
+        "prompt": "Flytt alle kvitteringer fra denne måneden til en mappe som heter Kvitteringer",
+        "outcome": "Flyttet 23 kvitteringer til Kvitteringer/2026."
+      },
+      {
+        "prompt": "Send denne mandag kl. 8, ikke nå",
+        "outcome": "Planlagt til man. kl. 08:00. Ingenting går ut før det."
+      },
+      {
+        "prompt": "Hva sa legekontoret om timen min?",
+        "outcome": "Bekreftet torsdag kl. 14:15."
+      }
+    ]
   },
   "quote": {
     "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
@@ -316,7 +342,28 @@
   "preview": {
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
-    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
+    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør.",
+    "mock": {
+      "nav": {
+        "overview": "Oversikt",
+        "inboxes": "Innbokser",
+        "apiKeys": "API-nøkler",
+        "usage": "Bruk"
+      },
+      "stats": {
+        "inboxes": "Tilkoblede innbokser",
+        "calls": "MCP-kall (30 d)",
+        "avgResponse": "Snitt svartid",
+        "plan": "Plan"
+      },
+      "userPlan": "Pro-plan",
+      "title": "Oversikt",
+      "subtitle": "Sanntidsvisning av tilkoblede innbokser og MCP-trafikk.",
+      "recentActivity": "Siste aktivitet",
+      "justNow": "akkurat nå",
+      "secondsAgo": "for {count} s siden",
+      "minutesAgo": "for {count} min siden"
+    }
   },
   "referralBanner": {
     "text": "En venn har invitert deg til MCPEmails. Din andre betalte måned er gratis.",

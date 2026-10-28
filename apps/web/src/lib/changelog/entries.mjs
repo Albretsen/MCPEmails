@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-28',
+    kind: 'fixed',
+    title: 'Home page examples in your language',
+    body:
+      "The example prompts and the dashboard preview on the home page showed English text on the German, French, Spanish, Norwegian and Chinese versions of the site. They now appear in the language of the page.",
+  },
+  {
     date: '2026-10-27',
     kind: 'fixed',
     title: 'Folder searches explain a busy mail server',
