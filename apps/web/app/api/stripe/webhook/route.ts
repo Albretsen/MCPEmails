@@ -689,8 +689,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // The growth board and kiosk cache their money reads for ten minutes. A
-  // billing event is exactly the change the owner is looking for, so expire
-  // them now instead of after the purchase email has long arrived.
+  // billing event is exactly the change the owner is looking for, so mark
+  // them stale now: the next read refreshes them in the background.
   if (GROWTH_EVENT_TYPES.has(event.type)) expireGrowthCache(`stripe:${event.type}`);
 
   return NextResponse.json({ received: true }, { status: 200 });

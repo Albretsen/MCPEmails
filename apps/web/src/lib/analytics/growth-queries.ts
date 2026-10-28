@@ -101,27 +101,28 @@ export const GROWTH_TAGS = {
  * button for the rare case where they need to see a change immediately.
  *
  * The events the owner actually watches for do not wait out this timer: a
- * Stripe webhook and a signup both expire the whole tag (see
- * expireGrowthCache), so the next kiosk tick or page load reads them. Before
- * 2026-10-22 a purchase could take ten minutes of cache plus a five minute
- * kiosk tick to appear, long after its notification email had arrived.
+ * Stripe webhook and a signup both mark the whole tag stale (see
+ * expireGrowthCache), so the next kiosk tick or page load starts a background
+ * read and the one after shows it.
  */
 export const GROWTH_REVALIDATE_SECONDS = 600;
 
 /**
- * Scopes every cache key to the running deployment.
+ * Scopes every cache key to the code that builds the payloads.
  *
  * The data cache behind `unstable_cache` persists ACROSS deployments, and the
  * key is only the wrapper's source text plus `keyParts`, neither of which
  * changes when a payload type gains a field. So a deploy that adds, say,
  * churn fields to RevenueSummary kept rendering the previous build's payload
- * (the new fields read "—") until the entry happened to expire. That happened
- * on 2026-09-23 and was patched by hand-bumping a 'v2' into two keys. Keying
- * on the deployment makes that automatic for every section: a new build
- * starts cold, once, and never reads a shape it was not compiled against.
+ * (the new fields read "—") until the entry happened to expire (2026-09-23).
+ *
+ * Until 2026-10-28 this was the deployment id, which fixed that but also
+ * emptied the cache on every deploy, dozens a day, and a cold board was when
+ * its sections hit the 8 s statement timeout. GROWTH_CACHE_GENERATION is a
+ * hash of src/lib/analytics and the plan table, computed in next.config.js,
+ * so only a deploy that changes those starts cold.
  */
-const CACHE_GENERATION =
-  process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+const CACHE_GENERATION = process.env.GROWTH_CACHE_GENERATION || 'local';
 
 /**
  * Either the rows or the reason there are none, never an exception.
@@ -444,20 +445,25 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
  * seven page reloads and no POST at all, which took the logs to establish.
  */
 export async function refreshGrowthData(): Promise<void> {
-  expireGrowthCache('refresh');
+  expireGrowthCache('refresh', 'now');
 }
 
 /**
- * Drop every cached growth read now, because something the board reports on
- * just happened: a Stripe event, a signup, or the Refresh button. Whole tag
+ * Invalidate every cached growth read, because something the board reports
+ * on just happened: a Stripe event, a signup, or the Refresh button. Whole tag
  * rather than one section, because a purchase moves revenue, the funnel and
- * the people counts at once, and these events arrive a few times a day.
+ * the people counts at once.
+ *
+ * 'stale' (events) keeps serving the cached rows while a background read
+ * replaces them, so a signup never leaves the next visitor waiting on every
+ * RPC at once. 'now' (the Refresh button) drops them, because the operator
+ * asked to see the new numbers on this load.
  * Never throws: a failed expiry must not fail the webhook that called it.
  */
-export function expireGrowthCache(reason: string): void {
+export function expireGrowthCache(reason: string, mode: 'stale' | 'now' = 'stale'): void {
   try {
-    revalidateTag(GROWTH_TAG, { expire: 0 });
-    console.info('[growth]', 'expired tag', { reason, tag: GROWTH_TAG, generation: CACHE_GENERATION });
+    revalidateTag(GROWTH_TAG, mode === 'now' ? { expire: 0 } : 'max');
+    console.info('[growth]', 'expired tag', { reason, mode, tag: GROWTH_TAG, generation: CACHE_GENERATION });
   } catch (err) {
     console.error('[growth]', 'expire failed', { reason, error: err instanceof Error ? err.message : String(err) });
   }

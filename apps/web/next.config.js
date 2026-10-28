@@ -133,8 +133,42 @@ if (!/^https:\/\/[^/]+\/\S*$/.test(MCP_EDGE_URL)) {
   throw new Error(`MCP_EDGE_URL must be an absolute https URL, got: ${MCP_EDGE_URL}`);
 }
 
+// ---------------------------------------------------------------------------
+// Growth cache generation
+// ---------------------------------------------------------------------------
+// The growth board's cached reads are keyed on this, so a deploy that changes
+// what they return starts cold and never renders a payload shaped for the
+// previous build. It hashes the code that builds those payloads instead of
+// naming the deployment: main deploys dozens of times a day, and keying on the
+// deployment emptied the cache on every one of them, which is when the board's
+// sections timed out.
+function growthCacheGeneration() {
+  const fs = require('fs');
+  const crypto = require('crypto');
+  const hash = crypto.createHash('sha256');
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx|js|mjs)$/.test(entry.name) && !/\.test\./.test(entry.name)) files.push(full);
+    }
+  };
+  walk(path.join(__dirname, 'src/lib/analytics'));
+  files.push(path.join(__dirname, 'src/lib/stripe/plans.ts'));
+  for (const file of files.sort()) {
+    hash.update(path.relative(__dirname, file));
+    hash.update(fs.readFileSync(file));
+  }
+  return hash.digest('hex').slice(0, 16);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    GROWTH_CACHE_GENERATION: growthCacheGeneration(),
+  },
+
   // ---------------------------------------------------------------------------
   // Turbopack workspace root (Next.js 16)
   // ---------------------------------------------------------------------------
