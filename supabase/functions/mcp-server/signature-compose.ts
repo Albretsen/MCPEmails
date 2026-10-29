@@ -56,22 +56,27 @@ export function signatureHtmlBlock(innerHtml: string): string {
   return `\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
 }
 
-/** An empty paragraph, as the dashboard editor stores a blank line. */
-const EMPTY_PARAGRAPH = /<p\b[^>]*>\s*<\/p>/gi;
+/** An empty paragraph (or one holding only a line break): a typed blank line. */
+const EMPTY_PARAGRAPH = /<p\b[^>]*>\s*(?:<br\s*\/?>\s*)?<\/p>/gi;
 
 /** Empty paragraphs (and whitespace) at the very end of a signature. */
-const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*<\/p>)+\s*$/i;
+const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*(?:<br\s*\/?>\s*)?<\/p>)+\s*$/i;
+
+/** One empty line with no margin above or below it. */
+const BLANK_LINE = "<div><br></div>";
 
 /**
  * Make the blank lines a person typed into their signature show in the sent
- * mail.
+ * mail as one line each, the way the dashboard editor shows them.
  *
- * The dashboard editor (TipTap) stores a blank line as `<p></p>`, and its
- * preview renders it as one line. In a mail client an empty paragraph has no
- * height, so a blank line typed above the name, the only way to put space
- * between the message and the signature, never arrived (14 of 137 live
- * signatures opened with one on 2026-10-29). `<p><br></p>` is what the editor
- * itself shows, so that is what is sent.
+ * The editor (TipTap) stores a blank line as `<p></p>`. In a mail client an
+ * empty paragraph has no height, so a blank line typed above the name, the
+ * only way to put space between the message and the signature, never arrived
+ * (14 of 137 live signatures opened with one on 2026-10-29). `<p><br></p>` is
+ * no answer either: clients give a paragraph a 1em margin above and below,
+ * so it showed as about three lines (seen on a real send, 2026-10-29). The
+ * editor's paragraphs have almost no margin (dashboard.css), and a
+ * `<div><br></div>` is exactly one line with none.
  *
  * Trailing empty paragraphs are left alone: TipTap appends one after a heading,
  * a list or an image on its own, so they are not something the person typed.
@@ -79,8 +84,7 @@ const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*<\/p>)+\s*$/i;
 export function keepTypedBlankLines(html: string): string {
   const trailing = TRAILING_EMPTY_PARAGRAPHS.exec(html);
   const end = trailing ? trailing.index : html.length;
-  return html.slice(0, end).replace(EMPTY_PARAGRAPH, (m) => m.replace(/\s*<\/p>$/i, "<br></p>")) +
-    html.slice(end);
+  return html.slice(0, end).replace(EMPTY_PARAGRAPH, BLANK_LINE) + html.slice(end);
 }
 
 /** Minimal HTML-escape for deriving HTML from plain text. */

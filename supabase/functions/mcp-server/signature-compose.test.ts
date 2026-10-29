@@ -90,13 +90,15 @@ Deno.test("no space is added above a signature: it sits right under the message"
 Deno.test("a blank line typed into the signature is sent as one, the way the editor shows it", () => {
   const sig = (html: string) =>
     composeSignatureBlocks({ signature_enabled: true, signature_text: null, signature_html: html })!.html;
-  // Above the name: the space between the message and the signature.
-  assertEquals(sig("<p></p><p>Asgeir</p>"), "<p><br></p><p>Asgeir</p>");
-  assertEquals(sig("<p></p><p></p><p>Asgeir</p>"), "<p><br></p><p><br></p><p>Asgeir</p>");
+  // Above the name: the space between the message and the signature. One
+  // margin-free line each: `<p><br></p>` showed as about three in a client.
+  assertEquals(sig("<p></p><p>Asgeir</p>"), "<div><br></div><p>Asgeir</p>");
+  assertEquals(sig("<p></p><p></p><p>Asgeir</p>"), "<div><br></div><div><br></div><p>Asgeir</p>");
+  assertEquals(sig("<p><br></p><table><tr><td>Asgeir</td></tr></table>"), "<div><br></div><table><tr><td>Asgeir</td></tr></table>");
   // Between lines.
-  assertEquals(sig("<p>Asgeir</p><p></p><p>CEO</p>"), "<p>Asgeir</p><p><br></p><p>CEO</p>");
-  // Already visible: unchanged.
-  assertEquals(sig("<p><br></p><p>Asgeir</p>"), "<p><br></p><p>Asgeir</p>");
+  assertEquals(sig("<p>Asgeir</p><p></p><p>CEO</p>"), "<p>Asgeir</p><div><br></div><p>CEO</p>");
+  // Already a margin-free line: unchanged.
+  assertEquals(sig("<div><br></div><p>Asgeir</p>"), "<div><br></div><p>Asgeir</p>");
   // TipTap's own trailing paragraph after a heading or image is not a typed line.
   assertEquals(sig("<h2>Ada</h2><p></p>"), "<h2>Ada</h2><p></p>");
   assertEquals(sig("<p>Ada</p><p></p><p></p>"), "<p>Ada</p><p></p><p></p>");
