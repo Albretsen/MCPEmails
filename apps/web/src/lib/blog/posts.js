@@ -61,6 +61,9 @@ import whatIsAnAppPassword from './posts/what-is-an-app-password';
 import scheduleEmailWithClaudeAndChatgpt from './posts/schedule-email-with-claude-and-chatgpt';
 import connectClaudeOutlookComHotmail from './posts/connect-claude-to-outlook-com-hotmail';
 import connectClaudeToAppleMail from './posts/connect-claude-to-apple-mail';
+import chatgptIcloudMailPlugin from './posts/chatgpt-icloud-mail-plugin';
+import connectYahooMailToChatgptAndClaude from './posts/connect-yahoo-mail-to-chatgpt-and-claude';
+import connectChatgptOutlookComHotmail from './posts/connect-chatgpt-to-outlook-com-hotmail';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -103,6 +106,9 @@ const MODULE_POSTS = [
   scheduleEmailWithClaudeAndChatgpt,
   connectClaudeOutlookComHotmail,
   connectClaudeToAppleMail,
+  chatgptIcloudMailPlugin,
+  connectYahooMailToChatgptAndClaude,
+  connectChatgptOutlookComHotmail,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -240,6 +246,11 @@ const RELEVANCE_ORDER = [
   'schedule-email-with-claude-and-chatgpt',
   'connect-gmail-to-claude',
   'connect-claude-to-outlook-com-hotmail',
+  // Added 2026-10-29: provider-in-ChatGPT queries the built-in plugins miss
+  // (iCloud beyond the new plugin, Yahoo, personal Outlook.com).
+  'connect-chatgpt-to-outlook-com-hotmail',
+  'connect-yahoo-mail-to-chatgpt-and-claude',
+  'chatgpt-icloud-mail-plugin',
   'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',
   'how-to-give-your-ai-agent-email-access',

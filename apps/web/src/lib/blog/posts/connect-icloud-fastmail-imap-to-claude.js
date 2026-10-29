@@ -29,7 +29,7 @@ The app password becomes the one credential MCPEmails stores for that inbox, [en
 3. Click the **+** (Generate an app-specific password), give it a label like \`MCPEmails\`, and confirm with your Apple Account password.
 4. Apple shows you a password in the format \`abcd-efgh-ijkl-mnop\`. Copy it now. You can't view it again later.
 
-You'll need two-factor authentication turned on for your Apple Account — app-specific passwords aren't available without it. The IMAP host for iCloud is \`imap.mail.me.com\` and SMTP is \`smtp.mail.me.com\`, but MCPEmails fills those in for you when you pick iCloud as the provider, so you usually won't touch them. The [iCloud Mail settings page](/connect/icloud) lists the same values.
+You'll need two-factor authentication turned on for your Apple Account — app-specific passwords aren't available without it. The IMAP host for iCloud is \`imap.mail.me.com\` and SMTP is \`smtp.mail.me.com\`, but MCPEmails fills those in for you when you pick iCloud as the provider, so you usually won't touch them. The [iCloud Mail settings page](/connect/icloud) lists the same values. ChatGPT now has an iCloud plugin of its own; [what ChatGPT's iCloud Mail plugin covers](/blog/chatgpt-icloud-mail-plugin) explains how it differs.
 
 ## Generate an app password for Fastmail
 

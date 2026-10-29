@@ -189,8 +189,10 @@ test('the Outlook guide is indexable now that the connector is live', () => {
  */
 const EM_DASH_CLEAN_SLUGS = [
   'can-claude-read-my-email',
+  'chatgpt-icloud-mail-plugin',
   'claude-custom-connectors-explained',
   'connect-chatgpt-to-email',
+  'connect-chatgpt-to-outlook-com-hotmail',
   'connect-claude-to-email',
   'connect-claude-to-outlook-com-hotmail',
   'connect-claude-to-apple-mail',
@@ -199,12 +201,16 @@ const EM_DASH_CLEAN_SLUGS = [
   'manage-multiple-email-accounts-with-ai',
   'schedule-email-with-claude-and-chatgpt',
   'what-is-an-app-password',
+  'connect-yahoo-mail-to-chatgpt-and-claude',
 ];
 
 for (const slug of EM_DASH_CLEAN_SLUGS) {
   const files = [
     join(postsDir, `${slug}.js`),
-    ...readdirSync(join(translationsDir, slug)).map((file) => join(translationsDir, slug, file)),
+    // An English-only post has no translations folder yet.
+    ...(existsSync(join(translationsDir, slug))
+      ? readdirSync(join(translationsDir, slug)).map((file) => join(translationsDir, slug, file))
+      : []),
   ];
 
   for (const path of files) {
