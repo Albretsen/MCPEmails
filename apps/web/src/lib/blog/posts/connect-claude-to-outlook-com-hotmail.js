@@ -112,7 +112,7 @@ No. Personal Microsoft accounts connect through Sign in with Microsoft and Micro
 Yes. Hotmail, Live, MSN and Outlook.com addresses are the same Microsoft consumer mail service, so they all connect the same way. If the Microsoft account you sign in with has no Outlook mailbox behind it, MCPEmails refuses the connection and tells you so.
 
 **Does the same setup work in ChatGPT?**
-Yes. The connector URL is the same, and [connecting ChatGPT to your email](/blog/connect-chatgpt-to-email) walks through ChatGPT's side.
+Yes. The URL is the same, and [connecting ChatGPT to Hotmail and Outlook.com](/blog/connect-chatgpt-to-outlook-com-hotmail) walks through ChatGPT's side, where you add it as a custom MCP server.
 
 ## Next step
 

@@ -145,7 +145,7 @@ Yes, with Claude's built-in Gmail connector, for the Google account you connect.
 Work and school Microsoft 365 accounts can use Claude's Microsoft 365 connector after an administrator approves it. Personal Outlook.com and Hotmail addresses cannot. MCPEmails connects both with Sign in with Microsoft, though a work account may still need its IT admin to approve the app once for the organization.
 
 **Can Claude read Yahoo or iCloud email?**
-Not with a built-in connector. Connect the mailbox to MCPEmails with an app password from Yahoo or Apple, then add MCPEmails to Claude.
+Not with a built-in connector. Connect the mailbox to MCPEmails with an app password from Yahoo or Apple, then add MCPEmails to Claude. The [Yahoo Mail guide for ChatGPT and Claude](/blog/connect-yahoo-mail-to-chatgpt-and-claude) has the steps, and [ChatGPT's iCloud Mail plugin explained](/blog/chatgpt-icloud-mail-plugin) compares OpenAI's new iCloud option.
 
 **Can Claude read several email accounts at once?**
 Yes, through MCPEmails. Every mailbox you connect appears in Claude through the one connector URL, and Claude names the mailbox on each call.
