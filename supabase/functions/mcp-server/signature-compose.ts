@@ -46,31 +46,41 @@ export const SIGNATURE_TEXT_DELIMITER = "\n\n-- \n";
 export const SIGNATURE_HTML_CLASS = "mcpemails-signature";
 
 /**
- * A signature whose markup already opens with space above it: a line break, an
- * empty paragraph or div, or a block clients give a top margin (`<p>`, a
- * heading, a list). The dashboard editor stores `<p>…</p>`, and some people
- * start their signature with a blank line on purpose. 67 of 137 live
- * signatures did one or the other on 2026-10-29.
- */
-const SIGNATURE_OPENS_WITH_GAP =
-  /^\s*(?:<br\b|<p\b|<h[1-6]\b|<ul\b|<ol\b|<blockquote\b|<div>\s*(?:<br\s*\/?>\s*)?<\/div>)/i;
-
-/**
- * The HTML signature block as it is appended after a body: the wrapper div,
- * with one empty line before it when the signature does not bring its own.
- *
- * The text part always has a blank line before `-- `. Without the spacer, a
- * signature that starts with text or a table (a logo card) ran straight under
- * the last line of the message in the HTML part, which is what clients render
- * (seen on a real reply 2026-10-29). A signature that already opens with space
- * keeps exactly what it had, so nobody's layout gains a second gap.
- * `<div><br></div>` is one empty line whether the body ends in inline text or
- * in a block, which a bare `<br>` is not. The wrapper's opening tag stays
- * exact: html-text-merge.ts and `storedSignatureBlockOf` find it by string.
+ * The HTML signature block as it is appended after a body: the wrapper div
+ * and nothing else. Any space above the signature is the person's own, typed
+ * into the signature (see `keepTypedBlankLines`); none is added here. The
+ * wrapper's opening tag stays exact: html-text-merge.ts and
+ * `storedSignatureBlockOf` find it by string.
  */
 export function signatureHtmlBlock(innerHtml: string): string {
-  const spacer = SIGNATURE_OPENS_WITH_GAP.test(innerHtml) ? "" : "\n<div><br></div>";
-  return `${spacer}\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+  return `\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+}
+
+/** An empty paragraph, as the dashboard editor stores a blank line. */
+const EMPTY_PARAGRAPH = /<p\b[^>]*>\s*<\/p>/gi;
+
+/** Empty paragraphs (and whitespace) at the very end of a signature. */
+const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*<\/p>)+\s*$/i;
+
+/**
+ * Make the blank lines a person typed into their signature show in the sent
+ * mail.
+ *
+ * The dashboard editor (TipTap) stores a blank line as `<p></p>`, and its
+ * preview renders it as one line. In a mail client an empty paragraph has no
+ * height, so a blank line typed above the name, the only way to put space
+ * between the message and the signature, never arrived (14 of 137 live
+ * signatures opened with one on 2026-10-29). `<p><br></p>` is what the editor
+ * itself shows, so that is what is sent.
+ *
+ * Trailing empty paragraphs are left alone: TipTap appends one after a heading,
+ * a list or an image on its own, so they are not something the person typed.
+ */
+export function keepTypedBlankLines(html: string): string {
+  const trailing = TRAILING_EMPTY_PARAGRAPHS.exec(html);
+  const end = trailing ? trailing.index : html.length;
+  return html.slice(0, end).replace(EMPTY_PARAGRAPH, (m) => m.replace(/\s*<\/p>$/i, "<br></p>")) +
+    html.slice(end);
 }
 
 /** Minimal HTML-escape for deriving HTML from plain text. */
@@ -178,7 +188,7 @@ export function composeSignatureBlocks(
   // outcome than sending without one. Every write path uses the throwing
   // version, so this only ever bites on rows written before that was true.
   const html = storedHtml
-    ? sanitizeSignatureHtmlSafe(storedHtml)
+    ? keepTypedBlankLines(sanitizeSignatureHtmlSafe(storedHtml))
     : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
   // Guard against a signature that strips down to nothing. The check has to be
