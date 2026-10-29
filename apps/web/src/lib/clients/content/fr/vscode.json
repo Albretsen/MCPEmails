@@ -25,7 +25,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, et connectez votre boîte dans Dashboard, Inboxes. Une boîte est gratuite, pour toujours."
     },
     {
       "h": "Lancez MCP: Add Server",
@@ -55,7 +55,7 @@
     }
   ],
   "limits": [
-    "Les requêtes sont limitées par clé dans des fenêtres par minute, par heure et par jour dimensionnées selon votre formule : une seule clé peut utiliser tout le plafond par minute de la formule, et plusieurs clés le partagent. Un 429 porte Retry-After. Le plafond d'actions facturables de votre formule s'applique aussi.",
+    "Les requêtes sont limitées par clé dans des fenêtres par minute, par heure et par jour dimensionnées selon votre formule. Un 429 porte Retry-After.",
     "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
     "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
   ],

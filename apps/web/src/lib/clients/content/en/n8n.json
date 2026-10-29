@@ -31,7 +31,7 @@
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP."
+      "p": "Sign up at mcpemails.com, no card needed, and connect your mailbox under Dashboard, Inboxes."
     },
     {
       "h": "Create a scoped API key",

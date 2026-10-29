@@ -29,7 +29,7 @@
   "setup": [
     {
       "h": "Kostenloses Konto erstellen und Postfach verbinden",
-      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und verbinden Sie Ihr Postfach unter Dashboard, Postfächer. Ein Postfach ist dauerhaft kostenlos."
     },
     {
       "h": "Connector-Seite öffnen",
@@ -64,7 +64,7 @@
   ],
   "limits": [
     "Cowork selbst setzt einen kostenpflichtigen Claude-Tarif voraus (Pro, Max, Team oder Enterprise).",
-    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt.",
     "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken eine Cowork-Aufgabe also nie von selbst. Cowork sieht E-Mails, wenn eine Aufgabe danach fragt.",
     "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
   ],
