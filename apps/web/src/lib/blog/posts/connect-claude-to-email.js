@@ -8,7 +8,7 @@ const post = {
     'Connect Claude to Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, and IMAP email with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-07-28T09:00:00.000Z',
-  updatedAt: '2026-10-28T09:00:00.000Z',
+  updatedAt: '2026-10-29T09:00:00.000Z',
   tags: ['Claude', 'MCP', 'Email', 'Tutorial'],
   featured: false,
   content: `Claude can read, search, organize, and send your email, but it needs an MCP server to reach a real inbox. MCPEmails is that bridge: connect an inbox once, add one secure endpoint to Claude, and Claude gets a consistent set of email tools across Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, and other IMAP providers.

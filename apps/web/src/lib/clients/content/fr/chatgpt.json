@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "Mode développeur ChatGPT : ajouter un connecteur MCP e-mail",
-    "description": "Ajoutez un connecteur MCP personnalisé en mode développeur ChatGPT et donnez-lui une vraie boîte : Yahoo, iCloud, Outlook ou IMAP. OAuth, sans clé API. Une boîte gratuite."
+    "title": "Connecter l'e-mail à ChatGPT : connecteur MCP",
+    "description": "Ajoutez une vraie boîte à ChatGPT avec le mode développeur et un connecteur MCP personnalisé. OAuth, sans clé API : lisez, cherchez, envoyez, planifiez. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-mail",

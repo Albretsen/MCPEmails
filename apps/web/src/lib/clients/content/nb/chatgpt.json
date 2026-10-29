@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "Utviklermodus i ChatGPT: legg til en MCP-kobling for e-post",
-    "description": "Legg til en egendefinert MCP-kobling i utviklermodus i ChatGPT og gi den en ekte innboks: Yahoo, iCloud, Outlook eller IMAP. OAuth, ingen API-nøkkel. Én innboks gratis."
+    "title": "Koble e-post til ChatGPT: oppsett av MCP-kobling",
+    "description": "Gi ChatGPT en ekte innboks med utviklermodus og en egendefinert MCP-kobling. OAuth, ingen API-nøkkel, så lese, søke, sende og planlegge e-post. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-post",
