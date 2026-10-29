@@ -224,7 +224,7 @@
   ],
   "contact": {
     "heading": "Écrivez-nous",
-    "lead": "Une personne lit chaque message et répond par e-mail. Comptez une réponse sous un jour ouvré.",
+    "lead": "Nous répondons par e-mail sous un jour ouvré.",
     "emailLine": "Écrivez-nous à {email}, ou envoyez un message ici.",
     "openForm": "Écrire un message"
   },

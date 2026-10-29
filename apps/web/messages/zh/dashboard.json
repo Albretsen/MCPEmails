@@ -201,6 +201,7 @@
     "capCompare": "比较所有方案",
     "errorBannerOne": "1 个收件箱已失去访问权限，需要重新连接。",
     "errorBannerMany": "{count} 个收件箱已失去访问权限，需要重新连接。",
+    "errorBannerSupport": "重新连接无效？给我们写信",
     "colLabel": "标签",
     "colAddress": "地址",
     "colProvider": "提供商",

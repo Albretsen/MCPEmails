@@ -7,13 +7,13 @@ import HelpSearch from './HelpSearch';
 import ContactForm from './ContactForm';
 
 /**
- * The help center: search, the articles by category, then the contact block.
+ * The help center: search, the contact block, then the articles by category.
  * Rendered by the public /help page and by the dashboard's help section.
  *
  * Layout. A section list sits on the left (a row of links on narrow screens)
- * and jumps to each category and to the contact block; the section in view is
- * marked. Contact comes last, after the articles, and the search's empty state
- * and the nav both link to it. Articles start collapsed (`<details>`, title
+ * and jumps to the contact block and each category; the section in view is
+ * marked. Contact comes first: the address and a button that opens the form
+ * in place, so it is visible without scrolling. Articles start collapsed (`<details>`, title
  * and one-line summary visible), open on demand, and end with "Was this
  * helpful?" (POST /api/support/article-feedback, remembered per article in
  * this browser so the answer shows on the next visit).
@@ -285,8 +285,8 @@ export default function HelpCenter({
   const email = SUPPORT_EMAIL;
   const contactTitle = copy.nav?.contact ?? contact.heading;
   const sections = useMemo(() => [
-    ...categories.map((c) => ({ id: `help-cat-${c.area}`, title: c.title })),
     { id: 'contact', title: contactTitle },
+    ...categories.map((c) => ({ id: `help-cat-${c.area}`, title: c.title })),
   ], [categories, contactTitle]);
 
   return (
@@ -313,16 +313,6 @@ export default function HelpCenter({
         <SectionNav sections={sections} label={copy.nav?.label ?? ''} />
 
         <div className="help-main">
-          {categories.map((c) => (
-            <section key={c.area} id={`help-cat-${c.area}`} className="help-category" aria-labelledby={`help-cat-${c.area}-h`} data-area={c.area}>
-              <h2 id={`help-cat-${c.area}-h`}>{c.title}</h2>
-              {c.lead ? <p className="help-muted">{c.lead}</p> : null}
-              {c.articles.map((a) => (
-                <Article key={a.id} article={a} locale={locale} onLinkClick={onLinkClick} feedbackCopy={copy.feedback} />
-              ))}
-            </section>
-          ))}
-
           <section id="contact" className="help-contact help-contact-block" aria-labelledby="help-contact">
             <h2 id="help-contact">{contact.heading}</h2>
             <p className="help-muted">{contact.lead}</p>
@@ -350,6 +340,17 @@ export default function HelpCenter({
             )}
             {formFooter}
           </section>
+
+          {categories.map((c) => (
+            <section key={c.area} id={`help-cat-${c.area}`} className="help-category" aria-labelledby={`help-cat-${c.area}-h`} data-area={c.area}>
+              <h2 id={`help-cat-${c.area}-h`}>{c.title}</h2>
+              {c.lead ? <p className="help-muted">{c.lead}</p> : null}
+              {c.articles.map((a) => (
+                <Article key={a.id} article={a} locale={locale} onLinkClick={onLinkClick} feedbackCopy={copy.feedback} />
+              ))}
+            </section>
+          ))}
+
         </div>
       </div>
     </div>

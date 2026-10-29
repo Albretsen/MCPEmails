@@ -148,21 +148,25 @@ test('the code is URL-encoded', async (t) => {
   assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=generic&code=odd%20code%26x%3D1#contact');
 });
 
-test('not visible: the same failure shows no contact link', async (t) => {
+test('not visible: the same failure offers an email to support@ instead', async (t) => {
   const { view, requests } = await openForm(t, { supportVisible: false, reply: AUTH_FAILED });
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   await waitFor(() => q(view, 'cm-form-error'), { message: 'the error headline' });
-  assert.equal(linkNamed(view, STILL_STUCK) === null, true);
-  assert.equal(view.container.textContent.includes(STILL_STUCK), false);
+  const link = linkNamed(view, STILL_STUCK);
+  assert.equal(link === null, false);
+  const href = link.getAttribute('href');
+  assert.equal(href.startsWith('mailto:support@mcpemails.com?subject='), true, href);
+  const subject = decodeURIComponent(new URL(href).searchParams.get('subject'));
+  assert.equal(subject.startsWith('Connect failed: generic'), true, subject);
 });
 
-test('prop omitted: hidden by default', async (t) => {
+test('prop omitted: the email fallback, not the help center', async (t) => {
   const { view, requests } = await openForm(t, { reply: AUTH_FAILED });
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   await waitFor(() => q(view, 'cm-form-error'), { message: 'the error headline' });
-  assert.equal(linkNamed(view, STILL_STUCK) === null, true);
+  assert.equal(linkNamed(view, STILL_STUCK).getAttribute('href').startsWith('mailto:support@mcpemails.com'), true);
 });
 
 test('a client-side validation error after a route failure drops the old code', async (t) => {

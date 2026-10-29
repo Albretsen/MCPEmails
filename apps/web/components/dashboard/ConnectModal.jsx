@@ -252,6 +252,22 @@ export function supportContactHref(provider, code) {
 }
 
 /**
+ * The same contact for anyone the help center is hidden from: an email to
+ * support@ with the provider and error code in the subject, so the reply can
+ * start from what went wrong. Only slug-shaped values are included.
+ */
+export function supportMailtoHref(provider, code) {
+  const clean = (v) => (typeof v === 'string' && /^[a-z0-9_.-]{1,64}$/i.test(v.trim()) ? v.trim() : null);
+  const p = clean(provider);
+  const c = clean(code);
+  const subject = p || c ? `Connect failed: ${[p, c && `(${c})`].filter(Boolean).join(' ')}` : 'Connect failed';
+  const body = ['Sent from the connect dialog in the dashboard.', p && `Provider: ${p}`, c && `Error code: ${c}`, '', 'What I tried:', '']
+    .filter((l) => l !== null && l !== undefined && l !== false)
+    .join('\n');
+  return `mailto:support@mcpemails.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+/**
  * The app's ordinary "sign in and come back here" link.
  *
  * `/login?redirect=<path>` is what the dashboard's own server-side guard, the
@@ -4151,8 +4167,8 @@ export function ConnectModal({
                     </>
                   )}
 
-                  {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop. */}
-                  {supportVisible && (
+                  {/* SUPPORT_RELEASE_GATE: at release drop the mailto branch, the condition and the prop. */}
+                  {supportVisible ? (
                     <a
                       href={supportContactHref(provider, shownFailureCode)}
                       style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
@@ -4161,6 +4177,13 @@ export function ConnectModal({
                         e.preventDefault();
                         onContactSupport(e.currentTarget.getAttribute('href'));
                       }}
+                    >
+                      {tr('connect.errorContactSupport')}
+                    </a>
+                  ) : (
+                    <a
+                      href={supportMailtoHref(provider, shownFailureCode)}
+                      style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
                     >
                       {tr('connect.errorContactSupport')}
                     </a>

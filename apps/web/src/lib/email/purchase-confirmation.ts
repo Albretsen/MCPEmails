@@ -269,7 +269,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     withdrawalLine(base),
     '',
     `Questions, or something looks wrong? Reply to this email or write to ${SUPPORT_ADDRESS}.`,
-    'A person reads it.',
+    'We reply within one business day.',
     '',
     'MCPEmails',
     base,
@@ -358,7 +358,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
             <td style="background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">
                 Questions, or something looks wrong? Reply to this email or write to
-                <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. A person reads it.
+                <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. We reply within one business day.
               </p>
             </td>
           </tr>

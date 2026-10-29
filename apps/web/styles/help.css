@@ -30,7 +30,7 @@
 .help-head { margin-bottom: 24px; }
 
 .help-contact-block {
-  margin: 32px 0 0; padding: 20px 24px; border: 1px solid var(--border-1);
+  margin: 0 0 24px; padding: 20px 24px; border: 1px solid var(--border-1);
   border-radius: 12px; background: var(--bg-surface); text-align: left;
 }
 .help-contact-block h2 { font-size: 20px; margin: 0 0 4px; }
@@ -80,7 +80,6 @@
 .help-nav a:hover { color: var(--fg-1); text-decoration: none; }
 .help-nav a.active { color: var(--brand); border-left-color: var(--brand); font-weight: 500; }
 .help-category { scroll-margin-top: 80px; }
-.help-category:first-child { padding-top: 0; }
 
 @media (max-width: 899px) {
   .help-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }

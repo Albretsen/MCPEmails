@@ -224,7 +224,7 @@
   ],
   "contact": {
     "heading": "Write to us",
-    "lead": "A person reads every message and replies by email. Expect a reply within one business day.",
+    "lead": "We reply by email within one business day.",
     "emailLine": "Email us at {email}, or send a message here.",
     "openForm": "Write a message"
   },

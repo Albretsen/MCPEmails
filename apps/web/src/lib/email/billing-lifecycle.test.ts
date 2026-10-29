@@ -1072,6 +1072,6 @@ test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branc
   assert.equal(out.length, 240);
   assert.equal(
     createHash('sha256').update(JSON.stringify(out)).digest('hex'),
-    '91b08191b55e5363312decd7c8e90daa5f2da7cae126b4f5162288674894f31e',
+    '4e0055c8dfe0959a0c7b3295732b5b0a4ccba22369a41f5d39e353d02b6c46e0',
   );
 });

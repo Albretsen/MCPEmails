@@ -15,6 +15,7 @@
     "inboxExistsOtherProvider": "Den adressen er allerede koblet til med en annen metode (for eksempel IMAP, Gmail eller Outlook), så vi rørte ikke den innboksen. Vil du bytte tilkoblingsmetode, må du først fjerne den innboksen og så koble den til på nytt.",
     "outlookNoMailbox": "Denne Microsoft-kontoen har ingen Outlook-postkasse (Exchange Online), så det er ingenting å koble til. Det er vanlig for administratorkontoer uten Exchange-lisens, eller når organisasjonens e-post ligger hos en annen leverandør. Ligger e-posten din på en annen server, kobler du adressen til med IMAP i stedet.",
     "connectionFailed": "Tilkobling av innboks mislyktes ({error}). Prøv igjen.",
+    "contactSupport": "Kontakt kundestøtte",
     "checkoutSuccess": "Velkommen til {plan}. Abonnementet ditt aktiveres nå; dette kan ta et øyeblikk.",
     "checkoutSuccessPlanFallback": "det nye abonnementet ditt",
     "checkoutFeedback": {

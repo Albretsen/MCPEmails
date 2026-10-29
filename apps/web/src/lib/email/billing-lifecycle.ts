@@ -816,9 +816,9 @@ function facts(rows: Array<[string, string]>): string {
  * would put a registration number in the middle of a sentence written to sound
  * like a person.
  */
-const SUPPORT_FOOTER = `Something look wrong, or is this a bad time? Reply to this email or write to <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. A person reads it, and at our size that person is the one who wrote the software.`;
+const SUPPORT_FOOTER = `Something look wrong, or is this a bad time? Reply to this email or write to <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. We reply within one business day.`;
 
-const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply to this email or write to ${SUPPORT_ADDRESS}. A person reads it, and at our size that person is the one who wrote the software.`;
+const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply to this email or write to ${SUPPORT_ADDRESS}. We reply within one business day.`;
 
 /**
  * The cancellation email gets its own footer, because the standard one ends in

@@ -15,6 +15,7 @@
     "inboxExistsOtherProvider": "Diese Adresse ist bereits über eine andere Methode verbunden (zum Beispiel IMAP, Gmail oder Outlook). Wir haben dieses Postfach daher nicht verändert. Wenn Sie die Verbindungsart wechseln möchten, entfernen Sie das Postfach zuerst und verbinden es dann neu.",
     "outlookNoMailbox": "Dieses Microsoft-Konto hat kein Outlook-Postfach (Exchange Online), es gibt also nichts zu verbinden. Das ist bei Admin-Konten ohne Exchange-Lizenz üblich oder wenn die E-Mails der Organisation woanders gehostet werden. Liegen Ihre E-Mails auf einem anderen Server, verbinden Sie die Adresse stattdessen per IMAP.",
     "connectionFailed": "Verbindung des Postfachs fehlgeschlagen ({error}). Bitte versuchen Sie es erneut.",
+    "contactSupport": "Support kontaktieren",
     "checkoutSuccess": "Willkommen bei {plan}. Ihr Abonnement wird gerade aktiviert, das kann einen Moment dauern.",
     "checkoutSuccessPlanFallback": "Ihrem neuen Tarif",
     "checkoutFeedback": {

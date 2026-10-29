@@ -105,26 +105,26 @@ test('every article starts collapsed, with title and summary in the summary line
   assert.equal(s.includes('Some context.'), false, 'the body is not in the summary');
 });
 
-test('the contact block, with the mailto, comes after the last category', async (t) => {
+test('the contact block, with the mailto and the reply time, comes before the first category', async (t) => {
   setHash('');
   const view = await render(t);
   const contact = view.container.querySelector('#contact');
-  const categories = view.container.querySelectorAll('.help-category');
-  const lastCategory = categories[categories.length - 1];
+  const firstCategory = view.container.querySelector('.help-category');
   assert.equal(contact === null, false);
-  assert.equal(Boolean(contact.compareDocumentPosition(lastCategory) & window.Node.DOCUMENT_POSITION_PRECEDING), true);
+  assert.equal(Boolean(contact.compareDocumentPosition(firstCategory) & window.Node.DOCUMENT_POSITION_FOLLOWING), true);
   const mail = contact.querySelector('a[href^="mailto:"]');
   assert.equal(mail.getAttribute('href'), 'mailto:support@mcpemails.com');
   assert.equal(contact.textContent.includes(en.contact.heading), true);
   assert.equal(contact.textContent.includes('one business day'), true);
+  assert.equal(/a person reads/i.test(contact.textContent), false);
 });
 
-test('the section nav links every category and the contact block', async (t) => {
+test('the section nav links the contact block and every category', async (t) => {
   setHash('');
   const view = await render(t);
   const links = [...view.container.querySelectorAll('.help-nav a')].map((a) => a.getAttribute('href'));
   const ids = [...view.container.querySelectorAll('.help-category')].map((c) => `#${c.id}`);
-  assert.deepEqual(links, [...ids, '#contact']);
+  assert.deepEqual(links, ['#contact', ...ids]);
   assert.equal(view.container.querySelector('.help-nav a').getAttribute('aria-current'), 'location');
 });
 

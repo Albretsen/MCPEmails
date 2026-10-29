@@ -9,7 +9,7 @@ import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
-import { ConnectModal } from './ConnectModal';
+import { ConnectModal, supportContactHref, supportMailtoHref } from './ConnectModal';
 import { HelpSection, prefetchHelpData } from './HelpSection';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
@@ -535,6 +535,20 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, [firstrun]);
 
   // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
+  // "Contact support" on a connect failure that a retry will not fix: the
+  // in-app help form when the help center is visible, else an email to
+  // support@ that carries the error code.
+  const contactSupportAction = (provider, code) => ({
+    label: tr('app.contactSupport'),
+    onClick: () => {
+      if (supportVisible) { // SUPPORT_RELEASE_GATE: at release keep only this branch.
+        window.location.assign(supportContactHref(provider, code));
+      } else {
+        window.location.assign(supportMailtoHref(provider, code));
+      }
+    },
+  });
+
   useEffect(() => {
     const connectedParam = readQuery(searchParams, 'connected');
     const errorParam = readQuery(searchParams, 'error');
@@ -622,7 +636,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Microsoft signed the person in but returned no usable email address to
       // attach the inbox to. Retrying the same account fails the same way, so
       // the message points at another account or support, and stays open.
-      toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0 });
+      toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0, action: contactSupportAction('outlook', errorParam) });
       setRouteState('inboxes');
     } else if (errorParam === 'inbox_exists_other_provider') {
       // The address is already connected through a different provider (e.g.
@@ -636,7 +650,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Microsoft signed the person in, but the account has no Exchange Online
       // mailbox, so no inbox was created. Signing in again gives the same
       // answer, so the message points at IMAP rather than a retry.
-      toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0 });
+      toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0, action: contactSupportAction('outlook', errorParam) });
       setRouteState('inboxes');
     } else if (adminConsentParam === 'granted') {
       // The tenant-wide approval went through. That grants nothing by itself:
@@ -663,7 +677,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       openConnect('other');
       setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
-      toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
+      toast({ message: tr('app.tokenExchangeFailed'), variant: 'error', duration: 0, action: contactSupportAction(null, errorParam) });
       setRouteState('inboxes');
     } else if (errorParam === 'insufficient_role') {
       // The provider OAuth callbacks redirect here when a workspace VIEWER
@@ -681,7 +695,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
     } else if (errorParam) {
-      toast({ message: tr('app.connectionFailed', { error: errorParam }), variant: 'error' });
+      toast({ message: tr('app.connectionFailed', { error: errorParam }), variant: 'error', duration: 0, action: contactSupportAction(null, errorParam) });
       setRouteState('inboxes');
     }
 

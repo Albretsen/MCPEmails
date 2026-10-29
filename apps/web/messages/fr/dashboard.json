@@ -201,6 +201,7 @@
     "capCompare": "Comparer toutes les formules",
     "errorBannerOne": "1 boîte a perdu l'accès et doit être reconnectée.",
     "errorBannerMany": "{count} boîtes ont perdu l'accès et doivent être reconnectées.",
+    "errorBannerSupport": "La reconnexion ne marche pas ? Écrivez-nous",
     "colLabel": "Étiquette",
     "colAddress": "Adresse",
     "colProvider": "Fournisseur",

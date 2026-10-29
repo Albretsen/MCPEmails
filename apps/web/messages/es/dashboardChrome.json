@@ -15,6 +15,7 @@
     "inboxExistsOtherProvider": "Esa dirección ya está conectada con otro método (por ejemplo IMAP, Gmail u Outlook), así que no hemos tocado esa bandeja. Si quieres cambiar cómo está conectada, elimina primero esa bandeja y vuelve a conectarla.",
     "outlookNoMailbox": "Esta cuenta de Microsoft no tiene buzón de Outlook (Exchange Online), así que no hay nada que conectar. Es habitual en cuentas de administrador sin licencia de Exchange o cuando el correo de la organización está alojado en otro sitio. Si tu correo está en otro servidor, conecta la dirección por IMAP.",
     "connectionFailed": "La conexión de la bandeja de entrada falló ({error}). Inténtalo de nuevo.",
+    "contactSupport": "Contactar con soporte",
     "checkoutSuccess": "Te damos la bienvenida a {plan}. Tu suscripción se está activando ahora; esto puede tardar un momento.",
     "checkoutSuccessPlanFallback": "tu nuevo plan",
     "checkoutFeedback": {

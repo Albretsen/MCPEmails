@@ -2038,6 +2038,12 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               ? t('inboxes.errorBannerOne')
               : t('inboxes.errorBannerMany', { count: erroredCount })}
           </span>
+          <a
+            href={`mailto:support@mcpemails.com?subject=${encodeURIComponent('Reconnecting an inbox does not work')}`}
+            style={{ marginLeft: 'auto', color: 'var(--red-700)', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+          >
+            {t('inboxes.errorBannerSupport')}
+          </a>
         </div>
       )}
 
