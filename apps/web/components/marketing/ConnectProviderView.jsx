@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
+import ConnectFolds, { ConnectFold } from './ConnectFolds';
 import { relatedProviders } from '@/lib/connect/release.mjs';
 import { guideLinksFor } from '@/lib/connect/guides.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
@@ -153,14 +154,6 @@ export default async function ConnectProviderView({ locale, provider, content, m
           </h1>
           <p className="pricing-page-lead">{content.hero.lead}</p>
           {/*
-            Direct answer to the question the query actually asks. These pages
-            ranked between 4.7 and 9.2 and returned zero clicks: the snippet had
-            nothing quotable to pull.
-          */}
-          {content.hero.answer && (
-            <p className="pricing-page-answer">{content.hero.answer}</p>
-          )}
-          {/*
             Optional pointer for the company-mailbox operator. /connect/imap
             sends them to /for/business: more than half of the business-domain
             mailboxes we see sit on a host with no brand of its own. The ten
@@ -193,6 +186,15 @@ export default async function ConnectProviderView({ locale, provider, content, m
 
       <section className="section" style={{ paddingTop: 56, paddingBottom: 0 }}>
         <div className="container">
+          {/*
+            Direct answer to the question the query actually asks. These pages
+            ranked between 4.7 and 9.2 and returned zero clicks: the snippet had
+            nothing quotable to pull. It sits just under the hero rather than in
+            it, so the hero stays one lead line and the buttons.
+          */}
+          {content.hero.answer && (
+            <p className="providers-sub">{content.hero.answer}</p>
+          )}
           <div className="connect-callout">
             <MIcon name="lock" size={20} color="var(--cobalt-600)" />
             <div>
@@ -218,16 +220,11 @@ export default async function ConnectProviderView({ locale, provider, content, m
           )}
 
           {showGmailVerification && (
-            <div role="note" className="connect-callout connect-callout-warn">
-              <MIcon name="alert-triangle" size={18} color="var(--amber-700)" />
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: 14, color: 'var(--amber-700)' }}>
-                  {t('verificationNote.title')}
-                </h3>
-                <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 13.5, lineHeight: 1.6 }}>
-                  <RichText>{t('verificationNote.body')}</RichText>
-                </p>
-              </div>
+            <div className="connect-folds" style={{ marginTop: 16 }}>
+              {/* t.raw: the body carries <b>, which t() rejects as an unknown rich-text tag. */}
+              <ConnectFold icon="alert-triangle" color="var(--amber-700)" title={t('verificationNote.title')}>
+                <p><RichText>{t.raw('verificationNote.body')}</RichText></p>
+              </ConnectFold>
             </div>
           )}
         </div>
@@ -430,27 +427,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <div className="eye-label">{t('gotchas.eyebrow')}</div>
               <h2>{t('gotchas.title', { provider: provider.name })}</h2>
             </div>
-            <div className="connect-gotchas">
-              {content.gotchas.map((g, i) => (
-                <div className="connect-gotcha" key={i}>
-                  <MIcon name="alert-triangle" size={17} color="var(--amber-700)" />
-                  <div>
-                    <h3>{g.h}</h3>
-                    <p><RichText>{g.p}</RichText></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {content.limits?.length > 0 && (
-              <div className="connect-limits">
-                <h3>{t('limits.title', named)}</h3>
-                <ul>
-                  {content.limits.map((l, i) => (
-                    <li key={i}><RichText>{l}</RichText></li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <ConnectFolds gotchas={content.gotchas} limitsTitle={t('limits.title', named)} limits={content.limits} />
           </div>
         </section>
       )}

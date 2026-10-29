@@ -31,7 +31,7 @@
   "setup": [
     {
       "h": "Kostenloses Konto erstellen und Postfach verbinden",
-      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP."
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und verbinden Sie Ihr Postfach unter Dashboard, Postfächer."
     },
     {
       "h": "API-Schlüssel mit Scopes erstellen",

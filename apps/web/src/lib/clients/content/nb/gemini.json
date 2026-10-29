@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og koble til innboksen under Dashboard, Inboxes. Én innboks er gratis, for alltid."
     },
     {
       "h": "Åpne Connected Apps på nettet",
@@ -60,7 +60,7 @@
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],
