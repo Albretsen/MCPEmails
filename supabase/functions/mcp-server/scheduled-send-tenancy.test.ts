@@ -34,7 +34,7 @@
 // ---------------------------------------------------------------------------
 
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
-import { SmtpNotSentError } from "./smtp-client.ts";
+import { isRetryableEnvelopeRefusal, SmtpNotSentError } from "./smtp-client.ts";
 
 const KEY_HEX = "0123456789abcdef".repeat(4);
 Deno.env.set("ENCRYPTION_KEY", KEY_HEX);
@@ -234,6 +234,8 @@ interface Calls {
   approved: Array<{ operation: string; original: Row; key: Row }>;
   completed: Array<[string, string, string | null]>;
   sent: Array<{ inbox: Row; params: Row }>;
+  /** Each outbound brake check: whether the dispatcher said it was already counted. */
+  brake: Array<{ alreadyCounted: boolean }>;
 }
 
 function harness(
@@ -241,10 +243,12 @@ function harness(
   behaviour: {
     approved?: () => { logStatus: "success" | "error"; logErrorCode: string | null };
     send?: () => void;
+    /** Stand in the outbound brake (always "allow"); left out, deps has none. */
+    brake?: boolean;
   } = {},
 ) {
   const rec = recordingClient(tables);
-  const calls: Calls = { approved: [], completed: [], sent: [] };
+  const calls: Calls = { approved: [], completed: [], sent: [], brake: [] };
   const deps = {
     runApprovedOperation(operation: string, original: Row, key: Row) {
       calls.approved.push({ operation, original, key });
@@ -259,6 +263,14 @@ function harness(
       behaviour.send?.();
       return Promise.resolve({ message_id: "<m@x>", sent_at: new Date().toISOString() });
     },
+    ...(behaviour.brake
+      ? {
+        outboundBrake(_ws: string, _inbox: Row, _params: Row, _approved: boolean, alreadyCounted: boolean) {
+          calls.brake.push({ alreadyCounted });
+          return Promise.resolve({ kind: "allow" as const });
+        },
+      }
+      : {}),
   };
   const run = async () => {
     // deno-lint-ignore no-explicit-any
@@ -607,4 +619,67 @@ Deno.test("a scheduled send refused before transmission is deferred, then retrie
   assertEquals(second.dispatched, 1);
   assertEquals(sendRow(tables, SEND_A).status, "sent");
   assertEquals(h.calls.sent.length, 2);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A permanent refusal fails at once, and a retry is not counted twice
+// (2026-10-29: 48 scheduled sends refused with 550 at RCPT TO were retried
+// once a minute and filled one inbox's 500/day brake without a delivery)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const reply = (code: number, text: string) => ({ code, text, lines: [text] });
+
+Deno.test("a 550 account block at RCPT TO fails the row on the first attempt", async () => {
+  const blocked = reply(550, "Outgoing mail from sender@example.com blocked");
+  assertEquals(isRetryableEnvelopeRefusal(blocked), false);
+  const tables = {
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  };
+  const h = harness(tables, {
+    brake: true,
+    send: () => {
+      throw new SmtpNotSentError(`SMTP RCPT TO <a@example.com> rejected: 550 ${blocked.text}`, false);
+    },
+  });
+  const first = await h.run();
+  assertEquals(first.errored, 1);
+  assertEquals(first.deferred, 0);
+  assertEquals(sendRow(tables, SEND_A).status, "error");
+  const second = await h.run();
+  assertEquals(second.total, 0);
+  assertEquals(h.calls.sent.length, 1, "never tried again");
+  assertEquals(h.calls.brake.length, 1);
+});
+
+Deno.test("a deferred retry is checked by the brake but counted only once", async () => {
+  let attempt = 0;
+  const tables = {
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  };
+  const h = harness(tables, {
+    brake: true,
+    send: () => {
+      if (++attempt <= 2) throw new SmtpNotSentError("SMTP RCPT TO <a@example.com> rejected: 451 4.7.1 try later", true);
+    },
+  });
+  assertEquals((await h.run()).deferred, 1);
+  assertStringIncludes(String(sendRow(tables, SEND_A).error_detail), "deferred, nothing was sent");
+  assertEquals((await h.run()).deferred, 1);
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(sendRow(tables, SEND_A).status, "sent");
+  assertEquals(h.calls.brake.map((b) => b.alreadyCounted), [false, true, true]);
+});
+
+Deno.test("a row deferred by the brake itself is still counted when it finally sends", async () => {
+  // A ScheduledDispatchHeld deferral happens before the brake counts, so the
+  // row must not inherit the "already counted" mark from it.
+  const tables = {
+    scheduled_sends: [await encryptedSend(SEND_A, { error_detail: "deferred, nothing was sent: held by a send limit" })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  };
+  const h = harness(tables, { brake: true });
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(h.calls.brake.map((b) => b.alreadyCounted), [false]);
 });

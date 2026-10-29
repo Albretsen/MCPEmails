@@ -413,7 +413,7 @@ async function submitOnce(
       if (r.code !== 250 && r.code !== 251) {
         throw new SmtpNotSentError(
           `SMTP RCPT TO <${rcpt}> rejected: ${r.code} ${r.text}`,
-          !isRecipientAddressRejection(r),
+          isRetryableEnvelopeRefusal(r),
         );
       }
     }
@@ -464,15 +464,35 @@ async function submitOnce(
  * retryable not-sent error without the "MAIL FROM" words, so every MAIL-stage
  * refusal earned a relay retry.
  *
- * Retryable unless the reply carries a 5.1.x address-status class: at MAIL
- * that names the sender address itself (5.1.7, 5.1.8), which repeats on every
- * attempt. Everything else keeps the one direct retry it had before.
+ * Retryable or not by {@link isRetryableEnvelopeRefusal}, the same rule as a
+ * refused RCPT TO.
  */
 export function mailFromRefusal(from: string, reply: SmtpReply): SmtpNotSentError {
   return new SmtpNotSentError(
     `SMTP MAIL FROM <${from}> refused: ${reply.code} ${reply.text}`,
-    !isRecipientAddressRejection(reply),
+    isRetryableEnvelopeRefusal(reply),
   );
+}
+
+/**
+ * Can a refused MAIL FROM or RCPT TO succeed if it is tried again later?
+ *
+ * A 4xx reply is transient by definition (greylisting, a rate limit), so yes,
+ * unless it names a bad address (5.1.x). A 5xx reply is permanent (RFC 5321
+ * 4.2.1) with one exception: an origin block whose own words blame the address
+ * we connect from (the ACR04 family, relay-registry.ts isOriginRefusalText).
+ * That one is about the egress IP, so the relay retry or a later attempt from
+ * a fresh isolate can get through.
+ *
+ * Before 2026-10-29 every 5xx without a 5.1.x class was retryable. On
+ * 2026-10-28 one provider refused 48 scheduled sends at RCPT TO with
+ * `550 Outgoing mail from <address> blocked`, an account-level block, and the
+ * dispatcher retried each one once a minute for its whole defer window.
+ */
+export function isRetryableEnvelopeRefusal(reply: SmtpReply): boolean {
+  if (isRecipientAddressRejection(reply)) return false;
+  if (reply.code >= 500) return isOriginRefusalText(reply.text);
+  return true;
 }
 
 function errorText(err: unknown): string {

@@ -35849,6 +35849,21 @@ const MAX_DISPATCH_BATCH = 50;
  */
 const SCHEDULED_SEND_DEFER_WINDOW_MS = 15 * 60 * 1000;
 
+/**
+ * The `error_detail` prefix of a row deferred after the outbound brake already
+ * counted it (2026-10-29).
+ *
+ * checkOutboundBrakes counts a send before it is transmitted, so a row the
+ * provider refused and the dispatcher deferred has been counted once. The next
+ * attempt reads this prefix back and asks the brake without committing: still
+ * refused while the inbox is frozen, paused or at its daily limit, but not
+ * counted a second time. Before this, 48 refused rows retried once a minute
+ * filled one inbox's 500/day limit on 2026-10-28 without a single delivery.
+ * Kept in `error_detail` because the table has no attempt column, and it still
+ * reads as a deferral to anyone who lists the schedule.
+ */
+const SCHEDULED_SEND_COUNTED_DEFER_PREFIX = "deferred, nothing was sent (retrying): ";
+
 // A row that has been in 'sending' longer than this is considered stale: the
 // dispatch invocation that claimed it crashed mid-flight.  We do NOT reset it
 // to 'pending' — the email may already have been (partially) sent before the
@@ -35968,6 +35983,8 @@ interface ScheduledDispatchDeps {
     inbox: InboxRow,
     params: SendEmailParams,
     humanApproved: boolean,
+    /** The row was counted by an earlier attempt: check, but do not count again. */
+    alreadyCounted: boolean,
   ): Promise<BrakeDecision>;
   /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
   noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
@@ -35988,7 +36005,7 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
     return executeSendEmail(original, internalKey);
   },
   completeApprovedIdempotency: completeApprovedOutboundIdempotency,
-  async outboundBrake(workspaceId, inbox, params, humanApproved) {
+  async outboundBrake(workspaceId, inbox, params, humanApproved, alreadyCounted) {
     const decision = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
       workspaceId,
       inboxId: inbox.id,
@@ -35997,7 +36014,7 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
       body: params.textBody,
       recipients: [...params.to, ...(params.cc ?? []), ...(params.bcc ?? [])],
       humanApproved,
-    });
+    }, { commit: !alreadyCounted });
     if (decision.kind === "hold" && decision.newlyTripped) {
       await notifyBrakeTripped({ workspaceId, inboxId: inbox.id, brake: "fanout_hold", retryAt: decision.retryAt });
     }
@@ -36070,7 +36087,9 @@ async function handleScheduledDispatch(
     // bounded window rather than failed outright (see the catch below).
     // workspace_id: every lookup below is scoped to the row's own workspace.
     // created_at: dates a plaintext payload (PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS).
-    .select("id, workspace_id, inbox_id, payload, payload_encrypted, send_at, created_at")
+    // error_detail: says whether an earlier attempt was already counted by the
+    // outbound brake (SCHEDULED_SEND_COUNTED_DEFER_PREFIX).
+    .select("id, workspace_id, inbox_id, payload, payload_encrypted, send_at, created_at, error_detail")
     .eq("status", "pending")
     .lte("send_at", now)
     .order("send_at", { ascending: true })
@@ -36126,6 +36145,10 @@ async function handleScheduledDispatch(
     // Whether the provider was asked to send, so a terminal failure of an
     // approved schedule settles as "unknown" (maybe sent) or "failed" (not).
     let providerAttempted = false;
+    // Whether the outbound brake has counted this row, by this attempt or an
+    // earlier deferred one. A deferral carries it forward in error_detail.
+    let brakeCounted = typeof row.error_detail === "string" &&
+      row.error_detail.startsWith(SCHEDULED_SEND_COUNTED_DEFER_PREFIX);
 
     try {
       // ── Look up the inbox ──────────────────────────────────────────────
@@ -36463,7 +36486,9 @@ async function handleScheduledDispatch(
           inbox,
           sendParams,
           approvedScheduleId !== null,
+          brakeCounted,
         );
+        if (brake.kind === "allow") brakeCounted = true;
         if (brake.kind === "refuse") {
           throw new ScheduledDispatchHeld(brakeRefusalText("scheduled send", brake.code, brake.retryAt));
         }
@@ -36521,11 +36546,12 @@ async function handleScheduledDispatch(
         (err instanceof SmtpNotSentError && err.retryable && withinDeferWindow)
       ) {
         console.warn(`[dispatch] scheduled_send ${row.id} deferred (nothing sent):`, detail);
+        const prefix = brakeCounted ? SCHEDULED_SEND_COUNTED_DEFER_PREFIX : "deferred, nothing was sent: ";
         await db
           .from("scheduled_sends")
           .update({
             status: "pending",
-            error_detail: `deferred, nothing was sent: ${detail}`.slice(0, 1000),
+            error_detail: `${prefix}${detail}`.slice(0, 1000),
             updated_at: new Date().toISOString(),
           })
           .eq("id", row.id);
