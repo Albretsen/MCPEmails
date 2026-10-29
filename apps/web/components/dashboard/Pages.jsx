@@ -32,7 +32,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
-import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
+import { InvitePanel, OverviewReferral, BillingReferralCredit, BillingReferralCode, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
@@ -1246,7 +1246,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
         onConnect={onConnect}
       />
       {/* The referral program, while workspaces.referral_enabled is on: the
-          code field for a new account, or the tile once it is earned. The
+          tile once it is earned (the code field is in Settings > Billing). The
           Free branch counts active days off the same usage series the chart
           below draws; the paid branch needs the two facts the page read on
           the server (successful sends, first paid checkout). */}
@@ -8108,9 +8108,11 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
-      {/* Referral credit waiting for the next invoice, while
-          workspaces.referral_enabled is on (InvitePanel.jsx). */}
+      {/* Referral credit waiting for the next invoice, and the code field
+          for a new account, while workspaces.referral_enabled is on
+          (InvitePanel.jsx). */}
       {workspace?.referralEnabled === true && <BillingReferralCredit onOpenInvite={onGoToInvite} />}
+      {workspace?.referralEnabled === true && <BillingReferralCode />}
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>
