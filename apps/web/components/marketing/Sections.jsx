@@ -1458,7 +1458,8 @@ export function Footer({ locales } = {}) {
   // it unconditionally would put a guaranteed 404 in the footer of every /nb,
   // /es, /fr and /zh page, which is worse than the link being absent there.
   // The per-client setup pages exist in every locale, so that link always shows.
-  const isEnglish = useLocale() === 'en';
+  const locale = useLocale();
+  const isEnglish = locale === 'en';
   return (
     <footer className="footer">
       <div className="container">
@@ -1492,6 +1493,10 @@ export function Footer({ locales } = {}) {
             <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
             <Link href="/docs/api">{t('footer.linkApiGuide')}</Link>
             <Link href="/docs/clients">{t('footer.linkClients')}</Link>
+            {/* The lookup has no zh page (zh is frozen), so no link there. */}
+            {locale !== 'zh' && (
+              <Link href="/tools/email-settings-lookup">{t('footer.linkSettingsLookup')}</Link>
+            )}
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
           </div>

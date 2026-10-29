@@ -66,7 +66,10 @@ test('every guide post exists and is translated into every locale', () => {
 
 test('guide copy has the same keys in every locale, all non-empty, no angle brackets', () => {
   const en = Object.keys(guideCopy('en')).sort();
-  assert.deepEqual(en, ['claude', 'imap', 'intro']);
+  assert.deepEqual(en, [
+    'agentInbox', 'claude', 'clientsAll', 'clientsIntro', 'connectors', 'imap', 'inboxZero',
+    'intro', 'lookupIntro', 'lookupLabel', 'moreIntro', 'personal', 'schedule',
+  ]);
   for (const locale of LOCALES) {
     const copy = guideCopy(locale);
     assert.deepEqual(Object.keys(copy).sort(), en, locale);

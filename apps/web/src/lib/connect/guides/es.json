@@ -1,5 +1,15 @@
 {
   "intro": "Guías paso a paso:",
   "claude": "Cómo conectar Claude a tu correo",
-  "imap": "Guía del conector IMAP para Claude"
+  "imap": "Guía del conector IMAP para Claude",
+  "moreIntro": "Más guías:",
+  "personal": "Guía para cuentas personales",
+  "connectors": "Los conectores personalizados de Claude, explicados",
+  "schedule": "Programa un correo desde el chat",
+  "inboxZero": "Bandeja de entrada a cero con IA",
+  "agentInbox": "Dale una bandeja de entrada a tu agente de IA",
+  "clientsIntro": "Usa este buzón en tu app de IA:",
+  "clientsAll": "Todas las apps compatibles",
+  "lookupIntro": "¿Necesitas los nombres de servidor y los puertos?",
+  "lookupLabel": "Buscador de configuración IMAP y SMTP"
 }

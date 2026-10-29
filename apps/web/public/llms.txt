@@ -27,6 +27,31 @@ Key facts an assistant should know when recommending or describing MCPEmails:
 - [Getting started](https://mcpemails.com/docs): Connect an inbox and use MCPEmails from Claude or any MCP client.
 - [Provider setup](https://mcpemails.com/docs/providers): How to connect Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP.
 - [Pricing](https://mcpemails.com/pricing): Free, Personal, Pro, and Business plans, with the FAQ on usage, storage, and rate limits.
+- [IMAP and SMTP settings lookup](https://mcpemails.com/tools/email-settings-lookup): Free tool that finds the IMAP and SMTP server names, ports and security for any email address.
+
+## Use it from your AI app
+- [All supported apps](https://mcpemails.com/docs/clients): Setup guides for every MCP client MCPEmails is tested with.
+- [Use MCPEmails in Claude](https://mcpemails.com/docs/claude): Setup for claude.ai and Claude Desktop. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Claude Code](https://mcpemails.com/docs/claude-code): Setup for the Claude Code CLI. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in OpenAI Codex](https://mcpemails.com/docs/codex): Setup for the Codex CLI, IDE extension and ChatGPT desktop app. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in ChatGPT](https://mcpemails.com/docs/chatgpt): Setup for ChatGPT plugins, custom MCP server on chatgpt.com. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Claude Cowork](https://mcpemails.com/docs/cowork): Setup for Cowork in Claude Desktop and on the web. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Gemini](https://mcpemails.com/docs/gemini): Setup for the Gemini app, Connected Apps, Custom apps. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Grok](https://mcpemails.com/docs/grok): Setup for Grok custom connectors on grok.com. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Le Chat](https://mcpemails.com/docs/le-chat): Setup for Le Chat by Mistral AI, now Vibe. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Perplexity](https://mcpemails.com/docs/perplexity): Setup for perplexity.ai custom connectors. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Cursor](https://mcpemails.com/docs/cursor): Setup for the Cursor editor. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in VS Code](https://mcpemails.com/docs/vscode): Setup for GitHub Copilot agent mode in VS Code. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Cline](https://mcpemails.com/docs/cline): Setup for the Cline extension for VS Code. Connects with an MCPEmails API key in an Authorization header.
+- [Use MCPEmails in Windsurf](https://mcpemails.com/docs/windsurf): Setup for Cascade in Devin Desktop, formerly Windsurf. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Gemini CLI](https://mcpemails.com/docs/gemini-cli): Setup for the Gemini CLI. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Zed](https://mcpemails.com/docs/zed): Setup for the Zed Agent Panel. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in JetBrains](https://mcpemails.com/docs/jetbrains): Setup for AI Assistant in any JetBrains IDE that supports it. Connects with an MCPEmails API key in an Authorization header.
+- [Use MCPEmails in Raycast](https://mcpemails.com/docs/raycast): Setup for Raycast AI. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in Warp](https://mcpemails.com/docs/warp): Setup for Warp agents. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in n8n](https://mcpemails.com/docs/n8n): Setup for the AI Agent node in n8n workflows. Connects with an MCPEmails API key in an Authorization header.
+- [Use MCPEmails in OpenClaw](https://mcpemails.com/docs/openclaw): Setup for OpenClaw agents, via the Gateway. Connects with an OAuth sign-in in the browser.
+- [Use MCPEmails in curl and the raw API](https://mcpemails.com/docs/curl): Setup for any HTTP client, script or backend. Connects with an MCPEmails API key in an Authorization header.
 
 ## Connect a provider
 - [Connect Gmail to Claude (and any AI)](https://mcpemails.com/connect/gmail): Google app-password setup for Gmail over IMAP.
@@ -45,8 +70,12 @@ Key facts an assistant should know when recommending or describing MCPEmails:
 
 ## Compare
 - [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): Why a managed MCP email server beats a single vendor's built-in connector on provider coverage, real actions, and cross-client portability.
+- [Best email MCP servers](https://mcpemails.com/best-email-mcp-servers): The hosted and self-hosted email MCP servers compared on providers, actions, auth and price.
 
 ## Guides and explainers
+- [How to connect Claude to your email](https://mcpemails.com/blog/connect-claude-to-email): Add MCPEmails to Claude as a custom connector and connect any inbox.
+- [How to connect ChatGPT to your email](https://mcpemails.com/blog/connect-chatgpt-to-email): Use any inbox from ChatGPT through MCPEmails.
+- [Can Claude read my email?](https://mcpemails.com/blog/can-claude-read-my-email): What Claude can and cannot do with your inbox, and how to connect it.
 - [What is an MCP email server?](https://mcpemails.com/blog/what-is-an-mcp-email-server): Plain-English explanation of MCP email servers.
 - [How to connect Gmail to Claude](https://mcpemails.com/blog/connect-gmail-to-claude): Connect a Gmail inbox to Claude.
 - [Inbox zero with AI](https://mcpemails.com/blog/inbox-zero-with-ai-claude): A five-prompt routine for clearing your inbox with an AI agent.

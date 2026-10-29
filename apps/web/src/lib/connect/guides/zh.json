@@ -1,5 +1,15 @@
 {
   "intro": "分步指南：",
   "claude": "如何将 Claude 连接到你的邮箱",
-  "imap": "Claude IMAP 连接器指南"
+  "imap": "Claude IMAP 连接器指南",
+  "moreIntro": "更多指南：",
+  "personal": "个人账户设置步骤",
+  "connectors": "Claude 自定义连接器详解",
+  "schedule": "在聊天中定时发送邮件",
+  "inboxZero": "用 AI 实现收件箱清零",
+  "agentInbox": "给你的 AI 智能体一个收件箱",
+  "clientsIntro": "在你的 AI 应用中使用这个邮箱：",
+  "clientsAll": "所有支持的应用",
+  "lookupIntro": "需要服务器名称和端口？",
+  "lookupLabel": "查询 IMAP 和 SMTP 设置"
 }

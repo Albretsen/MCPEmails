@@ -8,7 +8,7 @@ import { getMultiMailboxCopy, showsMultiMailbox } from '@/lib/connect/multi-mail
 import { CHATGPT_BLOG_SLUG, chatgptBlogLink, getChatgptCopy, showsChatgpt } from '@/lib/connect/chatgpt.mjs';
 import { providerFaq } from '@/lib/connect/faq.mjs';
 import { getPost, getPostLocales } from '@/lib/blog/posts';
-import { getGuideCopy } from '@/lib/connect/guides.mjs';
+import { getGuideCopy, moreGuideLinksFor } from '@/lib/connect/guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 import { requireLocale } from '@/i18n/require-locale';
@@ -84,6 +84,15 @@ export default async function ConnectProviderPage({ params }) {
     : null;
   const faq = providerFaq({ content, provider, multiMailbox, chatgptCopy: chatgpt?.copy });
   const guides = await getGuideCopy(locale);
+  const moreGuides = moreGuideLinksFor({
+    providerSlug: slug,
+    content,
+    locale,
+    postLocales: (postSlug) => {
+      const post = getPost(postSlug);
+      return post ? getPostLocales(post) : ['en'];
+    },
+  });
   const jsonLd = connectJsonLd(locale, {
     path: `/connect/${slug}`,
     title: content.meta.title,
@@ -100,7 +109,7 @@ export default async function ConnectProviderPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} chatgpt={chatgpt} />
+      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} moreGuides={moreGuides} chatgpt={chatgpt} />
     </>
   );
 }

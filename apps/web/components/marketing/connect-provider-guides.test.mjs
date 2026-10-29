@@ -96,3 +96,19 @@ test('without guide copy the page renders no guides line (other callers stay unc
   const hrefs = [...document.querySelectorAll('a')].map((a) => a.getAttribute('href'));
   assert.equal(hrefs.includes('/blog/connect-claude-to-email'), false);
 });
+
+test('connectable pages link the client setup pages and, outside zh, the settings lookup', async () => {
+  const { clientsForLocale } = await import('../../src/lib/clients/clients.mjs');
+  const gmail = PROVIDERS.find((p) => p.slug === 'gmail');
+  for (const locale of gmail.locales) {
+    const guides = await getGuideCopy(locale);
+    const { document } = await renderPage(locale, gmail, guides);
+    const hrefs = [...document.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    const available = new Set(clientsForLocale(locale).map((c) => c.slug));
+    for (const slug of ['claude', 'chatgpt', 'cursor', 'vscode']) {
+      if (available.has(slug)) assert.ok(hrefs.includes(`/docs/${slug}`), `${locale}: no /docs/${slug}`);
+    }
+    assert.ok(hrefs.includes('/docs/clients'), `${locale}: no client hub link`);
+    assert.equal(hrefs.includes('/tools/email-settings-lookup'), locale !== 'zh', `${locale}: lookup link`);
+  }
+});

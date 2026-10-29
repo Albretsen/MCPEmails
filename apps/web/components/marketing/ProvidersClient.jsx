@@ -407,6 +407,7 @@ const HAS_PLANNED = Object.values(MATRIX).some((row) =>
 
 export default function ProvidersClient() {
   const t = useTranslations('docs');
+  const th = useTranslations('home');
   const locale = useLocale();
   // Group rows by section for the section-head rows
   const sections = [];
@@ -517,6 +518,12 @@ export default function ProvidersClient() {
                 data: (chunks) => <a href="/docs/providers/data">{chunks}</a>,
               })}
             </p>
+            {/* The lookup tool for any address; it has no zh page. */}
+            {locale !== 'zh' && (
+              <p style={{ margin: 0 }}>
+                <Link href="/tools/email-settings-lookup">{th('footer.linkSettingsLookup')}</Link>
+              </p>
+            )}
           </div>
         </div>
       </section>
