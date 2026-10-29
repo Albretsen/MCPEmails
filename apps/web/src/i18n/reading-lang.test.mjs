@@ -109,6 +109,7 @@ const CTA_FILES = [
   '../../app/[locale]/self-hosting/page.js',
   '../../app/[locale]/docs/read-only-access/page.js',
   '../../app/[locale]/docs/api/page.js',
+  '../../app/[locale]/docs/microsoft-365-admin-consent/page.js',
   '../../app/[locale]/developers/page.js',
 ];
 

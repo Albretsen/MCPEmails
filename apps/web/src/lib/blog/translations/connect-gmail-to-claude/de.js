@@ -76,6 +76,8 @@ Nach der Verbindung arbeitet Claude mit einer kleinen Zahl zusammengefasster Too
 - **Organisieren:** \`email_organize\` (verschieben, kopieren, markieren, archivieren). Gmail-Labels erscheinen als Ordner: Eine Nachricht mit mehreren Labels taucht in mehreren Ordnern auf, Verschieben ändert ihre Labels, und Archivieren entfernt sie aus dem Posteingang.
 - **Entwürfe, Ordner, Planung, Kontakte:** \`draft\`, \`folder\`, \`schedule\` und \`contact_search\` runden das Set ab.
 
+Claude hat auch einen eigenen Gmail-Konnektor, und der kann ebenfalls senden. [Kann Claude meine E-Mails lesen und senden?](/blog/can-claude-read-my-email) vergleicht ihn Postfach für Postfach mit MCPEmails.
+
 Eines sollten Sie vorab wissen: MCPEmails arbeitet mit Abfragen. Es gibt keine Push-Webhooks, Claude reagiert also auf neue E-Mails, wenn Sie es zum Nachsehen auffordern, nicht in dem Moment, in dem eine Nachricht eintrifft. Für fast jeden Assistenten-Workflow ist das genau das richtige Modell.
 
 ## Ist es sicher, Gmail mit Claude zu verbinden?

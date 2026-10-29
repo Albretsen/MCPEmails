@@ -40,6 +40,8 @@ En una cuenta de trabajo o educativa, Microsoft puede detenerte antes de la pant
 2. Tu administrador lo abre, inicia sesión con su cuenta de administrador de Microsoft y aprueba MCPEmails una sola vez para toda la organización. No necesita una cuenta de MCPEmails.
 3. Vuelve al panel y conecta Outlook como en el paso 1. Ahora funciona igual que con una cuenta personal.
 
+Para que tu administrador vea exactamente qué permisos aprueba, envíale junto con el enlace [la página sobre la aprobación de un administrador en Microsoft 365](/docs/microsoft-365-admin-consent).
+
 Tu administrador aprueba la aplicación para la organización, y cada persona sigue iniciando sesión con su propia cuenta y conecta solo su propio buzón.
 
 ### Si la cuenta no tiene buzón de Exchange

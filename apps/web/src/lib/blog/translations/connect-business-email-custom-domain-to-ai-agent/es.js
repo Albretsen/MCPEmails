@@ -118,7 +118,7 @@ El plan Gratis conecta 1 bandeja. Personal cuesta $9/mes por 3 bandejas con acci
 
 ## Siguiente paso
 
-[Crea una cuenta gratuita](/signup), conecta tu buzón de empresa, define el nombre del remitente y añade \`https://mcpemails.com/api/mcp\` a tu cliente. Luego pídele que llame a \`inbox_list\` y resuma el correo sin leer de ayer antes de concederle nada que envíe.`,
+[Crea una cuenta gratuita](/signup), conecta tu buzón de empresa, define el nombre del remitente y añade \`https://mcpemails.com/api/mcp\` a tu cliente. Luego pídele que llame a \`inbox_list\` y resuma el correo sin leer de ayer antes de concederle nada que envíe. ¿Gestionas más de un buzón de empresa? [Varias cuentas de correo en Claude y ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) muestra cómo comparten un mismo conector.`,
 };
 
 export default translation;

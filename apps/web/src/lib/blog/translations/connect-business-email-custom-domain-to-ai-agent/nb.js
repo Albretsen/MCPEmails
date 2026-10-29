@@ -118,7 +118,7 @@ Free kobler til 1 postkasse. Personal koster 9 $/måned for 3 postkasser uten m�
 
 ## Neste steg
 
-[Opprett en gratis konto](/signup), koble til bedriftspostkassen, sett avsendernavnet og legg \`https://mcpemails.com/api/mcp\` inn i klienten din. Be den så kalle \`inbox_list\` og oppsummere gårsdagens uleste e-post før du gir den noe som kan sende.`,
+[Opprett en gratis konto](/signup), koble til bedriftspostkassen, sett avsendernavnet og legg \`https://mcpemails.com/api/mcp\` inn i klienten din. Be den så kalle \`inbox_list\` og oppsummere gårsdagens uleste e-post før du gir den noe som kan sende. Har du mer enn én firmapostkasse? [Flere e-postkontoer i Claude og ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) viser hvordan de deler én kobling.`,
 };
 
 export default translation;

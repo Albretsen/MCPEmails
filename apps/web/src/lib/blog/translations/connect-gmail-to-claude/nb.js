@@ -75,6 +75,8 @@ Når den er tilkoblet, jobber Claude gjennom et lite sett med konsoliderte verkt
 - **Organisere:** \`email_organize\` (flytte, kopiere, flagge, arkivere). Gmail-etiketter vises som mapper, så en melding med flere etiketter ligger i flere mapper, flytting endrer etikettene, og arkivering fjerner den fra innboksen.
 - **Utkast, mapper, planlegging, kontakter:** \`draft\`, \`folder\`, \`schedule\` og \`contact_search\` fullfører settet.
 
+Claude har også en egen Gmail-kobling, og den kan også sende. [Kan Claude lese e-posten min og sende e-post?](/blog/can-claude-read-my-email) sammenligner den med MCPEmails, postkasse for postkasse.
+
 Én ting å forvente på forhånd: MCPEmails er poll-basert. Det finnes ingen push-webhooks, så Claude reagerer på ny post når du ber den sjekke, ikke i det øyeblikket en melding kommer inn. For nesten alle assistent-arbeidsflyter er det akkurat den riktige modellen.
 
 ## Er det trygt å koble Gmail til Claude?

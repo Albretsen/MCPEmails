@@ -64,6 +64,8 @@ import connectClaudeToAppleMail from './posts/connect-claude-to-apple-mail';
 import chatgptIcloudMailPlugin from './posts/chatgpt-icloud-mail-plugin';
 import connectYahooMailToChatgptAndClaude from './posts/connect-yahoo-mail-to-chatgpt-and-claude';
 import connectChatgptOutlookComHotmail from './posts/connect-chatgpt-to-outlook-com-hotmail';
+import dailyEmailBriefing from './posts/daily-email-briefing-with-claude-and-chatgpt';
+import multipleAccountsClaudeCowork from './posts/multiple-email-accounts-in-claude-cowork';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -109,6 +111,8 @@ const MODULE_POSTS = [
   chatgptIcloudMailPlugin,
   connectYahooMailToChatgptAndClaude,
   connectChatgptOutlookComHotmail,
+  dailyEmailBriefing,
+  multipleAccountsClaudeCowork,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -218,6 +222,7 @@ const RELEVANCE_ORDER = [
   // workspaces pay, against 8% for claude-code).
   'connect-chatgpt-to-email',
   'multiple-email-accounts-in-claude-and-chatgpt',
+  'multiple-email-accounts-in-claude-cowork',
   'can-claude-read-my-email',
   'connect-email-to-ai-agent-under-2-minutes',
   'connect-claude-to-apple-mail',
@@ -244,6 +249,7 @@ const RELEVANCE_ORDER = [
   // workspaces run 70 and 57 standing triage rules between them.
   'automated-email-triage-rules',
   'schedule-email-with-claude-and-chatgpt',
+  'daily-email-briefing-with-claude-and-chatgpt',
   'connect-gmail-to-claude',
   'connect-claude-to-outlook-com-hotmail',
   // Added 2026-10-29: provider-in-ChatGPT queries the built-in plugins miss

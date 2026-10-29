@@ -8,7 +8,7 @@ const translation = {
 
 Cette page vous aide à savoir dans quel cas vous êtes. Les informations sur les produits d'Anthropic et de Google ont été relevées sur leurs propres pages en octobre 2026. Ces produits évoluent souvent : chaque section renvoie donc vers la page sur laquelle elle s'appuie.
 
-**Aller à :** [Gmail](#gmail-le-connecteur-intégré-de-claude) · [Microsoft 365](#outlook-et-microsoft-365-comptes-professionnels-uniquement) · [Ce que les connecteurs intégrés ne couvrent pas](#ce-que-les-connecteurs-intégrés-ne-couvrent-pas) · [MCPEmails](#comment-mcpemails-comble-ces-lacunes) · [FAQ](#faq)
+**Aller à :** [Gmail](#gmail-le-connecteur-intégré-de-claude) · [Microsoft 365](#outlook-et-microsoft-365-comptes-professionnels-uniquement) · [Ce que les connecteurs intégrés ne couvrent pas](#ce-que-les-connecteurs-intégrés-ne-couvrent-pas) · [MCPEmails](#comment-mcpemails-comble-ces-lacunes) · [Envoi](#claude-peut-il-envoyer-des-e-mails) · [FAQ](#faq)
 
 ## Gmail : le connecteur intégré de Claude
 
@@ -79,13 +79,36 @@ Les e-mails sont récupérés en direct chez votre fournisseur à chaque requêt
 
 Le [guide pas à pas pour configurer Claude](/blog/connect-claude-to-email) passe en revue chaque écran et chaque fournisseur, et la [page de configuration de Claude](/docs/claude) traite les erreurs de connecteur.
 
-## Claude peut-il envoyer des e-mails sans demander ?
+## Claude peut-il envoyer des e-mails ?
 
-Cela dépend du connecteur, et de vous.
+Oui. Beaucoup de pages affirment encore que Claude peut seulement lire vos e-mails, mais les articles d'aide actuels d'Anthropic disent le contraire. La possibilité d'envoyer dépend du connecteur, et de ce que vous avez autorisé au moment de le connecter.
+
+### Le connecteur Gmail de Claude
+
+D'après [l'article d'Anthropic sur Google Workspace](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), relu fin octobre 2026, le connecteur Gmail peut rédiger des e-mails, lister vos brouillons enregistrés, et envoyer, répondre et transférer. Par défaut, Claude demande votre accord avant chaque envoi, réponse ou transfert. Avec les formules Team et Enterprise, un propriétaire active le connecteur et décide si les membres peuvent laisser ces actions s'exécuter sans confirmation à chaque fois.
+
+Il envoie depuis le seul compte Google que vous avez connecté. Claude ne voit que les métadonnées des pièces jointes, pas leur contenu.
+
+### Le connecteur Microsoft 365 de Claude
+
+Il démarre en lecture seule. Une fois les outils d'écriture activés, ce qui exige qu'un administrateur général Microsoft Entra approuve les autorisations supplémentaires, Claude peut envoyer et transférer des e-mails, et créer, modifier et supprimer des brouillons. Les outils d'écriture refusent tout message avec une pièce jointe, et les adresses personnelles Outlook.com et Hotmail ne peuvent pas se connecter du tout.
+
+### Comment MCPEmails envoie
+
+Avec MCPEmails, Claude envoie depuis n'importe quelle boîte connectée : Gmail, Outlook, iCloud, Yahoo, une boîte IMAP d'entreprise et d'autres encore. C'est vous qui décidez jusqu'où il peut aller, à quatre endroits.
+
+- **L'accès que vous accordez.** Quand vous ajoutez MCPEmails à Claude, vous choisissez **Lecture seule** (Claude ne peut ni envoyer ni rédiger de brouillon), **Standard** (ajoute les brouillons et l'envoi) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression). Vous pouvez aussi limiter la connexion à certaines de vos boîtes.
+- **Le brouillon d'abord.** Quand vous demandez à Claude d'écrire un e-mail, MCPEmails lui indique de l'enregistrer comme brouillon dans votre boîte plutôt que de l'envoyer. Dans Claude et ChatGPT, le brouillon s'ouvre dans une carte modifiable au sein de la conversation : vous pouvez y changer les destinataires, l'objet et le texte, l'enregistrer, ou l'envoyer avec quelques secondes pour annuler. Il se trouve aussi dans le dossier Brouillons de votre application de messagerie.
+- **Revue avant envoi.** Ce réglage se fait boîte par boîte dans le tableau de bord. **Demander d'abord dans le chat** oblige Claude à vous montrer l'e-mail dans la conversation et à attendre votre accord avant d'envoyer. **Approuver sur mcpemails.com** retient chaque envoi, réponse, transfert et envoi de brouillon jusqu'à ce qu'un propriétaire ou un administrateur de l'espace de travail l'approuve, connecté à MCPEmails dans un navigateur ; Claude ne peut pas l'approuver lui-même. Consultez [la validation humaine des e-mails envoyés par une IA](/blog/approve-ai-agent-email-sends).
+- **Un reçu après chaque envoi.** Claude affiche l'adresse d'envoi, les destinataires, l'objet et la présence ou non d'une copie dans votre dossier Envoyés, ou la raison de l'échec d'un envoi.
+
+Chaque boîte envoie via son propre fournisseur : le message part donc de votre vraie adresse, avec votre nom d'expéditeur et votre signature, et la réponse arrive dans votre boîte habituelle. Claude peut aussi [programmer un e-mail pour plus tard](/blog/schedule-email-with-claude-and-chatgpt).
+
+### Claude peut-il envoyer des e-mails sans demander ?
 
 - **Le connecteur Gmail de Claude** demande par défaut votre accord avant chaque envoi, réponse ou transfert.
 - **Le connecteur Microsoft 365 de Claude** ne peut rien envoyer tant que les outils d'écriture ne sont pas activés.
-- **MCPEmails** n'envoie que si vous avez donné à Claude l'accès à l'envoi au moment de le connecter. En **Lecture seule**, Claude ne peut pas envoyer. Pour une boîte dont chaque message sortant doit être vérifié, activez **Revue avant envoi** dans les paramètres de cette boîte : chaque envoi attend alors qu'un propriétaire ou un administrateur de l'espace de travail l'approuve en se connectant à MCPEmails dans un navigateur. Claude ne peut pas l'approuver lui-même. Consultez [la validation humaine des e-mails envoyés par une IA](/blog/approve-ai-agent-email-sends).
+- **MCPEmails** n'envoie sans autre question que si vous avez accordé l'accès à l'envoi et laissé **Revue avant envoi** désactivé pour cette boîte. Les autorisations d'outils de Claude ajoutent une couche de plus : dans **Customize → Connectors**, vous pouvez régler chaque outil MCPEmails sur **Always allow**, **Needs approval** ou **Blocked**.
 
 Quelle que soit la méthode, considérez le contenu d'un e-mail comme une donnée, pas comme une instruction. Un message peut contenir du texte écrit pour manipuler une IA, et une étape de validation l'intercepte avant que quoi que ce soit ne quitte votre boîte. Le [guide sur la sécurité de l'accès aux e-mails](/blog/is-it-safe-to-give-ai-agent-email-access) détaille les risques.
 
@@ -95,7 +118,10 @@ Quelle que soit la méthode, considérez le contenu d'un e-mail comme une donné
 Oui, une fois une boîte connectée. Les comptes Gmail et Microsoft 365 professionnels se connectent via les connecteurs intégrés de Claude. Les boîtes Yahoo, iCloud, Outlook.com personnelles et IMAP se connectent via un serveur MCP comme MCPEmails, ajouté à Claude comme connecteur personnalisé.
 
 **Claude peut-il envoyer des e-mails ?**
-Oui. Le connecteur Gmail de Claude peut envoyer, répondre et transférer, et demande d'abord votre accord par défaut. Le connecteur Microsoft 365 peut envoyer une fois les outils d'écriture activés. Avec MCPEmails, Claude envoie depuis n'importe quelle boîte connectée si vous lui avez donné l'accès à l'envoi au moment de le connecter.
+Oui. Le connecteur Gmail de Claude peut envoyer, répondre et transférer, et demande d'abord votre accord par défaut. Le connecteur Microsoft 365 peut envoyer une fois les outils d'écriture activés. Avec MCPEmails, Claude envoie depuis n'importe quelle boîte connectée si vous lui avez donné l'accès à l'envoi au moment de le connecter, et enregistre d'abord comme brouillon un e-mail que vous lui demandez d'écrire.
+
+**Le connecteur Gmail de Claude peut-il envoyer des e-mails ?**
+Oui. Anthropic indique que le connecteur Gmail peut envoyer, répondre et transférer, chaque action demandant par défaut votre accord. Il envoie depuis le seul compte Google que vous avez connecté.
 
 **Claude peut-il lire mes e-mails Gmail ?**
 Oui, avec le connecteur Gmail intégré à Claude, pour le compte Google que vous connectez. Pour utiliser plusieurs comptes Google, ou Gmail avec d'autres fournisseurs dans la même conversation, connectez-les via MCPEmails avec un mot de passe d'application Google.

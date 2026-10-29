@@ -52,7 +52,7 @@ For low-risk personal reminders, you may decide immediate sending is appropriate
 
 The best guardrails do not make an agent useless. Your agent can still identify urgent messages, use a [repeatable inbox-triage workflow](/blog/ai-agent-email-workflows-and-prompts), prepare replies in the right thread, and schedule a send for later. Approval simply separates preparation from commitment.
 
-That separation is especially helpful if you are new to AI email access. Start with a read-only API key, then allow drafting or sending with approval enabled. Once you trust the workflow, keep the approval step for high-stakes inboxes and choose a lighter setup elsewhere. For the broader security model, read [Is It Safe to Give an AI Agent Email Access?](/blog/is-it-safe-to-give-ai-agent-email-access).
+That separation is especially helpful if you are new to AI email access. Start with a read-only API key, then allow drafting or sending with approval enabled. Once you trust the workflow, keep the approval step for high-stakes inboxes and choose a lighter setup elsewhere. For the broader security model, read [Is It Safe to Give an AI Agent Email Access?](/blog/is-it-safe-to-give-ai-agent-email-access). How Claude's own Gmail and Microsoft 365 connectors handle sending is compared in [can Claude send emails?](/blog/can-claude-read-my-email#can-claude-send-emails)
 
 ## Keep the agent focused, not overloaded
 

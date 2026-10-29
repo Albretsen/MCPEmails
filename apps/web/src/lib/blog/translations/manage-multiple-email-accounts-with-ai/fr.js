@@ -12,7 +12,7 @@ Un seul agent IA sur l'ensemble supprime ces allers-retours, mais seulement si l
 
 ## Pourquoi un seul agent vaut mieux que changer de client mail
 
-Un client mail vous montre des comptes. Il ne répond pas aux questions. « Dans lequel de mes comptes le reçu Stripe est-il arrivé ? » suppose une recherche dans trois boîtes, plus un jugement. Un agent qui a accès à toutes les boîtes fait cela en une seule demande, et vous cessez de servir de routeur. Le deuxième gain : un seul jeu d'habitudes, puisque les mêmes outils se trouvent derrière chaque compte.
+Un client mail vous montre des comptes. Il ne répond pas aux questions. « Dans lequel de mes comptes le reçu Stripe est-il arrivé ? » suppose une recherche dans trois boîtes, plus un jugement. Un agent qui a accès à toutes les boîtes fait cela en une seule demande, et vous cessez de servir de routeur. Le deuxième gain : un seul jeu d'habitudes, puisque les mêmes outils se trouvent derrière chaque compte. [Plusieurs comptes e-mail dans Claude et ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) détaille la configuration du connecteur dans les deux applications.
 
 ## Votre agent trouve les boîtes aux lettres tout seul
 

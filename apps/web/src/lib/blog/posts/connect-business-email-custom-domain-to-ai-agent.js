@@ -125,7 +125,7 @@ Free connects 1 inbox. Personal is $9/month for 3 inboxes with unlimited email a
 
 ## Next step
 
-[Create a free account](/signup), connect your business mailbox, set the sender name, and add \`https://mcpemails.com/api/mcp\` to your client. Then have it call \`inbox_list\` and summarize yesterday's unread mail before you grant it anything that sends.`,
+[Create a free account](/signup), connect your business mailbox, set the sender name, and add \`https://mcpemails.com/api/mcp\` to your client. Then have it call \`inbox_list\` and summarize yesterday's unread mail before you grant it anything that sends. Running more than one company mailbox? [Multiple email accounts in Claude and ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) shows how they share one connector.`,
 };
 
 export default post;

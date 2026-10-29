@@ -75,6 +75,8 @@ Une fois connecté, Claude travaille à travers un petit ensemble d'outils conso
 - **Organiser :** \`email_organize\` (déplacer, copier, marquer, archiver). Les libellés Gmail apparaissent comme des dossiers : un message qui porte plusieurs libellés apparaît dans plusieurs dossiers, le déplacer change ses libellés, et l'archiver le retire de la boîte de réception.
 - **Brouillons, dossiers, planification, contacts :** \`draft\`, \`folder\`, \`schedule\` et \`contact_search\` complètent l'ensemble.
 
+Claude dispose aussi de son propre connecteur Gmail, et lui aussi peut envoyer. [Claude peut-il lire et envoyer mes e-mails ?](/blog/can-claude-read-my-email) le compare à MCPEmails, boîte par boîte.
+
 Une chose à anticiper d'emblée : MCPEmails fonctionne par interrogation (polling). Il n'y a pas de webhooks push, Claude réagit donc aux nouveaux e-mails lorsque vous lui demandez de vérifier, et non à l'instant où un message arrive. Pour presque tous les workflows d'assistant, c'est exactement le bon modèle.
 
 ## Est-il sûr de connecter Gmail à Claude ?
