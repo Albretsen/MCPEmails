@@ -20,7 +20,7 @@
     "titleLine1": "Connect A2 Hosting email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real A2 Hosting mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you set on the mailbox in cPanel, in every MCP client rather than one.",
-    "answer": "Claude cannot reach an A2 Hosting mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, using the mail host your own account is on rather than a shared a2hosting.com address, so Claude, Cursor or any MCP client can read, search, send and organize that mail. A2 Hosting became hosting.com in April 2025 but the mail platform is unchanged: cPanel prints your exact host under Email Accounts, then Connect Devices. Authentication is the password set on the mailbox, not your control panel login, and one inbox is free.",
+    "answer": "Claude cannot reach an A2 Hosting mailbox on its own. MCPEmails is a hosted MCP server that connects it over plain IMAP on port 993, using the mail host your own account is on rather than a shared a2hosting.com address, so Claude, Cursor or any MCP client can read, search, send and organize that mail. A2 Hosting became hosting.com in April 2025 but the mail platform is unchanged: cPanel prints your exact host under Email Accounts, then Connect Devices. Authentication is the password set on the mailbox, not your control panel login, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from cPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "mcpemails works on the mailbox, not the hosting account. Aliases, forwarders, autoresponders and spam filters stay managed in cPanel and are not visible to your AI client.",
+    "MCPEmails works on the mailbox, not the hosting account. Aliases, forwarders, autoresponders and spam filters stay managed in cPanel and are not visible to your AI client.",
     "Reseller and VPS accounts can sit on a hostname A2 does not publish anywhere in the knowledge base. The Connect Devices panel inside that account's own cPanel is the only authoritative source for it."
   ],
   "faq": [
     {
       "q": "Does Claude work with A2 Hosting email?",
-      "a": "Not directly. Claude has no built-in connector for cPanel mail hosts. Connecting an MCP server such as mcpemails to your A2 Hosting mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials any desktop mail client would use."
+      "a": "Not directly. Claude has no built-in connector for cPanel mail hosts. Connecting an MCP server such as MCPEmails to your A2 Hosting mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials any desktop mail client would use."
     },
     {
       "q": "What are the A2 Hosting IMAP and SMTP settings?",

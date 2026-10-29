@@ -1,10 +1,15 @@
 import { Link } from '@/i18n/navigation';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { CLIENT_LOGOS } from '../dashboard/clientLogos';
-import { MCP_URL, relatedClients } from '@/lib/clients/clients.mjs';
+import { MCP_URL, getClient, relatedClients } from '@/lib/clients/clients.mjs';
+import { orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
+import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
+import { docsPageInstallAction } from '@/lib/clients/install-links.mjs';
+import DocsInstallCta from './DocsInstallCta';
 
 /**
  * A per-client setup page, rendered on the server.
@@ -15,8 +20,9 @@ import { clientUi, fill } from '@/lib/clients/ui.mjs';
  * every marketing page. Nav and Footer are the only things here that hydrate.
  *
  * Every class name used here already exists in styles/marketing.css, borrowed
- * from the provider landing pages and the docs page. This component adds no
- * CSS of its own.
+ * from the provider landing pages and the docs page. The hero buttons are the
+ * one client island (DocsInstallCta), for the click event, the copy button and
+ * the phone check.
  */
 
 /** The client's official logo glyph, white on a rounded tile in its brand colour. */
@@ -39,7 +45,7 @@ function ClientLogo({ color, logo, size = 44 }) {
       }}
     >
       <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
-        <path d={g.d} />
+        <path d={g.d} fillRule={g.fillRule} />
       </svg>
     </div>
   );
@@ -57,19 +63,39 @@ function CodeBlock({ label, code }) {
   );
 }
 
-export default function ClientSetupView({ locale, client, content }) {
+/**
+ * The sibling links, with the visitor's AI assistant (src/lib/clients/preferred.mjs)
+ * first: moved up when it is already in the list, otherwise put in front of a
+ * list one shorter. Never the page's own client, never a client without copy
+ * in this locale.
+ */
+export function relatedForVisitor(slug, locale, preferred) {
+  const related = relatedClients(slug, locale);
+  if (!preferred || preferred === slug) return related;
+  if (related.some((c) => c.slug === preferred)) return orderClients(related, preferred, (c) => c.slug);
+  const extra = getClient(preferred);
+  if (!extra || !extra.locales.includes(locale)) return related;
+  return [extra, ...related.slice(0, Math.max(0, related.length - 1))];
+}
+
+export default function ClientSetupView({ locale, client, content, preferred = null }) {
   const ui = clientUi(locale).page;
-  const related = relatedClients(client.slug, locale);
+  const related = relatedForVisitor(client.slug, locale, preferred);
+  // The signup buttons name this page's client, so onboarding starts on it.
+  const signupHref = withClientIntent(withReadingLang('/signup', locale), signupClientParam(client.slug));
   const name = client.shortName ?? client.name;
   const isTerminal = client.configFile === 'terminal';
   const configLabel = isTerminal ? ui.config.terminal : (client.configFile ?? ui.config.json);
   const config = client.config ? client.config(MCP_URL) : null;
+  const found = docsPageInstallAction(client.slug, { locale, mcpUrl: MCP_URL });
+  // Cowork needs a paid Claude plan, so the Claude Free note does not apply there.
+  const install = found && client.slug === 'cowork' ? { ...found, note: undefined } : found;
 
   return (
     <div>
       <Nav />
 
-      <section className="pricing-page-hero">
+      <section className="pricing-page-hero is-centered">
         <div className="container">
           <ClientLogo color={client.color} logo={client.logo} />
           <div className="eye-label">{content.hero.eyebrow}</div>
@@ -83,10 +109,19 @@ export default function ClientSetupView({ locale, client, content }) {
             these; there is no reason to relearn that here.
           */}
           {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
-            <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
-          </div>
+          {install ? (
+            <DocsInstallCta
+              action={install}
+              clientName={install.client === 'claude' ? 'Claude' : name}
+              signupHref={signupHref}
+              labels={{ ctaPrimary: ui.ctaPrimary, ctaSecondary: ui.ctaSecondary, ...ui.install }}
+            />
+          ) : (
+            <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+              <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
+              <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
+            </div>
+          )}
           <div className="hero-meta" style={{ justifyContent: 'center' }}>
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
@@ -110,6 +145,21 @@ export default function ClientSetupView({ locale, client, content }) {
           </div>
         </div>
       </section>
+
+      {/*
+        Optional direct answer to one question this page ranks for but did not
+        answer in so many words ("which MCP servers work with Claude Desktop
+        for email", "cursor gmail mcp"). Plain heading and paragraph, so a
+        search snippet can quote it.
+      */}
+      {content.answerSection?.title && (
+        <section className="section" id="answer" style={{ paddingTop: 40, paddingBottom: 0 }}>
+          <div className="container">
+            <h2 className="providers-h2">{content.answerSection.title}</h2>
+            <p className="providers-sub"><RichText>{content.answerSection.body}</RichText></p>
+          </div>
+        </section>
+      )}
 
       {/*
         The endpoint, the transport and which of the two auth paths this client
@@ -177,6 +227,13 @@ export default function ClientSetupView({ locale, client, content }) {
             <p className="how-guide-link">
               {fill(ui.guideLink.intro, { client: client.name })}{' '}
               <a href={client.guide} target="_blank" rel="noopener noreferrer">{client.guide}</a>
+            </p>
+          )}
+          {/* The blog walkthrough for this client, where one exists (clients.mjs `post`). */}
+          {client.post && (
+            <p className="how-guide-link">
+              {ui.postLink.intro}{' '}
+              <Link href={client.post.href}>{ui.postLink[client.post.key]}</Link>
             </p>
           )}
           <p className="how-guide-link">
@@ -268,13 +325,13 @@ export default function ClientSetupView({ locale, client, content }) {
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={client.locales} />
     </div>
   );
 }

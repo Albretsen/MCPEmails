@@ -3,11 +3,11 @@
  *
  * A work or school Microsoft 365 tenant on Microsoft's default consent policy
  * does not let an employee approve mail access, so an administrator has to
- * approve MCP Emails once for the whole organisation. The person who hits
+ * approve MCPEmails once for the whole organisation. The person who hits
  * that wall is the employee; the person who can clear it is an admin who
- * usually has no MCP Emails account at all. So the dashboard hands the
+ * usually has no MCPEmails account at all. So the dashboard hands the
  * employee a link they can SEND, and anyone holding it can start Microsoft's
- * admin-consent flow without signing in to MCP Emails.
+ * admin-consent flow without signing in to MCPEmails.
  *
  *   https://mcpemails.com/auth/outlook/admin-consent?t=<token>
  *
@@ -200,7 +200,7 @@ export function adminConsentResultUrl(appUrl: string, status: AdminConsentResult
 /**
  * Where the callback sends the browser once Microsoft has answered.
  *
- * The admin who opened a shared link has no MCP Emails session (or has one
+ * The admin who opened a shared link has no MCPEmails session (or has one
  * for a different account), so they get the small public result page. Only
  * when the browser's signed-in user IS the person who created the link (the
  * "I'm the admin, approve now" path) does it return to the dashboard, where

@@ -54,6 +54,15 @@ export const ARGUMENT_REMEDIES: Readonly<Record<string, Readonly<Record<string, 
       "a reply draft keeps the original subject with 'Re:' in front, and an " +
       "update of the returned draft_id can change it",
   },
+  // One workspace sent email_list since + before + include_folders
+  // 37 times 10-15..10-16 after PR #115, recovering on 8. "email_search takes
+  // it" was already said; what was not said is that such a search is complete
+  // on its own, with no from or subject, which is the list the caller wanted.
+  email_list: {
+    since: "a search with only since or before needs no other criterion",
+    before: "a search with only since or before needs no other criterion",
+    include_folders: "a list reads the one folder named in folder",
+  },
   email_search: {
     folder: "email_search names the folders it searches in include_folders",
     folder_id: "email_search names the folders it searches in include_folders",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Status",
-    "description": "Live oppetid for MCP Emails-endepunktet, målt av en automatisk sjekk som kjører hvert femte minutt mot produksjon. Ekte registrerte tall, ingen markedsføringsfigur."
+    "description": "Live oppetid for MCPEmails-endepunktet, målt av en automatisk sjekk som kjører hvert femte minutt mot produksjon. Ekte registrerte tall, ingen markedsføringsfigur."
   },
   "hero": {
     "eyebrow": "Status",

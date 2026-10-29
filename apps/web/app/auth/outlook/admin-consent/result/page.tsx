@@ -3,8 +3,8 @@ import { AdminConsentResult } from '../../../../../components/dashboard/AdminCon
 import { isAdminConsentResultStatus } from '@/lib/email-providers/outlook-admin-link';
 
 export const metadata: Metadata = {
-  title: 'Microsoft 365 approval · mcpemails',
-  description: 'The result of approving MCP Emails for a Microsoft 365 organisation',
+  title: 'Microsoft 365 approval',
+  description: 'The result of approving MCPEmails for a Microsoft 365 organisation',
   robots: { index: false, follow: false },
 };
 
@@ -17,7 +17,7 @@ interface Props {
  *
  * PUBLIC. Where a Microsoft 365 administrator lands after following a shared
  * admin-consent link (see app/auth/outlook/admin-consent/route.ts). They
- * usually have no MCP Emails account, so this is a small standalone page, not
+ * usually have no MCPEmails account, so this is a small standalone page, not
  * the dashboard. `status` is one of ADMIN_CONSENT_RESULT_STATUSES; anything
  * else renders as a generic failure. Nothing from Microsoft is echoed.
  */

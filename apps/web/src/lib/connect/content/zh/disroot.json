@@ -20,7 +20,7 @@
     "titleLine1": "将 Disroot 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Disroot 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个，并且坦白说明其中的隐私取舍。",
-    "answer": "Claude 无法自行访问 Disroot 邮箱。mcpemails 是一个托管 MCP 服务器，通过 disroot.org 的 IMAP（端口 993）和 SMTP（端口 465）与之连接，使用你登录网页邮箱和 Cloud 时用的同一个 Disroot 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Disroot 不提供应用专用密码，因此请清楚：你存储的凭据就是你的账户凭据。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Disroot 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 disroot.org 的 IMAP（端口 993）和 SMTP（端口 465）与之连接，使用你登录网页邮箱和 Cloud 时用的同一个 Disroot 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Disroot 不提供应用专用密码，因此请清楚：你存储的凭据就是你的账户凭据。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的 Disroot 账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "Disroot 的 FAQ 明确说明，账户登录名是<b>不带</b>域名的用户名。大多数邮件客户端用完整的 <code>name@disroot.org</code> 地址也能正常认证，但如果服务器拒绝登录，而密码确定无误，请只用用户名部分重试。Disroot 客户端登录失败，大多是因为这一个细节。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，填入你的 Disroot 地址和 Disroot 密码。收发两个方向的服务器都已预填为 <code>disroot.org</code>。凭据静态加密存储；邮件本身按请求实时获取，不做保留。"
     },
     {
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取你的邮件内容。Disroot 无法阻止这一点，我们也不能。mcpemails 按请求从 Disroot 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所使用的任何客户端。如果某个 Disroot 邮箱中有你不希望大型 AI 厂商处理的往来邮件，请不要连接它。",
-    "以 GPG 加密方式到达的邮件（Disroot 积极鼓励这样做）在 IMAP 客户端中显示为 ASCII 封装的密文块。mcpemails 不持有你的私钥，因此代理只能看到信封信息和加密载荷，看不到邮件内容。这些会话必须在持有你密钥的客户端中阅读。",
-    "没有权限受限的凭据。Disroot 不提供应用专用密码，因此 mcpemails 存储的就是能打开你 Cloud 文件的那个密码。"
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取你的邮件内容。Disroot 无法阻止这一点，我们也不能。MCPEmails 按请求从 Disroot 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所使用的任何客户端。如果某个 Disroot 邮箱中有你不希望大型 AI 厂商处理的往来邮件，请不要连接它。",
+    "以 GPG 加密方式到达的邮件（Disroot 积极鼓励这样做）在 IMAP 客户端中显示为 ASCII 封装的密文块。MCPEmails 不持有你的私钥，因此代理只能看到信封信息和加密载荷，看不到邮件内容。这些会话必须在持有你密钥的客户端中阅读。",
+    "没有权限受限的凭据。Disroot 不提供应用专用密码，因此 MCPEmails 存储的就是能打开你 Cloud 文件的那个密码。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Disroot 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Disroot 连接器，也无法使用 IMAP 协议。将 mcpemails 这样的 MCP 服务器连接到你的 Disroot 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重新设置，即可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Disroot 连接器，也无法使用 IMAP 协议。将 MCPEmails 这样的 MCP 服务器连接到你的 Disroot 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重新设置，即可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Disroot 的 IMAP 和 SMTP 设置是什么？",
@@ -89,7 +89,7 @@
     },
     {
       "q": "我的 AI 能读取经过 PGP 加密的 Disroot 邮件吗？",
-      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 mcpemails 从不持有你的私钥。代理可以看到发件人、主题和日期，也可以移动或标记这封邮件，但正文始终无法读取。这是预期行为，也正是端到端加密的会话能对 AI 客户端保密的原因。"
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 MCPEmails 从不持有你的私钥。代理可以看到发件人、主题和日期，也可以移动或标记这封邮件，但正文始终无法读取。这是预期行为，也正是端到端加密的会话能对 AI 客户端保密的原因。"
     },
     {
       "q": "我的 Disroot 邮件会存储在你们的服务器上吗？",

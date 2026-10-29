@@ -1,12 +1,12 @@
-AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
-[meta description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
-[meta og:title] AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
-[meta og:description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+AI Email Agent Security: OAuth, Encryption & Privacy · MCPEmails
+[meta description] Learn how MCPEmails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+[meta og:title] AI Email Agent Security: OAuth, Encryption & Privacy · MCPEmails
+[meta og:description] Learn how MCPEmails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
 [meta og:locale] en_US
-[meta twitter:title] AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
-[meta twitter:description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
-[alt] mcpemails
-[alt] mcpemails
+[meta twitter:title] AI Email Agent Security: OAuth, Encryption & Privacy · MCPEmails
+[meta twitter:description] Learn how MCPEmails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -40,7 +40,7 @@ Contacts / address book
 Scanned live from recent mail when asked
 Never. There is no stored address book
 OAuth token or app password
-Decrypted only inside an isolated function at call time
+Decrypted on our servers only for the request that needs it
 Yes, encrypted at rest with AES-256-GCM; key held separately
 API keys you create
 Compared as a hash on every request
@@ -48,10 +48,13 @@ Only a SHA-256 hash; the raw key is shown once and is never recoverable
 Messages you schedule for later
 Held until the send time, then dispatched
 Yes, encrypted at rest until sent, then kept as your history
+Sends held for your approval
+Held until a reviewer approves or rejects it, or it expires after 24 hours
+Yes, encrypted at rest, then kept as your approval history
 Tool-call activity (metadata)
 Recorded for your own audit log
 Tool name, inbox, timestamp, and status only. No email content
-The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history.
+The deliberate exceptions are outgoing messages that have to wait: a message you ask the agent to schedule for later, and a send held for your approval. We have to hold them until they go out, so we store them encrypted in the meantime, then keep a record afterwards for your history.
 3. You don't have to trust me, you can check
 "A random person vibe-coded this" is a fair worry for any hosted tool that touches your email. The right answer is not a bigger promise. It is removing the need to take me at my word.
 Read the code.
@@ -67,7 +70,7 @@ Every tool call your agent makes is recorded in an activity log you can read, so
 github.com/Albretsen/MCPEmails
 And if a native connector already covers your provider and does what you need, use it. This exists for the providers and multi-inbox combinations they don't cover.
 Run it yourself, trust no one (including us)
-MCP Emails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means "email is fetched live and never stored" is something you can verify by running it and watching the network, not something you have to take on faith.
+MCPEmails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means "email is fetched live and never stored" is something you can verify by running it and watching the network, not something you have to take on faith.
 Self-hosting is IMAP/SMTP-first: connect any mailbox with an app password, and your credentials are encrypted under a key only you hold. One command brings the whole stack up on your own machine.
 Read the self-hosting guide
 ·
@@ -88,7 +91,7 @@ Not solved. Contained: irreversible actions are gated, and API-key scopes and in
 5. How your credentials are protected
 Your tokens are the only sensitive thing we hold, so they get the strongest protection we can give them:
 All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.
-OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held separately from the encrypted data and is never co-located with it.
+OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held as a server secret, separate from the database, and is never stored alongside the encrypted data.
 API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.
 Database access is protected by Row-Level Security policies that stop one workspace from reaching another's data, even if a query is written wrong.
 Administrative access to production infrastructure requires multi-factor authentication and is logged.
@@ -105,10 +108,13 @@ Purpose
 Location
 Supabase
 Database, auth, edge functions
-EU (Stockholm, Sweden)
+Data stored in the EU (Stockholm, Sweden); mail processed live in the US (East)
 Vercel
-Website and dashboard hosting
-Global edge, nearest region to user
+Website, dashboard and MCP endpoint hosting
+Global CDN; servers in the US (East) and the EU (Stockholm)
+Hetzner
+Mail relay for the few providers that refuse connections from cloud addresses (a TLS tunnel: it cannot read mail or passwords)
+Germany (EU)
 Stripe
 Payment processing (billing only, no email data)
 US; PCI-DSS certified
@@ -124,7 +130,7 @@ I aim to acknowledge reports within 24 hours and to fix confirmed critical issue
 Safe harbour.
 If you make a good-faith effort to follow this policy, do not access or modify other users' data, and give me a reasonable chance to fix the issue before disclosing it, I will not pursue or support legal action against you for your research.
 Who runs this
-One person: me. I'm Asgeir Albretsen, operating as Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak), organisation number 926 646 753, based in Bergen, Norway. The commits are mine too, under
+One person: me. I'm Asgeir Albretsen, and I run MCPEmails through Albretsen AS, a Norwegian private limited company (aksjeselskap) that I own, organisation number 938 702 373, based in Bergen, Norway. The commits are mine too, under
 github.com/Albretsen
 , so the name on this page and the name on the code are the same one. There is more detail on the
 about page
@@ -139,7 +145,7 @@ Questions about any of this?
 Ask me anything. I'm Asgeir Albretsen, and I answer every message myself.
 Email security@
 Read the privacy policy
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -155,6 +161,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -163,11 +170,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
@@ -189,7 +199,10 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Withdraw from contract here
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/security","url":"https://mcpemails.com/security","name":"AI Email Agent Security: OAuth, Encryption & Privacy","description":"Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/security#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/security#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"AI Email Agent Security: OAuth, Encryption & Privacy"}]}]}
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/security","url":"https://mcpemails.com/security","name":"AI Email Agent Security: OAuth, Encryption & Privacy","description":"Learn how MCPEmails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/security#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/security#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"AI Email Agent Security: OAuth, Encryption & Privacy"}]}]}

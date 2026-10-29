@@ -668,6 +668,9 @@ Deno.test("no mail content in the log or the store: not a sender, a subject, an 
   const allowed = new Set([
     "inbox_id", "workspace_id", "provider", "outcome", "error_code", "recipients", "pushes_sent", "pushes_failed",
     "subscriptions_gone", "ms", "leased", "checked", "arrivals", "notified", "failed", "skipped_reconnect", "deferred",
+    // Webhook counts and the capacity line (webhook-dispatch.test.ts covers their privacy).
+    "webhooks_enqueued", "webhooks_delivered", "webhooks_failed", "webhook_attempts", "webhooks_abandoned",
+    "webhooks_disabled", "webhooks", "budget_ms", "batch_size", "unreached",
   ]);
   for (const line of r.logs) {
     for (const key of Object.keys(line.fields)) assert(allowed.has(key), `unexpected log field ${key}`);
@@ -690,4 +693,21 @@ Deno.test("a send-only inbox (no IMAP server) is never probed and never backs of
   assertEquals(row.backoff_until, null);
   // Left alone for a day, not re-leased on the next tick.
   assertEquals((await pass(r)).leased, 0);
+});
+
+Deno.test("the largest possible new-mail payload still fits one push message", async () => {
+  const { buildNewMailPayload } = await import("../push/notify.ts");
+  const { MAX_PLAINTEXT_BYTES } = await import("../push/webpush.ts");
+  // 4-byte characters and JSON-escaped quotes in every field, at every length cap.
+  const wide = "\u{1F600}\"\\".repeat(200);
+  const payload = buildNewMailPayload({
+    mode: "rich",
+    inboxId: "0b9f6c2e-1d2a-4c3b-9e8f-7a6b5c4d3e2f",
+    mailboxLabel: wide,
+    count: 99999,
+    unread: 99999,
+    messages: [1, 2, 3].map((n) => ({ id: `INBOX:${"9".repeat(40)}${n}`, from: `${wide} <a@b.example>`, subject: wide })),
+  });
+  const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+  if (bytes > MAX_PLAINTEXT_BYTES) throw new Error(`worst case is ${bytes} bytes, limit ${MAX_PLAINTEXT_BYTES}`);
 });

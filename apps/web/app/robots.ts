@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 
+import { isStaging } from '@/lib/env/app-env';
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://mcpemails.com';
 
@@ -11,13 +13,19 @@ const BASE_URL =
  * - Public marketing pages: allow all crawlers.
  * - Dashboard, auth, API, and OAuth routes: disallow all crawlers.
  *   These are private and must not be indexed.
+ * - Staging: disallow everything.
  */
 export default function robots(): MetadataRoute.Robots {
+  // Staging (APP_ENV=staging) is a copy of the site on another host: nothing
+  // on it may be indexed.
+  if (isStaging()) {
+    return { rules: [{ userAgent: '*', disallow: '/' }] };
+  }
   return {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/pricing', '/docs', '/blog', '/native-connectors-vs-mcp', '/connect/', '/privacy', '/terms', '/llms.txt'],
+        allow: ['/', '/pricing', '/docs', '/blog', '/native-connectors-vs-mcp', '/tools/', '/connect/', '/privacy', '/terms', '/llms.txt'],
         disallow: [
           '/dashboard',
           '/dashboard/',
@@ -28,6 +36,10 @@ export default function robots(): MetadataRoute.Robots {
           '/authorize',
           '/api/',
           '/auth/',
+          // The chat checkout link and the two pages it lands on. Bearer
+          // links and per-purchase status pages; nothing here is content.
+          '/u/',
+          '/upgrade/',
         ],
       },
     ],

@@ -139,14 +139,14 @@ async function main() {
     expect(
       "a save that changed the body",
       m.draftSavedContextLine(SAVED, { bodyEdited: true }),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:04:00Z. " +
         `Its current draft_id is Drafts:3. ${SHAPE} Body 5 words. ${DIFFERS}`,
     );
     const untouched = m.draftSavedContextLine(SAVED, { bodyEdited: false });
     expect(
       "a save that did not",
       untouched,
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:04:00Z. " +
         `Its current draft_id is Drafts:3. ${SHAPE} Body 5 words. This save did not change the body.`,
     );
     expect("which claims no difference", untouched.includes("differs"), false);
@@ -157,6 +157,16 @@ async function main() {
         m.draftSavedContextLine({ ...SAVED, last_saved_at: "soon" }, { bodyEdited: false }),
       ),
       true,
+    );
+  }
+
+  group("the card says it is on screen");
+  {
+    expect(
+      "shown",
+      m.draftShownContextLine(SAVED),
+      "The MCPEmails draft card is on screen for the user, who can edit and send it. " +
+        `Its current draft_id is Drafts:3. ${SHAPE}`,
     );
   }
 
@@ -191,46 +201,46 @@ async function main() {
     expect(
       "sent",
       act("send", { kind: "sent", sentAt: "2026-10-13T10:05:12.000Z" }),
-      `The user sent draft Drafts:3 from the MCP Emails card at 2026-10-13T10:05:12Z. ${SHAPE} ` +
+      `The user sent draft Drafts:3 from the MCPEmails card at 2026-10-13T10:05:12Z. ${SHAPE} ` +
         "The message has left Drafts, so that draft_id no longer resolves.",
     );
     expect(
       "sent, after the user had edited the body",
       act("send", { kind: "sent", sentAt: "2026-10-13T10:05:12.000Z" }, { bodyEdited: true }),
-      `The user sent draft Drafts:3 from the MCP Emails card at 2026-10-13T10:05:12Z. ${SHAPE} ` +
+      `The user sent draft Drafts:3 from the MCPEmails card at 2026-10-13T10:05:12Z. ${SHAPE} ` +
         "The message has left Drafts, so that draft_id no longer resolves. " +
         "The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote.",
     );
     expect(
       "held for approval",
       act("send", { kind: "held", approvalId: "8f2a44c1-3b7e-4d2a-9c1f-5e6d7a8b9c0d" }),
-      `The user pressed Send on draft Drafts:3 in the MCP Emails card. ${SHAPE} ` +
+      `The user pressed Send on draft Drafts:3 in the MCPEmails card. ${SHAPE} ` +
         "The send is held for approval under approval_id 8f2a44c1-3b7e-4d2a-9c1f-5e6d7a8b9c0d and nothing has been sent. " +
         "The draft is still in Drafts under that draft_id.",
     );
     expect(
       "held, with the body edited: the draft still exists, so the body fact rides along",
       act("send", { kind: "held", approvalId: null }, { bodyEdited: true }),
-      `The user pressed Send on draft Drafts:3 in the MCP Emails card. ${SHAPE} ` +
+      `The user pressed Send on draft Drafts:3 in the MCPEmails card. ${SHAPE} ` +
         "The send is held for approval and nothing has been sent. " +
         `The draft is still in Drafts under that draft_id. ${DIFFERS}`,
     );
     expect(
       "discarded",
       act("discard", { kind: "discarded" }),
-      `The user discarded draft Drafts:3 from the MCP Emails card. ${SHAPE} ` +
+      `The user discarded draft Drafts:3 from the MCPEmails card. ${SHAPE} ` +
         "Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.",
     );
     expect(
       "hidden, one inbox",
       act("hide", { kind: "hidden" }, { scope: "inbox" }),
-      "The user hid the MCP Emails draft editor card for this inbox. That is a display setting only. " +
+      "The user hid the MCPEmails draft editor card for this inbox. That is a display setting only. " +
         `Draft Drafts:3 was not sent, changed or deleted and is still in Drafts under that draft_id. ${SHAPE}`,
     );
     expect(
       "hidden, the workspace",
       act("hide", { kind: "hidden" }, { scope: "workspace" }),
-      "The user hid the MCP Emails draft editor card for every inbox in the workspace. That is a display setting only. " +
+      "The user hid the MCPEmails draft editor card for every inbox in the workspace. That is a display setting only. " +
         `Draft Drafts:3 was not sent, changed or deleted and is still in Drafts under that draft_id. ${SHAPE}`,
     );
   }
@@ -246,44 +256,44 @@ async function main() {
     expect(
       "a send the server marked not_sent is still in Drafts",
       act("send", failed("not_sent")),
-      `The user pressed Send on draft Drafts:3 in the MCP Emails card and the send failed. ${SHAPE} ${said} ` +
+      `The user pressed Send on draft Drafts:3 in the MCPEmails card and the send failed. ${SHAPE} ${said} ` +
         "Nothing was sent, and the draft is still in Drafts under that draft_id.",
     );
     expect(
       "one it marked unknown may not be",
       act("send", failed("unknown")),
-      `The user pressed Send on draft Drafts:3 in the MCP Emails card and the send failed. ${SHAPE} ${said} ` +
+      `The user pressed Send on draft Drafts:3 in the MCPEmails card and the send failed. ${SHAPE} ${said} ` +
         "Whether the message was delivered is not known, so the draft may or may not still be in Drafts.",
     );
     expect(
       "one it did not mark at all gets neither claim",
       act("send", failed(null)),
-      `The user pressed Send on draft Drafts:3 in the MCP Emails card and the send failed. ${SHAPE} ${said} ` +
+      `The user pressed Send on draft Drafts:3 in the MCPEmails card and the send failed. ${SHAPE} ${said} ` +
         "Nothing was reported as sent, and the card still holds the draft under that draft_id.",
     );
     expect(
       "a failed discard",
       act("discard", failed(null), { bodyEdited: true }),
-      `The user pressed Discard on draft Drafts:3 in the MCP Emails card and the delete failed. ${SHAPE} ${said} ` +
+      `The user pressed Delete draft on draft Drafts:3 in the MCPEmails card and the delete failed. ${SHAPE} ${said} ` +
         `The card still holds the draft under that draft_id. ${DIFFERS}`,
     );
     expect(
       "a failed hide",
       act("hide", { kind: "failed", said: "Only an owner or admin can hide it for the workspace.", delivery: null }),
-      "The user asked to hide the MCP Emails draft editor card and it was not hidden. " +
+      "The user asked to hide the MCPEmails draft editor card and it was not hidden. " +
         'The server reported: "Only an owner or admin can hide it for the workspace.". ' +
         `Draft Drafts:3 was not sent, changed or deleted and is still in Drafts under that draft_id. ${SHAPE}`,
     );
     expect(
       "a send that got no answer does not guess",
       act("send", { kind: "no_answer", why: "tools/call timed out" }),
-      "The user pressed Send on draft Drafts:3 in the MCP Emails card and the card got no usable answer " +
+      "The user pressed Send on draft Drafts:3 in the MCPEmails card and the card got no usable answer " +
         `("tools/call timed out"). ${SHAPE} The card does not know whether the message was sent.`,
     );
     expect(
       "nor a discard",
       act("discard", { kind: "no_answer", why: "-32000: host refused" }),
-      "The user pressed Discard on draft Drafts:3 in the MCP Emails card and the card got no usable answer " +
+      "The user pressed Delete draft on draft Drafts:3 in the MCPEmails card and the card got no usable answer " +
         `("-32000: host refused"). ${SHAPE} The card does not know whether the draft was deleted.`,
     );
     const noisy = act("send", { kind: "failed", said: `a\n"b"\n${"z".repeat(900)}`, delivery: null });
@@ -418,13 +428,13 @@ async function main() {
     expect(
       "rejected",
       m.outboundRejectContextLine(o, F.receiptRejected),
-      `The user rejected the queued send under approval_id ${o.approval_id} in the MCP Emails card. ${oShape} Nothing was sent.`,
+      `The user rejected the queued send under approval_id ${o.approval_id} in the MCPEmails card. ${oShape} Nothing was sent.`,
     );
     const elsewhere = m.outboundRejectContextLine(o, F.receiptDecidedElsewhere);
     expect(
       "a press that did not reject is not announced as a rejection",
       elsewhere.startsWith(
-        `The user pressed Reject on the queued send under approval_id ${o.approval_id} in the MCP Emails card, and that press did not reject it. ${oShape} The server reported: "`,
+        `The user pressed Reject on the queued send under approval_id ${o.approval_id} in the MCPEmails card, and that press did not reject it. ${oShape} The server reported: "`,
       ),
       true,
     );
@@ -444,20 +454,20 @@ async function main() {
     expect(
       "executed",
       ran,
-      `The user confirmed ${pShape} in the MCP Emails card. The plan ran.` +
+      `The user confirmed ${pShape} in the MCPEmails card. The plan ran.` +
         (typeof n === "number" ? ` ${n} messages were affected.` : ""),
     );
     expect(
       "a plan that did not run is not announced as run",
       m.bulkExecuteContextLine(plan, F.receiptFailed).startsWith(
-        `The user confirmed ${pShape} in the MCP Emails card. The server reported: "`,
+        `The user confirmed ${pShape} in the MCPEmails card. The server reported: "`,
       ),
       true,
     );
     expect(
       "cancelled",
       m.bulkCancelContextLine(plan),
-      `The user cancelled ${pShape} in the MCP Emails card. Nothing was changed.`,
+      `The user cancelled ${pShape} in the MCPEmails card. Nothing was changed.`,
     );
     expect("no sample row reaches the model", ran.includes(plan.sample?.[0]?.subject ?? "\u0000"), false);
   }
@@ -668,6 +678,66 @@ async function main() {
         JSON.stringify(caps.updateModelContext ? { sent: 1, ok: 1, failed: 0 } : { sent: 1, ok: 0, failed: 1 }));
       expect(`${label}: a refusal never throws`, caps.updateModelContext ? true : answer === null, true);
     }
+  }
+
+  group("the request follows the modalities the host listed (QA 2026-10-17)");
+  {
+    const line = "The user saved edits.";
+    const text = { content: [{ type: "text", text: line }] };
+    for (const [label, caps] of [["not advertised", undefined], ["advertised as {}", {}], ["text only", { text: {} }], ["junk", "yes"]]) {
+      expect(`${label}: one text block, nothing else`, JSON.stringify(m.modelContextParams(line, caps)), JSON.stringify(text));
+    }
+    expect(
+      "structuredContent listed: the same text rides along as structured data",
+      JSON.stringify(m.modelContextParams(line, { text: {}, structuredContent: {} })),
+      JSON.stringify({ ...text, structuredContent: { source: "MCPEmails draft card", context: line } }),
+    );
+    expect(
+      "never an empty update, which a host reads as 'clear the context'",
+      m.modelContextParams(line, { image: {} }).content[0].text,
+      line,
+    );
+    expect("diag: not advertised", m.modelContextCapability(undefined), "nocap");
+    expect("diag: advertised with nothing listed", m.modelContextCapability({}), "cap[]");
+    expect("diag: the modalities, in the host's order", m.modelContextCapability({ text: {}, structuredContent: {} }), "cap[text,structuredContent]");
+  }
+
+  group("the bridge says when its model-context counters move, and keeps the last refusal");
+  {
+    const listeners = [];
+    const parent = {
+      postMessage(msg) {
+        const reply = (body) =>
+          queueMicrotask(() => {
+            for (const fn of listeners) fn({ source: parent, data: { jsonrpc: "2.0", id: msg.id, ...body } });
+          });
+        if (msg.method === "ui/initialize") {
+          reply({ result: { protocolVersion: "2026-01-26", hostInfo: { name: "h", version: "1" }, hostCapabilities: {}, hostContext: {} } });
+        } else if (msg.method === "ui/update-model-context") {
+          reply({ error: { code: -32000, message: "Invalid content format" } });
+        }
+      },
+    };
+    globalThis.window = {
+      parent,
+      addEventListener: (type, fn) => type === "message" && listeners.push(fn),
+      removeEventListener() {},
+    };
+    const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+    const bridge = new mod.HostBridge();
+    await bridge.connect({ name: "mctx-listen", version: "0.0.0" });
+    const seen = [];
+    const off = bridge.onModelContextChange(() => seen.push(JSON.stringify(bridge.modelContext)));
+    await bridge.updateModelContext("x");
+    expect(
+      "told on send and again on the reply",
+      JSON.stringify(seen),
+      JSON.stringify([JSON.stringify({ sent: 1, ok: 0, failed: 0 }), JSON.stringify({ sent: 1, ok: 0, failed: 1 })]),
+    );
+    expect("the refusal is kept for the diagnostics line", bridge.modelContextLastError, "-32000: Invalid content format");
+    off();
+    await bridge.updateModelContext("y");
+    expect("an unsubscribed listener hears nothing more", seen.length, 2);
   }
 
   // ---- report ---------------------------------------------------------------

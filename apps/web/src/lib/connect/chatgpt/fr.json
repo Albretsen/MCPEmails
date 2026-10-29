@@ -1,0 +1,24 @@
+{
+  "eyebrow": "ChatGPT",
+  "title": "Utiliser {provider} dans ChatGPT",
+  "sub": "ChatGPT accède à {provider} via un serveur MCP personnalisé, que vous ajoutez sur chatgpt.com avec ChatGPT Go ou une offre payante.",
+  "steps": [
+    "Connectez {provider} à MCPEmails avec les étapes ci-dessus.",
+    "Sur chatgpt.com, ouvrez Plugins, Personal, cliquez sur Add, puis sur Add custom MCP server.",
+    "Nommez-le MCPEmails, collez <code>https://mcpemails.com/api/mcp</code> sous Connection, choisissez OAuth, confirmez, cliquez sur Create as a plugin et connectez-vous à MCPEmails.",
+    "Dans une conversation, tapez <b>@</b> et choisissez MCPEmails. Recommencez quand une question de suivi porte sur vos e-mails."
+  ],
+  "docsLink": "Guide complet de configuration de ChatGPT",
+  "blogLink": "Comment connecter ChatGPT à votre messagerie",
+  "faqQ": "ChatGPT peut-il lire mes e-mails {provider} ?",
+  "faqQMailName": "ChatGPT peut-il lire mes e-mails {provider} ?",
+  "faqA": "Oui, une fois {provider} connecté à MCPEmails. Sur chatgpt.com, ajoutez un serveur MCP personnalisé avec l'URL https://mcpemails.com/api/mcp et une connexion OAuth. C'est possible avec ChatGPT Go et les offres payantes. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés.",
+  "directorySub": "ChatGPT accède à {provider} via l'application Any Mailbox de MCPEmails.",
+  "directorySteps": [
+    "Connectez {provider} à MCPEmails avec les étapes ci-dessus.",
+    "Ouvrez Any Mailbox dans l'annuaire d'applications de ChatGPT et cliquez sur Connect.",
+    "Connectez-vous à MCPEmails et approuvez les accès que vous accordez à ChatGPT."
+  ],
+  "directoryLink": "Any Mailbox dans l'annuaire d'applications de ChatGPT",
+  "directoryFaqA": "Oui, une fois {provider} connecté à MCPEmails. Installez Any Mailbox depuis l'annuaire d'applications de ChatGPT et connectez-vous à MCPEmails. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés."
+}

@@ -7,7 +7,7 @@
     "method": "oauth",
     "label": "使用 Microsoft 登录（OAuth 2.0）",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "无需输入任何内容。你在 Microsoft 自己的页面上用 Microsoft 账户登录并批准访问，因此这里不需要输入密码或应用专用密码。为 Outlook.com 公布的 IMAP 和 SMTP 设置在这里不适用：MCP Emails 通过 Microsoft Graph 连接。",
+    "usernameForm": "无需输入任何内容。你在 Microsoft 自己的页面上用 Microsoft 账户登录并批准访问，因此这里不需要输入密码或应用专用密码。为 Outlook.com 公布的 IMAP 和 SMTP 设置在这里不适用：MCPEmails 通过 Microsoft Graph 连接。",
     "status": "active"
   },
   "meta": {
@@ -18,20 +18,20 @@
     "eyebrow": "Outlook.com + AI",
     "titleLine1": "将 Outlook.com 连接到 Claude，",
     "titleLine2": "以及 ChatGPT、Cursor 和任意 MCP 客户端",
-    "lead": "把你的 Outlook.com、Hotmail、Live 或 MSN 收件箱交给 AI 代理。使用 Microsoft 登录，批准一次访问，即可用一个 URL 在所有 MCP 客户端中阅读、搜索、发送、回复、定时发送和整理邮件。",
+    "lead": "Claude 自带的 Microsoft 365 连接器只接受工作或学校账户。MCPEmails 可以连接个人 Outlook.com、Hotmail、Live 和 MSN 邮箱：使用 Microsoft 登录，授权一次，即可在任何 MCP 客户端中用同一个 URL 阅读、搜索、发送、回复、定时发送和整理邮件。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用 Microsoft 登录，无需应用专用密码",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "可以。mcpemails 是一个托管的 MCP 服务器，通过 Microsoft Graph 连接个人 Microsoft 账户，即以 outlook.com、hotmail.com、live.com 或 msn.com 结尾的地址。你点击“使用 Microsoft 连接”，登录，然后在 Microsoft 的同意屏幕上批准访问，MCP Emails 在该屏幕上显示为已验证发布者。无需输入应用专用密码或 IMAP 设置，个人账户也不涉及任何管理员。把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端，代理即可阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。1 个收件箱永久免费。"
+    "answer": "可以。MCPEmails 是一个托管的 MCP 服务器，通过 Microsoft Graph 连接个人 Microsoft 账户，即以 outlook.com、hotmail.com、live.com 或 msn.com 结尾的地址。你点击“使用 Microsoft 连接”，登录，然后在 Microsoft 的同意屏幕上批准访问，MCPEmails 在该屏幕上显示为已验证发布者。无需输入应用专用密码或 IMAP 设置，个人账户也不涉及任何管理员。把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端，代理即可阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。1 个收件箱永久免费。"
   },
   "method": {
     "title": "Outlook.com 如何连接：使用 Microsoft 登录",
-    "body": "Outlook.com 通过 <b>Microsoft Graph</b> 以 OAuth 2.0 连接，而不是通过 IMAP。你在 Microsoft 自己的页面上登录，并批准一小组权限：读取和更改邮件（<b>Mail.ReadWrite</b>）、发送邮件（<b>Mail.Send</b>）、保持连接（<b>offline_access</b>），以及你的基本资料和邮箱地址。你的 Microsoft 密码只在 Microsoft 的页面上输入，永远不会到达我们这里。要断开连接，可在 mcpemails 中删除该收件箱，或将 MCP Emails 从有权访问你 Microsoft 账户的应用中移除。"
+    "body": "Outlook.com 通过 <b>Microsoft Graph</b> 以 OAuth 2.0 连接，而不是通过 IMAP。你在 Microsoft 自己的页面上登录，并批准一小组权限：读取和更改邮件（<b>Mail.ReadWrite</b>）、发送邮件（<b>Mail.Send</b>）、保持连接（<b>offline_access</b>），以及你的基本资料和邮箱地址。你的 Microsoft 密码只在 Microsoft 的页面上输入，永远不会到达我们这里。要断开连接，可在 MCPEmails 中删除该收件箱，或将 MCPEmails 从有权访问你 Microsoft 账户的应用中移除。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "选择 Outlook 并使用 Microsoft 连接",
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "应用专用密码和 IMAP 密码都无法使用，所以我们使用 Microsoft Graph",
-      "p": "自 2024 年 9 月 16 日起，Microsoft 停止了个人账户从非 Microsoft 应用连接时的基本身份验证，Outlook.com 的 IMAP 服务现在只提供 OAuth。许多旧教程仍然让你生成应用专用密码，但它已无法登录邮箱。mcpemails 对 Outlook.com 完全不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此没有需要创建的密码，也没有会填错的服务器设置。"
+      "p": "自 2024 年 9 月 16 日起，Microsoft 停止了个人账户从非 Microsoft 应用连接时的基本身份验证，Outlook.com 的 IMAP 服务现在只提供 OAuth。许多旧教程仍然让你生成应用专用密码，但它已无法登录邮箱。MCPEmails 对 Outlook.com 完全不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此没有需要创建的密码，也没有会填错的服务器设置。"
     },
     {
       "h": "hotmail.com、live.com 和 msn.com 地址是同一个服务",
@@ -57,7 +57,7 @@
     },
     {
       "h": "没有 Outlook 邮箱的 Microsoft 账户会被拒绝",
-      "p": "如果你登录的 Microsoft 账户背后没有 Exchange Online 邮箱，Microsoft Graph 就没有可打开的邮箱，因此 mcpemails 会拒绝连接并告诉你原因。如果该地址的邮件托管在其他服务器上，请改用 IMAP 连接。"
+      "p": "如果你登录的 Microsoft 账户背后没有 Exchange Online 邮箱，Microsoft Graph 就没有可打开的邮箱，因此 MCPEmails 会拒绝连接并告诉你原因。如果该地址的邮件托管在其他服务器上，请改用 IMAP 连接。"
     },
     {
       "h": "全新的 Outlook.com 账户可能会被暂时禁止发信",
@@ -73,7 +73,11 @@
   "faq": [
     {
       "q": "Claude 能用于 Outlook.com 吗？",
-      "a": "可以。使用 Microsoft 登录，将你的 Outlook.com 邮箱连接到 mcpemails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。同一个 URL 也适用于 ChatGPT、Cursor 和其他 MCP 客户端。"
+      "a": "可以。使用 Microsoft 登录，将你的 Outlook.com 邮箱连接到 MCPEmails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。同一个 URL 也适用于 ChatGPT、Cursor 和其他 MCP 客户端。"
+    },
+    {
+      "q": "为什么 Claude 的 Microsoft 365 连接器拒绝我的 Outlook.com 账户？",
+      "a": "Claude 内置的 Microsoft 365 连接器要求使用 Microsoft Entra 租户中的工作或学校账户，Anthropic 也说明不支持个人 Microsoft 账户，因此 Outlook.com、Hotmail、Live 和 MSN 地址会被拒绝。MCPEmails 可以连接这些个人账户：你在 Microsoft 自己的页面上用 Microsoft 登录，然后用一个 URL 把 MCPEmails 作为自定义连接器添加到 Claude。"
     },
     {
       "q": "Hotmail、Live 和 MSN 地址也可以吗？",
@@ -81,7 +85,7 @@
     },
     {
       "q": "我需要应用专用密码或 IMAP 设置吗？",
-      "a": "不需要。你使用 Microsoft 登录后，mcpemails 通过 Microsoft Graph 连接 Outlook.com，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正应用专用密码也无法使用：自 2024 年 9 月起，Microsoft 已不再接受个人账户上非 Microsoft 邮件应用的密码。"
+      "a": "不需要。你使用 Microsoft 登录后，MCPEmails 通过 Microsoft Graph 连接 Outlook.com，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正应用专用密码也无法使用：自 2024 年 9 月起，Microsoft 已不再接受个人账户上非 Microsoft 邮件应用的密码。"
     },
     {
       "q": "我的 AI 能在 Outlook.com 中做什么？",
@@ -89,11 +93,11 @@
     },
     {
       "q": "这和连接工作用的 Microsoft 365 账户一样吗？",
-      "a": "登录方式相同，审批可能不同。个人账户不需要管理员。工作或学校的 Microsoft 365 账户通常需要 IT 管理员先为整个组织批准一次 MCP Emails。遇到这种情况，控制台会给你一个审批链接，供你发给 IT 管理员，管理员无需 MCP Emails 账户即可使用。"
+      "a": "登录方式相同，审批可能不同。个人账户不需要管理员。工作或学校的 Microsoft 365 账户通常需要 IT 管理员先为整个组织批准一次 MCPEmails。遇到这种情况，控制台会给你一个审批链接，供你发给 IT 管理员，管理员无需 MCPEmails 账户即可使用。"
     },
     {
       "q": "我的邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 mcpemails 中删除该收件箱会立即终止连接，你也可以将 MCP Emails 从有权访问你 Microsoft 账户的应用中移除。"
+      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 MCPEmails 中删除该收件箱会立即终止连接，你也可以将 MCPEmails 从有权访问你 Microsoft 账户的应用中移除。"
     }
   ],
   "ctaBand": {

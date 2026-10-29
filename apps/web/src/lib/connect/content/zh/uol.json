@@ -21,7 +21,7 @@
     "titleLine1": "将 UOL Mail 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 UOL 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 UOL Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.uol.com.br 的 993 端口，用你的 UOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。UOL 邮箱出厂时 IMAP 是关闭的：你必须打开网页邮箱设置并使用 Ativar IMAP，任何客户端才能登录，在此之前，正确的密码也会被拒绝。发信通过 smtps.uol.com.br 的 587 端口使用 STARTTLS，与主机名的暗示不同。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 UOL Mail。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.uol.com.br 的 993 端口，用你的 UOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。UOL 邮箱出厂时 IMAP 是关闭的：你必须打开网页邮箱设置并使用 Ativar IMAP，任何客户端才能登录，在此之前，正确的密码也会被拒绝。发信通过 smtps.uol.com.br 的 587 端口使用 STARTTLS，与主机名的暗示不同。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "UOL 密码，先开启 IMAP",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并始终免费，无需信用卡。请保持页面打开；UOL 那边大约需要一分钟。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "登录 UOL 网页邮箱，打开 Configurações（设置），使用 Ativar IMAP（开启 IMAP）选项，然后保存更改。几乎每一次失败的 UOL 连接都缺了这一步。由此产生的登录错误完全没有提到 IMAP 已关闭，所以人们把时间花在了密码和端口上。"
     },
     {
-      "h": "在 mcpemails 中输入地址和密码",
+      "h": "在 MCPEmails 中输入地址和密码",
       "p": "选择 IMAP / SMTP，然后输入邮箱地址和你的 UOL 密码。服务器和端口已自动填好，并已通过实时 TLS 连接确认。如果完整地址在登录时被拒绝，请试试不带 <code>@uol.com.br</code> 的登录名：UOL 文档中的用户名就是这种较短的形式，有些邮箱只接受这种形式。"
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "发信主机叫 smtps，却不是隐式 TLS",
-      "p": "<code>smtps.uol.com.br</code> 这个名字的一切都暗示着 465 端口上的隐式 TLS SMTP，这正是 <code>smtps</code> 中字母 s 的惯常含义，也是很多照抄的配置所假设的。UOL 实际可用的提交服务在 <b>587 端口，使用 STARTTLS</b>：连接以明文打开，在认证之前升级。指向 465 端口隐式 TLS 的客户端通常会一直挂起直到超时，而不是返回有用的错误，这比被拒绝糟糕得多。请使用 587 和 STARTTLS。mcpemails 已正确自动填入。"
+      "p": "<code>smtps.uol.com.br</code> 这个名字的一切都暗示着 465 端口上的隐式 TLS SMTP，这正是 <code>smtps</code> 中字母 s 的惯常含义，也是很多照抄的配置所假设的。UOL 实际可用的提交服务在 <b>587 端口，使用 STARTTLS</b>：连接以明文打开，在认证之前升级。指向 465 端口隐式 TLS 的客户端通常会一直挂起直到超时，而不是返回有用的错误，这比被拒绝糟糕得多。请使用 587 和 STARTTLS。MCPEmails 已正确自动填入。"
     },
     {
       "h": "IMAP 在你开启之前是关闭的，而错误会怪到你的密码头上",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用 UOL Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 UOL 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 UOL 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 UOL 连接器，也无法自行建立 IMAP 连接。将 MCPEmails 这样的 MCP 服务器连接到你的 UOL 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "UOL 的 IMAP 和 SMTP 设置是什么？",

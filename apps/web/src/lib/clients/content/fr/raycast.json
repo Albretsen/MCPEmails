@@ -16,7 +16,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Lancez la commande Install MCP Server dans Raycast, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In pour autoriser avec mcpemails."
+    "answer": "Lancez la commande Install MCP Server dans Raycast, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In pour autoriser avec MCPEmails."
   },
   "method": {
     "title": "Comment Raycast se connecte : OAuth, sans clé API",
@@ -25,7 +25,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Lancez Install MCP Server",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Installez et connectez-vous",
-      "p": "Appuyez sur <b>Install MCP Server</b>, puis cliquez sur <b>Sign In</b> pour autoriser avec mcpemails. Approuvez les autorisations que Raycast doit détenir."
+      "p": "Appuyez sur <b>Install MCP Server</b>, puis cliquez sur <b>Sign In</b> pour autoriser avec MCPEmails. Approuvez les autorisations que Raycast doit détenir."
     }
   ],
   "gotchas": [
@@ -55,14 +55,14 @@
     }
   ],
   "limits": [
-    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Les requêtes sont limitées par clé dans des fenêtres par minute, par heure et par jour dimensionnées selon votre formule : une seule clé peut utiliser tout le plafond par minute de la formule, et plusieurs clés le partagent. Un 429 porte Retry-After. Le plafond d'actions facturables de votre formule s'applique aussi.",
     "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
     "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
   ],
   "faq": [
     {
       "q": "Comment connecter l'e-mail à Raycast ?",
-      "a": "Lancez la commande Install MCP Server, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In et autorisez avec mcpemails. Raycast AI dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+      "a": "Lancez la commande Install MCP Server, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In et autorisez avec MCPEmails. Raycast AI dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
     },
     {
       "q": "Ai-je besoin d'une clé API pour Raycast ?",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Quelles boîtes Raycast peut-il atteindre ainsi ?",
-      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application, la connexion Google restant une seconde option pour Gmail ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
     },
     {
       "q": "Raycast peut-il envoyer un e-mail sans que je le voie ?",

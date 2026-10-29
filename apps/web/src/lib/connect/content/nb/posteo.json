@@ -22,7 +22,7 @@
     "titleLine1": "Koble Posteo til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Posteo-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med et ærlig svar på hva Posteos kryptering skjuler og ikke skjuler for en agent.",
-    "answer": "Claude når ikke Posteo på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på posteo.de port 993, og SMTP på posteo.de port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det er ikke noe imap.- eller smtp.-prefiks: det nakne domenet er serveren for alle Posteo-adresser, uansett hvilket Posteo-domene din slutter på. Autentisering skjer med det vanlige Posteo-passordet ditt, med mindre du har slått på ekstra beskyttelse av e-postkontoen, og da godtar IMAP, POP3 og SMTP bare et app-passord opprettet i Posteo-innstillingene. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke Posteo på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på posteo.de port 993, og SMTP på posteo.de port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det er ikke noe imap.- eller smtp.-prefiks: det nakne domenet er serveren for alle Posteo-adresser, uansett hvilket Posteo-domene din slutter på. Autentisering skjer med det vanlige Posteo-passordet ditt, med mindre du har slått på ekstra beskyttelse av e-postkontoen, og da godtar IMAP, POP3 og SMTP bare et app-passord opprettet i Posteo-innstillingene. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord når ekstra beskyttelse er på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -41,7 +41,7 @@
       "p": "Logg inn i Posteo-webmailen og åpne <b>Settings</b>, så <b>Password and security</b>, der app-passord opprettes og administreres. Posteo krever at hvert av dem er minst 16 tegn med minst ett tall og én stor bokstav, og du kan ha opptil fem samtidig. Gi det et navn etter denne tilkoblingen, så du vet hvilket du skal slette senere. Du kan hoppe over dette hvis ekstra beskyttelse er av, men en pålogging du kan trekke tilbake for seg selv, er en bedre ting å gi til en tredjepart."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP og skriv inn hele Posteo-adressen din, så passordet. Verten er forhåndsutfylt som <code>posteo.de</code> for begge retninger, verifisert via en direkte TLS-tilkobling, og det utgående passordet må fylles ut i tillegg til det innkommende, fordi Posteo alltid autentiserer innsending."
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "Å koble en Posteo-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i det den blir bedt om å jobbe med. mcpemails henter e-post direkte fra Posteo for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Posteos anonyme registrering, anonyme betaling og tyske hosting beskytter forholdet mellom deg og Posteo. Ingenting av det følger en melding inn til en AI-leverandør du selv kobler til.",
-    "Med kryptering av innkommende e-post slått på kan en agent ikke lese e-posten din i det hele tatt. Meldinger kommer som PGP- eller S/MIME-chiffertekst, mcpemails har ingen privat nøkkel av deg, og bare headere, datoer og mappeoperasjoner er tilgjengelige.",
+    "Å koble en Posteo-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i det den blir bedt om å jobbe med. MCPEmails henter e-post direkte fra Posteo for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Posteos anonyme registrering, anonyme betaling og tyske hosting beskytter forholdet mellom deg og Posteo. Ingenting av det følger en melding inn til en AI-leverandør du selv kobler til.",
+    "Med kryptering av innkommende e-post slått på kan en agent ikke lese e-posten din i det hele tatt. Meldinger kommer som PGP- eller S/MIME-chiffertekst, MCPEmails har ingen privat nøkkel av deg, og bare headere, datoer og mappeoperasjoner er tilgjengelige.",
     "Posteos standard postkasse er liten etter moderne mål, og en postkasse på kvoten avviser innkommende e-post. En agent som arkiverer og flagger, frigjør ikke plass; det gjør sletting og tømming av papirkurven."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Posteo?",
-      "a": "Ikke på egen hånd. Claude har ingen Posteo-kobling og kan ikke snakke IMAP. Peker du en MCP-server som mcpemails mot Posteo-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter uten at du må sette den opp en gang til."
+      "a": "Ikke på egen hånd. Claude har ingen Posteo-kobling og kan ikke snakke IMAP. Peker du en MCP-server som MCPEmails mot Posteo-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter uten at du må sette den opp en gang til."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Posteo?",

@@ -1,0 +1,97 @@
+{
+  "cta": {
+    "primary": "{provider} kostenlos verbinden",
+    "secondary": "Zur Doku"
+  },
+  "settings": {
+    "title": "Die genauen IMAP- und SMTP-Einstellungen für {provider}",
+    "sub": "Übernehmen Sie diese ins Verbindungsformular. MCPEmails füllt sie vor, wo es kann, und versucht den anderen Standardtransport, falls der erste nicht antwortet.",
+    "colHost": "Server",
+    "colPort": "Port",
+    "colProtocol": "Protokoll",
+    "colSecurity": "Sicherheit",
+    "imap": "IMAP (eingehend)",
+    "smtp": "SMTP (ausgehend)",
+    "security": {
+      "tls": "TLS (implizit)",
+      "starttls": "STARTTLS",
+      "plain": "Keine"
+    },
+    "verified": "Geprüft am {date}: {host} hat eine TLS-Verbindung angenommen und sich unter diesem Namen als IMAP-Server ausgewiesen.",
+    "mechs": "Er bietet {mechs} zur Authentifizierung an.",
+    "username": "Anmelden mit:"
+  },
+  "caps": {
+    "eyebrow": "Was Ihre KI kann",
+    "title": "Ein {provider}-Postfach, mit dem Ihr Agent wirklich arbeiten kann",
+    "sub": "{toolCount} aktionsbasierte MCP-Tools: senden, antworten, weiterleiten, planen und organisieren. Ihr Agent erledigt die Aufgabe direkt in {provider}."
+  },
+  "capabilities": [
+    {
+      "tag": "Lesen",
+      "h": "E-Mails lesen & suchen",
+      "p": "Ordnerübergreifend auflisten, lesen und suchen, um die eine Rechnung zu finden, einen Thread zusammenzufassen oder das Neueste von einem Absender zu holen."
+    },
+    {
+      "tag": "Senden",
+      "h": "Senden, antworten & weiterleiten",
+      "p": "Echte Nachrichten verfassen und senden, im Thread antworten und weiterleiten, direkt aus Ihrem Postfach und nicht als Entwurf, den Sie von Hand fertigstellen."
+    },
+    {
+      "tag": "Planen",
+      "h": "Für später planen",
+      "p": "Eine Nachricht zum richtigen Zeitpunkt einplanen, sodass Ihr Agent jetzt entwirft und pünktlich sendet."
+    },
+    {
+      "tag": "Organisieren",
+      "h": "Verschieben, kopieren, markieren, archivieren, löschen",
+      "p": "Halten Sie das Postfach aufgeräumt: E-Mails in Ordner einsortieren, Wichtiges markieren, den Rest archivieren oder auf Wunsch löschen."
+    }
+  ],
+  "how": {
+    "eyebrow": "Einrichtung",
+    "title": "{provider} in vier Schritten verbinden",
+    "sub": "Von der Registrierung bis zur ersten KI-E-Mail in wenigen Minuten."
+  },
+  "gotchas": {
+    "eyebrow": "Bevor Sie starten",
+    "title": "Was bei {provider} tatsächlich schiefgeht"
+  },
+  "limits": {
+    "title": "Bekannte Einschränkungen bei {provider}"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "{provider} und KI: häufige Fragen"
+  },
+  "related": {
+    "title": "Ein anderes Postfach verbinden",
+    "sub": "Derselbe MCP-Server, dieselben {toolCount} Tools, ein anderer Anbieter.",
+    "link": "{provider} verbinden",
+    "all": "Alle unterstützten E-Mail-Anbieter ansehen"
+  },
+  "matrix": {
+    "intro": "Möchten Sie zuerst Anbieter vergleichen?",
+    "label": "Zur Kompatibilitätsmatrix der E-Mail-Anbieter"
+  },
+  "verificationNote": {
+    "title": "Google zeigt einen Hinweis auf eine nicht verifizierte App",
+    "body": "Das betrifft nur die Anmeldung mit Google, die es in den Tarifen Pro und Business gibt; die Standardverbindung mit App-Passwort zeigt keinen Google-Bildschirm. Google prüft Apps, die Zugriff auf Gmail anfordern, und mcpemails.com hat diese Prüfung nicht durchlaufen. Bei der Anmeldung mit Google sehen Sie daher einen Hinweis auf eine <b>nicht verifizierte App</b>, mit den Schritten zum Fortfahren. Die Verbindung selbst ist nicht zeitlich begrenzt: Einmal verbunden, bleibt ein Postfach verbunden, bis Sie den Zugriff widerrufen."
+  },
+  "hub": {
+    "meta": {
+      "title": "Jeden E-Mail-Anbieter mit Claude & MCP-Clients verbinden",
+      "description": "IMAP- und SMTP-Einstellungen für {count} E-Mail-Anbieter, jeweils über eine Live-Verbindung geprüft, und wie Sie Claude, Cursor oder ChatGPT Zugriff auf dieses Postfach geben."
+    },
+    "breadcrumb": "E-Mail-Anbieter",
+    "eyebrow": "Alle Anbieter",
+    "title": "Jedes Postfach mit Ihrer KI verbinden",
+    "lead": "MCPEmails spricht einfaches IMAP und SMTP und verbindet sich deshalb mit fast jedem Postfach. Unten finden Sie jeden Anbieter mit Einrichtungsanleitung: die genauen Hosts und Ports, ob Sie ein App-Passwort brauchen und was typischerweise schiefgeht.",
+    "answer": "MCPEmails verbindet sich mit jedem E-Mail-Anbieter, der IMAP- und SMTP-Zugang bietet, also mit fast allen. Jede Anleitung unten nennt die geprüften Hostnamen, Ports und Anforderungen an die Authentifizierung des jeweiligen Anbieters, und ein Postfach ist dauerhaft kostenlos.",
+    "verifiedIntro": "Jeder Hostname auf diesen Seiten wurde am {date} über eine echte TLS-Verbindung geprüft.",
+    "countLabel": "{count} Anbieter",
+    "genericTitle": "Anbieter nicht dabei?",
+    "genericSub": "Jedes Postfach mit IMAP-Zugang funktioniert. Die allgemeine Anleitung zeigt, wie Sie Ihren eigenen Host und Port finden.",
+    "genericCta": "Beliebiges IMAP-Postfach verbinden"
+  }
+}

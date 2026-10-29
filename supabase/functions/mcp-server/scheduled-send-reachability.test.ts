@@ -209,6 +209,7 @@ function inboxRow(overrides: Row = {}): Row {
     workspace_id: WORKSPACE,
     status: "active",
     deleted_at: null,
+    parked_at: null,
     // No supported branch matches this, so the dispatcher's own
     // unsupported-provider throw becomes the "the gate passed" witness and
     // nothing ever opens a socket. See the header.
@@ -222,12 +223,17 @@ function inboxRow(overrides: Row = {}): Row {
 function scheduledSendRow(overrides: Row = {}): Row {
   return {
     id: SEND,
+    workspace_id: WORKSPACE,
     inbox_id: INBOX,
     status: "pending",
     // Plaintext legacy payload: `resolveScheduledPayload` passes it straight
-    // through, so no encryption key is needed and nothing is mocked.
+    // through, so no encryption key is needed and nothing is mocked. Created
+    // before payload encryption shipped (2026-06-23), which is the only age at
+    // which the dispatcher still accepts a plaintext message payload; see
+    // scheduled-send-tenancy.test.ts for the refusal of a newer one.
     payload: { to: ["someone-else@example.com"], subject: "hi", body: "there" },
     payload_encrypted: false,
+    created_at: "2020-01-01T00:00:00.000Z",
     send_at: "2020-01-01T00:00:00.000Z",
     sent_at: null,
     error_detail: null,
@@ -481,6 +487,8 @@ function triageHarness(inboxes: Row[], overrides: Partial<TriageDeps> = {}) {
       reclaimStaleLease: () => Promise.resolve(),
       listDueRules: () => Promise.resolve([]),
       claimRule: () => Promise.resolve(true),
+      inboxLeaseHeld: () => Promise.resolve(false),
+      abandonClaim: () => Promise.resolve(),
       releaseRule: (_id: string, update: Record<string, unknown>) => {
         released.push(update);
         return Promise.resolve();
@@ -602,4 +610,69 @@ Deno.test("the failing rule counts toward auto-disable rather than retrying fore
   assertEquals(release.consecutive_failures, 5);
   assertEquals(release.enabled, false);
   assertStringIncludes(String(release.disabled_reason), "inbox_unavailable");
+});
+
+Deno.test("an inbox switched to receive only fails with what is true, not a credential error", async () => {
+  // Reconnect can change a generic inbox from send-and-receive to receive only
+  // in place, with sends still queued against it. Those must not reach SMTP and
+  // come back as `imap_auth_failed`, which reads as revoked credentials.
+  const { summary, send } = await dispatchAgainst([
+    inboxRow({ provider: "imap", imap_host: "imap.example.com", imap_port: 993, smtp_host: null, smtp_port: null }),
+  ]);
+  assertEquals(summary.errored, 1);
+  assertEquals(summary.deferred, 0);
+  assertEquals(send.status, "error");
+  assertStringIncludes(String(send.error_detail), "receiving only");
+  assertStringIncludes(String(send.error_detail), "Nothing was sent");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Parked inboxes (parked-inbox.ts)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PARKED_AT = "2026-11-01T00:00:00.000Z";
+
+Deno.test("a send scheduled BEFORE its inbox was parked is still delivered", async () => {
+  // The customer scheduled it while the plan covered the inbox (decision D4).
+  const { send } = await dispatchAgainst(
+    [inboxRow({ parked_at: PARKED_AT, parked_reason: "plan_limit" })],
+    { created_at: "2020-01-01T00:00:00.000Z" },
+  );
+  // Past every gate, stopped only by the unsupported provider: the witness.
+  assertStringIncludes(String(send.error_detail), "is not supported by the scheduled-send dispatcher");
+});
+
+Deno.test("a send created AFTER its inbox was parked fails with a clear detail", async () => {
+  const { summary, send } = await dispatchAgainst(
+    [inboxRow({ parked_at: PARKED_AT, parked_reason: "plan_limit" })],
+    { created_at: "2026-11-02T00:00:00.000Z" },
+  );
+  assertEquals(summary.errored, 1);
+  assertEquals(send.status, "error");
+  assertEquals(send.sent_at, null);
+  assertStringIncludes(String(send.error_detail), "is parked");
+  assertStringIncludes(String(send.error_detail), "Nothing was sent");
+});
+
+Deno.test("the dispatcher reads parked_at but does not filter on it in SQL", async () => {
+  const { queries } = await dispatchAgainst([inboxRow()]);
+  const [q] = queries.filter((query) => query.table === "inboxes");
+  const projection = (q.projection ?? "").split(",").map((c) => c.trim());
+  assert(projection.includes("parked_at"), "the parking rule needs parked_at in the projection");
+  assert(
+    !q.is.some(([column]) => column === "parked_at"),
+    "a SQL filter on parked_at would drop sends scheduled before parking",
+  );
+});
+
+Deno.test("the triage loader refuses a parked inbox, in SQL", async () => {
+  const { row, queries } = await loadForTriage([
+    inboxRow({ provider: "imap", parked_at: PARKED_AT, parked_reason: "plan_limit" }),
+  ]);
+  assertEquals(row, null);
+  const [q] = queries.filter((query) => query.table === "inboxes");
+  assert(
+    q.is.some(([column, value]) => column === "parked_at" && value === null),
+    "the loader must filter `parked_at is null`",
+  );
 });

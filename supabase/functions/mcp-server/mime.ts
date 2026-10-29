@@ -155,20 +155,20 @@ function parsePart(
     return;
   }
 
-  // Leaf part.
-  const bytes = decodeContent(body, cte);
-
   if (isAttachment) {
     const contentId = (getHeader(headers, "content-id") ?? "").trim().replace(/^<|>$/g, "");
-    out.attachments.push({
-      filename: attachmentFilename(ct, disposition),
-      mimeType: ct.mediaType,
-      size: bytes.length,
-      content: bytes,
-      ...(contentId ? { contentId } : {}),
-    });
+    out.attachments.push(attachmentPart(
+      attachmentFilename(ct, disposition),
+      ct.mediaType,
+      body,
+      cte,
+      contentId || undefined,
+    ));
     return;
   }
+
+  // Leaf part.
+  const bytes = decodeContent(body, cte);
 
   // No charset parameter is passed on as "": `decodeCharset` then looks at the
   // octets instead of assuming.
@@ -459,16 +459,13 @@ function joinedPart(
     );
   }
 
-  const bytes = decodeContent(body, cte);
   if (isAttachment) {
-    (depth === 0 ? out.attachments : out.embeddedAttachments).push({
-      filename: attachmentFilename(ct, disposition),
-      mimeType: ct.mediaType,
-      size: bytes.length,
-      content: bytes,
-    });
+    (depth === 0 ? out.attachments : out.embeddedAttachments).push(
+      attachmentPart(attachmentFilename(ct, disposition), ct.mediaType, body, cte),
+    );
     return NOTHING_SHOWN;
   }
+  const bytes = decodeContent(body, cte);
   const charset = ct.params["charset"] ?? "";
   if (ct.mediaType === "text/plain") return { text: decodeCharset(bytes, charset), html: null };
   if (ct.mediaType === "text/html") return { text: null, html: decodeCharset(bytes, charset) };
@@ -632,6 +629,78 @@ function splitMultipart(body: string, boundary: string): string[] {
 }
 
 /** Decode a part body (a byte string) into bytes per its transfer encoding. */
+/**
+ * An attachment whose bytes are decoded the first time `content` is read.
+ *
+ * Most reads never touch the bytes: email_read reports each file's name and
+ * size and returns no data unless asked. Decoding every attachment anyway is
+ * what made one message with a 25 MB file cost about 100 MB of heap to parse
+ * (the cleaned base64 copy, `atob`'s string and the byte array, all live at
+ * once). The function runs in a 256 MB isolate shared by concurrent requests,
+ * so two such reads at once killed the worker and every request in it
+ * ("Memory limit exceeded", HTTP 546; 69 in 18 minutes on 2026-10-28).
+ *
+ * The size comes from {@link base64DecodedLength}, which equals the decoded
+ * length exactly. A body that function cannot vouch for, and every non-base64
+ * body, is decoded at once as before. The getter caches, so a caller that
+ * reads `content` twice decodes once.
+ */
+function attachmentPart(
+  filename: string,
+  mimeType: string,
+  body: string,
+  cte: string,
+  contentId?: string,
+): MimeAttachment {
+  const size = cte === "base64" ? base64DecodedLength(body) : null;
+  const meta = { filename, mimeType, ...(contentId ? { contentId } : {}) };
+  if (size === null) {
+    const bytes = decodeContent(body, cte);
+    return { ...meta, size: bytes.length, content: bytes };
+  }
+  let decoded: Uint8Array | null = null;
+  const part = { ...meta, size } as MimeAttachment;
+  Object.defineProperty(part, "content", {
+    enumerable: true,
+    configurable: true,
+    get: () => (decoded ??= decodeContent(body, "base64")),
+  });
+  return part;
+}
+
+/**
+ * What `decodeContent(body, "base64").length` will be, read without
+ * allocating, or null when the decode would not take its `atob` path (a `=`
+ * anywhere but the last two places of the whole quanta makes `atob` throw and
+ * `decodeContent` fall back to the raw octets). Mirrors decodeContent: only
+ * base64 alphabet characters count, and a partial trailing quantum is dropped.
+ */
+export function base64DecodedLength(body: string): number | null {
+  let n = 0;
+  // Positions (in alphabet characters) of the first few `=`. More than a
+  // handful means the body is not plain padded base64; let the decode decide.
+  const pads: number[] = [];
+  for (let i = 0; i < body.length; i++) {
+    const c = body.charCodeAt(i);
+    if (
+      (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) ||
+      c === 43 || c === 47
+    ) {
+      n++;
+    } else if (c === 61) {
+      if (pads.length === 8) return null;
+      pads.push(n++);
+    }
+  }
+  const whole = n - (n % 4);
+  const counted = pads.filter((p) => p < whole);
+  if (counted.length > 2) return null;
+  for (let k = 0; k < counted.length; k++) {
+    if (counted[k] !== whole - counted.length + k) return null;
+  }
+  return (whole / 4) * 3 - counted.length;
+}
+
 function decodeContent(body: string, cte: string): Uint8Array {
   if (cte === "base64") {
     const clean = body.replace(/[^A-Za-z0-9+/=]/g, "");

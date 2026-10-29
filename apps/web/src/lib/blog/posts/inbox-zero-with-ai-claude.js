@@ -13,7 +13,7 @@ const post = {
   featured: false,
   content: `Inbox zero has always had the same problem: getting there takes an hour you don't have, and you're back to fifty unread by tomorrow. An AI agent changes the math. Instead of you sorting one message at a time, you tell Claude what "handled" means and it works the whole inbox at once — triaging, archiving, labeling, and drafting replies against your *real* mail, live.
 
-This guide is the routine: a repeatable loop you can run every morning, the exact prompts that drive it, and the one rule that keeps it safe (nothing is ever stored). It assumes Claude can already see your inbox. If it can't yet, start with [how to connect Gmail to Claude](/blog/connect-gmail-to-claude) (or the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — it takes about two minutes — then come back.
+This guide is the routine: a repeatable loop you can run every morning, the exact prompts that drive it, and the one rule that keeps it safe (nothing is ever stored). It assumes Claude can already see your inbox. If it can't yet, start with [how to connect Gmail to Claude](/blog/connect-gmail-to-claude) (or the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — it takes about two minutes — then come back. On iCloud, Fastmail or another IMAP host, use the [Claude email connection guide](/blog/connect-claude-to-email) instead.
 
 ## Why "inbox zero" is finally realistic with AI
 
@@ -65,7 +65,7 @@ The routine above is ~five minutes once Claude is doing the lifting. A few ways 
 
 ## The one rule that keeps this safe
 
-Handing an AI your whole inbox sounds risky until you know where the data goes: **nowhere.** With MCP Emails, every one of those prompts fetches your mail live from Gmail, Outlook or IMAP, hands it to Claude for that single action, and discards it immediately. Message bodies, subjects, and attachments are never stored — the only thing kept per inbox is an encrypted token so the next call can happen. That's the difference between giving an agent a *key* and giving it a *permanent copy of everything*; here's [why "email is never stored" matters](/blog/why-email-never-stored-matters), and the full [safety breakdown](/blog/is-it-safe-to-give-ai-agent-email-access) if you want the threat model.
+Handing an AI your whole inbox sounds risky until you know where the data goes: **nowhere.** With MCPEmails, every one of those prompts fetches your mail live from Gmail, Outlook or IMAP, hands it to Claude for that single action, and discards it immediately. Message bodies, subjects, and attachments are never stored — the only thing kept per inbox is an encrypted token so the next call can happen. That's the difference between giving an agent a *key* and giving it a *permanent copy of everything*; here's [why "email is never stored" matters](/blog/why-email-never-stored-matters), and the full [safety breakdown](/blog/is-it-safe-to-give-ai-agent-email-access) if you want the threat model.
 
 You also keep a hard line on sending: drafts stay drafts until you approve them, and you can grant read-only access so Claude literally cannot send.
 

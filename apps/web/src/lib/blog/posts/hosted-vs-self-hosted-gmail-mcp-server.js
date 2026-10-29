@@ -4,13 +4,13 @@ const post = {
   description:
     'Hosted vs. self-hosted Gmail MCP server, compared honestly: free DIY repos give you full control but you own OAuth, encryption, and uptime. A hosted server costs minutes.',
   cover: '/blog/cover-hosted-vs-self-hosted-gmail-mcp-server.svg',
-  coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCP Emails',
+  coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-05-28T09:00:00.000Z",
   updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['Comparison', 'Gmail', 'MCP', 'Security'],
   featured: false,
-  content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCP Emails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.
+  content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCPEmails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.
 
 This is the honest breakdown. I built a hosted server, so I have a side, but I'll tell you exactly where self-hosting wins and which kind of person should pick it. If you only want the verb-level model first, the [complete guide to giving an AI agent email access](/blog/how-to-give-your-ai-agent-email-access) is the pillar to read alongside this.
 
@@ -30,7 +30,7 @@ The code runs on your hardware. No third party ever sits between your agent and 
 
 ### It's free in dollars
 
-No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $9/month (or $15/month once you need unlimited inboxes), the math favors rolling your own.
+No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $9/month (or $15/month once you need more than three inboxes), the math favors rolling your own.
 
 ### You can bend it to anything
 
@@ -62,17 +62,17 @@ MCP is young. The spec moves, Google rotates requirements, and the repo you clon
 
 The repo you picked does Gmail. The day you add an Outlook account or an iCloud address, you're integrating Microsoft Graph or wiring IMAP and SMTP yourself, with a second auth model and a second set of edge cases. Most DIY servers stay Gmail-only because the second provider is a project of its own.
 
-## The hosted case: MCP Emails, honestly
+## The hosted case: MCPEmails, honestly
 
 A hosted MCP server flips the trade. You give up running the code; you get back all the time the list above would cost.
 
 ### Setup is minutes, not an afternoon
 
-You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and paste a Google app password, or choose Sign in with Google instead. No Cloud project of your own, no consent screen to configure, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes — no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
+You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and paste a Google app password (Google asks you to turn on 2-Step Verification before it will create one). No Cloud project of your own, no consent screen to configure, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes, with no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
 
 ### Credentials are encrypted and email is never stored
 
-The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
+The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key is kept as a server secret, separate from the database, and the credential is decrypted on our servers only when a request needs it. It's never sent to your agent. The email itself is never stored at all. Every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
 
 ### Multi-provider comes free
 
@@ -80,15 +80,15 @@ The same endpoint and the same core tools — \`inbox_list\`, \`email_read\`, \`
 
 ### Sending stays on your provider
 
-MCP Emails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your Gmail (or Microsoft Graph, or your own SMTP), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
+MCPEmails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your provider (Gmail or another provider over SMTP, or Microsoft Graph for Outlook), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
 
 ### The honest cost: you trust a vendor
 
-This is the real trade-off, and I won't dress it up. With a hosted server, your encrypted token sits in someone else's database and your agent's calls route through someone else's code. You're trusting that the encryption is real, the isolation holds, and the company doesn't do something dumb. For most people that trust is well-placed and saves enormous time. If your threat model forbids it outright, self-host — that's the legitimate reason to.
+This is the real trade-off, and I won't dress it up. With a hosted server, your encrypted token sits in someone else's database and your agent's calls route through someone else's code. You're trusting that the encryption is real, the access controls hold, and the company doesn't do something dumb. For most people that trust is well-placed and saves enormous time. If your threat model forbids it outright, self-host. That's the legitimate reason to.
 
 ## What it costs in dollars
 
-MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 30-day analytics, email support), Pro is $15/month (unlimited connected inboxes, 300 req/min, 90-day analytics), and Team is $79/month (members with roles, a separate workspace per client, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 90-day analytics, email support), Pro is $15/month (up to 10 connected inboxes, 300 req/min, 2-year analytics), and Business is $39/month (10 mailboxes included plus $3/month for each extra, members with roles, a separate workspace per client). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://cursor.com/docs/mcp"
+  ],
+  "meta": {
+    "title": "E-Mail mit Cursor verbinden: MCP-Server-Setup per mcp.json",
+    "description": "Fügen Sie Cursor mit vier Zeilen in mcp.json ein echtes Postfach hinzu. Cursor fragt nach der OAuth-Anmeldung, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Cursor + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Cursor",
+    "titleLine2": "mit vier Zeilen mcp.json",
+    "lead": "Geben Sie dem Editor ein echtes Postfach. Beantworten Sie einen Bugreport aus der Datei heraus, die ihn verursacht hat, schicken Sie einem Kunden den Fix oder räumen Sie ein Postfach auf, ohne das Fenster zu wechseln.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Fügen Sie in ~/.cursor/mcp.json unter mcpServers einen Eintrag mit der url https://mcpemails.com/api/mcp hinzu. Cursor fordert Sie dann zur Anmeldung per OAuth auf, ein API-Schlüssel ist nicht im Spiel."
+  },
+  "method": {
+    "title": "So verbindet sich Cursor: OAuth, kein API-Schlüssel",
+    "body": "Cursor durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "answerSection": {
+    "title": "Beispiel: Gmail in Cursor",
+    "body": "Verbinden Sie Gmail im Dashboard von MCPEmails mit einem Google-App-Passwort, tragen Sie den unten gezeigten Eintrag <code>mcpemails</code> in <code>~/.cursor/mcp.json</code> ein und melden Sie sich an, wenn Cursor fragt. Bitten Sie den Agenten in Cursor dann etwa: „Finde den Fehlerbericht, den Anna gestern an mein Gmail geschickt hat, und entwirf eine Antwort, dass der Fix heute kommt.“ Er durchsucht Ihr Gmail, liest den Verlauf und speichert die Antwort als Gmail-Entwurf, den Sie vor dem Senden prüfen."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "mcp.json öffnen",
+      "p": "Bearbeiten Sie <code>~/.cursor/mcp.json</code> für alle Projekte oder <code>.cursor/mcp.json</code> innerhalb eines Projekts."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Fügen Sie den Eintrag unten unter <code>mcpServers</code> hinzu. Das Feld, das Cursor hier erwartet, heißt <code>url</code>."
+    },
+    {
+      "h": "Autorisieren",
+      "p": "Cursor fordert Sie zur Anmeldung per OAuth auf. Autorisieren Sie mit MCPEmails und geben Sie die Scopes frei, die der Editor erhalten soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Projekt- und globale Konfiguration sind verschiedene Dateien, und es gibt beide",
+      "p": "Ein Server in <code>~/.cursor/mcp.json</code> begleitet Sie in jedes Projekt; einer in <code>.cursor/mcp.json</code> gehört nur zu diesem Repository. E-Mail betrifft meist Sie persönlich und nicht ein Repository, also ist die globale Datei der bessere Ort, und der Eintrag landet nicht in einem Repo, das andere klonen."
+    },
+    {
+      "h": "Eine mcp.json im Projekt ist eine Datei, die Sie versehentlich committen könnten",
+      "p": "Der Eintrag selbst enthält kein Geheimnis, nur eine öffentliche URL, und OAuth-Tokens speichert Cursor selbst, statt sie hier hineinzuschreiben. Das ändert sich, sobald jemand den OAuth-Eintrag durch einen direkt eingetragenen Bearer-API-Schlüssel ersetzt. Wenn Sie den Weg über Schlüssel gehen, halten Sie ihn aus committeten Dateien heraus und widerrufen Sie jeden Schlüssel, der je gepusht wurde: Unter Dashboard, API-Schlüssel geht das mit einem Klick."
+    },
+    {
+      "h": "Geben Sie dem Editor weniger als einem E-Mail-Programm",
+      "p": "Ein Coding-Agent mit <code>delete:email</code> hat erstaunlich viel Macht für ein Werkzeug, dessen Hauptaufgabe Refactoring ist. Scopes zum Lesen, Suchen und für Entwürfe decken fast jeden Editor-Workflow ab. Für den Assistenten, in dem Sie tatsächlich E-Mails sichten, können Sie jederzeit eine zweite, weiter gefasste Verbindung einrichten."
+    }
+  ],
+  "limits": [
+    "Anfragen werden je Schlüssel in Minuten-, Stunden- und Tagesfenstern begrenzt, die nach Ihrem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Ein 429 trägt Retry-After. Dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Cursor?",
+      "a": "Fügen Sie in ~/.cursor/mcp.json unter mcpServers einen Eintrag mit der url https://mcpemails.com/api/mcp hinzu und schließen Sie dann die OAuth-Anmeldung ab, zu der Cursor auffordert. Danach hat Cursor Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails in allen verbundenen Postfächern."
+    },
+    {
+      "q": "Brauche ich für Cursor einen API-Schlüssel?",
+      "a": "Nein. Cursor durchläuft mit diesem Server den OAuth-Ablauf im Browser, registriert sich dynamisch und autorisiert sich mit PKCE, die Konfigurationsdatei enthält also nichts Geheimes. Für skriptgesteuerte oder Setups ohne Oberfläche bleibt ein Bearer-API-Schlüssel eine Option."
+    },
+    {
+      "q": "Warum heißt das Feld hier url und in Windsurf serverUrl?",
+      "a": "Weil die beiden Clients für dieselbe Idee unterschiedliche Konfigurationsschemas gewählt haben. Cursor liest url unter mcpServers, Windsurf liest serverUrl, VS Code erwartet type und url unter servers, und Gemini CLI erwartet httpUrl. Der Endpunkt ist bei allen vier gleich; nur der Schlüsselname unterscheidet sich, und ein zwischen Clients kopiertes Snippet ist der übliche Grund, warum ein Setup stillschweigend nichts tut."
+    },
+    {
+      "q": "Welche Postfächer erreicht Cursor auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Cursor E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Cursor ein echtes Postfach",
+    "sub": "Vier Zeilen Konfiguration, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

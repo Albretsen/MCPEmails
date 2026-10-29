@@ -1,12 +1,12 @@
 const translation = {
   title: 'Automatiske triageregler for e-post som kjører uten en modell i løkka',
   description:
-    'Slik fungerer automasjoner i MCP Emails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
+    'Slik fungerer automasjoner i MCPEmails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
   coverAlt:
-    'Uovervåkede triageregler for e-post i MCP Emails: et lagret søk pluss én fast handling på et fast intervall',
+    'Uovervåkede triageregler for e-post i MCPEmails: et lagret søk pluss én fast handling på et fast intervall',
   content: `Hver morgen ber du agenten rydde bort støyen: arkiver byggevarslene, marker kvitteringene som lest, videresend fakturaene til regnskapsføreren. Det virker. Det koster også et modellkall hver gang, og tirsdag gjør det noe litt annet enn det gjorde mandag.
 
-MCP Emails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
+MCPEmails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
 
 **Hopp til:** [Hva en regel er](#hva-en-automasjon-egentlig-er) · [Lag en](#lag-en-forhåndsvis-opprett-aktiver) · [Hva den kan og ikke kan](#hva-en-regel-kan-og-ikke-kan-gjøre) · [Når du bør la være](#når-du-ikke-bør-skrive-en-regel)
 
@@ -25,7 +25,7 @@ Sett også \`max_messages_per_run\` (25 som standard, 200 som maksimum): det er 
 - **Kostnad.** En regel bruker ingen tokens. Morgensamtalen bruker dem daglig, på e-post du bestemte behandlingen av for måneder siden.
 - **Gjentakbarhet.** Samme filter gir samme handling. Det finnes ingen «i dag valgte den annerledes», fordi den ikke velger noe.
 - **Ingen hallusinerte trekk.** En regel kan ikke finne på en mappe, improvisere en mottaker eller handle på en instruksjon den fant inne i en e-posttekst.
-- **Den kjører mens du sover.** MCP Emails er ellers basert på polling: agenten sjekker etter ny e-post når du ber den om det. Regelen er den delen som ikke må bes om noe.
+- **Den kjører mens du sover.** MCPEmails er ellers basert på polling: agenten sjekker etter ny e-post når du ber den om det. Regelen er den delen som ikke må bes om noe.
 
 ## Agenttriage og uovervåkede regler gjør ulike jobber
 
@@ -67,7 +67,7 @@ De fem regelhandlingene:
 
 Hva en regel ikke kan gjøre:
 
-- **Slette e-post.** Sletting er ikke tilgjengelig for en automasjon. Å flytte til Papirkurv, Søppelpost eller Spam avvises også: alle leverandører tømmer disse på en tidtaker, så å arkivere dit er en sletting med forsinket lunte. Arkiver til en mappe du eier, og slett selv når du har lest kjøreloggen.
+- **Slette e-post.** Sletting er ikke tilgjengelig for en automasjon. Å flytte til Papirkurv avvises også, uansett språk: alle leverandører tømmer den på en tidtaker, så å arkivere dit er en sletting med forsinket lunte. Arkiver til en mappe du eier, og slett selv når du har lest kjøreloggen. Søppelpost og Spam er tillatt, siden det å arkivere uønsket e-post der er en vanlig grunn til å lage en regel.
 - **Tolke noe som helst.** Ingen oppsummering, ingen «hvis det høres hastende ut».
 - **Lenke sammen to handlinger.** Etikettert og markert som lest er to regler over samme filter.
 
@@ -97,7 +97,7 @@ Så spør du agenten om de tretti meldingene som er igjen, i stedet for de hundr
 
 ## Regler teller mot planens handlinger
 
-Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. På **Free**-planen er det 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 7 dagene ikke telles. Den månedlige grensen gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet før er unntatt. Når et arbeidsområde når kvoten sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet kvoteperioden slutter. **Personal** til $9 per måned fjerner den månedlige handlingsgrensen og tillater 3 tilkoblede innbokser. Se [priser](/pricing).
+Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. På **Free**-planen er det 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 3 dagene ikke telles. Den månedlige kvoten gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet før er unntatt. Når et arbeidsområde når kvoten sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet kvoteperioden slutter. **Personal** til $9 per måned gir ubegrensede e-posthandlinger og tillater 3 tilkoblede innbokser. Se [priser](/pricing).
 
 ## Ofte stilte spørsmål
 
@@ -105,7 +105,7 @@ Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fo
 Nei. En regel er et lagret søk pluss én fast handling. E-post matches, aldri tolkes, og meldingstekster kopieres aldri inn i noe en regel produserer.
 
 **Kan en regel slette e-posten min?**  
-Nei. Sletting er ikke tilgjengelig for automasjoner, og å flytte e-post til Papirkurv, Søppelpost eller Spam avvises av samme grunn.
+Nei. Sletting er ikke tilgjengelig for automasjoner, og å flytte e-post til Papirkurv avvises av samme grunn. Å flytte den til Søppelpost eller Spam er tillatt.
 
 **Hvilket tilgangsnivå krever dette?**  
 Enhver automasjonshandling krever \`manage:automations\`, en egen tildeling atskilt fra lesing og sending, fordi det å ha den betyr at en klient kan opprette stående regler som rører postkassen din uten tilsyn.

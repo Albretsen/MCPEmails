@@ -96,7 +96,7 @@ Deno.test("a forwarded 152 KB PDF reaches the socket in full", async () => {
   // Domeneshop's invoice, the largest file in the 2026-09-07 report.
   const pdf = pdfBytes(152_666);
   const mime = buildMimeMessage({
-    from: "MCP Emails <hello@mcpemails.com>",
+    from: "MCPEmails <hello@mcpemails.com>",
     to: ["bilag@example.com"],
     subject: "Fwd: Faktura",
     textBody: "---------- Forwarded message ----------\nFrom: Domeneshop\n",
@@ -139,7 +139,7 @@ Deno.test("the attachment survives the round trip byte for byte", async () => {
   const pdf = pdfBytes(116_911); // one of the two Supabase invoices
   const b64 = toBase64(pdf);
   const mime = buildMimeMessage({
-    from: "MCP Emails <hello@mcpemails.com>",
+    from: "MCPEmails <hello@mcpemails.com>",
     to: ["bilag@example.com"],
     subject: "Fwd: Invoice",
     textBody: "see attached",

@@ -11,7 +11,7 @@ Cet article explique pourquoi ce dernier kilomètre est trompeusement difficile,
 
 L’email a l’air d’un problème résolu. Il ne l’est pas — du moins pas pour un agent autonome. Trois obstacles se dressent :
 
-1. **L’authentification dépend du fournisseur.** Gmail veut OAuth avec les bons scopes. Outlook veut une identité Microsoft. Fastmail veut un mot de passe d’application. Chacun a son propre cycle de vie de jeton et ses propres modes de défaillance.
+1. **L’authentification dépend du fournisseur.** Gmail veut un mot de passe d’application et la validation en deux étapes. Outlook veut une identité Microsoft. Fastmail veut un mot de passe d’application. Chacun a son propre cycle de vie de jeton et ses propres modes de défaillance.
 2. **Les identifiants sont radioactifs.** Vous ne voulez pas qu’un mot de passe de boîte mail traîne dans une transcription de chat, une ligne de log ou un magasin de vecteurs. Jamais.
 3. **La « forme » de l’email est désordonnée.** MIME, threads, HTML contre texte brut, pièces jointes, dossiers qui sont en réalité des libellés. Un agent a besoin d’une interface propre et prévisible — pas de RFC 5322 brut.
 

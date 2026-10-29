@@ -21,8 +21,8 @@
     "eyebrow": "Axigen + AI",
     "titleLine1": "Koble en Axigen-postkasse",
     "titleLine2": "til Claude, Cursor og ChatGPT",
-    "lead": "Du drifter e-postserveren, så innstillingene er dine å kontrollere, ikke å slå opp. Pek mcpemails mot Axigen-verten din, så kan Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i kontoene du allerede administrerer.",
-    "answer": "Claude kan ikke nå en Axigen-server på egen hånd. mcpemails er en hostet MCP-server som kobler seg til Axigen-installasjonen din over IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, og autentiserer med kontopassordet som Axigen allerede godtar fra enhver e-postklient, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det finnes ikke noe felles vertsnavn å publisere: verten er det navnet serveren din svarer på, den må kunne nås fra det offentlige internettet, og lytteren på 993 må levere et sertifikat som er gyldig for det navnet. Én innboks er gratis.",
+    "lead": "Du drifter e-postserveren, så innstillingene er dine å kontrollere, ikke å slå opp. Pek MCPEmails mot Axigen-verten din, så kan Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i kontoene du allerede administrerer.",
+    "answer": "Claude kan ikke nå en Axigen-server på egen hånd. MCPEmails er en hostet MCP-server som kobler seg til Axigen-installasjonen din over IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, og autentiserer med kontopassordet som Axigen allerede godtar fra enhver e-postklient, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det finnes ikke noe felles vertsnavn å publisere: verten er det navnet serveren din svarer på, den må kunne nås fra det offentlige internettet, og lytteren på 993 må levere et sertifikat som er gyldig for det navnet. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassordet fra WebAdmin",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort, og det holder for å teste dette mot en ekte konto på din egen server."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Bekreft at kontoen kan bruke IMAP, og legg den så til",
-      "p": "Under Domains and Accounts åpner du kontoen eller kontoklassen den hører til, og sjekker at IMAP er blant tjenestene den har tillatelse til. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, og skriv inn Axigen-vertsnavnet ditt, hele kontoadressen og passordet."
+      "p": "Under Domains and Accounts åpner du kontoen eller kontoklassen den hører til, og sjekker at IMAP er blant tjenestene den har tillatelse til. Legg deretter til innboksen i MCPEmails: velg IMAP / SMTP, og skriv inn Axigen-vertsnavnet ditt, hele kontoadressen og passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Axigen binder hver lytter til en adresse, så for å nå serveren fra en hostet MCP-tjeneste må du ha en IMAP-lytter på en adresse som internettet kan rute til. Der retningslinjene sier at e-post aldri skal forlate det interne nettverket, gjelder de retningslinjene, og denne hostede tjenesten passer ikke for deg. mcpemails kan i stedet kjøres på egen server og kobles til den samme interne lytteren som skrivebordsklientene dine allerede bruker.",
+    "Axigen binder hver lytter til en adresse, så for å nå serveren fra en hostet MCP-tjeneste må du ha en IMAP-lytter på en adresse som internettet kan rute til. Der retningslinjene sier at e-post aldri skal forlate det interne nettverket, gjelder de retningslinjene, og denne hostede tjenesten passer ikke for deg. MCPEmails kan i stedet kjøres på egen server og kobles til den samme interne lytteren som skrivebordsklientene dine allerede bruker.",
     "TLS-valideringen er streng, og den kan ikke overstyres. Et selvsignert sertifikat, et utløpt sertifikat eller et sertifikat utstedt for et annet navn enn verten du oppgir, blir avvist.",
     "Utgående e-post sendes gjennom din egen Axigen SMTP-tjeneste, så leveringsevnen styres av SPF-, DKIM- og DMARC-postene dine og omdømmet til avsenderadressen din."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Axigen?",
-      "a": "Ikke på egen hånd. Claude har ingen Axigen-kobling og kan ikke åpne en IMAP-tilkobling til en server du drifter. Kobler du en MCP-server som mcpemails til Axigen-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en konto på den, og den samme innboksen fungerer deretter også fra Cursor eller ChatGPT."
+      "a": "Ikke på egen hånd. Claude har ingen Axigen-kobling og kan ikke åpne en IMAP-tilkobling til en server du drifter. Kobler du en MCP-server som MCPEmails til Axigen-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en konto på den, og den samme innboksen fungerer deretter også fra Cursor eller ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Axigen?",
@@ -96,6 +96,6 @@
   ],
   "ctaBand": {
     "title": "Gi AI-en din en Axigen-innboks",
-    "sub": "Pek mcpemails mot din egen Axigen-vert. Én innboks gratis for alltid, uten kort."
+    "sub": "Pek MCPEmails mot din egen Axigen-vert. Én innboks gratis for alltid, uten kort."
   }
 }

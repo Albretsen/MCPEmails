@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Ihr Plan: Free",
+    "lead": "Free deckt ab, was Sie gerade getan haben. Das bringt jeder Plan zusätzlich, wenn Sie mehr brauchen.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# Postfach} other {Bis zu # Postfächer}}",
+    "freeGrace": "Unbegrenzt bis {date}",
+    "freeCap": "{cap} E-Mail-Aktionen pro Monat",
+    "noCap": "Unbegrenzte E-Mail-Aktionen",
+    "emailSupport": "Support per E-Mail",
+    "everythingPersonal": "Alles aus Personal",
+    "perMonth": "{price}/Monat",
+    "perYear": "{price}/Jahr",
+    "intervalLabel": "Abrechnungszeitraum",
+    "monthly": "Monatlich",
+    "annual": "Jährlich",
+    "recommended": "Empfohlen",
+    "choose": "{plan} wählen",
+    "continueFree": "Mit Free weitermachen",
+    "dismiss": "Planübersicht ausblenden"
+  },
+  "graceNote": {
+    "today": "Sie haben MCPEmails an {days, plural, one {# Tag} other {# Tagen}} genutzt. Ab heute zählt Free Ihre monatlichen E-Mail-Aktionen.",
+    "since": "Sie haben MCPEmails an {days, plural, one {# Tag} other {# Tagen}} genutzt. Seit dem {date} zählt Free Ihre monatlichen E-Mail-Aktionen.",
+    "seeUsage": "Nutzung ansehen",
+    "dismiss": "Schließen"
+  },
+  "meter": {
+    "level50": "Die Hälfte der {cap} E-Mail-Aktionen dieses Monats ist verbraucht. Der Zähler wird am {date} zurückgesetzt.",
+    "level80": "{used} von {cap} E-Mail-Aktionen in diesem Monat verbraucht. Der Zähler wird am {date} zurückgesetzt. Personal hebt die monatliche Obergrenze auf.",
+    "level100": "Alle {cap} E-Mail-Aktionen sind verbraucht. Lesen und Schreiben werden bis zum {date} abgelehnt. Personal hebt die monatliche Obergrenze auf.",
+    "seePlans": "Pläne ansehen"
+  },
+  "multiInbox": {
+    "title": "Ihr anderes Postfach verbinden",
+    "desc": "Haben Sie noch ein Gmail-, iCloud- oder Outlook-Konto? Verbinden Sie es, und Ihre KI arbeitet in einem Chat mit beiden Postfächern.",
+    "descUpgrade": "Haben Sie noch ein Gmail-, iCloud- oder Outlook-Konto? Ihre KI kann in einem Chat mit beiden Postfächern arbeiten. Ein zweites Postfach braucht einen bezahlten Plan."
+  }
+}

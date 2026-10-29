@@ -55,6 +55,15 @@ import automatedEmailTriageRules from './posts/automated-email-triage-rules';
 import connectBusinessCustomDomain from './posts/connect-business-email-custom-domain-to-ai-agent';
 import aiEmailForAgencies from './posts/ai-email-for-agencies-and-client-work';
 import multipleAccountsClaudeChatgpt from './posts/multiple-email-accounts-in-claude-and-chatgpt';
+import canClaudeReadMyEmail from './posts/can-claude-read-my-email';
+import claudeCustomConnectorsExplained from './posts/claude-custom-connectors-explained';
+import whatIsAnAppPassword from './posts/what-is-an-app-password';
+import scheduleEmailWithClaudeAndChatgpt from './posts/schedule-email-with-claude-and-chatgpt';
+import connectClaudeOutlookComHotmail from './posts/connect-claude-to-outlook-com-hotmail';
+import connectClaudeToAppleMail from './posts/connect-claude-to-apple-mail';
+import chatgptIcloudMailPlugin from './posts/chatgpt-icloud-mail-plugin';
+import connectYahooMailToChatgptAndClaude from './posts/connect-yahoo-mail-to-chatgpt-and-claude';
+import connectChatgptOutlookComHotmail from './posts/connect-chatgpt-to-outlook-com-hotmail';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -91,6 +100,15 @@ const MODULE_POSTS = [
   connectBusinessCustomDomain,
   aiEmailForAgencies,
   multipleAccountsClaudeChatgpt,
+  canClaudeReadMyEmail,
+  claudeCustomConnectorsExplained,
+  whatIsAnAppPassword,
+  scheduleEmailWithClaudeAndChatgpt,
+  connectClaudeOutlookComHotmail,
+  connectClaudeToAppleMail,
+  chatgptIcloudMailPlugin,
+  connectYahooMailToChatgptAndClaude,
+  connectChatgptOutlookComHotmail,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -115,7 +133,7 @@ This post walks through why that last mile is deceptively hard, and how the [Mod
 
 Email looks like a solved problem. It is not — at least not for an autonomous agent. Three things get in the way:
 
-1. **Auth is provider-specific.** Gmail wants OAuth with the right scopes. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
+1. **Auth is provider-specific.** Gmail wants an app password and 2-Step Verification. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
 2. **Credentials are radioactive.** You do not want a mailbox password sitting in a chat transcript, a log line, or a vector store. Ever.
 3. **The "shape" of email is messy.** MIME, threading, HTML vs. plain text, attachments, folders that are really labels. An agent needs a clean, predictable interface — not raw RFC 5322.
 
@@ -189,8 +207,21 @@ Give your agent verbs, not passwords — and let it get to work.`,
  * reorder; any post not listed falls to the end (newest publishedAt first).
  */
 const RELEVANCE_ORDER = [
-  'approve-ai-agent-email-sends',
-  'ai-agent-email-workflows-and-prompts',
+  // The three posts search actually sends people to lead (GSC, 28 days to
+  // 2026-10-17: 79, 42 and 20 clicks, together 58% of blog clicks), and the
+  // first one turns signups into payers better than any provider page (5 of
+  // 42 in 90 days). Before 2026-10-20 they sat 10th to 12th, behind posts with
+  // no clicks. blog-order.test.mjs pins the first three.
+  'connect-claude-to-email',
+  'claude-imap-connector',
+  // `openai-mcp` is the best-converting MCP client we have (16% of those
+  // workspaces pay, against 8% for claude-code).
+  'connect-chatgpt-to-email',
+  'multiple-email-accounts-in-claude-and-chatgpt',
+  'can-claude-read-my-email',
+  'connect-email-to-ai-agent-under-2-minutes',
+  'connect-claude-to-apple-mail',
+  'claude-custom-connectors-explained',
   // Multi-mailbox is the buyer profile: every paying workspace to date runs two
   // or more inboxes, and inbox COUNT is the value metric the plans are priced
   // on, so this is the highest-intent page on the blog.
@@ -199,23 +230,27 @@ const RELEVANCE_ORDER = [
   // and a custom-domain mailbox is the thing that identifies them, so this sits
   // directly behind the multi-mailbox page.
   'connect-business-email-custom-domain-to-ai-agent',
+  'what-is-an-app-password',
   // Agencies are the multi-mailbox buyer at its most extreme: a workspace per
   // client, and the only segment that needs Team.
   'ai-email-for-agencies-and-client-work',
+  // Led the index until 2026-10-20 with no search clicks and no signups.
+  'approve-ai-agent-email-sends',
+  'ai-agent-email-workflows-and-prompts',
   'extract-email-attachments-for-ai',
   'prevent-duplicate-ai-agent-email-sends',
   'gmail-labels-vs-imap-folders-ai-agents',
-  'connect-email-to-ai-agent-under-2-minutes',
-  'connect-claude-to-email',
-  // Sits beside the Claude setup guide because `openai-mcp` is the
-  // best-converting MCP client we have (16% of those workspaces pay, against
-  // 8% for claude-code), and until now nothing on the blog served it.
-  'connect-chatgpt-to-email',
-  'claude-imap-connector',
   // Retention content for the heaviest free users: the two largest free
   // workspaces run 70 and 57 standing triage rules between them.
   'automated-email-triage-rules',
+  'schedule-email-with-claude-and-chatgpt',
   'connect-gmail-to-claude',
+  'connect-claude-to-outlook-com-hotmail',
+  // Added 2026-10-29: provider-in-ChatGPT queries the built-in plugins miss
+  // (iCloud beyond the new plugin, Yahoo, personal Outlook.com).
+  'connect-chatgpt-to-outlook-com-hotmail',
+  'connect-yahoo-mail-to-chatgpt-and-claude',
+  'chatgpt-icloud-mail-plugin',
   'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',
   'how-to-give-your-ai-agent-email-access',

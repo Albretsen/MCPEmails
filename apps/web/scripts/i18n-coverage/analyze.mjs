@@ -16,14 +16,28 @@
 // does not merge). Three declarations are understood, and anything else is
 // reported as a violation rather than guessed at:
 //
-//   <AppLocaleProvider>                    the namespaces bundled into
+//   <AppLocaleProvider>                    the NAMESPACES list in
 //                                          components/i18n/AppLocaleProvider.jsx
+//   <AuthLocaleProvider>                   the NAMESPACES list in
+//                                          components/i18n/AuthLocaleProvider.jsx
+//   <OnboardingLocaleProvider>             the NAMESPACES list in
+//                                          components/i18n/OnboardingLocaleProvider.jsx
+//   <AuthorizeLocaleProvider>              the NAMESPACES list in
+//                                          components/i18n/AuthorizeLocaleProvider.jsx
+//                                          (both load every non-English file
+//                                          through LocaleCore.jsx's LOADERS)
 //   <ClientMessages namespaces={[...]}>    exactly the listed namespaces
 //   <NextIntlClientProvider messages={X}>  X = `await getMessages()` (or the
 //                                          attribute omitted, which next-intl
 //                                          fills the same way): every namespace
 //                                          src/i18n/request.ts loads.
 //                                          X = null: none.
+//
+// PROVIDER ISLANDS. A component listed in PROVIDER_ISLANDS wraps everything it
+// renders in its own provider (the setup dialog, lazy-loaded by the dashboard,
+// brings OnboardingLocaleProvider). A route's import closure stops at an
+// island, and the island's own closure is checked against its provider
+// instead, as if it were a route of its own.
 //
 // WHAT COUNTS AS A READ. `useTranslations('<ns>...')` anywhere in the import
 // closure of the route file (static imports, re-exports, `import()` and
@@ -40,13 +54,29 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { FROZEN_LOCALES } from '../../src/i18n/locale-policy.mjs';
 
 const SOURCE_EXT = ['.js', '.jsx', '.ts', '.tsx', '.mjs'];
 const ROUTE_FILE = /^(page|layout|not-found|error|global-error|loading|template|default)\.(js|jsx|ts|tsx)$/;
 const LAYOUT_FILE = /^layout\.(js|jsx|ts|tsx)$/;
 
 /** Files that are allowed to contain a provider element without being a layout. */
-const PROVIDER_MODULES = ['components/i18n/AppLocaleProvider.jsx', 'components/i18n/ClientMessages.jsx'];
+const PROVIDER_MODULES = [
+  'components/i18n/AppLocaleProvider.jsx',
+  'components/i18n/AuthLocaleProvider.jsx',
+  'components/i18n/OnboardingLocaleProvider.jsx',
+  'components/i18n/AuthorizeLocaleProvider.jsx',
+  'components/i18n/LocaleCore.jsx',
+  'components/i18n/ClientMessages.jsx',
+];
+
+/**
+ * Files that render their whole subtree inside their own provider, and which
+ * one (see PROVIDER ISLANDS above).
+ */
+const PROVIDER_ISLANDS = {
+  'components/onboarding/SetupModal.jsx': 'OnboardingLocaleProvider',
+};
 
 function isFile(p) {
   try {
@@ -132,9 +162,14 @@ export function hasKey(messages, dotted) {
 }
 
 /**
+ * Message keys and namespace files are required in every locale on disk except
+ * the frozen ones (src/i18n/locale-policy.mjs). A frozen locale is laid over
+ * English at runtime, so a key it lacks renders English and is not a violation.
+ *
  * @param {string} webRoot  the app root: holds app/, components/, src/, messages/
+ * @param {{ frozenLocales?: readonly string[] }} [options]
  */
-export function analyze(webRoot) {
+export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   const appDir = path.join(webRoot, 'app');
   const rel = (file) => path.relative(webRoot, file).split(path.sep).join('/');
   const sources = new Map();
@@ -155,7 +190,13 @@ export function analyze(webRoot) {
     return null;
   }
 
+  // Islands absent from this tree (the synthetic fixtures) are skipped.
+  const islandFiles = new Map(Object.entries(PROVIDER_ISLANDS)
+    .map(([file, kind]) => [path.join(webRoot, file), kind])
+    .filter(([file]) => isFile(file)));
+
   const closures = new Map();
+  /** Everything `entry` imports, stopping at (but including) any provider island other than itself. */
   function closure(entry) {
     if (closures.has(entry)) return closures.get(entry);
     const seen = new Set([entry]);
@@ -166,7 +207,7 @@ export function analyze(webRoot) {
         const target = resolve(file, specifier);
         if (target && !seen.has(target)) {
           seen.add(target);
-          queue.push(target);
+          if (!islandFiles.has(target)) queue.push(target);
         }
       }
     }
@@ -183,6 +224,7 @@ export function analyze(webRoot) {
 
   const localesDir = path.join(webRoot, 'messages');
   const locales = readdirSync(localesDir).filter((name) => statSync(path.join(localesDir, name)).isDirectory());
+  const requiredLocales = locales.filter((locale) => !frozenLocales.includes(locale));
   const messages = {};
   for (const locale of locales) {
     messages[locale] = {};
@@ -193,30 +235,52 @@ export function analyze(webRoot) {
     }
   }
   for (const namespace of requestNamespaces) {
-    for (const locale of locales) {
+    for (const locale of requiredLocales) {
       if (!(namespace in messages[locale])) {
         violations.push({ type: 'missing-file', detail: `messages/${locale}/${namespace}.json is loaded by src/i18n/request.ts but does not exist` });
       }
     }
   }
 
-  let appNamespaces = null;
-  const appProviderFile = path.join(webRoot, 'components/i18n/AppLocaleProvider.jsx');
-  if (existsSync(appProviderFile)) {
-    const table = /const MESSAGES\s*=\s*\{([\s\S]*?)\n\};/.exec(read(appProviderFile));
-    if (!table) throw new Error('AppLocaleProvider.jsx: could not find the MESSAGES table');
-    const rows = [...table[1].matchAll(/^\s*([a-z]{2}):\s*\{([^}]*)\}/gm)];
-    const perLocale = rows.map((row) => ({ locale: row[1], keys: [...row[2].matchAll(/([A-Za-z0-9_]+)\s*:/g)].map((m) => m[1]).sort() }));
-    if (perLocale.length === 0) throw new Error('AppLocaleProvider.jsx: the MESSAGES table has no locale rows');
-    appNamespaces = perLocale[0].keys;
-    for (const row of perLocale) {
-      if (row.keys.join() !== appNamespaces.join()) {
-        violations.push({ type: 'app-provider-uneven', detail: `AppLocaleProvider MESSAGES.${row.locale} has [${row.keys}] but MESSAGES.${perLocale[0].locale} has [${appNamespaces}]` });
-      }
+  // The two client-side locale providers: each names its namespaces, bundles
+  // them in English, and loads every other language through LocaleCore.jsx's
+  // LOADERS table, which must therefore have every one of them for every locale.
+  const localeProviders = {};
+  for (const kind of ['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider', 'AuthorizeLocaleProvider']) {
+    const file = path.join(webRoot, `components/i18n/${kind}.jsx`);
+    if (!existsSync(file)) continue;
+    const source = read(file);
+    const list = /const NAMESPACES\s*=\s*\[([^\]]*)\]/.exec(source);
+    if (!list) throw new Error(`${kind}.jsx: could not find the NAMESPACES list`);
+    const namespaces = [...list[1].matchAll(/['"]([A-Za-z0-9_]+)['"]/g)].map((m) => m[1]).sort();
+    const english = /const ENGLISH\s*=\s*\{([^}]*)\}/.exec(source);
+    if (!english) throw new Error(`${kind}.jsx: could not find the ENGLISH catalog`);
+    const englishKeys = [...english[1].matchAll(/([A-Za-z0-9_]+)\s*:/g)].map((m) => m[1]).sort();
+    if (englishKeys.join() !== namespaces.join()) {
+      violations.push({ type: 'app-provider-uneven', detail: `${kind} bundles English [${englishKeys}] but declares [${namespaces}]` });
     }
-    for (const locale of locales) {
-      if (!perLocale.some((row) => row.locale === locale)) {
-        violations.push({ type: 'app-provider-uneven', detail: `AppLocaleProvider MESSAGES has no row for locale ${locale}` });
+    localeProviders[kind] = namespaces;
+  }
+  const appNamespaces = localeProviders.AppLocaleProvider ?? null;
+  const authNamespaces = localeProviders.AuthLocaleProvider ?? null;
+  const onboardingNamespaces = localeProviders.OnboardingLocaleProvider ?? null;
+  const authorizeNamespaces = localeProviders.AuthorizeLocaleProvider ?? null;
+  const coreFile = path.join(webRoot, 'components/i18n/LocaleCore.jsx');
+  if (Object.keys(localeProviders).length > 0) {
+    const table = existsSync(coreFile) && /const LOADERS\s*=\s*\{([\s\S]*?)\n\};/.exec(read(coreFile));
+    if (!table) throw new Error('LocaleCore.jsx: could not find the LOADERS table');
+    const rows = new Map([...table[1].matchAll(/^\s*([a-z]{2}):\s*\{([^}]*)\}/gm)].map((row) => [
+      row[1],
+      [...row[2].matchAll(/^\s*([A-Za-z0-9_]+):\s*\(\)\s*=>\s*import\(['"][^'"]*messages\/([a-z]{2})\/([A-Za-z0-9_]+)\.json['"]\)/gm)]
+        .filter((m) => m[2] === row[1] && m[3] === m[1])
+        .map((m) => m[1]),
+    ]));
+    const needed = [...new Set(Object.values(localeProviders).flat())].sort();
+    for (const locale of locales.filter((l) => l !== 'en')) {
+      const have = rows.get(locale) ?? [];
+      const missing = needed.filter((ns) => !have.includes(ns));
+      if (missing.length > 0) {
+        violations.push({ type: 'app-provider-uneven', detail: `LocaleCore LOADERS.${locale} cannot load [${missing}] (each entry must import messages/${locale}/<same name>.json)` });
       }
     }
   }
@@ -225,9 +289,10 @@ export function analyze(webRoot) {
   function providerOf(layoutFile) {
     const source = read(layoutFile);
     const declared = [];
-    if (/<AppLocaleProvider[\s>]/.test(source)) {
-      if (!appNamespaces) throw new Error(`${rel(layoutFile)} uses AppLocaleProvider, which was not found`);
-      declared.push({ kind: 'AppLocaleProvider', namespaces: appNamespaces });
+    for (const [kind, namespaces] of Object.entries({ AppLocaleProvider: appNamespaces, AuthLocaleProvider: authNamespaces, OnboardingLocaleProvider: onboardingNamespaces, AuthorizeLocaleProvider: authorizeNamespaces })) {
+      if (!new RegExp(`<${kind}[\\s>]`).test(source)) continue;
+      if (!namespaces) throw new Error(`${rel(layoutFile)} uses ${kind}, which was not found`);
+      declared.push({ kind, namespaces });
     }
     for (const match of source.matchAll(/<ClientMessages\b([^>]*)>/g)) {
       const list = /namespaces=\{\s*\[([^\]]*)\]\s*\}/.exec(match[1]);
@@ -292,21 +357,30 @@ export function analyze(webRoot) {
     .filter((file) => SOURCE_EXT.includes(path.extname(file)) && !/\.test\.[a-z]+$/.test(file));
   for (const file of allSource) {
     if (layouts.get(path.dirname(file)) === file) continue;
-    if (PROVIDER_MODULES.includes(rel(file))) continue;
-    if (/<(NextIntlClientProvider|ClientMessages|AppLocaleProvider)[\s>]/.test(read(file))) {
+    if (PROVIDER_MODULES.includes(rel(file)) || islandFiles.has(file)) continue;
+    if (/<(NextIntlClientProvider|ClientMessages|AppLocaleProvider|AuthLocaleProvider|OnboardingLocaleProvider|AuthorizeLocaleProvider|LocaleRoot)[\s>]/.test(read(file))) {
       violations.push({ type: 'provider-outside-layout', file: rel(file), detail: 'a message provider is rendered outside a layout file, where this analysis cannot place it' });
     }
   }
 
+  const islandNamespaces = { AppLocaleProvider: appNamespaces, AuthLocaleProvider: authNamespaces, OnboardingLocaleProvider: onboardingNamespaces, AuthorizeLocaleProvider: authorizeNamespaces };
+  for (const [file, kind] of islandFiles) {
+    if (!new RegExp(`<${kind}[\\s>]`).test(read(file))) {
+      violations.push({ type: 'unrecognised-provider', file: rel(file), detail: `listed as a ${kind} island but does not render <${kind}>` });
+    }
+  }
+
   const routes = [];
-  for (const file of routeFiles) {
+  for (const file of [...routeFiles, ...islandFiles.keys()]) {
     const name = path.basename(file);
-    const isLayout = LAYOUT_FILE.test(name);
+    const island = islandFiles.get(file) ?? null;
+    const isLayout = !island && LAYOUT_FILE.test(name);
     const own = isLayout ? providers.get(file) : null;
     // global-error replaces the root layout, so nothing above it applies. A
     // layout's own imports render outside the provider it declares.
     let scope;
-    if (/^global-error\./.test(name)) scope = { layout: null, kind: 'none', namespaces: [] };
+    if (island) scope = { layout: rel(file), kind: island, namespaces: islandNamespaces[island] ?? [] };
+    else if (/^global-error\./.test(name)) scope = { layout: null, kind: 'none', namespaces: [] };
     else if (isLayout && own) scope = file === layouts.get(appDir) ? { layout: null, kind: 'none', namespaces: [] } : scopeFrom(path.dirname(path.dirname(file)));
     else scope = scopeFrom(path.dirname(file));
 
@@ -344,7 +418,7 @@ export function analyze(webRoot) {
     for (const [key, member] of keys) {
       const namespace = key.split('.')[0];
       const rest = key.slice(namespace.length + 1);
-      for (const locale of locales) {
+      for (const locale of requiredLocales) {
         const tree = messages[locale][namespace];
         if (tree === undefined || (rest && !hasKey(tree, rest))) {
           violations.push({ type: 'missing-key', route: rel(file), file: member, locale, key, detail: `${member} reads "${key}", which messages/${locale}/${namespace}.json does not define` });
@@ -363,5 +437,5 @@ export function analyze(webRoot) {
     return true;
   });
 
-  return { requestNamespaces, appNamespaces, locales, routes, violations: unique };
+  return { requestNamespaces, appNamespaces, authNamespaces, onboardingNamespaces, authorizeNamespaces, locales, requiredLocales, routes, violations: unique };
 }

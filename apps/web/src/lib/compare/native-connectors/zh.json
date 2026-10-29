@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "title": "Claude 和 ChatGPT 的邮箱连接器与 MCP 服务器对比",
+    "description": "Claude 和 ChatGPT 内置邮箱连接器、Fastmail 和 Zoho 自家 MCP 服务器能做什么，与 MCPEmails 的对比。每条信息都注明来源和日期。"
+  },
+  "hero": {
+    "eyebrow": "内置连接器与 MCP",
+    "titleLine1": "内置连接器现在能发邮件了。",
+    "titleLine2": "它们的边界在这里。",
+    "lead": "Claude 和 ChatGPT 可以读取和发送 Gmail 及 Microsoft 邮件，Fastmail 和 Zoho 也推出了自家的 MCP 服务器。但每一个只覆盖一家邮件服务商，或只能在一个应用里使用。MCPEmails 把你所有的邮箱放在同一个连接后面，可在任何 MCP 客户端中使用。",
+    "updated": "第三方信息核实于 {date}。每条说法都附有来源链接。",
+    "ctaPrimary": "免费连接邮箱",
+    "ctaSecondary": "阅读文档"
+  },
+  "kinds": {
+    "title": "两种“内置”",
+    "sub": "它们常被混为一谈，但在最关键的两点上并不相同：能连接哪些邮箱，能在哪些应用中使用。",
+    "apps": {
+      "h": "AI 应用内置的连接器",
+      "p": "Claude 的 Gmail 和 Microsoft 365 连接器，以及 ChatGPT 的 Gmail 和 Outlook 应用。无需安装，而且现在已经能发邮件。它们只能在各自的应用里使用，Claude 的 Microsoft 365 连接器也无法连接个人 Outlook.com 或 Hotmail 账户。"
+    },
+    "provider": {
+      "h": "邮件服务商自家的 MCP 服务器",
+      "p": "Fastmail 和 Zoho Mail 各有一个官方 MCP 服务器，Google 的 Gmail MCP 服务器则处于开发者预览阶段。它们可以在任何 MCP 客户端中使用，但每一个只能连接自家服务商的邮箱。"
+    }
+  },
+  "axes": {
+    "title": "托管式 MCP 服务器仍然不同的地方",
+    "sub": "根据我们查阅的页面，以下三点差异依然成立。内置方案已经追上的地方，下方表格会如实标明。",
+    "items": {
+      "coverage": {
+        "tag": "覆盖范围",
+        "h": "所有邮箱，一个连接",
+        "p": "MCPEmails 可连接 Gmail、Outlook（包括个人 Outlook.com 账户）、iCloud、Yahoo、Fastmail、Zoho、Yandex 以及任何 IMAP 邮箱，多个邮箱可同时放在同一个 MCP URL 后面。内置连接器只能连接 Gmail 和 Microsoft 邮件，服务商自家的服务器只能连接该服务商。"
+      },
+      "actions": {
+        "tag": "掌控",
+        "h": "定时、暂扣与整理",
+        "p": "内置连接器可以发送、回复和转发。MCPEmails 还能定时发送，可按邮箱设置在你批准前暂扣外发邮件，并在所有已连接邮箱中移动、复制、标记、归档和删除邮件。"
+      },
+      "portable": {
+        "tag": "可迁移",
+        "h": "一次设置，所有 AI 应用通用",
+        "p": "Claude 和 ChatGPT 的连接器只能在各自的应用里使用。MCPEmails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，同一批邮箱可在 Claude、ChatGPT、Cursor、VS Code、n8n 及任何其他 MCP 客户端中使用。"
+      }
+    }
+  },
+  "table": {
+    "title": "逐项对比",
+    "featureCol": "功能",
+    "appsCol": "Claude 和 ChatGPT 连接器",
+    "providerCol": "服务商自家 MCP 服务器",
+    "usCol": "MCPEmails",
+    "notStated": "未说明",
+    "rows": {
+      "reach": "可连接的邮箱",
+      "several": "一个连接覆盖多家服务商",
+      "send": "发送、回复和转发",
+      "organize": "移动、加标签、归档或删除",
+      "schedule": "定时发送",
+      "approval": "发送前审批",
+      "portable": "可在其他 AI 应用中使用"
+    },
+    "values": {
+      "reachApps": "Gmail。Claude 支持 Microsoft 365 工作账户，ChatGPT 支持 Outlook。",
+      "reachProvider": "仅限该服务商：Fastmail、Zoho，或 Google 预览版中的 Gmail。",
+      "reachUs": "Gmail、Outlook 和 Outlook.com、iCloud、Yahoo、Fastmail、Zoho、Yandex、任何 IMAP。",
+      "sendProvider": "Fastmail 和 Zoho 可以发送。Google 预览版只能创建草稿。",
+      "organizeApps": "Claude 的 Gmail 连接器支持标签和移至垃圾箱。",
+      "organizeProvider": "Fastmail 和 Zoho 支持。",
+      "approvalApps": "Claude 默认在每次发送前询问。ChatGPT 可能在执行操作前询问。",
+      "approvalUs": "可按邮箱开启暂扣，所有套餐均可用，另有独立的发送权限。"
+    },
+    "footnote": "有关第三方的单元格于 {date} 从下方来源读取。“未说明”表示我们查阅的页面没有回答这个问题，并不代表该功能不存在。这些产品更新频繁，如果某个单元格已过时，请以来源链接为准。"
+  },
+  "faq": {
+    "title": "内置连接器与 MCP：常见问题",
+    "sub": "包括那些不会把你引向我们的回答。",
+    "items": [
+      {
+        "q": "Claude 或 ChatGPT 现在已经能从我的 Gmail 发邮件了吗？",
+        "a": "可以。Claude 的 Gmail 连接器能发送、回复和转发，默认在每次执行这些操作前请求你的批准。ChatGPT 在网页版的 Plus、Pro、Business 和 Enterprise 套餐中，可以通过已连接的 Gmail 或 Outlook 账户起草并发送邮件。如果 Gmail 是你唯一的邮箱，而你只用其中一个应用，内置连接器可能就够用了。"
+      },
+      {
+        "q": "我的邮件服务商有自己的 MCP 服务器，我还需要别的吗？",
+        "a": "也许不需要。Fastmail 和 Zoho Mail 都有官方 MCP 服务器，可在任何 MCP 客户端中使用；Google 的 Gmail MCP 服务器处于开发者预览阶段。它们各自只能连接自家服务商。MCPEmails 适合把多个邮箱放在同一个连接后面，适合 iCloud、Yahoo、Yandex 及其他 IMAP 服务，也适合个人 Outlook.com 账户，而这类账户无法通过 Claude 的 Microsoft 365 连接器连接。"
+      },
+      {
+        "q": "MCPEmails 能做哪些内置连接器做不到的事？",
+        "a": "通过一个 MCP URL 连接多家服务商的邮箱，定时发送邮件，按邮箱设置在有人批准前暂扣外发邮件，并且在 Claude、ChatGPT、Cursor、VS Code 和 n8n 中用法一致。我们查阅的内置方案都没有提到定时发送。"
+      },
+      {
+        "q": "如果我为 Claude 设置好了，在 Cursor 或 ChatGPT 中也能用吗？",
+        "a": "能。MCPEmails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，一次设置即可在 Claude、ChatGPT、Cursor、VS Code、Windsurf、n8n 及任何其他 MCP 客户端中使用。Claude 和 ChatGPT 的内置连接器只能在各自的应用里使用。"
+      },
+      {
+        "q": "MCPEmails 连接我的邮箱后，会存储我的邮件吗？",
+        "a": "不会。每次请求时都直接从你的邮件服务商实时获取邮件，响应发出后即丢弃。我们只保存加密的 OAuth 令牌或应用专用密码，以便后续请求登录；另外，你设置了定时发送的邮件会加密保存到发送为止。你可以随时撤销访问权限。"
+      }
+    ]
+  },
+  "sources": {
+    "title": "来源",
+    "sub": "以下每个页面均于 {date} 查阅。",
+    "items": {
+      "claudeGoogle": "Claude 帮助中心：Google Workspace 连接器",
+      "claudeGmailListing": "Claude 的 Gmail 连接器页面",
+      "claudeM365": "Claude 帮助中心：Microsoft 365 连接器",
+      "chatgptReleaseNotes": "ChatGPT 版本说明（通过 Gmail 或 Outlook 发送）",
+      "chatgptApps": "OpenAI 帮助中心：ChatGPT 中的应用",
+      "fastmailMcp": "Fastmail：通过 Fastmail 的 MCP 服务器连接 AI 工具",
+      "zohoMcp": "Zoho Mail MCP：入门",
+      "googleGmailMcp": "Google for Developers：配置 Gmail MCP 服务器"
+    }
+  },
+  "ctaBand": {
+    "title": "让你的 AI 连接你所有的邮箱",
+    "sub": "几分钟即可连接邮箱。免费使用一个邮箱，无需信用卡。",
+    "ctaPrimary": "免费连接邮箱",
+    "ctaSecondary": "阅读文档"
+  }
+}

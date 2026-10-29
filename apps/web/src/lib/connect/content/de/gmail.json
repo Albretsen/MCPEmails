@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://developers.google.com/gmail/api/guides",
+    "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
+    "https://support.google.com/a/answer/7281227"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-Passwort",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "Ihre vollständige Gmail-Adresse, zum Beispiel name@gmail.com. Das App-Passwort ersetzt Ihr normales Google-Passwort; das normale Passwort funktioniert hier nicht.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Gmail mit Claude, ChatGPT und Cursor verbinden: Gmail MCP-Server",
+    "description": "Gmail mit Claude oder ChatGPT verbinden: ein gehosteter Gmail MCP-Server. Mit einem Google App-Passwort per IMAP verbinden, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Gmail + KI",
+    "titleLine1": "Der Gmail MCP-Server",
+    "titleLine2": "für Claude, Cursor und ChatGPT",
+    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten ein echtes Gmail-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails mit einem Google App-Passwort, und nutzen Sie dasselbe Postfach in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Verbindung per Google App-Passwort",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Die URL des Gmail-MCP-Servers lautet https://mcpemails.com/api/mcp. MCPEmails ist ein gehosteter MCP-Server: Erstellen Sie ein Google-App-Passwort, verbinden Sie Gmail einmal im Dashboard und fügen Sie die URL dann in Claude, ChatGPT oder Cursor ein. In Cursor tragen Sie sie unter mcpServers in ~/.cursor/mcp.json im Feld url ein, und Cursor fordert Sie zur Anmeldung auf, ohne API-Schlüssel. Der Free-Plan verbindet ein Gmail-Postfach dauerhaft und ohne Karte, mit einem privaten Google-Konto oder mit Google Workspace."
+  },
+  "method": {
+    "title": "So verbindet sich Gmail: mit einem Google App-Passwort",
+    "body": "Gmail verbindet sich mit einem <b>Google App-Passwort</b> über IMAP und SMTP. Google bietet App-Passwörter nur für Konten mit <b>aktivierter Bestätigung in zwei Schritten</b> an. Schalten Sie diese also zuerst ein und erstellen Sie dann ein App-Passwort unter <b>myaccount.google.com/apppasswords</b>. Es besteht aus 16 Kleinbuchstaben in vier Gruppen und ersetzt Ihr normales Google-Passwort, das hier nicht funktioniert. Sie können es jederzeit auf derselben Google-Seite widerrufen oder das Postfach in MCPEmails löschen."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Google App-Passwort erstellen",
+      "p": "Aktivieren Sie in Ihrem Google-Konto die Bestätigung in zwei Schritten, falls sie noch nicht aktiv ist. Öffnen Sie dann myaccount.google.com/apppasswords und erstellen Sie ein App-Passwort. Fügen Sie die 16 Zeichen zusammen mit Ihrer vollständigen Gmail-Adresse in MCPEmails ein. Leerzeichen im Code spielen keine Rolle."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Google bietet einen eigenen Gmail MCP-Server an, und nur für Gmail ist das der kürzere Weg",
+      "p": "Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, darunter einen Workspace MCP-Server, der Gmail zusammen mit Drive, Calendar und Chat abdeckt. Das wollen wir nicht verschweigen. Wenn Gmail das einzige Postfach ist, auf das ein Assistent zugreifen soll, und Ihr Client mit Googles Server spricht, nutzen Sie ihn. Der Grund, MCPEmails stattdessen mit Gmail zu verbinden: Derselbe Server hält auch Ihr iCloud-, Fastmail-, Zoho-, Yahoo- oder Firmen-IMAP-Postfach, stellt alle über <b>eine</b> MCP-URL bereit und verhält sich in Claude, Cursor und ChatGPT gleich. Ein eigener Konnektor pro Anbieter, jeder mit eigener Anmeldung und eigenen Tool-Namen, entfällt damit."
+    },
+    {
+      "h": "Für das Senden von einer anderen Adresse braucht es eine bestätigte Senden-als-Adresse",
+      "p": "Ein Postfach, das mit einem App-Passwort verbunden ist, sendet von seiner eigenen Adresse. Soll Ihr Agent von einem Alias oder einer anderen Adresse senden, die Ihnen gehört, fügen Sie diese in den Postfach-Einstellungen von MCPEmails unter <b>Senden-als-Adressen</b> hinzu. Wir senden an diese Adresse einen 6-stelligen Code, und sobald Sie ihn eingeben, ist sie nutzbar. Auch Gmail muss die Adresse akzeptieren, richten Sie sie also zuerst in Gmail als <b>Senden als</b>-Adresse ein. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch bestätigt ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
+    },
+    {
+      "h": "Gmail kennt Labels statt Ordner, deshalb ist Verschieben kein echtes Verschieben",
+      "p": "Gmail speichert Labels, keine Ordner. Über IMAP erscheint jedes Label als Ordner, deshalb kann eine Nachricht mehrere Labels tragen und in mehreren Ordnern auftauchen. Verschieben heißt, ein Label hinzuzufügen und ein anderes zu entfernen, und Archivieren heißt einfach, <code>INBOX</code> zu entfernen. Löschen legt die Nachricht in Gmails Papierkorb, statt sie zu vernichten. Soll ein Agent E-Mails in einen Ordner ablegen, den es noch nicht gibt, muss das Label zuerst erstellt werden. Es erscheint danach in Gmail auf jedem Gerät."
+    },
+    {
+      "h": "Ein Google Workspace-Administrator kann App-Passwörter abschalten",
+      "p": "Bei einem privaten Google-Konto ist die Bestätigung in zwei Schritten die einzige Voraussetzung. Bei einem Google Workspace-Konto kann ein Administrator App-Passwörter für die gesamte Domain deaktivieren. Dann ist myaccount.google.com/apppasswords für Sie einfach nicht verfügbar, und aus dem Postfach heraus können Sie nichts tun. Fragen Sie Ihren Administrator oder verbinden Sie ein anderes Postfach."
+    }
+  ],
+  "limits": [
+    "MCPEmails greift nur auf E-Mails zu: Ein App-Passwort wird ausschließlich für IMAP und SMTP genutzt. Drive, Calendar, Chat und Docs bleiben unberührt.",
+    "Ein Google Workspace-Administrator kann App-Passwörter für die Domain in der Admin-Konsole abschalten. Nur ein Administrator kann diese Entscheidung ändern.",
+    "Löschen verschiebt eine Nachricht in Gmails Papierkorb. Ein endgültiges Löschen folgt Gmails IMAP-Einstellungen: Standardmäßig entfernt es nur das Label, aus dem die Nachricht gelöscht wurde, und ein Expunge aus dem Papierkorb löscht sie endgültig."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Gmail?",
+      "a": "Ja, sobald etwas dazwischen sitzt, das für Claude mit Gmail spricht. MCPEmails ist so ein Dienst: Sie erstellen ein Google App-Passwort, fügen eine MCP-URL ein, und Claude kann E-Mails lesen, suchen, senden, beantworten, weiterleiten und planen. Google bietet außerdem einen offiziellen Workspace MCP-Server an, der Gmail abdeckt. Der praktische Unterschied: MCPEmails ist nicht auf Google beschränkt, dieselbe URL bedient also auch Ihre anderen Postfächer."
+    },
+    {
+      "q": "Wie lautet die URL des Gmail-MCP-Servers, und ist er kostenlos?",
+      "a": "Die URL ist https://mcpemails.com/api/mcp, dieselbe in Claude, ChatGPT, Cursor und jedem anderen MCP-Client. Der Free-Plan verbindet ein Gmail-Postfach ohne Karte, dauerhaft. Bezahlte Pläne bieten mehr Postfächer."
+    },
+    {
+      "q": "Gibt es einen offiziellen Gmail MCP-Server von Google?",
+      "a": "Ja. Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, mit einem Workspace MCP-Server für Gmail, Drive, Calendar und Chat. Nutzen Sie ihn, wenn nur Gmail beteiligt ist und Ihr Client ihn unterstützt. Wählen Sie einen Drittanbieter-Server wie MCPEmails, wenn Sie mehrere Anbieter hinter einer einzigen MCP-URL möchten oder dasselbe Verhalten in Claude, Cursor und ChatGPT."
+    },
+    {
+      "q": "Brauche ich für Gmail ein App-Passwort?",
+      "a": "Ja. Gmail verbindet sich über IMAP und SMTP mit einem Google App-Passwort, nicht mit Ihrem normalen Google-Passwort. Google zeigt App-Passwörter nur bei Konten mit aktivierter Bestätigung in zwei Schritten an. Schalten Sie diese zuerst ein und erstellen Sie dann ein App-Passwort unter myaccount.google.com/apppasswords. Das dauert etwa eine Minute."
+    },
+    {
+      "q": "Warum kann ich bei meinem Arbeitskonto kein App-Passwort erstellen?",
+      "a": "Google bietet App-Passwörter nur bei Konten mit aktivierter Bestätigung in zwei Schritten an, prüfen Sie das also zuerst. Bei einem Google Workspace-Konto kann ein Administrator App-Passwörter außerdem für die gesamte Domain abschalten. Dann bleibt myaccount.google.com/apppasswords nicht verfügbar, egal was Sie im Postfach einstellen. Nur Ihr Administrator kann das ändern. Ein privates Gmail-Konto braucht nur die Bestätigung in zwei Schritten."
+    },
+    {
+      "q": "Funktioniert es mit einer eigenen Domain in Google Workspace?",
+      "a": "Ja. Ein Workspace-Postfach mit eigener Domain verbindet sich per App-Passwort genau wie eine gmail.com-Adresse und verhält sich danach identisch. Einzige Bedingung ist die Administrator-Richtlinie: Die Domain muss App-Passwörter und IMAP-Zugriff erlauben."
+    },
+    {
+      "q": "Wird mein Gmail auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Ihr App-Passwort wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCPEmails löschen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Gmail-Postfach",
+    "sub": "Gmail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  },
+  "guide": {
+    "intro": "Lieber eine Anleitung mit Screenshots?",
+    "label": "So verbinden Sie Gmail mit Claude",
+    "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "Firmenpostfach in Google Workspace mit eigener Domain?",
+    "label": "Google Workspace verbinden, und die Admin-Einstellungen, die darüber entscheiden",
+    "href": "/connect/google-workspace"
+  }
+}

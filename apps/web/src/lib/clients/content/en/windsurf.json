@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://docs.windsurf.com/windsurf/cascade/mcp"
+    "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
     "title": "Connect Email to Windsurf: Cascade MCP Server Setup",
@@ -12,42 +12,42 @@
     "eyebrow": "Windsurf + email",
     "titleLine1": "Connect your inbox to Windsurf",
     "titleLine2": "and Cascade",
-    "lead": "Add a real mailbox to Cascade. Read, search, send, reply, forward, schedule and organize mail from the editor, across every inbox you have connected.",
+    "lead": "Add a real mailbox to Cascade in Devin Desktop, formerly Windsurf. Read, search, send, reply, forward, schedule and organize mail from the editor, across every inbox you have connected.",
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Add one entry under mcpServers in ~/.codeium/windsurf/mcp_config.json using the field serverUrl, not url, with https://mcpemails.com/api/mcp. Refresh MCP servers in Cascade and authorize when prompted."
+    "answer": "Devin Desktop is the new name for Windsurf. In the Cascade panel, open the ... menu at the top right and click Open MCP config file in the MCPs section. Add one entry under mcpServers using the field serverUrl, not url, with https://mcpemails.com/api/mcp, save the file, and sign in with MCPEmails when prompted."
   },
   "method": {
     "title": "How Windsurf connects: OAuth, no API key",
-    "body": "Windsurf runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+    "body": "Devin Desktop (formerly Windsurf) runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
   },
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password, and Gmail can also use Google sign-in; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
-      "h": "Open the Cascade MCP settings",
-      "p": "Open Cascade MCP settings, or edit <code>~/.codeium/windsurf/mcp_config.json</code> directly."
+      "h": "Open the MCP config file",
+      "p": "In the Cascade panel, click the <b>...</b> menu at the top right, and in the <b>MCPs</b> section click <b>Open MCP config file</b>. The file is <code>~/.config/devin/mcp_config.json</code> on macOS and Linux, and <code>%APPDATA%\\devin\\mcp_config.json</code> on Windows."
     },
     {
       "h": "Add the server",
       "p": "Add the entry below. The field name here is <code>serverUrl</code>, not <code>url</code>."
     },
     {
-      "h": "Refresh and authorize",
-      "p": "Refresh MCP servers in Cascade and authorize with mcpemails when prompted. Approve the scopes you want Cascade to hold."
+      "h": "Save and sign in",
+      "p": "Save the file and sign in with MCPEmails when prompted. Approve the scopes you want Cascade to hold."
     }
   ],
   "gotchas": [
     {
       "h": "The field is serverUrl, and url fails silently",
-      "p": "This is the single most common Windsurf setup mistake, and it is entirely reasonable to make: Cursor, Zed and VS Code all read <code>url</code>, so a snippet copied from any of them looks right. Windsurf reads <code>serverUrl</code>. With the wrong key the entry parses, the server appears in the list, and no tools ever arrive."
+      "p": "This is the single most common Windsurf setup mistake, and it is entirely reasonable to make: Cursor, Zed and VS Code all read <code>url</code>, so a snippet copied from any of them looks right. Devin Desktop reads <code>serverUrl</code>. With the wrong key the entry parses, the server appears in the list, and no tools ever arrive."
     },
     {
-      "h": "Cascade needs a refresh, it does not watch the file",
-      "p": "Editing <code>mcp_config.json</code> in an editor does not make Cascade reload it. Use the refresh action in the MCP panel after any change. A correct entry that has not been refreshed looks exactly like a broken one."
+      "h": "Older guides point at the Windsurf config path",
+      "p": "Windsurf kept its MCP config in <code>~/.codeium/windsurf/mcp_config.json</code>, and many guides still say so. Devin Desktop uses <code>~/.config/devin/mcp_config.json</code> (<code>%APPDATA%\\devin\\mcp_config.json</code> on Windows). The <b>Open MCP config file</b> item in the Cascade <b>...</b> menu opens the file it actually reads, so start there rather than typing a path."
     },
     {
       "h": "Decide up front whether Cascade should be able to send",
@@ -55,26 +55,26 @@
     }
   ],
   "limits": [
-    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "Requests are rate limited per key in per-minute, hourly and daily windows sized to your plan, so one key can use the plan's full per-minute ceiling and several keys share it. A 429 carries Retry-After. Your plan ceiling on billable actions also applies.",
     "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
     "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
   ],
   "faq": [
     {
       "q": "How do I connect email to Windsurf?",
-      "a": "Add an entry under mcpServers in ~/.codeium/windsurf/mcp_config.json with serverUrl set to https://mcpemails.com/api/mcp, refresh MCP servers in Cascade, and authorize when prompted. Cascade then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+      "a": "In Devin Desktop, formerly Windsurf, open the ... menu in the Cascade panel and click Open MCP config file. Add an entry under mcpServers with serverUrl set to https://mcpemails.com/api/mcp, save, and sign in with MCPEmails when prompted. Cascade then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
     },
     {
       "q": "Why does my Windsurf config not work when the same JSON works in Cursor?",
-      "a": "Almost always the field name. Cursor reads url, Windsurf reads serverUrl. The rest of the entry is identical, which is exactly why the mistake survives a careful read."
+      "a": "Almost always the field name. Cursor reads url, Devin Desktop reads serverUrl. The rest of the entry is identical, which is exactly why the mistake survives a careful read."
     },
     {
       "q": "Do I need an API key for Windsurf?",
-      "a": "No. Windsurf runs the OAuth flow against this server, so the config file holds only a public URL. A bearer API key remains available for scripted or headless use."
+      "a": "No. Devin Desktop (formerly Windsurf) runs the OAuth flow against this server, so the config file holds only a public URL. A bearer API key remains available for scripted or headless use."
     },
     {
       "q": "Which mailboxes can Windsurf reach this way?",
-      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, with Google sign-in as a second option for Gmail; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
     },
     {
       "q": "Can Cascade send email without me seeing it?",

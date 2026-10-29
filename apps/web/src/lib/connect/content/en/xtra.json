@@ -18,8 +18,8 @@
     "eyebrow": "Spark Xtra Mail + AI",
     "titleLine1": "Connect your Xtra Mail inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Xtra Mail takes a plain password over IMAP, with no app password to generate and no second factor in the way. mcpemails connects it so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach an Xtra Mail inbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.xtra.co.nz on port 993, signing in with your full xtra.co.nz address and your ordinary Xtra Mail password. Spark issues no app-specific passwords for Xtra Mail and states that its two-step verification applies only in the webmail portal and not to email clients, so a correct password authenticates directly even with two-step turned on. Once connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail. One inbox is free, forever.",
+    "lead": "Xtra Mail takes a plain password over IMAP, with no app password to generate and no second factor in the way. MCPEmails connects it so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach an Xtra Mail inbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.xtra.co.nz on port 993, signing in with your full xtra.co.nz address and your ordinary Xtra Mail password. Spark issues no app-specific passwords for Xtra Mail and states that its two-step verification applies only in the webmail portal and not to email clients, so a correct password authenticates directly even with two-step turned on. Once connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Your Xtra password, no app password",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the full address and your Xtra Mail password",
-      "p": "In mcpemails choose IMAP / SMTP and enter the address exactly as Spark writes it, such as <code>joe.bloggs@xtra.co.nz</code>, with the password you use to sign in to Xtra webmail. The hosts and ports above are prefilled and were verified from a live TLS connection."
+      "p": "In MCPEmails choose IMAP / SMTP and enter the address exactly as Spark writes it, such as <code>joe.bloggs@xtra.co.nz</code>, with the password you use to sign in to Xtra webmail. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with Xtra Mail?",
-      "a": "Not directly. Claude has no built-in Spark or Xtra connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your xtra.co.nz mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Spark or Xtra connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your xtra.co.nz mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Xtra Mail IMAP and SMTP settings?",

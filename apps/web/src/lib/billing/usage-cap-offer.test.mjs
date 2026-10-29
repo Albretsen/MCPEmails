@@ -42,7 +42,7 @@ test('every key the offer names exists in every dashboard locale', () => {
   // The offer is rendered through next-intl. A missing key renders as the
   // key itself, on a paywall, in one language only, which nobody notices
   // until a customer in that language does.
-  const locales = ['en', 'es', 'fr', 'nb', 'zh'];
+  const locales = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
   for (const locale of locales) {
     const messages = JSON.parse(readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'));
     for (const offer of [usageCapOffer(), usageCapOffer({ reached: true })]) {
@@ -95,4 +95,11 @@ test('a plan /pricing will not emphasise still gets a well-formed compare link',
   // pricingCompareHref degrades to a bare /pricing for an unsellable plan, so
   // the offer name has to attach with "?" there and "&" everywhere else.
   assert.equal(usageCapCompareHref('free', false), `/pricing?offer=${USAGE_CAP_OFFER}`);
+});
+
+test('the banner buy link carries a German buyer\'s language next to the offer', () => {
+  const buy = new URL(usageCapCheckoutHref('personal', false, 'de'), 'https://mcpemails.test');
+  assert.equal(buy.searchParams.get('lang'), 'de');
+  assert.equal(buy.searchParams.get('offer'), USAGE_CAP_OFFER);
+  assert.equal(new URL(usageCapCheckoutHref('personal', false, 'en'), 'https://mcpemails.test').searchParams.has('lang'), false);
 });

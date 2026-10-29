@@ -14,32 +14,36 @@
     "eyebrow": "Claude + correo",
     "titleLine1": "Conecta tu bandeja a Claude",
     "titleLine2": "como conector personalizado",
-    "lead": "Claude no tiene un cliente de correo propio. mcpemails es el servidor MCP alojado que se lo da: leer, buscar, enviar, responder, reenviar, programar y organizar correo real desde claude.ai o Claude Desktop.",
+    "lead": "Claude no tiene un cliente de correo propio. MCPEmails es el servidor MCP alojado que se lo da: leer, buscar, enviar, responder, reenviar, programar y organizar correo real desde claude.ai o Claude Desktop.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth, sin clave de API",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "Añade https://mcpemails.com/api/mcp como conector personalizado en Claude, haz clic en Connect e inicia sesión con tu cuenta de mcpemails. Claude se registra automáticamente y pide los permisos que tú apruebas. No hay clave de API que crear ni archivo de configuración que editar."
+    "answer": "En claude.ai o Claude Desktop, abre Customize, Connectors, haz clic en + Add y luego en Add custom connector. Llámalo MCPEmails, pega https://mcpemails.com/api/mcp, haz clic en Continue, deja los ajustes de inicio de sesión detectados, haz clic en Add e inicia sesión con MCPEmails. No hay clave de API que crear ni archivo de configuración que editar."
   },
   "method": {
     "title": "Cómo se conecta Claude: OAuth, sin clave de API",
     "body": "Claude ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
   },
+  "answerSection": {
+    "title": "¿Qué servidores MCP funcionan con Claude Desktop para el correo?",
+    "body": "Claude Desktop admite cualquier servidor MCP remoto añadido como conector personalizado, así que un servidor de correo alojado como MCPEmails funciona igual que en claude.ai: abre <b>Customize</b>, <b>Connectors</b>, añade <code>https://mcpemails.com/api/mcp</code> e inicia sesión. Esa URL cubre Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo y cualquier buzón IMAP. Los conectores propios de Claude para Gmail y Microsoft 365 también aparecen en Claude Desktop, pero cada uno cubre un solo proveedor, y el de Microsoft 365 solo acepta cuentas del trabajo o de un centro educativo. Los servidores locales que se inician desde <code>claude_desktop_config.json</code> también funcionan; se ejecutan en tu ordenador y guardan el acceso a tu correo en un archivo."
+  },
   "setup": [
     {
       "h": "Crea una cuenta gratis y conecta un buzón",
-      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación, y Gmail también admite el inicio de sesión de Google; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
     },
     {
-      "h": "Abre los ajustes de conectores",
-      "p": "En claude.ai o Claude Desktop, abre Settings y luego Connectors."
+      "h": "Abre la página de conectores",
+      "p": "En claude.ai o Claude Desktop, abre <b>Customize</b> y luego <b>Connectors</b>. Haz clic en <b>+ Add</b> y luego en <b>Add custom connector</b>."
     },
     {
-      "h": "Añade un conector personalizado",
-      "p": "Haz clic en Add custom connector, pega <code>https://mcpemails.com/api/mcp</code> como URL del conector y haz clic en Add."
+      "h": "Añade el servidor",
+      "p": "Escribe un nombre como MCPEmails, pega <code>https://mcpemails.com/api/mcp</code> como URL y haz clic en <b>Continue</b>. Revisa los ajustes de inicio de sesión detectados (los valores por defecto sirven) y haz clic en <b>Add</b>."
     },
     {
-      "h": "Conecta y autoriza",
-      "p": "Haz clic en Connect e inicia sesión con mcpemails para autorizar. Aprueba los permisos que quieres que tenga Claude. No necesitas clave de API."
+      "h": "Inicia sesión y actívalo",
+      "p": "Inicia sesión con MCPEmails y aprueba los permisos que quieres que tenga Claude. No necesitas clave de API. En un chat, haz clic en <b>+</b> abajo a la izquierda, elige <b>Connectors</b> y activa MCPEmails."
     }
   ],
   "gotchas": [
@@ -54,17 +58,21 @@
     {
       "h": "La conexión funciona por consulta, así que Claude no verá el correo por su cuenta",
       "p": "No hay webhooks ni notificaciones push. Claude ve el correo nuevo cuando hace una llamada, es decir, cuando tú se lo pides. Una instrucción fija como \"revisa si hay algo de finanzas antes de empezar\" es lo que lo convierte en una rutina; nada llega sin que se pida."
+    },
+    {
+      "h": "Free admite un conector personalizado, y en Team y Enterprise lo añade un Owner",
+      "p": "El plan Free admite como máximo un conector personalizado; con Pro y Max puedes añadir todos los que necesites. En Team y Enterprise, un Owner añade MCPEmails en <b>Organization settings</b>, <b>Connectors</b>. Después, los miembros abren <b>Customize</b>, <b>Connectors</b>, lo buscan y hacen clic en <b>Connect</b> para iniciar sesión."
     }
   ],
   "limits": [
-    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "Las solicitudes se limitan por clave en ventanas por minuto, por hora y por día dimensionadas según tu plan, así que una sola clave puede usar todo el tope por minuto del plan y varias claves lo comparten. Un 429 lleva Retry-After. El tope de acciones facturables de tu plan también se aplica.",
     "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
     "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
   ],
   "faq": [
     {
       "q": "¿Puede Claude leer mi correo?",
-      "a": "No por sí solo. Claude solo puede acceder a un buzón a través de un conector, y un conector personalizado que apunte a mcpemails es una forma de darle uno. Una vez conectado, Claude puede listar, leer, buscar, enviar, responder, reenviar, organizar y programar correo en todas las bandejas que tengas conectadas, dentro de los permisos que aprobaste."
+      "a": "No por sí solo. Claude solo puede acceder a un buzón a través de un conector, y un conector personalizado que apunte a MCPEmails es una forma de darle uno. Una vez conectado, Claude puede listar, leer, buscar, enviar, responder, reenviar, organizar y programar correo en todas las bandejas que tengas conectadas, dentro de los permisos que aprobaste."
     },
     {
       "q": "¿Necesito una clave de API para Claude?",
@@ -72,19 +80,19 @@
     },
     {
       "q": "¿Qué buzones puede alcanzar Claude de esta forma?",
-      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación, con el inicio de sesión de Google como segunda opción para Gmail; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
     },
     {
       "q": "¿Puede Claude enviar correo sin que yo lo vea?",
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     },
     {
       "q": "¿Funciona en Claude Desktop además de en claude.ai?",
-      "a": "Sí. Ambos acceden a los conectores personalizados desde la misma pantalla Settings, Connectors y ambos comparten la misma conexión, así que un buzón añadido en uno está disponible en el otro. Para la terminal, consulta la guía aparte de Claude Code."
+      "a": "Sí. Ambos acceden a los conectores personalizados desde la misma página Customize, Connectors y ambos comparten la misma conexión, así que un buzón añadido en uno está disponible en el otro. Para la terminal, consulta la guía aparte de Claude Code."
     }
   ],
   "ctaBand": {

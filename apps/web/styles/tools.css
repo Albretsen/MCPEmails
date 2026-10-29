@@ -1,0 +1,62 @@
+/* /tools/*: the settings lookup card and its explainer. Tokens only; loaded by app/[locale]/tools/email-settings-lookup/page.js.
+   One column: every block starts at the container's left edge, under the H1. Nothing is centered. */
+.pricing-footnote.tool-footnote { margin: 16px 0 0; max-width: 760px; text-align: left; }
+
+.tool-card {
+  max-width: 760px; margin: 28px 0 0; text-align: left; box-sizing: border-box;
+  background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 12px; padding: 20px;
+}
+.tool-label { display: block; font-size: 13px; font-weight: 500; color: var(--fg-1); margin-bottom: 6px; }
+.tool-row { display: flex; gap: 8px; }
+.tool-input {
+  flex: 1; min-width: 0; box-sizing: border-box; font-family: var(--font-sans); font-size: 16px;
+  padding: 10px 12px; background: var(--bg-page); color: var(--fg-1);
+  border: 1px solid var(--border-1); border-radius: 8px; outline: none;
+}
+.tool-input:hover { border-color: var(--border-2); }
+.tool-input:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+.tool-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 0 0; font-size: 13px; color: var(--fg-3); }
+.tool-example {
+  font: inherit; font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--cobalt-600);
+  background: none; border: 0; padding: 0; cursor: pointer;
+}
+.tool-example:hover { text-decoration: underline; }
+.tool-privacy { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--fg-3); }
+
+.tool-result:not(:empty) { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border-1); }
+.tool-status, .tool-error { margin: 0; font-size: 14px; }
+.tool-status { color: var(--fg-2); }
+.tool-error { color: var(--red-500); }
+.tool-provider { margin: 0 0 12px; font-size: 15px; color: var(--fg-2); }
+.tool-provider strong { color: var(--fg-1); }
+.tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.tool-grid h3, .tool-mx h3, .tool-cta h3 { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--fg-1); }
+.tool-settings { margin: 0; display: grid; gap: 6px; }
+.tool-settings div { display: grid; grid-template-columns: 84px 1fr; gap: 8px; font-size: 14px; }
+.tool-settings dt { color: var(--fg-3); }
+.tool-settings dd { margin: 0; color: var(--fg-1); overflow-wrap: anywhere; }
+.tool-source, .tool-note { margin: 14px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--fg-2); }
+.tool-mx { margin-top: 14px; }
+.tool-mx ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.7; }
+.tool-mx p { margin: 4px 0 0; font-size: 12.5px; color: var(--fg-3); }
+.tool-cta { margin-top: 18px; padding: 14px 16px; border-radius: 8px; background: var(--bg-page); }
+.tool-cta p { margin: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--fg-2); }
+.tool-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 14px; }
+.tool-cta .tool-cta-row { margin-top: 0; }
+.tool-link { font-size: 14px; font-weight: 500; color: var(--cobalt-600); }
+
+.tool-explain { max-width: 760px; margin: 0; display: grid; gap: 24px; }
+.tool-explain h3 { margin: 0 0 6px; font-size: 18px; }
+.tool-explain p { margin: 0; color: var(--fg-2); font-size: 15px; line-height: 1.65; }
+.tool-faq-q { margin: 0; padding: 20px 0 8px; font-family: var(--font-sans); font-size: 16px; font-weight: 500; color: var(--fg-1); }
+.tool-related, .tool-sources {
+  margin: 0; padding: 0; max-width: 760px; list-style: none; display: grid; gap: 10px;
+  font-size: 14px; line-height: 1.6; color: var(--fg-2);
+}
+.tool-sources { font-size: 13.5px; }
+.tool-sources li { overflow-wrap: anywhere; }
+
+@media (max-width: 520px) {
+  .tool-card { padding: 16px; }
+  .tool-row { flex-direction: column; }
+}

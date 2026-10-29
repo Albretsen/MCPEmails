@@ -23,23 +23,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Migadu tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas atteindre Migadu tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Migadu se connecte : IMAP et le mot de passe de la boîte",
-    "body": "Migadu se connecte en IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas le mot de passe de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, sous Mailboxes, puis collez-le dans mcpemails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs, quel que soit votre domaine : il n'y a rien à chercher."
+    "body": "Migadu se connecte en IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas le mot de passe de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, sous Mailboxes, puis collez-le dans MCPEmails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs, quel que soit votre domaine : il n'y a rien à chercher."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Définissez un mot de passe de boîte dans Migadu",
       "p": "Dans l'espace d'administration Migadu, ouvrez Mailboxes, choisissez la boîte et définissez son mot de passe. Les clients de messagerie s'authentifient avec ce mot de passe ; votre identifiant d'administration ne fonctionnera pas."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Migadu, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -62,18 +62,18 @@
     },
     {
       "h": "Ni MOVE, ni UIDPLUS, ni SPECIAL-USE, ni IDLE",
-      "p": "Les capacités annoncées par Migadu omettent quatre extensions que la plupart des hébergeurs proposent. Sans <b>MOVE</b>, déplacer un message se fait par une copie, une mise à jour d'indicateur et un expunge plutôt qu'en une seule commande atomique. Sans <b>UIDPLUS</b>, le serveur ne communique pas le nouvel identifiant d'un message copié, qu'il faut donc retrouver en cherchant dans le dossier de destination. Sans <b>SPECIAL-USE</b>, Sent, Drafts, Trash et Archive sont reconnus par leur nom plutôt que par leur rôle : une boîte dont les dossiers ont été renommés exige de nommer le dossier explicitement. Sans <b>IDLE</b>, il n'y a aucun canal push. Rien de tout cela n'empêche la connexion de fonctionner, et mcpemails lit à la demande au lieu d'attendre des notifications push, mais cela explique des comportements que vous ne verrez pas chez d'autres fournisseurs."
+      "p": "Les capacités annoncées par Migadu omettent quatre extensions que la plupart des hébergeurs proposent. Sans <b>MOVE</b>, déplacer un message se fait par une copie, une mise à jour d'indicateur et un expunge plutôt qu'en une seule commande atomique. Sans <b>UIDPLUS</b>, le serveur ne communique pas le nouvel identifiant d'un message copié, qu'il faut donc retrouver en cherchant dans le dossier de destination. Sans <b>SPECIAL-USE</b>, Sent, Drafts, Trash et Archive sont reconnus par leur nom plutôt que par leur rôle : une boîte dont les dossiers ont été renommés exige de nommer le dossier explicitement. Sans <b>IDLE</b>, il n'y a aucun canal push. Rien de tout cela n'empêche la connexion de fonctionner, et MCPEmails lit à la demande au lieu d'attendre des notifications push, mais cela explique des comportements que vous ne verrez pas chez d'autres fournisseurs."
     }
   ],
   "limits": [
     "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours de route, un message peut brièvement se trouver dans les deux dossiers.",
     "Les dossiers sont reconnus par leur nom plutôt que par leur rôle : une boîte aux dossiers renommés ou nommés dans une autre langue que l'anglais peut exiger de nommer explicitement le dossier cible.",
-    "mcpemails connecte une boîte. Les domaines, transferts, réécritures et les quotas d'envoi et de réception propres à Migadu restent dans l'espace d'administration Migadu."
+    "MCPEmails connecte une boîte. Les domaines, transferts, réécritures et les quotas d'envoi et de réception propres à Migadu restent dans l'espace d'administration Migadu."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Migadu ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur Migadu intégré. Connecter un serveur MCP comme mcpemails à votre boîte Migadu en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme la connexion est du simple IMAP, la même boîte est aussi disponible dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur Migadu intégré. Connecter un serveur MCP comme MCPEmails à votre boîte Migadu en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme la connexion est du simple IMAP, la même boîte est aussi disponible dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Migadu ?",

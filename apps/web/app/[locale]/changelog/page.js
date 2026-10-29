@@ -3,6 +3,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd, APP_URL } 
 import { getEntriesByMonth, getEntries, getLatestDate } from '@/lib/changelog/entries.mjs';
 import { getChangelogCopy } from '@/lib/changelog/copy.mjs';
 import ChangelogView from '../../../components/marketing/ChangelogView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /changelog: the public record of what has shipped.
@@ -19,6 +20,7 @@ import ChangelogView from '../../../components/marketing/ChangelogView';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const copy = getChangelogCopy(locale);
   const { title, description } = copy.meta;
   return {
@@ -28,14 +30,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/changelog'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -44,6 +46,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ChangelogPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const copy = getChangelogCopy(locale);
@@ -53,7 +56,7 @@ export default async function ChangelogPage({ params }) {
 
   // WebPage + BreadcrumbList (the shape every other static marketing page
   // emits), plus an ItemList of the releases themselves so an assistant asked
-  // "what is new in mcpemails" has something machine readable to read. Every
+  // "what is new in MCPEmails" has something machine readable to read. Every
   // item mirrors visible page content; nothing is claimed here that the list
   // above does not already say.
   const base = pageJsonLd(locale, {

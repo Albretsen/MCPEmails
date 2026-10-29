@@ -21,7 +21,7 @@
     "titleLine1": "将 Terra Mail 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Terra 收件箱。在拥有有效付费套餐的巴西 terra.com.br 邮箱上，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Terra Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.terra.com.br 的 993 端口，用你的完整地址和 Terra Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Terra 已停止免费邮箱，因此没有有效付费 Terra Mail 套餐的地址会被封锁，而不只是受限；Terra 的非巴西域名多年前就已关闭，根本没有服务器。只有 terra.com.br 仍在运行。mcpemails 上一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Terra Mail。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.terra.com.br 的 993 端口，用你的完整地址和 Terra Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Terra 已停止免费邮箱，因此没有有效付费 Terra Mail 套餐的地址会被封锁，而不只是受限；Terra 的非巴西域名多年前就已关闭，根本没有服务器。只有 terra.com.br 仍在运行。MCPEmails 上一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "有效的付费 Terra Mail 套餐",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并始终免费，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "登录 Terra 网页邮箱。如果网页邮箱本身拒绝你，或提示套餐需要更新，那么该邮箱就属于 Terra 免费服务终止时受影响的账户，在其上开通付费 Terra Mail 套餐之前，任何邮件客户端都无法连接。如果网页邮箱能正常打开，说明账户有效，可以继续。"
     },
     {
-      "h": "在 mcpemails 中输入地址和密码",
+      "h": "在 MCPEmails 中输入地址和密码",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 <code>nome@terra.com.br</code>）和邮箱密码。Terra 的服务器和端口已自动填好，并已通过实时 TLS 连接确认。Terra 不签发应用专用密码，所以如果你一直在设置里找它，那里什么都没有。"
     },
     {
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "需要付费的 Terra Mail 套餐。已经没有可以连接的免费 terra.com.br 邮箱，mcpemails 也无法绕过 Terra 自身服务器实施的封锁。",
+    "需要付费的 Terra Mail 套餐。已经没有可以连接的免费 terra.com.br 邮箱，MCPEmails 也无法绕过 Terra 自身服务器实施的封锁。",
     "由于 MOVE 和 UIDPLUS 都缺失，归档邮件不是原子操作，结果需要通过搜索确认。中断的操作可能让一封邮件短暂同时存在于两个文件夹中。",
     "缺少 SPECIAL-USE，因此文件夹按名称而不是按用途匹配。在葡萄牙语邮箱中，名称通常是 Enviados、Rascunhos、Lixeira 和 Spam。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Terra Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Terra 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 terra.com.br 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Terra 连接器，也无法自行建立 IMAP 连接。将 MCPEmails 这样的 MCP 服务器连接到你的 terra.com.br 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Terra 的 IMAP 和 SMTP 设置是什么？",
@@ -95,6 +95,6 @@
   ],
   "ctaBand": {
     "title": "给你的 AI 一个 Terra 收件箱",
-    "sub": "几分钟即可连接有效的 terra.com.br 邮箱。mcpemails 上一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接有效的 terra.com.br 邮箱。MCPEmails 上一个收件箱永久免费，无需信用卡。"
   }
 }

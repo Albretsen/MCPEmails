@@ -78,13 +78,23 @@ const STORED_TEXT = 'Ada Lovelace\nacme.com';
  * A PATCH is answered the way the route answers it: the saved signature echoed
  * back under `signature`, which App.jsx merges into the inbox.
  */
-async function renderInboxes(t, { inboxes = [inbox()], respond } = {}) {
+async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owner', chatConfirmEnabled = false } = {}) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
+    // The detail modal's Send As list (send-as-ui.test.mjs covers it). Not a
+    // signature request, so it is answered and left out of `requests`.
+    if (String(url).endsWith('/send-as') && (init.method ?? 'GET') === 'GET') {
+      return { ok: true, status: 200, json: async () => ({ aliases: [] }) };
+    }
     let body = null;
     if (typeof init.body === 'string') body = JSON.parse(init.body);
     const request = { url: String(url), method: init.method ?? 'GET', body, raw: init.body };
+    // Analytics beacons are not what this suite counts. The fixture is a
+    // business-domain workspace with one mailbox, so the Inboxes page shows the
+    // second-mailbox invitation, and with no IntersectionObserver in this DOM
+    // its `shown` beacon fires on mount (covered in inbox-cap-offer-ui.test.mjs).
+    if (request.url.startsWith('/api/analytics/')) return { ok: true, status: 204, json: async () => ({}) };
     requests.push(request);
     if (respond) return respond(request);
     return {
@@ -98,11 +108,11 @@ async function renderInboxes(t, { inboxes = [inbox()], respond } = {}) {
     createElement(DashboardApp, {
       initialRoute: 'inboxes',
       user: { displayName: 'Ada', email: 'ada@acme.com', initials: 'A', id: 'u-0001' },
-      workspace: { id: WORKSPACE_ID, slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: true },
+      workspace: { id: WORKSPACE_ID, slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: userRole === 'owner', chatConfirmEnabled },
       workspaces: [],
       activeWorkspaceId: WORKSPACE_ID,
       mcpUrl: 'https://mcpemails.com/api/mcp',
-      userRole: 'owner',
+      userRole,
       planLimits: { inboxes: 10, members: 5 },
       stripePrices: {},
       overviewStats: {},
@@ -269,7 +279,12 @@ test('load: a text-only signature becomes one paragraph per line', async (t) => 
   await view.openReady();
   // The blank line is `<br>` from textToHtml, which TipTap wraps in its own
   // paragraph: a hard break plus ProseMirror's trailing break in the DOM.
-  assert.equal(view.pm().innerHTML, '<p>Ada &lt;Lovelace&gt;</p><p><br><br class="ProseMirror-trailingBreak"></p><p>Acme &amp; Co</p>');
+  // prosemirror-view >= 1.42.6 also puts a `ProseMirror-separator` <img> in
+  // front of an inline atom at the start of a block on Safari and Firefox, and
+  // jsdom reports `navigator.vendor` "Apple Computer, Inc.", so it counts as
+  // Safari here. That node is editor DOM only: the preview below (the saved
+  // HTML) has no separator.
+  assert.equal(view.pm().innerHTML, '<p>Ada &lt;Lovelace&gt;</p><p><img class="ProseMirror-separator" alt=""><br><br class="ProseMirror-trailingBreak"></p><p>Acme &amp; Co</p>');
   await waitFor(() => view.preview().innerHTML === '<p>Ada &lt;Lovelace&gt;</p><p><br></p><p>Acme &amp; Co</p>',
     { message: 'the preview to show the text-seeded signature' });
 });
@@ -323,8 +338,6 @@ test('typing: inserted text reaches the live preview and the save', async (t) =>
     signature_text: 'Ada Lovelace',
     signature_enabled: true,
     signature_reply_mode: 'first_only',
-    send_review_mode: 'off',
-    send_approval_required: false,
   });
 });
 
@@ -737,8 +750,6 @@ test('immediate save: Save clicked in the same breath as opening sends the STORE
     signature_text: 'Ada Lovelace\n\nacme.com',
     signature_enabled: true,
     signature_reply_mode: 'always',
-    send_review_mode: 'off',
-    send_approval_required: false,
   });
 });
 
@@ -771,4 +782,82 @@ test('reopen: a second inbox opens with its own signature, not the first one', a
   const patch = await view.save();
   assert.equal(patch.url, '/api/inboxes/ib-0002');
   assert.equal(patch.body.signature_html, '<p>Second</p>');
+});
+
+// ===========================================================================
+// Roles. The review gate is owner/admin-only, and PATCH /api/inboxes/[id]
+// refuses a member who CHANGES it. The form used to send the review fields
+// with every save, so a member could not save a signature at all.
+// ===========================================================================
+
+const reviewRadios = (view) => [...view.container.querySelectorAll('input[name="send-review-mode"]')];
+
+test('member: can save a signature; the review fields are not sent, and the selector says why it is locked', async (t) => {
+  const view = await renderInboxes(t, {
+    userRole: 'member',
+    inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT, sendReviewMode: 'dashboard', sendApprovalRequired: true })],
+  });
+  await view.openReady();
+
+  const radios = reviewRadios(view);
+  assert.equal(radios.length, 3, 'outside the chat rollout: off, inline, dashboard');
+  for (const r of radios) assert.equal(r.disabled, true, 'a member cannot change the review gate');
+  assert.ok(view.container.textContent.includes(en.approvals.mode.ownerAdminOnly), 'the reason is shown');
+  assert.equal(view.button(COPY.save).disabled, false, 'a member can still save');
+
+  const patch = await view.save();
+  assert.equal(patch.body.signature_html, STORED_HTML_AS_EDITED);
+  assert.ok(!('send_review_mode' in patch.body), 'send_review_mode is not sent');
+  assert.ok(!('send_approval_required' in patch.body), 'send_approval_required is not sent');
+});
+
+test('admin: the review selector is enabled and a changed mode is sent', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  for (const r of reviewRadios(view)) assert.equal(r.disabled, false);
+  assert.ok(!view.container.textContent.includes(en.approvals.mode.ownerAdminOnly));
+  await view.click(view.container.querySelector('input[name="send-review-mode"][value="inline"]'));
+  const patch = await view.save();
+  assert.equal(patch.body.send_review_mode, 'inline');
+  assert.equal(patch.body.send_approval_required, true);
+});
+
+test('outside the internal rollout, "Confirm in chat" is not offered', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  assert.equal(reviewRadios(view).length, 3);
+  assert.equal(view.container.querySelectorAll('input[name="send-review-mode"][value="chat"]').length, 0);
+});
+
+test('admin: "Confirm in chat" is sent as the chat mode and holds nothing', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', chatConfirmEnabled: true, inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  assert.ok(view.container.textContent.includes(en.approvals.mode.chat), 'the option is labelled');
+  await view.click(view.container.querySelector('input[name="send-review-mode"][value="chat"]'));
+  const patch = await view.save();
+  assert.equal(patch.body.send_review_mode, 'chat');
+  assert.equal(patch.body.send_approval_required, false, 'chat mode never holds a send for approval');
+});
+
+test('viewer: sender name and signature are read-only with the reason, and nothing is saved', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'viewer', inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+
+  assert.ok(view.panel().textContent.includes(en.inboxes.viewerActionsNote), 'the reason is shown in the panel');
+  const nameInput = view.container.querySelector(`#sender-name-${INBOX_ID}`);
+  assert.ok(nameInput, 'the sender name field is shown');
+  assert.equal(nameInput.disabled, true, 'the sender name field is read-only');
+  assert.equal(view.button(en.inboxes.detail.senderName.save).disabled, true);
+
+  const save = view.button(COPY.save);
+  assert.equal(save.disabled, true, 'signature Save is disabled');
+  for (const r of reviewRadios(view)) assert.equal(r.disabled, true);
+  assert.equal(view.container.querySelector('details.inbox-sending-details select.input').disabled, true);
+  assert.equal(view.toolbar('Insert image').disabled, true, 'the image upload is disabled');
+  assert.equal(view.pm().getAttribute('contenteditable'), 'false', 'the editor is not editable');
+
+  await flush(() => save.click());
+  await flush(() => {});
+  assert.equal(view.patches().length, 0, 'no PATCH was sent');
+  assert.equal(view.requests.filter((r) => r.url.includes('/signature/image')).length, 0);
 });

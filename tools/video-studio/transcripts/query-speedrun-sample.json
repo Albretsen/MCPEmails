@@ -1,0 +1,37 @@
+{
+  "id": "query-speedrun-sample",
+  "verifiedAt": "2026-10-24T12:00:51.513Z",
+  "endpoint": "https://mcpemails.com/api/mcp",
+  "turns": [
+    {
+      "role": "user",
+      "text": "Is there anything in here I actually have to pay?"
+    },
+    {
+      "role": "tool",
+      "name": "email_read",
+      "args": {
+        "action": "list",
+        "folder": "Demo"
+      },
+      "ok": true,
+      "summary": "9 messages",
+      "ms": 1824
+    },
+    {
+      "role": "tool",
+      "name": "email_read",
+      "args": {
+        "action": "read",
+        "message_id": "Demo:17"
+      },
+      "ok": true,
+      "summary": "opened \"Reminder: invoice KV-1182 is overdue\"",
+      "ms": 1905
+    },
+    {
+      "role": "assistant",
+      "text": "Found it: \"Reminder: invoice KV-1182 is overdue\", from Lena Brandt. Start there, the rest can wait."
+    }
+  ]
+}

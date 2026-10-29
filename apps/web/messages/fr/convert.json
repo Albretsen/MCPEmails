@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Votre forfait : Free",
+    "lead": "Free couvre ce que vous venez de faire. Voici ce que chaque forfait ajoute si vous voulez plus.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# boîte mail} other {Jusqu'à # boîtes mail}}",
+    "freeGrace": "Illimité jusqu'au {date}",
+    "freeCap": "{cap} actions e-mail par mois",
+    "noCap": "Actions e-mail illimitées",
+    "emailSupport": "Support par e-mail",
+    "everythingPersonal": "Tout ce que contient Personal",
+    "perMonth": "{price}/mois",
+    "perYear": "{price}/an",
+    "intervalLabel": "Période de facturation",
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "recommended": "Recommandé",
+    "choose": "Choisir {plan}",
+    "continueFree": "Continuer avec Free",
+    "dismiss": "Masquer le résumé des forfaits"
+  },
+  "graceNote": {
+    "today": "Vous avez utilisé MCPEmails {days, plural, one {# jour} other {# jours}}. À partir d'aujourd'hui, Free compte vos actions e-mail mensuelles.",
+    "since": "Vous avez utilisé MCPEmails {days, plural, one {# jour} other {# jours}}. Depuis le {date}, Free compte vos actions e-mail mensuelles.",
+    "seeUsage": "Voir l'utilisation",
+    "dismiss": "Fermer"
+  },
+  "meter": {
+    "level50": "La moitié des {cap} actions e-mail de ce mois est utilisée. Le compteur repart à zéro le {date}.",
+    "level80": "{used} actions e-mail sur {cap} utilisées ce mois-ci. Le compteur repart à zéro le {date}. Personal supprime le plafond mensuel.",
+    "level100": "Les {cap} actions e-mail sont toutes utilisées. Les lectures et écritures sont refusées jusqu'au {date}. Personal supprime le plafond mensuel.",
+    "seePlans": "Voir les forfaits"
+  },
+  "multiInbox": {
+    "title": "Connectez votre autre boîte mail",
+    "desc": "Vous avez aussi un autre compte Gmail, iCloud ou Outlook ? Connectez-le et votre IA gère les deux boîtes dans une seule conversation.",
+    "descUpgrade": "Vous avez aussi un autre compte Gmail, iCloud ou Outlook ? Votre IA peut gérer les deux boîtes dans une seule conversation. Une deuxième boîte mail nécessite un forfait payant."
+  }
+}

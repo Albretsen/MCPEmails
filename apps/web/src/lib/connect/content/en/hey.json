@@ -13,14 +13,14 @@
   },
   "meta": {
     "title": "HEY Email and AI: No IMAP, and What Works Instead",
-    "description": "HEY accepts no IMAP, POP or SMTP connections, so mcpemails cannot connect a HEY mailbox. Why 37signals built it that way, and the two routes that do work."
+    "description": "HEY accepts no IMAP, POP or SMTP connections, so MCPEmails cannot connect a HEY mailbox. Why 37signals built it that way, and the two routes that do work."
   },
   "hero": {
     "eyebrow": "HEY + AI",
     "titleLine1": "HEY has no IMAP, so no",
     "titleLine2": "hosted MCP server can reach it",
     "lead": "HEY is a closed mail system on purpose. No third-party client and no hosted server can log in to a hey.com mailbox. This page gives you the accurate picture and the routes that do put an AI agent on your mail.",
-    "answer": "No, and not because of a missing feature on our side. HEY accepts no IMAP, POP or SMTP connections at all, on hey.com addresses and on HEY for Domains custom domains alike, so mcpemails cannot connect a HEY mailbox and neither can any other hosted MCP server. 37signals treats this as a design decision rather than a gap: screening, contact-level rules and HEY's threading live on its servers and only its own apps speak that protocol. If you want an agent inside HEY, 37signals ships hey-cli, which runs an MCP server locally against your signed-in account. mcpemails is for the IMAP mailboxes you keep alongside it, and one inbox there is free.",
+    "answer": "No, and not because of a missing feature on our side. HEY accepts no IMAP, POP or SMTP connections at all, on hey.com addresses and on HEY for Domains custom domains alike, so MCPEmails cannot connect a HEY mailbox and neither can any other hosted MCP server. 37signals treats this as a design decision rather than a gap: screening, contact-level rules and HEY's threading live on its servers and only its own apps speak that protocol. If you want an agent inside HEY, 37signals ships hey-cli, which runs an MCP server locally against your signed-in account. MCPEmails is for the IMAP mailboxes you keep alongside it, and one inbox there is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "No IMAP, POP or SMTP login",
     "meta2": "hey-cli offers a local MCP server"
@@ -31,12 +31,12 @@
   },
   "setup": [
     {
-      "h": "Create the free mcpemails account",
+      "h": "Create the free MCPEmails account",
       "p": "It takes an email address and no card. You get one connected inbox free, which is what the rest of these steps fill."
     },
     {
       "h": "Decide which mailbox the agent actually works in",
-      "p": "Pick a mailbox that speaks IMAP: your work address, a domain mailbox at Fastmail or Migadu, a Gmail account, anything with a real server. That is the account mcpemails connects, and the one your agent reads, sends and files from."
+      "p": "Pick a mailbox that speaks IMAP: your work address, a domain mailbox at Fastmail or Migadu, a Gmail account, anything with a real server. That is the account MCPEmails connects, and the one your agent reads, sends and files from."
     },
     {
       "h": "Point HEY at it, or export from HEY",
@@ -84,7 +84,7 @@
     },
     {
       "q": "What is the practical way to get an AI agent onto my mail if I use HEY?",
-      "a": "Two options, and you can run both. Use hey-cli locally for HEY itself. Connect a separate IMAP mailbox to mcpemails for the correspondence you want handled from any MCP client, including ones that only take a URL, and forward mail into it if you want a mirror of what arrives in HEY."
+      "a": "Two options, and you can run both. Use hey-cli locally for HEY itself. Connect a separate IMAP mailbox to MCPEmails for the correspondence you want handled from any MCP client, including ones that only take a URL, and forward mail into it if you want a mirror of what arrives in HEY."
     },
     {
       "q": "Can I export my mail out of HEY?",

@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { revealCount } from '../components/snap-cn';
 import { getTheme, type ThemeName } from '../theme';
+import { useLayout } from '../layout';
 import type { TerminalScene } from '../storyboard-types';
 
 /**
@@ -24,6 +25,8 @@ export const Terminal: React.FC<{ scene: TerminalScene; themeName: ThemeName }> 
   const theme = getTheme(themeName);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const layout = useLayout();
+  const { content } = layout;
 
   // Walk the lines, spending frames on each: typed lines cost their length at
   // `cps`, output lines cost a short beat.
@@ -57,7 +60,9 @@ export const Terminal: React.FC<{ scene: TerminalScene; themeName: ThemeName }> 
         background: theme.bgPage,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 120,
+        padding: layout.vertical
+          ? `${content.top}px ${content.right}px ${content.bottom}px ${content.left}px`
+          : 120,
       }}
     >
       <div
@@ -102,7 +107,7 @@ export const Terminal: React.FC<{ scene: TerminalScene; themeName: ThemeName }> 
           style={{
             padding: '34px 40px 44px',
             fontFamily: theme.fontMono,
-            fontSize: 27,
+            fontSize: layout.vertical ? layout.type.mono : 27,
             lineHeight: 1.65,
             color: theme.fg2,
             minHeight: 340,
@@ -114,7 +119,7 @@ export const Terminal: React.FC<{ scene: TerminalScene; themeName: ThemeName }> 
         >
           {rendered.map((line, i) =>
             !line.visible ? null : (
-              <div key={i} style={{ whiteSpace: 'pre-wrap' }}>
+              <div key={i} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                 {line.kind === 'input' ? (
                   <>
                     <span style={{ color: theme.live, marginRight: 12 }}>$</span>

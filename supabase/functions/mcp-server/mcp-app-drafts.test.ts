@@ -35,6 +35,9 @@ import {
   DEFERRED_BODY_SCHEMA_VERSION,
   DRAFT_BODY_META_KEY,
   DRAFT_CARD_NOTICE,
+  DRAFT_CARD_UNLISTED_NOTICE,
+  DRAFT_NO_CARD_NOTICE,
+  draftIsThreaded,
   buildDraftEditorEnvelope,
   buildPlainDraftRead,
   clipDraftBody,
@@ -68,7 +71,7 @@ const IMAP_INBOX: DraftEditorProviderInbox = {
   provider: "imap",
   service: null,
   signature_enabled: true,
-  signature_text: "--\nAsgeir, MCP Emails",
+  signature_text: "--\nAsgeir, MCPEmails",
 };
 
 const GMAIL_INBOX: DraftEditorProviderInbox = {
@@ -351,11 +354,12 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(reply.threaded, true);
   assertEquals((reply.in_reply_to as { message_id: string }).message_id, "INBOX:154");
 
-  // An update or a read carries only the RFC header. `in_reply_to` stays null
-  // (it is typed as a server id) but `threaded` must not read as "lost".
+  // An update or a read carries only the RFC header. Since 2026-10-19 the
+  // context is read back from the draft, with no server id (message_id null),
+  // and `threaded` still must not read as "lost".
   for (const origin of ["update", "read"] as const) {
     const carried = build(normalized({ in_reply_to_header: "<abc@mail>" }), origin);
-    assertEquals(carried.in_reply_to, null);
+    assertEquals(carried.in_reply_to, { message_id: null, subject: "Quarterly numbers", from: null });
     assertEquals(carried.threaded, true);
   }
 
@@ -365,6 +369,54 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(fresh.threaded, false);
   // An empty header is no header.
   assertEquals(build(normalized({ in_reply_to_header: "" }), "read").threaded, false);
+});
+
+Deno.test("an update or read of a reply draft says who it answers, like the reply card (live test, 2026-10-19)", () => {
+  const build = (draft: NormalizedDraft, origin: "update" | "read" | "save") =>
+    (buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin,
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft as Record<string, unknown>);
+  // The text a reply is stored with (index.ts#buildReplyTextBody), signed.
+  const replyText = "Friday works.\n\n-- \nAsgeir, MCPEmails\n\n" +
+    "On Mon, 7 Sep 2026 17:32:55 +0000, Dana Example <dana@x.example> wrote:\n> Can we move the call?";
+  for (const origin of ["update", "read", "save"] as const) {
+    const d = build(
+      normalized({ subject: "Re: Call on Friday", body_text: replyText, in_reply_to_header: "<orig@x.example>" }),
+      origin,
+    );
+    assertEquals(
+      d.in_reply_to,
+      { message_id: null, subject: "Call on Friday", from: "Dana Example <dana@x.example>" },
+      origin,
+    );
+  }
+  // Neutralised like the reply path's own context.
+  const hostile = build(
+    normalized({
+      subject: "Re: Invoice‮txt.exe",
+      body_text: "Ok.\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Ev‮e <e@x.example> wrote:\n> pay",
+      in_reply_to_header: "<o@x>",
+    }),
+    "update",
+  ).in_reply_to as { subject: string; from: string };
+  assertEquals(/‮/.test(hostile.subject + hostile.from), false);
+  // No header: a new message never claims to answer one, quote or not.
+  assertEquals(build(normalized({ body_text: replyText }), "update").in_reply_to, null);
+  // The reply path's server id still wins over anything read back.
+  const reply = build(
+    normalized({
+      body_text: replyText,
+      in_reply_to_header: "<orig@x.example>",
+      in_reply_to: { message_id: "INBOX:9", subject: "Call", from: "Dana" },
+    }),
+    "update",
+  );
+  assertEquals(reply.in_reply_to, { message_id: "INBOX:9", subject: "Call", from: "Dana" });
 });
 
 Deno.test("id_is_stable is false on IMAP and true on the two API providers", () => {
@@ -624,10 +676,14 @@ Deno.test("the merge is a superset and the two key sets are disjoint", () => {
     assert(!(key in envelope), `${key} collides: the envelope must not carry it`);
   }
   const merged = draftCardToolResult(payload, envelope).structuredContent;
+  // Plus one: the server note (`notes`, result-notes.ts), which is neither
+  // side's key and carries DRAFT_CARD_NOTICE on an editor envelope.
+  assert(!("notes" in payload) && !("notes" in envelope));
+  assertEquals(merged.notes, [DRAFT_CARD_NOTICE]);
   assertEquals(
     Object.keys(merged).length,
-    Object.keys(payload).length + Object.keys(envelope).length,
-    "the merged object must be exactly the sum of both key counts",
+    Object.keys(payload).length + Object.keys(envelope).length + 1,
+    "the merged object must be exactly the sum of both key counts, plus notes",
   );
   // And the published keys still read exactly where callers already find them.
   assertEquals(merged.draft_id, "Drafts:2");
@@ -693,7 +749,7 @@ Deno.test("readStoredDraft normalises a provider draft and reports nothing extra
       to: ["a@x.com"],
       cc: ["c@x.com"],
       bcc: ["b@x.com"],
-      bodyText: "Here they are.\n--\nAsgeir, MCP Emails",
+      bodyText: "Here they are.\n--\nAsgeir, MCPEmails",
       bodyHtml: "<p>Here they are.</p>",
       attachments: [{ filename: "q3.pdf", size_bytes: 184320, mime_type: "application/pdf" }],
       inReplyTo: "<abc@mail>",
@@ -897,7 +953,9 @@ Deno.test("RULE: a body_text save regenerates the HTML part from the new text", 
       cc: [],
       bcc: [],
       bodyText: "The old wording.",
-      bodyHtml: "<p>The <b>old</b> wording.</p>",
+      // Paragraphs only: nothing a regeneration loses. A formatted part is
+      // edited in place or dropped instead; see section 11 below.
+      bodyHtml: "<p>The old wording.</p>",
       attachments: [],
     },
   });
@@ -963,16 +1021,16 @@ Deno.test("RULE: no signature is ever applied", async () => {
       to: ["a@x.com"],
       cc: [],
       bcc: [],
-      bodyText: "Body.\n--\nAsgeir, MCP Emails",
+      bodyText: "Body.\n--\nAsgeir, MCPEmails",
       bodyHtml: null,
       attachments: [],
     },
   });
-  const edited = "Edited body.\n--\nAsgeir, MCP Emails";
+  const edited = "Edited body.\n--\nAsgeir, MCPEmails";
   await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", body_text: edited });
   assertEquals(writes[0].params.body, edited, "the text is written exactly as given");
   assertEquals(
-    writes[0].params.body.split("Asgeir, MCP Emails").length - 1,
+    writes[0].params.body.split("Asgeir, MCPEmails").length - 1,
     1,
     "the signature must appear exactly once",
   );
@@ -1449,7 +1507,7 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     options: {
       stored: {
         ...WITH_ATTACHMENT,
-        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, encode: () => [] },
+        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, sizes: [26 * 1024 * 1024], encode: () => [] },
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
@@ -1471,6 +1529,19 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
+  },
+  {
+    at: "save: add_attachments or remove_attachments malformed",
+    tool: "draft_editor_save",
+    expect: "invalid_arguments",
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: -1, filename: "q3.pdf" }] },
+  },
+  {
+    at: "save: Outlook cannot remove a file through a save",
+    tool: "draft_editor_save",
+    expect: "attachment_remove_unsupported",
+    options: { inbox: OUTLOOK_INBOX, stored: WITH_ATTACHMENT },
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 12 }] },
   },
   {
     at: "save: the write said the draft is gone",
@@ -2026,10 +2097,12 @@ Deno.test("a GENUINE body edit still regenerates the HTML part", async () => {
     draft_id: "Drafts:2",
     body_text: "Line one\r\nLine three\r\n",
   });
-  const html = String(writes[0].params.htmlBody);
-  assert(html !== RICH_HTML, "a real edit must own the HTML part");
-  assert(html.includes("Line three"), "the regenerated part says what the user typed");
-  assert(!html.includes("Line two"), "and never the wording that was replaced");
+  // RICH_HTML carries an image and does not say what the text says, so the
+  // edit cannot be made inside it and it is not regenerated either: it is
+  // dropped, and the card is told (section 11). Either way the stale wording
+  // never survives in an HTML part.
+  assertEquals(writes[0].params.htmlBody, undefined, "a real edit must own the HTML part");
+  assertEquals(writes[0].params.body, "Line one\r\nLine three\r\n");
 });
 
 Deno.test("a subject-only save leaves both body parts exactly as stored", async () => {
@@ -2101,9 +2174,10 @@ Deno.test("writing a body into an HTML-only draft owns the HTML part too", async
     draft_id: "Drafts:2",
     body_text: "Replaced entirely.",
   });
-  const html = String(writes[0].params.htmlBody);
-  assert(html.includes("Replaced entirely."), "the HTML says what the user typed");
-  assert(!html.includes("cid:logo"), "and nothing of the part it replaced");
+  // The stored part is formatted (an image), so it is dropped, never kept
+  // saying the old words and never regenerated to pass for the original.
+  assertEquals(writes[0].params.htmlBody, undefined, "nothing of the part it replaced");
+  assertEquals(writes[0].params.body, "Replaced entirely.");
 });
 
 Deno.test("an omitted body_text still leaves an HTML-only draft untouched", async () => {
@@ -2511,7 +2585,7 @@ Deno.test("no editor: signature_embedded reports the stored signature", async ()
       to: ["a@example.com"],
       cc: [],
       bcc: [],
-      bodyText: "Hello.\n\n--\nAsgeir, MCP Emails",
+      bodyText: "Hello.\n\n--\nAsgeir, MCPEmails",
       bodyHtml: null,
       attachments: [],
     },
@@ -2822,7 +2896,10 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
     assertEquals(out.result.content.length, 1, `${name}: one content block`);
   }
   // The save line is still the body-free summary.
-  assert(save.result.content[0].text.startsWith("Draft saved. Draft Drafts:3."));
+  assert(save.result.content[0].text.startsWith("Draft saved. To "));
+  // The id is a labelled handle at the end, never part of the sentence.
+  assert(save.result.content[0].text.endsWith(' draft_id: "Drafts:3"'));
+  assertEquals(save.result.content[0].text.split("Drafts:3").length, 2, "the id appears once");
   assert(!save.result.content[0].text.includes("Here they are."));
 
   const receipt = draftReceiptEnvelope({
@@ -2838,28 +2915,44 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
   assertEquals(sent._meta, undefined);
 });
 
-Deno.test("a second content block says a card exists, only when an editor envelope is attached", () => {
+Deno.test("a key whose tool list had no card is told the card may not show, not that it is on screen", () => {
+  const result = draftCardToolResult(WRITE_PAYLOAD, editorEnvelope(), false, false);
+  assertEquals(result.content[1], { type: "text", text: DRAFT_CARD_UNLISTED_NOTICE });
+  assertEquals((result.structuredContent as any).notes, [DRAFT_CARD_UNLISTED_NOTICE]);
+  // The envelope still rides along, so a host that does draw it has its data.
+  assertEquals((result.structuredContent as any).card, "draft_editor");
+  assert(/new chat/.test(DRAFT_CARD_UNLISTED_NOTICE));
+  assert(!DRAFT_CARD_UNLISTED_NOTICE.includes("is shown this draft"));
+});
+
+Deno.test("a card-envelope result says the card is on screen, on both channels; no envelope, no note", () => {
   const withCard = draftCardToolResult(WRITE_PAYLOAD, editorEnvelope());
   assertEquals(withCard.content.length, 2);
   // Block one is the payload JSON, byte for byte (contract §8).
   assertEquals(withCard.content[0], { type: "text", text: JSON.stringify(WRITE_PAYLOAD) });
   assertEquals(withCard.content[1], { type: "text", text: DRAFT_CARD_NOTICE });
+  // And as a server note in the structured payload, which is the channel a
+  // client with structured output reads instead of `content` (result-notes.ts).
+  assertEquals((withCard.structuredContent as any).notes, [DRAFT_CARD_NOTICE]);
   assertEquals(
     DRAFT_CARD_NOTICE,
-    "Hosts that render MCP Apps cards show this draft to the user in an " +
-      "editable card, where the user can change it, and draft_read returns the " +
-      "current text.",
+    "The user is shown this draft in an editable card in this chat now, where " +
+      "they can change, save or send it. Do not paste the draft text back, do not " +
+      "say the card is missing, and do not send the user to their mail client or " +
+      "dashboard to see it. draft_read returns its current text.",
   );
-  // One sentence of fact. It asks the model for nothing.
-  assertEquals(DRAFT_CARD_NOTICE.split(". ").length, 1);
-  assert(!/\b(you|please|must|should|call|use)\b/i.test(DRAFT_CARD_NOTICE), "no directive in tool output");
+  // 2026-10-25: the hedge is gone. "does not say whether this host displayed
+  // the card" is what a model in Claude's Code tab read as "it did not".
+  assert(!/whether/i.test(DRAFT_CARD_NOTICE), "no hedge about whether the card showed");
   assert(!DRAFT_CARD_NOTICE.includes("—"), "no em dash");
 
-  // No envelope (gate off, hidden inbox, Outlook reply, a failed build): the
-  // result is exactly what it was before the card existed.
+  // No envelope (gate off, hidden inbox): the result is exactly what it was
+  // before the card existed. No note anywhere. (A failed build in a card-on
+  // inbox is "unavailable" and says so; see the Outlook reply tests.)
   const without = draftCardToolResult(WRITE_PAYLOAD, null);
   assertEquals(without.content, [{ type: "text", text: JSON.stringify(WRITE_PAYLOAD) }]);
   assertEquals(without.structuredContent, WRITE_PAYLOAD);
+  assertEquals("notes" in without.structuredContent, false);
   assertEquals("_meta" in without, false);
 
   // A receipt is an envelope, but not an editor: send and delete get no notice.
@@ -2873,6 +2966,7 @@ Deno.test("a second content block says a card exists, only when an editor envelo
   });
   const deleted = draftCardToolResult({ draft_id: "Drafts:2", deleted: true }, receipt);
   assertEquals(deleted.content.length, 1);
+  assertEquals("notes" in deleted.structuredContent, false);
   assertEquals("_meta" in deleted, false);
 });
 
@@ -2889,8 +2983,8 @@ const SIGNED_REPLY: ProviderDraft = {
   // Text the USER typed in the card after the model wrote the draft, with the
   // inbox signature already on it, CRLF line endings and trailing whitespace:
   // everything a "helpful" rewrite would normalise.
-  bodyText: "Edited by the user.\r\n\r\n--\nAsgeir, MCP Emails  \n",
-  bodyHtml: "<p>Edited by the user.</p><p><b>Asgeir</b>, MCP Emails</p>",
+  bodyText: "Edited by the user.\r\n\r\n--\nAsgeir, MCPEmails  \n",
+  bodyHtml: "<p>Edited by the user.</p><p><b>Asgeir</b>, MCPEmails</p>",
   attachments: [],
 };
 
@@ -2933,7 +3027,7 @@ Deno.test("body-less update: no signature is applied, so one already in the text
   assert(out.ok);
   const written = writes[0].params.body;
   assertEquals(written, SIGNED_REPLY.bodyText);
-  assertEquals(written.split("Asgeir, MCP Emails").length - 1, 1, "exactly one signature");
+  assertEquals(written.split("Asgeir, MCPEmails").length - 1, 1, "exactly one signature");
   assertEquals(writes[0].params.to, ["new@example.com"]);
   assertEquals(writes[0].params.cc, [], "an explicit [] clears; an omitted list is kept");
   assertEquals(writes[0].params.bcc, []);
@@ -3270,4 +3364,310 @@ Deno.test("describeParts bounds and neutralises what it puts in a sentence", () 
   const hostile = describeParts(["a text/x-\u202Eevil".padEnd(200, "x") + " part"]);
   assert(!hostile.includes("\u202E"));
   assert(hostile.length <= 60);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 11. A formatted body and a plain-text edit (QA, 2026-10-17)
+//
+// One typed word in the card turned a draft's heading, bold text, bullets and
+// link into plain text, and nothing said so: the regenerated part was still an
+// HTML part, so `formatting_removed` stayed unset. Now the edit is made inside
+// the stored HTML when it can be placed with certainty, and otherwise a
+// formatted part is dropped and the envelope says `formatting_removed: true`.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FORMATTED_HTML =
+  "<h2>Launch plan</h2>\n<p>We ship on <b>Friday</b> after the review.</p>\n" +
+  '<ul>\n  <li>Fix the footer</li>\n  <li>Update the docs</li>\n</ul>\n' +
+  '<p>Details are <a href="https://example.com/plan">in the plan</a>.</p>';
+const FORMATTED_TEXT =
+  "Launch plan\n\nWe ship on Friday after the review.\n\n- Fix the footer\n- Update the docs\n\nDetails are in the plan (https://example.com/plan).";
+
+function storedFormatted(): ProviderDraft {
+  return {
+    subject: "Launch",
+    to: ["a@x.com"],
+    cc: [],
+    bcc: [],
+    bodyText: FORMATTED_TEXT,
+    bodyHtml: FORMATTED_HTML,
+    attachments: [],
+  };
+}
+
+Deno.test("formatted body: one typed word is made inside the HTML, keeping every tag", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("after the review", "right after the review"),
+  });
+  assertEquals(out.result.isError, false);
+  assertEquals(
+    writes[0].params.htmlBody,
+    FORMATTED_HTML.replace("after the review", "right after the review"),
+  );
+  const body = (out.result.structuredContent as any).draft.body;
+  assertEquals(body.html, writes[0].params.htmlBody);
+  assert(!("formatting_removed" in body), "nothing was removed, so nothing is reported");
+});
+
+Deno.test("formatted body: a list item and the heading edited in one save keep their tags", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("Launch plan", "Launch plan, v2").replace(
+      "- Update the docs",
+      "- Update the docs & <notes>",
+    ),
+  });
+  assertEquals(
+    writes[0].params.htmlBody,
+    FORMATTED_HTML.replace("Launch plan", "Launch plan, v2").replace(
+      "<li>Update the docs</li>",
+      "<li>Update the docs &amp; &lt;notes&gt;</li>",
+    ),
+  );
+});
+
+Deno.test("formatted body: an edit that cannot be placed drops the HTML part and SAYS so", async () => {
+  // A new paragraph in the middle: which block it belongs to is not knowable.
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("after the review.", "after the review.\n\nOne more thing."),
+  });
+  assertEquals(writes[0].params.htmlBody, undefined, "no generated part passing for the original");
+  const body = (out.result.structuredContent as any).draft.body;
+  assertEquals(body.html, null);
+  assertEquals(body.formatting_removed, true);
+});
+
+Deno.test("formatted body: a paragraph added at the end keeps every tag (2026-10-19)", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + " Thanks!\n\nOne more thing.",
+  });
+  // A word on the last line AND a new line: the alignment is not certain.
+  assertEquals(writes[0].params.htmlBody, undefined);
+  assertEquals((out.result.structuredContent as any).draft.body.formatting_removed, true);
+
+  const second = fakeDeps({ stored: storedFormatted() });
+  const appended = await runDraftEditorSave(second.deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+  });
+  assertEquals(appended.result.isError, false);
+  assertEquals(second.writes[0].params.htmlBody, FORMATTED_HTML + "<p>One more thing.</p>");
+  assert(!("formatting_removed" in (appended.result.structuredContent as any).draft.body));
+});
+
+Deno.test("formatted body: link words are never edited under their old address", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("in the plan (", "in the new plan ("),
+  });
+  assertEquals(writes[0].params.htmlBody, undefined);
+  assertEquals((out.result.structuredContent as any).draft.body.formatting_removed, true);
+});
+
+Deno.test("plain HTML (text with line breaks) is still regenerated, and nothing is reported", async () => {
+  const { deps, writes } = fakeDeps({
+    stored: { ...storedFormatted(), bodyText: "Hi,\nsee you.", bodyHtml: "Hi,<br>\nsee you." },
+  });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: "Hi,\nsee you then.\nBye.",
+  });
+  assertEquals(writes[0].params.htmlBody, "Hi,<br>\nsee you then.<br>\nBye.");
+  assert(!("formatting_removed" in (out.result.structuredContent as any).draft.body));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 12. // The editor card adds and removes files (2026-10-17)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** A stored draft with two files the rebuild carries, as the IMAP reader hands it over. */
+function twoFiles(): ProviderDraft {
+  const files = [
+    { filename: "q3.pdf", mime_type: "application/pdf", data: "JVBERi0xLjQK" },
+    { filename: "notes.txt", mime_type: "text/plain", data: "aGk=" },
+  ];
+  return {
+    ...WITH_ATTACHMENT,
+    attachments: [
+      { filename: "q3.pdf", mime_type: "application/pdf", size_bytes: 9 },
+      { filename: "notes.txt", mime_type: "text/plain", size_bytes: 2 },
+    ],
+    carried: {
+      count: 2,
+      bytes: 11,
+      inlineImages: 0,
+      sizes: [9, 2],
+      encode: (skip) => files.filter((_, i) => !skip?.has(i)),
+    },
+  };
+}
+
+Deno.test("draft_editor_save remove_attachments writes the other files and lists only them", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 9 }],
+  });
+  assertEquals(out.result.isError, false, JSON.stringify(out.result.structuredContent));
+  assertEquals(writes.length, 1);
+  assertEquals(writes[0].params.attachments, [{ filename: "notes.txt", mime_type: "text/plain", data: "aGk=" }]);
+  const draft = (out.result.structuredContent as { draft: { attachments: { filename: string }[] } }).draft;
+  assertEquals(draft.attachments.map((a) => a.filename), ["notes.txt"]);
+});
+
+Deno.test("draft_editor_save add_attachments keeps the stored files and adds the new one", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    add_attachments: [{ filename: "a.csv", mime_type: "text/csv", data: "YTtiCg==" }],
+  });
+  assertEquals(out.result.isError, false);
+  assertEquals(writes[0].params.attachments?.map((a) => a.filename), ["q3.pdf", "notes.txt", "a.csv"]);
+});
+
+Deno.test("draft_editor_save refuses a removal that names another file, and writes nothing", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    subject: "x",
+    remove_attachments: [{ index: 0, filename: "notes.txt", size_bytes: 2 }],
+  });
+  assertEquals(failureCode(out), "draft_changed");
+  assertEquals(writes.length, 0);
+});
+
+Deno.test("draft_editor_save refuses malformed file arguments before reading anything", async () => {
+  for (const args of [
+    { add_attachments: [{ filename: "a.txt", mime_type: "text/plain", data: "not base64!" }] },
+    { add_attachments: [{ source_message_id: "INBOX:1", attachment_index: 0 }] },
+    { add_attachments: "a.txt" },
+    { remove_attachments: [{ index: 0 }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf" }, { index: 0, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0.5, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: "9" }] },
+  ]) {
+    const { deps, writes, reads } = fakeDeps({ stored: twoFiles() });
+    const out = await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", ...args });
+    assertEquals(failureCode(out), "invalid_arguments", JSON.stringify(args));
+    assertEquals([writes.length, reads.length], [0, 0], JSON.stringify(args));
+  }
+});
+
+Deno.test("draft_editor_save advertises the two file arguments without loosening the others", () => {
+  const save = DRAFT_EDITOR_TOOL_DEFINITIONS.find((t) => t.name === "draft_editor_save")!;
+  const props = (save.inputSchema as { properties: Record<string, { type?: unknown }> }).properties;
+  assertEquals(props.add_attachments.type, "array");
+  assertEquals(props.remove_attachments.type, "array");
+  assertEquals(props.to.type, "array");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Outlook reply drafts (persona test, 2026-10-26)
+//
+// 1. An Outlook reply mounted "Draft: no preview for this result." because
+//    its branch returned no envelope, and the model still said "in the card".
+// 2. Creation said threading "native"; draft_read said threaded: false.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("Outlook reply: a native reply reads back as threaded in both channels", async () => {
+  const { deps } = fakeDeps({
+    inbox: OUTLOOK_INBOX,
+    stored: {
+      subject: "RE: Card test",
+      to: ["Asgeir <asgeir@example.com>"],
+      cc: [],
+      bcc: [],
+      threadId: "AAQkAD-conversation",
+      bodyText: "Reply.\r\n\r\n________________________________________\r\nFrom: Asgeir <asgeir@example.com>\r\nSent: Monday\r\n\r\nHi",
+      bodyHtml: null,
+      attachments: [],
+      nativeReply: true,
+    },
+  });
+  const read = await runDraftRead(deps, caller(), { draft_id: "AAkALg-draft" });
+  const sc = read.result.structuredContent as Record<string, unknown>;
+  assertEquals(sc["card"], "draft_editor", "a card-renderable envelope");
+  assertEquals((sc["draft"] as Record<string, unknown>)["threaded"], true);
+  const plain = JSON.parse(read.result.content[0].text) as Record<string, unknown>;
+  assertEquals(plain["threaded"], true, "the plain read agrees with creation's threading: native");
+});
+
+Deno.test("Outlook: a new (non-reply) draft still reads as unthreaded", async () => {
+  const { deps } = fakeDeps({
+    inbox: OUTLOOK_INBOX,
+    stored: {
+      subject: "Hello",
+      to: ["a@x.com"],
+      cc: [],
+      bcc: [],
+      // Every Graph message has a conversationId; it is not evidence of a reply.
+      threadId: "AAQkAD-conversation",
+      bodyText: "Hi",
+      bodyHtml: null,
+      attachments: [],
+    },
+  });
+  const read = await runDraftRead(deps, caller(), { draft_id: "AAkALg-new" });
+  const sc = read.result.structuredContent as Record<string, unknown>;
+  assertEquals((sc["draft"] as Record<string, unknown>)["threaded"], false);
+  assertEquals((JSON.parse(read.result.content[0].text) as Record<string, unknown>)["threaded"], false);
+});
+
+Deno.test("draftIsThreaded: server id, RFC header or native reply, nothing else", () => {
+  assertEquals(draftIsThreaded(normalized()), false);
+  assertEquals(draftIsThreaded(normalized({ thread_id: "conv" })), false);
+  assertEquals(draftIsThreaded(normalized({ native_reply: true })), true);
+  assertEquals(draftIsThreaded(normalized({ in_reply_to_header: "<a@b>" })), true);
+  assertEquals(
+    draftIsThreaded(normalized({ in_reply_to: { message_id: "m1", subject: null, from: null } })),
+    true,
+  );
+});
+
+Deno.test("Outlook reply: the reply envelope is card-renderable and threaded", () => {
+  const envelope = buildDraftEditorEnvelope({
+    appUrl: APP_URL,
+    draft: normalized({
+      draft_id: "AAkALg-draft",
+      subject: "RE: Card test",
+      in_reply_to: { message_id: "AAkALg-original", subject: "Card test", from: "Asgeir" },
+      native_reply: true,
+    }),
+    inbox: OUTLOOK_INBOX,
+    origin: "reply",
+    lastSavedBy: "agent",
+    canSend: true,
+  });
+  const result = draftCardToolResult({ draft_id: "AAkALg-draft", threading: "native" }, envelope);
+  const sc = result.structuredContent;
+  assertEquals(sc["card"], "draft_editor");
+  assertEquals(sc["threading"], "native");
+  const draft = sc["draft"] as Record<string, unknown>;
+  assertEquals(draft["threaded"], true);
+  assertEquals(draft["origin"], "reply");
+  assert(
+    result.content.some((c) => c.text.includes(DRAFT_CARD_NOTICE)),
+    "the model is told the card is shown",
+  );
+});
+
+Deno.test("a card that could not be built says so, and never claims a card", () => {
+  const payload = { draft_id: "AAkALg-draft", untrusted_content: true };
+  const result = draftCardToolResult(payload, "unavailable");
+  assert(
+    result.content.some((c) => c.text.includes(DRAFT_NO_CARD_NOTICE)),
+    "the no-card note is in content",
+  );
+  assert(!result.content.some((c) => c.text.includes(DRAFT_CARD_NOTICE)));
+  assertEquals("schema_version" in result.structuredContent, false, "no envelope for the card to mount");
+  assertEquals("_meta" in result, false);
+  assert(!DRAFT_NO_CARD_NOTICE.includes("—"), "no em dash");
 });

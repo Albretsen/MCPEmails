@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "https://docs.cline.bot/mcp/configuring-mcp-servers"
   ],
   "meta": {
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",
-      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码，Gmail 也可以使用 Google 登录；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
       "h": "创建限定范围的 API 密钥",
@@ -60,14 +60,14 @@
     }
   ],
   "limits": [
-    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "请求按每个密钥在每分钟、每小时和每天的窗口内限速，窗口大小按你的套餐确定，所以单个密钥就能用满套餐的每分钟上限，多个密钥则共享它。429 响应带有 Retry-After。此外还受你所在套餐的计费操作上限约束。",
     "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
     "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
   ],
   "faq": [
     {
       "q": "如何将邮箱连接到 Cline？",
-      "a": "把 mcpemails 添加为远程服务器：MCP Servers、Remote Servers，粘贴 https://mcpemails.com/api/mcp ，将 Transport Type 设为 Streamable HTTP，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 Cline 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+      "a": "把 MCPEmails 添加为远程服务器：MCP Servers、Remote Servers，粘贴 https://mcpemails.com/api/mcp ，将 Transport Type 设为 Streamable HTTP，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 Cline 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
     },
     {
       "q": "为什么 Cline 需要 API 密钥，而 Cursor 不需要？",
@@ -79,7 +79,7 @@
     },
     {
       "q": "Cline 通过这种方式能访问哪些邮箱？",
-      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码，Gmail 也可改用 Google 登录；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
     },
     {
       "q": "Cline 会在我不知情的情况下发送邮件吗？",

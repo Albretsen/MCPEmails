@@ -1,6 +1,6 @@
 import type { VNode } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { HostBridge, ToolResultParams } from "../bridge";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
+import { errorText, type HostBridge, type ToolResultParams } from "../bridge";
 import {
   isSupportedVersion,
   SCHEMA_VERSION,
@@ -31,12 +31,14 @@ import {
   draftActionContextLine,
   draftCallOutcome,
   draftSavedContextLine,
+  modelContextCapability,
   outboundApproveOpenedContextLine,
   outboundRejectContextLine,
+  subscriptionCleanupContextLine,
   type DraftCall as ModelDraftCall,
 } from "../model-context";
-import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
-import { onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
+import { cardKey, goneDraft, isRestoreStub, lastDashboardUrl } from "../persist";
+import { claimDraft, onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
 import {
   acceptDeferredBody,
   acceptRehydration,
@@ -46,6 +48,7 @@ import {
   awaitsBodyOf,
   clearDraftError,
   deferredBodyCall,
+  editorDraft,
   deferredBodyKey,
   envelopeFrom,
   getState,
@@ -57,14 +60,17 @@ import {
   REPLAY_AGE_MS,
   setState,
   subscribe,
+  supersededBy,
 } from "../store";
+import { Automation } from "./Automation";
 import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
 import { DraftReadLine } from "./DraftReadLine";
 import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { SentMessage } from "./SentMessage";
-import { Loading, Notice, TextLink } from "./ui";
+import { SubscriptionPlan } from "./SubscriptionPlan";
+import { Btn, Head, Line, Loading, Notice, TextLink } from "./ui";
 
 /**
  * `ui/open-link` requires an absolute URL, so the server sends one: contract §4
@@ -102,6 +108,12 @@ function absoluteUrl(url: string | null | undefined): string | null {
  * the answer is known.
  */
 function Diagnostics(props: { bridge: HostBridge }) {
+  // The model-context counters live on the bridge, not in the store, so a
+  // reply landing re-rendered nothing: QA 2026-10-17 read 0/0/0 right after a
+  // save. Subscribe to them directly, in a layout effect: a plain effect runs
+  // after paint, and the reply to the card's first line can land before it.
+  const [, bump] = useState(0);
+  useLayoutEffect(() => props.bridge.onModelContextChange(() => bump((n) => n + 1)), [props.bridge]);
   const s = getState();
   const h = props.bridge.hostInfo ?? {};
   const line = [
@@ -126,9 +138,14 @@ function Diagnostics(props: { bridge: HostBridge }) {
     // ui/update-model-context: whether the host advertised it at initialize,
     // then answered ok / answered with an error / sent. The question QA
     // 2026-10-15 could not answer about Claude, written down where it shows.
-    `mctx ${props.bridge.hostCapabilities.updateModelContext ? "cap" : "nocap"} ${
+    // The capability is shown with the modalities it listed (QA 2026-10-17:
+    // "cap" alone could not say whether Claude takes text or only structured
+    // content), and the last refusal's code when there was one.
+    `mctx ${modelContextCapability(props.bridge.hostCapabilities.updateModelContext)} ${
       props.bridge.modelContext.ok
-    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}`,
+    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}${
+      props.bridge.modelContextLastError ? ` err ${props.bridge.modelContextLastError.slice(0, 40)}` : ""
+    }`,
     // Expected to be 0 forever. A non-zero count means the host pushed a
     // result belonging to a different call into this card (store.ts).
     ...(s.uncorrelatedResults ? [`xcall ${s.uncorrelatedResults}`] : []),
@@ -162,11 +179,47 @@ function closedHow(headline: string | null | undefined): "sent" | "discarded" | 
   return /already sent/i.test(h) ? "sent" : /discarded/i.test(h) ? "discarded" : null;
 }
 
+/**
+ * `draft_read`, remembering a not-found answer (persist.ts#goneDraft). An
+ * `automatic` read (a check nobody asked for) of a draft the server already
+ * called gone gets that answer back, as far as the card reads it, without a
+ * call; a read the person asked for always asks.
+ */
+async function readDraftOnce(
+  bridge: HostBridge,
+  args: { inbox_id?: string; draft_id?: string },
+  automatic: boolean,
+): Promise<ToolResultParams> {
+  const known = automatic ? goneDraft(args.inbox_id, args.draft_id) : null;
+  if (known !== null) {
+    return {
+      structuredContent: {
+        schema_version: SCHEMA_VERSION,
+        card: "receipt",
+        state: "error",
+        receipt: {
+          outcome: "failed",
+          // The server's own headline where it named the ending: closedHow reads it.
+          headline: [, "This draft was already sent.", "This draft was discarded."][known],
+          error_code: "draft_not_found",
+        },
+      },
+    } as unknown as ToolResultParams;
+  }
+  const result = await bridge.callServerTool("draft_read", args);
+  const env = envelopeFrom(result);
+  if (env?.receipt?.error_code === "draft_not_found") {
+    const how = closedHow(env.receipt.headline);
+    goneDraft(args.inbox_id, args.draft_id, how === "sent" ? 1 : how ? 2 : 0);
+  } else if (env?.draft) goneDraft(args.inbox_id, args.draft_id, null);
+  return result;
+}
+
 /** `email_compose` -> `Email compose`. Falls back to the product name. */
 function toolLabel(tool: string | null | undefined): string {
-  if (!tool) return "MCP Emails";
+  if (!tool) return "MCPEmails";
   const words = tool.replace(/_/g, " ").trim();
-  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCP Emails";
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCPEmails";
 }
 
 /**
@@ -192,8 +245,8 @@ export function turnOnUrl(scope: "inbox" | "workspace", dashboardUrl: string | n
  */
 export function hiddenDetail(scope: "inbox" | "workspace"): string {
   return scope === "workspace"
-    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Settings.'
-    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Inboxes, in this inbox\'s details.';
+    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCPEmails dashboard, under Settings.'
+    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCPEmails dashboard, under Inboxes, in this inbox\'s details.';
 }
 
 export function App(props: { bridge: HostBridge }) {
@@ -333,7 +386,7 @@ export function App(props: { bridge: HostBridge }) {
       const line = contextLine?.(next);
       if (line) void bridge.updateModelContext(line);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorText(e));
     } finally {
       setBusy(null);
     }
@@ -388,7 +441,7 @@ export function App(props: { bridge: HostBridge }) {
     key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
-    opts: { failAs?: DraftAction; quiet?: boolean } = {},
+    opts: { failAs?: DraftAction; quiet?: boolean; auto?: boolean } = {},
   ): Promise<DraftCall> => {
     // `failAs`: the action the user sees as failed, when it is not the one the
     // busy state names (the save half of "Save and send" is a save).
@@ -415,7 +468,9 @@ export function App(props: { bridge: HostBridge }) {
       clearDraftError();
     }
     try {
-      result = await bridge.callServerTool(tool, args);
+      result = await (tool === "draft_read"
+        ? readDraftOnce(bridge, args, !!opts.auto)
+        : bridge.callServerTool(tool, args));
       const next = envelopeFrom(result);
       raw = next;
       lastAnswer.current = Date.now();
@@ -451,7 +506,7 @@ export function App(props: { bridge: HostBridge }) {
       }
       return told({ env: applied, lost: null });
     } catch (e) {
-      thrown = e instanceof Error ? e.message : String(e);
+      thrown = errorText(e);
       return lose("transport");
     } finally {
       setBusy(null);
@@ -487,8 +542,8 @@ export function App(props: { bridge: HostBridge }) {
     opts: { quiet?: boolean; failAs?: DraftAction; auto?: boolean } = {},
   ): Promise<Envelope | null> => {
     const s = getState();
-    const d = s.envelope?.draft;
-    if (!d || s.envelope?.card !== "draft_editor") return null;
+    const d = editorDraft(s.envelope);
+    if (!d) return null;
     if (s.draftCheck !== "trusted") setState({ draftCheck: "checking" });
     const ids = [...new Set([s.draftIdHint, d.draft_id])].filter(
       (id): id is string => !!id,
@@ -589,12 +644,20 @@ export function App(props: { bridge: HostBridge }) {
   // inbox (draft-signal.ts). That is a reason to look NOW rather than after
   // `REPLAY_AGE_MS`, so the age test is skipped; `SIGNAL_GAP_MS` still keeps a
   // burst of hints (both carriers, several cards) to one read.
+  //
+  // `foldedFor`: the hint itself already folded this card, naming that revision
+  // of the same draft (see the listener below). This read lays the newer
+  // version under any unsaved edits the fold keeps, so "Show" and Save work
+  // against it, and it is what keeps the hint a hint: a read that finds no
+  // such revision and nothing newer from the assistant unfolds the card again.
+  // The only read a folded card makes.
   const lastHinted = useRef(0);
-  const attentionCheck = async (hinted = false) => {
+  const attentionCheck = async (hinted = false, foldedFor: number | null = null) => {
     const s = getState();
-    const d = s.envelope?.draft;
-    if (!d || s.envelope?.card !== "draft_editor" || isRestoreStub(s.envelope)) return;
-    if (s.draftCheck !== "trusted" || s.draftSuperseded || busyNow.current !== null) return;
+    const d = editorDraft(s.envelope);
+    if (!d || isRestoreStub(s.envelope)) return;
+    const folding = foldedFor !== null;
+    if (s.draftCheck !== "trusted" || (s.draftSuperseded && !folding) || busyNow.current !== null) return;
     if (hinted) {
       if (Date.now() - lastHinted.current < SIGNAL_GAP_MS) return;
       lastHinted.current = Date.now();
@@ -606,22 +669,82 @@ export function App(props: { bridge: HostBridge }) {
     const asked = d.draft_id;
     try {
       const next = envelopeFrom(
-        await bridge.callServerTool("draft_read", {
-          inbox_id: d.identity?.inbox_id,
-          draft_id: asked,
-        }),
+        await readDraftOnce(bridge, { inbox_id: d.identity?.inbox_id, draft_id: asked }, true),
       );
       if (seq !== callSeq.current || busyNow.current !== null) return;
+      // The draft was sent or discarded since this card last looked. Say so,
+      // with the text kept, and stop checking: left `trusted`, every later
+      // focus, scroll and sibling hint read the gone draft again, and each
+      // read is a failed call in activity_log (up to ~40 an hour from one
+      // chat, 2026-10-27). A folded card is not the current one, so it stays
+      // as it is.
+      if (!folding && isFailure(next) && next!.receipt?.error_code === "draft_not_found") {
+        setFailure({ action: "refresh", code: "draft_not_found", headline: next!.receipt?.headline ?? null, at: Date.now() });
+        setState({ draftCheck: "unverified" });
+        return;
+      }
       if (!draftStored(next) || isFailure(next)) return;
       const got = next!.draft!;
       if (got.draft_id !== asked && got.resolved_from !== asked) return;
+      const newer = supersededBy(d, got) ||
+        (typeof got.revision === "number" && foldedFor !== null && got.revision >= foldedFor);
       adoptOwnAnswer(next!);
+      if (folding && !newer) setState({ draftSuperseded: false });
     } catch {
       /* a check nobody asked for: the next action will say what is wrong */
     }
   };
   const onAttention = useRef(attentionCheck);
   onAttention.current = attentionCheck;
+
+  // ---- one current card per draft (2026-10-17) -----------------------------
+  //
+  // Every id this card has held for its draft, oldest first: on IMAP each save
+  // retires the id, and another card may hold any of them. A claim names them
+  // all (draft-signal.ts#claimDraft).
+  const heldIds = useRef<string[]>([]);
+  {
+    const d = editorDraft(store.envelope);
+    for (const id of [d?.resolved_from, d?.draft_id]) {
+      if (id && !heldIds.current.includes(id)) heldIds.current.push(id);
+    }
+  }
+  /**
+   * Tell every other card for this draft that this one is current now.
+   * `pending`: Save was just pressed and has not answered; `release`: that
+   * save did not store, so the pending claim is withdrawn (draft-signal.ts,
+   * "AT THE PRESS").
+   */
+  const claim = (opts: { pending?: boolean; release?: boolean } = {}) => {
+    const s = getState();
+    const d = editorDraft(s.envelope);
+    if (!d) return;
+    claimDraft({
+      ids: [...heldIds.current, d.resolved_from, d.draft_id],
+      revision: d.revision ?? null,
+      mounted: s.mountedRevision,
+      inbox_id: d.identity?.inbox_id ?? null,
+      ...opts,
+    });
+  };
+  /**
+   * The frame whose PENDING claim folded this card, while that fold stands.
+   * Only its release unfolds the card; any later fold clears it.
+   */
+  const takenBy = useRef<string | null>(null);
+  /**
+   * "Open here" on a folded card: read the draft as the mailbox holds it now,
+   * then make this card the current one and fold the others. The flag is
+   * cleared only AFTER the read is adopted: `adoptOwnAnswer` would otherwise
+   * find the newer agent revision again and fold this card straight back.
+   */
+  const takeOver = async (): Promise<boolean> => {
+    const env = await readDraft();
+    if (!env) return false;
+    setState({ draftSuperseded: false });
+    claim();
+    return true;
+  };
   useEffect(() => {
     const onFocus = () => void onAttention.current();
     // Becoming visible again (the chat's tab came back) is the same moment as
@@ -647,17 +770,60 @@ export function App(props: { bridge: HostBridge }) {
     } catch {
       io = null;
     }
-    // Another card frame mounted this draft (or one in the same inbox).
+    // Another card frame mounted this draft (or one in the same inbox), or
+    // took it over.
     const off = onDraftSignal((sig) => {
       const st = getState();
-      const d = st.envelope?.draft;
-      if (!d || st.envelope?.card !== "draft_editor") return;
-      const mine = [d.draft_id, d.resolved_from, st.draftIdHint]
+      const d = editorDraft(st.envelope);
+      if (!d) return;
+      const mine = [d.draft_id, d.resolved_from, st.draftIdHint, ...heldIds.current]
         .map((id) => signalTag(id))
         .filter((t): t is string => !!t);
       const sameDraft = sig.ids.some((t) => mine.includes(t));
+      // A claim folds this card at once, with no read: another card is the
+      // current one now. The live review's bug was the ~5 s between an older
+      // card's Save and this card noticing, with Send on in both.
+      if (sig.kind === "release") {
+        // The pending claim that folded this card ended in no save, so what
+        // this card holds is still the current draft.
+        if (takenBy.current === null || takenBy.current !== sig.from) return;
+        takenBy.current = null;
+        if (st.draftSuperseded && st.supersededAt.why === "taken") setState({ draftSuperseded: false });
+        return;
+      }
+      if (sig.kind === "claim") {
+        if (!sameDraft || isRestoreStub(st.envelope)) return;
+        // Both carriers deliver one claim, so the second copy keeps the mark.
+        takenBy.current = sig.pending && (!st.draftSuperseded || takenBy.current === sig.from)
+          ? sig.from
+          : null;
+        const mounted = st.mountedRevision;
+        const where = sig.mounted === null || mounted === null || sig.mounted === mounted
+          ? "other" as const
+          : sig.mounted < mounted
+          ? "above" as const
+          : "below" as const;
+        setState({ draftSuperseded: true, supersededAt: { why: "taken", where } });
+        return;
+      }
       const sameInbox = sig.inbox !== null && sig.inbox === signalTag(d.identity?.inbox_id);
       if (!sameDraft && !sameInbox) return;
+      // A fresh card for the same draft at a revision above this card's is a
+      // newer card, by construction (only a tool call that wrote the draft
+      // announces). Fold NOW, so there is never a moment with Send on in
+      // both, then read once so the fold's kept edits sit on the newer text.
+      if (
+        sameDraft && typeof sig.revision === "number" && typeof d.revision === "number" &&
+        sig.revision > d.revision && !st.draftSuperseded && !isRestoreStub(st.envelope) &&
+        st.draftCheck === "trusted" && busyNow.current === null
+      ) {
+        // Inside the gap the read would be skipped, and a fold must always
+        // come with its read (above). A real newer card is heard on the first.
+        if (Date.now() - lastHinted.current < SIGNAL_GAP_MS) return;
+        setState({ draftSuperseded: true, supersededAt: { why: "newer", where: "below" } });
+        void onAttention.current(true, sig.revision);
+        return;
+      }
       // The same draft at a revision this card already holds is nothing new.
       if (
         sameDraft && typeof sig.revision === "number" && typeof d.revision === "number" &&
@@ -699,6 +865,8 @@ export function App(props: { bridge: HostBridge }) {
       : "still_there";
     setFailure({ action, code, settled });
     if (settled === "landed") tellSaved(env.draft, patch);
+    // Settles the pending claim sent at the press (draft-signal.ts).
+    if (action === "save") claim(settled === "landed" ? {} : { release: true });
   };
 
   /**
@@ -713,13 +881,24 @@ export function App(props: { bridge: HostBridge }) {
     );
   };
 
+  // One subscriptions_cleanup call at a time. `busy` is state, so a double
+  // click lands twice before the re-render that disables the button.
+  const subFlight = useRef(false);
+  const runSub = (key: string, args: Record<string, unknown>) => {
+    if (subFlight.current) return;
+    subFlight.current = true;
+    void run(key, "subscriptions_cleanup", args, subscriptionCleanupContextLine).finally(() => {
+      subFlight.current = false;
+    });
+  };
+
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
     if (!url) return;
     setBusy("dashboard");
     bridge
       .openLink(url)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorText(e)))
       .finally(() => setBusy(null));
   };
 
@@ -828,8 +1007,9 @@ export function App(props: { bridge: HostBridge }) {
       const now = getState().envelope;
       return asked.card === "draft_editor" && !!now && !isRestoreStub(now);
     };
-    bridge
-      .callServerTool(call.tool, call.args)
+    (call.tool === "draft_read"
+      ? readDraftOnce(bridge, call.args, true)
+      : bridge.callServerTool(call.tool, call.args))
       .then((result) => {
         stubRead.current = false;
         if (overEditor()) return settleOverEditor(asked, result);
@@ -926,23 +1106,17 @@ export function App(props: { bridge: HostBridge }) {
   const fallbackDashboard = () => {
     const url = absoluteUrl(getState().envelope?.dashboard_url) ?? lastDashboardUrl();
     if (!url) return null;
-    return (
-      <div class="hdr-r">
-        <TextLink onClick={() => openDashboard(url)}>Open dashboard</TextLink>
-      </div>
-    );
+    return <TextLink onClick={() => openDashboard(url)}>Open dashboard</TextLink>;
   };
 
   /** One line, a dot and a link. Never a wall, never a skeleton. */
   const oneLine = (text: string) => (
-    <div class="hdr">
-      <div class="hdr-l">
-        <span class="dot" data-tone="neutral" aria-hidden="true" />
-        <b>{text}</b>
-      </div>
+    <Head tone="neutral" title={text}>
       {fallbackDashboard()}
-    </div>
+    </Head>
   );
+  /** `oneLine` led by the name of the tool this card was mounted for. */
+  const toolLine = (what: string) => oneLine(`${toolLabel(store.toolInfo?.tool)}: ${what}`);
 
   const body = ((): VNode | null => {
     // ---- connection / loading ----------------------------------------------
@@ -952,7 +1126,7 @@ export function App(props: { bridge: HostBridge }) {
     // one-liner with a way out rather than a red block announcing a failure the
     // user cannot act on and that cost them nothing.
     if (store.connectError) {
-      return oneLine(`${toolLabel(store.toolInfo?.tool)}: not shown here.`);
+      return toolLine("not shown here.");
     }
 
     // A restored card whose subject the server says is gone. One line, not the
@@ -996,11 +1170,24 @@ export function App(props: { bridge: HostBridge }) {
       // now say so in one quiet line, the same shape as every other
       // nothing-to-show state. Still never a warning: the operation succeeded
       // and the message above carries it.
+      //
+      // 2026-10-27: the outbound card is now listed for every send-capable key,
+      // so this line sits under errors, refusals and batch forwards on
+      // `email_compose` too. `resultNote` (plain-result.ts) words the ones it
+      // recognises; a plain successful send never gets here, it is a receipt.
       if (store.resultStatus === "foreign") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: no preview for this result.`);
+        if (store.automation) {
+          return (
+            <Automation
+              seed={store.automation}
+              call={(args) => bridge.callServerTool("card_automation", args)}
+            />
+          );
+        }
+        return toolLine(store.resultNote ?? "no preview for this result.");
       }
       if (store.resultStatus === "cancelled") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: cancelled.`);
+        return toolLine("cancelled.");
       }
 
       // OUR PAYLOAD, UNREADABLE -> LOUD. Something that identified itself as our
@@ -1022,7 +1209,7 @@ export function App(props: { bridge: HostBridge }) {
       // means "this host keeps nothing", and a user who scrolled back to a card
       // deserves to be told which tool it was and where the record lives.
       if (store.restored === "none") {
-        return oneLine(`${toolLabel(store.toolInfo?.tool)}: nothing to show here.`);
+        return toolLine("nothing to show here.");
       }
 
       // Still genuinely waiting. At most RESULT_WATCHDOG_MS of this.
@@ -1070,23 +1257,17 @@ export function App(props: { bridge: HostBridge }) {
     if (!isSupportedVersion(envelope.schema_version)) {
       return (
         <>
-          <div class="hdr">
-            <div class="hdr-l">
-              <span class="dot" data-tone="neutral" aria-hidden="true" />
-              <b>Update the MCP Emails connector</b>
-            </div>
-            <div class="hdr-r">
-              <TextLink onClick={() => openDashboard(envelope.dashboard_url)}>
-                Open dashboard
-              </TextLink>
-            </div>
-          </div>
-          <p class="line">
+          <Head tone="neutral" title="Update the MCPEmails connector">
+            <TextLink onClick={() => openDashboard(envelope.dashboard_url)}>
+              Open dashboard
+            </TextLink>
+          </Head>
+          <Line>
             This card understands <span class="mono">{SCHEMA_VERSION}</span>, but
             the server sent{" "}
             <span class="mono">{String(envelope.schema_version).slice(0, 40)}</span>
             . Rather than guess at the contents, it will not render them.
-          </p>
+          </Line>
         </>
       );
     }
@@ -1118,7 +1299,7 @@ export function App(props: { bridge: HostBridge }) {
       return hydrating ? (
         <Loading />
       ) : (
-        oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+        toolLine("open the dashboard to see this.")
       );
     }
 
@@ -1137,7 +1318,7 @@ export function App(props: { bridge: HostBridge }) {
     // the message above this card says so.
     if (isBodyDeferred(envelope)) {
       return bodyFailed === bodyKey
-        ? oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+        ? toolLine("open the dashboard to see this.")
         : <Loading />;
     }
 
@@ -1177,9 +1358,7 @@ export function App(props: { bridge: HostBridge }) {
                     setApproveOpened(true);
                     void bridge.updateModelContext(outboundApproveOpenedContextLine(o));
                   })
-                  .catch((e) =>
-                    setError(e instanceof Error ? e.message : String(e)),
-                  )
+                  .catch((e) => setError(errorText(e)))
                   .finally(() => setBusy(null));
               },
               update: (patch) =>
@@ -1250,6 +1429,36 @@ export function App(props: { bridge: HostBridge }) {
               });
               void bridge.updateModelContext(bulkCancelContextLine(plan));
             },
+            setFullscreen,
+          }}
+        />
+      );
+    }
+
+    if (envelope.card === "subscription_plan" && envelope.subscriptions) {
+      const sub = envelope.subscriptions;
+      return (
+        <SubscriptionPlan
+          key={sub.plan_id}
+          env={envelope}
+          sub={sub}
+          fullscreen={fullscreen}
+          canExpand={canExpand}
+          busy={busy}
+          error={error}
+          actions={{
+            confirm: (keys, backlog) =>
+              runSub("cleanup", { plan_id: sub.plan_id, sender_keys: keys, backlog }),
+            // §9: `continue` only moves the backlog; the unsubscribe part never
+            // re-runs, so no sender keys are sent.
+            continueBacklog: () =>
+              runSub("continue", {
+                plan_id: sub.plan_id,
+                sender_keys: [],
+                backlog: "archive",
+                continue: true,
+              }),
+            openLink: (url) => openDashboard(url),
             setFullscreen,
           }}
         />
@@ -1334,6 +1543,9 @@ export function App(props: { bridge: HostBridge }) {
 
       const save = async (patch: DraftPatch): Promise<boolean> => {
         if (Object.keys(patch).length === 0) return true;
+        // Every other card for the draft folds NOW, not when the save answers
+        // (re-test 2026-10-17: ~3.5 to 5 s of Send on in the newer card).
+        claim({ pending: true });
         const r = await callDraft("save", "draft_editor_save", {
           ...writeTarget(),
           ...patch,
@@ -1345,8 +1557,14 @@ export function App(props: { bridge: HostBridge }) {
           void reconcile("save", r.lost, patch);
           return false;
         }
-        if (!draftStored(r.env)) return false;
+        if (!draftStored(r.env)) {
+          claim({ release: true });
+          return false;
+        }
         tellSaved(r.env!.draft!, patch);
+        // A save makes this card the current one (store.ts#adoptOwnAnswer
+        // unfolds it); every other card for the draft folds at once.
+        claim();
         return true;
       };
 
@@ -1386,6 +1604,7 @@ export function App(props: { bridge: HostBridge }) {
           scope={draftScope}
           sendDoubt={sendDoubt}
           superseded={store.draftSuperseded}
+          supersededAt={store.supersededAt}
           actions={{
             save,
             allowSend: () => setSendDoubt(false),
@@ -1395,6 +1614,7 @@ export function App(props: { bridge: HostBridge }) {
               // wire when the user is looking at a newer one.
               if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
+                claim({ pending: true });
                 const saved = await callDraft(
                   "send",
                   "draft_editor_save",
@@ -1405,8 +1625,12 @@ export function App(props: { bridge: HostBridge }) {
                   void reconcile("save", saved.lost, patch);
                   return;
                 }
-                if (!draftStored(saved.env)) return;
+                if (!draftStored(saved.env)) {
+                  claim({ release: true });
+                  return;
+                }
                 tellSaved(saved.env!.draft!, patch);
+                claim();
                 // No "the save followed an older id" stop here any more: the
                 // server refuses such a save as `draft_changed` (contract §8),
                 // so a stored save never carries `resolved_from`.
@@ -1441,9 +1665,12 @@ export function App(props: { bridge: HostBridge }) {
                 how: "discarded" | "gone" | "sent_elsewhere",
                 outcome: "discarded" | "sent",
               ) => endedFrom(held, how, outcome, { screen, provider: envelope.provider?.label });
+              // base_revision marks this as the card's Discard, as it marks
+              // its Send, so the server can tell the model the draft was
+              // deleted here (card-activity.ts). Nothing is refused on it.
               const r = await callDraft("discard", "draft", {
                 action: "delete",
-                ...target(),
+                ...writeTarget(),
               });
               if (r.lost) {
                 tellAction("discard", held, r);
@@ -1463,8 +1690,8 @@ export function App(props: { bridge: HostBridge }) {
                 const id = held.draft_id || "unknown";
                 void bridge.updateModelContext(
                   how === "sent"
-                    ? `The user pressed Discard on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
-                    : `The user pressed Discard on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
+                    ? `The user pressed Delete draft on draft ${id} in the MCPEmails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
+                    : `The user pressed Delete draft on draft ${id} in the MCPEmails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
                 );
                 return;
               }
@@ -1478,6 +1705,7 @@ export function App(props: { bridge: HostBridge }) {
             },
             refresh: () => void readDraft(),
             loadCurrent: () => readDraft().then((env) => !!env),
+            takeOver,
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different
@@ -1547,12 +1775,47 @@ export function App(props: { bridge: HostBridge }) {
           />
         );
       }
+      // A bulk move/delete result (mcp-server/mcp-app-undo.ts): the receipt,
+      // Undo while the server offers it, and the sample folded underneath.
+      // Undo runs the server-held undo plan through bulk_execute; its answer
+      // replaces this envelope and carries no `undo`, so the button goes away.
+      const undo = envelope.undo;
+      const rows = envelope.bulk_sample ?? [];
       return (
-        <Receipt
-          receipt={envelope.receipt}
-          busy={busy}
-          onOpenDashboard={() => openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)}
-        />
+        <>
+          <Receipt
+            receipt={envelope.receipt}
+            busy={busy}
+            onOpenDashboard={() => openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)}
+          >
+            {typeof undo?.undo_id === "string" && (
+              <Btn
+                busy={busy === "undo"}
+                onClick={() =>
+                  run("undo", "bulk_execute", { plan_id: undo.undo_id }, (a) =>
+                    a?.receipt?.headline ? `The user pressed Undo on the bulk result: ${a.receipt.headline}` : null)}
+              >
+                {busy === "undo" ? "Undoing…" : "Undo"}
+              </Btn>
+            )}
+          </Receipt>
+          {rows.length > 0 && (
+            <details>
+              <summary class="line">
+                Show {rows.length < (envelope.receipt.affected_count ?? 0) ? `${rows.length} of them` : "them"}
+              </summary>
+              <ul class="samples">
+                {rows.map((s, i) => (
+                  <li key={i}>
+                    <span class="s-from">{s.from || "(unknown sender)"}</span>
+                    <span class="s-subject">{s.subject || "(no subject)"}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {error && <Notice tone="danger">{error}</Notice>}
+        </>
       );
     }
 
@@ -1570,7 +1833,10 @@ export function App(props: { bridge: HostBridge }) {
   // call) must keep rendering nothing, or every successful delete on an
   // opted-out inbox grows a stray line of protocol trivia underneath it.
   if (body === null) return null;
-  if (!diagnosticsEnabled(envelope)) return body;
+  // Not under the subscription list: the line measures the draft card's host
+  // handshake, and on this card it read as stray debug text under a list a
+  // person is choosing from, even for our own opted-in workspaces.
+  if (!diagnosticsEnabled(envelope) || envelope?.card === "subscription_plan") return body;
   return (
     <>
       {body}

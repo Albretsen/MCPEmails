@@ -24,6 +24,8 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { parsePermanentFlags } from "./imap-client.ts";
+import { IMAP_ALIAS_ALTERNATE_NAMES } from "./imap-folder-target.ts";
+import { isForbiddenMoveDestination, purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
 import {
   labelTargetFor,
   MAX_IMAP_KEYWORD_CHARS,
@@ -34,12 +36,14 @@ import {
 import {
   checkTriageAuthority,
   handleTriageDispatch,
+  MAX_RULES_PER_INVOCATION,
   redactForRunLog,
   renderTriageTemplate,
   reportedActionErrorCode,
   runTriageRule,
   TRIAGE_MAX_FORWARD_RECIPIENTS,
   TRIAGE_RUN_ERROR_DESTINATION_MISSING,
+  TRIAGE_DISPATCH_FANOUT,
   TRIAGE_STALE_LEASE_MS,
   TRIAGE_STOP_REASON_TIME_BUDGET,
   type TriageActionOutcome,
@@ -138,6 +142,16 @@ function fakeStore(state: FakeState): TriageStore {
       if (state.leases.has(ruleId)) return Promise.resolve(false);
       state.leases.set(ruleId, nowIso);
       return Promise.resolve(true);
+    },
+    inboxLeaseHeld: (inboxId, exceptRuleId) => {
+      const inboxOf = (id: string) => state.dueRules.find((r) => r.id === id)?.inbox_id ?? "inbox-1";
+      return Promise.resolve(
+        [...state.leases.keys()].some((id) => id !== exceptRuleId && inboxOf(id) === inboxId),
+      );
+    },
+    abandonClaim: (ruleId, claimedAtIso) => {
+      if (state.leases.get(ruleId) === claimedAtIso) state.leases.delete(ruleId);
+      return Promise.resolve();
     },
     releaseRule: (ruleId, update) => {
       state.leases.delete(ruleId);
@@ -653,6 +667,90 @@ Deno.test("two overlapping dispatches cannot both claim the same rule", async ()
   const secondBody = await second.json();
   assertEquals(secondBody.ran, 0, "the second dispatch runs nothing");
   assertEquals(secondBody.contended, 1, "and reports the contention rather than hiding it");
+});
+
+Deno.test("the dispatcher lists a fan-out-wide window but claims at most one batch", async () => {
+  const rules = Array.from({ length: 30 }, (_, i) => fakeRule({ id: `rule-${i}`, inbox_id: `inbox-${i}` }));
+  const state = freshState({ dueRules: rules });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [], applied);
+  let listedWith = 0;
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      listDueRules: (nowIso, limit) => {
+        listedWith = limit;
+        return base.store.listDueRules(nowIso, limit);
+      },
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(listedWith, MAX_RULES_PER_INVOCATION * TRIAGE_DISPATCH_FANOUT, "the window is fan-out wide");
+  assertEquals(body.ran, MAX_RULES_PER_INVOCATION, "but one invocation still claims at most one batch");
+});
+
+Deno.test("a rule is skipped while another rule on its inbox holds a lease", async () => {
+  const busy = fakeRule({ id: "rule-busy", inbox_id: "inbox-1" });
+  const waiting = fakeRule({ id: "rule-1", inbox_id: "inbox-1" });
+  const elsewhere = fakeRule({ id: "rule-2", inbox_id: "inbox-2" });
+  const state = freshState({ dueRules: [busy, waiting, elsewhere] });
+  // rule-busy is mid-run in another invocation.
+  state.leases.set("rule-busy", new Date(0).toISOString());
+  const applied = { calls: [] as any[] };
+
+  const body = await (await handleTriageDispatch(fakeDeps(state, [fakeMatch("msg-a")], applied))).json();
+  assertEquals(body.ran, 1, "only the rule on the idle inbox runs");
+  assertEquals(body.inbox_busy, 1, "the rule on the busy inbox waits");
+  assertEquals(body.contended, 1, "and the busy rule itself is contended, not re-run");
+  assertEquals(state.runs.map((r) => r.rule_id), ["rule-2"], "one run, on the idle inbox");
+});
+
+Deno.test("a claim that lost the inbox race after the CAS is given back, not run", async () => {
+  // Both invocations saw the inbox idle and both won a CAS on different rules.
+  // The re-check after the claim sees the other lease and backs off.
+  const state = freshState({ dueRules: [fakeRule({ id: "rule-1", inbox_id: "inbox-1" })] });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [fakeMatch("msg-a")], applied);
+  let looks = 0;
+  const abandoned: string[] = [];
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      inboxLeaseHeld: () => Promise.resolve(++looks > 1),
+      abandonClaim: async (ruleId, claimedAtIso) => {
+        abandoned.push(ruleId);
+        await base.store.abandonClaim(ruleId, claimedAtIso);
+      },
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(body.ran, 0, "the rule does not run");
+  assertEquals(body.inbox_busy, 1, "counted as a busy inbox");
+  assertEquals(abandoned, ["rule-1"], "its claim is given back");
+  assertEquals(state.leases.size, 0, "and no lease is left for the stale sweep");
+  assertEquals(state.runs.length, 0, "no run row is opened");
+});
+
+Deno.test("a failed re-check is treated as a collision", async () => {
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [fakeMatch("msg-a")], applied);
+  let looks = 0;
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      inboxLeaseHeld: () => (++looks > 1 ? Promise.reject(new Error("db down")) : Promise.resolve(false)),
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(body.ran, 0, "the rule does not run");
+  assertEquals(state.leases.size, 0, "the claim is given back");
 });
 
 Deno.test("a completed run releases the lease and schedules the next", async () => {
@@ -1910,9 +2008,9 @@ Deno.test("PERMANENTFLAGS is parsed out of the SELECT response", () => {
   );
 });
 
-Deno.test("a move whose destination is trash or junk is refused", () => {
+Deno.test("a move whose destination is trash is refused", () => {
   // Blocking an action literally named "delete" is not enough on its own:
-  // every provider empties trash and junk on a timer, so a move there is an
+  // every provider empties trash on a timer, so a move there is an
   // unattended delete with a delayed fuse. The product claim is that
   // automations never delete mail, so the destination is checked too.
   for (
@@ -1924,8 +2022,6 @@ Deno.test("a move whose destination is trash or junk is refused", () => {
       "Deleted Items",
       "deleted  items",
       "Deleted Messages",
-      "Junk",
-      "Spam",
       // Provider-prefixed paths must resolve to the same leaf.
       "[Gmail]/Trash",
       "INBOX.Trash",
@@ -1935,7 +2031,7 @@ Deno.test("a move whose destination is trash or junk is refused", () => {
     const result = validateTriageAction({ type: "move", folder });
     assert(!result.ok, `move to '${folder}' must be refused`);
     assert(
-      !result.ok && /trash and junk/i.test(result.error),
+      !result.ok && /empties its trash/i.test(result.error),
       `refusal for '${folder}' must explain why, got: ${!result.ok ? result.error : ""}`,
     );
   }
@@ -1945,10 +2041,105 @@ Deno.test("a move to an ordinary folder is still allowed", () => {
   // The guard must not overreach: only the destination is checked, and only
   // against trash-like leaves. Moving mail OUT of trash, and any folder whose
   // name merely contains one of those words, stay allowed.
-  for (const folder of ["Archive", "Clients", "Receipts 2026", "Trashed drafts", "Junk mail leads"]) {
+  for (
+    const folder of [
+      "Archive", "Clients", "Receipts 2026", "Trashed drafts", "Junk mail leads",
+      // Junk and spam are ordinary destinations (decided 2026-10-20): filing
+      // unwanted mail there is a main reason people build automations.
+      "Junk", "Spam", "Junk Email", "JunkEmail", "Bulk", "Bulk Mail", "INBOX.Spam", "[Gmail]/Spam",
+      "Spamverdacht", "Courrier indésirable", "Correo no deseado", "迷惑メール",
+    ]
+  ) {
     const result = validateTriageAction({ type: "move", folder });
     assert(result.ok, `move to '${folder}' must be allowed, got: ${!result.ok ? result.error : ""}`);
   }
+});
+
+Deno.test("a move to a localized trash folder is refused", () => {
+  // Until 2026-10-20 the refused list was a few English words, so a rule moving
+  // mail to "Papierkorb" saved and then deleted it on the provider's timer. The
+  // set is now derived from the folder resolver's own localized names.
+  for (
+    const folder of [
+      "Papierkorb",
+      "INBOX.Papierkorb",
+      "Корзина",
+      "Éléments supprimés",
+      "INBOX/Éléments supprimés",
+      // NFD input (e + combining acute) must match the NFC list entry.
+      "E\u0301le\u0301ments supprime\u0301s",
+      "Gelöschte Elemente",
+      "Cestino",
+      "Prullenbak",
+      "Papirkurv",
+      "ごみ箱",
+      "휴지통",
+      "已删除邮件",
+      // Provider-native ids of the same folder.
+      "deleteditems",
+      "[Gmail]/Bin",
+    ]
+  ) {
+    const result = validateTriageAction({ type: "move", folder });
+    assert(!result.ok, `move to '${folder}' must be refused`);
+    assert(
+      !result.ok && /empties its trash/i.test(result.error),
+      `refusal for '${folder}' must explain why, got: ${!result.ok ? result.error : ""}`,
+    );
+  }
+});
+
+Deno.test("every localized trash name the resolver knows is refused", () => {
+  // The derivation itself: a name added to IMAP_ALIAS_ALTERNATE_NAMES for
+  // resolving is refused here with no second edit.
+  for (const name of IMAP_ALIAS_ALTERNATE_NAMES.trash) {
+    assert(isForbiddenMoveDestination(name), `trash name '${name}' must be refused`);
+    assert(isForbiddenMoveDestination(`INBOX/${name}`), `'INBOX/${name}' must be refused`);
+  }
+  // And the other roles are not: spam, Sent, Drafts and Archive are ordinary
+  // destinations for an automation.
+  for (const role of ["spam", "sent", "drafts", "archive"]) {
+    for (const name of IMAP_ALIAS_ALTERNATE_NAMES[role]) {
+      assert(!isForbiddenMoveDestination(name), `${role} name '${name}' must stay allowed`);
+    }
+  }
+});
+
+Deno.test("a destination the provider flags as trash is refused at run time", async () => {
+  // "Müll" is in no name list, so it passes validation; the IMAP server flags
+  // it \\Trash, so moving mail there is still a delete on a timer.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, undefined, {
+    resolveFolder: (_inbox, name) => Promise.resolve({ id: name, verified: true, forbiddenRole: "trash" }),
+  });
+  const summary = await runTriageRule(deps, fakeRule({ action: { type: "move", folder: "Müll" } }));
+  assertEquals(summary.status, "failed", "the run fails");
+  assertEquals(summary.error_code, "invalid_action", "as an invalid rule");
+  assertEquals(applied.calls.length, 0, "and moves nothing");
+});
+
+Deno.test("a destination that resolves to a trash id is refused at run time", async () => {
+  // A rule's name can resolve to the provider's own trash by role, e.g. a Gmail
+  // alias landing on the TRASH system label.
+  for (const id of ["TRASH", "deleteditems", "[Gmail]/Trash", "INBOX.Papierkorb"]) {
+    const state = freshState();
+    const applied = { calls: [] as any[] };
+    const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, undefined, {
+      resolveFolder: () => Promise.resolve({ id, verified: true }),
+    });
+    const summary = await runTriageRule(deps, fakeRule({ action: { type: "move", folder: "Clients" } }));
+    assertEquals(summary.error_code, "invalid_action", `resolved id '${id}' must be refused`);
+    assertEquals(applied.calls.length, 0, `nothing moved into '${id}'`);
+  }
+});
+
+Deno.test("only the SPECIAL-USE \\Trash flag is refused", () => {
+  assertEquals(purgedRoleFromFlags(["\\HasNoChildren", "\\Trash"]), "trash", "\\Trash");
+  assertEquals(purgedRoleFromFlags(["\\trash"]), "trash", "flags compare case-insensitively");
+  assertEquals(purgedRoleFromFlags(["\\Junk"]), null, "junk is an allowed destination");
+  assertEquals(purgedRoleFromFlags(["\\Archive"]), null, "archive is an ordinary destination");
+  assertEquals(purgedRoleFromFlags([]), null, "no flags, no role");
 });
 
 // ---------------------------------------------------------------------------

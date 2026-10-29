@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode, OutlookEmailMissingError, probeOutlookMailboxAtConnect, type OutlookTokens } from '@/lib/email-providers/outlook';
 import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inboxes/provider-conflict';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
+import { ONBOARDING_RETURN_COOKIE, onboardingReturnLocation, onboardingReturnTarget } from '@/lib/onboarding/outlook-return';
 import {
   ADMIN_CONSENT_STATE_COOKIE,
   adminConsentCallbackRedirect,
@@ -59,7 +62,7 @@ export const maxDuration = 15;
  * URI. Those responses carry `admin_consent=True&tenant=...` (or an error)
  * and a state with ADMIN_CONSENT_STATE_PREFIX, never a code, and are handled
  * by `handleAdminConsent` before anything below runs. That branch needs no
- * MCP Emails session: the admin usually has none.
+ * MCPEmails session: the admin usually has none.
  *
  * Token security:
  *   - Tokens are never logged.
@@ -93,7 +96,7 @@ async function recordDeniedAuthorization(state: string | null): Promise<void> {
  * lives inside Microsoft.
  *
  * The person here is usually an administrator who opened a shared link and
- * has no MCP Emails session, so nothing below may depend on one. Integrity
+ * has no MCPEmails session, so nothing below may depend on one. Integrity
  * comes from two things instead: the state must be an unexpired, single-use
  * oauth_states row (minted when the link was opened), AND it must equal the
  * HttpOnly cookie set on the same browser at that moment. Without the cookie
@@ -169,7 +172,28 @@ async function handleAdminConsent(request: NextRequest, searchParams: URLSearchP
   );
 }
 
+/**
+ * A sign-in started on /onboarding (cookie set by /auth/outlook?from=onboarding)
+ * returns there instead of to the dashboard. See lib/onboarding/outlook-return.ts.
+ */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const response = await handleCallback(request);
+  const returnCookie = request.cookies.get(ONBOARDING_RETURN_COOKIE)?.value;
+  if (!returnCookie) return response;
+  const target = onboardingReturnLocation(
+    response.headers.get('location'),
+    process.env.NEXT_PUBLIC_APP_URL!,
+    onboardingReturnTarget(returnCookie),
+  );
+  if (!target) return response;
+  const redirect = NextResponse.redirect(target);
+  for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+  redirect.cookies.set(ONBOARDING_RETURN_COOKIE, '', { path: '/auth/outlook', maxAge: 0 });
+  redirect.headers.set('Cache-Control', 'no-store');
+  return redirect;
+}
+
+async function handleCallback(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
 
   // 0. Tenant admin consent shares this redirect URI; route it away first so
@@ -206,7 +230,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (providerError === 'cancelled') {
     await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'provider_denied');
     await recordDeniedAuthorization(state);
-    return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=cancelled`);
+    // Its own code (not the shared `cancelled`) so the dashboard can reopen
+    // the connect modal on the Outlook card with a "you cancelled on
+    // Microsoft's page" panel, rather than a toast that is gone in four
+    // seconds. Not `?provider=`: that parameter is the landing-page connect
+    // intent. Gmail's cancel keeps the shared code and its toast.
+    return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=outlook_cancelled`);
   }
 
   if (providerError) {
@@ -343,6 +372,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'plan_limit', phase: 'persistence', connectionType: 'first_connect' });
+      await recordInboxCapHit(oauthState.workspace_id, inboxLimit);
       return redirectWithError('inbox_limit_reached');
     }
   }
@@ -391,6 +421,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // 9. Redirect to the Inboxes page with a success indicator.
   await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'outlook', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Business bills mailboxes past ten: bring the add-on quantity in step.
+  // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
+  if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(oauthState.workspace_id).then(() => undefined));
   const { data: onboarding } = await serviceClient.from('workspaces').select('onboarding_client').eq('id', oauthState.workspace_id).maybeSingle();
   const guide = new URL(clientGuidePath(onboarding?.onboarding_client), DASHBOARD_INBOXES);
   guide.searchParams.set('connected', 'outlook');

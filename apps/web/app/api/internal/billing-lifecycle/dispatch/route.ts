@@ -1,9 +1,18 @@
 /**
  * POST /api/internal/billing-lifecycle/dispatch
  *
- * The billing lifecycle email dispatcher. Called by pg_cron every five minutes
- * (see supabase/migrations/20260902130100_schedule_billing_lifecycle.sql), it
- * claims whatever is due in `billing_email_sends` and sends it.
+ * The billing lifecycle email dispatcher's cron entry point and fallback.
+ *
+ * WHEN EMAILS GO OUT. A row due immediately (cancel_ask, pause_started, the
+ * first dunning email, the Free allowance notices) is sent right away: the web
+ * request that queued it dispatches exactly those rows after its response
+ * (src/lib/billing/dispatch-kick.ts), and the mcp-server POSTs here with
+ * `?mode=emails` after it queues an allowance notice. pg_cron still calls this
+ * route every five minutes (supabase/migrations/20260902130100_schedule_billing_lifecycle.sql)
+ * and claims whatever is due, which sends the scheduled rows (reminders,
+ * win-backs, later dunning steps) and retries anything a kick missed. Both
+ * paths share src/lib/billing/lifecycle-dispatch.ts and claim atomically, so a
+ * row is never sent twice.
  *
  * WHY IT LIVES IN THE WEB APP AND NOT IN THE EDGE FUNCTION
  * -------------------------------------------------------
@@ -15,8 +24,11 @@
  * and a different deploy pipeline from the copy for the purchase confirmation
  * it has to sound like. Every dependency this route needs already exists here.
  *
- * TWO MODES
- *   POST (default)     claim and send whatever is due.
+ * THREE MODES
+ *   POST (default)     re-project due plan changes, then claim and send
+ *                      whatever is due.
+ *   POST ?mode=emails  claim and send whatever is due, nothing else (the
+ *                      mcp-server's kick).
  *   POST ?mode=sweep   scan active subscriptions for cards that are about to
  *                      expire and QUEUE the warnings. Sends nothing itself.
  *                      Runs once a day.
@@ -61,53 +73,19 @@ import type Stripe from 'stripe';
 
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { getPlanByStripePriceId } from '@/lib/stripe/plans';
-import {
-  composeBillingEmail,
-  isUsageTemplate,
-  sendBillingLifecycleEmail,
-  sendInputForQueueRow,
-  type BillingTemplate,
-  type LifecyclePayload,
-  type LifecycleQueueRowInput,
-} from '@/lib/email/billing-lifecycle';
+import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   isGrandfathered,
   queueCardExpiryWarning,
   resolveRecipient,
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
-import { isSuppressed } from '@/lib/email/lifecycle';
+import { dispatchBillingEmails } from '@/lib/billing/lifecycle-dispatch';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
-import {
-  BATCH_SIZE,
-  RETRY_REASON,
-  budgetExhausted,
-  checkFreshness,
-} from '@/lib/billing/dispatch-freshness';
+import { reprojectDuePlanChanges } from '@/lib/billing/plan-change-reproject';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
-
-/**
- * A claimed `billing_email_sends` row. `stripe_customer_id` OR `workspace_id`
- * is set (CHECK billing_email_sends_keyed); never neither. The workspace
- * columns are cast here rather than read from database.types.ts, which is
- * regenerated after the 20260912200000 migration is applied.
- */
-interface QueueRow extends LifecycleQueueRowInput {
-  id: number;
-  stripe_customer_id: string | null;
-  workspace_id: string | null;
-  period_start: string | null;
-  user_id: string | null;
-  recipient: string;
-  template: BillingTemplate;
-  category: 'transactional' | 'marketing';
-  scope_key: string;
-  payload: LifecyclePayload;
-  attempts: number;
-}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -138,265 +116,39 @@ export async function POST(request: Request): Promise<Response> {
   const mode = new URL(request.url).searchParams.get('mode');
   if (mode === 'sweep') return sweepExpiringCards();
 
-  // Read at call time, never captured at module load: a warm lambda would
-  // otherwise keep the value it booted with and the kill switch would need a
-  // redeploy to take effect. See src/lib/billing/lifecycle-mode.ts.
-  const lifecycle = lifecycleMode();
-  if (lifecycle === 'off') {
-    return Response.json({ skipped: 'BILLING_LIFECYCLE_EMAILS=off' }, { status: 200 });
+  // The pause / downgrade fallback, before the email kill switch on purpose:
+  // it moves entitlement, not mail, and must run with lifecycle email off.
+  // Never throws. See src/lib/billing/plan-change-reproject.ts. Skipped for
+  // `?mode=emails`, the mcp-server's kick after it queues an allowance notice:
+  // that caller only wants the email out, and the cron still runs this.
+  const planChanges =
+    mode === 'emails' ? undefined : await reprojectDuePlanChanges(createServiceRoleClient(), stripe);
+
+  // The claim, the freshness checks, the kill switch and the send all live
+  // in src/lib/billing/lifecycle-dispatch.ts, shared with the immediate kick.
+  const outcome = await dispatchBillingEmails({ db: createServiceRoleClient(), stripe });
+
+  if (!outcome.ok) {
+    return Response.json({ error: outcome.error }, { status: 500 });
+  }
+  if ('skipped' in outcome) {
+    return Response.json({ skipped: outcome.skipped, planChanges }, { status: 200 });
   }
 
-  const started = Date.now();
-  const db = createServiceRoleClient();
-
-  const { data: claimed, error } = await db.rpc('claim_billing_emails', {
-    p_limit: BATCH_SIZE,
-  });
-
-  if (error) {
-    console.error('[lifecycle-dispatch] claim failed:', error.message);
-    return Response.json({ error: 'claim_failed' }, { status: 500 });
-  }
-
-  // Through `unknown`: the generated row type predates workspace_id and
-  // period_start (see the QueueRow note above).
-  const rows = (claimed ?? []) as unknown as QueueRow[];
-  const result = { claimed: rows.length, sent: 0, cancelled: 0, failed: 0, dryRun: 0 };
-
-  // What `queue_only` is FOR. A count answers "did anything happen"; reviewing
-  // a sequence before a customer sees one needs to know which email, to which
-  // address, about which invoice. Recipients are masked because this lands in
-  // a Vercel log line and a cron response body, neither of which is a place to
-  // put a customer's address in full.
-  const wouldSend: Array<{
-    id: number;
-    template: BillingTemplate;
-    scope: string;
-    to: string;
-    subject: string | null;
-  }> = [];
-
-  for (const row of rows) {
-    if (budgetExhausted(started, Date.now())) {
-      // Leave the rest claimed; the lease expires and the next tick takes them.
-      console.log('[lifecycle-dispatch] wall-clock budget reached; yielding.');
-      break;
-    }
-
-    // ── Suppression + opt-out link, MARKETING ONLY ────────────────────────
-    //
-    // The `category` column is GENERATED from the template name in the
-    // database, so a transactional row cannot reach this branch at all, no
-    // matter what preferences the recipient has set. That is the whole point: a
-    // customer who opted out of win-backs must still be told their card failed.
-    //
-    // The check reuses src/lib/email/lifecycle.ts rather than owning a second
-    // opt-out mechanism, and it reads the preference HERE rather than trusting
-    // the one that held when the row was queued, because the gap between
-    // queueing a win-back and sending it is two weeks and that is exactly where
-    // somebody clicks unsubscribe.
-    if (row.category === 'marketing') {
-      if (!row.user_id) {
-        // No user row means no preferences to honour and no token to sign a
-        // link with. Fail closed: marketing mail we cannot let them stop is
-        // marketing mail we do not send.
-        await finish(db, row.id, { cancelled: 'suppressed', error: 'no_user_row' });
-        result.cancelled += 1;
-        continue;
-      }
-      if (await isSuppressed(db, row.user_id, 'lifecycle')) {
-        await finish(db, row.id, { cancelled: 'suppressed' });
-        result.cancelled += 1;
-        continue;
-      }
-      const { data: profile } = await db
-        .from('users')
-        .select('unsubscribe_token')
-        .eq('id', row.user_id)
-        .maybeSingle();
-      if (!profile?.unsubscribe_token) {
-        await finish(db, row.id, { cancelled: 'suppressed', error: 'no_unsubscribe_token' });
-        result.cancelled += 1;
-        continue;
-      }
-      // Injected fresh, never frozen into the queued payload, so a rotated
-      // token cannot leave a dead opt-out link in an email sent a month later.
-      row.payload = { ...(row.payload ?? {}), unsubscribeToken: profile.unsubscribe_token };
-    }
-
-    // The usage notices have nothing in Stripe to check against; their
-    // freshness question is whether the Free allowance still applies. The
-    // suppression branch above is never entered for them either: their
-    // GENERATED category is transactional, so an owner cannot opt out of being
-    // told their own service is about to stop.
-    const fresh = isUsageTemplate(row.template)
-      ? await checkAllowanceFreshness(db, row)
-      : await checkFreshness(stripe, row);
-    if (!fresh.send) {
-      if (fresh.reason === RETRY_REASON) continue; // leave it; lease expires
-      await finish(db, row.id, { cancelled: fresh.reason });
-      result.cancelled += 1;
-      continue;
-    }
-
-    if (lifecycle !== 'on') {
-      // queue_only: everything above ran for real against real Stripe data, and
-      // this is where a customer would have received something. Compose it
-      // anyway, so the subject line in the report is the one that would have
-      // been used and a template that cannot compose shows up here rather than
-      // on the day the switch is flipped.
-      const composed = composeBillingEmail(row.template, row.payload ?? {});
-      wouldSend.push({
-        id: row.id,
-        template: row.template,
-        scope: row.scope_key,
-        to: maskAddress(row.recipient),
-        subject: composed?.subject ?? null,
-      });
-      // Release the claim so the row stays visible and due for inspection.
-      await db
-        .from('billing_email_sends')
-        .update({ claimed_at: null, attempts: Math.max(0, row.attempts - 1) })
-        .eq('id', row.id);
-      result.dryRun += 1;
-      continue;
-    }
-
-    // One attempt, never a retry inside the send; the queue retries on the
-    // next tick under the same Idempotency-Key, which for a workspace-keyed
-    // row is (workspace_id, template, period_start). See lifecycleIdempotencyKey.
-    const send = await sendBillingLifecycleEmail(sendInputForQueueRow(row));
-
-    if (send.ok) {
-      await finish(db, row.id, { sent: send.resendId });
-      result.sent += 1;
-    } else if (send.reason === 'unusable_recipient' || send.reason === 'not_composable') {
-      // Permanent. Retrying cannot help, so stop rather than burn five attempts.
-      await finish(db, row.id, { cancelled: 'undeliverable', error: send.reason });
-      result.cancelled += 1;
-    } else {
-      await db
-        .from('billing_email_sends')
-        .update({ last_error: send.reason, claimed_at: null })
-        .eq('id', row.id);
-      result.failed += 1;
-    }
-  }
-
+  const { wouldSend, ...result } = outcome;
   console.log('[lifecycle-dispatch]', JSON.stringify({ ...result, wouldSend }));
   return Response.json(
-    { ok: true, mode: lifecycle, ...result, ...(wouldSend.length ? { wouldSend } : {}) },
+    { ...result, ...(wouldSend.length ? { wouldSend } : {}) },
     { status: 200 },
   );
-}
-
-/**
- * `asgeir@mcpemails.com` to `a****r@mcpemails.com`. Enough to recognise an
- * address you already know, not enough to be a customer list in a log file.
- */
-function maskAddress(email: string): string {
-  const at = email.lastIndexOf('@');
-  if (at <= 0) return '****';
-  const local = email.slice(0, at);
-  const domain = email.slice(at);
-  if (local.length <= 2) return `${local[0] ?? '*'}****${domain}`;
-  return `${local[0]}****${local[local.length - 1]}${domain}`;
-}
-
-/**
- * The one row of `workspace_action_allowance()` this decision reads. The
- * function is declared in 20260912200000_free_action_cap_150.sql and is not
- * in database.types.ts until that file is regenerated, hence the local shape
- * and the cast below.
- */
-interface AllowanceRow {
-  exempt: boolean | null;
-  cap: number | null;
-  period_start: string | null;
-}
-
-/**
- * "Is this usage notice still true?", asked of the allowance function
- * immediately before the send.
- *
- * Cancels when the cap no longer applies (the workspace was exempted, comped
- * or upgraded since the row was queued: `exempt` or a NULL `cap`) or when the
- * period it describes is over (the allowance now reports a later
- * `period_start`, so the count it quotes has reset). A workspace that no
- * longer exists cancels too. A read failure returns RETRY_REASON, exactly as
- * the Stripe check does: the row stays claimed, the lease expires, and the
- * next run asks again. A notice delayed by fifteen minutes costs nothing; one
- * that tells a brand-new Personal customer their actions are refused costs
- * the sale it just made.
- */
-async function checkAllowanceFreshness(
-  db: ReturnType<typeof createServiceRoleClient>,
-  row: QueueRow,
-): Promise<{ send: true } | { send: false; reason: string }> {
-  if (!row.workspace_id) {
-    // Unreachable under the keyed CHECK plus the template CHECK, but a usage
-    // row with no workspace has no allowance to describe.
-    return { send: false, reason: 'no_workspace' };
-  }
-  try {
-    const rpc = (db as unknown as {
-      rpc(fn: string, args: Record<string, unknown>): PromiseLike<{
-        data: unknown;
-        error: { message: string } | null;
-      }>;
-    }).rpc.bind(db);
-    const { data, error } = await rpc('workspace_action_allowance', {
-      p_workspace_id: row.workspace_id,
-    });
-    if (error) throw new Error(error.message);
-
-    const allowance = (Array.isArray(data) ? data[0] : data) as AllowanceRow | null | undefined;
-    if (!allowance) return { send: false, reason: 'workspace_gone' };
-    if (allowance.exempt || allowance.cap == null) {
-      return { send: false, reason: 'allowance_lifted' };
-    }
-    if (
-      row.period_start &&
-      allowance.period_start &&
-      new Date(allowance.period_start).getTime() > new Date(row.period_start).getTime()
-    ) {
-      return { send: false, reason: 'period_ended' };
-    }
-    return { send: true };
-  } catch (err) {
-    console.error(`[lifecycle-dispatch] allowance check failed for row ${row.id}:`, {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return { send: false, reason: RETRY_REASON };
-  }
-}
-
-async function finish(
-  db: ReturnType<typeof createServiceRoleClient>,
-  id: number,
-  outcome: { sent?: string | null } | { cancelled: string; error?: string },
-): Promise<void> {
-  const patch =
-    'cancelled' in outcome
-      ? {
-          cancelled_at: new Date().toISOString(),
-          cancel_reason: outcome.cancelled,
-          ...(outcome.error ? { last_error: outcome.error } : {}),
-        }
-      : { sent_at: new Date().toISOString(), resend_id: outcome.sent ?? null };
-
-  const { error } = await db.from('billing_email_sends').update(patch).eq('id', id);
-  if (error) {
-    // The email is already gone. Loud, because a row stuck unsent-but-delivered
-    // is the one state that could produce a duplicate on a later lease expiry.
-    // The Resend Idempotency-Key is what stops that becoming a second email.
-    console.error(`[lifecycle-dispatch] could not finish row ${id}: ${error.message}`);
-  }
 }
 
 // ---------------------------------------------------------------------------
 // Card expiry sweep
 // ---------------------------------------------------------------------------
+
+/** Upper bound on one sweep, so a runaway pager cannot loop forever. */
+const CARD_SWEEP_MAX_SCANNED = 5000;
 
 /**
  * Queue card-expiry warnings. Runs daily.
@@ -405,7 +157,7 @@ async function finish(
  * legacy Sources, thirty days out, and every card in this account is a
  * PaymentMethod, for which no such event exists. There is no webhook that says
  * "this card expires next month", so the only honest implementation is to look.
- * At the current subscription count that is one API call.
+ * One list call per 100 active subscriptions, auto-paginated.
  *
  * The two windows do not overlap: a card with five days left gets the seven-day
  * warning only, never both on the same morning.
@@ -419,13 +171,22 @@ async function sweepExpiringCards(): Promise<Response> {
   const result = { scanned: 0, queued30: 0, queued7: 0, skipped: 0 };
 
   try {
-    const subs = await stripe.subscriptions.list({
+    // Auto-pagination: one list call returns only its first page (100), and
+    // there are more active subscriptions than that. The iterator fetches the
+    // next page as the loop reaches it.
+    const subscriptions = stripe.subscriptions.list({
       status: 'active',
       limit: 100,
       expand: ['data.default_payment_method'],
     });
 
-    for (const subscription of subs.data) {
+    for await (const subscription of subscriptions) {
+      if (result.scanned >= CARD_SWEEP_MAX_SCANNED) {
+        console.warn('[lifecycle-dispatch] card sweep stopped at the scan cap', {
+          cap: CARD_SWEEP_MAX_SCANNED,
+        });
+        break;
+      }
       result.scanned += 1;
 
       const card = await resolveCard(subscription);
@@ -461,7 +222,9 @@ async function sweepExpiringCards(): Promise<Response> {
         continue;
       }
 
-      const item = subscription.items.data[0];
+      // The plan's own item: a Business subscription also carries the
+      // per-mailbox add-on, and Stripe does not promise which comes first.
+      const item = basePlanItem(subscription.items.data);
       const resolved = item?.price?.id ? getPlanByStripePriceId(item.price.id) : null;
 
       const queued = await queueCardExpiryWarning({

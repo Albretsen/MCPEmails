@@ -6,7 +6,7 @@ import { PROVIDERS } from '../connect/providers.mjs';
 
 const webRoot = new URL('../../../', import.meta.url);
 const read = (rel: string) => readFileSync(new URL(rel, webRoot), 'utf8');
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 const messages = Object.fromEntries(
   LOCALES.map((locale) => [locale, JSON.parse(read(`messages/${locale}/dashboardChrome.json`))])
 );

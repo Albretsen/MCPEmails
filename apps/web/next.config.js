@@ -111,8 +111,64 @@ if (!SKIP_VALIDATION) {
 
 const path = require('path');
 
+// ---------------------------------------------------------------------------
+// /api/mcp → the mcp-server Edge Function
+// ---------------------------------------------------------------------------
+// The MCP endpoint is not a Next route. It is an external rewrite to the
+// Supabase Edge Function, proxied by Vercel's edge (an external rewrite in
+// next.config.js compiles to the same Vercel route a vercel.json rewrite does).
+// It lived in vercel.json until 2026-10-26; it moved here so the target can
+// come from MCP_EDGE_URL and a staging project can point at its own Supabase.
+// Unset, it is exactly the production URL it always was.
+//
+// `beforeFiles` matters: without it the request would first match the
+// app/api/[[...unmatched]] catch-all and 404. proxy.ts excludes api/mcp in its
+// matcher, so no session or CSP work runs on these requests either.
+// Keep `?forceFunctionRegion=us-east-1` on any override: it pins the function
+// to the region it has always run in.
+const MCP_EDGE_URL =
+  process.env.MCP_EDGE_URL ||
+  'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1';
+if (!/^https:\/\/[^/]+\/\S*$/.test(MCP_EDGE_URL)) {
+  throw new Error(`MCP_EDGE_URL must be an absolute https URL, got: ${MCP_EDGE_URL}`);
+}
+
+// ---------------------------------------------------------------------------
+// Growth cache generation
+// ---------------------------------------------------------------------------
+// The growth board's cached reads are keyed on this, so a deploy that changes
+// what they return starts cold and never renders a payload shaped for the
+// previous build. It hashes the code that builds those payloads instead of
+// naming the deployment: main deploys dozens of times a day, and keying on the
+// deployment emptied the cache on every one of them, which is when the board's
+// sections timed out.
+function growthCacheGeneration() {
+  const fs = require('fs');
+  const crypto = require('crypto');
+  const hash = crypto.createHash('sha256');
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx|js|mjs)$/.test(entry.name) && !/\.test\./.test(entry.name)) files.push(full);
+    }
+  };
+  walk(path.join(__dirname, 'src/lib/analytics'));
+  files.push(path.join(__dirname, 'src/lib/stripe/plans.ts'));
+  for (const file of files.sort()) {
+    hash.update(path.relative(__dirname, file));
+    hash.update(fs.readFileSync(file));
+  }
+  return hash.digest('hex').slice(0, 16);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    GROWTH_CACHE_GENERATION: growthCacheGeneration(),
+  },
+
   // ---------------------------------------------------------------------------
   // Turbopack workspace root (Next.js 16)
   // ---------------------------------------------------------------------------
@@ -183,6 +239,12 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Never let the edge cache a rewritten /api/mcp response: every MCP
+        // call is authenticated and per-user.
+        source: '/api/mcp',
+        headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }],
+      },
+      {
         source: '/(.*)',
         headers: [
           {
@@ -208,21 +270,11 @@ const nextConfig = {
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
-      {
-        // Demo video, poster and caption track. These are large, finished
-        // build outputs rather than page content, so they get the same
-        // year-long immutable cache as any hashed asset. Nothing else under
-        // public/ has one; only /_next/static did.
-        //
-        // Consequence worth knowing before a re-cut: `immutable` means a new
-        // cut MUST ship under a new filename. Overwriting connect-and-triage.mp4
-        // in place leaves every previous visitor on the old file for up to a
-        // year. The assets are content addressed by name in practice.
-        source: '/demo/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
+      // Staging only (APP_ENV=staging at build): nothing on that host may be
+      // indexed, including API answers and files robots.txt cannot cover.
+      ...(process.env.APP_ENV === 'staging'
+        ? [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+        : []),
     ];
   },
 
@@ -232,9 +284,22 @@ const nextConfig = {
   // /home is a legacy path that never existed in this app. It 404s today
   // because the redirect declaring it lived in the same dead repo-root
   // vercel.json as the HSTS value above.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/api/mcp', destination: MCP_EDGE_URL }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+
   async redirects() {
     return [
       { source: '/home', destination: '/', permanent: true },
+      // /docs/claude covers claude.ai and Claude Desktop on one page, but
+      // Google ranks the guessed /docs/claude-desktop URL (a 404) for "MCP
+      // servers for Claude Desktop email". Send it, in every locale, there.
+      { source: '/docs/claude-desktop', destination: '/docs/claude', permanent: true },
+      { source: '/:locale(nb|es|fr|de|zh)/docs/claude-desktop', destination: '/:locale/docs/claude', permanent: true },
     ];
   },
 };

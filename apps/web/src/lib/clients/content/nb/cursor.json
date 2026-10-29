@@ -22,10 +22,14 @@
     "title": "Slik kobler Cursor seg til: OAuth, ingen API-nøkkel",
     "body": "Cursor kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
   },
+  "answerSection": {
+    "title": "Eksempel: Gmail i Cursor",
+    "body": "Koble til Gmail i MCPEmails-dashbordet med et Google-apppassord, legg til <code>mcpemails</code>-oppføringen nedenfor i <code>~/.cursor/mcp.json</code> og logg inn når Cursor ber om det. Be så agenten i Cursor om noe som «finn feilrapporten Anna sendte til Gmailen min i går, og skriv et utkast til svar om at rettelsen kommer i dag». Den søker i Gmail, leser tråden og lagrer svaret som et Gmail-utkast som du ser over før noe sendes."
+  },
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord, og Gmail kan også bruke Google-innlogging; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
       "h": "Åpne mcp.json",
@@ -37,7 +41,7 @@
     },
     {
       "h": "Autoriser",
-      "p": "Cursor ber deg logge inn via OAuth. Autoriser med mcpemails og godkjenn tilgangene du vil at editoren skal ha."
+      "p": "Cursor ber deg logge inn via OAuth. Autoriser med MCPEmails og godkjenn tilgangene du vil at editoren skal ha."
     }
   ],
   "gotchas": [
@@ -55,7 +59,7 @@
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En 429 har Retry-After. Planens tak for fakturerbare handlinger gjelder i tillegg.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],
@@ -74,7 +78,7 @@
     },
     {
       "q": "Hvilke postkasser kan Cursor nå på denne måten?",
-      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, med Google-innlogging som et alternativ for Gmail; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
     },
     {
       "q": "Kan Cursor sende e-post uten at jeg ser det?",

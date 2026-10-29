@@ -70,10 +70,20 @@
  * THE ACTION CAP IS BACK, AS ONE BAND. Four panels of it were cut on
  * 2026-09-07 because the cap was a silent abuse ceiling nobody could reach
  * and they reported a structural zero. Since 2026-09-12 Free is 150 email
- * actions a month with the first 7 days uncounted (docs/PLAN-free-action-cap-150.md),
+ * actions a month with the first 3 days uncounted (docs/PLAN-free-action-cap-150.md),
  * which makes it a paywall with a funnel, two emails and an automation pause
  * behind it, and that is what the "Usage cap" band measures. Connected
  * inboxes remain the other value metric and keep their own tiles.
+ *
+ * THE DRAFT CARD BAND (2026-10-27) is the release read-out for the in-chat
+ * draft editor: whether customers use it, and whether drafts still get sent,
+ * against the window before the release and against the clients that draw no
+ * card. It reads draft_events, which is not purged with activity_log.
+ *
+ * THE ONBOARDING BAND (2026-10-27) is the read-out for the onb_flow x
+ * onb_convert test: whether it is switched on, whether assignment is sound,
+ * whether either arm is doing harm, and the arms side by side until the
+ * pre-registered read-out decides.
  *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
  *   - A jump nav. It was a patch on a page that was too long and too uniform.
@@ -90,9 +100,11 @@
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/admin/require-admin';
 import {
+  DraftCardSection,
   GrowthSection,
   MilestoneSection,
   MoneySection,
+  OnboardingSection,
   RelaySection,
   StickinessSection,
   TablesSection,
@@ -108,7 +120,7 @@ import '../../../styles/admin-board-parts.css';
 import '../../../styles/admin-kiosk.css';
 import '../../../styles/admin-growth.css';
 
-export const metadata = { title: 'Growth analytics · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Growth analytics', robots: { index: false, follow: false } };
 
 /**
  * Windows for the figures that are genuinely windowed: MRR movements,
@@ -150,6 +162,8 @@ function Band({ id, title, question }: { id: string; title: string; question: st
 const BANDS = [
   { id: 'money', title: 'Money', question: 'what have we earned' },
   { id: 'usage-cap', title: 'Usage cap', question: 'who is near the wall' },
+  { id: 'draft-card', title: 'Draft card', question: 'is it used, and is it worth keeping' },
+  { id: 'onboarding', title: 'Onboarding', question: 'does the new setup help, and is the test sound' },
   { id: 'milestones', title: 'Milestones', question: 'how far, and how fast' },
   { id: 'growth', title: 'Growth', question: 'who is arriving' },
   { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
@@ -200,6 +214,7 @@ export default async function GrowthBoardPage({
             <a className="gb-link" href="/admin/growth/experiments">Experiments</a>
             <a className="gb-link" href="/admin/growth/dunning">Dunning</a>
             <a className="gb-link" href="/admin/growth/usage-cap">Usage cap</a>
+            <a className="gb-link" href="/admin/growth/first-30-days">First 30 days</a>
             {/* A route handler rather than a Server Action: the action-ID lookup
                 failed on every submission in production (verified live
                 2026-08-30), and a URL is not a build-generated hash. */}
@@ -253,6 +268,34 @@ export default async function GrowthBoardPage({
             <UsageCapSection days={days} />
           </Suspense>
 
+          <Band id="draft-card" title="Draft card" question="is it used, and is it worth keeping" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+              </>
+            }
+          >
+            <DraftCardSection days={days} />
+          </Suspense>
+
+          <Band id="onboarding" title="Onboarding" question="does the new setup help, and is the test sound" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+              </>
+            }
+          >
+            <OnboardingSection days={days} />
+          </Suspense>
+
           <Band id="milestones" title="Milestones" question="how far, and how fast" />
           <Suspense fallback={<Skeleton span={12} tall={3} />}>
             <MilestoneSection />
@@ -262,6 +305,7 @@ export default async function GrowthBoardPage({
           <Suspense
             fallback={
               <>
+                <Skeleton span={12} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={8} tall={2} />

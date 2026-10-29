@@ -1,14 +1,14 @@
 {
   "meta": {
-    "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Team",
-    "description": "Gratis conecta una bandeja. Personal, tres por $9 al mes. Pro, todos los buzones de tu negocio por $15. Team añade miembros, roles, SSO y un espacio por cliente."
+    "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Business",
+    "description": "Gratis conecta una bandeja. Personal, tres por $9 al mes. Pro, hasta 10 por $15. Business incluye 10 buzones y todas las personas que quieras por $39."
   },
   "hero": {
     "eyebrow": "Precios",
     "titleLine1": "Una bandeja, gratis.",
     "titleLine2": "Tres bandejas, $9.",
     "titleLine2Yearly": "Tres bandejas, $86,40 al año.",
-    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $9 al mes. Pro cubre todos los buzones, tuyos o de tu negocio, con un solo inicio de sesión. Team añade personas, roles y un espacio de trabajo separado por cliente."
+    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $9 al mes. Pro cubre hasta 10 para una persona que lleva un negocio, con un solo inicio de sesión. Business incluye 10 buzones, cobra $3 al mes por cada uno adicional y deja que todo tu equipo inicie sesión sin coste extra."
   },
   "billing": {
     "monthly": "Mensual",
@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/para siempre",
     "perMonth": "/mes",
-    "billedYearly": "Facturado ${total}/año"
+    "billedYearly": "Facturado ${total}/año",
+    "inclVat": "IVA incluido"
   },
   "plans": {
     "free": {
@@ -27,7 +28,7 @@
       "cta": "Empieza gratis",
       "features": [
         "1 bandeja conectada",
-        "150 acciones de correo al mes, los primeros 7 días no cuentan",
+        "150 acciones de correo al mes, los primeros 3 días no cuentan",
         "Leer, buscar, organizar, redactar, programar y enviar",
         "Aprobación antes de enviar",
         "Analíticas de uso",
@@ -44,40 +45,50 @@
       "features": [
         "Todo lo de Free",
         "3 bandejas conectadas",
-        "Sin tope mensual de acciones",
+        "Acciones de correo ilimitadas",
         "Límite de ráfaga 2x más alto",
         "Soporte por correo"
       ]
     },
     "solo": {
       "name": "Pro",
-      "desc": "Todos los buzones que lleva tu negocio, en un solo agente: finanzas, ventas, soporte, info y el tuyo.",
+      "tagline": "Configúralo en el chat. Sigue funcionando cuando lo cierras.",
+      "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
       "cta": "Obtener Pro",
       "features": [
         "Todo lo de Personal",
-        "Bandejas conectadas ilimitadas",
+        "10 bandejas conectadas",
         "Límite de ráfaga 5x más alto",
-        "Más historial de analíticas"
+        "Más historial de analíticas",
+        "Recordatorios cuando nadie responde a un correo que enviaste",
+        "Posponer: el correo sale de la bandeja de entrada y vuelve cuando tú elijas",
+        "Un resumen cada mañana, directamente en tu bandeja de entrada",
+        "Busca en todas tus bandejas conectadas a la vez",
+        "Instrucciones para tu IA, por bandeja",
+        "Webhooks para el correo nuevo"
       ]
     },
     "pro": {
-      "name": "Team",
-      "desc": "Bandejas compartidas para un equipo, con un espacio de trabajo separado por cliente o negocio.",
-      "cta": "Obtener Team",
+      "name": "Business",
+      "desc": "Para un negocio con muchos buzones o varias personas: 10 buzones incluidos y más a un precio fijo por buzón.",
+      "cta": "Obtener Business",
       "features": [
         "Todo lo de Pro",
-        "Miembros ilimitados con roles",
-        "Un espacio de trabajo separado por cliente o negocio",
-        "SSO (SAML / OIDC) y registro de auditoría",
-        "El mayor historial de analíticas",
-        "Soporte prioritario"
+        "10 buzones incluidos, $3 al mes por cada buzón extra",
+        "Miembros ilimitados con roles, sin coste adicional",
+        "Los administradores aprueban los envíos en espera",
+        "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente",
+        "Webhooks para el correo nuevo"
       ]
     }
   },
   "cardsFootnote": {
-    "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
-    "business": "¿Una persona que lleva varios buzones de empresa? Eso es Pro, no Team. <business>Mira cómo todos los buzones de trabajo funcionan en un solo agente</business>.",
-    "custom": "¿Necesitas algo a medida? <contact>Contáctanos</contact>."
+    "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · datos almacenados en la UE (Estocolmo)",
+    "business": "¿Una persona que lleva varios buzones de empresa? Eso es Pro, hasta 10. <business>Mira cómo todos los buzones de trabajo funcionan en un solo agente</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise: hablemos",
+    "body": "Un acuerdo de tratamiento de datos (DPA), pago por factura y ayuda para que tu administrador de TI apruebe Microsoft 365. Escribe a <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Comparación completa",
@@ -86,7 +97,7 @@
     "free": "Gratis",
     "personal": "Personal",
     "solo": "Pro",
-    "team": "Team",
+    "business": "Business",
     "sections": {
       "usage": {
         "label": "Qué incluye",
@@ -94,7 +105,8 @@
           "inboxes": "Bandejas conectadas",
           "actions": "Acciones de correo al mes",
           "keys": "Claves de API",
-          "members": "Usuarios",
+          "webhooks": "Webhooks para el correo nuevo",
+          "members": "Personas con acceso",
           "burst": "Límite de ráfaga",
           "approvals": "Aprobación antes de enviar"
         }
@@ -102,7 +114,7 @@
       "providers": {
         "label": "Proveedores de correo",
         "rows": {
-          "gmail": "Gmail (contraseña de aplicación o inicio de sesión con Google)",
+          "gmail": "Gmail (contraseña de aplicación de Google)",
           "outlook": "Outlook / Microsoft 365 (inicio de sesión con Microsoft)",
           "fastmail": "Fastmail (contraseña de aplicación)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (contraseña de aplicación)",
@@ -112,13 +124,23 @@
       "mcpTools": {
         "label": "Herramientas MCP"
       },
+      "chatClosed": {
+        "label": "Cuando el chat está cerrado",
+        "rows": {
+          "followUps": "Recordatorios de seguimiento de correos enviados",
+          "snooze": "Posponer correo hasta la hora que elijas",
+          "brief": "Resumen matinal en tu bandeja de entrada",
+          "searchAll": "Búsqueda en todas las bandejas a la vez",
+          "instructions": "Instrucciones para tu IA, por bandeja"
+        }
+      },
       "analytics": {
         "label": "Analíticas y seguridad",
         "rows": {
           "dashboard": "Panel de analíticas de uso",
-          "roles": "Roles de equipo y espacios de trabajo",
-          "sso": "SSO (SAML / OIDC)",
-          "audit": "Registro de auditoría",
+          "roles": "Miembros con roles (lector, miembro, administrador)",
+          "adminApprovals": "Los administradores aprueban los envíos en espera",
+          "workspaces": "Varios espacios de trabajo en una suscripción",
           "history": "Historial de analíticas"
         }
       },
@@ -133,26 +155,27 @@
         "label": "Soporte",
         "rows": {
           "community": "Foro de la comunidad",
-          "email": "Soporte por correo",
-          "priority": "Soporte prioritario"
+          "email": "Soporte por correo"
         }
       }
     },
     "values": {
       "unlimited": "Ilimitado",
-      "unlimitedCompany": "Ilimitado, buzones de empresa incluidos",
-      "actionsFree": "150 / mes, los primeros 7 días no cuentan",
-      "actionsPaid": "Sin tope mensual, uso justo",
+      "tenMailboxes": "Hasta 10 buzones",
+      "businessMailboxes": "10 incluidos, luego $3 al mes cada uno",
+      "actionsFree": "150 / mes, los primeros 3 días no cuentan",
+      "actionsPaid": "Ilimitadas, uso justo",
       "oneInbox": "1 bandeja",
       "threeInboxes": "3 bandejas",
-      "oneSeat": "1 usuario",
+      "oneSeat": "1 persona",
+      "unlimitedPeople": "Ilimitadas, sin coste extra",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
       "burstPro": "1.000 / min",
       "history30": "30 días",
       "history90": "90 días",
-      "history365": "1 año"
+      "history2y": "2 años"
     }
   },
   "faq": {
@@ -161,35 +184,35 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 7 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente puede leer, buscar, organizar, etiquetar, redactar, programar y enviar en ese buzón, y la aprobación antes de enviar, configurable por bandeja, está incluida. Cuando quieras un segundo o un tercer buzón, o acciones de correo ilimitadas, eso es Personal, por $9 al mes."
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
-        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60) y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo demás ya está en Free: todas las herramientas MCP, incluidos los envíos programados, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. No retenemos funciones en Free para que los planes de pago parezcan más grandes."
+        "a": "Dos bandejas conectadas más, acciones de correo ilimitadas (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
       },
       {
         "q": "¿Qué cuenta como una acción de correo?",
-        "a": "Una llamada de herramienta contra tu endpoint /mcp que toca un buzón: una lectura, una búsqueda, un movimiento, un borrador, un envío. Listar tus bandejas (inbox_list) y todo lo que hagas en el panel no cuenta nunca. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP. Free incluye 150 acciones de correo por mes natural; Personal, Pro y Team no tienen tope mensual, sujeto a uso justo."
+        "a": "Una llamada de herramienta contra tu endpoint /mcp que toca un buzón: una lectura, una búsqueda, un movimiento, un borrador, un envío. Listar tus bandejas (inbox_list) y todo lo que hagas en el panel no cuenta nunca. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP. Free incluye 150 acciones de correo por mes natural; Personal, Pro y Business tienen acciones de correo ilimitadas, sujeto a uso justo."
       },
       {
         "q": "¿Qué pasa cuando llego a 150 acciones de correo?",
-        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Personal elimina el tope mensual por $9 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
+        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Con Personal, las acciones de correo son ilimitadas por $9 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
-        "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. La única excepción es un mensaje que nos pides programar para más tarde: lo almacenamos hasta que se envía y luego guardamos un registro para tu historial."
+        "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. Las excepciones son los mensajes salientes que tienen que esperar: un mensaje que nos pides programar para más tarde o un envío retenido para tu aprobación. Los almacenamos cifrados y luego guardamos un registro para tu historial."
       },
       {
-        "q": "¿Cuál es la diferencia entre Personal, Pro y Team?",
-        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, sin ningún límite de bandejas, así que una persona puede conectar todos los buzones que lleva una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Team es para cuando más de una persona necesita iniciar sesión: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, un año de historial de analíticas y soporte prioritario."
+        "q": "¿Cuál es la diferencia entre Personal, Pro y Business?",
+        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte por correo. Pro además sigue trabajando con el chat cerrado: recordatorios de seguimiento de correos enviados, posponer, un resumen cada mañana en tu bandeja de entrada, una sola búsqueda en todas tus bandejas conectadas e instrucciones para tu IA por bandeja. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto. Incluye todo lo de Pro."
       },
       {
         "q": "Somos una empresa con varios buzones. ¿Qué plan necesitamos?",
-        "a": "Cuenta primero las personas que inician sesión y después los buzones. Si una sola persona lleva info@, ventas@, facturas@ y los demás, eso es Pro: un solo inicio de sesión, sin límite de buzones conectados, y cada buzón conserva su propio nombre de remitente y su firma y envía a través de su propio servidor de correo. Dos o tres direcciones caben en Personal. Team solo hace falta cuando una segunda persona necesita su propio inicio de sesión. Se conecta cualquier buzón que hable IMAP y SMTP, lo aloje quien lo aloje, y también Gmail, Google Workspace y Microsoft 365; una cuenta de empresa de Microsoft 365 puede necesitar que su administrador de TI apruebe la aplicación una vez."
+        "a": "Cuenta primero los buzones y después las personas que inician sesión. Si una sola persona lleva info@, ventas@, facturas@ y los demás, eso es Pro: un solo inicio de sesión, hasta 10 buzones conectados, y cada buzón conserva su propio nombre de remitente y su firma y envía a través de su propio servidor de correo. Dos o tres direcciones caben en Personal. Business es para más de 10 buzones, o para cuando una segunda persona necesita su propio inicio de sesión: incluye 10 buzones, cada uno adicional cuesta $3 al mes y los miembros no cuestan nada extra. Se conecta cualquier buzón que hable IMAP y SMTP, lo aloje quien lo aloje, y también Gmail, Google Workspace y Microsoft 365; una cuenta de empresa de Microsoft 365 puede necesitar que su administrador de TI apruebe la aplicación una vez."
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",
-        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, y eso elimina el límite por completo: todos los buzones, tuyos o de tu empresa, sean los que sean, en un solo agente y con un solo inicio de sesión. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
+        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, que cubre hasta 10 buzones en un solo agente y con un solo inicio de sesión. A partir de 10, Business incluye 10 y cobra $3 al mes por cada uno adicional. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
@@ -197,11 +220,11 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $86,40 al año ($7,20 al mes), Pro cuesta $144 al año ($12 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $86,40 al año ($7,20 al mes), Pro cuesta $144 al año ($12 al mes) y Business cuesta $374,40 al año ($31,20 al mes), con cada buzón extra a $28,80 al año ($2,40 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
-        "a": "Gmail se conecta por defecto con una contraseña de aplicación, o iniciando sesión con Google (OAuth). Outlook y Microsoft 365 se conectan iniciando sesión con Microsoft (OAuth): las cuentas personales se conectan directamente, y una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez. Fastmail se conecta con una contraseña de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
+        "a": "Gmail y Google Workspace se conectan con una contraseña de aplicación de Google por IMAP. Outlook y Microsoft 365 se conectan iniciando sesión con Microsoft (OAuth): las cuentas personales se conectan directamente, y una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez. Fastmail se conecta con una contraseña de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
       },
       {
         "q": "¿Hay política de reembolso?",
@@ -209,14 +232,24 @@
       },
       {
         "q": "¿Puedo auto-alojarlo en lugar de pagar?",
-        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel se quedan en el servicio alojado, donde funcionan en todos los planes, incluido Gratis; las funciones de equipo y el soporte por correo están en los planes de pago."
+        "a": "Sí. MCPEmails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel se quedan en el servicio alojado, donde funcionan en todos los planes, incluido Gratis; los miembros y roles están en Business, y el soporte por correo en todos los planes de pago."
       }
     ]
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, y todos los buzones que lleva tu negocio cuestan $15 con Pro.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
-    "ctaSecondary": "Lee la documentación"
+    "ctaSecondary": "Lee la documentación",
+    "subFounder": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 con el precio fundador de arriba, con $3 al mes por cada uno adicional."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
+    "ends": "Termina el {date} a las {time}, hora de Oslo."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}"
   }
 }

@@ -1,10 +1,13 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'privacy' });
   const title = t.has('meta.title') ? t('meta.title') : 'Privacy Policy';
   const description = t.has('meta.description')
@@ -17,14 +20,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/privacy'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -37,19 +40,28 @@ const CONTACT_EMAIL = 'privacy@mcpemails.com';
 
 /* Service-provider identification required by the Norwegian ehandelsloven § 8:
    legal name, geographic address, the register we are enrolled in, and our
-   organisation number. These values must match our entry in Enhetsregisteret,
-   so do not edit them without checking brreg.no first. "MCPEmails" is only the
-   trading name of the service; the legal person is Albretsen Consulting. */
-const COMPANY_NAME = 'Albretsen Consulting';
+   organisation number. These values must match our entry in Foretaksregisteret
+   (brreg.no), so do not edit them without checking there first. "MCPEmails" is
+   only the trading name of the service; the legal person is Albretsen AS
+   (aksjeselskap, registered 2026-10-19), which takes over MCPEmails from the
+   founder's former sole proprietorship, Albretsen Consulting (926 646 753), on
+   2026-11-01. */
+const COMPANY_NAME = 'Albretsen AS';
 const COMPANY_OWNER = 'Asgeir Albretsen';
-const COMPANY_ORG_NUMBER = '926 646 753';
-const COMPANY_REGISTER = 'Enhetsregisteret';
+const COMPANY_ORG_NUMBER = '938 702 373';
+const COMPANY_REGISTER = 'Foretaksregisteret';
 const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
+/* No VAT number on purpose. Albretsen AS has applied for MVA registration but
+   it is not confirmed, so the page must not print a VAT number or claim VAT
+   registration. When Skatteetaten confirms it, add COMPANY_VAT_NUMBER back
+   (format "NO 938 702 373 MVA", checked against the registration letter) and
+   restore the VAT sentence in privacy.whoWeAre.p4 in every locale. */
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
 export default async function PrivacyPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('privacy');
   const richTags = {
@@ -103,7 +115,6 @@ export default async function PrivacyPage({ params }) {
               </p>
               <p>
                 {t.rich('whoWeAre.p4', {
-                  companyName: COMPANY_NAME,
                   email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
                 })}
               </p>
@@ -232,6 +243,12 @@ export default async function PrivacyPage({ params }) {
               <p>{t.rich('howWeUseData.marketingP1', richTags)}</p>
               <p>{t('howWeUseData.marketingP2')}</p>
               <p>{t('howWeUseData.marketingP3')}</p>
+
+              {/* Service email about a setup the reader started (activation
+                  help, src/lib/email/activation-help.ts). Not marketing, so
+                  not under 3.9; unsubscribable under the lifecycle category. */}
+              <h4>{t('howWeUseData.setupHelpTitle')}</h4>
+              <p>{t.rich('howWeUseData.setupHelpP', richTags)}</p>
             </LegalSection>
 
             {/* 4 - Data retention */}
@@ -290,6 +307,12 @@ export default async function PrivacyPage({ params }) {
                       <td>{t('thirdParties.vercelPurpose')}</td>
                       <td>{t('thirdParties.vercelData')}</td>
                       <td>{t('thirdParties.vercelLocation')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Hetzner</strong></td>
+                      <td>{t('thirdParties.relayPurpose')}</td>
+                      <td>{t('thirdParties.relayData')}</td>
+                      <td>{t('thirdParties.relayLocation')}</td>
                     </tr>
                     <tr>
                       <td><strong>Stripe</strong> {t('thirdParties.stripeProvider')}</td>
@@ -419,9 +442,9 @@ export default async function PrivacyPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${CONTACT_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/terms">
+            <Link className="btn btn-on-dark btn-lg" href="/terms">
               {t('cta.termsBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

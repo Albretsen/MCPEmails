@@ -22,6 +22,21 @@
 // Inline and fullscreen are separate layouts (fullscreen pins the action row
 // to the bottom of the frame), so each is compared with itself.
 //
+// Extended after the live claude.ai QA of 2026-10-17 (`layoutChecks`), at
+// every width, inline:
+//   - the header's controls (Expand, Hide, ⋯) do not move when the status
+//     text beside them changes, the From address gives way before the
+//     status, the status is never clipped, and (narrow: on a line of its
+//     own) the header's height does not change with it;
+//   - opening the ⋯ menu, and the turn-off confirm it leads to, moves none of
+//     To, Subject, the message, Save or Send (it is an overlay);
+//   - the delete confirm puts "Keep draft" under the point that pressed
+//     "Delete draft", and neither answer overlaps Save or Send;
+//   - the left links are on one line, or (narrow) not in the row at all and
+//     in the ⋯ menu instead;
+//   - "No subject. Send anyway?" keeps the Subject row's height and Send's
+//     place, so the second press is on the same button.
+//
 // No dependencies: Chrome is driven over the DevTools protocol with Node's own
 // WebSocket, and the card is served by mini-host.mjs, the same host a person
 // would use to look at it. Nothing is sent anywhere: mini-host answers every
@@ -36,7 +51,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "..");
-const WIDTHS = [280, 320, 360, 400, 420, 480, 600];
+const WIDTHS = [280, 300, 320, 360, 400, 420, 480, 600];
 const HOST_PORT = Number(process.env.GEOMETRY_HOST_PORT ?? 3019);
 const CDP_PORT = Number(process.env.GEOMETRY_CDP_PORT ?? 9339);
 const CHROME =
@@ -172,6 +187,14 @@ window.__g = {
     const r = el.getBoundingClientRect();
     return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
   },
+  hits(a, b) {
+    const x = a.getBoundingClientRect();
+    const y = b.getBoundingClientRect();
+    return x.left < y.right && x.right > y.left && x.top < y.bottom && x.bottom > y.top;
+  },
+  drawn(el) {
+    return !!el && el.getClientRects().length > 0;
+  },
   measure() {
     const d = this.doc();
     const [save, send] = this.buttons();
@@ -181,53 +204,77 @@ window.__g = {
       for (const el of left.querySelectorAll("*")) {
         const a = el.getBoundingClientRect();
         if (a.width === 0 || a.height === 0) continue;
-        for (const b of [save, send]) {
-          const c = b.getBoundingClientRect();
-          if (a.left < c.right && a.right > c.left && a.top < c.bottom && a.bottom > c.top) overlap = true;
-        }
+        for (const b of [save, send]) if (this.hits(el, b)) overlap = true;
       }
     }
     return { save: this.rect(save), send: this.rect(send), labels: [save.textContent.trim(), send.textContent.trim()], overlap };
   },
-  /** The Refresh link, by position: it is the one that is not Discard or formatting. */
-  refreshLink() {
-    return [...this.doc().querySelectorAll(".acts-l > .link")].find((l) => /^(Refresh|Refreshing|Up to date|Updated)$/.test(l.textContent.trim()));
+  /** The header's controls (Expand or Collapse, Hide, the menu button). */
+  controls() {
+    return [...this.doc().querySelectorAll(".ed-hdr > .hdr-r button.link")].map((b) => this.rect(b));
+  },
+  /** The rows under the header that an in-flow panel used to push down. */
+  fields() {
+    const d = this.doc();
+    return ["d-to", "d-subject", "d-body"].map((id) => this.rect(d.getElementById(id)));
+  },
+  link(re) {
+    return [...this.doc().querySelectorAll(".ed-links > .link")].find((l) => re.test(l.textContent.trim())) ?? null;
+  },
+  button(re) {
+    return [...this.doc().querySelectorAll("button")].find((b) => re.test(b.textContent.trim())) ?? null;
   },
   /** The formatting toggle. This fixture has no HTML part, so one is added for the measurement. */
   formatLink() {
     const d = this.doc();
-    let l = [...d.querySelectorAll(".acts-l > .link")].find((x) => /formatting|plain text/.test(x.textContent));
+    let l = [...d.querySelectorAll(".ed-links > .link")].find((x) => /formatting|plain text/.test(x.textContent));
     if (!l) {
       l = d.createElement("button");
       l.type = "button";
       l.className = "link";
       l.dataset.geometry = "added";
       l.textContent = "Show formatting";
-      d.querySelector(".acts-l").prepend(l);
+      d.querySelector(".ed-links")?.append(l);
     }
     return l;
   },
   dropAdded() {
     for (const l of this.doc().querySelectorAll("[data-geometry=added]")) l.remove();
   },
-  /** Every left-cluster label combination, measured. */
+  /** Every left-cluster label and status-line combination, measured. */
   labelStates(prefix) {
     const out = [];
-    const r = this.refreshLink();
-    const original = r ? r.textContent : null;
+    const line = this.doc().getElementById("d-status");
+    const original = line ? line.textContent : null;
     for (const fmt of [null, "Show formatting", "Edit plain text"]) {
       if (fmt) this.formatLink().textContent = fmt;
-      for (const word of ["Refresh", "Refreshing", "Up to date", "Updated"]) {
-        if (r) r.textContent = word;
+      for (const word of ["128 words · Saved to Drafts", "Refreshing… · Unsaved changes", "Updated from your mailbox · Unsaved changes", "Still saving. Your mail provider can take a moment."]) {
+        if (line) line.textContent = word;
         out.push({ state: prefix + (fmt ? " + " + fmt : "") + " + " + word, ...this.measure() });
       }
       this.dropAdded();
     }
-    if (r && original !== null) r.textContent = original;
+    if (line && original !== null) line.textContent = original;
     return out;
+  },
+  /** Do the visible left links sit on one line? (A ragged wrap is the bug.) */
+  linksOneLine() {
+    this.formatLink();
+    const links = [...this.doc().querySelectorAll(".ed-links > .link")].filter((l) => this.drawn(l));
+    const tops = new Set(links.map((l) => Math.round(l.getBoundingClientRect().top)));
+    const shown = links.length;
+    this.dropAdded();
+    return { shown, oneLine: tops.size <= 1 };
   },
   async type(text) {
     const b = this.doc().getElementById("d-body");
+    const w = this.doc().defaultView;
+    b.value = text;
+    b.dispatchEvent(new w.Event("input", { bubbles: true }));
+    await this.wait(80);
+  },
+  async subject(text) {
+    const b = this.doc().getElementById("d-subject");
     const w = this.doc().defaultView;
     b.value = text;
     b.dispatchEvent(new w.Event("input", { bubbles: true }));
@@ -237,10 +284,117 @@ window.__g = {
     this.buttons()[i].click();
     await this.wait(80);
   },
+  async click(el) {
+    el.focus();
+    el.click();
+    await this.wait(80);
+  },
+  async escape() {
+    const d = this.doc();
+    const w = d.defaultView;
+    d.activeElement.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    await this.wait(80);
+  },
   async mode(m) {
     const f = document.getElementById("card");
     f.contentWindow.postMessage({ jsonrpc: "2.0", method: "ui/notifications/host-context-changed", params: { displayMode: m } }, "*");
     await this.wait(150);
+  },
+  /**
+   * The layout checks of the live QA of 2026-10-17, one list of failures.
+   * Run on a clean, inline card.
+   */
+  async layoutChecks() {
+    const bad = [];
+    const d = this.doc();
+    const same = (label, a, b) => {
+      if (JSON.stringify(a) !== JSON.stringify(b)) bad.push(label + ": " + JSON.stringify(a) + " -> " + JSON.stringify(b));
+    };
+    const footer = () => this.buttons().map((b) => this.rect(b));
+
+    // 1. Header: the controls do not move when the status changes.
+    const ctl = this.controls();
+    const status = d.querySelector(".ed-hdr .hdr-status");
+    const was = status.textContent;
+    for (const text of ["Unsaved changes", "Saving…", "Saved Oct 9, 2025, 14:02 by the assistant", ""]) {
+      status.textContent = text;
+      same("header controls with status " + JSON.stringify(text), ctl, this.controls());
+    }
+    // The address gives way before the status (re-test, 2026-10-17: "Saved
+    // 15:15 by you" was cut to "Saved 15:15 …" at 300px). Narrow (a card
+    // under 380px of content) the status always has a line of its own, so the
+    // header is the same height whatever it says; wider, the everyday
+    // statuses fit on the one line. Never clipped either way.
+    const hdr = d.querySelector(".ed-hdr");
+    const draftTop = hdr.querySelector(".hdr-l > b").getBoundingClientRect().top;
+    const narrow = d.querySelector(".card").clientWidth - 24 < 380;
+    const heights = new Set();
+    for (const text of ["Saved 15:15 by you", "Unsaved changes", "Saving…", "Saved 3:43 PM by the assistant", "Saved Oct 9, 3:43 PM by the assistant"]) {
+      status.textContent = text;
+      const below = status.getBoundingClientRect().top > draftTop + 4;
+      heights.add(Math.round(hdr.getBoundingClientRect().height));
+      if (status.scrollWidth > status.clientWidth + 1) bad.push("status clipped: " + JSON.stringify(text));
+      if (narrow !== below) bad.push("status " + (below ? "under" : "beside") + " Draft: " + JSON.stringify(text));
+    }
+    if (heights.size > 1) bad.push("header height changes with the status: " + JSON.stringify([...heights]));
+    status.textContent = was;
+
+    // 2. The menu and the turn-off confirm cover the fields, never push them.
+    const rows = this.fields();
+    const before = footer();
+    await this.click(this.button(/^⋯$/));
+    if (!d.querySelector(".pop [role=menu]")) bad.push("menu did not open");
+    same("fields with the menu open", rows, this.fields());
+    same("Save and Send with the menu open", before, footer());
+    const pop = d.querySelector(".pop");
+    if (pop && pop.getBoundingClientRect().bottom > d.documentElement.clientHeight + 1) bad.push("menu runs past the frame");
+    await this.click(this.button(/^Turn off draft cards/));
+    same("fields with the turn-off confirm open", rows, this.fields());
+    await this.escape();
+    if (d.querySelector(".pop")) bad.push("Escape left the overlay open");
+
+    // 3. Footer delete confirm: "Keep draft" is where "Delete draft" was, and
+    //    nothing in it is where Save or Send are.
+    const del = this.link(/^Delete draft$/);
+    if (this.drawn(del)) {
+      const r = del.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      await this.click(del);
+      const keep = this.button(/^Keep draft$/);
+      const yes = this.button(/^Yes, delete$/);
+      if (!keep || !yes) bad.push("delete confirm has no buttons");
+      else {
+        if (d.elementFromPoint(cx, cy)?.closest("button") !== keep) bad.push("Keep draft is not under the pointer that pressed Delete draft");
+        const [save, send] = this.buttons();
+        if (this.hits(yes, save) || this.hits(yes, send) || this.hits(keep, save) || this.hits(keep, send)) bad.push("a delete answer overlaps Save or Send");
+      }
+      same("Save and Send with the delete confirm open", before, footer());
+      await this.click(keep);
+    }
+
+    // 4. Narrow: the left links are on one line, or not in the row at all.
+    const one = this.linksOneLine();
+    if (!one.oneLine) bad.push("left links wrap onto two lines");
+    if (one.shown === 0) {
+      // Then they are in the menu.
+      await this.click(this.button(/^⋯$/));
+      const items = [...d.querySelectorAll(".pop [role=menuitem]")].filter((el) => this.drawn(el)).map((el) => el.textContent.trim());
+      if (!items.includes("Refresh") || !items.includes("Delete draft…")) bad.push("narrow menu lacks the footer links: " + JSON.stringify(items));
+      await this.escape();
+    }
+
+    // 5. No subject: the warning keeps Subject's row and Send where they were.
+    const subj = d.getElementById("d-subject").value;
+    const subjRow = this.rect(d.getElementById("d-subject").parentElement);
+    await this.wait(600);
+    await this.subject("");
+    await this.press(1);
+    if (!d.getElementById("d-subject-warn")) bad.push("no subject warning");
+    same("Subject row with the warning", subjRow, this.rect(d.getElementById("d-subject").parentElement));
+    same("Save and Send with the warning", before, footer());
+    await this.subject(subj);
+    return bad;
   },
 };
 true;
@@ -254,10 +408,11 @@ async function measureWidth(c, width) {
   const take = async (into, prefix) => into.push(...(await c.run(`return window.__g.labelStates(${JSON.stringify(prefix)});`)));
   const original = await c.run(`return window.__g.doc().getElementById("d-body").value;`);
 
+  const layout = await c.run(`return await window.__g.layoutChecks();`);
   await take(inline, "clean");
   await c.run(`await window.__g.type(${JSON.stringify(original + " edited")}); return true;`);
   await take(inline, "dirty");
-  await c.run(`await window.__g.press(1); return true;`); // Send: the countdown starts
+  await c.run(`await window.__g.wait(600); await window.__g.press(1); return true;`); // Send: the countdown starts
   await take(inline, "countdown");
   await c.run(`await window.__g.press(1); return true;`); // Undo, long before 5 s
   await take(inline, "after undo");
@@ -271,7 +426,7 @@ async function measureWidth(c, width) {
   await take(full, "fullscreen countdown");
   await c.run(`await window.__g.press(1); return true;`);
   await c.run(`await window.__g.mode("inline"); return true;`);
-  return { inline, full };
+  return { inline, full, layout };
 }
 
 function summarise(rows) {
@@ -297,12 +452,13 @@ async function main() {
   let bad = 0;
   const table = [];
   for (const w of WIDTHS) {
-    const { inline, full } = await measureWidth(c, w);
+    const { inline, full, layout } = await measureWidth(c, w);
     const i = summarise(inline);
     const f = summarise(full);
-    const ok = i.distinct.length === 1 && f.distinct.length === 1 && i.overlap.length === 0 && f.overlap.length === 0;
+    const ok = i.distinct.length === 1 && f.distinct.length === 1 && i.overlap.length === 0 && f.overlap.length === 0 &&
+      layout.length === 0;
     if (!ok) bad++;
-    table.push({ w, ok, i, f, states: inline.length + full.length });
+    table.push({ w, ok, i, f, states: inline.length + full.length, layout });
     if (!ok) {
       for (const [mode, s, rows] of [["inline", i, inline], ["fullscreen", f, full]]) {
         if (s.distinct.length > 1) {
@@ -310,6 +466,7 @@ async function main() {
         }
         if (s.overlap.length) console.log(`  ${w}px ${mode} overlaps: ${s.overlap.join("; ")}`);
       }
+      for (const l of layout) console.log(`  ${w}px layout: ${l}`);
     }
   }
   c.close();
@@ -320,7 +477,7 @@ async function main() {
     console.log(
       `${pad(t.w + "px", 7)}${pad(t.states, 8)}${pad(JSON.stringify(t.i.first.save), 23)}${pad(JSON.stringify(t.i.first.send), 23)}` +
         `${pad(JSON.stringify(t.f.first.save), 23)}${pad(JSON.stringify(t.f.first.send), 23)}` +
-        `${t.ok ? "yes" : `NO (inline ${t.i.distinct.length}, fullscreen ${t.f.distinct.length} distinct, overlaps ${t.i.overlap.length + t.f.overlap.length})`}`,
+        `${t.ok ? "yes" : `NO (inline ${t.i.distinct.length}, fullscreen ${t.f.distinct.length} distinct, overlaps ${t.i.overlap.length + t.f.overlap.length}, layout ${t.layout.length})`}`,
     );
   }
   console.log(`\n${WIDTHS.length - bad}/${WIDTHS.length} widths stable`);

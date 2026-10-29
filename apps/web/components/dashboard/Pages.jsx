@@ -4,26 +4,54 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
-import { useAppLocale } from '../i18n/AppLocaleProvider';
+import { preferredAppLocale, useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
+import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
+import { canOperateWorkspace } from '@/lib/workspace/roles';
+import { startVisiblePoll } from '@/lib/polling/visible-poll';
+import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
+import { getInstallAction } from '@/lib/clients/install-links.mjs';
+import {
+  FIRST_CALL_POLL_MAX_MS,
+  FIRST_CALL_POLL_MS,
+  FIRST_CALL_PROMPT_KEYS,
+  clientToggleKey,
+  guideStep2Mode,
+} from '@/lib/onboarding/first-call-prompts.mjs';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
   workspaceDraftEditorControl,
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import PlanChangeBlock from './PlanChangeBlock';
 import { AutomationsPanel } from './AutomationsPanel';
+import { InvitePanel, OverviewReferral, BillingReferralCredit, referralTileEligible } from './InvitePanel';
+import { WebhooksPanel } from './WebhooksPanel';
+import { FirstWeekChecklist } from './FirstWeekChecklist';
+import { SsoSettingsSection } from './SsoSettingsSection';
+import { FolderOverridesEditor } from './FolderOverridesEditor';
+import { MorningBriefSection } from './MorningBriefSection';
+import { InboxInstructionsEditor } from './InboxInstructionsEditor';
+import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { founderCapCopy } from '@/lib/billing/founder-cap-copy.mjs';
+import FounderPriceNote from './FounderPriceNote';
 import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
+import { graceEndNote, showPlanSummary, usageMeterLevel as flowBMeterLevel } from '@/lib/onboarding/flow-b.mjs';
+import { PlanSummaryCard } from '../convert/PlanSummaryCard';
+import { GraceEndNote, UsageMeterNote } from '../convert/FlowBNotes';
 import {
   usageCapCheckoutHref,
   usageCapCompareHref,
@@ -35,13 +63,18 @@ import {
   allowanceTone,
   showUsageCapBanner,
 } from '@/lib/usage/allowance-view.mjs';
+import { PassBillingPanel, PassOfferLine } from './PersonalPass';
+import { CheckoutReassurance } from '../CheckoutReassurance';
 import UpgradeIntervalChoice, {
   IntervalToggle,
+  SeasonalOfferNote,
   PlanCheckoutLink,
+  ProPriceAppNotice,
   SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
 } from './UpgradeIntervalChoice';
+import { liveSeasonalOffer, seasonalOfferValues } from '@/lib/billing/seasonal-offer-view.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -73,7 +106,7 @@ export const PLAN_DISPLAY_NAMES = {
   free: 'Free',
   personal: 'Personal',
   solo: 'Pro',
-  pro: 'Team',
+  pro: 'Business',
 };
 
 /** Customer-facing name for a plan id, never the raw id. */
@@ -152,6 +185,11 @@ export function ApprovalsPage({ userRole }) {
 
 export function AutomationsPage({ userRole, inboxes, keys }) {
   return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
+}
+
+/** The referral program's Invite page (InvitePanel.jsx). */
+export function InvitePage() {
+  return <InvitePanel />;
 }
 
 // Rich-text tag handlers shared across pages (inline code + bold).
@@ -254,7 +292,7 @@ function ClientLogo({ color, logo, size = 34 }) {
     }}>
       {g ? (
         <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
-          <path d={g.d} />
+          <path d={g.d} fillRule={g.fillRule} />
         </svg>
       ) : null}
     </div>
@@ -289,7 +327,7 @@ const MCP_CLIENTS = [
   {
     k: 'chatgpt',
     name: 'ChatGPT',
-    sub: 'Apps · dev mode',
+    sub: 'Plugins',
     color: '#000000',
     logo: 'chatgpt',
     oauth: true,
@@ -324,9 +362,9 @@ const MCP_CLIENTS = [
     oauth: true,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
     stepKeys: ['clients.vscode.step1', 'clients.vscode.step2', 'clients.vscode.step3'],
-    config: (url) => `// .vscode/mcp.json
+    config: (url) => `// ~/.copilot/mcp-config.json
 {
-  "servers": {
+  "mcpServers": {
     "mcpemails": {
       "type": "http",
       "url": "${url}"
@@ -347,14 +385,14 @@ const MCP_CLIENTS = [
   },
   {
     k: 'windsurf',
-    name: 'Windsurf',
+    name: 'Devin Desktop (Windsurf)',
     sub: 'Cascade',
     color: '#0B100F',
     logo: 'windsurf',
     oauth: true,
-    guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
+    guide: 'https://docs.devin.ai/desktop/cascade/mcp',
     stepKeys: ['clients.windsurf.step1', 'clients.windsurf.step2', 'clients.windsurf.step3'],
-    config: (url) => `// ~/.codeium/windsurf/mcp_config.json
+    config: (url) => `// ~/.config/devin/mcp_config.json (Windows: %APPDATA%\\devin\\mcp_config.json)
 {
   "mcpServers": {
     "mcpemails": {
@@ -441,11 +479,55 @@ const MCP_CLIENTS = [
     guide: null,
     stepKeys: ['clients.api.step1', 'clients.api.step2'],
     config: (url) => `curl -X POST ${url} \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
   },
 ];
+
+/**
+ * The one-click install action above a client's manual steps
+ * (lib/clients/install-links.mjs): a deep-link button for Claude, Cursor and
+ * VS Code, a copyable command for terminal clients, nothing otherwise. Every
+ * click or copy writes an `install_link_clicked` funnel row for the client.
+ */
+function InstallAction({ client, mcpUrl }) {
+  const locale = useAppLocale()?.locale ?? 'en';
+  const action = getInstallAction(client.k, { locale, mcpUrl });
+  if (!action || action.kind === 'steps') return null;
+  const clientId = onboardingClientOf(client);
+  const record = () => {
+    recordActivationEvent('install_link_clicked', { client: clientId });
+    trackProductEvent('mcp_connection_started', { client: clientId });
+  };
+  if (action.kind === 'command') {
+    return <CopyField value={action.command} label={action.label} onCopy={record} />;
+  }
+  // claude.ai opens in a new tab; cursor:// and vscode: hand off to the app.
+  const external = action.href.startsWith('https:');
+  return (
+    <div data-install-action={action.client} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <a
+          className="btn btn-primary"
+          href={action.href}
+          onClick={record}
+          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {action.label}
+        </a>
+        {action.alt ? (
+          <a href={action.alt.href} onClick={record} style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' }}>
+            {action.alt.label}
+          </a>
+        ) : null}
+      </div>
+      {action.note ? (
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>{action.note}</div>
+      ) : null}
+    </div>
+  );
+}
 
 /**
  * Per-client connection guide modal. Highlights the live MCP URL (copyable),
@@ -453,7 +535,7 @@ const MCP_CLIENTS = [
  * and links to the client's official guide. For non-OAuth clients it surfaces
  * a shortcut to create an API key.
  */
-function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null }) {
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
@@ -493,6 +575,8 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
 
         {/* Body */}
         <div className="modal-body">
+          <InstallAction client={client} mcpUrl={mcpUrl} />
+
           <CopyField value={mcpUrl} label={t('clients.mcpServerUrl')} onCopy={() => trackProductEvent('mcp_connection_started', { client: client.k === 'api' ? 'curl' : client.k })} />
 
           <ol style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -532,7 +616,9 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
               </button>
             </div>
           ) : null}
-          {inbox?.id ? (
+          {/* A viewer cannot run the check (POST /api/inboxes/[id]/check
+              answers 403, lib/workspace/roles.ts), so the row is not offered. */}
+          {inbox?.id && canCheckConnection ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8 }}>
               <Icon name={verified ? 'check' : 'refresh'} size={15} color={verified ? 'var(--mint-600)' : 'var(--brand)'} />
               <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' }}>
@@ -562,27 +648,196 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
   );
 }
 
+/** MCP_CLIENTS uses 'api' for the curl tile; onboarding state calls it 'curl'. */
+function onboardingClientOf(c) {
+  return c.k === 'api' ? 'curl' : c.k;
+}
+
+/** Small marker for a sub-step of guide step 2: a check when done, a dot otherwise. */
+function SubStepDot({ done }) {
+  return (
+    <div style={{
+      width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+      background: done ? 'var(--live-soft)' : 'var(--bg-surface)',
+      border: `1px solid ${done ? 'rgba(31,203,139,0.28)' : 'var(--border-1)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {done ? <Icon name="check" size={10} color="var(--mint-600)" /> : null}
+    </div>
+  );
+}
+
+/**
+ * One suggested first prompt with a copy button. Copying records
+ * `first_call_prompt_copied` with the client the guide is pointed at.
+ */
+function FirstCallPrompt({ text, client }) {
+  const t = useTranslations('dashboard');
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    recordActivationEvent('first_call_prompt_copied', { client: client ?? 'unknown' });
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+  return (
+    <li data-first-call-prompt style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 8px 12px',
+      background: 'var(--bg-surface)', border: '1px solid var(--border-1)', borderRadius: 8,
+    }}>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}>{text}</span>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        title={copied ? t('copy.copied') : t('guide.copyPrompt')}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+      >
+        <Icon name={copied ? 'check' : 'copy'} size={14} color={copied ? 'var(--mint-600)' : 'var(--fg-3)'} />
+      </button>
+    </li>
+  );
+}
+
 /**
  * Getting-started guide shown on the Overview page until the workspace has
  * connected an inbox AND a client has made its first MCP call. Two steps:
- * connect an inbox, then connect an MCP client (the URL is highlighted and a
- * per-client guide opens on click).
+ * connect an inbox, then connect an MCP client.
+ *
+ * Step 2 has three versions (lib/onboarding/first-call-prompts.mjs,
+ * guideStep2Mode):
+ *   setup    the MCP URL and a client picker that opens a per-client guide.
+ *   waiting  once an inbox exists and no tool call has ever been made:
+ *            (a) connect your AI app, done when a credential exists (an API
+ *            key row, which OAuth grants create too), and (b) ask it
+ *            something, three copyable prompts plus the in-chat switch the
+ *            chosen app needs. GET /api/onboarding is polled every 10 s while
+ *            the tab is visible, for at most 15 minutes, so the step flips by
+ *            itself when the first call lands.
+ *   works    the first call landed while the page was open.
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false }) {
+export function GettingStartedGuide({
+  inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys,
+  initialClient = null, onClientSelected, canCheckConnection = true,
+  apiKeys = [], firstToolUsed = false,
+  pollMs = FIRST_CALL_POLL_MS, pollMaxMs = FIRST_CALL_POLL_MAX_MS,
+}) {
   const t = useTranslations('dashboard');
-  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
-  // Business-domain workspaces with one mailbox get an optional row asking
-  // for the rest (see lib/onboarding/multi-inbox-prompt). Null for everyone
-  // else, which renders exactly the guide they had before.
-  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
-  useMultiInboxPromptBeacon(multiInbox !== null);
+  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => onboardingClientOf(c) === initialClient) ?? null);
+  // The second-work-mailbox invitation used to be the last row of this guide.
+  // It is not here any more: see MultiInboxInvite, below, for where it went
+  // and why. This guide is the two numbered steps and nothing else.
+
+  // The client this workspace said it uses: picked here, or stored on the
+  // workspace (onboarding_client, read back by the poll below).
+  const [pickedClient, setPickedClient] = useState(initialClient);
+  const [savedClient, setSavedClient] = useState(null);
+  const [credentialLive, setCredentialLive] = useState(false);
+  const [activatedLive, setActivatedLive] = useState(false);
+  const [pollStopped, setPollStopped] = useState(false);
+  const [loadedAt] = useState(() => Date.now());
+
+  const mode = guideStep2Mode({ inboxCount, firstToolUsed, activatedLive });
+  const waiting = mode === 'waiting';
+  const client = pickedClient ?? savedClient ?? null;
+  const hasCredential = (apiKeys?.length ?? 0) > 0 || credentialLive;
 
   const step1Done = inboxCount > 0;
-  const step2Done = callsThisMonth > 0;
+  const step2Done = callsThisMonth > 0 || activatedLive;
   const allDone   = step1Done && step2Done;
 
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const started = Date.now();
+    let loop = null;
+    const poll = async () => {
+      if (Date.now() - started >= pollMaxMs) {
+        loop?.stop();
+        setPollStopped(true);
+        return;
+      }
+      const response = await fetch('/api/onboarding', { cache: 'no-store' });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => null);
+      if (!data) return;
+      if (typeof data.onboarding_client === 'string' && data.onboarding_client !== 'unknown') setSavedClient(data.onboarding_client);
+      // Only a credential issued after this page loaded is news: one issued
+      // earlier and since revoked is already reflected in `apiKeys`.
+      const issued = Date.parse(data.onboarding_credential_issued_at ?? '');
+      if (Number.isFinite(issued) && issued >= loadedAt - 60_000) setCredentialLive(true);
+      // Set by the MCP server on the workspace's first tool call, in the same
+      // update as analytics_first_tool_used_at.
+      if (data.onboarding_technical_activated_at) setActivatedLive(true);
+    };
+    loop = startVisiblePoll({ poll, intervalMs: () => pollMs, immediate: true });
+    return () => loop.stop();
+  }, [waiting, pollMs, pollMaxMs, loadedAt]);
+
+  const shownRecorded = useRef(false);
+  useEffect(() => {
+    if (!waiting || shownRecorded.current) return;
+    shownRecorded.current = true;
+    recordActivationEvent('waiting_state_shown', { client: initialClient ?? 'unknown' });
+  }, [waiting, initialClient]);
+
+  const pickClient = (c) => {
+    const picked = onboardingClientOf(c);
+    trackProductEvent('mcp_connection_started', { client: picked });
+    onClientSelected?.(picked);
+    setPickedClient(picked);
+    setActiveClient(c);
+  };
+
+  const clientPicker = (
+    <>
+      <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+      <div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
+          {t('guide.chooseClient')}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          {MCP_CLIENTS.map((c) => {
+            const selected = waiting && onboardingClientOf(c) === client;
+            return (
+              <button
+                key={c.k}
+                data-client-tile={onboardingClientOf(c)}
+                aria-pressed={waiting ? selected : undefined}
+                onClick={() => pickClient(c)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                  background: 'var(--bg-surface)', border: `1px solid ${selected ? 'var(--brand)' : 'var(--border-1)'}`,
+                  borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                  transition: 'border-color var(--dur-1) var(--ease-out)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                onMouseLeave={e => { if (!selected) e.currentTarget.style.borderColor = 'var(--border-1)'; }}
+              >
+                <ClientLogo color={c.color} logo={c.logo} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
+  const toggleKey = clientToggleKey(client);
+  const subTitle = (done) => ({ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: done ? 'var(--fg-3)' : 'var(--fg-1)' });
+  const subDesc = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 };
+
+  let step2Title = t('guide.step2Title');
+  let step2Desc = t('guide.step2Desc');
+  if (mode === 'waiting') { step2Title = t('guide.waitingTitle'); step2Desc = t('guide.waitingDesc'); }
+  if (mode === 'works') { step2Title = t('guide.itWorksTitle'); step2Desc = t('guide.itWorksDesc'); }
+
   return (
-    <div className="card" style={{ marginTop: 16 }}>
+    <div className="card" style={{ marginTop: 16 }} data-guide-step2={mode}>
       <div className="card-h">
         <div>
           <div className="title">{t('guide.title')}</div>
@@ -614,12 +869,12 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           </div>
           {!step1Done ? (
             <div style={{ flexShrink: 0 }}>
-              <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>{t('guide.connectInbox')}</Btn>
+              <Btn variant="primary" size="sm" icon="plus" onClick={() => onConnect('guide')}>{t('guide.connectInbox')}</Btn>
             </div>
           ) : null}
         </div>
 
-        {/* Step 2: connect an MCP client */}
+        {/* Step 2: connect an MCP client, then make the first call */}
         <div style={{
           display: 'flex', flexDirection: 'column', gap: 14, padding: '16px',
           background: 'var(--bg-sunken)', borderRadius: 10, border: '1px solid var(--border-1)',
@@ -627,75 +882,59 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <StepDot num={2} done={step2Done} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                {t('guide.step2Title')}
+              <div data-guide-step2-title style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+                {step2Title}
               </div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                {t('guide.step2Desc')}
+                {step2Desc}
               </div>
             </div>
           </div>
 
-          <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
+          {mode === 'setup' ? clientPicker : null}
 
-          <div>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
-              {t('guide.chooseClient')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-              {MCP_CLIENTS.map((c) => (
-                <button
-                  key={c.k}
-                  onClick={() => { const client = c.k === 'api' ? 'curl' : c.k; trackProductEvent('mcp_connection_started', { client }); onClientSelected?.(client); setActiveClient(c); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                    background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
-                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                    transition: 'border-color var(--dur-1) var(--ease-out)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-1)'; }}
-                >
-                  <ClientLogo color={c.color} logo={c.logo} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+          {mode === 'waiting' ? (
+            <>
+              {/* (a) connect your AI app */}
+              <div data-guide-substep="connect" data-done={hasCredential ? 'true' : 'false'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={hasCredential} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <div style={subTitle(hasCredential)}>{t('guide.connectAppTitle')}</div>
+                    <div style={subDesc}>{hasCredential ? t('guide.connectAppDone') : t('guide.connectAppDesc')}</div>
                   </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                  {!hasCredential ? clientPicker : null}
+                </div>
+              </div>
+
+              {/* (b) ask it something */}
+              <div data-guide-substep="ask" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <SubStepDot done={false} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <div style={subTitle(false)}>{t('guide.askTitle')}</div>
+                    <div style={subDesc}>{t('guide.askDesc')}</div>
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {FIRST_CALL_PROMPT_KEYS.map((k) => (
+                      <FirstCallPrompt key={k} text={t(k)} client={client} />
+                    ))}
+                  </ul>
+                  {toggleKey ? (
+                    <div data-client-toggle={client} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                      <Icon name="zap" size={13} color="var(--brand)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{t(toggleKey)}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div role="status" data-guide-poll={pollStopped ? 'stopped' : 'live'} style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                {pollStopped ? t('guide.waitingStopped') : t('guide.waitingLive')}
+              </div>
+            </>
+          ) : null}
         </div>
-        {/* Optional: the company's other mailboxes. After the two numbered
-            steps on purpose, so wiring up a client stays the next thing to
-            do; see lib/onboarding/multi-inbox-prompt for who sees it. */}
-        {multiInbox && (
-          <div data-multi-inbox-prompt={multiInbox} style={{
-            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 14, padding: '14px 16px',
-            background: 'var(--bg-page)', borderRadius: 10, border: '1px dashed var(--border-2, var(--border-1))',
-          }}>
-            <Icon name="plus" size={16} color="var(--brand)" />
-            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                {t('guide.multiInboxTitle')}
-                <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
-              </div>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                {t(multiInbox === 'upgrade' ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc')}
-              </div>
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <Btn
-                variant="secondary"
-                size="sm"
-                icon="plus"
-                onClick={() => { sendMultiInboxPromptBeacon('clicked'); onConnect(); }}
-              >
-                {t('guide.multiInboxCta')}
-              </Btn>
-            </div>
-          </div>
-        )}
       </div>
 
       {activeClient ? (
@@ -705,6 +944,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           onClose={() => setActiveClient(null)}
           onGoToKeys={onGoToKeys}
           inbox={inboxes?.[0] ?? null}
+          canCheckConnection={canCheckConnection}
         />
       ) : null}
     </div>
@@ -731,15 +971,140 @@ function sendMultiInboxPromptBeacon(action) {
   }
 }
 
-/** Records `shown` once per mount of the guide while the prompt is on screen. */
-function useMultiInboxPromptBeacon(visible) {
+/**
+ * Records `shown` once per mount, and only once the invitation has actually
+ * been on screen.
+ *
+ * It used to fire from a bare mount effect, when the invitation was the last
+ * row of the getting-started guide, far below the fold. So "shown" was booked
+ * for 43 workspaces, 33 of them within 30 seconds of their first connect (the
+ * dashboard routes to the Overview right after one), and none of them clicked:
+ * the row measured page loads, not eyes. Now it waits for an
+ * IntersectionObserver to report at least half of the element inside the
+ * viewport. Where there is no IntersectionObserver the mount is the best
+ * signal there is, so it falls back to the old behaviour.
+ *
+ * The server still keeps one `started` row per workspace, however many mounts
+ * and placements report.
+ */
+function useMultiInboxSeenBeacon(ref) {
   const sent = useRef(false);
   useEffect(() => {
-    if (!visible || sent.current) return;
-    sent.current = true;
-    const id = setTimeout(() => sendMultiInboxPromptBeacon('shown'), 0);
-    return () => clearTimeout(id);
-  }, [visible]);
+    if (sent.current) return undefined;
+    const node = ref.current;
+    let timer = null;
+    const report = () => {
+      if (sent.current) return;
+      sent.current = true;
+      // Deferred past paint, like the paywall beacon.
+      timer = setTimeout(() => sendMultiInboxPromptBeacon('shown'), 0);
+    };
+    if (!node || typeof IntersectionObserver !== 'function') {
+      report();
+      return () => clearTimeout(timer);
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      observer.disconnect();
+      report();
+    }, { threshold: 0.5 });
+    observer.observe(node);
+    // The timer is deliberately not cleared here: once the element has been
+    // seen, leaving the page a moment later does not make it unseen.
+    return () => observer.disconnect();
+  }, [ref]);
+}
+
+/**
+ * The second-work-mailbox invitation. Who sees it and in which of its two
+ * variants is decided by lib/onboarding/multi-inbox-prompt (business-shaped
+ * workspace, exactly one mailbox); callers render this only for a non-null
+ * variant, so a consumer workspace never mounts it.
+ *
+ * WHERE, AND WHY IT MOVED (2026-10-04). It was the last row of the
+ * getting-started guide: under the stat grid, both numbered steps, the URL
+ * field and a twelve-tile client grid, and gone for good at the first tool
+ * call because the guide is. 43 workspaces were "shown" it and none clicked.
+ * Meanwhile the people who did want a second mailbox pressed the header's
+ * "Connect inbox" or went to the Inboxes page. So it now sits in those two
+ * places and does not depend on the guide:
+ *
+ *   placement 'overview'  one compact line directly under the Overview header,
+ *                         beside the action it is about.
+ *   placement 'inboxes'   a row under the mailbox list, where the second
+ *                         mailbox would go.
+ *
+ * Each page renders exactly one, and the guide no longer renders any, so two
+ * copies can never share a screen.
+ *
+ * WHAT IT MUST STAY. Optional and quiet: neutral colours, an "Optional" badge,
+ * a small secondary button, no number, never the page's primary action, and it
+ * never opens anything by itself. An earlier Overview presented the upgrade as
+ * the next step and pulled people to a paywall seconds after their first
+ * connect. The 'upgrade' variant says in words that a second mailbox is on a
+ * paid plan before the button is pressed, because at the cap the button opens
+ * the connect modal on its paywall panel. Rendering this fires no
+ * `paywall_reached`: that stage counts the panel, and only the modal shows it.
+ *
+ * `onConnect` receives the entry point, so the modal's own funnel rows say
+ * which of the two placements was pressed.
+ */
+function MultiInboxInvite({ variant, placement, onConnect }) {
+  const t = useTranslations('dashboard');
+  const tc = useTranslations('convert.multiInbox');
+  const ref = useRef(null);
+  useMultiInboxSeenBeacon(ref);
+  const compact = placement === 'overview';
+  // Flow B's consumer variants (multi-inbox-prompt.mjs): their own wording,
+  // the same quiet row.
+  const consumer = variant === 'consumer_open' || variant === 'consumer_upgrade';
+  const upgrade = variant === 'upgrade' || variant === 'consumer_upgrade';
+  const title = consumer ? tc('title') : t('guide.multiInboxTitle');
+  const desc = consumer
+    ? tc(upgrade ? 'descUpgrade' : 'desc')
+    : compact
+      ? t(upgrade ? 'guide.multiInboxCompactUpgrade' : 'guide.multiInboxCompact')
+      : t(upgrade ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc');
+  return (
+    <div
+      ref={ref}
+      data-multi-inbox-prompt={variant}
+      data-multi-inbox-placement={placement}
+      style={{
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+        gap: compact ? 10 : 14,
+        padding: compact ? '8px 12px' : '14px 16px',
+        marginTop: compact ? 0 : 12,
+        marginBottom: compact ? 12 : 0,
+        background: 'var(--bg-surface)', borderRadius: 10,
+        border: '1px dashed var(--border-2, var(--border-1))',
+      }}
+    >
+      <Icon name="plus" size={compact ? 14 : 16} color="var(--fg-3)" />
+      <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: 'var(--font-sans)', fontSize: compact ? 13 : 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+          {title}
+          <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
+        </div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: compact ? 12 : 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
+          {desc}
+        </div>
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        <Btn
+          variant="secondary"
+          size="sm"
+          icon="plus"
+          onClick={() => {
+            sendMultiInboxPromptBeacon('clicked');
+            onConnect(compact ? 'multi_inbox_overview' : 'multi_inbox_inboxes');
+          }}
+        >
+          {t('guide.multiInboxCta')}
+        </Btn>
+      </div>
+    </div>
+  );
 }
 
 /** Step indicator dot: number, or a mint check when done. */
@@ -760,8 +1125,12 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage }) {
   const t = useTranslations('dashboard');
+  // Onboarding Flow B (src/lib/onboarding/flow-b.mjs): `flowB` is null unless
+  // this workspace is in the onb_convert arm and on Free. The clock is read
+  // once per mount so a render stays pure.
+  const [flowBNow] = useState(() => Date.now());
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
   // at page load, so the moment a mailbox was connected (or removed) without a
@@ -823,17 +1192,75 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   const atInboxLimit =
     planLimits?.maxInboxes != null && inboxCount >= planLimits.maxInboxes;
 
+  // Business-shaped workspace with exactly one mailbox: the optional
+  // invitation to add the others (see MultiInboxInvite). Null for everyone
+  // else, who get exactly the page they had. It does not depend on
+  // `showGuide`, so it is still here after the first tool call.
+  // A viewer cannot connect a mailbox (the connect routes refuse it), so a
+  // viewer is never invited to.
+  const multiInbox = userRole === 'viewer' ? null : multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit, convert: flowB ? 'on' : 'off' });
+
+  // Flow B's three quiet surfaces, each null outside the convert arm: the
+  // plan summary for the first 3 days after the first call (B2), the one
+  // grace-end note (B3a), and the usage meter at 50/80/100% (B3b).
+  const planSummaryVisible = userRole !== 'viewer' && showPlanSummary({ flowB, now: flowBNow });
+  const graceNote = graceEndNote({ flowB, allowance: actionAllowance, dailyCounts: usageData?.dailyCounts ?? [], now: flowBNow });
+  const meterLevel = flowB ? flowBMeterLevel(allowance) : null;
+
   return (
     <div className="page">
       <PageHeader
         title={t('overview.title')}
         sub={t('overview.sub')}
         action={
-          <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+          <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={() => onConnect('header')}>
             {t('overview.connectInbox')}
           </Btn>
         }
       />
+
+      {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
+
+      {graceNote && <GraceEndNote note={graceNote} onGoToUsage={onGoToUsage} />}
+      {meterLevel && (
+        <UsageMeterNote
+          level={meterLevel}
+          used={allowance.used}
+          cap={allowance.cap}
+          resetsAt={actionAllowance.monthly.resets_at}
+          periodStart={actionAllowance.monthly.period_start}
+          onSeePlans={onGoToUsage}
+        />
+      )}
+      {planSummaryVisible && <PlanSummaryCard flowB={flowB} surface="overview" businessShaped={businessShaped} />}
+
+      {/* First 14 days after the first payment, owner only. Renders nothing
+          otherwise; see lib/onboarding/first-week-checklist.ts. */}
+      <FirstWeekChecklist
+        inboxes={inboxes}
+        maxInboxes={planLimits?.maxInboxes ?? null}
+        userRole={userRole}
+        onReconnect={onReconnect}
+        onGoToInboxes={onGoToInboxes}
+        onGoToAutomations={onGoToAutomations}
+        onConnect={onConnect}
+      />
+      {/* The referral program, while workspaces.referral_enabled is on: the
+          code field for a new account, or the tile once it is earned. The
+          Free branch counts active days off the same usage series the chart
+          below draws; the paid branch needs the two facts the page read on
+          the server (successful sends, first paid checkout). */}
+      {referralEnabled && (
+        <OverviewReferral
+          eligible={referralTileEligible({
+            plan: _plan,
+            successfulSends: referralTileFacts?.successfulSends ?? 0,
+            paidSince: referralTileFacts?.paidSince ?? null,
+            dailyCounts: usageData?.dailyCounts ?? [],
+          })}
+          onOpenInvite={onGoToInvite}
+        />
+      )}
 
       <div className="stat-grid">
         <div className="stat">
@@ -946,15 +1373,16 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       {showGuide ? (
         <GettingStartedGuide
           inboxes={inboxes}
+          canCheckConnection={userRole !== 'viewer'}
           inboxCount={inboxCount}
           callsThisMonth={callsThisMonth}
           mcpUrl={mcpUrl}
           onConnect={onConnect}
           onGoToKeys={onGoToKeys}
           initialClient={onboardingClient}
+          apiKeys={apiKeys}
+          firstToolUsed={firstToolUsed}
           onClientSelected={onClientSelected}
-          businessShaped={businessShaped}
-          atInboxLimit={atInboxLimit}
         />
       ) : (
         <div className="overview-grid" style={{ marginTop: 16 }}>
@@ -991,7 +1419,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
                   <div className="act-row" key={a.id ?? a.tool + a.time}>
                     <span className={"dot " + (a.ok ? "live" : "red")}></span>
                     <span className="tool">{a.tool}()</span>
-                    <span className="meta">· {a.account}</span>
+                    <span className="meta">· {a.account ?? t('overview.recentActivityAllInboxes')}</span>
                     <span className="time">{a.time}</span>
                   </div>
                 ))
@@ -1117,11 +1545,12 @@ function UsageBars({ dailyCounts }) {
 }
 
 /**
- * 30-day bar chart that renders real daily call counts from `activity_log`.
+ * Daily bar chart that renders real call counts from `activity_log`.
  *
  * Props:
- *   dailyCounts: array of 30 { date: "YYYY-MM-DD", count: number } objects,
- *                 oldest first (index 0 = 29 days ago, index 29 = today).
+ *   dailyCounts: array of { date: "YYYY-MM-DD", count: number } objects,
+ *                 oldest first, last = today. At least 30 entries for a real
+ *                 workspace (see trimLeadingQuietDays), up to the plan window.
  */
 function UsageChart30({ dailyCounts }) {
   const t = useTranslations('dashboard');
@@ -1142,11 +1571,13 @@ function UsageChart30({ dailyCounts }) {
   }
 
   const max = Math.max(...dailyCounts.map((d) => d.count), 1);
-  const total = dailyCounts.length; // always 30
+  const total = dailyCounts.length; // 30 to 730 days, depending on plan and history
 
-  // Show a date label every 5 bars; always show the last bar's label.
+  // A date label every `step` bars (every 5 up to 40 days, then about eight in
+  // all so a long window does not print a hundred dates); always the last.
+  const step = Math.max(5, Math.ceil(total / 8));
   const labels = dailyCounts.map((d, i) => {
-    if (i === 0 || i % 5 === 4 || i === total - 1) return formatBarDate(d.date);
+    if (i === 0 || i % step === step - 1 || i === total - 1) return formatBarDate(d.date);
     return '';
   });
 
@@ -1180,7 +1611,7 @@ const WORKFLOW_CARDS = [
   { title: 'Review scheduled sends', prompt: 'Review my pending scheduled sends. Highlight anything stale, ambiguous, or unusually broad. Do not create or cancel anything.', scope: 'Scheduled sends' },
 ];
 
-export function WorkflowsPage({ mcpUrl }) {
+export function WorkflowsPage({ mcpUrl, userRole }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
   const copy = async (title, prompt) => {
@@ -1206,7 +1637,7 @@ export function WorkflowsPage({ mcpUrl }) {
           </article>
         ))}
       </div>
-      <BulkRunsPanel />
+      <BulkRunsPanel userRole={userRole} />
     </main>
   );
 }
@@ -1244,22 +1675,26 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
   const historyDays = planLimits?.historyDays ?? 30;
   const t = useTranslations('dashboard');
+  const { locale: appLocale } = useAppLocale();
   // The cap notice's interval copy and its annual buy label live beside the
   // modal's, in dashboardChrome, so the two surfaces cannot word the same
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error").length;
+  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
+  // hold a slot under the cap: the same count the server's checkInboxLimit uses.
+  const activeCount = inboxes.filter(ib => !ib.parked).length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
-  const atInboxLimit = maxInboxes !== null && inboxes.length >= maxInboxes;
+  const atInboxLimit = maxInboxes !== null && activeCount >= maxInboxes;
   // MONTHLY by default, and the notice buys monthly for anyone who does not
   // touch the choice: exactly what this CTA did before the choice existed.
   // Hoisted to the component body rather than kept inside the notice, because
@@ -1280,8 +1715,22 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
     : null;
 
+  // Viewers are read-only: checking, reconnecting and disconnecting an inbox
+  // are operator actions the server refuses them (403 from /check and DELETE
+  // /api/inboxes/[id], insufficient_role from the connect routes and OAuth
+  // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
+  // the reason instead of failing on click.
+  const canManage = userRole !== 'viewer';
+  // Swapping which inbox is parked changes what the workspace can reach, so
+  // it is owner/admin only, as the server's /api/inboxes/swap-parked checks.
+  const canSwap = Boolean(onSwapParked) && (userRole === 'owner' || userRole === 'admin');
+  // parked inbox whose "Make active" dialog is open, or null
+  const [swapInbox, setSwapInbox] = useState(null);
+  const viewerNote = t('inboxes.viewerActionsNote');
+  const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
+
   const handleCheck = async (inbox) => {
-    if (checkingId) return;
+    if (checkingId || !canManage) return;
     setCheckingId(inbox.id);
     try {
       await onCheck(inbox);
@@ -1291,6 +1740,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   };
 
   const handleDisconnectRequest = (inbox) => {
+    if (!canManage) return;
     setConfirmInbox(inbox);
   };
 
@@ -1321,10 +1771,15 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // two competing primary buttons where one of them silently means "buy" is
   // how a connect button becomes a bait-and-switch.
   const connectAction = (
-    <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+    <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={() => onConnect('inboxes_page')}>
       {t('inboxes.connectInbox')}
     </Btn>
   );
+  // Same rule and same component as the Overview: a business-shaped workspace
+  // with exactly one mailbox is invited, under the list, to add the others.
+  // Counted off the live `inboxes` array, like the cap above.
+  // Never for a viewer, who cannot connect one.
+  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: activeCount, atInboxLimit }) : null;
 
   return (
     <div className="page">
@@ -1333,8 +1788,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         sub={
           maxInboxes !== null
             ? (maxInboxes === 1
-                ? t('inboxes.subWithCountSingular', { count: inboxes.length, max: maxInboxes })
-                : t('inboxes.subWithCount', { count: inboxes.length, max: maxInboxes }))
+                ? t('inboxes.subWithCountSingular', { count: activeCount, max: maxInboxes })
+                : t('inboxes.subWithCount', { count: activeCount, max: maxInboxes }))
             : t('inboxes.sub')
         }
         action={connectAction}
@@ -1385,6 +1840,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
         const offer = inboxCapOffer(maxInboxes, { businessShaped });
+        // Founder keys for Business while the founder price is open.
+        const capCopy = founderCapCopy(offer, stripePrices);
         // Null when annual cannot be sold for this plan, in which case the
         // notice keeps the monthly-only shape it has always had.
         const annual = annualOfferForPlan(stripePrices, offer.plan);
@@ -1420,8 +1877,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 color: 'var(--fg-3)',
                 lineHeight: 1.5,
               }}>
-                {t(offer.noticeBodyKey)}
+                {t(capCopy.noticeBodyKey)}
               </div>
+              <ProPriceAppNotice plans={offer.offers.map(o => o.plan)} style={{ marginTop: 6 }} />
+              <FounderPriceNote founder={capCopy.founder} size="sm" />
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
               {!offer.dual && annual && (
@@ -1446,6 +1905,20 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     onChange={setCapInterval}
                     size="sm"
                   />
+                </div>
+              )}
+              {/* Black Week: the buttons carry no amount on annual, so each
+                  plan's first-year and renewal price is stated here. */}
+              {offer.dual && capInterval === 'year' && offer.offers.some(o => annualByPlan[o.plan]?.firstYear) && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {offer.offers.filter(o => annualByPlan[o.plan]?.firstYear).map(o => (
+                    <div key={o.plan}>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', marginBottom: 2 }}>
+                        {planDisplayName(o.plan)}
+                      </div>
+                      <SeasonalOfferNote offer={annualByPlan[o.plan]?.firstYear} size="sm" />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1492,7 +1965,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   key={o.plan}
                   plan={o.plan}
                   planName={planDisplayName(o.plan)}
-                  monthlyLabel={t(o.noticeCtaKey)}
+                  monthlyLabel={
+                    capCopy.founder && o.plan === 'pro'
+                      ? t(capCopy.noticeCtaKey, { price: formatAmountCents(capCopy.founder.monthlyCents) })
+                      : t(o.noticeCtaKey)
+                  }
                   annualOffer={annualByPlan[o.plan]}
                   interval={capInterval}
                   variant={offer.dual && !o.recommended ? 'secondary' : 'primary'}
@@ -1500,6 +1977,12 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 />
               ))}
             </div>
+            {/* Only at the Free cap, where the button opens a new
+                subscription. Above it the click is usually an in-place plan
+                change, which the 14-day refund does not cover. */}
+            {(maxInboxes ?? 1) <= 1 && (
+              <CheckoutReassurance locale={appLocale} align="right" style={{ flexBasis: '100%' }} />
+            )}
           </div>
         );
       })()}
@@ -1524,13 +2007,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           }}>
             <div style={{
               height: '100%',
-              width: `${Math.min(100, (inboxes.length / maxInboxes) * 100)}%`,
-              background: inboxes.length / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
+              width: `${Math.min(100, (activeCount / maxInboxes) * 100)}%`,
+              background: activeCount / maxInboxes >= 0.8 ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
               borderRadius: 2,
               transition: 'width 0.3s',
             }} />
           </div>
-          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: inboxes.length, max: maxInboxes }) : t('inboxes.usedPlural', { count: inboxes.length, max: maxInboxes })}</span>
+          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: activeCount, max: maxInboxes }) : t('inboxes.usedPlural', { count: activeCount, max: maxInboxes })}</span>
         </div>
       )}
 
@@ -1589,6 +2072,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                  className={ib.parked ? 'inbox-row-parked' : undefined}
                 >
                   <td><strong style={{ fontWeight: 600 }}>{ib.label}</strong></td>
                   <td className="mono">{ib.address}</td>
@@ -1599,9 +2083,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     </span>
                   </td>
                   <td>
-                    {ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
-                    {ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {ib.status === "error"   ? (
+                    {ib.parked ? (
+                      <div>
+                        <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                        <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)", maxWidth: 220, lineHeight: 1.4 }}>
+                          {t('inboxes.parkedNote')}
+                        </div>
+                      </div>
+                    ) : null}
+                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
+                    {!ib.parked && ib.status === "error"   ? (
                       <div>
                         <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
@@ -1621,11 +2113,18 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right" onClick={e => e.stopPropagation()}>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>
+                        {t('inboxes.makeActive')}
+                      </Btn>
+                    ) : null}
                     {needsReconnect(ib.status) ? (
                       <Btn
                         variant="secondary"
                         size="sm"
                         icon="refresh"
+                        disabled={!canManage}
+                        title={canManage ? undefined : viewerNote}
                         onClick={() => onReconnect(ib)}
                       >
                         {t('inboxes.reconnect')}
@@ -1636,9 +2135,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         size="sm"
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
-                        disabled={checkingId === ib.id}
+                        disabled={!canManage || checkingId === ib.id}
                         aria-label={t('inboxes.checkConnection')}
-                        title={t('inboxes.checkConnection')}
+                        title={checkTitle}
                         onClick={() => handleCheck(ib)}
                       >
                         {""}
@@ -1649,6 +2148,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                       size="sm"
                       icon="trash"
                       aria-label={t('inboxes.disconnectInbox')}
+                      disabled={!canManage}
+                      title={canManage ? undefined : viewerNote}
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1663,13 +2164,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
               const canReconnect = needsReconnect(ib.status);
-              const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
+              const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                 : <Badge tone="neutral">{ib.status}</Badge>;
               return (
                 <article
-                  className="inbox-mobile-card"
+                  className={ib.parked ? 'inbox-mobile-card inbox-row-parked' : 'inbox-mobile-card'}
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
                   onMouseEnter={warmSignatureEditor}
@@ -1690,15 +2192,19 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span><ProviderLogo kind={ib.provider} size={16} /> {PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
-                  {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>{t('inboxes.makeActive')}</Btn>
+                    ) : null}
                     {canReconnect ? (
-                      <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
+                      <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canManage || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
                     )}
-                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
+                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
                   </div>
                 </article>
               );
@@ -1711,7 +2217,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             <h3>{t('inboxes.emptyTitle')}</h3>
             <p>{t('inboxes.emptyDesc')}</p>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
+              <Btn variant="primary" icon="plus" onClick={() => onConnect('inboxes_page')}>{t('inboxes.connectInbox')}</Btn>
             </div>
             {/* Closing the connect modal landed the user here, where the only
                 control reopened the modal they had just backed out of. Anyone
@@ -1751,6 +2257,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         )}
       </div>
 
+      {multiInbox && <MultiInboxInvite variant={multiInbox} placement="inboxes" onConnect={onConnect} />}
+
       {/* Inbox detail / diagnostics modal */}
       {detailInboxLive && (
         <InboxDetailModal
@@ -1763,14 +2271,28 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onSaveSignature={onSaveSignature}
           onSaveSenderName={onSaveSenderName}
           onSaveDraftEditorHidden={onSaveDraftEditorHidden}
+          onConnectionChanged={onConnectionChanged}
           draftEditorRolledOut={draftEditorRolledOut}
+          chatConfirmRolledOut={chatConfirmRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
+          proFeatures={proFeatures}
           canManageInbox={userRole !== 'viewer'}
+          // The review gate is owner/admin-only (lib/workspace/roles.ts).
+          canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
         />
       )}
 
       {/* Disconnect confirmation dialog */}
+      {swapInbox && (
+        <SwapParkedDialog
+          inbox={swapInbox}
+          activeInboxes={inboxes.filter(ib => !ib.parked)}
+          maxInboxes={maxInboxes}
+          onSwap={onSwapParked}
+          onClose={() => setSwapInbox(null)}
+        />
+      )}
       {confirmInbox && (
         <DisconnectDialog
           inbox={confirmInbox}
@@ -1779,6 +2301,92 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onCancel={handleDisconnectCancel}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * "Make active" on a parked inbox (src/lib/billing/parking.ts). At the plan's
+ * cap the customer picks the active inbox that is parked in its place; with a
+ * free slot there is nothing to pick. One swap a day per workspace, enforced
+ * by /api/inboxes/swap-parked; a refusal is one line here.
+ */
+function SwapParkedDialog({ inbox, activeInboxes, maxInboxes, onSwap, onClose }) {
+  const t = useTranslations('dashboard');
+  const needsPick = maxInboxes !== null && activeInboxes.length >= maxInboxes;
+  const [pick, setPick] = useState(needsPick && activeInboxes[0] ? activeInboxes[0].id : '');
+  const [swapping, setSwapping] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleConfirm = async () => {
+    if (swapping) return;
+    if (needsPick && !pick) return;
+    setSwapping(true);
+    setError(null);
+    const result = await onSwap(inbox.id, needsPick ? pick : null);
+    setSwapping(false);
+    if (result?.ok) {
+      onClose();
+      return;
+    }
+    if (result?.error === 'swap_limit' && result.nextSwapAt) {
+      setError(t('inboxes.swapDialog.errorLimit', { time: new Date(result.nextSwapAt).toLocaleString() }));
+    } else {
+      setError(t('inboxes.swapDialog.errorFailed'));
+    }
+  };
+
+  return (
+    <div className="scrim" onClick={swapping ? undefined : onClose}>
+      <div
+        className="modal"
+        onClick={e => e.stopPropagation()}
+        style={{ width: 420 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="swap-dialog-title"
+      >
+        <div className="modal-h">
+          <h2 id="swap-dialog-title" style={{ margin: 0 }}>
+            {t('inboxes.swapDialog.title', { label: inbox.label })}
+          </h2>
+          <div className="sub" style={{ marginTop: 4 }}>
+            {needsPick ? t('inboxes.swapDialog.pickLead') : t('inboxes.swapDialog.freeSlot')}
+          </div>
+        </div>
+        <div className="modal-body">
+          {needsPick ? (
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--fg-2)', marginBottom: 6 }}>
+                {t('inboxes.swapDialog.pickLabel')}
+              </span>
+              <select
+                className="input"
+                value={pick}
+                onChange={e => setPick(e.target.value)}
+                disabled={swapping}
+                data-testid="swap-pick"
+              >
+                {activeInboxes.map(ib => (
+                  <option key={ib.id} value={ib.id}>{ib.label} ({ib.address})</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-3)' }}>{t('inboxes.swapDialog.onceADay')}</p>
+          {error ? (
+            <p role="alert" data-testid="swap-error" style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--red-700)' }}>{error}</p>
+          ) : null}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="secondary" onClick={onClose} disabled={swapping}>
+              {t('inboxes.swapDialog.cancel')}
+            </Btn>
+            <Btn variant="primary" onClick={handleConfirm} disabled={swapping || (needsPick && !pick)}>
+              {swapping ? t('inboxes.swapDialog.swapping') : t('inboxes.swapDialog.confirm')}
+            </Btn>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2051,7 +2659,10 @@ function SignatureEditorPlaceholder({ sourceMode, t }) {
 }
 
 /** Order matters: this is the order the options are offered in. */
-const REVIEW_MODES = ['off', 'inline', 'dashboard'];
+const REVIEW_MODES = ['off', 'chat', 'inline', 'dashboard'];
+
+/** The modes that hold a send for a signed-in approver. 'chat' does not. */
+export const HOLDING_REVIEW_MODES = ['inline', 'dashboard'];
 
 /**
  * Resolves an inbox's review mode.
@@ -2067,7 +2678,7 @@ export function resolveReviewMode(inbox) {
 }
 
 /**
- * Three-way "review before sending" selector.
+ * "Review before sending" selector: off, chat, inline, dashboard.
  *
  * COPY RULE: do not write anything that claims the assistant "cannot" call a
  * tool. `_meta.ui.visibility` is a host UI hint, not an authorisation boundary
@@ -2076,14 +2687,18 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
-function ReviewModeSelector({ value, onChange, disabled }) {
+function ReviewModeSelector({ value, onChange, disabled, lockedNote = null, chatRolledOut = false }) {
   const t = useTranslations('dashboard');
+  // 'chat' follows workspaces.chat_send_confirm_enabled, on for every workspace
+  // since 2026-10-27 and kept as a kill switch.
+  // Still shown when it is the stored value, so the radio never lies.
+  const modes = REVIEW_MODES.filter(mode => mode !== 'chat' || chatRolledOut || value === 'chat');
   return (
     <div className="review-mode">
       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
         {t('approvals.mode.label')}
       </div>
-      {REVIEW_MODES.map(mode => (
+      {modes.map(mode => (
         <label key={mode} className={`review-mode-option${value === mode ? ' is-active' : ''}`}>
           <input
             type="radio"
@@ -2099,6 +2714,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
           </span>
         </label>
       ))}
+      {lockedNote ? <p className="review-mode-note">{lockedNote}</p> : null}
       <p className="review-mode-note">{t('approvals.mode.guarantee')}</p>
     </div>
   );
@@ -2112,7 +2728,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
    it. Normalisation (control chars and angle brackets stripped, whitespace
    collapsed, 100-char cap) is shared with the PATCH route so the preview and
    the stored value never disagree. */
-function SenderNameEditor({ inbox, onSave, t }) {
+function SenderNameEditor({ inbox, onSave, t, readOnly = false }) {
   const [value, setValue] = useState(inbox.displayName ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -2131,7 +2747,7 @@ function SenderNameEditor({ inbox, onSave, t }) {
   const inputId = `sender-name-${inbox.id}`;
 
   const handleSave = async () => {
-    if (saving || !dirty) return;
+    if (saving || !dirty || readOnly) return;
     setSaving(true);
     try {
       await onSave(inbox.id, nextName);
@@ -2173,13 +2789,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
               handleSave();
             }
           }}
-          disabled={saving}
+          disabled={saving || readOnly}
           style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
         />
         <Btn
           variant="primary"
           size="sm"
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || readOnly}
           onClick={handleSave}
         >
           {saving ? t('inboxes.detail.senderName.saving') : t('inboxes.detail.senderName.save')}
@@ -2208,7 +2824,170 @@ function SenderNameEditor({ inbox, onSave, t }) {
   );
 }
 
-function SignatureEditor({ inbox, onSave, t }) {
+/**
+ * Send As addresses for an IMAP inbox: another From address that delivers to
+ * this mailbox (an iCloud alias, say). Adding one emails a code to that
+ * address; it can be used only once the code is entered here. The rules and
+ * limits live in lib/inboxes/send-as.ts; this only drives
+ * /api/inboxes/[id]/send-as. `readOnly`: a viewer sees the list, nothing else.
+ */
+const SEND_AS_ERRORS = new Set([
+  'invalid_address', 'own_address', 'connected_inbox', 'already_verified', 'too_many_aliases',
+  'rate_limited', 'cooldown', 'code_expired', 'too_many_attempts', 'wrong_code', 'invalid_code',
+  'mail_failed', 'unsupported_provider',
+]);
+
+export function SendAsEditor({ inbox, t, readOnly = false }) {
+  const [aliases, setAliases] = useState(null);
+  const [address, setAddress] = useState('');
+  const [codes, setCodes] = useState({});
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState(null);
+  const endpoint = `/api/inboxes/${encodeURIComponent(inbox.id)}/send-as`;
+
+  useEffect(() => {
+    let live = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAliases(null);
+    setError(null);
+    fetch(endpoint)
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error('load'))))
+      .then(body => { if (live) setAliases(Array.isArray(body.aliases) ? body.aliases : []); })
+      .catch(() => { if (live) { setAliases([]); setError('generic'); } });
+    return () => { live = false; };
+  }, [endpoint]);
+
+  const call = async (key, init, url = endpoint) => {
+    setBusy(key);
+    setError(null);
+    try {
+      const res = await fetch(url, init);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(SEND_AS_ERRORS.has(body.error) ? body.error : 'generic');
+        return null;
+      }
+      return body;
+    } catch {
+      setError('generic');
+      return null;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const upsert = alias => setAliases(list => {
+    const current = list ?? [];
+    return current.some(a => a.id === alias.id)
+      ? current.map(a => (a.id === alias.id ? alias : a))
+      : [...current, alias];
+  });
+
+  const post = payload => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+  const handleAdd = async () => {
+    if (readOnly || busy || !address.trim()) return;
+    const body = await call('add', post({ action: 'add', email_address: address.trim() }));
+    if (body?.alias) { upsert(body.alias); setAddress(''); }
+  };
+  const handleVerify = async alias => {
+    const body = await call(`verify:${alias.id}`, post({ action: 'verify', alias_id: alias.id, code: codes[alias.id] ?? '' }));
+    if (body?.alias) { upsert(body.alias); setCodes(c => ({ ...c, [alias.id]: '' })); }
+  };
+  const handleResend = async alias => {
+    const body = await call(`resend:${alias.id}`, post({ action: 'resend', alias_id: alias.id }));
+    if (body?.alias) upsert(body.alias);
+  };
+  const handleRemove = async alias => {
+    const body = await call(`remove:${alias.id}`, { method: 'DELETE' }, `${endpoint}?alias_id=${encodeURIComponent(alias.id)}`);
+    if (body) setAliases(list => (list ?? []).filter(a => a.id !== alias.id));
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' };
+  const inputId = `send-as-${inbox.id}`;
+
+  return (
+    <div style={{ marginBottom: 16 }} data-send-as>
+      <label htmlFor={inputId} style={{ display: 'block', margin: '0 0 2px', fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+        {t('inboxes.detail.sendAs.title')}
+      </label>
+      <div style={{ ...label, marginBottom: 8 }}>{t('inboxes.detail.sendAs.help')}</div>
+
+      {aliases === null ? (
+        <div style={label}>{t('inboxes.detail.sendAs.loading')}</div>
+      ) : aliases.map(alias => (
+        <div key={alias.id} data-alias={alias.email_address} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>{alias.email_address}</span>
+            {alias.verified
+              ? <Badge tone="live">{t('inboxes.detail.sendAs.verified')}</Badge>
+              : <Badge tone="neutral">{t(alias.code_pending ? 'inboxes.detail.sendAs.pending' : 'inboxes.detail.sendAs.unverified')}</Badge>}
+            <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleRemove(alias)}>
+              {t('inboxes.detail.sendAs.remove')}
+            </Btn>
+          </div>
+          {!alias.verified && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+              <input
+                className="input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={9}
+                aria-label={t('inboxes.detail.sendAs.codeLabel', { address: alias.email_address })}
+                placeholder={t('inboxes.detail.sendAs.codePlaceholder')}
+                value={codes[alias.id] ?? ''}
+                onChange={e => setCodes(c => ({ ...c, [alias.id]: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleVerify(alias); } }}
+                disabled={readOnly || !!busy}
+                style={{ width: 120, height: 30, padding: '0 10px' }}
+              />
+              <Btn variant="primary" size="sm" disabled={readOnly || !!busy || !(codes[alias.id] ?? '').trim()} onClick={() => handleVerify(alias)}>
+                {t('inboxes.detail.sendAs.verify')}
+              </Btn>
+              <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleResend(alias)}>
+                {t('inboxes.detail.sendAs.resend')}
+              </Btn>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <input
+          id={inputId}
+          className="input"
+          type="email"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={254}
+          placeholder={t('inboxes.detail.sendAs.placeholder')}
+          value={address}
+          onChange={e => setAddress(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+          disabled={readOnly || !!busy || aliases === null}
+          style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
+        />
+        <Btn variant="secondary" size="sm" disabled={readOnly || !!busy || !address.trim() || aliases === null} onClick={handleAdd}>
+          {busy === 'add' ? t('inboxes.detail.sendAs.adding') : t('inboxes.detail.sendAs.add')}
+        </Btn>
+      </div>
+      {error && (
+        <div role="alert" style={{ ...label, marginTop: 6, color: 'var(--red-500)' }}>
+          {t(`inboxes.detail.sendAs.errors.${error}`)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * `readOnly`: a viewer. Every control is disabled and nothing is saved (the
+ * PATCH and image routes refuse a viewer). `canManageReview`: owner/admin. The
+ * review gate is theirs alone, so for a member the selector is disabled with
+ * the reason, and the save only sends the review fields when they changed.
+ */
+function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true, chatConfirmRolledOut = false }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
@@ -2388,7 +3167,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving || awaitingEditor) return;
+    if (saving || awaitingEditor || readOnly) return;
     setSizeError('');
     setSaveBlocked(false);
 
@@ -2452,12 +3231,15 @@ function SignatureEditor({ inbox, onSave, t }) {
         ...(canEmbedImages && embedImages !== (inbox.signatureEmbedImages ?? false)
           ? { signature_embed_images: embedImages }
           : {}),
-        // Both columns are sent: `send_review_mode` is the new three-way
-        // setting, `send_approval_required` is the boolean the edge function
-        // still gates on. The API keeps them consistent; remove the boolean
-        // once the server reads the mode directly.
-        send_review_mode: reviewMode,
-        send_approval_required: reviewMode !== 'off',
+        // Sent only when the selection changed: the review gate is
+        // owner/admin-only, and a member saving a signature must not be
+        // refused for restating it. Both columns go together:
+        // `send_review_mode` is the setting, `send_approval_required` the
+        // boolean the edge function holds sends on ('chat' holds nothing).
+        // The API keeps them consistent.
+        ...(reviewMode !== resolveReviewMode(inbox)
+          ? { send_review_mode: reviewMode, send_approval_required: HOLDING_REVIEW_MODES.includes(reviewMode) }
+          : {}),
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -2474,6 +3256,8 @@ function SignatureEditor({ inbox, onSave, t }) {
   // `saving` alone, so an editor that mounts during that wait is not created
   // read-only.
   const busy = saving || awaitingEditor;
+  // Every control below is also off for a viewer.
+  const locked = busy || readOnly;
   const canEmbedImages = inbox.provider !== 'outlook';
 
   return (
@@ -2487,14 +3271,20 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={busy}
+            disabled={locked}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
+      <ReviewModeSelector
+        value={reviewMode}
+        onChange={setReviewMode}
+        chatRolledOut={chatConfirmRolledOut}
+        disabled={locked || !canManageReview}
+        lockedNote={!readOnly && !canManageReview ? t('approvals.mode.ownerAdminOnly') : null}
+      />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2512,7 +3302,7 @@ function SignatureEditor({ inbox, onSave, t }) {
             initialText={
               inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
             }
-            disabled={saving || !enabled}
+            disabled={saving || !enabled || readOnly}
             onChange={syncPreview}
             onReady={() => handleEditorReady(inbox.id)}
           />
@@ -2580,7 +3370,7 @@ function SignatureEditor({ inbox, onSave, t }) {
               type="checkbox"
               checked={embedImages}
               onChange={() => setEmbedImages(v => !v)}
-              disabled={busy}
+              disabled={locked}
               style={{ accentColor: 'var(--brand)' }}
             />
             {t('inboxes.detail.signature.embedImages')}
@@ -2601,7 +3391,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={busy}
+          disabled={locked}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2612,7 +3402,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={busy}
+          disabled={locked}
           onClick={handleSave}
         >
           {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
@@ -2725,7 +3515,54 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, historyDays = 30 }) {
+/**
+ * Folder choice applies to an inbox that reads over IMAP with a password, on
+ * implicit TLS (the dashboard's IMAP client does not speak STARTTLS). Gmail
+ * and Outlook API inboxes file Sent themselves, and a send-only inbox has no
+ * folders. The route checks the same on the stored row.
+ */
+export function folderChoiceAvailable(inbox) {
+  return !!inbox.hasImap
+    && (inbox.connectionMode === 'both' || inbox.connectionMode === 'imap')
+    && inbox.imapSecurity !== 'starttls'
+    && inbox.status !== 'pending';
+}
+
+/**
+ * "Instructions for your AI" (Pro feature inbox_instructions) shows only when
+ * the feature is VISIBLE for the workspace (internal rollout or the launch
+ * switch, lib/plans/pro-features.ts), for any connected inbox. Before launch a
+ * customer gets nothing new here, not even a request.
+ */
+export function inboxInstructionsAvailable(inbox, proFeatures) {
+  return proFeatures?.visible === true && inbox.status !== 'pending';
+}
+
+/** Whether the inbox detail has anything to show under Advanced. */
+export function inboxAdvancedAvailable(inbox, proFeatures = null) {
+  return folderChoiceAvailable(inbox) || connectionTypeAvailable(inbox) || inboxInstructionsAvailable(inbox, proFeatures);
+}
+
+/**
+ * The collapsed "Advanced" section of the inbox detail: connection type for a
+ * generic IMAP/SMTP inbox, then folder choice. Its contents mount only while
+ * it is open, so opening an inbox never dials its mail server.
+ */
+export function InboxAdvancedSection({ inbox, t, onConnectionChanged, proFeatures = null }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details className="inbox-sending-details inbox-advanced-details" onToggle={e => setOpen(e.currentTarget.open)}>
+      <summary><span>{t('inboxes.detail.advanced')}</span></summary>
+      {open && connectionTypeAvailable(inbox) && <ConnectionTypeEditor inbox={inbox} t={t} onChanged={onConnectionChanged} />}
+      {open && folderChoiceAvailable(inbox) && <FolderOverridesEditor inbox={inbox} t={t} />}
+      {open && inboxInstructionsAvailable(inbox, proFeatures) && (
+        <InboxInstructionsEditor inbox={inbox} t={t} allowed={proFeatures?.allowed === true} />
+      )}
+    </details>
+  );
+}
+
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2735,12 +3572,14 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const compatibility = compatibilityForInbox(inbox.provider);
 
   const statusLabel =
+    inbox.parked               ? t('inboxes.statusParked')    :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
     inbox.status;
 
   const statusBadge =
+    inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
@@ -2852,24 +3691,50 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
               <p>Set the sender name and signature, and choose where a prepared send waits for a human decision.</p>
-              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} />}
-              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
+              {!canManageInbox ? (
+                <p className="review-mode-note" role="note">{t('inboxes.viewerActionsNote')}</p>
+              ) : null}
+              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} readOnly={!canManageInbox} />}
+              {/* IMAP inboxes that can send. Gmail's own Send As list comes
+                  from Google; Outlook has none yet. */}
+              {inbox.hasImap && inbox.connectionMode !== 'imap' && <SendAsEditor inbox={inbox} t={t} readOnly={!canManageInbox} />}
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} chatConfirmRolledOut={chatConfirmRolledOut} />
             </details>
           )}
 
+          {canManageInbox && inboxAdvancedAvailable(inbox, proFeatures) && <InboxAdvancedSection inbox={inbox} t={t} onConnectionChanged={onConnectionChanged} proFeatures={proFeatures} />}
+
+          {!canManageInbox ? (
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>
+              {t('inboxes.viewerActionsNote')}
+            </p>
+          ) : null}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
+            <Btn
+              variant="ghost"
+              icon="trash"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onDisconnect(inbox)}
+            >
               {t('inboxes.detail.disconnect')}
             </Btn>
             <Btn
               variant="secondary"
               icon="refresh"
-              disabled={checking}
+              disabled={checking || !canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
               onClick={() => onCheck(inbox)}
             >
               {t('inboxes.checkConnection')}
             </Btn>
-            <Btn variant="primary" icon="refresh" onClick={() => onReconnect(inbox)}>
+            <Btn
+              variant="primary"
+              icon="refresh"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onReconnect(inbox)}
+            >
               {t('inboxes.reconnect')}
             </Btn>
           </div>
@@ -2896,7 +3761,7 @@ function formatDate(iso) {
  * The same short absolute date as formatDate, but read in UTC.
  *
  * Every boundary of the action allowance is a UTC instant: the counting window
- * ends at UTC month start, and the grace week ends seven days after the
+ * ends at UTC month start, and the grace period ends three days after the
  * workspace row was created. formatDate renders in the viewer's own zone, which
  * anywhere west of Greenwich turns a reset at 2026-10-01T00:00:00Z into
  * "30 Sep", a day before it is true, on the one surface whose whole job is to
@@ -3244,8 +4109,15 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
  * On save it calls onSave(apiKey.id, { scopes, inboxIds }). onSave throws on
  * failure so the error can be shown inline; on success the modal closes.
  */
-function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
+function EditConnectionModal({ apiKey, inboxes, onSave, onClose, scopeCap = 'none' }) {
   const t = useTranslations('dashboard');
+  // A scope the key's holder may not be given is shown but cannot be ticked
+  // (it can always be unticked). 'viewer': only the read-only allow-list.
+  // 'no_widen': nothing beyond it that the key does not already have.
+  const heldScopes = apiKey.scopes ?? [];
+  const scopeLocked = (value) => scopeCap !== 'none'
+    && !VIEWER_SCOPES.has(value)
+    && (scopeCap === 'viewer' || !heldScopes.includes(value));
   const [selectedScopes, setSelectedScopes] = useState(apiKey.scopes ?? []);
   // inboxIds === null means "all inboxes". Otherwise it's an explicit allowlist.
   const [allInboxes, setAllInboxes] = useState(apiKey.inboxIds == null);
@@ -3348,9 +4220,18 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
               }}>
                 {t('apiKeys.editModal.permissions')}
               </div>
+              {scopeCap !== 'none' && (
+                <div data-testid="scope-cap-note" style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                  marginBottom: 8, lineHeight: 1.5,
+                }}>
+                  {t(scopeCap === 'viewer' ? 'apiKeys.editModal.viewerCapNote' : 'apiKeys.editModal.noWidenNote')}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {
                   const checked = selectedScopes.includes(opt.value);
+                  const locked = !checked && scopeLocked(opt.value);
                   return (
                     <label
                       key={opt.value}
@@ -3360,16 +4241,16 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
                         border: `1px solid ${checked ? 'var(--border-focus)' : 'var(--border-1)'}`,
                         borderRadius: 8,
                         background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
+                        cursor: submitting || locked ? 'not-allowed' : 'pointer',
                         transition: 'border-color 120ms, background 120ms',
-                        opacity: submitting ? 0.7 : 1,
+                        opacity: submitting ? 0.7 : locked ? 0.5 : 1,
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
-                        onChange={() => !submitting && toggleScope(opt.value)}
-                        disabled={submitting}
+                        onChange={() => !submitting && !locked && toggleScope(opt.value)}
+                        disabled={submitting || locked}
                         style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
                       />
                       <div>
@@ -3706,7 +4587,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, scopes, onDone }) {
                 {t('apiKeys.revealModal.nextStep3')}{' '}
                 <span style={{
                   fontStyle: 'italic', color: 'var(--fg-1)',
-                }}>&ldquo;{t('apiKeys.revealModal.nextPrompt')}&rdquo;</span>
+                }}>&ldquo;{t(FIRST_CALL_PROMPT_KEYS[0])}&rdquo;</span>
               </li>
             </ol>
             <a
@@ -3838,8 +4719,24 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate }) {
+export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate, userRole, currentUserId, members = [] }) {
   const t = useTranslations('dashboard');
+  // Edit and Revoke are offered only on keys this person may change: any key
+  // for an owner/admin, otherwise only their own. Same rule the two routes
+  // enforce (lib/api-keys/key-authority.ts), so nobody is shown a button that
+  // can only answer 403. When the role is not known (older callers), keep the
+  // buttons and let the server decide, as before.
+  const mayChange = (k) => (userRole == null
+    ? true
+    : canChangeApiKey({ callerRole: userRole, callerId: currentUserId ?? '', keyCreatorId: k.createdBy }));
+  // The scope cap follows the key's HOLDER: a viewer's key stays read-only
+  // whoever edits it. A creator who is not in the member list (left, or not
+  // loaded) may keep but not widen.
+  const capFor = (k) => {
+    if (k.createdBy && k.createdBy === currentUserId && userRole) return keyScopeCap(userRole);
+    const holder = members.find(m => m.userId === k.createdBy);
+    return keyScopeCap(holder?.role ?? null);
+  };
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -3972,12 +4869,18 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
                     </div>
                   </td>
                   <td className="right">
-                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                      {onUpdate && (
-                        <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
-                      )}
-                      <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
-                    </div>
+                    {mayChange(k) ? (
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        {onUpdate && (
+                          <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
+                        )}
+                        <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                      </div>
+                    ) : (
+                      <span data-testid="key-not-yours" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>
+                        {t('apiKeys.notYours')}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -4035,6 +4938,9 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
         </div>
       </div>
 
+      {/* Webhooks for new mail sit with the keys: both are how your own agents use MCPEmails. */}
+      <WebhooksPanel inboxes={inboxes} planName={planDisplayName} />
+
       {confirmKey && (
         <RevokeDialog
           apiKey={confirmKey}
@@ -4065,6 +4971,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       {editKey && (
         <EditConnectionModal
           apiKey={editKey}
+          scopeCap={userRole == null ? 'none' : capFor(editKey)}
           inboxes={inboxes}
           onSave={onUpdate}
           onClose={() => setEditKey(null)}
@@ -4078,28 +4985,49 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 
 // Kept separate from the customer-facing workflow library above. Bulk-run
 // controls need their own route/API wiring before they can replace it.
-function BulkRunsPanel() {
+//
+// Stop is an operator action (owner/admin/member). Viewers are read-only, and
+// PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
+// is shown disabled with the reason beside it instead of failing on click.
+export const BULK_RUNS_ACTIVE_POLL_MS = 5_000;
+export const BULK_RUNS_IDLE_POLL_MS = 60_000;
+const isActiveBulkRun = (run) => run.status === 'running' || run.status === 'cancelling';
+
+function BulkRunsPanel({ userRole }) {
+  const t = useTranslations('dashboard');
+  const canStop = canOperateWorkspace(userRole);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
+
+  // Whether the last answer had a run in flight. Read by the poll clock, so a
+  // ref rather than state: changing it must not restart the effect.
+  const activeRef = useRef(false);
 
   const load = async () => {
     try {
       const response = await fetch('/api/workflows/runs', { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Failed to load runs.');
-      setRuns(payload.runs || []); setError('');
+      const next = payload.runs || [];
+      activeRef.current = next.some(isActiveBulkRun);
+      setRuns(next); setError('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load runs.'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => {
-    // Initial load plus a 5s poll; the fetch it runs necessarily sets state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-    const id = window.setInterval(load, 5000);
-    return () => window.clearInterval(id);
+    // Initial load, then 5 s while a run is in flight and 60 s while idle,
+    // paused while the tab is hidden and refreshed the moment it is shown.
+    // Runs are started from an MCP client, not this page, so the idle poll is
+    // what notices a new one. The fetch it runs necessarily sets state.
+    const poll = startVisiblePoll({
+      poll: load,
+      intervalMs: () => (activeRef.current ? BULK_RUNS_ACTIVE_POLL_MS : BULK_RUNS_IDLE_POLL_MS),
+      immediate: true,
+    });
+    return () => poll.stop();
   }, []);
 
   const cancel = async (id) => {
@@ -4117,12 +5045,13 @@ function BulkRunsPanel() {
     <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
     <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
     {error && <div className="alert alert-error" role="alert">{error}</div>}
+    {!canStop && <div className="alert" role="status" data-testid="bulk-runs-viewer-notice" style={{ marginBottom: 12 }}>{t('workflows.bulkRuns.viewerNotice')}</div>}
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
-          const active = run.status === 'running' || run.status === 'cancelling';
+          const active = isActiveBulkRun(run);
           const label = run.operation.replaceAll('_', ' ');
-          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={run.status === 'cancelling' || cancelling === run.id} onClick={() => cancel(run.id)}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
     </div>
   </section>;
@@ -4138,7 +5067,7 @@ function BulkRunsPanel() {
  * ceiling) was not something a customer could buy their way out of. It is
  * back since 2026-09-12 for exactly one case, a metered Free workspace,
  * because that number is now public, sold, and the one the MCP edge function
- * refuses at: 150 email actions a month after a 7-day grace week
+ * refuses at: 150 email actions a month after a 3-day grace period
  * (docs/PLAN-free-action-cap-150.md). From 80% the strip is joined by a
  * banner that names the plan that removes the cap, carrying the offer to
  * checkout and to /pricing the same way the inbox-cap notice does. Paid plans
@@ -4151,7 +5080,7 @@ function BulkRunsPanel() {
  *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, workspaceId = null, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
   // The banner's annual CTA label lives beside the modal's, in dashboardChrome.
   const trc = useTranslations('dashboardChrome');
@@ -4159,6 +5088,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
   // in the banner can switch it. Hoisted here because the banner renders from
   // a conditional and hooks cannot live inside it.
   const [capInterval, setCapInterval] = useState('month');
+  const { locale } = useAppLocale();
   const allowanceState = allowanceTileState(actionAllowance);
   const allowance = allowanceProgress(actionAllowance);
   const {
@@ -4168,13 +5098,18 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     byInbox = [],
   } = usageData ?? {};
 
-  // The analytics window this plan buys (Free 7, Personal 30, Pro 90, Team
-  // 365). Every figure on this page comes from a query scoped to it, so the
-  // average has to divide by the same number and the copy has to quote it.
+  // The analytics window this plan buys (Free 30, Personal 90, Pro and
+  // Business 730). Every figure on this page comes from a query scoped to it.
   const historyDays = planLimits?.historyDays ?? 30;
+  // What is drawn: the window minus the quiet days before the first call, never
+  // under 30. Rows past 90 days were deleted on every plan until 2026-10-20, so
+  // a 730-day window would otherwise chart ~640 empty days and divide the
+  // average by days that never had data. The labels quote what is drawn.
+  const shownCounts = trimLeadingQuietDays(dailyCounts);
+  const shownDays = shownCounts.length || historyDays;
 
   // Derived stats
-  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / historyDays) : 0;
+  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / shownDays) : 0;
   const busiestDay = dailyCounts.reduce(
     (best, d) => (d.count > best.count ? d : best),
     { date: '', count: 0 },
@@ -4187,7 +5122,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     <div className="page">
       <PageHeader
         title={t('usage.title')}
-        sub={t('usage.sub', { days: historyDays })}
+        sub={t('usage.sub', { days: shownDays })}
       />
 
       {/* The allowance strip: bar plus one sentence for a metered Free
@@ -4305,7 +5240,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 {t('usage.capCompare')}
               </Link>
               <a
-                href={usageCapCheckoutHref(offer.plan, capInterval === 'year')}
+                href={usageCapCheckoutHref(offer.plan, capInterval === 'year', locale)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -4330,6 +5265,13 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 })}
               </a>
             </div>
+            {/* The action allowance is a Free-plan limit, so this button
+                always opens a new subscription. */}
+            <CheckoutReassurance locale={locale} align="right" style={{ flexBasis: '100%' }} />
+            {/* The 3-month pass, below the subscription offer, only once the
+                server says this workspace has been at a cap for 72 hours and
+                is in the pass arm (PersonalPass.jsx, pass-offer.ts). */}
+            <PassOfferLine surface="cap_banner" workspaceId={workspaceId} enabled={allowance.atLimit} />
           </div>
         );
       })()}
@@ -4380,7 +5322,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
           {/* Summary stats */}
           <div className="stat-grid usage-stat-grid">
             <div className="stat">
-              <div className="label">{t('usage.totalCalls', { days: historyDays })}</div>
+              <div className="label">{t('usage.totalCalls', { days: shownDays })}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
               <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
@@ -4403,11 +5345,11 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
             <div className="card-h">
               <div>
                 <div className="title">{t('usage.callsPerDayTitle')}</div>
-                <div className="sub">{t('usage.callsPerDaySub', { days: historyDays })}</div>
+                <div className="sub">{t('usage.callsPerDaySub', { days: shownDays })}</div>
               </div>
             </div>
             <div className="card-body">
-              <UsageChart30 dailyCounts={dailyCounts} />
+              <UsageChart30 dailyCounts={shownCounts} />
             </div>
           </div>
 
@@ -5225,16 +6167,19 @@ const BILLING_PLANS = [
   {
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
-    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
-    // Pro is the highlighted plan: unlimited inboxes for one person is the
-    // upgrade nearly everyone here actually wants. Team only pays off once
-    // other people need in.
+    // soloFeatureChatClosed / soloFeatureAllInboxes: the Pro features, new at
+    // launch and gated to Pro and Business (see PLANS.solo.features).
+    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeatureChatClosed', 'billing.plans.soloFeatureAllInboxes', 'billing.plans.soloFeature4'],
+    // Pro is the highlighted plan: ten mailboxes for one person running a
+    // business is the upgrade nearly everyone here actually wants. Business
+    // pays off past ten mailboxes or once other people need in.
     highlighted: true,
   },
   {
     id: 'pro',
     name: PLAN_DISPLAY_NAMES.pro,
-    featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
+    // Only what Business does today: see the features note on PLANS.pro.
+    featureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessFeature2', 'billing.plans.businessFeature3', 'billing.plans.businessFeature4', 'billing.plans.businessFeature5'],
     highlighted: false,
   },
 ];
@@ -5313,6 +6258,9 @@ function formatRenewalDate(unixSeconds, locale) {
  *                 arrives here as null and is never quoted. Null itself (the
  *                 RPC failed) states nothing.
  */
+/** The checkout route's pass refusals; each has a billing.checkoutError sentence. */
+const PASS_ERROR_CODES = new Set(['pass_unavailable', 'already_subscribed', 'pass_already_queued', 'pass_monthly_not_yet']);
+
 function BillingSection({
   currentPlan,
   compedScale = false,
@@ -5321,10 +6269,15 @@ function BillingSection({
   maxInboxes = null,
   inboxCount = 0,
   grandfathered = false,
+  proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
+  passState = null,
+  workspaceId = null,
+  seasonalSwitch = null,
 }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   // Matches the pricing page, where annual is preselected. An upgrade intent
   // arriving from /pricing overrides this with whatever the visitor actually
   // chose there.
@@ -5398,16 +6351,25 @@ function BillingSection({
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval: checkoutInterval }),
+        // The buyer's language picks the hosted page's (German is the only
+        // one that changes it, see checkout-core). Read at call time, not
+        // from `locale`: the ?upgrade= effect below calls this on mount,
+        // before the provider has resolved the stored choice into context.
+        body: JSON.stringify({ planId, interval: checkoutInterval, locale: preferredAppLocale() }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
-            ? data.error
-            : t('billing.errCheckoutFailed');
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : PASS_ERROR_CODES.has(data?.error_code)
+            ? t(`billing.checkoutError.${data.error_code}`)
+            : typeof data?.error === 'string'
+              ? data.error
+              : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
         return;
       }
@@ -5424,6 +6386,7 @@ function BillingSection({
           planName: data.plan,
           interval: data.interval ?? checkoutInterval,
           preview: data.preview ?? null,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -5457,14 +6420,25 @@ function BillingSection({
           planId: pendingChange.planId,
           interval: pendingChange.interval,
           confirm: true,
+          // The offer this quote was priced with. If it has ended by now the
+          // server charges nothing and sends a fresh quote (handled below).
+          ...(pendingChange.preview?.seasonalOffer?.offerId
+            ? { offer: pendingChange.preview.seasonalOffer.offerId }
+            : {}),
+          // The plan price this quote was priced with. If a different price
+          // applies by now, the server charges nothing and quotes again.
+          ...(pendingChange.quotedPriceId ? { quotedPriceId: pendingChange.quotedPriceId } : {}),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        const message =
-          typeof data?.error === 'string'
+        // A pause or switch is booked: the billing card's own sentence, which
+        // points at Resume / Keep, instead of the server's English.
+        const message = data?.error_code === 'plan_change_pending'
+          ? t('billing.planChange.pendingCheckout')
+          : typeof data?.error === 'string'
             ? data.error
             : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
@@ -5501,6 +6475,18 @@ function BillingSection({
         setPaymentRequired({
           planName: data.plan,
           invoiceUrl: typeof data.invoice_url === 'string' ? data.invoice_url : null,
+        });
+      } else if (data?.confirmation_required === true) {
+        // The quoted seasonal offer ended between the quote and the click.
+        // Nothing was charged; show the new quote and let them decide again.
+        setPendingChange({
+          planId: data.plan_id ?? pendingChange.planId,
+          planName: data.plan ?? pendingChange.planName,
+          interval: data.interval ?? pendingChange.interval,
+          preview: data.preview ?? null,
+          offerEnded: data.seasonal_offer_ended === true,
+          priceChanged: data.price_changed === true,
+          quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -5576,6 +6562,15 @@ function BillingSection({
       ? (offeredPlans.find(plan => plan.id === currentPlan)?.id ?? null)
       : null;
 
+  // The Black Week switch card. Only for the plan this account pays for, on
+  // the same self-service path as any interval switch, and only while live.
+  const switchOffer =
+    intervalSwitchPlanId !== null &&
+    seasonalSwitch?.planId === intervalSwitchPlanId
+      ? liveSeasonalOffer(seasonalSwitch)
+      : null;
+  const switchValues = switchOffer ? seasonalOfferValues(switchOffer, locale) : null;
+
   // A paid-plan CTA on the pricing page is a direct request to begin Stripe
   // Checkout. The URL carries only a validated plan and interval; remove it
   // once consumed so refresh/back cannot accidentally initiate it again.
@@ -5631,6 +6626,18 @@ function BillingSection({
     statusParamsHandled.current = true;
 
     const params = new URLSearchParams(window.location.search);
+    // Back from a 3-month pass Checkout. A cancelled one needs no word; a paid
+    // one is confirmed and the page reloads once the webhook has had a moment
+    // to record the pass and project Personal.
+    const passReturn = params.get('pass');
+    if (passReturn === 'started' || passReturn === 'cancelled') {
+      window.history.replaceState(window.history.state, '', '/dashboard/settings');
+      if (passReturn === 'started') {
+        toast({ message: t('billing.pass.started'), variant: 'success' });
+        window.setTimeout(() => window.location.reload(), 3500);
+      }
+      return;
+    }
     const checkoutError = params.get('checkout_error');
     const billingStatus = params.get('billing');
     const billingChanged = billingStatus === 'changed';
@@ -5763,6 +6770,21 @@ function BillingSection({
               {t('billing.inboxesCount', { count: inboxCount })}
             </div>
           )}
+          {/* Pro bought before the 2026-10 cap keeps unlimited inboxes. Said
+              once, here, so the "10 mailboxes" on the pricing page does not
+              read as a change to their own plan. */}
+          {proInboxesKept && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.proInboxesKept')}
+            </div>
+          )}
+          {/* Business bills mailboxes above the included ten, across every
+              workspace on the subscription. Comped accounts pay nothing. */}
+          {currentPlan === 'pro' && !compedScale && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.businessMailboxRate')}
+            </div>
+          )}
           {allowanceLine && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)' }}>
               <Icon name="check" size={13} color="var(--mint-600)" />
@@ -5791,7 +6813,18 @@ function BillingSection({
           </div>
         )}
 
-        {isOnPaidPlan && (
+        {passState && (
+          /* A 3-month pass holder: no subscription to manage, so the pass and
+             the ways to keep Personal take the portal box's place. */
+          <PassBillingPanel
+            passState={passState}
+            stripePrices={stripePrices}
+            onSubscribe={(planId, checkoutInterval) => handleUpgrade(planId, checkoutInterval)}
+            busy={upgrading}
+          />
+        )}
+
+        {isOnPaidPlan && !passState && (
           /* Paid plan: show active subscription summary + portal button */
           <div style={{
             padding: '16px',
@@ -5871,6 +6904,50 @@ function BillingSection({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Pause, switch to Personal, switch to Free, and the banners for a
+            change already booked. Renders nothing while both flags are off
+            for this account (its routes answer 404). */}
+        <PlanChangeBlock toast={toast} />
+
+        {/* Black Week 2026: monthly Personal or Pro owners only. The server
+            decided eligibility from the live subscription (current monthly
+            price, never redeemed, see src/lib/stripe/seasonal-switch.ts);
+            this only re-checks the plan and that the window has not closed
+            on this clock. The button goes through the same two-step quote as
+            every other plan change, so nothing is charged from this card. */}
+        {switchOffer && switchValues && !passState && (
+          <div
+            data-seasonal-switch={switchOffer.planId}
+            style={{
+              padding: '14px 16px',
+              background: 'var(--brand-soft)',
+              border: '1px solid rgba(37,71,229,0.18)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-1)', lineHeight: 1.5 }}>
+                {trc('seasonal.switchBody', switchValues)}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--fg-3)', marginTop: 4 }}>
+                {trc('seasonal.ends', { date: switchValues.date, time: switchValues.time })}
+              </div>
+            </div>
+            <Btn
+              variant="primary"
+              onClick={() => handleUpgrade(switchOffer.planId, 'year')}
+              disabled={upgrading !== null}
+            >
+              {upgrading === switchOffer.planId ? trc('seasonal.switchBusy') : trc('seasonal.switchCta')}
+            </Btn>
           </div>
         )}
 
@@ -5984,6 +7061,15 @@ function BillingSection({
                           {t('billing.billedYearly', { total: yearlyAnnualTotal })}
                         </div>
                       )}
+                      {/* Black Week 2026: annual Personal and Pro only. */}
+                      {!isCustom && interval === 'year' && liveSeasonalOffer(stripePrices?.[plan.id]?.seasonalOffer) && (
+                        <div style={{ marginTop: 8 }}>
+                          <SeasonalOfferNote offer={stripePrices[plan.id].seasonalOffer} size="sm" />
+                        </div>
+                      )}
+                      {plan.id === 'pro' && (
+                        <FounderPriceNote founder={stripePrices?.pro?.founder} size="sm" />
+                      )}
                     </div>
 
                     {/* Feature list */}
@@ -6040,6 +7126,17 @@ function BillingSection({
               }}>
                 {t('billing.redirectNote')}
               </p>
+            )}
+            {/* Same rule as the redirect note: only a first subscription.
+                A pass holder's Personal starts at the pass end, so the pass
+                panel above says so instead. */}
+            {!isOnPaidPlan && !passState && (
+              <CheckoutReassurance locale={locale} />
+            )}
+            {/* The 3-month pass, below every subscription option, for a Free
+                workspace the server says has been at a cap for 72 hours. */}
+            {currentPlan === 'free' && !compedScale && (
+              <PassOfferLine surface="cap_banner" workspaceId={workspaceId} />
             )}
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
               {t('billing.customNote')} <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>{t('billing.contactUs')}</a>.
@@ -6131,6 +7228,7 @@ function SummaryRow({ label, value, strong = false }) {
 
 function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy, onConfirm, onCancel }) {
   const t = useTranslations('dashboard');
+  const trc = useTranslations('dashboardChrome');
   const { preview } = change;
 
   // Compared by id, not by display name: the names are translated in one place
@@ -6223,6 +7321,14 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
                   label={t('billing.confirmThen')}
                   value={`${recurring} ${intervalLabel}`}
                 />
+                {/* Business above ten mailboxes: the figure is the base price
+                    plus the extras, so say so rather than show a number that
+                    is not the list price without a reason. */}
+                {preview.extraMailboxes > 0 && (
+                  <div style={{ marginTop: 6, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    {t('billing.confirmExtraMailboxes', { count: preview.extraMailboxes })}
+                  </div>
+                )}
               </div>
             )}
             {/* The date in the preview is the end of the period being left. It
@@ -6232,6 +7338,32 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
               <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />
             )}
           </div>
+
+          {/* Black Week 2026: the quote already includes the first-year
+              price (checkout-core prices the swap with the coupon). */}
+          {preview?.seasonalOffer && <SeasonalOfferNote offer={preview.seasonalOffer} />}
+          {change.offerEnded && !preview?.seasonalOffer && (
+            <p data-seasonal-ended="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('seasonal.ended')}
+            </p>
+          )}
+          {change.priceChanged && !change.offerEnded && (
+            <p data-price-changed="true" style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'var(--fg-1)',
+              lineHeight: 1.5,
+            }}>
+              {trc('founder.priceChanged')}
+            </p>
+          )}
 
           <p style={{
             margin: 0,
@@ -6359,7 +7491,7 @@ function LanguageSection() {
 
   // Each language is shown by its own native name (autonym) so the option is
   // recognizable regardless of the current interface language.
-  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
   const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
 
   return (
@@ -6931,7 +8063,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, inboxes = [], proFeatures = null, stripePrices, passState = null, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate, onGoToInvite }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -6969,9 +8101,16 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         maxInboxes={planLimits?.maxInboxes ?? null}
         inboxCount={inboxCount}
         grandfathered={grandfathered}
+        proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
+        passState={passState}
+        workspaceId={workspace?.id ?? null}
+        seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
       />
+      {/* Referral credit waiting for the next invoice, while
+          workspaces.referral_enabled is on (InvitePanel.jsx). */}
+      {workspace?.referralEnabled === true && <BillingReferralCredit onOpenInvite={onGoToInvite} />}
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>
@@ -6986,6 +8125,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         userRole={userRole}
         onWorkspaceUpdate={onWorkspaceUpdate}
       />
+
+      {/* Morning brief (Pro): renders nothing unless the feature is visible. */}
+      <MorningBriefSection workspace={workspace} inboxes={inboxes} proFeatures={proFeatures} />
 
       {/* Delete THIS workspace only (owner-only) */}
       <DeleteWorkspaceSection
@@ -7476,7 +8618,7 @@ function AuditTable({ entries }) {
  *
  * Subsequent pages are fetched client-side from GET /api/security/audit-log.
  */
-export function SecurityPage({ auditLog }) {
+export function SecurityPage({ auditLog, userRole }) {
   const t = useTranslations('dashboard');
   const initialEntries = auditLog?.entries ?? [];
   const initialTotal   = auditLog?.total    ?? 0;
@@ -7537,6 +8679,9 @@ export function SecurityPage({ auditLog }) {
 
       {/* Active sessions: loaded client-side */}
       <ActiveSessionsSection />
+
+      {/* SAML single sign-on: owner/admin on the enterprise plan only */}
+      <SsoSettingsSection userRole={userRole} />
 
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">

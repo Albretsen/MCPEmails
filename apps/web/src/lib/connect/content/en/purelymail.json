@@ -24,10 +24,17 @@
     "titleLine1": "Connect Purelymail to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Purelymail inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox's own password, in every MCP client rather than just one.",
-    "answer": "Claude cannot reach Purelymail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.purelymail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Purelymail has no IMAP switch to find: you authenticate with the mailbox's full email address and that mailbox's own password, or an app password if the mailbox has two-factor authentication turned on. One inbox is free, forever.",
+    "answer": "Claude cannot reach Purelymail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.purelymail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Purelymail has no IMAP switch to find: you authenticate with the mailbox's full email address and that mailbox's own password, or an app password if the mailbox has two-factor authentication turned on. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password, or app password",
     "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "lookup": {
+      "intro": "Setting up a different address?",
+      "label": "Look up the IMAP and SMTP settings for any domain",
+      "href": "/tools/email-settings-lookup"
+    }
   },
   "method": {
     "title": "How Purelymail connects: IMAP and the mailbox's own password",
@@ -35,7 +42,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
     },
     {
@@ -44,7 +51,7 @@
     },
     {
       "h": "Add an app password if that user has 2FA, then connect",
-      "p": "If multi-factor authentication is on for that user, open the user, scroll to <b>App Passwords</b>, click <b>Add New</b>, give it a name and copy the code. Purelymail displays it once. Now choose IMAP / SMTP in mcpemails, enter the full address and that password. The hosts above are prefilled."
+      "p": "If multi-factor authentication is on for that user, open the user, scroll to <b>App Passwords</b>, click <b>Add New</b>, give it a name and copy the code. Purelymail displays it once. Now choose IMAP / SMTP in MCPEmails, enter the full address and that password. The hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -72,7 +79,7 @@
   "faq": [
     {
       "q": "Does Claude work with Purelymail?",
-      "a": "Not directly. Claude has no built-in Purelymail connector and cannot open an IMAP session by itself. Connecting an MCP server such as mcpemails to your Purelymail mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor, ChatGPT and any other MCP client rather than in one app only."
+      "a": "Not directly. Claude has no built-in Purelymail connector and cannot open an IMAP session by itself. Connecting an MCP server such as MCPEmails to your Purelymail mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor, ChatGPT and any other MCP client rather than in one app only."
     },
     {
       "q": "What are the Purelymail IMAP and SMTP settings?",

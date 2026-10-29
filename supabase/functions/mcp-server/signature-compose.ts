@@ -45,6 +45,48 @@ export const SIGNATURE_TEXT_DELIMITER = "\n\n-- \n";
 /** The class on the wrapper div that marks our own HTML signature block. */
 export const SIGNATURE_HTML_CLASS = "mcpemails-signature";
 
+/**
+ * The HTML signature block as it is appended after a body: the wrapper div
+ * and nothing else. Any space above the signature is the person's own, typed
+ * into the signature (see `keepTypedBlankLines`); none is added here. The
+ * wrapper's opening tag stays exact: html-text-merge.ts and
+ * `storedSignatureBlockOf` find it by string.
+ */
+export function signatureHtmlBlock(innerHtml: string): string {
+  return `\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+}
+
+/** An empty paragraph (or one holding only a line break): a typed blank line. */
+const EMPTY_PARAGRAPH = /<p\b[^>]*>\s*(?:<br\s*\/?>\s*)?<\/p>/gi;
+
+/** Empty paragraphs (and whitespace) at the very end of a signature. */
+const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*(?:<br\s*\/?>\s*)?<\/p>)+\s*$/i;
+
+/** One empty line with no margin above or below it. */
+const BLANK_LINE = "<div><br></div>";
+
+/**
+ * Make the blank lines a person typed into their signature show in the sent
+ * mail as one line each, the way the dashboard editor shows them.
+ *
+ * The editor (TipTap) stores a blank line as `<p></p>`. In a mail client an
+ * empty paragraph has no height, so a blank line typed above the name, the
+ * only way to put space between the message and the signature, never arrived
+ * (14 of 137 live signatures opened with one on 2026-10-29). `<p><br></p>` is
+ * no answer either: clients give a paragraph a 1em margin above and below,
+ * so it showed as about three lines (seen on a real send, 2026-10-29). The
+ * editor's paragraphs have almost no margin (dashboard.css), and a
+ * `<div><br></div>` is exactly one line with none.
+ *
+ * Trailing empty paragraphs are left alone: TipTap appends one after a heading,
+ * a list or an image on its own, so they are not something the person typed.
+ */
+export function keepTypedBlankLines(html: string): string {
+  const trailing = TRAILING_EMPTY_PARAGRAPHS.exec(html);
+  const end = trailing ? trailing.index : html.length;
+  return html.slice(0, end).replace(EMPTY_PARAGRAPH, BLANK_LINE) + html.slice(end);
+}
+
 /** Minimal HTML-escape for deriving HTML from plain text. */
 export function escapeSignatureHtml(text: string): string {
   return text
@@ -150,7 +192,7 @@ export function composeSignatureBlocks(
   // outcome than sending without one. Every write path uses the throwing
   // version, so this only ever bites on rows written before that was true.
   const html = storedHtml
-    ? sanitizeSignatureHtmlSafe(storedHtml)
+    ? keepTypedBlankLines(sanitizeSignatureHtmlSafe(storedHtml))
     : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
   // Guard against a signature that strips down to nothing. The check has to be
@@ -174,6 +216,27 @@ export interface ApplySignatureOptions {
    * `false`, the signature is never applied. `undefined`/`true` → apply.
    */
   include_signature?: boolean;
+}
+
+/**
+ * What `applySignature` did, as a write result reports it. Without this the
+ * model read the `include_signature` default and told users "your signature
+ * was added" on inboxes that have none.
+ *   - appended: a signature was added to the body.
+ *   - skipped: the call passed `include_signature: false`.
+ *   - disabled: the inbox has a signature turned off.
+ *   - none_configured: the inbox has no signature stored.
+ */
+export type SignatureOutcome = "appended" | "skipped" | "disabled" | "none_configured";
+
+/** The outcome `applySignature(params, inbox, opts)` has. Pure. */
+export function signatureOutcome(
+  inbox: SignatureInbox,
+  opts: ApplySignatureOptions = {},
+): SignatureOutcome {
+  if (opts.include_signature === false) return "skipped";
+  if (composeSignatureBlocks(inbox)) return "appended";
+  return inbox.signature_enabled === false ? "disabled" : "none_configured";
 }
 
 /**
@@ -210,7 +273,7 @@ export function applySignature<T extends { textBody: string; htmlBody?: string }
   if (!sig) return params;
 
   const sigTextBlock = `${SIGNATURE_TEXT_DELIMITER}${sig.text}`;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${sig.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(sig.html);
 
   if (params.htmlBody && params.htmlBody.trim()) {
     // Caller already supplied rich HTML — append to both parts so the
@@ -462,9 +525,53 @@ export function rebuildHtmlKeepingSignature(
 ): string | null {
   const split = splitAtSignature(text, inbox, storedHtml, storedText);
   if (!split) return null;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(split.html);
   const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";
   return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
+}
+
+/**
+ * True when the caller's own text (before any quoted original) already ends a
+ * paragraph with the inbox's signature: the `-- ` delimiter and the signature
+ * lines, or, for a signature of more than one line, those lines alone. A
+ * one-line signature without the delimiter is a sign-off ("Thanks,\nAsgeir"),
+ * not the signature, so it does not count (same rule as `splitAtSignature`).
+ */
+export function textCarriesOwnSignature(text: string, inbox: SignatureInbox): boolean {
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return false;
+  const sigText = comparableText(sig.text).trim();
+  if (!sigText) return false;
+  const hay = `\n${comparableText(text)}`;
+  const endBy = quoteStart(hay);
+  const needles = sigText.includes("\n") ? [`\n--\n${sigText}`, `\n${sigText}`] : [`\n--\n${sigText}`];
+  return needles.some((needle) => lastWholeLineMatch(hay, needle, endBy) !== -1);
+}
+
+/**
+ * `applySignature` for a draft body the model may have signed itself.
+ *
+ * WHY (live claude.ai test, 2026-10-19). Updating a reply draft, Claude pasted
+ * the signature (and the quote) back into `body`. With `include_signature`
+ * left on, `applySignature` appended a second copy, since it is not idempotent
+ * on purpose (see its note). A draft body that already carries the signature
+ * is left as it is; when it has no HTML part, the HTML part is the one
+ * `applySignature` would have built, rich signature block included
+ * (`rebuildHtmlKeepingSignature`). `include_signature: false` is unchanged.
+ */
+export function applySignatureOnce<T extends { textBody: string; htmlBody?: string }>(
+  params: T,
+  inbox: SignatureInbox,
+  opts: ApplySignatureOptions = {},
+): T {
+  if (opts.include_signature === false || !textCarriesOwnSignature(params.textBody, inbox)) {
+    return applySignature(params, inbox, opts);
+  }
+  if (!(params.htmlBody && params.htmlBody.trim())) {
+    const html = rebuildHtmlKeepingSignature(params.textBody, inbox);
+    if (html !== null) params.htmlBody = html;
+  }
+  return params;
 }
 
 /** True when an HTML part carries our signature wrapper. */

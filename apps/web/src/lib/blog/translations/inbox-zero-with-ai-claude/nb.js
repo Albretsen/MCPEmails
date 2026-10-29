@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Nå inbox zero med AI — Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
   content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang — sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
 
-Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake.
+Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake. Bruker du iCloud, Fastmail eller en annen IMAP-vert, følg heller [guiden for å koble e-post til Claude](/blog/connect-claude-to-email).
 
 ## Hvorfor «inbox zero» endelig er realistisk med AI
 
@@ -57,13 +57,13 @@ Rutinen over tar ~fem minutter når Claude gjør tunge løftet. Et par måter fo
 
 ## Den ene regelen som holder dette trygt
 
-Å gi en AI hele innboksen din høres risikabelt ut helt til du vet hvor dataene havner: **ingen steder.** Med MCP Emails henter hver eneste av disse promptene e-posten din live fra Gmail, Outlook eller IMAP, gir den til Claude for den ene handlingen, og forkaster den umiddelbart. Meldingsinnhold, emner og vedlegg lagres aldri — det eneste som beholdes per innboks, er et kryptert token slik at neste kall kan skje. Det er forskjellen mellom å gi en agent en *nøkkel* og å gi den en *permanent kopi av alt*; her er [hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters), og hele [sikkerhetsgjennomgangen](/blog/is-it-safe-to-give-ai-agent-email-access) om du vil ha trusselmodellen.
+Å gi en AI hele innboksen din høres risikabelt ut helt til du vet hvor dataene havner: **ingen steder.** Med MCPEmails henter hver eneste av disse promptene e-posten din live fra Gmail, Outlook eller IMAP, gir den til Claude for den ene handlingen, og forkaster den umiddelbart. Meldingsinnhold, emner og vedlegg lagres aldri — det eneste som beholdes per innboks, er et kryptert token slik at neste kall kan skje. Det er forskjellen mellom å gi en agent en *nøkkel* og å gi den en *permanent kopi av alt*; her er [hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters), og hele [sikkerhetsgjennomgangen](/blog/is-it-safe-to-give-ai-agent-email-access) om du vil ha trusselmodellen.
 
 Du holder også en klar grense for sending: utkast forblir utkast til du godkjenner dem, og du kan gi lesetilgang slik at Claude bokstavelig talt ikke kan sende.
 
 ## Kom til null i dag
 
-Du trenger ikke en ny e-postapp eller et produktivitetssystem — bare den eksisterende innboksen din og en agent som kan handle på den. Koble til innboksen din én gang, lim inn endepunktet i Claude, og kjør de fem promptene over. Alle planer er ubegrensede, og Free-nivået krever ikke kort.
+Du trenger ikke en ny e-postapp eller et produktivitetssystem, bare den eksisterende innboksen din og en agent som kan handle på den. Koble til innboksen din én gang, lim inn endepunktet i Claude, og kjør de fem promptene over. Free-nivået krever ikke kort og kobler til én innboks, for alltid.
 
 [Koble til innboksen din gratis](/signup) og be Claude sortere den uleste e-posten din. Inbox zero, med tilsyn i stedet for lidelse.`,
 };

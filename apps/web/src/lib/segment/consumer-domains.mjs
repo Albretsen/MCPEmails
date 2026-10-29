@@ -31,6 +31,16 @@
  */
 
 /**
+ * Throwaway-inbox services. Part of the consumer list below, and exported on
+ * its own for the referral program, which refuses a referral from or to one
+ * (src/lib/referrals/fraud.ts).
+ */
+export const DISPOSABLE_EMAIL_DOMAINS = Object.freeze([
+  'yopmail.com', 'mailinator.com', 'guerrillamail.com', 'sharklasers.com',
+  '10minutemail.com', 'temp-mail.org',
+]);
+
+/**
  * Exact consumer domains. Seeded from the classifier used for the segment
  * measurement (docs/PLAN-multi-mailbox-business-segment.md, section 3.4), plus
  * the ISPs that measurement was found to be missing.
@@ -113,9 +123,8 @@ export const CONSUMER_EMAIL_DOMAINS = Object.freeze([
   // Australia and New Zealand
   'bigpond.com', 'bigpond.net.au', 'optusnet.com.au', 'iinet.net.au',
   'tpg.com.au', 'xtra.co.nz',
-  // Disposable
-  'yopmail.com', 'mailinator.com', 'guerrillamail.com', 'sharklasers.com',
-  '10minutemail.com', 'temp-mail.org',
+  // Disposable (kept last so the order still matches the SQL array)
+  ...DISPOSABLE_EMAIL_DOMAINS,
 ]);
 
 const CONSUMER_DOMAIN_SET = new Set(CONSUMER_EMAIL_DOMAINS);

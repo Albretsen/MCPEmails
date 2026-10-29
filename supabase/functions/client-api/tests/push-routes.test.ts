@@ -38,6 +38,12 @@ const SUMMARY: DispatchSummary = {
   failed: 0,
   skipped_reconnect: 0,
   deferred: 0,
+  webhooks_enqueued: 0,
+  webhooks_delivered: 0,
+  webhooks_failed: 0,
+  webhook_attempts: 0,
+  webhooks_abandoned: 0,
+  webhooks_disabled: 0,
   ms: 12,
 };
 
@@ -157,6 +163,21 @@ Deno.test("subscribe: a per-person cap on devices", async () => {
   await again.body?.cancel();
 });
 
+Deno.test("subscribe: at the cap, dead (disabled) browsers give their slots back", async () => {
+  const r = rig();
+  for (let n = 0; n < MAX_SUBSCRIPTIONS_PER_USER; n++) {
+    await r.pushStore.upsertSubscription({ userId: USER_ID, workspaceId: WORKSPACE_ID, endpoint: `${ENDPOINT}-${n}`, ...(await browserKeys()), userAgent: null });
+  }
+  // Two of them were reported gone by the push service.
+  r.pushStore.subs[0].disabled_at = new Date().toISOString();
+  r.pushStore.subs[1].disabled_at = new Date().toISOString();
+  const fresh = await r.handle(request("/push/subscribe", { token, body: { subscription: await subscription() } }));
+  assertEquals(fresh.status, 200);
+  await fresh.body?.cancel();
+  assertEquals(r.pushStore.subs.filter((s) => s.user_id === USER_ID).length, MAX_SUBSCRIPTIONS_PER_USER - 1);
+  assertEquals(r.pushStore.subs.some((s) => s.disabled_at !== null), false);
+});
+
 Deno.test("subscribe and test answer 503 when the VAPID keys are not set; preferences say so", async () => {
   const r = rig({ sender: null });
   const sub = await r.handle(request("/push/subscribe", { token, body: { subscription: await subscription() } }));
@@ -256,7 +277,7 @@ Deno.test("test: a fixed payload to the caller's own subscriptions in this works
   assertEquals(r.sender!.sent.map((m) => m.endpoint), [`${ENDPOINT}-mine`]);
   assertEquals(r.sender!.sent[0].payload, {
     type: "test",
-    title: "MCP Emails",
+    title: "MCPEmails",
     body: "Notifications are working on this device.",
     url: "/",
     tag: "push-test",

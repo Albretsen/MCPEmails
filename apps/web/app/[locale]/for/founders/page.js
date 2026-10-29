@@ -1,16 +1,18 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import FoundersClient from '../../../../components/marketing/FoundersClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 const PATH = '/for/founders';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'forFounders' });
   const title = t.has('meta.title') ? t('meta.title') : 'Email for founders';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'Founders use mcpemails to answer customer email straight from Claude or any AI.';
+    : 'Founders use MCPEmails to answer customer email straight from Claude or any AI.';
   return {
     title,
     description,
@@ -18,14 +20,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, PATH),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -34,6 +36,7 @@ export async function generateMetadata({ params }) {
 
 export default async function FoundersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'forFounders' });

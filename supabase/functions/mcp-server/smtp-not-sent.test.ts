@@ -15,7 +15,7 @@
 // destination address" and repeats forever, everything else may not.
 // ---------------------------------------------------------------------------
 
-import { isRecipientAddressRejection, type SmtpReply } from "./smtp-client.ts";
+import { isRecipientAddressRejection, isRetryableEnvelopeRefusal, type SmtpReply } from "./smtp-client.ts";
 
 function assertEquals<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected) {
@@ -88,4 +88,52 @@ Deno.test("the sender-address class is not mistaken for the recipient one", () =
     false,
     "a bare decimal in prose is not an enhanced status code",
   );
+});
+
+// ---------------------------------------------------------------------------
+// Which envelope refusals the caller may try again later (2026-10-29).
+//
+// A 5xx at MAIL FROM or RCPT TO is permanent, except an origin block that
+// blames our egress address. 4xx stays retryable. On 2026-10-28 a provider's
+// `550 Outgoing mail from ... blocked` was retried once a minute per row.
+// ---------------------------------------------------------------------------
+
+Deno.test("an account-level 550 block is permanent", () => {
+  assertEquals(
+    isRetryableEnvelopeRefusal(reply(550, "Outgoing mail from sender@example.com blocked")),
+    false,
+    "the account is blocked from any address",
+  );
+  assertEquals(
+    isRetryableEnvelopeRefusal(reply(550, "5.7.1 <a@b.no>... Command rejected")),
+    false,
+    "a plain policy refusal repeats",
+  );
+  assertEquals(isRetryableEnvelopeRefusal(reply(552, "5.2.2 Mailbox full")), false, "552 is permanent");
+  assertEquals(
+    isRetryableEnvelopeRefusal(reply(550, "5.1.1 User unknown")),
+    false,
+    "a bad address stays permanent",
+  );
+});
+
+Deno.test("a 550 that blames our egress address stays retryable", () => {
+  assertEquals(
+    isRetryableEnvelopeRefusal(
+      reply(550, "[ACR04] Amazon AWS IP 100.27.38.52 may not use this server."),
+    ),
+    true,
+    "a fresh isolate or the relay has a different address",
+  );
+  assertEquals(
+    isRetryableEnvelopeRefusal(reply(554, "5.7.1 Service unavailable; Client host [1.2.3.4] blocked using Spamhaus")),
+    true,
+    "a blocklisted connecting IP",
+  );
+});
+
+Deno.test("a 4xx envelope refusal stays retryable", () => {
+  assertEquals(isRetryableEnvelopeRefusal(reply(451, "4.7.1 Greylisted, try again later")), true, "greylisting");
+  assertEquals(isRetryableEnvelopeRefusal(reply(421, "Too many connections")), true, "rate limit");
+  assertEquals(isRetryableEnvelopeRefusal(reply(450, "4.2.0 Mailbox busy")), true, "busy mailbox");
 });

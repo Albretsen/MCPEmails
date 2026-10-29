@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeGmailCode } from '@/lib/email-providers/gmail';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inboxes/provider-conflict';
 import { captureError } from '@/lib/errors/capture';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
+import { alertGmailOAuthCapClosed, loadGmailOAuthCapState } from '@/lib/oauth/gmail-oauth-gate';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 
 // ---------------------------------------------------------------------------
@@ -203,6 +206,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'gmail', errorCategory: 'plan_limit', phase: 'persistence', connectionType: 'first_connect' });
+      await recordInboxCapHit(oauthState.workspace_id, inboxLimit);
       return redirectWithError('inbox_limit_reached');
     }
   }
@@ -262,6 +266,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // 9. Redirect to the Inboxes page with a success indicator.
   await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'gmail', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Business bills mailboxes past ten: bring the add-on quantity in step.
+  // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
+  if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(oauthState.workspace_id).then(() => undefined));
+  // A new address may have been a new Google grant against the unverified
+  // client's 100-user lifetime cap. Recount after the response and alert the
+  // owner once if this grant closed the gate (src/lib/oauth/gmail-oauth-gate.ts).
+  if (!alreadyConnected) {
+    after(async () => {
+      const cap = await loadGmailOAuthCapState(serviceClient);
+      if (cap.closed) await alertGmailOAuthCapClosed(serviceClient, cap);
+    });
+  }
   const { data: onboarding } = await serviceClient.from('workspaces').select('onboarding_client').eq('id', oauthState.workspace_id).maybeSingle();
   const guide = new URL(clientGuidePath(onboarding?.onboarding_client), DASHBOARD_INBOXES);
   guide.searchParams.set('connected', 'gmail');

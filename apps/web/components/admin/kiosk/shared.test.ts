@@ -33,7 +33,86 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { SOURCES } from '../../../src/lib/acquisition-context.mjs';
-import { attemptRate, calendarWeekBuckets, mondayOf, prettyChannel } from './shared.ts';
+import { attemptRate, calendarWeekBuckets, mondayOf, prettyChannel, projectToday, projectWeek, revenueTone, signupDayColumns } from './shared.ts';
+
+/** `days` complete days of `perDay` signups, `byNow` of each in before the cutoff, then today. */
+function paceRows(days: number, perDay: number, byNow: number, today: number) {
+  return [
+    ...Array.from({ length: days }, () => ({ new_users: perDay, by_now: byNow })),
+    { new_users: today, by_now: today },
+  ];
+}
+
+test('projectToday adds what a normal day still has to come to what already came', () => {
+  // A quarter of a 40 a day day has usually arrived; 10 have. Expect 10 + 30.
+  const result = projectToday(paceRows(28, 40, 10, 10));
+  assert.equal(result.shareByNow, 0.25);
+  assert.equal(result.usualByNow, 10);
+  assert.equal(result.projected, 40);
+  assert.ok(result.low !== null && result.high !== null);
+  assert.ok(result.low < 40 && result.high > 40);
+});
+
+test('projectToday credits a hot day without dividing by a tiny share', () => {
+  // Five minutes in, nothing usually arrived, but 3 have. A naive soFar/share
+  // would explode; the blend says baseline plus the 3 already in.
+  const result = projectToday(paceRows(28, 40, 0, 3));
+  assert.equal(result.projected, 43);
+});
+
+test('projectToday never projects below what already happened', () => {
+  const result = projectToday(paceRows(28, 40, 40, 55));
+  assert.equal(result.projected, 55);
+  assert.equal(result.low, 55);
+});
+
+test('projectToday takes the baseline from the last week, not the whole history', () => {
+  const rows = [
+    ...Array.from({ length: 21 }, () => ({ new_users: 10, by_now: 5 })),
+    ...Array.from({ length: 7 }, () => ({ new_users: 50, by_now: 25 })),
+    { new_users: 0, by_now: 0 },
+  ];
+  assert.equal(projectToday(rows).baseline, 50);
+});
+
+test('projectToday refuses to project from too little history', () => {
+  const result = projectToday(paceRows(28, 2, 1, 4));
+  assert.equal(result.soFar, 4);
+  assert.equal(result.projected, null);
+  assert.equal(projectToday([]).projected, null);
+});
+
+test('projectWeek counts finished days as they are and the rest at the baseline', () => {
+  // 2026-10-16 is a Friday: Mon-Thu are finished, Sat and Sun are to come.
+  const rows = [
+    { day: '2026-10-11', new_users: 999 }, // the Sunday before: not this week
+    { day: '2026-10-12', new_users: 30 },
+    { day: '2026-10-13', new_users: 30 },
+    { day: '2026-10-14', new_users: 30 },
+    { day: '2026-10-15', new_users: 30 },
+    { day: '2026-10-16', new_users: 10 },
+  ];
+  const today = { soFar: 10, projected: 35, low: 30, high: 40, usualByNow: 8, baseline: 32, shareByNow: 0.25 };
+  assert.equal(projectWeek(rows, today), 120 + 35 + 2 * 32);
+  // Sunday: nothing left after today, and the week starts on the Monday six days back.
+  const sunday = [...rows.slice(1), { day: '2026-10-17', new_users: 0 }, { day: '2026-10-18', new_users: 5 }];
+  assert.equal(projectWeek(sunday, { ...today, projected: 20 }), 130 + 20);
+  assert.equal(projectWeek(rows, { ...today, projected: null }), null);
+});
+
+test('signupDayColumns hangs the projection on today only, never below the real count', () => {
+  const rows = [
+    { day: '2026-10-14', new_users: 38 },
+    { day: '2026-10-15', new_users: 55 },
+    { day: '2026-10-16', new_users: 14 },
+  ];
+  const columns = signupDayColumns(rows, 41, 2);
+  assert.equal(columns.length, 2);
+  assert.equal(columns[0].projected, undefined);
+  assert.equal(columns[1].label, 'F');
+  assert.equal(columns[1].projected, 41);
+  assert.equal(signupDayColumns(rows, 9, 1)[0].projected, 14);
+});
 
 test('mondayOf returns the Monday on or before a day, Sunday included', () => {
   // 2026-08-31 is a Monday. Walk the whole week and assert every day maps back
@@ -176,6 +255,7 @@ const EXPECTED_LABELS: Record<string, string> = {
   organic_duckduckgo: 'DuckDuckGo',
   google_ads: 'Google Ads',
   reddit: 'Reddit',
+  referral: 'Friend referral',
   hacker_news: 'Hacker News',
   x_twitter: 'X',
   linkedin: 'LinkedIn',
@@ -191,6 +271,22 @@ const EXPECTED_LABELS: Record<string, string> = {
   mcpservers: 'mcpservers.org',
   mcp_so: 'mcp.so',
   freemcp: 'freemcp',
+  npm: 'npm',
+  mcp_registry: 'MCP Registry',
+  docker: 'Docker MCP Catalog',
+  github_punkpeye: 'awesome-mcp-servers (punkpeye)',
+  github_tensorblock: 'awesome-mcp-servers (TensorBlock)',
+  github_bestof: 'best-of-mcp-servers',
+  claude_directory: 'Claude Directory',
+  chatgpt_directory: 'ChatGPT app directory',
+  cursor_directory: 'Cursor Directory',
+  gemini: 'Gemini',
+  copilot: 'Copilot',
+  connector_claude: 'Claude connector',
+  connector_chatgpt: 'ChatGPT connector',
+  connector_cursor: 'Cursor connector',
+  connector_vscode: 'VS Code connector',
+  connector_other: 'Other MCP client',
   other: 'Other',
 };
 
@@ -208,4 +304,15 @@ test('an id the map has never seen is still printed, not dropped', () => {
   assert.equal(prettyChannel('producthunt'), 'Product Hunt');
   assert.equal(prettyChannel('some_new_directory'), 'Some new directory');
   assert.equal(prettyChannel('unattributed'), 'Unknown');
+});
+
+test('revenueTone follows the window, not a single failing card or cancel', () => {
+  // Grew in the window: green, whatever else is going on with individual subs.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: 2_400 }), 'good');
+  // Flat window is not a fall.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: 0 }), 'good');
+  // Fell in the window: amber.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: -900 }), 'warn');
+  // Nothing yet is a milestone, not a fall.
+  assert.equal(revenueTone({ mrrMinor: 0, netNewMrrMinor: -900 }), 'goal');
 });

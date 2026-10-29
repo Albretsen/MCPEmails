@@ -20,7 +20,7 @@
     "titleLine1": "将 InMotion Hosting 邮箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 InMotion 邮箱。在 InMotion 为你的服务器分配的安全主机名上，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 InMotion Hosting 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。InMotion 没有一台统一的共用邮件服务器：安全连接时，你要使用账户的安全主机名，形如 secureNN.inmotionhosting.com，其中 NN 是你 Account Management Panel 技术详情中显示的服务器编号。认证使用在 cPanel 中为邮箱设置的密码，1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 InMotion Hosting 邮箱。MCPEmails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。InMotion 没有一台统一的共用邮件服务器：安全连接时，你要使用账户的安全主机名，形如 secureNN.inmotionhosting.com，其中 NN 是你 Account Management Panel 技术详情中显示的服务器编号。认证使用在 cPanel 中为邮箱设置的密码，1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "来自 cPanel 的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "在 cPanel 中设置邮箱密码",
-      "p": "IMAP 校验的是单个地址上的密码，而不是你的 AMP 登录密码。在 cPanel 中打开 <b>Email Accounts</b>，点击该地址的 <b>Manage</b>，设置一个密码。然后在 mcpemails 中输入它，用户名为完整地址，服务器为 <code>secureNN.inmotionhosting.com</code>。"
+      "p": "IMAP 校验的是单个地址上的密码，而不是你的 AMP 登录密码。在 cPanel 中打开 <b>Email Accounts</b>，点击该地址的 <b>Manage</b>，设置一个密码。然后在 MCPEmails 中输入它，用户名为完整地址，服务器为 <code>secureNN.inmotionhosting.com</code>。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Claude 能用于 InMotion Hosting 邮箱吗？",
-      "a": "不能直接使用。Claude 没有 InMotion 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 InMotion 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同。"
+      "a": "不能直接使用。Claude 没有 InMotion 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 InMotion 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同。"
     },
     {
       "q": "InMotion Hosting 的 IMAP 和 SMTP 设置是什么？",

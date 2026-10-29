@@ -87,11 +87,11 @@ const PLAN_KEYS = ['free', 'personal', 'solo', 'pro'];
 const checkout = (plan, interval) => `/api/stripe/checkout/start?plan=${plan}&interval=${interval}`;
 const viaSignup = (plan, interval) => `/signup?redirect=${encodeURIComponent(checkout(plan, interval))}`;
 
-function tree() {
-  return createElement(NextIntlClientProvider, { locale: 'en', messages }, createElement(PricingClient, { stripePrices: undefined }));
+function tree(locale = 'en') {
+  return createElement(NextIntlClientProvider, { locale, messages }, createElement(PricingClient, { stripePrices: undefined }));
 }
 
-async function renderPricing(t, { user = null, gate = null } = {}) {
+async function renderPricing(t, { user = null, gate = null, locale = 'en' } = {}) {
   session = { user };
   calls = [];
   listeners = [];
@@ -103,7 +103,7 @@ async function renderPricing(t, { user = null, gate = null } = {}) {
     beacons.push({ url: String(url), body: init.body ? JSON.parse(init.body) : null });
     return { ok: true, status: 204, json: async () => ({}) };
   };
-  const view = await mount(tree());
+  const view = await mount(tree(locale));
   let unmounted = false;
   const unmount = async () => { if (!unmounted) { unmounted = true; await view.unmount(); } };
   t.after(async () => {
@@ -233,6 +233,18 @@ test('logged out: the plan cards show four plans in ladder order, the featured o
   ]);
 });
 
+test('every paid card says charged today, cancel any time, 14-day refund under its button; Free does not', async (t) => {
+  const view = await renderPricing(t);
+  const cards = [...view.container.querySelectorAll('.price-grid .price')];
+  const lines = cards.map((c) => c.querySelector('[data-checkout-reassurance]')?.textContent ?? null);
+  const line = 'Charged today. Cancel any time. 14-day refund.';
+  assert.deepEqual(lines, [null, line, line, line]);
+  // Directly after the button, inside the card.
+  for (const card of cards.slice(1)) {
+    assert.equal(card.querySelector('a.btn').nextElementSibling?.dataset.checkoutReassurance, 'subscription');
+  }
+});
+
 // ===========================================================================
 // Logged in
 // ===========================================================================
@@ -328,4 +340,78 @@ test('the pricing-view beacon is still sent, once, for the pricing page', async 
   await waitFor(() => view.beacons.length > 0, { message: 'the analytics beacon' });
   await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
   assert.deepEqual(view.beacons, [{ url: '/api/analytics/pricing-view', body: { surface: 'pricing_page' } }]);
+});
+
+// ===========================================================================
+// German page: the language reaches checkout
+// ===========================================================================
+
+// /de/pricing's buttons must tell the checkout route the page was German, so
+// Stripe shows the German page and its "Zahlungspflichtig abonnieren" button.
+// The English messages are enough here: only the hrefs are under test.
+const deCheckout = (plan, interval) => `${checkout(plan, interval)}&lang=de`;
+
+test('German page, logged in: paid buttons carry lang=de to checkout', async (t) => {
+  const view = await renderPricing(t, { user: USER, locale: 'de' });
+  await waitFor(() => view.container.querySelector('.nav-signed-in'), { message: 'the signed-in nav' });
+  assert.deepEqual(view.cardCtas().slice(1).map(([, href]) => href), [
+    deCheckout('personal', 'year'),
+    deCheckout('solo', 'year'),
+    deCheckout('pro', 'year'),
+  ]);
+});
+
+// ── The Business founder price ──────────────────────────────────────────────
+// The page server prices Business from the founder pair and attaches the line
+// (founder-offer.ts) only while the offer is open; the card then prints the
+// founder line and the places left, and nothing else on the page changes.
+
+const FOUNDER_PRICES = {
+  pro: {
+    monthlyCents: 2900,
+    yearlyCents: 27840,
+    monthlyPriceConfigured: true,
+    yearlyPriceConfigured: true,
+    founder: { monthlyCents: 2900, yearlyCents: 27840, addonMonthlyCents: 300, placesLeft: 14, placesTotal: 20 },
+  },
+};
+
+function pricingHost(stripePrices) {
+  const html = renderToString(
+    createElement(NextIntlClientProvider, { locale: 'en', messages }, createElement(PricingClient, { stripePrices })),
+  );
+  const host = document.createElement('div');
+  host.innerHTML = html;
+  return { host, card: host.querySelectorAll('.price-grid .price')[3] };
+}
+
+test('founder offer open: the Business card prints the founder line and places left', () => {
+  const { host, card } = pricingHost(FOUNDER_PRICES);
+  assert.equal(
+    card.querySelector('[data-founder-line]').textContent,
+    'Founder price: $29 a month, kept for as long as you stay subscribed. Open to the first 20 companies or until 31 December 2026, whichever comes first. Extra mailboxes are $3 a month each.',
+  );
+  assert.equal(card.querySelector('[data-founder-places]').textContent, '14 of 20 places left');
+  // Annual is the default: $278.40 / 12, and the yearly total from the same pair.
+  assert.match(card.querySelector('.num').textContent, /^\$23\.20/);
+  assert.match(card.textContent, /Billed \$278\.40\/year/);
+  assert.equal(host.querySelectorAll('[data-founder-line]').length, 1);
+  assert.match(host.textContent, /Business includes 10 at the founder price above/);
+  assert.doesNotMatch(host.textContent, /Business includes 10 for \$39/);
+});
+
+test('no founder offer: no founder line anywhere and the closing band quotes $39', () => {
+  const { host } = pricingHost(undefined);
+  assert.equal(host.querySelectorAll('[data-founder-line], [data-founder-places]').length, 0);
+  assert.doesNotMatch(host.textContent, /Founder price/);
+  assert.match(host.textContent, /Business includes 10 for \$39/);
+});
+
+test('German page, logged out: lang=de is inside the post-signup destination, and on /signup', async (t) => {
+  const view = await renderPricing(t, { locale: 'de' });
+  await waitFor(() => calls.includes('getUser'), { message: 'the session check' });
+  const hrefs = view.cardCtas().slice(1).map(([, href]) => href);
+  assert.deepEqual(hrefs, ['personal', 'solo', 'pro'].map(
+    (plan) => `/signup?redirect=${encodeURIComponent(deCheckout(plan, 'year'))}&lang=de`,
+  ));
 });

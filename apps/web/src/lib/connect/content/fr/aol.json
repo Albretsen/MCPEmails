@@ -22,23 +22,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, aucune configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à AOL Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à AOL Mail. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment AOL Mail se connecte : IMAP et un mot de passe d'application",
-    "body": "AOL Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel n'authentifie pas un client de messagerie : une connexion refusée ici vient donc presque toujours d'un mot de passe d'application manquant. Activez 2-Step Verification (validation en deux étapes), générez un mot de passe d'application sous Account Info, Account Security, puis collez-le dans mcpemails avec votre adresse AOL complète."
+    "body": "AOL Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel n'authentifie pas un client de messagerie : une connexion refusée ici vient donc presque toujours d'un mot de passe d'application manquant. Activez 2-Step Verification (validation en deux étapes), générez un mot de passe d'application sous Account Info, Account Security, puis collez-le dans MCPEmails avec votre adresse AOL complète."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Générez un mot de passe d'application AOL",
       "p": "Dans AOL Mail, ouvrez Account Info, Account Security, activez 2-Step Verification si elle est désactivée, puis générez un mot de passe d'application. Copiez-le immédiatement : AOL ne l'affiche qu'une fois."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse AOL Mail, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "Le serveur de soumission d'AOL annonce une taille maximale de message d'environ 41 Mo. Les lectures de pièces jointes via mcpemails sont plafonnées à 25 Mo par requête.",
+    "Le serveur de soumission d'AOL annonce une taille maximale de message d'environ 41 Mo. Les lectures de pièces jointes via MCPEmails sont plafonnées à 25 Mo par requête.",
     "Un mot de passe d'application reste valide après un changement de votre mot de passe AOL. Le supprimer sur la page Account Security d'AOL est le seul moyen de couper l'accès."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec AOL Mail ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur AOL intégré. Connecter un serveur MCP comme mcpemails à votre boîte AOL en IMAP, avec un mot de passe d'application AOL, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur AOL intégré. Connecter un serveur MCP comme MCPEmails à votre boîte AOL en IMAP, avec un mot de passe d'application AOL, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'AOL Mail ?",

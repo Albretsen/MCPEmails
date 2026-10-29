@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Héberger MCP Emails vous-même",
+    "title": "Héberger MCPEmails vous-même",
     "description": "Exécutez le même serveur d'e-mails MCP qui propulse mcpemails.com sur votre propre machine. Open source sous AGPL-3.0, identifiants chiffrés avec une clé que vous seul détenez, e-mails récupérés en direct et jamais stockés."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",
-    "title": "Exécutez MCP Emails vous-même.",
+    "title": "Exécutez MCPEmails vous-même.",
     "lead": "Le même serveur MCP qui propulse mcpemails.com, sur votre propre machine, avec votre propre base de données. Les identifiants de votre boîte mail ne quittent jamais une infrastructure que vous contrôlez. Ils sont chiffrés avec une clé que vous seul détenez et déchiffrés uniquement dans votre conteneur, au moment précis où un appel d'outil en a besoin."
   },
   "proof": {
@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Auto-hébergé ou hébergé",
-    "intro": "Le serveur MCP complet et ses 23 outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
+    "intro": "Le serveur MCP complet et ses outils e-mail sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
     "thFeature": "",
     "thSelf": "Auto-hébergé",
     "thHosted": "Hébergé",
@@ -28,10 +28,10 @@
       {
         "feature": "Prix",
         "self": "Gratuit, à vous de l'exécuter",
-        "hosted": "Gratuit, 9 $, 15 $ ou 79 $"
+        "hosted": "Gratuit, 9 $, 15 $ ou 39 $"
       },
       {
-        "feature": "Le serveur MCP et ses 23 outils",
+        "feature": "Le serveur MCP et ses outils e-mail",
         "self": "Oui",
         "hosted": "Oui"
       },
@@ -51,9 +51,9 @@
         "hosted": "Oui"
       },
       {
-        "feature": "Connexion Gmail / Outlook (OAuth)",
+        "feature": "Connexion Outlook (OAuth)",
         "self": "Non inclus",
-        "hosted": "Gmail : oui ; Outlook : oui (les comptes professionnels peuvent nécessiter l'approbation de l'administrateur informatique)"
+        "hosted": "Oui (les comptes professionnels peuvent nécessiter l'approbation de l'administrateur informatique)"
       },
       {
         "feature": "Tableau de bord web (connexion, clés, activité)",
@@ -71,14 +71,14 @@
         "hosted": "Géré"
       },
       {
-        "feature": "Espaces d'équipe, rôles, SSO, journal d'audit",
+        "feature": "Membres, rôles et plusieurs espaces de travail",
         "self": "Non inclus",
-        "hosted": "Forfait Team"
+        "hosted": "Forfait Business"
       },
       {
         "feature": "Support",
         "self": "Communauté et GitHub",
-        "hosted": "E-mail et priorité"
+        "hosted": "E-mail sur les forfaits payants"
       },
       {
         "feature": "Installation",

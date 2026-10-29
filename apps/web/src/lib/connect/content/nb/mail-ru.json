@@ -22,23 +22,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå Mail.ru på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå Mail.ru på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobles Mail.ru til: IMAP og et app-passord",
-    "body": "Mail.ru kobles til over IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettstedet med, fungerer ikke fra en e-postklient. Opprett et i Mail.ru under Security, Passwords for external applications, og lim det deretter inn i mcpemails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før de utsteder et slikt passord."
+    "body": "Mail.ru kobles til over IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettstedet med, fungerer ikke fra en e-postklient. Opprett et i Mail.ru under Security, Passwords for external applications, og lim det deretter inn i MCPEmails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før de utsteder et slikt passord."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Opprett et passord for eksterne applikasjoner",
-      "p": "I Mail.ru åpner du Security og oppretter et passord for eksterne applikasjoner. Det er passordet mcpemails trenger, ikke det du bruker på nettstedet."
+      "p": "I Mail.ru åpner du Security og oppretter et passord for eksterne applikasjoner. Det er passordet MCPEmails trenger, ikke det du bruker på nettstedet."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg inn Mail.ru-adressen din, vertene fra innstillingstabellen ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -66,12 +66,12 @@
   ],
   "limits": [
     "Mail.ru støtter ikke IDLE, så ny e-post blir funnet når agenten din ser etter, i stedet for å bli dyttet ut i det øyeblikket den kommer.",
-    "Innsendingsserveren til Mail.ru oppgir et meldingstak på omtrent 70 MB. Lesing av vedlegg via mcpemails er begrenset til 25 MB per forespørsel."
+    "Innsendingsserveren til Mail.ru oppgir et meldingstak på omtrent 70 MB. Lesing av vedlegg via MCPEmails er begrenset til 25 MB per forespørsel."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Mail.ru?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Mail.ru-kobling. Ved å koble en MCP-server som mcpemails til postkassen over IMAP, med et passord for eksterne applikasjoner, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Mail.ru-kobling. Ved å koble en MCP-server som MCPEmails til postkassen over IMAP, med et passord for eksterne applikasjoner, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Mail.ru?",

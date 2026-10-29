@@ -200,579 +200,98 @@ Deno.test("reachableInboxSelect appends exactly the columns the predicate reads"
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// THE QUERIES THE ROLLUPS ACTUALLY ISSUE — behaviour, not source text
+// THE CARD GATES ARE SCOPE FACTS (2026-10-28)
 //
-// ── Why this replaced a source pin ─────────────────────────────────────────
-// Until 2026-09-17 the guarantee that `index.ts` applies the SQL half of this
-// filter was a pin on the TEXT of `index.ts`: read the file, strip its
-// comments, find the two rollup functions, match the shape of every `.select(`
-// inside them. Three adversarial rounds broke that pin without ever changing
-// the behaviour it claimed to protect:
-//
-//   1. `source.match(/\.select\(reachableInboxSelect\(/g).length === 2` was
-//      satisfied by putting the real call in a COMMENT:
-//          .select("draft_editor_hidden") // was .select(reachableInboxSelect(
-//      Two of those, both projections hand-written, both rollups constants,
-//      green at 1187/1187.
-//   2. the literal ban beside it banned two EXACT strings, so the same
-//      projection in a different column order walked straight through.
-//   3. the hand-rolled comment stripper written to close (1) does NOT consume
-//      `${…}` inside a template literal — it closes the outer template at the
-//      first inner backtick. `const label = `inbox${ "list`for" }summary`;`
-//      desynchronises it, and everything after is misread. With that one line
-//      in place, a THIRD rollup helper with a hand-written projection and NO
-//      `.is("deleted_at", null)` / `.eq("status", "active")` at all sat in
-//      `index.ts` with this file at 17/17 and the suite at 1204/1204.
-//
-// The pattern is not bad luck. A scanner over source text can be confused, and
-// a pin on the text of two named functions says nothing about a third. So the
-// pin is gone — `stripComments` and `functionBody` with it, because a broken
-// scanner nothing depends on is worse than no scanner — and what is asserted
-// instead is what the rollups ASK THE DATABASE FOR.
-//
-// `keyReviewCardGates` takes its Supabase client as a parameter (defaulting to
-// the module-level one, so production is unchanged), and these tests hand it a
-// recorder. Every `inboxes` query that call issues is captured, whoever built
-// it and whichever helper it came from, and EVERY one of them must carry both
-// filters and both deciding columns. A third helper is not a way around that:
-// the moment `keyReviewCardGates` uses it, its query is in the recording.
+// `keyReviewCardGates` used to roll the inbox rows above up at tools/list
+// time: approvals for the outbound card, `bulk_review_mode = 'plan'` for the
+// bulk card, the draft editor's rollout and opt-outs for the draft card.
+// Hosts keep the tool list a chat started with (claude.ai even across new
+// chats), so a setting switched on later never got its card. The gates now
+// follow the key's scopes alone, and the settings are read per call. What is
+// asserted here is that the gate asks the database NOTHING, so no setting can
+// move it, and that each gate follows its scopes.
 // ═══════════════════════════════════════════════════════════════════════════
 
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
 const { keyReviewCardGates } = await import("./index.ts");
 
-const WORKSPACE = "44444444-4444-4444-8444-444444444444";
-const ROLLED_OUT = { draft_editor_enabled: true, draft_editor_hidden: false };
-
-/** One PostgREST query, as the rollup built it. */
-interface RecordedQuery {
-  table: string;
-  /** The `select()` projection string, or null when the query never selected. */
-  projection: string | null;
-  eq: Array<[string, unknown]>;
-  is: Array<[string, unknown]>;
-  in: Array<[string, readonly unknown[]]>;
-  or: string[];
-}
-
-/** A row as production stores it, with every column these rollups can ask for. */
-interface FakeInboxRow {
-  id: string;
-  workspace_id: string;
-  status: string;
-  deleted_at: string | null;
-  draft_editor_hidden?: boolean;
-  bulk_review_mode?: string;
-  send_approval_required?: boolean;
-}
-
-/**
- * `col.eq.value` / `col.is.true` — the only two shapes `keyReviewCardGates`
- * builds, and they are NOT interchangeable. See `builder.eq` below.
- */
-function matchesOrTerm(row: Record<string, unknown>, term: string): boolean {
-  const [column, operator, ...rest] = term.split(".");
-  const raw = rest.join(".");
-  const value = raw === "true" ? true : raw === "false" ? false : raw === "null" ? null : raw;
-  if (operator === "is") return row[column] === value;
-  if (operator === "eq") {
-    // `eq.null` and `eq.true` are SQL `=` against a keyword. `col = NULL` is
-    // never true, and `col = 'true'` is a text comparison. PostgREST has `is`
-    // for exactly this reason; an `eq` term with a keyword value is a defect.
-    if (value === null || typeof value === "boolean") {
-      throw new Error(
-        `.or() term "${term}" uses eq against a SQL keyword — PostgREST needs is.${raw}`,
-      );
-    }
-    return row[column] === value;
-  }
-  throw new Error(`the recorder does not model the '${operator}' operator: ${term}`);
-}
-
-/**
- * A Supabase client that records what it is asked and answers like PostgREST.
- *
- * It really applies `eq` / `is` / `in` / `or` and really projects to the
- * selected columns, so a query that DROPS a filter gets the unfiltered rows
- * back exactly as production would, and a query that drops a column from its
- * projection gets rows without it. Both halves of the defence are therefore
- * exercised for real rather than simulated.
- *
- * ── `eq` AND `is` ARE MODELLED DISTINCTLY, AND THAT IS THE POINT ───────────
- * They used to be one line — `[...q.eq, ...q.is]`, both `row[c] === v` — which
- * made `.eq("deleted_at", null)` and `.is("deleted_at", null)` indistinguishable
- * here while being completely different queries in production. Swapping the
- * rollup's `.is` for `.eq` failed ONLY the structural assertion below; all five
- * "production bugs, end to end" tests stayed green, i.e. the behavioural half of
- * this file could not see the exact class of bug the whole module exists to
- * stop. Now `eq` refuses a SQL keyword, so the swap breaks the behaviour too.
- *
- * ── TWO GAPS THAT REMAIN, NAMED ───────────────────────────────────────────
- *   * PostgREST truncates any row-returning select at 1000 rows with no error.
- *     This recorder returns everything it is given, so a query that needs a
- *     narrowing filter to stay under that ceiling looks fine here. See the note
- *     on `allReachableInboxesHideDraftEditor` in index.ts, which has no
- *     narrowing `.or()` and is documented rather than guarded.
- *   * `resolve()` answers `{ error: null }`. `failingClient` below is what
- *     exercises the two fail directions instead.
- */
-function recordingClient(
-  inboxes: readonly FakeInboxRow[],
-  workspace: { draft_editor_enabled: boolean; draft_editor_hidden: boolean },
-) {
-  const queries: RecordedQuery[] = [];
-  const rowsFor = (table: string): Array<Record<string, unknown>> =>
-    table === "inboxes"
-      ? inboxes.map((row) => ({ ...row }) as Record<string, unknown>)
-      : [{ id: WORKSPACE, ...workspace }];
-
-  const from = (table: string) => {
-    const q: RecordedQuery = { table, projection: null, eq: [], is: [], in: [], or: [] };
-    queries.push(q);
-
-    const resolve = () => {
-      let rows = rowsFor(table);
-      // `is` is a SQL `IS` test: `IS NULL`, `IS TRUE`, `IS FALSE`.
-      for (const [column, value] of q.is) {
-        rows = rows.filter((row) => row[column] === value);
-      }
-      // `eq` is a SQL `=`. Against a non-keyword value it is an ordinary
-      // comparison; a keyword value never reaches here (see `builder.eq`).
-      for (const [column, value] of q.eq) {
-        rows = rows.filter((row) => row[column] === value);
-      }
-      for (const [column, values] of q.in) {
-        rows = rows.filter((row) => values.includes(row[column]));
-      }
-      for (const filter of q.or) {
-        const terms = filter.split(",");
-        rows = rows.filter((row) => terms.some((term) => matchesOrTerm(row, term)));
-      }
-      if (q.projection === null) return rows;
-      // PostgREST returns ONLY the selected columns. A column the projection
-      // forgot is absent from the row, which is the drift `inboxIsReachable`
-      // reports and degrades on — so the recorder must reproduce it.
-      const columns = q.projection.split(",").map((c) => c.trim()).filter((c) => c.length > 0);
-      return rows.map((row) => {
-        const projected: Record<string, unknown> = {};
-        for (const column of columns) {
-          if (column in row) projected[column] = row[column];
-        }
-        return projected;
-      });
-    };
-
-    const builder = {
-      select(projection: string) {
-        q.projection = projection;
-        return builder;
-      },
-      eq(column: string, value: unknown) {
-        // THE ONE THING THIS DOUBLE MUST NOT LET THROUGH.
-        // supabase-js builds `?col=eq.null` from `.eq(col, null)`, which is SQL
-        // `col = NULL` — never true for any row, and specifically NOT the
-        // soft-delete test the caller meant. `.eq(col, true)` is the same
-        // mistake against a boolean. PostgREST has `is` for both. Modelling
-        // these as `row[c] === v` is what let `.is` -> `.eq` pass every
-        // behavioural test in this file while breaking production.
-        //
-        // Thrown rather than modelled as "matches nothing": the exact PostgREST
-        // semantics of `eq.null` are version-dependent and cannot be checked
-        // from this test run, and every reading of them is wrong. A query this
-        // codebase may not issue should stop the call, not quietly pick one of
-        // two wrong answers. The rollups' own try/catch turns this into their
-        // documented failure direction, which is what the behavioural tests
-        // then see.
-        if (value === null || typeof value === "boolean") {
-          throw new Error(
-            `.eq("${column}", ${String(value)}) is a SQL '=' against a keyword and ` +
-              `matches nothing. Use .is("${column}", ${String(value)}).`,
-          );
-        }
-        q.eq.push([column, value]);
-        return builder;
-      },
-      is(column: string, value: unknown) {
-        q.is.push([column, value]);
-        return builder;
-      },
-      in(column: string, values: readonly unknown[]) {
-        q.in.push([column, values]);
-        return builder;
-      },
-      or(filter: string) {
-        q.or.push(filter);
-        return builder;
-      },
-      maybeSingle() {
-        const rows = resolve();
-        return Promise.resolve({ data: rows[0] ?? null, error: null });
-      },
-      // The builder is thenable, exactly as PostgREST's is, so `await query`
-      // and `Promise.all([query, ...])` in index.ts work unchanged.
-      then<R1, R2>(
-        onfulfilled?: ((value: { data: unknown; error: null }) => R1 | PromiseLike<R1>) | null,
-        onrejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
-      ): Promise<R1 | R2> {
-        return Promise.resolve({ data: resolve(), error: null }).then(onfulfilled, onrejected);
-      },
-    };
-    return builder;
+/** A client that records every table it is asked for and answers nothing. */
+function recordingClient() {
+  const tables: string[] = [];
+  return {
+    tables,
+    // deno-lint-ignore no-explicit-any
+    client: { from: (table: string) => (tables.push(table), { select: () => { throw new Error(table); } }) } as any,
   };
-
-  return { client: { from }, queries };
 }
 
-/** An `api_keys` row shaped the way the server's own loaders build one. */
-function gateKey(overrides: { inbox_ids?: string[] | null } = {}) {
+function gateKey(scopes: string[], inbox_ids: string[] | null = null) {
   return {
     id: "33333333-3333-4333-8333-333333333333",
-    workspace_id: WORKSPACE,
+    workspace_id: "44444444-4444-4444-8444-444444444444",
     name: "OAuth: Claude",
     key_prefix: "mcpe_abc",
     key_hash: "",
-    scopes: ["read:email", "send:email", "manage:drafts", "manage:mailbox"],
-    inbox_ids: overrides.inbox_ids ?? null,
+    scopes,
+    inbox_ids,
     expires_at: null,
     last_used_at: null,
     deleted_at: null,
     created_at: new Date(0).toISOString(),
-    // The row type lives in index.ts and is not exported, which is why callers
-    // of `keyReviewCardGates` below cast rather than annotate.
   };
 }
 
-/** Drive the REAL gate resolution against a recording client. */
-async function driveGates(
-  inboxes: readonly FakeInboxRow[],
-  options: {
-    inboxIds?: string[] | null;
-    workspace?: { draft_editor_enabled: boolean; draft_editor_hidden: boolean };
-  } = {},
-) {
-  const { client, queries } = recordingClient(inboxes, options.workspace ?? ROLLED_OUT);
-  const gates = await keyReviewCardGates(
-    // deno-lint-ignore no-explicit-any
-    gateKey({ inbox_ids: options.inboxIds ?? null }) as any,
-    client,
-  );
-  return { gates, queries, inboxQueries: queries.filter((q) => q.table === "inboxes") };
+async function gatesFor(scopes: string[], inboxIds: string[] | null = null) {
+  const { client, tables } = recordingClient();
+  // deno-lint-ignore no-explicit-any
+  const gates = await keyReviewCardGates(gateKey(scopes, inboxIds) as any, client);
+  return { gates, tables };
 }
 
-function activeRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
-  return { id, workspace_id: WORKSPACE, status: "active", deleted_at: null, ...extra };
-}
-
-function revokedRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
-  // Exactly what `DELETE /api/workspaces/[id]` leaves behind.
-  return {
-    id,
-    workspace_id: WORKSPACE,
-    status: "revoked",
-    deleted_at: "2026-09-01T00:00:00Z",
-    ...extra,
-  };
-}
-
-Deno.test("EVERY inboxes query the gate resolution issues excludes soft-deleted rows", async () => {
-  // THE DURABLE ASSERTION. Not "the two named functions look right in the
-  // source" — every query that reaches the database on this path, from any
-  // helper, existing or not yet written. The third-helper sabotage that the
-  // source pin could not see fails here the moment the helper is used.
-  const { inboxQueries } = await driveGates([
-    activeRow("a", { draft_editor_hidden: false, bulk_review_mode: "off" }),
-    revokedRow("b", { draft_editor_hidden: false, send_approval_required: true }),
+Deno.test("the card gates read no setting, so no setting can close them", async () => {
+  const { gates, tables } = await gatesFor([
+    "read:email",
+    "send:email",
+    "manage:drafts",
+    "manage:folders",
+    "delete:email",
   ]);
-
-  assert(inboxQueries.length >= 2, `expected both rollups to query, got ${inboxQueries.length}`);
-  for (const query of inboxQueries) {
-    assert(
-      query.is.some(([column, value]) => column === "deleted_at" && value === null),
-      `an inboxes query dropped .is("deleted_at", null): ${JSON.stringify(query)}`,
-    );
-    assert(
-      query.eq.some(([column, value]) => column === "workspace_id" && value === WORKSPACE),
-      `an inboxes query is not scoped to the key's workspace: ${JSON.stringify(query)}`,
-    );
-    // And the projection must carry the columns the predicate decides on, so
-    // the SECOND layer can still see a row it was handed. Any spelling, any
-    // order, built by hand or by `reachableInboxSelect` — what matters is that
-    // the columns arrive.
-    assert(query.projection !== null, "an inboxes query selected nothing at all");
-    const columns = query.projection!.split(",").map((c) => c.trim());
-    for (const column of REACHABLE_INBOX_COLUMNS) {
-      assert(
-        columns.includes(column),
-        `an inboxes query dropped ${column} from its projection: ${query.projection}`,
-      );
-    }
-  }
+  assertEquals(gates, { outbound: true, bulk: true, drafts: true });
+  assertEquals(tables, [], "no inboxes or workspaces read at tools/list");
 });
 
-Deno.test("the status filter is in SQL for the .some() rollup and NOT for the .every() one", async () => {
-  // The two rollups want opposite things from `status`, so "every query carries
-  // both filters" would have been the wrong assertion — it was, until
-  // 2026-09-17, and it is what kept the preference bug below alive.
-  //
-  //   * the `.some()` rollup must never let an unreachable inbox turn a review
-  //     card ON, so it filters `status = 'active'` in SQL as well as in the
-  //     predicate;
-  //   * the `.every()` rollup has to SEE an unreachable inbox, because the
-  //     preference stored on it still counts when the key reaches nothing else.
-  //     Filtering status in SQL there deletes the evidence.
-  //
-  // Identified by what each query ASKS FOR, not by the name of the function
-  // that built it, so a rename or a new helper changes nothing here.
-  const { inboxQueries } = await driveGates([activeRow("a", { draft_editor_hidden: true })]);
-  const filtersStatus = (q: RecordedQuery) =>
-    q.eq.some(([column, value]) => column === "status" && value === "active");
-
-  const cardOptIns = inboxQueries.filter((q) =>
-    (q.projection ?? "").includes("send_approval_required")
-  );
-  assert(cardOptIns.length >= 1, "the card opt-in rollup still queries");
-  for (const query of cardOptIns) {
-    assert(
-      filtersStatus(query),
-      `the card opt-in query dropped .eq("status", "active"): ${JSON.stringify(query)}`,
-    );
-  }
-
-  const draftHidden = inboxQueries.filter((q) =>
-    (q.projection ?? "").includes("draft_editor_hidden")
-  );
-  assert(draftHidden.length >= 1, "the draft-editor rollup still queries");
-  for (const query of draftHidden) {
-    assert(
-      !filtersStatus(query),
-      "the draft-editor rollup must NOT filter status in SQL — it has to see an " +
-        `unreachable inbox to honour the preference on it: ${JSON.stringify(query)}`,
-    );
-  }
+Deno.test("the outbound gate follows the send and schedule scopes", async () => {
+  assertEquals((await gatesFor(["read:email", "manage:drafts"])).gates.outbound, false, "no send scope, no card");
+  assertEquals((await gatesFor(["read:email", "schedule:email"])).gates.outbound, true, "schedule alone counts");
+  assertEquals((await gatesFor(["send:email"])).gates.outbound, true, "send alone counts");
 });
 
-Deno.test("both rollups ask for the preference columns they roll up", async () => {
-  // The other direction, so neither query can quietly stop reading the thing
-  // it exists to read while still passing the filter assertions above.
-  const { inboxQueries } = await driveGates([activeRow("a")]);
-  const projections = inboxQueries.map((q) => q.projection ?? "");
-  assert(
-    projections.some((p) => p.includes("draft_editor_hidden")),
-    `no query reads draft_editor_hidden: ${JSON.stringify(projections)}`,
-  );
-  assert(
-    projections.some((p) => p.includes("bulk_review_mode") && p.includes("send_approval_required")),
-    `no query reads the two card opt-ins: ${JSON.stringify(projections)}`,
-  );
+Deno.test("the bulk gate follows the folder and delete scopes", async () => {
+  assertEquals((await gatesFor(["read:email"])).gates.bulk, false);
+  assertEquals((await gatesFor(["manage:folders"])).gates.bulk, true);
+  assertEquals((await gatesFor(["delete:email"])).gates.bulk, true);
 });
 
-Deno.test("the key's inbox allowlist restricts every inboxes query", async () => {
-  const { inboxQueries } = await driveGates(
-    [activeRow("a", { draft_editor_hidden: true }), activeRow("b")],
-    { inboxIds: ["a"] },
-  );
-  assert(inboxQueries.length >= 2, "both rollups still query");
-  for (const query of inboxQueries) {
-    const allowlist = query.in.find(([column]) => column === "id");
-    assert(allowlist !== undefined, `an inboxes query ignores inbox_ids: ${JSON.stringify(query)}`);
-    assertEquals([...allowlist![1]], ["a"], "and restricts to exactly the allowed ids");
-  }
+Deno.test("the draft gate follows manage:drafts", async () => {
+  assertEquals((await gatesFor(["read:email", "send:email"])).gates.drafts, false);
+  assertEquals((await gatesFor(["manage:drafts"])).gates.drafts, true);
 });
 
-Deno.test("a key scoped to zero inboxes queries no inbox at all", async () => {
-  const { gates, inboxQueries } = await driveGates([activeRow("a", { send_approval_required: true })], {
-    inboxIds: [],
-  });
-  assertEquals(inboxQueries.length, 0, "an empty allowlist reaches nothing, so it asks nothing");
-  assertEquals(gates.outbound, false, "and opens no gate");
-  assertEquals(gates.bulk, false, "neither one");
-  // The drafts gate is the deliberate asymmetry: it is a `.every()`, and a key
-  // that reaches no live inbox has no "every inbox" to be hidden. Withholding
-  // the card from it would be a decision its owner never made, so vacuous
-  // truth is NOT returned and the workspace switch alone decides.
-  assertEquals(gates.drafts, true, "no reachable inbox is not 'all of them hidden'");
+Deno.test("a key allowed no inbox gets no card at all", async () => {
+  const { gates } = await gatesFor(["send:email", "manage:drafts", "manage:folders"], []);
+  assertEquals(gates, { outbound: false, bulk: false, drafts: false });
+  const scoped = await gatesFor(["send:email", "manage:drafts", "manage:folders"], ["a"]);
+  assertEquals(scoped.gates, { outbound: true, bulk: true, drafts: true }, "an allowlist with an inbox is fine");
 });
 
-// ── The production bugs, end to end through the real gate resolution ───────
-
-Deno.test("a soft-deleted inbox no longer defeats the draft-editor opt-out", async () => {
-  // THE BUG, in its production shape and driven through the real code path:
-  // one active inbox the user hid, one revoked row they deleted months ago
-  // whose `draft_editor_hidden` is stuck at its NOT NULL DEFAULT false. Before
-  // the filter the rollup could never reach true and `_meta.ui` stayed on.
-  const { gates } = await driveGates([
-    activeRow("a", { draft_editor_hidden: true }),
-    revokedRow("b", { draft_editor_hidden: false }),
-  ]);
-  assertEquals(gates.drafts, false, "every reachable inbox is hidden, so no card");
-});
-
-Deno.test("a reachable inbox that is not hidden still keeps the draft editor", async () => {
-  const { gates } = await driveGates([
-    activeRow("a", { draft_editor_hidden: true }),
-    activeRow("b", { draft_editor_hidden: false }),
-    revokedRow("c", { draft_editor_hidden: true }),
-  ]);
-  assertEquals(gates.drafts, true, "the rollup must stay honest in both directions");
-});
-
-Deno.test("the workspace switch still overrides the per-inbox rollup", async () => {
-  const { gates } = await driveGates([activeRow("a", { draft_editor_hidden: false })], {
-    workspace: { draft_editor_enabled: true, draft_editor_hidden: true },
-  });
-  assertEquals(gates.drafts, false, "a workspace-level opt-out withholds the card");
-  const notRolledOut = await driveGates([activeRow("a", { draft_editor_hidden: false })], {
-    workspace: { draft_editor_enabled: false, draft_editor_hidden: false },
-  });
-  assertEquals(notRolledOut.gates.drafts, false, "and so does the rollout flag");
-});
-
-Deno.test("a soft-deleted inbox no longer turns on the outbound or bulk card", async () => {
-  // The mirror-image bug: a `.some()` over the same unfiltered rows mounted a
-  // review card under every send for a key that cannot reach the opted-in row.
-  const { gates } = await driveGates([
-    activeRow("a", { send_approval_required: false, bulk_review_mode: "off" }),
-    revokedRow("b", { send_approval_required: true, bulk_review_mode: "plan" }),
-  ]);
-  assertEquals(gates.outbound, false, "a revoked inbox opens no outbound gate");
-  assertEquals(gates.bulk, false, "nor the bulk one");
-});
-
-Deno.test("a reachable opted-in inbox still opens exactly its own gate", async () => {
-  const outbound = await driveGates([
-    activeRow("a", { send_approval_required: true, bulk_review_mode: "off" }),
-    revokedRow("b", { send_approval_required: false, bulk_review_mode: "plan" }),
-  ]);
-  assertEquals(outbound.gates.outbound, true, "the live opt-in still counts");
-  assertEquals(outbound.gates.bulk, false, "and does not open the other gate");
-
-  const bulk = await driveGates([
-    activeRow("a", { send_approval_required: false, bulk_review_mode: "plan" }),
-  ]);
-  assertEquals(bulk.gates.outbound, false, "read independently");
-  assertEquals(bulk.gates.bulk, true, "read independently");
-});
-
-function erroredRow(id: string, extra: Partial<FakeInboxRow> = {}): FakeInboxRow {
-  // Live but broken: an expired OAuth token, a rejected app password. NOT
-  // deleted — in production on 2026-09-16, 4 rows were exactly this.
-  return { id, workspace_id: WORKSPACE, status: "error", deleted_at: null, ...extra };
-}
-
-Deno.test("a status='error' inbox opens nothing either", async () => {
-  // Neither condition implies the other: `resolveInbox` requires
-  // `status === 'active'`, so an errored inbox is reachable by nothing.
-  const { gates } = await driveGates([
-    erroredRow("a", {
-      send_approval_required: true,
-      bulk_review_mode: "plan",
-      draft_editor_hidden: false,
-    }),
-  ]);
-  assertEquals(gates.outbound, false, "an errored inbox is not reachable");
-  assertEquals(gates.bulk, false, "an errored inbox is not reachable");
-  // The case where nothing is at stake, kept for the other direction: the user
-  // never hid anything, so there is no preference to honour and the card stays.
-  assertEquals(gates.drafts, true, "an unreachable inbox nobody hid keeps the card");
-});
-
-Deno.test("an expired token does NOT hand back a card the user switched off", async () => {
-  // ── THE PRODUCT BUG (fixed 2026-09-17), asserted where it costs something ──
-  // The previous version of this file asserted the `status='error'` case with
-  // `draft_editor_hidden: false`, which is the arrangement where the empty-set
-  // rule changes nothing. With `true` the same rule silently reverted a stated
-  // preference:
-  //
-  //     active + draft_editor_hidden:true  -> drafts === false  (no card)
-  //     error  + draft_editor_hidden:true  -> drafts === true   (CARD BACK)
-  //
-  // A one-inbox workspace that hid the draft editor got it advertised again the
-  // moment that inbox's OAuth token expired. Nothing told the user, and nothing
-  // in the product asked for it.
-  const { gates } = await driveGates([erroredRow("a", { draft_editor_hidden: true })]);
-  assertEquals(gates.drafts, false, "the preference survives the mailbox going unreachable");
-
-  // The same inbox while it still worked, so the assertion above is not passing
-  // for some unrelated reason.
-  const healthy = await driveGates([activeRow("a", { draft_editor_hidden: true })]);
-  assertEquals(healthy.gates.drafts, false, "and it was hidden before the token expired");
-
-  // And the fallback is a LAST resort, not a widening: one live inbox that is
-  // not hidden still keeps the card, however many broken ones sit beside it.
-  const mixed = await driveGates([
-    activeRow("a", { draft_editor_hidden: false }),
-    erroredRow("b", { draft_editor_hidden: true }),
-  ]);
-  assertEquals(mixed.gates.drafts, true, "a reachable, un-hidden inbox still decides");
-});
-
-// ── The two fail directions, which the recording client cannot reach ───────
-//
-// `recordingClient` always answers `{ error: null }`, so neither rollup's error
-// branch was ever exercised. They fail in OPPOSITE directions on purpose and
-// that is worth holding: the card opt-ins are permissions and close, the
-// draft-editor rollup is a preference and stays open.
-
-/** A client whose every query comes back as a PostgREST error. */
-function failingClient(message: string) {
-  const from = (_table: string) => {
-    const builder = {
-      select: () => builder,
-      eq: () => builder,
-      is: () => builder,
-      in: () => builder,
-      or: () => builder,
-      maybeSingle: () => Promise.resolve({ data: null, error: { message } }),
-      then<R1, R2>(
-        onfulfilled?: ((value: { data: unknown; error: unknown }) => R1 | PromiseLike<R1>) | null,
-        onrejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
-      ): Promise<R1 | R2> {
-        return Promise.resolve({ data: null, error: { message } }).then(onfulfilled, onrejected);
-      },
-    };
-    return builder;
-  };
-  return { from };
-}
-
-Deno.test("an unreadable database closes the card gates and leaves the draft gate alone", async () => {
-  const warnings: string[] = [];
-  const original = console.warn;
-  console.warn = (...args: unknown[]) => {
-    warnings.push(args.map((a) => JSON.stringify(a)).join(" "));
-  };
-  let gates;
-  try {
-    gates = await keyReviewCardGates(
-      // deno-lint-ignore no-explicit-any
-      gateKey() as any,
-      failingClient("column inboxes.bulk_review_mode does not exist"),
-    );
-  } finally {
-    console.warn = original;
-  }
-
-  // Permissions: unknown is closed. This is the pre-MCP-Apps tool surface.
-  assertEquals(gates.outbound, false, "an unreadable opt-in must not mount a review card");
-  assertEquals(gates.bulk, false, "nor a bulk plan card");
-  // The workspace ROLLOUT flag also fails closed, and it is ANDed in, so the
-  // drafts gate closes with it. That is the rollout gate deciding, not the
-  // preference rollup — which independently fails OPEN, as its own note says.
-  assertEquals(gates.drafts, false, "an unreadable rollout flag is 'not rolled out'");
-  assert(
-    warnings.some((w) => w.includes("review_card_gate_query_failed")),
-    `the failure is reported, not swallowed: ${warnings.join(" | ")}`,
-  );
-});
 
 Deno.test("the SQL the callers must also apply is stated, not implied", () => {
-  // These strings exist so the filter can be quoted in one place. The tests
-  // above are what hold `index.ts` to them.
+  // These strings exist so the filter can be quoted in one place.
   assert(REACHABLE_INBOX_SQL.includes("deleted_at is null"));
   assert(REACHABLE_INBOX_SQL.includes("status = 'active'"));
   // The half every inboxes query applies, split out because the two rollups
-  // want opposite things from `status`. See the query-shape test above.
+  // want opposite things from `status`.
   assertEquals(SOFT_DELETE_SQL, "deleted_at is null");
   assert(REACHABLE_INBOX_SQL.startsWith(SOFT_DELETE_SQL), "one is a prefix of the other");
 });

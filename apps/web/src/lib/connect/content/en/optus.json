@@ -19,7 +19,7 @@
     "titleLine1": "Connect your OptusNet inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
     "lead": "Despite what half the internet says, OptusNet email did not shut down. It moved onto a new plan with new terms in 2025 and closed to new signups. The mailbox you have still speaks IMAP.",
-    "answer": "Claude cannot reach an OptusNet mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.optusnet.com.au on port 993, signing in with your address entered in full and your OptusNet email password. There is no app password to generate. Two facts matter before you build on it: Optus moved the service onto a new plan with new terms from May 2025 and requires the email plan to be linked to an eligible Optus service, and it is not accepting sign-ups for new OptusNet email. For an address you already have, one inbox is free, forever.",
+    "answer": "Claude cannot reach an OptusNet mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at mail.optusnet.com.au on port 993, signing in with your address entered in full and your OptusNet email password. There is no app password to generate. Two facts matter before you build on it: Optus moved the service onto a new plan with new terms from May 2025 and requires the email plan to be linked to an eligible Optus service, and it is not accepting sign-ups for new OptusNet email. For an address you already have, one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Email password, no app password",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the full address and the email password",
-      "p": "In mcpemails choose IMAP / SMTP and put the whole address in the username field, in Optus's own format <code>username@optusnet.com.au</code>. Use the password for that mailbox. The host and ports above are prefilled and were verified from a live TLS connection."
+      "p": "In MCPEmails choose IMAP / SMTP and put the whole address in the username field, in Optus's own format <code>username@optusnet.com.au</code>. Use the password for that mailbox. The host and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Old mail clients were dropped on purpose",
-      "p": "Optus states that most customers see no change, but that older versions of some third-party clients, naming Outlook 2010, are no longer supported because they no longer receive updates and may not meet current encryption and security standards. So a setup that broke around the change and has been blamed on the server is more likely the client. mcpemails connects with current TLS, which is the side of that line you want to be on."
+      "p": "Optus states that most customers see no change, but that older versions of some third-party clients, naming Outlook 2010, are no longer supported because they no longer receive updates and may not meet current encryption and security standards. So a setup that broke around the change and has been blamed on the server is more likely the client. MCPEmails connects with current TLS, which is the side of that line you want to be on."
     },
     {
       "h": "SPECIAL-USE and IDLE are there, MOVE and UIDPLUS are not",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with OptusNet email?",
-      "a": "Not directly. Claude has no built-in Optus connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optusnet.com.au mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Optus connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optusnet.com.au mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the OptusNet IMAP and SMTP settings?",

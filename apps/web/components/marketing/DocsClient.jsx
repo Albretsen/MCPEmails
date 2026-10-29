@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Nav, Footer } from './Sections';
+import { Nav, Footer, useSignupHref } from './Sections';
+import { usePreferredClient } from './PreferredClient';
 import { MIcon } from '../MarketingPrimitives';
+import { MODEL_VISIBLE_TOOL_COUNT, APP_ONLY_TOOL_COUNT, LISTED_TOOL_COUNT } from '@/lib/public-facts.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 // Rich-text tag handlers shared across this page (inline code + bold).
 const RICH = {
@@ -25,8 +28,8 @@ const QUICKSTART_STEPS = [
   {
     num: '02',
     id: 'apikey',
-    code: `# Your key looks like this:
-mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
+    code: `# Your key looks like this: mcpe_ followed by 64 hex characters
+mcpe_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`,
     cta: null,
   },
   {
@@ -57,7 +60,7 @@ const CLIENT_SNIPPETS = {
 #
 #        https://mcpemails.com/api/mcp
 #
-#   3. Click Connect and sign in with your mcpemails account.
+#   3. Click Connect and sign in with your MCPEmails account.
 #   4. Every tool your approved scopes allow is live immediately.
 #
 # Claude Desktop and Cursor follow the same OAuth flow when
@@ -69,7 +72,7 @@ const CLIENT_SNIPPETS = {
       "url": "https://mcpemails.com/api/mcp",
       "auth": {
         "type": "bearer",
-        "token": "mcpe_live_YOUR_KEY_HERE"
+        "token": "mcpe_YOUR_KEY_HERE"
       }
     }
   }
@@ -80,14 +83,14 @@ const CLIENT_SNIPPETS = {
     "servers": {
       "mcpemails": {
         "url": "https://mcpemails.com/api/mcp",
-        "bearer": "mcpe_live_YOUR_KEY_HERE"
+        "bearer": "mcpe_YOUR_KEY_HERE"
       }
     }
   }
 }`,
   raw: `# Raw JSON-RPC 2.0: initialize handshake
 curl -X POST https://mcpemails.com/api/mcp \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY_HERE" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
     "jsonrpc": "2.0",
@@ -130,11 +133,15 @@ const SCOPE_STYLES = {
 // t('tools.<name>.desc') and t('tools.<name>.params.<param>').
 //
 // WHAT THIS PAGE LEAVES OUT, and why it is a subset rather than an oversight:
-// a full-scope key gets 23 tools from tools/list. The six that are missing here
-// (approval_review, approval_decide, approval_update, approval_schedule,
-// bulk_execute, bulk_cancel) all carry _meta.ui.visibility: ["app"] and exist to
-// drive the review card an MCP client renders for a held send or a previewed
-// bulk operation. They are reached from that card, not composed by hand from
+// a full-scope key gets LISTED_TOOL_COUNT tools from tools/list. The eight that
+// are missing here (approval_review, approval_decide, approval_update,
+// approval_schedule, bulk_execute, bulk_cancel, draft_editor_save,
+// card_automation) all carry _meta.ui.visibility: ["app"] and exist to drive
+// the cards an MCP client renders for a held send, a previewed bulk operation,
+// the draft editor or an automation rule.
+// draft_read and draft_editor_hide are listed to the model as well, so they are
+// documented here. public-facts.test.mjs checks this list against the server.
+// The seven are reached from their cards, not composed by hand from
 // this reference, and documenting their plan_id/approval_id arguments here would
 // suggest a workflow nobody starts from scratch. Everything a caller writes a
 // tools/call for by hand is on this page.
@@ -680,6 +687,95 @@ const TOOLS = [
 }`,
     },
   },
+  // The Pro feature tools (pro-features.ts PRO_FEATURE_TOOLS). Every key is
+  // listed them; a plan without Pro gets an isError result naming Pro.
+  {
+    name: 'reminder_list',
+    scopes: ['read:email'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'show',     type: 'enum',          required: false },
+      { name: 'kind',     type: 'enum',          required: false },
+      { name: 'limit',    type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 32, "method": "tools/call",
+  "params": {
+    "name": "reminder_list",
+    "arguments": {
+      "show": "due"
+    }
+  }
+}`,
+      response: `{
+  "show": "due",
+  "total": 1,
+  "reminders": [
+    {
+      "id": "5b1e7c2d-9a40-4f3e-8d61-0c7a2e9f4b18",
+      "kind": "follow_up",
+      "status": "due",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "due_at": "2026-06-05T09:00:00Z",
+      "message_id": "4821",
+      "subject": "Proposal for June",
+      "to": ["carol@example.com"],
+      "folder": null,
+      "created_at": "2026-06-02T09:00:00Z"
+    }
+  ],
+  "untrusted_content": true
+}`,
+    },
+  },
+  {
+    name: 'reminder',
+    scopes: ['manage:automations', 'manage:folders'],
+    params: [
+      { name: 'action',     type: 'enum',              required: true },
+      { name: 'inbox_id',   type: 'string (uuid)',     required: false },
+      { name: 'inbox',      type: 'string',            required: false },
+      { name: 'message_id', type: 'string',            required: false },
+      { name: 'days',       type: 'integer',           required: false },
+      { name: 'due_at',     type: 'string (ISO 8601)', required: false },
+      { name: 'until',      type: 'string (ISO 8601)', required: false },
+      { name: 'condition',  type: 'enum',              required: false },
+      { name: 'folder',     type: 'string',            required: false },
+      { name: 'id',         type: 'string (uuid)',     required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "params": {
+    "name": "reminder",
+    "arguments": {
+      "action": "follow_up",
+      "message_id": "4821",
+      "days": 3
+    }
+  }
+}`,
+      response: `{
+  "created": true,
+  "already_tracked": false,
+  "reminder": {
+    "id": "5b1e7c2d-9a40-4f3e-8d61-0c7a2e9f4b18",
+    "kind": "follow_up",
+    "status": "pending",
+    "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+    "due_at": "2026-06-05T09:00:00Z",
+    "message_id": "4821",
+    "subject": "Proposal for June",
+    "to": ["carol@example.com"],
+    "folder": null,
+    "created_at": "2026-06-02T09:00:00Z"
+  },
+  "untrusted_content": true
+}`,
+    },
+  },
   {
     name: 'signature_get',
     scopes: ['read:email'],
@@ -877,6 +973,76 @@ const TOOLS = [
 }`,
     },
   },
+  {
+    name: 'draft_read',
+    scopes: ['manage:drafts', 'read:email'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'draft_id', type: 'string',        required: true },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 30, "method": "tools/call",
+  "params": {
+    "name": "draft_read",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "draft_id": "r-8830"
+    }
+  }
+}`,
+      response: `{
+  "draft_id": "r-8830",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "to": ["erin@example.com"],
+  "cc": [],
+  "bcc": [],
+  "subject": "Contract review",
+  "body_text": "Hi Erin, draft notes attached.",
+  "body_truncated": false,
+  "attachments": [
+    { "filename": "notes.pdf", "size_bytes": 20480, "mime_type": "application/pdf" }
+  ],
+  "attachment_count": 1,
+  "signature_embedded": false,
+  "threaded": false,
+  "untrusted_content": true
+}`,
+    },
+  },
+  {
+    name: 'draft_editor_hide',
+    scopes: ['manage:drafts'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'scope',    type: 'enum',          required: true },
+      { name: 'hidden',   type: 'boolean',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 31, "method": "tools/call",
+  "params": {
+    "name": "draft_editor_hide",
+    "arguments": {
+      "inbox": "alice@example.com",
+      "scope": "inbox",
+      "hidden": true
+    }
+  }
+}`,
+      response: `{
+  "content": [
+    {
+      "type": "text",
+      "text": "Draft editor card hidden for alice@example.com. Drafts are unaffected."
+    }
+  ],
+  "isError": false
+}`,
+    },
+  },
 ];
 
 // Flattened list — used for the in-page tool navigation.
@@ -922,7 +1088,10 @@ function CodeBlock({ code, lang = '' }) {
 
 function ClientTabs() {
   const t = useTranslations('docs');
-  const [tab, setTab] = useState('oauth');
+  // A visitor from Cursor opens on the Cursor tab (src/lib/clients/preferred.mjs).
+  // Claude and ChatGPT visitors connect by OAuth, the default tab.
+  const preferred = usePreferredClient();
+  const [tab, setTab] = useState(preferred === 'cursor' ? 'cursor' : 'oauth');
   const tabKeys = ['oauth', 'claude', 'cursor', 'raw'];
   return (
     <div style={{ marginTop: 16 }}>
@@ -944,6 +1113,8 @@ function ClientTabs() {
 
 function QuickstartStep({ step }) {
   const t = useTranslations('docs');
+  const locale = useLocale();
+  const signupHref = useSignupHref();
   const base = `quickstart.steps.${step.id}`;
   return (
     <div className="docs-step">
@@ -957,7 +1128,7 @@ function QuickstartStep({ step }) {
         {step.tabs && <ClientTabs />}
         {step.code && <CodeBlock code={step.code} />}
         {step.cta && (
-          <a className="btn btn-primary" href={step.cta.href} style={{ marginTop: 16 }}>
+          <a className="btn btn-primary" href={step.cta.href === '/signup' ? signupHref : withReadingLang(step.cta.href, locale)} style={{ marginTop: 16 }}>
             {t(`${base}.cta`)}
           </a>
         )}
@@ -1064,6 +1235,7 @@ function ToolSection({ tool }) {
 
 export default function DocsClient() {
   const t = useTranslations('docs');
+  const signupHref = useSignupHref();
   return (
     <div>
       <Nav />
@@ -1084,6 +1256,7 @@ export default function DocsClient() {
             <a className="btn btn-secondary btn-lg" href="#tools">{t('hero.ctaTools')}</a>
             <a className="btn btn-secondary btn-lg" href="#automation-safety">{t('hero.ctaSafety')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</Link>
+            <Link className="btn btn-secondary btn-lg" href="/docs/api">{t('hero.ctaApi')}</Link>
           </div>
         </div>
       </section>
@@ -1150,7 +1323,7 @@ export default function DocsClient() {
             <div className="docs-example-label" style={{ marginBottom: 8 }}>{t('endpoint.handshakeLabel')}</div>
             <CodeBlock
               code={`curl -X POST https://mcpemails.com/api/mcp \\
-  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Authorization: Bearer mcpe_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
     "jsonrpc": "2.0",
@@ -1279,9 +1452,9 @@ export default function DocsClient() {
         <div className="container">
           <div className="section-head">
             <div className="eye-label">{t('tools.eyebrow')}</div>
-            <h2>{t('tools.heading')}</h2>
+            <h2>{t('tools.heading', { toolCount: MODEL_VISIBLE_TOOL_COUNT })}</h2>
             <p className="sub">
-              {t.rich('tools.sub', RICH)}
+              {t.rich('tools.sub', { ...RICH, toolCount: MODEL_VISIBLE_TOOL_COUNT, appOnlyToolCount: APP_ONLY_TOOL_COUNT, listedToolCount: LISTED_TOOL_COUNT })}
             </p>
           </div>
 
@@ -1496,7 +1669,7 @@ export default function DocsClient() {
             {t('cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('cta.primary')}</a>
+            <a className="btn btn-primary btn-lg" href={signupHref}>{t('cta.primary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</Link>
           </div>
         </div>

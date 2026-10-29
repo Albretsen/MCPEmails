@@ -19,8 +19,8 @@
     "eyebrow": "Verizon.net + AI",
     "titleLine1": "Verizon retired its mail service.",
     "titleLine2": "Your verizon.net inbox still connects",
-    "lead": "Verizon does not run mailboxes any more. A surviving verizon.net address is an AOL account, and mcpemails connects it over IMAP so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach a verizon.net mailbox on its own, and neither can Verizon: it retired its consumer email service and moved the mailboxes to AOL Mail and Yahoo Mail. If your address survived that migration, it is an AOL account with a verizon.net username, and mcpemails is a hosted MCP server that connects it over IMAP at imap.aol.com on port 993 using an AOL app password rather than the password you type into webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
+    "lead": "Verizon does not run mailboxes any more. A surviving verizon.net address is an AOL account, and MCPEmails connects it over IMAP so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a verizon.net mailbox on its own, and neither can Verizon: it retired its consumer email service and moved the mailboxes to AOL Mail and Yahoo Mail. If your address survived that migration, it is an AOL account with a verizon.net username, and MCPEmails is a hosted MCP server that connects it over IMAP at imap.aol.com on port 993 using an AOL app password rather than the password you type into webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "AOL app password, not webmail password",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Generate an AOL app password under Account Security",
-      "p": "Open Account Info, then <b>Account Security</b>. Turn on two-step verification if it is off, then generate an app password and give it a name such as <code>mcpemails</code>. AOL shows it once. Paste that into mcpemails together with the full verizon.net address; the AOL hosts above are prefilled."
+      "p": "Open Account Info, then <b>Account Security</b>. Turn on two-step verification if it is off, then generate an app password and give it a name such as <code>mcpemails</code>. AOL shows it once. Paste that into MCPEmails together with the full verizon.net address; the AOL hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "AOL's SMTP host announces a maximum message size of about 39 MB, so a send with large attachments is refused before it leaves.",
-    "Only an existing, already-migrated verizon.net mailbox can be connected. Verizon issues no new ones and mcpemails cannot revive a deleted account."
+    "Only an existing, already-migrated verizon.net mailbox can be connected. Verizon issues no new ones and MCPEmails cannot revive a deleted account."
   ],
   "faq": [
     {
       "q": "Does Claude work with Verizon email?",
-      "a": "Not directly, and not through Verizon, which no longer runs mail. If your verizon.net address is alive on AOL, connecting an MCP server such as mcpemails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly, and not through Verizon, which no longer runs mail. If your verizon.net address is alive on AOL, connecting an MCP server such as MCPEmails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the verizon.net IMAP and SMTP settings?",

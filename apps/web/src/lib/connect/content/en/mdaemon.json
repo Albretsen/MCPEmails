@@ -21,8 +21,8 @@
     "eyebrow": "MDaemon + AI",
     "titleLine1": "Connect MDaemon to Claude,",
     "titleLine2": "Cursor, ChatGPT and any MCP client",
-    "lead": "MDaemon has run mail on your own Windows server for years without asking anyone's permission. Putting an AI agent on it does not have to change that: mcpemails connects over ordinary IMAP and fetches each message live.",
-    "answer": "Claude cannot reach an MDaemon server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP at your own hostname, on the IMAP SSL port, which MDaemon sets to 993 by default, using the account password from the Account Manager. That lets Claude, Cursor or any MCP client read, search, send and organize the mail in that mailbox. MDaemon is software you run, so there is no shared host to look up: the server has to be reachable from the internet, the account has to have IMAP access enabled, and MDaemon's screening features have to allow the connection through. One inbox is free.",
+    "lead": "MDaemon has run mail on your own Windows server for years without asking anyone's permission. Putting an AI agent on it does not have to change that: MCPEmails connects over ordinary IMAP and fetches each message live.",
+    "answer": "Claude cannot reach an MDaemon server on its own. MCPEmails is a hosted MCP server that connects to yours over IMAP at your own hostname, on the IMAP SSL port, which MDaemon sets to 993 by default, using the account password from the Account Manager. That lets Claude, Cursor or any MCP client read, search, send and organize the mail in that mailbox. MDaemon is software you run, so there is no shared host to look up: the server has to be reachable from the internet, the account has to have IMAP access enabled, and MDaemon's screening features have to allow the connection through. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Account password, IMAP access on",
     "meta2": "Email fetched live, never stored"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required, so you can test this against a real MDaemon mailbox first."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Enable IMAP access on the account",
-      "p": "Open the Account Manager, find the mailbox, and on its Mail Services screen make sure <b>Enable IMAP access</b> is ticked. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your MDaemon hostname, the full address and the account password."
+      "p": "Open the Account Manager, find the mailbox, and on its Mail Services screen make sure <b>Enable IMAP access</b> is ticked. Then add the inbox in MCPEmails: choose IMAP / SMTP, enter your MDaemon hostname, the full address and the account password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "MDaemon servers usually sit inside a company firewall with only port 25 published, and this needs an inbound IMAP connection as well. Opening 993 to the internet is a decision for whoever owns that firewall, not a setting in MDaemon. If the answer is no, mcpemails can be self-hosted on the same internal network, where it reaches MDaemon the way a desktop client on the LAN already does.",
+    "MDaemon servers usually sit inside a company firewall with only port 25 published, and this needs an inbound IMAP connection as well. Opening 993 to the internet is a decision for whoever owns that firewall, not a setting in MDaemon. If the answer is no, MCPEmails can be self-hosted on the same internal network, where it reaches MDaemon the way a desktop client on the LAN already does.",
     "TLS validation is strict. MDaemon's default self-signed certificate, or an expired one, will be refused with no option to continue anyway.",
     "Sending goes out through your own MDaemon SMTP service, so deliverability depends on your SPF, DKIM and DMARC records and on the reputation of the address your server sends from."
   ],
   "faq": [
     {
       "q": "Does Claude work with MDaemon?",
-      "a": "Not directly. Claude has no MDaemon connector and cannot open an IMAP socket to a server you host. Connecting an MCP server such as mcpemails to your MDaemon host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, using the same credentials any desktop client would use."
+      "a": "Not directly. Claude has no MDaemon connector and cannot open an IMAP socket to a server you host. Connecting an MCP server such as MCPEmails to your MDaemon host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, using the same credentials any desktop client would use."
     },
     {
       "q": "What are the MDaemon IMAP and SMTP settings?",

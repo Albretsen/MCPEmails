@@ -11,33 +11,33 @@ const translation = {
 
 [Model Context Protocol](https://modelcontextprotocol.io) 是一种通过 HTTP 向语言模型暴露工具的标准方式。一台 MCP 邮件服务器不会把你的邮箱当作原始 IMAP 暴露出来，而是呈现为智能体可以调用的几个带类型的动词：列出邮件、读取某封、搜索、发送、回复。智能体围绕这些动词进行推理。它从不接触底层的邮箱协议，也从不看到你的凭据。
 
-这正是 [MCP Emails](/) 的核心理念。一个端点，一组工具，适配任何兼容 MCP 的客户端。如果你想从头理解整个架构，配套文章 [什么是 MCP 邮件服务器](/blog/what-is-an-mcp-email-server) 用通俗的语言做了讲解。
+这正是 [MCPEmails](/) 的核心理念。一个端点，一组工具，适配任何兼容 MCP 的客户端。如果你想从头理解整个架构，配套文章 [什么是 MCP 邮件服务器](/blog/what-is-an-mcp-email-server) 用通俗的语言做了讲解。
 
 ## 为什么"最后一公里"这么难
 
 把模型接到邮箱看上去稀松平常，真正动手做时才会发现没那么简单。有三件事会让你头疼：
 
-1. **每个服务商的鉴权方式都不一样。** Gmail 需要带特定 scope 的 OAuth。Outlook 需要 Microsoft 身份认证。iCloud 和 Fastmail 需要专用应用密码。每一种都有自己的 token 刷新周期，也有各自的失败模式。
+1. **每个服务商的鉴权方式都不一样。** Outlook 和 Microsoft 365 需要通过 Microsoft 身份认证走 OAuth。Gmail 需要 Google 应用密码，而 Google 只有在开启两步验证后才允许你创建。iCloud 和 Fastmail 需要专用应用密码。每一种都有自己的 token 刷新周期，也有各自的失败模式。
 2. **凭据是高危品。** 一个躺在聊天记录或日志行里的邮箱密码，就是一次随时会引爆的数据泄露。你不能让模型持有这个密钥。
 3. **邮件的结构对智能体很不友好。** MIME、线程头、HTML 与纯文本之争、附件、其实是标签的文件夹。模型需要的是干净的响应，而不是 RFC 5322。
 
 那种最朴素的 DIY 做法——丢给模型一个 IMAP 库再加上你的密码——这三关一关都过不了。GitHub 上大多数"Gmail MCP 服务器"仓库恰恰就止步于此。
 
-## MCP Emails 是如何解决的
+## MCPEmails 是如何解决的
 
 四个设计决策挑起了大梁。它们正是我敢用它来管自己邮箱的原因。
 
 ### 邮件实时拉取，从不存储
 
-每一次工具调用都会实时打到你的服务商：Gmail API、Microsoft Graph 或 IMAP/SMTP。邮件正文、主题和附件交给智能体后即刻丢弃。没有任何东西被缓存、建索引或落库存档。每个邮箱唯一被持久化的，只有发起下一次调用所需的凭据。如果你想看为什么这一点很重要的详细版本，请读 [为什么"邮件从不存储"很重要](/blog/why-email-never-stored-matters)。
+每一次工具调用都会实时打到你的服务商：Gmail、iCloud、Fastmail 等走 IMAP/SMTP，Outlook 走 Microsoft Graph。邮件正文、主题和附件交给智能体后即刻丢弃。没有任何东西被缓存、建索引或落库存档。每个邮箱唯一被持久化的，只有发起下一次调用所需的凭据。如果你想看为什么这一点很重要的详细版本，请读 [为什么"邮件从不存储"很重要](/blog/why-email-never-stored-matters)。
 
 ### 凭据以 AES-256-GCM 静态加密
 
-每个邮箱的 OAuth token 或应用密码在写入数据库之前都会先加密。解密只在一个隔离的 Edge Function 内部、于调用时进行，使用的密钥作为环境密钥存放，与数据库相互独立。所以即便数据库泄露，攻击者拿到的也只是密文，而不是你的邮箱。
+每个邮箱的应用密码或 OAuth token 在写入数据库之前都会先加密。只有在请求需要时，它才会在我们的服务器上解密，而且从不发送给你的智能体。加密密钥作为服务器密钥保存，与数据库相互独立。所以即便数据库泄露，攻击者拿到的也只是密文，而不是你的邮箱。
 
 ### 发送走你自己的服务商
 
-当智能体发送或回复时，邮件是通过你的 Gmail、你的 Microsoft 365 或你的 SMTP 服务器发出去的。MCP Emails 从不用自己的域名做中转。你的送达率和域名信誉完全归你所有——不必再玩共享 IP 那种"进不进垃圾箱看运气"的轮盘赌。
+当智能体发送或回复时，邮件是通过你的 Gmail、你的 Microsoft 365 或你的 SMTP 服务器发出去的。MCPEmails 从不用自己的域名做中转。你的送达率和域名信誉完全归你所有——不必再玩共享 IP 那种"进不进垃圾箱看运气"的轮盘赌。
 
 ### 它就是基于 HTTP 的标准 MCP
 
@@ -76,12 +76,11 @@ const translation = {
 
 ### OAuth 服务商（登录即可，无需密码）
 
-- **Gmail** —— 通过 Google 登录走 OAuth 2.0。
 - **Outlook / Microsoft 365**：通过使用 Microsoft 登录走 OAuth 2.0，经由 Microsoft Graph 而不是 IMAP。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。配置细节见 [将 Outlook 和 Microsoft 365 连接到 AI 智能体](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 
 ### 应用密码服务商
 
-iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCP Emails 中。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
+Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCPEmails 中。Gmail 应用密码在你的 Google 账号里创建，Google 要求先开启两步验证才能创建。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
 
 ## 连接你的 AI 客户端
 
@@ -89,7 +88,7 @@ iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都�
 
 ### 支持 OAuth 的客户端（无需 API key）
 
-claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCP Emails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。
+claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCPEmails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
 
 ### 不支持 OAuth 的客户端（API key）
 
@@ -101,16 +100,16 @@ Cline、JetBrains、自定义脚本以及裸 cURL 使用带 scope 的 API key。
 
 简短的回答：安全，而 [让 AI 智能体访问邮箱安全吗](/blog/is-it-safe-to-give-ai-agent-email-access) 这篇文章把完整的论证讲透了。模型持有的是受限的能力，而不是你的密码；凭据经过加密；什么都不存储；发送始终留在你自己的服务商；访问权一键即可吊销。
 
-关于速率限制，在所有套餐上，每个 API key 都被限制在每分钟 100 次请求、每小时 1,000 次、每天 10,000 次。此外还有一个按工作区计算的突发上限，会随你的套餐递增：免费版为 60/min，Personal 为 120/min，Pro 为 300/min，Team 为 1,000/min。当你触及上限时，服务器会返回一个可重试的错误，并附带一个以秒为单位的 \`retry_after\` 值。请遵守它。另外，绝不要盲目地自动重试 \`email_compose\` 的发送，那样你会发出重复邮件。
+关于速率限制，每个工作区都有一个随套餐递增的每分钟上限（见[定价](/pricing)），每个 API 密钥会得到按该套餐确定大小的每分钟、每小时和每天窗口，所以单个密钥就能用满整个上限，多个密钥则共享它。当你触及上限时，服务器会返回一个可重试的错误，并附带一个以秒为单位的 \`retry_after\` 值。请遵守它。另外，绝不要盲目地自动重试 \`email_compose\` 的发送，那样你会发出重复邮件。
 
 ## 价格
 
 套餐按连接的收件箱数量定价。API key 在所有档位都不限量，各档之间还在突发速率、分析数据保留时长、团队功能和技术支持上有差别。
 
 - **免费版，永久 $0。** 无需信用卡。一个已连接收件箱，60 req/min，30 天分析数据，社区支持。
-- **Personal，每月 9 美元**（或每年 86.40 美元，合每月 7.20 美元）。最多连接三个收件箱，120 req/min，30 天分析数据，邮件支持。
-- **Pro，每月 15 美元**（或每年 144 美元，合每月 12 美元）。无限量连接收件箱，300 req/min，90 天分析数据，邮件支持。
-- **Team，每月 79 美元**（或每年 756 美元，合每月 63 美元）。包含 Pro 的全部内容，另加带角色的成员、每个客户或业务一个独立工作区、支持 SAML/OIDC 的 SSO 外加审计日志，1,000 req/min，1 年分析数据，优先支持。
+- **Personal，每月 9 美元**（或每年 86.40 美元，合每月 7.20 美元）。最多连接三个收件箱，120 req/min，90 天分析数据，邮件支持。
+- **Pro，每月 15 美元**（或每年 144 美元，合每月 12 美元）。最多连接 10 个收件箱，300 req/min，2 年分析数据，邮件支持。
+- **Business，每月 39 美元**（或每年 374.40 美元，合每月 31.20 美元）。包含 Pro 的全部内容，另含 10 个邮箱，每多一个每月 3 美元，不限人数的带角色成员，由管理员审批被暂停的发送，每个客户或业务一个独立工作区，1,000 req/min。
 
 完整明细见 [价格页面](/pricing)。
 

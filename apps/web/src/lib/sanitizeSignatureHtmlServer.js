@@ -185,8 +185,28 @@ const ALLOWED_CSS_FUNCTIONS = new Set(["rgb", "rgba", "hsl", "hsla", "calc"]);
  */
 const SAFE_STYLE_VALUE = /^[a-zA-Z0-9\s#%.,()/'"+!_-]*$/;
 
-/** Matches `name(` so every CSS function can be checked against the allow-list. */
-const CSS_FUNCTION = /([a-zA-Z-]+)\s*\(/g;
+/**
+ * Every `name(` in a declaration value, so each CSS function can be checked
+ * against the allow-list: a maximal run of `[a-zA-Z-]` (CSS_NAME_RUN) followed
+ * by `\s*\(` (CSS_CALL_OPEN, tested once at the run's end).
+ *
+ * This was one regex, `/([a-zA-Z-]+)\s*\(/g`, which finds the same names but
+ * retries from every letter of a run that is NOT followed by `(`: 100 KB of
+ * letters took 6.7 s. Each run is now tried once.
+ */
+const CSS_NAME_RUN = /[a-zA-Z-]+/g;
+const CSS_CALL_OPEN = /\s*\(/y;
+
+function cssFunctionsAllowed(value) {
+  CSS_NAME_RUN.lastIndex = 0;
+  for (let run = CSS_NAME_RUN.exec(value); run; run = CSS_NAME_RUN.exec(value)) {
+    CSS_CALL_OPEN.lastIndex = run.index + run[0].length;
+    if (CSS_CALL_OPEN.test(value) && !ALLOWED_CSS_FUNCTIONS.has(run[0].toLowerCase())) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * An entity reference this module did not decode. Any URL or style value still
@@ -399,17 +419,7 @@ export function sanitizeStyleAttribute(style, allowedProps = ALLOWED_STYLE_PROPS
     if (!allowedProps.has(prop)) continue;
     if (!SAFE_STYLE_VALUE.test(value)) continue;
 
-    let functionsOk = true;
-    CSS_FUNCTION.lastIndex = 0;
-    let match = CSS_FUNCTION.exec(value);
-    while (match) {
-      if (!ALLOWED_CSS_FUNCTIONS.has(match[1].toLowerCase())) {
-        functionsOk = false;
-        break;
-      }
-      match = CSS_FUNCTION.exec(value);
-    }
-    if (!functionsOk) continue;
+    if (!cssFunctionsAllowed(value)) continue;
 
     kept.push(`${prop}: ${value}`);
   }
@@ -506,6 +516,15 @@ function isAsciiAlpha(ch) {
   return (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z");
 }
 
+/**
+ * Lower-case A-Z only, so every offset into the result is an offset into the
+ * input. `String.prototype.toLowerCase` is not length-preserving (`"\u0130"`
+ * becomes two code units), and HTML tag names are ASCII-case-insensitive only.
+ */
+function asciiLower(value) {
+  return value.replace(/[A-Z]+/g, (run) => run.toLowerCase());
+}
+
 function isTagWhitespace(ch) {
   return ch === " " || ch === "\t" || ch === "\n" || ch === "\r" || ch === "\f";
 }
@@ -517,11 +536,16 @@ function isTagWhitespace(ch) {
  * of them — in the spec's tag-name state it is an ordinary name character. That
  * is exactly why `<scr<script>ipt>` is a single unknown tag here, as it is in a
  * browser, instead of something a strip-and-rescan pass can reassemble.
+ *
+ * `maxLength` stops reading early. A caller that only asks "is this name X?"
+ * passes `X.length + 1`: a longer name can never equal X, and without the
+ * bound `<<<<...` with no terminator re-reads the whole rest of the input from
+ * every `<`, which is quadratic.
  */
-function readTagName(source, start) {
+function readTagName(source, start, maxLength = Infinity) {
   let i = start;
   let name = "";
-  while (i < source.length) {
+  while (i < source.length && i - start < maxLength) {
     const ch = source[i];
     if (isTagWhitespace(ch) || ch === "/" || ch === ">") break;
     name += ch;
@@ -601,9 +625,14 @@ function parseAttributes(source, start) {
   return { attrs, next: i, selfClosing, closed };
 }
 
-/** Skip a raw-text element's body: no nesting, the first matching end tag wins. */
-function skipRawText(source, from, name) {
-  const lower = source.toLowerCase();
+/**
+ * Skip a raw-text element's body: no nesting, the first matching end tag wins.
+ *
+ * `lower` is `asciiLower(source)`, computed ONCE per document by the caller.
+ * Lower-casing the whole source here, on every dropped element, made a body of
+ * `<style></style>` repeated cost O(elements x length).
+ */
+function skipRawText(source, lower, from, name) {
   const needle = `</${name}`;
   let idx = lower.indexOf(needle, from);
   while (idx !== -1) {
@@ -617,9 +646,13 @@ function skipRawText(source, from, name) {
   return source.length;
 }
 
-/** Skip a normal element and everything inside it, honouring nesting. */
+/**
+ * Skip a normal element and everything inside it, honouring nesting.
+ *
+ * Linear: no whole-source lower-casing per call, and each candidate tag name is
+ * read no further than it takes to tell it is not `name`.
+ */
 function skipElementWithContent(source, from, name) {
-  const lower = source.toLowerCase();
   let depth = 1;
   let i = from;
   while (i < source.length) {
@@ -632,7 +665,7 @@ function skipElementWithContent(source, from, name) {
     }
     const isEnd = source[lt + 1] === "/";
     const nameStart = lt + (isEnd ? 2 : 1);
-    const read = readTagName(lower, nameStart);
+    const read = readTagName(source, nameStart, name.length + 1);
     if (read.name === name) {
       const parsed = parseAttributes(source, read.next);
       if (isEnd) {
@@ -658,20 +691,32 @@ function serializeStartTag(name, attrs) {
 /**
  * Tokenize `html` and rebuild it from the allow-list. Single pass: nothing is
  * ever stripped and rescanned, so there is no evasion window between passes.
+ *
+ * `stopAfter`: stop tokenizing once MORE than this many characters have been
+ * emitted. Output is append-only, so a caller that keeps at most the first
+ * `stopAfter` characters (sanitizeEmailHtml's truncation) gets byte-identical
+ * output without paying to tokenize the rest of a multi-megabyte body.
  */
-function rebuildFromAllowList(html, policy) {
+function rebuildFromAllowList(html, policy, stopAfter = Infinity) {
   const out = [];
   const stack = [];
   const len = html.length;
   let i = 0;
+  let emitted = 0;
+  const emit = (chunk) => {
+    out.push(chunk);
+    emitted += chunk.length;
+  };
+  // asciiLower(html), built the first time a raw-text element needs it.
+  let lower = null;
 
-  while (i < len) {
+  while (i < len && emitted <= stopAfter) {
     const lt = html.indexOf("<", i);
     if (lt === -1) {
-      out.push(escapeText(html.slice(i)));
+      emit(escapeText(html.slice(i)));
       break;
     }
-    if (lt > i) out.push(escapeText(html.slice(i, lt)));
+    if (lt > i) emit(escapeText(html.slice(i, lt)));
     i = lt;
 
     // Comments, doctypes, processing instructions, and the bogus-comment forms.
@@ -700,13 +745,13 @@ function rebuildFromAllowList(html, policy) {
       // inside it. An end tag with no open counterpart is simply dropped.
       const open = stack.lastIndexOf(read.name);
       if (open === -1) continue;
-      while (stack.length > open) out.push(`</${stack.pop()}>`);
+      while (stack.length > open) emit(`</${stack.pop()}>`);
       continue;
     }
 
     if (!isAsciiAlpha(marker || "")) {
       // A bare `<` in prose ("a < b"). Text, not markup.
-      out.push("&lt;");
+      emit("&lt;");
       i += 1;
       continue;
     }
@@ -723,7 +768,7 @@ function rebuildFromAllowList(html, policy) {
     if (DROP_CONTENT_TAGS.has(name)) {
       if (parsed.selfClosing) continue;
       i = RAW_TEXT_TAGS.has(name)
-        ? skipRawText(html, i, name)
+        ? skipRawText(html, (lower ??= asciiLower(html)), i, name)
         : skipElementWithContent(html, i, name);
       continue;
     }
@@ -738,7 +783,7 @@ function rebuildFromAllowList(html, policy) {
     // mail, where rows and cells are routinely left unclosed.
     let implied = AUTO_CLOSE[stack[stack.length - 1]];
     while (implied && implied.has(name)) {
-      out.push(`</${stack.pop()}>`);
+      emit(`</${stack.pop()}>`);
       implied = AUTO_CLOSE[stack[stack.length - 1]];
     }
 
@@ -747,13 +792,13 @@ function rebuildFromAllowList(html, policy) {
     const attrs = filterAttributes(name, parsed.attrs, policy);
     if (attrs === null) continue;
 
-    out.push(serializeStartTag(name, attrs));
+    emit(serializeStartTag(name, attrs));
     // A stray `/` on a non-void element does not close it in HTML, so the slash
     // is ignored here exactly as a browser ignores it.
     if (!VOID_TAGS.has(name)) stack.push(name);
   }
 
-  while (stack.length) out.push(`</${stack.pop()}>`);
+  while (stack.length) emit(`</${stack.pop()}>`);
   return out.join("");
 }
 
@@ -777,7 +822,7 @@ function rebuildFromAllowList(html, policy) {
  */
 export function sanitizeEmailHtml(dirtyHtml) {
   if (typeof dirtyHtml !== "string" || dirtyHtml === "") return "";
-  const clean = rebuildFromAllowList(dirtyHtml, EMAIL_POLICY);
+  const clean = rebuildFromAllowList(dirtyHtml, EMAIL_POLICY, EMAIL_HTML_MAX_LENGTH);
   if (clean.length <= EMAIL_HTML_MAX_LENGTH) return clean;
   // Cut back to the last complete tag so the tail can never be a half-written
   // element that a downstream concatenation could finish into something else.

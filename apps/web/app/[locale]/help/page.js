@@ -8,6 +8,7 @@ import { getHelpContent, SUPPORT_CATEGORIES } from '@/lib/support/help-content.m
 import { getHelpCenterData, seedContactForm } from '@/lib/support/help-center-data.mjs';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import HelpCenter from '../../../components/support/HelpCenter';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/help.css';
 
 /**
@@ -28,6 +29,7 @@ const viewerForRequest = cache(getSupportViewer);
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const viewer = await viewerForRequest();
   // SUPPORT_RELEASE_GATE: noindex while internal-only. Remove at release.
   const robots = { index: false, follow: false };
@@ -42,6 +44,7 @@ export async function generateMetadata({ params }) {
 
 export default async function HelpPage({ params, searchParams }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const viewer = await viewerForRequest();

@@ -2,7 +2,7 @@ const post = {
   slug: 'why-email-never-stored-matters',
   title: "Why 'Email Never Stored' Matters When Connecting AI to Your Inbox",
   description:
-    'Email never stored means MCP Emails fetches your mail live and discards it, keeping only an encrypted token. See why that beats tools that copy your whole inbox.',
+    'Email never stored means MCPEmails fetches your mail live and discards it, keeping only an encrypted token. See why that beats tools that copy your whole inbox.',
   cover: '/blog/cover-why-email-never-stored-matters.svg',
   coverAlt: 'Email fetched live and discarded versus a second copy stored in a vendor database',
   authorId: 'asgeir',
@@ -10,7 +10,7 @@ const post = {
   updatedAt: "2026-06-22T09:00:00.000Z",
   tags: ['Security', 'Privacy', 'Email'],
   featured: false,
-  content: `When you connect an AI agent to your inbox, the single most important question is where your email ends up. With MCP Emails the answer is: nowhere. Every tool call fetches your mail live from Gmail, Microsoft Graph, or your IMAP server, hands it to the agent, and throws it away. The only thing we keep is an encrypted token so the next call can happen.
+  content: `When you connect an AI agent to your inbox, the single most important question is where your email ends up. With MCPEmails the answer is: nowhere. Every tool call fetches your mail live from Gmail, Microsoft Graph, or your IMAP server, hands it to the agent, and throws it away. The only thing we keep is an encrypted token so the next call can happen.
 
 That sounds like a small implementation detail. It isn't. It's the difference between handing an agent a *key to your house* and handing it a *photocopy of everything in your house*, kept forever in someone else's filing cabinet. A lot of "AI email" tools quietly do the second thing. This post is about why that matters and how the architecture actually differs.
 
@@ -20,7 +20,7 @@ There are really only two designs, and most products fall cleanly into one camp.
 
 **Copy-everything (sync-and-store).** The tool connects to your mailbox once, then pulls your messages into its own database — often continuously. Your inbox gets mirrored into their infrastructure so it can be indexed, embedded into a vector store, fed to a model, or served back fast. The agent reads from *their* copy, not your provider.
 
-**Live-fetch (never-stored).** The tool holds only a credential. When the agent needs a message, the server calls your provider in real time, returns the result, and discards the body. Nothing about the content is retained. This is how MCP Emails works.
+**Live-fetch (never-stored).** The tool holds only a credential. When the agent needs a message, the server calls your provider in real time, returns the result, and discards the body. Nothing about the content is retained. This is how MCPEmails works.
 
 The copy-everything model is popular because it's easy to build and makes search feel instant. But it changes what you're actually agreeing to when you click "Connect." You're not granting access. You're authorizing a duplicate.
 
@@ -46,20 +46,20 @@ A stored corpus of real email is irresistible. It's tempting to use it to improv
 
 ## How live-fetch actually works
 
-Here's the path a single \`email_read\` call (action \`read\`) takes through MCP Emails:
+Here's the path a single \`email_read\` call (action \`read\`) takes through MCPEmails:
 
 \`\`\`
-agent  →  MCP server  →  isolated Edge Function
+agent  →  MCP server  →  provider connection
                               ↓ decrypt token (in memory)
                          your provider (Gmail / Graph / IMAP)
                               ↓ message body
-agent  ←  parsed result  ←  Edge Function
+agent  ←  parsed result  ←  MCP server
                          (body discarded, nothing written)
 \`\`\`
 
-The credential is the only thing at rest, and it's encrypted with **AES-256-GCM**. Decryption happens only inside an isolated Edge Function at call time, and the encryption key is an environment secret stored separately from the database — so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
+The credential is the only thing at rest, and it's encrypted with **AES-256-GCM**. It's decrypted on our servers only when a request needs it and is never sent to your agent, and the encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
 
-Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider — the Gmail API, Microsoft Graph, or your own SMTP. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
+Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider: Gmail or another provider over SMTP, or Microsoft Graph for Outlook. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
 
 If you want the deeper mechanics of the credential model — OAuth tokens versus app passwords and why both stay encrypted — I wrote that up in [OAuth vs. API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
 

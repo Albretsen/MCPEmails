@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "Sicherheit für KI-E-Mail-Agenten: OAuth, Verschlüsselung, Datenschutz",
+    "description": "So schützt MCPEmails den KI-Zugriff auf Ihre E-Mails: Live-Abruf statt Speicherung, verschlüsselte Zugangsdaten, begrenzte und widerrufbare Berechtigungen, Schutz vor Prompt-Injection und offener Quellcode."
+  },
+  "hero": {
+    "eyebrow": "Sicherheit & Vertrauen",
+    "title": "Sie sollten mir nicht einfach glauben müssen",
+    "lead": "MCPEmails verbindet einen KI-Agenten mit Ihrem Postfach. Dafür braucht es echtes Vertrauen. Hier steht, was der Dienst berührt, was er speichert, was er nie tun kann und wie Sie all das selbst prüfen."
+  },
+  "tldr": {
+    "title": "1. Die Kurzfassung",
+    "intro": "Falls Sie sonst nichts auf dieser Seite lesen:",
+    "points": [
+      "Ihre E-Mails werden bei jeder Anfrage live abgerufen und verworfen, sobald die Antwort gesendet ist. Wir behalten keine Kopie von Nachrichtentext, Betreff, Anhang oder Kontakt.",
+      "Pro Postfach speichern wir genau eine sensible Sache: ein Zugriffstoken oder App-Passwort, verschlüsselt mit AES-256-GCM, damit wir Ihren nächsten Aufruf ausführen können.",
+      "Wir trainieren nie ein KI-Modell mit Ihren E-Mails und senden sie nie an ein Modell unserer Wahl. Nur Ihr Agent liest sie, unter Ihrer Kontrolle.",
+      "Der Zugriff hängt von den Zugangsdaten ab, die Sie einrichten: API-Schlüssel lassen sich auf ausgewählte Postfächer beschränken oder für alle Postfächer im Workspace freigeben. Den Anbieterzugriff können Sie jederzeit in den Einstellungen von Google, Microsoft oder Ihrem Anbieter widerrufen.",
+      "Der Code, auf dem der Dienst läuft, ist öffentlich. Sie können ihn lesen, prüfen oder alles selbst hosten."
+    ]
+  },
+  "access": {
+    "title": "2. Was wir abrufen und was wir speichern",
+    "intro": "Der Unterschied zwischen Abruf und Speicherung ist das ganze Konzept. Im Moment der Anfrage kann der Agent vieles live lesen. Fast nichts davon wird je gespeichert.",
+    "thData": "Daten",
+    "thAccessed": "Abgerufen",
+    "thStored": "Gespeichert",
+    "rows": [
+      {
+        "data": "E-Mail-Texte, Betreffzeilen, Anhänge",
+        "accessed": "Live, nur wenn Ihr Agent liest oder sucht",
+        "stored": "Nie auf Festplatte, im Cache oder in Logs"
+      },
+      {
+        "data": "Kontakte / Adressbuch",
+        "accessed": "Bei Bedarf live aus aktuellen E-Mails ermittelt",
+        "stored": "Nie. Es gibt kein gespeichertes Adressbuch"
+      },
+      {
+        "data": "OAuth-Token oder App-Passwort",
+        "accessed": "Auf unseren Servern nur für die Anfrage entschlüsselt, die es braucht",
+        "stored": "Ja, verschlüsselt mit AES-256-GCM; Schlüssel getrennt aufbewahrt"
+      },
+      {
+        "data": "Ihre API-Schlüssel",
+        "accessed": "Bei jeder Anfrage als Hash verglichen",
+        "stored": "Nur ein SHA-256-Hash; der Schlüssel selbst wird einmal angezeigt und ist nicht wiederherstellbar"
+      },
+      {
+        "data": "Geplante Nachrichten",
+        "accessed": "Bis zum Sendezeitpunkt vorgehalten, dann versendet",
+        "stored": "Ja, verschlüsselt bis zum Versand, danach als Ihr Verlauf"
+      },
+      {
+        "data": "Sendungen, die auf Ihre Freigabe warten",
+        "accessed": "Vorgehalten, bis jemand sie freigibt oder ablehnt, oder sie nach 24 Stunden ablaufen",
+        "stored": "Ja, verschlüsselt gespeichert, danach als Ihr Freigabeverlauf aufbewahrt"
+      },
+      {
+        "data": "Tool-Aufrufe (Metadaten)",
+        "accessed": "Für Ihr eigenes Audit-Log erfasst",
+        "stored": "Nur Tool-Name, Postfach, Zeitstempel und Status. Kein E-Mail-Inhalt"
+      }
+    ],
+    "outro": "Die bewussten Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, die der Agent später senden soll, und eine Sendung, die auf Ihre Freigabe wartet. Wir müssen sie vorhalten, bis sie rausgehen, speichern sie so lange verschlüsselt und behalten danach einen Eintrag für Ihren Verlauf."
+  },
+  "verify": {
+    "title": "3. Sie müssen mir nicht vertrauen, Sie können es prüfen",
+    "p1": "„Das hat irgendwer schnell zusammengecodet“ ist eine berechtigte Sorge bei jedem gehosteten Tool, das auf Ihre E-Mails zugreift. Die richtige Antwort ist kein größeres Versprechen, sondern dass Sie mir gar nicht aufs Wort glauben müssen.",
+    "points": [
+      "<b>Lesen Sie den Code.</b> Der Server hinter MCPEmails ist öffentlich auf GitHub. Sie sehen genau, was er speichert (ein verschlüsseltes Token) und was nicht (Ihre E-Mails).",
+      "<selfhost><b>Hosten Sie es selbst.</b></selfhost> Wenn Sie den gehosteten Dienst gar nicht nutzen möchten, betreiben Sie denselben Code auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln: Ein Docker-Stack mit einem einzigen Befehl liegt in <selfhost>self-host/</selfhost>.",
+      "<b>Nutzen Sie eine begrenzte, widerrufbare Verbindung.</b> Sie verbinden sich per OAuth oder App-Passwort, das nur E-Mail-Zugriff gewährt, und können es bei Ihrem Anbieter mit einem Klick widerrufen, ganz ohne mich.",
+      "<b>Sehen Sie, was passiert.</b> Jeder Tool-Aufruf Ihres Agenten landet in einem Aktivitätsprotokoll, das Sie lesen können. So sehen Sie genau, worauf wann zugegriffen wurde."
+    ],
+    "outro": "Und wenn ein nativer Konnektor Ihren Anbieter schon abdeckt und alles kann, was Sie brauchen, nutzen Sie ihn. MCPEmails gibt es für die Anbieter und Kombinationen mehrerer Postfächer, die diese nicht abdecken."
+  },
+  "injection": {
+    "title": "4. Das eigentliche Risiko: Prompt-Injection",
+    "p1": "Die echte Gefahr ist nicht, dass ich Ihre E-Mails lese. Es ist eine feindselige E-Mail, die den Agenten kapern will: versteckte Anweisungen in einer Nachricht, die Ihre KI dazu bringen sollen, etwas weiterzuleiten, zu löschen oder preiszugeben. Das ist ein reales, ungelöstes Problem für jeden E-Mail-Agenten. Ich behaupte nicht, es sei gelöst. Ich kann zeigen, wie es eingedämmt wird:",
+    "points": [
+      "<b>Der Postfachzugriff ist konfigurierbar.</b> API-Schlüssel lassen sich auf ausgewählte Postfächer beschränken oder bewusst für alle Postfächer eines Workspace freigeben. Ein beschränkter Schlüssel erreicht kein Postfach, für das er nicht freigegeben wurde.",
+      "<b>Destruktive Aktionen sind getrennt und gekennzeichnet.</b> Senden und Löschen sind eigene Tools mit eigenen Berechtigungen; Löschen erfordert <code>confirm: true</code>. Ob ein Client eine Bestätigung beim Nutzer einholt, bestimmt die Richtlinie dieses Clients.",
+      "<b>Minimale Rechte.</b> Verbindungen fordern Lese- und Schreibzugriff auf E-Mails an, keine Kontrolle über das ganze Konto. Selbst ein vollständig kompromittiertes Token ist auf die von Ihnen erteilten Rechte begrenzt.",
+      "<b>Ratenlimits.</b> Jeder Schlüssel hat ein Ratenlimit. Ein außer Kontrolle geratener oder gekaperter Agent kann also nicht unbemerkt Tausende Aktionen auslösen."
+    ],
+    "outro": "Nicht gelöst, aber eingedämmt: Unumkehrbare Aktionen sind abgesichert, und die Berechtigungen von API-Schlüsseln sowie Postfachbeschränkungen können den möglichen Schaden begrenzen."
+  },
+  "credentials": {
+    "title": "5. So werden Ihre Zugangsdaten geschützt",
+    "intro": "Ihre Tokens sind das einzig Sensible, das wir aufbewahren. Deshalb bekommen sie den stärksten Schutz, den wir bieten können:",
+    "measures": [
+      "Alle Daten werden bei der Übertragung mit TLS 1.2 oder höher verschlüsselt. Verbindungen ohne TLS werden abgelehnt.",
+      "OAuth-Tokens und IMAP-Zugangsdaten werden im Ruhezustand mit AES-256-GCM verschlüsselt. Der Schlüssel liegt als Server-Secret getrennt von der Datenbank und wird nie zusammen mit den verschlüsselten Daten gespeichert.",
+      "API-Schlüssel werden vor dem Speichern mit SHA-256 gehasht. Der Schlüssel selbst lässt sich aus dem Hash nicht wiederherstellen.",
+      "Der Datenbankzugriff ist durch Row-Level-Security-Richtlinien geschützt. Sie verhindern, dass ein Workspace auf die Daten eines anderen zugreift, selbst wenn eine Abfrage fehlerhaft geschrieben ist.",
+      "Administrativer Zugriff auf die Produktionsinfrastruktur erfordert Multi-Faktor-Authentifizierung und wird protokolliert."
+    ]
+  },
+  "google": {
+    "title": "6. Prüfung durch Google, Microsoft und Anbieter",
+    "p1": "Der Gmail-Zugriff nutzt die eingeschränkten Scopes von Google, also die Stufe, die Google am genauesten prüft.",
+    "p2": "Die Nutzung und Weitergabe von Informationen, die MCPEmails über Google-APIs erhält, an andere Apps entspricht der <link>Google API Services User Data Policy</link>, einschließlich der Anforderungen zur eingeschränkten Nutzung (Limited Use).",
+    "p3": "Der Zugriff auf Outlook und Microsoft 365 läuft über Microsoft Graph, über eine App mit von Microsoft verifiziertem Herausgeber, und fordert nur die benannten Berechtigungen an, die auf dem Zustimmungsbildschirm von Microsoft stehen: Mail.ReadWrite, Mail.Send, offline_access, openid, profile und email. Bei Fastmail, iCloud, Yahoo, Zoho, Yandex und anderen IMAP-Anbietern verbinden Sie sich mit einem App-Passwort Ihres Anbieters, das Sie jederzeit widerrufen können. Es gibt keine weitreichenden OAuth-Scopes, die wir zu großzügig anfordern könnten."
+  },
+  "subprocessors": {
+    "title": "7. Unterauftragsverarbeiter",
+    "intro": "Die Liste der Unternehmen, die überhaupt mit Daten in Berührung kommen, halten wir kurz, und jedes ist an einen Auftragsverarbeitungsvertrag gebunden. Beachten Sie, was fehlt: Kein KI-Anbieter steht auf dieser Liste. MCPEmails sendet Ihre E-Mails an kein eigenes Modell. Das tut Ihr Agent, unter Ihrer Kontrolle und nach den Datenrichtlinien seines Anbieters.",
+    "thProvider": "Anbieter",
+    "thPurpose": "Zweck",
+    "thLocation": "Standort",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Datenbank, Authentifizierung, Edge Functions",
+        "location": "Daten in der EU gespeichert (Stockholm, Schweden); E-Mails live in den USA (Osten) verarbeitet"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Hosting für Website, Dashboard und MCP-Endpunkt",
+        "location": "Globales CDN; Server in den USA (Osten) und der EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Mail-Relay für die wenigen Anbieter, die Verbindungen von Cloud-Adressen ablehnen (ein TLS-Tunnel: Es kann weder E-Mails noch Passwörter lesen)",
+        "location": "Deutschland (EU)"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Zahlungsabwicklung (nur Abrechnung, keine E-Mail-Daten)",
+        "location": "USA; PCI-DSS-zertifiziert"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Eine Sicherheitslücke melden",
+    "p1": "Wenn Sie ein Sicherheitsproblem finden, melden Sie es bitte. Ich höre es viel lieber von Ihnen, als später darüber zu lesen.",
+    "points": [
+      "Schreiben Sie an <securityEmail></securityEmail>, mit Details und Schritten zur Reproduktion.",
+      "Ein maschinenlesbarer Kontakt ist unter <securitytxt>/.well-known/security.txt</securitytxt> veröffentlicht.",
+      "Ich bestätige Meldungen möglichst innerhalb von 24 Stunden und behebe bestätigte kritische Probleme möglichst innerhalb von 72 Stunden."
+    ],
+    "safeHarbor": "<b>Safe Harbor.</b> Wenn Sie sich in gutem Glauben an diese Richtlinie halten, nicht auf Daten anderer Nutzer zugreifen oder sie verändern und mir angemessen Zeit zur Behebung geben, bevor Sie das Problem offenlegen, werde ich keine rechtlichen Schritte gegen Sie wegen Ihrer Forschung einleiten oder unterstützen."
+  },
+  "cta": {
+    "title": "Fragen dazu?",
+    "sub": "Fragen Sie mich alles. Ich bin Asgeir Albretsen und beantworte jede Nachricht selbst.",
+    "contactBtn": "E-Mail an security@",
+    "privacyBtn": "Datenschutzerklärung lesen"
+  },
+  "selfhost": {
+    "title": "Selbst betreiben, niemandem vertrauen (auch uns nicht)",
+    "p1": "MCPEmails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf genau demselben MCP-Server, den Sie selbst hosten können. „E-Mails werden live abgerufen und nie gespeichert“ können Sie also prüfen, indem Sie ihn betreiben und den Netzwerkverkehr beobachten. Sie müssen es nicht einfach glauben.",
+    "p2": "Self-Hosting setzt auf IMAP/SMTP: Verbinden Sie jedes Postfach mit einem App-Passwort. Ihre Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Ein einziger Befehl startet den ganzen Stack auf Ihrem eigenen Rechner.",
+    "cta": "Zur Self-Hosting-Anleitung"
+  },
+  "operator": {
+    "title": "Wer dahintersteht",
+    "p1": "Eine Person: ich. Ich bin Asgeir Albretsen und betreibe den Dienst über die Albretsen AS, eine norwegische Gesellschaft mit beschränkter Haftung (aksjeselskap), die mir gehört, Organisationsnummer 938 702 373, mit Sitz in Bergen, Norwegen. Die Commits sind auch von mir, unter <gh>github.com/Albretsen</gh>. Der Name auf dieser Seite und der Name am Code sind also derselbe. Mehr steht auf der <about>Über-uns-Seite</about>, die vollständigen rechtlichen Angaben finden Sie in den <terms>Nutzungsbedingungen</terms>.",
+    "p2": "Dass alles an einer Person hängt, ist ein echtes Risiko, und die Antwort darauf ist nicht das Versprechen, dass ich immer da sein werde. MCPEmails ist unter AGPL-3.0 öffentlich, und der gehostete Dienst läuft auf genau diesem Code. Wenn ich aufhöre oder Sie mir einfach nicht mehr vertrauen, können Sie das Repository klonen und auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln betreiben. <selfhostpage>Die Self-Hosting-Anleitung</selfhostpage> beschreibt das komplette Vorgehen. Ich bin lieber eine namentlich bekannte Person, die Sie erreichen und verlassen können, als ein anonymer Anbieter, dem Sie nur vertrauen können.",
+    "p3": "Support- und Sicherheitsmails landen in keiner Warteschlange. Sie kommen bei mir an, und ich beantworte jede Nachricht selbst."
+  }
+}

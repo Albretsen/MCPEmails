@@ -20,30 +20,30 @@
     "titleLine1": "Conecta tu bandeja de laposte.net",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de laposte.net. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu contraseña normal de laposte.net.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de laposte.net. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.laposte.net en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de laposte.net, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La Poste no emite contraseñas específicas de aplicación y no hay ningún interruptor de acceso de clientes que buscar, pero el buzón solo acepta puertos cifrados y su límite de tamaño de salida es inusualmente bajo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de laposte.net. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.laposte.net en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de laposte.net, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La Poste no emite contraseñas específicas de aplicación y no hay ningún interruptor de acceso de clientes que buscar, pero el buzón solo acepta puertos cifrados y su límite de tamaño de salida es inusualmente bajo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Tu contraseña normal de laposte.net",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
   },
   "method": {
     "title": "Cómo se conecta laposte.net: IMAP con TLS y la contraseña de la cuenta",
-    "body": "La Poste sirve IMAP en <code>imap.laposte.net</code> en el puerto 993 con TLS implícito. Para el correo saliente, las páginas de ayuda de La Poste documentan <code>smtp.laposte.net</code> en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que rellena mcpemails, porque una única conexión cifrada desde el principio es más sencilla de mantener viva desde un servidor. La autenticación usa tu contraseña normal de laposte.net con la dirección <b>completa</b> como nombre de usuario. No hay contraseña de aplicación que generar ni ningún interruptor <b>autoriser les logiciels de messagerie</b> (autorizar los programas de correo) que buscar, lo que hace de laposte.net uno de los buzones franceses más sencillos de conectar. Las dificultades están en otra parte: el servidor es mínimo a propósito, y La Poste desactivó de golpe todos los protocolos sin cifrar, lo que sigue dejando tirados a clientes configurados hace años."
+    "body": "La Poste sirve IMAP en <code>imap.laposte.net</code> en el puerto 993 con TLS implícito. Para el correo saliente, las páginas de ayuda de La Poste documentan <code>smtp.laposte.net</code> en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que rellena MCPEmails, porque una única conexión cifrada desde el principio es más sencilla de mantener viva desde un servidor. La autenticación usa tu contraseña normal de laposte.net con la dirección <b>completa</b> como nombre de usuario. No hay contraseña de aplicación que generar ni ningún interruptor <b>autoriser les logiciels de messagerie</b> (autorizar los programas de correo) que buscar, lo que hace de laposte.net uno de los buzones franceses más sencillos de conectar. Las dificultades están en otra parte: el servidor es mínimo a propósito, y La Poste desactivó de golpe todos los protocolos sin cifrar, lo que sigue dejando tirados a clientes configurados hace años."
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
       "h": "Comprueba que tu contraseña de laposte.net sigue funcionando en el webmail",
-      "p": "Inicia sesión en laposte.net con la misma dirección y contraseña que vas a dar a mcpemails. Merece la pena dedicarle treinta segundos porque no hay ninguna credencial de correo aparte a la que echar la culpa si falla: si el webmail la acepta, el servidor IMAP también."
+      "p": "Inicia sesión en laposte.net con la misma dirección y contraseña que vas a dar a MCPEmails. Merece la pena dedicarle treinta segundos porque no hay ninguna credencial de correo aparte a la que echar la culpa si falla: si el webmail la acepta, el servidor IMAP también."
     },
     {
       "h": "Revisa tus ajustes de seguridad antes de conectar",
       "p": "En el webmail de laposte.net, abre <b>Paramètres</b>, luego <b>Sécurité</b>. Ahí se activa y desactiva la autenticación en dos factores. La documentación de La Poste sobre la autenticación en dos factores de laposte.net describe una confirmación push en un dispositivo móvil vinculado y no documenta ningún mecanismo de contraseñas de aplicación para programas de correo, así que ten claro en qué estado está tu cuenta antes de investigar un inicio de sesión rechazado."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa, como prenom.nom@laposte.net, y la contraseña. Los servidores y puertos de La Poste ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
@@ -54,11 +54,11 @@
     },
     {
       "h": "Todos los puertos sin cifrar se desactivaron el 4 de julio de 2023, y el error no ayuda",
-      "p": "La Poste desactivó ese día toda comunicación en texto plano. Los clientes que siguen apuntando a los antiguos puertos sin cifrar reciben un error del tipo <b>invalid command</b> en lugar de algo sobre el cifrado, así que una configuración que funcionó durante una década de repente parece una cuenta rota. Las únicas combinaciones admitidas ahora son IMAP en el 993, POP en el 995 y SMTP en el 587, todas con SSL o TLS 1.2 como mínimo. Si trasladas los ajustes de un cliente a mcpemails, no copies los puertos antiguos."
+      "p": "La Poste desactivó ese día toda comunicación en texto plano. Los clientes que siguen apuntando a los antiguos puertos sin cifrar reciben un error del tipo <b>invalid command</b> en lugar de algo sobre el cifrado, así que una configuración que funcionó durante una década de repente parece una cuenta rota. Las únicas combinaciones admitidas ahora son IMAP en el 993, POP en el 995 y SMTP en el 587, todas con SSL o TLS 1.2 como mínimo. Si trasladas los ajustes de un cliente a MCPEmails, no copies los puertos antiguos."
     },
     {
       "h": "Sin SASL-IR, y la mayoría de bibliotecas de cliente lo dan por hecho",
-      "p": "El servidor IMAP de laposte.net no anuncia <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> seco sin explicación, idéntico a una contraseña incorrecta. mcpemails detecta ese <code>BAD</code> y reintenta con el intercambio en dos pasos, así que está resuelto, pero por eso otras herramientas IMAP fallan contra laposte.net y funcionan en todos los demás sitios."
+      "p": "El servidor IMAP de laposte.net no anuncia <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> seco sin explicación, idéntico a una contraseña incorrecta. MCPEmails detecta ese <code>BAD</code> y reintenta con el intercambio en dos pasos, así que está resuelto, pero por eso otras herramientas IMAP fallan contra laposte.net y funcionan en todos los demás sitios."
     },
     {
       "h": "Sin IDLE, sin MOVE y sin SPECIAL-USE en un buzón con nombres en francés",
@@ -73,11 +73,11 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de laposte.net?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para La Poste. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para La Poste. Apuntar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de laposte.net?",
-      "a": "IMAP es imap.laposte.net en el puerto 993 con TLS implícito. Para el correo saliente, La Poste documenta smtp.laposte.net en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que usa mcpemails. Inicia sesión con tu dirección completa y tu contraseña de laposte.net. Ambos servidores se confirmaron con una conexión TLS real."
+      "a": "IMAP es imap.laposte.net en el puerto 993 con TLS implícito. Para el correo saliente, La Poste documenta smtp.laposte.net en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que usa MCPEmails. Inicia sesión con tu dirección completa y tu contraseña de laposte.net. Ambos servidores se confirmaron con una conexión TLS real."
     },
     {
       "q": "¿Necesita laposte.net una contraseña de aplicación?",

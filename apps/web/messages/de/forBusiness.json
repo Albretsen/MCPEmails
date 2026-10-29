@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "title": "KI-E-Mail für Unternehmen: Alle Firmenpostfächer in einem Agenten",
+    "description": "Eine Person, alle Firmenpostfächer. Verbinden Sie info@, sales@ und invoices@ per IMAP, Gmail, Microsoft 365 oder bei jedem Mail-Hoster und bearbeiten Sie alle aus Claude oder einem anderen MCP-Client."
+  },
+  "hero": {
+    "eyebrow": "Für alle, die die E-Mails der Firma betreuen",
+    "titleLine1": "Alle Firmenpostfächer,",
+    "titleLine2": "eine Person, ein Agent",
+    "lead": "info@, sales@, invoices@, support@ und Ihre eigene Adresse landen meist bei derselben Person. MCPEmails verbindet sie alle mit Claude, Cursor, ChatGPT oder einem anderen MCP-Client. So lesen, beantworten, leiten weiter und sortieren Sie über alle Adressen hinweg in einer Unterhaltung. Es funktioniert mit jedem Mail-Hoster, und Sie können jede ausgehende Nachricht zur Freigabe zurückhalten.",
+    "ctaPrimary": "Erstes Postfach kostenlos verbinden",
+    "ctaSecondary": "Funktionen ansehen"
+  },
+  "pains": {
+    "eyebrow": "Die Aufgabe",
+    "title": "Fünf Adressen, eine Person, die antwortet",
+    "sub": "Eine kleine Firma hat mehr Postfächer als Mitarbeitende. Jedes bedeutet ein eigenes Login, einen eigenen Tab und einen weiteren Ort, an dem eine Kundenanfrage unbeantwortet bleiben kann.",
+    "items": {
+      "coverage": {
+        "tag": "Überblick",
+        "h": "Einmal fragen, alle Adressen prüfen",
+        "p": "Bitten Sie Ihren Agenten, <b>sales@, info@ und support@ durchzugehen und aufzulisten, was noch auf Antwort wartet</b>. Er liest jedes verbundene Postfach live und liefert eine einzige Liste. So bleibt nichts in dem Postfach liegen, das heute niemand geöffnet hat."
+      },
+      "sender": {
+        "tag": "Richtiger Absender",
+        "h": "Antworten gehen von der richtigen Adresse raus",
+        "p": "Jedes Postfach hat <b>seinen eigenen Absendernamen und seine eigene Signatur</b>, und seine E-Mails gehen über den eigenen Anbieter oder SMTP-Server dieses Postfachs raus. Eine Antwort auf eine Rechnungsfrage kommt von invoices@, mit der Signatur von invoices@."
+      },
+      "routine": {
+        "tag": "Routine",
+        "h": "Routinearbeit nach Zeitplan",
+        "p": "Wiederkehrende Aufgaben laufen als <b>Triage-Automatisierungen</b>: eine gespeicherte Suche plus eine feste Aktion (verschieben, mit Label versehen, als gelesen markieren, weiterleiten oder einen Antwortentwurf erstellen) in festem Rhythmus, ohne KI-Modell dazwischen. Eine Automatisierung kann nie E-Mails löschen, und eine von ihr eingereihte Weiterleitung wartet immer auf Ihre Freigabe."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Ein Tag in den Firmenpostfächern",
+    "title": "Echte Prompts aus dem Alltag",
+    "sub": "Keine neue App zum Lernen. Sie sprechen mit Ihrem KI-Client, und er arbeitet in den echten Postfächern.",
+    "prompts": [
+      "Geh sales@ und info@ durch und liste alle Anfragen dieser Woche auf, die noch niemand beantwortet hat.",
+      "Leite die Rechnungen dieses Monats aus invoices@ an unseren Steuerberater weiter, mit Anhängen.",
+      "Entwirf eine Antwort von support@ auf die Lieferbeschwerde, im Ton unserer letzten Antwort an diesen Kunden.",
+      "Durchsuche alle Postfächer nach E-Mails von northwind-supplies.example und sag mir, wie es um die Bestellung steht.",
+      "Verschiebe alle Lieferantenauszüge in invoices@ in einen Ordner namens Kontoauszüge.",
+      "Plane die Preisänderung so, dass sie am Montag um 8 Uhr von sales@ rausgeht."
+    ]
+  },
+  "does": {
+    "eyebrow": "Was es tatsächlich kann",
+    "title": "Echte Postfächer, kein reiner Lesezugriff",
+    "sub": "Dieselben Tools funktionieren in jedem verbundenen Postfach. Sind mehrere verbunden, nennt jeder Aufruf das Postfach, auf das er wirkt.",
+    "items": {
+      "read": {
+        "h": "Lesen und suchen",
+        "p": "Jedes verbundene Postfach auflisten, lesen und durchsuchen, jedes Mal live vom Anbieter abgerufen."
+      },
+      "send": {
+        "h": "Senden, antworten und weiterleiten",
+        "p": "Neue E-Mails senden, im Thread antworten oder mit den Originalanhängen weiterleiten, von der Adresse, zu der die E-Mail gehört."
+      },
+      "schedule": {
+        "h": "Planen",
+        "p": "Eine Nachricht für später einplanen und jederzeit vor dem Versand stornieren."
+      },
+      "organize": {
+        "h": "Organisieren",
+        "p": "Nachrichten verschieben, kopieren, markieren, archivieren und mit Labels versehen und die passenden Ordner anlegen."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Kontrolle",
+    "title": "Sie entscheiden, was gesendet wird",
+    "sub": "Einen Agenten an die Firmen-E-Mails zu lassen, funktioniert nur mit echten Grenzen. Diese werden auf unserem Server durchgesetzt, nicht nur dem Modell vorgeschlagen.",
+    "items": {
+      "approval": {
+        "h": "Freigabe für ausgehende E-Mails",
+        "p": "Schalten Sie sie pro Postfach ein, und jedes Senden, Antworten, Weiterleiten, jeder gesendete Entwurf und jeder geplante Versand wartet in Ihrem Dashboard, bis Sie freigeben oder ablehnen. Enthalten in jedem Tarif, auch in Free."
+      },
+      "stored": {
+        "h": "Gelesene E-Mails werden nie gespeichert",
+        "p": "Nachrichten werden für jede Anfrage live von Ihrem Anbieter abgerufen und an Ihren KI-Client übergeben. Zwischen den Aufrufen bleibt nichts gespeichert. Pro Postfach speichern wir das verschlüsselte Token oder Passwort. Die Ausnahme ist eine Nachricht, die Sie für später planen: Wir speichern sie bis zum Versand und behalten danach einen Eintrag in Ihrem Verlauf."
+      },
+      "keys": {
+        "h": "Schlüssel nur für die Postfächer, die Sie wählen",
+        "p": "Ein API-Schlüssel lässt sich auf ausgewählte Postfächer und die nötigen Berechtigungen beschränken. Ein Schlüssel für die Triage von support@ erreicht invoices@ nicht, und ein Schlüssel ohne Sendeberechtigung kann gar nicht senden."
+      },
+      "server": {
+        "h": "Ihr Mailserver behält die Kontrolle",
+        "p": "E-Mails gehen über Ihren eigenen Anbieter oder SMTP-Server raus, nie über einen Mailserver von uns. Ändern Sie das Passwort eines Postfachs, widerrufen Sie sein App-Passwort oder entziehen Sie den Zugriff in Ihrem Google- oder Microsoft-Konto, ist der Agent ausgesperrt."
+      }
+    },
+    "link": "So funktioniert die Sicherheit"
+  },
+  "providers": {
+    "eyebrow": "Jeder Hoster",
+    "title": "Alle Firmenpostfächer verbinden, egal wo sie liegen",
+    "sub": "Die meisten Firmen-E-Mails liegen beim Webhoster oder Domain-Registrar, und das ist kein Problem. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort. IONOS, Hostinger, OVH, Namecheap und andere gängige Hoster werden an der Adresse erkannt und automatisch eingetragen. Gmail und Google Workspace verbinden sich per Google-App-Passwort. Microsoft 365 und Outlook verbinden sich per Anmeldung mit Microsoft; bei einem Firmenkonto in Microsoft 365 muss Ihre IT-Administration MCPEmails eventuell einmal für die ganze Organisation freigeben. iCloud, Fastmail, Yahoo, Zoho und Yandex verbinden sich per App-Passwort.",
+    "ctaImap": "Beliebiges IMAP-Postfach verbinden",
+    "ctaGmail": "Gmail oder Google Workspace verbinden",
+    "ctaMicrosoft": "Microsoft 365 verbinden",
+    "ctaIonos": "IONOS verbinden",
+    "ctaMatrix": "So verbindet sich jeder Anbieter"
+  },
+  "pricing": {
+    "eyebrow": "Preise",
+    "title": "Der Tarif richtet sich nach der Zahl der Postfächer",
+    "sub": "Free, Personal und Pro sind jeweils ein Login. Es ändert sich nur, wie viele Postfächer dieses Login verbinden kann.",
+    "items": {
+      "free": {
+        "h": "Free: ein Postfach",
+        "p": "Beginnen Sie mit der meistgenutzten Adresse. 150 E-Mail-Aktionen pro Monat, die ersten 3 Tage werden nicht gezählt, keine Kreditkarte nötig."
+      },
+      "personal": {
+        "h": "Personal, $9 pro Monat: bis zu drei",
+        "p": "Für eine Firma mit zwei oder drei Adressen. Unbegrenzte E-Mail-Aktionen, ein höheres Burst-Ratenlimit und Support per E-Mail."
+      },
+      "pro": {
+        "h": "Pro, $15 pro Monat: vier bis zehn",
+        "p": "Bis zu 10 Postfächer, weiterhin mit einem Login. Der Tarif für eine Person, die ein Unternehmen mit einer Adresse pro Abteilung führt."
+      }
+    },
+    "note": "Business für $39 pro Monat enthält 10 Postfächer und berechnet $3 pro Monat für jedes weitere. Mitglieder mit Rollen kosten nichts extra, und Sie können pro Firma oder Kunde einen eigenen Workspace führen.",
+    "cta": "Alle Tarife vergleichen"
+  },
+  "faq": {
+    "eyebrow": "Fragen aus der Praxis",
+    "title": "Was Betreiber vor dem Verbinden fragen",
+    "sub": "Die praktischen Einwände, direkt beantwortet.",
+    "items": [
+      {
+        "q": "Wir sind eine Firma, keine Einzelperson. Ist Pro wirklich der richtige Tarif?",
+        "a": "Ja, wenn eine Person die Postfächer betreut. Pro ist ein Login mit bis zu 10 verbundenen Postfächern, damit kann eine Person info@, sales@, invoices@ und support@ aus einem Agenten heraus betreuen. Business ist für mehr als 10 Postfächer oder mehrere Personen mit eigenem Login gedacht, mit Rollen und einem eigenen Workspace pro Kunde."
+      },
+      {
+        "q": "Unsere E-Mails liegen bei unserem Webhoster, nicht bei Gmail. Funktioniert das?",
+        "a": "Mit großer Wahrscheinlichkeit. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort, und gängige Hoster werden an der Adresse erkannt, sodass sich die Einstellungen selbst ausfüllen. Der Server muss aus dem öffentlichen Internet erreichbar sein, und ein Postfach, das über IMAP nur eine OAuth-Anmeldung akzeptiert, lässt sich so nicht verbinden. Liegen Ihre Firmen-E-Mails bei Microsoft 365, verbinden Sie sie stattdessen als Outlook: Sie melden sich mit Microsoft an, und Ihre IT-Administration muss MCPEmails eventuell einmal für die ganze Organisation freigeben."
+      },
+      {
+        "q": "Sendet der Agent von der richtigen Adresse?",
+        "a": "Ja. Sind mehrere Postfächer verbunden, nennt jeder Tool-Aufruf das Postfach, auf das er wirkt, und jedes Postfach hat seinen eigenen Absendernamen und seine eigene Signatur. Eine Antwort auf einen Thread in sales@ geht von sales@ raus, über den eigenen Mailserver dieses Postfachs."
+      },
+      {
+        "q": "Kann ich verhindern, dass er ohne mich etwas sendet?",
+        "a": "Ja. Schalten Sie die Freigabe für ein Postfach ein, und jede ausgehende Nachricht wartet in Ihrem Dashboard, bis Sie sie freigeben oder ablehnen. Sie können einem KI-Client auch einen API-Schlüssel ganz ohne Sendeberechtigung geben. Beides gibt es in jedem Tarif."
+      },
+      {
+        "q": "Werden Firmen-E-Mails auf Ihren Servern gespeichert?",
+        "a": "Nein. Die E-Mails, die Ihr Agent liest, werden für jede Anfrage live von Ihrem Anbieter abgerufen und nicht aufbewahrt. Wir speichern das verschlüsselte Token oder Passwort für jedes Postfach. Die Ausnahme ist eine Nachricht, die Sie für später planen: Wir speichern sie bis zum Versand und behalten danach einen Eintrag in Ihrem Verlauf."
+      },
+      {
+        "q": "Was ist, wenn auch ein Kollege Zugriff braucht?",
+        "a": "Free, Personal und Pro sind Tarife mit einem Login. Braucht eine zweite Person ein eigenes Login, ergänzt Business Mitglieder mit Rollen ohne Zusatzkosten pro Person. Bis dahin deckt eine Person mit Pro bis zu 10 Postfächer ab."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Alle Firmenpostfächer in einem Agenten",
+    "sub": "Verbinden Sie das erste Postfach kostenlos, ohne Kreditkarte. Die übrigen kommen dazu, wenn Sie so weit sind: drei mit Personal, alle mit Pro.",
+    "ctaPrimary": "Erstes Postfach kostenlos verbinden",
+    "ctaSecondary": "Zur Dokumentation"
+  }
+}

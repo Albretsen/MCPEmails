@@ -19,7 +19,7 @@
     "titleLine1": "将 Kolab Now 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Kolab Now 收件箱。通过来自瑞士的 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 Kolab Now。mcpemails 是一个托管 MCP 服务器，通过 imap.kolabnow.com 端口 993 的 IMAP 以及 smtp.kolabnow.com 端口 465 的 SMTP 与之连接，使用你的 Kolab Now 主地址和账户密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。无论你的地址位于哪个域名（包括你自己的域名），都使用这两个主机名。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Kolab Now。MCPEmails 是一个托管 MCP 服务器，通过 imap.kolabnow.com 端口 993 的 IMAP 以及 smtp.kolabnow.com 端口 465 的 SMTP 与之连接，使用你的 Kolab Now 主地址和账户密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。无论你的地址位于哪个域名（包括你自己的域名），都使用这两个主机名。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "主地址与账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -38,7 +38,7 @@
       "p": "Kolab Now 以账户的主邮箱地址进行认证。如果你的邮件会发到多个地址，或者邮箱位于你自己的域名下，只有主地址能登录。它显示在你的 Kolab Now 账户设置中；在用户名字段中填写别名，只会得到一个普通的认证失败，没有任何原因提示。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入主地址和你的 Kolab Now 密码。服务器已预填为 <code>imap.kolabnow.com</code> 和 <code>smtp.kolabnow.com</code>，无论你地址的域名是什么都正确。凭据静态加密存储；邮件按请求实时获取，不做保留。"
     },
     {
@@ -65,14 +65,14 @@
     }
   ],
   "limits": [
-    "将 Kolab Now 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取你的邮件内容。Kolab Now 的瑞士托管和 Kolab 的自由软件栈，并不延伸到连接另一端的 AI 客户端。mcpemails 按请求从 Kolab Now 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。如果某个邮箱之所以放在 Kolab Now，正是为了让其内容留在一个司法管辖区内，那么把它连接到大型 AI 厂商就违背了这一初衷。",
-    "用你的 OpenPGP 或 S/MIME 密钥加密的邮件，通过 IMAP 到达时是密文。mcpemails 不持有任何私钥，所以代理能读取邮件头并归档邮件，但看不到正文。",
-    "Kolab Now 没有应用专用密码或设备密码，所以 mcpemails 保存的凭据就是你的账户密码。要撤销单个连接，就得修改账户密码。"
+    "将 Kolab Now 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取你的邮件内容。Kolab Now 的瑞士托管和 Kolab 的自由软件栈，并不延伸到连接另一端的 AI 客户端。MCPEmails 按请求从 Kolab Now 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。如果某个邮箱之所以放在 Kolab Now，正是为了让其内容留在一个司法管辖区内，那么把它连接到大型 AI 厂商就违背了这一初衷。",
+    "用你的 OpenPGP 或 S/MIME 密钥加密的邮件，通过 IMAP 到达时是密文。MCPEmails 不持有任何私钥，所以代理能读取邮件头并归档邮件，但看不到正文。",
+    "Kolab Now 没有应用专用密码或设备密码，所以 MCPEmails 保存的凭据就是你的账户密码。要撤销单个连接，就得修改账户密码。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Kolab Now 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Kolab Now 连接器，自身也无法使用 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Kolab Now 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接可在 Cursor 和其他 MCP 客户端中复用。"
+      "a": "不能直接使用。Claude 没有内置的 Kolab Now 连接器，自身也无法使用 IMAP。将 MCPEmails 这样的 MCP 服务器连接到你的 Kolab Now 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接可在 Cursor 和其他 MCP 客户端中复用。"
     },
     {
       "q": "Kolab Now 的 IMAP 和 SMTP 设置是什么？",

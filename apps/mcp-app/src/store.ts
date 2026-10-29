@@ -14,7 +14,7 @@ import type {
   ToolCancelledParams,
   ToolResultParams,
 } from "./bridge";
-import { DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
+import { BULK_SAMPLE_META_KEY, DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
 import {
   cardKey,
   isRestoreStub,
@@ -23,7 +23,15 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
+import {
+  type AutomationSeed,
+  automationSeed,
+  plainResultFailure,
+  plainResultNote,
+  plainResultReceipt,
+} from "./plain-result";
 import { announceDraft } from "./draft-signal";
+import { draftShownContextLine } from "./model-context";
 
 /**
  * What the last tool result was, which is NOT the same question as "did it
@@ -134,6 +142,21 @@ export interface CardStore {
    */
   draftSuperseded: boolean;
   /**
+   * Where the card that is current for this draft sits, and why, while
+   * `draftSuperseded` is true; the folded line says it (DraftEditor#Superseded).
+   * `newer`: the assistant wrote a newer version, whose card is below.
+   * `taken`: another card took the draft over (a Save or "Open here" there,
+   * draft-signal.ts#claimDraft), above or below this one, or `other` when the
+   * order is not known. Meaningless while `draftSuperseded` is false.
+   */
+  supersededAt: SupersededAt;
+  /**
+   * The draft revision of the result this card was MOUNTED for, or null. A
+   * later tool call has a higher revision, so comparing two cards' values says
+   * which is further down the chat (draft-signal.ts, "A CLAIM").
+   */
+  mountedRevision: number | null;
+  /**
    * The terminal receipt this card had ended on (restored from storage) when a
    * replayed draft result replaced it. Held until the replay is checked: a
    * draft that was sent, discarded or hidden here does not come back as an
@@ -142,6 +165,13 @@ export interface CardStore {
   priorReceipt: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
   resultStatus: ResultStatus;
+  /**
+   * For a `foreign` FIRST result: what the card can say about it in one line
+   * (plain-result.ts#plainResultNote), or null for the generic line.
+   */
+  resultNote: string | null;
+  /** For a `foreign` FIRST result: an automation the card can show. */
+  automation: AutomationSeed | null;
   hostContext: HostContext;
   connected: boolean;
   connectError: string | null;
@@ -196,13 +226,23 @@ export interface CardStore {
   mountedForRead: boolean | null;
 }
 
+/** See `CardStore#supersededAt`. */
+export interface SupersededAt {
+  why: "newer" | "taken";
+  where: "above" | "below" | "other";
+}
+
 let state: CardStore = {
   envelope: null,
   draftCheck: "trusted",
   draftIdHint: null,
   draftSuperseded: false,
+  supersededAt: { why: "newer", where: "below" },
+  mountedRevision: null,
   priorReceipt: null,
   resultStatus: "waiting",
+  resultNote: null,
+  automation: null,
   hostContext: {},
   connected: false,
   connectError: null,
@@ -413,7 +453,13 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
 
 /** Everything an envelope goes through on its way in. See `classifyResult`. */
 function admit(env: Envelope, result: ToolResultParams): Envelope {
-  return resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+  const next = resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+  // A bulk result card's sample rides in result `_meta` (card-only); a host
+  // that drops it just shows no sample.
+  const rows = result._meta?.[BULK_SAMPLE_META_KEY];
+  return next.undo && Array.isArray(rows)
+    ? { ...next, bulk_sample: neutralizeDeep(rows.slice(0, 5)) }
+    : next;
 }
 
 // ---------------------------------------------------------------------------
@@ -441,6 +487,11 @@ function admit(env: Envelope, result: ToolResultParams): Envelope {
 // real draft's `version` — so nothing would ever resync it, Save would light up
 // on the first keystroke, and that save would write the blank over the draft.
 // ---------------------------------------------------------------------------
+
+/** The draft of a draft-editor envelope; undefined for every other card. */
+export function editorDraft(env: Envelope | null | undefined): Envelope["draft"] {
+  return env?.card === "draft_editor" ? env.draft : undefined;
+}
 
 /** Is this a draft envelope whose body the card does not have yet? */
 export function isBodyDeferred(env: Envelope | null | undefined): boolean {
@@ -482,6 +533,11 @@ function resolveDeferredBody(env: Envelope, result: ToolResultParams): Envelope 
         html: b.html ?? null,
         truncated:
           typeof b.truncated === "boolean" ? b.truncated : env.draft.body?.truncated === true,
+        // Where the reply's quoted original starts (contract.ts#Body.quoted).
+        // Shape-checked again where it is used (format.ts#splitQuote).
+        ...(b.quoted && typeof b.quoted === "object" && !Array.isArray(b.quoted)
+          ? { quoted: b.quoted as { line: number } }
+          : {}),
       }),
     },
   };
@@ -620,6 +676,8 @@ export function isRenderable(env: Envelope | null | undefined): boolean {
       return !!env.outbound;
     case "bulk_plan":
       return !!env.plan;
+    case "subscription_plan":
+      return !!env.subscriptions;
     case "receipt":
       return !!env.receipt;
     default:
@@ -657,6 +715,33 @@ export function isFailure(env: Envelope | null | undefined): boolean {
 /** A draft editor with real content in it, as opposed to a restore stub. */
 function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
   return !!env && env.card === "draft_editor" && !!env.draft && !isRestoreStub(env);
+}
+
+/**
+ * A read or save of the same reply draft keeps the "Replying to" context the
+ * card already has (live re-test, 2026-10-17).
+ *
+ * The server knows the original as a server message id on the reply path only,
+ * so every `draft_read` and `draft_editor_save` answers `in_reply_to: null`
+ * with `threaded: true`. Adopting that took the "Replying to Dana · <subject>"
+ * line away on the first Save (and on the read a reloaded card makes), and the
+ * card jumped up by a line. The draft still answers the same message, so the
+ * held context stays until an answer says the draft no longer answers one.
+ */
+function keepReplyContext(current: Envelope | null | undefined, next: Envelope): Envelope {
+  const held = editorDraft(current)?.in_reply_to;
+  const n = editorDraft(next);
+  // Since 2026-10-19 those answers carry a context read back from the stored
+  // draft (`message_id: null`, mcp-app-drafts.ts#storedReplyContext). The one
+  // already held came from the reply itself and is the better copy, so it
+  // still wins: the line must not change wording under the person on a Save.
+  if (!held || !n || n.in_reply_to?.message_id || n.threaded !== true) return next;
+  const was = current!.draft!;
+  if (was.identity?.inbox_id !== n.identity?.inbox_id) return next;
+  const same = n.draft_id === was.draft_id ||
+    (!!n.resolved_from && (n.resolved_from === was.draft_id || n.resolved_from === was.resolved_from)) ||
+    n.origin === "save";
+  return same ? { ...next, draft: { ...n, in_reply_to: held } } : next;
 }
 
 /** Rule 0 above: keep the sent message on screen under its receipt. */
@@ -736,7 +821,7 @@ export function mergeEnvelope(
   current: Envelope | null | undefined,
   incoming: Envelope,
 ): Envelope {
-  const next = keepKnownBody(current, incoming);
+  const next = keepReplyContext(current, keepKnownBody(current, incoming));
   // ── RULE -1: A FAILURE NEVER TAKES THE EDITOR AWAY ────────────────────────
   // "Anything renderable replaces" was written when the only receipt that
   // could follow a draft was a send completing. It is not: every draft tool
@@ -772,6 +857,8 @@ export function mergeEnvelope(
         return { ...next, outbound: current.outbound };
       case "bulk_plan":
         return { ...next, plan: current.plan };
+      case "subscription_plan":
+        return { ...next, subscriptions: current.subscriptions };
       case "receipt":
         return { ...next, receipt: current.receipt };
     }
@@ -1092,9 +1179,13 @@ export function adoptOwnAnswer(next: Envelope): Envelope {
         draftCheck: "trusted" as const,
         draftIdHint: null,
         priorReceipt: null,
-        draftSuperseded: next.draft?.origin === "save"
-          ? false
-          : state.draftSuperseded || supersededBy(held, next.draft),
+        ...(next.draft?.origin === "save"
+          ? { draftSuperseded: false }
+          : state.draftSuperseded
+          ? {}
+          : supersededBy(held, next.draft)
+          ? { draftSuperseded: true, supersededAt: { why: "newer" as const, where: "below" as const } }
+          : {}),
       }
       : {}),
   });
@@ -1263,6 +1354,9 @@ function envelopeSubject(env: Envelope | null | undefined): Subject | null {
     return { kind: "approval", id: env.outbound.approval_id, scope: null };
   }
   if (env.plan?.plan_id) return { kind: "plan", id: env.plan.plan_id, scope: null };
+  if (env.subscriptions?.plan_id) {
+    return { kind: "plan", id: env.subscriptions.plan_id, scope: null };
+  }
   if (env.receipt) return receiptSubject(env);
   return null;
 }
@@ -1506,7 +1600,23 @@ export function wireResultHandlers(bridge: HostBridge) {
     // `status` matters as much as `envelope`: a result that is not ours at all
     // (an opted-out inbox, a non-plannable email_organize action) must leave
     // the card silent rather than warn under a successful operation.
-    const { envelope, status } = classifyResult(params);
+    let { envelope, status } = classifyResult(params);
+    // A plain send/schedule result as the MOUNTING call's answer becomes a
+    // one-line receipt (plain-result.ts). Only the first push: a later plain
+    // result must never replace a card the user is looking at, which is the
+    // rule the `foreign` branch below keeps for everything else.
+    let note: string | null = null;
+    let automation: AutomationSeed | null = null;
+    if (!envelope && status === "foreign" && !pushAccepted) {
+      const receipt = plainResultReceipt(params) ?? plainResultFailure(params);
+      if (receipt) {
+        envelope = receipt;
+        status = "envelope";
+      } else {
+        note = plainResultNote(params);
+        automation = automationSeed(params, getState().toolInput);
+      }
+    }
     // Recorded before the disarm, because "did this beat the watchdog" is
     // exactly the fact the diagnostics line exists to collect from the real
     // host: `late` would mean remounts DO get a result and the budget is wrong.
@@ -1521,7 +1631,7 @@ export function wireResultHandlers(bridge: HostBridge) {
       // Unchanged and deliberately so: a foreign or malformed SECOND result
       // moves the status and leaves the card alone. App.tsx renders on
       // envelope presence, so nothing blanks.
-      setState(timing);
+      setState(pushAccepted ? timing : { ...timing, resultNote: note, automation });
       return;
     }
 
@@ -1590,10 +1700,13 @@ export function wireResultHandlers(bridge: HostBridge) {
     }
 
     // Decided by the FIRST result accepted, which is the mounting call's.
+    const firstResult = !pushAccepted;
     if (!pushAccepted) {
+      const rev = editorDraft(envelope)?.revision;
       check = {
         ...check,
-        mountedForRead: envelope.card === "draft_editor" && envelope.draft?.origin === "read",
+        mountedForRead: editorDraft(envelope)?.origin === "read",
+        mountedRevision: typeof rev === "number" ? rev : null,
       };
     }
     pushAccepted = true;
@@ -1603,11 +1716,20 @@ export function wireResultHandlers(bridge: HostBridge) {
     // re-reads its own draft and decides (draft-signal.ts). A replay is not
     // fresh (`check` set it pending) and says nothing, which, with re-reads
     // never announcing, is what keeps this from looping.
+    //
+    // Not for a model's `draft_read` (2026-10-17): a read writes nothing, so
+    // no card holds an older version because of it, and the card it mounts
+    // (only on a host with a listing from before draft_read lost its card URI)
+    // is the one-line DraftReadLine, which an older card must not fold toward.
     if (
       envelope.card === "draft_editor" && envelope.draft && !isFailure(envelope) &&
-      check.draftCheck === undefined
+      check.draftCheck === undefined && envelope.draft.origin !== "read"
     ) {
       announceDraft(envelope.draft);
+      // The model's only sign that the card rendered (model-context.ts). Once,
+      // for the mounting call's own fresh result: a replay says nothing, so a
+      // reloaded chat cannot replace a later save or send line with this one.
+      if (firstResult) void bridge.updateModelContext(draftShownContextLine(envelope.draft));
     }
   };
 

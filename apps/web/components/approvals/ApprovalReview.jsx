@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Btn, Icon } from '../Primitives';
 
 /**
@@ -13,8 +14,15 @@ import { Btn, Icon } from '../Primitives';
  * state has to explain itself without assuming the surrounding context, and
  * the successful path ends with an explicit "you can go back now".
  *
- * The decision is a POST carrying a single-use CSRF token. There is no GET
- * side effect anywhere on this page.
+ * The decision is a POST carrying a single-use CSRF token and the `revision`
+ * of the request this page rendered. There is no GET side effect anywhere on
+ * this page.
+ *
+ * A request can still be edited over MCP while this page is open. When that
+ * happens the server refuses the approve as `changed`; the page says so,
+ * reloads the current content (a server refresh, which also mints a fresh
+ * CSRF token) and keeps the buttons disabled until that newer version is on
+ * screen. The reviewer then decides on what will actually be sent.
  */
 
 const noopSubscribe = () => () => {};
@@ -80,24 +88,36 @@ function StatusBanner({ tone, icon, title, children }) {
 
 export function ApprovalReview({ review, csrfToken }) {
   const t = useTranslations('dashboard');
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(null);
   const [outcome, setOutcome] = useState(null);
   const [failure, setFailure] = useState(null);
   const [showHtml, setShowHtml] = useState(false);
+  // Set when the server said the request changed: the token and revision the
+  // refused decision carried. Until a refresh hands this page a newer one, the
+  // buttons stay disabled, so nothing can be decided on stale content.
+  const [staleFrom, setStaleFrom] = useState(null);
+  const awaitingFresh =
+    staleFrom !== null && staleFrom.token === csrfToken && staleFrom.revision === review.revision;
 
   const decide = async (decision) => {
-    if (submitting || outcome || !csrfToken) return;
+    if (submitting || outcome || !csrfToken || awaitingFresh) return;
     setSubmitting(decision);
     setFailure(null);
     try {
       const response = await fetch(`/api/approvals/${review.id}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision, csrf_token: csrfToken }),
+        body: JSON.stringify({ decision, csrf_token: csrfToken, revision: review.revision }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setFailure(payload.code || 'generic');
+        const code = payload.code || 'generic';
+        setFailure(code);
+        if (code === 'changed') {
+          setStaleFrom({ token: csrfToken, revision: review.revision });
+          router.refresh();
+        }
         return;
       }
       setOutcome(decision);
@@ -122,64 +142,66 @@ export function ApprovalReview({ review, csrfToken }) {
   const decided = outcome !== null;
   const live = review.state === 'pending' && !decided && !raced;
 
+  const banner = decided ? (
+    <StatusBanner
+      tone={outcome === 'approve' ? 'good' : 'neutral'}
+      icon={outcome === 'approve' ? 'check' : 'x'}
+      title={t(outcome === 'approve' ? 'approvals.review.done.approvedTitle' : 'approvals.review.done.rejectedTitle')}
+    >
+      {t(outcome === 'approve' ? 'approvals.review.done.approvedBody' : 'approvals.review.done.rejectedBody')}
+    </StatusBanner>
+  ) : raced ? (
+    <StatusBanner tone="warn" icon="alert-triangle" title={t('approvals.review.states.decidedElsewhereTitle')}>
+      {t('approvals.review.states.decidedElsewhereBody')}
+    </StatusBanner>
+  ) : failure === 'changed' ? (
+    <StatusBanner tone="warn" icon="alert-triangle" title={t('approvals.review.states.changedTitle')}>
+      {awaitingFresh ? t('approvals.review.states.changedLoading') : t('approvals.review.states.changedBody')}
+    </StatusBanner>
+  ) : review.state !== 'pending' ? (
+    <StatusBanner
+      tone={review.state === 'approved' ? 'good' : review.state === 'expired' ? 'warn' : 'neutral'}
+      icon={review.state === 'approved' ? 'check' : review.state === 'expired' ? 'alert-triangle' : 'x'}
+      title={t(`approvals.review.states.${review.state}Title`)}
+    >
+      {t(`approvals.review.states.${review.state}Body`)}
+    </StatusBanner>
+  ) : null;
+
+  const hasAttachments = review.attachment_count > 0 || review.forward_carries_original;
+
   return (
     <div className="review-shell">
       <div className="review-wrap">
         <Link className="review-brand" href="/dashboard">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" />
         </Link>
 
-        <div className="card review-card">
-          {decided ? (
-            <StatusBanner
-              tone={outcome === 'approve' ? 'good' : 'neutral'}
-              icon={outcome === 'approve' ? 'check' : 'x'}
-              title={t(outcome === 'approve' ? 'approvals.review.done.approvedTitle' : 'approvals.review.done.rejectedTitle')}
-            >
-              {t(outcome === 'approve' ? 'approvals.review.done.approvedBody' : 'approvals.review.done.rejectedBody')}
-            </StatusBanner>
-          ) : null}
-
-          {!decided && raced ? (
-            <StatusBanner
-              tone="warn"
-              icon="alert-triangle"
-              title={t('approvals.review.states.decidedElsewhereTitle')}
-            >
-              {t('approvals.review.states.decidedElsewhereBody')}
-            </StatusBanner>
-          ) : null}
-
-          {!decided && !raced && review.state !== 'pending' ? (
-            <StatusBanner
-              tone={review.state === 'approved' ? 'good' : review.state === 'expired' ? 'warn' : 'neutral'}
-              icon={review.state === 'approved' ? 'check' : review.state === 'expired' ? 'alert-triangle' : 'x'}
-              title={t(`approvals.review.states.${review.state}Title`)}
-            >
-              {t(`approvals.review.states.${review.state}Body`)}
-            </StatusBanner>
-          ) : null}
-
+        {live ? (
           <div className="review-head">
-            <span className="review-kicker">
-              {live ? t('approvals.review.kicker') : t('approvals.review.kickerSettled')}
-            </span>
-            <h1>{live ? t('approvals.review.title') : t('approvals.review.titleSettled')}</h1>
-            {live ? <p className="sub">{t('approvals.review.subtitle')}</p> : null}
+            <span className="review-kicker">{t('approvals.review.kicker')}</span>
+            <h1>{t('approvals.review.title')}</h1>
+            <p className="sub">{t('approvals.review.subtitle')}</p>
           </div>
+        ) : null}
 
-          {!decided && review.state !== 'pending' && review.decided_at ? (
-            <p className="review-provenance">
-              <LocalTime iso={review.decided_at} fallback="" />
-              {review.decided_by_label ? ` · ${review.decided_by_label}` : ''}
-              {viaLabel(review.decided_via) ? ` · ${viaLabel(review.decided_via)}` : ''}
-            </p>
-          ) : null}
+        {banner}
 
-          <dl className="review-rows">
+        {!decided && review.state !== 'pending' && review.decided_at ? (
+          <p className="review-provenance">
+            <LocalTime iso={review.decided_at} fallback="" />
+            {review.decided_by_label ? ` · ${review.decided_by_label}` : ''}
+            {viaLabel(review.decided_via) ? ` · ${viaLabel(review.decided_via)}` : ''}
+          </p>
+        ) : null}
+
+        <article className="card review-mail" aria-label={t('approvals.review.bodyTitle')}>
+          <dl className="review-envelope">
             <Row label={t('approvals.review.from')}>
-              <span className="review-strong">{review.identity.email_address || t('approvals.review.unknownInbox')}</span>
-              {review.identity.display_name ? <span className="review-muted"> · {review.identity.display_name}</span> : null}
+              <span className="review-strong">{review.identity.display_name || review.identity.email_address || t('approvals.review.unknownInbox')}</span>
+              {review.identity.display_name && review.identity.email_address ? (
+                <span className="review-muted"> {review.identity.email_address}</span>
+              ) : null}
             </Row>
 
             <Row label={t('approvals.review.to')}>
@@ -200,49 +222,77 @@ export function ApprovalReview({ review, csrfToken }) {
 
             {review.recipients.bcc_count > 0 ? (
               <Row label={t('approvals.review.bcc')}>
-                {t('approvals.review.bccCount', { count: review.recipients.bcc_count })}
+                {review.recipients.bcc?.length ? (
+                  <>
+                    <span className="review-strong review-wrapany">{review.recipients.bcc.join(', ')}</span>
+                    <div className="review-muted review-hint">{t('approvals.review.bccHint')}</div>
+                  </>
+                ) : (
+                  t('approvals.review.bccCount', { count: review.recipients.bcc_count })
+                )}
               </Row>
             ) : null}
 
-            <Row label={t('approvals.review.subject')}>
-              {review.subject ? (
-                <span className="review-strong review-wrapany">{review.subject}</span>
-              ) : (
-                <span className="review-muted">{t('approvals.review.noSubject')}</span>
-              )}
-            </Row>
+            {review.reply_to?.length ? (
+              <Row label={t('approvals.review.replyTo')}>
+                <span className="review-strong review-wrapany">{review.reply_to.join(', ')}</span>
+              </Row>
+            ) : null}
 
-            <Row label={t('approvals.review.attachments')}>
-              {review.attachment_count > 0 ? (
-                <>
-                  {t('approvals.review.attachmentCount', { count: review.attachment_count })}
-                  {review.attachments.length ? (
-                    <ul className="review-attachments">
-                      {review.attachments.map((file, index) => (
-                        <li key={`${file.filename}-${index}`}>
-                          <Icon name="download" size={13} />
-                          <span className="review-wrapany">{file.filename}</span>
-                          {formatBytes(file.size_bytes) ? (
-                            <span className="review-muted"> · {formatBytes(file.size_bytes)}</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </>
+            {review.send_at ? (
+              <Row label={t('approvals.review.sendAt')}>
+                <span className="review-strong"><LocalTime iso={review.send_at} fallback="" /></span>
+              </Row>
+            ) : null}
+          </dl>
+
+          <h2 className={`review-subject review-wrapany${review.subject ? '' : ' review-muted'}`}>
+            {review.subject || t('approvals.review.noSubject')}
+          </h2>
+
+          {review.body.unavailable ? (
+            <p className="review-body-note">
+              {t(`approvals.review.body${review.body.unavailable === 'withheld_role' ? 'WithheldRole'
+                : review.body.unavailable === 'stored_with_provider' ? 'StoredWithProvider'
+                : review.body.unavailable === 'decrypt_failed' ? 'DecryptFailed'
+                : 'Absent'}`)}
+            </p>
+          ) : (
+            <>
+              {review.body.text ? <div className="review-body">{review.body.text}</div> : null}
+              {review.body.truncated ? (
+                <p className="review-body-note">{t('approvals.review.bodyTruncated')}</p>
+              ) : null}
+            </>
+          )}
+
+          {hasAttachments ? (
+            <div className="review-attachments">
+              {review.attachments.length ? (
+                review.attachments.map((file, index) => (
+                  <span className="review-file" key={`${file.filename}-${index}`}>
+                    <Icon name="download" size={13} />
+                    <span className="review-wrapany">{file.filename}</span>
+                    {formatBytes(file.size_bytes) ? <span className="review-muted">{formatBytes(file.size_bytes)}</span> : null}
+                  </span>
+                ))
               ) : (
                 <span className="review-muted">
-                  {review.forward_carries_original
-                    ? t('approvals.review.attachmentsFromOriginal')
-                    : t('approvals.review.noAttachments')}
+                  {review.attachment_count > 0
+                    ? t('approvals.review.attachmentCount', { count: review.attachment_count })
+                    : t('approvals.review.attachmentsFromOriginal')}
                 </span>
               )}
-            </Row>
+            </div>
+          ) : null}
+        </article>
 
+        <details className="review-details">
+          <summary>{t('approvals.review.details')}</summary>
+          <dl className="review-rows">
             <Row label={t('approvals.review.operation')}>{operationLabel}</Row>
-
             <Row label={t('approvals.review.route')}>
-              <span className="review-strong">{routeLabel}</span>
+              {routeLabel}
               <div className="review-muted review-route">{review.provider.route}</div>
               {review.provider.caveatKeys.length ? (
                 <ul className="review-caveats">
@@ -252,97 +302,67 @@ export function ApprovalReview({ review, csrfToken }) {
                 </ul>
               ) : null}
             </Row>
-
             <Row label={t('approvals.review.requested')}>
               <LocalTime iso={review.created_at} fallback={t('approvals.review.unknownTime')} />
             </Row>
-
-            {review.send_at ? (
-              <Row label={t('approvals.review.sendAt')}>
-                <LocalTime iso={review.send_at} fallback="" />
-              </Row>
-            ) : null}
-
             {review.expires_at ? (
               <Row label={t('approvals.review.expires')}>
                 <LocalTime iso={review.expires_at} fallback="" />
               </Row>
             ) : null}
           </dl>
-
-          <section className="review-message" aria-labelledby="review-message-title">
-            <h2 id="review-message-title">{t('approvals.review.bodyTitle')}</h2>
-
-            {review.body.unavailable ? (
-              <p className="review-body-note">
-                {t(`approvals.review.body${review.body.unavailable === 'withheld_role' ? 'WithheldRole'
-                  : review.body.unavailable === 'stored_with_provider' ? 'StoredWithProvider'
-                  : review.body.unavailable === 'decrypt_failed' ? 'DecryptFailed'
-                  : 'Absent'}`)}
-              </p>
-            ) : (
-              <>
-                {review.body.text ? <pre className="review-body">{review.body.text}</pre> : null}
-                {review.body.truncated ? (
-                  <p className="review-body-note">{t('approvals.review.bodyTruncated')}</p>
-                ) : null}
-                {review.body.html ? (
-                  <div className="review-html">
-                    <Btn
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setShowHtml((v) => !v)}
-                    >
-                      {showHtml ? t('approvals.review.bodyHtmlHide') : t('approvals.review.bodyHtmlShow')}
-                    </Btn>
-                    <p className="review-body-note">{t('approvals.review.bodyHtmlNote')}</p>
-                    {showHtml ? <pre className="review-body review-body-source">{review.body.html}</pre> : null}
-                  </div>
-                ) : null}
-              </>
-            )}
-          </section>
-
-          {failure && !raced ? (
-            <div className="alert alert-error" role="alert">
-              {t(`approvals.review.errors.${failure === 'role' || failure === 'csrf' ? failure : 'generic'}`)}
+          {review.body.html && !review.body.unavailable ? (
+            <div className="review-html">
+              <Btn size="sm" variant="secondary" onClick={() => setShowHtml((v) => !v)}>
+                {showHtml ? t('approvals.review.bodyHtmlHide') : t('approvals.review.bodyHtmlShow')}
+              </Btn>
+              <p className="review-body-note">{t('approvals.review.bodyHtmlNote')}</p>
+              {showHtml ? <pre className="review-source">{review.body.html}</pre> : null}
             </div>
           ) : null}
+        </details>
 
-          {live && !review.canDecide ? (
-            <div className="alert" role="status">{t('approvals.review.readOnly')}</div>
-          ) : null}
+        {failure && !raced && failure !== 'changed' ? (
+          <div className="alert alert-error" role="alert">
+            {t(`approvals.review.errors.${failure === 'role' || failure === 'csrf' ? failure : 'generic'}`)}
+          </div>
+        ) : null}
 
-          {live && review.canDecide ? (
-            <div className="review-actions">
-              <Btn
-                variant="danger"
-                disabled={submitting !== null}
-                onClick={() => decide('reject')}
-              >
-                {submitting === 'reject' ? t('approvals.review.working') : t('approvals.review.reject')}
-              </Btn>
-              <Btn
-                variant="primary"
-                icon="check"
-                disabled={submitting !== null}
-                onClick={() => decide('approve')}
-              >
-                {submitting === 'approve' ? t('approvals.review.working') : t('approvals.review.approve')}
-              </Btn>
-            </div>
-          ) : (
-            <div className="review-actions">
-              <Link className="btn btn-secondary" href="/dashboard/approvals">
-                {t('approvals.review.toDashboard')}
-              </Link>
-            </div>
-          )}
+        {live && !review.canDecide ? (
+          <div className="alert" role="status">{t('approvals.review.readOnly')}</div>
+        ) : null}
 
-          <p className="review-note">
-            {live ? t('approvals.review.footnote') : t('approvals.review.backToConversation')}
-          </p>
-        </div>
+        {live && review.canDecide ? (
+          <div className="review-actions">
+            <Btn
+              variant="secondary"
+              disabled={submitting !== null || awaitingFresh}
+              onClick={() => decide('reject')}
+            >
+              {submitting === 'reject' ? t('approvals.review.working') : t('approvals.review.reject')}
+            </Btn>
+            {/* A legacy draft send can never be sent (the message section says
+                why), so only Reject is offered for it. */}
+            <Btn
+              variant="primary"
+              icon="check"
+              disabled={submitting !== null || awaitingFresh || review.approvable === false}
+              onClick={() => decide('approve')}
+            >
+              {submitting === 'approve' ? t('approvals.review.working') : t('approvals.review.approve')}
+            </Btn>
+          </div>
+        ) : (
+          <div className="review-actions">
+            <Link className="btn btn-secondary" href="/dashboard/approvals">
+              {t('approvals.review.toDashboard')}
+            </Link>
+          </div>
+        )}
+
+        <p className="review-note">
+          {live ? t('approvals.review.footnote') : t('approvals.review.backToConversation')}
+        </p>
       </div>
     </div>
   );

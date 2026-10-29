@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Tu plan: Free",
+    "lead": "Free cubre lo que acabas de hacer. Esto es lo que añade cada plan cuando quieras más.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# bandeja} other {Hasta # bandejas}}",
+    "freeGrace": "Sin límite hasta el {date}",
+    "freeCap": "{cap} acciones de correo al mes",
+    "noCap": "Acciones de correo ilimitadas",
+    "emailSupport": "Soporte por correo",
+    "everythingPersonal": "Todo lo de Personal",
+    "perMonth": "{price}/mes",
+    "perYear": "{price}/año",
+    "intervalLabel": "Periodo de facturación",
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "recommended": "Recomendado",
+    "choose": "Elegir {plan}",
+    "continueFree": "Seguir con Free",
+    "dismiss": "Ocultar el resumen de planes"
+  },
+  "graceNote": {
+    "today": "Usaste MCPEmails {days, plural, one {# día} other {# días}}. Desde hoy, Free cuenta tus acciones de correo mensuales.",
+    "since": "Usaste MCPEmails {days, plural, one {# día} other {# días}}. Desde el {date}, Free cuenta tus acciones de correo mensuales.",
+    "seeUsage": "Ver uso",
+    "dismiss": "Cerrar"
+  },
+  "meter": {
+    "level50": "Ya has usado la mitad de las {cap} acciones de correo de este mes. El contador se reinicia el {date}.",
+    "level80": "{used} de {cap} acciones de correo usadas este mes. El contador se reinicia el {date}. Personal elimina el límite mensual.",
+    "level100": "Has usado las {cap} acciones de correo. Las lecturas y escrituras se rechazan hasta el {date}. Personal elimina el límite mensual.",
+    "seePlans": "Ver planes"
+  },
+  "multiInbox": {
+    "title": "Conecta tu otra bandeja",
+    "desc": "¿Tienes también otra cuenta de Gmail, iCloud u Outlook? Conéctala y tu IA trabaja con las dos bandejas desde un mismo chat.",
+    "descUpgrade": "¿Tienes también otra cuenta de Gmail, iCloud u Outlook? Tu IA puede trabajar con las dos bandejas desde un mismo chat. Una segunda bandeja requiere un plan de pago."
+  }
+}

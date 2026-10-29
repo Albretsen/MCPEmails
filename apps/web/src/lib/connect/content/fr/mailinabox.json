@@ -19,8 +19,8 @@
     "eyebrow": "Mail-in-a-Box + IA",
     "titleLine1": "Connectez Mail-in-a-Box à Claude,",
     "titleLine2": "Cursor, ChatGPT et tout client MCP",
-    "lead": "Vous avez monté votre propre box pour que personne d'autre ne détienne votre courrier. Ajouter un agent IA n'a pas à changer cela : mcpemails se connecte à votre box en IMAP et récupère chaque message en direct, sans rien en stocker.",
-    "answer": "Claude ne peut pas accéder seul à un serveur Mail-in-a-Box. mcpemails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur le port 993, au nom d'hôte de la box que le guide d'installation vous indique d'utiliser, en général box.yourdomain.com, en s'authentifiant avec le mot de passe d'un utilisateur mail créé dans le panneau d'administration. Claude, Cursor ou tout client MCP peut ainsi lire, rechercher, envoyer et organiser le courrier de votre box. La box doit être joignable depuis Internet et disposer d'un certificat Let's Encrypt valide, que le panneau d'administration installe pour vous. Une boîte est gratuite.",
+    "lead": "Vous avez monté votre propre box pour que personne d'autre ne détienne votre courrier. Ajouter un agent IA n'a pas à changer cela : MCPEmails se connecte à votre box en IMAP et récupère chaque message en direct, sans rien en stocker.",
+    "answer": "Claude ne peut pas accéder seul à un serveur Mail-in-a-Box. MCPEmails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur le port 993, au nom d'hôte de la box que le guide d'installation vous indique d'utiliser, en général box.yourdomain.com, en s'authentifiant avec le mot de passe d'un utilisateur mail créé dans le panneau d'administration. Claude, Cursor ou tout client MCP peut ainsi lire, rechercher, envoyer et organiser le courrier de votre box. La box doit être joignable depuis Internet et disposer d'un certificat Let's Encrypt valide, que le panneau d'administration installe pour vous. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de l'utilisateur mail depuis le panneau",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Obtenez un vrai certificat depuis le panneau d'administration",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Vérifiez l'utilisateur mail et son mot de passe",
-      "p": "Sous Mail puis Users, vérifiez que l'adresse existe et définissez un mot de passe que vous connaissez. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, utilisez <code>box.yourdomain.com</code> comme serveur, et saisissez l'adresse complète et ce mot de passe."
+      "p": "Sous Mail puis Users, vérifiez que l'adresse existe et définissez un mot de passe que vous connaissez. Ajoutez ensuite la boîte dans MCPEmails : choisissez IMAP / SMTP, utilisez <code>box.yourdomain.com</code> comme serveur, et saisissez l'adresse complète et ce mot de passe."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "Votre box doit accepter les connexions entrantes sur 993 depuis l'extérieur pour qu'un serveur MCP hébergé puisse l'atteindre. Une Mail-in-a-Box sur une connexion domestique derrière un NAT, ou restreinte par un groupe de sécurité cloud à votre propre adresse, ne peut pas être connectée. mcpemails peut être auto-hébergé si vous préférez garder la session IMAP à l'intérieur de votre réseau.",
+    "Votre box doit accepter les connexions entrantes sur 993 depuis l'extérieur pour qu'un serveur MCP hébergé puisse l'atteindre. Une Mail-in-a-Box sur une connexion domestique derrière un NAT, ou restreinte par un groupe de sécurité cloud à votre propre adresse, ne peut pas être connectée. MCPEmails peut être auto-hébergé si vous préférez garder la session IMAP à l'intérieur de votre réseau.",
     "Mail-in-a-Box s'attend à gérer le DNS et le TLS du nom d'hôte de la box : cela fonctionne donc mieux sur une installation standard non modifiée. Une box fortement personnalisée peut ne pas présenter le certificat que le panneau d'administration croit servir."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Mail-in-a-Box ?",
-      "a": "Pas directement. Claude n'a pas de connecteur pour un serveur de messagerie que vous gérez vous-même. Relier un serveur MCP comme mcpemails à votre box en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'elle héberge, et la même boîte fonctionne ensuite aussi dans Cursor ou ChatGPT."
+      "a": "Pas directement. Claude n'a pas de connecteur pour un serveur de messagerie que vous gérez vous-même. Relier un serveur MCP comme MCPEmails à votre box en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'elle héberge, et la même boîte fonctionne ensuite aussi dans Cursor ou ChatGPT."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Mail-in-a-Box ?",
@@ -80,7 +80,7 @@
     },
     {
       "q": "Dois-je exposer ma box sur Internet ?",
-      "a": "Pour le service hébergé, oui : mcpemails se connecte en entrant sur le port 993. C'est de toute façon l'état normal d'une Mail-in-a-Box, puisqu'elle doit accepter du courrier du monde entier sur le port 25. Si vous avez volontairement restreint l'accès à vos propres adresses, auto-hébergez plutôt mcpemails pour que la connexion IMAP ne quitte jamais votre réseau."
+      "a": "Pour le service hébergé, oui : MCPEmails se connecte en entrant sur le port 993. C'est de toute façon l'état normal d'une Mail-in-a-Box, puisqu'elle doit accepter du courrier du monde entier sur le port 25. Si vous avez volontairement restreint l'accès à vos propres adresses, auto-hébergez plutôt MCPEmails pour que la connexion IMAP ne quitte jamais votre réseau."
     },
     {
       "q": "Mon courrier est-il stocké sur vos serveurs ?",

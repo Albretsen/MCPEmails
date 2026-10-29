@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://support.apple.com/en-us/102525",
+    "https://support.apple.com/en-us/102654"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-spezifisches Passwort",
+    "helpUrl": "https://support.apple.com/en-us/102654",
+    "usernameForm": "Laut Apple ist der Benutzername der Namensteil Ihrer iCloud-Adresse, also johnappleseed statt johnappleseed@icloud.com. Wird das abgelehnt, verwenden Sie die vollständige Adresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "iCloud und Apple Mail per MCP mit Claude und ChatGPT nutzen",
+    "description": "Nutzen Sie das iCloud-Postfach aus Apple Mail in Claude oder ChatGPT. In zwei Minuten mit einem App-spezifischen Passwort verbunden. Kein Mac nötig. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "iCloud Mail + KI",
+    "titleLine1": "Der iCloud MCP-Server",
+    "titleLine2": "für Claude, Cursor und ChatGPT",
+    "lead": "Geben Sie Claude oder ChatGPT das iCloud-Postfach, das Sie in Apple Mail lesen. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails mit einem App-spezifischen Passwort von Apple. Der Dienst wird gehostet, Ihr Mac kann also aus bleiben, und dasselbe Postfach funktioniert in jedem MCP-Client.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "App-spezifisches Passwort, kein OAuth",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Apple bietet für iCloud Mail kein OAuth an, deshalb kann Claude sich nicht direkt damit verbinden. MCPEmails verbindet Ihr iCloud-Postfach per IMAP mit einem App-spezifischen Passwort von Apple. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Die Einrichtung dauert etwa zwei Minuten, und ein Postfach ist kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich iCloud: mit einem App-spezifischen Passwort",
+    "body": "iCloud Mail verbindet sich über IMAP/SMTP mit einem <b>App-spezifischen Passwort von Apple</b>. Erstellen Sie eines auf account.apple.com unter Anmeldung und Sicherheit → App-spezifische Passwörter (Zwei-Faktor-Authentifizierung erforderlich) und fügen Sie es zusammen mit Ihrer iCloud-Adresse in MCPEmails ein."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "App-spezifisches Passwort erstellen",
+      "p": "Öffnen Sie auf account.apple.com Anmeldung und Sicherheit → App-spezifische Passwörter und erstellen Sie eines (die Zwei-Faktor-Authentifizierung muss aktiv sein)."
+    },
+    {
+      "h": "In MCPEmails einfügen",
+      "p": "Tragen Sie Ihre iCloud-Adresse und das App-spezifische Passwort ein, um das Postfach sicher zu verbinden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Zwei-Faktor-Authentifizierung ist Voraussetzung, keine Option",
+      "p": "Apple stellt App-spezifische Passwörter nur für einen Apple Account aus, der mit Zwei-Faktor-Authentifizierung geschützt ist. Fehlt der Eintrag App-spezifische Passwörter unter Anmeldung und Sicherheit auf account.apple.com, liegt es daran. Die Zwei-Faktor-Authentifizierung einzuschalten ist dann der erste Schritt, keine optionale Härtung. Einen anderen Weg gibt es nicht: Apple bietet für iCloud Mail kein OAuth an, und Ihr normales Apple Account-Passwort meldet einen Mail-Client in keiner Konfiguration an."
+    },
+    {
+      "h": "Der Benutzername ist meist nicht Ihre vollständige E-Mail-Adresse",
+      "p": "Laut Apple ist der Benutzername für eingehende E-Mails der <b>Namensteil</b> der iCloud-Adresse, zum Beispiel <code>johnappleseed</code> statt <code>johnappleseed@icloud.com</code>. Das ist das Gegenteil von fast jedem anderen Anbieter auf dieser Website und erwischt alle, die aus Gewohnheit ihre Adresse einfügen. Ältere Adressen mit <code>@me.com</code> und <code>@mac.com</code> sowie Adressen mit eigener Domain über iCloud+ melden sich alle mit demselben primären Kontonamen an. Wird die Kurzform abgelehnt, nennt Apples eigene Dokumentation die vollständige Adresse als Ausweichlösung."
+    },
+    {
+      "h": "Ausgehende E-Mails laufen über STARTTLS auf Port 587, und vor dem Upgrade wird nichts angeboten",
+      "p": "Apples Server für ausgehende E-Mails ist <code>smtp.mail.me.com</code> auf Port 587. Die Verbindung beginnt unverschlüsselt und wird per STARTTLS hochgestuft. Die meisten Anbieter auf dieser Website nutzen stattdessen implizites TLS auf Port 465, ein Client, der bei iCloud von 465 ausgeht, hängt also einfach. An derselben Stelle gibt es eine zweite Falle: Als wir den Server getestet haben, bot er vor STARTTLS <b>überhaupt keine Authentifizierungsverfahren</b> an. Ein Client, der die Liste der Verfahren zu früh liest, schließt daraus, dass keine Authentifizierung unterstützt wird, und gibt auf. Dabei hätte er nur zuerst die Verbindung hochstufen müssen."
+    },
+    {
+      "h": "Apples IMAP-Server meldet kaum Fähigkeiten, und das verändert, wie E-Mails verschoben werden",
+      "p": "Die Liste der Fähigkeiten, die wir von <code>imap.mail.me.com</code> zurückbekommen haben, ist ungewöhnlich knapp. Es gibt kein <code>MOVE</code>, deshalb wird eine Nachricht durch Kopieren, Setzen eines Flags und Expunge verschoben statt mit einem einzigen atomaren Befehl. Bricht die Verbindung mittendrin ab, kann die Nachricht in beiden Ordnern liegen. Es gibt kein <code>IDLE</code>, also kann nichts an Sie gepusht werden, und neue E-Mails werden durch Nachsehen gefunden. Es gibt kein <code>UIDPLUS</code>, die Kennung einer kopierten Nachricht wird also nicht zurückgegeben und muss im Zielordner gesucht werden. Und es gibt kein <code>SPECIAL-USE</code>, deshalb werden Gesendet, Entwürfe, Papierkorb und Werbung über ihren Namen statt über ihre Rolle erkannt: Bei einem Postfach, das in einer anderen Sprache angelegt wurde, nennen Sie den Ordner ausdrücklich, dann findet Ihr Agent ihn."
+    }
+  ],
+  "limits": [
+    "iCloud unterstützt kein IDLE. Neue E-Mails werden gefunden, wenn Ihr Agent nachsieht, und nicht sofort beim Eingang gepusht.",
+    "Da es keine MOVE-Erweiterung gibt, ist Verschieben nicht atomar. Bricht die Verbindung mitten im Vorgang ab, kann eine Nachricht kurzzeitig in zwei Ordnern liegen.",
+    "Apple bietet für iCloud Mail kein OAuth an. Ein App-spezifisches Passwort ist der einzige Zugang, und wenn Sie es in Ihrem Apple Account widerrufen, wird das Postfach sofort getrennt."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit iCloud Mail?",
+      "a": "Nicht von allein. Claude hat keinen eingebauten iCloud-Konnektor, und Apple bietet für iCloud Mail keine OAuth-Schnittstelle an. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP und mit einem App-spezifischen Passwort von Apple mit dem Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor und ChatGPT."
+    },
+    {
+      "q": "Kann Claude sich mit Apple Mail verbinden?",
+      "a": "Nicht mit der App selbst, und das ist auch nicht nötig. Apple Mail zeigt Postfächer an, die bei einem Anbieter liegen. Ist Ihres eine iCloud-Adresse, verbinden Sie es hier mit einem App-spezifischen Passwort, und Claude oder ChatGPT sieht dieselben Ordner und Nachrichten, mit Ausnahme von Ordnern, die nur unter „Auf meinem Mac“ liegen. Zeigt Apple Mail ein Gmail-, Outlook-, Yahoo- oder Arbeitskonto, verbinden Sie stattdessen diesen Anbieter. MCPEmails wird gehostet, Ihr Mac muss also nicht eingeschaltet sein."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für iCloud Mail?",
+      "a": "IMAP ist imap.mail.me.com auf Port 993 mit implizitem TLS. SMTP ist smtp.mail.me.com auf Port 587 mit STARTTLS, nicht implizites TLS auf 465. Das Passwort ist für beide ein App-spezifisches Passwort von Apple. Laut Apple ist der Benutzername für eingehende E-Mails der Namensteil Ihrer Adresse. Beide Hosts wurden an dem auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Warum wird mein Apple-Passwort abgelehnt?",
+      "a": "Weil iCloud das Apple Account-Passwort von einem Mail-Client nie akzeptiert. Sie brauchen ein App-spezifisches Passwort, das Sie auf account.apple.com unter Anmeldung und Sicherheit erstellen. Dieser Bereich erscheint erst, wenn die Zwei-Faktor-Authentifizierung aktiv ist. Stimmt das Passwort und die Anmeldung scheitert trotzdem, versuchen Sie als Benutzernamen den Namensteil Ihrer Adresse statt der vollständigen Adresse."
+    },
+    {
+      "q": "Funktioniert es mit @me.com, @mac.com oder einer eigenen Domain über iCloud+?",
+      "a": "Ja. Das ist jeweils dasselbe iCloud-Postfach, erreichbar über dieselben Hosts mit demselben App-spezifischen Passwort. Eine Adresse mit eigener Domain über iCloud+ ist ein Alias Ihres iCloud-Kontos und kein separates Postfach. Sie meldet sich daher mit Ihrem primären Kontonamen an, und ihre E-Mails landen in denselben Ordnern."
+    },
+    {
+      "q": "Werden meine iCloud-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Apple abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-spezifische Passwort in Ihrem Apple Account widerrufen, endet die Verbindung bei Apple sofort."
+    },
+    {
+      "q": "Erreicht es auch iCloud-Kalender, Kontakte, Notizen oder Drive?",
+      "a": "Nein. MCPEmails verarbeitet nur E-Mails: Ihr iCloud-Postfach und seine Ordner, per IMAP und SMTP. Kalender, Kontakte, Notizen, Erinnerungen und iCloud Drive werden nicht verbunden, und das App-spezifische Passwort wird nur für E-Mail verwendet."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein iCloud-Postfach",
+    "sub": "iCloud Mail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  },
+  "guide": {
+    "intro": "Möchten Sie auch Fastmail oder einen anderen IMAP-Anbieter verbinden?",
+    "label": "So verbinden Sie iCloud, Fastmail oder jedes IMAP-Postfach mit Claude",
+    "href": "/blog/connect-icloud-fastmail-imap-to-claude"
+  }
+}

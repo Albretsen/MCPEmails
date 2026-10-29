@@ -55,7 +55,7 @@ function fakeServiceClient() {
           ? { data: { event_id: 'evt' }, error: null }
           : { data: null, error: null };
       const builder: Record<string, unknown> = {};
-      for (const name of ['select', 'eq', 'neq', 'gt', 'is', 'limit', 'delete', 'order', 'in']) {
+      for (const name of ['select', 'eq', 'neq', 'not', 'gt', 'is', 'limit', 'delete', 'order', 'in']) {
         builder[name] = () => builder;
       }
       builder.insert = () => {

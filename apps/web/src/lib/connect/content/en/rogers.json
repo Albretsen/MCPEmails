@@ -20,8 +20,8 @@
     "eyebrow": "Rogers Yahoo Mail + AI",
     "titleLine1": "Connect a Rogers Yahoo inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Rogers mail is Yahoo mail with a rogers.com name on it. mcpemails connects it over IMAP so your AI agent can read, search, send, reply and file that mail, provided your account can still produce an app password.",
-    "answer": "Claude cannot reach a Rogers Yahoo mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.broadband.rogers.com on port 993, authenticating with a Rogers Yahoo app password rather than the password you type into webmail. There is a real catch to check first: Rogers' own setup article now states that app password generation is no longer available, while Yahoo's Rogers help still documents the Create app password button, so open your account security page before you plan around this. If an app password exists or can still be created, one inbox is free, forever.",
+    "lead": "Rogers mail is Yahoo mail with a rogers.com name on it. MCPEmails connects it over IMAP so your AI agent can read, search, send, reply and file that mail, provided your account can still produce an app password.",
+    "answer": "Claude cannot reach a Rogers Yahoo mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.broadband.rogers.com on port 993, authenticating with a Rogers Yahoo app password rather than the password you type into webmail. There is a real catch to check first: Rogers' own setup article now states that app password generation is no longer available, while Yahoo's Rogers help still documents the Create app password button, so open your account security page before you plan around this. If an app password exists or can still be created, one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "App password, if yours can make one",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Enter the rogers.com address and the app password",
-      "p": "In mcpemails choose IMAP / SMTP, put the full rogers.com address in the username field and paste the app password. Do not use your Rogers Yahoo webmail password; it is refused at the IMAP layer. The hosts and ports above are prefilled and were verified from a live TLS connection."
+      "p": "In MCPEmails choose IMAP / SMTP, put the full rogers.com address in the username field and paste the app password. Do not use your Rogers Yahoo webmail password; it is refused at the IMAP layer. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "The Yahoo SMTP host behind Rogers announces a maximum message size of about 39 MB, so a send with large attachments is refused before it leaves.",
-    "If your account can no longer produce an app password, mcpemails cannot connect it. There is no password-only fallback, and we are not one of the apps registered for the Rogers Yahoo OAuth window."
+    "If your account can no longer produce an app password, MCPEmails cannot connect it. There is no password-only fallback, and we are not one of the apps registered for the Rogers Yahoo OAuth window."
   ],
   "faq": [
     {
       "q": "Does Claude work with Rogers email?",
-      "a": "Not directly. Claude has no built-in Rogers connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your rogers.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients. It depends on your account being able to use an app password."
+      "a": "Not directly. Claude has no built-in Rogers connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your rogers.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients. It depends on your account being able to use an app password."
     },
     {
       "q": "What are the Rogers IMAP and SMTP settings?",

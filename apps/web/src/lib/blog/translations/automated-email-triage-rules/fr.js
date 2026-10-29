@@ -1,12 +1,12 @@
 const translation = {
   title: 'Des règles de tri automatique du courrier qui tournent sans modèle dans la boucle',
   description:
-    'Comment fonctionnent les automatisations de MCP Emails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
+    'Comment fonctionnent les automatisations de MCPEmails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
   coverAlt:
-    'Règles de tri du courrier sans supervision dans MCP Emails : une recherche enregistrée plus une action fixe selon un calendrier',
+    'Règles de tri du courrier sans supervision dans MCPEmails : une recherche enregistrée plus une action fixe selon un calendrier',
   content: `Chaque matin, vous demandez à votre agent de dégager le bruit : classer les notifications de build, marquer les reçus comme lus, transférer les factures à votre comptable. Cela fonctionne. Cela coûte aussi un appel au modèle à chaque fois, et le mardi le résultat diffère légèrement de celui du lundi.
 
-MCP Emails propose une seconde surface pour exactement ce courrier. Une **automatisation** est une recherche enregistrée plus une action fixe, évaluée selon une cadence, sans aucun modèle dans la boucle. Le courrier est mis en correspondance, jamais interprété.
+MCPEmails propose une seconde surface pour exactement ce courrier. Une **automatisation** est une recherche enregistrée plus une action fixe, évaluée selon une cadence, sans aucun modèle dans la boucle. Le courrier est mis en correspondance, jamais interprété.
 
 **Aller à :** [Ce qu'est une règle](#ce-quune-automatisation-est-vraiment) · [En créer une](#en-créer-une-prévisualiser-créer-activer) · [Ce qu'elle peut faire](#ce-quune-règle-peut-et-ne-peut-pas-faire) · [Quand s'en passer](#quand-ne-pas-écrire-de-règle)
 
@@ -25,7 +25,7 @@ Définissez aussi \`max_messages_per_run\` (25 par défaut, 200 au maximum) : c'
 - **Coût.** Une règle ne consomme aucun token. La conversation du matin en consomme tous les jours, pour du courrier dont vous avez décidé le traitement il y a des mois.
 - **Reproductibilité.** Le même filtre produit la même action. Il n'y a pas de « aujourd'hui il a décidé autrement », parce qu'il n'y a aucune décision.
 - **Aucun geste halluciné.** Une règle ne peut pas inventer un dossier, improviser un destinataire ni agir sur une instruction trouvée dans le corps d'un e-mail.
-- **Elle tourne pendant que vous dormez.** MCP Emails fonctionne par ailleurs par sondage : l'agent regarde s'il y a du courrier quand vous le lui demandez. La règle est la partie qui ne demande rien.
+- **Elle tourne pendant que vous dormez.** MCPEmails fonctionne par ailleurs par sondage : l'agent regarde s'il y a du courrier quand vous le lui demandez. La règle est la partie qui ne demande rien.
 
 ## Le tri par agent et les règles automatiques ne font pas le même travail
 
@@ -67,7 +67,7 @@ Les cinq actions de règle :
 
 Ce qu'une règle ne peut pas faire :
 
-- **Supprimer du courrier.** La suppression n'est pas offerte à une automatisation. Déplacer vers la Corbeille, les Indésirables ou le Spam est refusé aussi : tous les fournisseurs vident ces dossiers sur minuterie, donc y classer un message revient à le supprimer à retardement. Classez dans un dossier à vous et supprimez vous-même une fois le journal des exécutions lu.
+- **Supprimer du courrier.** La suppression n'est pas offerte à une automatisation. Déplacer vers la Corbeille est refusé aussi, quelle que soit la langue : tous les fournisseurs la vident sur minuterie, donc y classer un message revient à le supprimer à retardement. Classez dans un dossier à vous et supprimez vous-même une fois le journal des exécutions lu. Les Indésirables et le Spam sont autorisés, car y classer le courrier dont vous ne voulez pas est une raison courante d'écrire une règle.
 - **Interpréter quoi que ce soit.** Pas de résumé, pas de « si cela a l'air urgent ».
 - **Enchaîner deux actions.** Étiqueter et marquer comme lu, cela fait deux règles sur le même filtre.
 
@@ -97,7 +97,7 @@ Ensuite vous interrogez votre agent sur les trente messages restants au lieu des
 
 ## Les règles comptent dans les actions de votre forfait
 
-Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Sur le forfait **Free**, cela représente 150 actions e-mail facturables par mois calendaire UTC, les 7 premiers jours n'étant pas comptés. Ce plafond mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces créés avant en sont exemptés. Quand un espace de travail atteint son quota, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la période de quota se termine. **Personal**, à $9 par mois, supprime le plafond mensuel d'actions et autorise 3 boîtes connectées. Voir les [tarifs](/pricing).
+Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Sur le forfait **Free**, cela représente 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce quota mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces créés avant en sont exemptés. Quand un espace de travail atteint son quota, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la période de quota se termine. **Personal**, à $9 par mois, offre des actions e-mail illimitées et autorise 3 boîtes connectées. Voir les [tarifs](/pricing).
 
 ## FAQ
 
@@ -105,7 +105,7 @@ Chaque action appliquée par une règle est décomptée exactement comme une act
 Non. Une règle est une recherche enregistrée plus une action fixe. Le courrier est mis en correspondance, jamais interprété, et le corps des messages n'est jamais copié dans quoi que ce soit que produit une règle.
 
 **Une règle peut-elle supprimer mes e-mails ?**  
-Non. La suppression n'est pas offerte aux automatisations, et déplacer du courrier vers la Corbeille, les Indésirables ou le Spam est refusé pour la même raison.
+Non. La suppression n'est pas offerte aux automatisations, et déplacer du courrier vers la Corbeille est refusé pour la même raison. Le déplacer vers les Indésirables ou le Spam est autorisé.
 
 **Quelle autorisation faut-il ?**  
 Toute action d'automatisation exige \`manage:automations\`, une autorisation distincte de la lecture ou de l'envoi, parce que la détenir signifie qu'un client peut créer des règles permanentes qui touchent votre boîte sans surveillance.

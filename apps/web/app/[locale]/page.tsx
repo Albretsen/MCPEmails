@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
+import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
 import { routing } from '@/i18n/routing';
+import { requireLocale } from '@/i18n/require-locale';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
-import { HOMEPAGE_DEMO_VIDEO } from '@/lib/experiments/constants';
-import { getExperimentDecisionForRequest } from '@/lib/experiments/request';
 
 export async function generateMetadata({
   params,
@@ -13,13 +13,17 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'home.meta' });
 
   const title = t('title');
   const description = t('description');
 
   return {
-    title,
+    // Absolute on purpose: the homepage title text is frozen until 2026-11-01
+    // for an SEO test, so it keeps the old suffix while the layout template
+    // now says "MCPEmails". Switch back to plain `title` after the test.
+    title: { absolute: `${title} · mcpemails` },
     description,
     alternates: metaAlternates(locale, ''),
     openGraph: {
@@ -48,15 +52,9 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
-
-  // The first real user of the experiments system. The decision is made once
-  // per request from the anonymous subject id the proxy attached; the page
-  // itself knows nothing about cookies or bucketing. While the experiment is
-  // a draft this is always the control, so the homepage is unchanged.
-  const demoVideo = await getExperimentDecisionForRequest(HOMEPAGE_DEMO_VIDEO.key);
-  const showDemoVideo = demoVideo.variantId === HOMEPAGE_DEMO_VIDEO.variants.video;
 
   const t = await getTranslations({ locale, namespace: 'home.meta' });
   // The visible FAQ (components/marketing/Sections.jsx, Faq) reads this same
@@ -75,7 +73,9 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient stripePrices={stripePrices} showDemoVideo={showDemoVideo} />
+      {/* EUR on (env switch or the completed launch, eur-launch.ts) as read at
+          render; off renders exactly as before. */}
+      <HomeClient stripePrices={stripePrices} eurEnabled={await eurDisplayEnabled()} />
     </>
   );
 }

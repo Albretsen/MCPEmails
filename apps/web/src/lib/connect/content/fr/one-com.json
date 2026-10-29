@@ -20,7 +20,7 @@
     "titleLine1": "Serveur MCP pour la messagerie one.com :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez one.com ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
-    "answer": "Claude ne peut pas atteindre une boîte one.com tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.one.com, port 993, et envoie via send.one.com, port 465, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans le Control Panel de one.com. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a pas de mot de passe d'application à générer. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "answer": "Claude ne peut pas atteindre une boîte one.com tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.one.com, port 993, et envoie via send.one.com, port 465, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans le Control Panel de one.com. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a pas de mot de passe d'application à générer. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe du compte e-mail, défini dans le Control Panel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Connectez-vous au Control Panel de one.com et ouvrez la tuile Email. L'adresse doit y être créée avant qu'un client puisse l'atteindre. Cliquez sur l'adresse pour la modifier et définissez un mot de passe, ou changez l'existant. Vous pouvez aussi changer un mot de passe e-mail depuis one.com Webmail une fois connecté."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du compte e-mail. Les serveurs imap.one.com et send.one.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "one.com revend aussi Microsoft 365, et cette boîte-là se connecte avec Outlook",
-      "p": "La tuile du Control Panel s'intitule Email and Microsoft 365, et one.com vend les deux sous le même compte. Un compte e-mail one.com, créé dans cette tuile avec son propre mot de passe, est une boîte IMAP ordinaire sur les serveurs de one.com et se connecte sans problème. Une licence Microsoft 365 achetée via one.com est une boîte Microsoft sur les serveurs de Microsoft, alors connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook sur le web plutôt que l'interface propre à one.com, vous avez le produit Microsoft."
+      "p": "La tuile du Control Panel s'intitule Email and Microsoft 365, et one.com vend les deux sous le même compte. Un compte e-mail one.com, créé dans cette tuile avec son propre mot de passe, est une boîte IMAP ordinaire sur les serveurs de one.com et se connecte sans problème. Une licence Microsoft 365 achetée via one.com est une boîte Microsoft sur les serveurs de Microsoft, alors connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCPEmails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook sur le web plutôt que l'interface propre à one.com, vous avez le produit Microsoft."
     },
     {
       "h": "La validation en deux étapes du Control Panel ne s'applique pas à votre boîte",
-      "p": "one.com propose la validation en deux étapes pour la connexion au Control Panel. Elle protège le panneau, où se trouvent vos domaines et votre facturation, et n'a aucun effet sur IMAP ou SMTP, qui continuent d'accepter seuls le mot de passe du compte e-mail. L'activer ne cassera pas mcpemails, mais ne protégera pas non plus la boîte. Si vous voulez sécuriser la boîte elle-même, le levier est un mot de passe fort et unique sur cette adresse, pas la 2FA du panneau."
+      "p": "one.com propose la validation en deux étapes pour la connexion au Control Panel. Elle protège le panneau, où se trouvent vos domaines et votre facturation, et n'a aucun effet sur IMAP ou SMTP, qui continuent d'accepter seuls le mot de passe du compte e-mail. L'activer ne cassera pas MCPEmails, mais ne protégera pas non plus la boîte. Si vous voulez sécuriser la boîte elle-même, le levier est un mot de passe fort et unique sur cette adresse, pas la 2FA du panneau."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail one.com ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur one.com intégré. Pointer un serveur MCP comme mcpemails vers votre boîte one.com en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur one.com intégré. Pointer un serveur MCP comme MCPEmails vers votre boîte one.com en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de one.com ?",
@@ -95,7 +95,7 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes one.com sur un seul agent",
-    "sub": "Connectez votre première boîte one.com gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte one.com gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
   "seeAlso": {
     "intro": "Une boîte Microsoft 365 achetée via one.com ?",

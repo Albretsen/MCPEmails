@@ -17,6 +17,13 @@
 // mime-build.test.ts for the assertions that hold it in place.
 // ---------------------------------------------------------------------------
 
+import {
+  headerSafeAddress,
+  parseMailbox,
+  splitAddressList,
+  stripHeaderControls,
+} from "./address-header.ts";
+
 /**
  * Encode a UTF-8 text string as base64, split into 76-character lines per
  * MIME spec (RFC 2045). Used for text/plain and text/html body parts with
@@ -81,7 +88,8 @@ const ENCODED_WORD_MAX_BYTES = 45;
  *
  *   * plain atoms ("Acme Support")            -> bare, unchanged
  *   * ASCII with specials ("Bot (Prod)")     -> quoted-string, `"` and `\` escaped
- *   * anything non-ASCII ("Åsgeir Bjelland") -> RFC 2047 encoded-word(s), each
+ *   * anything non-ASCII ("Åsgeir Bjelland"), or any name containing "=?"
+ *                                             -> RFC 2047 encoded-word(s), each
  *     at most 75 characters, never split inside a UTF-8 sequence
  *
  * Control characters (CR/LF included) are collapsed to a space first, so a
@@ -92,9 +100,16 @@ export function encodeMimeDisplayName(name: string): string {
   // deno-lint-ignore no-control-regex
   const sanitized = name.replace(/[\x00-\x1F\x7F]+/g, " ").trim();
   if (sanitized.length === 0) return "";
+  // A name that itself looks like an encoded-word ("=?UTF-8?B?...?=" as
+  // literal text, e.g. the once-decoded name of a hostile sender) is ENCODED,
+  // not quoted (2026-10-16). Readers decode encoded-words inside quoted
+  // strings too (mailers write them, clients decode them, and so does
+  // address-header.ts for headers it reads), so a quoted literal lost one
+  // layer of encoding on every draft_read / draft_update. Encoded, it decodes
+  // back to exactly this literal, however often the draft is re-read.
   // deno-lint-ignore no-control-regex
-  if (/^[\x00-\x7F]*$/.test(sanitized)) {
-    if (BARE_PHRASE_RE.test(sanitized) && !sanitized.includes("=?")) return sanitized;
+  if (/^[\x00-\x7F]*$/.test(sanitized) && !sanitized.includes("=?")) {
+    if (BARE_PHRASE_RE.test(sanitized)) return sanitized;
     return `"${sanitized.replace(/["\\]/g, (c) => `\\${c}`)}"`;
   }
   const words: string[] = [];
@@ -124,6 +139,49 @@ function encodedWord(bytes: number[]): string {
 export function formatMailbox(name: string | null | undefined, address: string): string {
   const encoded = name ? encodeMimeDisplayName(name) : "";
   return encoded ? `${encoded} <${address}>` : address;
+}
+
+/**
+ * Re-serialize address-header entries for writing.
+ *
+ * Each element may be one mailbox or a list, in any of the forms callers
+ * hand in: our display form ("Åse Ødegård <a@x>", "\"Doe, Jane\" <j@x>"),
+ * formatMailbox output (already RFC 2047-encoded), or a bare address. Each is
+ * parsed STRUCTURALLY first (address-header.ts), then written back through
+ * formatMailbox: the name through encodeMimeDisplayName, the address with
+ * whitespace, control characters, `<>`, `,` and `;` removed. An encoded-word
+ * is decoded only in an unquoted phrase (RFC 2047 §5), which makes this
+ * idempotent on formatMailbox output and never decodes a quoted literal.
+ * Elements without an address are dropped.
+ */
+export function headerAddressList(elements: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const element of elements) {
+    if (typeof element !== "string") continue;
+    let mailboxes = splitAddressList(element).map((raw) => parseMailbox(raw, "unquoted"));
+    // `Doe, Jane <j@x>` with the comma unquoted is one person, not a mailbox
+    // "Doe" plus one "Jane": when a split yields a piece with no address in
+    // it, the element is read as ONE mailbox whose name holds the comma.
+    if (mailboxes.length > 1 && mailboxes.some((m) => !m.email.includes("@"))) {
+      mailboxes = [parseMailbox(element, "unquoted")];
+    }
+    for (const mailbox of mailboxes) {
+      const address = headerSafeAddress(mailbox.email);
+      if (address) out.push(formatMailbox(mailbox.name, address));
+    }
+  }
+  return out;
+}
+
+/** A free-text header value (msg-id lists) with every control-character run collapsed to a space. */
+export function headerText(value: string): string {
+  return stripHeaderControls(value).replace(/\s+/g, " ").trim();
+}
+
+/** The local token we put inside our own Message-ID: nothing that can end the msg-id or the line. */
+function headerMsgIdToken(value: string): string {
+  // deno-lint-ignore no-control-regex
+  return value.replace(/[\x00-\x20\x7F<>]/g, "");
 }
 
 /**
@@ -291,20 +349,30 @@ export function buildMimeMessage(params: MimeMessageParams): string {
   const lines: string[] = [];
 
   // ── Required headers ──────────────────────────────────────────────────────
-  lines.push(`From: ${params.from}`);
-  lines.push(`To: ${params.to.join(", ")}`);
-  if (params.cc?.length) lines.push(`Cc: ${params.cc.join(", ")}`);
+  // SECURITY (2026-10-16): no header value is written as given. Every address
+  // field is re-serialized mailbox by mailbox (headerAddressList), and every
+  // other value has its control characters collapsed (headerText), so nothing
+  // a caller passes, whatever it was read from, can start a new header line.
+  const to = headerAddressList(params.to);
+  const cc = headerAddressList(params.cc ?? []);
+  const bcc = headerAddressList(params.bcc ?? []);
+  lines.push(`From: ${headerAddressList([params.from]).join(", ")}`);
+  lines.push(`To: ${to.join(", ")}`);
+  if (cc.length) lines.push(`Cc: ${cc.join(", ")}`);
   // Bcc is written ONLY for draft persistence (includeBccHeader). It is stripped
   // before transmission so To/Cc recipients never see BCC addresses.
-  if (params.includeBccHeader && params.bcc?.length) {
-    lines.push(`Bcc: ${params.bcc.join(", ")}`);
+  if (params.includeBccHeader && bcc.length) {
+    lines.push(`Bcc: ${bcc.join(", ")}`);
   }
   lines.push(`Subject: ${encodeMimeHeaderValue(params.subject)}`);
   lines.push(`Date: ${new Date().toUTCString()}`);
-  lines.push(`Message-ID: <${params.messageId}@mcpemails.com>`);
-  if (params.replyTo) lines.push(`Reply-To: ${params.replyTo}`);
-  if (params.inReplyTo) lines.push(`In-Reply-To: ${params.inReplyTo}`);
-  if (params.references) lines.push(`References: ${params.references}`);
+  lines.push(`Message-ID: <${headerMsgIdToken(params.messageId)}@mcpemails.com>`);
+  const replyTo = params.replyTo ? headerAddressList([params.replyTo]) : [];
+  if (replyTo.length) lines.push(`Reply-To: ${replyTo.join(", ")}`);
+  const inReplyTo = params.inReplyTo ? headerText(params.inReplyTo) : "";
+  if (inReplyTo) lines.push(`In-Reply-To: ${inReplyTo}`);
+  const references = params.references ? headerText(params.references) : "";
+  if (references) lines.push(`References: ${references}`);
   lines.push(`MIME-Version: 1.0`);
 
   const hasHtml = !!params.htmlBody;
@@ -417,8 +485,9 @@ export function mimeMessageToBase64url(mimeText: string): string {
  */
 export function buildDraftMime(params: MimeMessageParams): string {
   const mime = buildMimeMessage(params);
-  // buildMimeMessage always writes a To line; drop it when it is empty.
-  return params.to.length ? mime : mime.replace(/^To:[ \t]*\r?\n/m, "");
+  // buildMimeMessage always writes a To line; drop it when it is empty (also
+  // when every entry given was dropped for having no address).
+  return mime.replace(/^To:[ \t]*\r?\n/m, "");
 }
 
 /**
@@ -431,7 +500,8 @@ export function buildDraftMime(params: MimeMessageParams): string {
  */
 /**
  * The octets `draft_send` transmits (and files in Sent) for a stored IMAP
- * draft: the draft as it is in the mailbox, minus its Bcc header.
+ * draft: the draft as it is in the mailbox, minus its Bcc header, dated at
+ * send time (setDateHeader).
  *
  * `rawMime` is a byte string, one character per octet, as the IMAP reader
  * returns it. It goes back to bytes octet for octet. Sending the string
@@ -443,8 +513,8 @@ export function buildDraftMime(params: MimeMessageParams): string {
  * A string holding anything that is not an octet cannot have come from the
  * reader; it is encoded as text, which is what happened to every draft before.
  */
-export function draftSendBytes(rawMime: string): Uint8Array {
-  const stripped = stripBccHeader(rawMime);
+export function draftSendBytes(rawMime: string, sentAt: Date = new Date()): Uint8Array {
+  const stripped = setDateHeader(stripBccHeader(rawMime), sentAt);
   const bytes = new Uint8Array(stripped.length);
   for (let i = 0; i < stripped.length; i++) {
     const code = stripped.charCodeAt(i);
@@ -452,6 +522,38 @@ export function draftSendBytes(rawMime: string): Uint8Array {
     bytes[i] = code;
   }
   return bytes;
+}
+
+/**
+ * Give the message its send time as its Date. A draft keeps the Date it was
+ * saved with, and sending it unchanged (found 2026-10-26) dated the mail, and
+ * its place in the recipient's inbox, to whenever the draft was written.
+ * Only the Date header is touched: Message-ID, In-Reply-To and References stay
+ * as they are, so threading is unchanged. A draft with no Date header is left
+ * alone; the receiving server stamps one.
+ */
+export function setDateHeader(rawMime: string, sentAt: Date): string {
+  const sep = rawMime.search(/\r?\n\r?\n/);
+  if (sep === -1) return rawMime;
+  const headerLines = rawMime.slice(0, sep).split(/\r?\n/);
+  const rest = rawMime.slice(sep);
+  const kept: string[] = [];
+  let replaced = false;
+  let skipping = false;
+  for (const line of headerLines) {
+    if (skipping && /^[ \t]/.test(line)) continue;
+    skipping = false;
+    if (/^date[ \t]*:/i.test(line)) {
+      skipping = true;
+      if (replaced) continue; // a second Date header goes too
+      kept.push(`Date: ${sentAt.toUTCString()}`);
+      replaced = true;
+      continue;
+    }
+    kept.push(line);
+  }
+  if (!replaced) return rawMime;
+  return kept.join("\r\n") + rest;
 }
 
 export function stripBccHeader(rawMime: string): string {

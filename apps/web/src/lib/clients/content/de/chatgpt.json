@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://help.openai.com/en/articles/12584461"
+  ],
+  "meta": {
+    "title": "E-Mail mit ChatGPT verbinden: Setup des MCP-Konnektors",
+    "description": "Fügen Sie ChatGPT mit dem Entwicklermodus und einem benutzerdefinierten MCP-Konnektor ein echtes Postfach hinzu. OAuth, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "ChatGPT + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit ChatGPT",
+    "titleLine2": "als benutzerdefinierten MCP-Konnektor",
+    "lead": "Fügen Sie einen benutzerdefinierten MCP-Server mit einer einzigen URL hinzu, und ChatGPT kann Ihre echten E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie auf chatgpt.com Plugins, Personal, Add und dann Add custom MCP server. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp unter Connection ein, wählen Sie OAuth, setzen Sie das Bestätigungshäkchen, klicken Sie auf Create as a plugin und melden Sie sich bei MCPEmails an. Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen. Im Chat tippen Sie @ und wählen MCPEmails."
+  },
+  "method": {
+    "title": "So verbindet sich ChatGPT: OAuth, kein API-Schlüssel",
+    "body": "ChatGPT durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Add custom MCP server öffnen",
+      "p": "Öffnen Sie auf chatgpt.com <b>Plugins</b> und dann <b>Personal</b>, klicken Sie oben rechts auf <b>Add</b> und wählen Sie <b>Add custom MCP server</b>. Das geht nur im Web: In der Mobil-App lässt sich kein Server hinzufügen."
+    },
+    {
+      "h": "Server eintragen",
+      "p": "Nennen Sie ihn MCPEmails und fügen Sie <code>https://mcpemails.com/api/mcp</code> unter <b>Connection</b> ein."
+    },
+    {
+      "h": "OAuth wählen und anmelden",
+      "p": "Wählen Sie <b>OAuth</b>, setzen Sie das Häkchen bei <b>I understand and want to continue</b>, klicken Sie auf <b>Create as a plugin</b>, melden Sie sich dann bei MCPEmails an und geben Sie die Scopes frei, die ChatGPT erhalten soll."
+    },
+    {
+      "h": "Im Chat erwähnen",
+      "p": "Tippen Sie im Chat <b>@</b> und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hinzufügen im Web, Auswahl pro Nachricht",
+      "p": "Benutzerdefinierte MCP-Server lassen sich auf chatgpt.com mit Go und den kostenpflichtigen Tarifen hinzufügen; in der Mobil-App geht das nicht. Bei Business und Enterprise muss eventuell ein Admin oder Owner den Server für den Workspace hinzufügen. Der Schritt, den viele übersehen, ist der letzte: ChatGPT nutzt MCPEmails für eine Nachricht nur, wenn Sie <b>@</b> tippen und es auswählen. Erwähnen Sie es also erneut, wenn eine Folgefrage Ihre E-Mails braucht."
+    },
+    {
+      "h": "Wählen Sie beim Erstellen des Konnektors OAuth, nicht „keine Authentifizierung“",
+      "p": "Das Konnektor-Formular fragt nach der Authentifizierung. Dieser Server lehnt anonyme Aufrufe ab: Eine nicht authentifizierte Anfrage erhält eine 401 mit einem Verweis auf die OAuth-Discovery, dem ein konformer Client folgt, um den Ablauf zu starten. Mit „keine Authentifizierung“ entsteht ein Konnektor, der erst beim ersten Tool-Aufruf scheitert statt beim Einrichten, und das ist die verwirrendere Reihenfolge."
+    },
+    {
+      "h": "Nur-Lese-Zugriff ist eine echte Option und oft der richtige Anfang",
+      "p": "Auf dem Zustimmungsbildschirm können Sie ChatGPT nur <code>read:email</code> und <code>search:email</code> geben. Das reicht zum Sichten, Zusammenfassen und Finden und nimmt jede unumkehrbare Aktion vom Tisch, während Sie entscheiden, wie weit Sie gehen wollen."
+    }
+  ],
+  "limits": [
+    "Anfragen werden je Schlüssel in Minuten-, Stunden- und Tagesfenstern begrenzt, die nach Ihrem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Ein 429 trägt Retry-After. Dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Kann ChatGPT meine E-Mails lesen und senden?",
+      "a": "Über einen benutzerdefinierten MCP-Konnektor, ja. ChatGPT erreicht von sich aus kein Postfach; ein Konnektor, der auf MCPEmails zeigt, gibt ihm Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails, beschränkt auf die Scopes, die Sie beim Einrichten freigeben."
+    },
+    {
+      "q": "Warum kann ich in ChatGPT keinen benutzerdefinierten MCP-Server hinzufügen?",
+      "a": "Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen, und zwar auf chatgpt.com: Die Mobil-App bietet das nicht an. In einem Business- oder Enterprise-Workspace muss eventuell ein Admin oder Owner den Server hinzufügen. Ist MCPEmails hinzugefügt, wird aber nicht genutzt, tippen Sie im Chat <b>@</b> und wählen Sie MCPEmails; die Auswahl gilt jeweils für eine Nachricht."
+    },
+    {
+      "q": "Brauche ich für ChatGPT einen API-Schlüssel?",
+      "a": "Nein. Wählen Sie beim Erstellen des Konnektors OAuth, dann registriert sich ChatGPT selbst und durchläuft einen Ablauf mit Autorisierungscode und PKCE. API-Schlüssel sind für Clients gedacht, die das nicht können, und für Skripte."
+    },
+    {
+      "q": "Welche Postfächer erreicht ChatGPT auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann ChatGPT E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie ChatGPT ein echtes Postfach",
+    "sub": "Ein Konnektor für jedes verbundene Postfach. Ein Postfach dauerhaft kostenlos."
+  }
+}

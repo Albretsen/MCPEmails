@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "https://docs.cline.bot/mcp/configuring-mcp-servers"
   ],
   "meta": {
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis y conecta un buzón",
-      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación, y Gmail también admite el inicio de sesión de Google; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
     },
     {
       "h": "Crea una clave de API con permisos limitados",
@@ -60,14 +60,14 @@
     }
   ],
   "limits": [
-    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "Las solicitudes se limitan por clave en ventanas por minuto, por hora y por día dimensionadas según tu plan, así que una sola clave puede usar todo el tope por minuto del plan y varias claves lo comparten. Un 429 lleva Retry-After. El tope de acciones facturables de tu plan también se aplica.",
     "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
     "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
   ],
   "faq": [
     {
       "q": "¿Cómo conecto el correo a Cline?",
-      "a": "Añade mcpemails como servidor remoto: MCP Servers, Remote Servers, pega https://mcpemails.com/api/mcp, pon Transport Type en Streamable HTTP y añade un encabezado Authorization Bearer con una clave de API de tu panel. A partir de ahí Cline tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+      "a": "Añade MCPEmails como servidor remoto: MCP Servers, Remote Servers, pega https://mcpemails.com/api/mcp, pon Transport Type en Streamable HTTP y añade un encabezado Authorization Bearer con una clave de API de tu panel. A partir de ahí Cline tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
     },
     {
       "q": "¿Por qué Cline necesita una clave de API y Cursor no?",
@@ -79,14 +79,14 @@
     },
     {
       "q": "¿Qué buzones puede alcanzar Cline de esta forma?",
-      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación, con el inicio de sesión de Google como segunda opción para Gmail; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
     },
     {
       "q": "¿Puede Cline enviar correo sin que yo lo vea?",
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     }
   ],

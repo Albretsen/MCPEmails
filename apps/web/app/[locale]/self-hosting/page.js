@@ -1,11 +1,14 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../components/marketing/Sections';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'selfHosting' });
-  const title = t.has('meta.title') ? t('meta.title') : 'Self-host MCP Emails';
+  const title = t.has('meta.title') ? t('meta.title') : 'Self-host MCPEmails';
   const description = t.has('meta.description')
     ? t('meta.description')
     : 'Run the same MCP email server that powers mcpemails.com on your own machine. Open source under AGPL-3.0.';
@@ -16,14 +19,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/self-hosting'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -44,6 +47,7 @@ make setup && make up`;
 
 export default async function SelfHostingPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('selfHosting');
   const richTags = {
@@ -136,7 +140,7 @@ export default async function SelfHostingPage({ params }) {
               <h2>{t('commitment.title')}</h2>
               <p>{t('commitment.body')}</p>
               <p style={{ margin: 0 }}>
-                <a href="/signup">{t('commitment.cta')}</a>
+                <a href={withReadingLang('/signup', locale)}>{t('commitment.cta')}</a>
                 {' · '}
                 <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">AGPL-3.0</a>
               </p>
@@ -155,7 +159,7 @@ export default async function SelfHostingPage({ params }) {
             <a className="btn btn-primary btn-lg" href={GUIDE_URL} target="_blank" rel="noopener noreferrer">
               {t('cta.primary')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/signup">
+            <a className="btn btn-on-dark btn-lg" href={withReadingLang('/signup', locale)}>
               {t('cta.secondary')}
             </a>
           </div>

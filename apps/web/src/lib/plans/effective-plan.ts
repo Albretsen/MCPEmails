@@ -37,6 +37,15 @@ export type EffectivePlanResolution =
       limits: PlanLimits;
       compedScale: boolean;
       unlimitedInboxes: boolean;
+      /** Pro cap cutover exemption, or the cap's kill switch is off. Pro only. */
+      proUnlimitedInboxes: boolean;
+      /**
+       * A Free workspace whose owner holds an active referral month
+       * (`user_usage_entitlements.referral_personal_until`). `plan` stays
+       * "free", because checkout and billing must keep seeing the stored plan;
+       * `limits` are Personal's while it lasts.
+       */
+      referralPersonal: boolean;
     }
   | {
       resolved: false;
@@ -59,12 +68,21 @@ export async function resolveEffectiveWorkspacePlan(
 
   const compedScale = row.comped_scale ?? false;
   const unlimitedInboxes = row.unlimited_inboxes ?? false;
+  const proUnlimitedInboxes = row.pro_unlimited_inboxes ?? false;
+  // Absent on an RPC that predates 20261025090000: no referral month.
+  const referralPersonal = row.plan === 'free' && (row.referral_personal ?? false);
 
   return {
     resolved: true,
     plan: row.plan,
-    limits: resolvePlanLimits(row.plan, { compedScale, unlimitedInboxes }),
+    limits: resolvePlanLimits(referralPersonal ? 'personal' : row.plan, {
+      compedScale,
+      unlimitedInboxes,
+      proUnlimitedInboxes,
+    }),
     compedScale,
     unlimitedInboxes,
+    proUnlimitedInboxes,
+    referralPersonal,
   };
 }

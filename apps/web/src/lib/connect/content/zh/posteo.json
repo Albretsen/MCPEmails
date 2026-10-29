@@ -22,7 +22,7 @@
     "titleLine1": "将 Posteo 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Posteo 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个，并坦白告诉你 Posteo 的加密对代理能隐藏什么、不能隐藏什么。",
-    "answer": "Claude 无法自行连接 Posteo。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 posteo.de 的 993 端口，通过 SMTP 连接 posteo.de 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有 imap. 或 smtp. 前缀：无论你的地址以哪个 Posteo 域名结尾，服务器都是这个裸域名。认证使用你普通的 Posteo 密码，除非你开启了额外的邮箱账户保护，此后 IMAP、POP3 和 SMTP 只接受在 Posteo 设置中创建的应用密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Posteo。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 posteo.de 的 993 端口，通过 SMTP 连接 posteo.de 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有 imap. 或 smtp. 前缀：无论你的地址以哪个 Posteo 域名结尾，服务器都是这个裸域名。认证使用你普通的 Posteo 密码，除非你开启了额外的邮箱账户保护，此后 IMAP、POP3 和 SMTP 只接受在 Posteo 设置中创建的应用密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "开启额外保护后使用应用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -41,7 +41,7 @@
       "p": "登录 Posteo 网页邮箱，打开 <b>Settings</b>，然后是 <b>Password and security</b>，应用密码在这里创建和管理。Posteo 要求每个应用密码至少 16 个字符，包含至少一个数字和一个大写字母，最多可同时持有五个。以这个连接为它命名，以便日后知道该删除哪个。如果额外保护未开启，可以跳过这一步，但交给第三方时，一个可以单独撤销的凭据更好。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整的 Posteo 地址，然后输入密码。收发两个方向的主机都已自动填为 <code>posteo.de</code>，并已通过实时 TLS 连接验证。发信密码和收信密码都必须填写，因为 Posteo 始终对提交进行认证。"
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "将 Posteo 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它被要求处理的任何内容。mcpemails 每次请求都实时从 Posteo 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Posteo 的匿名注册、匿名付款和德国托管保护的是你与 Posteo 之间的关系。一旦邮件进入你自己连接的 AI 厂商，这些保护都不会随之而去。",
-    "开启入站加密后，代理完全无法读取你的邮件。邮件以 PGP 或 S/MIME 密文形式到达，mcpemails 不持有你的任何私钥，只剩邮件头、日期和文件夹操作可用。",
+    "将 Posteo 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它被要求处理的任何内容。MCPEmails 每次请求都实时从 Posteo 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Posteo 的匿名注册、匿名付款和德国托管保护的是你与 Posteo 之间的关系。一旦邮件进入你自己连接的 AI 厂商，这些保护都不会随之而去。",
+    "开启入站加密后，代理完全无法读取你的邮件。邮件以 PGP 或 S/MIME 密文形式到达，MCPEmails 不持有你的任何私钥，只剩邮件头、日期和文件夹操作可用。",
     "按现代标准，Posteo 的标准邮箱容量较小，达到配额的邮箱会拒收新邮件。代理归档和标记邮件并不会释放空间；删除邮件并清空已删除文件夹才会。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Posteo 吗？",
-      "a": "不能单独使用。Claude 没有 Posteo 连接器，也不会 IMAP。将 mcpemails 这样的 MCP 服务器指向你的 Posteo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有 Posteo 连接器，也不会 IMAP。将 MCPEmails 这样的 MCP 服务器指向你的 Posteo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Posteo 的 IMAP 和 SMTP 设置是什么？",

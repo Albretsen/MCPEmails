@@ -120,3 +120,30 @@ Deno.test("inbox_list says nothing extra about an inbox that does both", async (
   const [listed] = (body(outcome) as { inboxes: Array<Record<string, unknown>> }).inboxes;
   assertEquals("access" in listed, false);
 });
+
+Deno.test("contact_search across inboxes keeps another inbox's credential error, not the send-only note", async () => {
+  // A sweep with no inbox named acts on no single inbox. Before the fix the
+  // send-only inbox in the sweep was recorded anyway, and the dispatcher then
+  // replaced the revoked inbox's real error with "connected for sending only,
+  // do not ask the user to reconnect", which sent nobody to fix the real one.
+  const revokedId = "44444444-4444-4444-8444-444444444444";
+  const revoked = await imapInbox({ id: revokedId, email_address: "revoked@example.com", imap_password: null });
+  const sendOnly = await imapInbox({ imap_host: null, imap_port: null });
+  const { value: outcome } = await harness.runToolWithInboxes(
+    [revoked, sendOnly],
+    noProvider,
+    () => server.dispatchExecutor("contact_search", { query: "someone" }, harness.API_KEY),
+  );
+  assert(outcome);
+  assertEquals(outcome.result.isError, true);
+  assertEquals(outcome.logErrorCode, "auth_failed");
+  const text = outcome.result.content[0].text;
+  assert(!/send_only|sending only|transport_not_configured/i.test(text), text);
+});
+
+Deno.test("contact_search on one named send-only inbox still says so", async () => {
+  const inbox = await imapInbox({ imap_host: null, imap_port: null });
+  const { outcome } = await dispatch(inbox, "contact_search", { query: "someone" });
+  assertEquals(outcome.logErrorCode, "transport_not_configured");
+  assertEquals(body(outcome).access, "send_only");
+});

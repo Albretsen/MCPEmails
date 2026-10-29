@@ -1,4 +1,5 @@
 import { del, get, set } from "idb-keyval";
+import { APP_ORIGIN } from "../config";
 import type {
   AppNotification,
   BackgroundPushConfig,
@@ -122,6 +123,23 @@ export function createWebPlatform(): PlatformAdapter {
     }
   };
 
+  /** `navigator.serviceWorker.ready`, which never settles without a worker, bounded. */
+  const activeRegistration = async (ms: number): Promise<ServiceWorkerRegistration | null> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => {
+          timer = setTimeout(() => resolve(null), ms);
+        }),
+      ]);
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
   // Chromium fires beforeinstallprompt once, early. Keep it so a button can use it later.
   let installEvent: BeforeInstallPromptEvent | null = null;
   const installListeners = new Set<() => void>();
@@ -183,8 +201,12 @@ export function createWebPlatform(): PlatformAdapter {
         if (!vapidPublicKey || !hasPush) return null;
         if (Notification.permission !== "granted") return null;
         try {
-          const reg = await registration();
+          let reg = await registration();
           if (!reg) return null;
+          // Registered but still installing (first visit, or right after an
+          // update): pushManager.subscribe() rejects with "no active Service
+          // Worker". Wait for it to activate, briefly.
+          if (!reg.active) reg = (await activeRegistration(5_000)) ?? reg;
           const key = urlBase64ToUint8Array(vapidPublicKey);
           let sub = await reg.pushManager.getSubscription();
           // Made with another server key (the keys were replaced): the push
@@ -290,7 +312,7 @@ export function createWebPlatform(): PlatformAdapter {
         };
       },
       buildUrl(path: string): string {
-        const origin = hasWindow ? window.location.origin : "https://app.mcpemails.com";
+        const origin = hasWindow ? window.location.origin : APP_ORIGIN;
         return origin + (path.startsWith("/") ? path : `/${path}`);
       },
     },

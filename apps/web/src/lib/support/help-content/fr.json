@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Aide et support",
-    "description": "Les réponses aux questions les plus fréquentes sur la connexion, les clients et la facturation, et un formulaire pour joindre l’équipe de MCP Emails."
+    "description": "Les réponses aux questions les plus fréquentes sur la connexion, les clients et la facturation, et un formulaire pour joindre l’équipe de MCPEmails."
   },
   "hero": {
     "eyebrow": "Aide",
@@ -100,14 +100,14 @@
     {
       "id": "assistant-sees-nothing",
       "title": "Connecté, mais l’assistant ne voit aucun e-mail",
-      "summary": "En général, la boîte est en erreur, la conversation précède le connecteur, ou une autorisation est désactivée.",
-      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée autorisations inbox_list developer mode scope",
+      "summary": "La boîte est connectée, mais votre assistant dit qu’il n’a pas d’outils de messagerie ou ne trouve rien.",
+      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list plugin @",
       "steps": [
-        "Dans Boîtes, vérifiez que la boîte affiche Connectée. Sinon, reconnectez-la.",
-        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur.",
-        "Connectez-vous au connecteur avec le compte qui détient la boîte.",
-        "Dans Clés API, choisissez Modifier l'accès et vérifiez ses autorisations et ses boîtes.",
-        "Demandez d’abord à l’assistant de lister vos boîtes."
+        "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans Claude, vérifiez que MCPEmails est activé sous + et Connecteurs. Dans ChatGPT, tapez @ et choisissez MCPEmails, puis mentionnez-le à nouveau avec @ quand une question de suivi porte sur vos e-mails.",
+        "Autorisez le connecteur avec le même compte MCPEmails que celui qui détient la boîte.",
+        "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
+        "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
       ],
       "links": [
         { "label": "Guides des clients", "href": "/docs/clients" },
@@ -120,10 +120,11 @@
       "summary": "Free inclut 150 actions e-mail par mois. Ensuite, les actions attendent le 1er du mois (UTC).",
       "keywords": "limite d’utilisation quota plafond 150 actions formule gratuite free refusé réinitialisation usage limit",
       "steps": [
-        "Voyez ce que vous avez utilisé dans Usage.",
-        "Lister les boîtes et les actions du tableau de bord ne comptent jamais. Vos 7 premiers jours sont gratuits.",
-        "Réessayer n’aide pas. Les automatisations en pause reprennent le 1er.",
-        "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable."
+        "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
+        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 3 premiers jours après l’inscription.",
+        "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
+        "Personal, Pro et Business offrent des actions illimitées, dans la limite d’un usage raisonnable.",
+        "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."
       ],
       "links": [
         { "label": "Questions sur les tarifs", "href": "/pricing#faq" },

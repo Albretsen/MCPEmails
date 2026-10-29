@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Receipt as ReceiptData } from "../contract";
 import type { EndedCopy, EndedField } from "../ended";
 import { formatBytes, formatDateTime, receiptDetail, splitBody, wordCount } from "../format";
-import { copyLabel, Fields, HtmlBody, Notice, TextLink, useCopy } from "./ui";
+import { copyLabel, Fields, FsLink, Head, HtmlBody, Line, Notice, TextLink, useCopy } from "./ui";
 
 /**
  * A draft that has ended (sent, or discarded), with the message still there to
@@ -191,46 +191,30 @@ export function SentMessage(props: SentMessageProps) {
   if (!open) {
     return (
       <>
-        <div class="hdr">
-          <div class="hdr-l">
-            <span class="dot" data-tone={tone} aria-hidden="true" />
-            <b>{headline}</b>
-          </div>
-          <div class="hdr-r">
-            {toggleLink}
-          </div>
-        </div>
-        {detail && <p class="line">{detail}</p>}
+        <Head tone={tone} title={headline}>
+          {toggleLink}
+        </Head>
+        {detail && <Line>{detail}</Line>}
       </>
     );
   }
 
   const header = (
-    <div class="hdr">
-      <div class="hdr-l">
-        <span class="dot" data-tone={tone} aria-hidden="true" />
-        <b>{headline}</b>
-        {departed && c.from && <span class="muted">{c.from}</span>}
-      </div>
-      <div class="hdr-r">
-        {when && (
-          <span class="muted">
-            {scheduled ? "Sending" : "Sent"} {when}
-          </span>
-        )}
-        {fullscreen ? (
-          <TextLink onClick={() => props.setFullscreen(false)}>Collapse</TextLink>
-        ) : props.canExpand ? (
-          <TextLink
-            onClick={() => props.setFullscreen(true)}
-            title="Read the whole message"
-          >
-            Expand
-          </TextLink>
-        ) : null}
-        {toggleLink}
-      </div>
-    </div>
+    <Head tone={tone} title={headline} extra={departed && c.from && <span class="muted">{c.from}</span>}>
+      {when && (
+        <span class="muted">
+          {scheduled ? "Sending" : "Sent"} {when}
+        </span>
+      )}
+      <FsLink
+        on={fullscreen}
+        can={props.canExpand}
+        set={props.setFullscreen}
+        label="Expand"
+        title="Read the whole message"
+      />
+      {toggleLink}
+    </Head>
   );
 
   /**
@@ -240,8 +224,8 @@ export function SentMessage(props: SentMessageProps) {
    */
   const footer = (
     <>
-      {attachments && <p class="line">{attachments}</p>}
-      {detail && <p class="line">{detail}</p>}
+      {attachments && <Line>{attachments}</Line>}
+      {detail && <Line>{detail}</Line>}
       {c.truncated && (
         <Notice tone="warning">
           {departed
@@ -249,14 +233,14 @@ export function SentMessage(props: SentMessageProps) {
             : "This is a clipped copy of the text. The card never had all of it."}
         </Notice>
       )}
-      <p class="line">
+      <Line>
         {/* The message, not the message plus the signature — the same count the
             editor showed a second ago, so the two views do not disagree about
             how long what you wrote was. */}
         {[`${wordCount(splitBody(bodyText).message)} words`, c.provider]
           .filter((s): s is string => !!s)
           .join(" · ")}
-      </p>
+      </Line>
     </>
   );
 
@@ -322,7 +306,7 @@ export function SentMessage(props: SentMessageProps) {
       <>
         {header}
         <div class="stack" id={regionId}>
-          {label && <p class="line">{label}</p>}
+          {label && <Line>{label}</Line>}
           <div class="tight">
             <div class="row">
               <span class="lbl">To</span>
@@ -354,7 +338,7 @@ export function SentMessage(props: SentMessageProps) {
     <>
       {header}
       <div class="stack" id={regionId}>
-        {label && <p class="line">{label}</p>}
+        {label && <Line>{label}</Line>}
         <h2 class="subject">{c.subject || "(no subject)"}</h2>
         <Fields rows={rows} />
         {bodyBlock(true)}

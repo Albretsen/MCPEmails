@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail har ingen IMAP",
     "titleLine2": "eller SMTP, og det finnes ingen bro",
     "lead": "Tuta, tidligere Tutanota, kjører ingen av protokollene en e-postklient eller en MCP-server trenger, og i motsetning til Proton leverer den ingen lokal bro som kan etterligne en. Denne siden forklarer hvorfor, og hva som faktisk er tilgjengelig for deg.",
-    "answer": "Nei, og det finnes ingen omvei. Tuta tilbyr ingen IMAP-, POP- eller SMTP-tilgang i det hele tatt, så mcpemails kan ikke koble til en Tuta-postkasse, og det kan heller ikke Thunderbird, Apple Mail eller noen annen klient. Dette følger av hvordan Tutas kryptering virker: emnelinjer, innhold, vedlegg, kontakter og kalenderoppføringer krypteres alle med en nøkkel som aldri forlater enheten din, og Tutas servere har bare chiffertekst. Standard IMAP forutsetter en server som kan lese emner, sortere, søke og gi en klient klartekst, som er nøyaktig evnen Tuta fjernet. I motsetning til Proton finnes det heller ingen broapplikasjon å kjøre lokalt, så vil du ha en AI-agent som jobber med e-post, må det være en postkasse hos en leverandør som snakker IMAP, og mcpemails kobler til én av dem gratis."
+    "answer": "Nei, og det finnes ingen omvei. Tuta tilbyr ingen IMAP-, POP- eller SMTP-tilgang i det hele tatt, så MCPEmails kan ikke koble til en Tuta-postkasse, og det kan heller ikke Thunderbird, Apple Mail eller noen annen klient. Dette følger av hvordan Tutas kryptering virker: emnelinjer, innhold, vedlegg, kontakter og kalenderoppføringer krypteres alle med en nøkkel som aldri forlater enheten din, og Tutas servere har bare chiffertekst. Standard IMAP forutsetter en server som kan lese emner, sortere, søke og gi en klient klartekst, som er nøyaktig evnen Tuta fjernet. I motsetning til Proton finnes det heller ingen broapplikasjon å kjøre lokalt, så vil du ha en AI-agent som jobber med e-post, må det være en postkasse hos en leverandør som snakker IMAP, og MCPEmails kobler til én av dem gratis."
   },
   "method": {
     "title": "Slik kobler Tuta seg til: bare gjennom egne apper",
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Opprett den gratis mcpemails-kontoen",
+      "h": "Opprett den gratis MCPEmails-kontoen",
       "p": "En e-postadresse, uten kort. Én tilkoblet innboks er gratis for alltid, og de neste to stegene avgjør hva som havner i den."
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "q": "Hva bør jeg gjøre hvis jeg vil ha en AI-agent til å håndtere e-posten min?",
-      "a": "Ha to adresser med vilje. Behold privat korrespondanse i Tuta, der ingenting automatisert kan nå den, og bruk en separat IMAP-postkasse for e-posten du vil at en agent skal sortere, besvare, planlegge og arkivere. mcpemails kobler den andre postkassen til Claude, Cursor eller ChatGPT, én innboks gratis, og ser aldri Tuta-postkassen."
+      "a": "Ha to adresser med vilje. Behold privat korrespondanse i Tuta, der ingenting automatisert kan nå den, og bruk en separat IMAP-postkasse for e-posten du vil at en agent skal sortere, besvare, planlegge og arkivere. MCPEmails kobler den andre postkassen til Claude, Cursor eller ChatGPT, én innboks gratis, og ser aldri Tuta-postkassen."
     }
   ],
   "ctaBand": {

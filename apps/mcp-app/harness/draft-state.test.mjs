@@ -479,9 +479,9 @@ async function main() {
       await settle();
       expect(`${label}: the not-found notice is up`, /could not be found in Drafts/.test(c.text()), true);
       c.tools.draft = answer;
-      c.press(c.btn(/^Discard$/));
+      c.press(c.btn(/^Delete draft$/));
       await settle();
-      c.press(c.btn(/^Yes, discard$/));
+      c.press(c.btn(/^Yes, delete$/));
       await settle();
       expect(`${label}: the editor is gone`, c.isEditor(), false);
       expect(`${label}: one line says how it ended`, re.test(c.text()), true);
@@ -548,13 +548,15 @@ async function main() {
     await settle();
     await settle();
     expect("no editor", c.isEditor(), false);
-    expect("one line says where the draft went", /A newer version of this draft is below\./.test(c.text()), true);
+    expect("one line says where the draft went", /Newer version below/.test(c.text()), true);
     expect("the frame is not empty", c.root.children.length > 0, true);
     expect("the stale text is not on screen", /Here they are/.test(c.text()), false);
-    // The way back, because the detection is an inference.
-    c.press(c.btn(/^Edit here anyway$/));
+    // The way back, because the detection is an inference. "Open here" takes
+    // the draft over: it reads the current version and opens it here.
+    c.press(c.btn(/^Open here$/));
     await settle();
-    expect("Edit here anyway opens the editor", c.isEditor(), true);
+    await settle();
+    expect("Open here opens the editor", c.isEditor(), true);
     expect("on the current version", c.value("d-body"), "The assistant's rewrite.");
     expect("with Send on", c.softOff(c.btn(/^Send$/)), false);
     await c.done();
@@ -579,7 +581,13 @@ async function main() {
     r.push(draftEnvelope({ last_saved_at: OLD(), revision: 1 }));
     await settle();
     await settle();
-    expect("unsaved edits: the editor stays", r.isEditor(), true);
+    // 2026-10-17: unsaved edits no longer keep the card open as a second
+    // live editor. It folds, and the line says the edits are kept here.
+    expect("unsaved edits: one line", r.isEditor(), false);
+    expect("unsaved edits: the line says they are kept", /Newer version below.*Your unsaved edits are kept here/.test(r.text()), true);
+    r.press(r.btn(/^Show$/));
+    await settle();
+    expect("unsaved edits: Show opens them", r.isEditor(), true);
     expect("unsaved edits: the edit is there", r.value("d-subject"), "My subject");
     await r.done();
   }
@@ -596,7 +604,7 @@ async function main() {
       await settle();
     });
     expectJson("after a while, one silent read", c.calls.map((x) => [x.name, x.args.draft_id]), [["draft_read", "Drafts:102"]]);
-    expect("the card folds to one line", /A newer version of this draft is below\./.test(c.text()), true);
+    expect("the card folds to one line", /Newer version below/.test(c.text()), true);
     expect("no editor", c.isEditor(), false);
     await later(3 * c.mod.REPLAY_AGE_MS, async () => {
       c.attend();
@@ -628,10 +636,34 @@ async function main() {
       await settle();
     });
     await settle();
-    expect("typing: the editor stays", e.isEditor(), true);
+    expect("typing: folded, edits kept behind Show", /Your unsaved edits are kept here/.test(e.text()), true);
+    e.press(e.btn(/^Show$/));
+    await settle();
     expect("typing: kept", e.value("d-subject"), "My own subject");
     expect("typing: the newer body arrived under it", e.value("d-body"), "The assistant's rewrite.");
+    expect("typing: and the card says so", /Your unsaved edits are shown on top of the current version/.test(e.text()), true);
     await e.done();
+  }
+
+  group("5d. a silent read that finds the draft gone says so once and stops asking");
+  {
+    const c = await editor({ revision: 1 });
+    c.tools.draft_read = () => failedResult("draft_not_found", "This draft was already sent.");
+    await later(c.mod.REPLAY_AGE_MS + 1000, async () => {
+      c.attend();
+      await settle();
+    });
+    expect("one read", c.calls.length, 1);
+    expect("the card says it was sent", /This draft was already sent/.test(c.text()), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
+    for (const k of [2, 3, 4]) {
+      await later(k * c.mod.REPLAY_AGE_MS + 1000, async () => {
+        c.attend();
+        await settle();
+      });
+    }
+    expect("later focus reads nothing more", c.calls.length, 1);
+    await c.done();
   }
 
   // ── 6. Leaving fullscreen when the card ends ─────────────────────────────
@@ -643,9 +675,9 @@ async function main() {
     await settle();
     expect("the card is fullscreen", c.root.getAttribute("data-mode"), "fullscreen");
     c.tools.draft = () => discardedResult();
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
-    c.press(c.btn(/^Yes, discard$/));
+    c.press(c.btn(/^Yes, delete$/));
     await settle();
     await settle();
     expect("discarded: one line", c.isEditor(), false);
@@ -693,7 +725,7 @@ async function main() {
     p.press(p.btn(/^Refresh$/));
     await settle();
     await settle();
-    expect("superseded: one line", /A newer version of this draft is below\./.test(p.text()), true);
+    expect("superseded: one line", /Newer version below/.test(p.text()), true);
     expectJson("superseded: inline was requested", p.modeRequests(), ["inline"]);
     await p.done();
 
@@ -712,9 +744,9 @@ async function main() {
   {
     const c = await editor();
     c.tools.draft = () => discardedResult();
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
-    c.press(c.btn(/^Yes, discard$/));
+    c.press(c.btn(/^Yes, delete$/));
     await settle();
     const s = c.storage();
     c.kill();
@@ -798,6 +830,59 @@ async function main() {
     await c.done();
   }
 
+  group("7d. a draft the server already called gone is not asked about again on the next reopen");
+  {
+    for (const [headline, ends] of [
+      ["This draft was already sent.", true],
+      ["This draft is no longer in your mailbox.", false],
+    ]) {
+      const first = await boot();
+      first.tools.draft_read = () => failedResult("draft_not_found", headline);
+      first.deliver(TOOL_INPUT);
+      first.push(draftEnvelope({ last_saved_at: OLD() }));
+      await settle();
+      await settle();
+      expect(`${headline} first reopen asks once`, first.calls.length, 1);
+      const s = first.storage();
+      await first.done();
+
+      const again = await boot({ storage: s });
+      again.tools.draft_read = () => failedResult("draft_not_found", headline);
+      again.deliver(TOOL_INPUT);
+      again.push(draftEnvelope({ last_saved_at: OLD() }));
+      await settle();
+      await settle();
+      expectJson(`${headline} second reopen asks nothing`, again.calls.filter((x) => x.name === "draft_read"), []);
+      expect(`${headline} same ending`, again.isEditor(), !ends);
+      expect(
+        `${headline} same words`,
+        ends ? /^(?!.*Here they are).*(Sent|already sent)/.test(again.text()) : /could not be found in Drafts/.test(again.text()),
+        true,
+      );
+      if (!ends) {
+        // Check again is the person asking: it goes to the server, and a draft
+        // found there is forgotten as gone.
+        again.tools.draft_read = () => draftResult({ origin: "read" });
+        again.press(again.btn(/^Check again$/));
+        await settle();
+        await settle();
+        expect("Check again asks the server", again.calls.filter((x) => x.name === "draft_read").length, 1);
+        const s2 = again.storage();
+        await again.done();
+        const third = await boot({ storage: s2 });
+        third.tools.draft_read = () => draftResult({ origin: "read" });
+        third.deliver(TOOL_INPUT);
+        third.push(draftEnvelope({ last_saved_at: OLD() }));
+        await settle();
+        await settle();
+        expect("found again: the next reopen asks", third.calls.some((x) => x.name === "draft_read"), true);
+        await third.done();
+      } else {
+        await again.done();
+      }
+    }
+  }
+
   group("7c. a draft saved in the card comes back current after the chat is reopened");
   {
     const c = await editor();
@@ -833,7 +918,7 @@ async function main() {
     expect("no not-found notice", /could not be found/.test(r.text()), false);
     expect("no notice at all", r.root.querySelectorAll(".notice").length, 0);
     expect("Send is on", r.softOff(r.btn(/^Send$/)), false);
-    expect("not folded: the person saved it here", /newer version of this draft is below/.test(r.text()), false);
+    expect("not folded: the person saved it here", /Newer version below/.test(r.text()), false);
     await r.done();
   }
 

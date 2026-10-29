@@ -11,34 +11,34 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez Yahoo Mail à Claude, Cursor et aux clients MCP",
-    "description": "Connectez Yahoo Mail à Claude, Cursor et tout client MCP en IMAP, port 993, avec un mot de passe d'application Yahoo. Votre mot de passe de compte ne marche pas."
+    "title": "MCP Yahoo Mail : connectez Yahoo Mail à Claude et ChatGPT",
+    "description": "Connectez Yahoo Mail à Claude ou ChatGPT avec un mot de passe d'application Yahoo, en IMAP port 993. Votre mot de passe de compte ne marche pas. Une boîte gratuite."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",
     "titleLine1": "Connectez Yahoo Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
+    "lead": "Offrez à Claude ou ChatGPT votre vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à Yahoo Mail. mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur le port 993, en s'authentifiant avec un mot de passe d'application Yahoo créé sous External connections (connexions externes) sur votre page Account Security, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Votre mot de passe Yahoo habituel n'est jamais accepté depuis un client de messagerie. La configuration prend quelques minutes et une boîte est gratuite, pour toujours."
+    "answer": "Claude ne peut pas accéder seul à Yahoo Mail. MCPEmails est un serveur MCP hébergé qui le connecte en IMAP sur le port 993, en s'authentifiant avec un mot de passe d'application Yahoo créé sous External connections (connexions externes) sur votre page Account Security, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Votre mot de passe Yahoo habituel n'est jamais accepté depuis un client de messagerie. La configuration prend quelques minutes et une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Yahoo se connecte : un mot de passe d'application",
-    "body": "Yahoo Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Générez-en un dans Yahoo Account Security, sous External connections, puis collez-le dans mcpemails avec votre adresse Yahoo. Si l'option n'apparaît pas, activez la vérification en deux étapes et regardez à nouveau. Pas de parcours OAuth, pas de fenêtres pop-up."
+    "body": "Yahoo Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Générez-en un dans Yahoo Account Security, sous External connections, puis collez-le dans MCPEmails avec votre adresse Yahoo. Si l'option n'apparaît pas, activez la vérification en deux étapes et regardez à nouveau. Pas de parcours OAuth, pas de fenêtres pop-up."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Générez un mot de passe d'application Yahoo",
       "p": "Dans Yahoo Account Security, sous External connections, générez un mot de passe d'application. Si l'option n'y figure pas, activez d'abord la vérification en deux étapes."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Ajoutez votre adresse Yahoo et le mot de passe d'application pour connecter la boîte en toute sécurité."
     },
     {
@@ -65,13 +65,17 @@
     }
   ],
   "limits": [
-    "Le serveur d'envoi de Yahoo annonce une taille maximale de message d'environ 41 Mo. La lecture des pièces jointes via mcpemails est plafonnée à 25 Mo par requête : tout fichier plus volumineux doit être récupéré dans Yahoo Mail lui-même.",
+    "Le serveur d'envoi de Yahoo annonce une taille maximale de message d'environ 41 Mo. La lecture des pièces jointes via MCPEmails est plafonnée à 25 Mo par requête : tout fichier plus volumineux doit être récupéré dans Yahoo Mail lui-même.",
     "Les mots de passe d'application n'expirent pas et survivent à un changement de votre mot de passe Yahoo. Supprimer le mot de passe d'application dans Account Security est le seul moyen de révoquer l'accès."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Yahoo Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Yahoo intégré. Connecter un serveur MCP comme mcpemails à votre boîte Yahoo en IMAP, avec un mot de passe d'application Yahoo, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. La même connexion fonctionne ensuite sans modification depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Yahoo intégré. Connecter un serveur MCP comme MCPEmails à votre boîte Yahoo en IMAP, avec un mot de passe d'application Yahoo, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. La même connexion fonctionne ensuite sans modification depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "ChatGPT peut-il se connecter à Yahoo Mail ?",
+      "a": "Oui, en ajoutant MCPEmails comme serveur MCP personnalisé. Sur chatgpt.com (avec ChatGPT Go ou une offre payante), ouvrez Plugins, Personal, Add, Add custom MCP server, collez l'URL de MCPEmails, choisissez OAuth et connectez-vous. Tapez ensuite @ dans une conversation et choisissez MCPEmails pour accéder à la boîte Yahoo connectée ici. Le même mot de passe d'application sert aussi à Claude."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Yahoo Mail ?",

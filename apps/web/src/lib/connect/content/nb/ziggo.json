@@ -20,7 +20,7 @@
     "titleLine1": "Koble Ziggo-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Ziggo-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med e-mailwachtwoord-et du har satt i Mijn Ziggo.",
-    "answer": "Claude når ikke en Ziggo-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.ziggo.nl port 993 og autentiserer med hele adressen din og e-mailwachtwoord-et du har satt for den adressen i Mijn Ziggo, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Ziggo har ikke app-passord og ingen bryter for klienttilgang, men utgående e-post er unntaket i denne kategorien: den kjører STARTTLS på smtp.ziggo.nl port 587, ikke implisitt TLS på 465. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en Ziggo-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.ziggo.nl port 993 og autentiserer med hele adressen din og e-mailwachtwoord-et du har satt for den adressen i Mijn Ziggo, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Ziggo har ikke app-passord og ingen bryter for klienttilgang, men utgående e-post er unntaket i denne kategorien: den kjører STARTTLS på smtp.ziggo.nl port 587, ikke implisitt TLS på 465. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "E-mailwachtwoord fra Mijn Ziggo",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Med et internettabonnement lar Ziggo deg opprette opptil seks e-postadresser; et abonnement med bare telefon får én. Vil du helst ikke gi en agent hovedadressen din, lager du en ekstra i Mijn Ziggo og kobler til den i stedet. Merk at hovedadressen er knyttet til internettabonnementet og faller bort hvis du sier det opp."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@ziggo.nl, og lim inn e-mailwachtwoord-et. Ziggo-vertene og -portene er forhåndsutfylt, inkludert STARTTLS-porten for innsending, og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Ziggo-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Ziggo-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Ziggo-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Ziggo?",

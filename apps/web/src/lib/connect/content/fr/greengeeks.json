@@ -20,7 +20,7 @@
     "titleLine1": "Connectez votre messagerie GreenGeeks à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte GreenGeeks. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
-    "answer": "Claude ne peut pas accéder seul à une boîte GreenGeeks. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. GreenGeeks utilise un cPanel standard et n'exploite pas de nom d'hôte de messagerie partagé : votre serveur est construit à partir de votre propre domaine ou du serveur sur lequel se trouve votre compte, et cPanel affiche la valeur exacte sous Email Accounts, puis Connect Devices, dans le bloc Mail Client Manual Settings. Vous vous authentifiez avec le mot de passe de la boîte plutôt qu'avec l'identifiant de votre tableau de bord GreenGeeks, et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à une boîte GreenGeeks. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. GreenGeeks utilise un cPanel standard et n'exploite pas de nom d'hôte de messagerie partagé : votre serveur est construit à partir de votre propre domaine ou du serveur sur lequel se trouve votre compte, et cPanel affiche la valeur exacte sous Email Accounts, puis Connect Devices, dans le bloc Mail Client Manual Settings. Vous vous authentifiez avec le mot de passe de la boîte plutôt qu'avec l'identifiant de votre tableau de bord GreenGeeks, et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis cPanel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, sans carte bancaire."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Définissez ou confirmez le mot de passe de la boîte",
-      "p": "IMAP vérifie le mot de passe associé à l'adresse e-mail, distinct du mot de passe de votre tableau de bord GreenGeeks et de l'identifiant cPanel. Si vous ne l'avez pas, utilisez <b>Manage</b> sur la ligne de l'adresse dans Email Accounts pour en définir un nouveau, puis collez-le dans mcpemails avec l'adresse complète comme identifiant."
+      "p": "IMAP vérifie le mot de passe associé à l'adresse e-mail, distinct du mot de passe de votre tableau de bord GreenGeeks et de l'identifiant cPanel. Si vous ne l'avez pas, utilisez <b>Manage</b> sur la ligne de l'adresse dans Email Accounts pour en définir un nouveau, puis collez-le dans MCPEmails avec l'adresse complète comme identifiant."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "GreenGeeks applique des limites d'envoi horaires sur les offres mutualisées. Un envoi automatisé à fort volume depuis un agent IA peut les atteindre, et l'échec apparaît comme un envoi différé ou refusé plutôt que comme une erreur de connexion.",
-    "mcpemails connecte uniquement la boîte. Les alias, redirections, réponses automatiques et réglages antispam restent dans cPanel."
+    "MCPEmails connecte uniquement la boîte. Les alias, redirections, réponses automatiques et réglages antispam restent dans cPanel."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie GreenGeeks ?",
-      "a": "Pas directement. Claude ne propose aucun connecteur pour les hébergeurs mail sous cPanel. Connecter un serveur MCP comme mcpemails à votre boîte GreenGeeks en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous saisiriez dans Thunderbird ou Apple Mail."
+      "a": "Pas directement. Claude ne propose aucun connecteur pour les hébergeurs mail sous cPanel. Connecter un serveur MCP comme MCPEmails à votre boîte GreenGeeks en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous saisiriez dans Thunderbird ou Apple Mail."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de GreenGeeks ?",

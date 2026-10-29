@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "title": "E-postkoblingene i Claude og ChatGPT vs en MCP-server",
+    "description": "Hva de innebygde e-postkoblingene i Claude og ChatGPT og Fastmails og Zohos egne MCP-servere kan gjøre, sammenlignet med MCPEmails. Med kilder og datoer."
+  },
+  "hero": {
+    "eyebrow": "Innebygde koblinger vs MCP",
+    "titleLine1": "Innebygde koblinger sender e-post nå.",
+    "titleLine2": "Her er hvor de stopper.",
+    "lead": "Claude og ChatGPT kan lese og sende e-post i Gmail og hos Microsoft, og Fastmail og Zoho har egne MCP-servere. Hver av dem dekker én leverandør eller virker i én app. MCPEmails samler alle postkassene dine bak én tilkobling som virker i alle MCP-klienter.",
+    "updated": "Fakta om andre selskaper sjekket {date}. Hver påstand lenker til kilden.",
+    "ctaPrimary": "Koble til en innboks gratis",
+    "ctaSecondary": "Les dokumentasjonen"
+  },
+  "kinds": {
+    "title": "To slags innebygd",
+    "sub": "De blir ofte slått sammen, men de skiller seg på de to tingene som teller: hvilke postkasser de når, og hvilke apper de virker i.",
+    "apps": {
+      "h": "Koblinger bygd inn i en AI-app",
+      "p": "Gmail- og Microsoft 365-koblingene i Claude, og Gmail- og Outlook-appene i ChatGPT. Ingenting å installere, og de sender e-post nå. De virker bare inne i den ene appen, og Microsoft 365-koblingen i Claude kan ikke koble til private Outlook.com- eller Hotmail-kontoer."
+    },
+    "provider": {
+      "h": "E-postleverandørens egen MCP-server",
+      "p": "Fastmail og Zoho Mail har hver sin offisielle MCP-server, og Googles Gmail MCP-server er i forhåndsversjon for utviklere. De virker i alle MCP-klienter, men hver av dem når bare postkassene hos sin egen leverandør."
+    }
+  },
+  "axes": {
+    "title": "Der en administrert MCP-server fortsatt skiller seg ut",
+    "sub": "Tre forskjeller som står seg på sidene vi leste. Der de innebygde alternativene har tatt igjen, sier tabellen under det.",
+    "items": {
+      "coverage": {
+        "tag": "Dekning",
+        "h": "Alle postkasser, én tilkobling",
+        "p": "MCPEmails kobler til Gmail, Outlook (også private Outlook.com-kontoer), iCloud, Yahoo, Fastmail, Zoho, Yandex og enhver IMAP-postkasse, flere samtidig bak én MCP-URL. En innebygd kobling når Gmail og Microsoft-e-post, og en leverandørs egen server når den leverandøren."
+      },
+      "actions": {
+        "tag": "Kontroll",
+        "h": "Planlegg, hold igjen og organiser",
+        "p": "De innebygde koblingene sender, svarer og videresender. MCPEmails kan i tillegg planlegge utsendelser, holde igjen utgående e-post til du godkjenner den, per innboks, og flytte, kopiere, flagge, arkivere og slette i alle tilkoblede postkasser."
+      },
+      "portable": {
+        "tag": "Flyttbar",
+        "h": "Ett oppsett, alle AI-apper",
+        "p": "Koblingene i Claude og ChatGPT virker bare inne i sin egen app. MCPEmails er en standard streamable-http MCP-server med OAuth 2.1, dynamisk klientregistrering og PKCE, så de samme postkassene virker i Claude, ChatGPT, Cursor, VS Code, n8n og alle andre MCP-klienter."
+      }
+    }
+  },
+  "table": {
+    "title": "Side om side",
+    "featureCol": "Funksjon",
+    "appsCol": "Koblingene i Claude og ChatGPT",
+    "providerCol": "Leverandørens egen MCP-server",
+    "usCol": "MCPEmails",
+    "notStated": "Ikke oppgitt",
+    "rows": {
+      "reach": "Postkasser den når",
+      "several": "Flere leverandører i én tilkobling",
+      "send": "Sende, svare og videresende",
+      "organize": "Flytte, merke, arkivere eller slette",
+      "schedule": "Planlegge en utsendelse til senere",
+      "approval": "Godkjenning før sending",
+      "portable": "Virker i andre AI-apper"
+    },
+    "values": {
+      "reachApps": "Gmail. Microsoft 365-jobbkontoer i Claude, Outlook i ChatGPT.",
+      "reachProvider": "Bare den leverandøren: Fastmail, Zoho eller Gmail i Googles forhåndsversjon.",
+      "reachUs": "Gmail, Outlook og Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex, all IMAP.",
+      "sendProvider": "Fastmail og Zoho sender. Googles forhåndsversjon lager bare utkast.",
+      "organizeApps": "Etiketter og papirkurv i Gmail-koblingen i Claude.",
+      "organizeProvider": "Fastmail og Zoho, ja.",
+      "approvalApps": "Claude spør før hver sending som standard. ChatGPT kan spørre før en handling.",
+      "approvalUs": "Valgfri tilbakeholding per innboks, på alle planer, pluss en egen sendetillatelse."
+    },
+    "footnote": "Cellene om andre selskaper ble lest i kildene under {date}. «Ikke oppgitt» betyr at sidene vi leste ikke svarte på spørsmålet, ikke at funksjonen mangler. Disse produktene endrer seg ofte. Er en celle utdatert, er kildelenken stedet å sjekke."
+  },
+  "faq": {
+    "title": "Innebygde koblinger vs MCP, besvart",
+    "sub": "Også svarene som ikke sender deg til oss.",
+    "items": [
+      {
+        "q": "Kan Claude eller ChatGPT allerede sende e-post fra Gmail-kontoen min?",
+        "a": "Ja. Gmail-koblingen i Claude sender, svarer og videresender, og ber som standard om godkjenning før hver av disse handlingene. ChatGPT kan skrive og sende via en tilkoblet Gmail- eller Outlook-konto på nettet med Plus, Pro, Business og Enterprise. Er Gmail din eneste postkasse og du bruker bare én av disse appene, kan den innebygde koblingen være alt du trenger."
+      },
+      {
+        "q": "E-postleverandøren min har sin egen MCP-server. Trenger jeg noe mer?",
+        "a": "Kanskje ikke. Fastmail og Zoho Mail har offisielle MCP-servere som virker i alle MCP-klienter, og Googles Gmail MCP-server er i forhåndsversjon for utviklere. Hver av dem når bare sin egen leverandør. MCPEmails er for flere postkasser bak én tilkobling, for iCloud, Yahoo, Yandex og andre IMAP-verter, og for private Outlook.com-kontoer, som Microsoft 365-koblingen i Claude ikke kan koble til."
+      },
+      {
+        "q": "Hva kan MCPEmails gjøre som de innebygde koblingene ikke kan?",
+        "a": "Nå postkasser hos flere leverandører gjennom én MCP-URL, planlegge en utsendelse til senere, holde igjen utgående e-post til et menneske godkjenner den, per innboks, og virke likt i Claude, ChatGPT, Cursor, VS Code og n8n. Ingen av de innebygde alternativene vi sjekket nevner planlagt sending."
+      },
+      {
+        "q": "Hvis jeg setter det opp for Claude, virker det i Cursor eller ChatGPT også?",
+        "a": "Ja. MCPEmails er en standard streamable-http MCP-server med OAuth 2.1, dynamisk klientregistrering og PKCE, så ett oppsett virker i Claude, ChatGPT, Cursor, VS Code, Windsurf, n8n og alle andre MCP-klienter. De innebygde koblingene i Claude og ChatGPT virker bare inne i sin egen app."
+      },
+      {
+        "q": "Blir e-posten min lagret hvis MCPEmails kobler til innboksen?",
+        "a": "Nei. Meldinger hentes direkte fra leverandøren ved hver forespørsel og forkastes når svaret er sendt. Det som lagres, er et kryptert OAuth-token eller app-passord slik at senere forespørsler kan logge inn, og meldinger du planlegger, som holdes kryptert til de sendes. Du kan trekke tilbake tilgangen når som helst."
+      }
+    ]
+  },
+  "sources": {
+    "title": "Kilder",
+    "sub": "Hver side under ble lest {date}.",
+    "items": {
+      "claudeGoogle": "Claude Help Center: Google Workspace-koblinger",
+      "claudeGmailListing": "Oppføringen for Gmail-koblingen i Claude",
+      "claudeM365": "Claude Help Center: Microsoft 365-koblingen",
+      "chatgptReleaseNotes": "ChatGPTs versjonsnotater (sending fra Gmail eller Outlook)",
+      "chatgptApps": "OpenAI Help Center: apper i ChatGPT",
+      "fastmailMcp": "Fastmail: koble til AI-verktøy via Fastmails MCP-server",
+      "zohoMcp": "Zoho Mail MCP: kom i gang",
+      "googleGmailMcp": "Google for Developers: sett opp Gmail MCP-serveren"
+    }
+  },
+  "ctaBand": {
+    "title": "Gi AI-en din alle innboksene du har",
+    "sub": "Koble til en postkasse på få minutter. Én innboks gratis, uten kort.",
+    "ctaPrimary": "Koble til en innboks gratis",
+    "ctaSecondary": "Les dokumentasjonen"
+  }
+}

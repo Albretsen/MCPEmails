@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
+    "https://mc.merill.net/message/MC1163922",
+    "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Mit Microsoft anmelden (OAuth 2.0), eventuell ist die Freigabe durch die IT-Administration nötig",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "Sie müssen nichts eintippen. Sie melden sich auf Microsofts eigener Seite mit Ihrem Geschäfts-, Schul- oder Unikonto von Microsoft an und erteilen den Zugriff, hier wird also weder ein Passwort noch ein App-Passwort eingegeben. Die für Microsoft 365 veröffentlichten IMAP- und SMTP-Einstellungen gelten nicht: MCPEmails verbindet sich über Microsoft Graph.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Microsoft 365 Postfach mit Claude und ChatGPT verbinden",
+    "description": "Ein Microsoft 365 Postfach aus Firma, Schule oder Uni mit Claude, ChatGPT, Cursor oder jedem MCP-Client verbinden. Mit Microsoft anmelden; in vielen Organisationen muss die IT-Administration die App einmal freigeben."
+  },
+  "hero": {
+    "eyebrow": "Microsoft 365 + KI",
+    "titleLine1": "Microsoft 365 E-Mail verbinden",
+    "titleLine2": "mit Claude, ChatGPT und Cursor",
+    "lead": "Geben Sie Ihrem KI-Agenten Ihr Outlook-Postfach aus Firma, Schule oder Uni. Melden Sie sich mit Microsoft an. Verlangt Ihre Organisation eine Freigabe, schicken Sie Ihrer IT-Administration einen Link, mit dem sie MCPEmails für alle freigibt.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Mit Microsoft anmelden, kein App-Passwort",
+    "meta2": "Freigabe-Link für die IT-Administration inklusive",
+    "answer": "Ja, mit einer Bedingung, die von Ihrer Organisation abhängt. MCPEmails verbindet Microsoft 365 Postfächer aus Firma, Schule oder Uni über Microsoft Graph: Sie klicken auf Mit Microsoft verbinden und melden sich mit Ihrem Arbeitskonto an. Viele Organisationen verlangen aber, dass die IT-Administration die App zuerst einmal freigibt. Der Grund ist Microsofts Standardrichtlinie für die Einwilligung, die seit Ende 2025 gilt: Sie verhindert, dass Mitarbeitende Berechtigungen zum Lesen von E-Mails selbst erteilen. Passiert das, erhalten Sie im Dashboard einen Freigabe-Link für Ihre IT-Administration. Der Administrator öffnet ihn, meldet sich mit seinem Microsoft-Arbeitskonto an und gibt MCPEmails einmal für die ganze Organisation frei, ganz ohne MCPEmails-Konto. Danach verbinden Sie und Ihre Kollegen sich ganz normal. Anschließend fügen Sie eine URL in Claude, ChatGPT, Cursor oder einen anderen MCP-Client ein. Ein Postfach ist dauerhaft kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Microsoft 365: Anmeldung mit Microsoft, teils mit Freigabe durch die Administration",
+    "body": "Microsoft 365 verbindet sich über <b>Microsoft Graph</b> mit OAuth 2.0, nicht über IMAP. Sie melden sich auf Microsofts eigener Seite an und erteilen die Berechtigungen, die MCPEmails anfragt: E-Mails lesen und ändern (<b>Mail.ReadWrite</b>), E-Mails senden (<b>Mail.Send</b>), verbunden bleiben (<b>offline_access</b>) sowie Ihr Basisprofil und Ihre E-Mail-Adresse. Microsoft zeigt MCPEmails als verifizierten Herausgeber an. Ob Sie diese Berechtigungen selbst erteilen dürfen, entscheidet Ihre Organisation. Seit Ende 2025 erlaubt Microsofts Standardrichtlinie normalen Benutzern nicht mehr, einer App E-Mail-Berechtigungen zu erteilen. In vielen Organisationen wird deshalb die erste Person, die sich verbindet, stattdessen nach einer Administratorfreigabe gefragt. Ein Administrator gibt die App einmal für die ganze Organisation frei, nicht für jede Person einzeln."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Outlook wählen und mit Microsoft verbinden",
+      "p": "Öffnen Sie im Dashboard Postfach verbinden, wählen Sie Outlook, klicken Sie auf Mit Microsoft verbinden und melden Sie sich mit Ihrem Konto aus Firma, Schule oder Uni an."
+    },
+    {
+      "h": "Zugriff erteilen oder den Freigabe-Link senden",
+      "p": "Lässt Microsoft Sie selbst zustimmen, bestätigen Sie die Berechtigungen, und das Postfach ist verbunden. Verlangt Ihre Organisation eine Administratorfreigabe, erhalten Sie im Dashboard einen Freigabe-Link für Ihre IT-Administration. Der Administrator öffnet ihn, meldet sich mit Microsoft an und gibt die App einmal für die ganze Organisation frei; ein MCPEmails-Konto braucht er dafür nicht. Klicken Sie danach erneut auf Mit Microsoft verbinden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Passwörter und App-Passwörter funktionieren nicht, deshalb läuft das über Microsoft Graph",
+      "p": "Microsoft hat die Standardauthentifizierung für IMAP und POP 2022 in jedem Exchange Online-Mandanten abgeschaltet, und sie lässt sich nicht wieder aktivieren. Eine Anmeldung mit Passwort scheitert genau so, als wäre das Passwort falsch. Deshalb setzen viele Zugangsdaten zurück, die von Anfang an richtig waren. MCPEmails nutzt für Microsoft 365 kein IMAP: Es meldet sich mit Microsoft an und spricht mit Microsoft Graph. Es gibt also kein Passwort einzugeben und keine Servereinstellung, die falsch sein könnte."
+    },
+    {
+      "h": "Die Administratorfreigabe legt Ihre Organisation fest, und ein verifizierter Herausgeber umgeht sie nicht",
+      "p": "Seit der Änderung, die Microsoft ab Ende Oktober 2025 ausgerollt hat, liegen die Exchange-E-Mail-Berechtigungen in der von Microsoft verwalteten Standardrichtlinie für die Einwilligung. Wer einer E-Mail-App zustimmen will, sieht deshalb stattdessen eine Anfrage zur Administratorfreigabe. Daran ändert auch ein verifizierter Herausgeber nichts. Ihre IT-Administration kann MCPEmails über den Freigabe-Link aus dem Dashboard für die ganze Organisation freigeben, und zwar nur ein einziges Mal."
+    },
+    {
+      "h": "Ein Konto ohne Exchange Online-Postfach wird abgelehnt",
+      "p": "Manche Microsoft 365-Konten haben kein Exchange Online-Postfach, etwa ein Administratorkonto ohne Exchange-Lizenz oder eine Organisation, deren E-Mails woanders gehostet werden. Microsoft Graph kann dann nichts öffnen, also lehnt MCPEmails die Verbindung ab und sagt das auch. Liegen Ihre E-Mails auf einem anderen Server, verbinden Sie die Adresse stattdessen per IMAP."
+    },
+    {
+      "h": "Hat die Freigabe nicht geklappt, öffnet der Administrator den Link erneut",
+      "p": "Das Dashboard behandelt Ihre Organisation erst dann als freigegeben, wenn Microsoft das bestätigt. Bestätigt Microsoft die Freigabe nicht, zum Beispiel weil der Administrator die Seite geschlossen oder abgelehnt hat, bleibt Outlook gesperrt, und das Dashboard zeigt das an. Bitten Sie Ihre IT-Administration, den Freigabe-Link noch einmal zu öffnen."
+    }
+  ],
+  "limits": [
+    "Outlook ordnet E-Mails in Ordnern, auch in verschachtelten. Die Label-Tools gibt es nur für Gmail, aber die Label-Aktion einer Automatisierung weist der Nachricht in Outlook eine Kategorie zu.",
+    "Microsoft Graph kann eine Textsuche nicht mit den Filtern für ungelesen, Anhang, markiert oder Datum kombinieren. Enthält eine Suche Text, werden diese Filter nicht angewendet, und das Ergebnis nennt die ausgelassenen Filter.",
+    "Beim Senden sind bis zu 10 MB Anhänge pro Nachricht möglich; das Herunterladen von Anhängen und das Weiterleiten von Originalen funktioniert bis 25 MB.",
+    "Die Self-Hosting-Version verbindet sich nur über IMAP und SMTP. Die Anmeldung mit Microsoft gehört zum gehosteten Dienst."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Microsoft 365 E-Mail?",
+      "a": "Ja. Verbinden Sie Ihr Postfach aus Firma, Schule oder Uni mit MCPEmails, indem Sie sich mit Microsoft anmelden, fügen Sie eine MCP-URL in Claude ein, und Claude kann Ihre E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und ablegen. Verlangt Ihre Organisation eine Administratorfreigabe, gibt Ihre IT-Administration MCPEmails vorher einmal über den Link aus dem Dashboard frei."
+    },
+    {
+      "q": "Warum werde ich nach einer Administratorfreigabe gefragt?",
+      "a": "Wegen der Einwilligungsrichtlinie Ihrer Organisation. Seit Ende 2025 verhindert Microsofts Standardrichtlinie, dass Mitarbeitende Apps selbst Berechtigungen zum Lesen von E-Mails erteilen. Die Anmeldung fragt deshalb nach einer Administratorfreigabe. Mit Ihrem Konto ist alles in Ordnung. Im Dashboard erhalten Sie einen Freigabe-Link für Ihre IT-Administration."
+    },
+    {
+      "q": "Was muss meine IT-Administration tun?",
+      "a": "Den Freigabe-Link öffnen, den Sie geschickt haben, sich mit dem Microsoft-Arbeitskonto anmelden und die App auf Microsofts Zustimmungsbildschirm für die Organisation freigeben. Dort erscheint MCPEmails als verifizierter Herausgeber. Ein MCPEmails-Konto ist nicht nötig. Das geschieht einmal für die ganze Organisation. Danach verbinden sich alle in der Organisation ganz normal über Mit Microsoft verbinden."
+    },
+    {
+      "q": "Brauche ich ein App-Passwort oder IMAP-Einstellungen?",
+      "a": "Nein. MCPEmails verbindet Microsoft 365 nach Ihrer Anmeldung mit Microsoft über Microsoft Graph. Sie müssen also kein App-Passwort erstellen und keinen IMAP- oder SMTP-Server eintragen. Ein Passwort würde ohnehin nicht funktionieren: Die Standardauthentifizierung wurde 2022 aus Exchange Online entfernt und lässt sich nicht wieder einschalten."
+    },
+    {
+      "q": "Was kann meine KI in Microsoft 365 tun?",
+      "a": "Lesen, suchen, senden, antworten und weiterleiten; mit Entwürfen arbeiten; Ordner anlegen und nutzen, auch verschachtelte; verschieben, kopieren und archivieren; markieren; in den Papierkorb oder endgültig löschen; bis zu 10 MB Anhänge pro Nachricht senden sowie Anhänge herunterladen oder Originale weiterleiten bis 25 MB; Sendungen planen; Automatisierungsregeln ausführen; und Ihre Signatur verwalten."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Microsoft abgerufen und an Ihren KI-Client übergeben. Das OAuth-Token aus Ihrer Microsoft-Anmeldung wird verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das Postfach in MCPEmails löschen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI Ihr Microsoft 365 Postfach",
+    "sub": "Mit Microsoft anmelden. Braucht Ihre Organisation eine Administratorfreigabe, deckt ein Link an Ihre IT-Administration alle ab. Ein Postfach dauerhaft kostenlos."
+  },
+  "seeAlso": {
+    "intro": "Private Adresse bei Outlook.com, Hotmail oder Live?",
+    "label": "Outlook.com verbinden",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "Lieber eine Schritt-für-Schritt-Anleitung?",
+    "label": "Outlook und Microsoft 365 per MCP mit Ihrem KI-Agenten verbinden",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

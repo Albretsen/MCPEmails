@@ -20,3 +20,10 @@ test('rejects undeclared events and sensitive properties', () => {
   assert.throws(() => assertSafeAnalyticsEvent('signup_completed', { method: 'password', user_id: 'abc' }));
   assert.throws(() => assertSafeAnalyticsEvent('mcp_connection_started', { client: 'https://example.com/?key=mcpe_secret' }));
 });
+
+test('every signup method the signup page offers is a valid signup event', () => {
+  for (const method of ['password', 'google', 'github', 'microsoft']) {
+    assert.doesNotThrow(() => assertSafeAnalyticsEvent('signup_started', { method }));
+    assert.doesNotThrow(() => assertSafeAnalyticsEvent('signup_completed', { method }));
+  }
+});

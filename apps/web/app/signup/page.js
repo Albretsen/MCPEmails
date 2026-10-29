@@ -2,11 +2,17 @@ import '../../styles/theme.css';
 import '../../styles/marketing.css';
 import '../../styles/dashboard.css';
 import { SignupApp } from '../../components/auth/SignupApp';
-import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
+import {
+  CLIENT_INTENT_PARAM,
+  CONNECT_INTENT_PARAM,
+  clientIntentShape,
+  connectIntentSlugShape,
+} from '@/lib/connect/intent-carry.mjs';
+import { authorizeSignupContext } from '@/lib/onboarding/clients.mjs';
 
 export const metadata = {
-  title: 'Create your account · mcpemails',
-  description: 'Create your mcpemails account and connect your first inbox',
+  title: 'Create your account',
+  description: 'Create your MCPEmails account and connect your first inbox',
 };
 
 /**
@@ -32,5 +38,13 @@ export default async function SignupPage({ searchParams }) {
   // is checked here; the dashboard validates it against the registry.
   const connectProvider = connectIntentSlugShape(params?.[CONNECT_INTENT_PARAM]);
 
-  return <SignupApp redirectTo={safeRedirect} connectProvider={connectProvider} />;
+  // The AI app this visitor came for (`?client=claude`), carried the same way
+  // into the first run; the /onboarding chip starts from it.
+  const connectClient = clientIntentShape(params?.[CLIENT_INTENT_PARAM]);
+
+  // Sent here by an AI app's connect flow (/authorize): say which app, from
+  // its OAuth redirect_uri or client_id, so the page is not a dead end.
+  const authorizing = authorizeSignupContext(safeRedirect);
+
+  return <SignupApp redirectTo={safeRedirect} connectProvider={connectProvider} connectClient={connectClient} authorizing={authorizing} />;
 }

@@ -19,7 +19,7 @@
     "titleLine1": "Conecta el correo Bluewin a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de bluewin.ch. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu contraseña de correo de Swisscom, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Bluewin. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imaps.bluewin.ch en el puerto 993, iniciando sesión con tu dirección bluewin.ch completa y tu contraseña de correo de Bluewin, que Swisscom mantiene separada de la contraseña de acceso a My Swisscom. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Bluewin. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imaps.bluewin.ch en el puerto 993, iniciando sesión con tu dirección bluewin.ch completa y tu contraseña de correo de Bluewin, que Swisscom mantiene separada de la contraseña de acceso a My Swisscom. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de correo, no el acceso a Swisscom",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Inicia sesión en My Swisscom y abre la sección para cambiar la contraseña de correo de la dirección de Bluewin que quieres conectar. Es una contraseña distinta de la que usaste para entrar en My Swisscom. Si nunca la has definido, hazlo ahora; el valor que elijas aquí es el que usa un cliente de correo."
     },
     {
-      "h": "Introduce la dirección y la contraseña de correo en mcpemails",
+      "h": "Introduce la dirección y la contraseña de correo en MCPEmails",
       "p": "Elige IMAP / SMTP, introduce tu dirección <code>@bluewin.ch</code> completa y pega la contraseña de correo, no la contraseña de acceso a Swisscom. Los servidores de Bluewin ya vienen rellenados, incluidas las letras finales que es fácil escribir mal."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "Faltan tanto MOVE como UIDPLUS",
-      "p": "Este servidor no implementa ni MOVE ni UIDPLUS. Archivar un mensaje se ejecuta por tanto como COPY, luego STORE de la marca de borrado y luego EXPUNGE, y el servidor nunca informa del id que asignó a la nueva copia. mcpemails gestiona la secuencia, pero aquí mover no es atómico y un mensaje archivado se confirma buscando en la carpeta de destino, no por id."
+      "p": "Este servidor no implementa ni MOVE ni UIDPLUS. Archivar un mensaje se ejecuta por tanto como COPY, luego STORE de la marca de borrado y luego EXPUNGE, y el servidor nunca informa del id que asignó a la nueva copia. MCPEmails gestiona la secuencia, pero aquí mover no es atómico y un mensaje archivado se confirma buscando en la carpeta de destino, no por id."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo Bluewin?",
-      "a": "No directamente. Claude no tiene un conector integrado para Bluewin ni para Swisscom. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de bluewin.ch, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Bluewin ni para Swisscom. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de bluewin.ch, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Bluewin?",

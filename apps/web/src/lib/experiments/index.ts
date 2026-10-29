@@ -56,7 +56,6 @@ export async function getExperimentVariant(
 }
 
 export {
-  HOMEPAGE_DEMO_VIDEO,
   OVERRIDE_COOKIE,
   SUBJECT_COOKIE,
   SUBJECT_COOKIE_MAX_AGE_SECONDS,

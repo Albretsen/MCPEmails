@@ -19,7 +19,7 @@
     "titleLine1": "将 Bluewin 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 bluewin.ch 收件箱。使用你的 Swisscom 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 Bluewin 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imaps.bluewin.ch 端口 993 的 IMAP 与之连接，使用你完整的 bluewin.ch 地址和 Bluewin 邮箱密码登录；Swisscom 将这个密码与 My Swisscom 登录密码分开管理。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Bluewin 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 imaps.bluewin.ch 端口 993 的 IMAP 与之连接，使用你完整的 bluewin.ch 地址和 Bluewin 邮箱密码登录；Swisscom 将这个密码与 My Swisscom 登录密码分开管理。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，而非 Swisscom 登录密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -38,7 +38,7 @@
       "p": "登录 My Swisscom，打开你要连接的 Bluewin 地址的邮箱密码修改部分。这个密码与你登录 My Swisscom 的密码不同。如果你从未设置过，现在就设置；你在这里设定的值就是邮件客户端要用的密码。"
     },
     {
-      "h": "在 mcpemails 中输入地址和邮箱密码",
+      "h": "在 MCPEmails 中输入地址和邮箱密码",
       "p": "选择 IMAP / SMTP，输入完整的 <code>@bluewin.ch</code> 地址，并粘贴邮箱密码，而不是 Swisscom 登录密码。Bluewin 的服务器地址已预填，包括末尾那几个容易输错的字母。"
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "MOVE 和 UIDPLUS 都不支持",
-      "p": "该服务器既不支持 MOVE，也不支持 UIDPLUS。因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，而且服务器从不报告它为新副本分配的 ID。mcpemails 会处理这一系列操作，但这里的移动不是原子操作，已归档的邮件是通过在目标文件夹中搜索来确认的，而不是通过 ID。"
+      "p": "该服务器既不支持 MOVE，也不支持 UIDPLUS。因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，而且服务器从不报告它为新副本分配的 ID。MCPEmails 会处理这一系列操作，但这里的移动不是原子操作，已归档的邮件是通过在目标文件夹中搜索来确认的，而不是通过 ID。"
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Bluewin 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Bluewin 或 Swisscom 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 bluewin.ch 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Bluewin 或 Swisscom 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 bluewin.ch 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Bluewin 的 IMAP 和 SMTP 设置是什么？",

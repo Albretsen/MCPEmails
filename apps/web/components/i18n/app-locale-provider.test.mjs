@@ -40,6 +40,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
+import { withEnglishFallback } from '../../src/i18n/locale-policy.mjs';
 
 const window = installDom();
 // installDom() does not expose storage, and the provider reads the bare global.
@@ -50,22 +51,32 @@ const { renderToString } = await import('react-dom/server');
 const { hydrateRoot } = await import('react-dom/client');
 const { useMessages, useLocale, useTranslations } = await import('next-intl');
 const { default: AppLocaleProvider, useAppLocale } = await import('./AppLocaleProvider.jsx');
+const { default: AuthLocaleProvider } = await import('./AuthLocaleProvider.jsx');
 const { DashboardApp } = await import('../dashboard/App.jsx');
 const { LoginApp } = await import('../auth/LoginApp.jsx');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
-const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
+const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common', 'convert'];
 const STORAGE_KEY = 'mcpe-locale';
 /** The language buttons on the Settings page, by their own-language names. */
-const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
 
-/** The catalogs, read straight off disk: the reference everything is held to. */
-const CATALOG = Object.fromEntries(LOCALES.map((locale) => [
+/** The catalogs, read straight off disk. */
+const RAW_CATALOG = Object.fromEntries(LOCALES.map((locale) => [
   locale,
   Object.fromEntries(NAMESPACES.map((ns) => [
     ns,
     JSON.parse(readFileSync(new URL(`../../messages/${locale}/${ns}.json`, import.meta.url), 'utf8')),
   ])),
+]));
+/**
+ * What each language should render, the reference everything is held to: the
+ * file as it is for a full locale, and laid over English for a frozen one (zh),
+ * per src/i18n/locale-policy.mjs.
+ */
+const CATALOG = Object.fromEntries(LOCALES.map((locale) => [
+  locale,
+  withEnglishFallback(locale, RAW_CATALOG[locale], RAW_CATALOG.en),
 ]));
 
 // ---------------------------------------------------------------------------
@@ -180,6 +191,18 @@ function Probe({ seen }) {
   return createElement('p', { id: 'probe' }, t('settings.languageHeading'));
 }
 
+/**
+ * Resolves once `locale`'s catalog files are imported and the provider's own
+ * load of the same modules has had a task to finish. LocaleCore.jsx fetches a
+ * language on demand, so a test that counts console errors awaits this inside
+ * an `act`: the update that applies the language then lands inside it instead
+ * of being reported as an unwrapped update.
+ */
+async function catalogLoaded(locale) {
+  await Promise.all(NAMESPACES.map((ns) => import(`../../messages/${locale}/${ns}.json`, { with: { type: 'json' } })));
+  await new Promise((resolve) => setTimeout(resolve, 20));
+}
+
 function newSeen() {
   return { renders: [], messages: null, setLocale: null };
 }
@@ -233,6 +256,52 @@ async function settled(view, locale) {
 }
 
 // ===========================================================================
+// Catalogs on demand (LocaleCore.jsx): only English is bundled
+// ===========================================================================
+//
+// The cold server render (nothing loaded yet) is in locale-ssr-cold.test.mjs:
+// it needs a process of its own, both to start cold and because a streaming
+// render here would leave React's renderer marker on the shared contexts.
+
+test('bundle: only the English catalogs are imported statically', () => {
+  const STATIC_CATALOG = /^import\s+\w+\s+from\s+['"][^'"]*messages\/(\w+)\/(\w+)\.json['"]/gm;
+  const read = (file) => readFileSync(new URL(file, import.meta.url), 'utf8');
+  const staticImports = (file) => [...read(file).matchAll(STATIC_CATALOG)].map((m) => `${m[1]}/${m[2]}`);
+  assert.deepEqual(staticImports('./AppLocaleProvider.jsx'),
+    ['en/dashboard', 'en/dashboardChrome', 'en/auth', 'en/common', 'en/convert']);
+  assert.deepEqual(staticImports('./AuthLocaleProvider.jsx'), ['en/auth', 'en/common']);
+  assert.deepEqual(staticImports('./LocaleCore.jsx'), []);
+  // Every other language is reachable on demand, all four files of it.
+  const lazy = new Set([...read('./LocaleCore.jsx').matchAll(/import\(['"][^'"]*messages\/(\w+)\/(\w+)\.json['"]\)/g)]
+    .map((m) => `${m[1]}/${m[2]}`));
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    for (const ns of NAMESPACES) assert.ok(lazy.has(`${locale}/${ns}`), `${locale}/${ns} has a loader`);
+  }
+});
+
+test('auth screens: AuthLocaleProvider carries auth and common only, and the login screen is complete in every language', async (t) => {
+  for (const locale of LOCALES) {
+    reset(t, { stored: locale });
+    const seen = newSeen();
+    function AuthProbe() {
+      seen.messages = useMessages();
+      seen.locale = useLocale();
+      return null;
+    }
+    const view = await mount(createElement(AuthLocaleProvider, null, [
+      createElement(AuthProbe, { key: 'probe' }),
+      createElement(LoginApp, { key: 'login' }),
+    ]));
+    await waitFor(() => view.container.querySelector('h1')?.textContent === CATALOG[locale].auth.login.title,
+      { message: `the login screen in ${locale}` });
+    assert.equal(seen.locale, locale);
+    assert.deepEqual(seen.messages, { auth: CATALOG[locale].auth, common: CATALOG[locale].common });
+    assert.deepEqual(keyPathsOnScreen(view.container), [], `${locale}: no key path on the login screen`);
+    await view.unmount();
+  }
+});
+
+// ===========================================================================
 // The first render is English
 // ===========================================================================
 
@@ -277,6 +346,8 @@ test('hydration: server HTML hydrates without a mismatch, then moves to the stor
   await act(async () => {
     root = hydrateRoot(container, tree(seen), { onRecoverableError: (err) => errors.push(String(err)) });
   });
+  // The provider's effect has asked for French; its catalog arrives on demand.
+  await act(async () => { await catalogLoaded('fr'); });
   t.after(async () => {
     console.error = previousError;
     await act(async () => { root.unmount(); });
@@ -359,13 +430,13 @@ for (const locale of LOCALES.filter((l) => l !== 'en')) {
   });
 }
 
-test('the five catalogs are five different languages (the comparison above is not vacuous)', () => {
+test('the six catalogs are six different languages (the comparison above is not vacuous)', () => {
   const headings = LOCALES.map((l) => CATALOG[l].dashboard.settings.languageHeading);
-  assert.equal(new Set(headings).size, 5);
+  assert.equal(new Set(headings).size, LOCALES.length);
   const titles = LOCALES.map((l) => CATALOG[l].auth.login.title);
-  assert.equal(new Set(titles).size, 5);
+  assert.equal(new Set(titles).size, LOCALES.length);
   const nav = LOCALES.map((l) => CATALOG[l].dashboardChrome.sidebar.navSettings);
-  assert.equal(new Set(nav).size, 5);
+  assert.equal(new Set(nav).size, LOCALES.length);
 });
 
 // ===========================================================================
@@ -379,8 +450,10 @@ const BROWSER_LANGUAGES = [
   [['es-MX', 'en'], 'es'],
   [['fr-CA'], 'fr'],
   [['zh-Hans-CN'], 'zh'],
-  [['de-DE', 'fr-FR'], 'fr'],
-  [['de-DE'], 'en'],
+  [['de-DE', 'fr-FR'], 'de'],
+  [['de-AT'], 'de'],
+  [['it-IT', 'fr-FR'], 'fr'],
+  [['it-IT'], 'en'],
   [['en-GB', 'nb'], 'en'],
 ];
 
@@ -406,11 +479,11 @@ test('a stored choice beats the browser language', async (t) => {
 });
 
 test('a stored value that is not a supported language is ignored', async (t) => {
-  reset(t, { stored: 'de', languages: ['fr-FR'] });
+  reset(t, { stored: 'it', languages: ['fr-FR'] });
   const seen = newSeen();
   const view = await mountWith(t, createElement(Probe, { seen }));
   await settled(view, 'fr');
-  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'de', 'and it is left as it was');
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'it', 'and it is left as it was');
 });
 
 // ===========================================================================
@@ -422,7 +495,7 @@ test('switching: each language button re-renders the dashboard in that language,
   await settled(view, 'en');
   const reference = strings(view.container);
 
-  for (const locale of ['nb', 'es', 'fr', 'zh', 'en']) {
+  for (const locale of ['nb', 'es', 'fr', 'zh', 'de', 'en']) {
     await flush(() => view.button(locale).click());
     await settled(view, locale);
     assert.equal(window.localStorage.getItem(STORAGE_KEY), locale, `${locale} is stored`);
@@ -452,7 +525,7 @@ test('switching: the picker marks the new language at once, and the screen never
 test('switching: setLocale ignores a language that is not supported', async (t) => {
   const view = await mountDashboard(t, { stored: 'nb' });
   await settled(view, 'nb');
-  await flush(() => { view.seen.setLocale('de'); view.seen.setLocale(undefined); view.seen.setLocale(''); });
+  await flush(() => { view.seen.setLocale('it'); view.seen.setLocale(undefined); view.seen.setLocale(''); });
   await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
   assert.equal(view.seen.renders.at(-1).app, 'nb');
   assert.equal(window.localStorage.getItem(STORAGE_KEY), 'nb');
@@ -521,4 +594,128 @@ test('rapid switching: a click before the stored language has been applied still
   ]);
   await flush(() => languageButton(view.container, 'es').click());
   await assertEndsOn({ ...view, seen, button: (l) => languageButton(view.container, l) }, 'es');
+});
+
+// ===========================================================================
+// The reading language from a marketing page (`/signup?lang=fr`)
+// ===========================================================================
+//
+// The signup and login pages validate `lang` on the server and pass it as
+// `initialLocale` to a provider nested inside the layout's one. That inner
+// provider must render the language from the server render on (no English
+// flash, nothing to hydrate differently), store it under the key Settings
+// writes, and leave the layout's provider on it too.
+
+/** Reports the language of the provider it sits under. */
+function OuterProbe({ seen }) {
+  seen.outer = useAppLocale().locale;
+  return null;
+}
+
+test('reading language: the server render is already in it, whatever is stored', async (t) => {
+  reset(t, { stored: 'nb', languages: ['nb-NO'] });
+  const seen = newSeen();
+  const html = renderToString(createElement(AppLocaleProvider, { initialLocale: 'fr' }, createElement(Probe, { seen })));
+  assert.equal(html, `<p id="probe">${CATALOG.fr.dashboard.settings.languageHeading}</p>`);
+  assert.deepEqual(seen.renders, [{ intl: 'fr', app: 'fr', heading: CATALOG.fr.dashboard.settings.languageHeading }]);
+});
+
+test('reading language: hydrates without a mismatch, never shows English, and is stored', async (t) => {
+  reset(t, { stored: 'nb', languages: ['en-US'] });
+  const tree = (seen) => createElement(AppLocaleProvider, { initialLocale: 'es' }, createElement(Probe, { seen }));
+  const container = document.createElement('div');
+  container.innerHTML = renderToString(tree(newSeen()));
+  document.body.appendChild(container);
+
+  const errors = [];
+  const previousError = console.error;
+  console.error = (...args) => { errors.push(args.map(String).join(' ')); };
+  const seen = newSeen();
+  let root;
+  await act(async () => {
+    root = hydrateRoot(container, tree(seen), { onRecoverableError: (err) => errors.push(String(err)) });
+  });
+  t.after(async () => {
+    console.error = previousError;
+    await act(async () => { root.unmount(); });
+    container.remove();
+  });
+
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'es', { message: 'the reading language stored' });
+  await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
+  assert.deepEqual([...new Set(seen.renders.map((r) => r.app))], ['es'], 'every render is Spanish');
+  assert.equal(container.querySelector('#probe').textContent, CATALOG.es.dashboard.settings.languageHeading);
+  assert.equal(document.documentElement.lang, 'es');
+  assert.deepEqual(errors, [], 'no hydration mismatch and no console error');
+});
+
+test('reading language: the layout provider around it follows, so later pages and the dashboard do too', async (t) => {
+  reset(t, { languages: ['en-US'] });
+  const seen = newSeen();
+  seen.outer = null;
+  const view = await mountWith(t, [
+    createElement(OuterProbe, { key: 'outer', seen }),
+    createElement(AppLocaleProvider, { key: 'inner', initialLocale: 'zh' }, createElement(Probe, { seen })),
+  ]);
+  await settled(view, 'zh');
+  await waitFor(() => seen.outer === 'zh', { message: 'the layout provider on zh' });
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'zh');
+  assert.equal(document.documentElement.lang, 'zh');
+});
+
+test('reading language: a later choice in Settings still wins', async (t) => {
+  reset(t);
+  const seen = newSeen();
+  const view = await mountWith(t, createElement(AppLocaleProvider, { initialLocale: 'fr' }, createElement(Probe, { seen })));
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'fr', { message: 'fr stored' });
+  await flush(() => seen.setLocale('en'));
+  await settled(view, 'en');
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'en');
+});
+
+// The /signup and /login layouts pass `readLangParam`: the provider reads
+// `?lang=` itself through next/navigation, which in the app reads Next's
+// SearchParamsContext. Supplying that context is how the router hands the URL
+// to the server render and to hydration alike.
+const { SearchParamsContext } = await import('next/dist/shared/lib/hooks-client-context.shared-runtime.js');
+
+/** The layout's provider, rendered for a URL with `search`. */
+function atUrl(search, children) {
+  return createElement(SearchParamsContext.Provider, { value: new URLSearchParams(search) },
+    createElement(AppLocaleProvider, { readLangParam: true }, children));
+}
+
+test('reading language from the URL: /signup?lang=nb renders Norwegian from the server render on', async (t) => {
+  reset(t, { stored: 'es', languages: ['en-US'] });
+  const html = renderToString(atUrl('lang=nb&redirect=%2Fdashboard', createElement(Probe, { seen: newSeen() })));
+  assert.equal(html, `<p id="probe">${CATALOG.nb.dashboard.settings.languageHeading}</p>`);
+  const seen = newSeen();
+  const view = await mountWith(t, atUrl('lang=nb', createElement(Probe, { seen })));
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'nb', { message: 'nb stored' });
+  assert.deepEqual([...new Set(seen.renders.map((r) => r.app))], ['nb']);
+  assert.equal(view.container.querySelector('#probe').textContent, CATALOG.nb.dashboard.settings.languageHeading);
+});
+
+test('reading language from the URL: no or an invalid lang leaves the usual rules', async (t) => {
+  for (const search of ['', 'lang=it', 'lang=FR', 'lang=', 'provider=gmx']) {
+    reset(t, { stored: 'es', languages: ['fr-FR'] });
+    const html = renderToString(atUrl(search, createElement(Probe, { seen: newSeen() })));
+    assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, search);
+    const view = await mount(atUrl(search, createElement(Probe, { seen: newSeen() })));
+    await settled(view, 'es');
+    assert.equal(window.localStorage.getItem(STORAGE_KEY), 'es', `${search}: the stored choice is kept`);
+    await view.unmount();
+  }
+});
+
+test('reading language: an unsupported value is ignored, and the usual rules apply', async (t) => {
+  for (const initialLocale of ['it', 'FR', '', ['fr']]) {
+    reset(t, { languages: ['es-ES'] });
+    const html = renderToString(createElement(AppLocaleProvider, { initialLocale }, createElement(Probe, { seen: newSeen() })));
+    assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, JSON.stringify(initialLocale));
+    const view = await mount(createElement(AppLocaleProvider, { initialLocale }, createElement(Probe, { seen: newSeen() })));
+    await settled(view, 'es');
+    assert.equal(window.localStorage.getItem(STORAGE_KEY), null, 'nothing stored for an invalid value');
+    await view.unmount();
+  }
 });

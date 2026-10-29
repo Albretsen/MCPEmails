@@ -19,7 +19,7 @@
     "titleLine1": "将你的 Orange 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Orange 收件箱。开启 Orange 默认关闭的 POP/IMAP 访问后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Orange 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.orange.fr 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：Orange 出于安全原因在邮箱上关闭了 POP 和 IMAP 访问，因此你需要在网页邮箱的 Sécurité 中开启；此外，Orange 建议使用 Espace client 中的 mot de passe dédié（专用密码）认证，而不是普通的 Orange 密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Orange 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.orange.fr 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：Orange 出于安全原因在邮箱上关闭了 POP 和 IMAP 访问，因此你需要在网页邮箱的 Sécurité 中开启；此外，Orange 建议使用 Espace client 中的 mot de passe dédié（专用密码）认证，而不是普通的 Orange 密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "开启 POP/IMAP，使用专用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -42,7 +42,7 @@
       "p": "登录 orange.fr 上的 Espace client，打开 <b>Connexion et sécurité</b> 部分。那里显示的专用密码就是 Orange 希望你用于 POP、IMAP 和 SMTP 的密码。它与你登录 orange.fr 的密码是不同的值，Orange 专门推荐将其用于邮件软件。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "粘贴到 MCPEmails，再把 MCP URL 粘贴到你的 AI",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nom@orange.fr），粘贴专用密码。Orange 的服务器和端口已自动填好。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude 能用 Orange 邮箱吗？",
-      "a": "不能直接使用。Claude 没有自带 Orange 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，之后同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有自带 Orange 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，之后同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Orange 的 IMAP 和 SMTP 设置是什么？",

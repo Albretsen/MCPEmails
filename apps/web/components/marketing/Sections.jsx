@@ -11,7 +11,15 @@ import {
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { CheckoutReassurance } from '../CheckoutReassurance';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { routing } from '@/i18n/routing';
+import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
+import { AI_CLIENT_NAMES, orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
+import { usePreferredClient } from './PreferredClient';
+import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -19,9 +27,46 @@ const RICH = {
   b: (chunks) => <strong>{chunks}</strong>,
 };
 
-export function Nav({ onSignIn, onGetStarted, user }) {
+/**
+ * /signup in the page's language, plus `?client=` when the visitor came from
+ * an AI assistant (src/lib/clients/preferred.mjs), so the onboarding chip
+ * starts on it. Without one it is exactly withReadingLang('/signup', locale).
+ */
+export function useSignupHref() {
+  const locale = useLocale();
+  const preferred = usePreferredClient();
+  return withClientIntent(withReadingLang('/signup', locale), signupClientParam(preferred));
+}
+
+/**
+ * @param {{ onSignIn?: () => void, onGetStarted?: () => void, user?: { email: string } | null, minimal?: boolean }} props
+ *   `minimal` renders the logo only: no links, no sign-up or sign-in buttons,
+ *   no mobile menu. Used by /cancel, where nothing may pull the customer away
+ *   from ending the contract (§312k BGB). The language switcher stays in the
+ *   footer.
+ */
+export function Nav({ onSignIn, onGetStarted, user, minimal = false }) {
+  if (minimal) return <MinimalNav />;
+  return <FullNav onSignIn={onSignIn} onGetStarted={onGetStarted} user={user} />;
+}
+
+function MinimalNav() {
+  return (
+    <header className="nav">
+      <div className="container nav-row">
+        <Link className="brand" href="/"><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
+      </div>
+    </header>
+  );
+}
+
+function FullNav({ onSignIn, onGetStarted, user }) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
+  // /signup and /login are not localized by URL: say which language this page
+  // was in, so the form and the dashboard after it open in that language.
+  const locale = useLocale();
+  const signupHref = useSignupHref();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = 'mobile-nav-menu';
 
@@ -40,14 +85,14 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
+        {/* Compare and Self-host live in the mobile menu and the footer: with
+            them the row needs about 1240 px in French, wider than the container. */}
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/pricing">{t('nav.pricing')}</Link>
-          <Link href="/native-connectors-vs-mcp">{tc('links.compare')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
-          <Link href="/self-hosting">{t('nav.selfHost')}</Link>
           <Link href="/blog">{t('nav.blog')}</Link>
         </nav>
         <div className="nav-grow" />
@@ -59,8 +104,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
             </>
           ) : (
             <>
-              <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
-              <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
+              <a className="btn btn-ghost" onClick={onSignIn} href={withReadingLang('/login', locale)}>{t('nav.signIn')}</a>
+              <a className="btn btn-primary" onClick={onGetStarted} href={signupHref}>{t('nav.getStarted')}</a>
             </>
           )}
         </div>
@@ -97,8 +142,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
               <a className="btn btn-primary" href="/dashboard" onClick={closeMenu}>{t('nav.dashboard')}</a>
             ) : (
               <>
-                <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
-                <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+                <a className="btn btn-ghost" href={withReadingLang('/login', locale)} onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
+                <a className="btn btn-primary" href={signupHref} onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
               </>
             )}
           </div>
@@ -112,6 +157,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
 
 export function HeroTextBlock({ onGetStarted }) {
   const t = useTranslations('home');
+  const signupHref = useSignupHref();
   return (
     <div>
       {/* The kicker is part of the H1 on purpose: it is the one place the page
@@ -125,7 +171,7 @@ export function HeroTextBlock({ onGetStarted }) {
       </h1>
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
-        <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
+        <MBtn variant="primary" size="lg" icon="arrow" href={signupHref} onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
         <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
@@ -165,7 +211,7 @@ https://mcpemails.com/api/mcp`,
   "mcpServers": {
     "mcpemails": {
       "url": "https://mcpemails.com/api/mcp",
-      "auth": { "type": "bearer", "token": "mcpe_live_••••" }
+      "auth": { "type": "bearer", "token": "mcpe_••••" }
     }
   }
 }`,
@@ -174,7 +220,7 @@ https://mcpemails.com/api/mcp`,
     "servers": {
       "mcpemails": {
         "url": "https://mcpemails.com/api/mcp",
-        "bearer": "mcpe_live_••••"
+        "bearer": "mcpe_••••"
       }
     }
   }
@@ -182,7 +228,7 @@ https://mcpemails.com/api/mcp`,
     n8n: `# n8n MCP node
 URL:    https://mcpemails.com/api/mcp
 Auth:   Bearer
-Token:  mcpe_live_••••`,
+Token:  mcpe_••••`,
   };
   const paths = {
     oauth:  "claude.ai · Claude Desktop · Cursor · OAuth",
@@ -228,9 +274,26 @@ Token:  mcpe_live_••••`,
   );
 }
 
-/* Variant B: Agent -> mcpemails -> Provider pipe diagram (canonical, default hero) */
+/* Variant B: Agent -> MCPEmails -> Provider pipe diagram (canonical, default hero) */
+/**
+ * "Claude · Cursor · VS Code · ChatGPT · any MCP client", with the visitor's
+ * own assistant moved (or added) to the front. The names are product names and
+ * the same in every locale; the translated tail is the last segment of the
+ * message, so the default order renders the message exactly as written.
+ */
+export function agentSubLine(message, preferred) {
+  const parts = message.split(' · ');
+  if (parts.length < 2) return message;
+  const tail = parts.pop();
+  const name = preferred ? AI_CLIENT_NAMES[preferred] : null;
+  if (!name) return message;
+  const names = parts.includes(name) ? orderClients(parts, name) : [name, ...parts];
+  return [...names, tail].join(' · ');
+}
+
 export function HeroPipeDiagram() {
   const t = useTranslations('home');
+  const preferred = usePreferredClient();
   return (
     <div className="pipe-diagram">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -245,7 +308,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node">
           <MIcon name="cpu" size={22} color="var(--fg-2)"/>
           <div className="h">{t('hero.pipe.agent')}</div>
-          <div className="s">{t('hero.pipe.agentSub')}</div>
+          <div className="s">{agentSubLine(t('hero.pipe.agentSub'), preferred)}</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">MCP</span>
@@ -253,7 +316,7 @@ export function HeroPipeDiagram() {
         </div>
         <div className="pipe-node brand">
           <MIcon name="server" size={22} color="#fff"/>
-          <div className="h">mcpemails</div>
+          <div className="h">MCPEmails</div>
           <div className="s">{t('hero.pipe.serverSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
@@ -320,7 +383,7 @@ export function HeroMcpTerminal() {
     <div className="mcp-terminal">
       <div className="term-bar">
         <div className="dots"><span/><span/><span/></div>
-        <span className="title">mcpemails · live tool log</span>
+        <span className="title">MCPEmails · live tool log</span>
         <span className="pill"><span className="d"/>connected</span>
       </div>
       <div className="term-body">
@@ -368,7 +431,7 @@ function MarqueeItem({ name, logo, color }) {
       <span className="marquee-logo" style={{ background: color }}>
         {g && (
           <svg viewBox={g.viewBox} width="17" height="17" fill="#fff" aria-hidden="true">
-            <path d={g.d} />
+            <path d={g.d} fillRule={g.fillRule} />
           </svg>
         )}
       </span>
@@ -377,11 +440,24 @@ function MarqueeItem({ name, logo, color }) {
   );
 }
 
+/** Perplexity has no tile of its own; a Perplexity visitor gets one in front. */
+const PERPLEXITY_BRAND = { name: 'Perplexity', logo: 'perplexity', color: '#20808D' };
+
+/**
+ * The marquee's brands with the visitor's assistant first (matched on the logo
+ * key: claude, chatgpt, cursor, gemini). Default order without one.
+ */
+export function marqueeBrands(preferred) {
+  if (preferred === 'perplexity') return [PERPLEXITY_BRAND, ...MCP_CLIENT_BRANDS];
+  return orderClients(MCP_CLIENT_BRANDS, preferred, (b) => b.logo);
+}
+
 export function Trusted() {
   const t = useTranslations('home');
+  const brands = marqueeBrands(usePreferredClient());
   // Repeat the list so a single segment always overflows even ultra-wide screens,
   // then duplicate that segment so the track loops seamlessly under translateX(-50%).
-  const segment = [...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS];
+  const segment = [...brands, ...brands, ...brands];
   const loop = [...segment, ...segment];
   return (
     <section className="trusted">
@@ -405,14 +481,19 @@ export function Trusted() {
  * and three crawlable links, in server-rendered text: until this block the
  * phrase "email MCP server" appeared in the body only as a footer link label.
  *
- * It sits after the client marquee and so below the hero, the proof bar and the
- * demo-video slot, at the same depth in both arms of the homepage experiment.
+ * It sits after the client marquee and so below the hero and the proof bar.
  */
 export function WhatIs() {
   const t = useTranslations('home');
   // /best-email-mcp-servers is English only and 404s elsewhere, same as the
   // footer link to it.
   const isEnglish = useLocale() === 'en';
+  // A ChatGPT visitor gets the ChatGPT guide first; everyone else the default.
+  const guides = orderClients([
+    { client: 'claude', href: '/blog/connect-claude-to-email', key: 'guideClaude' },
+    { client: 'chatgpt', href: '/blog/connect-chatgpt-to-email', key: 'guideChatgpt' },
+    { client: 'imap', href: '/blog/claude-imap-connector', key: 'guideImap' },
+  ], usePreferredClient(), (g) => g.client);
   return (
     <section className="whatis" id="email-mcp-server">
       <div className="container">
@@ -426,6 +507,15 @@ export function WhatIs() {
           {isEnglish && (
             <Link href="/best-email-mcp-servers">Best email MCP servers compared</Link>
           )}
+        </p>
+        {/*
+          The setup guides search sends people to, which the home page did not
+          link at all until 2026-10-20. /blog/connect-claude-to-email turns
+          more of its signups into payers than any provider page. All three
+          posts are translated into every locale, so the Link stays in-locale.
+        */}
+        <p className="whatis-links">
+          {guides.map((g) => <Link key={g.href} href={g.href}>{t(`whatIs.${g.key}`)}</Link>)}
         </p>
       </div>
     </section>
@@ -467,29 +557,30 @@ export function Features() {
 /**
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
- * never drifts from the real naming (note the "Team" plan and the real tool names)
+ * never drifts from the real naming (note the "Business" plan and the real tool names)
  * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
   const t = useTranslations('home');
+  const locale = useLocale();
 
   const navItems = [
-    { label: 'Overview', icon: 'cpu', active: true },
-    { label: 'Inboxes', icon: 'inbox', count: 4 },
-    { label: 'API keys', icon: 'lock', count: 3 },
-    { label: 'Usage', icon: 'zap' },
+    { label: t('preview.mock.nav.overview'), icon: 'cpu', active: true },
+    { label: t('preview.mock.nav.inboxes'), icon: 'inbox', count: 4 },
+    { label: t('preview.mock.nav.apiKeys'), icon: 'lock', count: 3 },
+    { label: t('preview.mock.nav.usage'), icon: 'zap' },
   ];
   const stats = [
-    { label: 'Inboxes connected', value: '4' },
-    { label: 'MCP calls (30d)', value: '12,484' },
-    { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Team' },
+    { label: t('preview.mock.stats.inboxes'), value: '4' },
+    { label: t('preview.mock.stats.calls'), value: new Intl.NumberFormat(locale).format(12484) },
+    { label: t('preview.mock.stats.avgResponse'), value: '214ms' },
+    { label: t('preview.mock.stats.plan'), value: 'Business' },
   ];
   const activity = [
-    { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
-    { tool: 'email_compose', inbox: 'work-gmail', time: '12s ago' },
-    { tool: 'email_organize', inbox: 'ops-fastmail', time: '1m ago' },
-    { tool: 'email_read', inbox: 'support-imap', time: '3m ago' },
+    { tool: 'email_read', inbox: 'work-gmail', time: t('preview.mock.justNow') },
+    { tool: 'email_compose', inbox: 'work-gmail', time: t('preview.mock.secondsAgo', { count: 12 }) },
+    { tool: 'email_organize', inbox: 'ops-fastmail', time: t('preview.mock.minutesAgo', { count: 1 }) },
+    { tool: 'email_read', inbox: 'support-imap', time: t('preview.mock.minutesAgo', { count: 3 }) },
   ];
 
   return (
@@ -534,7 +625,7 @@ export function DashboardPreview() {
             <div className="dash-preview-aside" style={{ width: 210, flexShrink: 0, borderRight: '1px solid var(--border-1)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--bg-page)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px 14px' }}>
                 <MIcon name="mail" size={18} color="var(--cobalt-600)" />
-                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>mcpemails</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>MCPEmails</span>
               </div>
               {navItems.map(it => (
                 <div key={it.label} style={{
@@ -555,16 +646,16 @@ export function DashboardPreview() {
                 <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Pro plan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>{t('preview.mock.userPlan')}</div>
                 </div>
               </div>
             </div>
 
             {/* Main */}
             <div style={{ flex: 1, padding: '22px 24px', minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)' }}>Overview</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)' }}>{t('preview.mock.title')}</div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 2, marginBottom: 18 }}>
-                Real-time view of your connected inboxes and MCP traffic.
+                {t('preview.mock.subtitle')}
               </div>
 
               {/* Stat cards */}
@@ -580,7 +671,7 @@ export function DashboardPreview() {
               {/* Recent activity */}
               <div style={{ border: '1px solid var(--border-1)', borderRadius: 10, overflow: 'hidden', background: 'var(--bg-surface, #fff)' }}>
                 <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-1)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
-                  Recent activity
+                  {t('preview.mock.recentActivity')}
                 </div>
                 {activity.map((a, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderTop: i === 0 ? 'none' : '1px solid var(--border-1)' }}>
@@ -638,10 +729,9 @@ export function HowItWorks() {
 /* ============== EXAMPLES ============== */
 /**
  * Concrete, mass-appeal prompts a person could hand their AI assistant once
- * connected: everyday inbox chores, not developer jargon. The prompts/
- * outcomes are untranslated (like the terminal/endpoint hero mockups above)
- * since the literal tool-call fragments are part of the visual rather than
- * prose to localize; the section head text is translated as usual.
+ * connected: everyday inbox chores, not developer jargon. Prompts and outcomes
+ * are translated (home.examples.items, same index as EXAMPLE_TOOLS); the tool
+ * chips are real tool names and stay as they are in every locale.
  *
  * The first and third cards are departmental on purpose (role addresses on a
  * company domain). The grid used to be six personal-life prompts, and the
@@ -650,37 +740,13 @@ export function HowItWorks() {
  * only show things the tools really do: reading several inboxes is one
  * email_read call per inbox, and a forward carries the original attachments.
  */
-const EXAMPLES = [
-  {
-    prompt: "Go through sales@ and info@ and list every enquiry from this week nobody has answered",
-    tools: ["inbox_list", "email_read"],
-    outcome: "7 open enquiries across both inboxes, oldest first. Two have waited since Monday.",
-  },
-  {
-    prompt: "Unsubscribe me from every newsletter I haven’t opened in 3 months",
-    tools: ["email_read", "email_organize"],
-    outcome: "Archived 14 newsletters you haven’t touched since April.",
-  },
-  {
-    prompt: "Forward this month’s invoices from invoices@ to our accountant",
-    tools: ["email_read", "email_compose"],
-    outcome: "Forwarded 9 invoices from invoices@, PDFs attached.",
-  },
-  {
-    prompt: "Move every receipt from this month into a Receipts folder",
-    tools: ["email_organize"],
-    outcome: "Moved 23 receipts into Receipts/2026.",
-  },
-  {
-    prompt: "Send this at 8am Monday, not now",
-    tools: ["schedule"],
-    outcome: "Scheduled for Mon 8:00 AM. Nothing goes out before then.",
-  },
-  {
-    prompt: "What did the doctor’s office say about my appointment?",
-    tools: ["email_read"],
-    outcome: "Confirmed for Thursday at 2:15 PM.",
-  },
+const EXAMPLE_TOOLS = [
+  ["inbox_list", "email_read"],
+  ["email_read", "email_organize"],
+  ["email_read", "email_compose"],
+  ["email_organize"],
+  ["schedule"],
+  ["email_read"],
 ];
 
 export function Examples() {
@@ -694,21 +760,21 @@ export function Examples() {
           <p className="sub">{t('examples.sub')}</p>
         </div>
         <div className="example-grid">
-          {EXAMPLES.map((ex, i) => (
+          {EXAMPLE_TOOLS.map((tools, i) => (
             <div className="example-card" key={i}>
               <div className="example-user">
                 <span className="example-user-mark">{'>_'}</span>
-                <p>{ex.prompt}</p>
+                <p>{t(`examples.items.${i}.prompt`)}</p>
               </div>
               <div className="example-reply">
                 <div className="example-tools">
-                  {ex.tools.map((tool) => (
+                  {tools.map((tool) => (
                     <span className="example-tool-chip" key={tool}>{tool}()</span>
                   ))}
                 </div>
                 <p className="example-outcome">
                   <MIcon name="check" size={13} color="var(--mint-600)" />
-                  <span>{ex.outcome}</span>
+                  <span>{t(`examples.items.${i}.outcome`)}</span>
                 </p>
               </div>
             </div>
@@ -995,10 +1061,6 @@ export function Reviews() {
  * that the referent arrived later. That was wrong, and it cost the bar five
  * screens of reach.)
  *
- * Keep it ABOVE the demo-video slot in HomeClient. The video is the treatment
- * arm of a running experiment; ordering the bar after it would change the
- * bar's depth between arms and confound the test.
- *
  * Deliberately not a card and not the display serif. The founder Quote already
  * owns the big italic pull-quote treatment, and a second one would read as the
  * same block twice. This is a slim band: stars, sentence, attribution, source.
@@ -1098,12 +1160,24 @@ export function Quote() {
 
 /* ============== PRICING ============== */
 /**
- * @param {{ onGetStarted?: () => void, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * @param {{
+ *   onGetStarted?: () => void,
+ *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   currency?: 'usd' | 'eur',
+ * }} props
+ *
+ * `currency` comes from useDisplayCurrency in HomeClient: 'eur' only for an EU
+ * visitor while STRIPE_EUR_PRICES is on, and then every amount here is the
+ * same digits in EUR with "incl. VAT". 'usd' renders exactly as before.
  */
-export function Pricing({ onGetStarted, stripePrices }) {
+export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
   const t = useTranslations('home');
+  const locale = useLocale();
+  const signupHref = useSignupHref();
+  const eur = currency === 'eur';
+  const money = (text) => (eur ? euroizeAmounts(text, locale) : text);
   // Static, non-translated attributes per tier. `msgKey` indexes the message
-  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
+  // bundle; `priceKey` indexes the live Stripe prices map (Business is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
   // Auth middleware immediately forwards an existing session to the preserved
   // checkout intent, while new visitors keep that intent through Google,
@@ -1115,18 +1189,18 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // could even begin checkout. These must stay plain <a> hrefs: a next/link
   // <Link> would prefetch the checkout route.
   //
-  // Pro carries the accent: unlimited inboxes for one person is the upgrade
-  // almost everyone actually wants, and Team only pays off once other people
-  // are involved. Personal sits between Free and Pro for the large group who
+  // Pro carries the accent: up to 10 inboxes for one person is the upgrade
+  // almost everyone actually wants, and Business pays off past 10 mailboxes or
+  // once other people are involved. Personal sits between Free and Pro for the large group who
   // need two or three mailboxes and nothing else.
   //
-  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Team".
+  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Business".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
-    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
-    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team',     priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: signupHref },
+    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false, locale), locale) },
+    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false, locale), locale) },
+    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false, locale), locale) },
   ];
 
   const tiers = allTiers;
@@ -1136,19 +1210,26 @@ export function Pricing({ onGetStarted, stripePrices }) {
         <div className="section-head">
           <div className="eye-label">{t('pricing.eyebrow')}</div>
           <h2>{t('pricing.title')}</h2>
-          <p className="sub">{t('pricing.sub')}</p>
+          <p className="sub">{money(t('pricing.sub'))}</p>
         </div>
         <div className="price-grid">
           {tiers.map((tier) => {
             const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
             // Stripe's live price, else the catalogue in stripe/plans.ts. No
             // price is written in this file (it once still said Pro was $29).
-            const livePrice = formatPriceCents(
+            const monthlyCents =
               liveMonthlyCents != null && liveMonthlyCents > 0
                 ? liveMonthlyCents
-                : CATALOGUE[tier.priceKey].monthlyPriceCents,
-            );
-            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`);
+                : CATALOGUE[tier.priceKey].monthlyPriceCents;
+            // EUR: Stripe's EUR currency option, else the same digits.
+            const livePrice = eur
+              ? formatMoneyCents(
+                  eurCentsFor(stripePrices?.[tier.priceKey]?.eurMonthlyCents, monthlyCents) ?? monthlyCents,
+                  'eur',
+                  locale,
+                )
+              : formatPriceCents(monthlyCents);
+            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
 
             return (
               <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
@@ -1158,6 +1239,12 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     {livePrice}
                     {tier.per && <small> {tier.per}</small>}
                   </div>
+                  {eur && monthlyCents > 0 && (
+                    <p className="price-annual-note">{t('pricing.inclVat')}</p>
+                  )}
+                  {t.has(`pricing.tiers.${tier.msgKey}.tagline`) && (
+                    <p className="price-tagline">{t(`pricing.tiers.${tier.msgKey}.tagline`)}</p>
+                  )}
                   <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>
@@ -1171,13 +1258,27 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     offeredPlans note in dashboard/Pages.jsx: Personal is a
                     strict upgrade for that cohort, not a downgrade, so the
                     status line was withholding the only buy link they had. */}
-                <a
-                  className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
-                  href={tier.ctaHref}
-                  onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
-                >
-                  {t(`pricing.tiers.${tier.msgKey}.cta`)}
-                </a>
+                {tier.priceKey === 'free' ? (
+                  <a
+                    className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                    href={tier.ctaHref}
+                    onClick={onGetStarted}
+                  >
+                    {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                  </a>
+                ) : (
+                  <>
+                    <a
+                      className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                      href={tier.ctaHref}
+                    >
+                      {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                    </a>
+                    {/* A sibling of the button inside .price (18px gap),
+                        pulled up to sit 8px under it. */}
+                    <CheckoutReassurance locale={locale} align="center" style={{ margin: '-10px 0 0' }} />
+                  </>
+                )}
               </div>
             );
           })}
@@ -1225,9 +1326,16 @@ function FaqItem({ q, a }) {
  * same copy is emitted as FAQPage JSON-LD in app/[locale]/page.tsx, so it must
  * stay in sync with `home.faq.items`.
  */
-export function Faq() {
+export function Faq({ currency = 'usd' }) {
   const t = useTranslations('home');
-  const items = t.raw('faq.items');
+  const locale = useLocale();
+  // The visible answers follow the price cards' currency (see Pricing). The
+  // FAQPage JSON-LD stays USD, next to the USD offers it sits beside.
+  const raw = t.raw('faq.items');
+  const items =
+    currency === 'eur' && Array.isArray(raw)
+      ? raw.map((item) => ({ ...item, a: euroizeAmounts(item.a, locale) }))
+      : raw;
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
     <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
@@ -1258,36 +1366,37 @@ export function Faq() {
  * five links on ~110 pages meant 317 of 560 internal links landed on just
  * four translated home pages, starving every other page of internal signal.
  *
- * Each option now points at the CURRENT page in that locale, which is also
+ * Each option points at the CURRENT page in that locale, which is also
  * exactly the URL the page already declares as its hreflang alternate.
  * `usePathname` here is next-intl's, so it returns the path with the locale
  * prefix already stripped ("/pricing" on both / and /es/pricing).
+ *
+ * Not every page exists in every locale (src/i18n/locale-policy.mjs): pass the
+ * page's real list as `locales`. An option for a locale the page is missing in
+ * goes to that locale's home page instead of a 404 or an English fallback URL
+ * (see src/i18n/language-switcher.mjs). Pages translated five ways can leave
+ * `locales` out.
+ *
+ * Hrefs are built by hand rather than with next-intl's `locale` prop, which
+ * always emits the prefix: under localePrefix 'as-needed' that produced
+ * /en/pricing, a 307 to /pricing.
  */
-function LanguageSwitcher() {
+function LanguageSwitcher({ locales = routing.locales }) {
   const t = useTranslations('home');
   const locale = useLocale();
   // Falls back to the home path if the router has not resolved a pathname,
   // so the statically rendered HTML never ships an empty href.
   const pathname = usePathname() || '/';
-  const codes = ['en', 'nb', 'es', 'fr', 'zh'];
-  /*
-    Built by hand rather than with next-intl's `locale` prop, which always
-    emits the prefix: under localePrefix 'as-needed' that produced /en/pricing,
-    a 307 to /pricing. A redirect hop on every page, on a URL that does not
-    match the hreflang the page declares for itself, is the thing this change
-    exists to avoid.
-  */
-  const hrefFor = (code) =>
-    code === 'en' ? pathname : `/${code}${pathname === '/' ? '' : pathname}`;
+  const links = languageSwitcherLinks(pathname, locales, routing.locales);
   return (
     <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
       <MIcon name="globe" size={13} color="var(--fg-3)" />
-      {codes.map((code) => (
+      {links.map(({ code, href, samePage }) => (
         <a
           key={code}
-          href={hrefFor(code)}
+          href={href}
           className={"lang-opt" + (locale === code ? " active" : "")}
-          aria-current={locale === code ? 'true' : undefined}
+          aria-current={locale === code && samePage ? 'true' : undefined}
           hrefLang={code}
         >
           {t(`languageSwitcher.${code}`)}
@@ -1337,27 +1446,31 @@ function FooterCopy({ icon, label, value, href }) {
   );
 }
 
-export function Footer() {
+/**
+ * @param {{ locales?: readonly string[] }} props  the locales the current page
+ *   exists in, for the language switcher; omit on pages present in all five.
+ */
+export function Footer({ locales } = {}) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
-  // The footer renders on every locale, but three of its links point at
-  // English-only routes that deliberately 404 elsewhere (the per-client setup
-  // silo and the comparison against other MCP servers). Linking them
-  // unconditionally would put a guaranteed 404 in the footer of every /nb,
+  // The footer renders on every locale, but the comparison against other MCP
+  // servers is an English-only route that deliberately 404s elsewhere. Linking
+  // it unconditionally would put a guaranteed 404 in the footer of every /nb,
   // /es, /fr and /zh page, which is worse than the link being absent there.
+  // The per-client setup pages exist in every locale, so that link always shows.
   const isEnglish = useLocale() === 'en';
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
-            <img src="/logo-mark-dark.svg" width="48" height="48" alt="mcpemails" />
+            <img src="/logo-mark-dark.svg" width="48" height="48" alt="MCPEmails" />
             <p>{t('footer.tagline')}</p>
             <div className="footer-contact">
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
               <FooterCopy icon="server" label={t('footer.mcpLabel')} value={FOOTER_MCP_URL} />
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher locales={locales} />
           </div>
           <div>
             <p className="footer-heading">{t('footer.productHeading')}</p>
@@ -1368,6 +1481,7 @@ export function Footer() {
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
             <Link href="/for/founders">{t('footer.linkFounders')}</Link>
             <Link href="/for/business">{t('footer.linkBusiness')}</Link>
+            <Link href="/developers">{t('footer.linkDevelopers')}</Link>
           </div>
           <div>
             <p className="footer-heading">{t('footer.resourcesHeading')}</p>
@@ -1375,7 +1489,9 @@ export function Footer() {
             <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
-            {isEnglish && <Link href="/docs/clients">MCP client setup</Link>}
+            <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
+            <Link href="/docs/api">{t('footer.linkApiGuide')}</Link>
+            <Link href="/docs/clients">{t('footer.linkClients')}</Link>
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
           </div>
@@ -1412,6 +1528,18 @@ export function Footer() {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
+            {/* The withdrawal function (Art. 11a CRD, Directive (EU)
+                2023/2673): the label names the action and the link opens the
+                form with withdrawal preselected. The /withdrawal explainer is
+                linked from the /cancel lead. */}
+            <Link href="/cancel?type=withdraw">{t('footer.linkWithdrawal')}</Link>
+            {/* The §312k BGB entry point: reachable from every page, no login. */}
+            <Link href="/cancel">{t('footer.linkCancel')}</Link>
+            {/* The provider identification an Impressum asks for already sits
+                in section 1 of the terms (name, address, register, org and VAT
+                number, contact), so the link points there rather than at a
+                second copy that could drift. */}
+            <Link href="/terms#agreement">{t('footer.linkImpressum')}</Link>
           </div>
         </div>
         <div className="legal">

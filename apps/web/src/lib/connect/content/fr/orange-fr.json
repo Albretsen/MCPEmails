@@ -19,7 +19,7 @@
     "titleLine1": "Connectez votre boîte Orange à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Orange. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois activé l'accès POP/IMAP qu'Orange laisse désactivé.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Orange. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.orange.fr sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux points doivent d'abord être réglés : Orange désactive l'accès POP et IMAP de la boîte pour des raisons de sécurité, vous l'activez donc dans le webmail sous Sécurité, et Orange recommande de s'authentifier avec le mot de passe dédié de votre Espace client plutôt qu'avec votre mot de passe Orange habituel. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Orange. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.orange.fr sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux points doivent d'abord être réglés : Orange désactive l'accès POP et IMAP de la boîte pour des raisons de sécurité, vous l'activez donc dans le webmail sous Sécurité, et Orange recommande de s'authentifier avec le mot de passe dédié de votre Espace client plutôt qu'avec votre mot de passe Orange habituel. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Activez POP/IMAP, utilisez le mot de passe dédié",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Activez l'accès POP/IMAP dans le webmail Orange",
@@ -42,7 +42,7 @@
       "p": "Connectez-vous à votre Espace client sur orange.fr et ouvrez la rubrique <b>Connexion et sécurité</b>. Le mot de passe dédié qui y figure est celui qu'Orange prévoit pour POP, IMAP et SMTP. Il est distinct du mot de passe qui vous sert à vous connecter à orange.fr, et Orange le recommande spécifiquement pour les logiciels de messagerie."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Collez-le dans MCPEmails, puis collez l'URL MCP dans votre IA",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nom@orange.fr, et collez le mot de passe dédié. Les serveurs et ports Orange sont préremplis. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie Orange ?",
-      "a": "Pas directement. Claude n'est livré avec aucun connecteur Orange. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'est livré avec aucun connecteur Orange. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'Orange ?",

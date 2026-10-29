@@ -21,7 +21,7 @@
     "titleLine1": "将 Soverin 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Soverin 收件箱。在任意 MCP 客户端中通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，包括你自有域名上的邮箱，并坦白说明什么在保护这个连接、什么没有。",
-    "answer": "Claude 无法自行连接 Soverin 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.soverin.net 的 993 端口，通过 SMTP 连接 smtp.soverin.net 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Soverin 规定用户名是你的邮箱地址，密码是你的账户密码，而且同样这两台服务器既服务 soverin.net 邮箱，也服务自定义域名邮箱。Soverin 不签发应用密码，其双重认证保护的是控制台和网页邮箱而不是 IMAP，所以你在这里保存的凭据就是账户密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Soverin 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.soverin.net 的 993 端口，通过 SMTP 连接 smtp.soverin.net 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Soverin 规定用户名是你的邮箱地址，密码是你的账户密码，而且同样这两台服务器既服务 soverin.net 邮箱，也服务自定义域名邮箱。Soverin 不签发应用密码，其双重认证保护的是控制台和网页邮箱而不是 IMAP，所以你在这里保存的凭据就是账户密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的 Soverin 账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "在 Soverin Dashboard 中打开要连接的邮箱。邮箱本身的地址才是用户名，而不是你指向它的某个别名。Soverin 为每个邮箱提供无限别名，所以你很可能多年前就不再使用最初的地址，也不再把它当作登录名。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入该完整地址和你的 Soverin 账户密码。服务器已自动填为 <code>imap.soverin.net</code> 和 <code>smtp.soverin.net</code>，并已通过实时 TLS 连接验证。不要换成基于你自己域名构造的主机名；证书是为 Soverin 自己的名称签发的，严格校验的客户端会拒绝它。"
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "将 Soverin 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 imap.soverin.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Soverin 仅在欧盟托管、依靠订阅收入、承诺不扫描或分析你的邮件，这些描述的都是 Soverin。一旦邮件进入你自己接入的 AI 厂商，这些都不会随之而去。",
+    "将 Soverin 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。MCPEmails 每次请求都实时从 imap.soverin.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Soverin 仅在欧盟托管、依靠订阅收入、承诺不扫描或分析你的邮件，这些描述的都是 Soverin。一旦邮件进入你自己接入的 AI 厂商，这些都不会随之而去。",
     "没有范围受限的凭据。Soverin 没有应用密码，所以这里保存的是你的账户密码，也就是打开 Soverin Dashboard 的那个密码。撤回这个连接意味着修改该密码，而不是删除某个单独的令牌。",
-    "mcpemails 连接的是邮箱，而不是账户。别名、其他邮箱、域名设置和转发仍在 Soverin Dashboard 中，你的 AI 客户端既看不到也无法更改。"
+    "MCPEmails 连接的是邮箱，而不是账户。别名、其他邮箱、域名设置和转发仍在 Soverin Dashboard 中，你的 AI 客户端既看不到也无法更改。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Soverin 吗？",
-      "a": "不能直接使用。Claude 没有 Soverin 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Soverin 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有 Soverin 连接器，自身也不会 IMAP。将 MCPEmails 这样的 MCP 服务器连接到你的 Soverin 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Soverin 的 IMAP 和 SMTP 设置是什么？",

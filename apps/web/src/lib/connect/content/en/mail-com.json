@@ -24,18 +24,18 @@
     "titleLine1": "Connect Mail.com to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real mail.com inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one, once client access is switched on.",
-    "answer": "Claude cannot reach mail.com on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.mail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two mail.com conditions come first: POP3, IMAP and SMTP are Premium features, and even on Premium the access starts switched off until you enable it under Email, Settings, POP3 and IMAP. Once it is on, connecting one inbox is free, forever.",
+    "answer": "Claude cannot reach mail.com on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.mail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two mail.com conditions come first: POP3, IMAP and SMTP are Premium features, and even on Premium the access starts switched off until you enable it under Email, Settings, POP3 and IMAP. Once it is on, connecting one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Premium account, IMAP switched on",
     "meta2": "Email fetched live, never stored"
   },
   "method": {
     "title": "How mail.com connects: Premium IMAP, switched on by hand",
-    "body": "mail.com serves IMAP at <code>imap.mail.com</code> on port 993 over TLS. For outgoing mail its help centre lists <code>smtp.mail.com</code> on port 587 with STARTTLS and then offers port 465 with SSL/TLS as an alternative, which is the one mcpemails uses. mail.com is run by 1&1 Mail and Media, the same group behind GMX and WEB.DE, and it inherits their house rule: <b>access from outside the browser is a paid feature and it starts turned off</b>. mail.com's own third-party applications page states that POP, IMAP and SMTP are Premium features only, and its troubleshooting page separately states that retrieval by POP3 or IMAP is switched off by default in your mailbox. A free mail.com address cannot be connected by this or any other mail client until the account is upgraded, and an upgraded one still needs the box ticked."
+    "body": "mail.com serves IMAP at <code>imap.mail.com</code> on port 993 over TLS. For outgoing mail its help centre lists <code>smtp.mail.com</code> on port 587 with STARTTLS and then offers port 465 with SSL/TLS as an alternative, which is the one MCPEmails uses. mail.com is run by 1&1 Mail and Media, the same group behind GMX and WEB.DE, and it inherits their house rule: <b>access from outside the browser is a paid feature and it starts turned off</b>. mail.com's own third-party applications page states that POP, IMAP and SMTP are Premium features only, and its troubleshooting page separately states that retrieval by POP3 or IMAP is switched off by default in your mailbox. A free mail.com address cannot be connected by this or any other mail client until the account is upgraded, and an upgraded one still needs the box ticked."
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Create an application-specific password if 2FA is on, then connect",
-      "p": "With two-factor authentication enabled, your ordinary mail.com password stops working in clients. Click the <b>profile icon</b>, then <b>Security Options</b>, then <b>Manage application-specific passwords</b>, then <b>Create new application-specific password</b>. mail.com shows it once. Now choose IMAP / SMTP in mcpemails and enter your full address, on whichever mail.com family domain it sits, with that password."
+      "p": "With two-factor authentication enabled, your ordinary mail.com password stops working in clients. Click the <b>profile icon</b>, then <b>Security Options</b>, then <b>Manage application-specific passwords</b>, then <b>Create new application-specific password</b>. mail.com shows it once. Now choose IMAP / SMTP in MCPEmails and enter your full address, on whichever mail.com family domain it sits, with that password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -71,12 +71,12 @@
   ],
   "limits": [
     "A free mail.com mailbox cannot be connected at all, by us or by any mail client, because POP3, IMAP and SMTP are reserved for Premium accounts.",
-    "mail.com's IMAP server data page also lists port 143, which is unencrypted unless the client negotiates STARTTLS. mcpemails connects on 993 with implicit TLS only and does not offer the plaintext port."
+    "mail.com's IMAP server data page also lists port 143, which is unencrypted unless the client negotiates STARTTLS. MCPEmails connects on 993 with implicit TLS only and does not offer the plaintext port."
   ],
   "faq": [
     {
       "q": "Does Claude work with mail.com?",
-      "a": "Not directly, and not at all on a free mail.com account. Claude has no built-in mail.com connector. On a Premium mailbox with POP3 and IMAP enabled, connecting an MCP server such as mcpemails gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor, ChatGPT and any other MCP client."
+      "a": "Not directly, and not at all on a free mail.com account. Claude has no built-in mail.com connector. On a Premium mailbox with POP3 and IMAP enabled, connecting an MCP server such as MCPEmails gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor, ChatGPT and any other MCP client."
     },
     {
       "q": "Do I need mail.com Premium to use IMAP?",
@@ -84,7 +84,7 @@
     },
     {
       "q": "What are the mail.com IMAP and SMTP settings?",
-      "a": "IMAP is imap.mail.com on port 993 with implicit TLS. For SMTP, mail.com documents smtp.mail.com on port 587 with STARTTLS and port 465 with SSL/TLS as an equivalent alternative; mcpemails uses 465. Log in with your full mail.com address and your account password, or an application-specific password if two-factor authentication is on."
+      "a": "IMAP is imap.mail.com on port 993 with implicit TLS. For SMTP, mail.com documents smtp.mail.com on port 587 with STARTTLS and port 465 with SSL/TLS as an equivalent alternative; MCPEmails uses 465. Log in with your full mail.com address and your account password, or an application-specific password if two-factor authentication is on."
     },
     {
       "q": "My mail.com connection broke after I turned on two-factor authentication. Why?",
@@ -101,6 +101,6 @@
   ],
   "ctaBand": {
     "title": "Give your AI a Mail.com inbox",
-    "sub": "Connect mail.com Premium in minutes. One inbox free forever on mcpemails, no card required."
+    "sub": "Connect mail.com Premium in minutes. One inbox free forever on MCPEmails, no card required."
   }
 }

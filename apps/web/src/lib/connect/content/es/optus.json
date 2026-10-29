@@ -19,7 +19,7 @@
     "titleLine1": "Conecta tu bandeja de OptusNet",
     "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
     "lead": "Diga lo que diga medio internet, el correo de OptusNet no cerró. En 2025 pasó a un plan nuevo con condiciones nuevas y dejó de admitir altas. El buzón que tienes sigue hablando IMAP.",
-    "answer": "Claude no puede llegar a un buzón de OptusNet por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.optusnet.com.au, puerto 993, iniciando sesión con tu dirección escrita completa y la contraseña de tu correo de OptusNet. No hay contraseña de aplicación que generar. Hay dos hechos que importan antes de construir nada encima: desde mayo de 2025 Optus presta el servicio con un plan nuevo y condiciones nuevas, y exige que el plan de correo esté vinculado a un servicio de Optus que cumpla los requisitos; además, no acepta altas nuevas en el correo de OptusNet. Para una dirección que ya tienes, una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de OptusNet por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.optusnet.com.au, puerto 993, iniciando sesión con tu dirección escrita completa y la contraseña de tu correo de OptusNet. No hay contraseña de aplicación que generar. Hay dos hechos que importan antes de construir nada encima: desde mayo de 2025 Optus presta el servicio con un plan nuevo y condiciones nuevas, y exige que el plan de correo esté vinculado a un servicio de Optus que cumpla los requisitos; además, no acepta altas nuevas en el correo de OptusNet. Para una dirección que ya tienes, una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del correo, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis de mcpemails",
+      "h": "Crea una cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y la contraseña del correo",
-      "p": "En mcpemails elige IMAP / SMTP y escribe la dirección completa en el campo de usuario, con el formato de la propia Optus, <code>username@optusnet.com.au</code>. Usa la contraseña de ese buzón. El servidor y los puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS en vivo."
+      "p": "En MCPEmails elige IMAP / SMTP y escribe la dirección completa en el campo de usuario, con el formato de la propia Optus, <code>username@optusnet.com.au</code>. Usa la contraseña de ese buzón. El servidor y los puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS en vivo."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Los clientes de correo antiguos se dejaron fuera a propósito",
-      "p": "Optus afirma que la mayoría de los clientes no nota ningún cambio, pero que las versiones antiguas de algunos clientes de terceros, y cita Outlook 2010, ya no son compatibles porque no reciben actualizaciones y puede que no cumplan los estándares actuales de cifrado y seguridad. Así que una configuración que se rompió en torno al cambio y a la que se le ha echado la culpa al servidor probablemente sea cosa del cliente. mcpemails se conecta con TLS actual, que es el lado de esa línea en el que quieres estar."
+      "p": "Optus afirma que la mayoría de los clientes no nota ningún cambio, pero que las versiones antiguas de algunos clientes de terceros, y cita Outlook 2010, ya no son compatibles porque no reciben actualizaciones y puede que no cumplan los estándares actuales de cifrado y seguridad. Así que una configuración que se rompió en torno al cambio y a la que se le ha echado la culpa al servidor probablemente sea cosa del cliente. MCPEmails se conecta con TLS actual, que es el lado de esa línea en el que quieres estar."
     },
     {
       "h": "SPECIAL-USE e IDLE están, MOVE y UIDPLUS no",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con el correo de OptusNet?",
-      "a": "No directamente. Claude no tiene un conector integrado para Optus. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de optusnet.com.au, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Optus. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de optusnet.com.au, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de OptusNet?",

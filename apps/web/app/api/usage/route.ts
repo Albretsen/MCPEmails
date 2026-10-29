@@ -17,7 +17,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *   plan:          string,                 // effective plan id
  *   exempt:        boolean,                // never metered against Free
  *   exempt_reason: 'early_member' | 'comped' | 'exemption' | null,
- *   in_grace:      boolean,                // Free, inside its first 7 days
+ *   in_grace:      boolean,                // Free, inside its first 3 days
  *   grace_ends_at: string | null,          // ISO, Free only
  *   monthly: {
  *     used:         number,                // billable actions in the window

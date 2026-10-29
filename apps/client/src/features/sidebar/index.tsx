@@ -47,7 +47,7 @@ export function SidebarPane() {
   return (
     <div className={cx(s.root, rail && s.rail)}>
       <div className={s.brand}>
-        {rail ? <LogoMark size={28} alt="mcpemails" /> : <img className={s.wordmark} src="/logo-wordmark.svg" alt="mcpemails" />}
+        {rail ? <LogoMark size={28} alt="MCPEmails" /> : <img className={s.wordmark} src="/logo-wordmark.svg" alt="MCPEmails" />}
       </div>
 
       <button

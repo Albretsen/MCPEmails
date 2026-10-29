@@ -17,8 +17,8 @@
     "eyebrow": "Free.fr Mail + AI",
     "titleLine1": "Connect your Free.fr inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Free gives every subscriber a mailbox and plain IMAP access to it. mcpemails connects that inbox so your AI agent can read, search, send, reply and file mail from any MCP client rather than one app.",
-    "answer": "Claude cannot reach a Free.fr mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.free.fr on port 993, authenticating with your complete address and the password of your Free account. Free issues no app-specific passwords and requires nothing to be switched on first, which makes it one of the simpler providers to connect, though its IMAP server is unusually bare and that has consequences covered below. Once connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "lead": "Free gives every subscriber a mailbox and plain IMAP access to it. MCPEmails connects that inbox so your AI agent can read, search, send, reply and file mail from any MCP client rather than one app.",
+    "answer": "Claude cannot reach a Free.fr mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.free.fr on port 993, authenticating with your complete address and the password of your Free account. Free issues no app-specific passwords and requires nothing to be switched on first, which makes it one of the simpler providers to connect, though its IMAP server is unusually bare and that has consequences covered below. Once connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Your Free account password, nothing else",
     "meta2": "Email fetched live, never stored"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -37,7 +37,7 @@
       "p": "The mailbox password is the password of your Free account. Changing it in the espace abonné changes it for every mail client at the same moment, including this one, so if you rotate it later expect to update the connection. If you have forgotten it, reset it there rather than looking for a mail-specific credential; there is not one."
     },
     {
-      "h": "Enter the complete address in mcpemails",
+      "h": "Enter the complete address in MCPEmails",
       "p": "Choose IMAP / SMTP and type the whole address, <code>name@free.fr</code>, in the username field. Free's own documentation says to give the complete address including the domain. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Free advertises AUTH=PLAIN only, and no SASL-IR with it",
-      "p": "The capability banner from <code>imap.free.fr</code> is about as short as an IMAP banner gets. It offers <code>AUTH=PLAIN</code> and nothing else, and it does not advertise SASL-IR, so the server refuses the one-step form that sends credentials alongside the AUTHENTICATE command. A client hard-wired to the LOGIN mechanism, or one that assumes SASL-IR, gets a bare refusal that reads like a wrong password. mcpemails retries the two-step exchange instead of treating that refusal as final."
+      "p": "The capability banner from <code>imap.free.fr</code> is about as short as an IMAP banner gets. It offers <code>AUTH=PLAIN</code> and nothing else, and it does not advertise SASL-IR, so the server refuses the one-step form that sends credentials alongside the AUTHENTICATE command. A client hard-wired to the LOGIN mechanism, or one that assumes SASL-IR, gets a bare refusal that reads like a wrong password. MCPEmails retries the two-step exchange instead of treating that refusal as final."
     },
     {
       "h": "The outgoing server accepts mechanisms the incoming one does not",
@@ -60,7 +60,7 @@
     },
     {
       "h": "One password, one blast radius",
-      "p": "Because the mail credential is your Free account password rather than a per-application secret, anything you paste it into holds the keys to the account, and revoking access to one tool means changing the password for all of them. That is a property of Free's design rather than a criticism of it, but it is worth knowing before you connect. mcpemails encrypts stored credentials at rest, and you can disconnect the inbox from the dashboard at any time."
+      "p": "Because the mail credential is your Free account password rather than a per-application secret, anything you paste it into holds the keys to the account, and revoking access to one tool means changing the password for all of them. That is a property of Free's design rather than a criticism of it, but it is worth knowing before you connect. MCPEmails encrypts stored credentials at rest, and you can disconnect the inbox from the dashboard at any time."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Does Claude work with Free.fr email?",
-      "a": "Not directly. Claude has no built-in Free connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your free.fr mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Free connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your free.fr mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Free.fr IMAP and SMTP settings?",

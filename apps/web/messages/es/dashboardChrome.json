@@ -3,6 +3,7 @@
     "connectedSuccess": "Bandeja de entrada de {provider} conectada correctamente.",
     "inboxLimitReached": "Has alcanzado el límite de bandejas en {plan}. Mejora tu plan para conectar más buzones.",
     "tokenExchangeFailed": "No se pudo conectar la bandeja de entrada. Falló el intercambio de token con el proveedor. Inténtalo de nuevo.",
+    "gmailOauthUnavailable": "El inicio de sesión con Google no está disponible para una nueva bandeja de Gmail en este espacio de trabajo. Conecta Gmail con una contraseña de aplicación, que funciona en todos los planes.",
     "connectionCancelled": "Conexión de la bandeja de entrada cancelada.",
     "adminConsentRequired": "Tu organización debe aprobar el acceso al buzón antes de que puedas conectar Outlook. Microsoft impide que los empleados lo aprueben por su cuenta.",
     "adminConsentAction": "Obtener un enlace para tu administrador de TI",
@@ -36,6 +37,8 @@
     "checkoutPanel": {
       "title": "Ya estás en {plan}",
       "subtitle": "Pago recibido. El recibo va de camino a tu correo electrónico.",
+      "subtitleEur": "Tu plan está activo. Si pagaste con adeudo bancario, puede tardar unos días hábiles en completarse, y mientras tanto tienes acceso completo.",
+      "subtitleProcessing": "Tu adeudo bancario se está procesando y puede tardar unos días hábiles. Mientras tanto tienes acceso completo.",
       "close": "Cerrar",
       "planLabel": "Plan",
       "priceLabel": "Precio",
@@ -51,6 +54,7 @@
       "activatingTitle": "Ya casi",
       "activating": "Estamos activando tu suscripción. Tarda unos segundos y la página se actualiza sola.",
       "activatingSlow": "Tu pago se ha completado. La activación está tardando más de lo habitual; vuelve a cargar la página dentro de un momento si sigue igual.",
+      "activatingSlowNeutral": "La activación está tardando más de lo habitual; vuelve a cargar la página dentro de un momento si sigue igual.",
       "billingDetailsNote": "Tu precio y tu fecha de renovación están en Facturación.",
       "connectCta": "Conectar otra bandeja de entrada",
       "billingCta": "Ver facturación"
@@ -91,9 +95,13 @@
     "densityLabel": "Densidad",
     "densityCompact": "Compacta",
     "densitySpacious": "Espaciosa",
-    "firstRunTitle": "Te damos la bienvenida a mcpemails",
+    "firstRunTitle": "Te damos la bienvenida a MCPEmails",
     "firstRunBody": "Conecta tu primera bandeja de entrada para obtener un endpoint MCP funcional en menos de un minuto.",
     "firstRunCta": "Conectar bandeja de entrada",
+    "paymentIssueDeclined": "Tu último pago no se ha completado. Tu plan sigue activo mientras lo volvemos a intentar.",
+    "paymentIssueDeclinedCta": "Actualizar pago",
+    "paymentIssueConfirm": "Tu banco quiere que confirmes el último pago. Tu plan sigue activo.",
+    "paymentIssueConfirmCta": "Confirmar pago",
     "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",
     "inviteResent": "Invitación reenviada a {email}.",
     "inviteResendFailed": "No se pudo reenviar la invitación.",
@@ -105,7 +113,7 @@
     "workspacesLabel": "Espacios de trabajo",
     "memberSuffix": "miembro",
     "newWorkspace": "Nuevo espacio de trabajo",
-    "newWorkspaceUpsell": "Los espacios de trabajo son una función de Team. Ver planes",
+    "newWorkspaceUpsell": "Los espacios de trabajo son una función de Business. Ver planes",
     "sectionWorkspace": "Espacio de trabajo",
     "sectionAccount": "Cuenta",
     "navOverview": "Resumen",
@@ -125,7 +133,8 @@
     "searchPlaceholder": "Buscar páginas, bandejas de entrada, miembros…",
     "openSearch": "Abrir búsqueda (Command K)",
     "navWorkflows": "Flujos de trabajo",
-    "navAutomations": "Automatizaciones"
+    "navAutomations": "Automatizaciones",
+    "navInvite": "Invita a un amigo"
   },
   "topbar": {
     "mcpLabel": "Endpoint MCP",
@@ -135,7 +144,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCP Emails una vez; no necesita una cuenta de MCP Emails para hacerlo.",
+    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCPEmails una vez; no necesita una cuenta de MCPEmails para hacerlo.",
     "subFastmail": "Contraseña de aplicación",
     "subAppPassword": "Contraseña de aplicación",
     "subGeneric": "Cualquier buzón · recomendado",
@@ -228,9 +237,9 @@
     "subChooseProvider": "Elige un proveedor. Las credenciales se cifran antes de almacenarse y nunca se comparten.",
     "subGenericForm": "Introduce la configuración de tu servidor de correo y tu contraseña.",
     "close": "Cerrar",
-    "upgradeTitle": "Pro conecta todos los buzones que tengas",
-    "upgradeBody": "Estabas a punto de conectar otra bandeja. Pro elimina el límite por $15 al mes: trabajo, personal y cada proyecto paralelo en el mismo agente.",
-    "featureInboxes": "Bandejas conectadas ilimitadas",
+    "upgradeTitle": "Pro conecta hasta 10 buzones",
+    "upgradeBody": "Estabas a punto de conectar otra bandeja. Pro sube el límite a 10 por $15 al mes: trabajo, personal y cada proyecto paralelo en el mismo agente.",
+    "featureInboxes": "10 bandejas conectadas",
     "featureRateLimit": "Límite de ráfaga 5x más alto",
     "featureTeam": "Cancela cuando quieras y conserva el resto del período",
     "featureSupport": "Soporte por correo",
@@ -242,7 +251,7 @@
     "businessUpgradeTitle": "Añade el resto de los buzones de tu empresa",
     "businessUpgradeBody": "¿Gestionas info@, ventas@ y facturas@ de tu empresa? El plan gratuito conecta un buzón. Elige el plan que cubre el resto.",
     "businessPersonalPitch": "Tres buzones por $9 al mes, suficiente para info@, ventas@ y el tuyo.",
-    "businessProPitch": "Todos los buzones de tu empresa, en un solo agente, por $15 al mes: finanzas, ventas, soporte, info y el tuyo.",
+    "businessProPitch": "Hasta 10 buzones de tu empresa en un solo agente, por $15 al mes: finanzas, ventas, soporte, info y el tuyo.",
     "recommendedBadge": "Recomendado",
     "fastmailTabAppPassword": "Contraseña de aplicación",
     "howToGenerate": "Cómo generar una",
@@ -339,7 +348,132 @@
     "outlookAdminLink": "Obtener el enlace de aprobación para tu administrador",
     "microsoftAddressNotice": "Esta es una cuenta de Microsoft. Las cuentas de Microsoft se conectan con Iniciar sesión con Microsoft; IMAP con contraseña ya no funciona para ellas.",
     "microsoftAddressAction": "Usar Iniciar sesión con Microsoft",
-    "errorMicrosoftAccountShort": "Microsoft ya no acepta una contraseña para esta cuenta. Conéctala con la tarjeta de Outlook."
+    "errorMicrosoftAccountShort": "Microsoft ya no acepta una contraseña para esta cuenta. Conéctala con la tarjeta de Outlook.",
+    "businessCapTitle": "Business conecta más de 10 buzones",
+    "businessCapBody": "Pro conecta 10 buzones. Business incluye 10 por $39 al mes y añade cada buzón adicional por $3 al mes, con miembros ilimitados sin coste extra.",
+    "businessCapCta": "Mejorar a Business, $39/mes",
+    "businessFeatureInboxes": "10 buzones incluidos, $3 al mes por cada uno adicional",
+    "businessFeatureMembers": "Miembros ilimitados con roles, sin coste extra",
+    "businessFeatureApprovals": "Los administradores aprueban los envíos retenidos",
+    "businessFeatureWorkspaces": "Varios espacios de trabajo con una sola suscripción",
+    "fix": {
+      "heading": "Cómo solucionarlo",
+      "testAgain": "Probar de nuevo",
+      "useOutlook": "Usar el inicio de sesión de Microsoft",
+      "receiveOnly": "Conectar solo para leer",
+      "useSuggestedHost": "Usar {host}",
+      "progressLogin": "Comprobando el inicio de sesión...",
+      "progressSending": "Comprobando el envío...",
+      "progressSlow": "Seguimos comprobando. Algunos servidores de correo tardan hasta un minuto en responder.",
+      "gmail": {
+        "twoStep": "Activa la verificación en dos pasos en tu cuenta de Google.",
+        "create": "Crea una contraseña de aplicación en myaccount.google.com/apppasswords y llámala MCPEmails.",
+        "paste": "Pega las 16 letras en el campo de contraseña. Los espacios no importan.",
+        "workspace": "En una cuenta de trabajo o de centro educativo puede faltar la opción de contraseñas de aplicación porque tu administrador la desactivó. En ese caso, pide a tu administrador que permita las contraseñas de aplicación.",
+        "imapDisabled": "El administrador de tu Google Workspace ha desactivado IMAP en tu cuenta, así que ninguna contraseña puede funcionar.",
+        "imapDisabledAdmin": "Envía esto a tu equipo de TI: activad el acceso IMAP para mi cuenta en la Consola de administración de Google, en Aplicaciones, Google Workspace, Gmail, Acceso de usuarios finales."
+      },
+      "appPassword": {
+        "normalRejected": "Aquí se rechaza tu contraseña normal de {provider}. Solo funciona una contraseña de aplicación.",
+        "paste": "Pégala en el campo de contraseña y pulsa Probar de nuevo."
+      },
+      "yahoo": {
+        "create": "En la página Seguridad de la cuenta de Yahoo, en Conexiones externas, elige Crear contraseña de aplicación, llámala MCPEmails y genérala."
+      },
+      "aol": {
+        "create": "En la página Seguridad de la cuenta de AOL, genera una contraseña de aplicación y llámala MCPEmails. Si no aparece la opción, activa primero la verificación en dos pasos."
+      },
+      "icloud": {
+        "create": "En account.apple.com, abre Inicio de sesión y seguridad, luego Contraseñas específicas de apps, y crea una llamada MCPEmails. La autenticación de doble factor debe estar activada."
+      },
+      "ionos": {
+        "password": "IONOS pide la contraseña de esta dirección de correo, no la que usas para entrar en IONOS."
+      },
+      "fullAddress": "Usa tu dirección de correo completa como usuario.",
+      "tOnline": {
+        "password": "Telekom solo acepta aquí tu Passwort für E-Mail-Programme, no la contraseña de Telekom Login.",
+        "where": "Configúrala en el E-Mail Center, en Einstellungen, luego Passwörter, luego Passwort für E-Mail-Programme."
+      },
+      "mailRu": {
+        "create": "En Mail.ru, abre Configuración, Toda la configuración, Seguridad, luego Contraseñas para aplicaciones externas, y crea una con acceso completo al correo."
+      },
+      "qq": {
+        "service": "En QQ Mail, abre 设置 (Configuración), luego 账号与安全 (Cuenta y seguridad), y activa el servicio POP3/IMAP/SMTP.",
+        "code": "Genera un código de autorización (授权码) y pégalo en el campo de contraseña. Tu contraseña de QQ no funciona."
+      },
+      "mailCom": {
+        "imap": "Activa IMAP en mail.com: Email, Settings, POP3 and IMAP, y marca Enable access to this account via POP3 and IMAP. IMAP requiere un plan Premium de mail.com.",
+        "twoFactor": "Con la autenticación de dos factores activada, crea una contraseña específica de aplicación en Security Options y usa esa."
+      },
+      "infomaniak": {
+        "password": "Infomaniak no acepta aquí tu contraseña del Manager. En el Manager, abre Mail Service, tu dirección, luego Dispositivos, y añade un dispositivo para obtener una contraseña de dispositivo."
+      },
+      "orange": {
+        "imap": "Activa POP/IMAP en tu buzón de Orange: la rueda dentada, tous les paramètres, Sécurité, Protocoles POP ou IMAP, y luego Activer POP/IMAP.",
+        "password": "Después usa el mot de passe dédié de tu Espace client, en Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "Si la autenticación de dos factores (dvoufázové ověření) está activada, tu contraseña de Seznam deja de funcionar aquí. Crea una Heslo pro aplikace en Zabezpečení účtu y usa esa."
+      },
+      "gmx": {
+        "imap": "{provider} desactiva por defecto el acceso POP3 e IMAP. Actívalo en E-Mail-Einstellungen, luego POP3/IMAP.",
+        "twoFactor": "Con la autenticación de dos factores activada, usa una contraseña de aplicación en lugar de tu contraseña normal."
+      },
+      "zoho": {
+        "imap": "Activa el acceso IMAP en Zoho Mail, en Configuración, Cuentas de correo, Acceso IMAP.",
+        "twoFactor": "Con autenticación de dos factores, inicio de sesión federado o SAML, genera una contraseña específica de aplicación y usa esa."
+      },
+      "yandex": {
+        "create": "En id.yandex.com, abre Seguridad, luego Contraseñas de aplicaciones, y crea una de tipo Correo.",
+        "imap": "En la configuración de Yandex Mail, abre Clientes de correo y activa tanto el acceso IMAP como Contraseñas de aplicaciones y tokens OAuth."
+      },
+      "office365": {
+        "useOutlook": "Los buzones de Microsoft 365 de trabajo o de centros educativos no aceptan contraseñas desde apps de correo. Conéctalo con el inicio de sesión de Microsoft."
+      },
+      "smtp": {
+        "readingOk": "Tu servidor aceptó el inicio de sesión para leer el correo, pero lo rechazó para enviar.",
+        "username": "Si tu proveedor te da un usuario distinto para enviar, escríbelo en Configuración avanzada, Usuario.",
+        "readOnly": "O conecta ahora solo para leer y añade el envío más tarde en la configuración del buzón."
+      },
+      "unreachable": {
+        "tried": "Probamos {host} y el servidor no respondió.",
+        "notFound": "No encontramos ningún servidor de correo llamado {host}.",
+        "suggest": "Tu dirección es de {provider}, cuyo servidor es {host}.",
+        "check": "Revisa el nombre del servidor en la página de configuración de tu proveedor y prueba de nuevo.",
+        "blocked": "Tu servidor de correo no acepta conexiones desde nuestros servidores. Es habitual en servidores de correo de centros educativos y empresas.",
+        "blockedNext": "Pide a tu equipo de TI que permita el acceso desde fuera, o conecta otra dirección."
+      },
+      "tls": {
+        "tried": "Probamos el puerto {tlsPort} con TLS y el puerto {starttlsPort} con STARTTLS, y la conexión segura falló en ambos.",
+        "next": "Si tu proveedor indica otro puerto u otra seguridad, cámbialo aquí y prueba de nuevo."
+      },
+      "link": {
+        "twoStep": "Abrir la verificación en dos pasos",
+        "appPasswords": "Abrir la página de contraseñas de aplicación de {provider}",
+        "imapSetting": "Cómo activar IMAP en {provider}",
+        "providerHelp": "Página de ayuda de {provider}",
+        "adminGuide": "Guía de Google para tu administrador"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft mostrará una pantalla de consentimiento con lo que MCPEmails puede hacer: leer y cambiar el correo, enviar correo y seguir conectado.",
+        "line2": "Acéptala para conectar. Tu contraseña de Microsoft solo se escribe en la página de Microsoft.",
+        "line3": "Una cuenta de trabajo puede pedir la aprobación de un administrador. Si pasa, vuelve aquí y consigue el enlace para tu administrador."
+      },
+      "outlookCancelled": {
+        "title": "Cancelaste en la página de Microsoft",
+        "body": "No se conectó nada. Para conectar tu buzón de Outlook, acepta la pantalla de consentimiento cuando Microsoft la muestre.",
+        "tryAgain": "Intentar de nuevo"
+      },
+      "done": {
+        "title": "Buzón conectado",
+        "body": "Ahora conecta tu app de IA para que pueda usar este buzón.",
+        "bodyClient": "Ahora conecta {client} para que pueda usar este buzón.",
+        "openGuide": "Muéstrame cómo",
+        "later": "Más tarde"
+      }
+    },
+    "businessCapBodyFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
+    "businessCapCtaFounder": "Mejorar a Business, ${price}/mes"
   },
   "commandPalette": {
     "pageOverview": "Resumen",
@@ -391,7 +525,7 @@
   },
   "adminConsentLink": {
     "title": "Envía este enlace a tu administrador de TI",
-    "body": "Envía este enlace a tu administrador de Microsoft 365. Inicia sesión con su cuenta de administrador de Microsoft y lo aprueba una sola vez; no necesita una cuenta de MCP Emails. Después, todas las personas de tu organización podrán conectar Outlook.",
+    "body": "Envía este enlace a tu administrador de Microsoft 365. Inicia sesión con su cuenta de administrador de Microsoft y lo aprueba una sola vez; no necesita una cuenta de MCPEmails. Después, todas las personas de tu organización podrán conectar Outlook.",
     "label": "Enlace de aprobación",
     "loading": "Creando el enlace...",
     "copy": "Copiar",
@@ -404,21 +538,43 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Aprobado",
-    "grantedBody": "Tu equipo ya puede conectar Outlook en MCP Emails. Nadie tiene que aprobar nada más: cada persona inicia sesión con Microsoft cuando conecta su propio buzón.",
+    "grantedBody": "Tu equipo ya puede conectar Outlook en MCPEmails. Nadie tiene que aprobar nada más: cada persona inicia sesión con Microsoft cuando conecta su propio buzón.",
     "cancelledTitle": "No aprobado",
     "cancelledBody": "La aprobación se canceló en la pantalla de Microsoft, así que no ha cambiado nada. Abre el enlace de nuevo cuando quieras.",
     "failedTitle": "La aprobación no se completó",
     "failedBody": "Microsoft no confirmó la aprobación. Para aprobar hace falta una cuenta de administrador de Microsoft 365, como Administrador global o Administrador de aplicaciones en la nube. Inicia sesión con una y abre el enlace de nuevo.",
     "link_invalidTitle": "Este enlace no es válido",
-    "link_invalidBody": "El enlace de aprobación está incompleto o se ha modificado. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "link_invalidBody": "El enlace de aprobación está incompleto o se ha modificado. Pide a quien te lo envió uno nuevo desde su panel de MCPEmails.",
     "link_expiredTitle": "Este enlace ha caducado",
-    "link_expiredBody": "Los enlaces de aprobación funcionan durante 7 días. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "link_expiredBody": "Los enlaces de aprobación funcionan durante 7 días. Pide a quien te lo envió uno nuevo desde su panel de MCPEmails.",
     "timed_outTitle": "Empieza de nuevo",
     "timed_outBody": "La aprobación tardó demasiado o terminó en otro navegador. Abre el enlace de aprobación de nuevo en este navegador.",
     "unavailableTitle": "Algo salió mal",
     "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
     "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
-    "openApp": "Abrir MCP Emails"
+    "openApp": "Abrir MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} el primer año y después ${renewal} al año. Ahorras ${saving}.",
+    "ends": "Termina el {date} a las {time}, hora de Oslo.",
+    "ctaAnnual": "Mejorar a {plan} anual",
+    "switchBody": "Black Week: cámbiate al plan anual por ${firstYear} el primer año y después ${renewal} al año. Se descuentan los días que no has usado de tu mes actual, así que hoy pagas algo menos.",
+    "switchCta": "Cambiar a anual",
+    "switchBusy": "Preparando...",
+    "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
+  },
+  "founder": {
+    "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
+    "places": "Plazas disponibles: {left} de {total}",
+    "priceChanged": "El precio cambió antes de que confirmaras, así que no se cobró nada. Los importes de arriba son el precio que se aplica ahora."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Terminar la configuración",
+    "resetTitle": "Restablecer la configuración inicial",
+    "resetBody": "Solo cuentas internas. Borra el progreso de la configuración y las marcas de la primera llamada de este espacio de trabajo para repetir el proceso. Las bandejas de entrada y las claves siguen conectadas.",
+    "resetButton": "Restablecer la configuración inicial",
+    "resetFailed": "No se pudo restablecer la configuración inicial. Inténtalo de nuevo."
   },
   "help": {
     "loading": "Cargando la ayuda…",

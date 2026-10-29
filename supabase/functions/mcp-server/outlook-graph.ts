@@ -46,6 +46,8 @@
 //     https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow#refresh-the-access-token
 // ---------------------------------------------------------------------------
 
+import { assertOutboundRecipientsAllowed, outboundAllowlist } from "./outbound-allowlist.ts";
+
 export const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
 /**
@@ -1777,12 +1779,32 @@ export async function graphPatchMessage(
   await resp.body?.cancel().catch(() => {});
 }
 
+/** The to, cc and bcc addresses on a Graph message (a draft about to be sent). */
+export async function graphDraftRecipients(accessToken: string, draftId: string): Promise<string[]> {
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(draftId)}?$select=toRecipients,ccRecipients,bccRecipients`,
+  );
+  if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook read draft recipients");
+  type Recipient = { emailAddress?: { address?: string } };
+  const body = (await resp.json()) as Record<string, Recipient[] | undefined>;
+  return ["toRecipients", "ccRecipients", "bccRecipients"]
+    .flatMap((key) => body[key] ?? [])
+    .map((r) => r.emailAddress?.address ?? "")
+    .filter(Boolean);
+}
+
 /**
  * `POST /me/messages/{id}/send`. Returns the raw response so the caller keeps
  * its own status mapping: this is the transmission step, and what a failure
  * here means for delivery is the caller's to say.
  */
-export function graphSendDraft(accessToken: string, draftId: string): Promise<Response> {
+export async function graphSendDraft(accessToken: string, draftId: string): Promise<Response> {
+  // Every Outlook send (new mail, reply, forward, a saved draft) ends here, so
+  // this is where a test deploy's recipient allowlist is checked. Graph built
+  // the recipients of a reply or forward itself, so they are read back first.
+  const allowlist = outboundAllowlist();
+  if (allowlist) assertOutboundRecipientsAllowed(await graphDraftRecipients(accessToken, draftId), allowlist);
   return graphFetch(accessToken, `/me/messages/${encodeURIComponent(draftId)}/send`, {
     method: "POST",
     headers: { "Content-Length": "0" },
@@ -1833,6 +1855,19 @@ export async function graphDeleteDraftQuietly(accessToken: string, draftId: stri
 }
 
 /**
+ * A Graph recipient's display name, or "" when it is only the address again.
+ * Graph fills `name` with the address for a recipient saved without one, and
+ * passing that on made every chip read "a@example.com <a@example.com>".
+ */
+export function graphRecipientName(
+  emailAddress: { name?: string | null; address?: string | null } | null | undefined,
+): string {
+  const name = emailAddress?.name ?? "";
+  const address = emailAddress?.address ?? "";
+  return name.trim().toLowerCase() === address.trim().toLowerCase() ? "" : name;
+}
+
+/**
  * `createReply` / `createReplyAll` / `createForward` on `messageId`: a draft
  * that Graph threads natively (its own In-Reply-To / References, conversation
  * id, and the quoted original in the body).
@@ -1872,7 +1907,7 @@ export async function graphCreateResponseDraft(
   };
   return {
     toRecipients: (data.toRecipients ?? []).map((r) => ({
-      name: r.emailAddress?.name ?? "",
+      name: graphRecipientName(r.emailAddress),
       email: r.emailAddress?.address ?? "",
     })),
     id: data.id,
@@ -1949,6 +1984,28 @@ export async function graphPrepareResponseDraft(
     toRecipients: draft.toRecipients,
     createdDateTime: draft.createdDateTime,
   };
+}
+
+/**
+ * Whether a Graph message is a reply or forward, from its `conversationIndex`.
+ *
+ * Graph exposes no In-Reply-To header on a draft (internetMessageHeaders is
+ * empty until it is sent), so a draft made by createReply looked unthreaded to
+ * every reader here, although Exchange threads it natively and adds the RFC
+ * headers on send (persona test, 2026-10-26). The PidTagConversationIndex
+ * layout is a 22-byte header for the first message of a conversation plus one
+ * 5-byte block per response, so anything longer than 22 bytes answers a
+ * message. Unknown or unreadable is false: never claim a thread on a guess.
+ */
+export function graphConversationIndexIsResponse(value: unknown): boolean {
+  if (typeof value !== "string" || value.length === 0) return false;
+  let bytes: number;
+  try {
+    bytes = atob(value).length;
+  } catch {
+    return false;
+  }
+  return bytes > 22 && (bytes - 22) % 5 === 0;
 }
 
 function escapeHtml(value: string): string {
@@ -2084,6 +2141,55 @@ export async function graphListAttachmentMeta(
     url = data["@odata.nextLink"];
   }
   return out;
+}
+
+/**
+ * Up to this many bytes in all (Graph's `size`), a draft's attachment list is
+ * read a second time with `contentBytes` so each file reports its real size.
+ */
+export const GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES = 1024 * 1024;
+
+/**
+ * A draft's attachments as the editor card and draft_read list them.
+ *
+ * Graph's `size` is the attachment ITEM, property overhead included: a 19-byte
+ * notes.txt reads as 183 bytes, while draft_create reported the 19 it wrote.
+ * So a small list is read again without `$select`, which returns each
+ * fileAttachment's `contentBytes`, and the size is the decoded length of that.
+ * Past the ceiling, or for an item/reference attachment (no bytes), Graph's
+ * size stands: the overhead is noise there. Any failed read throws.
+ */
+export async function graphDraftAttachmentList(
+  accessToken: string,
+  draftId: string,
+): Promise<{ filename: string; size_bytes: number | null; mime_type: string | null }[]> {
+  type Row = { name?: string; size?: number; contentType?: string; contentBytes?: string };
+  const read = async (query: string): Promise<Row[]> => {
+    const resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(draftId)}/attachments${query}`,
+      { headers: {} },
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`Outlook attachment list error: ${resp.status}`);
+    }
+    return ((await resp.json()) as { value?: Row[] }).value ?? [];
+  };
+  let rows = await read("?$select=name,size,contentType");
+  const total = rows.reduce((sum, a) => sum + (typeof a.size === "number" ? a.size : 0), 0);
+  // The second read only sharpens sizes; if it fails, Graph's sizes from the
+  // first read are still a usable list, so the card does not fail over it.
+  if (rows.length > 0 && total <= GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES) {
+    rows = await read("").catch(() => rows);
+  }
+  return rows.map((a) => ({
+    filename: typeof a.name === "string" ? a.name : "attachment",
+    size_bytes: typeof a.contentBytes === "string"
+      ? base64DecodedLength(a.contentBytes)
+      : typeof a.size === "number" ? a.size : null,
+    mime_type: typeof a.contentType === "string" ? a.contentType : null,
+  }));
 }
 
 /**

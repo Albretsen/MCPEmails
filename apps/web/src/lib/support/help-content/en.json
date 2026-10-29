@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Help and support",
-    "description": "Answers to the most common connection, client and billing questions, and a form to reach the people who build MCP Emails."
+    "description": "Answers to the most common connection, client and billing questions, and a form to reach the people who build MCPEmails."
   },
   "hero": {
     "eyebrow": "Help",
@@ -121,14 +121,14 @@
     {
       "id": "assistant-sees-nothing",
       "title": "Connected, but the assistant sees no mail",
-      "summary": "Usually the mailbox has an error, the chat predates the connector, or a permission is off.",
-      "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list",
+      "summary": "The mailbox is connected, but your assistant says it has no email tools or finds nothing.",
+      "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list plugin @",
       "steps": [
-        "In Inboxes, check the mailbox shows Connected. If not, reconnect it.",
-        "Start a new chat after adding the connector.",
-        "Sign in to the connector with the account that holds the mailbox.",
-        "In API keys, choose Edit access and check its permissions and inboxes.",
-        "Ask the assistant to list your inboxes first."
+        "Open Inboxes in the dashboard and check that the mailbox is listed without an error. If it shows one, reconnect it.",
+        "Start a new chat after adding the connector. In Claude, check that MCPEmails is switched on under + and Connectors. In ChatGPT, type @ and pick MCPEmails, and @mention it again when a follow-up needs your mail.",
+        "Authorize the connector with the same MCPEmails account that holds the mailbox.",
+        "Your assistant only sees the tools your connector or API key is scoped for. If you left a scope unticked, remove the connector and add it again.",
+        "Ask the assistant to list your inboxes first. Mail is fetched when the assistant asks for it, so nothing arrives on its own."
       ],
       "links": [
         {
@@ -147,10 +147,11 @@
       "summary": "Free includes 150 email actions a month. After that, actions wait until the 1st (UTC).",
       "keywords": "usage limit allowance cap 150 actions free plan refused reset quota",
       "steps": [
-        "See what you have used under Usage.",
-        "Listing inboxes and dashboard actions never count. Your first 7 days are free.",
-        "Retrying does not help. Paused automations resume on the 1st.",
-        "Personal, Pro and Team have no monthly cap, subject to fair use."
+        "See how many actions you have used under Usage in the dashboard.",
+        "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 3 days after signup.",
+        "Retrying does not help. The allowance resets on the 1st of the next month (UTC), and paused automations resume on their own.",
+        "Personal, Pro and Business have unlimited email actions, subject to fair use.",
+        "Workspaces created before 2026-09-12 are not metered. If you see the limit on one of those, write to us."
       ],
       "links": [
         {

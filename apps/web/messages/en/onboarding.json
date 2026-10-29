@@ -1,0 +1,361 @@
+{
+  "shell": {
+    "title": "Set up MCPEmails",
+    "progress": "Step {current} of {total}",
+    "exit": "Close setup",
+    "loading": "Loading your setup",
+    "statusError": "Could not load your setup. Reload the page to try again.",
+    "skip": "Skip setup"
+  },
+  "chip": {
+    "using": "Using {client}",
+    "change": "Change",
+    "label": "The AI app you use with MCPEmails",
+    "more": "More apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Connect your inbox",
+      "reuseTitle": "An inbox is already connected",
+      "reuse": "Use {address}",
+      "connectAnother": "Connect another inbox",
+      "lead": "The one your AI should read and answer.",
+      "emailLabel": "Email address",
+      "useSignup": "Use {address}",
+      "detecting": "Looking up your provider",
+      "detected": "{provider}",
+      "notRight": "Change",
+      "chooseLead": "Which provider is it?",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Other (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Turn on 2-Step Verification.",
+        "step1Body": "Already on? Skip this.",
+        "step1Link": "Open 2-Step Verification",
+        "step2Title": "Create an app password.",
+        "step2Body": "Type MCPEmails as the name and press Create. Google shows 16 letters once, so copy them before you close the page.",
+        "step2Link": "Create app password",
+        "step3Title": "Paste it below.",
+        "missingTitle": "No App passwords page?",
+        "missingBody": "One of three things: 2-Step Verification is off (step 1), a work or school admin has turned app passwords off, or the account uses Advanced Protection or security keys only.",
+        "workspace": "Your company manages this account. If step 2 says the setting is not available, your admin must allow 2-Step Verification and app passwords."
+      },
+      "icloud": {
+        "step1Title": "Open your Apple Account.",
+        "step1Link": "Open account.apple.com",
+        "step2Title": "Choose Sign-In and Security, then App-Specific Passwords.",
+        "step2Body": "Generate a new one and name it MCPEmails.",
+        "step3Title": "Paste it below.",
+        "step3Body": "Apple shows it once, as xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Option missing?",
+        "missingBody": "Two-factor authentication must be on. If you reset your Apple Account password recently, older app-specific passwords stopped working, so make a new one."
+      },
+      "yahoo": {
+        "step1Title": "Open {provider} Account Security.",
+        "step1Link": "Create app password",
+        "step2Title": "Under External connections, choose Create app password.",
+        "step2Body": "Type MCPEmails, then Generate password.",
+        "step3Title": "Paste the 16 letters below.",
+        "missingTitle": "Not there, or it says not available right now?",
+        "missingBody": "Turn on two-step verification and reload. New accounts can wait up to two weeks. Use a browser you normally sign in with, not a private window."
+      },
+      "gmx": {
+        "step1Title": "Turn on IMAP in {provider}.",
+        "step1Body": "In webmail, open E-Mail-Einstellungen, then POP3/IMAP, and switch on POP3- und IMAP-Zugriff erlauben (allow POP3 and IMAP access).",
+        "step1Link": "How to turn on IMAP",
+        "step2Title": "Two-factor authentication on?",
+        "step2Body": "Create an application-specific password under Sicherheit (security). It is shown once. If two-factor authentication is off, use your normal {provider} password.",
+        "step3Title": "Paste it below.",
+        "missingTitle": "Worked before and stopped?",
+        "missingBody": "{provider} can switch IMAP off again. Check step 1."
+      },
+      "microsoft": {
+        "step1Title": "Press Connect with Microsoft and sign in on Microsoft's page.",
+        "step2Title": "Accept the permissions screen.",
+        "note": "No password needed here. You sign in on Microsoft's own page.",
+        "connect": "Connect with Microsoft",
+        "adminTitle": "Work or school account?",
+        "adminBody": "Many organisations need an admin to approve new apps before you can sign in. If Microsoft asks for admin approval, send your admin this link. They do not need an MCPEmails account.",
+        "adminLink": "Get the link for your admin",
+        "adminCopy": "Copy link",
+        "adminCopied": "Copied",
+        "adminError": "Could not create the link. Try again."
+      },
+      "proton": {
+        "title": "Proton Mail needs Proton Bridge",
+        "body": "Proton Mail works with mail apps only through Proton Bridge, which runs on your own computer. MCPEmails runs in the cloud and cannot reach it, so a Proton mailbox cannot be connected."
+      },
+      "imap": {
+        "step1": "Use your full email address and the password of the mailbox itself, not your hosting or control panel login.",
+        "step2": "If the mailbox has two-factor authentication, create an app password in your provider's security settings and use that.",
+        "appPasswordLink": "Create a {provider} app password",
+        "servers": "Servers: {host}",
+        "manualLead": "We could not find your mail servers. Your provider lists them in its help pages.",
+        "imapHost": "Incoming server (IMAP)",
+        "smtpHost": "Outgoing server (SMTP)",
+        "port": "Port",
+        "username": "Login name, if it is not your email address",
+        "advanced": "Advanced"
+      },
+      "password": {
+        "labelApp": "App password",
+        "labelMailbox": "Password",
+        "spaces": "Spaces are fine.",
+        "show": "Show",
+        "hide": "Hide",
+        "warnAccount": "This looks like a normal password. {provider} needs an app password here: 16 letters.",
+        "warnLength": "An app password has 16 letters. Check that you copied all of it.",
+        "warnNote": "You can still try it."
+      },
+      "trust": {
+        "appPassword": "An app password opens only your mail. Stored encrypted in Stockholm, and you can revoke it any time.",
+        "mailboxPassword": "Stored encrypted in Stockholm. Disconnect any time."
+      },
+      "connect": "Connect",
+      "progress": {
+        "title": "Connecting {address}",
+        "server": "Mail server found",
+        "signedIn": "Signed in",
+        "read": "Mailbox read"
+      },
+      "proof": {
+        "title": "Connected",
+        "count": "{count, plural, one {# message} other {# messages}} in your inbox",
+        "newest": "Newest",
+        "noSubject": "(no subject)",
+        "private": "Shown only to you, read live from your mailbox.",
+        "ready": "Your inbox is connected and ready.",
+        "continue": "Continue"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} has IMAP access turned off for this mailbox. Turn it on, then try again.",
+          "app_password_required": "{provider} needs an app password here, not your normal password.",
+          "account_password_used": "That looks like your normal {provider} password. Use an app password instead.",
+          "app_password_length": "That app password looks incomplete. It should be 16 letters.",
+          "provider_refused_signin": "{provider} refused the sign-in itself, not the password. Sign in to {provider} in your browser, clear any security prompt, then try again.",
+          "login_username_required": "This server wants a login name that is not your email address. Find it in your provider's settings and enter it under Advanced.",
+          "password_rejected": "{provider} did not accept that password. Check it and paste it again."
+        },
+        "network": "We could not reach MCPEmails. Check your connection and try again.",
+        "limit": "This workspace already has all the inboxes its plan includes.",
+        "sessionExpired": "You were signed out. Sign in again, then come back to this page.",
+        "notAllowed": "Only workspace owners and admins can connect an inbox.",
+        "alreadyConnected": "This mailbox is already connected in this workspace.",
+        "useMicrosoft": "This is a Microsoft mailbox. It connects with Microsoft sign-in, not a password.",
+        "smtpRejected": "Reading works, but the server refused the login for sending.",
+        "blocked": "The mail server refused our connection. Some providers block cloud servers.",
+        "hostNotFound": "We could not find that mail server. Check the server name.",
+        "unreachable": "The mail server did not answer. Check the server name and port.",
+        "tls": "The secure connection to the mail server failed. Try the other port.",
+        "hostRefused": "We cannot connect to that server name or port. Check the server settings.",
+        "saveFailed": "Signed in, but saving failed. Try again in a moment.",
+        "generic": "That did not work. Try again, or connect a different inbox.",
+        "link": {
+          "twoStep": "Open 2-Step Verification",
+          "appPasswords": "Open the {provider} app password page",
+          "imapSetting": "How to turn on IMAP at {provider}",
+          "providerHelp": "{provider} help page",
+          "adminGuide": "Google's guide for your admin"
+        },
+        "kept": "Your address is kept, so trying again is one paste.",
+        "readOnly": "Connect for reading only",
+        "readOnlyNote": "Your AI can read and search, but not send.",
+        "different": "Connect a different inbox",
+        "support": "Send this error to support",
+        "supportNote": "We get the error and your provider, never your password.",
+        "signIn": "Sign in again",
+        "seePlans": "See plans"
+      },
+      "outlookError": {
+        "admin_consent_required": "Your organisation needs an admin to approve MCPEmails before you can sign in. Send your admin the link below.",
+        "outlook_cancelled": "You cancelled on Microsoft's page. Press Connect with Microsoft to try again.",
+        "generic": "Microsoft sign-in did not finish. Try again."
+      },
+      "emailPlaceholder": "you@example.com"
+    },
+    "add_to_ai": {
+      "title": "Add MCPEmails to {client}",
+      "lead": "This moves on by itself once {client} connects.",
+      "urlLabel": "MCPEmails server URL",
+      "linkAfter": "Confirm in {client}, then sign in to MCPEmails.",
+      "claudeAfter": "In Claude, click Continue, then Add, then Connect.",
+      "commandAfter": "Then start {client} and sign in to MCPEmails when it asks.",
+      "configLead": "Add this to {file}, then reload {client} and sign in to MCPEmails when it asks.",
+      "genericOauth": "In {client}, add an MCP server of type HTTP, paste the URL below, and sign in to MCPEmails when it asks.",
+      "manual": "Set it up by hand",
+      "continue": "I added it",
+      "chatgpt": {
+        "step1": "On chatgpt.com, open Plugins and click Add at the top right.",
+        "step2": "Choose Add custom MCP server, name it MCPEmails and paste the URL below as the Server URL.",
+        "step3": "Tick I understand and want to continue, click Create as a plugin, then Connect MCPEmails and allow access.",
+        "step4": "In a chat, type @MCPEmails to use it.",
+        "note": "Custom MCP servers work on the Go plan and every paid plan, in a browser on chatgpt.com."
+      },
+      "key": {
+        "creating": "Creating an API key for {client}",
+        "ready": "We created an API key for {client} with Standard access (read, drafts, send). Copy it now: it is shown only once.",
+        "failed": "Could not create an API key. Create one in the dashboard under API keys.",
+        "limit": "This plan has no room for another API key. Remove one in the dashboard, then reload this page.",
+        "retry": "Try again",
+        "header": "Header",
+        "label": "API key"
+      },
+      "cline": {
+        "step1": "In Cline, open MCP Servers, then the Remote Servers tab.",
+        "step2": "Name it MCPEmails, paste the URL and set Transport Type to Streamable HTTP.",
+        "step3": "Add the header below, then click Add Server."
+      },
+      "jetbrains": {
+        "step1": "Open Settings, then Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Click Add, choose Streamable HTTP and paste the URL.",
+        "step3": "Add the header below and save."
+      },
+      "curl": "Call the server with this key. The next step gives you a first request to send.",
+      "phone": {
+        "claudeTitle": "On a phone, add it in the browser",
+        "claudeBody": "Copy this link and paste it into Safari or Chrome. Tapping it may open the Claude app, which cannot add connectors. Once added, MCPEmails works in the app too.",
+        "copyLink": "Copy link",
+        "otherBody": "{client} is set up on a computer. We can email you this step so you can open it there.",
+        "showHere": "Show the steps here anyway"
+      }
+    },
+    "first_prompt": {
+      "title": "Try it in {client}",
+      "lead": "Paste this into a new chat.",
+      "leadCode": "Paste this into {client}.",
+      "leadApi": "Send your first request:",
+      "open": "Open {client}"
+    },
+    "wait": {
+      "title": "Waiting for {client}"
+    },
+    "it_works": {
+      "title": "It works",
+      "success": {
+        "read": "{client} just read your inbox.",
+        "search": "{client} just searched your inbox.",
+        "draft": "{client} just saved a draft in your inbox.",
+        "organize": "{client} just organized your inbox.",
+        "generic": "{client} just used your inbox.",
+        "connected": "{client} is connected to your inbox."
+      },
+      "finish": "Done",
+      "secondInbox": {
+        "title": "Connect your other inbox",
+        "lead": "Most people connect a second inbox: work and personal in one chat.",
+        "cta": "Connect another inbox",
+        "paidNote": "Free covers one inbox. The next one opens the plan options, with Continue on Free right beside them."
+      }
+    }
+  },
+  "nav": {
+    "continue": "Continue",
+    "back": "Back",
+    "done": "Done"
+  },
+  "placeholder": "This step is still being built.",
+  "actions": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "emailMe": "Email me this link",
+    "emailSent": "Sent to {email}.",
+    "emailFailed": "Could not send the email. Try again in a minute."
+  },
+  "ladder": {
+    "waiting": "Waiting for {client}",
+    "connected": "{client} connected",
+    "ask": "Ask it something",
+    "works": "It works",
+    "listening": "Listening for {client}",
+    "stopped": "Stopped listening. Reload this page after you try the prompt."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} has not connected yet",
+      "claude": "Reload claude.ai and start a new chat. In Claude Desktop, quit the app fully and open it again.",
+      "chatgpt": "Open a new chat on chatgpt.com, type @ and pick MCPEmails.",
+      "editor": "Reload the {client} window and check that MCPEmails shows as connected in its MCP list. If it does not, paste the URL again.",
+      "cli": "Quit and restart {client}, then check that MCPEmails is listed and connected.",
+      "api": "Send the request again and check that the Authorization header carries your key."
+    },
+    "noCall": {
+      "title": "{client} is connected but has not used MCPEmails yet",
+      "claude": "Switch MCPEmails on in this chat (+ > Connectors) or start a new chat, then paste the prompt again.",
+      "chatgpt": "In the chat, type @ and pick MCPEmails, then paste the prompt again.",
+      "other": "Start a new chat and paste the prompt again. It names MCPEmails, so {client} knows to use it."
+    },
+    "reconnect": {
+      "title": "Still nothing?",
+      "body": "Remove MCPEmails from {client}, add it again, then start a new chat.",
+      "docs": "{client} setup guide",
+      "back": "Show the setup step again",
+      "email": "Email me the steps"
+    }
+  },
+  "failure": {
+    "auth": "Your mail provider rejected the inbox password. Reconnect the inbox in the dashboard.",
+    "timeout": "Your mail server took too long to answer. Ask again for a shorter time range.",
+    "provider": "Your mail provider returned an error. Try again in a minute.",
+    "scope": "The access you gave {client} does not allow that. Ask for something else, or reconnect with more access.",
+    "inbox": "{client} could not find a connected inbox. Check your inboxes in the dashboard.",
+    "params": "{client} sent a request MCPEmails could not read. It usually tries again by itself.",
+    "generic": "The last request from {client} failed. Ask again."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Using MCPEmails, look at my inbox from the last 2 days and tell me which emails need a reply from me today. One line each: who, what they want, and by when. Don't send, draft, move or delete anything.",
+      "code": "Use the MCPEmails tools to look at my inbox from the last 2 days and tell me which emails need a reply from me today. One line each: who, what they want, and by when. Don't send, draft, move or delete anything."
+    },
+    "draftReplies": {
+      "drafts": "Pick the 3 emails from that list that most need an answer and save a draft reply to each in my Drafts folder, written in my usual tone. Don't send anything.",
+      "readOnly": "Pick the 3 emails from that list that most need an answer and write a short reply to each here in the chat. Don't send or save anything."
+    },
+    "morningBrief": {
+      "chat": "Using MCPEmails, give me my morning brief: what came in since yesterday, what needs a reply today, and anything with a deadline this week. Keep it under 10 lines. Don't change anything.",
+      "code": "Use the MCPEmails tools to give me my morning brief: what came in since yesterday, what needs a reply today, and anything with a deadline this week. Keep it under 10 lines. Don't change anything."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Your MCPEmails setup link",
+      "intro": "Open this link on your computer to add MCPEmails to {client}:"
+    },
+    "helpSteps": {
+      "subject": "How to connect MCPEmails to {client}",
+      "intro": "Here is how to get {client} working with MCPEmails:",
+      "prompt": "Then paste this prompt into the new chat:",
+      "guide": "Setup guide:",
+      "resume": "Pick up where you left off:"
+    },
+    "morning": {
+      "subject": "Your morning brief prompt",
+      "intro": "Good morning. Paste this into {client} to get your morning brief:"
+    },
+    "footer": "You asked for this email while setting up MCPEmails. It is sent once."
+  },
+  "chatReturn": {
+    "title": "Connected. Go back to {client} and ask again.",
+    "lead": "Your mailbox is ready. Ask {client} the same question again, or start with this:",
+    "prompt": "Look at my inbox from the last 24 hours and tell me which emails need a reply from me.",
+    "copy": "Copy prompt",
+    "copied": "Copied",
+    "open": "Open {client}",
+    "yourApp": "your AI app",
+    "dashboard": "Go to the dashboard"
+  }
+}

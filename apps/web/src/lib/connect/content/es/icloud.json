@@ -11,34 +11,34 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP de iCloud: conecta iCloud Mail a Claude",
-    "description": "Sí, Claude puede usar iCloud Mail. Conéctalo con una contraseña específica de aplicación de Apple en dos minutos y gestiona tu correo desde cualquier cliente MCP."
+    "title": "Servidor MCP de iCloud y Apple Mail para Claude y ChatGPT",
+    "description": "Usa desde Claude o ChatGPT la bandeja de iCloud que lees en Apple Mail. Conéctala en dos minutos con una contraseña de aplicación. Sin Mac. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "iCloud Mail + IA",
     "titleLine1": "El servidor MCP de iCloud",
     "titleLine2": "para Claude, Cursor y ChatGPT",
-    "lead": "Dale a tu agente de IA una bandeja real de iCloud en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a Claude o ChatGPT la bandeja de iCloud que lees en Apple Mail. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple. Es un servicio alojado, así que tu Mac puede estar apagado, y la misma bandeja funciona en todos los clientes MCP.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña específica de aplicación, sin OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Apple no ofrece OAuth para iCloud Mail, así que Claude no puede conectarse directamente. mcpemails conecta tu bandeja de iCloud por IMAP con una contraseña específica de aplicación de Apple, lo que permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar ese correo. La configuración lleva unos dos minutos y una bandeja es gratis."
+    "answer": "Apple no ofrece OAuth para iCloud Mail, así que Claude no puede conectarse directamente. MCPEmails conecta tu bandeja de iCloud por IMAP con una contraseña específica de aplicación de Apple, lo que permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar ese correo. La configuración lleva unos dos minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta iCloud: una contraseña específica de aplicación",
-    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en account.apple.com, en Sign-In and Security → App-Specific Passwords (hace falta la autenticación de doble factor), y pégala en mcpemails con tu dirección de iCloud."
+    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en account.apple.com, en Inicio de sesión y seguridad → Contraseñas específicas de app (hace falta la autenticación de doble factor), y pégala en MCPEmails con tu dirección de iCloud."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Genera una contraseña específica de aplicación",
-      "p": "En account.apple.com, ve a Sign-In and Security → App-Specific Passwords y crea una (la autenticación de doble factor tiene que estar activada)."
+      "p": "En account.apple.com, ve a Inicio de sesión y seguridad → Contraseñas específicas de app y crea una (la autenticación de doble factor tiene que estar activada)."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCPEmails",
       "p": "Añade tu dirección de iCloud y la contraseña específica de aplicación para conectar la bandeja de forma segura."
     },
     {
@@ -49,11 +49,11 @@
   "gotchas": [
     {
       "h": "La autenticación de doble factor es un requisito, no una preferencia",
-      "p": "Apple solo emite contraseñas específicas de aplicación para una cuenta de Apple protegida con autenticación de doble factor. Si App-Specific Passwords no aparece en Sign-In and Security en account.apple.com, esa es la razón, y activar la 2FA es el primer paso, no una medida de refuerzo opcional. No hay otra vía: Apple no ofrece OAuth para iCloud Mail y tu contraseña normal de la cuenta de Apple no autentica un cliente de correo con ninguna configuración."
+      "p": "Apple solo emite contraseñas específicas de aplicación para una cuenta de Apple protegida con autenticación de doble factor. Si Contraseñas específicas de app no aparece en Inicio de sesión y seguridad en account.apple.com, esa es la razón, y activar la 2FA es el primer paso, no una medida de refuerzo opcional. No hay otra vía: Apple no ofrece OAuth para iCloud Mail y tu contraseña normal de la cuenta de Apple no autentica un cliente de correo con ninguna configuración."
     },
     {
       "h": "El nombre de usuario no suele ser tu dirección de correo completa",
-      "p": "Apple documenta como nombre de usuario de entrada la <b>parte del nombre</b> de la dirección de iCloud, por ejemplo <code>johnappleseed</code> en lugar de <code>johnappleseed@icloud.com</code>. Es lo contrario que en casi todos los demás proveedores de este sitio, y pilla a quien pega su dirección por costumbre. Las direcciones antiguas <code>@me.com</code> y <code>@mac.com</code>, y las direcciones de dominio propio de iCloud+, inician sesión todas con ese mismo nombre de cuenta principal. Si se rechaza la forma corta, la propia documentación de Apple indica la dirección completa como alternativa."
+      "p": "Apple documenta como nombre de usuario de entrada la <b>parte del nombre</b> de la dirección de iCloud, por ejemplo <code>johnappleseed</code> en lugar de <code>johnappleseed@icloud.com</code>. Es lo contrario que en casi todos los demás proveedores de este sitio, y despista a quien pega su dirección por costumbre. Las direcciones antiguas <code>@me.com</code> y <code>@mac.com</code>, y las direcciones de dominio propio de iCloud+, inician sesión todas con ese mismo nombre de cuenta principal. Si se rechaza la forma corta, la propia documentación de Apple indica la dirección completa como alternativa."
     },
     {
       "h": "El correo saliente usa STARTTLS en el 587, y no se ofrece nada hasta la actualización",
@@ -72,7 +72,11 @@
   "faq": [
     {
       "q": "¿Funciona Claude con iCloud Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como mcpemails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
+      "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como MCPEmails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Puede Claude conectarse a Apple Mail?",
+      "a": "A la app no, y no hace falta. Apple Mail muestra buzones que están en un proveedor. Si el tuyo es una dirección de iCloud, conéctala aquí con una contraseña de aplicación y Claude o ChatGPT verán las mismas carpetas y mensajes, salvo las carpetas guardadas solo En mi Mac. Si Apple Mail muestra una cuenta de Gmail, Outlook, Yahoo o del trabajo, conecta ese proveedor. MCPEmails es un servicio alojado, así que tu Mac no tiene que estar encendido."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de iCloud Mail?",
@@ -80,7 +84,7 @@
     },
     {
       "q": "¿Por qué se rechaza mi contraseña de Apple?",
-      "a": "Porque iCloud nunca acepta la contraseña de la cuenta de Apple desde un cliente de correo. Necesitas una contraseña específica de aplicación creada en account.apple.com, en Sign-In and Security, y esa sección solo aparece cuando la autenticación de doble factor está activada. Si la contraseña es correcta y el inicio de sesión sigue fallando, prueba como nombre de usuario la parte del nombre de tu dirección en lugar de la dirección completa."
+      "a": "Porque iCloud nunca acepta la contraseña de la cuenta de Apple desde un cliente de correo. Necesitas una contraseña específica de aplicación creada en account.apple.com, en Inicio de sesión y seguridad, y esa sección solo aparece cuando la autenticación de doble factor está activada. Si la contraseña es correcta y el inicio de sesión sigue fallando, prueba como nombre de usuario la parte del nombre de tu dirección en lugar de la dirección completa."
     },
     {
       "q": "¿Funciona con @me.com, @mac.com o un dominio propio de iCloud+?",
@@ -89,6 +93,10 @@
     {
       "q": "¿Se almacena mi correo de iCloud en sus servidores?",
       "a": "No. Los mensajes se obtienen en vivo de Apple por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Revocar la contraseña específica de aplicación en tu cuenta de Apple corta la conexión en el lado de Apple de inmediato."
+    },
+    {
+      "q": "¿Llega a Calendario, Contactos, Notas o iCloud Drive?",
+      "a": "No. MCPEmails solo gestiona el correo: tu bandeja de iCloud y sus carpetas, por IMAP y SMTP. Calendario, Contactos, Notas, Recordatorios e iCloud Drive no se conectan, y la contraseña de aplicación solo se usa para el correo."
     }
   ],
   "ctaBand": {

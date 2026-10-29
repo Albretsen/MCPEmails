@@ -110,41 +110,47 @@ SELECT throws_ok(
 );
 
 -- 1c. Charlie cannot update Dave's inbox
--- (UPDATE on a row that doesn't match the USING predicate is silently skipped,
---  not an error — assert zero rows were changed. is_empty runs the statement
---  itself: Postgres refuses a data-modifying WITH nested in a subquery, which
---  is how these four checks were written until 2026-09-26 and why this file
---  died at 1c without reaching 1c-3.)
-SELECT is_empty(
+-- (Since 20261016160200 authenticated has no UPDATE on inboxes at all, so the
+--  statement is refused outright rather than matching 0 rows. See
+--  supabase/tests/inboxes_user_access.sql for the same-workspace cases.)
+SELECT throws_ok(
   $$
     UPDATE public.inboxes
     SET    display_name = 'hacked'
     WHERE  id = 'dd111111-0000-0000-0000-000000000002'
-    RETURNING id
   $$,
-  '[inboxes] Charlie cannot UPDATE Dave''s inbox (0 rows affected)'
+  '42501',
+  NULL,
+  '[inboxes] Charlie cannot UPDATE Dave''s inbox'
 );
 
--- 1d. Charlie cannot update Dave's API key
-SELECT is_empty(
+-- 1d. Charlie cannot update Dave's API key. Since 20261016160300 browser
+-- sessions hold no UPDATE grant on api_keys at all, so this is a permission
+-- error rather than a zero-row update.
+SELECT throws_ok(
   $$
     UPDATE public.api_keys
     SET    name = 'hacked'
     WHERE  id = 'dd222222-0000-0000-0000-000000000002'
-    RETURNING id
   $$,
-  '[api_keys] Charlie cannot UPDATE Dave''s key (0 rows affected)'
+  '42501',
+  NULL,
+  '[api_keys] Charlie cannot UPDATE Dave''s key'
 );
 
--- 1e. Charlie cannot update Dave's workspace
-SELECT is_empty(
+-- 1e. Charlie cannot update Dave's workspace. Since
+-- 20261016160100_workspaces_server_owned_writes.sql user sessions hold no
+-- UPDATE privilege on workspaces at all, so the statement is refused outright
+-- (it used to match 0 rows under the owner-only policy).
+SELECT throws_ok(
   $$
     UPDATE public.workspaces
     SET    display_name = 'hacked'
     WHERE  id = 'dd000000-0000-0000-0000-000000000002'
-    RETURNING id
   $$,
-  '[workspaces] Charlie cannot UPDATE Dave''s workspace (0 rows affected)'
+  '42501',
+  NULL,
+  '[workspaces] Charlie cannot UPDATE Dave''s workspace (permission denied)'
 );
 
 -- 1f. Charlie cannot create a workspace claiming a different owner

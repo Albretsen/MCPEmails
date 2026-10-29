@@ -1,12 +1,12 @@
-Terms of Service · mcpemails
+Terms of Service · MCPEmails
 [meta description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
-[meta og:title] Terms of Service · mcpemails
+[meta og:title] Terms of Service · MCPEmails
 [meta og:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
 [meta og:locale] en_US
-[meta twitter:title] Terms of Service · mcpemails
+[meta twitter:title] Terms of Service · MCPEmails
 [meta twitter:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
-[alt] mcpemails
-[alt] mcpemails
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -21,14 +21,14 @@ Get started free
 Legal
 Terms of Service
 These terms govern your access to and use of MCPEmails. By creating an account or using the service you agree to be bound by them. Please read them carefully.
-Last updated: September 26, 2026 · Effective: May 25, 2026
+Last updated: October 24, 2026 · Effective: May 25, 2026
 1. Agreement to These Terms
-These Terms of Service ("Terms") constitute a legally binding agreement between you ("you" or "User") and Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak) with organisation number
-926 646 753
+These Terms of Service ("Terms") constitute a legally binding agreement between you ("you" or "User") and Albretsen AS, a Norwegian private limited company (aksjeselskap) with organisation number
+938 702 373
 , owned and operated by Asgeir Albretsen and trading as "MCPEmails" ("MCPEmails", "we", "us", or "our"). They govern your access to and use of the MCPEmails service, including the website at
 mcpemails.com
-, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the "Service"). Your contract is with Albretsen Consulting; "MCPEmails" is a trading name, not a separate legal entity.
-Service provider identification: Albretsen Consulting, organisation number 926 646 753, entered in Enhetsregisteret (the Norwegian Central Coordinating Register for Legal Entities, operated by Brønnøysundregistrene). Registered address: Håsteins gate 9, 5160 Laksevåg, Norway. Albretsen Consulting is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). Legal enquiries:
+, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the "Service"). Your contract is with Albretsen AS; "MCPEmails" is a trading name, not a separate legal entity.
+Service provider identification: Albretsen AS, organisation number 938 702 373, registered in Foretaksregisteret (the Norwegian Register of Business Enterprises, operated by Brønnøysundregistrene). Registered address: Håsteins gate 9, 5160 Laksevåg, Norway. Legal enquiries:
 legal@mcpemails.com
 .
 By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our
@@ -99,7 +99,7 @@ Pricing page
 5.2 Paid plans
 Paid plans are billed monthly or annually in advance. By subscribing to a paid plan you authorise us to charge the payment method on file at the start of each billing period. All fees are exclusive of applicable taxes, which will be added where required by law.
 5.3 Upgrades and downgrades
-You may upgrade your plan at any time; the new rate takes effect immediately and is prorated for the remainder of the current billing period. Downgrading takes effect at the start of the next billing period. Features that exceed the new plan's limits will be disabled at the downgrade date.
+You may upgrade your plan at any time; the new rate takes effect immediately and is prorated for the remainder of the current billing period. Downgrading takes effect at the start of the next billing period, and until then you keep the plan you have already paid for. If the new plan includes fewer inboxes than you have connected, the inboxes above its limit are parked on the downgrade date: they are not deleted, your AI assistant cannot reach them while they are parked, and they come back when you move to a plan that includes them. You choose which inboxes stay active.
 5.4 Refunds
 Cancel any time, keep what you have paid for.
 Cancelling stops the next renewal, and your paid plan stays active until the end of the period you have already paid for. We do not refund partial periods and we do not pro-rate an unused part of a monthly or annual term.
@@ -110,12 +110,27 @@ within 14 days of that charge and we will refund it in full. That single 14-day 
 5.5 Late payment and suspension
 If a payment fails, we will retry the charge and notify you by email. If payment remains outstanding after 7 days, we may suspend access to paid features until the balance is settled. If payment remains outstanding after 30 days, we may terminate the account in accordance with Section 8.
 5.6 Price changes
-We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date.
+We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date. If you do not want to pay the new price, you can cancel before it takes effect and you will not be charged it.
 5.7 Fair use and service limits
 To protect platform stability and ensure fair access for all customers, the Service applies a per-minute request rate limit to every plan (a “fair-use limit”), as described on our
 Pricing page
 . We may also apply reasonable technical measures to prevent abuse, automated scraping, or usage that materially degrades the Service for others.
 The number of connected inboxes included with each plan is published on our Pricing page. Every workspace is additionally subject to a fair-use ceiling on automated activity and to Section 4 (Acceptable Use). That ceiling exists to stop a runaway or abusive agent, is set far above ordinary use, and is not a purchasable allowance. We may change fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace.
+5.8 Personal 3-month pass
+Paid once, does not renew.
+The 3-month Personal pass is a single payment for the Personal plan until a fixed end date, which is shown at checkout and on your receipt. It is not a subscription: it does not renew and we never charge you for it again. When the pass ends, your workspace returns to the Free plan and its limits; nothing is deleted. If you change your mind, contact us at
+legal@mcpemails.com
+or use our
+online withdrawal form
+within 14 days of the payment and we will refund the pass in full. As in section 5.4, that 14-day refund is also how we honour the statutory right of withdrawal described on our
+right of withdrawal
+page.
+5.9 Pausing
+Where your billing page offers it, you may pause a monthly paid plan for 1 to 3 months, with at most 3 paused months in any 12 months. The pause starts when your current paid period ends. While paused, your workspace is on the Free plan and its limits: one inbox stays active and the others are parked as described in section 5.3, the Free allowance of email actions is counted from the day the pause starts, and scheduled sends you booked before the pause are still delivered. Billing resumes automatically on the date shown when you paused, at the price you paid before the pause, and we email you 3 days before that date. You may resume early, extend the pause within the limit, or cancel at any time while paused.
+5.11 Referral program
+You can invite others to MCPEmails with your referral link or code. A referral counts when the person you invited opens a new account through it, has not paid for MCPEmails before, and their first payment is 14 days old without being refunded or disputed. You cannot refer yourself, another account you control, or a member of your own workspace.
+When a referral counts, the person you invited gets one month of the plan they bought as credit on their account. You get one month of your own plan as credit, or one month of Personal if you are on the Free plan. You can earn up to 6 free months in any 12-month period. Credit applies to your future invoices, has no cash value, does not expire, and cannot be transferred or sold.
+We may withhold or reverse a reward that comes from abuse, such as fake or duplicate accounts, self-referrals, or payments that are refunded or disputed. We may change or end the program with notice. Rewards you have already earned stay on your account.
 6. Intellectual Property
 6.1 MCPEmails IP
 All intellectual property rights in the Service, including the software, designs, logos, trademarks, and documentation, are owned by MCPEmails or its licensors. Nothing in these Terms grants you any right, title, or interest in MCPEmails intellectual property except the limited licence to use the Service as described in these Terms.
@@ -167,19 +182,21 @@ These Terms and any dispute arising out of or in connection with them or the Ser
 Norway
 , without regard to its conflict-of-law provisions. The United Nations Convention on Contracts for the International Sale of Goods does not apply.
 9.2 Jurisdiction
-Any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of
+If you use the Service as a business, any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of
 Bergen, Norway
-. You consent to the personal jurisdiction of those courts and waive any objection to venue.
+, and you consent to the jurisdiction of those courts. If you are a consumer, you may bring proceedings in the courts of Norway or in the courts of your country of residence, and we may bring proceedings against you only in the courts of your country of residence.
 9.3 Consumer rights (EEA/UK)
-Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. If you are a consumer resident in the European Union, you may also submit a complaint through the EU Online Dispute Resolution platform at
-ec.europa.eu/consumers/odr
+Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. How to use your right of withdrawal is described on the
+right of withdrawal
+page, and you can cancel your subscription or withdraw without logging in at
+mcpemails.com/cancel
 .
 9.4 Informal resolution
 Before initiating any formal legal proceedings, we encourage you to contact us at
 legal@mcpemails.com
 so that we can attempt to resolve the dispute informally. We will respond within 14 business days and work in good faith toward a resolution.
-9.5 Class action waiver
-To the extent permitted by applicable law, you agree that any dispute resolution proceedings shall be conducted on an individual basis only. You waive any right to bring or participate in a class, collective, or representative action against MCPEmails.
+9.5 Class action waiver (business customers)
+If you use the Service as a business, then to the extent permitted by applicable law you agree that any dispute resolution proceedings shall be conducted on an individual basis only, and you waive any right to bring or participate in a class, collective, or representative action against MCPEmails. This section does not apply to consumers.
 10. General Provisions
 10.1 Entire agreement
 These Terms, together with the Privacy Policy and any supplemental terms applicable to specific features or plans, constitute the entire agreement between you and MCPEmails relating to the Service and supersede all prior agreements, representations, and understandings.
@@ -208,14 +225,14 @@ privacy@mcpemails.com
 Security reports
 security@mcpemails.com
 Postal address
-Albretsen Consulting (organisation number 926 646 753), Håsteins gate 9, 5160 Laksevåg, Norway
+Albretsen AS (organisation number 938 702 373), Håsteins gate 9, 5160 Laksevåg, Norway
 Response time
 We respond to all legal enquiries within 14 business days
 Questions about these Terms?
 Reach out about anything in these Terms and we will respond within 14 business days.
 Contact us about these Terms
 Read our Privacy Policy
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -231,6 +248,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -239,11 +257,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
@@ -265,6 +286,9 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Withdraw from contract here
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.

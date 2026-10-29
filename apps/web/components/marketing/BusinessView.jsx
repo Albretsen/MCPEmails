@@ -2,6 +2,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 /**
  * /for/business, rendered on the server.
@@ -26,7 +27,7 @@ const SAFETY_KEYS = ['approval', 'stored', 'keys', 'server'];
 const SAFETY_ICONS = { approval: 'shield', stored: 'ghost', keys: 'lock', server: 'server' };
 const PLAN_KEYS = ['free', 'personal', 'pro'];
 
-export default function BusinessView({ copy }) {
+export default function BusinessView({ copy, locale }) {
   const { hero, pains, day, does, safety, providers, pricing, faq, ctaBand } = copy;
 
   return (
@@ -42,7 +43,7 @@ export default function BusinessView({ copy }) {
           </h1>
           <p className="pricing-page-lead">{hero.lead}</p>
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{hero.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{hero.ctaPrimary}</a>
             <a className="btn btn-secondary btn-lg" href="#day">{hero.ctaSecondary}</a>
           </div>
         </div>
@@ -207,7 +208,7 @@ export default function BusinessView({ copy }) {
           <h2 className="pricing-cta-h">{ctaBand.title}</h2>
           <p className="pricing-cta-sub">{ctaBand.sub}</p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{ctaBand.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ctaBand.ctaPrimary}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{ctaBand.ctaSecondary}</Link>
           </div>
         </div>

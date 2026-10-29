@@ -1,0 +1,35 @@
+/* /cancel and /withdrawal. Builds on help.css (fields, buttons, errors). */
+.contract-fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.contract-choice { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--fg-1); cursor: pointer; }
+.contract-choice input { margin-top: 4px; }
+.contract-choice-label { display: block; font-weight: 500; }
+.contract-choice-hint { display: block; margin: 2px 0 0; }
+.contract-date { margin: 2px 0 0 24px; max-width: 220px; }
+.contract-done h2 { font-size: 22px; margin: 0 0 8px; }
+.contract-summary { margin: 16px 0; border: 1px solid var(--border-1); border-radius: 8px; background: var(--bg-surface); }
+.contract-summary-row { display: grid; grid-template-columns: minmax(120px, 34%) 1fr; gap: 12px; padding: 10px 14px; }
+.contract-summary-row + .contract-summary-row { border-top: 1px solid var(--border-1); }
+.contract-summary dt { color: var(--fg-3); font-size: 14px; }
+.contract-summary dd { margin: 0; color: var(--fg-1); font-size: 15px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.contract-actions { gap: 8px; flex-wrap: wrap; }
+.contract-done p { font-size: 15px; color: var(--fg-1); }
+.withdrawal-form {
+  white-space: pre-wrap; font-family: var(--font-sans); font-size: 15px; line-height: 1.6; color: var(--fg-1);
+  background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 8px; padding: 16px 18px; margin: 12px 0 0;
+}
+/* /billing/feedback: the one-tap cancel reasons. */
+.feedback-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.feedback-reason {
+  font: inherit; font-size: 15px; color: var(--fg-1); background: var(--bg-surface);
+  border: 1px solid var(--border-1); border-radius: 8px; padding: 8px 14px; cursor: pointer; text-align: left;
+}
+.feedback-reason:hover { border-color: var(--border-2); }
+.feedback-reason:focus-visible { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+.feedback-reason[aria-pressed="true"] { border-color: var(--fg-1); font-weight: 600; }
+.feedback-thanks { font-size: 17px; color: var(--fg-1); }
+@media (max-width: 520px) {
+  .contract-summary-row { grid-template-columns: 1fr; gap: 2px; }
+}
+@media print {
+  .nav, .footer, .contract-print, .pricing-page-hero { display: none !important; }
+}

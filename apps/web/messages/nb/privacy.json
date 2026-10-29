@@ -6,28 +6,28 @@
   "hero": {
     "eyebrow": "Juridisk",
     "title": "Personvernerklæring",
-    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Det eneste unntaket er en melding du planlegger å sende senere, som vi kun oppbevarer frem til den er levert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
+    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Unntakene er utgående meldinger som må vente: en melding du planlegger å sende senere, eller en sending som holdes tilbake for godkjenning, som vi lagrer kryptert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
     "dates": "Sist oppdatert: {lastUpdated}  ·  Gjelder fra: {effectiveDate}"
   },
   "whoWeAre": {
     "title": "1. Hvem vi er",
-    "p1": "MCPEmails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk enkeltpersonforetak eid og drevet av {ownerName}, som opptrer under forretningsnavnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
+    "p1": "MCPEmails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
     "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
-    "p3": "Opplysninger om tjenesteyteren: {companyName} er et enkeltpersonforetak etablert i Norge og drevet av {ownerName}. Foretaket er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Vår registrerte adresse er {companyAddress}.",
-    "p4": "{companyName} er per i dag ikke registrert i Merverdiavgiftsregisteret. Du kan kontakte oss om personvern på <email></email>."
+    "p3": "Opplysninger om tjenesteyteren: {companyName} er et aksjeselskap etablert i Norge, eid av {ownerName}, som også er styreleder. Selskapet er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Forretningsadressen vår er {companyAddress}.",
+    "p4": "Du kan kontakte oss om personvern på <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Data vi samler inn",
     "accountTitle": "2.1 Kontodata",
-    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din. Hvis du krysser av i boksen på registreringsskjemaet om å få produkttips og tilbud på e-post, registrerer vi også at du gjorde det, når, og hvilken ordlyd du så. Når du registrerer deg, registrerer vi også om du brukte en mobil, et nettbrett eller en datamaskin, ut fra forespørselshodene fra nettleseren din. Vi lagrer bare den kategorien, aldri nettleserens user-agent-streng eller noen enhetsidentifikator, og bruker den bare til å forstå hvor registreringer kommer fra.",
+    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din. Hvis du krysser av i boksen på registreringsskjemaet om å få produkttips og tilbud på e-post, registrerer vi også at du gjorde det, når, og hvilken ordlyd du så. Når du registrerer deg, registrerer vi også om du brukte en mobil, et nettbrett eller en datamaskin, ut fra forespørselshodene fra nettleseren din. Vi lagrer bare den kategorien, aldri nettleserens user-agent-streng eller noen enhetsidentifikator, og bruker den bare til å forstå hvor registreringer kommer fra. Vi registrerer også hvilket land registreringen kom fra, som en kode på to bokstaver som vertsleverandøren vår utleder fra IP-adressen din. Vi lagrer bare den koden, aldri IP-adressen, og bruker den bare til å forstå hvor registreringer kommer fra.",
     "workspaceTitle": "2.2 Arbeidsområde- og konfigurasjonsdata",
-    "workspaceP": "Vi lagrer arbeidsområdenavnet du velger, og konfigurasjonen til hver tilkoblet innboks (leverandørtype, e-postadresse, OAuth-status og tidspunkt for tilkobling). Vi lagrer <b>ikke</b> OAuth-tilgangstokener eller app-passord i klartekst. De krypteres med AES-256-GCM før de skrives til databasen, og krypteringsnøkkelen lagres i en separat hemmelighetshvelv.",
+    "workspaceP": "Vi lagrer arbeidsområdenavnet du velger, og konfigurasjonen til hver tilkoblet innboks (leverandørtype, e-postadresse, OAuth-status og tidspunkt for tilkobling). Vi lagrer <b>ikke</b> OAuth-tilgangstokener eller app-passord i klartekst. De krypteres med AES-256-GCM før de skrives til databasen, og krypteringsnøkkelen holdes som en serverhemmelighet i applikasjonsmiljøet vårt, aldri i databasen.",
     "apiKeysTitle": "2.3 API-nøkler",
     "apiKeysP": "Vi lagrer en SHA-256-hash av hver API-nøkkel du oppretter, sammen med nøkkelens navn, omfang, opprettelsestidspunkt og tidspunkt for siste bruk. Den rå nøkkelverdien vises til deg nøyaktig én gang ved opprettelse, og lagres aldri i gjenopprettbar form.",
     "logsTitle": "2.4 Bruks- og revisjonslogger",
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>email_read</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
-    "emailContentP": "Når agenten din kaller <c>email_read</c> (for å liste, lese eller søke) eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Det eneste unntaket er planlagte sendinger: når du ber agenten din om å planlegge en melding for fremtidig levering, lagrer vi den utgående meldingen (mottakere, emne, brødtekst og eventuelle vedlegg) i databasen vår frem til den er sendt, og vi beholder oppføringen etterpå for revisjon og feilsøking. Dette gjelder kun meldinger du uttrykkelig planlegger; e-post agenten din leser eller sender umiddelbart lagres aldri.",
+    "emailContentP": "Når agenten din kaller <c>email_read</c> (for å liste, lese eller søke) eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Det finnes to unntak, begge utgående meldinger som må vente. Planlagte sendinger: når du ber agenten din om å planlegge en melding for fremtidig levering, lagrer vi den utgående meldingen (mottakere, emne, brødtekst og eventuelle vedlegg) i databasen vår frem til den er sendt, og vi beholder oppføringen etterpå for revisjon og feilsøking. Sendinger som venter på godkjenning: når en innboks krever godkjenning, lagres en sending, et svar, en videresending eller en utkastsending agenten din ber om kryptert i databasen vår til et medlem av arbeidsområdet godkjenner eller avviser den, eller til den utløper etter 24 timer, og oppføringen beholdes etterpå som godkjenningshistorikken din. E-post agenten din leser, og e-post den sender umiddelbart uten å vente på godkjenning, lagres aldri.",
     "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
@@ -78,7 +78,9 @@
     "marketingTitle": "3.9 Direkte markedsføring på e-post",
     "marketingP1": "Vi sender markedsføring på e-post (produkttips og tilbud, for eksempel om et betalt abonnement når arbeidsområdet ditt når en abonnementsgrense) bare hvis du har samtykket ved å krysse av i boksen på registreringsskjemaet. Boksen er ikke avkrysset på forhånd, og vi leser ikke samtykke ut av noe annet. Det rettslige grunnlaget er ditt <b>samtykke</b> (GDPR artikkel 6 nr. 1 bokstav a), som markedsføringsloven § 15 også krever for markedsføring på e-post.",
     "marketingP2": "For å velge hvilken av noen få meldinger vi sender, og når, bruker vi konto- og bruksdata: for eksempel at arbeidsområdet ditt har nådd en abonnementsgrense, hvor mange innbokser du har koblet til, abonnementet ditt og når du registrerte deg. Vi bruker aldri innholdet i e-postkassen din, eller noe som er avledet av det, til dette.",
-    "marketingP3": "Du kan trekke tilbake samtykket når som helst med avmeldingslenken i hver markedsførings-e-post. Det gjelder med umiddelbar virkning og påvirker ikke kvitteringer, sikkerhetsvarsler eller annen e-post vi må sende for å drifte kontoen din. Vi lagrer når du samtykket og hvilken ordlyd du så, slik at vi kan dokumentere at samtykke ble gitt."
+    "marketingP3": "Du kan trekke tilbake samtykket når som helst med avmeldingslenken i hver markedsførings-e-post. Det gjelder med umiddelbar virkning og påvirker ikke kvitteringer, sikkerhetsvarsler eller annen e-post vi må sende for å drifte kontoen din. Vi lagrer når du samtykket og hvilken ordlyd du så, slik at vi kan dokumentere at samtykke ble gitt.",
+    "setupHelpTitle": "3.10 E-post som hjelper deg å fullføre oppsettet",
+    "setupHelpP": "Hvis du begynner å sette opp MCPEmails og står fast, kan vi sende deg opptil to korte e-poster som hjelper deg å fullføre: for eksempel etter en mislykket tilkobling, med løsningen på feilen vi så, eller etter at du har koblet til en innboks, men ennå ikke brukt den fra AI-appen din. For å velge hvilken e-post vi sender og når, bruker vi oppsettstegene som er registrert for arbeidsområdet ditt, for eksempel hvilken leverandør som feilet og hvorfor, og hvilken AI-app du valgte. Vi bruker aldri innholdet i innboksen din til dette, og disse e-postene inneholder ingen tilbud. Det rettslige grunnlaget er vår <b>berettigede interesse</b> i å hjelpe deg å bruke tjenesten du registrerte deg for. Hver av disse e-postene har en avmeldingslenke som stopper dem med umiddelbar virkning."
   },
   "dataRetention": {
     "title": "4. Datalagring",
@@ -113,9 +115,9 @@
         "reason": "Revisjonsspor; gjenopprettingsvindu"
       },
       {
-        "category": "MCP-verktøykall revisjonslogger",
-        "period": "7 dager (Free); 90 dager (Agent); 1 år (Scale)",
-        "reason": "Sikkerhetsrevisjon; abonnementsfunksjon"
+        "category": "Aktivitetslogg for MCP-verktøykall",
+        "period": "Opptil 90 dager på Free og Personal, opptil 2 år på Pro og Business",
+        "reason": "Sikkerhet; brukshistorikk i dashbordet"
       },
       {
         "category": "Aggregerte bruksmetrikker",
@@ -136,6 +138,11 @@
         "category": "Planlagte sendingsmeldinger",
         "period": "Frem til sendt; oppføring beholdes etterpå for revisjon",
         "reason": "Nødvendig for å levere meldinger du planlegger"
+      },
+      {
+        "category": "Sendinger som venter på godkjenning",
+        "period": "Kryptert mens de venter på en avgjørelse (høyst 24 timer); oppføringen beholdes etterpå som godkjenningshistorikk",
+        "reason": "Nødvendig for å vise meldingen til den som godkjenner, og sende den når den er godkjent"
       }
     ],
     "outro": "Når du sletter kontoen din, igangsetter vi sletting av alle personopplysninger innen 30 dager. Aggregert, ikke-personlig bruksstatistikk avledet fra kontoen din kan oppbevares utover denne perioden i anonymisert form."
@@ -149,11 +156,14 @@
     "thData": "Data som behandles",
     "thLocation": "Plassering",
     "supabasePurpose": "Database, autentisering, edge-funksjoner",
-    "supabaseData": "Kontodata, arbeidsområdekonfigurasjon, revisjonslogger",
-    "supabaseLocation": "EU (Stockholm, Sverige)",
-    "vercelPurpose": "Webhotell, CDN",
-    "vercelData": "HTTP-forespørselsmetadata; ingen e-postinnhold",
-    "vercelLocation": "Globalt edge (nærmeste region til brukeren)",
+    "supabaseData": "Kontodata, arbeidsområdekonfigurasjon, revisjonslogger; e-postinnhold passerer gjennom direkte og lagres bare slik avsnitt 2.5 beskriver",
+    "supabaseLocation": "Data lagres i EU (Stockholm, Sverige). Edge-funksjonene kjører i USA (øst) og behandler e-post direkte",
+    "vercelPurpose": "Webhotell, CDN, MCP-endepunkt",
+    "vercelData": "HTTP-forespørselsmetadata; MCP-forespørsler og -svar, inkludert e-postinnhold, passerer gjennom uten å lagres",
+    "vercelLocation": "Globalt CDN; serverfunksjoner i USA (øst) og EU (Stockholm, Sverige)",
+    "relayPurpose": "E-postrelé for de få leverandørene som avviser tilkoblinger fra skyadresser",
+    "relayData": "Den krypterte IMAP- og SMTP-tilkoblingen til disse leverandørene, sendt gjennom som en tunnel med TLS hele veien: reléet kan ikke lese e-post eller passord",
+    "relayLocation": "Tyskland (EU)",
     "stripeProvider": "(kun betalte abonnementer)",
     "stripePurpose": "Betalingsbehandling",
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
@@ -171,7 +181,7 @@
     "title": "6. Internasjonale dataoverføringer",
     "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
     "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
-    "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region."
+    "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region. Ikke alle serverne som håndterer forespørslene fra agenten din, står i EU: edge-funksjonene som kobler til innboksen din, kjører i USA (østkysten), og det samme gjør delen av nettstedet vårt som videresender disse forespørslene. E-postinnhold passerer gjennom dem direkte for å besvare forespørselen og lagres ikke der. Kryptert legitimasjon dekrypteres i det samme amerikanske miljøet mens forespørselen pågår."
   },
   "yourRights": {
     "title": "7. Dine rettigheter",
@@ -214,7 +224,7 @@
     "intro": "Vi tar sikkerheten til dataene dine på alvor og iverksetter egnede tekniske og organisatoriske tiltak, inkludert:",
     "measures": [
       "Alle data under overføring krypteres med TLS 1.2 eller høyere. Tilkoblinger som ikke støtter TLS, avvises.",
-      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen lagres i en separat Supabase Vault-instans og er aldri plassert sammen med de krypterte dataene.",
+      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen holdes som en serverhemmelighet i applikasjonsmiljøet vårt, adskilt fra databasen, og lagres aldri sammen med de krypterte dataene.",
       "API-nøkler hashes med SHA-256 før lagring. Den rå nøkkelen kan ikke gjenopprettes fra hashen.",
       "Databasetilgang er beskyttet av Row-Level Security (RLS)-policyer som hindrer ett arbeidsområde i å få tilgang til et annets data, selv ved en feil i spørringslogikken.",
       "Administrativ tilgang til produksjonsinfrastruktur krever flerfaktorautentisering og logges."

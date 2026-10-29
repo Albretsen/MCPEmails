@@ -105,6 +105,29 @@ export type GrowthActivationFunnelRow = {
 };
 
 /**
+ * Where the workspaces that never made a tool call stopped.
+ * `activation_segments(days)` (service role only). One segment per workspace,
+ * first match wins, all six rows always returned; `workspaces` over the six
+ * rows sums to `total_workspaces`. The activation-rescue stages written from
+ * the dashboard (`connect_fix_shown`, `connect_fix_link_clicked`,
+ * `first_call_prompt_copied`, `waiting_state_shown`) are on the
+ * `ProductFunnelEvent` stage union in product-funnel.ts, not here: this file
+ * types what the growth RPCs return.
+ */
+export type ActivationSegmentRow = {
+  segment_index: number;
+  segment:
+    | 'called'
+    | 'connected_idle'
+    | 'failed'
+    | 'started_no_result'
+    | 'picked_provider'
+    | 'no_attempt';
+  workspaces: number;
+  total_workspaces: number;
+};
+
+/**
  * Per-provider connection funnel. `growth_provider_funnel(p_days)`.
  * `attempts`/`successes`/`failures` count `product_funnel_events` rows at
  * stage `inbox_connection`; the workspace counts are the deduplicated version,
@@ -397,11 +420,23 @@ export type GrowthUserSignupDayRow = {
 };
 
 /**
+ * One UTC day of external signups for the kiosk's today projection. The last
+ * row is today, so far. `by_now` counts the day's signups that arrived before
+ * the UTC time of day at `as_of`; see growth_signup_pace in the migration.
+ */
+export type GrowthSignupPaceRow = {
+  day: string;
+  new_users: number;
+  by_now: number;
+  as_of: string;
+};
+
+/**
  * The Free action allowance, one row of counts.
  * `growth_usage_cap_overview(p_window_days, p_internal_emails, p_internal_domains)`.
  *
  * The state counts are a snapshot of now, bucketed by the SAME rules as
- * `workspace_action_allowance()` (150 per UTC month, first 7 days uncounted,
+ * `workspace_action_allowance()` (150 per UTC month, first 3 days uncounted,
  * exempt for every workspace that existed at launch) written set-based in
  * migration 20260912210000. Everything else is over the window. Internal
  * accounts are excluded in SQL, so these never include our own traffic.
@@ -415,7 +450,7 @@ export type GrowthUserSignupDayRow = {
  * ones included.
  */
 export type GrowthUsageCapOverviewRow = {
-  /** Non-exempt Free, inside the first 7 days: nothing is counted yet. */
+  /** Non-exempt Free, inside the first 3 days: nothing is counted yet. */
   in_grace: number;
   /** Counting, under 50% of the allowance. */
   under_half: number;
@@ -538,4 +573,121 @@ export type GrowthMailRelayDayRow = {
   ok: number;
   relay_down: number;
   host_refused: number;
+};
+
+/**
+ * One (period, client family) row of `growth_draft_card_stats`. Customer
+ * workspaces only. See supabase/migrations/20261027120000_draft_events.sql.
+ */
+export type GrowthDraftCardStatsRow = {
+  period: 'before' | 'after';
+  family: 'claude' | 'claude_code' | 'chatgpt' | 'other';
+  /** New drafts (create + reply), raw. */
+  drafted: number;
+  /** New drafts whose result carried the card (offered; whether it was drawn depends on the client). */
+  drafted_card: number;
+  saved: number;
+  sent_card: number;
+  sent_agent: number;
+  deleted_card: number;
+  deleted_agent: number;
+  /** draft_editor_hide calls that turned the card off. */
+  hidden: number;
+  workspaces: number;
+  card_workspaces: number;
+  /** activity_log rows for draft* tools, and how many failed. Raw. */
+  calls: number;
+  errors: number;
+  /**
+   * Per draft: draft_lineage lines opened in the window. `lines` is raw; the
+   * `w_` fields weight each workspace to at most 20 lines (50 tool calls).
+   */
+  lines: number;
+  w_lines: number;
+  /** Lines saved, sent or discarded in the card at any time. */
+  w_touched: number;
+  w_deleted: number;
+  /** Lines at least 24 hours old, and of those, sent within 24 hours. */
+  mature_lines: number;
+  w_mature: number;
+  w_sent_day: number;
+  w_calls: number;
+  w_errors: number;
+  eligible_card: number;
+  returned_card: number;
+  eligible_plain: number;
+  returned_plain: number;
+  /**
+   * The line counts again, only for workspaces that drafted through a key whose
+   * tool list carried the card (api_keys.card_listed). Old connections loaded
+   * before the release draw no card, so they are left out of "used the card".
+   */
+  lines_listed: number;
+  w_lines_listed: number;
+  w_touched_listed: number;
+  /** The day-old counts again, for the same workspaces as lines_listed. */
+  mature_listed: number;
+  w_mature_listed: number;
+  w_sent_day_listed: number;
+};
+
+/** Customer drafts per UTC day, zero-filled. `growth_draft_card_daily`. */
+export type GrowthDraftCardDayRow = {
+  day: string;
+  drafted: number;
+  saved: number;
+  sent_card: number;
+  sent_agent: number;
+  hidden: number;
+};
+
+/** Who can get the card now. `growth_draft_card_reach`. */
+export type GrowthDraftCardReachRow = {
+  workspaces: number;
+  enabled: number;
+  hidden_workspaces: number;
+  hidden_inboxes: number;
+  enabled_inboxes: number;
+};
+
+/** growth_onboarding_arms: one arm of the onb_flow x onb_convert test, enrolled customers only. */
+export type GrowthOnboardingArmRow = {
+  flow: string;
+  convert: string;
+  assigned: number;
+  first_assigned_at: string | null;
+  mature_1d: number;
+  inbox_1d: number;
+  value_1d: number;
+  mature_3d: number;
+  draft_3d: number;
+  mature_7d: number;
+  habit_7d: number;
+  mature_30d: number;
+  paid_30d: number;
+  paid_any: number;
+  connect_ws: number;
+  connect_failed_ws: number;
+  completed: number;
+};
+
+/** growth_onboarding_steps: category null is the stage's total over every category. */
+export type GrowthOnboardingStepRow = {
+  flow: string;
+  convert: string;
+  stage: string;
+  category: string | null;
+  workspaces: number;
+};
+
+/** growth_onboarding_daily: new customer workspaces per UTC day and how many were enrolled. */
+export type GrowthOnboardingDayRow = {
+  day: string;
+  created: number;
+  flow_control: number;
+  flow_new: number;
+  convert_off: number;
+  convert_on: number;
+  mature_1d: number;
+  value_1d: number;
 };

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Ayuda y soporte",
-    "description": "Respuestas a las dudas más comunes sobre conexión, clientes y facturación, y un formulario para escribir a quienes hacen MCP Emails."
+    "description": "Respuestas a las dudas más comunes sobre conexión, clientes y facturación, y un formulario para escribir a quienes hacen MCPEmails."
   },
   "hero": {
     "eyebrow": "Ayuda",
@@ -100,14 +100,14 @@
     {
       "id": "assistant-sees-nothing",
       "title": "Conectado, pero el asistente no ve ningún correo",
-      "summary": "Suele ser un error en el buzón, un chat anterior al conector o un permiso desactivado.",
-      "keywords": "sin herramientas nada vacío conector no funciona claude chatgpt cursor modo desarrollador permisos inbox_list",
+      "summary": "El buzón está conectado, pero tu asistente dice que no tiene herramientas de correo o no encuentra nada.",
+      "keywords": "sin herramientas nada vacío conector no funciona claude chatgpt cursor modo desarrollador permisos inbox_list plugin @",
       "steps": [
-        "En Bandejas de entrada, comprueba que el buzón muestra Conectada. Si no, reconéctalo.",
-        "Empieza un chat nuevo después de añadir el conector.",
-        "Inicia sesión en el conector con la cuenta que tiene el buzón.",
-        "En Claves de API, elige Editar acceso y revisa sus permisos y bandejas.",
-        "Pide primero al asistente que liste tus bandejas."
+        "Abre Bandejas de entrada en el panel y comprueba que el buzón aparece sin errores. Si muestra uno, vuelve a conectarlo.",
+        "Empieza un chat nuevo después de añadir el conector. En Claude, comprueba que MCPEmails está activado en + y Conectores. En ChatGPT, escribe @ y elige MCPEmails, y vuelve a mencionarlo con @ cuando una pregunta de seguimiento necesite tu correo.",
+        "Autoriza el conector con la misma cuenta de MCPEmails que tiene el buzón.",
+        "Tu asistente solo ve las herramientas para las que tiene permiso el conector o la clave de API. Si dejaste un permiso sin marcar, quita el conector y vuelve a añadirlo.",
+        "Pide al asistente que liste primero tus bandejas. El correo se obtiene cuando el asistente lo pide, así que nada llega por sí solo."
       ],
       "links": [
         { "label": "Guías de clientes", "href": "/docs/clients" },
@@ -120,10 +120,11 @@
       "summary": "Free incluye 150 acciones de correo al mes. Después, las acciones esperan hasta el día 1 (UTC).",
       "keywords": "límite de uso cuota tope 150 acciones plan gratuito free rechazado reinicio",
       "steps": [
-        "Mira lo que has usado en Uso.",
-        "Listar bandejas y las acciones del panel nunca cuentan. Tus primeros 7 días son gratis.",
-        "Reintentar no sirve. Las automatizaciones en pausa se reanudan el día 1.",
-        "Personal, Pro y Team no tienen tope mensual, sujeto a un uso justo."
+        "Mira cuántas acciones has usado en Uso, dentro del panel.",
+        "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 3 días tras el registro.",
+        "Reintentar no sirve. El límite se reinicia el día 1 del mes siguiente (UTC) y las automatizaciones en pausa se reanudan solas.",
+        "Personal, Pro y Business tienen acciones ilimitadas, sujeto a un uso justo.",
+        "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."
       ],
       "links": [
         { "label": "Preguntas sobre precios", "href": "/pricing#faq" },

@@ -1,13 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" = production ] || exit 0; B=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}; git merge-base --is-ancestor $B HEAD || B=HEAD^; git diff --quiet $B HEAD -- . ../../packages ../../package*.json ../../supabase/functions/mcp-server/search-translate.ts",
   "functions": {
-    "app/api/mcp/route.ts": { "regions": ["iad1"] },
     "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/imap/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/app-password/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/fastmail-app-password/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/[id]/check/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/[id]/connection/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/[id]/folders/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/[id]/route.ts": { "regions": ["iad1"] },
+    "app/api/onboarding/inbox-proof/route.ts": { "regions": ["iad1"] },
     "app/auth/gmail/callback/route.ts": { "regions": ["iad1"] },
     "app/auth/outlook/callback/route.ts": { "regions": ["iad1"] },
     "app/auth/outlook/admin-consent/route.ts": { "regions": ["iad1"] },
@@ -20,7 +23,11 @@
     "app/approvals/**": { "regions": ["arn1"] },
     "app/invite/**": { "regions": ["arn1"] },
     "app/signup/**": { "regions": ["arn1"] },
+    "app/onboarding/**": { "regions": ["arn1"] },
+    "app/r/**": { "regions": ["arn1"] },
     "app/(auth)/**": { "regions": ["arn1"] },
+    "app/u/**": { "regions": ["arn1"] },
+    "app/upgrade/done/**": { "regions": ["arn1"] },
     "app/**": { "regions": ["iad1"] }
   }
 }

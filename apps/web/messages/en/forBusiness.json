@@ -7,7 +7,7 @@
     "eyebrow": "For the person who runs the company's email",
     "titleLine1": "Every company mailbox,",
     "titleLine2": "one operator, one agent",
-    "lead": "info@, sales@, invoices@, support@ and your own address usually land on the same person. mcpemails connects all of them to Claude, Cursor, ChatGPT or any MCP client, so you read, answer, forward and file across every address from one conversation. It works with whoever hosts your mail, and you can hold every outgoing message for your approval.",
+    "lead": "info@, sales@, invoices@, support@ and your own address usually land on the same person. MCPEmails connects all of them to Claude, Cursor, ChatGPT or any MCP client, so you read, answer, forward and file across every address from one conversation. It works with whoever hosts your mail, and you can hold every outgoing message for your approval.",
     "ctaPrimary": "Connect your first mailbox free",
     "ctaSecondary": "See what it does"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Any host",
     "title": "Connect every mailbox the company runs, whoever hosts it",
-    "sub": "Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace connect with an app password or by signing in with Google. Microsoft 365 and Outlook connect by signing in with Microsoft; on a company Microsoft 365 account, your IT admin may need to approve mcpemails once for the whole organisation. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.",
+    "sub": "Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace connect with a Google app password. Microsoft 365 and Outlook connect by signing in with Microsoft; on a company Microsoft 365 account, your IT admin may need to approve MCPEmails once for the whole organisation. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.",
     "ctaImap": "Connect any IMAP mailbox",
     "ctaGmail": "Connect Gmail or Google Workspace",
     "ctaMicrosoft": "Connect Microsoft 365",
@@ -110,18 +110,18 @@
     "items": {
       "free": {
         "h": "Free: one mailbox",
-        "p": "Start with the busiest address. 150 email actions a month, the first 7 days uncounted, no card required."
+        "p": "Start with the busiest address. 150 email actions a month, the first 3 days uncounted, no card required."
       },
       "personal": {
         "h": "Personal, $9 a month: up to three",
-        "p": "For a company with two or three addresses. No monthly action cap, a higher burst rate limit and email support."
+        "p": "For a company with two or three addresses. Unlimited email actions, a higher burst rate limit and email support."
       },
       "pro": {
-        "h": "Pro, $15 a month: four or more",
-        "p": "Every mailbox the business runs, with no limit on how many, still on one login. The plan for a company with an address per department."
+        "h": "Pro, $15 a month: four to ten",
+        "p": "Up to 10 mailboxes, still on one login. The plan for one person running a business with an address per department."
       }
     },
-    "note": "Team, at $79 a month, is for when several people each need their own login, with roles and a separate workspace per client.",
+    "note": "Business, at $39 a month, includes 10 mailboxes and charges $3 a month for each one after that. Members with roles cost nothing extra, and you can run a separate workspace per company or client.",
     "cta": "Compare all plans"
   },
   "faq": {
@@ -131,11 +131,11 @@
     "items": [
       {
         "q": "We are a company, not an individual. Is Pro really the right plan?",
-        "a": "Yes, if one person operates the mailboxes. Pro is one login with no limit on connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Team is for when several people each need to sign in, with roles and a separate workspace per client."
+        "a": "Yes, if one person operates the mailboxes. Pro is one login with up to 10 connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Business is for more than 10 mailboxes or several people who each sign in, with roles and a separate workspace per client."
       },
       {
         "q": "Our email is with our web host, not Gmail. Will it work?",
-        "a": "Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way. If your company mail is on Microsoft 365, connect it as Outlook instead: you sign in with Microsoft, and your IT admin may need to approve mcpemails once for the whole organisation."
+        "a": "Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way. If your company mail is on Microsoft 365, connect it as Outlook instead: you sign in with Microsoft, and your IT admin may need to approve MCPEmails once for the whole organisation."
       },
       {
         "q": "Does the agent send from the right address?",
@@ -151,7 +151,7 @@
       },
       {
         "q": "What if a colleague needs access too?",
-        "a": "Free, Personal and Pro are single-login plans. When a second person needs a login of their own, Team adds members with roles. Until then, one operator on Pro covers every mailbox."
+        "a": "Free, Personal and Pro are single-login plans. When a second person needs a login of their own, Business adds members with roles at no extra cost per person. Until then, one operator on Pro covers up to 10 mailboxes."
       }
     ]
   },

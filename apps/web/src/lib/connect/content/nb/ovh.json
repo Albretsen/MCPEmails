@@ -24,7 +24,40 @@
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+    "answer": "Claude når ikke OVH på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
+  },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "De to første radene gjelder MX Plan. Tallet 4 i ex4 og pro4 er ditt eget servernummer, som står i OVHcloud Control Panel under General information. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
   },
   "persona": {
     "intro": "Flere bedriftspostkasser hos OVH?",
@@ -33,19 +66,19 @@
   },
   "method": {
     "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
-    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVHs kontrollpanel, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, og derfor henger standardinnstillingene for delt hosting rett og slett mot den. mcpemails gjenkjenner begge og velger riktig par."
+    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVHs kontrollpanel, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, og derfor henger standardinnstillingene for delt hosting rett og slett mot den. MCPEmails gjenkjenner begge og velger riktig par."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent OVH-postkassepassordet ditt",
       "p": "I OVHs kontrollpanel åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for den postkassen hvis den ikke er ssl0.ovh.net."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg til OVH-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -64,7 +97,7 @@
     },
     {
       "h": "Ingenting i adressen din forteller hvilket OVH-produkt du har",
-      "p": "Alle tre produktene leverer e-post på ditt eget domene, så <code>you@yourdomain.fr</code> ser lik ut uansett hvilket den ligger på. Svaret finnes i OVHcloud Control Panel under Web Cloud, der MX Plan vises under Emails, Email Pro har sin egen seksjon og Hosted Exchange en annen. Sjekk det først, for alle andre innstillinger avhenger av det. Gjaldt OVH-bestillingen din Microsoft 365 i stedet for OVHs egen Hosted Exchange, ligger postkassen på Microsofts servere, så koble den til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP. En IT-administrator kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende."
+      "p": "Alle tre produktene leverer e-post på ditt eget domene, så <code>you@yourdomain.fr</code> ser lik ut uansett hvilket den ligger på. Svaret finnes i OVHcloud Control Panel under Web Cloud, der MX Plan vises under Emails, Email Pro har sin egen seksjon og Hosted Exchange en annen. Sjekk det først, for alle andre innstillinger avhenger av det. Gjaldt OVH-bestillingen din Microsoft 365 i stedet for OVHs egen Hosted Exchange, ligger postkassen på Microsofts servere, så koble den til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP. En IT-administrator kan måtte godkjenne MCPEmails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende."
     },
     {
       "h": "MX Plan kjører Dovecot uten MOVE, UIDPLUS eller SPECIAL-USE",
@@ -79,7 +112,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med OVH-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd OVHcloud-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Det ene du må finne ut først, er hvilket OVH-e-postprodukt adressen tilhører, fordi vertsnavnene er helt forskjellige mellom dem."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd OVHcloud-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Det ene du må finne ut først, er hvilket OVH-e-postprodukt adressen tilhører, fordi vertsnavnene er helt forskjellige mellom dem."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for OVH?",
@@ -104,7 +137,7 @@
   ],
   "ctaBand": {
     "title": "Samle alle OVH-postkassene på én agent",
-    "sub": "Koble til den første OVH-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første OVH-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra OVHcloud?",

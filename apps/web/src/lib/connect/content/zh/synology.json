@@ -21,7 +21,7 @@
     "titleLine1": "将 Synology MailPlus 连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "你的邮件存放在你自己楼里的一台设备上。AI 代理可以通过任何邮件客户端都在用的 IMAP 处理它，前提是这台 NAS 确实能从外部访问，而这恰恰是大多数人从未需要安排过的部分。",
-    "answer": "Claude 无法自行连接 Synology NAS。mcpemails 是一个托管 MCP 服务器，通过 993 端口的 IMAP，在你的 NAS 所响应的公网名称上，使用在 MailPlus 中已激活账户的 DSM 密码连接 MailPlus Server，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。由于服务器是一台 NAS 而不是托管服务，需要先解决两件事：可访问性和证书。993 端口必须从互联网转发到 NAS，分配给 MailPlus Server 服务的证书也必须对你连接的名称有效。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Synology NAS。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的 IMAP，在你的 NAS 所响应的公网名称上，使用在 MailPlus 中已激活账户的 DSM 密码连接 MailPlus Server，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。由于服务器是一台 NAS 而不是托管服务，需要先解决两件事：可访问性和证书。993 端口必须从互联网转发到 NAS，分配给 MailPlus Server 服务的证书也必须对你连接的名称有效。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "MailPlus 账户的 DSM 密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "为 MailPlus Server 分配一个真正的证书",
-      "p": "在 Control Panel、Security、Certificate 中为该公网名称获取 Let's Encrypt 证书，然后通过证书的服务分配功能，让 <b>MailPlus Server</b> 使用它。获取证书并不会把它分配给任何东西。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入公网名称、完整邮件地址和 DSM 密码。"
+      "p": "在 Control Panel、Security、Certificate 中为该公网名称获取 Let's Encrypt 证书，然后通过证书的服务分配功能，让 <b>MailPlus Server</b> 使用它。获取证书并不会把它分配给任何东西。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入公网名称、完整邮件地址和 DSM 密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "局域网中的 NAS 对托管服务不可见，QuickConnect 也帮不上忙",
-      "p": "这是在尝试任何其他东西之前，就让大多数 Synology 连接止步的问题。托管 MCP 服务器会向 993 端口发起入站 TCP 连接，而位于 <code>192.168.1.20</code> 或只能通过 <code>diskstation.local</code> 访问的 NAS，没有任何你家外面的东西能拨通的地址。这里有四件具体的事会出错。第一，你需要在路由器上设置端口转发，把 TCP 993（以及用于发信的 465 或 587）转发到 NAS 的固定内网地址。第二，如果 ISP 的光猫本身就是路由器，而你在它后面又加了自己的路由器，你就处于两层 NAT 之后，只在内层设置转发毫无作用：外层设备也必须转发，或者切换到桥接模式。第三，越来越多的家庭和移动 ISP 把用户放在运营商级 NAT 之后，这种情况下根本没有可供转发的公网 IPv4 地址，你这边的任何配置都无法创造一个。请向 ISP 申请公网地址，或者接受这条路走不通。第四，QuickConnect 也救不了这一切：它中继的是 DSM 自己的网页应用，而不是任意 TCP，所以 <code>quickconnect.to</code> 地址不是邮件主机名，将来也不会是。请改为在 Control Panel、External Access 中设置 DDNS，并在更改其他任何东西之前，先从你自己的网络之外验证。如果你完全不想暴露 NAS，mcpemails 可以自托管在你的网络中，让 IMAP 会话留在 NAS 所在的局域网内。"
+      "p": "这是在尝试任何其他东西之前，就让大多数 Synology 连接止步的问题。托管 MCP 服务器会向 993 端口发起入站 TCP 连接，而位于 <code>192.168.1.20</code> 或只能通过 <code>diskstation.local</code> 访问的 NAS，没有任何你家外面的东西能拨通的地址。这里有四件具体的事会出错。第一，你需要在路由器上设置端口转发，把 TCP 993（以及用于发信的 465 或 587）转发到 NAS 的固定内网地址。第二，如果 ISP 的光猫本身就是路由器，而你在它后面又加了自己的路由器，你就处于两层 NAT 之后，只在内层设置转发毫无作用：外层设备也必须转发，或者切换到桥接模式。第三，越来越多的家庭和移动 ISP 把用户放在运营商级 NAT 之后，这种情况下根本没有可供转发的公网 IPv4 地址，你这边的任何配置都无法创造一个。请向 ISP 申请公网地址，或者接受这条路走不通。第四，QuickConnect 也救不了这一切：它中继的是 DSM 自己的网页应用，而不是任意 TCP，所以 <code>quickconnect.to</code> 地址不是邮件主机名，将来也不会是。请改为在 Control Panel、External Access 中设置 DDNS，并在更改其他任何东西之前，先从你自己的网络之外验证。如果你完全不想暴露 NAS，MCPEmails 可以自托管在你的网络中，让 IMAP 会话留在 NAS 所在的局域网内。"
     },
     {
       "h": "获取证书不等于把它交给 MailPlus",
@@ -70,7 +70,7 @@
   "faq": [
     {
       "q": "Claude 能用 Synology MailPlus 吗？",
-      "a": "不能单独使用。Claude 没有 Synology 连接器，也无法向 NAS 打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 MailPlus Server 后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用，前提是 NAS 能从互联网访问。"
+      "a": "不能单独使用。Claude 没有 Synology 连接器，也无法向 NAS 打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 MailPlus Server 后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用，前提是 NAS 能从互联网访问。"
     },
     {
       "q": "Synology MailPlus 的 IMAP 和 SMTP 设置是什么？",
@@ -78,7 +78,7 @@
     },
     {
       "q": "我能在不把 NAS 暴露到互联网的情况下连接 MailPlus 吗？",
-      "a": "连接托管服务不行。mcpemails 以入站方式连接 993 端口，所以没有外部路由的 NAS 无法访问，而 QuickConnect 也不承载 IMAP。替代方案是在你自己的网络中自托管 mcpemails，它通过局域网访问 NAS，邮件服务器的任何部分都不会公开可见。"
+      "a": "连接托管服务不行。MCPEmails 以入站方式连接 993 端口，所以没有外部路由的 NAS 无法访问，而 QuickConnect 也不承载 IMAP。替代方案是在你自己的网络中自托管 MCPEmails，它通过局域网访问 NAS，邮件服务器的任何部分都不会公开可见。"
     },
     {
       "q": "为什么我的 MailPlus 密码被拒绝？",

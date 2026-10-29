@@ -4,9 +4,11 @@ import { getAllPosts, getAuthor, getLocalizedPost } from '@/lib/blog/posts';
 import { readingTime } from '@/lib/blog/markdown';
 import { blogPostCanonicalLocale } from '@/lib/blog/seo.mjs';
 import BlogIndexClient from '../../../components/marketing/BlogIndexClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'blog' });
   const title = t('meta.title');
   const description = t('meta.description');
@@ -19,13 +21,13 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/blog'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
     },
   };
@@ -33,6 +35,7 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogIndexPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'blog' });
 
@@ -66,7 +69,7 @@ export default async function BlogIndexPage({ params }) {
     inLanguage: locale,
     publisher: {
       '@type': 'Organization',
-      name: 'mcpemails',
+      name: 'MCPEmails',
       url: APP_URL,
       logo: { '@type': 'ImageObject', url: `${APP_URL}/logo-mark.svg` },
     },

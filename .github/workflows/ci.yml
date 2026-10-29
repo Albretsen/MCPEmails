@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, staging]
   # WHY A PUSH TRIGGER (2026-09-17). With `pull_request` alone this pipeline
   # had never run for any change that reached production, because nothing here
   # goes through a PR: work is integrated locally and pushed straight to main.
@@ -16,8 +16,11 @@ on:
   # branches in this repo do not each start a build. The `concurrency` group
   # below keys on `github.ref`, and a push to main (`refs/heads/main`) and a
   # PR (`refs/pull/N/merge`) are different refs, so neither cancels the other.
+  #
+  # `staging` (2026-10-26) is the long-lived branch the staging Vercel projects
+  # build from. They gate on the same "CI passed" check, so it runs there too.
   push:
-    branches: [main]
+    branches: [main, staging]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -112,6 +115,8 @@ jobs:
       # prod, still fails.
       - name: audit script self-test
         run: node --test scripts/audit-with-exceptions.test.mjs
+      - name: staging scripts self-test (Stripe sandbox + seed guards)
+        run: node --test scripts/staging-lib.test.mjs
       - name: npm audit (fails on high or critical, dated exceptions only)
         run: node scripts/audit-with-exceptions.mjs
 
@@ -164,30 +169,23 @@ jobs:
   # nowhere else. That is the card the user types an unsent email into: its
   # tests are what stand between a refactor and a draft being rewritten on save.
   #
-  # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs, and
-  # that runs THIRTEEN independent suites and reports all of them: the scripted host
-  # (state-machine.mjs), hardening (hardening.mjs), the storage audit
-  # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs), the
-  # resync suite (draft-sync.test.mjs, 39 checks), the render suite
-  # (card-render.test.mjs, 27 checks), the draft QA suite (draft-qa.test.mjs:
-  # failed actions, remounts, unsaved edits, focus, recipients) and the draft
-  # polish suite (draft-polish.test.mjs: recipient parsing, focus, fullscreen,
-  # copy, the formatted preview, the server's new draft fields), plus the draft
-  # state, draft UX and draft ended suites (draft-state, draft-ux and
-  # draft-ended .test.mjs), the model context suite (model-context.test.mjs) and
-  # the draft send safety suite (draft-send-safety.test.mjs). Every suite
-  # bundles `src/` with esbuild and drives the SHIPPED functions, so a green run
-  # here means the code that goes into the card is the code that passed. The
-  # first four need no browser at all; the rest use jsdom, because what
-  # they pin only exists in a mounted component — a teardown landing between a
-  # new envelope and the effect that would disarm the saver, and a card that
-  # renders nothing and so reports a zero height to the host. The render suite evaluates the real `main.tsx`, so it
-  # also covers that module's composition order. Runtime is a couple of seconds.
+  # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs. It
+  # runs every suite in its SUITES list (eighteen on 2026-10-20: the scripted
+  # host, hardening, the storage audit, the sanitizer's layer 1, and the draft
+  # body, resync, render, QA, polish, state, UX, ended, send safety, formatting,
+  # quote, layout, fields and model context suites) and reports all of them.
+  # Every suite bundles `src/` with esbuild and drives the SHIPPED functions,
+  # so a green run here means the code that goes into the card is the code that
+  # passed. The DOM-free suites need no browser; the rest use jsdom, because
+  # what they pin only exists in a mounted component, and the render suite
+  # evaluates the real `main.tsx`, so it also covers that module's composition
+  # order.
   #
-  # The suite count is load-bearing: verify.mjs prints "N/N suites passed", and
-  # it exists because the old `&&` chain let one crashing suite hide the findings
-  # of every suite behind it. If that line ever says fewer than thirteen, a suite
-  # was dropped rather than fixed.
+  # NO SUITE COUNT TO KEEP IN STEP. verify.mjs prints "N/N suites passed" (it
+  # exists because the old `&&` chain let one crashing suite hide the findings
+  # of every suite behind it), and it fails when a harness/*.test.mjs file is
+  # missing from SUITES, so a dropped or forgotten suite is an error rather
+  # than a number someone has to notice. This comment used to say thirteen.
   #
   # WHY `npm ci` AT THE ROOT. apps/mcp-app is an npm workspace (root
   # package.json "workspaces": ["apps/*"]) with no lockfile of its own, exactly
@@ -224,23 +222,30 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (thirteen suites via harness/verify.mjs)
+      - name: Run card tests (harness/verify.mjs, DOM suites serial, the rest alongside)
         run: cd apps/mcp-app && npm test
       # The card ships through the generated file
       # supabase/functions/mcp-server/ui/review-card.html.ts, not through src.
       # The tests above build their own bundles from src, so a change to src
       # without a regenerate would pass CI and ship the old card. Rebuild it
-      # here and fail if anything under ui/ differs or appears. Checked
+      # here and fail if anything under ui/ differs or appears.
+      #
+      # Runs on EVERY change, not on a path filter, because the inputs are not
+      # only apps/mcp-app: the card imports
+      # supabase/functions/mcp-server/html-text-merge.ts and quoted-reply.ts,
+      # so a server-only PR can change the card. Rebuilding and diffing catches
+      # that too, whatever the input. Checked
       # 2026-10-15: the build is byte-identical across runs, on a clean tree and
       # on Node 22 and 24, so a diff here means the file is stale, not that the
       # build is flaky. The first CI run DID differ, and the cause was the
-      # install, not the platform: vite 8 minifies with esbuild, an optional
-      # peer that apps/mcp-app never declared, so npm 10 installed esbuild
-      # 0.28.2 next to vite while npm 11 (Node 24, this runner) skipped it and
-      # vite fell back to the root 0.25.12. One minifier choice changed and so
-      # did the build id. esbuild is now a declared devDependency, so every
-      # install minifies with the same version. If this fails on an unchanged
-      # tree again, compare `npm ls esbuild -w apps/mcp-app` here and locally.
+      # install, not the platform: vite 8 minified with esbuild then, an
+      # optional peer that apps/mcp-app never declared, so npm 10 installed
+      # esbuild 0.28.2 next to vite while npm 11 (Node 24, this runner) skipped
+      # it and vite fell back to the root 0.25.12. One minifier choice changed
+      # and so did the build id. Since 2026-10-20 the card minifies with Oxc,
+      # which ships inside vite 8 itself, so the minifier version follows the
+      # locked vite. If this fails on an unchanged tree again, compare
+      # `npm ls vite esbuild -w apps/mcp-app` here and locally.
       - name: Check the generated card matches src
         run: |
           cd apps/mcp-app && npm run build && cd ../..
@@ -291,6 +296,11 @@ jobs:
           # Match the version the functions are developed against; Deno's
           # minor releases have changed type-checking strictness before.
           deno-version: v2.x
+          # CACHE (2026-10-20). Keeps deno's global cache (the jsr:/npm:
+          # modules the type checks download) between runs, keyed by
+          # setup-deno on deno.lock, so a run without a lockfile change does
+          # not fetch them again.
+          cache: true
       # WHY --node-modules-dir=none ON BOTH DENO STEPS. The repo root has a
       # package.json, which puts deno into "bring your own node_modules" mode.
       # A fresh checkout here runs no `npm install`, so there is no
@@ -340,16 +350,20 @@ jobs:
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
         run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/client-api/
+      # Heads-up only, never fails: warns when a function's local sources pass
+      # ~4.5 MB, near the 5 MB cap of `functions deploy --use-api`. The deploy
+      # workflow then falls back to the Docker bundler on its own.
+      - name: Edge function source size
+        run: node scripts/edge-function-size.mjs mcp-server client-api
       # The remaining functions with no other coverage (2026-10-15). Until now
       # nothing type-checked them, including system-notify, which carries the
       # email-mute logic (MUTED_EVENT_TYPES) and had no check at all. The first run of this step found a real error in
-      # gmail-token-refresh (TS2769 on crypto.subtle.importKey), fixed in the
+      # gmail-token-refresh (TS2769, since removed: nothing called it), fixed in the
       # same change. Same flag as above, for the same reason.
       - name: Type check the other edge functions
         run: >-
           deno check --node-modules-dir=none
           supabase/functions/system-notify/index.ts
-          supabase/functions/gmail-token-refresh/index.ts
           supabase/functions/outlook-token-refresh/index.ts
           supabase/functions/synthetic-monitor/index.ts
 

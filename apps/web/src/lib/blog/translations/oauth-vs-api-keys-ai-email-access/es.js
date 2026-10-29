@@ -2,15 +2,15 @@ const translation = {
   title: 'OAuth o claves de API para el acceso de la IA al email: ¿cuál usar?',
   description: 'OAuth o claves de API para el acceso de la IA al email: usa OAuth en claude.ai, Claude Desktop y Cursor; usa una clave de API con alcance en Cline, JetBrains y scripts.',
   coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email — MCPEmails',
-  content: `Cuando conectas un agente de IA a tu email a través de MCP Emails, te autenticas de una de dos formas: con OAuth o con una clave de API. La respuesta corta es OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
+  content: `Cuando conectas un agente de IA a tu correo a través de MCPEmails, te autenticas de una de dos formas: con OAuth o con una clave de API. La respuesta corta es OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
 
-Esto no es un intercambio entre seguridad y comodidad en el que sacrificas una por la otra. Ambos caminos quedan limitados exactamente a \`read:email\`, \`send:email\`, o ambos, y los dos se pueden revocar desde el panel con un clic. La verdadera pregunta es cuál encaja con el cliente que realmente estás usando. Para tener la visión de conjunto de cómo se conecta todo esto, empieza por la guía principal, [cómo dar acceso al email a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
+Esto no es un intercambio entre seguridad y comodidad en el que sacrificas una por la otra. Ambos caminos quedan limitados exactamente a \`read:email\`, \`send:email\`, o ambos, y los dos se pueden revocar desde el panel con un clic. La verdadera pregunta es cuál encaja con el cliente que realmente estás usando. Para tener la visión de conjunto de cómo se conecta todo esto, empieza por la guía principal, [cómo dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
 
 ## La recomendación en 30 segundos
 
 Usa **OAuth** cuando tu cliente MCP lo admita. Hoy eso cubre claude.ai, Claude Desktop y Cursor. Pegas una URL, inicias sesión, apruebas los alcances y listo. Ningún secreto que copiar, ninguno que guardar, ninguno que filtrar.
 
-Usa una **clave de API** cuando tu cliente no tenga flujo de OAuth. Cline, el asistente de IA de JetBrains, un cron de Python, un script de shell que canaliza JSON-RPC por cURL: todos necesitan un token de portador. Creas una en el panel, le pones alcance, la copias una vez y la pasas en la cabecera \`Authorization\`.
+Usa una **clave de API** cuando tu cliente no tenga flujo de OAuth. Cline, el asistente de IA de JetBrains, un cron de Python, un script de shell que canaliza JSON-RPC por cURL: todos necesitan un token de portador. Creas una en el panel, defines su alcance, la copias una vez y la pasas en la cabecera \`Authorization\`.
 
 Si ambas opciones están disponibles para el mismo cliente, elige OAuth. Cuantos menos secretos en tus archivos de configuración, mejor; siempre es la opción por defecto más acertada.
 
@@ -18,7 +18,7 @@ Si ambas opciones están disponibles para el mismo cliente, elige OAuth. Cuantos
 
 OAuth es el camino sin clave. En lugar de generar tú una credencial y pegarla en algún sitio, el cliente y el servidor la negocian directamente, y el token vive dentro del cliente en vez de en un archivo de configuración que tú gestionas.
 
-En claude.ai, el flujo es: **Customize → Connectors → Add connector → pega la URL → Connect → inicia sesión y aprueba.** La URL es el endpoint MCP, \`https://mcpemails.com/api/mcp\`. Una vez que apruebas, el agente tiene acceso y nunca tocaste un secreto.
+En claude.ai, el flujo es: **Customize → Connectors → Add connector → pega la URL → Connect → inicia sesión y aprueba.** La URL es el endpoint MCP, \`https://mcpemails.com/api/mcp\`. Una vez que apruebas, el agente tiene acceso y tú no has tenido que tocar ningún secreto.
 
 Por debajo es OAuth estándar y actual:
 
@@ -27,22 +27,22 @@ Por debajo es OAuth estándar y actual:
 - **Los tokens se renuevan automáticamente** dentro de los clientes compatibles. No tienes que estar pendiente de ninguna caducidad.
 - **Los alcances son exactamente los que apruebas** en la pantalla de consentimiento: \`read:email\`, \`send:email\`, o ambos.
 
-La ventaja práctica: el token nunca aparece como una cadena de texto plano que podrías subir por accidente, registrar en un log o pegar en el chat equivocado. Cuando quieres cortar el acceso, revocas la conexión en el panel y el agente queda fuera de inmediato. Y sobre por qué esa revocación importa de verdad: la bandeja en sí queda intacta porque [el email nunca se almacena](/blog/why-email-never-stored-matters) en nuestro lado, para empezar.
+La ventaja práctica: el token nunca aparece como una cadena de texto plano que podrías subir por accidente a un repositorio, dejar en un registro o pegar en el chat equivocado. Cuando quieres cortar el acceso, revocas la conexión en el panel y el agente queda fuera de inmediato. Y en cuanto a por qué esa revocación es suficiente: la bandeja en sí queda intacta porque, de entrada, [el correo nunca se almacena](/blog/why-email-never-stored-matters) en nuestros servidores.
 
 ## Cómo funcionan las claves de API aquí
 
 Algunos clientes no hablan OAuth. No es un demérito. Cline, JetBrains y cualquier cosa que escribas tú mismo simplemente esperan un token de portador, que es la forma más antigua y perfectamente válida de autenticar una máquina.
 
-Creas una en **Dashboard → API Keys**:
+Creas una en **Panel → Claves de API**:
 
 1. Ponle a la clave un nombre que reconozcas luego (\`cline-laptop\`, \`triage-cron\`).
 2. Elige sus alcances: \`read:email\`, \`send:email\`, o ambos.
 3. Cópiala. Se muestra **una sola vez** y nunca más. Si la pierdes, creas una nueva.
 
-La clave tiene este aspecto, \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, y la pasas en cada petición:
+La clave tiene este aspecto, \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, y la pasas en cada petición:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Una llamada JSON-RPC en crudo para listar tus bandejas tiene este aspecto:
@@ -56,9 +56,9 @@ Una llamada JSON-RPC en crudo para listar tus bandejas tiene este aspecto:
 }
 \`\`\`
 
-Haz un POST a \`https://mcpemails.com/api/mcp\` con la cabecera de portador y recibes de vuelta tus bandejas conectadas y sus identificadores. A partir de ahí el agente llama a \`email_read\` (con \`action\` en list, read o search) y \`email_compose\` (\`action\` send, reply o forward): las herramientas básicas, más \`email_organize\`, \`folder\`, \`schedule\` y \`contact_search\` para banderas, carpetas, programación y contactos.
+Haz un POST a \`https://mcpemails.com/api/mcp\` con la cabecera de portador y recibes de vuelta tus bandejas conectadas y sus identificadores. A partir de ahí el agente llama a \`email_read\` (con \`action\` en list, read o search) y \`email_compose\` (\`action\` send, reply o forward): las herramientas básicas, más \`email_organize\`, \`folder\`, \`schedule\` y \`contact_search\` para marcas, carpetas, programación y contactos.
 
-Lo único que las claves de API te piden y OAuth no: trata la clave como una contraseña. Es un secreto de larga duración en texto plano. Ponla en una variable de entorno, no en código que vayas a subir a GitHub. Si una clave se filtra, revócala desde el panel y rota a una nueva.
+Lo único que las claves de API te piden y OAuth no: trata la clave como una contraseña. Es un secreto de larga duración en texto plano. Ponla en una variable de entorno, no en código que vayas a subir a GitHub. Si una clave se filtra, revócala desde el panel y sustitúyela por una nueva.
 
 ## Alcances: concede el mínimo, siempre
 
@@ -74,9 +74,9 @@ Tu cliente es claude.ai, Claude Desktop o Cursor. Quieres cero secretos en tu co
 
 ### Usa una clave de API si...
 
-Tu cliente no admite OAuth: Cline, JetBrains, los ejecutores de herramientas al estilo de OpenAI o tu propio código. Estás haciendo scripts contra el endpoint con cURL o un programa pequeño. Necesitas una credencial estable que un proceso sin interfaz pueda usar sin que una persona tenga que hacer clic en una pantalla de consentimiento. Una clave con alcance encaja perfecto aquí, y hay un recorrido completo para los [clientes Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
+Tu cliente no admite OAuth: Cline, JetBrains, los ejecutores de herramientas al estilo de OpenAI o tu propio código. Escribes scripts que llaman al endpoint con cURL o un programa pequeño. Necesitas una credencial estable que un proceso sin interfaz pueda usar sin que una persona tenga que hacer clic en una pantalla de consentimiento. Una clave con alcance encaja perfectamente aquí, y hay un recorrido completo para los [clientes Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Team). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
+Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada workspace tiene un tope por minuto fijado por su plan (consulta [precios](/pricing)), y cada clave de API recibe ventanas por minuto, por hora y por día dimensionadas según ese plan, así que una sola clave puede usar todo el tope y varias claves lo comparten. Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
 
 ## En resumen
 

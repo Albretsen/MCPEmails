@@ -1,6 +1,11 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import type { MailboxListEntry } from "./imap-folder-target.ts";
-import { LEGACY_SENT_FOLDER_CANDIDATES, SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
+import {
+  LEGACY_SENT_FOLDER_CANDIDATES,
+  SENT_COPY_NOT_SAVED_NOTE,
+  sentCopyCandidates,
+  smtpFilesSentCopyItself,
+} from "./sent-copy.ts";
 
 function listed(name: string, ...flags: string[]): MailboxListEntry {
   return { name, delimiter: "/", flags };
@@ -36,4 +41,13 @@ Deno.test("sent copy: an ambiguous layout falls back to the legacy order rather 
 Deno.test("sent copy: the note says the message went out and must not be resent", () => {
   assert(SENT_COPY_NOT_SAVED_NOTE.includes("was sent"));
   assert(SENT_COPY_NOT_SAVED_NOTE.includes("Do not resend"));
+});
+
+Deno.test("sent copy: Microsoft 365 and Outlook.com SMTP file their own copy, so none is APPENDed", () => {
+  for (const host of ["smtp.office365.com", "SMTP.Office365.com", " smtp-mail.outlook.com "]) {
+    assert(smtpFilesSentCopyItself(host), host);
+  }
+  // SMTP relay and Direct Send go to the tenant's MX host and save nothing.
+  assert(!smtpFilesSentCopyItself("contoso-com.mail.protection.outlook.com"));
+  assert(!smtpFilesSentCopyItself("smtp.office365.com.evil.test"));
 });

@@ -23,23 +23,23 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder a Migadu por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder a Migadu por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta Migadu: IMAP y la contraseña de tu buzón",
-    "body": "Migadu se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, que no es la contraseña de tu cuenta de administración de Migadu. Establécela o restablécela en el área de administración de Migadu, en Mailboxes, y pégala en mcpemails junto con tu dirección. Todos los buzones de Migadu usan los mismos dos servidores sea cual sea tu dominio, así que no hay nada que buscar."
+    "body": "Migadu se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, que no es la contraseña de tu cuenta de administración de Migadu. Establécela o restablécela en el área de administración de Migadu, en Mailboxes, y pégala en MCPEmails junto con tu dirección. Todos los buzones de Migadu usan los mismos dos servidores sea cual sea tu dominio, así que no hay nada que buscar."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Establece una contraseña de buzón en Migadu",
       "p": "En el área de administración de Migadu, abre Mailboxes, elige el buzón y establece su contraseña. Los clientes de correo se autentican con esa contraseña; tu inicio de sesión de administrador no funcionará."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de Migadu, los servidores indicados arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -62,18 +62,18 @@
     },
     {
       "h": "Sin MOVE, sin UIDPLUS, sin SPECIAL-USE y sin IDLE",
-      "p": "El conjunto de capacidades que anuncia Migadu omite cuatro extensiones que tienen la mayoría de los servidores. Sin <b>MOVE</b>, mover un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. Sin <b>UIDPLUS</b>, el servidor no informa del nuevo identificador de un mensaje copiado, así que hay que encontrarlo buscando en el destino. Sin <b>SPECIAL-USE</b>, Enviados, Borradores, Papelera y Archivo se identifican por nombre y no por función, así que un buzón con carpetas renombradas necesita que se indique la carpeta explícitamente. Sin <b>IDLE</b>, no hay ningún canal push. Nada de esto impide que la conexión funcione, y mcpemails lee bajo demanda en lugar de esperar notificaciones push, pero explica comportamientos que no verás en otros proveedores."
+      "p": "El conjunto de capacidades que anuncia Migadu omite cuatro extensiones que tienen la mayoría de los servidores. Sin <b>MOVE</b>, mover un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. Sin <b>UIDPLUS</b>, el servidor no informa del nuevo identificador de un mensaje copiado, así que hay que encontrarlo buscando en el destino. Sin <b>SPECIAL-USE</b>, Enviados, Borradores, Papelera y Archivo se identifican por nombre y no por función, así que un buzón con carpetas renombradas necesita que se indique la carpeta explícitamente. Sin <b>IDLE</b>, no hay ningún canal push. Nada de esto impide que la conexión funcione, y MCPEmails lee bajo demanda en lugar de esperar notificaciones push, pero explica comportamientos que no verás en otros proveedores."
     }
   ],
   "limits": [
     "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en ambas carpetas.",
     "Las carpetas se identifican por nombre y no por función, así que un buzón con carpetas renombradas o con nombres no ingleses puede necesitar que se indique la carpeta de destino explícitamente.",
-    "mcpemails conecta un buzón. Los dominios, reenvíos, reescrituras y las cuotas propias de envío y recepción de Migadu siguen gestionándose en el área de administración de Migadu."
+    "MCPEmails conecta un buzón. Los dominios, reenvíos, reescrituras y las cuotas propias de envío y recepción de Migadu siguen gestionándose en el área de administración de Migadu."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Migadu?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Migadu. Conectar un servidor MCP como mcpemails a tu buzón de Migadu por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como la conexión es IMAP estándar, el mismo buzón también está disponible en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Migadu. Conectar un servidor MCP como MCPEmails a tu buzón de Migadu por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como la conexión es IMAP estándar, el mismo buzón también está disponible en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Migadu?",

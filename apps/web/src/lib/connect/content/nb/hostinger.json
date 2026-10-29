@@ -23,7 +23,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå Hostinger på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå Hostinger på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobles Hostinger til: IMAP og postkassepassordet ditt",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent postkassepassordet ditt hos Hostinger",
-      "p": "Åpne Emails i hPanel, velg adressen og sett eller tilbakestill passordet. Det passordet er det mcpemails autentiserer med."
+      "p": "Åpne Emails i hPanel, velg adressen og sett eller tilbakestill passordet. Det passordet er det MCPEmails autentiserer med."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg inn Hostinger-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Hostinger-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Hostinger-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter, ikke bare én."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Hostinger-kobling. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter, ikke bare én."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Hostinger?",

@@ -20,7 +20,7 @@
     "titleLine1": "Koble ScalaHosting-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte ScalaHosting-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, enten kontoen din kjører SPanel eller cPanel.",
-    "answer": "Claude når ikke en ScalaHosting-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. ScalaHosting har ikke noe felles e-postvertsnavn: e-postserveren din er ditt eget domene eller hostingserverens navn, og begge panelene viser det under Connect device på adressen. Hvilket panel du får, avhenger av abonnementet, fordi både SPanel og cPanel er i bruk. Autentisering skjer med postkassepassordet, og én innboks er gratis.",
+    "answer": "Claude når ikke en ScalaHosting-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. ScalaHosting har ikke noe felles e-postvertsnavn: e-postserveren din er ditt eget domene eller hostingserverens navn, og begge panelene viser det under Connect device på adressen. Hvilket panel du får, avhenger av abonnementet, fordi både SPanel og cPanel er i bruk. Autentisering skjer med postkassepassordet, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra SPanel",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Sett eller gjenopprett postkassepassordet",
-      "p": "IMAP sjekker passordet på adressen, som ikke er innloggingen til ScalaHostings kundeområde. I SPanel oppretter eller redigerer du adressen under Email Accounts, og bruker Generate-knappen hvis du vil ha en sterk verdi. Lim det så inn i mcpemails med hele adressen som brukernavn og vertsnavnet du kopierte."
+      "p": "IMAP sjekker passordet på adressen, som ikke er innloggingen til ScalaHostings kundeområde. I SPanel oppretter eller redigerer du adressen under Email Accounts, og bruker Generate-knappen hvis du vil ha en sterk verdi. Lim det så inn i MCPEmails med hele adressen som brukernavn og vertsnavnet du kopierte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "mcpemails kobler til postkasser, ikke serveren. SPanels egne verktøy, sikkerhetskopier og sikkerhetsfunksjoner blir der de er.",
+    "MCPEmails kobler til postkasser, ikke serveren. SPanels egne verktøy, sikkerhetskopier og sikkerhetsfunksjoner blir der de er.",
     "På en administrert VPS kan du ha endret e-postoppsettet etter provisjonering. I så fall rapporterer popup-vinduet Connect device fortsatt det SPanel konfigurerte, som kanskje ikke lenger er det som lytter."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med ScalaHosting-e-post?",
-      "a": "Ikke direkte. Claude har ingen ScalaHosting-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Dette virker likt på SPanel-kontoer og cPanel-kontoer, siden begge leverer vanlig IMAP."
+      "a": "Ikke direkte. Claude har ingen ScalaHosting-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Dette virker likt på SPanel-kontoer og cPanel-kontoer, siden begge leverer vanlig IMAP."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for ScalaHosting?",

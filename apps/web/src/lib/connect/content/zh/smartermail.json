@@ -22,7 +22,7 @@
     "titleLine1": "将 SmarterMail 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
     "lead": "SmarterMail 已经为你的用户提供了网页邮箱、日历和聊天。MCP 服务器补上了它唯一做不到的一件事：一个能在邮箱中读取、搜索、发送、回复、定时和归档邮件的 AI 代理。",
-    "answer": "Claude 无法自行连接 SmarterMail 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（通常是 993 端口、隐式 TLS）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SmarterMail 是由你或你的主机商运行的软件，所以没有共享的主机名：服务器必须能从互联网访问，邮箱必须在其 Service Access 设置中启用 IMAP，而且 SmarterMail 的滥用检测不能封锁发起连接的地址。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 SmarterMail 服务器。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（通常是 993 端口、隐式 TLS）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SmarterMail 是由你或你的主机商运行的软件，所以没有共享的主机名：服务器必须能从互联网访问，邮箱必须在其 Service Access 设置中启用 IMAP，而且 SmarterMail 的滥用检测不能封锁发起连接的地址。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，Service Access 中启用 IMAP",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "检查邮箱的 Service Access，然后添加它",
-      "p": "打开该用户，确认其 Service Access 设置中已启用 IMAP。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 SmarterMail 主机名、完整邮箱地址及其密码。如果你是域管理员而不是系统管理员，这是你自己能访问的页面。"
+      "p": "打开该用户，确认其 Service Access 设置中已启用 IMAP。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入你的 SmarterMail 主机名、完整邮箱地址及其密码。如果你是域管理员而不是系统管理员，这是你自己能访问的页面。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "托管 MCP 服务器必须能从外部访问你的 SmarterMail 服务器。只绑定在内部地址上，或只对办公网段开放的服务器，无法以这种方式连接。如果你希望 IMAP 会话永远不离开你的网络，mcpemails 支持自托管。",
+    "托管 MCP 服务器必须能从外部访问你的 SmarterMail 服务器。只绑定在内部地址上，或只对办公网段开放的服务器，无法以这种方式连接。如果你希望 IMAP 会话永远不离开你的网络，MCPEmails 支持自托管。",
     "证书校验是严格的，所以 993 上的绑定需要一个对你输入的主机名有效的证书。Windows 上的 SmarterMail 通常使用 Windows 证书存储中的证书，而为机器名而非邮件主机名签发的证书会被拒绝。",
     "这个连接只传输邮件。SmarterMail 的日历、联系人、任务和聊天由其自身的网页界面以及 Exchange ActiveSync 或 EWS 提供，而不是 IMAP。"
   ],
   "faq": [
     {
       "q": "Claude 能用 SmarterMail 吗？",
-      "a": "不能单独使用。Claude 没有 SmarterMail 连接器，也无法向你或你的主机商运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 SmarterMail 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+      "a": "不能单独使用。Claude 没有 SmarterMail 连接器，也无法向你或你的主机商运行的服务器打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 SmarterMail 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
     },
     {
       "q": "SmarterMail 的 IMAP 和 SMTP 设置是什么？",

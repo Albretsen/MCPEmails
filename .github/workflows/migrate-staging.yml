@@ -1,0 +1,96 @@
+name: Migrate staging database
+
+# Applies supabase/migrations to the STAGING Supabase project with
+# `supabase db push`. This is the only place `db push` is allowed (decision
+# D8); production keeps the manual one-file apply plus `migration repair`
+# described in CLAUDE.md, and this workflow refuses to run against it.
+#
+# Inert until the repository is wired for staging:
+#   - vars.SUPABASE_REF_STAGING  the staging project ref (required)
+#   - vars.SUPABASE_REF_PROD     the production ref, used by the guard
+#   - secrets.STAGING_DB_URL     optional; otherwise secrets.SUPABASE_ACCESS_TOKEN
+#                                plus secrets.STAGING_DB_PASSWORD link the project
+# Without SUPABASE_REF_STAGING the run fails at the guard and touches nothing.
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'supabase/migrations/**'
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: db push to staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/staging'
+    env:
+      STAGING_REF: ${{ vars.SUPABASE_REF_STAGING }}
+      PROD_REF: ${{ vars.SUPABASE_REF_PROD }}
+      # Literal as well as the variable, so a missing or mistyped variable can
+      # never let production through.
+      PROD_REF_LITERAL: swvaxorwumispmjaaszb
+    steps:
+      - name: Refuse anything that is not the staging project
+        run: |
+          if [ -z "$STAGING_REF" ]; then
+            echo "::error::vars.SUPABASE_REF_STAGING is not set. Nothing was applied."
+            exit 1
+          fi
+          if [ "$STAGING_REF" = "$PROD_REF_LITERAL" ] || { [ -n "$PROD_REF" ] && [ "$STAGING_REF" = "$PROD_REF" ]; }; then
+            echo "::error::vars.SUPABASE_REF_STAGING is the PRODUCTION ref. Refusing to db push."
+            exit 1
+          fi
+          echo "Target: $STAGING_REF"
+
+      - uses: actions/checkout@v7
+
+      # Same pin as the CI `db` job, which proves every migration replays.
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.118.0
+
+      - name: Push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_DB_URL: ${{ secrets.STAGING_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -n "$STAGING_DB_URL" ]; then
+            # The connection string names the project (db.<ref>.supabase.co or
+            # the pooler user postgres.<ref>). It must name staging, never prod.
+            case "$STAGING_DB_URL" in
+              *"$PROD_REF_LITERAL"*) echo "::error::STAGING_DB_URL points at production."; exit 1 ;;
+            esac
+            if [ -n "$PROD_REF" ]; then
+              case "$STAGING_DB_URL" in
+                *"$PROD_REF"*) echo "::error::STAGING_DB_URL points at production."; exit 1 ;;
+              esac
+            fi
+            case "$STAGING_DB_URL" in
+              *"$STAGING_REF"*) ;;
+              *) echo "::error::STAGING_DB_URL does not name $STAGING_REF."; exit 1 ;;
+            esac
+            supabase db push --db-url "$STAGING_DB_URL" --include-all --yes
+          else
+            if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
+              echo "::error::Set secrets.STAGING_DB_URL, or SUPABASE_ACCESS_TOKEN and STAGING_DB_PASSWORD."
+              exit 1
+            fi
+            supabase link --project-ref "$STAGING_REF"
+            linked=$(cat supabase/.temp/project-ref)
+            if [ "$linked" != "$STAGING_REF" ]; then
+              echo "::error::Linked to '$linked', expected $STAGING_REF."
+              exit 1
+            fi
+            supabase db push --linked --include-all --yes
+          fi

@@ -35,11 +35,15 @@ export const DEFERRED_BODY_SCHEMA_VERSION = "review-card-v2";
  */
 export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
 
+/** Result `_meta` key: up to five `{ from, subject }` rows under a bulk result card. */
+export const BULK_SAMPLE_META_KEY = "mcpemails/bulk_sample";
+
 export type CardKind =
   | "outbound_review"
   | "bulk_plan"
   | "receipt"
-  | "draft_editor";
+  | "draft_editor"
+  | "subscription_plan";
 
 export type CardState =
   | "pending"
@@ -75,9 +79,25 @@ export interface Body {
   /**
    * Draft editor only, and only on the SAVE that removed the HTML part (`html`
    * is null then too). The card says so in one line rather than silently
-   * dropping "Show formatting".
+   * dropping "Show formatting". Since 2026-10-17 the server also sets it when a
+   * body edit could not be made inside a formatted HTML part (a heading, a
+   * list, a link): that part is dropped, never regenerated to pass for the
+   * original (mcp-server/html-text-merge.ts).
    */
   formatting_removed?: boolean;
+  /**
+   * Draft editor only (2026-10-17), and only when `text` ends in the quoted
+   * original of a reply ("On <date>, <name> wrote:" and `>` lines, Outlook's
+   * header block, ...): the line it starts on, counted in `\n` from 0.
+   * Server-detected (mcp-server/quoted-reply.ts). In lines rather than
+   * characters because `neutralizeText` removes characters but never a `\n`.
+   *
+   * Additive: `text` is still the WHOLE body, quote included, so a card that
+   * ignores this edits the quote as part of the text, as it always did. This
+   * card shows the quote read-only and saves it back verbatim
+   * (format.ts#splitQuote).
+   */
+  quoted?: { line: number } | null;
 }
 
 /**
@@ -102,6 +122,8 @@ export interface DeferredBody {
   deferred: true;
   /** Never on a deferred body: only a save sets it, and a save is not deferred. */
   formatting_removed?: undefined;
+  /** Rides in `_meta` with the real body, never on the placeholder. */
+  quoted?: undefined;
 }
 
 export type DraftBody = Body | DeferredBody;
@@ -194,6 +216,12 @@ export interface DraftSignature {
    * body-only edit keeps it. The card warns before that happens.
    */
   rich?: boolean;
+  /**
+   * The first line of the INBOX's signature, present only when the draft does
+   * not carry it (`embedded: false`) and the inbox has one. The card names it in
+   * its "not in this draft" line, and shows no such line without it.
+   */
+  first_line?: string | null;
 }
 
 /**
@@ -263,12 +291,98 @@ export interface DraftEditorData {
   subject?: string;
   /** May arrive as a `DeferredBody`; no component is handed one. */
   body?: DraftBody;
-  /** Display only: the card cannot add or remove attachments. */
+  /**
+   * Metadata only, never bytes. The card adds and removes files through
+   * `draft_editor_save` (`add_attachments`, `remove_attachments`; attachments.ts).
+   */
   attachments?: Attachment[];
   signature?: DraftSignature | null;
   in_reply_to?: InReplyTo | null;
+  /**
+   * The draft answers a message (its In-Reply-To header survived), whatever
+   * `in_reply_to` says: that is null on every read and save. store.ts#keepReplyContext.
+   */
+  threaded?: boolean;
   /** Key has send:email AND the draft has at least one recipient. */
   can_send?: boolean;
+}
+
+/**
+ * §9 `subscription_plan` (internal only, `workspaces.subscription_cleanup_enabled`).
+ * A scan of newsletter and list senders; the card ticks some and calls
+ * `subscriptions_cleanup`. Display names, addresses and `detail` are hostile
+ * text. The plan carries hosts only, never a URL; `results[].link` is the one
+ * raw URL (https only), present only for `needs_user`; a mailto sender that
+ * could not get a draft has `mailto_address` instead.
+ */
+export type SubscriptionMethod = "one_click" | "mailto" | "link" | "none";
+
+export interface SubscriptionSender {
+  sender_key: string;
+  display_name: string;
+  from_address: string;
+  domain: string;
+  list_id: string | null;
+  message_count: number;
+  unread_count: number;
+  read_share: number;
+  last_received_at: string;
+  method: SubscriptionMethod;
+  safe: boolean;
+  unsafe_reason: string | null;
+  url_host: string | null;
+  suggested: boolean;
+}
+
+export type SubscriptionStatus =
+  | "requested"
+  | "failed"
+  | "draft_ready"
+  | "needs_user"
+  | "filtered"
+  | "skipped_unsafe"
+  | "already_done";
+
+export interface SubscriptionResult {
+  sender_key: string;
+  display_name: string;
+  status: SubscriptionStatus;
+  method: SubscriptionMethod;
+  detail: string | null;
+  draft_id: string | null;
+  /** https only, on needs_user. */
+  link: string | null;
+  /** A mailto sender on needs_user (no draft): the address to email. */
+  mailto_address?: string | null;
+}
+
+export interface SubscriptionBacklog {
+  action: "archive" | "keep";
+  destination: string | null;
+  moved: number;
+  remaining: number;
+  has_more: boolean;
+}
+
+export interface Subscriptions {
+  plan_id: string;
+  expires_at: string;
+  inbox: { inbox_id: string; email_address: string; provider: string };
+  window_days: number;
+  scanned: number;
+  truncated: boolean;
+  summary: {
+    senders: number;
+    one_click: number;
+    mailto: number;
+    link: number;
+    none: number;
+    unsafe: number;
+  };
+  senders: SubscriptionSender[];
+  /** Present once executed. */
+  results?: SubscriptionResult[];
+  backlog?: SubscriptionBacklog | null;
 }
 
 export interface Receipt {
@@ -292,6 +406,13 @@ export interface Receipt {
     // question from whether the tool exists, and is open.
     | "cancelled";
   headline: string;
+  /**
+   * CLIENT-AUTHORED, never sent by the server: the muted text beside the
+   * headline on a receipt the card built from a plain send or schedule result
+   * (plain-result.ts), e.g. the subject. Not persisted (persist.ts keeps only
+   * the outcome).
+   */
+  subline?: string | null;
   detail?: string | null;
   affected_count?: number | null;
   dashboard_url?: string | null;
@@ -349,6 +470,8 @@ export interface Envelope {
   diagnostics?: boolean;
   outbound?: Outbound;
   plan?: Plan;
+  /** §9, on a `subscription_plan` card. */
+  subscriptions?: Subscriptions;
   /**
    * §8's draft payload on a `draft_editor` card.
    *
@@ -361,6 +484,14 @@ export interface Envelope {
    */
   draft?: DraftEditorData;
   receipt?: Receipt;
+  /**
+   * On a bulk move/delete receipt (mcp-server/mcp-app-undo.ts): present means
+   * the card offers Undo, which calls `bulk_undo` with this id. Every answer
+   * that has nothing left to undo comes without it, so the button goes away.
+   */
+  undo?: { undo_id: string; expires_at?: string };
+  /** CLIENT-SIDE: the result `_meta` sample rows, grafted on by store.ts#admit. */
+  bulk_sample?: Array<{ from?: string; subject?: string }>;
   /**
    * Not an envelope field: a published key of the `draft{action:"send"}`
    * payload, which §8 merges with the receipt envelope at the top level, so it

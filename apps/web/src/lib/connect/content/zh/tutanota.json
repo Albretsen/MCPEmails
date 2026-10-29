@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail 没有 IMAP",
     "titleLine2": "也没有 SMTP，更没有 Bridge",
     "lead": "Tuta（原名 Tutanota）不运行邮件客户端或 MCP 服务器所需的任何协议，而且与 Proton 不同，它也不提供本地 Bridge 来模拟协议。本页解释原因，以及你实际能用的是什么。",
-    "answer": "不能，也没有变通办法。Tuta 完全不提供 IMAP、POP 或 SMTP 访问，所以 mcpemails 无法连接 Tuta 邮箱，Thunderbird、Apple Mail 或任何其他客户端也不行。这源于 Tuta 的加密方式：主题、正文、附件、联系人和日历条目都用一个永不离开你设备的密钥加密，Tuta 的服务器只持有密文。标准 IMAP 假定服务器能读取主题、排序、搜索并向客户端提供明文，而这恰恰是 Tuta 移除的能力。与 Proton 不同，这里也没有可在本地运行的 Bridge 应用，所以如果你想让 AI 代理处理邮件，它必须是一个支持 IMAP 的服务商上的邮箱，mcpemails 可以免费连接一个这样的邮箱。"
+    "answer": "不能，也没有变通办法。Tuta 完全不提供 IMAP、POP 或 SMTP 访问，所以 MCPEmails 无法连接 Tuta 邮箱，Thunderbird、Apple Mail 或任何其他客户端也不行。这源于 Tuta 的加密方式：主题、正文、附件、联系人和日历条目都用一个永不离开你设备的密钥加密，Tuta 的服务器只持有密文。标准 IMAP 假定服务器能读取主题、排序、搜索并向客户端提供明文，而这恰恰是 Tuta 移除的能力。与 Proton 不同，这里也没有可在本地运行的 Bridge 应用，所以如果你想让 AI 代理处理邮件，它必须是一个支持 IMAP 的服务商上的邮箱，MCPEmails 可以免费连接一个这样的邮箱。"
   },
   "method": {
     "title": "Tuta 如何连接：只能通过它自己的应用",
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "只需一个邮箱地址，无需信用卡。连接一个收件箱永久免费，接下来两步决定里面放什么。"
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "q": "如果我想让 AI 代理处理我的邮件，该怎么办？",
-      "a": "有意地使用两个地址。把私人往来邮件留在 Tuta，那里任何自动化都触及不到；为你希望代理分拣、回复、定时和归档的邮件另用一个 IMAP 邮箱。mcpemails 会把第二个邮箱连接到 Claude、Cursor 或 ChatGPT（一个收件箱免费），而永远看不到 Tuta 那个。"
+      "a": "有意地使用两个地址。把私人往来邮件留在 Tuta，那里任何自动化都触及不到；为你希望代理分拣、回复、定时和归档的邮件另用一个 IMAP 邮箱。MCPEmails 会把第二个邮箱连接到 Claude、Cursor 或 ChatGPT（一个收件箱免费），而永远看不到 Tuta 那个。"
     }
   ],
   "ctaBand": {

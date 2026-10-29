@@ -11,34 +11,34 @@
     "status": "active"
   },
   "meta": {
-    "title": "iCloud MCP-server: koble iCloud Mail til Claude",
-    "description": "Ja, Claude kan bruke iCloud Mail. Koble til med et appspesifikt passord fra Apple på to minutter, og les, søk, send og organiser e-post fra enhver MCP-klient."
+    "title": "MCP-server for iCloud og Apple Mail til Claude og ChatGPT",
+    "description": "Bruk iCloud-innboksen du leser i Apple Mail fra Claude eller ChatGPT. Koble til på to minutter med et appspesifikt passord. Ingen Mac trengs. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "iCloud Mail + AI",
     "titleLine1": "MCP-serveren for iCloud",
     "titleLine2": "for Claude, Cursor og ChatGPT",
-    "lead": "Gi AI-agenten din en ekte iCloud-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med et appspesifikt passord fra Apple, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
+    "lead": "Gi Claude eller ChatGPT iCloud-innboksen du leser i Apple Mail. Les, søk, send, svar, planlegg og organiser e-post med et appspesifikt passord fra Apple. Tjenesten driftes for deg, så Macen kan være av, og den samme innboksen virker i alle MCP-klienter.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Appspesifikt passord, ingen OAuth",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Apple tilbyr ikke OAuth for iCloud Mail, så Claude kan ikke koble seg direkte til den. mcpemails kobler iCloud-innboksen din til over IMAP med et appspesifikt passord fra Apple, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar rundt to minutter, og én innboks er gratis."
+    "answer": "Apple tilbyr ikke OAuth for iCloud Mail, så Claude kan ikke koble seg direkte til den. MCPEmails kobler iCloud-innboksen din til over IMAP med et appspesifikt passord fra Apple, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar rundt to minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobles iCloud til: et appspesifikt passord",
-    "body": "iCloud Mail kobles til over IMAP/SMTP med et <b>appspesifikt passord fra Apple</b>. Generer et på account.apple.com under Sign-In and Security → App-Specific Passwords (krever tofaktorautentisering), og lim det deretter inn i mcpemails sammen med iCloud-adressen din."
+    "body": "iCloud Mail kobles til over IMAP/SMTP med et <b>appspesifikt passord fra Apple</b>. Generer et på account.apple.com under Sign-In and Security → App-Specific Passwords (krever tofaktorautentisering), og lim det deretter inn i MCPEmails sammen med iCloud-adressen din."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Generer et appspesifikt passord",
       "p": "På account.apple.com går du til Sign-In and Security → App-Specific Passwords og oppretter et (tofaktorautentisering må være slått på)."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Legg inn iCloud-adressen din og det appspesifikke passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -72,7 +72,11 @@
   "faq": [
     {
       "q": "Fungerer Claude med iCloud Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd iCloud-kobling, og Apple publiserer ikke noe OAuth-grensesnitt for iCloud Mail. Kobler du en MCP-server som mcpemails til postkassen over IMAP med et appspesifikt passord fra Apple, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og ChatGPT."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd iCloud-kobling, og Apple publiserer ikke noe OAuth-grensesnitt for iCloud Mail. Kobler du en MCP-server som MCPEmails til postkassen over IMAP med et appspesifikt passord fra Apple, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Kan Claude kobles til Apple Mail?",
+      "a": "Ikke til selve appen, og det trengs ikke. Apple Mail viser innbokser som ligger hos en leverandør. Er din en iCloud-adresse, kobler du den til her med et appspesifikt passord, og Claude eller ChatGPT ser de samme mappene og meldingene, bortsett fra mapper som bare ligger På min Mac. Viser Apple Mail en Gmail-, Outlook-, Yahoo- eller jobbkonto, kobler du til den leverandøren i stedet. MCPEmails driftes for deg, så Macen trenger ikke være på."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for iCloud Mail?",
@@ -89,6 +93,10 @@
     {
       "q": "Lagres iCloud-e-posten min på serverne deres?",
       "a": "Nei. Meldinger hentes direkte fra Apple over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. Tilbakekaller du det appspesifikke passordet i Apple-kontoen din, avsluttes tilkoblingen hos Apple med én gang."
+    },
+    {
+      "q": "Når den iCloud-kalender, kontakter, notater eller Drive?",
+      "a": "Nei. MCPEmails håndterer bare e-post: iCloud-innboksen og mappene, via IMAP og SMTP. Kalender, Kontakter, Notater, Påminnelser og iCloud Drive kobles ikke til, og det appspesifikke passordet brukes bare til e-post."
     }
   ],
   "ctaBand": {

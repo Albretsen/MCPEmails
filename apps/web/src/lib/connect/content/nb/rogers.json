@@ -20,8 +20,8 @@
     "eyebrow": "Rogers Yahoo Mail + AI",
     "titleLine1": "Koble en Rogers Yahoo-innboks",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
-    "lead": "Rogers-e-post er Yahoo-e-post med et rogers.com-navn på. mcpemails kobler den til via IMAP, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten, forutsatt at kontoen din fortsatt kan lage et app-passord.",
-    "answer": "Claude når ikke en Rogers Yahoo-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.broadband.rogers.com port 993 og autentiserer med et Rogers Yahoo-app-passord i stedet for passordet du skriver inn i webmail. Det er en reell hake du bør sjekke først: Rogers' egen oppsettartikkel sier nå at generering av app-passord ikke lenger er tilgjengelig, mens Yahoos Rogers-hjelp fortsatt dokumenterer knappen Create app password, så åpne kontoens sikkerhetsside før du planlegger rundt dette. Finnes det et app-passord eller kan det fortsatt opprettes, er én innboks gratis, for alltid.",
+    "lead": "Rogers-e-post er Yahoo-e-post med et rogers.com-navn på. MCPEmails kobler den til via IMAP, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten, forutsatt at kontoen din fortsatt kan lage et app-passord.",
+    "answer": "Claude når ikke en Rogers Yahoo-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.broadband.rogers.com port 993 og autentiserer med et Rogers Yahoo-app-passord i stedet for passordet du skriver inn i webmail. Det er en reell hake du bør sjekke først: Rogers' egen oppsettartikkel sier nå at generering av app-passord ikke lenger er tilgjengelig, mens Yahoos Rogers-hjelp fortsatt dokumenterer knappen Create app password, så åpne kontoens sikkerhetsside før du planlegger rundt dette. Finnes det et app-passord eller kan det fortsatt opprettes, er én innboks gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, hvis din kan lage et",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Skriv inn rogers.com-adressen og app-passordet",
-      "p": "I mcpemails velger du IMAP / SMTP, skriver hele rogers.com-adressen i brukernavnfeltet og limer inn app-passordet. Ikke bruk webmail-passordet for Rogers Yahoo; det avvises på IMAP-nivå. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I MCPEmails velger du IMAP / SMTP, skriver hele rogers.com-adressen i brukernavnfeltet og limer inn app-passordet. Ikke bruk webmail-passordet for Rogers Yahoo; det avvises på IMAP-nivå. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "Yahoo-SMTP-verten bak Rogers annonserer en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises før den går ut.",
-    "Kan kontoen din ikke lenger lage et app-passord, kan mcpemails ikke koble den til. Det finnes ingen reserve med bare passord, og vi er ikke en av appene som er registrert for Rogers Yahoo OAuth-vinduet."
+    "Kan kontoen din ikke lenger lage et app-passord, kan MCPEmails ikke koble den til. Det finnes ingen reserve med bare passord, og vi er ikke en av appene som er registrert for Rogers Yahoo OAuth-vinduet."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Rogers-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Rogers-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere rogers.com-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. Det forutsetter at kontoen din kan bruke et app-passord."
+      "a": "Ikke direkte. Claude har ingen innebygd Rogers-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere rogers.com-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. Det forutsetter at kontoen din kan bruke et app-passord."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Rogers?",

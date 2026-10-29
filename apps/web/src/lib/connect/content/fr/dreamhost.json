@@ -20,7 +20,7 @@
     "titleLine1": "Connectez l'e-mail DreamHost à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte DreamHost. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe du mail user défini dans le panel DreamHost.",
-    "answer": "Claude ne peut pas accéder seul à une boîte DreamHost. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.dreamhost.com, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe du mail user de cette adresse, que DreamHost distingue du mot de passe du panel avec lequel vous vous connectez. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option IMAP à activer. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte DreamHost. MCPEmails est un serveur MCP hébergé qui la connecte via IMAP sur imap.dreamhost.com, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe du mail user de cette adresse, que DreamHost distingue du mot de passe du panel avec lequel vous vous connectez. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option IMAP à activer. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe du mail user, pas celui du panel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Connectez-vous au panel DreamHost, ouvrez Mail, puis Manage Email, trouvez l'adresse et cliquez sur Manage. Descendez jusqu'à la section Change Password et générez un mot de passe ou définissez le vôtre. DreamHost indique que cela ne peut pas se faire depuis le webmail : vous devez passer par le panel ou par l'interface distincte des boîtes."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du mail user. Les serveurs imap.dreamhost.com et smtp.dreamhost.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "L'identifiant court fonctionne assez souvent pour être un piège",
-      "p": "Les consignes de DreamHost indiquent qu'un client peut avoir besoin de l'adresse e-mail complète pour se connecter, mais que bien souvent seule la partie avant l'arobase suffit. Cette ambiguïté ne pose pas de problème sur un compte à un seul domaine, et en devient un dès que deux de vos domaines ont une adresse avec la même partie locale, puisque la forme courte n'identifie plus une seule boîte. Saisissez toujours l'adresse complète. mcpemails envoie l'adresse complète."
+      "p": "Les consignes de DreamHost indiquent qu'un client peut avoir besoin de l'adresse e-mail complète pour se connecter, mais que bien souvent seule la partie avant l'arobase suffit. Cette ambiguïté ne pose pas de problème sur un compte à un seul domaine, et en devient un dès que deux de vos domaines ont une adresse avec la même partie locale, puisque la forme courte n'identifie plus une seule boîte. Saisissez toujours l'adresse complète. MCPEmails envoie l'adresse complète."
     }
   ],
   "limits": [
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail DreamHost ?",
-      "a": "Pas seul. Claude n'a pas de connecteur DreamHost intégré. Pointer un serveur MCP comme mcpemails vers votre boîte DreamHost via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur DreamHost intégré. Pointer un serveur MCP comme MCPEmails vers votre boîte DreamHost via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de DreamHost ?",

@@ -23,20 +23,20 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Connects with a Google app password",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Gmail on its own. mcpemails is a hosted MCP server that sits between them: you create a Google app password once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
+    "answer": "The Gmail MCP server URL is https://mcpemails.com/api/mcp. MCPEmails is a hosted MCP server: create a Google app password, connect Gmail once in the dashboard, then paste that URL into Claude, ChatGPT or Cursor. In Cursor, add it under mcpServers in ~/.cursor/mcp.json with the field url, and Cursor asks you to sign in, with no API key. The Free plan connects one Gmail inbox, forever, with no card, and works with a personal Google account or Google Workspace."
   },
   "method": {
     "title": "How Gmail connects: a Google app password",
-    "body": "Gmail connects with a <b>Google app password</b> over IMAP and SMTP. Google only offers app passwords on accounts with <b>2-Step Verification switched on</b>, so turn that on first, then create one at <b>myaccount.google.com/apppasswords</b>. It is 16 lowercase letters in four groups, and you paste it in place of your normal Google password, which will not work. Revoke it anytime from the same Google page, or delete the inbox in mcpemails."
+    "body": "Gmail connects with a <b>Google app password</b> over IMAP and SMTP. Google only offers app passwords on accounts with <b>2-Step Verification switched on</b>, so turn that on first, then create one at <b>myaccount.google.com/apppasswords</b>. It is 16 lowercase letters in four groups, and you paste it in place of your normal Google password, which will not work. Revoke it anytime from the same Google page, or delete the inbox in MCPEmails."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Create a Google app password",
-      "p": "Switch on 2-Step Verification in your Google account if it is not already on, then go to myaccount.google.com/apppasswords and create one. Paste the 16 characters into mcpemails with your full Gmail address. Spaces in the code do not matter."
+      "p": "Switch on 2-Step Verification in your Google account if it is not already on, then go to myaccount.google.com/apppasswords and create one. Paste the 16 characters into MCPEmails with your full Gmail address. Spaces in the code do not matter."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -46,15 +46,15 @@
   "gotchas": [
     {
       "h": "Google publishes its own Gmail MCP server, and for Gmail alone it is the shorter path",
-      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point mcpemails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
+      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point MCPEmails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
     },
     {
-      "h": "On a work Gmail, the Google sign-in option can be blocked by your Workspace administrator",
-      "p": "This applies only to the Google sign-in option, not to an app password. Google Workspace administrators control third-party API access under Security, then API controls, then App access control. An admin can block all third-party apps outright, or allow an app only for named OAuth scopes. Where that is switched on, Google refuses at its own consent screen with <code>Error 400: admin_policy_enforced</code>, and the request never reaches us. Nothing on our side can override it: an administrator has to allow the app for the Gmail scopes. Personal accounts ending in <code>@gmail.com</code> have no such policy and are unaffected."
+      "h": "Sending from another address takes a verified Send As address",
+      "p": "A mailbox connected with an app password sends from its own address. To let your agent send from an alias or another address you own, add it under <b>Send As addresses</b> in the inbox settings in MCPEmails. We email that address a 6-digit code, and it becomes usable once you enter the code. Gmail has to accept the address too, so set it up as a <b>Send mail as</b> address in Gmail first. A From address that is neither the mailbox's own nor verified is refused, not silently rewritten."
     },
     {
       "h": "Gmail has labels, not folders, so a move is not a move",
-      "p": "Gmail stores labels, not folders. Over IMAP every label appears as a folder, and the Google sign-in option works on the labels directly, so either way a message can carry several labels at once and show up in several folders. Moving it means adding one label and removing another, and archiving is simply removing <code>INBOX</code>. Delete puts the message in Gmail's Trash rather than erasing it. If you ask an agent to file mail into a folder that does not exist yet, the label has to be created first, and it will then appear in Gmail on every device."
+      "p": "Gmail stores labels, not folders. Over IMAP every label appears as a folder, so a message can carry several labels at once and show up in several folders. Moving it means adding one label and removing another, and archiving is simply removing <code>INBOX</code>. Delete puts the message in Gmail's Trash rather than erasing it. If you ask an agent to file mail into a folder that does not exist yet, the label has to be created first, and it will then appear in Gmail on every device."
     },
     {
       "h": "A Google Workspace admin can switch app passwords off",
@@ -62,34 +62,38 @@
     }
   ],
   "limits": [
-    "Either way, mcpemails reaches mail only: an app password is used for IMAP and SMTP alone, and the Google sign-in option requests only the Gmail read, send, modify and basic settings scopes. Drive, Calendar, Chat and Docs are not reached.",
-    "A Google Workspace administrator can close either route from the Admin console: app passwords can be switched off for the domain, and third-party API access can be blocked for the Google sign-in option. Only an administrator can change either decision.",
-    "Delete moves a message into Gmail's Trash. Permanently erasing mail is done in Gmail itself."
+    "MCPEmails reaches mail only: an app password is used for IMAP and SMTP alone. Drive, Calendar, Chat and Docs are not reached.",
+    "A Google Workspace administrator can switch app passwords off for the domain from the Admin console. Only an administrator can change that decision.",
+    "Delete moves a message into Gmail's Trash. A permanent delete follows Gmail's IMAP settings: by default it only removes the label the message was deleted from, and an expunge from Trash erases it."
   ],
   "faq": [
     {
       "q": "Does Claude work with Gmail?",
-      "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. mcpemails is one such thing: you create a Google app password, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that mcpemails is not Google-only, so the same URL serves your other mailboxes too."
+      "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. MCPEmails is one such thing: you create a Google app password, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that MCPEmails is not Google-only, so the same URL serves your other mailboxes too."
+    },
+    {
+      "q": "What is the Gmail MCP server URL, and is it free?",
+      "a": "The URL is https://mcpemails.com/api/mcp, the same in Claude, ChatGPT, Cursor and every other MCP client. The Free plan connects one Gmail inbox with no card, forever. Paid plans add more inboxes."
     },
     {
       "q": "Is there an official Gmail MCP server from Google?",
-      "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as mcpemails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
+      "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as MCPEmails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
     },
     {
       "q": "Do I need an app password for Gmail?",
-      "a": "Yes. Gmail connects over IMAP and SMTP with a Google app password, not your normal Google password. Google only shows app passwords on accounts with 2-Step Verification enabled, so switch that on first, then create one at myaccount.google.com/apppasswords. It takes about a minute. Google sign-in is still offered as an alternative, but it shows an unverified-app warning you have to click past."
+      "a": "Yes. Gmail connects over IMAP and SMTP with a Google app password, not your normal Google password. Google only shows app passwords on accounts with 2-Step Verification enabled, so switch that on first, then create one at myaccount.google.com/apppasswords. It takes about a minute."
     },
     {
-      "q": "Why does Google refuse the Google sign-in option on my work account?",
-      "a": "Almost always an administrator policy. Google Workspace admins restrict which third-party applications may use Gmail scopes under Security, API controls, App access control. When the app is not allowed, Google stops the flow with Error 400: admin_policy_enforced before anything reaches us. Your administrator has to permit the app, or you can connect with an app password instead, if your domain allows those. A personal Gmail account will not hit this."
+      "q": "Why can I not create an app password on my work account?",
+      "a": "Google only offers app passwords on accounts with 2-Step Verification switched on, so check that first. On a Google Workspace account an administrator can also switch app passwords off for the whole domain, and then myaccount.google.com/apppasswords stays unavailable whatever you do inside the mailbox. Only your administrator can change that. A personal Gmail account needs nothing more than 2-Step Verification."
     },
     {
       "q": "Does it work with a Google Workspace custom domain?",
-      "a": "Yes. A Workspace mailbox on your own domain connects with an app password exactly like a gmail.com address and behaves identically afterwards. The one condition is administrator policy: the domain has to allow app passwords, or, if you use the Google sign-in option, third-party API access has to be permitted for the account, otherwise Google blocks the consent screen."
+      "a": "Yes. A Workspace mailbox on your own domain connects with an app password exactly like a gmail.com address and behaves identically afterwards. The one condition is administrator policy: the domain has to allow app passwords and IMAP access."
     },
     {
       "q": "Is my Gmail stored on your servers?",
-      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. Your app password, or the OAuth token if you use Google sign-in, is encrypted at rest and message bodies are not retained. Revoking the app password or the access in your Google Account, or deleting the inbox in mcpemails, ends the connection straight away."
+      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. Your app password is encrypted at rest and message bodies are not retained. Revoking the app password in your Google Account, or deleting the inbox in MCPEmails, ends the connection straight away."
     }
   ],
   "ctaBand": {

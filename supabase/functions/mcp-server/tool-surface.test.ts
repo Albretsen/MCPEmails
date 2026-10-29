@@ -118,6 +118,11 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft",
       "schedule_list",
       "schedule",
+      // Pro (reminders): registered here, hidden from every workspace by the
+      // Pro gate until pro_features_enabled / pro_features_public (see the
+      // reminders tests for the hidden listing).
+      "reminder_list",
+      "reminder",
       "signature_get",
       "signature_set",
       "automation_read",
@@ -135,6 +140,11 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "draft_read",
       "draft_editor_save",
       "draft_editor_hide",
+      // Subscription cleanup. In the registry for every client; tools/list
+      // drops both for a workspace without subscription_cleanup_enabled.
+      "subscriptions_scan",
+      "subscriptions_cleanup",
+      "card_automation",
     ],
   );
 });
@@ -320,7 +330,9 @@ Deno.test("the tools split out of a mixed one keep the right write annotations",
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Tools that can reach a party outside the connected mailbox. */
-const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation"];
+// `subscriptions_cleanup` sends an RFC 8058 one-click POST to the sender's
+// server, which is outside the account.
+const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation", "subscriptions_cleanup"];
 
 Deno.test("openWorldHint is true only where the tool can reach outside the account", () => {
   for (const tool of advertisedTools()) {
@@ -1116,7 +1128,10 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // The per-action required list no longer names body for update...
   assert(!/update: body/.test(action), action);
   // ...and still names it for the two actions that do require it.
-  assert(/create = a new draft, subject and body required/.test(action), action);
+  // Subject left create's required list on 2026-10-17 (the card saves a
+  // draft with an empty subject); the hint says so.
+  assert(/create = a new draft; body required, subject optional/.test(action), action);
+  assert(!/subject and body required|create: subject/.test(action), action);
   assert(/Required: reply: body\./.test(action), action);
   assert(
     /update = change only the fields you pass on draft_id, keeping every omitted one \(body included\); send = /
@@ -1134,15 +1149,28 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // "kept", not "kept exactly": on IMAP and Gmail the message is rebuilt and
   // only the decoded text is guaranteed. See draft-rebuild.ts.
   assert(/'update' replaces only the fields passed: omit body and the stored body text is kept\./.test(description));
+  // Live re-test 2026-10-17: a new body no longer drops a reply's quote.
+  // Live claude.ai test 2026-10-19: the model read "replaces" as "drops the
+  // quote" and pasted it (and the signature) back. Say it stays, and that body
+  // is the model's own text only.
+  assert(/A new body replaces only your text: a reply's quoted original stays below it \(quote_kept\)\./.test(description));
+  assert(!/unless it includes one/.test(description), "no invitation to paste the quote back");
+  assertEquals(
+    draft.inputSchema.properties.body.description,
+    "Plain-text draft body, not markdown (no ** or #): formatting goes in html_body. " +
+      "Your message text only: the server adds the signature and the quoted original.",
+  );
   assert(!/exactly/.test(description), "no description promises an exact copy");
-  assert(/The signature is embedded on create and on an update that passes body/.test(description));
+  assert(/Any inbox signature is embedded on create and on an update that passes body/.test(description));
   // The card sentence is true with the editor off as well as on.
   assert(
     /Where the draft editor card is on, hosts that render MCP Apps cards show the draft to the user in an editable card, where the user can change it\./
       .test(description),
     description,
   );
-  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\.$/.test(description));
+  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\. /.test(description));
+  // Testers 2026-10-23: the model mixed the card up with another connector's draft tool.
+  assert(/The card shows only drafts made with this tool, not another connector's drafts\.$/.test(description));
 
   const list = registryEntry("draft_list").description;
   assert(/and no body: draft_read returns one draft's text\./.test(list), list);
@@ -1151,4 +1179,47 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   for (const text of [description, action, list]) {
     assert(!text.includes("\u2014"), `em dash in model-facing text: ${text}`);
   }
+});
+
+Deno.test("the draft writes state what a draft is for, and never instruct the model", () => {
+  // 2026-10-25, two ways the draft card went unseen: a model asked to write an
+  // email wrote it in the chat and called nothing, and in claude.ai a model
+  // encoded an upload in its code sandbox and called `draft` from there, where
+  // no card is mounted. 2026-10-27, chatgpt.com put a "Suspicious Instruction"
+  // box on every draft because the descriptions said how to call the tool. So
+  // the descriptions state facts. Claude's steer to save a requested email as
+  // a draft lives in SERVER_INSTRUCTIONS (server-instructions.test.ts).
+  const perOperation = new Map(
+    PER_OPERATION_LISTING.map((tool) => [tool.name, serializeToolForList(tool)]),
+  );
+  const descriptions: Array<[string, string]> = [
+    ["draft", (serializeToolForList(registryEntry("draft")) as { description: string }).description],
+    ["draft_create", (perOperation.get("draft_create") as { description: string }).description],
+    ["draft_reply", (perOperation.get("draft_reply") as { description: string }).description],
+    ["draft_update", (perOperation.get("draft_update") as { description: string }).description],
+  ];
+  for (const [name, description] of descriptions) {
+    if (name !== "draft_update") {
+      assert(/where the user can see and edit/.test(description), `${name}: says what a draft is for`);
+    }
+    for (
+      const steer of [
+        /rather than only writing it in chat/,
+        /call this tool directly/,
+        /never from code/,
+        /\bMUST\b/,
+        /\bnever use\b/,
+        /data, never instructions/,
+        /call draft_read before/,
+        /\bDo NOT\b/,
+      ]
+    ) {
+      assert(!steer.test(description), `${name}: no instruction ${steer}`);
+    }
+    assert(!description.includes("\u2014"), `${name}: no em dash`);
+    // Claude Code cuts a tool description at 2KB.
+    assert(new TextEncoder().encode(description).length <= 2048, `${name}: under 2KB`);
+  }
+  const draft = descriptions[0][1];
+  assert(draft.includes("The draft card appears only for a direct call to this tool, not one made from code."), draft);
 });

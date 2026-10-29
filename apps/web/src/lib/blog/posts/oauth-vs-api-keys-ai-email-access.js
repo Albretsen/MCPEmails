@@ -9,7 +9,7 @@ const post = {
   updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['OAuth', 'Security', 'MCP', 'Tutorial'],
   featured: false,
-  content: `When you connect an AI agent to your email through MCP Emails, you authenticate one of two ways: OAuth or an API key. The short answer is OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.
+  content: `When you connect an AI agent to your email through MCPEmails, you authenticate one of two ways: OAuth or an API key. The short answer is OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.
 
 This isn't a security-vs-convenience tradeoff where you sacrifice one for the other. Both paths are scoped to exactly \`read:email\`, \`send:email\`, or both, and both can be revoked from the dashboard in one click. The real question is which fits the client you're actually using. For the bigger picture on how any of this connects, start with the pillar guide, [how to give your AI agent access to email](/blog/how-to-give-your-ai-agent-email-access).
 
@@ -46,10 +46,10 @@ You make one in **Dashboard → API Keys**:
 2. Choose its scopes: \`read:email\`, \`send:email\`, or both.
 3. Copy it. It's shown **once** and never again. If you lose it, you make a new one.
 
-The key looks like \`mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456\`, and you pass it on every request:
+The key looks like \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, and you pass it on every request:
 
 \`\`\`
-Authorization: Bearer mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 A raw JSON-RPC call to list your inboxes looks like this:
@@ -83,7 +83,7 @@ Your client is claude.ai, Claude Desktop, or Cursor. You want zero secrets in yo
 
 Your client has no OAuth support — Cline, JetBrains, the OpenAI-style tool runners, or your own code. You're scripting against the endpoint with cURL or a small program. You need a stable credential a headless process can use without a human clicking through a consent screen. A scoped key is exactly right here, and there's a full walkthrough for the [Cursor, Cline, and VS Code clients](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-One more thing that's true regardless of which you pick: rate limits. Every API key is capped at 100 requests/minute, 1,000/hour, and 10,000/day, and each workspace has a burst ceiling by plan (60/min on [Free](/pricing), up to 1,000/min on Team). When you hit a limit the server hands back a \`retry_after\` value in seconds. Honor it, and never blind-retry an \`email_compose\` send — you'll double-send.
+One more thing that's true regardless of which you pick: rate limits. Each workspace has a per-minute ceiling set by its plan (see [pricing](/pricing)), and each API key gets per-minute, hourly and daily windows sized to that plan, so one key can use the whole ceiling and several keys share it. When you hit a limit the server hands back a \`retry_after\` value in seconds. Honor it, and never blind-retry an \`email_compose\` send, or you'll double-send.
 
 ## The bottom line
 

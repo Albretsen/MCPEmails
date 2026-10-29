@@ -21,7 +21,7 @@
     "titleLine1": "Koble en Plesk-postkasse til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Plesk-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, på enhver server som kjører Plesk Obsidian, uansett hvem som hoster den.",
-    "answer": "Claude når ikke en Plesk-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Plesk er kontrollpanelprogramvare, ikke et hostingselskap, så det finnes ikke noe felles vertsnavn: e-postserveren er ditt eget domene eller serverens vertsnavn, og Plesk viser det nøyaktige paret under Mail Accounts, så Mail Client Setup. Autentisering skjer med passordet som er satt på postkassen i Plesk, ikke panelinnloggingen, og én innboks er gratis.",
+    "answer": "Claude når ikke en Plesk-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Plesk er kontrollpanelprogramvare, ikke et hostingselskap, så det finnes ikke noe felles vertsnavn: e-postserveren er ditt eget domene eller serverens vertsnavn, og Plesk viser det nøyaktige paret under Mail Accounts, så Mail Client Setup. Autentisering skjer med passordet som er satt på postkassen i Plesk, ikke panelinnloggingen, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord satt i Plesk",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med en Plesk-postkasse?",
-      "a": "Ikke direkte. Claude har ingen kobling for Plesk-servere. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Fordi Plesk-e-post er vanlig IMAP og SMTP, virker dette likt hos alle verter som kjører Plesk."
+      "a": "Ikke direkte. Claude har ingen kobling for Plesk-servere. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Fordi Plesk-e-post er vanlig IMAP og SMTP, virker dette likt hos alle verter som kjører Plesk."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Plesk?",

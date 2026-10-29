@@ -5,7 +5,7 @@ const post = {
     'Setup guide for you@yourcompany.com: find out who really runs your mail, connect Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS or cPanel, and fix the From name before your agent replies.',
   cover: '/blog/cover-connect-gmail-to-claude.svg',
   coverAlt:
-    'Connect a business email on your own domain to an AI agent with MCP Emails',
+    'Connect a business email on your own domain to an AI agent with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-25T09:00:00.000Z',
@@ -26,7 +26,7 @@ Most guides for connecting email to an AI agent assume your address ends in gmai
 
 ## Step 1: Find out who actually runs your mail
 
-MCP Emails tries to answer this for you. Type your address into the IMAP connect form, pause for half a second, and it checks four sources in order: a table of providers that caused real connection failures, your domain's RFC 6186 service records, your MX record matched back against that table, and Mozilla's autoconfiguration database. Nothing is filled in unless both halves resolved.
+MCPEmails tries to answer this for you. Type your address into the IMAP connect form, pause for half a second, and it checks four sources in order: a table of providers that caused real connection failures, your domain's RFC 6186 service records, your MX record matched back against that table, and Mozilla's autoconfiguration database. Nothing is filled in unless both halves resolved.
 
 To check yourself first:
 
@@ -49,13 +49,13 @@ In the dashboard, open **Inboxes → Connect Inbox** and pick the route that mat
 
 ### Google Workspace
 
-Workspace connects with a **Google app password** over IMAP by default (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465); OAuth is also available. App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. Admins can also restrict third-party OAuth apps under Security → API controls, which blocks that path at Google's consent screen. If both are shut, ask your admin.
+Workspace connects with a **Google app password** over IMAP (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465). App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. If so, ask your admin. The [Google Workspace settings page](/connect/google-workspace) lists the same values.
 
 ### Zoho Mail
 
 **Enable IMAP access** first, under Settings → Mail Accounts → the address → IMAP Access. It is off by default and set per mailbox, so enabling it for yourself does nothing for a colleague. Generate an **application-specific password** too if two-factor authentication is on.
 
-Your host depends on two things Zoho never shows together: which of its six regional data centres the account lives in (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), and whether it is a paid custom-domain organization account, which uses \`imappro\` and \`smtppro\` for that region. MCP Emails asks for both and builds the hostname.
+Your host depends on two things Zoho never shows together: which of its six regional data centres the account lives in (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), and whether it is a paid custom-domain organization account, which uses \`imappro\` and \`smtppro\` for that region. MCPEmails asks for both and builds the hostname.
 
 ### Fastmail and Migadu
 
@@ -81,14 +81,14 @@ There is no cPanel mail service, only your hosting company's server, so the pane
 
 ## When nothing is detected and you supply the settings yourself
 
-Give MCP Emails four things per protocol: host, port, security mode, and your full address as the username. The conventions are fixed, and the form keeps port and security in step so they cannot drift apart:
+Give MCPEmails four things per protocol: host, port, security mode, and your full address as the username. The conventions are fixed, and the form keeps port and security in step so they cannot drift apart:
 
 - IMAP **993** is implicit TLS; IMAP **143** is STARTTLS.
 - SMTP **465** is implicit TLS; SMTP **587** is STARTTLS, and **25** is STARTTLS on small hosts that offer nothing else.
 
-Mixing those up was the largest cause of failed generic connections: STARTTLS on 993 stalls waiting for a greeting a TLS-only listener never sends, and implicit TLS on 143 fails the handshake. You no longer have to get it right first time. A connection that never established a usable session is retried on the other standard transports, up to three attempts per protocol, starting with the one you asked for. A password the server refused is never retried: re-sending it would only triple the failed-login count your provider uses for lockout.
+Mixing those up was the largest cause of failed generic connections: STARTTLS on 993 stalls waiting for a greeting a TLS-only listener never sends, and implicit TLS on 143 fails the handshake. You no longer have to get it right first time. A connection that never established a usable session is retried on the other standard transports, up to three attempts per protocol, starting with the one you asked for. A password the server refused is never retried: re-sending it would only triple the failed-login count your provider uses for lockout. See also the [generic IMAP connection page](/connect/imap).
 
-Sending negotiates one more thing you will never see. Exchange-style hosts advertise **LOGIN** without PLAIN, so MCP Emails reads what the server offers, tries PLAIN first when both are there, and falls back to LOGIN. A refused mechanism is never reported as a bad password.
+Sending negotiates one more thing you will never see. Exchange-style hosts advertise **LOGIN** without PLAIN, so MCPEmails reads what the server offers, tries PLAIN first when both are there, and falls back to LOGIN. A refused mechanism is never reported as a bad password.
 
 ## Set the sender display name before your agent replies
 
@@ -102,7 +102,7 @@ Set it per inbox on the inbox detail page, where a preview shows the header as r
 - **You are using the wrong password entirely.** Migadu, IONOS, Rackspace and cPanel all separate the control-panel login from the mailbox password, and both are usually email addresses.
 - **It times out instead of failing.** That is the host or the port, not the credential. Re-read the hostname from the provider's own panel.
 - **Mail reads but will not send.** The outgoing half is its own host, port and security mode, and some hosts do not listen on 465 at all. Confirm you granted \`send:email\`.
-- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant. Connect it with **Outlook** and Sign in with Microsoft, not IMAP. If Microsoft says admin approval is required, send the link the dashboard shows to your IT admin.
+- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant. Connect it with **Outlook** and Sign in with Microsoft, not IMAP. If Microsoft says admin approval is required, send the link the dashboard shows to your IT admin. The [Microsoft 365 connection page](/connect/office365) has the details.
 
 The [provider matrix](/docs/providers) and the [provider pages](/connect) carry the per-provider detail.
 
@@ -112,16 +112,16 @@ The [provider matrix](/docs/providers) and the [provider pages](/connect) carry 
 Look up your domain's MX record, or type your address into the connect form and let autodiscovery check the MX and service records for you.
 
 **Can I connect a Google Workspace address?**
-Yes, with a Google app password over IMAP, or with OAuth. Your administrator can block either: app passwords can be disabled domain-wide, and third-party OAuth apps restricted under API controls.
+Yes, with a Google app password over IMAP. 2-Step Verification must be on to create one, and your administrator can disable app passwords domain-wide, so ask them if the option is missing.
 
 **What if my host publishes no IMAP settings?**
 Supply them yourself: host, port, security mode, and your full address as the username. If the first transport does not answer, the standard alternatives are tried automatically.
 
-**Does MCP Emails store my company's email?**
+**Does MCPEmails store my company's email?**
 No. Message content is fetched live from your provider on each request and discarded. Only the encrypted provider credential is retained.
 
 **Is one inbox enough on the free plan?**
-Free connects 1 inbox. Personal is $9/month for 3 inboxes with no monthly action cap, Pro $15/month for unlimited inboxes. See [pricing](/pricing).
+Free connects 1 inbox. Personal is $9/month for 3 inboxes with unlimited email actions, Pro $15/month for up to 10. See [pricing](/pricing).
 
 ## Next step
 

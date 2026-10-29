@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://tuta.com/blog/desktop-clients-tutanota",
+    "https://tuta.com/encryption",
+    "https://tuta.com/support",
+    "https://tuta.com/blog/tuta-release-update-february"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Kein Client-Protokoll vorhanden",
+    "helpUrl": "https://tuta.com/support",
+    "usernameForm": "Hier gibt es nichts einzugeben. Tuta betreibt keinen IMAP-, POP- oder SMTP-Dienst, für eine Tuta-Adresse gibt es also keinerlei Zugangsdaten für Mail-Clients.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tuta Mail und Claude: kein IMAP, kein SMTP, keine Bridge",
+    "description": "Tuta betreibt bewusst keinen IMAP-, POP- oder SMTP-Dienst und bietet keine Bridge, daher kann kein MCP-Server ein Tuta-Postfach verbinden. Der Grund, und was Sie stattdessen tun können."
+  },
+  "hero": {
+    "eyebrow": "Tuta Mail + KI",
+    "titleLine1": "Tuta Mail hat kein IMAP",
+    "titleLine2": "und kein SMTP, und es gibt keine Bridge",
+    "lead": "Tuta, früher Tutanota, betreibt keines der Protokolle, die ein Mail-Client oder ein MCP-Server braucht, und anders als Proton bietet es auch keine lokale Bridge, die eines nachbildet. Diese Seite erklärt, warum, und was Ihnen tatsächlich zur Verfügung steht.",
+    "answer": "Nein, und es gibt keinen Umweg. Tuta bietet überhaupt keinen Zugang per IMAP, POP oder SMTP, deshalb kann MCPEmails ein Tuta-Postfach nicht verbinden, und Thunderbird, Apple Mail oder ein anderer Client ebenso wenig. Das folgt aus der Art, wie Tuta verschlüsselt: Betreffzeilen, Inhalte, Anhänge, Kontakte und Kalendereinträge werden mit einem Schlüssel verschlüsselt, der Ihr Gerät nie verlässt, und Tutas Server halten nur Geheimtext. Standard-IMAP setzt einen Server voraus, der Betreffzeilen lesen, sortieren, suchen und einem Client Klartext liefern kann, und genau diese Fähigkeit hat Tuta entfernt. Anders als bei Proton gibt es auch keine Bridge-Anwendung für den lokalen Betrieb. Soll ein KI-Agent mit E-Mails arbeiten, muss es also ein Postfach bei einem Anbieter mit IMAP sein, und MCPEmails verbindet ein solches kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Tuta: nur über die eigenen Apps",
+    "body": "Tuta erreicht Ihr Postfach über seinen Web-Client, seine Desktop-Clients für Windows, macOS und Linux sowie seine mobilen Apps, über ein proprietäres verschlüsseltes Protokoll. Es gibt keinen Host zum Einrichten, keinen Port und kein Passwort, das Sie für externe Software erstellen könnten. Tuta selbst erklärt, dass IMAP nur möglich wäre, wenn Nachrichten unverschlüsselt auf das Gerät heruntergeladen und dort gespeichert würden. Das widerspricht dem Versprechen, dass Ihre Daten überall Ende-zu-Ende-verschlüsselt sind, auch auf Ihrem eigenen Rechner. Für Werkzeuge ist die Folge vollständig: Lesen, Senden und Suchen laufen alle über dasselbe Protokoll, es gibt also keine Teilfunktion, die sich freigeben ließe. Was Tuta Ihnen bietet, ist ein vollständiger Export. Aktuelle Desktop-Clients exportieren eine einzelne Nachricht als <code>.eml</code> oder ein ganzes Postfach als <code>.mbox</code> mit einem Klick, auf allen drei Desktop-Plattformen, und der Export steht auch im kostenlosen Tarif zur Verfügung."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails-Konto erstellen",
+      "p": "Eine E-Mail-Adresse genügt, ohne Kreditkarte. Ein verbundenes Postfach ist dauerhaft kostenlos, und die nächsten beiden Schritte entscheiden, was hineinkommt."
+    },
+    {
+      "h": "Die Adresse wählen, mit der ein Agent arbeiten soll",
+      "p": "Das ist eine echte Entscheidung, keine Formalität. Wählen Sie ein Postfach bei einem Anbieter mit IMAP: Ihre eigene Domain, ein Arbeitskonto, Fastmail, Migadu, Gmail. Korrespondenz, die hinter Tutas Verschlüsselung gehört, bleibt in Tuta, und die E-Mails, die automatisch sortiert, beantwortet und abgelegt werden sollen, liegen im verbundenen Konto."
+    },
+    {
+      "h": "Das Archiv übertragen, wenn Sie dort den Verlauf brauchen",
+      "p": "Öffnen Sie in einem Tuta-Desktop-Client eine Nachricht und exportieren Sie sie über das Drei-Punkte-Menü, oder exportieren Sie das Postfach als <code>.mbox</code>. Importieren Sie diese Datei mit dem Import-Werkzeug des verbindbaren Kontos. Der Export ist eine Momentaufnahme, keine Live-Verbindung. Wiederholen Sie ihn also, wenn er aktuell sein soll."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und der Agent hat das verbundene Postfach mit Lesen, Suchen, Senden, Antworten, Planen und Ablegen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tuta verschlüsselt die Betreffzeile, ein IMAP-Server hätte also nichts zu liefern",
+      "p": "Diesen Teil überspringen die meisten Erklärungen. IMAP ist nicht nur ein Transportweg: Der Server zerlegt Nachrichten, liefert Kopfdaten wie Betreff und Absender, sortiert und führt SEARCH auf den Inhalten aus. Tutas Server halten Geheimtext und haben nie den Schlüssel. Ein IMAP-Frontend könnte also nichts Nützlicheres liefern als undurchsichtige Datenblöcke, und jede Client-Funktion, die auf serverseitigen Kopfdaten und Suche aufbaut, würde ausfallen. Hätte Tuta nur den Inhalt verschlüsselt, wäre IMAP möglich geblieben, doch Tuta hat sich anders entschieden."
+    },
+    {
+      "h": "Es gibt keine Tuta-Bridge, auch wenn viele eine erwarten",
+      "p": "Proton hat dasselbe Verschlüsselungsproblem mit einer lokalen Desktop-Anwendung gelöst, die auf Ihrem Rechner entschlüsselt und einem Client auf demselben Computer IMAP anbietet. Tuta hat nichts Vergleichbares. Es gibt keine unterstützte Komponente, weder offiziell noch anderweitig, die aus einem Tuta-Konto auf irgendeinem Rechner einen IMAP-Endpunkt macht. Der localhost-Trick, der bei Proton wenigstens für einen Desktop-Client funktioniert, existiert hier nicht."
+    },
+    {
+      "h": "Einstellungsverzeichnisse nennen Tuta-Hostnamen, die es nicht gibt",
+      "p": "Wer nach IMAP-Einstellungen für Tuta oder Tutanota sucht, findet Seiten mit Hostname, Port und Verschlüsselungsart, erzeugt aus derselben Vorlage, die diese Seiten auf jeden Anbieter anwenden. Ein solcher Server läuft nicht. Ein Client, der auf einen dieser Hosts zeigt, scheitert beim Verbinden oder bei der Anmeldung, und der Fehler sieht nach falschen Zugangsdaten aus. Dann suchen viele nach einem App-Passwort, das sich nie erstellen ließ."
+    },
+    {
+      "h": "Eine eigene Domain bei Tuta bleibt ein Tuta-Postfach",
+      "p": "In bezahlten Tarifen können Sie Ihre eigene Domain nutzen, mit MX-Einträgen, die auf Tuta zeigen. Damit haben Sie die Adresse, aber keinen eigenen Server, es gibt also kein <code>mail.yourdomain.com</code>, an dem Sie sich anmelden könnten. Bei den Protokollen ist die Lage genau wie bei einer Adresse mit tutanota.com oder tuta.com."
+    }
+  ],
+  "limits": [
+    "Einen Mittelweg mit reinem Lesezugriff gibt es nicht. Auflisten, Lesen, Suchen und Senden hängen alle von demselben Protokoll ab, das Tuta nicht betreibt. Es gibt also keine eingeschränkte oder sicherere Zugriffsform, die wir Ihnen anbieten könnten.",
+    "Ein exportiertes Postfach ist ein Archiv. Ein Agent, der mit importiertem .mbox-Verlauf arbeitet, kann darin suchen und daraus zitieren, sieht aber nichts, was danach in Tuta eingeht, und kann nicht in einem Tuta-Verlauf antworten."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Tuta Mail?",
+      "a": "Nein. Claude hat keinen Tuta-Konnektor, und kein MCP-Server kann einen bauen, weil Tuta keine IMAP-, POP- oder SMTP-Schnittstelle bereitstellt, mit der sich etwas verbinden könnte. Die praktische Lösung: Behalten Sie Tuta für die E-Mails, die verschlüsselt bleiben sollen, und geben Sie Ihrem Agenten ein separates Postfach bei einem Anbieter mit IMAP."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Tuta?",
+      "a": "Es gibt keine. Tuta betreibt keine IMAP-, POP- oder SMTP-Server für Postfächer seiner Nutzer, es gibt also nirgends einen Hostnamen, Port oder eine Verschlüsselungseinstellung einzutragen. Seiten, die solche Werte nennen, füllen nur eine Vorlage aus. Tuta-E-Mails sind nur über Tutas eigene Web-, Desktop- und Mobil-Clients erreichbar."
+    },
+    {
+      "q": "Warum unterstützt Tuta kein IMAP?",
+      "a": "Wegen dessen, was Tuta verschlüsselt. Betreffzeilen, Inhalte, Anhänge, Kontakte und Kalender werden mit einem Schlüssel auf Ihrem Gerät verschlüsselt, Tutas Server können also nichts davon lesen. IMAP anzubieten hieße, Clients entweder Geheimtext zu liefern, mit dem sie nichts anfangen können, oder E-Mails unverschlüsselt zu speichern, und genau das ist die Garantie, die Tuta verkauft. Tuta hat klar gesagt, dass es diese nicht aufgeben wird."
+    },
+    {
+      "q": "Gibt es eine Tuta-Bridge wie Proton Mail Bridge?",
+      "a": "Nein. Proton bietet eine Desktop-Anwendung, die lokal entschlüsselt und Clients auf demselben Computer IMAP anbietet. Tuta hat in keinem Tarif eine solche Komponente, also gibt es auch keinen lokalen Endpunkt. Drittanbieter-Werkzeuge, die eine Bridge für Tuta versprechen, bauen auf keiner unterstützten Schnittstelle auf, und wer einem solchen Werkzeug sein Tuta-Passwort gibt, überlässt ihm sein Postfach."
+    },
+    {
+      "q": "Kann ich meine E-Mails aus Tuta exportieren?",
+      "a": "Ja, und das ist kostenlos. Tutas Desktop-Clients für Windows, macOS und Linux exportieren über das Nachrichtenmenü eine einzelne Nachricht als .eml oder das ganze Postfach als .mbox. Diese Datei lässt sich in die meisten anderen Maildienste importieren. So bringen Nutzer ihren Verlauf in ein Konto, das Automatisierungen erreichen können."
+    },
+    {
+      "q": "Was soll ich tun, wenn ein KI-Agent meine E-Mails bearbeiten soll?",
+      "a": "Nutzen Sie bewusst zwei Adressen. Behalten Sie private Korrespondenz in Tuta, wo nichts Automatisiertes sie erreicht, und nutzen Sie ein separates IMAP-Postfach für die E-Mails, die ein Agent sortieren, beantworten, planen und ablegen soll. MCPEmails verbindet dieses zweite Postfach mit Claude, Cursor oder ChatGPT, ein Postfach kostenlos, und sieht das Tuta-Postfach nie."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Postfach, das sie auch öffnen kann",
+    "sub": "Tuta bleibt versiegelt. Verbinden Sie ein IMAP-Postfach für die Arbeit, die Sie automatisieren möchten, dauerhaft kostenlos."
+  }
+}

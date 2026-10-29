@@ -1,30 +1,40 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { HelpSection } from './HelpSection';
+import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
+import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
+import { FinishSetupLink, ResetOnboardingCard } from './OnboardingEntry';
+import { PaymentIssueBanner } from './PaymentIssueBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
+import { pricesWithFounder } from '@/lib/stripe/founder-offer';
+import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
 import {
   connectIntentStorage,
   takeConnectIntent,
+  takeConnectSettings,
   withoutConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { findMailHostPreset } from '@/lib/email-providers/host-presets';
+import { backToChatPath, rememberChatReturn, takeChatReturn, withoutChatLinkParams } from '@/lib/onboarding/chat-return.mjs';
+
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -131,16 +141,67 @@ export function DashboardApp(props) {
   );
 }
 
+// The setup flow (onboarding), a dialog over the dashboard. Loaded only when
+// the page came with `?setup=1` for a workspace in the new flow.
+const SetupModal = dynamic(() => import('../onboarding/SetupModal'), { ssr: false });
+
+/** Query params that belong to the setup dialog, dropped when it closes. */
+const SETUP_PARAMS = ['setup', 'client', 'provider', 'step', 'from', 'exp', 'sig', 'connected', 'outlook_error'];
+
 /**
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null, setup = null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
+  // The Business founder price, when the server attached it: priced in here,
+  // once, for the viewer's language (zh keeps the normal price), so every
+  // surface below quotes what checkout charges.
+  const { locale: appLocale } = useAppLocale();
+  const stripePrices = useMemo(
+    () => pricesWithFounder(serverStripePrices, appLocale),
+    [serverStripePrices, appLocale],
+  );
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
+  // A signed chat connect link (`from=chat`, page.js verified it): connect
+  // only, then "Go back to <client> and ask again" on /onboarding/back-to-chat.
+  const [chatDone, setChatDone] = useState(null);
+  useEffect(() => {
+    if (chatDone) router.push(backToChatPath(chatDone.client));
+  }, [chatDone, router]);
+  useEffect(() => {
+    if (!chatReturn) return;
+    rememberChatReturn(chatReturn);
+    try {
+      const stripped = withoutChatLinkParams(window.location.href);
+      if (stripped !== window.location.href) window.history.replaceState(window.history.state, '', stripped);
+    } catch { /* cosmetic */ }
+  }, [chatReturn]);
+  // The setup dialog: open while `setup` came from the server and it has not
+  // been closed. Closing drops its params and re-reads the server props, so
+  // an inbox connected inside it shows up here.
+  const [setupOpen, setSetupOpen] = useState(Boolean(setup));
+  // The dialog's code loads after the page paints. Until it has mounted, a
+  // server-rendered scrim covers the dashboard so it does not flash first.
+  const [setupMounted, setSetupMounted] = useState(false);
+  const onSetupMounted = useCallback(() => setSetupMounted(true), []);
+  const closeSetup = useCallback((href) => {
+    setSetupOpen(false);
+    if (typeof href === 'string') {
+      router.push(href);
+      return;
+    }
+    try {
+      const url = new URL(window.location.href);
+      for (const key of SETUP_PARAMS) url.searchParams.delete(key);
+      router.replace(url.pathname + url.search, { scroll: false });
+    } catch {
+      router.refresh();
+    }
+  }, [router]);
   const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
   const upgradePlan = readQuery(searchParams, 'upgrade');
   const upgradeInterval = readQuery(searchParams, 'interval');
@@ -275,13 +336,28 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
   }
   const [showConnect, setShowConnect] = useState(false);
+  // Which control opened the connect modal, from the closed list in
+  // lib/analytics/connect-entry-point.mjs. Every opener goes through
+  // `openConnect` so none of them can open the modal without naming itself:
+  // the funnel used to see nine paywall views seconds after a first connect
+  // and could not say which button had been pressed. A value that is not on
+  // the list (a click event handed straight to `onConnect`, say) is 'other'.
+  const [connectEntry, setConnectEntry] = useState(null);
+  const openConnect = useCallback((entry) => {
+    setConnectEntry(parseConnectEntryPoint(entry) ?? 'other');
+    setShowConnect(true);
+  }, []);
   // The provider a /connect/<slug> landing page sent this person for, resolved
   // into what the ConnectModal preselects. Set at most once per page load (see
   // the first-run effect below) and dropped when the modal closes, so every
   // later opening of the modal is the ordinary one.
   const [connectPreselect, setConnectPreselect] = useState(null);
+  // A notice the connect modal opens with, e.g. 'outlook_cancelled'.
+  const [connectNotice, setConnectNotice] = useState(null);
   // undefined = not looked at yet, null = nothing (or already spent).
   const connectIntentSlug = useRef(undefined);
+  // Servers carried from /tools/email-settings-lookup (intent-carry.mjs).
+  const connectIntentSettings = useRef(null);
   // The shareable Microsoft 365 admin-consent link (AdminConsentLinkDialog).
   const [showAdminLink, setShowAdminLink] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
@@ -308,6 +384,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // The "what stopped you?" card shown on return from a cancelled checkout.
   const [checkoutCancelled, setCheckoutCancelled] = useState(false);
   const dismissCheckoutCancelled = useCallback(() => setCheckoutCancelled(false), []);
+  // Which plan the abandoned checkout was for. Only a Personal one can show the
+  // 3-month pass card (treatment arm only; see PersonalPass.jsx).
+  const [cancelledPlan, setCancelledPlan] = useState(null);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
 
@@ -391,16 +470,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       let slug = null;
       try {
         slug = takeConnectIntent({ search: window.location.search, storage: connectIntentStorage() });
+        connectIntentSettings.current = takeConnectSettings(connectIntentStorage());
         const stripped = withoutConnectIntent(window.location.href);
         if (stripped !== window.location.href) window.history.replaceState({}, '', stripped);
       } catch { /* a hint is never worth an error */ }
       connectIntentSlug.current = slug;
     }
     const slug = connectIntentSlug.current;
+    const carried = connectIntentSettings.current;
 
-    if (!slug) {
-      if (firstrun) {
-        const id = setTimeout(() => setShowConnect(true), 400);
+    if (!slug && !carried) {
+      if (firstrun || chatReturn) {
+        const id = setTimeout(() => openConnect(firstrun ? 'first_run' : 'other'), 400);
         return () => clearTimeout(id);
       }
       return;
@@ -412,13 +493,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     let cancelled = false;
     const welcome = new Promise(resolve => setTimeout(resolve, firstrun ? 400 : 0));
     const resolved = import('@/lib/connect/intent.mjs')
-      .then(({ resolveConnectIntent, connectPreselectFor }) =>
-        connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset))
+      .then(({ resolveConnectIntent, connectPreselectFor, withCarriedSettings }) =>
+        withCarriedSettings(connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset), carried, findMailHostPreset))
       // Failing to load a hint must leave the dashboard exactly as it was.
       .catch(() => null);
     Promise.all([resolved, welcome]).then(([preselect]) => {
       if (cancelled) return;
       connectIntentSlug.current = null;
+      connectIntentSettings.current = null;
       // An unknown, unreleased or unsupported provider resolves to null. So
       // does nothing at all: a first run still gets its modal, and an ordinary
       // sign-in gets the dashboard and no modal.
@@ -428,9 +510,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         && (serverInboxes?.length ?? 0) >= planLimits.maxInboxes;
       if (preselect && !atCap) {
         setConnectPreselect(preselect);
-        setShowConnect(true);
-      } else if (firstrun) {
-        setShowConnect(true);
+        openConnect('provider_intent');
+      } else if (firstrun || chatReturn) {
+        openConnect(firstrun ? 'first_run' : 'other');
       }
     });
     return () => { cancelled = true; };
@@ -446,7 +528,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const adminConsentParam = readQuery(searchParams, 'admin_consent');
     const signupMethod = readQuery(searchParams, 'signup_method');
 
-    if (signupMethod === 'google' || signupMethod === 'github') {
+    // A browser beacon only; signups are counted from the database
+    // (product_funnel_events stage 'signup_completed'), see src/lib/analytics.mjs.
+    if (signupMethod === 'google' || signupMethod === 'github' || signupMethod === 'microsoft') {
       trackProductEvent('signup_completed', { method: signupMethod });
     }
 
@@ -460,6 +544,17 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Routes once off the ?connected= param the OAuth callback redirects back with.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
+      // Came from a chat link before the Microsoft sign-in: back to the chat.
+      // The setup dialog handles a chat link's return itself.
+      const fromChat = setup ? null : takeChatReturn();
+      if (fromChat) setChatDone(fromChat);
+    } else if (readQuery(searchParams, 'connect') === 'second_inbox') {
+      // Onboarding Flow B, B1: "Connect your other inbox" on It works, for a
+      // workspace already at its inbox cap. The modal opens on the existing
+      // upgrade panel (consumer or business wording, monthly with annual
+      // beside it, Continue on Free). No toast: nothing went wrong.
+      setRouteState('inboxes');
+      openConnect('second_inbox');
     } else if (errorParam === 'inbox_limit_reached') {
       // The provider OAuth callbacks redirect here carrying the error code and
       // nothing else, so this path must not depend on a count or a max.
@@ -473,7 +568,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // checkouts we have both came from people pushed at a card form before
       // they wanted anything. The offer belongs where the intent already is.
       setRouteState('inboxes');
-      setShowConnect(true);
+      openConnect('other');
     } else if (errorParam === 'admin_consent_required') {
       // Microsoft refused before the user ever saw a consent screen: their
       // organisation's default policy does not let employees approve mailbox
@@ -483,7 +578,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // the person has to take somewhere else.
       //
       // The action opens a dialog with a real, copyable link: the admin who
-      // can clear this usually has no MCP Emails account, so "send it to them"
+      // can clear this usually has no MCPEmails account, so "send it to them"
       // has to produce something that can be sent.
       toast({
         message: tr('app.adminConsentRequired'),
@@ -540,9 +635,19 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         duration: 0,
         action: {
           label: tr('app.adminConsentGrantedAction'),
-          onClick: () => setShowConnect(true),
+          onClick: () => openConnect('other'),
         },
       });
+      setRouteState('inboxes');
+    } else if (errorParam === 'gmail_oauth_unavailable') {
+      // /auth/gmail refused a NEW Gmail connection through Google sign-in: it
+      // is Pro and Business only, and closes when the unverified Google
+      // client's lifetime cap is nearly spent (src/lib/oauth/gmail-oauth-gate.ts).
+      // Open the modal on the Gmail card, where the app password path works on
+      // every plan.
+      toast({ message: tr('app.gmailOauthUnavailable'), variant: 'info', duration: 0 });
+      setConnectPreselect({ card: 'gmail' });
+      openConnect('other');
       setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
@@ -552,6 +657,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // completes a connect flow. Read-only members cannot attach a mailbox.
       toast({ message: tr('app.insufficientRole'), variant: 'error' });
       setRouteState('inboxes');
+    } else if (errorParam === 'outlook_cancelled') {
+      // Declined on Microsoft's consent screen. Reopen the connect modal on
+      // the Outlook card with a panel that says so and retries in place,
+      // rather than a four-second toast.
+      setConnectNotice('outlook_cancelled');
+      openConnect('other');
+      setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
@@ -560,9 +672,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setRouteState('inboxes');
     }
 
-    if (connectedParam || errorParam || adminConsentParam || signupMethod) {
+    if (connectedParam || errorParam || adminConsentParam || signupMethod || readQuery(searchParams, 'connect') === 'second_inbox') {
       try {
         const url = new URL(window.location.href);
+        url.searchParams.delete('connect');
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
         url.searchParams.delete('admin_consent');
@@ -603,14 +716,28 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         // starts appending it, the panel picks it up and shows price and
         // renewal date; until then it renders without those two rows.
         const intervalParam = readQuery(searchParams, 'interval');
+        // A Business founder purchase (checkout-core adds offer=founder). The
+        // panel may only quote a price when the founder amounts are on this
+        // page; once the plan has landed they are not, and the price rows are
+        // left out rather than showing the $39 nobody was charged.
+        const founderPurchase = readQuery(searchParams, 'offer') === 'founder';
+        const priceKnown =
+          !founderPurchase ||
+          Boolean(stripePrices?.pro?.founder) ||
+          stripePrices?.pro?.founderSubscriber === true;
         // The return URL is a one-shot signal that only exists on the client,
         // and the panel is an overlay: deriving it during render instead would
         // put a server render that shows nothing against a client render that
         // shows a dialog, which is a hydration mismatch.
+        // `currency=eur` is an optional hint a EUR checkout can append to its
+        // return URL; allow-listed, anything else keeps the USD wording.
+        const currencyParam = readQuery(searchParams, 'currency');
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCheckoutSuccess({
           planId: planParam,
-          interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+          interval:
+            priceKnown && (intervalParam === 'month' || intervalParam === 'year') ? intervalParam : null,
+          currency: currencyParam === 'eur' ? 'eur' : 'usd',
         });
         rememberCheckoutAcknowledged(planParam);
       } else if (!isPaidPlan) {
@@ -623,6 +750,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // One-shot signal from the return URL, client only: same reasoning as
       // the success panel above.
       setCheckoutCancelled(true);
+      setCancelledPlan(readQuery(searchParams, 'plan'));
     }
     // Clean up the query params from the URL without a reload, so a refresh
     // does not replay the confirmation.
@@ -631,6 +759,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
       url.searchParams.delete('interval');
+      url.searchParams.delete('offer');
+      url.searchParams.delete('currency');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -656,6 +786,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, [t.density]);
 
   const counts = { inboxes: inboxes.length, keys: keys.length, members: members.length };
+  // Inboxes that hold a slot under the plan's inbox cap. A parked inbox
+  // (src/lib/billing/parking.ts) is still listed but does not, matching the
+  // server's checkInboxLimit.
+  const activeInboxCount = inboxes.filter((ib) => !ib.parked).length;
 
   /**
    * Disconnects an inbox by calling DELETE /api/inboxes/[id].
@@ -689,6 +823,35 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Re-throw so the confirmation dialog knows to stay open.
       throw err;
     }
+  };
+
+  /**
+   * "Make active" on a parked inbox: POST /api/inboxes/swap-parked. The
+   * parked inbox comes back and `activeInboxId` (when given) is parked in its
+   * place, at most once a day per workspace. Resolves { ok, error,
+   * nextSwapAt } for the dialog, which shows a failure as one line; on
+   * success local state takes the server's active/parked lists.
+   */
+  const onSwapParkedInbox = async (parkedInboxId, activeInboxId) => {
+    let data = {};
+    try {
+      const res = await fetch('/api/inboxes/swap-parked', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ parkedInboxId, activeInboxId: activeInboxId ?? null }),
+      });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) return { ok: false, error: data?.error ?? 'swap_failed', nextSwapAt: data?.next_swap_at ?? null };
+    } catch {
+      return { ok: false, error: 'swap_failed', nextSwapAt: null };
+    }
+    const active = new Set(Array.isArray(data.active) ? data.active : []);
+    const parked = new Set(Array.isArray(data.parked) ? data.parked : []);
+    setInboxes(xs => xs.map(x => (
+      active.has(x.id) ? { ...x, parked: false } : parked.has(x.id) ? { ...x, parked: true } : x
+    )));
+    refreshServerData();
+    return { ok: true, error: null, nextSwapAt: data.next_swap_at ?? null };
   };
 
   /**
@@ -858,6 +1021,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   /**
+   * Merges a saved connection-type change (Advanced > Connection type, which
+   * calls PATCH /api/inboxes/[id]/connection itself) into the inbox list, so
+   * the detail view and the row read the new type without a reload.
+   */
+  const onInboxConnectionChanged = (id, fields) => {
+    setInboxes(xs => xs.map(x => (x.id === id ? { ...x, ...fields, hasImap: true } : x)));
+  };
+
+  /**
    * Restarts the OAuth (or app-password) flow for an errored inbox.
    *
    * For OAuth inboxes: navigate to the provider's server-side initiation
@@ -879,9 +1051,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // both showed the wrong form and left an empty login field for the browser
       // to autofill with another account's saved login (the wrong-mailbox bug).
       setReconnectInbox(inbox);
-      setShowConnect(true);
+      openConnect('reconnect');
     } else {
-      window.location.href = oauthRoutes[inbox.provider] ?? '/auth/gmail';
+      // The inbox id marks this as a reconnect: /auth/gmail pre-selects the
+      // account and skips the gate that applies to NEW Gmail sign-in
+      // connections (src/lib/oauth/gmail-oauth-gate.ts).
+      const route = oauthRoutes[inbox.provider] ?? '/auth/gmail';
+      window.location.href = route === '/auth/gmail' && inbox.id
+        ? `${route}?inbox=${encodeURIComponent(inbox.id)}`
+        : route;
     }
   };
 
@@ -962,7 +1140,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * @param {object|null} [transport] - Present only when the route reports that
    *   the settings it connected on are not the ones that were submitted.
    */
-  const onConnect = ({ label, provider, address, connectionMethod, transport }) => {
+  const onConnect = ({ label, provider, address, connectionMethod, transport, keepOpen = false }) => {
     // This used to say 'app_password' unconditionally, which is wrong for the
     // generic IMAP connector: 'imap' is the largest provider bucket on this
     // event, so the connection-method split was wrong for most of the rows it
@@ -985,9 +1163,20 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       }
       return [...xs, next];
     });
+    // Came from a chat link: the next step is the chat, not the client guide.
+    if (reconnectInbox == null) {
+      const fromChat = takeChatReturn();
+      if (fromChat) setChatDone(fromChat);
+    }
     setReconnectInbox(null);
-    setShowConnect(false);
-    setConnectPreselect(null);
+    // `keepOpen`: a first inbox, and the modal moves on to its "Now connect
+    // your AI app" screen; it closes from there (onOpenClientGuide or Later).
+    if (!keepOpen) {
+      setShowConnect(false);
+      setConnectEntry(null);
+      setConnectPreselect(null);
+      setConnectNotice(null);
+    }
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
     // store what worked, and they have always reported it back; nothing read
@@ -1023,7 +1212,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } else {
       toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
     }
-    if (firstrun || onboardingClient) {
+    if (!keepOpen && (firstrun || onboardingClient)) {
       // Continue the chosen-client guide instead of dropping every provider
       // into a generic API-key screen.
       setGuideResumeKey(value => value + 1);
@@ -1068,7 +1257,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * Adds the new key row (without rawKey) to local state and shows a toast.
    */
   const onKeyCreated = (keyRow) => {
-    setKeys(xs => [keyRow, ...xs]);
+    // The creator is the person who just made it; the POST response does not
+    // carry it, and the Keys page needs it to offer Edit/Revoke on this row.
+    setKeys(xs => [{ createdBy: user?.id ?? null, ...keyRow }, ...xs]);
     toast({
       message: tr('app.apiKeyCreated'),
       variant: 'success',
@@ -1188,6 +1379,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
+      {setupOpen && setup && !setupMounted && <div className="scrim scrim-setup" aria-hidden="true" data-testid="setup-pending" />}
+      {setupOpen && setup && <SetupModal setup={setup} mcpUrl={mcpUrl} flowB={serverWorkspace?.flowB ?? null} onClose={closeSetup} onMounted={onSetupMounted} />}
       <Sidebar
         route={route}
         setRoute={setRoute}
@@ -1198,26 +1391,52 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         activeWorkspaceId={activeWorkspaceId}
         canCreateWorkspace={canCreateWorkspace}
         supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
+        referralVisible={workspace?.referralEnabled === true}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
       <div className="main-col">
         <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} sidebarOpen={sidebarOpen} />
 
-        {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
-          <FirstRunBanner onConnect={() => setShowConnect(true)} />
+        {/* Owner only, while the renewal payment is failing. Not dismissible. */}
+        <PaymentIssueBanner
+          isOwner={serverWorkspace?.isOwner === true}
+          subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
+          lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
+        />
+        {/* The /onboarding flow, not finished yet: a way back (OnboardingEntry.jsx). */}
+        <FinishSetupLink onboarding={serverWorkspace?.onboarding} />
+        {cancelledPlan === 'personal' && (
+          <CheckoutReturnPassCard
+            workspaceId={workspace?.id}
+            stripePrices={stripePrices}
+            onDismiss={() => setCancelledPlan(null)}
+          />
+        )}
+        {route !== "settings" && (
+          <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
-        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
+        {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
+          <FirstRunBanner onConnect={() => openConnect('first_run')} />
+        )}
+
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
+        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
-        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
+        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
+        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
-        {route === "security" && <SecurityPage auditLog={auditLog} />}
+        {route === "invite" && workspace?.referralEnabled === true && <InvitePage />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} inboxes={inboxes} proFeatures={workspace?.proFeatures ?? null} stripePrices={stripePrices} passState={passState} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} onGoToInvite={() => setRoute("invite")} />}
+        {route === "settings" && serverWorkspace?.onboarding?.canReset && (
+          <div className="page" style={{ paddingTop: 0 }}>
+            <ResetOnboardingCard onboarding={serverWorkspace.onboarding} />
+          </div>
+        )}
+        {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
         {/* SUPPORT_RELEASE_GATE: at release drop `supportVisible &&`. */}
         {route === "help" && supportVisible && <HelpSection key={helpKey} onNavigateSection={setRoute} />}
       </div>
@@ -1233,15 +1452,34 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); setConnectNotice(null); }}
+          returnNotice={reconnectInbox == null ? connectNotice : null}
+          showNextStepAfterConnect={reconnectInbox == null && inboxes.length === 0 && !chatReturn}
+          onboardingClient={onboardingClient}
+          onOpenClientGuide={(client) => {
+            setShowConnect(false);
+            setConnectEntry(null);
+            setConnectPreselect(null);
+            setConnectNotice(null);
+            if (client) setOnboardingClient(client);
+            // Remounts the Overview guide, which opens ClientGuideModal for
+            // `onboardingClient` when one is set.
+            setGuideResumeKey(value => value + 1);
+            setRoute('overview');
+          }}
+          entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}
-          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
+          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && activeInboxCount >= planLimits.maxInboxes}
           planName={planDisplayName(workspace?.plan)}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
+          // Onboarding Flow B: at the Free cap the panel's dismiss button
+          // reads "Continue on Free" at the buy button's size.
+          continueOnFree={serverWorkspace?.onboarding?.convert === 'on'}
+          gmailOauthAllowed={workspace?.gmailOAuthAllowed === true}
           onAdminConsentLink={() => setShowAdminLink(true)}
           supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
           onContactSupport={openHelpFromConnect}
@@ -1262,10 +1500,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           interval={checkoutSuccess.interval}
           livePlan={serverWorkspace?.plan ?? null}
           maxInboxes={planLimits?.maxInboxes ?? null}
-          inboxCount={inboxes.length}
+          inboxCount={activeInboxCount}
           stripePrices={stripePrices}
+          currency={checkoutSuccess.currency}
           onRefreshPlan={refreshServerData}
-          onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); setShowConnect(true); }}
+          onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}
           onViewBilling={() => { setCheckoutSuccess(null); setRoute('settings'); }}
           onDismiss={() => setCheckoutSuccess(null)}
         />
@@ -1277,7 +1516,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         open={showCommand}
         onClose={() => setShowCommand(false)}
         setRoute={setRoute}
-        onConnect={() => setShowConnect(true)}
+        onConnect={() => openConnect('command_palette')}
         inboxes={inboxes}
         members={members}
         keys={keys}

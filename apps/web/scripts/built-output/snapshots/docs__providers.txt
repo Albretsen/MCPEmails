@@ -1,12 +1,12 @@
-Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · MCPEmails
 [meta description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
-[meta og:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+[meta og:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · MCPEmails
 [meta og:description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
 [meta og:locale] en_US
-[meta twitter:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+[meta twitter:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · MCPEmails
 [meta twitter:description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
-[alt] mcpemails
-[alt] mcpemails
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -84,7 +84,7 @@ Microsoft 365 / Outlook
 Microsoft OAuth
 Provider API, no IMAP
 Provider API, no IMAP
-Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard gives you a shareable approval link to send to your IT admin, who approves the app once for the whole organisation and does not need an MCP Emails account; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks.
+Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard gives you a shareable approval link to send to your IT admin, who approves the app once for the whole organisation and does not need an MCPEmails account; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks.
 Generic IMAP
 Mailbox password
 Your host’s settings
@@ -92,10 +92,10 @@ Your host’s settings
 Your host’s settings
 465 / 587 · TLS / STARTTLS
 A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination.
-Gmail, two ways in:
-a Google mailbox connects either with an app password over
+Gmail (IMAP) and Gmail (API):
+a Google mailbox connects with an app password over
 imap.gmail.com
-, which is the default, or by signing in with Google, which uses the Gmail API instead of IMAP. Both are offered in the connect window and both keep working. The choice decides what the agent can do afterwards, so the capability table below has a column for each:
+. A mailbox connected by signing in with Google uses the Gmail API instead of IMAP, and keeps working. The route decides what the agent can do afterwards, so the capability table below has a column for each:
 Gmail (IMAP)
 for the app password and
 Gmail (API)
@@ -122,6 +122,10 @@ AUTH LOGIN
 on its own.
 Other hosts:
 IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX and mail.com are recognised from the address or the mail host you type, and their hosts, ports and transport security are filled in for you.
+Raw data:
+the hosts, ports, login mechanisms and size limits we probed for every provider are published as an
+open dataset
+, with free JSON and CSV downloads.
 What the agent can do once connected
 The operations an MCP client can perform per provider: read, search, send, reply, forward, move, flag, folders, drafts, scheduled send and attachments.
 [aria-label] Supported
@@ -141,7 +145,7 @@ means the normalized operation keeps its meaning,
 different
 means the provider uses documented alternative semantics, and
 unavailable
-means MCP Emails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail.
+means MCPEmails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail.
 Feature
 Gmail (IMAP)
 Gmail (API)
@@ -389,7 +393,7 @@ Ready to connect your inbox?
 Free plan: one connected inbox, forever, no card required.
 Get started free
 Read the docs
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -405,6 +409,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -413,11 +418,14 @@ Docs
 Self-hosting
 For founders
 For business
+Developers
 Resources
 Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
+Developer guide
 MCP client setup
 Blog
 Changelog
@@ -439,7 +447,10 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Withdraw from contract here
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/docs/providers","url":"https://mcpemails.com/docs/providers","name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)","description":"Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/docs/providers#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/docs/providers#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)"}]}]}
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/docs/providers","url":"https://mcpemails.com/docs/providers","name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)","description":"Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/docs/providers#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/docs/providers#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)"}]}]}

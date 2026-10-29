@@ -1,9 +1,9 @@
 const translation = {
   title: 'Hvorfor «e-post lagres aldri» er avgjørende når du kobler AI til innboksen',
   description:
-    'E-post lagres aldri betyr at MCP Emails henter posten din live og kaster den, og beholder kun et kryptert token. Se hvorfor det slår verktøy som kopierer hele innboksen.',
+    'E-post lagres aldri betyr at MCPEmails henter posten din live og kaster den, og beholder kun et kryptert token. Se hvorfor det slår verktøy som kopierer hele innboksen.',
   coverAlt: 'E-post hentet live og kastet kontra en andre kopi lagret i en leverandørs database',
-  content: `Når du kobler en AI-agent til innboksen din, er det aller viktigste spørsmålet hvor e-posten din havner. Med MCP Emails er svaret: ingen steder. Hvert verktøykall henter posten din live fra Gmail, Microsoft Graph eller IMAP-serveren din, gir den til agenten og kaster den. Det eneste vi beholder, er et kryptert token slik at neste kall kan skje.
+  content: `Når du kobler en AI-agent til innboksen din, er det aller viktigste spørsmålet hvor e-posten din havner. Med MCPEmails er svaret: ingen steder. Hvert verktøykall henter posten din live fra Gmail, Microsoft Graph eller IMAP-serveren din, gir den til agenten og kaster den. Det eneste vi beholder, er et kryptert token slik at neste kall kan skje.
 
 Det høres ut som en liten implementasjonsdetalj. Det er det ikke. Det er forskjellen på å gi en agent en *nøkkel til huset ditt* og å gi den en *fotokopi av alt i huset ditt*, oppbevart for alltid i en andres arkivskap. Mange «AI-e-post»-verktøy gjør stille det andre. Dette innlegget handler om hvorfor det betyr noe, og hvordan arkitekturen faktisk skiller seg.
 
@@ -13,7 +13,7 @@ Det finnes egentlig bare to design, og de fleste produkter faller tydelig i én 
 
 **Kopier-alt (synkroniser-og-lagre).** Verktøyet kobler seg til postkassen din én gang og henter så meldingene dine inn i sin egen database — ofte kontinuerlig. Innboksen din blir speilet inn i deres infrastruktur slik at den kan indekseres, embeddes i et vektorlager, mates til en modell eller leveres tilbake raskt. Agenten leser fra *deres* kopi, ikke fra leverandøren din.
 
-**Live-henting (aldri-lagret).** Verktøyet holder kun på en legitimasjon. Når agenten trenger en melding, ringer serveren leverandøren din i sanntid, returnerer resultatet og kaster brødteksten. Ingenting av innholdet beholdes. Slik fungerer MCP Emails.
+**Live-henting (aldri-lagret).** Verktøyet holder kun på en legitimasjon. Når agenten trenger en melding, ringer serveren leverandøren din i sanntid, returnerer resultatet og kaster brødteksten. Ingenting av innholdet beholdes. Slik fungerer MCPEmails.
 
 Kopier-alt-modellen er populær fordi den er lett å bygge og får søk til å føles umiddelbart. Men den endrer hva du faktisk samtykker til når du klikker «Connect». Du gir ikke tilgang. Du autoriserer en duplikat.
 
@@ -39,20 +39,20 @@ Et lagret korpus med ekte e-post er uimotståelig. Det er fristende å bruke det
 
 ## Hvordan live-henting faktisk fungerer
 
-Her er veien et enkelt \`email_read\`-kall (handling \`read\`) tar gjennom MCP Emails:
+Her er veien et enkelt \`email_read\`-kall (handling \`read\`) tar gjennom MCPEmails:
 
 \`\`\`
-agent  →  MCP-server  →  isolert Edge Function
+agent  →  MCP-server  →  leverandørtilkobling
                               ↓ dekrypter token (i minne)
                          leverandøren din (Gmail / Graph / IMAP)
                               ↓ meldingsbrødtekst
-agent  ←  tolket resultat  ←  Edge Function
+agent  ←  tolket resultat  ←  MCP-server
                          (brødtekst kastet, ingenting skrevet)
 \`\`\`
 
-Legitimasjonen er det eneste som ligger lagret, og den er kryptert med **AES-256-GCM**. Dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunktet, og krypteringsnøkkelen er en miljøhemmelighet lagret separat fra databasen — så en database-dump alene er ubrukelig. Selve meldingen rører aldri varig lagring. Den tolkes, returneres til agenten din og er borte.
+Legitimasjonen er det eneste som ligger lagret, og den er kryptert med **AES-256-GCM**. Den dekrypteres på serverne våre bare når en forespørsel trenger den og sendes aldri til agenten din, og krypteringsnøkkelen oppbevares som en serverhemmelighet, adskilt fra databasen, så en database-dump alene er ubrukelig. Selve meldingen rører aldri varig lagring. Den tolkes, returneres til agenten din og er borte.
 
-Sending fungerer på samme måte og legger til én garanti til: utgående post går gjennom *din* leverandør — Gmail API, Microsoft Graph eller din egen SMTP. Vi videresender aldri fra vårt eget domene, så leveringsdyktigheten og domeneomdømmet ditt forblir helt og holdent dine. Det finnes ingen delt sendepool som kan lande deg i en annens spam-omdømme.
+Sending fungerer på samme måte og legger til én garanti til: utgående post går gjennom *din* leverandør: Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook. Vi videresender aldri fra vårt eget domene, så leveringsdyktigheten og domeneomdømmet ditt forblir helt og holdent dine. Det finnes ingen delt sendepool som kan lande deg i en annens spam-omdømme.
 
 Vil du ha den dypere mekanikken bak legitimasjonsmodellen — OAuth-tokens kontra app-passord og hvorfor begge forblir krypterte — skrev jeg om det i [OAuth vs. API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access).
 

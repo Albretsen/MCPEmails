@@ -1,0 +1,361 @@
+{
+  "shell": {
+    "title": "Kom i gang med MCPEmails",
+    "progress": "Steg {current} av {total}",
+    "exit": "Lukk oppsettet",
+    "loading": "Laster oppsettet ditt",
+    "statusError": "Kunne ikke laste oppsettet. Last inn siden på nytt for å prøve igjen.",
+    "skip": "Hopp over"
+  },
+  "chip": {
+    "using": "Bruker {client}",
+    "change": "Endre",
+    "label": "AI-appen du bruker med MCPEmails",
+    "more": "Flere apper"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Koble til innboksen din",
+      "reuseTitle": "En innboks er allerede koblet til",
+      "reuse": "Bruk {address}",
+      "connectAnother": "Koble til en annen innboks",
+      "lead": "Den AI-en din skal lese og svare fra.",
+      "emailLabel": "E-postadresse",
+      "useSignup": "Bruk {address}",
+      "detecting": "Finner leverandøren din",
+      "detected": "{provider}",
+      "notRight": "Endre",
+      "chooseLead": "Hvilken leverandør er det?",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Annen (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Slå på totrinnsbekreftelse.",
+        "step1Body": "Allerede på? Hopp over dette.",
+        "step1Link": "Åpne totrinnsbekreftelse",
+        "step2Title": "Lag et app-passord.",
+        "step2Body": "Skriv MCPEmails som navn og trykk Opprett. Google viser de 16 bokstavene bare én gang, så kopier dem før du lukker siden.",
+        "step2Link": "Lag app-passord",
+        "step3Title": "Lim det inn nedenfor.",
+        "missingTitle": "Finner du ikke siden for app-passord?",
+        "missingBody": "Det er én av tre ting: totrinnsbekreftelse er av (steg 1), en administrator på jobb eller skole har slått av app-passord, eller kontoen bruker Avansert beskyttelse eller bare sikkerhetsnøkler.",
+        "workspace": "Denne kontoen styres av bedriften din. Hvis steg 2 sier at innstillingen ikke er tilgjengelig, må administratoren tillate totrinnsbekreftelse og app-passord."
+      },
+      "icloud": {
+        "step1Title": "Åpne Apple-kontoen din.",
+        "step1Link": "Åpne account.apple.com",
+        "step2Title": "Velg Pålogging og sikkerhet, og deretter Appspesifikke passord.",
+        "step2Body": "Lag et nytt og kall det MCPEmails.",
+        "step3Title": "Lim det inn nedenfor.",
+        "step3Body": "Apple viser det bare én gang, som xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Mangler valget?",
+        "missingBody": "Tofaktorautentisering må være på. Har du nylig tilbakestilt passordet til Apple-kontoen, sluttet eldre appspesifikke passord å virke, så lag et nytt."
+      },
+      "yahoo": {
+        "step1Title": "Åpne kontosikkerhet hos {provider}.",
+        "step1Link": "Lag app-passord",
+        "step2Title": "Under Eksterne tilkoblinger velger du Lag app-passord.",
+        "step2Body": "Skriv MCPEmails og trykk Generer passord.",
+        "step3Title": "Lim inn de 16 bokstavene nedenfor.",
+        "missingTitle": "Ikke der, eller står det at det ikke er tilgjengelig nå?",
+        "missingBody": "Slå på totrinnsbekreftelse og last inn siden på nytt. Nye kontoer kan måtte vente opptil to uker. Bruk en nettleser du vanligvis logger inn med, ikke et privat vindu."
+      },
+      "gmx": {
+        "step1Title": "Slå på IMAP hos {provider}.",
+        "step1Body": "I nettposten åpner du E-Mail-Einstellungen, så POP3/IMAP, og slår på POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang).",
+        "step1Link": "Slik slår du på IMAP",
+        "step2Title": "Tofaktorautentisering på?",
+        "step2Body": "Lag et programspesifikt passord under Sicherheit (sikkerhet). Det vises bare én gang. Er tofaktorautentisering av, bruker du det vanlige {provider}-passordet ditt.",
+        "step3Title": "Lim det inn nedenfor.",
+        "missingTitle": "Virket før, men ikke nå?",
+        "missingBody": "{provider} kan slå av IMAP igjen. Sjekk steg 1."
+      },
+      "microsoft": {
+        "step1Title": "Trykk Koble til med Microsoft og logg inn på Microsofts side.",
+        "step2Title": "Godta tillatelsene.",
+        "note": "Her trengs ikke noe passord. Du logger inn på Microsofts egen side.",
+        "connect": "Koble til med Microsoft",
+        "adminTitle": "Jobb- eller skolekonto?",
+        "adminBody": "Mange organisasjoner krever at en administrator godkjenner nye apper før du kan logge inn. Hvis Microsoft ber om godkjenning fra en administrator, send administratoren denne lenken. Administratoren trenger ingen MCPEmails-konto.",
+        "adminLink": "Hent lenken til administratoren",
+        "adminCopy": "Kopier lenke",
+        "adminCopied": "Kopiert",
+        "adminError": "Kunne ikke lage lenken. Prøv igjen."
+      },
+      "proton": {
+        "title": "Proton Mail krever Proton Bridge",
+        "body": "Proton Mail virker med e-postapper bare gjennom Proton Bridge, som kjører på din egen datamaskin. MCPEmails kjører i skyen og når den ikke, så en Proton-innboks kan ikke kobles til."
+      },
+      "imap": {
+        "step1": "Bruk hele e-postadressen og passordet til selve innboksen, ikke innloggingen til webhotellet eller kontrollpanelet.",
+        "step2": "Har innboksen tofaktorautentisering, lager du et app-passord i sikkerhetsinnstillingene hos leverandøren og bruker det.",
+        "appPasswordLink": "Lag et app-passord hos {provider}",
+        "servers": "Servere: {host}",
+        "manualLead": "Vi fant ikke e-postserverne dine. Leverandøren oppgir dem på hjelpesidene sine.",
+        "imapHost": "Innkommende server (IMAP)",
+        "smtpHost": "Utgående server (SMTP)",
+        "port": "Port",
+        "username": "Brukernavn, hvis det ikke er e-postadressen din",
+        "advanced": "Avansert"
+      },
+      "password": {
+        "labelApp": "App-passord",
+        "labelMailbox": "Passord",
+        "spaces": "Mellomrom gjør ingenting.",
+        "show": "Vis",
+        "hide": "Skjul",
+        "warnAccount": "Dette ser ut som et vanlig passord. {provider} trenger et app-passord her: 16 bokstaver.",
+        "warnLength": "Et app-passord har 16 bokstaver. Sjekk at du kopierte alt.",
+        "warnNote": "Du kan likevel prøve."
+      },
+      "trust": {
+        "appPassword": "Et app-passord gir bare tilgang til e-posten. Lagres kryptert i Stockholm, og du kan trekke det tilbake når som helst.",
+        "mailboxPassword": "Lagres kryptert i Stockholm. Koble fra når som helst."
+      },
+      "connect": "Koble til",
+      "progress": {
+        "title": "Kobler til {address}",
+        "server": "E-postserver funnet",
+        "signedIn": "Logget inn",
+        "read": "Innboks lest"
+      },
+      "proof": {
+        "title": "Tilkoblet",
+        "count": "{count, plural, one {# melding} other {# meldinger}} i innboksen",
+        "newest": "Nyeste",
+        "noSubject": "(uten emne)",
+        "private": "Vises bare for deg, lest direkte fra innboksen din.",
+        "ready": "Innboksen er tilkoblet og klar.",
+        "continue": "Fortsett"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} har slått av IMAP-tilgang for denne innboksen. Slå det på og prøv igjen.",
+          "app_password_required": "{provider} trenger et app-passord her, ikke det vanlige passordet ditt.",
+          "account_password_used": "Dette ser ut som det vanlige {provider}-passordet ditt. Bruk et app-passord i stedet.",
+          "app_password_length": "App-passordet ser ufullstendig ut. Det skal ha 16 bokstaver.",
+          "provider_refused_signin": "{provider} avviste selve innloggingen, ikke passordet. Logg inn hos {provider} i nettleseren, godkjenn eventuelle sikkerhetsvarsler og prøv igjen.",
+          "login_username_required": "Denne serveren vil ha et brukernavn som ikke er e-postadressen din. Finn det i innstillingene hos leverandøren og skriv det inn under Avansert.",
+          "password_rejected": "{provider} godtok ikke passordet. Sjekk det og lim det inn på nytt."
+        },
+        "network": "Vi fikk ikke kontakt med MCPEmails. Sjekk tilkoblingen og prøv igjen.",
+        "limit": "Dette arbeidsområdet har allerede alle innboksene planen inkluderer.",
+        "sessionExpired": "Du ble logget ut. Logg inn igjen og kom tilbake til denne siden.",
+        "notAllowed": "Bare eiere og administratorer av arbeidsområdet kan koble til en innboks.",
+        "alreadyConnected": "Denne innboksen er allerede koblet til i dette arbeidsområdet.",
+        "useMicrosoft": "Dette er en Microsoft-innboks. Den kobles til med Microsoft-pålogging, ikke med passord.",
+        "smtpRejected": "Lesing virker, men serveren avviste innloggingen for sending.",
+        "blocked": "E-postserveren avviste tilkoblingen vår. Noen leverandører blokkerer skyservere.",
+        "hostNotFound": "Vi fant ikke den e-postserveren. Sjekk servernavnet.",
+        "unreachable": "E-postserveren svarte ikke. Sjekk servernavn og port.",
+        "tls": "Den sikre tilkoblingen til e-postserveren mislyktes. Prøv den andre porten.",
+        "hostRefused": "Vi kan ikke koble til det servernavnet eller den porten. Sjekk serverinnstillingene.",
+        "saveFailed": "Logget inn, men lagringen mislyktes. Prøv igjen om litt.",
+        "generic": "Det virket ikke. Prøv igjen, eller koble til en annen innboks.",
+        "link": {
+          "twoStep": "Åpne totrinnsbekreftelse",
+          "appPasswords": "Åpne siden for app-passord hos {provider}",
+          "imapSetting": "Slik slår du på IMAP hos {provider}",
+          "providerHelp": "Hjelpesiden til {provider}",
+          "adminGuide": "Googles veiledning for administratoren"
+        },
+        "kept": "Adressen står fortsatt, så et nytt forsøk er bare å lime inn.",
+        "readOnly": "Koble til bare for lesing",
+        "readOnlyNote": "AI-en kan lese og søke, men ikke sende.",
+        "different": "Koble til en annen innboks",
+        "support": "Send denne feilen til support",
+        "supportNote": "Vi får feilen og leverandøren, aldri passordet ditt.",
+        "signIn": "Logg inn igjen",
+        "seePlans": "Se planer"
+      },
+      "outlookError": {
+        "admin_consent_required": "Organisasjonen din krever at en administrator godkjenner MCPEmails før du kan logge inn. Send administratoren lenken nedenfor.",
+        "outlook_cancelled": "Du avbrøt på Microsofts side. Trykk Koble til med Microsoft for å prøve igjen.",
+        "generic": "Microsoft-påloggingen ble ikke fullført. Prøv igjen."
+      },
+      "emailPlaceholder": "deg@eksempel.no"
+    },
+    "add_to_ai": {
+      "title": "Legg til MCPEmails i {client}",
+      "lead": "Dette går videre av seg selv når {client} har koblet til.",
+      "urlLabel": "Server-URL for MCPEmails",
+      "linkAfter": "Bekreft i {client}, og logg inn på MCPEmails.",
+      "claudeAfter": "I Claude klikker du Fortsett, så Legg til og så Koble til.",
+      "commandAfter": "Start så {client} og logg inn på MCPEmails når du blir spurt.",
+      "configLead": "Legg dette inn i {file}, last inn {client} på nytt og logg inn på MCPEmails når du blir spurt.",
+      "genericOauth": "Legg til en MCP-server av typen HTTP i {client}, lim inn URL-en under, og logg inn på MCPEmails når du blir spurt.",
+      "manual": "Sett det opp manuelt",
+      "continue": "Jeg har lagt det til",
+      "chatgpt": {
+        "step1": "På chatgpt.com åpner du Plugins og klikker Add øverst til høyre.",
+        "step2": "Velg Add custom MCP server, kall den MCPEmails og lim inn URL-en under som Server URL.",
+        "step3": "Huk av for I understand and want to continue, klikk Create as a plugin, så Connect MCPEmails, og gi tilgang.",
+        "step4": "Skriv @MCPEmails i en chat for å bruke den.",
+        "note": "Egne MCP-servere fungerer på Go-abonnementet og alle betalte abonnementer, i en nettleser på chatgpt.com."
+      },
+      "key": {
+        "creating": "Lager en API-nøkkel for {client}",
+        "ready": "Vi har laget en API-nøkkel for {client} med standardtilgang (lese, utkast, sende). Kopier den nå: den vises bare én gang.",
+        "failed": "Kunne ikke lage en API-nøkkel. Lag en i dashbordet under API-nøkler.",
+        "limit": "Abonnementet ditt har ikke plass til flere API-nøkler. Fjern en i dashbordet og last inn siden på nytt.",
+        "retry": "Prøv igjen",
+        "header": "Header",
+        "label": "API-nøkkel"
+      },
+      "cline": {
+        "step1": "I Cline åpner du MCP Servers og så fanen Remote Servers.",
+        "step2": "Kall den MCPEmails, lim inn URL-en og sett Transport Type til Streamable HTTP.",
+        "step3": "Legg til headeren under og klikk Add Server."
+      },
+      "jetbrains": {
+        "step1": "Åpne Settings, så Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Klikk Add, velg Streamable HTTP og lim inn URL-en.",
+        "step3": "Legg til headeren under og lagre."
+      },
+      "curl": "Kall serveren med denne nøkkelen. Neste steg gir deg en første forespørsel å sende.",
+      "phone": {
+        "claudeTitle": "På mobilen legger du det til i nettleseren",
+        "claudeBody": "Kopier denne lenken og lim den inn i Safari eller Chrome. Trykker du på den, kan Claude-appen åpnes, og der kan du ikke legge til connectors. Når den er lagt til, virker MCPEmails i appen også.",
+        "copyLink": "Kopier lenken",
+        "otherBody": "{client} settes opp på en datamaskin. Vi kan sende deg dette steget på e-post, så du kan åpne det der.",
+        "showHere": "Vis stegene her likevel"
+      }
+    },
+    "first_prompt": {
+      "title": "Prøv det i {client}",
+      "lead": "Lim inn dette i en ny chat.",
+      "leadCode": "Lim inn dette i {client}.",
+      "leadApi": "Send din første forespørsel:",
+      "open": "Åpne {client}"
+    },
+    "wait": {
+      "title": "Venter på {client}"
+    },
+    "it_works": {
+      "title": "Det virker",
+      "success": {
+        "read": "{client} har nettopp lest innboksen din.",
+        "search": "{client} har nettopp søkt i innboksen din.",
+        "draft": "{client} har nettopp lagret et utkast i postkassen din.",
+        "organize": "{client} har nettopp ryddet i innboksen din.",
+        "generic": "{client} har nettopp brukt postkassen din.",
+        "connected": "{client} er koblet til postkassen din."
+      },
+      "finish": "Ferdig",
+      "secondInbox": {
+        "title": "Koble til den andre innboksen din",
+        "lead": "De fleste kobler til en innboks til: jobb og privat i samme chat.",
+        "cta": "Koble til en innboks til",
+        "paidNote": "Free dekker én innboks. Den neste åpner planvalgene, med Fortsett med Free rett ved siden av."
+      }
+    }
+  },
+  "nav": {
+    "continue": "Fortsett",
+    "back": "Tilbake",
+    "done": "Ferdig"
+  },
+  "placeholder": "Dette steget er fortsatt under arbeid.",
+  "actions": {
+    "copy": "Kopier",
+    "copied": "Kopiert",
+    "emailMe": "Send meg lenken på e-post",
+    "emailSent": "Sendt til {email}.",
+    "emailFailed": "Kunne ikke sende e-posten. Prøv igjen om et minutt."
+  },
+  "ladder": {
+    "waiting": "Venter på {client}",
+    "connected": "{client} er koblet til",
+    "ask": "Spør den om noe",
+    "works": "Det virker",
+    "listening": "Venter på {client}",
+    "stopped": "Vi venter ikke lenger. Last inn siden på nytt etter at du har prøvd prompten."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} har ikke koblet til ennå",
+      "claude": "Last inn claude.ai på nytt og start en ny chat. I Claude Desktop avslutter du appen helt og åpner den igjen.",
+      "chatgpt": "Åpne en ny chat på chatgpt.com, skriv @ og velg MCPEmails.",
+      "editor": "Last inn {client}-vinduet på nytt og sjekk at MCPEmails står som tilkoblet i MCP-listen. Hvis ikke, lim inn URL-en på nytt.",
+      "cli": "Avslutt og start {client} på nytt, og sjekk at MCPEmails står på listen og er tilkoblet.",
+      "api": "Send forespørselen på nytt og sjekk at Authorization-headeren har nøkkelen din."
+    },
+    "noCall": {
+      "title": "{client} er koblet til, men har ikke brukt MCPEmails ennå",
+      "claude": "Slå på MCPEmails i denne chatten (+ > Connectors) eller start en ny chat, og lim inn prompten på nytt.",
+      "chatgpt": "Skriv @ i chatten og velg MCPEmails, og lim inn prompten på nytt.",
+      "other": "Start en ny chat og lim inn prompten på nytt. Den nevner MCPEmails, så {client} vet hva den skal bruke."
+    },
+    "reconnect": {
+      "title": "Fortsatt ingenting?",
+      "body": "Fjern MCPEmails fra {client}, legg det til på nytt og start en ny chat.",
+      "docs": "Oppsettsguide for {client}",
+      "back": "Vis oppsettssteget igjen",
+      "email": "Send meg stegene på e-post"
+    }
+  },
+  "failure": {
+    "auth": "E-postleverandøren din avviste passordet til innboksen. Koble til innboksen på nytt i dashbordet.",
+    "timeout": "E-postserveren din brukte for lang tid. Spør på nytt for en kortere periode.",
+    "provider": "E-postleverandøren din svarte med en feil. Prøv igjen om et minutt.",
+    "scope": "Tilgangen du ga {client}, tillater ikke det. Spør om noe annet, eller koble til på nytt med mer tilgang.",
+    "inbox": "{client} fant ingen tilkoblet innboks. Sjekk innboksene dine i dashbordet.",
+    "params": "{client} sendte en forespørsel MCPEmails ikke kunne lese. Vanligvis prøver den igjen av seg selv.",
+    "generic": "Den siste forespørselen fra {client} feilet. Spør på nytt."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Bruk MCPEmails, se på innboksen min fra de siste 2 dagene og si hvilke e-poster som trenger svar fra meg i dag. Én linje per e-post: hvem, hva de vil og innen når. Ikke send, lag utkast, flytt eller slett noe.",
+      "code": "Bruk MCPEmails-verktøyene til å se på innboksen min fra de siste 2 dagene og si hvilke e-poster som trenger svar fra meg i dag. Én linje per e-post: hvem, hva de vil og innen når. Ikke send, lag utkast, flytt eller slett noe."
+    },
+    "draftReplies": {
+      "drafts": "Velg de 3 e-postene på listen som trenger svar mest, og lagre et svarutkast til hver i Utkast-mappen min, skrevet i min vanlige tone. Ikke send noe.",
+      "readOnly": "Velg de 3 e-postene på listen som trenger svar mest, og skriv et kort svar til hver her i chatten. Ikke send eller lagre noe."
+    },
+    "morningBrief": {
+      "chat": "Bruk MCPEmails og gi meg morgenoppsummeringen min: hva som har kommet siden i går, hva som trenger svar i dag, og alt med en frist denne uken. Maks 10 linjer. Ikke endre noe.",
+      "code": "Bruk MCPEmails-verktøyene til å gi meg morgenoppsummeringen min: hva som har kommet siden i går, hva som trenger svar i dag, og alt med en frist denne uken. Maks 10 linjer. Ikke endre noe."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Oppsettslenken din for MCPEmails",
+      "intro": "Åpne denne lenken på datamaskinen for å legge til MCPEmails i {client}:"
+    },
+    "helpSteps": {
+      "subject": "Slik kobler du MCPEmails til {client}",
+      "intro": "Slik får du {client} til å virke med MCPEmails:",
+      "prompt": "Lim så inn denne prompten i den nye chatten:",
+      "guide": "Oppsettsguide:",
+      "resume": "Fortsett der du slapp:"
+    },
+    "morning": {
+      "subject": "Prompten for morgenoppsummeringen",
+      "intro": "God morgen. Lim inn dette i {client} for å få morgenoppsummeringen din:"
+    },
+    "footer": "Du ba om denne e-posten da du satte opp MCPEmails. Den sendes én gang."
+  },
+  "chatReturn": {
+    "title": "Tilkoblet. Gå tilbake til {client} og spør på nytt.",
+    "lead": "Innboksen din er klar. Still {client} det samme spørsmålet igjen, eller start med dette:",
+    "prompt": "Se på innboksen min fra de siste 24 timene og si hvilke e-poster jeg må svare på.",
+    "copy": "Kopier ledetekst",
+    "copied": "Kopiert",
+    "open": "Åpne {client}",
+    "yourApp": "KI-appen din",
+    "dashboard": "Gå til dashbordet"
+  }
+}

@@ -22,7 +22,7 @@
     "titleLine1": "Connectez Naver Mail à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Naver. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'application Naver, dans tous les clients MCP plutôt qu'un seul.",
-    "answer": "Claude ne peut pas atteindre Naver Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.naver.com, port 993, en s'authentifiant avec un mot de passe d'application Naver (애플리케이션 비밀번호) plutôt qu'avec le mot de passe de votre compte. Depuis le 24 juin 2025, Naver exige la validation en deux étapes sur le compte et un mot de passe d'application pour toute connexion POP3, IMAP et SMTP : le mot de passe du compte n'authentifie donc plus aucun client de messagerie. Vous devez aussi activer IMAP dans les réglages de Naver Mail, un contrôle distinct du mot de passe. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas atteindre Naver Mail tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.naver.com, port 993, en s'authentifiant avec un mot de passe d'application Naver (애플리케이션 비밀번호) plutôt qu'avec le mot de passe de votre compte. Depuis le 24 juin 2025, Naver exige la validation en deux étapes sur le compte et un mot de passe d'application pour toute connexion POP3, IMAP et SMTP : le mot de passe du compte n'authentifie donc plus aucun client de messagerie. Vous devez aussi activer IMAP dans les réglages de Naver Mail, un contrôle distinct du mot de passe. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Validation en deux étapes et mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Deux éléments seront générés dans les étapes suivantes : gardez l'onglet ouvert pour la dernière."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Activez la validation en deux étapes et générez un mot de passe d'application",
-      "p": "Allez sur nid.naver.com, ouvrez 보안설정 (Réglages de sécurité) et configurez 2단계 인증 (validation en deux étapes) si elle n'est pas déjà active, puis cliquez sur 관리 (gérer). À l'intérieur, ouvrez 애플리케이션 비밀번호 관리 (gestion des mots de passe d'application) et cliquez sur 생성하기 (générer). Choisissez l'option de saisie directe, nommez-le par exemple mcpemails, et copiez le mot de passe affiché par Naver. Dans mcpemails, choisissez IMAP / SMTP, saisissez votre adresse Naver complète et collez ce mot de passe d'application plutôt que votre mot de passe Naver."
+      "p": "Allez sur nid.naver.com, ouvrez 보안설정 (Réglages de sécurité) et configurez 2단계 인증 (validation en deux étapes) si elle n'est pas déjà active, puis cliquez sur 관리 (gérer). À l'intérieur, ouvrez 애플리케이션 비밀번호 관리 (gestion des mots de passe d'application) et cliquez sur 생성하기 (générer). Choisissez l'option de saisie directe, nommez-le par exemple MCPEmails, et copiez le mot de passe affiché par Naver. Dans MCPEmails, choisissez IMAP / SMTP, saisissez votre adresse Naver complète et collez ce mot de passe d'application plutôt que votre mot de passe Naver."
     },
     {
       "h": "Collez l'URL MCP dans votre client IA",
@@ -64,7 +64,7 @@
     },
     {
       "h": "Naver Works est un autre service, et ces réglages ne s'y appliquent pas",
-      "p": "Naver Works, la suite professionnelle vendue aux entreprises coréennes, n'est pas le même produit qu'une boîte personnelle <code>@naver.com</code>. Il a sa propre administration, ses propres contrôles de protocoles et ses propres noms de serveurs. Si votre adresse est sur un domaine d'entreprise administré via Naver Works, prenez les serveurs dans cette console plutôt que sur cette page, puis connectez la boîte dans mcpemails comme un compte IMAP et SMTP ordinaire."
+      "p": "Naver Works, la suite professionnelle vendue aux entreprises coréennes, n'est pas le même produit qu'une boîte personnelle <code>@naver.com</code>. Il a sa propre administration, ses propres contrôles de protocoles et ses propres noms de serveurs. Si votre adresse est sur un domaine d'entreprise administré via Naver Works, prenez les serveurs dans cette console plutôt que sur cette page, puis connectez la boîte dans MCPEmails comme un compte IMAP et SMTP ordinaire."
     }
   ],
   "limits": [
@@ -75,7 +75,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Naver Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Naver intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Naver donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Naver intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCPEmails à votre boîte Naver donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Naver ?",
@@ -87,7 +87,7 @@
     },
     {
       "q": "Comment créer un mot de passe d'application Naver ?",
-      "a": "Connectez-vous sur nid.naver.com, ouvrez 보안설정 et activez 2단계 인증 si elle est désactivée. Cliquez sur 관리 à côté, puis ouvrez 애플리케이션 비밀번호 관리 et cliquez sur 생성하기. Donnez un nom au mot de passe pour pouvoir le révoquer séparément plus tard, puis copiez-le dans le champ mot de passe de votre client de messagerie ou de mcpemails."
+      "a": "Connectez-vous sur nid.naver.com, ouvrez 보안설정 et activez 2단계 인증 si elle est désactivée. Cliquez sur 관리 à côté, puis ouvrez 애플리케이션 비밀번호 관리 et cliquez sur 생성하기. Donnez un nom au mot de passe pour pouvoir le révoquer séparément plus tard, puis copiez-le dans le champ mot de passe de votre client de messagerie ou de MCPEmails."
     },
     {
       "q": "Dois-je quand même activer IMAP dans les réglages de Naver Mail ?",

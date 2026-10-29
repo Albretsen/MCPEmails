@@ -20,7 +20,7 @@
     "titleLine1": "将 GreenGeeks 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 GreenGeeks 邮箱。使用创建地址时设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 GreenGeeks 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GreenGeeks 运行标准的 cPanel，并不提供共用的邮件主机名：你的服务器由你自己的域名或你账户所在的服务器构成，cPanel 会在 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 区块中列出准确的值。认证使用邮箱密码，而不是你的 GreenGeeks 控制台登录密码，1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 GreenGeeks 邮箱。MCPEmails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GreenGeeks 运行标准的 cPanel，并不提供共用的邮件主机名：你的服务器由你自己的域名或你账户所在的服务器构成，cPanel 会在 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 区块中列出准确的值。认证使用邮箱密码，而不是你的 GreenGeeks 控制台登录密码，1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "来自 cPanel 的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "设置或确认邮箱密码",
-      "p": "IMAP 校验的是邮箱地址所附带的密码，它与你的 GreenGeeks 控制台密码和 cPanel 登录密码都不同。如果你不知道这个密码，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置一个新密码，然后以完整地址作为用户名，把密码粘贴到 mcpemails。"
+      "p": "IMAP 校验的是邮箱地址所附带的密码，它与你的 GreenGeeks 控制台密码和 cPanel 登录密码都不同。如果你不知道这个密码，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置一个新密码，然后以完整地址作为用户名，把密码粘贴到 MCPEmails。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "GreenGeeks 在共享套餐上设有每小时外发数量限制。AI 代理的大量自动发送可能会触及上限，表现为发送被延迟或拒绝，而不是连接错误。",
-    "mcpemails 只连接邮箱。别名、转发器、自动回复和垃圾邮件设置仍在 cPanel 中管理。"
+    "MCPEmails 只连接邮箱。别名、转发器、自动回复和垃圾邮件设置仍在 cPanel 中管理。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 GreenGeeks 邮箱吗？",
-      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 GreenGeeks 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，所用凭据与你在 Thunderbird 或 Apple Mail 中填写的相同。"
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 GreenGeeks 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，所用凭据与你在 Thunderbird 或 Apple Mail 中填写的相同。"
     },
     {
       "q": "GreenGeeks 的 IMAP 和 SMTP 设置是什么？",

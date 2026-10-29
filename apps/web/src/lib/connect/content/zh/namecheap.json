@@ -23,7 +23,7 @@
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Namecheap Private Email。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "answer": "Claude 无法自行连接 Namecheap Private Email。MCPEmails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "persona": {
     "intro": "在 Namecheap 有好几个公司邮箱？",
@@ -37,14 +37,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "找到你的 Private Email 邮箱密码",
       "p": "使用邮箱本身的密码，而不是 Namecheap 账户密码。你随时可以在 Private Email 控制面板中重置它。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 Namecheap Private Email 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "Private Email 的两步验证只作用于网页邮箱，却会把所有邮件客户端挡在门外",
-      "p": "Namecheap 在文档中说明 Private Email 的两步验证用于保护网页界面。一旦开启，你普通的邮箱密码就无法再通过 IMAP 和 SMTP 认证，而拒绝信息只是一个普通的登录失败，完全不提第二重验证。解决办法是<b>应用专用密码</b>：在 Private Email 网页邮箱中依次打开 <b>Settings</b>、<b>Security</b>、<b>Application Passwords</b>，从下拉菜单选择客户端类型并生成密码。把它粘贴到 mcpemails，替代邮箱密码。如果你从未开启两步验证，就不存在应用密码，也不需要。"
+      "p": "Namecheap 在文档中说明 Private Email 的两步验证用于保护网页界面。一旦开启，你普通的邮箱密码就无法再通过 IMAP 和 SMTP 认证，而拒绝信息只是一个普通的登录失败，完全不提第二重验证。解决办法是<b>应用专用密码</b>：在 Private Email 网页邮箱中依次打开 <b>Settings</b>、<b>Security</b>、<b>Application Passwords</b>，从下拉菜单选择客户端类型并生成密码。把它粘贴到 MCPEmails，替代邮箱密码。如果你从未开启两步验证，就不存在应用密码，也不需要。"
     },
     {
       "h": "所有客户的服务器都是 mail.privateemail.com，Namecheap 明确要求不要修改",
@@ -73,12 +73,12 @@
   "limits": [
     "由于服务器未声明 MOVE，移动操作不是原子的。如果连接中途断开，一封邮件可能会短暂同时存在于两个文件夹中。",
     "Private Email 是独立于域名的订阅。拥有 Namecheap 域名并不意味着你有可连接的 Namecheap 邮箱。",
-    "mcpemails 连接的是邮箱。别名、转发器、全收规则和邮箱创建仍在 Namecheap Private Email 控制面板中管理。"
+    "MCPEmails 连接的是邮箱。别名、转发器、全收规则和邮箱创建仍在 Namecheap Private Email 控制面板中管理。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Namecheap Private Email 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Namecheap 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接还能在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+      "a": "不能单独使用。Claude 没有内置的 Namecheap 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接还能在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
     },
     {
       "q": "Namecheap Private Email 的 IMAP 和 SMTP 设置是什么？",
@@ -90,7 +90,7 @@
     },
     {
       "q": "如何创建 Namecheap 应用密码？",
-      "a": "登录 privateemail.com 上的 Private Email 网页邮箱，依次打开 Settings、Security、Application Passwords。从下拉菜单中选择应用或客户端类型并生成密码。立即复制，并粘贴到 mcpemails 替代邮箱密码。只有开启了两步验证才需要它。"
+      "a": "登录 privateemail.com 上的 Private Email 网页邮箱，依次打开 Settings、Security、Application Passwords。从下拉菜单中选择应用或客户端类型并生成密码。立即复制，并粘贴到 MCPEmails 替代邮箱密码。只有开启了两步验证才需要它。"
     },
     {
       "q": "我能用 mail.mydomain.com 代替 mail.privateemail.com 吗？",
@@ -103,6 +103,6 @@
   ],
   "ctaBand": {
     "title": "把所有 Namecheap Private Email 邮箱交给同一个代理",
-    "sub": "免费连接第一个 Namecheap Private Email 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "sub": "免费连接第一个 Namecheap Private Email 邮箱，无需信用卡。Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   }
 }

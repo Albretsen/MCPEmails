@@ -123,7 +123,7 @@ export function InstallPrompt() {
         outcome === "enabled"
           ? "Notifications are on"
           : outcome === "failed"
-            ? { text: "Notifications could not be turned on. Try again from the account menu.", kind: "error" }
+            ? { text: "Notifications could not be turned on. Try again in Notifications settings.", kind: "error" }
             : "Notifications are allowed. They will start once they are available for your account.",
       );
       // Stay up only if there is still an install to offer.
@@ -141,7 +141,7 @@ export function InstallPrompt() {
   };
 
   const title =
-    variant === "ios" ? "Get notified about new mail" : variant === "notify" ? "Turn on notifications" : "Install mcpemails";
+    variant === "ios" ? "Get notified about new mail" : variant === "notify" ? "Turn on notifications" : "Install MCPEmails";
 
   // One compact row; the explanation and the buttons open on tap.
   return (
@@ -164,10 +164,10 @@ export function InstallPrompt() {
             <p className={s.noticeBody}>
               On iPhone and iPad, notifications only work for apps on the Home Screen. Tap{" "}
               <Share size={13} aria-label="Share" className={s.noticeGlyph} /> in Safari, then <strong>Add to Home Screen</strong>, and open
-              mcpemails from there.
+              MCPEmails from there.
             </p>
           ) : variant === "notify" ? (
-            <p className={s.noticeBody}>Know when new mail arrives, even when mcpemails is not open.</p>
+            <p className={s.noticeBody}>Know when new mail arrives, even when MCPEmails is not open.</p>
           ) : (
             <p className={s.noticeBody}>Its own window, in your dock or on your home screen.</p>
           )}

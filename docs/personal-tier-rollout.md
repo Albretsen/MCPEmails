@@ -32,7 +32,7 @@ Do not renegotiate these. If you believe one is wrong, say so and stop; do not q
 ```
 maxInboxes: 3
 maxDailyBurstCalls: Infinity
-maxMonthlyToolCalls: 25_000     // silent abuse ceiling, NEVER appears in customer-facing copy
+maxMonthlyToolCalls: 100_000    // silent (25_000 until 2026-10-16) abuse ceiling, NEVER appears in customer-facing copy
 maxApiKeys: Infinity
 maxMembers: 1
 billingPortalEnabled: true      // it is a paid plan and must be self-cancellable

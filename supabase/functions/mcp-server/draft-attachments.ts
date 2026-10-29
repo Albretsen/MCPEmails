@@ -369,8 +369,15 @@ export interface CarriedAttachments {
    * counted above; see the header.
    */
   inlineImages: number;
-  /** The files, encoded on demand: most reads never write. */
-  encode(): OutgoingAttachment[];
+  /** Each file's decoded size, in the order `encode` returns them. */
+  sizes: number[];
+  /**
+   * The files, encoded on demand: most reads never write. `skip` holds the
+   * positions of files to leave out (the editor card's remove, 2026-10-17);
+   * every other file is re-encoded from its own decoded bytes, so what the
+   * rebuilt message carries is byte for byte what the stored one had.
+   */
+  encode(skip?: ReadonlySet<number>): OutgoingAttachment[];
 }
 
 /** The `cid:` references an HTML body makes, lowercased, brackets stripped. */
@@ -408,8 +415,9 @@ export function carriedAttachmentsOf(
     count: files.length,
     bytes: files.reduce((total, file) => total + file.content.length, 0),
     inlineImages,
-    encode: () =>
-      files.map((file) => ({
+    sizes: files.map((file) => file.content.length),
+    encode: (skip) =>
+      files.filter((_, i) => !skip?.has(i)).map((file) => ({
         filename: file.filename,
         mime_type: cleanMediaType(file.mimeType) ?? "application/octet-stream",
         data: bytesToBase64(file.content),

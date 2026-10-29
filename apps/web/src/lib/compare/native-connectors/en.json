@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "title": "Claude and ChatGPT email connectors vs an MCP server",
+    "description": "What Claude's and ChatGPT's built-in email connectors and Fastmail's and Zoho's own MCP servers can do, compared with MCPEmails. Sourced and dated."
+  },
+  "hero": {
+    "eyebrow": "Native connectors vs MCP",
+    "titleLine1": "Built-in connectors send mail now.",
+    "titleLine2": "Here is where they stop.",
+    "lead": "Claude and ChatGPT can read and send Gmail and Microsoft mail, and Fastmail and Zoho run their own MCP servers. Each one covers a single provider or works inside a single app. MCPEmails puts every mailbox you own behind one connection that works in any MCP client.",
+    "updated": "Third-party facts checked {date}. Every claim links to its source.",
+    "ctaPrimary": "Connect an inbox free",
+    "ctaSecondary": "Read the docs"
+  },
+  "kinds": {
+    "title": "Two kinds of native",
+    "sub": "They are often lumped together, and they differ on the two things that matter: which mailboxes they reach and which apps they work in.",
+    "apps": {
+      "h": "Connectors built into an AI app",
+      "p": "Claude's Gmail and Microsoft 365 connectors and ChatGPT's Gmail and Outlook apps. Nothing to install, and they now send mail. They only work inside that one app, and Claude's Microsoft 365 connector cannot connect personal Outlook.com or Hotmail accounts."
+    },
+    "provider": {
+      "h": "A mail provider's own MCP server",
+      "p": "Fastmail and Zoho Mail each run an official MCP server, and Google's Gmail MCP server is in developer preview. They work in any MCP client, but each one reaches only its own provider's mailboxes."
+    }
+  },
+  "axes": {
+    "title": "Where a managed MCP server still differs",
+    "sub": "Three differences that hold on the pages we read. Where the built-in options caught up, the table below says so.",
+    "items": {
+      "coverage": {
+        "tag": "Coverage",
+        "h": "Every mailbox, one connection",
+        "p": "MCPEmails connects Gmail, Outlook including personal Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex and any IMAP mailbox, several at once behind one MCP URL. A built-in connector reaches Gmail and Microsoft mail, and a provider's own server reaches that provider."
+      },
+      "actions": {
+        "tag": "Control",
+        "h": "Schedule, hold and organize",
+        "p": "The built-in connectors send, reply and forward. MCPEmails also schedules sends for later, can hold outbound mail for your approval per inbox, and moves, copies, flags, archives and deletes in every connected mailbox."
+      },
+      "portable": {
+        "tag": "Portable",
+        "h": "One setup, every AI app",
+        "p": "Claude's and ChatGPT's connectors work only inside their own app. MCPEmails is a standard streamable-http MCP server with OAuth 2.1, dynamic client registration and PKCE, so the same mailboxes work in Claude, ChatGPT, Cursor, VS Code, n8n and any other MCP client."
+      }
+    }
+  },
+  "table": {
+    "title": "Side by side",
+    "featureCol": "Capability",
+    "appsCol": "Claude and ChatGPT connectors",
+    "providerCol": "Provider's own MCP server",
+    "usCol": "MCPEmails",
+    "notStated": "Not stated",
+    "rows": {
+      "reach": "Mailboxes it reaches",
+      "several": "Several providers in one connection",
+      "send": "Send, reply and forward",
+      "organize": "Move, label, archive or delete",
+      "schedule": "Schedule a send for later",
+      "approval": "Approval before sending",
+      "portable": "Works in other AI apps"
+    },
+    "values": {
+      "reachApps": "Gmail. Microsoft 365 work accounts in Claude, Outlook in ChatGPT.",
+      "reachProvider": "That provider only: Fastmail, Zoho, or Gmail in Google's preview.",
+      "reachUs": "Gmail, Outlook and Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex, any IMAP.",
+      "sendProvider": "Fastmail and Zoho send. Google's preview server drafts only.",
+      "organizeApps": "Labels and trash in Claude's Gmail connector.",
+      "organizeProvider": "Fastmail and Zoho, yes.",
+      "approvalApps": "Claude asks before each send by default. ChatGPT may ask before an action.",
+      "approvalUs": "Optional hold per inbox, on every plan, plus a separate send permission."
+    },
+    "footnote": "Third-party cells were read at the sources below on {date}. \"Not stated\" means the pages we read did not answer the question, not that the feature is missing. These products change often; if a cell is out of date, the source link is the place to check."
+  },
+  "faq": {
+    "title": "Native connectors vs MCP, answered",
+    "sub": "Including the answers that do not send you to us.",
+    "items": [
+      {
+        "q": "Can Claude or ChatGPT already send email from my Gmail?",
+        "a": "Yes. Claude's Gmail connector sends, replies and forwards, and by default asks for your approval before each of those actions. ChatGPT can draft and send through a connected Gmail or Outlook account on the web on Plus, Pro, Business and Enterprise plans. If Gmail is your only mailbox and you only use one of those apps, the built-in connector may be all you need."
+      },
+      {
+        "q": "My mail provider has its own MCP server. Do I need anything else?",
+        "a": "Possibly not. Fastmail and Zoho Mail run official MCP servers that work in any MCP client, and Google's Gmail MCP server is in developer preview. Each reaches only its own provider. MCPEmails is for several mailboxes behind one connection, for iCloud, Yahoo, Yandex and other IMAP hosts, and for personal Outlook.com accounts, which Claude's Microsoft 365 connector cannot connect."
+      },
+      {
+        "q": "What can MCPEmails do that the built-in connectors cannot?",
+        "a": "Reach mailboxes at several providers through one MCP URL, schedule a send for later, hold outbound mail for human approval per inbox, and work the same way in Claude, ChatGPT, Cursor, VS Code and n8n. None of the built-in options we checked mentions scheduled sending."
+      },
+      {
+        "q": "If I set this up for Claude, does it work in Cursor or ChatGPT too?",
+        "a": "Yes. MCPEmails is a standard streamable-http MCP server with OAuth 2.1, dynamic client registration and PKCE, so one setup works across Claude, ChatGPT, Cursor, VS Code, Windsurf, n8n and any other MCP client. Claude's and ChatGPT's built-in connectors only work inside their own app."
+      },
+      {
+        "q": "Is my mail stored if MCPEmails connects my inbox?",
+        "a": "No. Messages are fetched live from your provider on each request and dropped once the response is sent. What is kept is an encrypted OAuth token or app password so later requests can sign in, and any message you schedule, which is held encrypted until it sends. You can revoke access at any time."
+      }
+    ]
+  },
+  "sources": {
+    "title": "Sources",
+    "sub": "Each page below was read on {date}.",
+    "items": {
+      "claudeGoogle": "Claude Help Center: Google Workspace connectors",
+      "claudeGmailListing": "Claude's Gmail connector listing",
+      "claudeM365": "Claude Help Center: Microsoft 365 connector",
+      "chatgptReleaseNotes": "ChatGPT release notes (sending from Gmail or Outlook)",
+      "chatgptApps": "OpenAI Help Center: apps in ChatGPT",
+      "fastmailMcp": "Fastmail: connecting AI tools via Fastmail's MCP server",
+      "zohoMcp": "Zoho Mail MCP: getting started",
+      "googleGmailMcp": "Google for Developers: configure the Gmail MCP server"
+    }
+  },
+  "more": {
+    "h": "Decided you want an MCP server?",
+    "p": "There are several, and they differ on price, mailbox coverage and what they do with your credentials. We ranked them, listed what each one is bad at, and dated every figure.",
+    "link": "Read: the best email MCP servers"
+  },
+  "ctaBand": {
+    "title": "Give your AI every inbox you own",
+    "sub": "Connect a mailbox in minutes. One inbox free, no card required.",
+    "ctaPrimary": "Connect an inbox free",
+    "ctaSecondary": "Read the docs"
+  }
+}

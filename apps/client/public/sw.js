@@ -23,10 +23,12 @@
  * WHEN THE APP IS OPEN AND VISIBLE the push is handed to the page
  *   { type: "push", payload }
  * and no system notification is shown: the page syncs at once and shows its
- * own toast if the mailbox is not the one on screen. Safari is the exception:
- * it withdraws a subscription that receives pushes without showing a
+ * own toast if the mailbox is not the one on screen. Apple's push service
+ * (Safari on macOS, every Home Screen app on iOS) is the exception: it
+ * withdraws a subscription that receives pushes without showing a
  * notification, so there the notification is always shown (silently when the
- * app is visible) as well as the page being told.
+ * app is visible) as well as the page being told. Which service delivered is
+ * read from the subscription's endpoint (mustAlwaysNotify).
  *
  * Notification click -> the app. If a window is open it is focused and sent
  *   { type: "deep_link", url, action, data }
@@ -105,7 +107,7 @@ function textFor(data) {
     return { title: data.title || "The assistant wants to send an email", body: data.body || "" };
   }
   if (data.type === "test") {
-    return { title: data.title || "MCP Emails", body: data.body || "Notifications are working on this device." };
+    return { title: data.title || "MCPEmails", body: data.body || "Notifications are working on this device." };
   }
   const count = Number.isFinite(data.count) && data.count > 0 ? Math.round(data.count) : 1;
   const fallback = count === 1 ? "1 new message" : `${count} new messages`;
@@ -114,10 +116,42 @@ function textFor(data) {
   return { title: data.title || "New mail", body: data.body || fallback };
 }
 
-/** Safari revokes a subscription whose pushes show nothing. Chromium and Firefox do not when a window is visible. */
-function mustAlwaysNotify() {
-  const ua = self.navigator.userAgent || "";
-  return /Safari\//.test(ua) && !/Chrome\/|Chromium\/|Edg\/|OPR\/|Android/.test(ua);
+/* Which push services tolerate a push that shows nothing while the app is
+ * visible. Chromium (FCM, WNS) and Firefox (autopush) do. Apple's push service
+ * (Safari on macOS, and EVERY browser on iOS / iPadOS, where push only exists
+ * for Home Screen apps) withdraws a subscription whose pushes show no
+ * notification, visible app or not.
+ *
+ * Decided by the subscription's ENDPOINT, not the user agent: a Home Screen
+ * app on iOS reports a user agent without "Safari/", and Chrome / Firefox /
+ * Edge on iOS name themselves (CriOS, FxiOS, EdgiOS) but still deliver through
+ * Apple. Anything that is not positively known to tolerate a silent push is
+ * treated like Apple: an extra notification is harmless, a revoked
+ * subscription is not.
+ */
+const SILENT_OK_HOSTS = ["fcm.googleapis.com", "push.services.mozilla.com", "notify.windows.com"];
+
+function hostAllowsSilent(endpoint) {
+  try {
+    const host = new URL(endpoint).hostname.toLowerCase();
+    return SILENT_OK_HOSTS.some((h) => host === h || host.endsWith("." + h));
+  } catch {
+    return false;
+  }
+}
+
+async function mustAlwaysNotify() {
+  try {
+    const sub = await self.registration.pushManager.getSubscription();
+    if (sub && typeof sub.endpoint === "string") return !hostAllowsSilent(sub.endpoint);
+  } catch {
+    /* fall through to the user agent */
+  }
+  const ua = (self.navigator && self.navigator.userAgent) || "";
+  // No subscription to look at: only Chromium or Firefox outside iOS is trusted
+  // (on iOS every browser delivers through Apple).
+  if (/iPhone|iPad|iPod/.test(ua)) return true;
+  return !/Chrome\/|Chromium\/|Edg\/|OPR\/|Firefox\//.test(ua);
 }
 
 /** The app badge follows new mail while no window is open; the app sets the true total when it opens. */
@@ -140,20 +174,42 @@ async function bumpBadge(data) {
   }
 }
 
+/* EVERY push ends in showNotification unless the app is visible on a push
+ * service that allows that (see mustAlwaysNotify). Nothing before the
+ * notification is allowed to stop it: a thrown error in the badge, the client
+ * list or a postMessage would otherwise leave a push with no notification,
+ * which Apple punishes by withdrawing the subscription. */
 async function onPush(event) {
   const data = readPayload(event);
   const approval = data.type === "approval_required";
-  const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  const visible = windows.filter((c) => c.visibilityState === "visible");
+  let visible = [];
+  try {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    visible = windows.filter((c) => c.visibilityState === "visible");
+  } catch {
+    visible = [];
+  }
 
   // The open app hears about it first: it syncs and decides on an in-app toast.
-  for (const client of visible) client.postMessage({ type: "push", payload: data });
+  for (const client of visible) {
+    try {
+      client.postMessage({ type: "push", payload: data });
+    } catch {
+      /* that window is going away */
+    }
+  }
 
-  const always = mustAlwaysNotify();
+  const always = await mustAlwaysNotify();
   // An approval request is always shown: it needs an answer.
   if (visible.length > 0 && !approval && !always) return;
 
-  if (visible.length === 0) await bumpBadge(data);
+  if (visible.length === 0) {
+    try {
+      await bumpBadge(data);
+    } catch {
+      /* the badge is a nicety; the notification is not */
+    }
+  }
 
   const { title, body } = textFor(data);
   const options = {
@@ -172,7 +228,7 @@ async function onPush(event) {
     // One notification per mailbox: a newer one replaces it, and alerts again.
     options.renotify = true;
   }
-  // Shown only because Safari requires it: no sound over the app that is already showing the mail.
+  // Shown only because the push service requires it: no sound over the app that is already showing the mail.
   if (visible.length > 0 && always && !approval) options.silent = true;
   if (approval) {
     options.requireInteraction = true;
@@ -181,7 +237,13 @@ async function onPush(event) {
       { action: "review", title: "Review" },
     ];
   }
-  await self.registration.showNotification(title, options);
+  try {
+    await self.registration.showNotification(title, options);
+  } catch {
+    // An option this browser refuses (actions, renotify, a bad tag): the
+    // notification itself still has to appear.
+    await self.registration.showNotification(title, { body, icon: ICON, data: options.data });
+  }
 }
 
 self.addEventListener("push", (event) => {

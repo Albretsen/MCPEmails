@@ -22,18 +22,18 @@
     "titleLine1": "将 Open-Xchange 邮箱连接到",
     "titleLine2": "Claude、Cursor 和 ChatGPT",
     "lead": "App Suite 是界面，而不是邮件存储。一旦知道它背后是哪台 IMAP 服务器，连接 AI 代理就是常规操作：在任意 MCP 客户端中读取、搜索、发送、回复、定时与归档。",
-    "answer": "Claude 无法自行连接 Open-Xchange 邮箱，而 Open-Xchange App Suite 本身也不是应该连接的服务器。App Suite 是协作套件中间件，它与一个独立的 IMAP 和 SMTP 后端通信，在大多数部署中是 Dovecot。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP（通常是 993 端口）连接该后端，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。要使用的主机是你的部署或服务商公布的邮件服务器，而不是 App Suite 网页界面的地址。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Open-Xchange 邮箱，而 Open-Xchange App Suite 本身也不是应该连接的服务器。App Suite 是协作套件中间件，它与一个独立的 IMAP 和 SMTP 后端通信，在大多数部署中是 Dovecot。MCPEmails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP（通常是 993 端口）连接该后端，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。要使用的主机是你的部署或服务商公布的邮件服务器，而不是 App Suite 网页界面的地址。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "后端邮箱密码，而不是网页地址",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
     "title": "Open-Xchange 如何连接：通过 App Suite 所代理的邮件服务器",
-    "body": "Open-Xchange App Suite 存储日历、联系人、任务和文件，但不存储邮件。对于邮件，它是一个客户端，代表用户向独立的服务器打开 IMAP 会话，并在浏览器中呈现结果。Open-Xchange 自己的指导是，任何提供 IMAP 和 SMTP 的系统都可以作为后端，而新部署推荐使用 Dovecot。某个安装使用哪台服务器，写在 <code>/opt/open-xchange/etc/mail.properties</code> 中：IMAP 是 <code>com.openexchange.mail.mailServer</code>，提交是 <code>com.openexchange.mail.transportServer</code>；IMAP 特有的行为，例如 <code>com.openexchange.imap.imapSearch</code>，则在旁边的 <code>imap.properties</code> 中。mcpemails 连接的就是这个后端。我们 Dovecot 页面上关于监听器、文件夹用途和证书的所有内容都适用于它，因为在大多数 App Suite 部署中，它本身就是 Dovecot。"
+    "body": "Open-Xchange App Suite 存储日历、联系人、任务和文件，但不存储邮件。对于邮件，它是一个客户端，代表用户向独立的服务器打开 IMAP 会话，并在浏览器中呈现结果。Open-Xchange 自己的指导是，任何提供 IMAP 和 SMTP 的系统都可以作为后端，而新部署推荐使用 Dovecot。某个安装使用哪台服务器，写在 <code>/opt/open-xchange/etc/mail.properties</code> 中：IMAP 是 <code>com.openexchange.mail.mailServer</code>，提交是 <code>com.openexchange.mail.transportServer</code>；IMAP 特有的行为，例如 <code>com.openexchange.imap.imapSearch</code>，则在旁边的 <code>imap.properties</code> 中。MCPEmails 连接的就是这个后端。我们 Dovecot 页面上关于监听器、文件夹用途和证书的所有内容都适用于它，因为在大多数 App Suite 部署中，它本身就是 Dovecot。"
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "确认后端需要的登录名",
-      "p": "登录一个桌面邮件客户端，或检查中间件配置中的 <code>com.openexchange.mail.loginSource</code>，看看后端要求的是完整邮箱地址还是单独的登录名。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入该主机、登录名和邮箱密码。"
+      "p": "登录一个桌面邮件客户端，或检查中间件配置中的 <code>com.openexchange.mail.loginSource</code>，看看后端要求的是完整邮箱地址还是单独的登录名。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入该主机、登录名和邮箱密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -56,7 +56,7 @@
     },
     {
       "h": "如果 App Suite 是随主机服务附带的，服务商自己的设置就是答案",
-      "p": "Open-Xchange 把 App Suite 卖给运营商而不是最终用户，所以大多数人是以别人的网页邮箱的形式接触到它的，屏幕上从未出现过这个产品名。IONOS 和 Namecheap Private Email 是你可能认得的两个例子。如果你是这样来到这里的，上面提到的配置文件不存在于你能访问的任何机器上，你也不需要它们：你的服务商会为桌面客户端公布 IMAP 和 SMTP 主机名，这正是 mcpemails 需要的。使用服务商文档中的主机、端口和他们签发的邮箱密码，把 App Suite 当作他们恰好采购的网页邮箱就好。"
+      "p": "Open-Xchange 把 App Suite 卖给运营商而不是最终用户，所以大多数人是以别人的网页邮箱的形式接触到它的，屏幕上从未出现过这个产品名。IONOS 和 Namecheap Private Email 是你可能认得的两个例子。如果你是这样来到这里的，上面提到的配置文件不存在于你能访问的任何机器上，你也不需要它们：你的服务商会为桌面客户端公布 IMAP 和 SMTP 主机名，这正是 MCPEmails 需要的。使用服务商文档中的主机、端口和他们签发的邮箱密码，把 App Suite 当作他们恰好采购的网页邮箱就好。"
     },
     {
       "h": "loginSource 决定用户名，而主认证可能意味着你根本没有用户名",
@@ -65,13 +65,13 @@
   ],
   "limits": [
     "这个连接只传输邮件。App Suite 的日历、通讯录、任务和 Drive 文件由中间件通过自己的 HTTP API 提供，不属于 IMAP 会话，因此以这种方式连接的代理只能看到邮件。",
-    "只能在你网络内部访问的后端无法连接到托管服务。mcpemails 支持自托管，如果 IMAP 服务器是有意不暴露在公网上的，这是明智的途径。",
+    "只能在你网络内部访问的后端无法连接到托管服务。MCPEmails 支持自托管，如果 IMAP 服务器是有意不暴露在公网上的，这是明智的途径。",
     "在主认证部署中，要连接任何客户端，都需要运营商开通真正的按用户 IMAP 凭据。这由平台运营者决定，你无法从浏览器中自行安排。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Open-Xchange 吗？",
-      "a": "可以，通过它背后的邮件服务器。Claude 没有 Open-Xchange 连接器，App Suite 也不提供 MCP 端点，但邮箱本身位于一台普通的 IMAP 服务器上。将 mcpemails 连接到该服务器后，Claude 就能对你在 App Suite 中看到的同一批邮件进行读取、搜索、发送、回复、定时和整理，同一个收件箱在 Cursor 和 ChatGPT 中也能使用。"
+      "a": "可以，通过它背后的邮件服务器。Claude 没有 Open-Xchange 连接器，App Suite 也不提供 MCP 端点，但邮箱本身位于一台普通的 IMAP 服务器上。将 MCPEmails 连接到该服务器后，Claude 就能对你在 App Suite 中看到的同一批邮件进行读取、搜索、发送、回复、定时和整理，同一个收件箱在 Cursor 和 ChatGPT 中也能使用。"
     },
     {
       "q": "Open-Xchange 的 IMAP 和 SMTP 设置是什么？",

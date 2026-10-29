@@ -136,3 +136,33 @@ export function connectPreselectFor(intent, findPreset = null) {
     appPasswordHelpUrl: preset?.appPasswordHelpUrl ?? null,
   };
 }
+
+/**
+ * `preselect` with the servers carried from /tools/email-settings-lookup
+ * (intent-carry.mjs `takeConnectSettings`) put into the generic form.
+ *
+ * The carried servers win over the registry's: they are what the visitor just
+ * read for their own address (a company domain on its own host, or OVH
+ * Exchange on ex4.mail.ovh.net rather than the registry's ssl0.ovh.net). A
+ * provider with its own card (Gmail, Outlook, iCloud...) keeps that card and
+ * ignores them. With no slug at all, the generic form opens with them.
+ */
+export function withCarriedSettings(preselect, carried, findPreset = null) {
+  if (!carried) return preselect;
+  if (preselect && preselect.card !== GENERIC_CARD) return preselect;
+  const { label, ...form } = carried;
+  let preset = null;
+  try {
+    preset = findPreset ? findPreset({ host: form.imapHost }) : null;
+  } catch {
+    preset = null;
+  }
+  return {
+    slug: preselect?.slug ?? null,
+    card: GENERIC_CARD,
+    label: preselect?.label ?? (label || null),
+    form,
+    requiresAppPassword: preset?.requiresAppPassword === true || preselect?.requiresAppPassword === true,
+    appPasswordHelpUrl: preset?.appPasswordHelpUrl ?? preselect?.appPasswordHelpUrl ?? null,
+  };
+}

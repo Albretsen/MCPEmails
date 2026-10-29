@@ -57,9 +57,9 @@ VALUES
 SELECT throws_ok(
   $$INSERT INTO public.draft_card_activity (workspace_id, inbox_id, api_key_id, draft_id, action, occurred_at)
     VALUES ('fa000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-0000000000a1',
-            'fb000000-0000-0000-0000-0000000000a1', 'Drafts:8', 'deleted', now())$$,
+            'fb000000-0000-0000-0000-0000000000a1', 'Drafts:8', 'archived', now())$$,
   '23514', NULL,
-  'an action is saved or sent');
+  'an action is saved, sent or deleted');
 
 SELECT throws_ok(
   $$INSERT INTO public.draft_card_activity (workspace_id, inbox_id, api_key_id, draft_id, action, occurred_at, fields)

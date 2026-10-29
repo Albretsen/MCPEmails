@@ -20,18 +20,18 @@
     "titleLine1": "Koble 163.com-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte 163.com-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en NetEase-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke NetEase 163 Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.163.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (授权码) som NetEase utsteder, i stedet for postkassepassordet ditt. Du må slå på klientprotokollen i innstillingene i 163 Mail og bestå en SMS-sjekk før koden utstedes, og NetEase blokkerer også klienter som ikke identifiserer seg med IMAP-kommandoen ID. Én innboks er gratis.",
+    "answer": "Claude når ikke NetEase 163 Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.163.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (授权码) som NetEase utsteder, i stedet for postkassepassordet ditt. Du må slå på klientprotokollen i innstillingene i 163 Mail og bestå en SMS-sjekk før koden utstedes, og NetEase blokkerer også klienter som ikke identifiserer seg med IMAP-kommandoen ID. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Autorisasjonskode, utstedt etter SMS-sjekk",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
     "title": "Slik kobler 163 Mail seg til: IMAP, en autorisasjonskode og et IMAP ID-håndtrykk",
-    "body": "163 Mail kjører på NetEases Coremail-plattform og tilbyr IMAP på <code>imap.163.com</code> port 993 over TLS, med SMTP på <code>smtp.163.com</code> port 465. To ting må være på plass før en klient logger inn. For det første må klientprotokollen være slått på i postkasseinnstillingene, som gir deg en <b>autorisasjonskode på 16 store bokstaver</b> som erstatter postkassepassordet overalt der en klient ber om det. For det andre må klienten sende IMAP-kommandoen <code>ID</code> og identifisere seg før den autentiserer: NetEase avviser klienter som hopper over den med <code>Unsafe Login</code>, som slett ikke er et problem med påloggingsdetaljene. mcpemails gjør begge deler."
+    "body": "163 Mail kjører på NetEases Coremail-plattform og tilbyr IMAP på <code>imap.163.com</code> port 993 over TLS, med SMTP på <code>smtp.163.com</code> port 465. To ting må være på plass før en klient logger inn. For det første må klientprotokollen være slått på i postkasseinnstillingene, som gir deg en <b>autorisasjonskode på 16 store bokstaver</b> som erstatter postkassepassordet overalt der en klient ber om det. For det andre må klienten sende IMAP-kommandoen <code>ID</code> og identifisere seg før den autentiserer: NetEase avviser klienter som hopper over den med <code>Unsafe Login</code>, som slett ikke er et problem med påloggingsdetaljene. MCPEmails gjør begge deler."
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Ha telefonen klar: NetEase ber deg sende en bekreftelses-SMS i neste steg."
     },
     {
@@ -39,8 +39,8 @@
       "p": "Logg inn på mail.163.com, åpne 设置 (innstillinger) og så 常规设置 (generelle innstillinger), og velg POP3/SMTP/IMAP i sidefeltet til venstre. Slå på IMAP/SMTP. NetEase foreslår først sin egen 邮箱大师-klient; klikk 继续开启 (fortsett å aktivere) for å gå videre."
     },
     {
-      "h": "Bestå SMS-sjekken, og lim så koden inn i mcpemails",
-      "p": "NetEase viser en QR-kode som lager en bekreftelses-SMS på telefonen din, med 试试手动发送短信 (prøv å sende SMS-en manuelt) som reserve. Send den, vent opptil ett minutt, og klikk 我已发送 (jeg har sendt den). Autorisasjonskoden på 16 store bokstaver vises én gang. Kopier den, velg IMAP / SMTP i mcpemails, skriv inn hele 163-adressen din og lim inn koden som passord."
+      "h": "Bestå SMS-sjekken, og lim så koden inn i MCPEmails",
+      "p": "NetEase viser en QR-kode som lager en bekreftelses-SMS på telefonen din, med 试试手动发送短信 (prøv å sende SMS-en manuelt) som reserve. Send den, vent opptil ett minutt, og klikk 我已发送 (jeg har sendt den). Autorisasjonskoden på 16 store bokstaver vises én gang. Kopier den, velg IMAP / SMTP i MCPEmails, skriv inn hele 163-adressen din og lim inn koden som passord."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "«Unsafe Login» er ikke et passordproblem",
-      "p": "NetEase krever at tredjepartsklienter presenterer seg med IMAP-kommandoen <code>ID</code> fra RFC 2971, med navn, versjon, leverandør og supportadresse, før de autentiserer. En klient som hopper over den, avvises med <code>Unsafe Login. Please contact kefu@188.com for help</code>, og NetEase legger i tillegg en advarsel i postkassen. Fordi den kommer akkurat der en innloggingsfeil ville kommet, konkluderer de fleste med at autorisasjonskoden er feil og genererer en ny, noe som ikke endrer noe. mcpemails sender ID-håndtrykket, så denne er allerede håndtert."
+      "p": "NetEase krever at tredjepartsklienter presenterer seg med IMAP-kommandoen <code>ID</code> fra RFC 2971, med navn, versjon, leverandør og supportadresse, før de autentiserer. En klient som hopper over den, avvises med <code>Unsafe Login. Please contact kefu@188.com for help</code>, og NetEase legger i tillegg en advarsel i postkassen. Fordi den kommer akkurat der en innloggingsfeil ville kommet, konkluderer de fleste med at autorisasjonskoden er feil og genererer en ny, noe som ikke endrer noe. MCPEmails sender ID-håndtrykket, så denne er allerede håndtert."
     },
     {
       "h": "Den eneste mekanismen 163 annonserer, er XOAUTH2",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med NetEase 163 Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd 163-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til 163-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd 163-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til 163-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for 163.com?",

@@ -10,12 +10,15 @@ import { rememberOAuthConsent, signupConsentMetadata } from '@/lib/marketing-con
 import {
   connectIntentStorage,
   rememberConnectIntent,
+  withClientIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
-export function SignupApp({ redirectTo = null, connectProvider = null }) {
+export function SignupApp({ redirectTo = null, connectProvider = null, connectClient = null, authorizing = null }) {
   const t = useTranslations('auth');
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
@@ -31,7 +34,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'sent' | 'error'
   const [serverError, setServerError] = useState('');
   const [loadingMsg, setLoadingMsg] = useState(SIGNUP_LOADING_MESSAGES[0]);
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
   // Marketing email consent. UNTICKED by default and never pre-filled: consent
   // under markedsføringsloven § 15 / GDPR has to be an active choice. What the
   // box says is versioned in src/lib/marketing-consent.mjs.
@@ -92,18 +95,25 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     return callbackUrl.toString();
   }
 
+  // The first-run dashboard, with the provider and AI-app hints this visitor
+  // came with (`?provider=`, `?client=`). A workspace in the new onboarding
+  // flow is sent on from there to /onboarding (src/lib/onboarding/entry.ts).
+  function firstRunDestination() {
+    return withClientIntent(withConnectIntent('/dashboard?firstrun=1', connectProvider), connectClient);
+  }
+
   // Where a freshly-signed-up user lands once they have a session. Honor an
   // invite/`?redirect=` target if present; otherwise drop them into the
   // first-run connect flow (`firstrun=1` auto-opens the Connect Inbox modal).
   function getRedirectDestination() {
-    return getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
+    return getSafeRedirect() ?? firstRunDestination();
   }
 
   function buildOAuthUrl(provider) {
     const url = new URL(`/auth/${provider}`, window.location.origin);
     // The connect hint, unlike attribution, belongs INSIDE `next`: the
     // dashboard is the thing that reads it, and the callback has no use for it.
-    const redirect = getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
+    const redirect = getSafeRedirect() ?? firstRunDestination();
     const destination = new URL(redirect, window.location.origin);
     destination.searchParams.set('signup_method', provider);
     const acquisition = readAcquisitionContext();
@@ -120,6 +130,13 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     trackProductEvent('signup_started', { method: 'google' });
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
+  }
+
+  function handleMicrosoftSignIn() {
+    rememberOAuthConsent(marketingConsent);
+    trackProductEvent('signup_started', { method: 'microsoft' });
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
   }
 
   function handleGitHubSignIn() {
@@ -180,7 +197,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     });
 
     if (error) {
-      setServerError(error.message ?? t('signup.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('signup.errorGeneric')));
       setStep('error');
     } else if (data?.session) {
       // Email confirmation is disabled, so signUp returns an active session.
@@ -237,6 +254,15 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
@@ -252,20 +278,28 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     <div className="auth-shell">
       <ThemeBtn />
       <div className="auth-wrap">
-        <a className="auth-back" href="/">
-          <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          {t('shared.backToHome')}
-        </a>
+        {/* Inside an AI app's connect flow, Back to home would drop the request. */}
+        {!authorizing && (
+          <a className="auth-back" href="/">
+            <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
+            {t('shared.backToHome')}
+          </a>
+        )}
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" />
         </div>
 
         {/* ── Form ──────────────────────────────────────────────────── */}
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
             <h1>{t('signup.title')}</h1>
+            {authorizing && (
+              <p className="sub" data-testid="signup-authorize-lead">
+                {authorizing.app ? t('signup.authorizeLead', { app: authorizing.app }) : t('signup.authorizeLeadAny')}
+              </p>
+            )}
             {socialButtons}
             {serverError && (
               <div

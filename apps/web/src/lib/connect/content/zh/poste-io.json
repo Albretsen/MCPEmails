@@ -20,8 +20,8 @@
     "eyebrow": "Poste.io + AI",
     "titleLine1": "将 Poste.io 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
-    "lead": "一个容器、一个主机名、一台完整的邮件服务器。把 mcpemails 指向它，AI 代理就能在你于 Poste.io 管理界面中创建的邮箱里读取、搜索、发送、回复、定时和归档邮件。",
-    "answer": "Claude 无法自行连接 Poste.io 服务器。mcpemails 是一个托管 MCP 服务器，通过 993 端口的 IMAP，在你启动容器时为其指定的主机名上连接你的服务器，使用在 Poste.io 管理界面中创建的邮箱的密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Poste.io 在容器内运行 Dovecot 提供 IMAP，所以协议行为就是普通的 Dovecot。容器必须将 993 端口发布到互联网，并提供一个对你所连接主机名有效的证书。一个收件箱免费。",
+    "lead": "一个容器、一个主机名、一台完整的邮件服务器。把 MCPEmails 指向它，AI 代理就能在你于 Poste.io 管理界面中创建的邮箱里读取、搜索、发送、回复、定时和归档邮件。",
+    "answer": "Claude 无法自行连接 Poste.io 服务器。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的 IMAP，在你启动容器时为其指定的主机名上连接你的服务器，使用在 Poste.io 管理界面中创建的邮箱的密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Poste.io 在容器内运行 Dovecot 提供 IMAP，所以协议行为就是普通的 Dovecot。容器必须将 993 端口发布到互联网，并提供一个对你所连接主机名有效的证书。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用管理界面中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "检查证书，然后添加邮箱",
-      "p": "在 Poste.io 管理界面中打开 TLS 证书设置，确认确实已签发 Let's Encrypt 证书，而不是仍在使用自签名证书。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入容器主机名、完整邮箱地址以及管理界面中为其设置的密码。"
+      "p": "在 Poste.io 管理界面中打开 TLS 证书设置，确认确实已签发 Let's Encrypt 证书，而不是仍在使用自签名证书。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入容器主机名、完整邮箱地址以及管理界面中为其设置的密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "容器必须接受来自互联网的 993 端口入站连接，托管 MCP 服务器才能访问它。运行在家庭服务器或私有网络上的 Poste.io 无法以这种方式连接。mcpemails 支持自托管，所以如果你希望不让任何外部服务接触邮件服务器，可以在同一网络中同时运行两者。",
+    "容器必须接受来自互联网的 993 端口入站连接，托管 MCP 服务器才能访问它。运行在家庭服务器或私有网络上的 Poste.io 无法以这种方式连接。MCPEmails 支持自托管，所以如果你希望不让任何外部服务接触邮件服务器，可以在同一网络中同时运行两者。",
     "TLS 校验是严格的，无法绕过。全新 Poste.io 生成的自签名证书会被拒绝，这就是为什么配置真正的证书是一个设置步骤，而不是可有可无的润色。",
     "发信通过 Haraka 从你自己的 IP 地址发出，因此下游是否接收邮件取决于 SPF、DKIM 和 DMARC 记录以及你的地址信誉。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Poste.io 吗？",
-      "a": "不能单独使用。Claude 没有 Poste.io 连接器，也无法向你运行的容器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Poste.io 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+      "a": "不能单独使用。Claude 没有 Poste.io 连接器，也无法向你运行的容器打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 Poste.io 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
     },
     {
       "q": "Poste.io 的 IMAP 和 SMTP 设置是什么？",

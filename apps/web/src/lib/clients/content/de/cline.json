@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "E-Mail mit Cline verbinden: Setup als Remote-MCP-Server",
+    "description": "Fügen Sie Cline ein echtes Postfach als entfernten Streamable-HTTP-Server mit einem API-Schlüssel mit Scopes hinzu. E-Mails aus VS Code lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Cline + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Cline",
+    "titleLine2": "als entfernten MCP-Server",
+    "lead": "Fügen Sie Cline in VS Code ein echtes Postfach hinzu. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, mit einem Schlüssel, dessen Scopes genau das abdecken, was der Agent tun soll.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "API-Schlüssel mit Scopes, mit einem Klick widerrufbar",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie im Cline-Panel MCP Servers und dann Remote Servers. Fügen Sie https://mcpemails.com/api/mcp ein, setzen Sie den Transport-Typ auf Streamable HTTP, fügen Sie den Server hinzu und ergänzen Sie dann einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard."
+  },
+  "method": {
+    "title": "So verbindet sich Cline: ein API-Schlüssel mit Scopes",
+    "body": "Cline durchläuft bei einem entfernten MCP-Server keinen OAuth-Ablauf im Browser und authentifiziert sich deshalb mit einem Bearer-Token. Erstellen Sie im Dashboard einen API-Schlüssel, aktivieren Sie nur die Scopes, die der Agent braucht, und tragen Sie ihn in Cline als Header <code>Authorization: Bearer</code> ein. Verbindungen per Schlüssel und per OAuth nutzen denselben Endpunkt und denselben Tool-Katalog; sie unterscheiden sich nur darin, wie das Token zustande kommt."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "API-Schlüssel mit Scopes erstellen",
+      "p": "Klicken Sie unter Dashboard, API-Schlüssel auf „Schlüssel erstellen“. Geben Sie ihm einen Namen und aktivieren Sie nur die Scopes, die dieser Agent braucht: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> und <code>manage:automations</code>. Der Schlüssel besteht aus <code>mcpe_</code> und 64 Hex-Zeichen und wird nur einmal angezeigt. Kopieren Sie ihn also, bevor Sie den Dialog schließen."
+    },
+    {
+      "h": "Entfernten Server hinzufügen",
+      "p": "Klicken Sie im Cline-Panel auf das Symbol MCP Servers, öffnen Sie den Tab <b>Remote Servers</b>, geben Sie einen Namen ein und fügen Sie <code>https://mcpemails.com/api/mcp</code> ein. Setzen Sie Transport Type auf <b>Streamable HTTP</b> und klicken Sie auf Add Server."
+    },
+    {
+      "h": "Authorization-Header hinzufügen",
+      "p": "Fügen Sie einen Header namens <code>Authorization</code> hinzu, mit dem Wert <code>Bearer</code>, einem Leerzeichen und Ihrem Schlüssel. Der Server akzeptiert Bearer-Tokens nur in diesem Header."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, nicht SSE",
+      "p": "Der Tab Remote Servers bietet mehr als einen Transport. Dieser Server spricht Streamable HTTP nach der Protokollrevision 2025-06-18. Wer SSE wählt, bekommt einen Server, der sich scheinbar sauber hinzufügen lässt und dann nie antwortet, und so dauert es lange, einen Fehler in einem einzigen Feld zu finden."
+    },
+    {
+      "h": "Das Wort Bearer gehört zum Wert",
+      "p": "Der Header-Wert ist <code>Bearer</code>, ein Leerzeichen, dann der Schlüssel. Nur den reinen Schlüssel einzufügen ist hier die häufigste Ursache für eine 401, und eine 401 von diesem Endpunkt enthält einen Verweis auf die OAuth-Discovery statt einer Meldung, dass der Header falsch ist. Das hilft beim Raten wenig."
+    },
+    {
+      "h": "Begrenzen Sie die Scopes des Schlüssels auf den Agenten, denn der Schlüssel ist das ganze Berechtigungsmodell",
+      "p": "Cline durchläuft keinen OAuth-Zustimmungsablauf, die Scopes, die Sie beim Erstellen des Schlüssels aktivieren, sind also die einzige Grenze. Ein Schlüssel mit <code>read:email</code>, <code>search:email</code> und <code>manage:drafts</code> lässt Cline sichten und Entwürfe schreiben, aber nichts senden oder löschen. Erweitern Sie später, indem Sie einen zweiten Schlüssel ausstellen, statt den ersten zu lockern."
+    },
+    {
+      "h": "Der Schlüssel wird nur einmal angezeigt",
+      "p": "Gespeichert wird nur ein SHA-256-Hash des Schlüssels, er lässt sich also nicht noch einmal anzeigen. Wenn Sie ihn verlieren, widerrufen Sie ihn und erstellen einen neuen. Ein Widerruf unter Dashboard, API-Schlüssel greift ab dem nächsten Aufruf."
+    }
+  ],
+  "limits": [
+    "Anfragen werden je Schlüssel in Minuten-, Stunden- und Tagesfenstern begrenzt, die nach Ihrem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Ein 429 trägt Retry-After. Dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Cline?",
+      "a": "Fügen Sie MCPEmails als entfernten Server hinzu: MCP Servers, Remote Servers, https://mcpemails.com/api/mcp einfügen, Transport Type auf Streamable HTTP setzen und einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard ergänzen. Danach hat Cline Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Warum braucht Cline einen API-Schlüssel, Cursor aber nicht?",
+      "a": "Weil die beiden Clients die Authentifizierung bei entfernten MCP-Servern unterschiedlich handhaben. Cursor durchläuft den OAuth-Ablauf im Browser und speichert das Token selbst. Cline authentifiziert sich mit dem Header, den Sie konfigurieren, also ist ein Bearer-Schlüssel der Weg, der funktioniert. Beide nutzen denselben Endpunkt und erhalten dieselben Tools; nur der Weg zum Token unterscheidet sich."
+    },
+    {
+      "q": "Was kann ich tun, wenn der Schlüssel öffentlich wird?",
+      "a": "Widerrufen Sie ihn. Schlüssel stehen unter Dashboard, API-Schlüssel, und der Widerruf gilt ab dem nächsten Aufruf, ohne Wartezeit. Da ein Schlüssel nur die aktivierten Scopes trägt, kann ein öffentlich gewordener Schlüssel mit Nur-Lese-Zugriff auch nichts gesendet oder gelöscht haben."
+    },
+    {
+      "q": "Welche Postfächer erreicht Cline auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Cline E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Cline ein echtes Postfach",
+    "sub": "Ein entfernter Server, ein Schlüssel mit Scopes. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

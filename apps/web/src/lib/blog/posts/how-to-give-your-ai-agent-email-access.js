@@ -18,33 +18,33 @@ If you just want the fast path: connect an inbox in the dashboard, paste the MCP
 
 The [Model Context Protocol](https://modelcontextprotocol.io) is a standard way to expose tools to a language model over HTTP. An MCP email server presents your inbox not as raw IMAP, but as a handful of typed verbs the agent can call: list messages, read one, search, send, reply. The agent reasons over those verbs. It never touches the underlying mailbox protocol, and it never sees your credentials.
 
-That's the whole idea behind [MCP Emails](/). One endpoint, one set of tools, any MCP-compatible client. If you want the ground-up explanation of the architecture, the companion post [what is an MCP email server](/blog/what-is-an-mcp-email-server) covers it in plain English.
+That's the whole idea behind [MCPEmails](/). One endpoint, one set of tools, any MCP-compatible client. If you want the ground-up explanation of the architecture, the companion post [what is an MCP email server](/blog/what-is-an-mcp-email-server) covers it in plain English.
 
 ## Why the last mile is hard
 
 Hooking a model up to email looks trivial until you try it for real. Three things bite:
 
-1. **Auth is different for every provider.** Gmail wants OAuth with specific scopes. Outlook wants Microsoft identity. iCloud and Fastmail want an app-specific password. Each has its own token refresh cycle and its own failure modes.
+1. **Auth is different for every provider.** Outlook and Microsoft 365 want OAuth through Microsoft identity. Gmail wants a Google app password, which Google only lets you create once 2-Step Verification is on. iCloud and Fastmail want an app-specific password. Each has its own token refresh cycle and its own failure modes.
 2. **Credentials are radioactive.** A mailbox password sitting in a chat transcript or a log line is a breach waiting to happen. You cannot let the model hold the secret.
 3. **Email is shaped badly for agents.** MIME, threading headers, HTML versus plain text, attachments, folders that are really labels. The model needs a clean response, not RFC 5322.
 
 The naive DIY fix — hand the model an IMAP library and your password — fails all three at once. Most "Gmail MCP server" repos on GitHub stop right there.
 
-## How MCP Emails solves it
+## How MCPEmails solves it
 
 Four design decisions do the heavy lifting. They're the reason I trust this with my own inbox.
 
 ### Email is fetched live and never stored
 
-Every tool call hits your provider in real time: the Gmail API, Microsoft Graph, or IMAP/SMTP. Message bodies, subjects, and attachments are handed to the agent and discarded immediately. Nothing is cached, indexed, or warehoused. The only thing persisted per inbox is the credential needed to make the next call. If you want the long version of why this matters, read [why "email never stored" matters](/blog/why-email-never-stored-matters).
+Every tool call hits your provider in real time: IMAP/SMTP for Gmail, iCloud, Fastmail and the rest, or Microsoft Graph for Outlook. Message bodies, subjects, and attachments are handed to the agent and discarded immediately. Nothing is cached, indexed, or warehoused. The only thing persisted per inbox is the credential needed to make the next call. If you want the long version of why this matters, read [why "email never stored" matters](/blog/why-email-never-stored-matters).
 
 ### Credentials are AES-256-GCM encrypted at rest
 
-The OAuth token or app password for each inbox is encrypted before it's written to the database. Decryption happens only inside an isolated Edge Function, at call time, using a key that lives as an environment secret separate from the database. So even a database leak hands an attacker ciphertext, not your inbox.
+The app password or OAuth token for each inbox is encrypted before it's written to the database. It's decrypted on our servers only when a request needs it, and it's never sent to your agent. The encryption key is kept as a server secret, separate from the database. So even a database leak hands an attacker ciphertext, not your inbox.
 
 ### Sending goes through your own provider
 
-When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCP Emails never relays from its own domain. Your deliverability and domain reputation stay entirely yours — no shared-IP spam-folder roulette.
+When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCPEmails never relays from its own domain. Your deliverability and domain reputation stay entirely yours — no shared-IP spam-folder roulette.
 
 ### It's standard MCP over HTTP
 
@@ -83,12 +83,11 @@ You connect an inbox once in **Dashboard → Inboxes → Connect Inbox**. How yo
 
 ### OAuth providers (sign in, no password)
 
-- **Gmail** — OAuth 2.0 via Google sign-in.
 - **Outlook / Microsoft 365**: OAuth 2.0 via Sign in with Microsoft, over Microsoft Graph rather than IMAP. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. Setup details in [connect Outlook and Microsoft 365 to an AI agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### App-password providers
 
-iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCP Emails. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCPEmails. Gmail app passwords come from your Google Account, and Google requires 2-Step Verification before it will create one. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Connecting your AI client
 
@@ -96,7 +95,7 @@ Same endpoint, same tools, two ways in depending on whether your client speaks O
 
 ### OAuth-capable clients (no API key)
 
-claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both.
+claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCPEmails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both. For step-by-step walkthroughs, see [set up Claude with your inbox](/blog/connect-claude-to-email) and [add your email to ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients without OAuth (API key)
 
@@ -108,16 +107,16 @@ Either way, you revoke any connection from the dashboard in one click. Grab the 
 
 Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
-On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan: 60/min on Free, 120/min on Personal, 300/min on Pro, 1,000/min on Team. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
+On rate limits, each workspace has a per-minute ceiling that scales with your plan (see [pricing](/pricing)), and each API key gets per-minute, hourly and daily windows sized to that plan, so one key can use the whole ceiling and several keys share it. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
 
 ## Pricing
 
 Plans are priced by connected inboxes. API keys are unlimited on every tier, and tiers also differ on burst rate, analytics retention, team features, and support.
 
 - **Free, $0 forever.** No card. One connected inbox, 60 req/min, 30-day analytics, community support.
-- **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 30-day analytics, email support.
-- **Pro, $15/month** (or $144/year, $12/month). Unlimited connected inboxes, 300 req/min, 90-day analytics, email support.
-- **Team, $79/month** (or $756/year, $63/month). Everything in Pro, plus members with roles, a separate workspace per client or business, SSO with SAML/OIDC and an audit log, 1,000 req/min, 1-year analytics, priority support.
+- **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 90-day analytics, email support.
+- **Pro, $15/month** (or $144/year, $12/month). Up to 10 connected inboxes, 300 req/min, 2-year analytics, email support.
+- **Business, $39/month** (or $374.40/year, $31.20/month). Everything in Pro, plus 10 mailboxes included and $3/month for each extra, unlimited members with roles, admins who approve held sends, a separate workspace per client or business, 1,000 req/min.
 
 Full breakdown on the [pricing page](/pricing).
 

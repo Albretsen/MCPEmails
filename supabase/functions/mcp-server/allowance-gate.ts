@@ -58,7 +58,9 @@ import {
 import type { TriageAllowanceCheck, TriagePlanLimit } from "./triage-engine.ts";
 
 /** The three notices the edge function can queue. Composed and sent by the
- * web app's billing-lifecycle dispatcher; this side only writes the row. */
+ * web app's billing-lifecycle dispatcher; this side writes the row and kicks
+ * the dispatcher to send it now (billing-dispatch-kick.ts), with the
+ * five-minute cron as the fallback. */
 export type UsageEmailTemplate = "usage_warning_80" | "usage_limit_reached" | "automation_paused_limit";
 
 /** One row for `billing_email_sends`, before the recipient is resolved. */
@@ -130,6 +132,51 @@ export interface AllowanceGateIo {
   limitNoticeQueued(workspaceId: string, periodStart: string): Promise<boolean>;
   /** Insert-or-ignore on the queue's unique index. Best effort, never throws. */
   queueEmail(input: UsageEmailInput): Promise<void>;
+  /**
+   * `finalize_action_usage_reservation(id, false)`: give back a reservation
+   * nobody will use. Only needed by callers that pass a `PrereservedAction`.
+   * Best effort, never throws; a failure leaves the row to expire (15 min).
+   */
+  release?(reservationId: string): Promise<void>;
+}
+
+/**
+ * A reservation already made before this module was asked, by the tools/call
+ * gate RPC (mcp_tools_call_gate), with the terms it was made under.
+ *
+ * It replaces `io.reserve` only when the tool, cap and window are exactly the
+ * ones this module would have reserved with. In every other case it is
+ * released first and the reservation is made here as usual, so the answer can
+ * never depend on which path made it.
+ */
+export interface PrereservedAction {
+  toolName: string;
+  cap: number;
+  periodStart: string;
+  periodEnd: string;
+  /** What `io.reserve` would have answered: `ok: false` when the reservation itself errored. */
+  outcome: { ok: true; row: ActionReservationRow | null } | { ok: false };
+}
+
+const sameInstant = (a: string, b: string) => {
+  const left = Date.parse(a);
+  return Number.isFinite(left) && left === Date.parse(b);
+};
+
+/** Does this pre-made reservation stand in for the one `decision` asks for? */
+export function prereservationMatches(
+  prereserved: PrereservedAction,
+  toolName: string,
+  decision: { cap: number; periodStart: string; periodEnd: string },
+): boolean {
+  return prereserved.toolName === toolName && prereserved.cap === decision.cap &&
+    sameInstant(prereserved.periodStart, decision.periodStart) &&
+    sameInstant(prereserved.periodEnd, decision.periodEnd);
+}
+
+async function releasePrereserved(io: AllowanceGateIo, prereserved: PrereservedAction | undefined): Promise<void> {
+  const id = prereserved?.outcome.ok ? prereserved.outcome.row?.reservation_id : null;
+  if (id && io.release) await io.release(id);
 }
 
 /** The allowance notices are about the Free allowance, and only about it.
@@ -148,7 +195,16 @@ export type BillableActionReservation =
   /** No reservation was made and none is owed: the bare insert in writeActionUsage is correct. */
   | { outcome: "unmetered"; reason: string }
   /** Reserved. `usedActions` counts this reservation, so 120 here IS the 80% crossing. */
-  | { outcome: "reserved"; reservationId: string; usedActions: number }
+  | {
+    outcome: "reserved";
+    reservationId: string;
+    usedActions: number;
+    /** The terms it was reserved under, for the Flow B usage line (usage-meter-note.ts). */
+    plan: string;
+    cap: number;
+    periodStart: string;
+    periodEnd: string;
+  }
   /** Refused by the cap. Everything the refusal text and `_meta` need. */
   | {
     outcome: "refused";
@@ -229,14 +285,30 @@ export async function reserveBillableAction(
    * leave one behind. The automation runner passes nothing and reads it here.
    */
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
+  /**
+   * The reservation the tools/call gate RPC already made, if any. Used in
+   * place of `io.reserve` only when it matches exactly; otherwise released
+   * BEFORE anything else is reserved, so it can never count against the cap
+   * alongside the real one. See PrereservedAction.
+   */
+  prereserved?: PrereservedAction,
 ): Promise<BillableActionReservation> {
   const allowance = await (preloadedAllowance ?? io.loadAllowance(workspaceId));
   const decision = allowanceDecision(allowance);
-  if (decision.kind !== "meter" || !allowance) return { outcome: "unmetered", reason: decision.kind === "meter" ? "no_row" : decision.reason };
+  if (decision.kind !== "meter" || !allowance) {
+    await releasePrereserved(io, prereserved);
+    return { outcome: "unmetered", reason: decision.kind === "meter" ? "no_row" : decision.reason };
+  }
 
-  const reservation = await io.reserve({
-    workspaceId, toolName, cap: decision.cap, periodStart: decision.periodStart, periodEnd: decision.periodEnd,
-  });
+  let reservation: { ok: true; row: ActionReservationRow | null } | { ok: false };
+  if (prereserved && prereservationMatches(prereserved, toolName, decision)) {
+    reservation = prereserved.outcome;
+  } else {
+    await releasePrereserved(io, prereserved);
+    reservation = await io.reserve({
+      workspaceId, toolName, cap: decision.cap, periodStart: decision.periodStart, periodEnd: decision.periodEnd,
+    });
+  }
   // Fail open only when the reservation subsystem itself is unavailable.
   if (!reservation.ok) return { outcome: "unmetered", reason: "reservation_error" };
   const result = reservation.row;
@@ -249,7 +321,10 @@ export async function reserveBillableAction(
         payload: usagePayload(allowance, decision, result.used_actions),
       });
     }
-    return { outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions };
+    return {
+      outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions,
+      plan: allowance.plan, cap: decision.cap, periodStart: decision.periodStart, periodEnd: decision.periodEnd,
+    };
   }
 
   const usedActions = result?.used_actions ?? decision.cap;

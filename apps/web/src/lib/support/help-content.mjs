@@ -13,7 +13,7 @@
 
 import en from './help-content/en.json';
 
-export const HELP_LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+export const HELP_LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 /** The ticket categories, in display order. Must match the ticket API's allow-list. */
 export const SUPPORT_CATEGORIES = ['connect', 'client', 'billing', 'bug', 'feature', 'other'];

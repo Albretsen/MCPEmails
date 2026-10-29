@@ -340,6 +340,19 @@
 .gb-verdict.is-down b::before { background: var(--kiosk-bad); }
 .gb-verdict.is-down .gb-verdict-reason { white-space: normal; color: var(--fg-2); }
 
+/* ── Signup trend ───────────────────────────────────────────────────────── */
+
+/* The verdict line inside the "Is signup growth over?" tile. The state word
+   carries the colour; the reason stays readable grey. */
+.gb-trend-state { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 8px; font-size: 12px; color: var(--fg-3); }
+.gb-trend-state b { display: inline-flex; align-items: baseline; gap: 6px; font-size: 14px; font-weight: 700; color: var(--fg-1); }
+.gb-trend-state b::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fg-4); }
+.gb-trend-state.is-ok b::before { background: var(--kiosk-good); }
+.gb-trend-state.is-watch b { color: var(--kiosk-warn); }
+.gb-trend-state.is-watch b::before { background: var(--kiosk-warn); }
+.gb-trend-state.is-alarm b { color: var(--kiosk-bad); }
+.gb-trend-state.is-alarm b::before { background: var(--kiosk-bad); }
+
 /* ── Milestones ─────────────────────────────────────────────────────────── */
 
 /* The reached half is a time axis: one column per calendar month since the
@@ -492,4 +505,24 @@
   .gb-chan li { grid-template-columns: minmax(0, 5em) minmax(0, 1fr) auto; gap: 8px; }
   .gb-verdict-reason { white-space: normal; }
   .gb .bd-heat { overflow-x: auto; }
+}
+
+/* ── Test read-outs (onboarding, draft card) ─────────────────────────────── */
+
+/* A verdict line, then a few large numbers. Each number carries one line of
+   context and one state word; nothing else is on these tiles. */
+.gb-big { display: grid; gap: 0; margin-top: 14px; }
+.gb-big-stat { padding: 2px 18px; border-left: 1px solid var(--border-1); min-width: 0; }
+.gb-big-stat:first-child { padding-left: 0; border-left: 0; }
+.gb-big-label { margin: 0 0 6px; font-size: 11px; font-weight: 600; color: var(--fg-3); }
+.gb-big-value { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg-1); }
+.gb-big-note { margin: 6px 0 0; font-size: 11.5px; color: var(--fg-4); }
+.gb-big-state { margin: 8px 0 0; font-size: 12px; font-weight: 650; color: var(--fg-3); }
+.gb-big-state.is-pass, .gb-big-state.is-good { color: var(--kiosk-good); }
+.gb-big-state.is-fail, .gb-big-state.is-bad { color: var(--kiosk-bad); }
+.gb-big-state.is-warn { color: var(--kiosk-warn); }
+.gb-big-state.is-wait, .gb-big-state.is-quiet { color: var(--fg-4); font-weight: 500; }
+@media (max-width: 720px) {
+  .gb-big { grid-template-columns: 1fr !important; gap: 14px; }
+  .gb-big-stat { padding: 0; border-left: 0; }
 }

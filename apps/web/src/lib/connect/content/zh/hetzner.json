@@ -19,7 +19,7 @@
     "titleLine1": "面向 Hetzner 邮箱的 MCP 服务器：",
     "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 Hetzner 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。使用你在 konsoleH 中设置的邮箱密码，通过 mail.your-server.de 的 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Hetzner 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mail.your-server.de 端口 993 的 IMAP 连接 Hetzner Web Hosting 邮箱，使用你的完整邮箱地址和你在 konsoleH 中创建账户时设置的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。对每位客户来说，主机名就是字面上的 mail.your-server.de，而不是你自己域名的某种变体。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
+    "answer": "Claude 无法自行访问 Hetzner 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 mail.your-server.de 端口 993 的 IMAP 连接 Hetzner Web Hosting 邮箱，使用你的完整邮箱地址和你在 konsoleH 中创建账户时设置的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。对每位客户来说，主机名就是字面上的 mail.your-server.de，而不是你自己域名的某种变体。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "在 konsoleH 中设置的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -43,7 +43,7 @@
       "p": "登录 konsoleH，选择域名，依次打开 E-Mail、Mailboxes。选择该地址，如果你不知道当前密码，就在两个密码字段中输入新密码。请注意，创建邮箱时只填写 @ 符号前面的本地部分，但在任何客户端中作为用户名输入的都是完整地址。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮箱密码。服务器 mail.your-server.de 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Hetzner 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Hetzner 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Hetzner 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Hetzner 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 Hetzner 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Hetzner 的 IMAP 和 SMTP 设置是什么？",
@@ -93,6 +93,6 @@
   ],
   "ctaBand": {
     "title": "把所有 Hetzner 邮箱交给同一个代理",
-    "sub": "免费连接第一个 Hetzner 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "sub": "免费连接第一个 Hetzner 邮箱，无需信用卡。Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   }
 }

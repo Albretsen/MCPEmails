@@ -7,7 +7,7 @@
     "https://support.google.com/a/answer/7281227",
     "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
     "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
-    "supabase/functions/mcp-server/index.ts (sender_identities: Send As listed only for provider gmail, the Google sign-in connection)"
+    "apps/web/src/lib/inboxes/send-as.ts (Send As addresses for IMAP inboxes, including Gmail and Google Workspace by app password, verified by a code emailed to the address)"
   ],
   "auth": {
     "method": "app-password",
@@ -28,23 +28,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "用 Google 应用专用密码连接",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "使用你自己域名的 Google Workspace 邮箱，底层就是一个 Gmail 邮箱，所以它与 Gmail 一样连接到 mcpemails：用 Google 应用专用密码，通过 imap.gmail.com 和 smtp.gmail.com 上的 IMAP 与 SMTP 连接。mcpemails 是一个托管 MCP 服务器，邮箱连接好之后，Claude、ChatGPT、Cursor 或任意 MCP 客户端都能读取、搜索、发送和整理其中的邮件。能否使用应用专用密码、是否允许 IMAP，由你的 Workspace 管理员的设置决定。"
+    "answer": "使用你自己域名的 Google Workspace 邮箱，底层就是一个 Gmail 邮箱，所以它与 Gmail 一样连接到 MCPEmails：用 Google 应用专用密码，通过 imap.gmail.com 和 smtp.gmail.com 上的 IMAP 与 SMTP 连接。MCPEmails 是一个托管 MCP 服务器，邮箱连接好之后，Claude、ChatGPT、Cursor 或任意 MCP 客户端都能读取、搜索、发送和整理其中的邮件。能否使用应用专用密码、是否允许 IMAP，由你的 Workspace 管理员的设置决定。"
   },
   "method": {
     "title": "Google Workspace 如何连接：通过 IMAP 使用应用专用密码",
-    "body": "在 IMAP 表单中输入你的地址，mcpemails 会读取你域名的 MX 记录：邮件发往 Google（<code>aspmx.l.google.com</code> 或 <code>smtp.google.com</code>）的域名会被识别为 Google Workspace，表单会自动填入端口 993 的 <b>imap.gmail.com</b> 和端口 465 的 <b>smtp.gmail.com</b>，并提示你需要应用专用密码。选择 Gmail 卡片的效果相同。Google 已于 2025 年关闭 Workspace 应用的密码登录，只有应用专用密码例外，所以账户密码在这里永远无法使用。也可以改用 Google 登录连接。"
+    "body": "在 IMAP 表单中输入你的地址，MCPEmails 会读取你域名的 MX 记录：邮件发往 Google（<code>aspmx.l.google.com</code> 或 <code>smtp.google.com</code>）的域名会被识别为 Google Workspace，表单会自动填入端口 993 的 <b>imap.gmail.com</b> 和端口 465 的 <b>smtp.gmail.com</b>，并提示你需要应用专用密码。选择 Gmail 卡片的效果相同。Google 已于 2025 年关闭 Workspace 应用的密码登录，只有应用专用密码例外，所以账户密码在这里永远无法使用。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "创建 Google 应用专用密码",
       "p": "以你要连接的邮箱身份登录，如果尚未开启两步验证，请先开启，然后前往 myaccount.google.com/apppasswords 创建一个应用专用密码。如果找不到这个选项，很可能是管理员的设置所致（见下文）。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP 或 Gmail，输入你域名下的完整地址，然后粘贴 16 个字符的应用专用密码。服务器地址会根据你的域名自动填入。"
     },
     {
@@ -55,7 +55,7 @@
   "gotchas": [
     {
       "h": "Workspace 账户上可能找不到应用专用密码选项",
-      "p": "Google 只在开启了两步验证的账户上提供应用专用密码，而且它自己的帮助页面列出了即使开启后该选项仍可能不出现的三种原因：两步验证<b>只设置了安全密钥</b>、开启了<b>高级保护</b>，或者登录的是设置不允许应用专用密码的<b>工作、学校或其他组织账户</b>。最后一种由你的管理员决定，在邮箱内做任何事都改变不了。请询问管理员；如果你的组织允许第三方应用，也可以改用 Google 登录连接。"
+      "p": "Google 只在开启了两步验证的账户上提供应用专用密码，而且它自己的帮助页面列出了即使开启后该选项仍可能不出现的三种原因：两步验证<b>只设置了安全密钥</b>、开启了<b>高级保护</b>，或者登录的是设置不允许应用专用密码的<b>工作、学校或其他组织账户</b>。最后一种由你的管理员决定，在邮箱内做任何事都改变不了。请让管理员为你的账户允许应用专用密码。"
     },
     {
       "h": "IMAP 由管理员开启，而不是由你开启",
@@ -66,23 +66,23 @@
       "p": "Workspace 允许管理员为一个用户添加最多 30 个别名，发往别名的邮件会进入该用户自己的收件箱。别名没有自己的登录，所以你要连接它所属的用户，别名的邮件本来就在那里。Google 群组地址（邮件列表或协作收件箱）同样不是可以登录的账户，因此没有可用于连接的应用专用密码：请连接某个成员的邮箱。只有真正的用户邮箱才能连接，每个都用自己的应用专用密码，每个都算作一个已连接收件箱。"
     },
     {
-      "h": "用别名回复需要使用 Google 登录连接",
-      "p": "使用应用专用密码时，邮箱只能用自己的地址发信。要用其他地址发信，例如设置为 Gmail <b>Send mail as</b> 地址的别名，只有在通过 Google 登录连接的邮箱上才支持，这时已验证的 Send As 地址会列出来供你的代理使用。在其他任何连接方式上，如果 From 地址不是邮箱自己的地址，请求会被拒绝，而不是被悄悄改写。"
+      "h": "别名验证后即可用别名回复",
+      "p": "使用应用专用密码时，邮箱默认从它自己的地址发信。若要从别名回复，例如在 Gmail 中设置为 <b>Send mail as</b> 地址的别名，请在 MCPEmails 的收件箱设置中把它添加到<b>发件地址</b>。我们会向该别名发送一个 6 位验证码，输入后你的代理就能从这个地址发信。既不是邮箱本身地址、也不是已验证发件地址的 From 地址会被拒绝，而不会被悄悄改写。"
     }
   ],
   "limits": [
-    "mcpemails 只触及邮件：应用专用密码只用于 IMAP 和 SMTP。Drive、Calendar、Chat 和 Docs 都无法访问。",
-    "Google Workspace 管理员可以关闭这两种连接方式：你的账户可能无法使用应用专用密码，IMAP 可能被关闭或仅限指定的 OAuth 客户端，Google 登录选项的第三方访问也可能被阻止。这些设置只有管理员能够更改。",
+    "MCPEmails 只触及邮件：应用专用密码只用于 IMAP 和 SMTP。Drive、Calendar、Chat 和 Docs 都无法访问。",
+    "Google Workspace 管理员可以关闭这条途径：你的账户可能无法使用应用专用密码，IMAP 也可能被关闭或仅限指定的 OAuth 客户端。只有管理员能更改这些设置。",
     "Gmail 存储的是标签而不是文件夹，所以移动邮件就是添加一个标签并移除另一个，而删除会把邮件移入 Gmail 的 Trash。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Google Workspace 邮箱吗？",
-      "a": "能，只要由 mcpemails 这样的 MCP 服务器连接该邮箱。使用你自己域名的 Workspace 邮箱与 gmail.com 地址完全一样，用 Google 应用专用密码通过 IMAP 连接，之后 Claude 就能读取、搜索、发送、回复和整理其中的邮件。同一个连接也适用于 ChatGPT、Cursor 以及任何其他 MCP 客户端。"
+      "a": "能，只要由 MCPEmails 这样的 MCP 服务器连接该邮箱。使用你自己域名的 Workspace 邮箱与 gmail.com 地址完全一样，用 Google 应用专用密码通过 IMAP 连接，之后 Claude 就能读取、搜索、发送、回复和整理其中的邮件。同一个连接也适用于 ChatGPT、Cursor 以及任何其他 MCP 客户端。"
     },
     {
       "q": "Google Workspace 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 imap.gmail.com，端口 993，使用 SSL/TLS；SMTP 为 smtp.gmail.com，端口 465，使用 SSL/TLS。用户名是你自己域名下的完整地址，密码是 Google 应用专用密码。当你域名的 MX 记录指向 Google 时，mcpemails 会自动填入这些设置。"
+      "a": "IMAP 为 imap.gmail.com，端口 993，使用 SSL/TLS；SMTP 为 smtp.gmail.com，端口 465，使用 SSL/TLS。用户名是你自己域名下的完整地址，密码是 Google 应用专用密码。当你域名的 MX 记录指向 Google 时，MCPEmails 会自动填入这些设置。"
     },
     {
       "q": "为什么我无法在 Workspace 账户上创建应用专用密码？",
@@ -98,7 +98,7 @@
     },
     {
       "q": "我的 Google Workspace 邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。应用专用密码（如果使用 Google 登录，则是 OAuth 令牌）静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码，或在 mcpemails 中删除该收件箱，都会终止连接。"
+      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。应用专用密码静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码，或在 MCPEmails 中删除该收件箱，都会终止连接。"
     }
   ],
   "ctaBand": {

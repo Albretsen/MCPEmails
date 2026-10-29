@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "title": "E-Mail-Konnektoren von Claude und ChatGPT im Vergleich zu einem MCP-Server",
+    "description": "Was die integrierten E-Mail-Konnektoren von Claude und ChatGPT und die eigenen MCP-Server von Fastmail und Zoho können, verglichen mit MCPEmails. Mit Quellen und Datum."
+  },
+  "hero": {
+    "eyebrow": "Native Konnektoren und MCP im Vergleich",
+    "titleLine1": "Integrierte Konnektoren senden jetzt E-Mails.",
+    "titleLine2": "Hier liegen ihre Grenzen.",
+    "lead": "Claude und ChatGPT können E-Mails bei Gmail und Microsoft lesen und senden, und Fastmail und Zoho betreiben eigene MCP-Server. Jede dieser Lösungen deckt nur einen Anbieter ab oder funktioniert nur in einer App. MCPEmails bündelt alle Ihre Postfächer in einer Verbindung, die in jedem MCP-Client funktioniert.",
+    "updated": "Angaben zu Drittanbietern geprüft am {date}. Jede Aussage verlinkt auf ihre Quelle.",
+    "ctaPrimary": "Postfach kostenlos verbinden",
+    "ctaSecondary": "Zur Dokumentation"
+  },
+  "kinds": {
+    "title": "Zwei Arten von nativ",
+    "sub": "Sie werden oft in einen Topf geworfen, unterscheiden sich aber in den zwei entscheidenden Punkten: welche Postfächer sie erreichen und in welchen Apps sie funktionieren.",
+    "apps": {
+      "h": "Konnektoren, die in eine KI-App integriert sind",
+      "p": "Die Konnektoren für Gmail und Microsoft 365 in Claude und die Apps für Gmail und Outlook in ChatGPT. Nichts zu installieren, und inzwischen senden sie E-Mails. Sie funktionieren nur in dieser einen App, und der Microsoft-365-Konnektor von Claude kann keine privaten Outlook.com- oder Hotmail-Konten verbinden."
+    },
+    "provider": {
+      "h": "Der eigene MCP-Server eines E-Mail-Anbieters",
+      "p": "Fastmail und Zoho Mail betreiben jeweils einen offiziellen MCP-Server, und der Gmail-MCP-Server von Google ist als Developer Preview verfügbar. Sie funktionieren in jedem MCP-Client, aber jeder erreicht nur die Postfächer seines eigenen Anbieters."
+    }
+  },
+  "axes": {
+    "title": "Wo sich ein verwalteter MCP-Server weiterhin unterscheidet",
+    "sub": "Drei Unterschiede, die auf den gelesenen Seiten Bestand haben. Wo die integrierten Optionen aufgeholt haben, steht das in der Tabelle unten.",
+    "items": {
+      "coverage": {
+        "tag": "Abdeckung",
+        "h": "Alle Postfächer, eine Verbindung",
+        "p": "MCPEmails verbindet Gmail, Outlook einschließlich privater Outlook.com-Konten, iCloud, Yahoo, Fastmail, Zoho, Yandex und jedes IMAP-Postfach, mehrere gleichzeitig hinter einer MCP-URL. Ein integrierter Konnektor erreicht Gmail und Microsoft, der eigene Server eines Anbieters erreicht nur diesen Anbieter."
+      },
+      "actions": {
+        "tag": "Kontrolle",
+        "h": "Planen, zurückhalten und organisieren",
+        "p": "Die integrierten Konnektoren senden, antworten und leiten weiter. MCPEmails plant außerdem Sendungen für später, kann ausgehende E-Mails pro Postfach zur Freigabe zurückhalten und verschiebt, kopiert, markiert, archiviert und löscht in jedem verbundenen Postfach."
+      },
+      "portable": {
+        "tag": "Portabel",
+        "h": "Einmal einrichten, in jeder KI-App nutzen",
+        "p": "Die Konnektoren von Claude und ChatGPT funktionieren nur in der eigenen App. MCPEmails ist ein standardkonformer MCP-Server mit streamable-http, OAuth 2.1, dynamischer Client-Registrierung und PKCE. Dieselben Postfächer funktionieren also in Claude, ChatGPT, Cursor, VS Code, n8n und jedem anderen MCP-Client."
+      }
+    }
+  },
+  "table": {
+    "title": "Im direkten Vergleich",
+    "featureCol": "Funktion",
+    "appsCol": "Konnektoren von Claude und ChatGPT",
+    "providerCol": "Eigener MCP-Server des Anbieters",
+    "usCol": "MCPEmails",
+    "notStated": "Keine Angabe",
+    "rows": {
+      "reach": "Erreichbare Postfächer",
+      "several": "Mehrere Anbieter in einer Verbindung",
+      "send": "Senden, antworten und weiterleiten",
+      "organize": "Verschieben, Labels, archivieren oder löschen",
+      "schedule": "Versand für später planen",
+      "approval": "Freigabe vor dem Senden",
+      "portable": "Funktioniert in anderen KI-Apps"
+    },
+    "values": {
+      "reachApps": "Gmail. Geschäftskonten von Microsoft 365 in Claude, Outlook in ChatGPT.",
+      "reachProvider": "Nur dieser Anbieter: Fastmail, Zoho oder Gmail in der Preview von Google.",
+      "reachUs": "Gmail, Outlook und Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex, jedes IMAP-Postfach.",
+      "sendProvider": "Fastmail und Zoho senden. Der Preview-Server von Google erstellt nur Entwürfe.",
+      "organizeApps": "Labels und Papierkorb im Gmail-Konnektor von Claude.",
+      "organizeProvider": "Fastmail und Zoho: ja.",
+      "approvalApps": "Claude fragt standardmäßig vor jedem Versand. ChatGPT fragt eventuell vor einer Aktion.",
+      "approvalUs": "Optionale Freigabe pro Postfach, in jedem Tarif, plus eine separate Sendeberechtigung."
+    },
+    "footnote": "Die Angaben zu Drittanbietern wurden am {date} in den unten genannten Quellen gelesen. „Keine Angabe“ bedeutet, dass die gelesenen Seiten die Frage nicht beantwortet haben, nicht dass die Funktion fehlt. Diese Produkte ändern sich oft; wenn eine Angabe veraltet ist, prüfen Sie den Link zur Quelle."
+  },
+  "faq": {
+    "title": "Native Konnektoren und MCP: die Antworten",
+    "sub": "Auch die Antworten, die Sie nicht zu uns schicken.",
+    "items": [
+      {
+        "q": "Können Claude oder ChatGPT schon E-Mails aus meinem Gmail senden?",
+        "a": "Ja. Der Gmail-Konnektor von Claude sendet, antwortet und leitet weiter und fragt standardmäßig vor jeder dieser Aktionen nach Ihrer Freigabe. ChatGPT kann im Web über ein verbundenes Gmail- oder Outlook-Konto Entwürfe erstellen und senden, in den Tarifen Plus, Pro, Business und Enterprise. Wenn Gmail Ihr einziges Postfach ist und Sie nur eine dieser Apps nutzen, reicht Ihnen vielleicht der integrierte Konnektor."
+      },
+      {
+        "q": "Mein E-Mail-Anbieter hat einen eigenen MCP-Server. Brauche ich noch etwas anderes?",
+        "a": "Vielleicht nicht. Fastmail und Zoho Mail betreiben offizielle MCP-Server, die in jedem MCP-Client funktionieren, und der Gmail-MCP-Server von Google ist als Developer Preview verfügbar. Jeder erreicht nur seinen eigenen Anbieter. MCPEmails ist für mehrere Postfächer hinter einer Verbindung gedacht, für iCloud, Yahoo, Yandex und andere IMAP-Hoster sowie für private Outlook.com-Konten, die der Microsoft-365-Konnektor von Claude nicht verbinden kann."
+      },
+      {
+        "q": "Was kann MCPEmails, was die integrierten Konnektoren nicht können?",
+        "a": "Postfächer bei mehreren Anbietern über eine MCP-URL erreichen, einen Versand für später planen, ausgehende E-Mails pro Postfach zur Freigabe durch einen Menschen zurückhalten und in Claude, ChatGPT, Cursor, VS Code und n8n gleich funktionieren. Keine der geprüften integrierten Optionen erwähnt geplanten Versand."
+      },
+      {
+        "q": "Wenn ich das für Claude einrichte, funktioniert es dann auch in Cursor oder ChatGPT?",
+        "a": "Ja. MCPEmails ist ein standardkonformer MCP-Server mit streamable-http, OAuth 2.1, dynamischer Client-Registrierung und PKCE. Eine Einrichtung funktioniert also in Claude, ChatGPT, Cursor, VS Code, Windsurf, n8n und jedem anderen MCP-Client. Die integrierten Konnektoren von Claude und ChatGPT funktionieren nur in der eigenen App."
+      },
+      {
+        "q": "Werden meine E-Mails gespeichert, wenn MCPEmails mein Postfach verbindet?",
+        "a": "Nein. Nachrichten werden bei jeder Anfrage live von Ihrem Anbieter abgerufen und verworfen, sobald die Antwort gesendet ist. Gespeichert werden ein verschlüsseltes OAuth-Token oder App-Passwort, damit spätere Anfragen sich anmelden können, und jede Nachricht, die Sie planen. Diese wird bis zum Versand verschlüsselt aufbewahrt. Sie können den Zugriff jederzeit widerrufen."
+      }
+    ]
+  },
+  "sources": {
+    "title": "Quellen",
+    "sub": "Jede der folgenden Seiten wurde am {date} gelesen.",
+    "items": {
+      "claudeGoogle": "Claude Help Center: Konnektoren für Google Workspace",
+      "claudeGmailListing": "Eintrag des Gmail-Konnektors von Claude",
+      "claudeM365": "Claude Help Center: Microsoft-365-Konnektor",
+      "chatgptReleaseNotes": "Versionshinweise von ChatGPT (Senden aus Gmail oder Outlook)",
+      "chatgptApps": "OpenAI Help Center: Apps in ChatGPT",
+      "fastmailMcp": "Fastmail: KI-Tools über den MCP-Server von Fastmail verbinden",
+      "zohoMcp": "Zoho Mail MCP: Erste Schritte",
+      "googleGmailMcp": "Google for Developers: Gmail-MCP-Server konfigurieren"
+    }
+  },
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI alle Ihre Postfächer",
+    "sub": "Verbinden Sie ein Postfach in wenigen Minuten. Ein Postfach kostenlos, ohne Kreditkarte.",
+    "ctaPrimary": "Postfach kostenlos verbinden",
+    "ctaSecondary": "Zur Dokumentation"
+  }
+}

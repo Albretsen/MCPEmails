@@ -21,8 +21,8 @@
     "eyebrow": "Axigen + IA",
     "titleLine1": "Conecta un buzón de Axigen",
     "titleLine2": "a Claude, Cursor y ChatGPT",
-    "lead": "Tú gestionas el servidor de correo, así que los ajustes los compruebas tú en lugar de buscarlos. Apunta mcpemails a tu servidor Axigen y Claude podrá leer, buscar, enviar, responder, programar y archivar correo en las cuentas que ya administras.",
-    "answer": "Claude no puede acceder por sí solo a un servidor Axigen. mcpemails es un servidor MCP alojado que se conecta a tu instalación de Axigen por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, autenticándose con la contraseña de la cuenta que Axigen ya acepta de cualquier cliente de correo, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que publicar: el servidor es el nombre al que responda el tuyo, tiene que ser accesible desde internet y el listener del 993 tiene que servir un certificado válido para ese nombre. Una bandeja es gratis.",
+    "lead": "Tú gestionas el servidor de correo, así que los ajustes los compruebas tú en lugar de buscarlos. Apunta MCPEmails a tu servidor Axigen y Claude podrá leer, buscar, enviar, responder, programar y archivar correo en las cuentas que ya administras.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Axigen. MCPEmails es un servidor MCP alojado que se conecta a tu instalación de Axigen por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, autenticándose con la contraseña de la cuenta que Axigen ya acepta de cualquier cliente de correo, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que publicar: el servidor es el nombre al que responda el tuyo, tiene que ser accesible desde internet y el listener del 993 tiene que servir un certificado válido para ese nombre. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de la cuenta desde WebAdmin",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta, lo que basta para probarlo con una cuenta real de tu propio servidor."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Confirma que la cuenta puede usar IMAP y añádela",
-      "p": "En Domains and Accounts, abre la cuenta o la clase de cuenta a la que pertenece y comprueba que IMAP está entre los servicios permitidos. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el nombre de tu servidor Axigen, la dirección completa de la cuenta y su contraseña."
+      "p": "En Domains and Accounts, abre la cuenta o la clase de cuenta a la que pertenece y comprueba que IMAP está entre los servicios permitidos. Después añade la bandeja en MCPEmails: elige IMAP / SMTP e introduce el nombre de tu servidor Axigen, la dirección completa de la cuenta y su contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Axigen vincula cada listener a una dirección, así que para llegar al servidor desde un servicio MCP alojado hace falta un listener IMAP en una dirección enrutable desde internet. Si tu política dice que el correo nunca sale de la red interna, esa política manda y este servicio alojado no encaja contigo. En su lugar puedes alojar tú mismo mcpemails, conectándolo al mismo listener interno que ya usan tus clientes de escritorio.",
+    "Axigen vincula cada listener a una dirección, así que para llegar al servidor desde un servicio MCP alojado hace falta un listener IMAP en una dirección enrutable desde internet. Si tu política dice que el correo nunca sale de la red interna, esa política manda y este servicio alojado no encaja contigo. En su lugar puedes alojar tú mismo MCPEmails, conectándolo al mismo listener interno que ya usan tus clientes de escritorio.",
     "La validación TLS es estricta y no se puede desactivar. Se rechazará un certificado autofirmado, uno caducado o uno emitido para un nombre distinto del servidor que introduzcas.",
     "El correo saliente sale por tu propio servicio SMTP de Axigen, así que la entregabilidad depende de tus registros SPF, DKIM y DMARC y de la reputación de tu dirección de envío."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Axigen?",
-      "a": "No por sí solo. Claude no tiene un conector para Axigen y no puede abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu servidor Axigen le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar una cuenta en él, y la misma bandeja funciona también desde Cursor o ChatGPT."
+      "a": "No por sí solo. Claude no tiene un conector para Axigen y no puede abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como MCPEmails a tu servidor Axigen le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar una cuenta en él, y la misma bandeja funciona también desde Cursor o ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Axigen?",
@@ -96,6 +96,6 @@
   ],
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de Axigen",
-    "sub": "Apunta mcpemails a tu propio servidor Axigen. Una bandeja gratis para siempre, sin tarjeta."
+    "sub": "Apunta MCPEmails a tu propio servidor Axigen. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

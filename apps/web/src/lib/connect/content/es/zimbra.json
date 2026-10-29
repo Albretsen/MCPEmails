@@ -22,7 +22,7 @@
     "titleLine1": "Conecta Zimbra a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Zimbra lleva años guardando el correo de tu organización, y habla un IMAP perfectamente normal. Es todo lo que necesita un agente de IA para leer, buscar, enviar, responder, programar y archivar dentro de un buzón real.",
-    "answer": "Claude no puede acceder por sí solo a un servidor Zimbra. mcpemails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, en el puerto 993 cuando está instalado el proxy de Zimbra, con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Zimbra es software que gestiona tu organización, así que no hay un nombre de servidor común que publicar, y conviene comprobar el puerto en lugar de suponerlo: el 993 y el 143 pertenecen al proxy de Zimbra, mientras que el propio mailboxd escucha en el 7993 y el 7143. El servidor tiene que ser accesible desde internet y su certificado tiene que validarse. Una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Zimbra. MCPEmails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, en el puerto 993 cuando está instalado el proxy de Zimbra, con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Zimbra es software que gestiona tu organización, así que no hay un nombre de servidor común que publicar, y conviene comprobar el puerto en lugar de suponerlo: el 993 y el 143 pertenecen al proxy de Zimbra, mientras que el propio mailboxd escucha en el 7993 y el 7143. El servidor tiene que ser accesible desde internet y su certificado tiene que validarse. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón, IMAP activado en la COS",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta, lo que basta para probarlo con una cuenta real de Zimbra."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Revisa la clase de servicio y añade la cuenta",
-      "p": "Abre Configure, luego Class of Service, luego la clase a la que pertenece la cuenta, y mira las opciones POP/IMAP en Preferences. Una clase con IMAP desactivado rechaza todas las cuentas que contiene. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el nombre de tu servidor Zimbra, la dirección completa y la contraseña del buzón."
+      "p": "Abre Configure, luego Class of Service, luego la clase a la que pertenece la cuenta, y mira las opciones POP/IMAP en Preferences. Una clase con IMAP desactivado rechaza todas las cuentas que contiene. Después añade la bandeja en MCPEmails: elige IMAP / SMTP e introduce el nombre de tu servidor Zimbra, la dirección completa y la contraseña del buzón."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -60,18 +60,18 @@
     },
     {
       "h": "IMAP se puede desactivar en cuatro sitios distintos",
-      "p": "Zimbra organiza su configuración en capas, y cada capa puede rechazar una conexión por su cuenta mientras las demás parecen correctas. Los ajustes globales, en Configure, luego Global Settings, luego IMAP, contienen el interruptor general <b>Enable IMAP services</b>. Cada servidor tiene sus propios ajustes, donde se fijan los números de puerto de IMAP e IMAP SSL y donde se puede apagar el servidor integrado en el proceso, mediante <code>zimbraImapServerEnabled</code> y <code>zimbraImapSSLServerEnabled</code>. Cada clase de servicio tiene opciones POP e IMAP que se aplican a todas sus cuentas. Y una cuenta individual puede anular su clase. La línea de comandos los consulta en el mismo orden: <code>zmprov gcf</code> para la configuración global, <code>zmprov gs</code> para un servidor, <code>zmprov gc</code> para una clase de servicio y <code>zmprov ga</code> para una cuenta. Recorre esa lista en orden en lugar de adivinar, porque el fallo es idéntico en todos los niveles."
+      "p": "Zimbra organiza su configuración en capas, y cada capa puede rechazar una conexión por sí sola mientras las demás parecen correctas. Los ajustes globales, en Configure, luego Global Settings, luego IMAP, contienen el interruptor general <b>Enable IMAP services</b>. Cada servidor tiene sus propios ajustes, donde se fijan los números de puerto de IMAP e IMAP SSL y donde se puede apagar el servidor integrado en el proceso, mediante <code>zimbraImapServerEnabled</code> y <code>zimbraImapSSLServerEnabled</code>. Cada clase de servicio tiene opciones POP e IMAP que se aplican a todas sus cuentas. Y una cuenta individual puede anular su clase. La línea de comandos los consulta en el mismo orden: <code>zmprov gcf</code> para la configuración global, <code>zmprov gs</code> para un servidor, <code>zmprov gc</code> para una clase de servicio y <code>zmprov ga</code> para una cuenta. Recorre esa lista en orden en lugar de adivinar, porque el fallo es idéntico en todos los niveles."
     }
   ],
   "limits": [
-    "Tu servidor Zimbra tiene que aceptar una conexión IMAP entrante desde internet. Un despliegue publicado solo dentro de la red corporativa o detrás de una VPN no es accesible para un servicio alojado. En su lugar, mcpemails puede autoalojarse dentro de la misma red, lo que a menudo es una conversación más fácil con un equipo de seguridad que abrir un puerto.",
+    "Tu servidor Zimbra tiene que aceptar una conexión IMAP entrante desde internet. Un despliegue publicado solo dentro de la red corporativa o detrás de una VPN no es accesible para un servicio alojado. En su lugar, MCPEmails puede autoalojarse dentro de la misma red, lo que a menudo es una conversación más fácil con un equipo de seguridad que abrir un puerto.",
     "Por una conexión IMAP solo pasa el correo. Los calendarios, contactos, tareas y el maletín (briefcase) de Zimbra se sirven a través de su propio cliente web y de CalDAV, CardDAV o la API de Zimbra, así que un agente conectado de esta forma trabaja solo con el correo.",
     "Los envíos salen por tu propio MTA de Zimbra, así que la entregabilidad depende de tus registros SPF, DKIM y DMARC exactamente igual que para cualquier otro cliente del servidor."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Zimbra?",
-      "a": "No directamente. Claude no tiene un conector para Zimbra y no puede abrir una sesión IMAP con un servidor que gestiona tu organización. Conectar un servidor MCP como mcpemails a tu servidor Zimbra le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón alojado en él, con las mismas credenciales que usa el Zimbra Web Client, y la misma bandeja funciona después en Cursor o ChatGPT."
+      "a": "No directamente. Claude no tiene un conector para Zimbra y no puede abrir una sesión IMAP con un servidor que gestiona tu organización. Conectar un servidor MCP como MCPEmails a tu servidor Zimbra le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón alojado en él, con las mismas credenciales que usa el Zimbra Web Client, y la misma bandeja funciona después en Cursor o ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Zimbra?",

@@ -1044,6 +1044,28 @@ const SQL_ALLOWED = new Set([
   // api_keys lookup works on a self-hosted install. It never writes a value;
   // the server does, through the constant. Issue #82.
   "self-host/db/00-schema.sql",
+  // mcp_tools_call_preflight returns the api_keys row for a tools/call, so it
+  // must hand back the same columns lookupApiKey selects, this one included.
+  // It READS the column and never writes it; the compare-and-swap stays in
+  // TypeScript through the constant.
+  "supabase/migrations/20261020100000_mcp_tools_call_preflight.sql",
+  // mcp_tools_call_gate, its successor, for the same reason: it reads the
+  // column into the key row and never writes it.
+  "supabase/migrations/20261020214737_mcp_tools_call_gate.sql",
+  // Re-creates mcp_tools_call_gate verbatim with three workspace payment
+  // columns added; the key row, this column included, is only read.
+  "supabase/migrations/20261024190000_payment_issue_columns.sql",
+  // The referral migration re-creates mcp_tools_call_gate whole (to return
+  // referral_personal_until); it reads the column the same way and never
+  // writes it.
+  "supabase/migrations/20261025090000_referrals.sql",
+  // Re-creates mcp_tools_call_gate to return card_listed as well; reads this
+  // column into the key row as before and never writes it.
+  "supabase/migrations/20261027150000_tools_call_gate_card_listed.sql",
+  // The draft card rollout marks every live key's listing stale in one
+  // statement, the same write invalidateCardListings() makes per workspace.
+  // It writes the literal 'stale', which must equal CARD_LISTING_STALE.
+  "supabase/migrations/20261027160000_draft_editor_for_everyone.sql",
 ]);
 
 /**
@@ -1406,7 +1428,6 @@ Deno.test("the file list is git's, not a hand-maintained root list", () => {
   for (
     const tree of [
       "apps/web/components/",
-      "supabase/functions/gmail-token-refresh/",
       "supabase/functions/outlook-token-refresh/",
       "supabase/functions/synthetic-monitor/",
       "supabase/functions/system-notify/",
@@ -1446,5 +1467,34 @@ Deno.test("a stale marker on a non-card tool still says nothing", () => {
     }),
     { notify: false, record: null },
     "still only card-bearing calls",
+  );
+});
+
+Deno.test("an OpenAI key reading NULL is notified even when the key is new", () => {
+  // 2026-10-26: a fresh ChatGPT OAuth link sent no initialize and no tools/list
+  // on the new key and called tools from the listing cached under the old one.
+  // New key, NULL column: the age rule alone stays silent.
+  const fresh = { ...BASE, notifiedBuild: null, keyPredatesBuildTracking: false, keyUsedBefore: false };
+  assertEquals(decideBuildNotification(fresh), { notify: false, record: null }, "non-OpenAI unchanged");
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true }),
+    { notify: true, record: "bbbbbbbbbbbb" },
+    "OpenAI key with NULL notifies",
+  );
+  // The other gates still hold for it.
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, acceptsEventStream: false }),
+    { notify: false, record: null },
+    "no stream, no notification",
+  );
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, cardBearingTool: false }),
+    { notify: false, record: null },
+    "not card-bearing, no notification",
+  );
+  assertEquals(
+    decideBuildNotification({ ...fresh, clientReusesListings: true, method: "tools/list" }),
+    { notify: false, record: "bbbbbbbbbbbb" },
+    "tools/list still records only",
   );
 });

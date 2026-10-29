@@ -1,0 +1,74 @@
+name: Sync staging with main
+
+# Fast-forwards the long-lived `staging` branch to `main` (decision D10).
+# Weekly, or by hand after a release. It never rewrites staging: if staging
+# has commits main lacks, the run fails and lists them, and a person merges
+# them into main (or drops them) first.
+#
+# Inert until the `staging` branch exists.
+#
+# A push made with GITHUB_TOKEN does not start other workflows, so when the
+# sync brings new migrations this run dispatches migrate-staging.yml itself.
+# CI does not need to rerun: after a fast-forward staging's head is a main
+# commit, which already carries its "CI passed" check.
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync:
+    name: Fast-forward staging to main
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward
+        id: ff
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --heads origin staging >/dev/null; then
+            echo "::notice::No staging branch yet. Nothing to do."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin main staging
+          ahead=$(git rev-list --count origin/main..origin/staging)
+          if [ "$ahead" -gt 0 ]; then
+            echo "::error::staging has $ahead commit(s) that main lacks. Merge them into main or drop them, then rerun."
+            git log --oneline origin/main..origin/staging
+            exit 1
+          fi
+          if [ "$(git rev-parse origin/staging)" = "$(git rev-parse origin/main)" ]; then
+            echo "staging is already at main."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          old=$(git rev-parse origin/staging)
+          # A plain push is rejected unless it is a fast-forward.
+          git push origin origin/main:refs/heads/staging
+          echo "Fast-forwarded staging $old -> $(git rev-parse origin/main)"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          if git diff --quiet "$old" origin/main -- supabase/migrations; then
+            echo "migrations=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "migrations=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply new migrations to staging
+        if: steps.ff.outputs.pushed == 'true' && steps.ff.outputs.migrations == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run migrate-staging.yml --ref staging --repo "${{ github.repository }}"

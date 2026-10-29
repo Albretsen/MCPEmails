@@ -3,6 +3,7 @@
     "connectedSuccess": "Boîte {provider} connectée avec succès.",
     "inboxLimitReached": "Vous avez atteint la limite de boîtes sur {plan}. Passez à la formule supérieure pour en connecter davantage.",
     "tokenExchangeFailed": "Impossible de connecter la boîte. L'échange de jeton avec le fournisseur a échoué. Veuillez réessayer.",
+    "gmailOauthUnavailable": "La connexion avec Google n'est pas disponible pour une nouvelle boîte Gmail dans cet espace de travail. Connectez plutôt Gmail avec un mot de passe d'application, qui fonctionne avec toutes les offres.",
     "connectionCancelled": "Connexion de la boîte annulée.",
     "adminConsentRequired": "Votre organisation doit autoriser l'accès à la boîte avant que vous puissiez connecter Outlook. Microsoft empêche les employés de l'autoriser eux-mêmes.",
     "adminConsentAction": "Obtenir un lien pour votre administrateur informatique",
@@ -36,6 +37,8 @@
     "checkoutPanel": {
       "title": "Vous êtes maintenant sur {plan}",
       "subtitle": "Paiement reçu. Un reçu part vers votre adresse e-mail.",
+      "subtitleEur": "Votre forfait est actif. Si vous avez payé par prélèvement bancaire, il peut prendre quelques jours ouvrés, et vous avez un accès complet en attendant.",
+      "subtitleProcessing": "Votre prélèvement bancaire est en cours de traitement, ce qui peut prendre quelques jours ouvrés. Vous avez un accès complet en attendant.",
       "close": "Fermer",
       "planLabel": "Formule",
       "priceLabel": "Prix",
@@ -51,6 +54,7 @@
       "activatingTitle": "Presque terminé",
       "activating": "Activation de votre abonnement en cours. Cela prend quelques secondes et la page se met à jour toute seule.",
       "activatingSlow": "Votre paiement a bien été effectué. L'activation prend plus de temps que d'habitude ; rechargez la page dans un instant si rien n'a changé.",
+      "activatingSlowNeutral": "L'activation prend plus de temps que d'habitude ; rechargez la page dans un instant si rien n'a changé.",
       "billingDetailsNote": "Votre prix et votre date de renouvellement se trouvent dans Facturation.",
       "connectCta": "Connecter une autre boîte",
       "billingCta": "Voir la facturation"
@@ -91,9 +95,13 @@
     "densityLabel": "Densité",
     "densityCompact": "Compacte",
     "densitySpacious": "Spacieuse",
-    "firstRunTitle": "Bienvenue sur mcpemails",
+    "firstRunTitle": "Bienvenue sur MCPEmails",
     "firstRunBody": "Connectez votre première boîte pour obtenir un point de terminaison MCP fonctionnel en moins d'une minute.",
     "firstRunCta": "Connecter une boîte",
+    "paymentIssueDeclined": "Votre dernier paiement n'a pas abouti. Votre offre reste active pendant que nous réessayons.",
+    "paymentIssueDeclinedCta": "Mettre à jour le paiement",
+    "paymentIssueConfirm": "Votre banque vous demande de confirmer le dernier paiement. Votre offre reste active.",
+    "paymentIssueConfirmCta": "Confirmer le paiement",
     "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",
     "inviteResent": "Invitation renvoyée à {email}.",
     "inviteResendFailed": "Impossible de renvoyer l'invitation.",
@@ -105,7 +113,7 @@
     "workspacesLabel": "Espaces de travail",
     "memberSuffix": "membre",
     "newWorkspace": "Nouvel espace de travail",
-    "newWorkspaceUpsell": "Les espaces de travail sont une fonctionnalité Team. Voir les formules",
+    "newWorkspaceUpsell": "Les espaces de travail sont une fonctionnalité Business. Voir les formules",
     "sectionWorkspace": "Espace de travail",
     "sectionAccount": "Compte",
     "navOverview": "Aperçu",
@@ -125,7 +133,8 @@
     "searchPlaceholder": "Rechercher des pages, des boîtes, des membres…",
     "openSearch": "Ouvrir la recherche (Command K)",
     "navWorkflows": "Workflows",
-    "navAutomations": "Automatisations"
+    "navAutomations": "Automatisations",
+    "navInvite": "Inviter un ami"
   },
   "topbar": {
     "mcpLabel": "Point de terminaison MCP",
@@ -135,7 +144,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCP Emails une fois ; il n'a pas besoin d'un compte MCP Emails pour le faire.",
+    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCPEmails une fois ; il n'a pas besoin d'un compte MCPEmails pour le faire.",
     "subFastmail": "Mot de passe d'application",
     "subAppPassword": "Mot de passe d'application",
     "subGeneric": "Toute boîte mail · recommandé",
@@ -228,9 +237,9 @@
     "subChooseProvider": "Choisissez un fournisseur. Les identifiants sont chiffrés avant stockage et jamais partagés.",
     "subGenericForm": "Saisissez les paramètres de votre serveur de messagerie et votre mot de passe.",
     "close": "Fermer",
-    "upgradeTitle": "Pro connecte toutes les boîtes que vous possédez",
-    "upgradeBody": "Vous alliez connecter une autre boîte. Pro supprime la limite pour 15 $ par mois : le travail, le personnel et chaque activité annexe sur le même agent.",
-    "featureInboxes": "Boîtes connectées illimitées",
+    "upgradeTitle": "Pro connecte jusqu'à 10 boîtes",
+    "upgradeBody": "Vous alliez connecter une autre boîte. Pro relève la limite à 10 pour 15 $ par mois : le travail, le personnel et chaque activité annexe sur le même agent.",
+    "featureInboxes": "10 boîtes connectées",
     "featureRateLimit": "Limite de pointe 5x plus élevée",
     "featureTeam": "Annulez à tout moment, gardez le reste de la période",
     "featureSupport": "Support par e-mail",
@@ -242,7 +251,7 @@
     "businessUpgradeTitle": "Ajoutez les autres boîtes de votre entreprise",
     "businessUpgradeBody": "Vous gérez info@, ventes@ et factures@ pour votre entreprise ? L'offre gratuite connecte une boîte. Choisissez la formule qui couvre les autres.",
     "businessPersonalPitch": "Trois boîtes pour 9 $ par mois, de quoi couvrir info@, ventes@ et la vôtre.",
-    "businessProPitch": "Toutes les boîtes de votre entreprise, sur un seul agent, pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
+    "businessProPitch": "Jusqu'à 10 boîtes de votre entreprise sur un seul agent, pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
     "recommendedBadge": "Recommandé",
     "fastmailTabAppPassword": "Mot de passe d'application",
     "howToGenerate": "Comment en générer un",
@@ -339,7 +348,132 @@
     "outlookAdminLink": "Obtenir le lien d'approbation pour votre administrateur",
     "microsoftAddressNotice": "Il s'agit d'un compte Microsoft. Les comptes Microsoft se connectent avec Se connecter avec Microsoft ; l'IMAP avec mot de passe ne fonctionne plus pour eux.",
     "microsoftAddressAction": "Utiliser Se connecter avec Microsoft",
-    "errorMicrosoftAccountShort": "Microsoft n'accepte plus de mot de passe pour ce compte. Connectez-le plutôt avec la carte Outlook."
+    "errorMicrosoftAccountShort": "Microsoft n'accepte plus de mot de passe pour ce compte. Connectez-le plutôt avec la carte Outlook.",
+    "businessCapTitle": "Business connecte plus de 10 boîtes",
+    "businessCapBody": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
+    "businessCapCta": "Passer à Business, 39 $/mois",
+    "businessFeatureInboxes": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
+    "businessFeatureMembers": "Membres illimités avec rôles, sans surcoût",
+    "businessFeatureApprovals": "Les administrateurs approuvent les envois en attente",
+    "businessFeatureWorkspaces": "Plusieurs espaces de travail sur un seul abonnement",
+    "fix": {
+      "heading": "Comment résoudre le problème",
+      "testAgain": "Tester à nouveau",
+      "useOutlook": "Utiliser la connexion Microsoft",
+      "receiveOnly": "Connecter en lecture seule",
+      "useSuggestedHost": "Utiliser {host}",
+      "progressLogin": "Vérification de la connexion...",
+      "progressSending": "Vérification de l’envoi...",
+      "progressSlow": "Vérification en cours. Certains serveurs de messagerie mettent jusqu’à une minute à répondre.",
+      "gmail": {
+        "twoStep": "Activez la validation en deux étapes de votre compte Google.",
+        "create": "Créez un mot de passe d’application sur myaccount.google.com/apppasswords et nommez-le MCPEmails.",
+        "paste": "Collez les 16 lettres dans le champ du mot de passe. Les espaces ne posent pas de problème.",
+        "workspace": "Sur un compte professionnel ou scolaire, l’option des mots de passe d’application peut manquer si votre administrateur l’a désactivée. Dans ce cas, demandez-lui d’autoriser les mots de passe d’application.",
+        "imapDisabled": "L’administrateur de votre Google Workspace a désactivé IMAP pour votre compte, aucun mot de passe ne peut donc fonctionner.",
+        "imapDisabledAdmin": "Envoyez ceci à votre service informatique : merci d’activer l’accès IMAP pour mon compte dans la console d’administration Google, sous Applications, Google Workspace, Gmail, Accès des utilisateurs finaux."
+      },
+      "appPassword": {
+        "normalRejected": "Votre mot de passe {provider} habituel est refusé ici. Seul un mot de passe d’application fonctionne.",
+        "paste": "Collez-le dans le champ du mot de passe et cliquez sur Tester à nouveau."
+      },
+      "yahoo": {
+        "create": "Sur la page Sécurité du compte de Yahoo, sous Connexions externes, choisissez Créer un mot de passe d’application, nommez-le MCPEmails et générez-le."
+      },
+      "aol": {
+        "create": "Sur la page Sécurité du compte d’AOL, générez un mot de passe d’application et nommez-le MCPEmails. Si l’option manque, activez d’abord la validation en deux étapes."
+      },
+      "icloud": {
+        "create": "Sur account.apple.com, ouvrez Connexion et sécurité, puis Mots de passe pour app, et créez-en un nommé MCPEmails. L’identification à deux facteurs doit être activée."
+      },
+      "ionos": {
+        "password": "IONOS attend le mot de passe de cette adresse e-mail, pas celui qui sert à vous connecter à IONOS."
+      },
+      "fullAddress": "Utilisez votre adresse e-mail complète comme identifiant.",
+      "tOnline": {
+        "password": "Telekom n’accepte ici que votre Passwort für E-Mail-Programme, pas votre mot de passe Telekom Login.",
+        "where": "Définissez-le dans l’E-Mail Center sous Einstellungen, puis Passwörter, puis Passwort für E-Mail-Programme."
+      },
+      "mailRu": {
+        "create": "Dans Mail.ru, ouvrez Paramètres, Tous les paramètres, Sécurité, puis Mots de passe pour applications externes, et créez-en un avec un accès complet au courrier."
+      },
+      "qq": {
+        "service": "Dans QQ Mail, ouvrez 设置 (Paramètres), puis 账号与安全 (Compte et sécurité), et activez le service POP3/IMAP/SMTP.",
+        "code": "Générez un code d’autorisation (授权码) et collez-le dans le champ du mot de passe. Votre mot de passe QQ ne fonctionne pas."
+      },
+      "mailCom": {
+        "imap": "Activez IMAP sur mail.com : Email, Settings, POP3 and IMAP, puis cochez Enable access to this account via POP3 and IMAP. IMAP nécessite une offre mail.com Premium.",
+        "twoFactor": "Si l’authentification à deux facteurs est activée, créez un mot de passe spécifique à l’application dans Security Options et utilisez-le."
+      },
+      "infomaniak": {
+        "password": "Infomaniak n’accepte pas ici votre mot de passe du Manager. Dans le Manager, ouvrez Service Mail, votre adresse, puis Appareils, et ajoutez un appareil pour obtenir un mot de passe d’appareil."
+      },
+      "orange": {
+        "imap": "Activez POP/IMAP dans votre boîte Orange : la roue crantée, tous les paramètres, Sécurité, Protocoles POP ou IMAP, puis Activer POP/IMAP.",
+        "password": "Utilisez ensuite le mot de passe dédié de votre Espace client, rubrique Connexion et sécurité."
+      },
+      "seznam": {
+        "password": "Si l’authentification à deux facteurs (dvoufázové ověření) est activée, votre mot de passe Seznam ne fonctionne plus ici. Définissez un Heslo pro aplikace sous Zabezpečení účtu et utilisez-le."
+      },
+      "gmx": {
+        "imap": "{provider} désactive par défaut l’accès POP3 et IMAP. Activez-le sous E-Mail-Einstellungen, puis POP3/IMAP.",
+        "twoFactor": "Si l’authentification à deux facteurs est activée, utilisez un mot de passe d’application au lieu de votre mot de passe habituel."
+      },
+      "zoho": {
+        "imap": "Activez l’accès IMAP dans Zoho Mail sous Paramètres, Comptes de messagerie, Accès IMAP.",
+        "twoFactor": "Avec l’authentification à deux facteurs, une connexion fédérée ou SAML, générez un mot de passe spécifique à l’application et utilisez-le."
+      },
+      "yandex": {
+        "create": "Sur id.yandex.com, ouvrez Sécurité, puis Mots de passe d’application, et créez-en un de type Mail.",
+        "imap": "Dans les paramètres de Yandex Mail, ouvrez Clients de messagerie et activez à la fois l’accès IMAP et les mots de passe d’application et jetons OAuth."
+      },
+      "office365": {
+        "useOutlook": "Les boîtes Microsoft 365 professionnelles et scolaires n’acceptent pas les mots de passe venant d’applications de messagerie. Connectez-la plutôt avec la connexion Microsoft."
+      },
+      "smtp": {
+        "readingOk": "Votre serveur a accepté la connexion pour lire le courrier mais l’a refusée pour l’envoi.",
+        "username": "Si votre fournisseur vous donne un identifiant distinct pour l’envoi, saisissez-le dans Paramètres avancés, Nom d’utilisateur.",
+        "readOnly": "Ou connectez-vous maintenant en lecture seule et ajoutez l’envoi plus tard dans les paramètres de la boîte."
+      },
+      "unreachable": {
+        "tried": "Nous avons essayé {host} et le serveur n’a pas répondu.",
+        "notFound": "Nous n’avons trouvé aucun serveur de messagerie nommé {host}.",
+        "suggest": "Votre adresse est chez {provider}, dont le serveur est {host}.",
+        "check": "Vérifiez le nom du serveur sur la page de paramètres de votre fournisseur, puis testez à nouveau.",
+        "blocked": "Votre serveur de messagerie n’accepte pas les connexions venant de nos serveurs. C’est fréquent avec les serveurs des écoles et des entreprises.",
+        "blockedNext": "Demandez à votre service informatique d’autoriser l’accès depuis l’extérieur, ou connectez une autre adresse."
+      },
+      "tls": {
+        "tried": "Nous avons essayé le port {tlsPort} en TLS et le port {starttlsPort} en STARTTLS, et la connexion sécurisée a échoué sur les deux.",
+        "next": "Si votre fournisseur indique un autre port ou un autre réglage de sécurité, modifiez-le ici et testez à nouveau."
+      },
+      "link": {
+        "twoStep": "Ouvrir la validation en deux étapes",
+        "appPasswords": "Ouvrir la page des mots de passe d’application de {provider}",
+        "imapSetting": "Comment activer IMAP chez {provider}",
+        "providerHelp": "Page d’aide de {provider}",
+        "adminGuide": "Le guide de Google pour votre administrateur"
+      },
+      "outlookConsent": {
+        "line1": "Microsoft affichera un écran de consentement indiquant ce que MCPEmails peut faire : lire et modifier le courrier, envoyer du courrier et rester connecté.",
+        "line2": "Acceptez-le pour vous connecter. Vous saisissez votre mot de passe Microsoft uniquement sur la page de Microsoft.",
+        "line3": "Un compte professionnel peut demander l’approbation d’un administrateur. Dans ce cas, revenez ici pour obtenir le lien à envoyer à votre administrateur."
+      },
+      "outlookCancelled": {
+        "title": "Vous avez annulé sur la page de Microsoft",
+        "body": "Rien n’a été connecté. Pour connecter votre boîte Outlook, acceptez l’écran de consentement quand Microsoft l’affiche.",
+        "tryAgain": "Réessayer"
+      },
+      "done": {
+        "title": "Boîte connectée",
+        "body": "Connectez maintenant votre application d’IA pour qu’elle puisse utiliser cette boîte.",
+        "bodyClient": "Connectez maintenant {client} pour qu’il puisse utiliser cette boîte.",
+        "openGuide": "Montrez-moi comment",
+        "later": "Plus tard"
+      }
+    },
+    "businessCapBodyFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
+    "businessCapCtaFounder": "Passer à Business, {price} $/mois"
   },
   "commandPalette": {
     "pageOverview": "Aperçu",
@@ -391,7 +525,7 @@
   },
   "adminConsentLink": {
     "title": "Envoyez ce lien à votre administrateur informatique",
-    "body": "Envoyez ce lien à votre administrateur Microsoft 365. Il se connecte avec son compte administrateur Microsoft et approuve une seule fois ; il n'a pas besoin d'un compte MCP Emails. Ensuite, tout le monde dans votre organisation peut connecter Outlook.",
+    "body": "Envoyez ce lien à votre administrateur Microsoft 365. Il se connecte avec son compte administrateur Microsoft et approuve une seule fois ; il n'a pas besoin d'un compte MCPEmails. Ensuite, tout le monde dans votre organisation peut connecter Outlook.",
     "label": "Lien d'approbation",
     "loading": "Création du lien...",
     "copy": "Copier",
@@ -404,21 +538,43 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Approuvé",
-    "grantedBody": "Votre équipe peut maintenant connecter Outlook dans MCP Emails. Personne n'a rien d'autre à approuver : chacun se connecte avec Microsoft au moment de connecter sa propre boîte.",
+    "grantedBody": "Votre équipe peut maintenant connecter Outlook dans MCPEmails. Personne n'a rien d'autre à approuver : chacun se connecte avec Microsoft au moment de connecter sa propre boîte.",
     "cancelledTitle": "Non approuvé",
     "cancelledBody": "L'approbation a été annulée sur l'écran de Microsoft, rien n'a donc changé. Ouvrez à nouveau le lien quand vous serez prêt.",
     "failedTitle": "L'approbation n'a pas abouti",
     "failedBody": "Microsoft n'a pas confirmé l'approbation. Il faut un compte administrateur Microsoft 365, par exemple Administrateur général ou Administrateur d'applications cloud. Connectez-vous avec l'un d'eux et ouvrez à nouveau le lien.",
     "link_invalidTitle": "Ce lien n'est pas valide",
-    "link_invalidBody": "Le lien d'approbation est incomplet ou a été modifié. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "link_invalidBody": "Le lien d'approbation est incomplet ou a été modifié. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCPEmails.",
     "link_expiredTitle": "Ce lien a expiré",
-    "link_expiredBody": "Les liens d'approbation restent valables 7 jours. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "link_expiredBody": "Les liens d'approbation restent valables 7 jours. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCPEmails.",
     "timed_outTitle": "Veuillez recommencer",
     "timed_outBody": "L'approbation a pris trop de temps ou s'est terminée dans un autre navigateur. Ouvrez à nouveau le lien d'approbation dans ce navigateur.",
     "unavailableTitle": "Un problème est survenu",
     "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
     "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
-    "openApp": "Ouvrir MCP Emails"
+    "openApp": "Ouvrir MCPEmails"
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week : {firstYear} $ la première année, puis {renewal} $ par an. Vous économisez {saving} $.",
+    "ends": "Se termine le {date} à {time}, heure d'Oslo.",
+    "ctaAnnual": "Passer à {plan} en annuel",
+    "switchBody": "Black Week : passez à l'annuel pour {firstYear} $ la première année, puis {renewal} $ par an. Les jours non utilisés de votre mois en cours sont déduits, vous payez donc un peu moins aujourd'hui.",
+    "switchCta": "Passer à l'annuel",
+    "switchBusy": "Préparation...",
+    "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
+  },
+  "founder": {
+    "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
+    "places": "Places restantes : {left} sur {total}",
+    "priceChanged": "Le prix a changé avant votre confirmation, rien n'a donc été facturé. Les montants ci-dessus sont le prix qui s'applique maintenant."
+  },
+  "onboardingEntry": {
+    "finishSetup": "Terminer la configuration",
+    "resetTitle": "Réinitialiser la prise en main",
+    "resetBody": "Comptes internes uniquement. Efface la progression de la configuration et les marqueurs du premier appel de cet espace de travail pour refaire le parcours. Les boîtes de réception et les clés restent connectées.",
+    "resetButton": "Réinitialiser la prise en main",
+    "resetFailed": "Impossible de réinitialiser la prise en main. Réessayez."
   },
   "help": {
     "loading": "Chargement de l’aide…",

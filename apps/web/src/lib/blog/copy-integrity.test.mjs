@@ -53,6 +53,7 @@ const IN_PROGRESS = {
   fr: /en cours|bient[oô]t disponible|pas encore disponible|ne pouvez pas connecter|peuvent pas encore|pas encore connectable/i,
   nb: /under utvikling|under arbeid|kommer snart|enn[aå] ikke allment tilgjengelig|kan (?:enn[aå] )?ikke kobles?|ikke mulig [aå] koble til enn[aå]/i,
   zh: /(?:正|仍)在开发中|即将推出|尚未全面开放|尚未在生产环境中提供|无法在生产环境中连接|目前还不能连接/,
+  de: /in Entwicklung|in Arbeit|demn[aä]chst verf[uü]gbar|kommt bald|noch nicht allgemein verf[uü]gbar|(?:k[oö]nnen|l[aä]sst sich) (?:noch )?nicht verbunden|noch nicht verbindbar/i,
 };
 
 /**
@@ -69,6 +70,7 @@ const ADMIN_CAVEAT = {
   fr: /administrateur informatique|approbation de l.administrateur/i,
   nb: /IT-ansvarlig|administratorgodkjenning/i,
   zh: /IT 管理员|管理员批准/,
+  de: /IT-Administrator|IT-Admin|Administrator-?(?:genehmigung|freigabe)|Freigabe durch (?:einen|Ihren|die) (?:IT-)?Admin/i,
 };
 
 const localeFiles = (slug) =>
@@ -146,6 +148,7 @@ const GMAIL_ONE_CLICK = {
   fr: /OAuth en un clic|Gmail utilise OAuth|Gmail \(OAuth\)|connexion Gmail utilise Google OAuth/i,
   nb: /ett-klikks OAuth|Gmail bruker OAuth|Gmail \(OAuth\)|Gmail-tilkoblingen bruker Google OAuth/i,
   zh: /一键 ?OAuth|Gmail 使用 OAuth|Gmail（OAuth）|Gmail 连接使用 Google OAuth/,
+  de: /OAuth mit einem Klick|Ein-Klick-OAuth|Gmail (?:nutzt|verwendet) OAuth|Gmail \(OAuth\)|Gmail-Verbindung (?:nutzt|verwendet) Google OAuth/i,
 };
 
 for (const slug of allPostSlugs) {
@@ -185,17 +188,29 @@ test('the Outlook guide is indexable now that the connector is live', () => {
  * this pins the slugs that have been swept. Add a slug here as it is cleaned.
  */
 const EM_DASH_CLEAN_SLUGS = [
+  'can-claude-read-my-email',
+  'chatgpt-icloud-mail-plugin',
+  'claude-custom-connectors-explained',
   'connect-chatgpt-to-email',
+  'connect-chatgpt-to-outlook-com-hotmail',
   'connect-claude-to-email',
+  'connect-claude-to-outlook-com-hotmail',
+  'connect-claude-to-apple-mail',
   'connect-gmail-to-claude',
   'connect-outlook-microsoft-365-ai-agent-mcp',
   'manage-multiple-email-accounts-with-ai',
+  'schedule-email-with-claude-and-chatgpt',
+  'what-is-an-app-password',
+  'connect-yahoo-mail-to-chatgpt-and-claude',
 ];
 
 for (const slug of EM_DASH_CLEAN_SLUGS) {
   const files = [
     join(postsDir, `${slug}.js`),
-    ...readdirSync(join(translationsDir, slug)).map((file) => join(translationsDir, slug, file)),
+    // An English-only post has no translations folder yet.
+    ...(existsSync(join(translationsDir, slug))
+      ? readdirSync(join(translationsDir, slug)).map((file) => join(translationsDir, slug, file))
+      : []),
   ];
 
   for (const path of files) {

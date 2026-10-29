@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Grok : connecteur MCP personnalisé",
+    "description": "Ajoutez une vraie boîte à Grok comme connecteur MCP personnalisé. Collez une URL sur grok.com, connectez-vous via OAuth, puis lisez, cherchez, envoyez et planifiez. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Grok + e-mail",
+    "titleLine1": "Connectez votre boîte à Grok",
+    "titleLine2": "comme connecteur MCP personnalisé",
+    "lead": "Ajoutez une URL sous Connectors sur grok.com, et Grok peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser vos e-mails dans toutes les boîtes que vous avez connectées.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Allez sur grok.com/connectors, cliquez sur New Connector, choisissez Custom, collez https://mcpemails.com/api/mcp comme URL du serveur MCP, puis connectez-vous à MCPEmails quand Grok le demande et approuvez les autorisations. Sur Grok Business et Enterprise, un administrateur d'équipe doit d'abord ajouter le serveur dans la console cloud."
+  },
+  "method": {
+    "title": "Comment Grok se connecte : OAuth, sans clé API",
+    "body": "Grok exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et obtient son autorisation via le flux <b>code d'autorisation avec PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez Connectors sur grok.com",
+      "p": "Allez sur <code>grok.com/connectors</code> en étant connecté à Grok."
+    },
+    {
+      "h": "Ajoutez un connecteur personnalisé",
+      "p": "Cliquez sur <b>New Connector</b>, puis choisissez <b>Custom</b>. Collez <code>https://mcpemails.com/api/mcp</code> comme URL du serveur MCP."
+    },
+    {
+      "h": "Connectez-vous et approuvez",
+      "p": "Suivez les étapes d'authentification demandées par Grok : il vous envoie sur MCPEmails, où vous vous connectez et approuvez les autorisations que vous accordez à Grok. Grok découvre ensuite les outils que le serveur expose."
+    },
+    {
+      "h": "Interrogez-le sur votre courrier",
+      "p": "Ouvrez une conversation et demandez par exemple « quelles boîtes ai-je ? » ou « résume mes e-mails non lus ». Grok utilise les outils d'un connecteur quand votre question s'y rapporte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sur Business et Enterprise, un administrateur l'ajoute d'abord",
+      "p": "Sur les offres Grok Business et Enterprise, les membres ne peuvent pas ajouter le serveur eux-mêmes tant qu'un administrateur d'équipe ne l'a pas provisionné. L'administrateur se connecte à <code>console.x.ai</code>, sélectionne l'équipe, ouvre <b>Grok Business</b>, <b>Connectors</b>, clique sur <b>+ Add Connector</b>, choisit <b>Other</b> et saisit <code>https://mcpemails.com/api/mcp</code>. Il lui faut pour cela les droits Team Read-Write. Chaque membre connecte ensuite son propre compte MCPEmails sur <code>grok.com/connectors</code>."
+    },
+    {
+      "h": "Configurez-le sur le web",
+      "p": "xAI ne documente l'ajout d'un connecteur personnalisé que sur <code>grok.com/connectors</code>, sans aucune étape pour les apps iOS ou Android. Ajoutez le connecteur depuis un navigateur."
+    },
+    {
+      "h": "La lecture seule est une vraie option, et souvent le bon point de départ",
+      "p": "L'écran de consentement vous permet de ne donner à Grok que <code>read:email</code> et <code>search:email</code>. Cela suffit pour trier, résumer et retrouver des messages, et cela écarte toute action irréversible le temps de décider jusqu'où vous voulez aller. Si vous accordez <code>send:email</code>, le propriétaire d'une boîte peut activer la validation humaine pour que chaque envoi attende une personne."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Grok ?",
+      "a": "Allez sur grok.com/connectors, cliquez sur New Connector, choisissez Custom, collez https://mcpemails.com/api/mcp, puis connectez-vous à MCPEmails et approuvez les autorisations. Grok dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Grok ?",
+      "a": "Non. Grok exécute le flux OAuth quand vous ajoutez le connecteur, donc rien de secret n'est collé dans Grok. Une clé bearer est disponible pour les autres clients qui ne prennent pas en charge OAuth."
+    },
+    {
+      "q": "Le connecteur Gmail intégré à Grok, c'est la même chose ?",
+      "a": "Non. Les connecteurs Gmail et Outlook intégrés à Grok ne couvrent que ces deux fournisseurs. MCPEmails est un connecteur personnalisé qui couvre Outlook, Microsoft 365, Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP par une seule connexion, avec les autorisations que vous choisissez et une validation humaine facultative des envois."
+    },
+    {
+      "q": "Quelles boîtes Grok peut-il atteindre ainsi ?",
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte compatible IMAP et SMTP sur les ports standard. Grok les voit toutes par la même connexion : il appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, vous n'avez donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Grok peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : un jeton sans cette autorisation ne peut rien envoyer du tout. De plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez votre vraie boîte à Grok",
+    "sub": "Une URL, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

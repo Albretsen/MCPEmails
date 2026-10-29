@@ -10,6 +10,10 @@ import { SW_BADGE_URL, SW_CONFIG_URL, SW_STORE } from "./web";
 const SOURCE = readFileSync(resolve(process.cwd(), "public/sw.js"), "utf8");
 const ORIGIN = "https://app.mcpemails.com";
 const CHROME = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+/* A Home Screen app on iOS: no "Version/" and no "Safari/" token. */
+const IOS_HOME_SCREEN = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+const APPLE_ENDPOINT = "https://web.push.apple.com/QGuQyavXutnMH-kBcW6MQ8z9YAm5e3vSO1n_xGMHcRZyR8yD8GCv";
+const FCM_ENDPOINT = "https://fcm.googleapis.com/fcm/send/abc:APA91b";
 const SAFARI = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
 interface FakeClient {
@@ -31,7 +35,20 @@ function windowClient(visibilityState: "visible" | "hidden"): FakeClient {
   return client;
 }
 
-function worker(options: { clients?: FakeClient[]; userAgent?: string; badge?: boolean; store?: Record<string, unknown> } = {}) {
+function worker(
+  options: {
+    clients?: FakeClient[];
+    userAgent?: string;
+    badge?: boolean | "throws";
+    store?: Record<string, unknown>;
+    /** The endpoint of the subscription this worker holds (null: none). */
+    endpoint?: string | null;
+    /** showNotification rejects this many times before it works. */
+    showFails?: number;
+    /** clients.matchAll rejects. */
+    matchAllThrows?: boolean;
+  } = {},
+) {
   type Handler = (event: Record<string, unknown>) => void;
   const handlers = new Map<string, Handler>();
   const shown: Array<{ title: string; options: Record<string, unknown> }> = [];
@@ -39,7 +56,11 @@ function worker(options: { clients?: FakeClient[]; userAgent?: string; badge?: b
   const fetched: Array<{ url: string; init: RequestInit }> = [];
   const badges: Array<number | "clear"> = [];
   const store = new Map<string, string>(Object.entries(options.store ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
-  const subscriptions = { current: null as unknown, subscribed: [] as unknown[] };
+  const subscriptions = {
+    current: (options.endpoint ? sub(options.endpoint, "auth") : null) as unknown,
+    subscribed: [] as unknown[],
+  };
+  let showFails = options.showFails ?? 0;
   const cacheNames: string[] = [];
 
   const scope = {
@@ -48,6 +69,15 @@ function worker(options: { clients?: FakeClient[]; userAgent?: string; badge?: b
       userAgent: options.userAgent ?? CHROME,
       ...(options.badge === false
         ? {}
+        : options.badge === "throws"
+        ? {
+            setAppBadge: () => {
+              throw new Error("badge exploded");
+            },
+            clearAppBadge: () => {
+              throw new Error("badge exploded");
+            },
+          }
         : {
             setAppBadge: async (n: number) => void badges.push(n),
             clearAppBadge: async () => void badges.push("clear"),
@@ -57,11 +87,20 @@ function worker(options: { clients?: FakeClient[]; userAgent?: string; badge?: b
     addEventListener: (type: string, handler: Handler) => void handlers.set(type, handler),
     clients: {
       claim: async () => {},
-      matchAll: async () => options.clients ?? [],
+      matchAll: async () => {
+        if (options.matchAllThrows) throw new Error("clients unavailable");
+        return options.clients ?? [];
+      },
       openWindow: async (url: string) => void opened.push(url),
     },
     registration: {
-      showNotification: async (title: string, opts: Record<string, unknown>) => void shown.push({ title, options: opts }),
+      showNotification: async (title: string, opts: Record<string, unknown>) => {
+        if (showFails > 0) {
+          showFails--;
+          throw new TypeError("option not supported");
+        }
+        shown.push({ title, options: opts });
+      },
       pushManager: {
         getSubscription: async () => subscriptions.current,
         subscribe: async (opts: unknown) => {
@@ -163,8 +202,8 @@ describe("service worker: showing a push", () => {
 
   it("the test push is shown with its fixed text", async () => {
     const w = worker();
-    await w.push({ type: "test", title: "MCP Emails", body: "Notifications are working on this device.", url: "/", tag: "push-test" });
-    expect([w.shown[0]!.title, w.shown[0]!.options.body, w.shown[0]!.options.tag]).toEqual(["MCP Emails", "Notifications are working on this device.", "push-test"]);
+    await w.push({ type: "test", title: "MCPEmails", body: "Notifications are working on this device.", url: "/", tag: "push-test" });
+    expect([w.shown[0]!.title, w.shown[0]!.options.body, w.shown[0]!.options.tag]).toEqual(["MCPEmails", "Notifications are working on this device.", "push-test"]);
     expect(w.shown[0]!.options.renotify).toBeUndefined();
   });
 });
@@ -196,11 +235,66 @@ describe("service worker: the app is open", () => {
     expect(visible.messages).toEqual([{ type: "push", payload: RICH }]);
   });
 
+  it("iOS Home Screen app (user agent without Safari/): the Apple endpoint still forces a notification", async () => {
+    const visible = windowClient("visible");
+    const w = worker({ clients: [visible], userAgent: IOS_HOME_SCREEN, endpoint: APPLE_ENDPOINT });
+    await w.push(RICH);
+    expect(w.shown).toHaveLength(1);
+    expect(w.shown[0]!.options.silent).toBe(true);
+    expect(visible.messages).toEqual([{ type: "push", payload: RICH }]);
+  });
+
+  it("iOS Home Screen app with no subscription to read: the user agent alone still forces it", async () => {
+    const w = worker({ clients: [windowClient("visible")], userAgent: IOS_HOME_SCREEN });
+    await w.push(RICH);
+    expect(w.shown).toHaveLength(1);
+  });
+
+  it("the endpoint decides over the user agent: an Apple endpoint is always shown, an FCM one may stay silent", async () => {
+    const apple = worker({ clients: [windowClient("visible")], userAgent: CHROME, endpoint: APPLE_ENDPOINT });
+    await apple.push(RICH);
+    expect(apple.shown).toHaveLength(1);
+    const fcm = worker({ clients: [windowClient("visible")], userAgent: CHROME, endpoint: FCM_ENDPOINT });
+    await fcm.push(RICH);
+    expect(fcm.shown).toEqual([]);
+    const unknown = worker({ clients: [windowClient("visible")], userAgent: "SomethingNew/1.0" });
+    await unknown.push(RICH);
+    expect(unknown.shown).toHaveLength(1);
+  });
+
   it("an approval request is shown even over a visible app, with its two actions", async () => {
     const w = worker({ clients: [windowClient("visible")] });
     await w.push({ type: "approval_required", approval_id: "ap1", url: "/compose" });
     expect(w.shown[0]!.options).toMatchObject({ requireInteraction: true, tag: "approval-ap1" });
     expect((w.shown[0]!.options.actions as { action: string }[]).map((a) => a.action)).toEqual(["approve", "review"]);
+  });
+});
+
+describe("service worker: a push ALWAYS ends in a notification", () => {
+  it("a badge that throws does not stop the notification", async () => {
+    const w = worker({ badge: "throws", endpoint: APPLE_ENDPOINT, userAgent: SAFARI });
+    await w.push(RICH);
+    expect(w.shown).toHaveLength(1);
+  });
+
+  it("an option the browser refuses: the notification is shown again with the plain options", async () => {
+    const w = worker({ showFails: 1, endpoint: APPLE_ENDPOINT, userAgent: SAFARI });
+    await w.push({ type: "approval_required", approval_id: "ap1", url: "/compose" });
+    expect(w.shown).toHaveLength(1);
+    expect(w.shown[0]!.options.actions).toBeUndefined();
+    expect(w.shown[0]!.options.data).toMatchObject({ url: "/compose", type: "approval_required" });
+  });
+
+  it("a client list that cannot be read is treated as no window: the notification is shown", async () => {
+    const w = worker({ endpoint: FCM_ENDPOINT, matchAllThrows: true });
+    await w.push(RICH);
+    expect(w.shown).toHaveLength(1);
+  });
+
+  it("an empty or undecryptable push (no data) still shows a notification", async () => {
+    const w = worker({ clients: [windowClient("visible")], endpoint: APPLE_ENDPOINT, userAgent: SAFARI });
+    await w.push(undefined);
+    expect(w.shown).toHaveLength(1);
   });
 });
 

@@ -35,7 +35,7 @@ import { MIN_DENOMINATOR_FOR_PERCENT, formatCount, ratio } from '../../../../com
 import '../../../../styles/admin-board.css';
 import '../../../../styles/admin-experiments.css';
 
-export const metadata = { title: 'Experiments · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Experiments', robots: { index: false, follow: false } };
 
 /** Assignments and stats change on every visitor, so nothing here is cached. */
 export const dynamic = 'force-dynamic';

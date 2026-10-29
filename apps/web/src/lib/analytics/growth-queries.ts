@@ -54,14 +54,23 @@ import type {
   GrowthInboxBandRow,
   GrowthChannelRow,
   GrowthPeopleCountsRow,
+  GrowthSignupPaceRow,
   GrowthUserSignupDayRow,
   GrowthUsageCapOverviewRow,
   GrowthUsageCapWorkspaceRow,
   GrowthMailRelayHostRow,
   GrowthMailRelayDayRow,
+  GrowthDraftCardStatsRow,
+  GrowthDraftCardDayRow,
+  GrowthDraftCardReachRow,
+  GrowthOnboardingArmRow,
+  GrowthOnboardingDayRow,
+  GrowthOnboardingStepRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
+import type { SignupTrendRow } from '@/lib/analytics/signup-trend';
+import type { OnboardingExperimentRow } from '@/lib/analytics/onboarding-test';
 
 // The cap projection is implemented next to the other pure helpers so it can be
 // unit tested without dragging in the Supabase client, and re-exported here
@@ -83,28 +92,37 @@ export const GROWTH_TAGS = {
   revenue: 'growth:revenue',
   usageCap: 'growth:usage-cap',
   relay: 'growth:relay',
+  draftCard: 'growth:draft-card',
+  onboarding: 'growth:onboarding',
 } as const;
 
 /**
  * Ten minutes. Growth numbers move in days, and the operator has a Refresh
  * button for the rare case where they need to see a change immediately.
+ *
+ * The events the owner actually watches for do not wait out this timer: a
+ * Stripe webhook and a signup both mark the whole tag stale (see
+ * expireGrowthCache), so the next kiosk tick or page load starts a background
+ * read and the one after shows it.
  */
 export const GROWTH_REVALIDATE_SECONDS = 600;
 
 /**
- * Scopes every cache key to the running deployment.
+ * Scopes every cache key to the code that builds the payloads.
  *
  * The data cache behind `unstable_cache` persists ACROSS deployments, and the
  * key is only the wrapper's source text plus `keyParts`, neither of which
  * changes when a payload type gains a field. So a deploy that adds, say,
  * churn fields to RevenueSummary kept rendering the previous build's payload
- * (the new fields read "—") until the entry happened to expire. That happened
- * on 2026-09-23 and was patched by hand-bumping a 'v2' into two keys. Keying
- * on the deployment makes that automatic for every section: a new build
- * starts cold, once, and never reads a shape it was not compiled against.
+ * (the new fields read "—") until the entry happened to expire (2026-09-23).
+ *
+ * Until 2026-10-28 this was the deployment id, which fixed that but also
+ * emptied the cache on every deploy, dozens a day, and a cold board was when
+ * its sections hit the 8 s statement timeout. GROWTH_CACHE_GENERATION is a
+ * hash of src/lib/analytics and the plan table, computed in next.config.js,
+ * so only a deploy that changes those starts cold.
  */
-const CACHE_GENERATION =
-  process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+const CACHE_GENERATION = process.env.GROWTH_CACHE_GENERATION || 'local';
 
 /**
  * Either the rows or the reason there are none, never an exception.
@@ -157,10 +175,11 @@ export async function cachedSection<T>(
 }
 
 /**
- * RPC arguments: numbers, the plan-cap map passed to the bands function, and
- * the internal-account lists passed to the retention curve.
+ * RPC arguments: numbers, the plan-cap map passed to the bands function, the
+ * internal-account lists passed to the retention curve, and the draft card's
+ * release timestamp.
  */
-type RpcArgs = Record<string, number | string[] | Record<string, number>>;
+type RpcArgs = Record<string, number | string | string[] | Record<string, number>>;
 
 /** Every RPC the generated schema knows about. A typo is a compile error. */
 type RpcName = keyof Database['public']['Functions'];
@@ -426,8 +445,28 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
  * seven page reloads and no POST at all, which took the logs to establish.
  */
 export async function refreshGrowthData(): Promise<void> {
-  revalidateTag(GROWTH_TAG, { expire: 0 });
-  console.info('[growth]', 'refresh: expired tag', { tag: GROWTH_TAG, generation: CACHE_GENERATION });
+  expireGrowthCache('refresh', 'now');
+}
+
+/**
+ * Invalidate every cached growth read, because something the board reports
+ * on just happened: a Stripe event, a signup, or the Refresh button. Whole tag
+ * rather than one section, because a purchase moves revenue, the funnel and
+ * the people counts at once.
+ *
+ * 'stale' (events) keeps serving the cached rows while a background read
+ * replaces them, so a signup never leaves the next visitor waiting on every
+ * RPC at once. 'now' (the Refresh button) drops them, because the operator
+ * asked to see the new numbers on this load.
+ * Never throws: a failed expiry must not fail the webhook that called it.
+ */
+export function expireGrowthCache(reason: string, mode: 'stale' | 'now' = 'stale'): void {
+  try {
+    revalidateTag(GROWTH_TAG, mode === 'now' ? { expire: 0 } : 'max');
+    console.info('[growth]', 'expired tag', { reason, mode, tag: GROWTH_TAG, generation: CACHE_GENERATION });
+  } catch (err) {
+    console.error('[growth]', 'expire failed', { reason, error: err instanceof Error ? err.message : String(err) });
+  }
 }
 
 /**
@@ -506,6 +545,36 @@ export async function fetchUserSignupDays(days: number): Promise<GrowthResult<Gr
   });
 }
 
+/**
+ * Daily external signups with an intraday split, for projecting today.
+ *
+ * Cached like everything else here, which is safe because each result carries
+ * its own `as_of`: the projection reads the time of day from the row, not from
+ * the clock at render, so a ten minute old cache entry is still self-consistent.
+ */
+export async function fetchSignupPace(days: number): Promise<GrowthResult<GrowthSignupPaceRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthSignupPaceRow>('growth_signup_pace', GROWTH_TAGS.daily, {
+    p_days: clampInt(days, 1, 120),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/**
+ * New workspaces per Mon-Sun UTC week, soft-deleted included, current week
+ * last, each with its count at the same offset into the week as now. Feeds
+ * the signup trend tile; see signup-trend.ts for the verdict.
+ */
+export async function fetchSignupTrend(weeks: number): Promise<GrowthResult<SignupTrendRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<SignupTrendRow>('growth_signup_trend', GROWTH_TAGS.daily, {
+    p_weeks: clampInt(weeks, 1, 52),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
 /** See fetchPeopleCounts: half the 90 day purge horizon, because it looks back twice. */
 const PEOPLE_MAX_DAYS = 45;
 
@@ -558,4 +627,78 @@ export async function fetchMailRelayHosts(days: number): Promise<GrowthResult<Gr
 /** Relayed connections per day over the window, by outcome. */
 export async function fetchMailRelayDaily(days: number): Promise<GrowthResult<GrowthMailRelayDayRow[]>> {
   return rpcRows<GrowthMailRelayDayRow>('growth_mail_relay_daily', GROWTH_TAGS.relay, { p_days: clampDays(days) });
+}
+
+/**
+ * The draft card band: drafts and what became of them, per client family,
+ * before and after the release. `releaseAt` null means not released yet, and
+ * only the 'before' rows (the last `days` days) come back.
+ */
+export async function fetchDraftCardStats(
+  days: number,
+  releaseAt: string | null,
+): Promise<GrowthResult<GrowthDraftCardStatsRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthDraftCardStatsRow>('growth_draft_card_stats', GROWTH_TAGS.draftCard, {
+    p_days: clampDays(days),
+    ...(releaseAt ? { p_release_at: releaseAt } : {}),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchDraftCardDaily(days: number): Promise<GrowthResult<GrowthDraftCardDayRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthDraftCardDayRow>('growth_draft_card_daily', GROWTH_TAGS.draftCard, {
+    p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchDraftCardReach(): Promise<GrowthResult<GrowthDraftCardReachRow>> {
+  const internal = internalAccountMatchers();
+  return rpcSingleRow<GrowthDraftCardReachRow>('growth_draft_card_reach', GROWTH_TAGS.draftCard, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/* The onboarding test (onb_flow x onb_convert): enrolled customer workspaces only. */
+
+export async function fetchOnboardingArms(): Promise<GrowthResult<GrowthOnboardingArmRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingArmRow>('growth_onboarding_arms', GROWTH_TAGS.onboarding, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchOnboardingSteps(): Promise<GrowthResult<GrowthOnboardingStepRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingStepRow>('growth_onboarding_steps', GROWTH_TAGS.onboarding, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+export async function fetchOnboardingDaily(days: number): Promise<GrowthResult<GrowthOnboardingDayRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthOnboardingDayRow>('growth_onboarding_daily', GROWTH_TAGS.onboarding, {
+    p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/** The two experiment rows, for the band's release state. */
+export async function fetchOnboardingExperiments(): Promise<GrowthResult<OnboardingExperimentRow[]>> {
+  return cachedSection<OnboardingExperimentRow[]>(['onboarding-experiments'], GROWTH_TAGS.onboarding, async () => {
+    const { data, error } = await createServiceRoleClient()
+      .from('experiments')
+      .select('key, status, started_at, concluded_at, winner_variant_id')
+      .in('key', ['onb_flow', 'onb_convert']);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 }

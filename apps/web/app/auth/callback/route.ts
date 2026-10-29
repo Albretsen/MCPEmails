@@ -4,10 +4,26 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
 import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
 } from '@/lib/marketing-consent.mjs';
+import { microsoftSignInRefusal, oauthErrorReason } from '@/lib/auth/microsoft-sign-in';
+import { ssoRouteForEmail, isSsoUser, type SsoLookupRpc } from '@/lib/sso/sign-in';
+import { mayUseThisDeployment, STAGING_RESTRICTED_REASON } from '@/lib/env/app-env';
+import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
+import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
+import { clientIpFromHeaders, recordSsoAuditVia } from '@/lib/sso/audit';
+import { attachReferral } from '@/lib/referrals/attach';
+import { assignOnboardingAtSignup } from '@/lib/onboarding/variant';
+import { onboardingEntryPath } from '@/lib/onboarding/entry';
+import {
+  clearReferralCookieString,
+  referralCookieFromHeader,
+  referralIpHash,
+} from '@/lib/referrals/server';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -44,12 +60,16 @@ export async function GET(request: Request) {
   const acquisition = acquisitionFromParams(searchParams);
 
   if (!code) {
-    // No code means the link was malformed or already used.
-    return NextResponse.redirect(`${origin}/auth/error?reason=missing_code`);
+    // A failed OAuth sign-in comes back with `error` and `error_description`
+    // instead of a code: the user cancelled, or (Microsoft) their organization
+    // requires an admin to approve the app first. Name those; anything else is
+    // a malformed or already-used link.
+    const reason = oauthErrorReason(searchParams) ?? 'missing_code';
+    return NextResponse.redirect(`${origin}/auth/error?reason=${reason}`);
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: exchanged, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     // Common causes: code already used, link expired (>60 min), or PKCE
@@ -57,6 +77,64 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/auth/error?reason=${encodeURIComponent(error.message)}`
     );
+  }
+
+  // Sign in with Microsoft: refuse the session unless Microsoft vouches for
+  // the email (`xms_edov`). An unverified Entra email claim is an account
+  // takeover path, because Supabase links identities by email. Runs before any
+  // write below, so a refused sign-in records no consent and no attribution.
+  // Scope 'local' ends only this session: if the identity was linked to an
+  // existing account, that account's other sessions belong to its owner.
+  const refusal = microsoftSignInRefusal(exchanged?.user);
+  if (refusal) {
+    await supabase.auth.signOut({ scope: 'local' });
+    const refused = NextResponse.redirect(`${origin}/auth/error?reason=${refusal}`);
+    refused.headers.append(
+      'set-cookie',
+      clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
+    );
+    return refused;
+  }
+
+  // Staging only (APP_ENV=staging): an address outside
+  // EMAIL_RECIPIENT_ALLOWLIST may not sign in or sign up. An account this
+  // exchange just created (first OAuth sign-in, first magic link) is deleted
+  // again, so a stranger leaves nothing behind. Always passes in production.
+  if (exchanged?.user && !mayUseThisDeployment(exchanged.user.email)) {
+    await supabase.auth.signOut({ scope: 'local' });
+    if (isNewAccountSignup(exchanged.user.created_at)) {
+      const { error: deleteError } = await createServiceRoleClient().auth.admin.deleteUser(exchanged.user.id);
+      if (deleteError) console.error('[auth-callback] staging: deleting a refused new user failed:', deleteError.message);
+    }
+    return NextResponse.redirect(`${origin}/auth/error?reason=${STAGING_RESTRICTED_REASON}`);
+  }
+
+  // SAML SSO: the account has no personal workspace (the new-user trigger
+  // skips `sso:` users), so it joins its company's workspace here, on every
+  // sign-in, through the team tier's add_workspace_member. Anything that
+  // stops the join refuses the session (see src/lib/sso/join.ts). Scope
+  // 'local' ends only this session.
+  const exchangedUser = exchanged?.user ?? null;
+  if (exchangedUser && isSsoUser(exchangedUser)) {
+    const service = createServiceRoleClient();
+    const rpc = (service.rpc as unknown as SsoLookupRpc).bind(service);
+    const sso = await completeSsoSignIn(
+      {
+        routeForEmail: (email) => ssoRouteForEmail(rpc, email),
+        findConnection: findSsoConnectionVia(service),
+        addMember: addWorkspaceMemberVia(service),
+        audit: recordSsoAuditVia(service),
+      },
+      exchangedUser,
+      {
+        ipAddress: clientIpFromHeaders(request.headers),
+        userAgent: request.headers.get('user-agent'),
+      },
+    );
+    if (!sso.ok) {
+      await supabase.auth.signOut({ scope: 'local' });
+      return NextResponse.redirect(`${origin}/auth/error?reason=${sso.reason}`);
+    }
   }
 
   // Marketing consent ticked on the signup page before a Google/GitHub
@@ -93,8 +171,13 @@ export async function GET(request: Request) {
     // today's landing page instead of their real first touch. Only stamp an
     // account this exchange just created.
     if (user && isNewAccountSignup(user.created_at)) {
+      // Service role: the user's own session cannot write public.workspaces at
+      // all (20261016160100_workspaces_server_owned_writes.sql), so a signed-in
+      // user can never set attribution, plan or billing columns themselves.
+      // The owner filter below is what scopes the write to this account.
+      const service = createServiceRoleClient();
       // First-touch only: never overwrite a previously attributed workspace.
-      await supabase
+      await service
         .from('workspaces')
         .update({
           acquisition_source: acquisition.source,
@@ -116,10 +199,41 @@ export async function GET(request: Request) {
       // Only the class is kept. A statement of its own, so the attribution
       // write above cannot fail on this column before its migration is
       // applied. It filters on its own NULL and never throws.
-      await stampAcquisitionDevice(supabase, {
+      await stampAcquisitionDevice(service, {
         ownerId: user.id,
         device: deviceClassFromHeaders(request.headers),
       });
+
+      // The country, from Vercel's x-vercel-ip-country on this same request,
+      // for the same reason: it is the user's own browser, so the code places
+      // the person, not a server. Only the two letters are kept, never the IP.
+      // Its own statement, first write wins, never throws.
+      await stampAcquisitionCountry(service, {
+        ownerId: user.id,
+        country: countryFromHeaders(request.headers),
+      });
+    }
+  }
+
+  // Referral link opened in this browser (app/r/[code]/route.ts). Attached
+  // once, here, and the cookie is cleared below on every outcome, so a later
+  // login on a shared computer cannot attach someone else. attachReferral
+  // applies every rule (new account, no paid history, not the same person);
+  // nothing it does, throws or refuses may change where this login goes.
+  const referralCode = referralCookieFromHeader(request.headers.get('cookie'));
+  if (referralCode && exchangedUser) {
+    try {
+      // Loaded here, not at module scope: the Stripe client throws at import
+      // without STRIPE_SECRET_KEY, and that must never take the callback down.
+      const { stripe } = await import('@/lib/stripe/client');
+      await attachReferral(createServiceRoleClient(), stripe, {
+        code: referralCode,
+        friend: exchangedUser,
+        via: 'cookie',
+        ipHash: referralIpHash(clientIpFromHeaders(request.headers)),
+      });
+    } catch (err) {
+      console.error('[auth-callback] referral attach failed:', err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -130,12 +244,49 @@ export async function GET(request: Request) {
   // passes a bare startsWith('/') check but resolves to an external origin.
   const isSafeNext =
     next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
-  const redirectPath = isSafeNext ? next : '/dashboard';
+  let redirectPath = isSafeNext ? next : '/dashboard';
+
+  // Onboarding arms (src/lib/onboarding/variant.ts), assigned the moment an
+  // OAuth signup creates its workspace. A workspace in the new flow goes to
+  // /onboarding instead of the first-run dashboard; any other destination
+  // (an invite, a checkout redirect) is kept. SSO joins are not new
+  // workspaces. Never blocks the sign-in.
+  if (exchangedUser && !isSsoUser(exchangedUser) && isNewAccountSignup(exchangedUser.created_at)) {
+    try {
+      const service = createServiceRoleClient();
+      const { data: ownWorkspace } = await service
+        .from('workspaces')
+        .select('id, created_at')
+        .eq('owner_id', exchangedUser.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (ownWorkspace) {
+        const variant = await assignOnboardingAtSignup(ownWorkspace.id, {
+          ownerEmail: exchangedUser.email ?? null,
+          workspaceCreatedAt: ownWorkspace.created_at,
+          db: service,
+        });
+        const entry = variant.flow === 'new' ? onboardingEntryPath(redirectPath) : null;
+        if (entry) redirectPath = entry;
+      }
+    } catch (err) {
+      console.error('[auth-callback] onboarding assignment failed:', err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const response = NextResponse.redirect(`${origin}${redirectPath}`);
   if (consentVersion) {
     response.headers.append(
       'set-cookie',
       clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
+    );
+  }
+  if (referralCode !== null) {
+    response.headers.append(
+      'set-cookie',
+      clearReferralCookieString({ secure: new URL(request.url).protocol === 'https:' }),
     );
   }
   return response;

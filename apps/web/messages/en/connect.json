@@ -5,7 +5,7 @@
   },
   "settings": {
     "title": "The exact {provider} IMAP and SMTP settings",
-    "sub": "Copy these into the connect form. mcpemails prefills them where it can, and retries the other standard transport if the first does not answer.",
+    "sub": "Copy these into the connect form. MCPEmails prefills them where it can, and retries the other standard transport if the first does not answer.",
     "colHost": "Server",
     "colPort": "Port",
     "colProtocol": "Protocol",
@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "What your AI can do",
     "title": "{article, select, an {An} other {A}} {provider} inbox your agent can actually use",
-    "sub": "Seventeen action-based MCP tools: send, reply, forward, schedule, and organize. Your agent finishes the job inside {provider}."
+    "sub": "{toolCount} action-based MCP tools: send, reply, forward, schedule, and organize. Your agent finishes the job inside {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Connect a different mailbox",
-    "sub": "Same MCP server, same seventeen tools, a different provider.",
+    "sub": "Same MCP server, same {toolCount} tools, a different provider.",
     "link": "Connect {provider}",
     "all": "See every supported email provider"
   },
@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google shows an unverified app screen",
-    "body": "Google reviews apps that request Gmail access, and mcpemails.com has not been through that review. You will see an <b>unverified app</b> screen during sign-in, with the steps to continue. The connection itself is not time-limited: once connected, an inbox stays connected until you revoke it."
+    "body": "This applies only to Google sign-in, which is offered on Pro and Business; the default app password connection shows no Google screen. Google reviews apps that request Gmail access, and mcpemails.com has not been through that review, so Google sign-in shows an <b>unverified app</b> screen, with the steps to continue. The connection itself is not time-limited: once connected, an inbox stays connected until you revoke it."
   },
   "hub": {
     "meta": {
@@ -86,8 +86,8 @@
     "breadcrumb": "Email providers",
     "eyebrow": "Every provider",
     "title": "Connect any mailbox to your AI",
-    "lead": "mcpemails speaks plain IMAP and SMTP, so it connects almost any mailbox. Below is every provider with a setup guide: the exact hosts and ports, whether you need an app password, and what tends to go wrong.",
-    "answer": "mcpemails connects to any email provider that offers IMAP and SMTP access, which is nearly all of them. Each guide below lists that provider's verified hostnames, ports and authentication requirements, and one inbox is free forever.",
+    "lead": "MCPEmails speaks plain IMAP and SMTP, so it connects almost any mailbox. Below is every provider with a setup guide: the exact hosts and ports, whether you need an app password, and what tends to go wrong.",
+    "answer": "MCPEmails connects to any email provider that offers IMAP and SMTP access, which is nearly all of them. Each guide below lists that provider's verified hostnames, ports and authentication requirements, and one inbox is free forever.",
     "verifiedIntro": "Every hostname on these pages was checked on {date} by opening a real TLS connection to it.",
     "countLabel": "{count} providers",
     "genericTitle": "Provider not listed?",

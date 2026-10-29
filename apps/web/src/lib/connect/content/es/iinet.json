@@ -18,7 +18,7 @@
     "titleLine1": "iiNet dejó de gestionar el correo.",
     "titleLine2": "Esto es lo que sigue conectándose",
     "lead": "iiNet traspasó sus buzones a otra empresa y dejó de emitir direcciones. Eso cambia de dónde salen tus ajustes, no que un agente de IA pueda trabajar en el buzón.",
-    "answer": "iiNet ha salido del negocio del correo. Transfirió las direcciones iinet.net.au a otro proveedor australiano, The Messaging Company, cerró el periodo de inscripción, borró todas las direcciones que no se inscribieron e indica que no es posible crear nuevas direcciones de correo en el dominio iinet.net.au. Así que la pregunta no es si Claude puede llegar a iiNet, sino qué servidor tiene hoy tu buzón. mcpemails es un servidor MCP alojado que conecta cualquier buzón IMAP, incluida una antigua dirección de iiNet en su nuevo proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "answer": "iiNet ha salido del negocio del correo. Transfirió las direcciones iinet.net.au a otro proveedor australiano, The Messaging Company, cerró el periodo de inscripción, borró todas las direcciones que no se inscribieron e indica que no es posible crear nuevas direcciones de correo en el dominio iinet.net.au. Así que la pregunta no es si Claude puede llegar a iiNet, sino qué servidor tiene hoy tu buzón. MCPEmails es un servidor MCP alojado que conecta cualquier buzón IMAP, incluida una antigua dirección de iiNet en su nuevo proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Los ajustes vienen de tu nuevo proveedor",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "h": "Introduce los ajustes que te da tu proveedor actual",
-      "p": "En mcpemails elige IMAP / SMTP y rellena el servidor, el puerto y la contraseña exactamente como los documente tu proveedor, con la dirección completa como nombre de usuario. Solo publicamos ajustes con los que hemos abierto nosotros mismos una conexión, así que aquí no mostramos los nombres de servidor de The Messaging Company. Tómalos de su material de soporte y no de un blog de terceros."
+      "p": "En MCPEmails elige IMAP / SMTP y rellena el servidor, el puerto y la contraseña exactamente como los documente tu proveedor, con la dirección completa como nombre de usuario. Solo publicamos ajustes con los que hemos abierto nosotros mismos una conexión, así que aquí no mostramos los nombres de servidor de The Messaging Company. Tómalos de su material de soporte y no de un blog de terceros."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -70,7 +70,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de iiNet?",
-      "a": "Claude no tiene un conector integrado para él, e iiNet ya no gestiona el servicio. Si tu dirección iinet.net.au sobrevivió a la transferencia a The Messaging Company, conectar un servidor MCP como mcpemails a ella por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con los ajustes de servidor que te dé tu proveedor actual."
+      "a": "Claude no tiene un conector integrado para él, e iiNet ya no gestiona el servicio. Si tu dirección iinet.net.au sobrevivió a la transferencia a The Messaging Company, conectar un servidor MCP como MCPEmails a ella por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con los ajustes de servidor que te dé tu proveedor actual."
     },
     {
       "q": "¿Qué pasó con el correo de iiNet?",
@@ -82,7 +82,7 @@
     },
     {
       "q": "¿Puedo conseguir una dirección de correo iinet.net.au nueva?",
-      "a": "No. La página de ayuda de iiNet indica directamente que no es posible crear nuevas direcciones de correo con el dominio iinet.net.au. Si necesitas un buzón nuevo para que trabaje un asistente, tiene que ser en un proveedor que siga emitiéndolos, y mcpemails conecta cualquiera de ellos por IMAP."
+      "a": "No. La página de ayuda de iiNet indica directamente que no es posible crear nuevas direcciones de correo con el dominio iinet.net.au. Si necesitas un buzón nuevo para que trabaje un asistente, tiene que ser en un proveedor que siga emitiéndolos, y MCPEmails conecta cualquiera de ellos por IMAP."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",

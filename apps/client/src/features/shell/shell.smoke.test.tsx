@@ -84,7 +84,7 @@ describe("shell", () => {
     expect(document.querySelector("section#pane-list")?.getAttribute("aria-label")).toBe("Messages");
     expect(document.querySelector("main")?.getAttribute("aria-label")).toBe("Email");
     expect(document.querySelector("aside#pane-assistant")?.getAttribute("aria-label")).toBe("Assistant");
-    expect(document.title).toMatch(/^Inbox( \(\d+\))? · mcpemails$/);
+    expect(document.title).toMatch(/^Inbox( \(\d+\))? · MCPEmails$/);
     for (const sep of document.querySelectorAll('[role="separator"]')) {
       expect(sep.getAttribute("aria-controls")).toBeTruthy();
       expect(sep.getAttribute("aria-valuenow")).toBeTruthy();

@@ -19,8 +19,8 @@
     "eyebrow": "Cox Email + IA",
     "titleLine1": "Conecta tu bandeja cox.net",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "Cox ha dejado el negocio del correo y ahora Yahoo gestiona los buzones cox.net. La dirección sigue funcionando, y mcpemails la conecta por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
-    "answer": "Claude no puede acceder por sí solo a un buzón cox.net. mcpemails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993 al servidor de Yahoo que aparece en la tabla de abajo, porque Cox traspasó su servicio de correo a Yahoo y el correo cox.net se sirve ahora desde la infraestructura de Yahoo y no desde la de Cox. La credencial es una contraseña de aplicación de Yahoo generada desde la página de seguridad de la cuenta, no tu antigua contraseña de Cox ni la contraseña que escribes en el webmail. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo, y una bandeja es gratis, para siempre.",
+    "lead": "Cox ha dejado el negocio del correo y ahora Yahoo gestiona los buzones cox.net. La dirección sigue funcionando, y MCPEmails la conecta por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón cox.net. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993 al servidor de Yahoo que aparece en la tabla de abajo, porque Cox traspasó su servicio de correo a Yahoo y el correo cox.net se sirve ahora desde la infraestructura de Yahoo y no desde la de Cox. La credencial es una contraseña de aplicación de Yahoo generada desde la página de seguridad de la cuenta, no tu antigua contraseña de Cox ni la contraseña que escribes en el webmail. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo, y una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación de Yahoo, no la de Cox",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Introduce la dirección cox.net y la contraseña de aplicación",
-      "p": "En mcpemails elige IMAP / SMTP, pon tu dirección cox.net completa en el campo de nombre de usuario y pega la contraseña de aplicación, no la contraseña de tu cuenta de Cox. Los servidores y puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS real."
+      "p": "En MCPEmails elige IMAP / SMTP, pon tu dirección cox.net completa en el campo de nombre de usuario y pega la contraseña de aplicación, no la contraseña de tu cuenta de Cox. Los servidores y puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Cox?",
-      "a": "No directamente. Claude no tiene un conector integrado para Cox, y Cox ya no gestiona el servicio de correo. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo cox.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Cox, y Cox ya no gestiona el servicio de correo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo cox.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son ahora los ajustes IMAP y SMTP de Cox?",

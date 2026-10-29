@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "Paramètres IMAP et SMTP de n'importe quelle adresse e-mail",
+    "description": "Saisissez une adresse e-mail pour obtenir ses serveurs IMAP et SMTP, le port et la sécurité, et le fournisseur qui gère le courrier d'un domaine personnalisé. Gratuit, dans votre navigateur."
+  },
+  "hero": {
+    "eyebrow": "Outil gratuit",
+    "title": "Trouver les paramètres IMAP et SMTP",
+    "lead": "Quel est mon serveur IMAP ? Quel serveur SMTP utiliser ? Saisissez une adresse e-mail, un domaine ou le nom d'un serveur de messagerie : l'outil renvoie le serveur entrant (IMAP) et le serveur sortant (SMTP), avec le port et le type de sécurité. Pour une adresse sur un domaine d'entreprise, il lit les enregistrements MX du domaine pour montrer quel fournisseur héberge réellement la boîte.",
+    "updated": "Normes et informations sur les services tiers vérifiées le {date}."
+  },
+  "tool": {
+    "label": "Adresse e-mail, domaine ou serveur de messagerie",
+    "placeholder": "vous@votreentreprise.fr",
+    "submit": "Trouver les paramètres",
+    "checking": "Vérification des enregistrements DNS...",
+    "privacy": "Tout se passe dans votre navigateur. La partie avant le @ ne quitte jamais cette page. Quand un domaine ne figure pas dans nos tables, seul le domaine est envoyé au résolveur DNS public de Cloudflare et à la base d'autoconfiguration Thunderbird de Mozilla.",
+    "invalid": "Saisissez une adresse e-mail comme vous@exemple.fr, un domaine ou un nom de serveur.",
+    "examplesLabel": "Exemples :",
+    "examples": ["you@gmx.net", "ex4.mail.ovh.net", "you@purelymail.com"],
+    "provider": "Fournisseur",
+    "providerUnknown": "Non identifié",
+    "incoming": "Courrier entrant (IMAP)",
+    "outgoing": "Courrier sortant (SMTP)",
+    "server": "Serveur",
+    "port": "Port",
+    "security": "Sécurité",
+    "securityTls": "SSL/TLS",
+    "securityStarttls": "STARTTLS",
+    "username": "Nom d'utilisateur",
+    "usernameValue": "En général, votre adresse e-mail complète",
+    "mxTitle": "Enregistrements MX de {domain}",
+    "mxNote": "Ces serveurs reçoivent le courrier du domaine. Ce ne sont pas les serveurs auxquels un logiciel de messagerie se connecte.",
+    "source": {
+      "registry": "Paramètres vérifiés par MCPEmails via une connexion TLS aux serveurs de ce fournisseur.",
+      "host": "Reconnu à partir du nom de serveur saisi.",
+      "table": "Issu de la table des paramètres fournisseurs de MCPEmails.",
+      "srv": "Publié par {domain} lui-même dans ses enregistrements DNS de service (RFC 6186).",
+      "mx": "Déduit des enregistrements MX, qui pointent vers {provider}.",
+      "ispdb": "Issu de la base d'autoconfiguration de Mozilla Thunderbird."
+    },
+    "appPassword": "{provider} exige un mot de passe d'application dans les logiciels de messagerie. Si votre mot de passe habituel est refusé, créez un mot de passe d'application et utilisez-le à la place.",
+    "appPasswordCreate": "Créer un mot de passe d'application",
+    "appPasswordGeneric": "Si le fournisseur refuse votre mot de passe habituel avec ces paramètres, il attend très probablement un mot de passe d'application.",
+    "appPasswordLearn": "Qu'est-ce qu'un mot de passe d'application ?",
+    "microsoftOutlook": "Il s'agit d'un compte Microsoft personnel (Outlook.com, Hotmail, Live ou MSN). Depuis le 16 septembre 2024, Microsoft n'accepte plus les mots de passe venant de logiciels de messagerie sur ces comptes : des paramètres serveur avec un mot de passe ne vous permettront donc pas de vous connecter. Les logiciels de messagerie et les connecteurs passent désormais par la connexion avec votre compte Microsoft.",
+    "microsoftOffice365": "Les enregistrements MX de {domain} pointent vers Microsoft : cette boîte est donc hébergée sur Microsoft 365. Exchange Online n'accepte plus de mot de passe en IMAP, si bien que les logiciels de messagerie et les connecteurs passent par la connexion avec Microsoft.",
+    "microsoftCta": "Se connecter avec Microsoft",
+    "limited": "{provider} ne propose aucun serveur IMAP ou SMTP auquel un logiciel installé sur un autre ordinateur peut se connecter : il n'y a donc aucun paramètre à afficher.",
+    "limitedLink": "Pourquoi {provider} ne peut pas être connecté",
+    "notFound": "Aucun paramètre trouvé pour {domain}. Le domaine ne publie aucun enregistrement de service de messagerie, la base de Mozilla ne le répertorie pas et ses enregistrements MX ne pointent vers aucun fournisseur que nous reconnaissons.",
+    "notFoundMx": "Demandez à la personne qui gère le domaine quel hébergeur gère ses boîtes, ou consultez l'espace client de cet hébergeur.",
+    "notFoundNoMx": "{domain} ne publie aucun enregistrement MX : il n'y a donc pas de fournisseur de messagerie dont lire les paramètres. Vérifiez l'orthographe.",
+    "dnsFailed": "La requête DNS pour {domain} n'a reçu aucune réponse : impossible pour l'instant de dire quoi que ce soit sur sa messagerie. Réessayez dans un instant.",
+    "ctaTitle": "Utilisez cette boîte depuis Claude, ChatGPT ou Cursor",
+    "ctaBody": "MCPEmails connecte {provider} à votre assistant IA avec ces paramètres et vérifie la connexion IMAP et SMTP au moment où vous connectez la boîte. Le formulaire de connexion remplit les serveurs pour vous.",
+    "ctaBodyGeneric": "MCPEmails connecte n'importe quelle boîte IMAP à votre assistant IA et vérifie la connexion IMAP et SMTP au moment où vous connectez la boîte. Le formulaire de connexion remplit les serveurs pour vous.",
+    "ctaButton": "Connecter {provider}",
+    "ctaButtonGeneric": "Connecter cette boîte",
+    "guideLink": "Guide de configuration {provider}"
+  },
+  "explain": {
+    "title": "À quoi servent ces paramètres",
+    "sub": "Chaque logiciel de messagerie et chaque connecteur demande les six mêmes valeurs. Voici le rôle de chacune.",
+    "items": [
+      {
+        "h": "IMAP sert à lire, SMTP sert à envoyer",
+        "p": "IMAP (Internet Message Access Protocol) permet à une application de lire votre boîte là où elle se trouve : dossiers, statut lu ou non lu et déplacements restent synchronisés avec le webmail et votre téléphone. SMTP (Simple Mail Transfer Protocol) est le moyen par lequel une application remet un nouveau message à votre fournisseur pour qu'il soit distribué. Une boîte a besoin des deux, et ils fonctionnent souvent sur des serveurs différents, comme <code>imap.gmx.net</code> et <code>mail.gmx.net</code>."
+      },
+      {
+        "h": "Ports et sécurité",
+        "p": "Le port et le type de sécurité vont ensemble. <b>SSL/TLS</b> (aussi appelé TLS implicite) chiffre la connexion dès le premier octet, sur le port 993 pour IMAP et 465 pour SMTP. <b>STARTTLS</b> se connecte sur le port 143 ou 587, puis passe en connexion chiffrée. La RFC 8314 recommande le TLS implicite pour la lecture comme pour l'envoi. Un port associé au mauvais type de sécurité se termine en général par un délai dépassé ou une erreur TLS peu explicite, pas par un message clair."
+      },
+      {
+        "h": "Votre nom d'utilisateur et votre mot de passe",
+        "p": "Le nom d'utilisateur est presque toujours votre adresse e-mail complète. La plupart des échecs de connexion viennent du mot de passe : Gmail, iCloud, Yahoo, AOL, Fastmail et Yandex refusent le mot de passe habituel de votre compte dans un logiciel de messagerie et demandent à la place un [mot de passe d'application](appPassword), tout comme Zoho dès que la double authentification ou l'authentification unique (SSO) est activée. Les comptes Microsoft personnels n'acceptent ni l'un ni l'autre et exigent la connexion avec Microsoft."
+      },
+      {
+        "h": "Domaines personnalisés et enregistrements MX",
+        "p": "Une adresse sur votre propre domaine ne dit rien de l'endroit où se trouve la boîte. Les enregistrements MX du domaine, si : ils désignent les serveurs qui reçoivent son courrier, et le propriétaire de ce serveur gère presque toujours aussi les serveurs IMAP et SMTP. <code>aspmx.l.google.com</code> signifie Google Workspace, <code>*.mail.protection.outlook.com</code> signifie Microsoft 365, <code>aspmx1.migadu.com</code> signifie Migadu. Quand le MX pointe vers un filtre antispam, l'hébergeur de la boîte est caché derrière et il faut demander à la personne qui gère le domaine. Le [guide des domaines personnalisés](customDomain) passe en revue les hébergeurs les plus courants."
+      },
+      {
+        "h": "Comment fonctionne cette recherche",
+        "p": "Elle vérifie, dans l'ordre : les [paramètres fournisseurs](providers) que MCPEmails a vérifiés en se connectant à chaque serveur ; une table d'hébergeurs constituée à partir de vrais échecs de connexion ; les enregistrements de service RFC 6186 du domaine lui-même ; ses enregistrements MX, rapprochés de ces tables ; et la base d'autoconfiguration de Mozilla Thunderbird. Elle n'affiche un résultat que si la partie IMAP et la partie SMTP ont toutes deux été trouvées. Les paramètres fournisseurs sont aussi publiés sous forme de [jeu de données](dataset) ouvert."
+      }
+    ]
+  },
+  "ports": {
+    "title": "Ports de messagerie standard",
+    "colPort": "Port",
+    "colProtocol": "Protocole",
+    "colSecurity": "Sécurité",
+    "colUse": "Usage",
+    "rows": [
+      { "port": "993", "protocol": "IMAP", "security": "SSL/TLS", "use": "Lecture du courrier. La valeur par défaut presque partout." },
+      { "port": "143", "protocol": "IMAP", "security": "STARTTLS", "use": "Lecture du courrier sur les serveurs sans port 993." },
+      { "port": "465", "protocol": "SMTP", "security": "SSL/TLS", "use": "Envoi depuis un logiciel de messagerie. Recommandé par la RFC 8314." },
+      { "port": "587", "protocol": "SMTP", "security": "STARTTLS", "use": "Envoi depuis un logiciel de messagerie (soumission de messages, RFC 6409)." },
+      { "port": "25", "protocol": "SMTP", "security": "STARTTLS ou aucune", "use": "Acheminement entre serveurs de messagerie. Certains réseaux le bloquent pour les connexions sortantes." }
+    ],
+    "note": "MCPEmails se connecte uniquement en SSL/TLS ou STARTTLS, jamais en clair."
+  },
+  "faq": {
+    "title": "Questions",
+    "items": [
+      {
+        "q": "Comment trouver les paramètres IMAP et SMTP de mon adresse e-mail ?",
+        "a": "Saisissez l'adresse dans l'outil ci-dessus. Pour une adresse chez un fournisseur, comme @gmx.net ou @yahoo.com, il renvoie immédiatement les serveurs IMAP et SMTP du fournisseur, avec les ports et la sécurité. Pour une adresse sur votre propre domaine, il lit les enregistrements DNS du domaine pour trouver quel fournisseur héberge la boîte, puis renvoie les paramètres de ce fournisseur. Si rien n'est trouvé, les enregistrements MX affichés indiquent qui reçoit le courrier du domaine, et donc à qui poser la question."
+      },
+      {
+        "q": "Quels sont les paramètres SMTP d'OVH Hosted Exchange (ex4.mail.ovh.net) ?",
+        "a": "Le courrier sortant utilise le même hôte numéroté que le courrier entrant, par exemple <code>ex4.mail.ovh.net</code>, sur le port 587 avec STARTTLS. IMAP se trouve sur ce même hôte, port 993 en SSL/TLS. Le port 465 ne répond pas sur Hosted Exchange : des paramètres repris de l'hébergement mutualisé OVH (<code>ssl0.ovh.net</code>, port 465) restent bloqués jusqu'à expiration du délai. Le numéro dans le nom d'hôte est propre à votre service et s'affiche dans l'espace client OVHcloud. Plus de détails sur la [page OVH](ovh)."
+      },
+      {
+        "q": "Quels sont les paramètres IMAP et SMTP de Purelymail ?",
+        "a": "IMAP : <code>imap.purelymail.com</code> sur le port 993 en SSL/TLS. SMTP : <code>smtp.purelymail.com</code> sur le port 465 en SSL/TLS. Le nom d'utilisateur est l'adresse e-mail complète de la boîte. Les instructions de configuration sont sur la [page Purelymail](purelymail)."
+      },
+      {
+        "q": "Faut-il utiliser le port 465 ou 587 pour SMTP ?",
+        "a": "Utilisez celui qu'indique votre fournisseur. Le port 465 chiffre dès le départ et c'est celui que recommande la RFC 8314 ; le port 587 démarre en clair puis passe en chiffré avec STARTTLS. Beaucoup de fournisseurs proposent les deux. L'essentiel est d'associer chaque port à son propre type de sécurité : 465 avec SSL/TLS, 587 avec STARTTLS."
+      },
+      {
+        "q": "Les paramètres sont bons mais mon mot de passe est refusé. Pourquoi ?",
+        "a": "Beaucoup de fournisseurs refusent le mot de passe habituel de votre compte dans un logiciel de messagerie. Gmail, iCloud, Yahoo, AOL, Fastmail et Yandex demandent un [mot de passe d'application](appPassword), que vous créez dans les paramètres de sécurité du compte, tout comme Zoho dès que la double authentification ou l'authentification unique (SSO) est activée. Les comptes Microsoft personnels n'acceptent plus les mots de passe venant de logiciels de messagerie depuis le 16 septembre 2024 et exigent la connexion avec Microsoft."
+      },
+      {
+        "q": "Cet outil peut-il tester ma connexion ?",
+        "a": "Non. Une page web ne peut pas ouvrir de connexion IMAP ou SMTP, et de toute façon il ne faut pas saisir le mot de passe d'une boîte dans une page de recherche. MCPEmails teste la connexion IMAP et SMTP lorsque vous [connectez une boîte](imap) à votre assistant IA, et vous indique laquelle des deux a échoué."
+      }
+    ]
+  },
+  "related": {
+    "title": "Guides associés",
+    "items": {
+      "imap": "Connecter n'importe quelle boîte IMAP à Claude ou ChatGPT",
+      "customDomain": "Connecter la messagerie de votre propre domaine à un agent IA",
+      "appPassword": "Qu'est-ce qu'un mot de passe d'application ?",
+      "providers": "Matrice de compatibilité des fournisseurs",
+      "dataset": "Jeu de données ouvert des fournisseurs IMAP et SMTP",
+      "connect": "Guides de configuration pour chaque fournisseur"
+    }
+  },
+  "sources": {
+    "title": "Sources",
+    "sub": "Consultées le {date}.",
+    "items": {
+      "rfc8314": "RFC 8314 : utilisation de TLS pour l'envoi et l'accès aux e-mails",
+      "rfc6186": "RFC 6186 : utilisation des enregistrements SRV pour localiser les services de messagerie",
+      "rfc6409": "RFC 6409 : soumission de messages électroniques",
+      "rfc5068": "RFC 5068 : opérations de soumission d'e-mails",
+      "msBasicAuth": "Support Microsoft : l'authentification moderne est désormais requise pour Outlook.com dans les autres applications",
+      "msExchangeOnline": "Microsoft Learn : abandon de l'authentification de base dans Exchange Online",
+      "ispdb": "Base d'autoconfiguration de Mozilla Thunderbird (ISPDB)",
+      "cloudflareDoh": "Cloudflare : API JSON DNS over HTTPS"
+    }
+  },
+  "ctaBand": {
+    "title": "Vous avez trouvé vos paramètres ? Confiez la boîte à votre assistant IA.",
+    "sub": "MCPEmails connecte Gmail, Outlook, iCloud et n'importe quelle boîte IMAP à Claude, ChatGPT, Cursor et d'autres clients MCP. Les e-mails sont récupérés en direct, jamais stockés.",
+    "ctaPrimary": "Connecter une boîte",
+    "ctaSecondary": "Voir les fournisseurs"
+  }
+}

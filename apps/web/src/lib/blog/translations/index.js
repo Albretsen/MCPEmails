@@ -112,19 +112,50 @@ import t99 from './multiple-email-accounts-in-claude-and-chatgpt/es';
 import t100 from './multiple-email-accounts-in-claude-and-chatgpt/fr';
 import t101 from './multiple-email-accounts-in-claude-and-chatgpt/nb';
 import t102 from './multiple-email-accounts-in-claude-and-chatgpt/zh';
+import t103 from './connect-claude-to-email/de';
+import t104 from './claude-imap-connector/de';
+import t105 from './connect-chatgpt-to-email/de';
+import t106 from './multiple-email-accounts-in-claude-and-chatgpt/de';
+import t107 from './connect-email-to-ai-agent-under-2-minutes/de';
+import t108 from './connect-gmail-to-claude/de';
+import t109 from './email-for-ai-agents-cursor-cline-vscode/de';
+import t110 from './can-claude-read-my-email/es';
+import t111 from './can-claude-read-my-email/fr';
+import t112 from './can-claude-read-my-email/nb';
+import t113 from './can-claude-read-my-email/de';
+import t114 from './claude-custom-connectors-explained/es';
+import t115 from './claude-custom-connectors-explained/fr';
+import t116 from './claude-custom-connectors-explained/nb';
+import t117 from './claude-custom-connectors-explained/de';
+import t118 from './what-is-an-app-password/es';
+import t119 from './what-is-an-app-password/fr';
+import t120 from './what-is-an-app-password/nb';
+import t121 from './what-is-an-app-password/de';
+import t122 from './schedule-email-with-claude-and-chatgpt/es';
+import t123 from './schedule-email-with-claude-and-chatgpt/fr';
+import t124 from './schedule-email-with-claude-and-chatgpt/nb';
+import t125 from './schedule-email-with-claude-and-chatgpt/de';
+import t126 from './connect-claude-to-outlook-com-hotmail/es';
+import t127 from './connect-claude-to-outlook-com-hotmail/fr';
+import t128 from './connect-claude-to-outlook-com-hotmail/nb';
+import t129 from './connect-claude-to-outlook-com-hotmail/de';
+import t130 from './connect-claude-to-apple-mail/es';
+import t131 from './connect-claude-to-apple-mail/fr';
+import t132 from './connect-claude-to-apple-mail/nb';
+import t133 from './connect-claude-to-apple-mail/de';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
   'ai-agent-triage-summarize-inbox': { es: t4, fr: t5, nb: t6, zh: t7 },
   'best-ways-to-let-claude-manage-your-inbox': { es: t8, fr: t9, nb: t10, zh: t11 },
   'build-email-auto-responder-mcp-agent': { es: t12, fr: t13, nb: t14, zh: t15 },
-  'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78 },
-  'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18 },
-  'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22 },
-  'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74 },
+  'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78, de: t104 },
+  'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18, de: t107 },
+  'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22, de: t108 },
+  'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74, de: t103 },
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
-  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34 },
+  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34, de: t109 },
   'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70 },
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },
@@ -134,12 +165,18 @@ const TRANSLATIONS = {
   'oauth-vs-api-keys-ai-email-access': { es: t55, fr: t56, nb: t57, zh: t58 },
   'what-is-an-mcp-email-server': { es: t59, fr: t60, nb: t61, zh: t62 },
   'why-email-never-stored-matters': { es: t63, fr: t64, nb: t65, zh: t66 },
-  'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82 },
+  'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82, de: t105 },
   'manage-multiple-email-accounts-with-ai': { es: t83, fr: t84, nb: t85, zh: t86 },
   'automated-email-triage-rules': { es: t87, fr: t88, nb: t89, zh: t90 },
   'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
   'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
-  'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102 },
+  'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102, de: t106 },
+  'can-claude-read-my-email': { es: t110, fr: t111, nb: t112, de: t113 },
+  'claude-custom-connectors-explained': { es: t114, fr: t115, nb: t116, de: t117 },
+  'what-is-an-app-password': { es: t118, fr: t119, nb: t120, de: t121 },
+  'schedule-email-with-claude-and-chatgpt': { es: t122, fr: t123, nb: t124, de: t125 },
+  'connect-claude-to-outlook-com-hotmail': { es: t126, fr: t127, nb: t128, de: t129 },
+  'connect-claude-to-apple-mail': { es: t130, fr: t131, nb: t132, de: t133 },
 };
 
 export default TRANSLATIONS;

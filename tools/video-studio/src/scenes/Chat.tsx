@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { revealCount } from '../components/snap-cn';
 import { getTheme, type ThemeName } from '../theme';
+import { useLayout, type Layout } from '../layout';
 import type { ChatScene, Transcript, TranscriptTurn } from '../storyboard-types';
 
 /**
@@ -22,7 +23,7 @@ const ASSISTANT_WORDS_PER_SECOND = 7;
 /**
  * A NEUTRAL assistant surface. Read the two rules before editing this file.
  *
- * Rule one, whose UI this is. MCP Emails has no first-party chat surface: it is
+ * Rule one, whose UI this is. MCPEmails has no first-party chat surface: it is
  * an MCP server consumed by Claude Desktop, Claude Code, Cursor and others. The
  * obvious move is therefore to draw something that looks like Claude Desktop.
  * Do not. Reproducing another company's interface in our marketing material
@@ -68,11 +69,47 @@ export const Chat: React.FC<{
   const theme = getTheme(themeName);
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  const layout = useLayout();
 
   if (!transcript) return <MissingTranscript file={scene.transcript} themeName={themeName} />;
 
   const turns = transcript.turns;
+  const { starts, spans } = chatSchedule(turns, durationInFrames, fps);
+  const { content } = layout;
 
+  return (
+    <AbsoluteFill
+      style={{
+        background: theme.bgPage,
+        padding: layout.vertical
+          ? `${content.top}px ${content.right}px ${content.bottom}px ${content.left}px`
+          : '70px 200px',
+      }}
+    >
+      <ChatCard
+        scene={scene}
+        turns={turns}
+        starts={starts}
+        spans={spans}
+        frame={frame}
+        fps={fps}
+        theme={theme}
+        layout={layout}
+      />
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * When each turn starts and how long it has the floor, in frames. Pure, and
+ * exported because the timer overlay stops the clock on the frame the answer
+ * finishes arriving, which only this schedule knows.
+ */
+export function chatSchedule(
+  turns: TranscriptTurn[],
+  durationInFrames: number,
+  fps: number,
+): { starts: number[]; spans: number[]; answerDoneFrame: number } {
   // Budget the scene across the turns by weight: a user turn types, tool turns
   // are quick beats, the assistant answer needs the most time because it is the
   // payload. Weights are relative, then normalised to the scene length, so the
@@ -103,8 +140,31 @@ export const Chat: React.FC<{
   // the turn. Stretching the scene then bought unreadability AND a freeze.
   const spans = starts.map((st, i) => (i + 1 < starts.length ? starts[i + 1] : usable) - st);
 
+  // The frame the last assistant turn has fully streamed in, using the same
+  // per-word pacing Turn draws with.
+  let answerDoneFrame = usable;
+  for (let i = turns.length - 1; i >= 0; i--) {
+    if (turns[i].role !== 'assistant') continue;
+    const words = (turns[i].text ?? '').split(' ').length;
+    const perWord = Math.max(1, Math.min(fps / ASSISTANT_WORDS_PER_SECOND, (spans[i] * 0.7) / Math.max(1, words)));
+    answerDoneFrame = Math.min(durationInFrames, Math.round(starts[i] + perWord * words));
+    break;
+  }
+
+  return { starts, spans, answerDoneFrame };
+}
+
+const ChatCard: React.FC<{
+  scene: ChatScene;
+  turns: TranscriptTurn[];
+  starts: number[];
+  spans: number[];
+  frame: number;
+  fps: number;
+  theme: ReturnType<typeof getTheme>;
+  layout: Layout;
+}> = ({ scene, turns, starts, spans, frame, fps, theme, layout }) => {
   return (
-    <AbsoluteFill style={{ background: theme.bgPage, padding: '70px 200px' }}>
       <div
         style={{
           flex: 1,
@@ -136,19 +196,19 @@ export const Chat: React.FC<{
               boxShadow: `0 0 0 5px ${theme.liveSoft}`,
             }}
           />
-          <div style={{ fontFamily: theme.fontSans, fontSize: 22, color: theme.fg2, fontWeight: 500 }}>
+          <div style={{ fontFamily: theme.fontSans, fontSize: layout.vertical ? 30 : 22, color: theme.fg2, fontWeight: 500 }}>
             {scene.title}
           </div>
           <div style={{ flex: 1 }} />
-          <div style={{ fontFamily: theme.fontMono, fontSize: 18, color: theme.fg4 }}>
-            MCP Emails
+          <div style={{ fontFamily: theme.fontMono, fontSize: layout.vertical ? 24 : 18, color: theme.fg4 }}>
+            MCPEmails
           </div>
         </div>
 
         <div
           style={{
             flex: 1,
-            padding: '36px 44px',
+            padding: layout.vertical ? '30px 30px' : '36px 44px',
             display: 'flex',
             flexDirection: 'column',
             gap: 22,
@@ -164,13 +224,25 @@ export const Chat: React.FC<{
               frame={frame}
               fps={fps}
               theme={theme}
+              layout={layout}
             />
           ))}
         </div>
       </div>
-    </AbsoluteFill>
   );
 };
+
+/**
+ * Message ids and other opaque values are evidence, but a 40-character id
+ * crowds out the tool name and the result. Shorten long strings for display
+ * only; the transcript file keeps the full value.
+ */
+function displayArgs(args: Record<string, unknown> | undefined): string {
+  if (!args || Object.keys(args).length === 0) return '{}';
+  return JSON.stringify(args, (_k, v) =>
+    typeof v === 'string' && v.length > 28 ? `${v.slice(0, 25)}...` : v,
+  );
+}
 
 const Turn: React.FC<{
   turn: TranscriptTurn;
@@ -179,7 +251,9 @@ const Turn: React.FC<{
   frame: number;
   fps: number;
   theme: ReturnType<typeof getTheme>;
-}> = ({ turn, startFrame, spanFrames, frame, fps, theme }) => {
+  layout: Layout;
+}> = ({ turn, startFrame, spanFrames, frame, fps, theme, layout }) => {
+  const bodySize = layout.type.body;
   const local = frame - startFrame;
   if (local < 0) return null;
 
@@ -206,11 +280,11 @@ const Turn: React.FC<{
       <div style={{ ...lift, display: 'flex', justifyContent: 'flex-end' }}>
         <div
           style={{
-            maxWidth: '76%',
+            maxWidth: layout.vertical ? '88%' : '76%',
             background: theme.brand,
             color: theme.fgOnBrand,
             fontFamily: theme.fontSans,
-            fontSize: 30,
+            fontSize: bodySize,
             lineHeight: 1.45,
             padding: '20px 28px',
             borderRadius: '20px 20px 6px 20px',
@@ -229,20 +303,24 @@ const Turn: React.FC<{
     // A tool call is the interesting part: it is the evidence that the model is
     // reaching real mail rather than making something up. Shown as a compact
     // row with the tool's real name, its real arguments and the real outcome.
-    const args = turn.args && Object.keys(turn.args).length ? JSON.stringify(turn.args) : '{}';
+    const args = displayArgs(turn.args);
     return (
       <div style={{ ...lift, display: 'flex', justifyContent: 'flex-start' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            // Vertical: a tool row is wider than the column, so it wraps
+            // rather than running under the edge of the card.
+            flexWrap: layout.vertical ? 'wrap' : 'nowrap',
+            gap: layout.vertical ? '6px 14px' : 14,
             background: theme.bgSunken,
             border: `1px solid ${theme.border1}`,
             borderRadius: 12,
             padding: '14px 20px',
             fontFamily: theme.fontMono,
-            fontSize: 22,
+            fontSize: layout.type.mono,
+            overflowWrap: 'anywhere',
             color: theme.fg2,
           }}
         >
@@ -274,12 +352,12 @@ const Turn: React.FC<{
     <div style={{ ...lift, display: 'flex', justifyContent: 'flex-start' }}>
       <div
         style={{
-          maxWidth: '84%',
+          maxWidth: layout.vertical ? '96%' : '84%',
           background: theme.bgSunken,
           border: `1px solid ${theme.border1}`,
           color: theme.fg1,
           fontFamily: theme.fontSans,
-          fontSize: 30,
+          fontSize: bodySize,
           lineHeight: 1.5,
           padding: '22px 30px',
           borderRadius: '20px 20px 20px 6px',

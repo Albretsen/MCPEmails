@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { runCheckout } from '@/lib/stripe/checkout-core';
+import { runCheckout, runPassCheckout } from '@/lib/stripe/checkout-core';
+import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
  * POST /api/stripe/checkout
@@ -20,6 +22,24 @@ import { runCheckout } from '@/lib/stripe/checkout-core';
  *              been shown, and accepted, the amount from a previous call. An
  *              existing subscriber's plan change is a two-call handshake:
  *              the first returns the quote, the second performs it.
+ *   locale   : the buyer's app-realm language. Only 'de' changes anything (a
+ *              German hosted page); any other value, or none, is English.
+  const { planId, interval, confirm, locale, offer, product, arm, surface } = body as Record<string, unknown>;
+
+  if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
+    return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
+  }
+
+  const outcome =
+    product === PERSONAL_PASS_3M.id
+      ? await runPassCheckout({ locale, experimentArm: arm, surface })
+      : await runCheckout({
+          planId,
+          interval,
+          confirmChange: confirm,
+          locale,
+          ...(offer !== undefined ? { quotedOffer: offer } : {}),
+        });
  *
  * Response (200):
  *   { url: string }        : the Stripe Checkout hosted page URL to redirect to
@@ -64,9 +84,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale, offer, quotedPriceId, product, arm, surface } =
+    body as Record<string, unknown>;
 
-  const outcome = await runCheckout({ planId, interval, confirmChange: confirm });
+  if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
+    return NextResponse.json({ error: 'Unknown product.' }, { status: 400 });
+  }
+
+  // Vercel's geolocation of this request, for the EUR currency choice and VAT
+  // evidence (see `country` on runCheckout). Absent locally and in tests.
+  const country = countryFromHeaders(request.headers);
+
+  const outcome =
+    product === PERSONAL_PASS_3M.id
+      ? await runPassCheckout({ locale, experimentArm: arm, surface })
+      : await runCheckout({
+          planId,
+          interval,
+          confirmChange: confirm,
+          locale,
+          ...(country ? { country } : {}),
+          ...(offer !== undefined ? { quotedOffer: offer } : {}),
+          ...(quotedPriceId !== undefined ? { quotedPriceId } : {}),
+        });
 
   if (outcome.kind === 'checkout') {
     return NextResponse.json({ url: outcome.url }, { status: 200 });
@@ -83,6 +123,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         plan: outcome.planName,
         interval: outcome.interval,
         preview: outcome.preview,
+        ...(outcome.offerEnded ? { seasonal_offer_ended: true } : {}),
+        // Sent back as `quotedPriceId` on confirm; see runCheckout.
+        quoted_price_id: outcome.quotedPriceId,
+        ...(outcome.priceChanged ? { price_changed: true } : {}),
       },
       { status: 200 },
     );

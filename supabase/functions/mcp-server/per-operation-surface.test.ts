@@ -43,6 +43,7 @@ import {
   runBodylessDraftUpdate,
 } from "./mcp-app-drafts.ts";
 import { PER_OPERATION_REWORDINGS } from "./per-operation-wording.ts";
+import { CLOSED_PRO_GATE, decideProFeatureAccess, hideProFeaturesFromListing } from "./pro-features.ts";
 
 // See the note in tool-surface.test.ts: the environment is arranged before the
 // dynamic import because index.ts reads it at module load.
@@ -123,7 +124,7 @@ async function call(
     { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } },
     1,
     key,
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   ) as CallResponse;
 }
 
@@ -224,7 +225,15 @@ Deno.test("no other client is listed a per-operation tool", async () => {
   );
   assertEquals(
     (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name),
-    toolsForListing(claude(["read:email"])).map((tool) => tool.name),
+    // Pro tools are hidden until the features are visible (the gate's read
+    // fails closed here), exactly as for every customer before launch; and
+    // minus the subscription tools: tools/list drops them for a workspace
+    // without subscription_cleanup_enabled, which introspection mode is. And
+    // minus card_automation, listed only while the automation card is (its
+    // gate is closed in introspection mode).
+    hideProFeaturesFromListing(toolsForListing(claude(["read:email"])), decideProFeatureAccess(CLOSED_PRO_GATE))
+      .map((tool) => tool.name)
+      .filter((name) => !name.startsWith("subscriptions_") && name !== "card_automation"),
   );
   const names = (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name);
   for (const name of PER_OPERATION_ONLY_TOOLS.keys()) {
@@ -289,8 +298,15 @@ Deno.test("the listing stays inside its size budget", () => {
   // the consolidated listing. Bytes are what a test can count without a
   // tokenizer; the budget is the measured 114 KB plus room for a few edits.
   // Legacy output schemas put back on this surface would be 163 KB.
-  const bytes = JSON.stringify(PER_OPERATION_LISTING.map(serializeToolForList)).length;
+  // What a customer is shown before launch: the Pro tools hidden.
+  const closed = decideProFeatureAccess(CLOSED_PRO_GATE);
+  const bytes = JSON.stringify(hideProFeaturesFromListing(PER_OPERATION_LISTING, closed).map(serializeToolForList))
+    .length;
   assert(bytes < 120_000, `the per-operation listing is ${bytes} bytes`);
+  // With the Pro tools visible (reminders, 2026-10-24). Measure tokens again
+  // before pro_features_public is switched on.
+  const launched = JSON.stringify(PER_OPERATION_LISTING.map(serializeToolForList)).length;
+  assert(launched < 126_000, `the launched per-operation listing is ${launched} bytes`);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -308,6 +324,8 @@ Deno.test("destructiveHint is false only on writes that purely add", () => {
     "folder_create",
     "draft_create",
     "draft_reply",
+    // Pro: stores one tracking row; a repeat returns the same row.
+    "reminder_follow_up",
   ];
   const nonDestructiveWrites = listedMailTools()
     .filter((tool) => (tool.annotations as Record<string, unknown>).readOnlyHint === false)
@@ -350,7 +368,7 @@ Deno.test("no listed text points at a consolidated tool or an action selector", 
   // Names that exist only on the consolidated listing, and the ways the legacy
   // prose refers to choosing an action on one.
   const stale =
-    /email_organize|email_compose|automation_read|action: |\(action |by action '|the (draft|folder|schedule|automation|signature) tool|Use action '/;
+    /email_organize|email_compose|automation_read|action: |\(action |by action '|the (draft|folder|schedule|automation|signature|reminder) tool|Use action '/;
   const found: string[] = [];
   for (const tool of listedMailTools()) {
     for (const [path, text] of strings(tool, tool.name as string)) {
@@ -569,7 +587,8 @@ Deno.test("the draft editor's own tools get the same visibility on this surface 
     withListingCardMeta(TOOL_REGISTRY, open, "consolidated").map((t) => [t.name, t._meta]),
   );
   // The model reads a draft back and hides or shows the card; only the card saves.
-  assertEquals(perOperation.get("draft_read"), modelAndAppReviewCardToolMeta());
+  // `draft_read` mounts no card on either surface (2026-10-17).
+  assertEquals(perOperation.get("draft_read"), { ui: { visibility: ["model", "app"] } });
   assertEquals(perOperation.get("draft_editor_hide"), modelAndAppReviewCardToolMeta());
   assertEquals(perOperation.get("draft_editor_save"), appOnlyReviewCardToolMeta());
   for (const name of ["draft_read", "draft_editor_save", "draft_editor_hide"]) {
@@ -594,7 +613,9 @@ Deno.test("draft_update is listed with body optional, and says what an update wi
   assertEquals(schema.properties.body.type, "string", "the type did not move, only `required`");
   assertEquals(
     schema.properties.body.description,
-    "Updated plain-text body. Omit to keep the stored body text.",
+    "Updated plain-text body, your text only: a reply's quoted original " +
+      "is kept and the signature added by the server. Not markdown (no ** or #): " +
+      "formatting goes in html_body. Omit to keep the stored body text.",
   );
   const description = update.description as string;
   assert(

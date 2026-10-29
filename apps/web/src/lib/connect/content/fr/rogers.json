@@ -20,8 +20,8 @@
     "eyebrow": "Rogers Yahoo Mail + IA",
     "titleLine1": "Connectez une boîte Rogers Yahoo",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "La messagerie Rogers est une messagerie Yahoo portant le nom rogers.com. mcpemails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier, à condition que votre compte puisse encore produire un mot de passe d'application.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Rogers Yahoo. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.broadband.rogers.com sur le port 993, en s'authentifiant avec un mot de passe d'application Rogers Yahoo plutôt qu'avec le mot de passe que vous saisissez dans le webmail. Il y a un vrai piège à vérifier d'abord : l'article de configuration de Rogers indique désormais que la génération de mots de passe d'application n'est plus disponible, tandis que l'aide Rogers de Yahoo documente toujours le bouton Create app password. Ouvrez donc la page de sécurité de votre compte avant de vous organiser en conséquence. Si un mot de passe d'application existe ou peut encore être créé, une boîte est gratuite, pour toujours.",
+    "lead": "La messagerie Rogers est une messagerie Yahoo portant le nom rogers.com. MCPEmails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier, à condition que votre compte puisse encore produire un mot de passe d'application.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Rogers Yahoo. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.broadband.rogers.com sur le port 993, en s'authentifiant avec un mot de passe d'application Rogers Yahoo plutôt qu'avec le mot de passe que vous saisissez dans le webmail. Il y a un vrai piège à vérifier d'abord : l'article de configuration de Rogers indique désormais que la génération de mots de passe d'application n'est plus disponible, tandis que l'aide Rogers de Yahoo documente toujours le bouton Create app password. Ouvrez donc la page de sécurité de votre compte avant de vous organiser en conséquence. Si un mot de passe d'application existe ou peut encore être créé, une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, si le vôtre peut en créer un",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Ouvrez la page de sécurité du compte Rogers Yahoo et cherchez les mots de passe d'application",
@@ -41,7 +41,7 @@
     },
     {
       "h": "Saisissez l'adresse rogers.com et le mot de passe d'application",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP, mettez l'adresse rogers.com complète dans le champ du nom d'utilisateur et collez le mot de passe d'application. N'utilisez pas votre mot de passe de webmail Rogers Yahoo : il est refusé au niveau IMAP. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans MCPEmails, choisissez IMAP / SMTP, mettez l'adresse rogers.com complète dans le champ du nom d'utilisateur et collez le mot de passe d'application. N'utilisez pas votre mot de passe de webmail Rogers Yahoo : il est refusé au niveau IMAP. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "Le serveur SMTP Yahoo derrière Rogers annonce une taille de message maximale d'environ 39 Mo : un envoi avec de grosses pièces jointes est refusé avant de partir.",
-    "Si votre compte ne peut plus produire de mot de passe d'application, mcpemails ne peut pas le connecter. Il n'existe aucune solution de repli par simple mot de passe, et nous ne faisons pas partie des applications enregistrées pour la fenêtre OAuth Rogers Yahoo."
+    "Si votre compte ne peut plus produire de mot de passe d'application, MCPEmails ne peut pas le connecter. Il n'existe aucune solution de repli par simple mot de passe, et nous ne faisons pas partie des applications enregistrées pour la fenêtre OAuth Rogers Yahoo."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie Rogers ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Rogers intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier rogers.com, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP. Cela suppose que votre compte puisse utiliser un mot de passe d'application."
+      "a": "Pas directement. Claude n'a pas de connecteur Rogers intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier rogers.com, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP. Cela suppose que votre compte puisse utiliser un mot de passe d'application."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Rogers ?",

@@ -157,7 +157,7 @@ const TRANSPORT = { error: { code: -32603, message: "Failed to fetch" } };
  * arguments that returns a result object, `TRANSPORT`, or a promise of either.
  * Every call is recorded in `calls`.
  */
-function installDom({ storage = null } = {}) {
+function installDom({ storage = null, updateModelContext = {} } = {}) {
   const dom = new JSDOM("<!doctype html><html><body><div id=root></div></body></html>", {
     pretendToBeVisual: true,
     url: "https://card.test/",
@@ -170,6 +170,8 @@ function installDom({ storage = null } = {}) {
 
   const calls = [];
   const tools = {};
+  /** Every ui/update-model-context request's params, in order. */
+  const contexts = [];
 
   function deliver(message) {
     queueMicrotask(() => {
@@ -185,7 +187,7 @@ function installDom({ storage = null } = {}) {
         result: {
           protocolVersion: PROTOCOL_VERSION,
           hostInfo: { name: "scripted-host", version: "0.0.1" },
-          hostCapabilities: { openLinks: {}, updateModelContext: {} },
+          hostCapabilities: { openLinks: {}, updateModelContext },
           hostContext: { theme: "light", displayMode: "inline" },
         },
       });
@@ -201,6 +203,7 @@ function installDom({ storage = null } = {}) {
       });
       return;
     }
+    if (message.method === "ui/update-model-context") contexts.push(message.params);
     if (message.id !== undefined && message.method) {
       // Any other request (update-model-context, display mode): answer empty.
       deliver({ jsonrpc: "2.0", id: message.id, result: {} });
@@ -218,7 +221,7 @@ function installDom({ storage = null } = {}) {
   for (const key of ["cancelAnimationFrame", "getComputedStyle", "requestAnimationFrame"]) {
     globalThis[key] = w[key].bind(w);
   }
-  return { dom, w, calls, tools, deliver };
+  return { dom, w, calls, tools, contexts, deliver };
 }
 
 let instance = 0;
@@ -910,18 +913,18 @@ async function main() {
     const c = await editor();
     c.input("d-body", "edited");
     await settle();
-    const discard = c.btn(/^Discard$/);
+    const discard = c.btn(/^Delete draft$/);
     c.press(discard);
     await settle();
-    const no = c.btn(/^No$/);
-    const yes = c.btn(/^Yes, discard$/);
+    const no = c.btn(/^Keep draft$/);
+    const yes = c.btn(/^Yes, delete$/);
     expect("focus starts on the safe choice", c.active(), no);
     const row = [...no.parentElement.querySelectorAll("button")];
     expect("No comes before Yes, so it is not where Send sits", row.indexOf(no) < row.indexOf(yes), true);
     expect("Yes is not the first stop", row[0] === yes, false);
     c.press(no);
     await settle();
-    expect("focus is back on Discard", c.active(), c.btn(/^Discard$/));
+    expect("focus is back on Discard", c.active(), c.btn(/^Delete draft$/));
     expect("not on Send", /send/i.test(c.active()?.textContent ?? ""), false);
     // The second half of a double click lands where No was.
     c.btn(/^Send$/).click();
@@ -929,12 +932,12 @@ async function main() {
     await settle();
     expectJson("a click right after closing sends and saves nothing", c.calls, []);
 
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
     c.key(c.active(), "Escape");
     await settle();
-    expect("Escape cancels the confirm", !!c.btn(/^Yes, discard$/), false);
-    expect("and returns focus to Discard", c.active(), c.btn(/^Discard$/));
+    expect("Escape cancels the confirm", !!c.btn(/^Yes, delete$/), false);
+    expect("and returns focus to Discard", c.active(), c.btn(/^Delete draft$/));
 
     c.press(c.btn(/^⋯$/));
     await settle();
@@ -1003,6 +1006,47 @@ async function main() {
     c.press(c.btn(/^Save$/));
     await settle();
     expectJson("with the field fixed, the save goes out with the address", c.calls.at(-1)?.args.to, ["dana@x.example", "sam@x.example"]);
+    await c.done();
+  }
+
+  group("7. the diagnostics line follows the model-context replies, and the request fits the host (QA 2026-10-17)");
+  {
+    // The counters live on the bridge, so a reply that landed after the save's
+    // re-render used to leave the line at 0/0/0 until the next keystroke.
+    const c = await boot({ updateModelContext: { text: {}, structuredContent: {} } });
+    c.push({ ...draftEnvelope(), diagnostics: true });
+    await settle();
+    const diag = () => c.root.querySelector(".diag")?.textContent ?? "";
+    await settle();
+    expect("the line shows what the host listed", /mctx cap\[text,structuredContent\] 1\/0\/1/.test(diag()), true);
+    expect("the fresh result said the card is on screen", /^The MCPEmails draft card is on screen/.test(c.contexts[0]?.content?.[0]?.text ?? ""), true);
+    c.tools.draft_editor_save = () => ({
+      structuredContent: { ...draftEnvelope({ draft_id: "Drafts:140", origin: "save", subject: "Edited" }), diagnostics: true },
+      content: [{ type: "text", text: "{}" }],
+    });
+    c.input("d-subject", "Edited");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expect("after the save, with no other input, the reply is counted", /mctx cap\[text,structuredContent\] 2\/0\/2/.test(diag()), true);
+    expect("one more update went out", c.contexts.length, 2);
+    expect("as one text block", c.contexts[1]?.content?.[0]?.type, "text");
+    expect("naming the live id", /current draft_id is Drafts:140\./.test(c.contexts[1]?.content?.[0]?.text ?? ""), true);
+    expect(
+      "with the same text as structuredContent, because this host listed it",
+      c.contexts[1]?.structuredContent?.context,
+      c.contexts[1]?.content?.[0]?.text,
+    );
+    await c.done();
+  }
+  {
+    const c = await editor({}, { updateModelContext: { text: {} } });
+    c.tools.draft_editor_save = () => draftResult({ draft_id: "Drafts:141", origin: "save", subject: "Edited" });
+    c.input("d-subject", "Edited");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expectJson("a host that lists only text gets only text", Object.keys(c.contexts[0] ?? {}), ["content"]);
     await c.done();
   }
 

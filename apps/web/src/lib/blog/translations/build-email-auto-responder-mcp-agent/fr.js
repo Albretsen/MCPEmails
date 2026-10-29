@@ -2,13 +2,13 @@ const translation = {
   title: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP',
   description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : interroger les non lus, rédiger et répondre en toute sécurité avec scopes, limites de débit et garde-fous.',
   coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP — MCPEmails',
-  content: `Un répondeur automatique d’e-mails bâti sur MCP Emails est une boucle, pas un webhook. Il n’y a aucun événement initié par le serveur : votre agent **interroge** (poll) les e-mails non lus selon une planification avec \`email_read\` (action \`list\`), lit chaque message avec \`email_read\` (action \`read\`), rédige une réponse et appelle \`email_compose\` (action \`reply\`). Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
+  content: `Un répondeur automatique d’e-mails bâti sur MCPEmails est une boucle, pas un webhook. Il n’y a aucun événement initié par le serveur : votre agent **interroge** (poll) les e-mails non lus selon une planification avec \`email_read\` (action \`list\`), lit chaque message avec \`email_read\` (action \`read\`), rédige une réponse et appelle \`email_compose\` (action \`reply\`). Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
 
 C’est l’extrémité avancée de l’histoire racontée dans [donnez à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access). Si vous voulez simplement du tri et des résumés matinaux sans rien envoyer, lisez d’abord [tri et résumé de boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox) — c’est l’endroit le plus sûr pour commencer. Revenez ici quand vous voudrez vraiment que l’agent appuie sur envoyer.
 
 ## La part d’honnêteté : il n’y a pas de webhook
 
-La plupart des tutoriels de « répondeur automatique » supposent qu’un événement push se déclenche dès qu’un e-mail arrive. MCP Emails ne fonctionne pas ainsi, et aucun serveur MCP que je connaisse ne le fait. MCP est un protocole d’outils requête/réponse. Le serveur répond quand votre agent le sollicite ; il ne vous appelle jamais.
+La plupart des tutoriels de « répondeur automatique » supposent qu’un événement push se déclenche dès qu’un e-mail arrive. MCPEmails ne fonctionne pas ainsi, et aucun serveur MCP que je connaisse ne le fait. MCP est un protocole d’outils requête/réponse. Le serveur répond quand votre agent le sollicite ; il ne vous appelle jamais.
 
 Un vrai répondeur automatique, c’est donc un planificateur plus une interrogation. Vous lancez un tick toutes les N secondes ou minutes, vous demandez les messages non lus, et vous traitez ce qui est nouveau. C’est tout. C’est moins élégant qu’un webhook, mais c’est prévisible, et cela veut dire que *vous* contrôlez la cadence et le rayon d’action.
 
@@ -23,10 +23,10 @@ Dans le tableau de bord, allez dans **API Keys**, créez une clé, et accordez-l
 - \`read:email\` — pour interroger, lister et lire les messages avec \`email_read\`.
 - \`send:email\` — pour appeler \`email_compose\` (action \`reply\`).
 
-La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_live_...\` et vous la transmettez à chaque requête :
+La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_9f86d081...\` et vous la transmettez à chaque requête :
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 Le point de terminaison MCP est une URL unique :
@@ -87,7 +87,7 @@ Si vous voulez qu’un message cesse d’apparaître comme non lu une fois que v
 
 ## Limites de débit, et pourquoi on ne réessaie jamais aveuglément un envoi
 
-Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, quel que soit le forfait. Votre espace de travail a aussi un plafond de pointe selon le palier : **60 req/min sur Gratuit, 120 sur Personal, 300 sur Pro, 1 000 sur Team** (voir [tarifs](/pricing)). Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
+Votre espace de travail a un plafond par minute fixé par son forfait (voir [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
 
 Lorsque vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
 
@@ -125,7 +125,7 @@ Ne répondez pas à tout le monde. Commencez par une allowlist étroite — un a
 
 ### Gardez un humain dans la boucle, au moins au début
 
-La version la plus sûre de tout cela n’est pas un répondeur automatique du tout — c’est un *rédacteur* automatique. L’agent lit, rédige et prépare la réponse, mais une personne approuve l’envoi. MCP Emails prend en charge les brouillons, vous pouvez donc faire en sorte que la boucle appelle \`draft\` (action \`create\`) au lieu d’\`email_compose\`, puis envoyer vous-même les bons. Fonctionnez en mode brouillon pendant une semaine. Lisez ce qu’il aurait envoyé. Ensuite seulement, basculez en envoi automatique ceux auxquels vous faites confiance.
+La version la plus sûre de tout cela n’est pas un répondeur automatique du tout — c’est un *rédacteur* automatique. L’agent lit, rédige et prépare la réponse, mais une personne approuve l’envoi. MCPEmails prend en charge les brouillons, vous pouvez donc faire en sorte que la boucle appelle \`draft\` (action \`create\`) au lieu d’\`email_compose\`, puis envoyer vous-même les bons. Fonctionnez en mode brouillon pendant une semaine. Lisez ce qu’il aurait envoyé. Ensuite seulement, basculez en envoi automatique ceux auxquels vous faites confiance.
 
 ### Stoppez les boucles et les auto-réponses à soi-même
 
@@ -150,7 +150,7 @@ Si je devais déployer ceci pour une vraie boîte de réception demain, je comme
 
 C’est un système auquel vous pouvez réellement faire confiance, et il se généralise. La même boucle avec un prompt différent devient un bot de tri, un routeur de leads ou un notificateur. Pour le menu plus large de ce qu’un agent peut faire une fois branché, voir [7 choses qu’un agent IA peut faire avec un accès à la boîte de réception](/blog/7-things-ai-agent-can-do-with-inbox-access). Si vous hésitez encore à confier à un agent un accès d’envoi, [est-il sûr de donner à un agent IA un accès à l’e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) mérite votre temps avant de déployer.
 
-Prêt à le construire ? Créez une clé API à scope restreint et lisez la référence des outils dans [la documentation](/docs), ou [commencez gratuitement](/signup) : Gratuit connecte une boîte, Personal (9 $/mois) jusqu'à trois, et Pro toutes celles que vous possédez ; ajoutez d’abord les garde-fous avant d’automatiser.`,
+Prêt à le construire ? Créez une clé API à scope restreint et lisez la référence des outils dans [la documentation](/docs), ou [commencez gratuitement](/signup) : Gratuit connecte une boîte, Personal (9 $/mois) jusqu'à trois, et Pro jusqu'à 10 ; ajoutez d’abord les garde-fous avant d’automatiser.`,
 };
 
 export default translation;

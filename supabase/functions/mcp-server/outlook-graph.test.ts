@@ -29,11 +29,15 @@ import {
   graphFolderLabels,
   graphImmutableMessageIds,
   graphListAttachmentMeta,
+  GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES,
+  graphDraftAttachmentList,
+  graphRecipientName,
   graphSendFailure,
   GraphSendRefusedError,
   outlookListTotal,
   OUTLOOK_ARCHIVE_FOLDER_NAMES,
   splitOutlookFolderPath,
+  graphConversationIndexIsResponse,
   graphPrepareResponseDraft,
   graphSearchParam,
   graphSendDraft,
@@ -701,6 +705,101 @@ Deno.test("attachment listing uses $select (no contentBytes) and classifies item
   assertEquals(calls[0].url, `${GRAPH_BASE}/me/messages/m1/attachments?$select=id,name,contentType,size,isInline`);
   assertEquals(metas.map((m) => m.kind), ["file", "item", "reference"]);
   assertEquals(metas[1].contentType, "message/rfc822");
+});
+
+// ── Draft attachments: real file sizes (2026-10-17 re-test) ─────────────────
+
+Deno.test("a small draft attachment list reports decoded content sizes, not Graph's item size", async () => {
+  // The re-test: a 19-byte notes.txt came back from Graph as size 183.
+  const notes = btoa("nineteen bytes here");
+  let list: Awaited<ReturnType<typeof graphDraftAttachmentList>> = [];
+  const calls = await withFetch(
+    [
+      () => json(200, { value: [{ name: "notes.txt", size: 183, contentType: "text/plain" }] }),
+      () =>
+        json(200, {
+          value: [
+            { name: "notes.txt", size: 183, contentType: "text/plain", contentBytes: notes },
+            // An item attachment has no contentBytes: Graph's size stands.
+            { name: "Fwd", size: 900, contentType: "message/rfc822" },
+          ],
+        }),
+    ],
+    async () => {
+      list = await graphDraftAttachmentList("tok", "d1");
+    },
+  );
+  assertEquals(calls[0].url, `${GRAPH_BASE}/me/messages/d1/attachments?$select=name,size,contentType`);
+  assertEquals(calls[1].url, `${GRAPH_BASE}/me/messages/d1/attachments`);
+  assertEquals(list, [
+    { filename: "notes.txt", size_bytes: 19, mime_type: "text/plain" },
+    { filename: "Fwd", size_bytes: 900, mime_type: "message/rfc822" },
+  ]);
+});
+
+Deno.test("a large draft attachment list is never downloaded to measure it", async () => {
+  let list: Awaited<ReturnType<typeof graphDraftAttachmentList>> = [];
+  const calls = await withFetch(
+    [() => json(200, { value: [{ name: "big.pdf", size: GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES + 1, contentType: "application/pdf" }] })],
+    async () => {
+      list = await graphDraftAttachmentList("tok", "d1");
+    },
+  );
+  assertEquals(calls.length, 1);
+  assertEquals(list[0].size_bytes, GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES + 1);
+});
+
+Deno.test("a failed first attachment read throws; a failed size read keeps Graph's sizes", async () => {
+  await withFetch([() => json(500, {})], async () => {
+    await assertRejects(() => graphDraftAttachmentList("tok", "d1"), Error, "Outlook attachment list error: 500");
+  });
+  await withFetch(
+    [() => json(200, { value: [{ name: "a.txt", size: 150 }] }), () => json(400, {})],
+    async () => {
+      const list = await graphDraftAttachmentList("tok", "d1");
+      assertEquals(list, [{ filename: "a.txt", size_bytes: 150, mime_type: null }]);
+    },
+  );
+});
+
+// ── Recipient names: Graph's name-equals-address echo ───────────────────────
+
+Deno.test("graphRecipientName drops a name that is only the address again", () => {
+  // After a save Graph returned every recipient with name === address, and the
+  // card rendered "user1@example.com <user1@example.com>".
+  assertEquals(graphRecipientName({ name: "user1@example.com", address: "user1@example.com" }), "");
+  assertEquals(graphRecipientName({ name: "User1@Example.com ", address: "user1@example.com" }), "");
+  assertEquals(graphRecipientName({ name: "", address: "user1@example.com" }), "");
+  assertEquals(graphRecipientName({ address: "user1@example.com" }), "");
+  assertEquals(graphRecipientName(undefined), "");
+  assertEquals(graphRecipientName({ name: "Ada Lovelace", address: "ada@example.com" }), "Ada Lovelace");
+});
+
+Deno.test("a Graph reply draft's recipients carry no name-equals-address echo", async () => {
+  let to: { name: string; email: string }[] = [];
+  await withFetch(
+    (c) =>
+      c.method === "POST"
+        ? json(201, {
+          id: "r1",
+          body: { contentType: "html", content: "<html><body></body></html>" },
+          toRecipients: [
+            { emailAddress: { name: "user1@example.com", address: "user1@example.com" } },
+            { emailAddress: { name: "Ada", address: "ada@example.com" } },
+          ],
+        })
+        : json(200, {}),
+    async () => {
+      const draft = await graphPrepareResponseDraft("tok", {
+        messageId: "m1",
+        kind: "createReply",
+        patch: {},
+        text: "Hi",
+      });
+      to = draft.toRecipients;
+    },
+  );
+  assertEquals(to, [{ name: "", email: "user1@example.com" }, { name: "Ada", email: "ada@example.com" }]);
 });
 
 // ── Folders ─────────────────────────────────────────────────────────────────
@@ -1423,4 +1522,16 @@ Deno.test("graphCanonicalFanoutFolders: a single folder costs no request; over t
   assertEquals(out.labels.get("INBOX-ID"), "INBOX");
   assertEquals(out.labels.get("F2"), "Kvitteringer/2024");
   assertEquals(out.labels.get("F3"), "Kunder");
+});
+
+// ── conversationIndex: is this Graph message a response? (2026-10-26) ──────
+Deno.test("graphConversationIndexIsResponse: 22 bytes is a new message, 22 + 5n a response", () => {
+  const b64 = (n: number) => btoa(String.fromCharCode(...new Array(n).fill(1)));
+  assertEquals(graphConversationIndexIsResponse(b64(22)), false);
+  assertEquals(graphConversationIndexIsResponse(b64(27)), true);
+  assertEquals(graphConversationIndexIsResponse(b64(32)), true);
+  assertEquals(graphConversationIndexIsResponse(b64(25)), false, "not a valid index length");
+  assertEquals(graphConversationIndexIsResponse(""), false);
+  assertEquals(graphConversationIndexIsResponse(undefined), false);
+  assertEquals(graphConversationIndexIsResponse("not base64!!"), false);
 });

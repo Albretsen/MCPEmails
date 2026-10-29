@@ -20,7 +20,7 @@
     "titleLine1": "Conecta BOL Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de BOL. Lee, busca, envía, responde, programa y organiza correo por IMAP, siempre que el buzón esté en un plan de pago de BOL y no en el nivel gratuito de solo webmail.",
-    "answer": "Claude no puede acceder por sí solo a BOL Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.bol.com.br en el puerto 993, autenticándose con tu contraseña de BOL, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La pega probablemente está en el plan, no en el protocolo: según guías de configuración de terceros, BOL retiró el acceso IMAP y POP de sus cuentas gratuitas, que quedaron como solo webmail, así que puede que una dirección bol.com.br gratuita no se pueda conectar desde ningún cliente hasta que se pase a un plan de pago de BOL. Una bandeja en mcpemails es gratis.",
+    "answer": "Claude no puede acceder por sí solo a BOL Mail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.bol.com.br en el puerto 993, autenticándose con tu contraseña de BOL, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La pega probablemente está en el plan, no en el protocolo: según guías de configuración de terceros, BOL retiró el acceso IMAP y POP de sus cuentas gratuitas, que quedaron como solo webmail, así que puede que una dirección bol.com.br gratuita no se pueda conectar desde ningún cliente hasta que se pase a un plan de pago de BOL. Una bandeja en MCPEmails es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Plan de pago de BOL, luego tu contraseña",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,15 +31,15 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Antes de seguir, comprueba en qué plan de BOL está el buzón, porque eso decide si el resto de esta página te sirve."
     },
     {
       "h": "Confirma que el buzón está en un plan de pago de BOL",
-      "p": "Inicia sesión en el webmail de BOL y comprueba el plan de la cuenta. Según guías de terceros, una cuenta gratuita de BOL no tiene ningún acceso de clientes que activar, porque POP e IMAP se eliminaron de ese nivel, y pasar a BOL Completo es lo que hace posible una conexión IMAP. Si la cuenta es gratuita y se rechaza una contraseña correcta, esa es la causa probable; en ese caso, conecta otro buzón en mcpemails y reenvía a él el correo de BOL."
+      "p": "Inicia sesión en el webmail de BOL y comprueba el plan de la cuenta. Según guías de terceros, una cuenta gratuita de BOL no tiene ningún acceso de clientes que activar, porque POP e IMAP se eliminaron de ese nivel, y pasar a BOL Completo es lo que hace posible una conexión IMAP. Si la cuenta es gratuita y se rechaza una contraseña correcta, esa es la causa probable; en ese caso, conecta otro buzón en MCPEmails y reenvía a él el correo de BOL."
     },
     {
-      "h": "Introduce tu dirección y tu contraseña en mcpemails",
+      "h": "Introduce tu dirección y tu contraseña en MCPEmails",
       "p": "Elige IMAP / SMTP e introduce la dirección completa, como <code>nome@bol.com.br</code>, junto con tu contraseña de BOL. Los servidores y puertos ya vienen rellenados y se confirmaron con una conexión TLS real. Fíjate en el puerto de salida: BOL usa TLS implícito en el 465, que no es el mismo ajuste que usa su servicio hermano."
     },
     {
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "Según guías de terceros, IMAP requiere un plan de pago de BOL. Si eso se aplica a tu buzón, mcpemails no puede sortearlo, porque el inicio de sesión lo rechaza el servidor de BOL.",
+    "Según guías de terceros, IMAP requiere un plan de pago de BOL. Si eso se aplica a tu buzón, MCPEmails no puede sortearlo, porque el inicio de sesión lo rechaza el servidor de BOL.",
     "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse al instante. Tu agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega.",
     "El servidor SMTP acepta mensajes de hasta unos 33 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo en lugar de quedar en cola."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de BOL?",
-      "a": "Según se informa, solo en un plan de pago de BOL. Claude no tiene un conector integrado para BOL y no puede abrir una conexión IMAP por sí mismo, así que necesita un servidor MCP como mcpemails delante del buzón. Esa conexión es por IMAP, que según guías de terceros las cuentas gratuitas de BOL no ofrecen, así que puede que una dirección bol.com.br gratuita tenga que pasar antes a un plan de pago."
+      "a": "Según se informa, solo en un plan de pago de BOL. Claude no tiene un conector integrado para BOL y no puede abrir una conexión IMAP por sí mismo, así que necesita un servidor MCP como MCPEmails delante del buzón. Esa conexión es por IMAP, que según guías de terceros las cuentas gratuitas de BOL no ofrecen, así que puede que una dirección bol.com.br gratuita tenga que pasar antes a un plan de pago."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de BOL?",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de BOL",
-    "sub": "Conecta un buzón de pago de BOL en minutos. Una bandeja gratis para siempre en mcpemails, sin tarjeta."
+    "sub": "Conecta un buzón de pago de BOL en minutos. Una bandeja gratis para siempre en MCPEmails, sin tarjeta."
   }
 }

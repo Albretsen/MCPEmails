@@ -15,16 +15,19 @@
 // the host's decision (the spec says it SHOULD, and MAY defer it). The card's
 // actions all reach the server as tool calls, though, and a tool RESULT is the
 // one thing every host shows the model. So the server records each editor
-// action here, and the next draft result a model asks for, on the SAME API key
-// and inbox, carries one note saying what happened, once.
+// action here, and the next model draft call that names THAT draft, on the
+// same API key and inbox, carries one note saying what happened, once.
 //
 // ── What is recorded, and why the wording never says "the user" ────────────
 //   draft_editor_save            recorded as `saved` when it wrote something.
 //   draft{action:"send"} with    recorded as `sent`. The card is the caller
 //   base_revision                that passes base_revision; the dispatcher's
 //                                re-run of an approved send is excluded.
+//   draft{action:"delete"} with  recorded as `deleted` (since 2026-10-26).
+//   base_revision                The card's Discard passes base_revision
+//                                exactly as its Send does.
 //
-// Neither is PROOF that a person acted in a card. `base_revision` is in the
+// None is PROOF that a person acted in a card. `base_revision` is in the
 // model-visible `draft` schema, and `draft_editor_save`'s app-only visibility
 // is a host hint that a host may ignore. An MCP request carries nothing a model
 // cannot also send (the card's calls arrive through the host with the same
@@ -34,13 +37,27 @@
 // editor") and never who did it. That is true whoever the caller was, and it
 // is enough to stop a model saying "I never sent it" or quoting an old subject.
 //
-// A discard (`draft{action:"delete"}`) carries nothing that tells the card's
-// call from the model's, so it is not recorded, and the model's own delete
-// result already says the draft is gone.
+// A discard used to carry nothing that told the card's call from the model's,
+// so it was not recorded, and after a Discard in the card Claude said it could
+// not tell what had happened to the draft (live test 2026-10-26). The card now
+// sends base_revision with it, the same marker as its Send, and the delete is
+// recorded. A model's own delete (no base_revision) is not: its result already
+// says the draft is gone.
+//
+// ── A draft the editor deleted: told on the not-found ERROR ───────────────
+// After a Discard every model call naming the draft fails (draft_not_found),
+// and result notes are never attached to errors (result-notes.ts). So a
+// failed `draft_read`, `draft_update`, `draft_send` or `draft_delete` that
+// names a draft whose line has a recorded `deleted` gets the note appended to
+// its error text (`goneNoteTargetDraftId`). Read only, never claimed, like
+// `draft_read` above: the card's own reads of a discarded draft look the same.
 //
 // ── Which results carry the note ───────────────────────────────────────────
-// `noteCarrier`: draft calls a model makes over MCP for the inbox
-// (index.ts#handleToolsCall, after dispatch). Never:
+// `noteTargetDraftId`: draft calls a model makes over MCP that NAME A DRAFT
+// (`draft_update`, and `draft_send` without base_revision), after dispatch in
+// index.ts#handleToolsCall. Never:
+//   * a call with no draft of its own (`draft_list`, `draft_create`,
+//     `draft_reply`): there is nothing to scope a note to (see "Per draft");
 //   * a call the card itself makes (`draft_read`, `draft_editor_*`,
 //     `draft_delete`, a send with base_revision): the host does not put those
 //     results in front of the model, so a note there would be claimed and
@@ -51,17 +68,46 @@
 //   * a non-draft tool: this costs a database round trip, and the draft tools
 //     are where a model goes to find out about a draft.
 //
+// ── A model's draft_read: told, NOT claimed (re-test 2026-10-17) ───────────
+// Live in claude.ai the card's `ui/update-model-context` reached the model
+// neither on the next turn nor later (see apps/mcp-app/src/model-context.ts),
+// and the descriptions send a model to `draft_read` before it states a
+// draft's state, so that read is where the model actually looks. Its result
+// shows the current subject and recipients but not WHAT the editor changed,
+// which is what "what did I change in the card?" asks. So a successful
+// `draft_read` carries the same note about its own draft's line
+// (`peekTargetDraftId`), but only READS the rows: the card makes `draft_read`
+// calls too (restore, deferred body, the focus re-check), with the same
+// arguments, and a claim there would hand the note to a result no model sees.
+// The note therefore stays for the next model draft call that claims it, and
+// may be told on every model read until then. Same scope as above: one key,
+// one inbox, one draft's line, no ids.
+//
 // ── Per key ────────────────────────────────────────────────────────────────
 // A row carries the API key the editor call came in on, and only a call on
 // that key claims it. A save made in Claude's card is news to Claude's
 // conversation, not to another client (ChatGPT, a script) on another key that
 // happens to touch the same inbox first.
 //
+// ── Per draft (QA 2026-10-17) ──────────────────────────────────────────────
+// The key is not a conversation. Claude uses ONE key for every chat a person
+// has, so "the next draft result on this key" was the next draft result in ANY
+// chat: a brand-new, unrelated conversation was told "Drafts:115 now has 1 To
+// and 2 Cc, and Drafts:116 has 1 To and no Cc", about drafts it had never
+// seen, by raw provider id, and with 115 already retired by the save that
+// made 116. Nothing on an MCP request names the conversation, so the note is
+// scoped to the one thing a call does name: its draft. Only the events of the
+// draft's LINE (draft-lineage.ts: every id one draft has had) are claimed and
+// told, collapsed into one statement about "this draft", with no id at all, so
+// a retired id and its successor read as the one draft they are. Everything
+// else stays unclaimed for a call that does concern it, or expires.
+//
 // ── What is stored ─────────────────────────────────────────────────────────
 // No mail content, the same promise `draft_lineage` keeps: a draft id, which
 // action, when, the lineage revision, which FIELDS a save changed (names, not
-// values) and recipient COUNTS. The note never quotes a subject; it says which
-// fields moved and that `draft_read` has them.
+// values) and recipient COUNTS. The subject the note may quote is not stored:
+// it is the one the CURRENT call's own result already shows the model, passed
+// in when the note is worded, so the note adds no content the result lacks.
 //
 // ── Retention ──────────────────────────────────────────────────────────────
 // Every insert also deletes every row older than 7 days, in any workspace, in
@@ -77,7 +123,9 @@
 // draft tool behaves exactly as before.
 // ---------------------------------------------------------------------------
 
-export type CardActivityAction = "saved" | "sent";
+import { neutralizeText } from "./text-safety.ts";
+
+export type CardActivityAction = "saved" | "sent" | "deleted";
 
 /** The fields an editor save can change, as `draft_editor_save` takes them. */
 export type CardSavedField = "to" | "cc" | "bcc" | "subject" | "body";
@@ -112,15 +160,38 @@ export interface CardActivityScope {
   apiKeyId: string;
 }
 
+/**
+ * The draft a call concerns: its lineage line, when it has one, and every id
+ * of it the caller knows (the id it was given, the id it resolved to, the id
+ * the call returned). An event matches on its line OR its id, so an event
+ * recorded before the draft had a line still belongs to it.
+ */
+export interface CardActivityTarget {
+  lineId: string | null;
+  draftIds: string[];
+}
+
 /** The two operations. Each may throw; the functions here catch. */
 export interface CardActivityStore {
   insert(scope: CardActivityScope, event: CardActivityEvent): Promise<void>;
   /**
-   * Mark every unreported event for this key and inbox at or after `since`
-   * reported, in ONE statement, and return the rows that statement changed. A
-   * concurrent second claim gets none of them, so each event is told once.
+   * Mark every unreported event for this key and inbox, at or after `since`,
+   * that belongs to `target` (its line, or one of its ids) reported, and
+   * return the rows that changed. Each statement marks and returns at once, so
+   * a concurrent second claim gets none of them and each event is told once.
    */
-  claim(scope: CardActivityScope, since: string, at: string): Promise<CardActivityRow[]>;
+  claim(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+    at: string,
+  ): Promise<CardActivityRow[]>;
+  /** The same rows `claim` would return, left unreported. */
+  peek(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+  ): Promise<CardActivityRow[]>;
 }
 
 type Logger = (event: string, details: Record<string, unknown>) => void;
@@ -141,9 +212,6 @@ export const CARD_ACTIVITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /** Rows older than this are deleted (see "Retention" above). */
 export const CARD_ACTIVITY_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
-
-/** At most this many actions are spelled out in one note. */
-export const CARD_ACTIVITY_NOTE_MAX = 5;
 
 /** Record one editor action. Never throws. */
 export async function recordCardActivity(
@@ -183,61 +251,107 @@ function count(n: number | null): string {
   return typeof n === "number" && Number.isFinite(n) && n >= 0 ? String(Math.floor(n)) : "?";
 }
 
+const SUBJECT_MAX = 120;
+
 /**
- * One sentence for one event. What was recorded, never who did it (see the
- * header), and never a subject or an address.
+ * `this draft ("Q3 numbers")`, or `this draft`. The subject is the one the
+ * current result carries, held to one line, clipped, and unable to close its
+ * own quotes: on a reply it is a third party's text.
  */
-export function cardActivitySentence(row: CardActivityEvent): string {
-  const at = instant(row.occurredAt) ?? "an unrecorded time";
-  if (row.action === "sent") {
-    return `At ${at} draft ${row.draftId} was sent. It is no longer a draft and that draft_id no longer resolves.`;
-  }
-  const fields = FIELD_ORDER.filter((f) => row.fields.includes(f));
-  const changed = fields.length ? `, changing ${fieldWords(fields)}` : "";
-  const counts = row.toCount === null && row.ccCount === null && row.bccCount === null
-    ? ""
-    : ` Its recipients are now to ${count(row.toCount)}, cc ${count(row.ccCount)}, bcc ${count(row.bccCount)}.`;
-  return `At ${at} draft ${row.draftId} was saved${changed}.${counts}`;
+function draftName(subject: string | null | undefined): string {
+  if (typeof subject !== "string") return "this draft";
+  const flat = neutralizeText(subject).replace(/\s+/g, " ").replace(/"/g, "'").trim();
+  if (!flat) return "this draft";
+  return `this draft ("${flat.length > SUBJECT_MAX ? `${flat.slice(0, SUBJECT_MAX - 1)}…` : flat}")`;
 }
 
 /**
- * The note for a set of claimed events, oldest first, or null for none.
+ * The note for the claimed events of ONE draft, or null for none.
  *
- * A statement of fact, like every other server note: it says what was
- * recorded and where the current text is, and asks for nothing. Bounded: at
- * most `CARD_ACTIVITY_NOTE_MAX` actions, newest kept.
+ * Every event is about the draft the current call names (see "Per draft"), so
+ * they collapse into one statement about "this draft": no draft id, because a
+ * retired id and its successor are the same draft and the model already holds
+ * the id it called with. What was recorded, never who did it (see the header),
+ * and never an address. A statement of fact, like every other server note: it
+ * says what was recorded and where the current text is, and asks for nothing.
  */
-export function cardActivityNote(rows: readonly CardActivityEvent[]): string | null {
+export function cardActivityNote(
+  rows: readonly CardActivityEvent[],
+  opts: { subject?: string | null; read?: boolean } = {},
+): string | null {
   if (rows.length === 0) return null;
   const sorted = [...rows].sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt));
-  const shown = sorted.slice(-CARD_ACTIVITY_NOTE_MAX);
-  const earlier = sorted.length - shown.length;
-  const anySaved = shown.some((r) => r.action === "saved");
-  return (
-    "Since the last draft result for this inbox, the MCP Emails draft editor (the card in which the " +
-    "user can edit, save and send a draft) recorded these changes, which may not appear in this " +
-    "conversation. " +
-    shown.map(cardActivitySentence).join(" ") +
-    (earlier > 0 ? ` ${earlier} earlier change${earlier === 1 ? " is" : "s are"} not listed.` : "") +
-    (anySaved ? " draft_read returns a saved draft's current subject, recipients and text." : "")
-  );
+  const saves = sorted.filter((r) => r.action === "saved");
+  const send = sorted.filter((r) => r.action === "sent").at(-1) ?? null;
+  const deleted = sorted.filter((r) => r.action === "deleted").at(-1) ?? null;
+  const name = draftName(opts.subject);
+  const parts: string[] = [
+    `Before this call, the MCPEmails draft editor (the card in which the user can edit, save and ` +
+    `send a draft) recorded changes to ${name} that may not appear in this conversation.`,
+  ];
+  if (saves.length > 0) {
+    const last = saves[saves.length - 1];
+    const at = instant(last.occurredAt) ?? "an unrecorded time";
+    const fields = FIELD_ORDER.filter((f) => saves.some((r) => r.fields.includes(f)));
+    const times = saves.length === 1 ? "once" : `${saves.length} times`;
+    const when = saves.length === 1 ? `at ${at}` : `last at ${at}`;
+    const changed = fields.length ? `, changing ${fieldWords(fields)}` : "";
+    parts.push(`It was saved there ${times}, ${when}${changed}.`);
+    const counted = [...saves].reverse().find((r) =>
+      r.toCount !== null || r.ccCount !== null || r.bccCount !== null
+    );
+    if (counted) {
+      parts.push(
+        `After that save it had To ${count(counted.toCount)}, Cc ${count(counted.ccCount)}, ` +
+          `Bcc ${count(counted.bccCount)}.`,
+      );
+    }
+  }
+  if (send) {
+    const at = instant(send.occurredAt) ?? "an unrecorded time";
+    parts.push(`At ${at} it was sent, so it is no longer a draft.`);
+  } else if (deleted) {
+    const at = instant(deleted.occurredAt) ?? "an unrecorded time";
+    parts.push(
+      `At ${at} it was deleted there: it was removed from Drafts without being sent, ` +
+        `so it no longer exists and nothing went out.`,
+    );
+  } else if (saves.length > 0) {
+    parts.push(
+      opts.read
+        ? "This result shows its current subject, recipients and text."
+        : "draft_read returns its current subject, recipients and text.",
+    );
+  }
+  return parts.join(" ");
 }
 
 /**
- * Claim the unreported editor actions for one key and inbox and word them, or
- * null. Never throws.
+ * Claim the unreported editor actions of ONE draft, for one key and inbox,
+ * and word them, or null. Never throws.
+ *
+ * A target with no line and no id is no draft at all, and claims nothing:
+ * there is no "every draft" mode any more (see "Per draft").
  */
 export async function takeCardActivityNote(
   store: CardActivityStore | null | undefined,
   scope: CardActivityScope,
-  nowMs: number = Date.now(),
-  log: Logger = defaultLog,
+  target: CardActivityTarget,
+  opts: { subject?: string | null; nowMs?: number; log?: Logger } = {},
 ): Promise<string | null> {
-  if (!store) return null;
+  const log = opts.log ?? defaultLog;
+  const nowMs = opts.nowMs ?? Date.now();
+  const draftIds = [...new Set(target.draftIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!store || (!target.lineId && draftIds.length === 0)) return null;
   try {
     const since = new Date(nowMs - CARD_ACTIVITY_WINDOW_MS).toISOString();
-    const rows = await store.claim(scope, since, new Date(nowMs).toISOString());
-    return cardActivityNote(rows);
+    const rows = await store.claim(
+      scope,
+      { lineId: target.lineId, draftIds },
+      since,
+      new Date(nowMs).toISOString(),
+    );
+    return cardActivityNote(rows, { subject: opts.subject });
   } catch (error) {
     log("draft_card_activity_claim_failed", { inbox_id: scope.inboxId, error: message(error) });
     return null;
@@ -245,33 +359,140 @@ export async function takeCardActivityNote(
 }
 
 /**
- * Does this tool call's result carry the note?
- *
- * Draft calls a model makes. `base_revision` on a send marks the card's call;
- * the dispatcher's re-run of an approved send has no result a model reads. The
- * web client is excluded by WHERE this is called (index.ts#handleToolsCall).
+ * Word the unreported editor actions of ONE draft for a model's `draft_read`,
+ * without claiming them (see "A model's draft_read"), or null. Never throws.
  */
-export function noteCarrier(
+export async function peekCardActivityNote(
+  store: CardActivityStore | null | undefined,
+  scope: CardActivityScope,
+  target: CardActivityTarget,
+  opts: { subject?: string | null; nowMs?: number; log?: Logger } = {},
+): Promise<string | null> {
+  const log = opts.log ?? defaultLog;
+  const nowMs = opts.nowMs ?? Date.now();
+  const draftIds = [...new Set(target.draftIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!store || (!target.lineId && draftIds.length === 0)) return null;
+  try {
+    const since = new Date(nowMs - CARD_ACTIVITY_WINDOW_MS).toISOString();
+    const rows = await store.peek(scope, { lineId: target.lineId, draftIds }, since);
+    return cardActivityNote(rows, { subject: opts.subject, read: true });
+  } catch (error) {
+    log("draft_card_activity_peek_failed", { inbox_id: scope.inboxId, error: message(error) });
+    return null;
+  }
+}
+
+/**
+ * The draft a successful `draft_read` names, whose note it carries without
+ * claiming it (see "A model's draft_read"), or null.
+ */
+export function peekTargetDraftId(dispatchName: string, args: unknown): string | null {
+  if (dispatchName !== "draft_read") return null;
+  const a = args && typeof args === "object" && !Array.isArray(args) ? args as Record<string, unknown> : {};
+  return typeof a["draft_id"] === "string" && a["draft_id"].length > 0 ? a["draft_id"] : null;
+}
+
+/**
+ * The draft this tool call's result may carry a note about, or null for none.
+ *
+ * Draft calls a model makes that name a draft. `base_revision` on a send marks
+ * the card's call; the dispatcher's re-run of an approved send has no result a
+ * model reads. A call that names no draft (`draft_list`, `draft_create`,
+ * `draft_reply`) carries nothing: see "Per draft". The web client is excluded
+ * by WHERE this is called (index.ts#handleToolsCall).
+ */
+export function noteTargetDraftId(
   dispatchName: string,
   args: unknown,
   opts: { approvalDispatch: boolean },
-): boolean {
-  if (opts.approvalDispatch) return false;
+): string | null {
+  if (opts.approvalDispatch) return null;
+  const a = args && typeof args === "object" && !Array.isArray(args)
+    ? args as Record<string, unknown>
+    : {};
+  const id = typeof a["draft_id"] === "string" && a["draft_id"].length > 0 ? a["draft_id"] : null;
   switch (dispatchName) {
-    case "draft_list":
-    case "draft_create":
-    case "draft_reply":
     case "draft_update":
-      return true;
-    case "draft_send": {
-      const a = args && typeof args === "object" && !Array.isArray(args)
-        ? args as Record<string, unknown>
-        : {};
-      return a["base_revision"] === undefined || a["base_revision"] === null;
-    }
+      return id;
+    case "draft_send":
+      return a["base_revision"] === undefined || a["base_revision"] === null ? id : null;
     default:
-      return false;
+      return null;
   }
+}
+
+/**
+ * The draft a FAILED model draft call names, whose `deleted` record (if any)
+ * its error text is told (see "A draft the editor deleted"), or null. A call
+ * with base_revision is the card's own and is skipped.
+ */
+export function goneNoteTargetDraftId(
+  dispatchName: string,
+  args: unknown,
+  opts: { approvalDispatch: boolean },
+): string | null {
+  if (opts.approvalDispatch) return null;
+  if (!["draft_read", "draft_update", "draft_send", "draft_delete"].includes(dispatchName)) return null;
+  const a = args && typeof args === "object" && !Array.isArray(args) ? args as Record<string, unknown> : {};
+  if (a["base_revision"] !== undefined && a["base_revision"] !== null) return null;
+  return typeof a["draft_id"] === "string" && a["draft_id"].length > 0 ? a["draft_id"] : null;
+}
+
+/**
+ * The note for a failed call on a draft the editor deleted, or null when no
+ * `deleted` is recorded for it. Read, never claimed. Never throws.
+ */
+export async function peekCardDeletedNote(
+  store: CardActivityStore | null | undefined,
+  scope: CardActivityScope,
+  target: CardActivityTarget,
+  opts: { nowMs?: number; log?: Logger } = {},
+): Promise<string | null> {
+  const log = opts.log ?? defaultLog;
+  const nowMs = opts.nowMs ?? Date.now();
+  const draftIds = [...new Set(target.draftIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!store || (!target.lineId && draftIds.length === 0)) return null;
+  try {
+    const since = new Date(nowMs - CARD_ACTIVITY_WINDOW_MS).toISOString();
+    const rows = await store.peek(scope, { lineId: target.lineId, draftIds }, since);
+    if (!rows.some((r) => r.action === "deleted")) return null;
+    return cardActivityNote(rows, {});
+  } catch (error) {
+    log("draft_card_activity_peek_failed", { inbox_id: scope.inboxId, error: message(error) });
+    return null;
+  }
+}
+
+/** Append `note` to an error tool result's text, as its own content block. */
+export function appendNoteToErrorResult(result: unknown, note: string): void {
+  if (!result || typeof result !== "object") return;
+  const r = result as { isError?: unknown; content?: unknown };
+  if (r.isError !== true || !Array.isArray(r.content)) return;
+  r.content.push({ type: "text", text: note });
+}
+
+/**
+ * What the current call's own result says about its draft: the id it ended
+ * on and its subject, for the target and the note's wording. Reads the flat
+ * payload and the draft card's `draft` block; null for what neither carries.
+ */
+export function resultDraftFacts(result: unknown): { draftId: string | null; subject: string | null } {
+  const r = result && typeof result === "object" ? result as Record<string, unknown> : {};
+  const sc = r["structuredContent"] && typeof r["structuredContent"] === "object"
+    ? r["structuredContent"] as Record<string, unknown>
+    : {};
+  const draft = sc["draft"] && typeof sc["draft"] === "object" && !Array.isArray(sc["draft"])
+    ? sc["draft"] as Record<string, unknown>
+    : {};
+  const str = (v: unknown) => (typeof v === "string" && v.length > 0 ? v : null);
+  return {
+    draftId: str(draft["draft_id"]) ?? str(sc["draft_id"]),
+    subject: typeof draft["subject"] === "string"
+      ? draft["subject"] as string
+      : typeof sc["subject"] === "string"
+      ? sc["subject"] as string
+      : null,
+  };
 }
 
 /**
@@ -324,7 +545,7 @@ function cardActivityRowFrom(r: Record<string, unknown>): CardActivityRow {
     id: String(r.id),
     draftId: String(r.draft_id),
     lineId: typeof r.line_id === "string" ? r.line_id : null,
-    action: r.action === "sent" ? "sent" : "saved",
+    action: r.action === "sent" || r.action === "deleted" ? r.action : "saved",
     occurredAt: String(r.occurred_at),
     revision: n(r.revision),
     fields: Array.isArray(r.fields)
@@ -368,20 +589,52 @@ export function postgrestCardActivityStore(
       const cutoff = new Date(nowMs() - CARD_ACTIVITY_RETENTION_MS).toISOString();
       await client.from("draft_card_activity").delete().lt("occurred_at", cutoff);
     },
-    // ONE update that marks and returns, so two concurrent claims never both
-    // report the same action.
-    async claim(scope, since, at) {
-      const { data, error } = await client
-        .from("draft_card_activity")
-        .update({ reported_at: at })
-        .eq("workspace_id", scope.workspaceId)
-        .eq("inbox_id", scope.inboxId)
-        .eq("api_key_id", scope.apiKeyId)
-        .is("reported_at", null)
-        .gte("occurred_at", since)
-        .select(CARD_ACTIVITY_COLUMNS);
-      if (error) throw new Error(error.message);
-      return ((data ?? []) as Record<string, unknown>[]).map(cardActivityRowFrom);
+    // Each update marks and returns at once, so two concurrent claims never
+    // both report the same action. Two statements, not one `.or()`: a draft id
+    // is caller text ("Drafts:115"), and `.in()` quotes it where an
+    // or-filter string would have to be escaped by hand. A row the first
+    // statement marked is no longer unreported, so the second never returns it.
+    async claim(scope, target, since, at) {
+      const claimBy = async (column: "line_id" | "draft_id", values: string[]) => {
+        let q = client
+          .from("draft_card_activity")
+          .update({ reported_at: at })
+          .eq("workspace_id", scope.workspaceId)
+          .eq("inbox_id", scope.inboxId)
+          .eq("api_key_id", scope.apiKeyId);
+        q = values.length === 1 ? q.eq(column, values[0]) : q.in(column, values);
+        const { data, error } = await q
+          .is("reported_at", null)
+          .gte("occurred_at", since)
+          .select(CARD_ACTIVITY_COLUMNS);
+        if (error) throw new Error(error.message);
+        return ((data ?? []) as Record<string, unknown>[]).map(cardActivityRowFrom);
+      };
+      const rows: CardActivityRow[] = [];
+      if (target.lineId) rows.push(...await claimBy("line_id", [target.lineId]));
+      if (target.draftIds.length > 0) rows.push(...await claimBy("draft_id", target.draftIds));
+      const seen = new Set<string>();
+      return rows.filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
+    },
+    // `claim`'s filters exactly, as a select: nothing is marked.
+    async peek(scope, target, since) {
+      const peekBy = async (column: "line_id" | "draft_id", values: string[]) => {
+        let q = client
+          .from("draft_card_activity")
+          .select(CARD_ACTIVITY_COLUMNS)
+          .eq("workspace_id", scope.workspaceId)
+          .eq("inbox_id", scope.inboxId)
+          .eq("api_key_id", scope.apiKeyId);
+        q = values.length === 1 ? q.eq(column, values[0]) : q.in(column, values);
+        const { data, error } = await q.is("reported_at", null).gte("occurred_at", since);
+        if (error) throw new Error(error.message);
+        return ((data ?? []) as Record<string, unknown>[]).map(cardActivityRowFrom);
+      };
+      const rows: CardActivityRow[] = [];
+      if (target.lineId) rows.push(...await peekBy("line_id", [target.lineId]));
+      if (target.draftIds.length > 0) rows.push(...await peekBy("draft_id", target.draftIds));
+      const seen = new Set<string>();
+      return rows.filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
     },
   };
 }
@@ -401,17 +654,38 @@ export class FakeCardActivityStore implements CardActivityStore {
     return Promise.resolve();
   }
 
-  claim(scope: CardActivityScope, since: string, at: string): Promise<CardActivityRow[]> {
+  claim(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+    at: string,
+  ): Promise<CardActivityRow[]> {
+    return this.match(scope, target, since, at);
+  }
+
+  private match(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+    at: string | null,
+  ): Promise<CardActivityRow[]> {
     if (this.failing) return Promise.reject(new Error("relation does not exist"));
     const out: CardActivityRow[] = [];
     for (const r of this.rows) {
       if (r.workspaceId !== scope.workspaceId || r.inboxId !== scope.inboxId) continue;
       if (r.apiKeyId !== scope.apiKeyId) continue;
+      const ofTarget = (target.lineId !== null && r.lineId === target.lineId) ||
+        target.draftIds.includes(r.draftId);
+      if (!ofTarget) continue;
       if (r.reportedAt !== null || Date.parse(r.occurredAt) < Date.parse(since)) continue;
-      r.reportedAt = at;
+      if (at !== null) r.reportedAt = at;
       const { workspaceId: _w, inboxId: _i, apiKeyId: _k, reportedAt: _r, ...row } = r;
       out.push(row);
     }
     return Promise.resolve(out);
+  }
+
+  peek(scope: CardActivityScope, target: CardActivityTarget, since: string): Promise<CardActivityRow[]> {
+    return this.match(scope, target, since, null);
   }
 }

@@ -1,4 +1,5 @@
-import { Resend } from 'resend';
+import type { Resend } from 'resend';
+import { createResend } from '@/lib/email/resend';
 
 /**
  * Thin wrapper around Resend for sending workspace invite emails.
@@ -6,20 +7,20 @@ import { Resend } from 'resend';
  * Requires:
  *   RESEND_API_KEY       : API key from resend.com
  *   RESEND_FROM_EMAIL    : Verified sender address (default: invites@mcpemails.com)
- *   NEXT_PUBLIC_APP_URL  : Base URL for building accept links (default: https://www.mcpemails.com)
+ *   NEXT_PUBLIC_APP_URL  : Base URL for building accept links (default: https://mcpemails.com)
  */
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error('RESEND_API_KEY is not set');
-  return new Resend(key);
+  return createResend(key);
 }
 
 const FROM =
-  process.env.RESEND_FROM_EMAIL ?? 'MCP Emails <invites@mcpemails.com>';
+  process.env.RESEND_FROM_EMAIL ?? 'MCPEmails <invites@mcpemails.com>';
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mcpemails.com';
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
 export interface SendInviteEmailParams {
   to: string;
@@ -53,7 +54,7 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<vo
           <!-- Header -->
           <tr>
             <td style="background:#0f172a;padding:28px 40px;">
-              <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;">MCP Emails</span>
+              <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;">MCPEmails</span>
             </td>
           </tr>
 
@@ -66,7 +67,7 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<vo
               <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.5;">
                 <strong style="color:#0f172a;">${inviterName}</strong> has invited you to join
                 <strong style="color:#0f172a;">${workspaceName}</strong>
-                on MCP Emails as a <strong style="color:#0f172a;">${roleLabel}</strong>.
+                on MCPEmails as a <strong style="color:#0f172a;">${roleLabel}</strong>.
               </p>
 
               <!-- CTA button -->
@@ -105,7 +106,7 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<vo
 </html>`;
 
   const text = [
-    `You've been invited to join ${workspaceName} on MCP Emails`,
+    `You've been invited to join ${workspaceName} on MCPEmails`,
     '',
     `${inviterName} has invited you as a ${roleLabel}.`,
     '',
@@ -119,7 +120,7 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<vo
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `You've been invited to join ${workspaceName} on MCP Emails`,
+    subject: `You've been invited to join ${workspaceName} on MCPEmails`,
     html,
     text,
   });

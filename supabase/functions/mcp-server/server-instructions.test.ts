@@ -42,7 +42,7 @@ import { isAdvertisedTool } from "./advertised-schema.ts";
 // tool-surface.test.ts, and for the same reason.
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { SERVER_INSTRUCTIONS, SERVER_INSTRUCTIONS_MAX_BYTES, TOOL_REGISTRY } = await import(
+const { PER_OPERATION_SERVER_INSTRUCTIONS, SERVER_INSTRUCTIONS, SERVER_INSTRUCTIONS_MAX_BYTES, TOOL_REGISTRY } = await import(
   "./index.ts"
 );
 
@@ -200,4 +200,27 @@ Deno.test("the APP-ONLY paragraph names each card family for what it is, and dra
   );
   assert(pairs!.includes("`draft_read` reads one draft in full."), pairs);
   assert(!SERVER_INSTRUCTIONS.includes("\u2014"), "no em dash");
+});
+
+Deno.test("the DRAFTS paragraph tells a model to save a requested email as a draft", () => {
+  // 2026-10-25: asked to write an email, models wrote it in the chat and never
+  // called a draft tool, so the draft editor card never appeared. Worded
+  // without a tool name so it holds on both listings and on hosts with no card.
+  const drafts = SERVER_INSTRUCTIONS.split("\n\n").find((p: string) => p.startsWith("DRAFTS:"));
+  assertEquals(
+    drafts,
+    "DRAFTS: save an email the user asks you to write as a draft, not only as " +
+      "chat text, so they can see and edit it.",
+  );
+});
+
+Deno.test("OpenAI clients get the DRAFTS paragraph as a statement, not an instruction", () => {
+  // chatgpt.com 2026-10-27 put a "Suspicious Instruction" box over imperative
+  // steering about drafts on every draft_create call.
+  const drafts = PER_OPERATION_SERVER_INSTRUCTIONS.split("\n\n").find((p: string) => p.startsWith("DRAFTS:"));
+  assertEquals(
+    drafts,
+    "DRAFTS: an email saved with `draft_create` or `draft_reply` is one the " +
+      "user can see and edit; text written only in chat is not saved.",
+  );
 });

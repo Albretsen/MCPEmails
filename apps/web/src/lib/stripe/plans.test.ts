@@ -2,11 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
+  BUSINESS_EXTRA_INBOX_YEARLY_CENTS,
+  BUSINESS_INCLUDED_INBOXES,
   FREE_ACTION_ALLOWANCE,
   FREE_ACTION_GRACE_DAYS,
+  PERSONAL_PASS_3M,
   PLANS,
+  PRO_INBOX_CAP,
+  basePlanItem,
+  extraMailboxQuantity,
+  isMailboxAddonPriceId,
+  mailboxAddonItem,
+  mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
+  personalPassPriceId,
   planDisplayName,
   resolvePlanLimits,
 } from './plans.ts';
@@ -17,20 +28,22 @@ const FREE_ALLOWANCE_FEATURE = `${FREE_ACTION_ALLOWANCE} email actions a month, 
 test('the value metric is inboxes, and the tiers are named the way they are sold', () => {
   assert.equal(PLANS.free.name, 'Free');
   assert.equal(PLANS.solo.name, 'Pro');
-  assert.equal(PLANS.pro.name, 'Team');
+  assert.equal(PLANS.pro.name, 'Business');
 
   // Free is one inbox. This is the paywall now; everything else follows from it.
+  // Pro is ten for a new customer (2026-10-19); Business is never capped, it
+  // bills past ten instead.
   assert.equal(resolvePlanLimits('free').maxInboxes, 1);
-  assert.equal(resolvePlanLimits('solo').maxInboxes, Infinity);
+  assert.equal(resolvePlanLimits('solo').maxInboxes, 10);
   assert.equal(resolvePlanLimits('pro').maxInboxes, Infinity);
 
-  // Members are a Team feature. Pro buys mailboxes, not seats.
+  // Members are a Business feature. Pro buys mailboxes, not seats.
   assert.equal(resolvePlanLimits('free').maxMembers, 1);
   assert.equal(resolvePlanLimits('solo').maxMembers, 1);
   assert.equal(resolvePlanLimits('pro').maxMembers, Infinity);
 
   assert.equal(planDisplayName('solo'), 'Pro');
-  assert.equal(planDisplayName('pro'), 'Team');
+  assert.equal(planDisplayName('pro'), 'Business');
   assert.equal(planDisplayName('free'), 'Free');
   assert.equal(planDisplayName(null), 'Free');
 });
@@ -38,8 +51,8 @@ test('the value metric is inboxes, and the tiers are named the way they are sold
 test('prices match the published repricing', () => {
   assert.equal(PLANS.solo.monthlyPriceCents, 1500);
   assert.equal(PLANS.solo.yearlyPriceCents, 14400);
-  assert.equal(PLANS.pro.monthlyPriceCents, 7900);
-  assert.equal(PLANS.pro.yearlyPriceCents, 75600);
+  assert.equal(PLANS.pro.monthlyPriceCents, 3900);
+  assert.equal(PLANS.pro.yearlyPriceCents, 37440);
   assert.equal(PLANS.free.monthlyPriceCents, 0);
 });
 
@@ -47,10 +60,11 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // Free's allowance is public (2026-09-12): the pricing page, the dashboard
   // and the docs all quote it, and the MCP edge function refuses at exactly
   // this number. The constants are mirrored from the SQL function
-  // workspace_action_allowance (c_free_cap = 150, c_grace = 7 days); if either
+  // workspace_action_allowance (c_free_cap = 150) and free_action_grace_ends_at
+  // (3 days for new workspaces); if either
   // moves here, the migration and the pricing copy move with it.
   assert.equal(FREE_ACTION_ALLOWANCE, 150);
-  assert.equal(FREE_ACTION_GRACE_DAYS, 7);
+  assert.equal(FREE_ACTION_GRACE_DAYS, 3);
   assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.ok(
     PLANS.free.features.includes(FREE_ALLOWANCE_FEATURE),
@@ -62,7 +76,7 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // "No monthly action cap" is the only sentence a paid tier may say about
   // actions. If this test is updated, check that nothing customer-facing
   // quotes the old numbers.
-  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 25_000);
+  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('solo').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('pro').maxMonthlyToolCalls, 500_000);
   assert.ok(PLANS.personal.features.includes('No monthly action cap'));
@@ -95,7 +109,7 @@ test('no feature list promises an analytics retention window', () => {
   // `pricing.plans.*.features` message arrays are two renderings of one
   // promise and must not diverge again.
   //
-  // The Free allowance line ("first 7 days uncounted") is the one exception:
+  // The Free allowance line ("first 3 days uncounted") is the one exception:
   // it is a metering rule, not a retention window, and it is built from the
   // same constant the enforcing SQL mirrors, so it cannot drift on its own.
   for (const plan of Object.values(PLANS)) {
@@ -142,7 +156,10 @@ test('the two entitlements stack without either swallowing the other', () => {
   assert.equal(compedFromFree.maxMonthlyToolCalls, Infinity);
   assert.equal(compedFromPro.maxMonthlyToolCalls, Infinity);
   assert.equal(compedFromFree.maxRequestsPerMinute, PLANS.pro.limits.maxRequestsPerMinute);
-  assert.equal(compedFromFree.auditLogEnabled, true);
+  // The comp is Business's limits, and Business has no audit-log feature.
+  assert.equal(compedFromFree.auditLogEnabled, false);
+  assert.equal(compedFromFree.maxInboxes, Infinity);
+  assert.equal(compedFromPro.maxInboxes, Infinity);
 
   const both = resolvePlanLimits('free', { compedScale: true, unlimitedInboxes: true });
   assert.equal(both.maxInboxes, Infinity);
@@ -231,8 +248,8 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(personal.limits.maxInboxes, 3);
   assert.equal(personal.limits.maxMembers, 1);
   assert.equal(personal.limits.maxRequestsPerMinute, 120);
-  assert.equal(personal.limits.analyticsRetentionDays, 30);
-  assert.equal(personal.limits.maxMonthlyToolCalls, 25_000);
+  assert.equal(personal.limits.analyticsRetentionDays, 90);
+  assert.equal(personal.limits.maxMonthlyToolCalls, 100_000);
   // A paid plan the customer cannot cancel themselves is a support ticket
   // waiting to happen, and in several jurisdictions a legal problem.
   assert.equal(personal.limits.billingPortalEnabled, true);
@@ -246,18 +263,18 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(PLANS.free.limits.maxInboxes, 1);
   assert.equal(PLANS.solo.monthlyPriceCents, 1500);
   assert.equal(PLANS.solo.yearlyPriceCents, 14400);
-  assert.equal(PLANS.pro.monthlyPriceCents, 7900);
-  assert.equal(PLANS.pro.yearlyPriceCents, 75600);
+  assert.equal(PLANS.pro.monthlyPriceCents, 3900);
+  assert.equal(PLANS.pro.yearlyPriceCents, 37440);
 });
 
-test('the ladder is ordered Free, Personal, Pro, Team', () => {
+test('the ladder is ordered Free, Personal, Pro, Business', () => {
   // The pricing page renders columns in Object.values(PLANS) order, so the
   // position of the key in the object literal IS the marketing layout. Moving
   // it produces a page that reads $0, $15, $5, $79 and nothing errors.
   assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
 
   const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
-  assert.deepEqual(monthly, [0, 900, 1500, 7900]);
+  assert.deepEqual(monthly, [0, 900, 1500, 3900]);
   for (let i = 1; i < monthly.length; i += 1) {
     assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
   }
@@ -287,8 +304,8 @@ test('a grandfathered user on Personal keeps unlimited inboxes', () => {
   // It lifts the inbox cap and nothing else: they are still a Personal account.
   assert.equal(grandfathered.maxMembers, 1);
   assert.equal(grandfathered.maxRequestsPerMinute, 120);
-  assert.equal(grandfathered.analyticsRetentionDays, 30);
-  assert.equal(grandfathered.maxMonthlyToolCalls, 25_000);
+  assert.equal(grandfathered.analyticsRetentionDays, 90);
+  assert.equal(grandfathered.maxMonthlyToolCalls, 100_000);
   assert.equal(grandfathered.supportTier, 'email');
   assert.equal(grandfathered.teamRolesEnabled, false);
 });
@@ -440,4 +457,323 @@ test('the commitment rank orders every (plan, interval) pair', () => {
     'personal -> solo is an upgrade',
   );
   assert.equal(planCommitmentRank('free', 'month'), 0);
+});
+
+
+// ---------------------------------------------------------------------------
+// Pro capped at 10 and Business priced by mailbox, 2026-10-19.
+// ---------------------------------------------------------------------------
+
+test('Pro is capped at ten for a new customer, and the cutover exemption lifts it', () => {
+  assert.equal(PRO_INBOX_CAP, 10);
+  assert.equal(PLANS.solo.limits.maxInboxes, PRO_INBOX_CAP);
+  assert.equal(resolvePlanLimits('solo').maxInboxes, 10);
+  assert.equal(resolvePlanLimits('solo', { proUnlimitedInboxes: false }).maxInboxes, 10);
+  // A workspace on Pro at the cutover (or every one, kill switch off).
+  assert.equal(resolvePlanLimits('solo', { proUnlimitedInboxes: true }).maxInboxes, Infinity);
+  // The 2026-08-19 grandfather still lifts Pro's cap on its own.
+  assert.equal(resolvePlanLimits('solo', { unlimitedInboxes: true }).maxInboxes, Infinity);
+});
+
+test('the Pro exemption widens Pro and nothing else', () => {
+  // It is a promise about Pro. A Pro customer who moves to Personal gets
+  // Personal's three, and Free stays one: the flag must not travel.
+  assert.equal(resolvePlanLimits('free', { proUnlimitedInboxes: true }).maxInboxes, 1);
+  assert.equal(resolvePlanLimits('personal', { proUnlimitedInboxes: true }).maxInboxes, 3);
+  // It touches the inbox cap only.
+  const exempt = resolvePlanLimits('solo', { proUnlimitedInboxes: true });
+  assert.equal(exempt.maxMembers, 1);
+  assert.equal(exempt.maxMonthlyToolCalls, 100_000);
+  assert.equal(exempt.teamRolesEnabled, false);
+});
+
+test('Business is $39 with ten mailboxes included and $3 for each extra', () => {
+  const business = PLANS.pro;
+  assert.equal(business.name, 'Business');
+  assert.equal(business.monthlyPriceCents, 3900);
+  assert.equal(BUSINESS_INCLUDED_INBOXES, 10);
+  assert.equal(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS, 300);
+  // Twelve months less exactly 20%, the discount every annual price carries,
+  // in the same integer form as Personal's check: x5 = x12 x4.
+  assert.equal(business.yearlyPriceCents, 37440);
+  assert.equal(business.yearlyPriceCents! * 5, business.monthlyPriceCents * 12 * 4);
+  assert.equal(BUSINESS_EXTRA_INBOX_YEARLY_CENTS, 2880);
+  assert.equal(BUSINESS_EXTRA_INBOX_YEARLY_CENTS * 5, BUSINESS_EXTRA_INBOX_MONTHLY_CENTS * 12 * 4);
+  // People cost nothing: unlimited members with roles.
+  assert.equal(business.limits.maxMembers, Infinity);
+  assert.equal(business.limits.teamRolesEnabled, true);
+  assert.equal(business.limits.maxInboxes, Infinity);
+});
+
+test('Business claims only what exists', () => {
+  // Team said SSO, audit log, a year of history and priority support. None of
+  // it had code behind it. The limits must not carry it either, because a
+  // limit set to true is one copy edit away from a claim again.
+  const limits = PLANS.pro.limits;
+  assert.equal(limits.ssoEnabled, false);
+  assert.equal(limits.auditLogEnabled, false);
+  assert.equal(limits.supportTier, 'email');
+  // Two years, the same as Pro, kept by the per-plan activity_log job
+  // (migration 20261020153742) rather than the old flat 90-day delete.
+  assert.equal(limits.analyticsRetentionDays, 730);
+  for (const plan of Object.values(PLANS)) {
+    for (const feature of plan.features) {
+      assert.ok(
+        !/\b(SSO|SAML|OIDC|audit log|priority support|365|unlimited (connected )?inbox)/i.test(feature),
+        `plan ${plan.id} claims something that does not exist: ${feature}`,
+      );
+    }
+  }
+});
+
+test('extra mailboxes are the ones above ten, never negative', () => {
+  assert.equal(extraMailboxQuantity(0), 0);
+  assert.equal(extraMailboxQuantity(10), 0);
+  assert.equal(extraMailboxQuantity(11), 1);
+  assert.equal(extraMailboxQuantity(25), 15);
+  assert.equal(extraMailboxQuantity(-3), 0);
+  assert.equal(extraMailboxQuantity(Number.NaN), 0);
+});
+
+test('the add-on price is recognised at both intervals and is not a plan', () => {
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year_fixture';
+  try {
+    assert.equal(mailboxAddonPriceId('month'), 'price_addon_month_fixture');
+    assert.equal(mailboxAddonPriceId('year'), 'price_addon_year_fixture');
+    assert.equal(isMailboxAddonPriceId('price_addon_month_fixture'), true);
+    assert.equal(isMailboxAddonPriceId('price_addon_year_fixture'), true);
+    assert.equal(isMailboxAddonPriceId('price_1TcQBFARrgumc6cqmaRTXJ5Q'), false);
+    assert.equal(isMailboxAddonPriceId(null), false);
+    // The webhook maps a price to a plan; the add-on must never be one.
+    assert.equal(getPlanByStripePriceId('price_addon_month_fixture'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY;
+  }
+});
+
+test('the base plan item is found whatever order Stripe lists the items in', () => {
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_fixture';
+  try {
+    const plan = { id: 'si_plan', price: { id: 'price_1TcQBFARrgumc6cqmaRTXJ5Q' } }; // legacy Business
+    const addon = { id: 'si_addon', price: { id: 'price_addon_month_fixture' } };
+    assert.equal(basePlanItem([plan, addon])?.id, 'si_plan');
+    assert.equal(basePlanItem([addon, plan])?.id, 'si_plan');
+    assert.equal(mailboxAddonItem([addon, plan])?.id, 'si_addon');
+    assert.equal(mailboxAddonItem([plan]), undefined);
+    // An unmapped price still comes back, exactly as items[0] did before.
+    const unknown = { id: 'si_unknown', price: { id: 'price_unknown' } };
+    assert.equal(basePlanItem([addon, unknown])?.id, 'si_unknown');
+    assert.equal(basePlanItem([unknown])?.id, 'si_unknown');
+    assert.equal(basePlanItem([]), undefined);
+    assert.equal(basePlanItem(undefined), undefined);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+  }
+});
+
+test('the retired $79 / $756 Team prices still resolve to Business', async () => {
+  // Team had no paying subscriber, but a stray subscription on its price must
+  // keep mapping to the plan rather than become an unknown price.
+  process.env.STRIPE_PRICE_PRO_MONTHLY = 'price_team_79_fixture';
+  process.env.STRIPE_PRICE_PRO_YEARLY = 'price_team_756_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_YEARLY = 'price_business_37440_fixture';
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?business-prices')) as typeof import('./plans.ts');
+  try {
+    assert.equal(fresh.PLANS.pro.stripePriceIdMonthly, 'price_business_39_fixture');
+    assert.equal(fresh.PLANS.pro.stripePriceIdYearly, 'price_business_37440_fixture');
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_business_39_fixture'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_team_79_fixture'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_team_756_fixture'), { plan: fresh.PLANS.pro, interval: 'year' });
+  } finally {
+    delete process.env.STRIPE_PRICE_PRO_MONTHLY;
+    delete process.env.STRIPE_PRICE_PRO_YEARLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+  }
+});
+
+test('the 3-month pass costs more than three months of Personal monthly, so it is never a discount', () => {
+  assert.equal(PERSONAL_PASS_3M.priceCents, 2900);
+  assert.equal(PERSONAL_PASS_3M.months, 3);
+  assert.equal(PERSONAL_PASS_3M.plan, 'personal');
+  assert.ok(
+    PERSONAL_PASS_3M.priceCents > PLANS.personal.monthlyPriceCents * PERSONAL_PASS_3M.months,
+    'the pass must stay dearer than paying monthly for the same months',
+  );
+});
+
+test('the pass price is never read as a subscription plan', () => {
+  const before = process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+  process.env.STRIPE_PRICE_PERSONAL_PASS_3M = ' price_pass_unit ';
+  try {
+    assert.equal(personalPassPriceId(), 'price_pass_unit');
+    assert.equal(getPlanByStripePriceId('price_pass_unit'), null);
+    assert.equal(basePlanItem([{ price: { id: 'price_pass_unit' } }])?.price?.id, 'price_pass_unit');
+    assert.equal(Object.keys(PLANS).includes(PERSONAL_PASS_3M.id), false);
+    process.env.STRIPE_PRICE_PERSONAL_PASS_3M = '';
+    assert.equal(personalPassPriceId(), null);
+  } finally {
+    if (before === undefined) delete process.env.STRIPE_PRICE_PERSONAL_PASS_3M;
+    else process.env.STRIPE_PRICE_PERSONAL_PASS_3M = before;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Tax-inclusive twins (EUR launch). An EU subscriber moved to a USD inclusive
+// twin must resolve to exactly the plan and interval of the original, or a
+// renewal on the twin would read as an unknown price.
+// ---------------------------------------------------------------------------
+test('an inclusive twin resolves to the same plan and interval as its original', async () => {
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_twinfixture';
+  process.env.STRIPE_PRICE_BUSINESS_YEARLY = 'price_business_37440_twinfixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_twinfixture';
+  process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+    price_twin_business_month: 'price_business_39_twinfixture',
+    price_twin_business_year: 'price_business_37440_twinfixture',
+    price_twin_legacy_scale_year: 'price_1TcQBGARrgumc6cqmy0LeLSL', // legacy Scale yearly
+    price_twin_addon_month: 'price_addon_month_twinfixture',
+  });
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins')) as typeof import('./plans.ts');
+  try {
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_business_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_business_year'), { plan: fresh.PLANS.pro, interval: 'year' });
+    // A twin of a LEGACY id keeps the legacy pair's interval rule.
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_legacy_scale_year'), { plan: fresh.PLANS.pro, interval: 'year' });
+    // The add-on twin is still the add-on, still not a plan.
+    assert.equal(fresh.isMailboxAddonPriceId('price_twin_addon_month'), true);
+    assert.equal(fresh.mailboxAddonInterval('price_twin_addon_month'), 'month');
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_addon_month'), null);
+    const base = { id: 'si_base', price: { id: 'price_twin_business_month' } };
+    const addon = { id: 'si_addon', price: { id: 'price_twin_addon_month' } };
+    assert.equal(fresh.basePlanItem([addon, base])?.id, 'si_base');
+    assert.equal(fresh.mailboxAddonItem([base, addon])?.id, 'si_addon');
+    assert.equal(fresh.canonicalPriceId('price_twin_business_month'), 'price_business_39_twinfixture');
+    assert.equal(fresh.canonicalPriceId('price_business_39_twinfixture'), 'price_business_39_twinfixture');
+    assert.equal(fresh.twinOfPriceId('price_business_39_twinfixture'), 'price_twin_business_month');
+    assert.equal(fresh.twinOfPriceId('price_nothing'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});
+
+test('the twin map is read at call time and a bad value maps nothing', async () => {
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins-bad')) as typeof import('./plans.ts');
+  const legacyScaleMonthly = 'price_1TcQBFARrgumc6cqmaRTXJ5Q';
+  const originalError = console.error;
+  const errors: unknown[] = [];
+  console.error = (...a: unknown[]) => { errors.push(a); };
+  try {
+    delete process.env.STRIPE_PRICE_TWINS;
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_x'), null);
+
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_x: legacyScaleMonthly });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_x'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    for (const bad of ['{not json', '["price_a"]', '"price_a"']) {
+      process.env.STRIPE_PRICE_TWINS = bad;
+      assert.equal(fresh.getPlanByStripePriceId('price_twin_x'), null);
+      assert.equal(fresh.priceTwinMap().size, 0);
+    }
+    assert.ok(errors.length >= 3, 'a malformed STRIPE_PRICE_TWINS is logged');
+
+    // Non-price ids, self-maps and chains are dropped; an unknown original stays unknown.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+      cus_x: legacyScaleMonthly,
+      price_self: 'price_self',
+      price_chain_a: 'price_chain_b',
+      price_chain_b: legacyScaleMonthly,
+      price_twin_unknown: 'price_not_in_catalogue',
+      price_twin_num: 42,
+    });
+    const map = fresh.priceTwinMap();
+    assert.equal(map.has('cus_x'), false);
+    assert.equal(map.has('price_self'), false);
+    assert.equal(map.has('price_chain_a'), false);
+    assert.equal(map.has('price_twin_num'), false);
+    assert.equal(map.get('price_chain_b'), legacyScaleMonthly);
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_unknown'), null);
+  } finally {
+    console.error = originalError;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});
+
+test('a Pro subscriber on a retained-pair twin switches interval onto the other twin', async () => {
+  const { retainedPriceGenerationId } = await import('./plans.ts');
+  const pair = ['price_pro_15_month', 'price_pro_144_year'];
+  process.env.STRIPE_PRICE_TWINS = JSON.stringify({
+    price_twin_pro_month: 'price_pro_15_month',
+    price_twin_pro_year: 'price_pro_144_year',
+  });
+  try {
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'solo', 'year', pair), 'price_twin_pro_year');
+    assert.equal(retainedPriceGenerationId('price_twin_pro_year', 'solo', 'month', pair), 'price_twin_pro_month');
+    // Not on a twin: unchanged behaviour, the plain other half.
+    assert.equal(retainedPriceGenerationId('price_pro_15_month', 'solo', 'year', pair), 'price_pro_144_year');
+    // Only one half twinned: fall back to the original other half.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_pro_month: 'price_pro_15_month' });
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'solo', 'year', pair), 'price_pro_144_year');
+    assert.equal(retainedPriceGenerationId('price_twin_pro_month', 'pro', 'year', pair), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
+});
+
+// The EUR launch dispatcher creates the twins on its own, with
+// metadata.twin_of, and nothing can set STRIPE_PRICE_TWINS from there. A
+// twin must therefore resolve from the price object a subscription carries.
+test('a twin resolves from its own metadata.twin_of, with no STRIPE_PRICE_TWINS', async () => {
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_metafixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year_metafixture';
+  delete process.env.STRIPE_PRICE_TWINS;
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?twins-meta')) as typeof import('./plans.ts');
+  try {
+    const twin = { id: 'price_twin_meta_month', metadata: { twin_of: 'price_business_39_metafixture' } };
+    // Unknown by id alone until a price object has been seen.
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_meta_month'), null);
+    // The object resolves directly, and teaches the id.
+    assert.deepEqual(fresh.getPlanByStripePriceId(twin), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    // basePlanItem learns from the items it is handed, so the webhook's
+    // `getPlanByStripePriceId(basePlanItem(items).price.id)` resolves.
+    const addonTwin = { id: 'price_twin_meta_addon', metadata: { twin_of: 'price_addon_year_metafixture' } };
+    const items = [{ id: 'si_addon', price: addonTwin }, { id: 'si_base', price: twin }];
+    assert.equal(fresh.basePlanItem(items)?.id, 'si_base');
+    assert.equal(fresh.mailboxAddonItem(items)?.id, 'si_addon');
+    assert.equal(fresh.mailboxAddonInterval('price_twin_meta_addon'), 'year');
+    assert.equal(fresh.canonicalPriceId('price_twin_meta_addon'), 'price_addon_year_metafixture');
+
+    // Metadata pointing outside the catalogue, at itself, or at nothing, is ignored.
+    fresh.notePriceTwin({ id: 'price_stray', metadata: { twin_of: 'price_other_product_line' } });
+    fresh.notePriceTwin({ id: 'price_self', metadata: { twin_of: 'price_self' } });
+    fresh.notePriceTwin({ id: 'price_none', metadata: {} });
+    fresh.notePriceTwin({ id: 'not_a_price', metadata: { twin_of: 'price_business_39_metafixture' } });
+    for (const id of ['price_stray', 'price_self', 'price_none', 'not_a_price']) {
+      assert.equal(fresh.getPlanByStripePriceId(id), null, id);
+    }
+
+    // The env map still works next to it and wins on a conflict.
+    process.env.STRIPE_PRICE_TWINS = JSON.stringify({ price_twin_meta_month: 'price_1TcQBGARrgumc6cqmy0LeLSL' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'year' });
+    delete process.env.STRIPE_PRICE_TWINS;
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_twin_meta_month'), { plan: fresh.PLANS.pro, interval: 'month' });
+
+    fresh.resetLearnedTwins();
+    assert.equal(fresh.getPlanByStripePriceId('price_twin_meta_month'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY;
+    delete process.env.STRIPE_PRICE_TWINS;
+  }
 });

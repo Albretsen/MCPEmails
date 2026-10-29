@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { yandexLoginUsername } from '@/lib/email/connection-config';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { connectFailureContext } from '@/lib/email/auth-failure-help';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
@@ -232,6 +235,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: 'plan_limit' });
+      await recordInboxCapHit(workspaceId, inboxLimit);
       // 402 with a stable machine-readable body; the dashboard owns the
       // localised sentence. See inboxLimitErrorBody for why nothing here
       // interpolates the internal plan slug.
@@ -286,9 +290,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // was never the point: the client picks a short headline from the code and
     // decides whether the fix lives in Advanced settings, and a timeout or TLS
     // failure with no code reads to it exactly like a rejected password.
-    const body: Record<string, string> = {
+    const body: Record<string, string | boolean> = {
       error: validation.message,
       error_code: validation.code.toLowerCase(),
+      // The fix panel's row keys. This route never relays.
+      ...connectFailureContext({ host: imapHost, phase: validation.phase, viaRelay: false }),
     };
     // Which of the credential situations this rejection actually is. The
     // branded providers all mandate an app password, so a bare "wrong
@@ -375,6 +381,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         error: smtpValidation.message,
         error_code: smtpValidation.code.toLowerCase(),
         ...(smtpAuthFailure?.fields ?? {}),
+        ...connectFailureContext({ host: smtpHost, phase: `smtp_${smtpValidation.phase}`, viaRelay: false, imapOk: true }),
       },
       { status: 422 },
     );
@@ -462,6 +469,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: funnelProvider(service), phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Business bills mailboxes past ten: bring the add-on quantity in step.
+  // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
+  if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));
   // The same success shape /api/inboxes/imap answers with. A branded card hides
   // its ports rather than showing them, so nobody typed the numbers here, but
   // the autodetect loop can still land somewhere other than the preset (a

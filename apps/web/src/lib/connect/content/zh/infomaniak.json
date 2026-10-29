@@ -20,7 +20,7 @@
     "titleLine1": "面向 Infomaniak 邮箱的 MCP 服务器：",
     "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 Infomaniak 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。使用为该地址生成的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Infomaniak Mail。mcpemails 是一个托管 MCP 服务器，通过 mail.infomaniak.com 端口 993 的 IMAP 与之连接，使用为该邮箱地址生成的设备密码（而不是你的 Infomaniak 账户密码）进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Infomaniak 完全不接受通过 IMAP 使用账户密码，而它另外提供的应用密码是另一回事，在这里也行不通。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
+    "answer": "Claude 无法自行访问 Infomaniak Mail。MCPEmails 是一个托管 MCP 服务器，通过 mail.infomaniak.com 端口 993 的 IMAP 与之连接，使用为该邮箱地址生成的设备密码（而不是你的 Infomaniak 账户密码）进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Infomaniak 完全不接受通过 IMAP 使用账户密码，而它另外提供的应用密码是另一回事，在这里也行不通。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "设备密码，而非账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,7 +44,7 @@
       "p": "打开 manager.infomaniak.com，进入 Mail Service，点击你的域名，再点击该邮箱地址本身。打开 Devices 选项卡，选择 Add a device。除非你有意把 SMTP 限制与某个特定账户绑定，否则将用户保留为“No user”，为它起一个日后能认出的名字，并立即复制生成的密码。Infomaniak 不会再次显示它。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整的邮箱地址，并粘贴设备密码。服务器 mail.infomaniak.com 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "Infomaniak 不声明 SASL-IR，而大多数客户端默认它支持",
-      "p": "该 IMAP 服务器不支持 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。mcpemails 会检测到这一点并改用两步交互重试，所以这里的连接能够成功，但这是其他 IMAP 工具在 Infomaniak 上失败的常见原因。"
+      "p": "该 IMAP 服务器不支持 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。MCPEmails 会检测到这一点并改用两步交互重试，所以这里的连接能够成功，但这是其他 IMAP 工具在 Infomaniak 上失败的常见原因。"
     },
     {
       "h": "欢迎消息中不带能力列表",
-      "p": "Infomaniak 的服务器只回应一个光秃秃的 <code>* OK IMAP4 ready</code>，别无其他，而大多数服务器会在欢迎消息中声明其扩展。只从横幅中读取能力的客户端会断定服务器什么都不支持，要么降级到最原始的行为，要么直接放弃。正确的处理方式是在欢迎消息之后以及认证之后，分别显式发出 CAPABILITY 命令，mcpemails 就是这样做的。"
+      "p": "Infomaniak 的服务器只回应一个光秃秃的 <code>* OK IMAP4 ready</code>，别无其他，而大多数服务器会在欢迎消息中声明其扩展。只从横幅中读取能力的客户端会断定服务器什么都不支持，要么降级到最原始的行为，要么直接放弃。正确的处理方式是在欢迎消息之后以及认证之后，分别显式发出 CAPABILITY 命令，MCPEmails 就是这样做的。"
     }
   ],
   "limits": [
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Infomaniak Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Infomaniak 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Infomaniak 地址后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Infomaniak 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 Infomaniak 地址后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Infomaniak 的 IMAP 和 SMTP 设置是什么？",
@@ -89,7 +89,7 @@
     },
     {
       "q": "可以在不影响其他设备的情况下撤销访问吗？",
-      "a": "可以。每个设备密码都是独立的，所以你可以为 mcpemails 单独创建一个并相应命名，以后只删除这一个。你手机和桌面客户端的现有连接会继续工作，因为它们持有各自的密码。"
+      "a": "可以。每个设备密码都是独立的，所以你可以为 MCPEmails 单独创建一个并相应命名，以后只删除这一个。你手机和桌面客户端的现有连接会继续工作，因为它们持有各自的密码。"
     },
     {
       "q": "我的 Infomaniak 邮件会存储在你们的服务器上吗？",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "把所有 Infomaniak 邮箱交给同一个代理",
-    "sub": "免费连接第一个 Infomaniak 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "sub": "免费连接第一个 Infomaniak 邮箱，无需信用卡。Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   }
 }

@@ -19,7 +19,7 @@
     "titleLine1": "Koble Bluewin-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte bluewin.ch-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med Swisscom-e-postpassordet ditt, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå en Bluewin-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imaps.bluewin.ch, port 993, og logger inn med hele bluewin.ch-adressen din og Bluewin-e-postpassordet ditt, som Swisscom holder adskilt fra passordet til My Swisscom-påloggingen. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Bluewin-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imaps.bluewin.ch, port 993, og logger inn med hele bluewin.ch-adressen din og Bluewin-e-postpassordet ditt, som Swisscom holder adskilt fra passordet til My Swisscom-påloggingen. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "E-postpassord, ikke Swisscom-pålogging",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Logg inn i My Swisscom og åpne delen for å endre e-postpassordet for Bluewin-adressen du vil koble til. Dette er et annet passord enn det du brukte for å komme inn i My Swisscom. Hvis du aldri har satt det, gjør du det nå; verdien du velger her, er den en e-postklient bruker."
     },
     {
-      "h": "Skriv inn adressen og e-postpassordet i mcpemails",
+      "h": "Skriv inn adressen og e-postpassordet i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele <code>@bluewin.ch</code>-adressen din, og lim inn e-postpassordet i stedet for passordet til Swisscom-påloggingen. Bluewin-vertene er forhåndsutfylt, inkludert de avsluttende bokstavene som er lette å skrive feil."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "Både MOVE og UIDPLUS mangler",
-      "p": "Denne serveren støtter verken MOVE eller UIDPLUS. Å flytte en melding til en mappe skjer derfor som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir aldri ID-en den tildelte den nye kopien. mcpemails håndterer sekvensen, men en flytting er ikke atomisk her, og en flyttet melding bekreftes ved å søke i målmappen i stedet for via ID."
+      "p": "Denne serveren støtter verken MOVE eller UIDPLUS. Å flytte en melding til en mappe skjer derfor som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir aldri ID-en den tildelte den nye kopien. MCPEmails håndterer sekvensen, men en flytting er ikke atomisk her, og en flyttet melding bekreftes ved å søke i målmappen i stedet for via ID."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Bluewin-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd kobling for Bluewin eller Swisscom. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i bluewin.ch-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for Bluewin eller Swisscom. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i bluewin.ch-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Bluewin?",

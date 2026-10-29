@@ -12,7 +12,14 @@
 // from the traffic captured in phase-0.
 // ---------------------------------------------------------------------------
 
+import { modelContextParams } from "./model-context";
+
 export const UI_PROTOCOL_VERSION = "2026-01-26";
+
+/** A thrown value as text: its message when it is an Error. */
+export function errorText(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 export type DisplayMode = "inline" | "fullscreen" | "pip";
 export type Theme = "light" | "dark";
@@ -533,6 +540,35 @@ export class HostBridge {
   modelContext = { sent: 0, ok: 0, failed: 0 };
 
   /**
+   * The error the host answered the last failed `ui/update-model-context`
+   * with, as `code: message`, or null. Diagnostics only, like the counters.
+   */
+  modelContextLastError: string | null = null;
+
+  private modelContextListeners = new Set<() => void>();
+
+  /**
+   * Be told whenever `modelContext` changes. The counters live here, not in
+   * the store, so nothing re-rendered when a reply landed: QA 2026-10-17 read
+   * `0/0/0` right after a save and only saw `1/0/1` after the next keystroke.
+   * The diagnostics line subscribes through this. Returns the unsubscribe.
+   */
+  onModelContextChange(fn: () => void): () => void {
+    this.modelContextListeners.add(fn);
+    return () => this.modelContextListeners.delete(fn);
+  }
+
+  private modelContextChanged() {
+    for (const fn of this.modelContextListeners) {
+      try {
+        fn();
+      } catch {
+        /* a listener is a re-render hint, never worth an exception */
+      }
+    }
+  }
+
+  /**
    * Tell the host what the card did, for the model's future turns.
    *
    * ── SENT WHETHER OR NOT THE HOST ADVERTISES IT (QA 2026-10-15) ────────────
@@ -548,22 +584,27 @@ export class HostBridge {
    *
    * Sending to a host that does not implement it costs one error reply
    * (-32601), swallowed here. The request shape is the spec's exactly:
-   * `{ content: ContentBlock[], structuredContent? }`. The server says the same
-   * facts in the model's next draft result regardless (card-activity.ts), so
-   * this is the fast path, not the only one.
+   * `{ content: ContentBlock[], structuredContent? }`, chosen against what the
+   * host advertised by model-context.ts#modelContextParams. The server says
+   * the same facts in the model's next draft result for that draft regardless
+   * (card-activity.ts), so this is the fast path, not the only one.
    */
-  updateModelContext(text: string, structured?: Json): Promise<unknown> {
+  updateModelContext(text: string): Promise<unknown> {
     this.modelContext.sent++;
-    return this.request("ui/update-model-context", {
-      content: [{ type: "text", text }],
-      ...(structured ? { structuredContent: structured } : {}),
-    }).then(
+    this.modelContextChanged();
+    return this.request(
+      "ui/update-model-context",
+      modelContextParams(text, this.hostCapabilities.updateModelContext),
+    ).then(
       (r) => {
         this.modelContext.ok++;
+        this.modelContextChanged();
         return r;
       },
-      () => {
+      (e) => {
         this.modelContext.failed++;
+        this.modelContextLastError = errorText(e);
+        this.modelContextChanged();
         return null;
       },
     );

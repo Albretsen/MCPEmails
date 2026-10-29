@@ -1,4 +1,4 @@
-# Self-host MCP Emails
+# Self-host MCPEmails
 
 Run the **exact MCP server that powers [mcpemails.com](https://mcpemails.com)** on your own
 machine, against your own database. Your mailbox credentials never leave infrastructure you
@@ -192,8 +192,8 @@ curl -fsS -X POST -H "X-Dispatch-Secret: $DISPATCH_SECRET" http://localhost:8787
   and do not publish or port-forward the plaintext MCP port.
 - **No outbound calls to us.** The only network the server makes is to your mail provider and your
   own Postgres. Verify it: `make logs S=mcp-server` and watch.
-- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles,
-  SSO, and audit-log retention are hosted-only features.
+- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles and
+  the web dashboard (with its activity log) are hosted-only features.
 
 ## How it maps to the hosted product
 
@@ -203,7 +203,7 @@ production. The only differences are operational, not behavioral:
 | | Hosted (mcpemails.com) | Self-host |
 | --- | --- | --- |
 | Backend | Supabase (Postgres + PostgREST + Auth + Vault + cron) | Postgres + PostgREST only |
-| Schema | 44 migrations (auth, billing, OAuth clients, partitioned logs) | one consolidated, dependency-free schema |
+| Schema | 200+ migrations (auth, billing, OAuth clients, partitioned logs) | one consolidated, dependency-free schema |
 | Connect a mailbox | Web dashboard | `make provision` |
 | Mint a key | Web dashboard | `make key` |
 | Scheduled-send cron | `pg_cron` + Vault | a 60-second `curl` loop (or your own cron) |

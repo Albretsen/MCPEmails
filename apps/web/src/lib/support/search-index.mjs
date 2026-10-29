@@ -22,6 +22,7 @@ import { releasedProviders } from '../connect/release.mjs';
 import { CLIENTS } from '../clients/clients.mjs';
 import { clientUi } from '../clients/ui.mjs';
 import { fill, helpHref } from './help-content.mjs';
+import { MODEL_VISIBLE_TOOL_COUNT } from '../public-facts.mjs';
 
 export const HINT_MAX = 80;
 
@@ -62,6 +63,9 @@ const PROVIDER_ALIASES = {
   'netease-126': '126',
   qq: 'tencent foxmail',
 };
+
+/** Placeholders the docs headings interpolate (the tool reference states the tool count). */
+const DOCS_VALUES = { toolCount: MODEL_VISIBLE_TOOL_COUNT };
 
 /** Docs sections on /docs: message key, anchor, extra English search terms. */
 const DOCS_SECTIONS = [
@@ -105,7 +109,7 @@ export function clip(text, max = HINT_MAX) {
 
 // One literal namespace per import, so the bundler's context module covers
 // docs.json and pricing.json only, not every namespace of every locale.
-const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh']);
+const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh', 'de']);
 
 async function loadDocs(locale) {
   const l = LOCALES.has(locale) ? locale : 'en';
@@ -159,8 +163,8 @@ export function buildSearchIndex({ locale, help, docs, pricing, articles, inApp 
     out.push({
       id: `docs:${anchor}`,
       kind: 'docs',
-      title: clip(section.eyebrow ?? section.heading),
-      hint: clip(section.heading ?? help.hints.docs),
+      title: clip(fill(section.eyebrow ?? section.heading, DOCS_VALUES)),
+      hint: clip(section.heading ? fill(section.heading, DOCS_VALUES) : help.hints.docs),
       href: href(`/docs#${anchor}`),
       terms,
     });

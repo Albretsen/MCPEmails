@@ -21,8 +21,8 @@
     "eyebrow": "MDaemon + IA",
     "titleLine1": "Connectez MDaemon à Claude,",
     "titleLine2": "Cursor, ChatGPT et tout client MCP",
-    "lead": "MDaemon fait tourner le courrier sur votre propre serveur Windows depuis des années sans demander la permission à personne. Y brancher un agent IA n'a pas à changer cela : mcpemails se connecte en IMAP classique et récupère chaque message en direct.",
-    "answer": "Claude ne peut pas accéder seul à un serveur MDaemon. mcpemails est un serveur MCP hébergé qui se connecte au vôtre en IMAP à votre propre nom d'hôte, sur le port IMAP SSL, que MDaemon règle sur 993 par défaut, avec le mot de passe du compte issu de l'Account Manager. Claude, Cursor ou tout client MCP peut ainsi lire, rechercher, envoyer et organiser le courrier de cette boîte. MDaemon est un logiciel que vous exploitez vous-même, il n'y a donc pas de serveur partagé à chercher : le serveur doit être joignable depuis Internet, l'accès IMAP doit être activé sur le compte, et les fonctions de filtrage de MDaemon doivent laisser passer la connexion. Une boîte est gratuite.",
+    "lead": "MDaemon fait tourner le courrier sur votre propre serveur Windows depuis des années sans demander la permission à personne. Y brancher un agent IA n'a pas à changer cela : MCPEmails se connecte en IMAP classique et récupère chaque message en direct.",
+    "answer": "Claude ne peut pas accéder seul à un serveur MDaemon. MCPEmails est un serveur MCP hébergé qui se connecte au vôtre en IMAP à votre propre nom d'hôte, sur le port IMAP SSL, que MDaemon règle sur 993 par défaut, avec le mot de passe du compte issu de l'Account Manager. Claude, Cursor ou tout client MCP peut ainsi lire, rechercher, envoyer et organiser le courrier de cette boîte. MDaemon est un logiciel que vous exploitez vous-même, il n'y a donc pas de serveur partagé à chercher : le serveur doit être joignable depuis Internet, l'accès IMAP doit être activé sur le compte, et les fonctions de filtrage de MDaemon doivent laisser passer la connexion. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe du compte, accès IMAP activé",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. Une boîte est gratuite pour toujours et aucune carte bancaire n'est demandée : vous pouvez donc d'abord tester avec une vraie boîte MDaemon."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Activez l'accès IMAP sur le compte",
-      "p": "Ouvrez l'Account Manager, trouvez la boîte et, sur son écran Mail Services, vérifiez que <b>Enable IMAP access</b> est coché. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, saisissez votre nom d'hôte MDaemon, l'adresse complète et le mot de passe du compte."
+      "p": "Ouvrez l'Account Manager, trouvez la boîte et, sur son écran Mail Services, vérifiez que <b>Enable IMAP access</b> est coché. Ajoutez ensuite la boîte dans MCPEmails : choisissez IMAP / SMTP, saisissez votre nom d'hôte MDaemon, l'adresse complète et le mot de passe du compte."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Les serveurs MDaemon se trouvent généralement derrière un pare-feu d'entreprise où seul le port 25 est publié, et ce service a aussi besoin d'une connexion IMAP entrante. Ouvrir le 993 sur Internet est une décision qui revient au responsable de ce pare-feu, pas un réglage de MDaemon. Si la réponse est non, mcpemails peut être auto-hébergé sur le même réseau interne, d'où il atteint MDaemon comme le fait déjà un client de bureau sur le LAN.",
+    "Les serveurs MDaemon se trouvent généralement derrière un pare-feu d'entreprise où seul le port 25 est publié, et ce service a aussi besoin d'une connexion IMAP entrante. Ouvrir le 993 sur Internet est une décision qui revient au responsable de ce pare-feu, pas un réglage de MDaemon. Si la réponse est non, MCPEmails peut être auto-hébergé sur le même réseau interne, d'où il atteint MDaemon comme le fait déjà un client de bureau sur le LAN.",
     "La validation TLS est stricte. Le certificat auto-signé par défaut de MDaemon, ou un certificat expiré, sera refusé sans possibilité de continuer malgré tout.",
     "L'envoi passe par votre propre service SMTP MDaemon : la délivrabilité dépend donc de vos enregistrements SPF, DKIM et DMARC et de la réputation de l'adresse depuis laquelle votre serveur envoie."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec MDaemon ?",
-      "a": "Pas directement. Claude n'a pas de connecteur MDaemon et ne peut pas ouvrir de socket IMAP vers un serveur que vous hébergez. Relier un serveur MCP comme mcpemails à votre serveur MDaemon donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte qu'il héberge, avec les mêmes identifiants qu'utiliserait n'importe quel client de bureau."
+      "a": "Pas directement. Claude n'a pas de connecteur MDaemon et ne peut pas ouvrir de socket IMAP vers un serveur que vous hébergez. Relier un serveur MCP comme MCPEmails à votre serveur MDaemon donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte qu'il héberge, avec les mêmes identifiants qu'utiliserait n'importe quel client de bureau."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de MDaemon ?",

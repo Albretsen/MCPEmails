@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
+import { verifyPortalCustomerOwnership } from '@/lib/stripe/portal-customer';
 import {
   planCategory,
   primaryWorkspaceId,
@@ -34,8 +35,9 @@ import {
  *
  * Security:
  *   - Requires authenticated Supabase session.
- *   - The portal session is scoped to the workspace's Stripe customer,
- *     so a user cannot access another workspace's billing.
+ *   - The portal session is scoped to the user's own Stripe customer. A
+ *     customer id found only on a workspace row is used after Stripe confirms
+ *     it belongs to this user, so a user cannot open another customer's portal.
  */
 export async function POST(_request: NextRequest): Promise<NextResponse> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
@@ -51,12 +53,17 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
 
   // ── 2. Resolve the user's Stripe customer id ──────────────────────────────
   // Billing (the Stripe customer) is tied to the user, not a workspace, so the
-  // authoritative source is `user_billing.stripe_customer_id`. However, plans
-  // that were seeded manually (or by an older workspace-scoped flow) can leave
-  // `user_billing.stripe_customer_id` NULL while a workspace the user owns still
-  // carries the real `cus_...` id. In that case the user is genuinely a paying
-  // customer but the portal would 422. Fall back to the workspace's customer id,
-  // and backfill `user_billing` so the next call resolves directly.
+  // authoritative source is `user_billing.stripe_customer_id`, which only server
+  // code writes. However, plans that were seeded manually (or by the older
+  // workspace-scoped flow) can leave it NULL while a workspace the user owns
+  // still carries the real `cus_...` id. Those users are genuinely paying and
+  // must still reach their portal, so the workspace column stays as a fallback.
+  //
+  // That column was writable by the workspace owner until
+  // 20261016160100_workspaces_server_owned_writes.sql and is not unique, so a
+  // stored value is only a CANDIDATE: the Stripe customer must itself name this
+  // user (or one of their workspaces) before a portal session is created or the
+  // id is copied into user_billing. See src/lib/stripe/portal-customer.ts.
   const { data: billing } = await supabase
     .from('user_billing')
     .select('stripe_customer_id, plan')
@@ -66,20 +73,9 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   let customerId: string | null = billing?.stripe_customer_id ?? null;
 
   if (!customerId) {
-    // Fallback: any non-deleted workspace this user owns that has a customer id.
-    const { data: ownedWorkspaces } = await supabase
-      .from('workspaces')
-      .select('stripe_customer_id')
-      .eq('owner_id', user.id)
-      .is('deleted_at', null)
-      .not('stripe_customer_id', 'is', null)
-      .order('created_at', { ascending: true });
+    customerId = await verifiedWorkspaceCustomerId(user);
 
-    const workspaceCustomerId =
-      ownedWorkspaces?.find((w) => w.stripe_customer_id)?.stripe_customer_id ?? null;
-
-    if (workspaceCustomerId) {
-      customerId = workspaceCustomerId;
+    if (customerId) {
       // Backfill user_billing (service role: the user RLS policy may block the
       // write, and this self-heals the desync so the webhook stays authoritative).
       try {
@@ -87,11 +83,11 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
         await serviceClient
           .from('user_billing')
           .upsert(
-            { user_id: user.id, stripe_customer_id: workspaceCustomerId },
+            { user_id: user.id, stripe_customer_id: customerId },
             { onConflict: 'user_id' },
           );
       } catch (backfillErr) {
-        // Non-fatal: we can still open the portal with the workspace customer id.
+        // Non-fatal: we can still open the portal with the verified customer id.
         console.error('[portal] user_billing backfill failed:', backfillErr);
       }
     }
@@ -222,4 +218,96 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
       { status: 500 },
     );
   }
+}
+
+/**
+ * The legacy fallback: the first customer id stored on a live workspace the
+ * user owns whose Stripe record proves it is theirs, or null.
+ *
+ * Read with the service role so the owner filter, not RLS membership, decides
+ * which rows count, and so a workspace the user has since deleted still counts
+ * as theirs for a customer created in the workspace-scoped era.
+ *
+ * Self-heal (as step 5a does for the user_billing id): a candidate that Stripe
+ * no longer has (resource_missing), that is deleted, or that provably belongs
+ * to someone else (planted or foreign) is nulled on the caller's own live
+ * workspaces that carry it, so the next portal click does not repeat the
+ * Stripe call. A customer with no ownership proof either way ('no_proof') is
+ * left in place: it may be the user's own hand-made customer under another
+ * email, which support can still recover.
+ */
+async function verifiedWorkspaceCustomerId(user: {
+  id: string;
+  email?: string | null;
+  email_confirmed_at?: string | null;
+}): Promise<string | null> {
+  const service = createServiceRoleClient();
+  const { data: owned, error } = await service
+    .from('workspaces')
+    .select('id, stripe_customer_id, deleted_at')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: true });
+  if (error || !owned) {
+    if (error) console.error('[portal] owned workspace lookup failed:', error.message);
+    return null;
+  }
+
+  const ownedIds = owned.map((w) => w.id);
+  const candidates = [
+    ...new Set(
+      owned
+        .filter((w) => !w.deleted_at && w.stripe_customer_id)
+        .map((w) => w.stripe_customer_id as string),
+    ),
+  ];
+
+  const workspaceIdsCarrying = (candidate: string) =>
+    owned.filter((w) => !w.deleted_at && w.stripe_customer_id === candidate).map((w) => w.id);
+
+  /** Null `candidate` on the caller's own live workspaces that carry it. */
+  const clearCandidate = async (candidate: string, reason: string) => {
+    try {
+      const { error: clearError } = await service
+        .from('workspaces')
+        .update({ stripe_customer_id: null })
+        .in('id', workspaceIdsCarrying(candidate))
+        .eq('owner_id', user.id)
+        .eq('stripe_customer_id', candidate);
+      if (clearError) throw new Error(clearError.message);
+      console.error('[portal] nulled workspace stripe_customer_id for user', user.id, `(${reason})`);
+    } catch (healErr) {
+      console.error('[portal] workspace self-heal failed:', healErr);
+    }
+  };
+
+  for (const candidate of candidates) {
+    let customer;
+    try {
+      customer = await stripe.customers.retrieve(candidate);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const code = (err as Record<string, unknown>)?.code;
+      console.error('[portal] fallback customer lookup failed:', message);
+      // Only a definite "no such customer" is healed. A network blip or a
+      // Stripe outage must never erase a paying user's id.
+      if (code === 'resource_missing' || message.toLowerCase().includes('no such customer')) {
+        await clearCandidate(candidate, 'resource_missing');
+      }
+      continue;
+    }
+    const verdict = verifyPortalCustomerOwnership(
+      {
+        id: customer.id,
+        deleted: (customer as { deleted?: unknown }).deleted === true,
+        email: 'email' in customer ? customer.email : null,
+        metadata: 'metadata' in customer ? customer.metadata : null,
+      },
+      user,
+      ownedIds,
+    );
+    if (verdict.owned) return candidate;
+    console.error('[portal] refused workspace customer fallback for user', user.id, `(${verdict.reason})`);
+    if (verdict.reason !== 'no_proof') await clearCandidate(candidate, verdict.reason);
+  }
+  return null;
 }

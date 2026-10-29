@@ -20,7 +20,7 @@
     "titleLine1": "Conecta el correo de Krystal a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón real de Krystal. Lee, busca, envía, responde, programa y organiza correo por IMAP, en el hosting compartido con cPanel o en el complemento de correo de Onyx.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Krystal. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Krystal no tiene un nombre de servidor de correo compartido: usas mail.yourdomain.co.uk o el nombre propio de tu servidor de hosting, y ambos aparecen en la pantalla Connect Devices de cPanel. Antes de empezar, comprueba que el plan incluye realmente correo, porque la plataforma de WordPress gestionado Onyx de Krystal viene sin buzones salvo que hayas comprado el complemento. La autenticación usa la contraseña del buzón, y una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Krystal. MCPEmails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Krystal no tiene un nombre de servidor de correo compartido: usas mail.yourdomain.co.uk o el nombre propio de tu servidor de hosting, y ambos aparecen en la pantalla Connect Devices de cPanel. Antes de empezar, comprueba que el plan incluye realmente correo, porque la plataforma de WordPress gestionado Onyx de Krystal viene sin buzones salvo que hayas comprado el complemento. La autenticación usa la contraseña del buzón, y una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde cPanel",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Define la contraseña del buzón",
-      "p": "Los buzones de Krystal se autentican con la contraseña definida en la propia dirección, no con tu acceso al área de cliente de Krystal. En el hosting compartido, usa <b>Manage</b> en la fila de la dirección en Email Accounts para definir una. Después introdúcela en mcpemails con la dirección completa como nombre de usuario y el nombre de servidor que copiaste."
+      "p": "Los buzones de Krystal se autentican con la contraseña definida en la propia dirección, no con tu acceso al área de cliente de Krystal. En el hosting compartido, usa <b>Manage</b> en la fila de la dirección en Email Accounts para definir una. Después introdúcela en MCPEmails con la dirección completa como nombre de usuario y el nombre de servidor que copiaste."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "El tamaño del buzón está limitado por plan en el hosting compartido de Krystal, a 5GB en los niveles pequeños y 50GB en los grandes. Un buzón lleno rechaza el correo nuevo en lugar de degradarse sin avisar.",
-    "mcpemails solo conecta el buzón. Los ajustes del dominio, los reenviadores y las reglas de spam se quedan en cPanel o en el portal de Onyx."
+    "MCPEmails solo conecta el buzón. Los ajustes del dominio, los reenviadores y las reglas de spam se quedan en cPanel o en el portal de Onyx."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Krystal?",
-      "a": "No directamente. Claude no tiene un conector para Krystal. Conectar un servidor MCP como mcpemails a tu buzón de Krystal por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, tanto si el buzón está en el hosting compartido con cPanel de Krystal como en el complemento de correo de Onyx."
+      "a": "No directamente. Claude no tiene un conector para Krystal. Conectar un servidor MCP como MCPEmails a tu buzón de Krystal por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, tanto si el buzón está en el hosting compartido con cPanel de Krystal como en el complemento de correo de Onyx."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Krystal?",

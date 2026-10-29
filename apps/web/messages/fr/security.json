@@ -38,7 +38,7 @@
       },
       {
         "data": "Jeton OAuth ou mot de passe d'application",
-        "accessed": "Déchiffré uniquement à l'intérieur d'une fonction isolée, au moment de l'appel",
+        "accessed": "Déchiffré sur nos serveurs uniquement pour la requête qui en a besoin",
         "stored": "Oui, chiffré au repos avec AES-256-GCM ; la clé est conservée séparément"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Oui, chiffrés au repos jusqu'à l'envoi, puis conservés dans votre historique"
       },
       {
+        "data": "Envois retenus pour votre approbation",
+        "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou expirent au bout de 24 heures",
+        "stored": "Oui, chiffrés au repos, puis conservés dans votre historique des approbations"
+      },
+      {
         "data": "Activité des appels d'outils (métadonnées)",
         "accessed": "Enregistrée pour votre propre journal d'audit",
         "stored": "Nom de l'outil, boîte de réception, horodatage et statut uniquement. Aucun contenu d'e-mail"
       }
     ],
-    "outro": "La seule exception délibérée est un message que vous demandez à l'agent de programmer pour plus tard. Nous devons le conserver jusqu'à l'heure d'envoi, nous le stockons donc chiffré entre-temps, puis nous en gardons une trace ensuite pour votre historique."
+    "outro": "Les exceptions délibérées sont les messages sortants qui doivent attendre : un message que vous demandez à l'agent de programmer pour plus tard, et un envoi retenu pour votre approbation. Nous devons les conserver jusqu'à leur départ, nous les stockons donc chiffrés entre-temps, puis nous en gardons une trace pour votre historique."
   },
   "verify": {
     "title": "3. Vous n'avez pas à me faire confiance, vous pouvez vérifier",
@@ -86,7 +91,7 @@
     "intro": "Vos jetons sont la seule chose sensible que nous détenons, ils bénéficient donc de la protection la plus forte que nous puissions leur offrir :",
     "measures": [
       "Toutes les données en transit sont chiffrées avec TLS 1.2 ou supérieur. Les connexions qui ne prennent pas en charge TLS sont rejetées.",
-      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée séparément des données chiffrées et n'est jamais située au même endroit qu'elles.",
+      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée comme secret serveur, séparément de la base de données, et n'est jamais stockée avec les données chiffrées.",
       "Les clés d'API sont hachées avec SHA-256 avant le stockage. La clé brute ne peut pas être récupérée à partir du hachage.",
       "L'accès à la base de données est protégé par des politiques de Row-Level Security qui empêchent un espace de travail d'atteindre les données d'un autre, même si une requête est mal écrite.",
       "L'accès administratif à l'infrastructure de production nécessite une authentification multifacteur et est journalisé."
@@ -108,12 +113,17 @@
       {
         "provider": "Supabase",
         "purpose": "Base de données, authentification, fonctions edge",
-        "location": "UE (Stockholm, Suède)"
+        "location": "Données stockées dans l'UE (Stockholm, Suède) ; e-mails traités en direct aux États-Unis (Est)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Hébergement du site web et du tableau de bord",
-        "location": "Edge mondial, région la plus proche de l'utilisateur"
+        "purpose": "Hébergement du site web, du tableau de bord et du point de terminaison MCP",
+        "location": "CDN mondial ; serveurs aux États-Unis (Est) et dans l'UE (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relais de messagerie pour les rares fournisseurs qui refusent les connexions depuis des adresses cloud (un tunnel TLS : il ne peut lire ni le courrier ni les mots de passe)",
+        "location": "Allemagne (UE)"
       },
       {
         "provider": "Stripe",
@@ -140,13 +150,13 @@
   },
   "selfhost": {
     "title": "Exécutez-le vous-même, ne faites confiance à personne (pas même à nous)",
-    "p1": "MCP Emails est open source sous AGPL-3.0, et le service hébergé exécute exactement le même serveur MCP que vous pouvez auto-héberger. Cela signifie que « les e-mails sont récupérés en direct et jamais stockés » est quelque chose que vous pouvez vérifier en l'exécutant et en observant le réseau, et non quelque chose que vous devez croire sur parole.",
+    "p1": "MCPEmails est open source sous AGPL-3.0, et le service hébergé exécute exactement le même serveur MCP que vous pouvez auto-héberger. Cela signifie que « les e-mails sont récupérés en direct et jamais stockés » est quelque chose que vous pouvez vérifier en l'exécutant et en observant le réseau, et non quelque chose que vous devez croire sur parole.",
     "p2": "L'auto-hébergement privilégie IMAP/SMTP : connectez n'importe quelle boîte mail avec un mot de passe d'application, et vos identifiants sont chiffrés sous une clé que vous seul détenez. Une seule commande met en route toute la stack sur votre propre machine.",
     "cta": "Lire le guide d'auto-hébergement"
   },
   "operator": {
     "title": "Qui est aux commandes",
-    "p1": "Une seule personne : moi. Je suis Asgeir Albretsen et j'opère sous le nom d'Albretsen Consulting, une entreprise individuelle norvégienne (enkeltpersonforetak), numéro d'organisation 926 646 753, basée à Bergen, en Norvège. Les commits sont les miens eux aussi, sous <gh>github.com/Albretsen</gh>, si bien que le nom affiché sur cette page et le nom associé au code ne sont qu'un seul et même nom. Vous trouverez plus de détails sur la <about>page « À propos »</about>, et l'identification juridique complète figure dans les <terms>conditions</terms>.",
+    "p1": "Une seule personne : moi. Je suis Asgeir Albretsen et j'exploite MCPEmails par l'intermédiaire d'Albretsen AS, une société à responsabilité limitée de droit norvégien (aksjeselskap) dont je suis propriétaire, numéro d'organisation 938 702 373, basée à Bergen, en Norvège. Les commits sont les miens eux aussi, sous <gh>github.com/Albretsen</gh>, si bien que le nom affiché sur cette page et le nom associé au code ne sont qu'un seul et même nom. Vous trouverez plus de détails sur la <about>page « À propos »</about>, et l'identification juridique complète figure dans les <terms>conditions</terms>.",
     "p2": "Que tout repose sur une seule personne est un risque réel, et la réponse n'est pas de promettre que je serai toujours là. MCPEmails est public sous AGPL-3.0 et le service hébergé exécute ce même code, donc si j'arrête, ou si vous cessez simplement de me faire confiance, vous pouvez cloner le dépôt et l'exécuter sur votre propre infrastructure avec vos propres clés. <selfhostpage>Le guide d'auto-hébergement</selfhostpage> décrit toute la procédure. Je préfère être une personne identifiée que vous pouvez joindre et que vous pouvez quitter, plutôt qu'un fournisseur anonyme à qui vous ne pouvez que faire confiance.",
     "p3": "Les messages de support et de sécurité ne passent par aucune file d'attente. Ils arrivent chez moi, et je réponds moi-même à chaque message."
   }

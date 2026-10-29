@@ -19,7 +19,7 @@
     "titleLine1": "SAPO Mail via IMAP,",
     "titleLine2": "i Claude, Cursor, enhver MCP-klient",
     "lead": "SAPO legger tilgang for e-postklienter på Premium-nivået. Har kontoen din det, kan en AI-agent lese, søke, sende, svare, planlegge og organisere postkassen via IMAP.",
-    "answer": "Claude når ikke en SAPO-postkasse på egen hånd, og på en gratis SAPO Base-konto kan heller ikke noe annet det: SAPO skriver i sin egen dokumentasjon at o acesso IMAP/POP está disponível apenas para contas Premium. På en Premium-konto er mcpemails en hostet MCP-server som kobler til postkassen via IMAP på imap.sapo.pt port 993 med SAPO-adressen og -passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen bryter å slå på: sperren er abonnementet. Én innboks på mcpemails er gratis, for alltid.",
+    "answer": "Claude når ikke en SAPO-postkasse på egen hånd, og på en gratis SAPO Base-konto kan heller ikke noe annet det: SAPO skriver i sin egen dokumentasjon at o acesso IMAP/POP está disponível apenas para contas Premium. På en Premium-konto er MCPEmails en hostet MCP-server som kobler til postkassen via IMAP på imap.sapo.pt port 993 med SAPO-adressen og -passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen bryter å slå på: sperren er abonnementet. Én innboks på MCPEmails er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Krever en SAPO Premium-konto",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -42,7 +42,7 @@
       "p": "SAPO utsteder ikke programspesifikke passord. Påloggingen er det vanlige SAPO-passordet ditt med hele adressen som brukernavn, brukt på både innkommende og utgående side. Godtar webmailen det og klienten ikke, er kontoen nesten helt sikkert på Base-nivået og ikke Premium."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Lim det inn i MCPEmails, og lim så MCP-URL-en inn i AI-en",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nome@sapo.pt, og skriv inn passordet. SAPO-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "Bare PLAIN på IMAP, både PLAIN og LOGIN på SMTP",
-      "p": "IMAP-banneret tilbyr <code>AUTH=PLAIN</code> og ingenting annet, uten <code>AUTH=LOGIN</code>. Klientbiblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, avvises på autentiseringstrinnet med en feil som ser ut som feil påloggingsdetaljer. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av samme konto kan oppføre seg ulikt i én klient. mcpemails forhandler det hver del faktisk tilbyr."
+      "p": "IMAP-banneret tilbyr <code>AUTH=PLAIN</code> og ingenting annet, uten <code>AUTH=LOGIN</code>. Klientbiblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, avvises på autentiseringstrinnet med en feil som ser ut som feil påloggingsdetaljer. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av samme konto kan oppføre seg ulikt i én klient. MCPEmails forhandler det hver del faktisk tilbyr."
     },
     {
       "h": "Ingen MOVE og ingen SPECIAL-USE på en postkasse med portugisiske navn",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med SAPO Mail?",
-      "a": "Bare på en Premium-konto. SAPO begrenser IMAP, POP og SMTP til Premium, så en gratis Base-konto kan ikke kobles til av noen e-postklient eller MCP-server. Med Premium gir mcpemails pekt mot postkassen Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor og ChatGPT."
+      "a": "Bare på en Premium-konto. SAPO begrenser IMAP, POP og SMTP til Premium, så en gratis Base-konto kan ikke kobles til av noen e-postklient eller MCP-server. Med Premium gir MCPEmails pekt mot postkassen Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor og ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for SAPO?",

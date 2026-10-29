@@ -1,12 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { resolveDefaultAccess, resolvePresets } from '@/lib/oauth/consent-presets';
+import { isRedirectToForRegisteredUri, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+
+// The onboarding inbox step, only for a consent that shows it (inboxStep prop).
+const AuthorizeInboxStep = dynamic(() => import('./AuthorizeInboxStep'), { ssr: false });
+
+/** One connector-first funnel row (POST /api/onboarding/authorize-event); never throws. */
+function reportAuthorizeEvent(stage, client) {
+  try {
+    fetch('/api/onboarding/authorize-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage, client }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics never blocks consent.
+  }
+}
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -39,10 +58,12 @@ function ThemeBtn() {
 
 // ─── Client logo ──────────────────────────────────────────────────────────────
 // Renders a logo_url image if provided, otherwise falls back to a generic
-// agent mark derived from the client_id. This avoids hard-coding real product
-// logos for clients we don't control.
+// agent mark: the first letter of the client's display name, coloured from
+// the client_id. This avoids hard-coding real product logos for clients we
+// don't control. Every dynamically registered client_id starts with "dyn_",
+// so its letter would be a D for Claude and ChatGPT alike.
 
-function ClientMark({ clientId, logoUrl, size = 36 }) {
+function ClientMark({ clientId, clientName = '', logoUrl, size = 36 }) {
   if (logoUrl) {
     return (
       <img
@@ -61,7 +82,7 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
     clientId.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
   ) % 360;
 
-  const firstLetter = clientId.replace(/[^a-z]/gi, '')[0]?.toUpperCase() ?? '?';
+  const firstLetter = (clientName.match(/\p{L}|\p{N}/u)?.[0] ?? clientId.replace(/^dyn_/, '').replace(/[^a-z]/gi, '')[0])?.toUpperCase() ?? '?';
 
   return (
     <svg width={size} height={size} viewBox="0 0 36 36">
@@ -97,7 +118,7 @@ const PRESET_ICONS = { readOnly: 'eye', standard: 'zap', full: 'shield' };
 
 // ─── Preset cards (radiogroup) ───────────────────────────────────────────────
 
-function PresetCards({ presets, mode, recommendedMode, onSelect }) {
+function PresetCards({ presets, mode, recommendedMode, onSelect, roleLimited = false }) {
   const t = useTranslations('auth');
 
   // Keyboard: arrow keys move selection between enabled (offered) presets,
@@ -127,7 +148,7 @@ function PresetCards({ presets, mode, recommendedMode, onSelect }) {
             aria-disabled={disabled}
             tabIndex={disabled ? -1 : (selected || (mode === 'custom' && p.id === presets.find((x) => x.available)?.id) ? 0 : -1)}
             className={'az-preset' + (selected ? ' is-selected' : '') + (disabled ? ' is-disabled' : '')}
-            title={disabled ? t('authorize.presetNotOffered') : undefined}
+            title={disabled ? t(roleLimited ? 'authorize.presetViewerUnavailable' : 'authorize.presetNotOffered') : undefined}
             onClick={() => { if (!disabled) onSelect(p.id); }}
             onKeyDown={(e) => {
               if (disabled) return;
@@ -325,6 +346,92 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
   );
 }
 
+// ─── Where the code goes ─────────────────────────────────────────────────────
+//
+// The redirect_uri decides who receives the authorization code, so it is shown
+// on every consent, above the permissions. For an anonymously registered (DCR)
+// client the name is the registrant's own free text: the heading becomes the
+// destination host unless that host belongs to a known vendor, and the name is
+// shown only here. An app we cannot verify gets no badge and no notice, only
+// the red alert when its name claims a vendor whose host it is not. The
+// decision is made server-side in lib/oauth/client-identity.ts; this only
+// renders it.
+
+const DESTINATION_BADGE = {
+  registered: { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
+  verified:   { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
+  local:      { key: 'badgeLocal',      icon: 'key',    fg: 'var(--fg-2)',               bg: 'var(--ink-25)' },
+};
+
+function DestinationPanel({ identity }) {
+  const t = useTranslations('auth');
+  const badge = DESTINATION_BADGE[identity.verification];
+  const label = identity.destinationLabel;
+  const where =
+    identity.destinationKind === 'app'
+      ? t('authorize.destinationApp', { scheme: label })
+      : identity.destinationKind === 'loopback'
+        ? t('authorize.destinationLoopback', { host: label })
+        : label;
+  return (
+    <div
+      data-testid="az-destination"
+      data-verification={identity.verification}
+      style={{
+        marginBottom: 16, padding: '10px 12px', borderRadius: 8,
+        border: '1px solid ' + (identity.impersonates ? 'var(--red-500, #E5484D)' : 'var(--border-1)'),
+        background: 'var(--bg-surface)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: 'var(--fg-2)' }}>{t('authorize.destinationLabel')}</span>
+        <strong data-testid="az-destination-host" style={{ fontSize: 14, color: 'var(--fg-1)', wordBreak: 'break-all' }}>{where}</strong>
+        {badge && (
+          <span
+            data-testid="az-destination-badge"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 'auto',
+              padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+              color: badge.fg, background: badge.bg, whiteSpace: 'nowrap',
+            }}
+          >
+            <Icon name={badge.icon} size={12} color="currentColor" />
+            {t(`authorize.${badge.key}`)}
+          </span>
+        )}
+      </div>
+
+      {identity.selfReportedName && identity.verification === 'unverified' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t.rich('authorize.selfReportedName', {
+            name: identity.selfReportedName,
+            strong: (c) => <strong>{c}</strong>,
+          })}
+        </div>
+      )}
+
+      {identity.selfReportedName && identity.verification === 'verified' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.verifiedSelfReported', { name: identity.selfReportedName })}
+        </div>
+      )}
+
+      {identity.selfReportedName && identity.verification === 'local' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.localNote', { name: identity.selfReportedName })}
+        </div>
+      )}
+
+      {identity.impersonates && (
+        <div role="alert" data-testid="az-impersonation" style={{ fontSize: 12, color: 'var(--red-700, #A11D22)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.impersonationWarning', { vendor: identity.impersonates, host: label })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── AuthorizeApp (main export) ───────────────────────────────────────────────
 
 /**
@@ -332,6 +439,12 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *
  * Props (all provided by the server component in page.js):
  *  - client         { client_id, client_name, client_byline, logo_url, is_first_party }
+ *                     client_name is the DISPLAY name decided by
+ *                     lib/oauth/client-identity.ts (the destination host for an
+ *                     unverified client), never a raw self-asserted name.
+ *  - identity       { verification, selfReportedName, destinationKind,
+ *                     destinationLabel, impersonates } | null: where the code
+ *                     goes and whether that is verified (DestinationPanel).
  *  - workspaceName  string: the user's workspace display name
  *  - requestedScopes  Array<{ scope, icon, title, desc, required }>: the MENU,
  *                     i.e. every scope this client is permitted to be granted
@@ -346,6 +459,10 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *                     (identifyStepUpLimitedClient in lib/oauth/consent-presets.ts,
  *                     computed by page.js from the validated client_id and
  *                     redirect_uri). Opens the screen on the widest preset.
+ *  - roleLimited    boolean: the caller is a viewer in this workspace, so page.js
+ *                     has already cut `requestedScopes` down to the read-only
+ *                     allow-list. Shows a one-line note saying why the wider
+ *                     levels are unavailable.
  *  - identityScopes  string[]: `openid` and/or `email` if the client asked for
  *                     them. They are NOT permissions in this screen's sense —
  *                     they grant no mailbox access, only the account email at
@@ -358,6 +475,14 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *  - codeChallenge  string: PKCE code_challenge
  *  - challengeMethod string: must be 'S256'
  *  - resource       string|null: RFC 8707 resource indicator (validated by page.js)
+ *  - preferStandard boolean: a connector-first consent from claude.ai; opens on
+ *                     Standard (lib/oauth/consent-presets.ts, owner decision F3).
+ *  - inboxStep      { client, userEmail, returnTo } | null: the workspace is in
+ *                     the new onboarding flow and has no mailbox, so the screen
+ *                     first shows the inbox step (AuthorizeInboxStep), with
+ *                     "Skip, connect later", then the permissions card.
+ *  - connectedOnStep boolean: back from a Microsoft sign-in started on that
+ *                     step, mailbox connected; the card says so.
  *
  * The "Allow access" button posts to /api/oauth/authorize (task 15.2).
  * Until that endpoint exists it shows a granting spinner and transitions
@@ -365,10 +490,12 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  */
 export function AuthorizeApp({
   client,
+  identity = null,
   workspaceName,
   requestedScopes,
   clientRequestedScopes = [],
   clientCannotStepUp = false,
+  roleLimited = false,
   identityScopes = [],
   inboxes,
   redirectUri,
@@ -378,6 +505,9 @@ export function AuthorizeApp({
   resource = null,
   csrfToken,
   preApproved = false,
+  preferStandard = false,
+  inboxStep = null,
+  connectedOnStep = false,
 }) {
   const router = useRouter();
   const t = useTranslations('auth');
@@ -407,6 +537,7 @@ export function AuthorizeApp({
       offeredScopes: offeredScopeIds,
       requestedScopes: clientRequestedScopes,
       clientCannotStepUp,
+      preferStandard,
     }),
   );
 
@@ -466,11 +597,71 @@ export function AuthorizeApp({
     return initial;
   });
 
+  // A mailbox connected on the inbox step arrives with router.refresh().
+  useEffect(() => {
+    // Syncs the per-inbox toggles with a list the server just refreshed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGrantedInboxes((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const ib of inboxes) {
+        if (!(ib.id in next)) {
+          next[ib.id] = ib.status === 'connected' || ib.status === 'active';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [inboxes]);
+
   const [keyLabel, setKeyLabel] = useState(
     `${client.client_name} · ${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
   );
 
-  const [step, setStep] = useState('review'); // review | granting | done | error
+  // inbox | review | granting | done | error. `inbox` only when page.js sent
+  // `inboxStep` (new onboarding flow, no mailbox yet).
+  const [step, setStep] = useState(inboxStep ? 'inbox' : 'review');
+  // The step was offered on this page load: "Connect an inbox" under
+  // Specific inboxes then goes back to it instead of leaving the OAuth flow.
+  const [inboxStepOffered] = useState(Boolean(inboxStep));
+  const [justConnected, setJustConnected] = useState(connectedOnStep);
+  // Once the inbox step shows its proof card the mailbox is connected, so
+  // "Skip, connect later" would only contradict it.
+  const [inboxProofShown, setInboxProofShown] = useState(false);
+  const funnelClient = inboxStep?.client ?? null;
+
+  // One authorize_inbox_step_viewed per page load (the server keeps one per workspace).
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (step !== 'inbox' || viewedRef.current) return;
+    viewedRef.current = true;
+    reportAuthorizeEvent('authorize_inbox_step_viewed', funnelClient);
+  }, [step, funnelClient]);
+
+  // Back from a Microsoft sign-in: drop ?connected= so a reload is a plain consent.
+  useEffect(() => {
+    if (!connectedOnStep) return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('connected');
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {
+      // Cosmetic only.
+    }
+  }, [connectedOnStep]);
+
+  const inboxConnected = () => {
+    reportAuthorizeEvent('authorize_inbox_connected', funnelClient);
+    setJustConnected(true);
+    setStep('review');
+    // The new mailbox, for "Specific inboxes" and the footer count.
+    router.refresh();
+  };
+
+  const skipInboxStep = () => {
+    reportAuthorizeEvent('authorize_skipped', funnelClient);
+    setStep('review');
+  };
   const [errorMsg, setErrorMsg] = useState('');
 
   const selectedScopes = requestedScopes.filter((s) => enabledScopes[s.scope]);
@@ -520,6 +711,16 @@ export function AuthorizeApp({
         scope_profile: scopeProfile(selectedScopes.map((scope) => scope.scope)),
       });
       if (redirect_to) {
+        // The server already refuses these, but the navigation runs on our own
+        // origin, so a javascript:/data:/file: target is never followed from
+        // here either. The full scheme check runs on the REGISTERED
+        // redirectUri (server-validated); redirect_to must be that URI with
+        // only the server's query added. Not the full scan on redirect_to: the
+        // client's own `state` is in its query and may hold a URL. See
+        // lib/oauth/redirect-scheme.ts.
+        if (!isRedirectToForRegisteredUri(redirect_to, redirectUri)) {
+          throw new Error(t('authorize.unsafeRedirect'));
+        }
         window.location.href = redirect_to;
       } else {
         // Endpoint not yet implemented (task 15.2): show the done screen
@@ -538,7 +739,7 @@ export function AuthorizeApp({
   };
 
   const handleDeny = () => {
-    if (redirectUri) {
+    if (redirectUri && isSafeRedirectScheme(redirectUri)) {
       const url = new URL(redirectUri);
       url.searchParams.set('error', 'access_denied');
       url.searchParams.set('error_description', 'The user denied access.');
@@ -559,20 +760,44 @@ export function AuthorizeApp({
         </a>
 
         <div className="az-card">
-          {/* Header: client logo ↔ mcpemails logo */}
+          {/* Header: client logo ↔ MCPEmails logo */}
           {step !== 'done' && (
             <div className="az-head">
               <div className="blob">
                 <ClientMark
                   clientId={client.client_id}
+                  clientName={client.client_name}
                   logoUrl={client.logo_url}
                   size={36}
                 />
               </div>
               <div className="arc" />
               <div className="blob brand">
-                <img src="/favicon.svg" alt="mcpemails" />
+                <img src="/favicon.svg" alt="MCPEmails" />
               </div>
+            </div>
+          )}
+
+          {/* ── Inbox step (new onboarding flow, no mailbox yet) ───────── */}
+          {step === 'inbox' && inboxStep && (
+            <div className="az-body" data-testid="az-inbox-stage">
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-2)', margin: '0 0 8px' }}>
+                {t('authorize.inboxStepLead', { clientName: client.client_name })}
+              </p>
+              <AuthorizeInboxStep
+                client={inboxStep.client}
+                userEmail={inboxStep.userEmail}
+                returnTo={inboxStep.returnTo}
+                onConnected={inboxConnected}
+                onProof={() => setInboxProofShown(true)}
+              />
+              {!inboxProofShown && (
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <button type="button" className="btn btn-ghost" onClick={skipInboxStep} data-testid="az-skip-inbox">
+                    {t('authorize.skipConnectLater')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -580,6 +805,18 @@ export function AuthorizeApp({
           {step === 'review' && (
             <>
               <div className="az-body">
+                {justConnected && (
+                  <div role="status" data-testid="az-inbox-connected" style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                    borderRadius: 8, marginBottom: 12,
+                    background: 'var(--mint-50, #f0fdf4)', border: '1px solid var(--mint-200, #bbf7d0)',
+                  }}>
+                    <Icon name="check" size={14} color="var(--mint-700, #15803d)" strokeWidth={2.2} />
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--mint-700, #15803d)' }}>
+                      {t('authorize.inboxStepConnected', { clientName: client.client_name })}
+                    </span>
+                  </div>
+                )}
                 <h1>{t('authorize.title', { clientName: client.client_name })}</h1>
                 <div className="who">
                   {t.rich('authorize.who', {
@@ -589,6 +826,9 @@ export function AuthorizeApp({
                     strong: (c) => <strong>{c}</strong>,
                   })}
                 </div>
+
+                {/* Where the authorization code will be sent */}
+                {identity && <DestinationPanel identity={identity} />}
 
                 {/* Client ID badge */}
                 <div style={{
@@ -637,7 +877,18 @@ export function AuthorizeApp({
                     </div>
 
                     {/* Preset cards (radiogroup) */}
-                    <PresetCards presets={presets} mode={mode} recommendedMode={defaultAccess.recommendedMode} onSelect={selectPreset} />
+                    <PresetCards presets={presets} mode={mode} recommendedMode={defaultAccess.recommendedMode} onSelect={selectPreset} roleLimited={roleLimited} />
+
+                    {roleLimited && (
+                      <div className="az-role-note" role="note" style={{
+                        fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                        lineHeight: 1.5, margin: '8px 0 4px',
+                      }}>
+                        {t('authorize.viewerScopeNote', {
+                          workspace: workspaceName || t('authorize.workspaceFallback'),
+                        })}
+                      </div>
+                    )}
 
                     {/* Customize affordance + granular per-scope toggles */}
                     <button
@@ -672,7 +923,7 @@ export function AuthorizeApp({
                     fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     padding: '12px 0', marginBottom: 8,
                   }}>
-                    {t('authorize.noScopes')}
+                    {roleLimited ? t('authorize.viewerNoScopes') : t('authorize.noScopes')}
                   </div>
                 )}
 
@@ -774,9 +1025,17 @@ export function AuthorizeApp({
                       fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     }}>
                       {t('authorize.noInboxesPrefix')}
-                      <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
-                        {t('authorize.connectInbox')}
-                      </a>
+                      {inboxStepOffered ? (
+                        // Back to the inbox step: the OAuth request stays alive.
+                        <button type="button" onClick={() => setStep('inbox')} data-testid="az-back-to-inbox-step"
+                          style={{ color: 'var(--brand)', background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }}>
+                          {t('authorize.connectInbox')}
+                        </button>
+                      ) : (
+                        <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
+                          {t('authorize.connectInbox')}
+                        </a>
+                      )}
                       {t('authorize.noInboxesSuffix')}
                     </div>
                   )

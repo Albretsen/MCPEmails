@@ -1,8 +1,8 @@
 import { ForgotPasswordApp } from '../../../components/auth/ForgotPasswordApp';
 
 export const metadata = {
-  title: 'Reset password · mcpemails',
-  description: 'Reset your mcpemails account password',
+  title: 'Reset password',
+  description: 'Reset your MCPEmails account password',
 };
 
 /**

@@ -6,21 +6,33 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
-import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
+import { BLACK_WEEK_2026 } from '@/lib/stripe/seasonal-offer';
+import {
+  seasonalOfferForPlan,
+  seasonalOfferValues,
+  shouldFetchSeasonalOffers,
+} from '@/lib/billing/seasonal-offer-view.mjs';
+import ProPriceNotice, { useProPriceNoticeVisible } from '../ProPriceNotice';
+import { CheckoutReassurance } from '../CheckoutReassurance';
+import { proPriceNoticeCopy } from '@/lib/stripe/pro-price-notice-copy.mjs';
+import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
+import { useDisplayCurrency } from './useDisplayCurrency';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
-// for one person, Pro is every inbox you own, Team adds people. Since
+// for one person, Pro is up to 10 for one person running a business, and
+// Business includes 10, sells each extra mailbox and adds people. Since
 // 2026-09-12 Free also carries a public allowance of 150 email actions a
-// calendar month (first 7 days uncounted), stated in the table and the FAQ;
+// calendar month (first 3 days uncounted), stated in the table and the FAQ;
 // paid tiers have no monthly cap and their fair-use ceilings stay silent
 // (see src/lib/stripe/plans.ts, FREE_ACTION_ALLOWANCE / FREE_ACTION_GRACE_DAYS).
 //
-// NOTE: the "Pro" tier keeps the internal key `solo` and "Team" keeps `pro`, so
+// NOTE: the "Pro" tier keeps the internal key `solo` and "Business" keeps `pro`, so
 // live Stripe prices (keyed by plan id) resolve correctly. Only the display
 // names changed. `personal` is the one id that matches its own display name.
 // User-facing copy (name, desc, cta, features) is read from the `pricing`
@@ -65,7 +77,7 @@ const PLANS = [
 // Plan-availability matrix only. Labels (section + feature names) and string
 // values are resolved from the message bundle by key.
 
-// Column order is the ladder order: free, personal, solo ("Pro"), pro ("Team").
+// Column order is the ladder order: free, personal, solo ("Pro"), pro ("Business").
 // EVERY row must carry all four keys. A missing key renders an empty cell
 // instead of failing the build, so new rows have to be checked by eye.
 
@@ -73,22 +85,25 @@ const TABLE_SECTIONS = [
   {
     key: 'usage',
     rows: [
-      // Pro's cell says company mailboxes out loud. Pro is the plan a business
-      // with a mailbox per department wants, and a bare "Unlimited" next to a
-      // single seat read as "one person's own mailboxes" and sent companies to
-      // Team.
-      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimitedCompany', pro: 'values.unlimited' },
+      // Pro is capped at PRO_INBOX_CAP and Business includes
+      // BUSINESS_INCLUDED_INBOXES plus a per-mailbox price (src/lib/stripe/plans.ts).
+      // Pro workspaces from before the 2026-10 cap keep unlimited; the dashboard
+      // says so, this public table quotes what a new customer buys.
+      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.tenMailboxes', pro: 'values.businessMailboxes' },
       // Free's allowance is public and must match FREE_ACTION_ALLOWANCE /
       // FREE_ACTION_GRACE_DAYS in src/lib/stripe/plans.ts. Paid tiers never
       // print a number: they have no monthly cap, subject to fair use.
       { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
-      // Personal and Pro are deliberately single-seat: sharing inboxes with
-      // other people is what Team is for. The row is labelled "Seats" and the
-      // value is a count, not "Just you": the old wording was true about logins
-      // and read as "not for a company", which is wrong about the buyer.
+      // `webhooksEnabled` in src/lib/stripe/plans.ts, enforced by the
+      // /api/webhook-endpoints routes and by webhooks_plan_allowed() in SQL.
+      { key: 'webhooks', free: false, personal: false, solo: true, pro: true },
+      // Personal and Pro are deliberately single-seat: other people signing in
+      // is what Business is for, at no per-person price. The value is a count,
+      // not "Just you": the old wording was true about logins and read as "not
+      // for a company", which is wrong about the buyer.
       // src/lib/personas/business-copy.test.ts keeps "Just you" from returning.
-      { key: 'members',  free: 'values.oneSeat', personal: 'values.oneSeat',     solo: 'values.oneSeat', pro: 'values.unlimited' },
+      { key: 'members',  free: 'values.oneSeat', personal: 'values.oneSeat',     solo: 'values.oneSeat', pro: 'values.unlimitedPeople' },
       { key: 'burst',    free: 'values.burstFree', personal: 'values.burstPersonal', solo: 'values.burstSolo', pro: 'values.burstPro' },
       // On every tier, and broken out as its own row on purpose. It is an
       // inbox setting (`inboxes.send_review_mode`) with no plan gate anywhere,
@@ -121,20 +136,39 @@ const TABLE_SECTIONS = [
       { name: 'draft',          free: true, personal: true, solo: true, pro: true },
       { name: 'schedule',       free: true, personal: true, solo: true, pro: true },
       { name: 'contact_search', free: true, personal: true, solo: true, pro: true },
+      // Pro feature tools (pro-features.ts PRO_FEATURE_TOOLS): listed to every
+      // key since launch, refused with an upgrade note below Pro.
+      { name: 'reminder',       free: false, personal: false, solo: true, pro: true },
+      { name: 'reminder_list',  free: false, personal: false, solo: true, pro: true },
+    ],
+  },
+  {
+    // The Pro features. All new at launch: nothing here was ever on Free or
+    // Personal. Each row is gated to Pro and Business (`solo`, `pro`) in
+    // mcp-server/pro-features.ts and apps/web/src/lib/plans/pro-features.ts.
+    key: 'chatClosed',
+    rows: [
+      { key: 'followUps',    free: false, personal: false, solo: true, pro: true },
+      { key: 'snooze',       free: false, personal: false, solo: true, pro: true },
+      { key: 'brief',        free: false, personal: false, solo: true, pro: true },
+      { key: 'searchAll',    free: false, personal: false, solo: true, pro: true },
+      { key: 'instructions', free: false, personal: false, solo: true, pro: true },
     ],
   },
   {
     key: 'analytics',
     rows: [
       { key: 'dashboard', free: true,              personal: true,                 solo: true,               pro: true },
-      { key: 'roles',     free: false,             personal: false,                solo: false,              pro: true },
-      { key: 'sso',       free: false,             personal: false,                solo: false,              pro: true },
-      { key: 'audit',     free: false,             personal: false,                solo: false,              pro: true },
+      // Only what Business really does today. No SSO, audit-log or priority
+      // support rows: none of those exist on any plan.
+      { key: 'roles',          free: false, personal: false, solo: false, pro: true },
+      { key: 'adminApprovals', free: false, personal: false, solo: false, pro: true },
+      { key: 'workspaces',     free: false, personal: false, solo: false, pro: true },
       // The ONLY analytics difference between the tiers. The dashboard itself
       // is on every plan, so listing "usage analytics" as a paid feature was
       // the claim this row replaces. Values mirror `analyticsRetentionDays` in
       // src/lib/stripe/plans.ts, enforced via src/lib/analytics/retention.ts.
-      { key: 'history',   free: 'values.history30', personal: 'values.history30',   solo: 'values.history90', pro: 'values.history365' },
+      { key: 'history',   free: 'values.history30', personal: 'values.history90',   solo: 'values.history2y', pro: 'values.history2y' },
     ],
   },
   {
@@ -149,7 +183,6 @@ const TABLE_SECTIONS = [
     rows: [
       { key: 'community', free: true,  personal: true,  solo: true,  pro: true },
       { key: 'email',     free: false, personal: true,  solo: true,  pro: true },
-      { key: 'priority',  free: false, personal: false, solo: false, pro: true },
     ],
   },
 ];
@@ -212,11 +245,75 @@ function UpgradeIntentReader({ onIntent }) {
 }
 
 /**
- * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * The live seasonal first-year offers (Black Week 2026), or null.
+ *
+ * WHY AFTER MOUNT. This page is prerendered and CDN cached, and its HTML must
+ * not change for the offer: the titles, meta description and JSON-LD stay
+ * exactly what crawlers already read. So the offer is fetched from
+ * /api/seasonal-offer once the page is in the browser, and it switches on and
+ * off at the window boundaries with no deploy and no revalidation of the page.
+ * Outside a margin around the window no request is made at all. The server
+ * render and the first client render both show no offer, so hydration agrees.
+ *
+ * A tab left open past the end drops the line at `endsAt` rather than at the
+ * next reload.
  */
-function PlanCards({ annual, stripePrices, user, highlightPlan }) {
+function useSeasonalOffers() {
+  const [offers, setOffers] = useState(null);
+  useEffect(() => {
+    if (!shouldFetchSeasonalOffers(BLACK_WEEK_2026, Date.now(), process.env.NODE_ENV)) return undefined;
+    let cancelled = false;
+    let timer = null;
+    fetch('/api/seasonal-offer')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.offers || typeof data.offers !== 'object') return;
+        setOffers(data.offers);
+        const ends = Object.values(data.offers)
+          .map((o) => Date.parse(o?.endsAt))
+          .filter(Number.isFinite);
+        const wait = ends.length ? Math.min(...ends) + 1000 - Date.now() : -1;
+        if (wait > 0 && wait < 2 ** 31 - 1) {
+          timer = setTimeout(() => { if (!cancelled) setOffers({}); }, wait);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+  return offers;
+}
+
+/**
+ * The Black Week line under an annual price: the first-year price, the renewal
+ * price in the same sentence, the computed saving, and the fixed end date.
+ * Every number comes from the offer object. Renders nothing without one.
+ */
+function SeasonalOfferLine({ offer, planKey }) {
   const t = useTranslations('pricing');
   const locale = useLocale();
+  const values = seasonalOfferValues(offer, locale);
+  if (!values) return null;
+  return (
+    <div className="price-seasonal" data-seasonal-offer={planKey}>
+      <p>{t('seasonal.line', values)}</p>
+      <p className="price-seasonal-ends">{t('seasonal.ends', { date: values.date, time: values.time })}</p>
+    </div>
+  );
+}
+
+/**
+ * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ */
+function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd', seasonalOffers = null }) {
+  const t = useTranslations('pricing');
+  const locale = useLocale();
+  // EUR (an EU visitor, STRIPE_EUR_PRICES on): same digits, euro sign in the
+  // reader's format, VAT included. USD keeps today's rendering exactly.
+  const eur = currency === 'eur';
+  const money = (text) => (eur ? euroizeAmounts(text, locale) : text);
   // No entitlement is read here any more. The Personal CTA used to become a
   // non-interactive status line for a visitor holding `unlimited_inboxes`,
   // matching a 409 in checkout-core. Both are gone: the grant lifts only
@@ -245,18 +342,36 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
 
         // Formatted, never rounded to whole dollars: Personal's $86.40 a year
         // is $7.20 a month, and Math.round would print a $7 nobody is charged.
-        const priceDisplay =
-          monthlyCents === 0
-            ? '$0'
-            : annual && yearlyCents
-            ? formatPriceCents(Math.round(yearlyCents / 12))
-            : formatPriceCents(monthlyCents);
+        let priceDisplay;
+        if (eur) {
+          // Stripe's EUR currency option, else the same digits as USD.
+          const eurMonthly = eurCentsFor(stripePrices?.[plan.key]?.eurMonthlyCents, monthlyCents);
+          const eurYearly = eurCentsFor(stripePrices?.[plan.key]?.eurYearlyCents, yearlyCents);
+          priceDisplay =
+            monthlyCents === 0
+              ? formatMoneyCents(0, 'eur', locale)
+              : annual && eurYearly
+              ? formatMoneyCents(Math.round(eurYearly / 12), 'eur', locale)
+              : formatMoneyCents(eurMonthly, 'eur', locale);
+        } else {
+          priceDisplay =
+            monthlyCents === 0
+              ? '$0'
+              : annual && yearlyCents
+              ? formatPriceCents(Math.round(yearlyCents / 12))
+              : formatPriceCents(monthlyCents);
+        }
 
-        // The message writes its own currency sign, so it gets the bare amount.
-        const liveAnnualTotal = yearlyCents ? formatAmountCents(yearlyCents, locale) : null;
+        // The message writes its own currency sign, so it gets the bare amount
+        // (and `money` swaps that sign for the euro when EUR is shown).
+        const eurYearlyTotal = eur ? eurCentsFor(stripePrices?.[plan.key]?.eurYearlyCents, yearlyCents) : null;
+        const annualTotalCents = eur ? eurYearlyTotal : yearlyCents;
+        const liveAnnualTotal = annualTotalCents ? formatAmountCents(annualTotalCents, locale) : null;
 
         const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
-        const features = t.raw(`plans.${plan.key}.features`);
+        // Set only on Business, only while the founder offer is open.
+        const founder = plan.key === 'pro' ? stripePrices?.pro?.founder ?? null : null;
+        const features = t.raw(`plans.${plan.key}.features`).map(money);
 
         // The card the visitor was quoted at an in-product paywall, if they
         // arrived from one. It gets the ring .featured already uses and NOT the
@@ -282,8 +397,41 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
                 {priceDisplay}
                 {perDisplay && <small> {perDisplay}</small>}
               </div>
+              {eur && liveMonthly > 0 && (
+                <p className="price-annual-note">{t('card.inclVat')}</p>
+              )}
               {annual && liveMonthly > 0 && (
-                <p className="price-annual-note">{t('card.billedYearly', { total: liveAnnualTotal })}</p>
+                <p className="price-annual-note">{money(t('card.billedYearly', { total: liveAnnualTotal }))}</p>
+              )}
+              {/* Annual Personal and Pro only, inside the window only.
+                  Business and monthly never get one: the offer map has no
+                  entry for them, and the monthly view does not ask. */}
+              {annual && seasonalOffers && (
+                <SeasonalOfferLine offer={seasonalOfferForPlan(seasonalOffers, plan.key)} planKey={plan.key} />
+              )}
+              {/* The Business founder price, only while it is open. The page
+                  then prices the card from the founder pair, so the amount
+                  here is the amount checkout charges. Plain text: no badge,
+                  no strike-through, no colour change as places go. */}
+              {founder && (
+                <>
+                  <p className="price-annual-note" data-founder-line="">
+                    {money(
+                      t('founder.line', {
+                        price: formatAmountCents(founder.monthlyCents, locale),
+                        addon: formatAmountCents(founder.addonMonthlyCents, locale),
+                        total: founder.placesTotal,
+                      }),
+                    )}
+                  </p>
+                  <p className="price-annual-note" data-founder-places="">
+                    {t('founder.places', { left: founder.placesLeft, total: founder.placesTotal })}
+                  </p>
+                </>
+              )}
+              {/* Pro only: the plan's one-line promise, above its description. */}
+              {t.has(`plans.${plan.key}.tagline`) && (
+                <p className="price-tagline">{t(`plans.${plan.key}.tagline`)}</p>
               )}
               <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
             </div>
@@ -295,7 +443,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
             {plan.key === 'free' ? (
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={user ? '/dashboard' : plan.ctaHref}
+                href={user ? '/dashboard' : withReadingLang(plan.ctaHref, locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
@@ -306,14 +454,23 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
                  to point at /dashboard/settings?upgrade=, which server-rendered
                  and hydrated the entire dashboard before a client effect could
                  begin checkout. Keep this a plain <a>: a next/link <Link> would
-                 prefetch the checkout route. */
-              <a
-                className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={pricingUpgradeHref(plan.key, annual, Boolean(user))}
-                style={{ textAlign: 'center', justifyContent: 'center' }}
-              >
-                {t(`plans.${plan.key}.cta`)}
-              </a>
+                 prefetch the checkout route.
+
+                 The reassurance line sits under the button only, never in the
+                 page title or description (a snippet test owns those). */
+              <>
+                <a
+                  className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                  href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user), locale), locale)}
+                  style={{ textAlign: 'center', justifyContent: 'center' }}
+                >
+                  {t(`plans.${plan.key}.cta`)}
+                </a>
+                {/* A sibling, not a wrapper: the button stays a direct child
+                    of .price. The negative margin pulls it to 8px under the
+                    button inside the card's 18px gap. */}
+                <CheckoutReassurance locale={locale} align="center" style={{ margin: '-10px 0 0' }} />
+              </>
             )}
           </div>
         );
@@ -336,11 +493,17 @@ function TableCell({ value }) {
   return <td className="tbl-val">{value}</td>;
 }
 
-function ComparisonTable() {
+function ComparisonTable({ currency = 'usd' }) {
   const t = useTranslations('pricing');
+  const locale = useLocale();
   // String cell values are stored as message keys (e.g. "values.unlimited");
   // booleans render as check/dash. Translate keys, pass booleans through.
-  const cell = (v) => (typeof v === 'string' ? t(`comparison.${v}`) : v);
+  // "then $3 a month each" follows the visitor's currency like the cards do.
+  const cell = (v) => {
+    if (typeof v !== 'string') return v;
+    const text = t(`comparison.${v}`);
+    return currency === 'eur' ? euroizeAmounts(text, locale) : text;
+  };
 
   return (
     <div className="comparison-wrap">
@@ -351,7 +514,7 @@ function ComparisonTable() {
             <th>{t('comparison.free')}</th>
             <th>{t('comparison.personal')}</th>
             <th className="featured-col">{t('comparison.solo')}</th>
-            <th>{t('comparison.team')}</th>
+            <th>{t('comparison.business')}</th>
           </tr>
         </thead>
         <tbody>
@@ -402,9 +565,16 @@ function FaqItem({ q, a }) {
 /* ─── Page ───────────────────────────────────────────────────── */
 
 /**
- * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * @param {{
+ *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   eurEnabled?: boolean,
+ * }} props
+ *
+ * `eurEnabled` is STRIPE_EUR_PRICES as the server read it. Off (the default),
+ * the page never asks for the visitor's country and renders USD exactly as
+ * before. On, an EU visitor sees the same digits in EUR with "incl. VAT".
  */
-export default function PricingClient({ stripePrices }) {
+export default function PricingClient({ stripePrices, eurEnabled = false }) {
   // Annual is the default selection, not just an available option. Which
   // interval is preselected swings the annual mix far more than the size of
   // the discount does, and annual prepay is the cheapest working capital a
@@ -430,23 +600,54 @@ export default function PricingClient({ stripePrices }) {
     setHighlightPlan(planId);
   }, []);
   const t = useTranslations('pricing');
-  const faqItems = t.raw('faq.items');
+  const locale = useLocale();
+  const currency = useDisplayCurrency(eurEnabled);
+  // Prices inside sentences follow the cards: the same digits, in EUR, for an
+  // EU visitor while the switch is on. Identity for everyone else.
+  const money = (text) => (currency === 'eur' ? euroizeAmounts(text, locale) : text);
+  // The dated Pro price question joins the FAQ only while the notice above
+  // the cards is up, so the two can never disagree about whether it applies.
+  const proPriceNotice = useProPriceNoticeVisible();
+  const rawFaqItems = proPriceNotice
+    ? [proPriceNoticeCopy(locale).faq, ...t.raw('faq.items')]
+    : t.raw('faq.items');
+  const faqItems =
+    currency === 'eur'
+      ? rawFaqItems.map((item) => ({ ...item, a: money(item.a) }))
+      : rawFaqItems;
 
   // Billing funnel. The endpoint ignores anonymous callers, so this records
   // only signed-in users revisiting /pricing, which is the population whose
   // non-conversion is actually diagnostic.
   usePricingView('pricing_page');
 
+  // Black Week 2026, fetched after mount (see useSeasonalOffers).
+  const seasonalOffers = useSeasonalOffers();
+
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a
   // clear account affordance without making the public page private.
+  //
+  // The Supabase browser client is loaded on demand, not imported at the top:
+  // it is only needed for this one check, and a static import put supabase-js
+  // (about 67 KB gzipped) on the page's first load for every visitor.
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    let cancelled = false;
+    let subscription = null;
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      if (cancelled) return;
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data }) => {
+        if (!cancelled) setUser(data.user ?? null);
+      });
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      }));
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   return (
@@ -473,10 +674,10 @@ export default function PricingClient({ stripePrices }) {
               rather than a per-month figure stripped of its commitment. */}
           <h1 className="pricing-page-h1">
             {t('hero.titleLine1')}<br />
-            {annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2')}
+            {money(annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2'))}
           </h1>
           <p className="pricing-page-lead">
-            {t('hero.lead')}
+            {money(t('hero.lead'))}
           </p>
           <BillingToggle annual={annual} onChange={setAnnual} />
         </div>
@@ -485,20 +686,29 @@ export default function PricingClient({ stripePrices }) {
       {/* Plan cards */}
       <section className="pricing-page-cards">
         <div className="container">
-          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} />
+          <ProPriceNotice
+            locale={locale}
+            where="pricing"
+            className="pricing-footnote"
+            style={{ textAlign: 'center', margin: '0 auto 24px', maxWidth: 720, color: 'var(--fg-2)' }}
+          />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} currency={currency} seasonalOffers={seasonalOffers} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
-          {/* A company reading these cards has to find out that Pro, not
-              Team, is the plan for one person running several company
-              mailboxes. The FAQ says so too; this is the line people see. */}
+          {/* A company reading these cards has to find out that Pro is the
+              plan for one person running several company mailboxes. The FAQ
+              says so too; this is the line people see. */}
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
             {t.rich('cardsFootnote.business', {
               business: (chunks) => <Link href="/for/business">{chunks}</Link>,
             })}
           </p>
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
-            {t.rich('cardsFootnote.custom', {
+          {/* Enterprise is a conversation, not a fifth card: a DPA, invoice
+              billing and Microsoft 365 admin help, all by email. */}
+          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 16 }}>
+            <strong>{t('enterprise.title')}</strong>{' '}
+            {t.rich('enterprise.body', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
             })}
           </p>
@@ -512,7 +722,7 @@ export default function PricingClient({ stripePrices }) {
             <div className="eye-label">{t('comparison.eyebrow')}</div>
             <h2 style={{ fontSize: 36 }}>{t('comparison.title')}</h2>
           </div>
-          <ComparisonTable />
+          <ComparisonTable currency={currency} />
         </div>
       </section>
 
@@ -536,10 +746,10 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">
-            {t('ctaBand.sub')}
+            {money(stripePrices?.pro?.founder ? t('ctaBand.subFounder') : t('ctaBand.sub'))}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
           </div>
         </div>

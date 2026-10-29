@@ -20,8 +20,8 @@
     "eyebrow": "Rogers Yahoo Mail + IA",
     "titleLine1": "Conecta una bandeja de Rogers Yahoo",
     "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
-    "lead": "El correo de Rogers es correo de Yahoo con el nombre rogers.com. mcpemails lo conecta por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo, siempre que tu cuenta todavía pueda generar una contraseña de aplicación.",
-    "answer": "Claude no puede acceder a un buzón de Rogers Yahoo por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.broadband.rogers.com en el puerto 993, autenticándose con una contraseña de aplicación de Rogers Yahoo en lugar de la contraseña que escribes en el webmail. Hay un problema real que conviene comprobar primero: el propio artículo de configuración de Rogers dice ahora que la generación de contraseñas de aplicación ya no está disponible, mientras que la ayuda de Yahoo para Rogers sigue documentando el botón Create app password, así que abre la página de seguridad de tu cuenta antes de hacer planes. Si ya existe una contraseña de aplicación o todavía se puede crear, una bandeja es gratis, para siempre.",
+    "lead": "El correo de Rogers es correo de Yahoo con el nombre rogers.com. MCPEmails lo conecta por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo, siempre que tu cuenta todavía pueda generar una contraseña de aplicación.",
+    "answer": "Claude no puede acceder a un buzón de Rogers Yahoo por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.broadband.rogers.com en el puerto 993, autenticándose con una contraseña de aplicación de Rogers Yahoo en lugar de la contraseña que escribes en el webmail. Hay un problema real que conviene comprobar primero: el propio artículo de configuración de Rogers dice ahora que la generación de contraseñas de aplicación ya no está disponible, mientras que la ayuda de Yahoo para Rogers sigue documentando el botón Create app password, así que abre la página de seguridad de tu cuenta antes de hacer planes. Si ya existe una contraseña de aplicación o todavía se puede crear, una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, si tu cuenta la permite",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis de mcpemails",
+      "h": "Crea una cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Introduce la dirección rogers.com y la contraseña de aplicación",
-      "p": "En mcpemails elige IMAP / SMTP, pon la dirección rogers.com completa en el campo de usuario y pega la contraseña de aplicación. No uses la contraseña del webmail de Rogers Yahoo; la capa IMAP la rechaza. Los servidores y puertos de arriba vienen rellenados y se verificaron mediante una conexión TLS real."
+      "p": "En MCPEmails elige IMAP / SMTP, pon la dirección rogers.com completa en el campo de usuario y pega la contraseña de aplicación. No uses la contraseña del webmail de Rogers Yahoo; la capa IMAP la rechaza. Los servidores y puertos de arriba vienen rellenados y se verificaron mediante una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "El servidor SMTP de Yahoo que hay detrás de Rogers anuncia un tamaño máximo de mensaje de unos 39 MB, así que un envío con adjuntos grandes se rechaza antes de salir.",
-    "Si tu cuenta ya no puede generar una contraseña de aplicación, mcpemails no puede conectarla. No hay alternativa solo con contraseña, y no somos una de las aplicaciones registradas para la ventana OAuth de Rogers Yahoo."
+    "Si tu cuenta ya no puede generar una contraseña de aplicación, MCPEmails no puede conectarla. No hay alternativa solo con contraseña, y no somos una de las aplicaciones registradas para la ventana OAuth de Rogers Yahoo."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Rogers?",
-      "a": "No directamente. Claude no tiene un conector de Rogers integrado. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo rogers.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP. Depende de que tu cuenta pueda usar una contraseña de aplicación."
+      "a": "No directamente. Claude no tiene un conector de Rogers integrado. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo rogers.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP. Depende de que tu cuenta pueda usar una contraseña de aplicación."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Rogers?",

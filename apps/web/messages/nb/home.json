@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "agenten kaller",
       "logReturns": "returnerer innboks-ID-er, ingen kopiering fra dashbordet",
-      "logFetches": "mcpemails henter via Gmail API (token rotert)",
+      "logFetches": "MCPEmails henter direkte fra leverandøren din",
       "logResult": "20 meldinger returnert",
       "logNothing": "ingenting lagret",
-      "legendPipe": "mcpemails (røret)",
+      "legendPipe": "MCPEmails (røret)",
       "legendLive": "sanntidsforespørsel",
       "legendData": "dine data, din leverandør"
     }
@@ -49,10 +49,13 @@
   "whatIs": {
     "title": "Hva er en MCP-server for e-post?",
     "p1": "En MCP-server for e-post (email MCP server) er broen mellom en AI-assistent og en ekte postkasse. Den snakker Model Context Protocol, slik at Claude, ChatGPT, Cursor eller en annen MCP-klient kan lese, søke, skrive utkast og sende e-post gjennom ett endepunkt, uten en egen integrasjon for hver app.",
-    "p2": "MCP Emails er en vertsbasert en. Den fungerer med Gmail, Outlook og Microsoft 365, iCloud, Fastmail og alle postkasser som støtter IMAP, og én agent kan jobbe i flere postkasser samtidig. E-posten hentes direkte fra leverandøren din ved hvert kall og lagres aldri på serverne våre.",
+    "p2": "MCPEmails er en vertsbasert en. Den fungerer med Gmail, Outlook og Microsoft 365, iCloud, Fastmail og alle postkasser som støtter IMAP, og én agent kan jobbe i flere postkasser samtidig. E-posten hentes direkte fra leverandøren din ved hvert kall og lagres aldri på serverne våre.",
     "linkImap": "Sett opp MCP-serveren for IMAP",
     "linkBusiness": "E-post-MCP for firmaets postkasser",
-    "linkProviders": "Alle støttede e-postleverandører"
+    "linkProviders": "Alle støttede e-postleverandører",
+    "guideClaude": "Slik kobler du Claude til e-posten din",
+    "guideChatgpt": "Slik kobler du ChatGPT til e-posten din",
+    "guideImap": "Guide til Claude IMAP-koblingen"
   },
   "features": {
     "eyebrow": "Prinsipper",
@@ -62,23 +65,23 @@
     "items": {
       "0": {
         "tag": "Omfang",
-        "h": "Sytten fokuserte verktøy. Det essensielle, dekket.",
+        "h": "Tjueen fokuserte verktøy. Det essensielle, dekket.",
         "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter, signaturer og automatiseringer som går uten tilsyn. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",
         "h": "E-post hentes i sanntid. Lagres aldri.",
-        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
+        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Unntakene er utgående meldinger som må vente: en melding du planlegger til senere, eller en sending som holdes tilbake for godkjenning, lagres kryptert, og oppføringen beholdes for historikken din."
       },
       "2": {
         "tag": "Sending",
-        "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "h": "Du har kontroll over hver sending.",
+        "p": "Din egen leverandør sender hver melding, fra din adresse: Gmail, Outlook, Fastmail eller din egen SMTP-server. Hvis en leverandør avviser tilkoblinger fra skyadresser, går tilkoblingen gjennom vårt relé, en ren tunnel med TLS hele veien, så reléet ser aldri e-posten eller passordet ditt. Slå på godkjenning per innboks for å holde tilbake sendinger, svar, videresendinger, sending av utkast og planlagte sendinger til de er gjennomgått i dashbordet. Automatiske nye forsøk kan gjenbruke en idempotensnøkkel i 24 timer, og en annen avsenderadresse fungerer bare når den er en verifisert Send As-adresse for den innboksen."
       },
       "3": {
         "tag": "Leverandører",
         "h": "Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "App-passord eller Google-innlogging (OAuth 2.0) for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
+        "p": "Google-app-passord over IMAP for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
       },
       "4": {
         "tag": "Tilgang",
@@ -88,7 +91,7 @@
       "5": {
         "tag": "Sikkerhet",
         "h": "Legitimasjon krypteres ved lagring.",
-        "p": "OAuth-tokens og app-passord krypteres med AES-256-GCM før de skrives til databasen. Dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunktet. Krypteringsnøkkelen lagres som en miljøhemmelighet, atskilt fra databasen."
+        "p": "OAuth-tokens og app-passord krypteres med AES-256-GCM før de skrives til databasen. De dekrypteres bare på serverne våre, for forespørselen som trenger dem. Krypteringsnøkkelen lagres som en miljøhemmelighet, atskilt fra databasen."
       }
     }
   },
@@ -125,17 +128,43 @@
     "eyebrow": "Ekte forespørsler",
     "titleLine1": "Bare spør.",
     "titleLine2": "Den leser, skriver og rydder.",
-    "sub": "Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den mcpemails til å få det gjort."
+    "sub": "Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den MCPEmails til å få det gjort.",
+    "items": [
+      {
+        "prompt": "Gå gjennom sales@ og info@ og list opp alle henvendelser fra denne uka som ingen har svart på",
+        "outcome": "7 åpne henvendelser i begge innboksene, eldste først. To har ventet siden mandag."
+      },
+      {
+        "prompt": "Meld meg av alle nyhetsbrev jeg ikke har åpnet på 3 måneder",
+        "outcome": "Arkiverte 14 nyhetsbrev du ikke har rørt siden april."
+      },
+      {
+        "prompt": "Videresend denne månedens fakturaer fra invoices@ til regnskapsføreren vår",
+        "outcome": "Videresendte 9 fakturaer fra invoices@, med PDF-ene vedlagt."
+      },
+      {
+        "prompt": "Flytt alle kvitteringer fra denne måneden til en mappe som heter Kvitteringer",
+        "outcome": "Flyttet 23 kvitteringer til Kvitteringer/2026."
+      },
+      {
+        "prompt": "Send denne mandag kl. 8, ikke nå",
+        "outcome": "Planlagt til man. kl. 08:00. Ingenting går ut før det."
+      },
+      {
+        "prompt": "Hva sa legekontoret om timen min?",
+        "outcome": "Bekreftet torsdag kl. 14:15."
+      }
+    ]
   },
   "quote": {
     "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
-    "role": "grunnlegger, mcpemails"
+    "role": "grunnlegger, MCPEmails"
   },
   "reviews": {
     "eyebrow": "Omtaler",
     "titleLine1": "Ikke ta vårt ord for det.",
     "titleLine2": "Ta deres.",
-    "sub": "Ekte omtaler fra folk som bruker mcpemails mot sin egen innboks, publisert under fullt navn.",
+    "sub": "Ekte omtaler fra folk som bruker MCPEmails mot sin egen innboks, publisert under fullt navn.",
     "ratingLabel": "Vurdert til {rating} av 5",
     "count": "{count, plural, one {# omtale} other {# omtaler}}",
     "via": "Omtalt på {source}",
@@ -148,9 +177,10 @@
   "pricing": {
     "eyebrow": "Priser",
     "title": "Prisen følger innboksene. Ingen måling på betalte planer.",
-    "sub": "Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til alle postkassene firmaet ditt har. Team legger til folk, roller og et eget arbeidsområde per kunde.",
+    "sub": "Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til opptil 10 for én person som driver en bedrift. Business har 10 postkasser inkludert, $3 i måneden for hver ekstra, og plass til hele teamet.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
+    "inclVat": "inkl. mva.",
     "tiers": {
       "free": {
         "name": "Gratis",
@@ -180,27 +210,32 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Alle postkassene firmaet ditt har, i én agent: økonomi, salg, support, post@ og din egen.",
+        "tagline": "Sett det opp i chatten. Det fortsetter å kjøre etter at du lukker den.",
+        "desc": "For én person som driver en bedrift: opptil 10 postkasser på én agent, fra økonomi og salg til support og din egen.",
         "features": [
           "Alt i Personal",
-          "Ubegrenset antall tilkoblede innbokser",
+          "10 tilkoblede innbokser",
           "5x høyere burst-grense",
-          "Lengre analysehistorikk"
+          "Lengre analysehistorikk",
+          "Påminnelser når ingen svarer på e-post du har sendt",
+          "Utsett: e-post forsvinner fra innboksen og kommer tilbake når du vil",
+          "En daglig morgenoppsummering, lagt rett i innboksen din",
+          "Søk i alle tilkoblede innbokser samtidig",
+          "Instruksjoner til AI-en din, per innboks"
         ],
         "cta": "Velg Pro"
       },
-      "team": {
-        "name": "Team",
-        "desc": "Delte innbokser for et team, med et eget arbeidsområde per kunde eller virksomhet.",
+      "business": {
+        "name": "Business",
+        "desc": "For en bedrift med mange postkasser eller flere folk: 10 postkasser inkludert, flere til fast pris per stykk.",
         "features": [
           "Alt i Pro",
-          "Ubegrenset antall medlemmer med roller",
-          "Et eget arbeidsområde per kunde eller virksomhet",
-          "SSO (SAML / OIDC) og revisjonslogg",
-          "Lengst analysehistorikk",
-          "Prioritert støtte"
+          "10 postkasser inkludert, $3 i måneden for hver ekstra",
+          "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
+          "Administratorer godkjenner sendinger som venter",
+          "Flere arbeidsområder på ett abonnement, ett per firma eller kunde"
         ],
-        "cta": "Velg Team"
+        "cta": "Velg Business"
       }
     },
     "footnote": "Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>",
@@ -212,8 +247,8 @@
     "sub": "Alt du trenger å vite før du kobler til den første innboksen din.",
     "items": [
       {
-        "q": "Er MCP Emails en MCP-server for IMAP?",
-        "a": "Ja. I tillegg til innlogging med Gmail og Outlook finnes det en generisk IMAP- og SMTP-kobling, så alle postkasser med IMAP-tilgang fungerer: ditt eget domene, et webhotell eller en lokal nettleverandør. Du legger inn serveropplysningene og et app-passord én gang, og agenten leser over IMAP og sender gjennom din egen SMTP-server."
+        "q": "Er MCPEmails en MCP-server for IMAP?",
+        "a": "Ja. I tillegg til Gmail og Outlook finnes det en generisk IMAP- og SMTP-kobling, så alle postkasser med IMAP-tilgang fungerer: ditt eget domene, et webhotell eller en lokal nettleverandør. Du legger inn serveropplysningene og et app-passord én gang, og agenten leser over IMAP og sender gjennom din egen SMTP-server."
       },
       {
         "q": "Kan én agent jobbe i flere postkasser samtidig?",
@@ -233,27 +268,27 @@
       },
       {
         "q": "Hvilke e-postleverandører kan jeg koble til?",
-        "a": "Gmail med et app-passord eller ved å logge inn med Google, Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
+        "a": "Gmail og Google Workspace med et Google-app-passord over IMAP, Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
       },
       {
         "q": "Lagres e-posten min noe sted?",
-        "a": "Nei. E-posten agenten din leser hentes i sanntid fra leverandøren din ved hvert kall, og lagres aldri på serverne våre. Det eneste unntaket er en melding du selv planlegger å sende senere, som oppbevares kryptert frem til sendetidspunktet."
+        "a": "Nei. E-posten agenten din leser hentes i sanntid fra leverandøren din ved hvert kall, og lagres aldri på serverne våre. Unntakene er utgående meldinger som må vente: en melding du planlegger til senere, eller en sending som holdes tilbake for godkjenning, lagres kryptert."
       },
       {
         "q": "Er det virkelig gratis?",
-        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din får alle verktøyene vi leverer mot den: lese, søke, sende, svare, planlegge og organisere. Personal koster $9 i måneden for postkasse nummer to og tre på samme agent, Pro fjerner innboksgrensen helt, og Team er for når andre folk skal inn."
+        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din kan lese, søke, sende, svare, planlegge og organisere i den. Personal koster $9 i måneden for postkasse nummer to og tre på samme agent, Pro dekker opptil 10 for $15, og Business er for flere postkasser eller når andre folk skal inn."
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
-        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Sytten action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Tjueen action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
-        "a": "Opprett en gratis konto, koble til innboksen din (app-passord eller Google-innlogging for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+        "a": "Opprett en gratis konto, koble til innboksen din (Google-app-passord for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
       },
       {
         "q": "Kan jeg selvhoste den?",
-        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører den samme serveren som du kan kjøre selv. En docker-compose-stack får hele MCP-serveren og alle verktøyene i gang mot din egen database på omtrent fem minutter, for hvilken som helst IMAP- eller SMTP-postkasse. Gmail- og Outlook-innlogging (OAuth) og dashboardet forblir på den hostede planen."
+        "a": "Ja. MCPEmails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører den samme serveren som du kan kjøre selv. En docker-compose-stack får hele MCP-serveren og alle verktøyene i gang mot din egen database på omtrent fem minutter, for hvilken som helst IMAP- eller SMTP-postkasse. Gmail- og Outlook-innlogging (OAuth) og dashboardet forblir på den hostede planen."
       }
     ]
   },
@@ -270,11 +305,17 @@
     "linkQuickstart": "Hurtigstart",
     "linkOauth": "OAuth-tilkobling",
     "linkProviders": "Leverandørstøtte",
+    "linkReadOnly": "Skrivebeskyttet tilgang",
+    "linkApiGuide": "Utviklerguide",
+    "linkClients": "Oppsett av MCP-klienter",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
-    "copyright": "© 2026 mcpemails.",
+    "linkWithdrawal": "Gå fra avtalen her",
+    "linkCancel": "Si opp avtaler her",
+    "linkImpressum": "Impressum",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring",
-    "legalEntity": "MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.",
+    "legalEntity": "MCPEmails er en tjeneste fra Albretsen AS, organisasjonsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norge.",
     "contactLabel": "Kontakt",
     "mcpLabel": "MCP-endepunkt",
     "copy": "Kopier",
@@ -286,7 +327,8 @@
     "linkHelp": "Hjelp og kundestøtte",
     "linkSelfHost": "Selvhosting",
     "linkFounders": "For gründere",
-    "linkBusiness": "For bedrifter"
+    "linkBusiness": "For bedrifter",
+    "linkDevelopers": "Utviklere"
   },
   "languageSwitcher": {
     "label": "Språk",
@@ -294,21 +336,37 @@
     "nb": "Norsk",
     "es": "Español",
     "fr": "Français",
-    "zh": "中文"
+    "zh": "中文",
+    "de": "Deutsch"
   },
   "preview": {
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
-    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
-  },
-  "demo": {
-    "eyebrow": "Se det i bruk",
-    "title": "Koble til en innboks, og spør hva som haster.",
-    "sub": "Under ett minutt, tatt opp mot det ekte produktet: en virkelig IMAP-tilkobling, og så et virkelig verktøykall som finner den ene e-posten som betyr noe.",
-    "caption": "Tatt opp mot en demo-innboks fylt med oppdiktet e-post. Ingen ekte korrespondanse vises i videoen.",
-    "player": {
-      "label": "Demovideo: koble til en innboks og la en AI-agent sortere den",
-      "fallback": "Nettleseren din kan ikke spille av denne videoen. Hurtigstarten i dokumentasjonen dekker de samme trinnene."
+    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør.",
+    "mock": {
+      "nav": {
+        "overview": "Oversikt",
+        "inboxes": "Innbokser",
+        "apiKeys": "API-nøkler",
+        "usage": "Bruk"
+      },
+      "stats": {
+        "inboxes": "Tilkoblede innbokser",
+        "calls": "MCP-kall (30 d)",
+        "avgResponse": "Snitt svartid",
+        "plan": "Plan"
+      },
+      "userPlan": "Pro-plan",
+      "title": "Oversikt",
+      "subtitle": "Sanntidsvisning av tilkoblede innbokser og MCP-trafikk.",
+      "recentActivity": "Siste aktivitet",
+      "justNow": "akkurat nå",
+      "secondsAgo": "for {count} s siden",
+      "minutesAgo": "for {count} min siden"
     }
+  },
+  "referralBanner": {
+    "text": "En venn har invitert deg til MCPEmails. Din andre betalte måned er gratis.",
+    "close": "Lukk"
   }
 }

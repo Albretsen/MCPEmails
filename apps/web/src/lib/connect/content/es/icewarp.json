@@ -21,7 +21,7 @@
     "titleLine1": "Conecta IceWarp a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "IceWarp ya gestiona tu correo, tus calendarios y tu chat. Añadir un servidor MCP encima permite que un agente de IA trabaje en el propio buzón: leer, buscar, enviar, responder, programar y archivar, con las mismas credenciales que usa cualquier cliente de escritorio.",
-    "answer": "Claude no puede acceder por sí solo a un servidor IceWarp. mcpemails es un servidor MCP alojado que se conecta a tu instalación de IceWarp por IMAP en tu propio nombre de servidor, en el puerto 993 con TLS implícito, con la contraseña del buzón guardada en la consola de administración de IceWarp, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. IceWarp es software que alojas tú, así que no hay un nombre de servidor compartido que publicar: el servidor tiene que poder resolverse y ser accesible desde internet, y el certificado del 993 tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a un servidor IceWarp. MCPEmails es un servidor MCP alojado que se conecta a tu instalación de IceWarp por IMAP en tu propio nombre de servidor, en el puerto 993 con TLS implícito, con la contraseña del buzón guardada en la consola de administración de IceWarp, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. IceWarp es software que alojas tú, así que no hay un nombre de servidor compartido que publicar: el servidor tiene que poder resolverse y ser accesible desde internet, y el certificado del 993 tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde la consola",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,16 +32,16 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta, lo que basta para probarlo con una cuenta real de IceWarp."
     },
     {
       "h": "Abre el servicio IMAP en la consola de administración",
-      "p": "Ve al nodo System, luego Services, y haz doble clic en IMAP. Confirma que el servicio está en marcha y que el puerto seguro es el 993. Ya que estás en System, abre Certificates y comprueba qué certificado está vinculado al nombre de servidor que vas a darle a mcpemails."
+      "p": "Ve al nodo System, luego Services, y haz doble clic en IMAP. Confirma que el servicio está en marcha y que el puerto seguro es el 993. Ya que estás en System, abre Certificates y comprueba qué certificado está vinculado al nombre de servidor que vas a darle a MCPEmails."
     },
     {
       "h": "Revisa el Mailbox Type de la cuenta y añade la bandeja",
-      "p": "En Domains and Accounts, abre el usuario y mira la pestaña Options. El ajuste <code>Mailbox: Type</code> tiene que tener el valor combinado de IMAP y POP3, no solo POP3. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el nombre de tu servidor IceWarp, la dirección completa y la contraseña del buzón."
+      "p": "En Domains and Accounts, abre el usuario y mira la pestaña Options. El ajuste <code>Mailbox: Type</code> tiene que tener el valor combinado de IMAP y POP3, no solo POP3. Después añade la bandeja en MCPEmails: elige IMAP / SMTP e introduce el nombre de tu servidor IceWarp, la dirección completa y la contraseña del buzón."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "Un servidor MCP alojado tiene que abrir una conexión entrante a tu servidor IceWarp, así que un servidor publicado solo en una red interna, o accesible solo a través de una VPN corporativa, no se puede conectar de esta forma. mcpemails se puede alojar por tu cuenta si quieres que la sesión IMAP se quede dentro del perímetro.",
+    "Un servidor MCP alojado tiene que abrir una conexión entrante a tu servidor IceWarp, así que un servidor publicado solo en una red interna, o accesible solo a través de una VPN corporativa, no se puede conectar de esta forma. MCPEmails se puede alojar por tu cuenta si quieres que la sesión IMAP se quede dentro del perímetro.",
     "La validación de certificados es estricta y no se puede omitir, así que un certificado caducado o emitido para otro nombre se rechazará en lugar de aceptarse con un aviso.",
-    "Los calendarios, contactos y chat de IceWarp no forman parte de esto. mcpemails habla IMAP y SMTP, así que funciona con el correo, no con las funciones de groupware que hay a su lado."
+    "Los calendarios, contactos y chat de IceWarp no forman parte de esto. MCPEmails habla IMAP y SMTP, así que funciona con el correo, no con las funciones de groupware que hay a su lado."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con IceWarp?",
-      "a": "No por sí solo. Claude no tiene un conector para IceWarp y no puede abrir una sesión IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu servidor IceWarp le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón en él, y la misma bandeja queda disponible después en Cursor y ChatGPT."
+      "a": "No por sí solo. Claude no tiene un conector para IceWarp y no puede abrir una sesión IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como MCPEmails a tu servidor IceWarp le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón en él, y la misma bandeja queda disponible después en Cursor y ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de IceWarp?",

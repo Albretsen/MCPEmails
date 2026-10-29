@@ -172,6 +172,18 @@ export const PLANNABLE_ACTIONS = [
 
 export type BulkAction = typeof PLANNABLE_ACTIONS[number];
 
+/**
+ * The scope a key must hold to RUN a plan with this action.
+ *
+ * The same scopes the preview tools require to create one: delete:email for a
+ * delete (permanent or not), manage:folders for a move. bulk_execute's
+ * tool-level gate admits either scope, because a plan_id alone does not say
+ * which kind of plan it is; this is the check that does.
+ */
+export function scopeForBulkAction(action: BulkAction): "delete:email" | "manage:folders" {
+  return isDeleteAction(action) ? "delete:email" : "manage:folders";
+}
+
 /** The consolidated tool an action belongs to (contract §3 `operation`). */
 export function operationForAction(action: BulkAction): "email_delete" | "email_organize" {
   return action === "delete_batch" || action === "search_and_delete"
@@ -261,6 +273,12 @@ export interface BulkCaller {
   name: string;
   /** Non-null = this key may only touch these inboxes. */
   inbox_ids: string[] | null;
+  /**
+   * The key's scopes. Read by bulk_execute, whose tool-level gate admits
+   * EITHER delete:email or manage:folders (a plan may be a delete or a move),
+   * so the scope the plan's own action needs is checked against the row.
+   */
+  scopes: string[];
 }
 
 /** The result shape every `index.ts` tool handler returns. */
@@ -889,6 +907,34 @@ async function loadPendingPlan(
 
   const at = nowMs(deps);
 
+  if (row.status !== "pending" && isUndoRow(row)) {
+    // An Undo (mcp-app-undo.ts) in plain words: no "preview", no "plan".
+    const done = row.status === "executed";
+    return {
+      ok: false,
+      failure: failureResult(
+        done ? "executed" : row.status === "expired" ? "expired" : "decided_elsewhere",
+        {
+          outcome: done ? "executed" : row.status === "expired" ? "expired" : "decided_elsewhere",
+          headline: done
+            ? "Already undone."
+            : row.status === "expired"
+            ? "Undo expired."
+            : row.status === "executing"
+            ? "Undo is already running."
+            : "This can no longer be undone.",
+          detail: "Nothing more was changed.",
+          affected_count: 0,
+          dashboard_url: dashboardUrl(deps),
+          error_code: null,
+        },
+        "not_pending",
+        row.status === "expired" ? "bulk_plan_expired" : "bulk_plan_not_pending",
+        row.id,
+      ),
+    };
+  }
+
   if (row.status !== "pending") {
     // Every terminal status needs its own branch. `cancelled` fell through to
     // the "already executed" default here, so declining a plan and then
@@ -937,7 +983,7 @@ async function loadPendingPlan(
       .update({ status: "expired" })
       .eq("id", row.id)
       .eq("status", "pending");
-    return { ok: false, failure: expiredPlanFailure(deps, row.id) };
+    return { ok: false, failure: expiredPlanFailure(deps, row.id, isUndoRow(row)) };
   }
 
   return { ok: true, row };
@@ -954,16 +1000,22 @@ export function isPlanExpired(
   return Number.isFinite(parsed) && parsed <= atMs;
 }
 
-function expiredPlanFailure(deps: BulkDeps, planId: string): BulkToolResult {
+/** An Undo row, written by mcp-app-undo.ts rather than by a preview. */
+function isUndoRow(row: { scope_kind?: unknown }): boolean {
+  return row.scope_kind === "undo";
+}
+
+function expiredPlanFailure(deps: BulkDeps, planId: string, undo = false): BulkToolResult {
   return failureResult(
     "expired",
     {
       outcome: "expired",
-      headline: "This preview expired before it was run.",
-      detail:
-        "A bulk preview stays runnable for 15 minutes, because it is a frozen snapshot of the " +
-        "mailbox and stops describing it accurately soon after. Nothing was changed. " +
-        "Ask for the operation again to get a fresh preview.",
+      headline: undo ? "Undo expired." : "This preview expired before it was run.",
+      detail: undo
+        ? "Undo is available for 24 hours after the change. Nothing was changed."
+        : "A bulk preview stays runnable for 15 minutes, because it is a frozen snapshot of the " +
+          "mailbox and stops describing it accurately soon after. Nothing was changed. " +
+          "Ask for the operation again to get a fresh preview.",
       affected_count: 0,
       dashboard_url: dashboardUrl(deps),
       error_code: null,
@@ -1066,6 +1118,38 @@ export async function runBulkExecute(
   if (!loaded.ok) return loaded.failure;
   const row = loaded.row;
 
+  // ── The plan's own scope ─────────────────────────────────────────────────
+  // The tool gate admits delete:email OR manage:folders, so without this a
+  // move-only key could run a (permanent) delete plan another key prepared.
+  // Checked BEFORE the claim and before the scope is decrypted, so a refused
+  // caller changes nothing: the plan stays pending for a key that may run it.
+  // An action this module does not recognise is refused too (fail closed).
+  const planAction = row.action as BulkAction;
+  const requiredScope = (PLANNABLE_ACTIONS as readonly string[]).includes(planAction)
+    ? scopeForBulkAction(planAction)
+    : null;
+  if (!requiredScope || !caller.scopes.includes(requiredScope)) {
+    const isDelete = requiredScope === "delete:email";
+    return failureResult(
+      "error",
+      {
+        outcome: "failed",
+        headline: "This API key cannot run this plan.",
+        detail:
+          (requiredScope
+            ? `It ${isDelete ? "deletes" : "moves"} mail, which needs the '${requiredScope}' scope, and this key does not hold it. `
+            : "Its action is not one this server can run. ") +
+          "Nothing was changed.",
+        affected_count: 0,
+        dashboard_url: dashboardUrl(deps),
+        error_code: "scope_denied",
+      },
+      "viewer_role",
+      "scope_denied",
+      row.id,
+    );
+  }
+
   const scope = await readScope(deps, row);
   if (!scope) {
     await deps.db
@@ -1135,7 +1219,7 @@ export async function runBulkExecute(
       "decided_elsewhere",
       {
         outcome: "decided_elsewhere",
-        headline: "This preview was already run.",
+        headline: isUndoRow(row) ? "Already undone." : "This preview was already run.",
         detail:
           "A plan runs exactly once, and another call claimed this one first. " +
           "Nothing was done a second time.",
@@ -1209,6 +1293,25 @@ export async function runBulkExecute(
     ? ` ${outcome.failed} could not be changed and were left alone.`
     : "";
 
+  if (totalFailure && isUndoRow(row)) {
+    return failureResult(
+      "error",
+      {
+        outcome: "failed",
+        headline: "Nothing to undo.",
+        detail: outcome.error_code === "message_not_found"
+          ? "None of the messages are still where they were moved, so nothing was moved back."
+          : `The mailbox did not let them move back${outcome.error_code ? ` (${outcome.error_code})` : ""}. Nothing was changed.`,
+        affected_count: 0,
+        dashboard_url: dashboardUrl(deps),
+        error_code: outcome.error_code ?? "provider_error",
+      },
+      "not_pending",
+      outcome.error_code ?? "provider_error",
+      row.id,
+    );
+  }
+
   if (totalFailure) {
     return failureResult(
       "error",
@@ -1230,7 +1333,16 @@ export async function runBulkExecute(
     );
   }
 
-  const receipt: BulkReceiptFields = {
+  const receipt: BulkReceiptFields = isUndoRow(row)
+    ? {
+      outcome: "executed",
+      headline: `Undone. ${outcome.succeeded} ${noun} moved back to ${scope.destination_label ?? "where they were"}.`,
+      detail: outcome.failed > 0 ? `${outcome.failed} had moved again since and were left alone.` : "",
+      affected_count: outcome.succeeded,
+      dashboard_url: dashboardUrl(deps),
+      error_code: null,
+    }
+    : {
     outcome: "executed",
     headline: `${verb} ${outcome.succeeded} ${noun}${destination}.`,
     detail: isDelete && !scope.permanent

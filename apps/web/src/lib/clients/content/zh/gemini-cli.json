@@ -17,7 +17,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "自动发现 OAuth",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 ~/.gemini/settings.json 的 mcpServers 下添加一个条目，使用 httpUrl 字段，值为 https://mcpemails.com/api/mcp 。首次连接时，CLI 会发现 OAuth 元数据并自行打开浏览器授权流程。"
+    "answer": "在 ~/.gemini/settings.json 的 mcpServers 下添加一个条目，使用 httpUrl 字段，值为 https://mcpemails.com/api/mcp 。首次连接时，CLI 会发现 OAuth 元数据并自行打开浏览器授权流程。也可以运行 gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp ，然后运行 /mcp auth mcpemails 登录。"
   },
   "method": {
     "title": "Gemini CLI 如何连接：OAuth，无需 API 密钥",
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",
-      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码，Gmail 也可以使用 Google 登录；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
       "h": "打开你的 settings.json",
@@ -34,11 +34,11 @@
     },
     {
       "h": "添加服务器",
-      "p": "在 <code>mcpServers</code> 下添加下面的条目。这里用于 Streamable HTTP 服务器的字段是 <code>httpUrl</code>。"
+      "p": "在 <code>mcpServers</code> 下添加下面的条目。这里用于 Streamable HTTP 服务器的字段是 <code>httpUrl</code>。也可以用一行命令添加：<code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>。"
     },
     {
       "h": "连接",
-      "p": "首次连接时，CLI 会从服务器元数据中自动发现 OAuth 并打开浏览器授权流程。批准你希望 CLI 拥有的权限范围。"
+      "p": "首次连接时，CLI 会从服务器元数据中自动发现 OAuth 并打开浏览器授权流程。批准你希望 CLI 拥有的权限范围。如需随时登录，可在 CLI 中运行 <code>/mcp auth mcpemails</code>。"
     }
   ],
   "gotchas": [
@@ -53,10 +53,14 @@
     {
       "h": "共享机器或无图形界面机器上的 CLI 更适合走密钥路线",
       "p": "浏览器授权流程需要浏览器。在构建代理或共享机器上，稳妥的做法是使用一个 bearer API 密钥，其权限范围精确限定为该自动化任务应做的事，并保存在环境变量中，而不是放在会被提交的设置文件里。"
+    },
+    {
+      "h": "免费层和 Google One 账户现在使用 Antigravity CLI",
+      "p": "自 2026 年 6 月 18 日起，Google 已将免费层账户和 Google One 账户从 Gemini CLI 迁移到 Antigravity CLI。在那里，输入 <code>/mcp</code> 打开 MCP 管理器，或使用 <code>serverUrl</code> 字段把服务器添加到 <code>mcp_config.json</code>。"
     }
   ],
   "limits": [
-    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "请求按每个密钥在每分钟、每小时和每天的窗口内限速，窗口大小按你的套餐确定，所以单个密钥就能用满套餐的每分钟上限，多个密钥则共享它。429 响应带有 Retry-After。此外还受你所在套餐的计费操作上限约束。",
     "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
     "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
   ],
@@ -71,11 +75,11 @@
     },
     {
       "q": "这和 Google 发布的 Gmail MCP 服务器是一回事吗？",
-      "a": "不是。Google 发布了一个 Workspace MCP 服务器，在其他服务之外也涵盖 Gmail；如果你只用 Gmail、并且完全在 Google 生态中工作，那是更直接的路径。mcpemails 面向的是邮箱并非全部来自 Google、并且同一个 URL 还要在 Claude、Cursor 和 ChatGPT 中使用的情况。"
+      "a": "不是。Google 发布了一个 Workspace MCP 服务器，在其他服务之外也涵盖 Gmail；如果你只用 Gmail、并且完全在 Google 生态中工作，那是更直接的路径。MCPEmails 面向的是邮箱并非全部来自 Google、并且同一个 URL 还要在 Claude、Cursor 和 ChatGPT 中使用的情况。"
     },
     {
       "q": "Gemini CLI 通过这种方式能访问哪些邮箱？",
-      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码，Gmail 也可改用 Google 登录；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
     },
     {
       "q": "Gemini CLI 会在我不知情的情况下发送邮件吗？",

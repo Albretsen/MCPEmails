@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Hjelp og support",
-    "description": "Svar på de vanligste spørsmålene om tilkobling, klienter og fakturering, og et skjema for å nå dem som lager MCP Emails."
+    "description": "Svar på de vanligste spørsmålene om tilkobling, klienter og fakturering, og et skjema for å nå dem som lager MCPEmails."
   },
   "hero": {
     "eyebrow": "Hjelp",
@@ -100,14 +100,14 @@
     {
       "id": "assistant-sees-nothing",
       "title": "Tilkoblet, men assistenten ser ingen e-post",
-      "summary": "Som regel har postkassen en feil, chatten er eldre enn tilkoblingen, eller en tillatelse er av.",
-      "keywords": "ingen verktøy ingenting tom connector tilkobling virker ikke claude chatgpt cursor utviklermodus developer mode tilgang inbox_list",
+      "summary": "Postkassen er koblet til, men assistenten sier at den ikke har e-postverktøy eller ikke finner noe.",
+      "keywords": "ingen verktøy ingenting tom connector virker ikke claude chatgpt cursor utviklermodus tilgang inbox_list plugin @",
       "steps": [
-        "I Innbokser sjekker du at postkassen viser Tilkoblet. Hvis ikke, koble den til på nytt.",
-        "Start en ny chat etter at du har lagt til tilkoblingen.",
-        "Logg inn i tilkoblingen med kontoen som har postkassen.",
-        "I API-nøkler velger du Rediger tilgang og sjekker tillatelsene og innboksene.",
-        "Be assistenten liste innboksene dine først."
+        "Åpne Innbokser i dashbordet og sjekk at postkassen står oppført uten feil. Viser den en feil, koble den til på nytt.",
+        "Start en ny chat etter at du har lagt til connectoren. I Claude sjekker du at MCPEmails er slått på under + og Connectors. I ChatGPT skriver du @ og velger MCPEmails, og nevner den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
+        "Godkjenn connectoren med den samme MCPEmails-kontoen som har postkassen.",
+        "Assistenten ser bare verktøyene connectoren eller API-nøkkelen har tilgang til. Lot du en tilgang stå uten hake, fjern connectoren og legg den til på nytt.",
+        "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."
       ],
       "links": [
         { "label": "Oppsett for klienter", "href": "/docs/clients" },
@@ -120,10 +120,11 @@
       "summary": "Free har 150 e-posthandlinger i måneden. Deretter venter handlinger til den 1. (UTC).",
       "keywords": "bruksgrense kvote tak 150 handlinger gratis free plan avvist nullstilles usage limit",
       "steps": [
-        "Se hva du har brukt under Bruk.",
-        "Å liste innbokser og handlinger i dashbordet telles aldri. De første 7 dagene er gratis.",
-        "Å prøve på nytt hjelper ikke. Pausede automatiseringer fortsetter den 1.",
-        "Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk."
+        "Se hvor mange handlinger du har brukt under Bruk i dashbordet.",
+        "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 3 dagene etter registrering.",
+        "Å prøve på nytt hjelper ikke. Kvoten nullstilles den 1. i neste måned (UTC), og pausede automatiseringer fortsetter av seg selv.",
+        "Personal, Pro og Business har ubegrensede e-posthandlinger, innenfor rimelig bruk.",
+        "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."
       ],
       "links": [
         { "label": "Spørsmål om priser", "href": "/pricing#faq" },

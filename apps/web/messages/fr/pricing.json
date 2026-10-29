@@ -1,14 +1,14 @@
 {
   "meta": {
-    "title": "Tarifs du serveur MCP e-mail pour l'IA : Gratuit, Personal, Pro et Team",
-    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 9 $ par mois. Pro connecte toutes les boîtes de votre entreprise pour 15 $. Team ajoute membres, rôles et SSO."
+    "title": "Tarifs du serveur MCP e-mail pour l'IA : Gratuit, Personal, Pro et Business",
+    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 9 $ par mois. Pro jusqu'à 10 pour 15 $. Business inclut 10 boîtes et autant de personnes que nécessaire pour 39 $."
   },
   "hero": {
     "eyebrow": "Tarifs",
     "titleLine1": "Une boîte, gratuite.",
     "titleLine2": "Trois boîtes, 9 $.",
     "titleLine2Yearly": "Trois boîtes, 86,40 $ par an.",
-    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 9 $ par mois. Pro couvre toutes les boîtes que vous ou votre entreprise gérez, avec une seule connexion. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
+    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 9 $ par mois. Pro en couvre jusqu'à 10 pour une personne qui gère une entreprise, avec une seule connexion. Business inclut 10 boîtes, facture 3 $ par mois chaque boîte en plus, et toute votre équipe peut se connecter sans surcoût."
   },
   "billing": {
     "monthly": "Mensuel",
@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/pour toujours",
     "perMonth": "/mois",
-    "billedYearly": "Facturé {total} $/an"
+    "billedYearly": "Facturé {total} $/an",
+    "inclVat": "TVA incluse"
   },
   "plans": {
     "free": {
@@ -27,7 +28,7 @@
       "cta": "Commencer gratuitement",
       "features": [
         "1 boîte connectée",
-        "150 actions e-mail par mois, les 7 premiers jours non comptés",
+        "150 actions e-mail par mois, les 3 premiers jours non comptés",
         "Lire, chercher, organiser, rédiger, programmer et envoyer",
         "Validation avant envoi",
         "Analytique d'usage",
@@ -44,40 +45,50 @@
       "features": [
         "Tout ce que contient Free",
         "3 boîtes connectées",
-        "Aucun plafond mensuel d'actions",
+        "Actions e-mail illimitées",
         "Limite de pointe 2x plus élevée",
         "Support par e-mail"
       ]
     },
     "solo": {
       "name": "Pro",
-      "desc": "Toutes les boîtes que gère votre entreprise, sur un seul agent : finance, ventes, support, info et la vôtre.",
+      "tagline": "Configurez-le dans la conversation. Il continue de tourner une fois celle-ci fermée.",
+      "desc": "Pour une personne qui gère une entreprise : jusqu'à 10 boîtes sur un seul agent, de la finance et des ventes au support et à la vôtre.",
       "cta": "Choisir Pro",
       "features": [
         "Tout ce que contient Personal",
-        "Boîtes connectées illimitées",
+        "10 boîtes connectées",
         "Limite de pointe 5x plus élevée",
-        "Historique d'analytique plus long"
+        "Historique d'analytique plus long",
+        "Des relances quand personne ne répond à un e-mail que vous avez envoyé",
+        "Mise en attente : l'e-mail quitte la boîte de réception et revient au moment choisi",
+        "Un récapitulatif chaque matin, déposé directement dans votre boîte de réception",
+        "Recherche dans toutes vos boîtes connectées à la fois",
+        "Des instructions pour votre IA, boîte par boîte",
+        "Webhooks pour les nouveaux e-mails"
       ]
     },
     "pro": {
-      "name": "Team",
-      "desc": "Des boîtes partagées pour une équipe, avec un espace de travail distinct par client ou activité.",
-      "cta": "Choisir Team",
+      "name": "Business",
+      "desc": "Pour une entreprise avec beaucoup de boîtes ou plusieurs personnes : 10 boîtes incluses, et d'autres à prix fixe par boîte.",
+      "cta": "Choisir Business",
       "features": [
         "Tout ce que contient Pro",
-        "Membres illimités avec rôles",
-        "Un espace de travail distinct par client ou activité",
-        "SSO (SAML / OIDC) et journal d'audit",
-        "Historique d'analytique le plus long",
-        "Support prioritaire"
+        "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
+        "Membres illimités avec rôles, sans surcoût",
+        "Les administrateurs valident les envois en attente",
+        "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client",
+        "Webhooks pour les nouveaux e-mails"
       ]
     }
   },
   "cardsFootnote": {
-    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
-    "business": "Une seule personne gère plusieurs boîtes d'entreprise ? C'est Pro, pas Team. <business>Voyez comment toutes les boîtes professionnelles tournent sur un seul agent</business>.",
-    "custom": "Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>."
+    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · données stockées dans l'UE (Stockholm)",
+    "business": "Une seule personne gère plusieurs boîtes d'entreprise ? C'est Pro, jusqu'à 10. <business>Voyez comment toutes les boîtes professionnelles tournent sur un seul agent</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise : parlons-en",
+    "body": "Un accord de traitement des données (DPA), le paiement sur facture et de l'aide pour faire approuver Microsoft 365 par votre administrateur informatique. Écrivez à <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Comparatif complet",
@@ -86,7 +97,7 @@
     "free": "Gratuit",
     "personal": "Personal",
     "solo": "Pro",
-    "team": "Team",
+    "business": "Business",
     "sections": {
       "usage": {
         "label": "Ce que vous obtenez",
@@ -94,7 +105,8 @@
           "inboxes": "Boîtes connectées",
           "actions": "Actions e-mail par mois",
           "keys": "Clés API",
-          "members": "Utilisateurs",
+          "webhooks": "Webhooks pour les nouveaux e-mails",
+          "members": "Personnes qui peuvent se connecter",
           "burst": "Limite de débit en pointe",
           "approvals": "Validation avant envoi"
         }
@@ -102,7 +114,7 @@
       "providers": {
         "label": "Fournisseurs d'e-mail",
         "rows": {
-          "gmail": "Gmail (mot de passe d'application ou connexion avec Google)",
+          "gmail": "Gmail (mot de passe d'application Google)",
           "outlook": "Outlook / Microsoft 365 (connexion avec Microsoft)",
           "fastmail": "Fastmail (mot de passe d'application)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
@@ -112,13 +124,23 @@
       "mcpTools": {
         "label": "Outils MCP"
       },
+      "chatClosed": {
+        "label": "Quand la conversation est fermée",
+        "rows": {
+          "followUps": "Relances sur les e-mails envoyés sans réponse",
+          "snooze": "Mettre un e-mail en attente jusqu'à l'heure choisie",
+          "brief": "Récapitulatif du matin dans votre boîte de réception",
+          "searchAll": "Recherche dans toutes les boîtes à la fois",
+          "instructions": "Des instructions pour votre IA, boîte par boîte"
+        }
+      },
       "analytics": {
         "label": "Analytique et sécurité",
         "rows": {
           "dashboard": "Tableau de bord d'analytique d'usage",
-          "roles": "Rôles d'équipe et espaces de travail",
-          "sso": "SSO (SAML / OIDC)",
-          "audit": "Journal d'audit",
+          "roles": "Membres avec rôles (observateur, membre, administrateur)",
+          "adminApprovals": "Les administrateurs valident les envois en attente",
+          "workspaces": "Plusieurs espaces de travail sur un abonnement",
           "history": "Historique d'analytique"
         }
       },
@@ -133,26 +155,27 @@
         "label": "Support",
         "rows": {
           "community": "Forum communautaire",
-          "email": "Support par e-mail",
-          "priority": "Support prioritaire"
+          "email": "Support par e-mail"
         }
       }
     },
     "values": {
       "unlimited": "Illimité",
-      "unlimitedCompany": "Illimité, boîtes d'entreprise comprises",
-      "actionsFree": "150 / mois, 7 premiers jours non comptés",
-      "actionsPaid": "Aucun plafond mensuel, usage équitable",
+      "tenMailboxes": "Jusqu'à 10 boîtes",
+      "businessMailboxes": "10 incluses, puis 3 $ par mois chacune",
+      "actionsFree": "150 / mois, 3 premiers jours non comptés",
+      "actionsPaid": "Illimité, usage équitable",
       "oneInbox": "1 boîte",
       "threeInboxes": "3 boîtes",
-      "oneSeat": "1 utilisateur",
+      "oneSeat": "1 personne",
+      "unlimitedPeople": "Illimité, sans surcoût",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
       "history30": "30 jours",
       "history90": "90 jours",
-      "history365": "1 an"
+      "history2y": "2 ans"
     }
   },
   "faq": {
@@ -161,35 +184,35 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 7 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent peut lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer dans cette boîte, et la validation avant envoi, réglable par boîte, est incluse. Dès que vous voulez une deuxième ou une troisième boîte, ou des actions e-mail illimitées, c'est Personal, à 9 $ par mois."
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60) et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
+        "a": "Deux boîtes connectées de plus, des actions e-mail illimitées (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
-        "a": "Un appel d'outil sur votre point de terminaison /mcp qui touche une boîte : une lecture, une recherche, un déplacement, un brouillon, un envoi. Lister vos boîtes (inbox_list) et tout ce que vous faites dans le tableau de bord n'est jamais compté. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP. Free comprend 150 actions e-mail par mois civil ; Personal, Pro et Team n'ont aucun plafond mensuel, sous réserve d'un usage équitable."
+        "a": "Un appel d'outil sur votre point de terminaison /mcp qui touche une boîte : une lecture, une recherche, un déplacement, un brouillon, un envoi. Lister vos boîtes (inbox_list) et tout ce que vous faites dans le tableau de bord n'est jamais compté. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP. Free comprend 150 actions e-mail par mois civil ; Personal, Pro et Business offrent des actions e-mail illimitées, sous réserve d'un usage équitable."
       },
       {
         "q": "Que se passe-t-il quand j'atteins 150 actions e-mail ?",
-        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Personal supprime le plafond mensuel pour 9 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
+        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Avec Personal, les actions e-mail sont illimitées pour 9 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
-        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
+        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. Les exceptions sont les messages sortants qui doivent attendre : un message que vous nous demandez de programmer pour plus tard, ou un envoi retenu pour votre approbation. Nous les stockons chiffrés, puis en gardons une trace pour votre historique."
       },
       {
-        "q": "Quelle est la différence entre Personal, Pro et Team ?",
-        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, mais sans aucune limite de boîtes : une personne peut donc connecter toutes les boîtes que gère une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Team, c'est pour le moment où plusieurs personnes doivent se connecter : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, un an d'historique d'analytique et support prioritaire."
+        "q": "Quelle est la différence entre Personal, Pro et Business ?",
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Pro continue aussi de travailler quand la conversation est fermée : relances sur les e-mails envoyés, mise en attente, un récapitulatif chaque matin déposé dans votre boîte, une seule recherche dans toutes vos boîtes connectées et des instructions pour votre IA, boîte par boîte. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute. Tout ce qui est dans Pro est inclus."
       },
       {
         "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
-        "a": "Comptez d'abord les personnes qui se connectent, puis les boîtes. Si une seule personne gère info@, ventes@, factures@ et les autres, c'est Pro : une seule connexion, aucune limite de boîtes connectées, et chaque boîte garde son propre nom d'expéditeur et sa signature, et envoie par son propre serveur de messagerie. Deux ou trois adresses tiennent dans Personal. Team n'est nécessaire que lorsqu'une deuxième personne a besoin de sa propre connexion. Toute boîte qui parle IMAP et SMTP se connecte, quel que soit l'hébergeur, tout comme Gmail, Google Workspace et Microsoft 365 ; un compte Microsoft 365 d'entreprise peut nécessiter que son administrateur informatique approuve l'application une fois."
+        "a": "Comptez d'abord les boîtes, puis les personnes qui se connectent. Si une seule personne gère info@, ventes@, factures@ et les autres, c'est Pro : une seule connexion, jusqu'à 10 boîtes connectées, et chaque boîte garde son propre nom d'expéditeur et sa signature, et envoie par son propre serveur de messagerie. Deux ou trois adresses tiennent dans Personal. Business sert au-delà de 10 boîtes, ou dès qu'une deuxième personne a besoin de sa propre connexion : 10 boîtes sont incluses, chaque boîte en plus coûte 3 $ par mois, et les membres ne coûtent rien de plus. Toute boîte qui parle IMAP et SMTP se connecte, quel que soit l'hébergeur, tout comme Gmail, Google Workspace et Microsoft 365 ; un compte Microsoft 365 d'entreprise peut nécessiter que son administrateur informatique approuve l'application une fois."
       },
       {
         "q": "Et s'il me faut une quatrième boîte ?",
-        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 15 $ par mois, et cela supprime complètement la limite : toutes les boîtes que vous ou votre entreprise gérez, quel qu'en soit le nombre, sur un seul agent et avec une seule connexion. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
+        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 15 $ par mois, qui couvre jusqu'à 10 boîtes sur un seul agent et avec une seule connexion. Au-delà de 10, Business en inclut 10 et facture 3 $ par mois chaque boîte en plus. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
       },
       {
         "q": "Puis-je changer ou annuler ma formule ?",
@@ -197,11 +220,11 @@
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 86,40 $ par an (7,20 $ par mois), Pro à 144 $ par an (12 $ par mois) et Team à 756 $ par an (63 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
+        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 86,40 $ par an (7,20 $ par mois), Pro à 144 $ par an (12 $ par mois) et Business à 374,40 $ par an (31,20 $ par mois), chaque boîte en plus étant à 28,80 $ par an (2,40 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
-        "a": "Gmail se connecte par défaut avec un mot de passe d'application, ou via la connexion avec Google (OAuth). Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+        "a": "Gmail et Google Workspace se connectent avec un mot de passe d'application Google via IMAP. Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",
@@ -209,14 +232,24 @@
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
-        "a": "Oui. MCP Emails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les fonctionnalités d'équipe et le support par e-mail sont sur les forfaits payants."
+        "a": "Oui. MCPEmails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les membres et rôles sont sur Business, et le support par e-mail sur tous les forfaits payants."
       }
     ]
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, et toutes les boîtes que gère votre entreprise 15 $ avec Pro.",
+    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
     "ctaPrimary": "Commencer gratuitement",
-    "ctaSecondary": "Lire la documentation"
+    "ctaSecondary": "Lire la documentation",
+    "subFounder": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 au prix fondateur indiqué plus haut, avec 3 $ par mois pour chaque boîte en plus."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week : {firstYear} $ la première année, puis {renewal} $ par an. Vous économisez {saving} $.",
+    "ends": "Se termine le {date} à {time}, heure d'Oslo."
+  },
+  "founder": {
+    "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
+    "places": "Places restantes : {left} sur {total}"
   }
 }

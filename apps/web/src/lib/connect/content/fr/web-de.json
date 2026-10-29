@@ -4,7 +4,8 @@
     "https://hilfe.web.de/pop-imap/index.html",
     "https://hilfe.web.de/pop-imap/imap/index.html",
     "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
-    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
   ],
   "auth": {
     "method": "account-password",
@@ -25,23 +26,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre compte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à WEB.DE. mcpemails est un serveur MCP hébergé qui le connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à WEB.DE. MCPEmails est un serveur MCP hébergé qui le connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
-    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-Mail-Einstellungen (réglages e-mail), E-Mail empfangen (réception), POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. mcpemails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
+    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-Mail-Einstellungen (réglages e-mail), E-Mail empfangen (réception), POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. MCPEmails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Activez l'accès IMAP dans WEB.DE",
       "p": "Dans WEB.DE, ouvrez E-Mail-Einstellungen (réglages e-mail), choisissez POP3/IMAP sous E-Mail empfangen, et placez le curseur sur POP3- und IMAP-Zugriff erlauben (autoriser l'accès POP3 et IMAP)."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessus et le mot de passe pour connecter la boîte de façon sécurisée."
     },
     {
@@ -60,26 +61,26 @@
     },
     {
       "h": "Activer l'authentification à deux facteurs met votre mot de passe hors service pour les clients de messagerie",
-      "p": "L'authentification à deux facteurs de WEB.DE protège la connexion web, et une fois activée, votre mot de passe WEB.DE habituel cesse de fonctionner dans tout ce qui parle IMAP ou SMTP. Il vous faut alors un <b>anwendungsspezifisches Passwort</b> (mot de passe d'application), généré dans la boîte sous Account verwalten, puis Login & Sicherheit, puis Anwendungsspezifische Passwörter verwalten. Créez-en un pour le courrier, collez-le dans mcpemails à la place de votre mot de passe habituel, et gardez ce dernier pour le site web. Sans 2FA, le mot de passe du compte est le bon identifiant et il n'y a pas de mot de passe d'application à créer."
+      "p": "WEB.DE range son mot de passe d'application sous l'authentification à deux facteurs et le présente comme le mot de passe des logiciels de messagerie externes en POP3 et IMAP. Une fois la 2FA active sur votre compte, créez-en un dans un navigateur : cliquez sur vos initiales, puis <b>Account verwalten</b>, puis <b>Login & Sicherheit</b>, puis <b>App-Passwörter (für externe Apps)</b>, puis <b>Neues App-Passwort erstellen</b>. Nommez-le, par exemple MCPEmails, et copiez-le aussitôt, car WEB.DE ne l'affiche qu'une fois. Collez-le dans MCPEmails à la place de votre mot de passe habituel, et gardez ce dernier pour le site web. Sans 2FA, le mot de passe du compte est le bon identifiant."
     },
     {
-      "h": "Les deux transports SMTP répondent, donc un échec d'envoi vient rarement du port",
-      "p": "Les guides WEB.DE ne s'accordent pas sur le courrier sortant : certains donnent <code>smtp.web.de</code> sur le port 465 en TLS implicite, d'autres le port 587 avec STARTTLS. Les deux fonctionnent, et notre sonde a terminé une négociation TLS sur 465, le serveur proposant PLAIN et LOGIN. Alterner entre les deux ports est donc un effort inutile. Si l'envoi est refusé, la cause est le curseur de récupération, le mot de passe d'application manquant, ou une adresse From qui ne fait pas partie des adresses enregistrées sur le compte."
+      "h": "Les deux ports SMTP fonctionnent, un échec d'envoi vient donc rarement du port",
+      "p": "L'aide de WEB.DE indique <code>smtp.web.de</code> sur le port 587 avec STARTTLS, le port 465 avec SSL en alternative, et n'accepte que TLS 1.2 ou 1.3. Les deux ports fonctionnent, et notre sonde a réalisé une négociation TLS sur le 465 avec un serveur proposant PLAIN et LOGIN : alterner entre les deux ne sert à rien. Si l'envoi est refusé, la cause est le curseur de récupération, le mot de passe d'application manquant ou l'adresse d'expédition : WEB.DE demande de n'envoyer que depuis des adresses dont on peut vérifier qu'elles appartiennent à votre boîte."
     }
   ],
   "limits": [
-    "mcpemails connecte uniquement la boîte WEB.DE. WEB.DE Online-Speicher, le carnet d'adresses et le calendrier sont des produits distincts et ne sont pas exposés à votre client IA.",
+    "MCPEmails connecte uniquement la boîte WEB.DE. WEB.DE Online-Speicher, le carnet d'adresses et le calendrier sont des produits distincts et ne sont pas exposés à votre client IA.",
     "Le curseur POP3/IMAP est contrôlé par WEB.DE, pas par nous. Si WEB.DE désactive la récupération après une longue période d'inactivité, la connexion doit être réactivée dans WEB.DE avant de fonctionner de nouveau.",
     "WEB.DE est une boîte grand public avec ses propres limites d'envoi anti-abus. Utilisez-la pour une correspondance ordinaire, pas pour des envois en masse ou des campagnes."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec WEB.DE ?",
-      "a": "Pas seul. Claude n'a pas de connecteur WEB.DE intégré. Brancher un serveur MCP comme mcpemails sur votre boîte WEB.DE en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP, pas un seul."
+      "a": "Pas seul. Claude n'a pas de connecteur WEB.DE intégré. Brancher un serveur MCP comme MCPEmails sur votre boîte WEB.DE en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP, pas un seul."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de WEB.DE ?",
-      "a": "IMAP : imap.web.de sur le port 993 en TLS implicite, et SMTP : smtp.web.de sur le port 465, également en TLS implicite. WEB.DE accepte aussi 587 avec STARTTLS pour le courrier sortant. Le nom d'utilisateur est votre adresse WEB.DE complète, domaine compris. Les deux serveurs ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+      "a": "L'IMAP est imap.web.de sur le port 993 avec SSL. Le SMTP est smtp.web.de, sur le port 587 avec STARTTLS comme le documente WEB.DE, ou sur le port 465 avec SSL, que MCPEmails utilise. L'identifiant est votre adresse WEB.DE complète, domaine compris. Les deux serveurs ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
     },
     {
       "q": "Comment activer IMAP dans WEB.DE ?",
@@ -91,7 +92,7 @@
     },
     {
       "q": "WEB.DE a-t-il besoin d'un mot de passe d'application ?",
-      "a": "Seulement si l'authentification à deux facteurs est activée. Sans 2FA, votre mot de passe WEB.DE habituel authentifie les clients de messagerie une fois la récupération activée. Avec la 2FA, générez un mot de passe d'application sous Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, et utilisez-le dans mcpemails."
+      "a": "Seulement si l'authentification à deux facteurs est active. Sans 2FA, votre mot de passe WEB.DE habituel authentifie les logiciels de messagerie une fois la récupération activée. Avec la 2FA, créez un App-Passwort sous Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), et utilisez-le dans MCPEmails. WEB.DE ne l'affiche qu'une fois ; si vous le perdez, supprimez-le et créez-en un nouveau."
     },
     {
       "q": "Mon courrier WEB.DE est-il stocké sur vos serveurs ?",

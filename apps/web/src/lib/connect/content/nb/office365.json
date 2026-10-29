@@ -8,7 +8,7 @@
     "method": "oauth",
     "label": "Logg inn med Microsoft (OAuth 2.0), kan kreve godkjenning fra IT-administrator",
     "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
-    "usernameForm": "Ingenting å skrive inn. Du logger inn med Microsoft-kontoen din fra jobb eller skole på Microsofts egen side og godkjenner tilgangen, så verken passord eller app-passord skrives inn her. IMAP- og SMTP-innstillinger som er publisert for Microsoft 365, gjelder ikke: MCP Emails kobler til via Microsoft Graph.",
+    "usernameForm": "Ingenting å skrive inn. Du logger inn med Microsoft-kontoen din fra jobb eller skole på Microsofts egen side og godkjenner tilgangen, så verken passord eller app-passord skrives inn her. IMAP- og SMTP-innstillinger som er publisert for Microsoft 365, gjelder ikke: MCPEmails kobler til via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
@@ -19,20 +19,20 @@
     "eyebrow": "Microsoft 365 + AI",
     "titleLine1": "Koble Microsoft 365-e-post",
     "titleLine2": "til Claude, ChatGPT og Cursor",
-    "lead": "Gi AI-agenten din Outlook-postkassen din fra jobb eller skole. Logg inn med Microsoft, og hvis organisasjonen krever det, sender du IT-administratoren én lenke for å godkjenne MCP Emails for alle.",
+    "lead": "Gi AI-agenten din Outlook-postkassen din fra jobb eller skole. Logg inn med Microsoft, og hvis organisasjonen krever det, sender du IT-administratoren én lenke for å godkjenne MCPEmails for alle.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Logg inn med Microsoft, uten app-passord",
     "meta2": "Godkjenningslenke for IT-administrator innebygd",
-    "answer": "Ja, med én betingelse som avhenger av organisasjonen din. mcpemails kobler til Microsoft 365-postkasser fra jobb og skole via Microsoft Graph: du klikker Koble til med Microsoft og logger inn med jobbkontoen din. Mange organisasjoner trenger likevel at en IT-administrator godkjenner appen én gang først, fordi Microsofts standard samtykkepolicy, som har gjeldt siden slutten av 2025, hindrer ansatte i å godkjenne tillatelser til å lese e-post selv. Skjer det, gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren. Administratoren åpner den, logger inn med jobbkontoen sin hos Microsoft og godkjenner MCP Emails én gang for hele organisasjonen, uten å trenge en MCP Emails-konto, og etter det kobler du og kollegene dine til som vanlig. Lim deretter én URL inn i Claude, ChatGPT, Cursor eller en annen MCP-klient. Én innboks er gratis, for alltid."
+    "answer": "Ja, med én betingelse som avhenger av organisasjonen din. MCPEmails kobler til Microsoft 365-postkasser fra jobb og skole via Microsoft Graph: du klikker Koble til med Microsoft og logger inn med jobbkontoen din. Mange organisasjoner trenger likevel at en IT-administrator godkjenner appen én gang først, fordi Microsofts standard samtykkepolicy, som har gjeldt siden slutten av 2025, hindrer ansatte i å godkjenne tillatelser til å lese e-post selv. Skjer det, gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren. Administratoren åpner den, logger inn med jobbkontoen sin hos Microsoft og godkjenner MCPEmails én gang for hele organisasjonen, uten å trenge en MCPEmails-konto, og etter det kobler du og kollegene dine til som vanlig. Lim deretter én URL inn i Claude, ChatGPT, Cursor eller en annen MCP-klient. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobles Microsoft 365 til: Microsoft-innlogging, noen ganger med godkjenning fra administrator",
-    "body": "Microsoft 365 kobles til via <b>Microsoft Graph</b> med OAuth 2.0, ikke over IMAP. Du logger inn på Microsofts egen side og godkjenner tillatelsene MCP Emails ber om: lese og endre e-post (<b>Mail.ReadWrite</b>), sende e-post (<b>Mail.Send</b>), holde forbindelsen (<b>offline_access</b>) og den grunnleggende profilen og e-postadressen din. Microsoft viser MCP Emails som en app fra en verifisert utgiver. Om du selv kan godkjenne disse tillatelsene, bestemmer organisasjonen din. Siden slutten av 2025 lar Microsofts standard samtykkepolicy ikke lenger vanlige brukere godkjenne e-posttillatelser for en app, så i mange organisasjoner blir den første som kobler til bedt om administratorgodkjenning i stedet. En administrator godkjenner én gang for hele organisasjonen, ikke én gang per person."
+    "body": "Microsoft 365 kobles til via <b>Microsoft Graph</b> med OAuth 2.0, ikke over IMAP. Du logger inn på Microsofts egen side og godkjenner tillatelsene MCPEmails ber om: lese og endre e-post (<b>Mail.ReadWrite</b>), sende e-post (<b>Mail.Send</b>), holde forbindelsen (<b>offline_access</b>) og den grunnleggende profilen og e-postadressen din. Microsoft viser MCPEmails som en app fra en verifisert utgiver. Om du selv kan godkjenne disse tillatelsene, bestemmer organisasjonen din. Siden slutten av 2025 lar Microsofts standard samtykkepolicy ikke lenger vanlige brukere godkjenne e-posttillatelser for en app, så i mange organisasjoner blir den første som kobler til bedt om administratorgodkjenning i stedet. En administrator godkjenner én gang for hele organisasjonen, ikke én gang per person."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Velg Outlook og koble til med Microsoft",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Godkjenn tilgangen, eller send lenken til administratoren",
-      "p": "Hvis Microsoft lar deg godkjenne, godtar du tillatelsene og innboksen kobles til. Hvis organisasjonen krever administratorgodkjenning, gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren. Administratoren åpner den, logger inn med Microsoft og godkjenner appen én gang for hele organisasjonen; vedkommende trenger ingen MCP Emails-konto. Klikk deretter Koble til med Microsoft igjen."
+      "p": "Hvis Microsoft lar deg godkjenne, godtar du tillatelsene og innboksen kobles til. Hvis organisasjonen krever administratorgodkjenning, gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren. Administratoren åpner den, logger inn med Microsoft og godkjenner appen én gang for hele organisasjonen; vedkommende trenger ingen MCPEmails-konto. Klikk deretter Koble til med Microsoft igjen."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -50,15 +50,15 @@
   "gotchas": [
     {
       "h": "Passord og app-passord fungerer ikke, og derfor bruker vi Microsoft Graph",
-      "p": "Microsoft fjernet grunnleggende autentisering for IMAP og POP i alle Exchange Online-leietakere i 2022, og den kan ikke slås på igjen. En passordinnlogging feiler på en måte som ser helt ut som feil passord, og derfor tilbakestiller folk påloggingsinformasjon som var riktig hele tiden. mcpemails bruker ikke IMAP for Microsoft 365: den logger inn med Microsoft og snakker med Microsoft Graph, så det finnes ikke noe passord å skrive inn og ingen serverinnstilling å gjøre feil."
+      "p": "Microsoft fjernet grunnleggende autentisering for IMAP og POP i alle Exchange Online-leietakere i 2022, og den kan ikke slås på igjen. En passordinnlogging feiler på en måte som ser helt ut som feil passord, og derfor tilbakestiller folk påloggingsinformasjon som var riktig hele tiden. MCPEmails bruker ikke IMAP for Microsoft 365: den logger inn med Microsoft og snakker med Microsoft Graph, så det finnes ikke noe passord å skrive inn og ingen serverinnstilling å gjøre feil."
     },
     {
       "h": "Administratorgodkjenning bestemmes av organisasjonen, og en verifisert utgiver slipper ikke unna",
-      "p": "Etter endringen Microsoft rullet ut fra slutten av oktober 2025, ligger e-posttillatelsene i Exchange i den Microsoft-administrerte standard samtykkepolicyen, så en bruker som prøver å godkjenne en e-postapp, får i stedet en forespørsel om administratorgodkjenning. Å være verifisert utgiver endrer ikke det. IT-administratoren din kan godkjenne MCP Emails for hele organisasjonen via godkjenningslenken dashbordet gir deg å sende videre, og trenger bare å gjøre det én gang."
+      "p": "Etter endringen Microsoft rullet ut fra slutten av oktober 2025, ligger e-posttillatelsene i Exchange i den Microsoft-administrerte standard samtykkepolicyen, så en bruker som prøver å godkjenne en e-postapp, får i stedet en forespørsel om administratorgodkjenning. Å være verifisert utgiver endrer ikke det. IT-administratoren din kan godkjenne MCPEmails for hele organisasjonen via godkjenningslenken dashbordet gir deg å sende videre, og trenger bare å gjøre det én gang."
     },
     {
       "h": "En konto uten Exchange Online-postkasse blir avvist",
-      "p": "Noen Microsoft 365-kontoer har ingen Exchange Online-postkasse, for eksempel en administratorkonto uten Exchange-lisens, eller en organisasjon der e-posten ligger et annet sted. Microsoft Graph har da ingenting å åpne, så mcpemails avviser tilkoblingen og sier ifra. Hvis e-posten din ligger på en annen server, kobler du adressen til med IMAP i stedet."
+      "p": "Noen Microsoft 365-kontoer har ingen Exchange Online-postkasse, for eksempel en administratorkonto uten Exchange-lisens, eller en organisasjon der e-posten ligger et annet sted. Microsoft Graph har da ingenting å åpne, så MCPEmails avviser tilkoblingen og sier ifra. Hvis e-posten din ligger på en annen server, kobler du adressen til med IMAP i stedet."
     },
     {
       "h": "Hvis godkjenningen ikke gikk gjennom, åpner administratoren lenken på nytt",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Microsoft 365-e-post?",
-      "a": "Ja. Koble postkassen din fra jobb eller skole til mcpemails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Hvis organisasjonen krever administratorgodkjenning, godkjenner IT-administratoren MCP Emails én gang først, med lenken dashbordet gir deg."
+      "a": "Ja. Koble postkassen din fra jobb eller skole til MCPEmails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Hvis organisasjonen krever administratorgodkjenning, godkjenner IT-administratoren MCPEmails én gang først, med lenken dashbordet gir deg."
     },
     {
       "q": "Hvorfor blir jeg bedt om administratorgodkjenning?",
@@ -82,11 +82,11 @@
     },
     {
       "q": "Hva må IT-administratoren min gjøre?",
-      "a": "Åpne godkjenningslenken du sender, logge inn med jobbkontoen sin hos Microsoft og godkjenne appen for organisasjonen på Microsofts samtykkeskjerm, der MCP Emails vises som verifisert utgiver. Vedkommende trenger ingen MCP Emails-konto. Det gjøres én gang for hele organisasjonen. Etter det kobler alle i organisasjonen til med Koble til med Microsoft som vanlig."
+      "a": "Åpne godkjenningslenken du sender, logge inn med jobbkontoen sin hos Microsoft og godkjenne appen for organisasjonen på Microsofts samtykkeskjerm, der MCPEmails vises som verifisert utgiver. Vedkommende trenger ingen MCPEmails-konto. Det gjøres én gang for hele organisasjonen. Etter det kobler alle i organisasjonen til med Koble til med Microsoft som vanlig."
     },
     {
       "q": "Trenger jeg et app-passord eller IMAP-innstillinger?",
-      "a": "Nei. mcpemails kobler til Microsoft 365 via Microsoft Graph etter at du har logget inn med Microsoft, så det finnes ikke noe app-passord å lage og ingen IMAP- eller SMTP-server å skrive inn. Et passord ville uansett ikke fungert: grunnleggende autentisering ble fjernet fra Exchange Online i 2022 og kan ikke slås på igjen."
+      "a": "Nei. MCPEmails kobler til Microsoft 365 via Microsoft Graph etter at du har logget inn med Microsoft, så det finnes ikke noe app-passord å lage og ingen IMAP- eller SMTP-server å skrive inn. Et passord ville uansett ikke fungert: grunnleggende autentisering ble fjernet fra Exchange Online i 2022 og kan ikke slås på igjen."
     },
     {
       "q": "Hva kan AI-en min gjøre i Microsoft 365?",
@@ -94,7 +94,7 @@
     },
     {
       "q": "Lagres e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra Microsoft for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokenet fra Microsoft-innloggingen din er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du innboksen i mcpemails, avsluttes tilkoblingen umiddelbart."
+      "a": "Nei. Meldinger hentes direkte fra Microsoft for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokenet fra Microsoft-innloggingen din er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du innboksen i MCPEmails, avsluttes tilkoblingen umiddelbart."
     }
   ],
   "ctaBand": {

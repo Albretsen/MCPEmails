@@ -2,8 +2,8 @@ const translation = {
   title: 'Serveur MCP Gmail hébergé ou auto-hébergé : avantages, inconvénients et coûts',
   description:
     'Serveur MCP Gmail hébergé ou auto-hébergé, comparés en toute franchise : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
-  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé — MCP Emails',
-  content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCP Emails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
+  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé — MCPEmails',
+  content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCPEmails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
 
 Voici le bilan honnête. J'ai construit un serveur hébergé, j'ai donc un parti pris, mais je vais vous dire exactement où l'auto-hébergement l'emporte et quel profil de personne devrait le choisir. Si vous voulez d'abord le modèle au niveau des verbes, le [guide complet pour donner à un agent IA l'accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est l'article pilier à lire en parallèle.
 
@@ -23,7 +23,7 @@ Le code tourne sur votre matériel. Aucun tiers ne se place jamais entre votre a
 
 ### C'est gratuit en dollars
 
-Pas d'abonnement. L'API Gmail elle-même est gratuite, quel que soit le volume qu'un agent atteindra. Si votre temps vaut peu face à 9 $/mois (ou 15 $/mois dès qu'il vous faut des boîtes illimitées), le calcul penche pour la solution maison.
+Pas d'abonnement. L'API Gmail elle-même est gratuite, quel que soit le volume qu'un agent atteindra. Si votre temps vaut peu face à 9 $/mois (ou 15 $/mois dès qu'il vous faut plus de trois boîtes), le calcul penche pour la solution maison.
 
 ### Vous pouvez l'adapter à tout
 
@@ -55,17 +55,17 @@ MCP est jeune. La spécification évolue, Google fait tourner ses exigences, et 
 
 Le dépôt que vous avez choisi gère Gmail. Le jour où vous ajoutez un compte Outlook ou une adresse iCloud, vous intégrez Microsoft Graph ou câblez vous-même IMAP et SMTP, avec un deuxième modèle d'authentification et un deuxième lot de cas particuliers. La plupart des serveurs DIY restent Gmail uniquement parce que le deuxième fournisseur est un projet à part entière.
 
-## L'argument de l'hébergé : MCP Emails, en toute franchise
+## L'argument de l'hébergé : MCPEmails, en toute franchise
 
 Un serveur MCP hébergé inverse le compromis. Vous renoncez à faire tourner le code ; vous récupérez tout le temps que la liste ci-dessus vous aurait coûté.
 
 ### L'installation prend des minutes, pas un après-midi
 
-Vous créez un compte, allez dans **Dashboard → Inboxes → Connect Inbox**, choisissez Gmail et collez un mot de passe d'application Google, ou choisissez plutôt la connexion avec Google. Pas de projet Cloud à vous, pas d'écran de consentement à configurer, pas de file d'attente de vérification. Ensuite, vous connectez votre agent. Pour [claude.ai ou Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes), vous collez l'URL du point de terminaison MCP, vous vous connectez et approuvez les scopes — aucune clé API. Pour un client sans OAuth, comme [Cursor, Cline ou un script brut](/blog/email-for-ai-agents-cursor-cline-vscode), vous générez une clé API à portée limitée dans **Dashboard → API Keys** et l'envoyez comme jeton bearer.
+Vous créez un compte, allez dans **Dashboard → Inboxes → Connect Inbox**, choisissez Gmail et collez un mot de passe d'application Google (Google vous demande d'activer la validation en deux étapes avant d'en créer un). Pas de projet Cloud à vous, pas d'écran de consentement à configurer, pas de file d'attente de vérification. Ensuite, vous connectez votre agent. Pour [claude.ai ou Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes), vous collez l'URL du point de terminaison MCP, vous vous connectez et approuvez les scopes, sans clé API. Pour un client sans OAuth, comme [Cursor, Cline ou un script brut](/blog/email-for-ai-agents-cursor-cline-vscode), vous générez une clé API à portée limitée dans **Dashboard → API Keys** et l'envoyez comme jeton bearer.
 
 ### Les identifiants sont chiffrés et l'e-mail n'est jamais stocké
 
-L'identifiant de la boîte (le mot de passe d'application ou le jeton OAuth) est la seule chose conservée par boîte de réception, et il est chiffré avec AES-256-GCM au repos. La clé vit comme un secret d'environnement, séparée de la base de données, et le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée au moment de l'appel. L'e-mail lui-même n'est jamais stocké : chaque appel \`email_read\` (que ce soit pour lister, lire ou rechercher) interroge Gmail en direct, transmet le résultat à votre agent et le jette. C'est le travail de chiffrement de la section auto-hébergement, fait et maintenu. [Est-il sûr de donner à un agent IA l'accès à l'e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille tout le modèle de sécurité.
+L'identifiant de la boîte (le mot de passe d'application ou le jeton OAuth) est la seule chose conservée par boîte de réception, et il est chiffré avec AES-256-GCM au repos. La clé est conservée comme secret serveur, séparée de la base de données, et l'identifiant est déchiffré sur nos serveurs uniquement lorsqu'une requête en a besoin. Il n'est jamais envoyé à votre agent. L'e-mail lui-même n'est jamais stocké : chaque appel \`email_read\` (que ce soit pour lister, lire ou rechercher) interroge Gmail en direct, transmet le résultat à votre agent et le jette. C'est le travail de chiffrement de la section auto-hébergement, fait et maintenu. [Est-il sûr de donner à un agent IA l'accès à l'e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille tout le modèle de sécurité.
 
 ### Le multi-fournisseur est offert
 
@@ -73,15 +73,15 @@ Le même point de terminaison et les mêmes outils principaux — \`inbox_list\`
 
 ### L'envoi reste sur votre fournisseur
 
-MCP Emails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre Gmail (ou Microsoft Graph, ou votre propre SMTP), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
+MCPEmails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre fournisseur (Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
 
 ### Le coût honnête : vous faites confiance à un prestataire
 
-C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur hébergé, votre jeton chiffré se trouve dans la base de données de quelqu'un d'autre et les appels de votre agent transitent par le code de quelqu'un d'autre. Vous faites confiance au fait que le chiffrement est réel, que l'isolation tient, et que l'entreprise ne fait pas une bêtise. Pour la plupart des gens, cette confiance est bien placée et fait gagner énormément de temps. Si votre modèle de menace l'interdit catégoriquement, auto-hébergez — c'est la raison légitime de le faire.
+C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur hébergé, votre jeton chiffré se trouve dans la base de données de quelqu'un d'autre et les appels de votre agent transitent par le code de quelqu'un d'autre. Vous faites confiance au fait que le chiffrement est réel, que les contrôles d'accès tiennent, et que l'entreprise ne fait pas une bêtise. Pour la plupart des gens, cette confiance est bien placée et fait gagner énormément de temps. Si votre modèle de menace l'interdit catégoriquement, auto-hébergez. C'est la raison légitime de le faire.
 
 ## Ce que ça coûte en dollars
 
-MCP Emails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics et un support communautaire. [Personal est à 9 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 30 jours d'analytics, support par e-mail), Pro est à 15 $/mois (boîtes connectées illimitées, 300 req/min, 90 jours d'analytics), et Team est à 79 $/mois (membres avec rôles, un espace de travail distinct par client, SSO et journaux d'audit). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
+MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics et un support communautaire. [Personal est à 9 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 90 jours d'analytics, support par e-mail), Pro est à 15 $/mois (jusqu'à 10 boîtes connectées, 300 req/min, 2 ans d'analytics), et Business est à 39 $/mois (10 boîtes incluses plus 3 $/mois par boîte en plus, membres avec rôles, un espace de travail distinct par client). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
 
 ## Alors, lequel choisir ?
 

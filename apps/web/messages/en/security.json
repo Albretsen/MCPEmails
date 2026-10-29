@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email Agent Security: OAuth, Encryption & Privacy",
-    "description": "Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code."
+    "description": "Learn how MCPEmails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code."
   },
   "hero": {
     "eyebrow": "Security & trust",
@@ -38,7 +38,7 @@
       },
       {
         "data": "OAuth token or app password",
-        "accessed": "Decrypted only inside an isolated function at call time",
+        "accessed": "Decrypted on our servers only for the request that needs it",
         "stored": "Yes, encrypted at rest with AES-256-GCM; key held separately"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Yes, encrypted at rest until sent, then kept as your history"
       },
       {
+        "data": "Sends held for your approval",
+        "accessed": "Held until a reviewer approves or rejects it, or it expires after 24 hours",
+        "stored": "Yes, encrypted at rest, then kept as your approval history"
+      },
+      {
         "data": "Tool-call activity (metadata)",
         "accessed": "Recorded for your own audit log",
         "stored": "Tool name, inbox, timestamp, and status only. No email content"
       }
     ],
-    "outro": "The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history."
+    "outro": "The deliberate exceptions are outgoing messages that have to wait: a message you ask the agent to schedule for later, and a send held for your approval. We have to hold them until they go out, so we store them encrypted in the meantime, then keep a record afterwards for your history."
   },
   "verify": {
     "title": "3. You don't have to trust me, you can check",
@@ -86,7 +91,7 @@
     "intro": "Your tokens are the only sensitive thing we hold, so they get the strongest protection we can give them:",
     "measures": [
       "All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.",
-      "OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held separately from the encrypted data and is never co-located with it.",
+      "OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held as a server secret, separate from the database, and is never stored alongside the encrypted data.",
       "API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.",
       "Database access is protected by Row-Level Security policies that stop one workspace from reaching another's data, even if a query is written wrong.",
       "Administrative access to production infrastructure requires multi-factor authentication and is logged."
@@ -108,12 +113,17 @@
       {
         "provider": "Supabase",
         "purpose": "Database, auth, edge functions",
-        "location": "EU (Stockholm, Sweden)"
+        "location": "Data stored in the EU (Stockholm, Sweden); mail processed live in the US (East)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Website and dashboard hosting",
-        "location": "Global edge, nearest region to user"
+        "purpose": "Website, dashboard and MCP endpoint hosting",
+        "location": "Global CDN; servers in the US (East) and the EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Mail relay for the few providers that refuse connections from cloud addresses (a TLS tunnel: it cannot read mail or passwords)",
+        "location": "Germany (EU)"
       },
       {
         "provider": "Stripe",
@@ -140,13 +150,13 @@
   },
   "selfhost": {
     "title": "Run it yourself, trust no one (including us)",
-    "p1": "MCP Emails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means \"email is fetched live and never stored\" is something you can verify by running it and watching the network, not something you have to take on faith.",
+    "p1": "MCPEmails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means \"email is fetched live and never stored\" is something you can verify by running it and watching the network, not something you have to take on faith.",
     "p2": "Self-hosting is IMAP/SMTP-first: connect any mailbox with an app password, and your credentials are encrypted under a key only you hold. One command brings the whole stack up on your own machine.",
     "cta": "Read the self-hosting guide"
   },
   "operator": {
     "title": "Who runs this",
-    "p1": "One person: me. I'm Asgeir Albretsen, operating as Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak), organisation number 926 646 753, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
+    "p1": "One person: me. I'm Asgeir Albretsen, and I run MCPEmails through Albretsen AS, a Norwegian private limited company (aksjeselskap) that I own, organisation number 938 702 373, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
     "p2": "Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCPEmails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys. <selfhostpage>The self-hosting guide</selfhostpage> is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.",
     "p3": "Support and security mail does not go through a queue. It comes to me, and I answer every message myself."
   }

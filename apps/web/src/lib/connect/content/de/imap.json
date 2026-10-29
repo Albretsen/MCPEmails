@@ -1,0 +1,121 @@
+{
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postfach-Passwort",
+    "helpUrl": null,
+    "usernameForm": "Fast immer Ihre vollständige E-Mail-Adresse. Einige Hosts wollen nur den Teil vor dem @, und bei Apples iCloud ist es so dokumentiert.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Beliebiges IMAP-Postfach mit Claude, ChatGPT und Cursor verbinden",
+    "description": "Jedes IMAP-Postfach Ihres Unternehmens mit Claude, Cursor und jedem MCP-Client verbinden. Host und Passwort genügen: IMAP auf 993 oder 143, SMTP auf 465 oder 587, automatisch erkannt."
+  },
+  "hero": {
+    "eyebrow": "IMAP + KI",
+    "titleLine1": "Der IMAP-MCP-Server für jedes Postfach,",
+    "titleLine2": "in Claude, Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Verbinden Sie jedes Postfach Ihres Unternehmens, egal wo es gehostet wird: info@, vertrieb@, rechnungen@ und Ihr eigenes. Ihr KI-Agent liest, sucht, sendet, beantwortet, plant und sortiert diese E-Mails über ganz normales IMAP und SMTP, und dieselben Postfächer funktionieren in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Jeder IMAP-Host, keine OAuth-Einrichtung",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Claude hat keinen eigenen IMAP-Client. MCPEmails ist ein gehosteter IMAP-MCP-Server, der sich per IMAP und SMTP an Ihrem Mailserver anmeldet, mit der Adresse, dem Host und dem Passwort, die Sie von Ihrem Anbieter ohnehin haben. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Jeder Host, der IMAP spricht, funktioniert, Funktionsadressen eines Unternehmens verbinden sich genauso wie eine private, und ein Postfach ist kostenlos."
+  },
+  "persona": {
+    "intro": "Sie betreuen mehrere Firmenpostfächer?",
+    "label": "So bearbeitet eine Person jede Firmenadresse mit einem Agenten",
+    "href": "/for/business"
+  },
+  "method": {
+    "title": "So verbindet sich ein beliebiges IMAP-Postfach",
+    "body": "Sie brauchen vier Dinge: Ihre Adresse, Ihren Mailserver, Ihr Passwort und, falls Ihr Anbieter es verlangt, ein App-Passwort. Geben Sie zuerst Ihre Adresse ein: MCPEmails erkennt die gängigen Hosting-Anbieter und trägt beide Hosts, beide Ports und die Verschlüsselungsart für Sie ein. Antwortet die gewählte Verbindungsart nicht, probiert es von selbst die andere Standardvariante, <b>993 oder 143</b> für IMAP und <b>465 oder 587</b> für SMTP. Niemand muss also bei STARTTLS raten."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft. Bezahlte Tarife bieten mehr: drei Postfächer mit Personal, bis zu 10 mit Pro und so viele, wie Sie brauchen, mit Business."
+    },
+    {
+      "h": "IMAP- und SMTP-Einstellungen heraussuchen",
+      "p": "Ihr Anbieter veröffentlicht sie, meist als imap.yourdomain.com und smtp.yourdomain.com auf den Ports 993 und 465. Verlangt Ihr Anbieter ein App-Passwort für Mail-Clients, erstellen Sie jetzt eines."
+    },
+    {
+      "h": "In MCPEmails einfügen",
+      "p": "Wählen Sie IMAP / SMTP und tragen Sie Ihre Adresse, die beiden Hosts und das Passwort ein. Ports und Verschlüsselungsart finden Sie unter Erweitert, vorausgefüllt mit den Standardwerten."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "So finden Sie Ihren echten Hostnamen, in der Reihenfolge, die tatsächlich funktioniert",
+      "p": "Es gibt vier Stellen, die einfachste zuerst. <b>Erstens</b> die Hilfeseite Ihres Anbieters: Suchen Sie nach dem Namen Ihres Anbieters und den Wörtern IMAP-Einstellungen; genau dafür gibt es die anderen Anbieterseiten auf dieser Website. <b>Zweitens</b> das Control Panel: In cPanel finden Sie die manuellen Einstellungen über die E-Mail-Konten und den Bereich zum Verbinden von Geräten; in Plesk über Mail, dann die Adresse, dann die Seite zum Verbinden mit dem Postfach. Die meisten Hosting-Panels haben eine vergleichbare Seite, und sie ist für Ihr Konto maßgeblich. <b>Drittens</b> DNS: Ein Anbieter, der RFC 6186 folgt, veröffentlicht einen SRV-Eintrag <code>_imaps._tcp.yourdomain.com</code>, der Host und Port direkt nennt. <b>Viertens</b> Ihr MX-Eintrag: Er nennt die Maschine, die Ihre E-Mails empfängt, und gehört sehr oft zur selben Namensfamilie wie der IMAP-Host. Was nicht funktioniert: <code>imap.yourdomain.com</code> raten und hoffen. Viele Hosts stellen Ihre E-Mails unter einem Namen bereit, der mit Ihrer Domain nichts zu tun hat."
+    },
+    {
+      "h": "An einem eigenen Hostnamen scheitert es meist am Zertifikat",
+      "p": "Die meisten Hosting-Firmen lassen Sie <code>mail.yourdomain.com</code> problemlos auf ihren Mailserver zeigen, und in einem Client, der nicht genau prüft, funktioniert das auch. Der Server legt aber ein Zertifikat für den eigenen Namen der Hosting-Firma vor, etwa <code>server24.hostingprovider.net</code> oder ein Wildcard-Zertifikat für deren Domain, nicht für Ihre. Ein Client, der TLS korrekt prüft, lehnt die Verbindung wegen eines <b>nicht passenden Hostnamens</b> ab. Das ist ein anderer Fehler als ein abgelehntes Passwort, auch wenn die meisten Oberflächen beides verwischen. Die Prüfung abzuschalten ist keine akzeptable Lösung für ein Postfach, aus dem ein KI-Agent senden kann. Die Lösung ist, sich mit dem gemeinsamen Hostnamen zu verbinden, für den das Zertifikat tatsächlich ausgestellt ist. Das ist der Name, den Ihr Anbieter dokumentiert, und den nutzen wir."
+    },
+    {
+      "h": "993 oder 143, 465 oder 587, und was ein Anbieter mit „SSL“ oder „TLS“ meint",
+      "p": "RFC 8314 empfiehlt Anbietern implizites TLS, die Verbindung ist also ab dem ersten Byte verschlüsselt: Port <code>993</code> für IMAP und <code>465</code> für den Versand. Ältere Konfigurationen nutzen <code>143</code> und <code>587</code>. Diese starten unverschlüsselt und werden per STARTTLS hochgestuft. Anbieter beschriften das uneinheitlich, und genau diese Beschriftungen sorgen für die meiste Verwirrung: „SSL/TLS“ in einer Einstellungstabelle bedeutet fast immer implizites TLS auf 993 oder 465, „TLS“ oder „STARTTLS“ fast immer 143 oder 587. Sie müssen das nicht selbst herausfinden. Geben Sie Ihre Adresse ein, und MCPEmails trägt bei den Hosts, die es kennt, beide Hosts, beide Ports und beide Verschlüsselungsarten ein. Antwortet die gewählte Verbindungsart nicht, versucht es von selbst die andere Standardvariante."
+    },
+    {
+      "h": "Drei Serverfähigkeiten bestimmen, wie sich Ihr Postfach verhält, und keine zwei Server sind sich einig",
+      "p": "<b>SASL-IR</b> (RFC 4959): Ein Server, der das nicht meldet, lehnt Zugangsdaten ab, die in derselben Zeile wie der Befehl <code>AUTHENTICATE</code> gesendet werden, und antwortet mit einem bloßen <code>BAD</code> ohne Erklärung. Das sieht genau aus wie ein falsches Passwort. MCPEmails erkennt das und wiederholt die Anmeldung in zwei Schritten. Deshalb funktionieren manche Hosts hier und scheitern in anderen Werkzeugen. <b>MOVE</b> (RFC 6851): Ohne diese Fähigkeit lässt sich eine Nachricht nicht atomar verschieben. Verschieben wird dann zu Kopieren, Setzen eines Flags und Expunge, und eine mittendrin abgebrochene Verbindung kann die Nachricht in beiden Ordnern hinterlassen. <b>SPECIAL-USE</b> (RFC 6154): Ohne diese Fähigkeit kennzeichnet der Server Gesendet, Entwürfe, Papierkorb und Spam nicht nach ihrer Rolle, Ordner werden also über den Namen zugeordnet. Bei einem Postfach, das auf Deutsch, Norwegisch oder Russisch angelegt wurde, erkennt Ihr Agent die Systemordner dann nur, wenn Sie sie benennen. Verhält sich ein Ordnervorgang seltsam, ist meist eine dieser drei Fähigkeiten der Grund."
+    }
+  ],
+  "limits": [
+    "Der Server muss aus dem öffentlichen Internet erreichbar sein. Ein Postfach in einem privaten Netzwerk, hinter einem VPN oder unter einer privaten IP-Adresse wird bewusst abgelehnt: Der Hostname wird aufgelöst, und jede Adresse aus einem privaten Bereich wird zurückgewiesen.",
+    "Es werden nur die Standard-Mailports angewählt: 143 und 993 für IMAP sowie 25, 465 und 587 für SMTP. Ein Server auf einem eigenen Port lässt sich nicht verbinden.",
+    "Ein Postfach, das OAuth verlangt und kein Passwort über IMAP akzeptiert, lässt sich so nicht verbinden. Am häufigsten betrifft das Microsoft 365 und Outlook.com: Verbinden Sie diese mit der Outlook-Option (Anmeldung mit Microsoft) statt mit IMAP."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit jedem IMAP-Postfach?",
+      "a": "Claude hat keinen eigenen IMAP-Client, also nicht direkt. Richten Sie einen MCP-Server wie MCPEmails mit Ihrer Adresse, Ihrem Host und Ihrem Passwort auf das Postfach ein, dann kann Claude diese E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Jeder Server, der IMAP und SMTP auf den Standardports spricht, funktioniert, egal wer ihn hostet, und dieselbe Verbindung klappt dann auch in Cursor und ChatGPT."
+    },
+    {
+      "q": "Wie finde ich meine IMAP-Servereinstellungen?",
+      "a": "Beginnen Sie mit der Hilfeseite Ihres Anbieters, dann mit Ihrem Hosting-Control-Panel: cPanel und Plesk zeigen für jede Adresse die genauen Hosts und Ports. Gibt es beides nicht, veröffentlicht ein Anbieter, der RFC 6186 folgt, einen SRV-Eintrag _imaps._tcp für Ihre Domain, und Ihr MX-Eintrag nennt die Maschine, die Ihre E-Mails annimmt. Sie hängt meist mit dem IMAP-Host zusammen. Raten Sie nicht anhand Ihres Domainnamens."
+    },
+    {
+      "q": "Soll ich Port 993 oder 143 verwenden?",
+      "a": "Verwenden Sie 993, sofern Ihr Anbieter nichts anderes sagt. Port 993 ist implizites TLS, ab dem ersten Byte verschlüsselt, und wird von den aktuellen Standards empfohlen. Port 143 startet unverschlüsselt und wird per STARTTLS hochgestuft. Das funktioniert weiterhin, ist aber das ältere Muster. Beim Senden gilt dieselbe Unterscheidung: 465 für implizites TLS und 587 für STARTTLS. MCPEmails probiert das Standardpaar und weicht von selbst auf das andere aus."
+    },
+    {
+      "q": "Warum verbindet sich mein Mail-Client, aber diese Anmeldung scheitert?",
+      "a": "Es gibt drei übliche Ursachen. Ihr Client zeigt auf einen eigenen Hostnamen, dessen Zertifikat für einen anderen Namen ausgestellt ist, und prüft nicht streng. Ihr Anbieter verlangt ein App-Passwort für alles außer der eigenen App. Oder der Server lehnt die SASL-Anmeldung in einem Schritt ab und antwortet mit einem bloßen BAD, das wie falsche Zugangsdaten aussieht. Versuchen Sie den Hostnamen, den Ihr Anbieter dokumentiert, statt eines, der aus Ihrer Domain gebildet ist."
+    },
+    {
+      "q": "Brauche ich ein App-Passwort?",
+      "a": "Das hängt ganz vom Anbieter ab. Apples iCloud, Yahoo, AOL, Fastmail, Yandex und Mail.ru lehnen das Kontopasswort von einem Mail-Client ab und verlangen ein eigenes. Zoho verlangt eines, wenn die Zwei-Faktor-Authentifizierung aktiv ist. Die meisten unabhängigen Hosting-Anbieter und cPanel-Server akzeptieren das Postfach-Passwort direkt. Wird ein scheinbar korrektes Passwort abgelehnt, prüfen Sie zuerst, ob ein App-Passwort nötig ist."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Ihrem Server abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Ändern Sie das Postfach-Passwort bei Ihrem Anbieter, wird das Postfach getrennt, bis Sie das neue eingeben. Das ist der schnellste Weg, den Zugriff zu beenden."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI die Postfächer, die Ihr Unternehmen bereits nutzt",
+    "sub": "Jedes IMAP-Postfach in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  },
+  "guide": {
+    "intro": "Lieber eine Anleitung mit Screenshots?",
+    "label": "Claude IMAP-Konnektor: jedes IMAP-Postfach mit Claude verbinden",
+    "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Postfach bei Outlook.com, Hotmail oder Microsoft 365?",
+    "label": "Verbinden Sie es mit der Anmeldung über Microsoft statt per IMAP",
+    "href": "/connect/outlook"
+  }
+}

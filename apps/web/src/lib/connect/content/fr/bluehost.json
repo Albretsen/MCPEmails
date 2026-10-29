@@ -20,7 +20,7 @@
     "titleLine1": "Serveur MCP pour la messagerie Bluehost :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Bluehost ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, que la boîte soit un compte cPanel Email ou une boîte Professional Email.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Bluehost. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP classique sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La première chose à établir est lequel des trois produits e-mail de Bluehost vous avez, car cPanel Email répond sur un serveur construit à partir de votre propre domaine tandis que Professional Email répond sur les serveurs de Titan, et les deux jeux de réglages ne sont pas interchangeables. Dans les deux cas, vous vous authentifiez avec le mot de passe défini sur la boîte, jamais avec votre mot de passe du portail Bluehost. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Bluehost. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP classique sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La première chose à établir est lequel des trois produits e-mail de Bluehost vous avez, car cPanel Email répond sur un serveur construit à partir de votre propre domaine tandis que Professional Email répond sur les serveurs de Titan, et les deux jeux de réglages ne sont pas interchangeables. Dans les deux cas, vous vous authentifiez avec le mot de passe défini sur la boîte, jamais avec votre mot de passe du portail Bluehost. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe de la boîte, pas l'identifiant du portail",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande aucune carte."
     },
     {
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Une boîte Google Workspace achetée via Bluehost est une boîte Google. Connectez-la comme Gmail, avec un mot de passe d'application Google ou l'option de connexion avec Google, pas avec des identifiants Bluehost.",
-    "mcpemails connecte des boîtes, pas le compte d'hébergement. Les redirections, alias et filtres restent dans le portail Bluehost."
+    "Une boîte Google Workspace achetée via Bluehost est une boîte Google. Connectez-la comme Gmail, avec un mot de passe d'application Google, pas avec des identifiants Bluehost.",
+    "MCPEmails connecte des boîtes, pas le compte d'hébergement. Les redirections, alias et filtres restent dans le portail Bluehost."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Bluehost ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Bluehost intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Cela fonctionne pour les comptes cPanel Email comme pour les comptes Professional Email, dès lors que vous utilisez le bon serveur pour votre produit."
+      "a": "Pas directement. Claude n'a pas de connecteur Bluehost intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Cela fonctionne pour les comptes cPanel Email comme pour les comptes Professional Email, dès lors que vous utilisez le bon serveur pour votre produit."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Bluehost ?",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes Bluehost sur un seul agent",
-    "sub": "Connectez votre première boîte Bluehost gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte Bluehost gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   }
 }

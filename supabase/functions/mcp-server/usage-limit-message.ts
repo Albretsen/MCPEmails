@@ -47,7 +47,7 @@
  *
  * The internal plan ids have never matched the pricing page and drifted twice:
  * `solo` was sold as Solo, then Agent, and is now Pro; `pro` was Team, then
- * Scale, and is Team again. `personal` is the lone id that matches the name it
+ * Scale, then Team again, and is Business since 2026-10-19. `personal` is the lone id that matches the name it
  * is sold under, which makes it the easy one to mis-read the others against. A
  * message a person reads has to use the name printed on the pricing page.
  * Mirror of `planDisplayName` in apps/web/src/lib/stripe/plans.ts.
@@ -56,7 +56,7 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
   personal: "Personal",
   solo: "Pro",
-  pro: "Team",
+  pro: "Business",
 };
 
 /**
@@ -71,11 +71,11 @@ export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
 
 /**
  * Days after signup during which a Free workspace's actions are not counted.
- * Mirrors `c_grace` in `workspace_action_allowance()` (migration
- * 20260912200000) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
+ * Mirrors `free_action_grace_ends_at()` (migration 20261017160000;
+ * workspaces created before 2026-10-17 16:00 UTC keep 7 days) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
  * SQL function is what actually decides.
  */
-export const FREE_ACTION_GRACE_DAYS = 7;
+export const FREE_ACTION_GRACE_DAYS = 3;
 
 /** Monthly price of the plan that removes the Free cap, as printed on /pricing. */
 export const FREE_CAP_UPGRADE_PRICE = "$9 per month";
@@ -98,8 +98,27 @@ export function freeCapUpgradeUrl(appOrigin: string): string {
  * an upgrade. So that wording names no plan to buy and no price, and its one
  * link is the plain pricing page rather than the tagged upgrade door.
  * Everyone else keeps `standard`, which is unchanged.
+ *
+ * `checkout` is `standard` plus a short-lived link straight to Stripe Checkout
+ * for Personal monthly (checkout-link.ts decides who gets it and mints it).
+ * It is only ever chosen for a Free workspace's OWNER on a non-OpenAI client,
+ * on the refused call itself, and only when a link was actually minted; any
+ * failure along the way lands on `standard`. Without a `checkout` argument it
+ * renders exactly as `standard`, so a caller cannot produce a refusal that
+ * promises a link and carries none.
  */
-export type PlanLimitWording = "standard" | "directory";
+export type PlanLimitWording = "standard" | "directory" | "checkout";
+
+/**
+ * The minted link, as the refusal text prints it. `minutes` is what is LEFT on
+ * the link, not its full lifetime: a repeat refusal inside the window hands
+ * back the same link (checkout_link_issue), and saying "30 minutes" about a
+ * link with 4 left would send someone to an expired page.
+ */
+export interface CheckoutLinkWording {
+  url: string;
+  minutes: number;
+}
 
 /** The informational page that describes the plans, with no funnel tag. */
 export function plansInfoUrl(appOrigin: string): string {
@@ -156,6 +175,9 @@ export function rateLimitPlanSentence(wording: PlanLimitWording): string {
  * @param resetAt    ISO timestamp of the period end, i.e. when the meter clears.
  * @param appOrigin  App origin, passed in rather than read from the environment
  *                   so this module stays a pure function of its arguments.
+ * @param wording    See PlanLimitWording.
+ * @param checkout   The minted checkout link; read only for Free under
+ *                   `checkout` wording, ignored everywhere else.
  */
 export function buildUsageLimitText(
   plan: string,
@@ -164,6 +186,7 @@ export function buildUsageLimitText(
   resetAt: string,
   appOrigin: string,
   wording: PlanLimitWording = "standard",
+  checkout?: CheckoutLinkWording | null,
 ): string {
   const planLabel = PLAN_DISPLAY_NAMES[plan] ?? plan;
   // Date only, in ISO order. An LLM relaying "2026-10-01" to a person will
@@ -172,6 +195,30 @@ export function buildUsageLimitText(
   const resetDate = resetAt.slice(0, 10);
   const used = usedActions.toLocaleString("en-US");
   const total = cap.toLocaleString("en-US");
+
+  if (plan === "free" && wording === "checkout" && checkout) {
+    // Same facts as `standard`, numbers first, one way out per sentence. The
+    // link sentence says what the link does AND what it does not do: a bearer
+    // link in a chat transcript reads like a sign-in link to anyone wary of
+    // one, and "signs nobody in" is both true (the route never sets a cookie)
+    // and the thing a careful model would otherwise hedge about. The "same
+    // request succeeds" sentence is what lets the person say "continue" after
+    // paying; "nothing from this request was stored" is true (only the tool
+    // NAME is kept, on the link row) and answers the obvious worry about a
+    // half-done action. Still declarative throughout, for the reasons above.
+    const minutes = Math.max(1, Math.round(checkout.minutes));
+    return `Monthly allowance reached: ${used} of ${total} email actions used this month on the ${planLabel} plan. ` +
+      `The counter resets on ${resetDate}. Until then every email action in this workspace will be refused, ` +
+      `so retrying will not help unless the plan changes; this is a plan limit, not a temporary failure. ` +
+      `The ${planLabel} plan includes ${total} email actions per calendar month; the first ${FREE_ACTION_GRACE_DAYS} days ` +
+      `after signup are not counted. inbox_list and the dashboard keep working. ` +
+      `The Personal plan removes the monthly cap for ${FREE_CAP_UPGRADE_PRICE}. ` +
+      `A checkout page for it opens at ${checkout.url} for the next ${minutes} minute${minutes === 1 ? "" : "s"}; ` +
+      `the link only opens checkout and signs nobody in. ` +
+      `Once Personal is active, the same request succeeds; nothing from this request was stored. ` +
+      `All plans are at ${plansInfoUrl(appOrigin)}. ` +
+      `The current count is at ${appOrigin}/dashboard/usage.`;
+  }
 
   if (plan === "free") {
     return `Monthly allowance reached: ${used} of ${total} email actions used this month on the ${planLabel} plan. ` +

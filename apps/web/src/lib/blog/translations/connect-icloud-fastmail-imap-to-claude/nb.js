@@ -3,48 +3,48 @@ const translation = {
   description:
     'Koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude med et app-spesifikt passord. Steg-for-steg-oppsett, MCP-endepunktet, og hva IMAP får til som Gmail ikke gjør.',
   coverAlt: 'Koble iCloud, Fastmail og en hvilken som helst IMAP-innboks til Claude over MCP',
-  content: `Å koble iCloud, Fastmail eller en hvilken som helst IMAP-postkasse til Claude krever én ting Outlook ikke trenger: et **app-spesifikt passord**. Du genererer det inne hos e-postleverandøren din, limer det inn i MCP Emails én gang, og Claude kan lese, søke og sende gjennom den innboksen. Ingen OAuth-dans, ingen SMTP-serverinnstillinger å pugge.
+  content: `Å koble iCloud, Fastmail eller en hvilken som helst IMAP-postkasse til Claude krever én ting Outlook ikke trenger: et **app-spesifikt passord**. Du genererer det inne hos e-postleverandøren din, limer det inn i MCPEmails én gang, og Claude kan lese, søke og sende gjennom den innboksen. Ingen OAuth-dans, ingen SMTP-serverinnstillinger å pugge.
 
-Dette er ruten for alle leverandører som ikke er Gmail eller Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-vert kjører alle gjennom den samme IMAP/SMTP-transporten, så de deler et identisk funksjonssett. Hvis du klarer å hente ut et app-passord fra leverandøren, kan du koble den til. En fin bonus over Gmail: IMAP gir Claude ekte, permanent sletting.
+Dette er ruten for alle leverandører som ikke er Gmail eller Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-vert kjører alle gjennom den samme IMAP/SMTP-transporten, så de deler et identisk funksjonssett. Hvis du klarer å hente ut et app-passord fra leverandøren, kan du koble den til. Gmail kobles til på samme måte, med et Google-app-passord over IMAP.
 
 ## Hvorfor disse leverandørene bruker app-passord, ikke OAuth
 
-Outlook tilbyr et moderne OAuth-API, så MCP Emails kobler det til med Logg inn med Microsoft i stedet for et passord. (En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang; [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) forklarer det.) Gmail tilbyr begge veier: standard er et Google-apppassord over IMAP, som leverandørene her, og Logg inn med Google er alternativet. iCloud og Fastmail tilbyr ikke den veien til tredjeparts e-postverktøy. I stedet gir de deg et **app-spesifikt passord**: et langt, tilfeldig generert passord som er begrenset til én enkelt applikasjon, atskilt fra det egentlige kontopassordet ditt og som kan tilbakekalles for seg.
+Outlook tilbyr et moderne OAuth-API, så MCPEmails kobler det til med Logg inn med Microsoft i stedet for et passord. (En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang; [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) forklarer det.) Gmail fungerer som leverandørene her: det kobles til med et Google-apppassord over IMAP, og Google lar deg bare lage et når totrinnsbekreftelse er slått på. iCloud og Fastmail tilbyr ikke den veien til tredjeparts e-postverktøy. I stedet gir de deg et **app-spesifikt passord**: et langt, tilfeldig generert passord som er begrenset til én enkelt applikasjon, atskilt fra det egentlige kontopassordet ditt og som kan tilbakekalles for seg.
 
-Én korrigering som er verdt å gjøre, fordi eldre omtaler tar feil her: **Fastmail bruker kun app-passord.** Fastmail støttet tidligere en OAuth-flyt for enkelte integrasjoner, men for å koble til MCP Emails i dag genererer du et app-passord i Fastmails innstillinger. Akkurat som iCloud. Hvis en guide ber deg "logge inn med Fastmail" via OAuth, er den utdatert.
+Én korrigering som er verdt å gjøre, fordi eldre omtaler tar feil her: **Fastmail bruker kun app-passord.** Fastmail støttet tidligere en OAuth-flyt for enkelte integrasjoner, men for å koble til MCPEmails i dag genererer du et app-passord i Fastmails innstillinger. Akkurat som iCloud. Hvis en guide ber deg "logge inn med Fastmail" via OAuth, er den utdatert.
 
-App-passordet blir den ene legitimasjonen MCP Emails lagrer for den innboksen, [kryptert med AES-256-GCM i hvile](/blog/why-email-never-stored-matters) og dekryptert kun inne i en isolert Edge Function på kalltidspunktet. Selve e-posten din blir aldri lagret — hvert verktøykall henter den live fra leverandøren og forkaster den.
+App-passordet blir den ene legitimasjonen MCPEmails lagrer for den innboksen, [kryptert med AES-256-GCM i hvile](/blog/why-email-never-stored-matters) og dekryptert på serverne våre bare når en forespørsel trenger det. Det sendes aldri til Claude. Selve e-posten din blir aldri lagret: hvert verktøykall henter den live fra leverandøren og forkaster den.
 
 ## Generer et app-spesifikt passord for iCloud
 
 1. Gå til [appleid.apple.com](https://appleid.apple.com) og logg inn med Apple-kontoen din.
 2. Under seksjonen **Sign-In and Security**, åpne **App-Specific Passwords**.
-3. Klikk på **+** (Generate an app-specific password), gi det en etikett som \`MCP Emails\`, og bekreft med passordet til Apple-kontoen din.
+3. Klikk på **+** (Generate an app-specific password), gi det en etikett som \`MCPEmails\`, og bekreft med passordet til Apple-kontoen din.
 4. Apple viser deg et passord i formatet \`abcd-efgh-ijkl-mnop\`. Kopier det nå. Du kan ikke se det igjen senere.
 
-Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCP Emails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem.
+Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCPEmails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem. [Innstillingssiden for iCloud Mail](/connect/icloud) viser de samme verdiene.
 
 ## Generer et app-passord for Fastmail
 
 1. Logg inn på Fastmail og åpne **Settings → Privacy & Security → Connected apps & API tokens** (eldre kontoer kaller det **App Passwords**).
 2. Klikk på **New app password**.
-3. Gi det et navn (\`MCP Emails\` fungerer), og for tilgang velg **Mail (IMAP/SMTP)** slik at det både kan lese og sende.
+3. Gi det et navn (\`MCPEmails\` fungerer), og for tilgang velg **Mail (IMAP/SMTP)** slik at det både kan lese og sende.
 4. Fastmail genererer passordet kun én gang. Kopier det før du lukker dialogen.
 
-Fastmails IMAP-vert er \`imap.fastmail.com\` og SMTP er \`smtp.fastmail.com\`. Igjen, når du velger Fastmail i MCP Emails settes disse automatisk.
+Fastmails IMAP-vert er \`imap.fastmail.com\` og SMTP er \`smtp.fastmail.com\`. Igjen, når du velger Fastmail i MCPEmails settes disse automatisk. [Innstillingssiden for Fastmail](/connect/fastmail) har dem også.
 
 ## Koble til en generisk IMAP-innboks (alt annet)
 
-For Yahoo, Zoho, Yandex, en selvhostet e-postserver eller noe annet med et IMAP-endepunkt har stegene samme form: hent et app-passord fra leverandøren (de fleste som støtter 2FA krever ett), og gi deretter MCP Emails fire ting:
+For Yahoo, Zoho, Yandex, en selvhostet e-postserver eller noe annet med et IMAP-endepunkt har stegene samme form: hent et app-passord fra leverandøren (de fleste som støtter 2FA krever ett), og gi deretter MCPEmails fire ting:
 
 - **IMAP-vert og -port** (vanligvis \`993\` for TLS)
 - **SMTP-vert og -port** (vanligvis \`465\` eller \`587\`)
 - **E-postadressen din** som brukernavn
 - **App-passordet** som passord
 
-Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også — men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din.
+Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også — men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din. For porter, TLS-moduser og feilsøking på andre verter, se den [fullstendige guiden til IMAP-koblingen](/blog/claude-imap-connector).
 
-## Koble til innboksen i MCP Emails
+## Koble til innboksen i MCPEmails
 
 Når du har kopiert passordet:
 
@@ -57,13 +57,13 @@ Det er hele greia. Hvis du vil ha den raskest mulige versjonen på tvers av alle
 
 ## Pek Claude mot innboksen din
 
-Å koble til innboksen og å koble til Claude er to separate steg. Innboksen bor i MCP Emails; nå gir du Claude [MCP](https://modelcontextprotocol.io)-endepunktet slik at den kan kalle verktøyene.
+Å koble til innboksen og å koble til Claude er to separate steg. Innboksen bor i MCPEmails; nå gir du Claude [MCP](https://modelcontextprotocol.io)-endepunktet slik at den kan kalle verktøyene.
 
 I claude.ai:
 
 1. Gå til **Customize → Connectors**.
 2. Klikk på **Add connector** og lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
-3. Klikk på **Connect**, logg inn med MCP Emails-kontoen din, og godkjenn de tilgangene du vil ha — \`read:email\`, \`send:email\`, eller begge.
+3. Klikk på **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn de tilgangene du vil ha — \`read:email\`, \`send:email\`, eller begge.
 
 Ingen API-nøkkel, ingen konfigurasjonsfil. claude.ai bruker OAuth med PKCE under panseret, og tokenet Claude får er begrenset til nøyaktig det du godkjente. Hvis du er på en klient som ikke kan gjøre OAuth — Cursor, Cline, et cURL-skript — lager du i stedet en avgrenset nøkkel, som jeg dekker i [e-posttilgang for Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
@@ -75,11 +75,11 @@ En prompt for å bekrefte at det fungerer:
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## Den ene tingen IMAP gjør som Gmail ikke kan
+## Slik fungerer sletting på IMAP
 
-Her er delen folk overser. Når Claude "sletter" en melding på Gmail, havner den i papirkurven. Det er en hard begrensning i Gmail-API-et: det eksponerer ikke en permanent sletting til tredjepartsapper. Meldingen blir liggende i papirkurven til leverandørens oppbevaringsvindu utløper. (Outlook er annerledes: Microsoft Graph tilbyr permanent sletting, og MCP Emails støtter det.)
+Her er delen folk overser. En vanlig sletting flytter meldingen til papirkurven hos alle leverandører. Med \`permanent: true\` merker MCPEmails meldingen som slettet og fjerner den (expunge) på IMAP, og bruker Microsoft Graphs permanente sletting på Outlook. Gmail over IMAP følger deretter Gmails egne IMAP-innstillinger: som standard fjerner en expunge fra innboksen eller en etikett bare den etiketten, og meldingen blir liggende i Alle e-poster, mens en expunge fra papirkurven sletter den for godt.
 
-IMAP er også annerledes. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
+På de andre IMAP-vertene er det enklere. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
 
 Søk oppfører seg også litt annerledes. Gmail får hele operatorsyntaksen sin, Outlook bruker KQL, og IMAP-leverandører bruker IMAP-tekstsøk — kapabelt, men ikke like uttrykksfullt som Gmails operatorer. Verdt å vite hvis du skriver søketunge prompts.
 
@@ -88,13 +88,13 @@ Søk oppfører seg også litt annerledes. Gmail får hele operatorsyntaksen sin,
 Mekanikken er den samme uansett leverandør, så enhver arbeidsflyt du har sett for Gmail fungerer på Fastmail- eller iCloud-innboksen din. Noen som bærer sin egen vekt:
 
 - Morgentriagering som flagger det som trenger et menneske og skriver utkast til svar på resten. Se [innbokstriagering og oppsummering](/blog/ai-agent-triage-summarize-inbox).
-- En tilnærmet sanntids auto-svarer. Ett ærlig forbehold: MCP Emails er pollbasert, ikke push — det finnes ingen webhooks, så agenten sjekker etter ny post på en tidsplan. [Auto-svarer-byggingen](/blog/build-email-auto-responder-mcp-agent) forklarer hvordan du gjør det godt.
+- En tilnærmet sanntids auto-svarer. Ett ærlig forbehold: MCPEmails er pollbasert, ikke push — det finnes ingen webhooks, så agenten sjekker etter ny post på en tidsplan. [Auto-svarer-byggingen](/blog/build-email-auto-responder-mcp-agent) forklarer hvordan du gjør det godt.
 
 Hvis du fortsatt vurderer om du i det hele tatt skal koble e-post til en agent, start med hovedartikkelen: [hvordan du gir AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
 
 ## Oppsummering
 
-iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss den permanente slettingen Gmail ikke kan tilby. Det er [gratis å komme i gang](/signup), uten kort, én innboks for alltid.`,
+iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss ekte permanent sletting. Det er [gratis å komme i gang](/signup), uten kort, én innboks for alltid.`,
 };
 
 export default translation;

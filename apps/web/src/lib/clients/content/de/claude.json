@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/messages/en/docs.json",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+  ],
+  "meta": {
+    "title": "E-Mail mit Claude verbinden: MCP-Setup für Gmail, Outlook, IMAP",
+    "description": "Fügen Sie claude.ai und Claude Desktop ein echtes Postfach als benutzerdefinierten Konnektor hinzu. Eine URL einfügen, per OAuth autorisieren, und Claude kann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Claude + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Claude",
+    "titleLine2": "als benutzerdefinierten Konnektor",
+    "lead": "Claude hat kein eigenes E-Mail-Programm. MCPEmails ist der gehostete MCP-Server, der ihm eines gibt: echte E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, direkt aus claude.ai oder Claude Desktop.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie in claude.ai oder Claude Desktop Customize, Connectors, klicken Sie auf + Add und dann auf Add custom connector. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp ein, klicken Sie auf Continue, übernehmen Sie die erkannten Anmeldeeinstellungen, klicken Sie auf Add und melden Sie sich bei MCPEmails an. Sie müssen weder einen API-Schlüssel erstellen noch eine Konfigurationsdatei bearbeiten."
+  },
+  "method": {
+    "title": "So verbindet sich Claude: OAuth, kein API-Schlüssel",
+    "body": "Claude durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "answerSection": {
+    "title": "Welche MCP-Server funktionieren mit Claude Desktop für E-Mail?",
+    "body": "Claude Desktop nimmt jeden entfernten MCP-Server als benutzerdefinierten Konnektor an, daher funktioniert ein gehosteter E-Mail-Server wie MCPEmails dort genauso wie in claude.ai: Öffnen Sie <b>Customize</b>, <b>Connectors</b>, fügen Sie <code>https://mcpemails.com/api/mcp</code> hinzu und melden Sie sich an. Diese eine URL deckt Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo und jedes IMAP-Postfach ab. Die eigenen Konnektoren von Claude für Gmail und Microsoft 365 erscheinen ebenfalls in Claude Desktop, decken aber jeweils nur einen Anbieter ab, und der Microsoft 365-Konnektor akzeptiert nur Arbeits- oder Schulkonten. Lokale Server, die über <code>claude_desktop_config.json</code> gestartet werden, funktionieren auch; sie laufen auf Ihrem Rechner und speichern Ihre Mail-Zugangsdaten dort in einer Datei."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Connector-Seite öffnen",
+      "p": "Öffnen Sie in claude.ai oder Claude Desktop <b>Customize</b> und dann <b>Connectors</b>. Klicken Sie auf <b>+ Add</b> und dann auf <b>Add custom connector</b>."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Geben Sie einen Namen wie MCPEmails ein, fügen Sie <code>https://mcpemails.com/api/mcp</code> als URL ein und klicken Sie auf <b>Continue</b>. Prüfen Sie die erkannten Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie dann auf <b>Add</b>."
+    },
+    {
+      "h": "Anmelden und einschalten",
+      "p": "Melden Sie sich bei MCPEmails an und geben Sie die Scopes frei, die Claude erhalten soll. Ein API-Schlüssel ist nicht nötig. Klicken Sie im Chat unten links auf <b>+</b>, wählen Sie <b>Connectors</b> und schalten Sie MCPEmails ein."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ein benutzerdefinierter Konnektor ist nicht dasselbe wie der eingebaute Gmail-Konnektor von Claude",
+      "p": "Anthropic liefert einen eigenen Google-Konnektor, und das ist ein anderer Weg: ein Anbieter, in einer App. Ein benutzerdefinierter Konnektor verweist Claude stattdessen auf einen MCP-Server. Deshalb deckt dasselbe Setup auch Outlook, iCloud, Fastmail, Zoho, Yandex und jedes IMAP-Firmenpostfach hinter einer einzigen URL ab, und deshalb funktioniert dieselbe URL auch in Cursor, ChatGPT und den übrigen Clients."
+    },
+    {
+      "h": "Sie geben Scopes einmal frei, und mehr kann das Token nicht",
+      "p": "Der Zustimmungsbildschirm gehört uns und ist keine Formalität. Ein Token ohne <code>send:email</code> kann nicht senden, ein Token ohne <code>delete:email</code> kann nicht löschen, egal worum das Modell gebeten wird. Wenn Claude lesen und Entwürfe schreiben, aber nie senden soll, lassen Sie <code>send:email</code> deaktiviert und geben Sie stattdessen <code>manage:drafts</code> frei."
+    },
+    {
+      "h": "Die Verbindung wird abgefragt, Claude bemerkt neue E-Mails also nicht von selbst",
+      "p": "Es gibt keine Webhooks und keinen Push. Claude sieht neue E-Mails, wenn es einen Aufruf macht, also wenn Sie fragen. Eine feste Anweisung wie „vor dem Start nachsehen, ob etwas von der Buchhaltung da ist“ macht daraus eine Routine; ungefragt kommt nichts an."
+    },
+    {
+      "h": "Free erlaubt einen Custom Connector, bei Team und Enterprise fügt ihn ein Owner hinzu",
+      "p": "Im Free-Tarif ist höchstens ein Custom Connector möglich, mit Pro und Max können Sie beliebig viele hinzufügen. Bei Team und Enterprise fügt ein Owner MCPEmails unter <b>Organization settings</b>, <b>Connectors</b> hinzu. Mitglieder öffnen dann <b>Customize</b>, <b>Connectors</b>, suchen den Eintrag und klicken auf <b>Connect</b>, um sich anzumelden."
+    }
+  ],
+  "limits": [
+    "Anfragen werden je Schlüssel in Minuten-, Stunden- und Tagesfenstern begrenzt, die nach Ihrem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Ein 429 trägt Retry-After. Dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Kann Claude meine E-Mails lesen?",
+      "a": "Nicht von selbst. Claude erreicht ein Postfach nur über einen Konnektor, und ein benutzerdefinierter Konnektor, der auf MCPEmails zeigt, ist eine Möglichkeit dafür. Nach der Verbindung kann Claude E-Mails in allen verbundenen Postfächern auflisten, lesen, suchen, senden, beantworten, weiterleiten, organisieren und planen, beschränkt auf die freigegebenen Scopes."
+    },
+    {
+      "q": "Brauche ich für Claude einen API-Schlüssel?",
+      "a": "Nein. Claude durchläuft mit diesem Server den OAuth-Ablauf im Browser, registriert sich dynamisch und autorisiert sich mit PKCE. API-Schlüssel gibt es für Clients, die das nicht können, etwa Cline und JetBrains AI Assistant, und für Skripte."
+    },
+    {
+      "q": "Welche Postfächer erreicht Claude auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Claude E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    },
+    {
+      "q": "Funktioniert das in Claude Desktop genauso wie in claude.ai?",
+      "a": "Ja. Beide erreichen benutzerdefinierte Konnektoren über dieselbe Seite unter Customize, Connectors und teilen dieselbe Verbindung. Ein in einer App hinzugefügtes Postfach ist also auch in der anderen verfügbar. Für das Terminal gibt es eine eigene Anleitung zu Claude Code."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Claude ein echtes Postfach",
+    "sub": "Verbinden Sie ein Postfach in wenigen Minuten. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

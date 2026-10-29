@@ -19,8 +19,16 @@
 // into the headers are converted to their UTF-8 octets first for the same
 // reason.
 //
-// Pure and dependency-free so it can be tested without booting the server.
+// Pure (no I/O) so it can be tested without booting the server.
+//
+// SECURITY (2026-10-16): an entry is validated as a whole (no control
+// characters anywhere, a valid address) and written back through
+// mime-build.ts#headerAddressList, never as given, so a display name can no
+// longer carry a CRLF into the stored message.
 // ---------------------------------------------------------------------------
+
+import { hasHeaderControls, parseMailbox } from "./address-header.ts";
+import { headerAddressList } from "./mime-build.ts";
 
 /** The recipient lists to set. An absent list is left as stored. */
 export interface RecipientOverride {
@@ -68,8 +76,12 @@ export function invalidRecipientIn(
       if (typeof entry !== "string") return { field, entry };
       const trimmed = entry.trim();
       if (trimmed === "") continue;
-      const angle = trimmed.match(/<([^>]*)>\s*$/);
-      if (!isValidEmailAddress(angle ? angle[1] : trimmed)) return { field, entry };
+      // A control character anywhere (a CRLF in the display name included)
+      // is refused outright: it can only be an attempt to add a header.
+      if (hasHeaderControls(trimmed)) return { field, entry };
+      // One entry is one mailbox; its address part, read structurally (the
+      // last angle-addr outside any quoted name), is what is validated.
+      if (!isValidEmailAddress(parseMailbox(trimmed).email)) return { field, entry };
     }
   }
   return null;
@@ -174,8 +186,10 @@ export function rewriteRecipientHeaders(
 
   const added: string[] = [];
   for (const key of ["to", "cc", "bcc"] as const) {
-    const addresses = override[key];
-    if (addresses && addresses.length > 0) added.push(headerField(HEADER_NAMES[key], addresses, eol));
+    // Re-serialized, not written as given: names RFC 2047-encoded, addresses
+    // stripped of anything that could split the field (mime-build.ts).
+    const addresses = headerAddressList(override[key] ?? []);
+    if (addresses.length > 0) added.push(headerField(HEADER_NAMES[key], addresses, eol));
   }
 
   // New fields go right after From, where a mail client writes them; a message

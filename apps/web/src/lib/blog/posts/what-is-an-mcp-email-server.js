@@ -20,13 +20,13 @@ MCP stands for [Model Context Protocol](https://modelcontextprotocol.io). It's a
 
 Before MCP, if you wanted your agent to use a calendar, a database, and your email, you wrote three different integrations with three different shapes. MCP fixes that. A service exposes its capabilities as **tools** (named actions the model can call) over a standard transport, and any MCP-compatible client knows how to discover and call them.
 
-The part that matters here: an MCP server doesn't have to live on your machine. MCP Emails runs over **Streamable HTTP** at a single endpoint URL. You paste that URL into your client and you're connected. No SDK, no package install, no local process to babysit.
+The part that matters here: an MCP server doesn't have to live on your machine. MCPEmails runs over **Streamable HTTP** at a single endpoint URL. You paste that URL into your client and you're connected. No SDK, no package install, no local process to babysit.
 
 ## So what's an MCP *email* server?
 
 An MCP email server is an MCP server whose tools happen to be about email. It sits between your AI agent and a real mailbox, and it translates "agent intentions" into "provider operations."
 
-Here's the concrete version. You connect your Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox to the server once. The server then exposes email as a handful of tools. When your agent wants to deal with email, it calls one of those tools, the server talks to Gmail's API (or Microsoft Graph, or IMAP) on your behalf, and it returns a clean result.
+Here's the concrete version. You connect your Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox to the server once. The server then exposes email as a handful of tools. When your agent wants to deal with email, it calls one of those tools, the server talks to your provider over IMAP and SMTP (or Microsoft Graph for Outlook) on your behalf, and it returns a clean result.
 
 A useful way to picture it: the MCP email server is a **translator and a bouncer**. The translator part turns the agent's plain request ("read the latest message from my landlord") into the right provider-specific API call, and turns the messy reply (MIME parts, encoding, threading headers) back into something readable. The bouncer part decides what the agent is allowed to do — read only, or read and send — and never lets it near your actual password.
 
@@ -36,7 +36,7 @@ This is the heart of it, so I want to slow down here.
 
 If you've ever set up email in a mail client, you've met IMAP and SMTP. They're the protocols email runs on, and they are not friendly. IMAP makes you juggle folder state, message flags, partial fetches, and a query syntax that varies by server. SMTP makes you hand-build MIME messages with the right headers or your reply lands in the wrong thread. Handing all of that to a language model is a bad idea. The model will get the encoding wrong, leak a credential into a log, or fire off a malformed send.
 
-An MCP email server replaces that with **verbs**. The agent doesn't see protocols. It sees a short menu of actions. MCP Emails ships a handful of consolidated tools, and these three are the daily drivers:
+An MCP email server replaces that with **verbs**. The agent doesn't see protocols. It sees a short menu of actions. MCPEmails ships a handful of consolidated tools, and these three are the daily drivers:
 
 \`\`\`json
 {
@@ -56,9 +56,9 @@ The shift from "here's a library, figure it out" to "here are three verbs — ea
 
 The naive way to give an agent email access is to drop your mailbox password into a prompt or a config and let it run an IMAP client. Don't do this. A password is a master key — it grants everything, forever, with no way to scope it down to "read only" and no clean way to pull it back without changing it everywhere.
 
-Verbs are different. When your agent connects to MCP Emails, it gets a token scoped to exactly what you approved: \`read:email\`, \`send:email\`, or both. The agent holds a capability, not a credential. If you only granted read access, there is no send verb in its menu — it physically cannot email anyone.
+Verbs are different. When your agent connects to MCPEmails, it gets a token scoped to exactly what you approved: \`read:email\`, \`send:email\`, or both. The agent holds a capability, not a credential. If you only granted read access, there is no send verb in its menu — it physically cannot email anyone.
 
-And the actual secret? It stays on the server, encrypted. MCP Emails stores one thing per inbox: an OAuth token or app password, encrypted with AES-256-GCM, decrypted only inside an isolated function at the moment of a call. Your email itself is never stored. Every tool call fetches the message live from your provider and discards it the instant the agent has it. The body of your email doesn't sit in a database somewhere waiting to leak. If you want the longer version of why that design choice matters, I wrote about it in [why never storing your email matters](/blog/why-email-never-stored-matters).
+And the actual secret? It stays on the server, encrypted. MCPEmails stores one thing per inbox: an app password or OAuth token, encrypted with AES-256-GCM, decrypted on our servers only when a request needs it, and never sent to your agent. Your email itself is never stored. Every tool call fetches the message live from your provider and discards it the instant the agent has it. The body of your email doesn't sit in a database somewhere waiting to leak. If you want the longer version of why that design choice matters, I wrote about it in [why never storing your email matters](/blog/why-email-never-stored-matters).
 
 The capability-not-credential model is also why you can [revoke a connection in one click](/blog/oauth-vs-api-keys-ai-email-access) from the dashboard. Revoking a verb is instant and surgical. Rotating a leaked password is not.
 

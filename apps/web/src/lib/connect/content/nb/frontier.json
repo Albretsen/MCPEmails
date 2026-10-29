@@ -18,8 +18,8 @@
     "eyebrow": "Frontier Mail + AI",
     "titleLine1": "Koble en Frontier-innboks",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "Frontier sluttet å drifte sin egen e-post og overlot tjenesten til Yahoo. frontier.com-adressen fungerer fortsatt over IMAP, og mcpemails kobler den til slik at AI-agenten din kan lese, søke i, sende, svare på og sortere den e-posten.",
-    "answer": "Claude kan ikke nå en Frontier-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.frontier.com, port 993, som fortsatt svarer selv om Frontiers e-posttjeneste og kundestøtte har vært håndtert av Yahoo siden 20. mars 2024. Fordi kontoen bak adressen er en Yahoo-konto, er påloggingsopplysningen et Yahoo-app-passord som lages på kontoens sikkerhetsside, ikke passordet du bruker i webmail. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
+    "lead": "Frontier sluttet å drifte sin egen e-post og overlot tjenesten til Yahoo. frontier.com-adressen fungerer fortsatt over IMAP, og MCPEmails kobler den til slik at AI-agenten din kan lese, søke i, sende, svare på og sortere den e-posten.",
+    "answer": "Claude kan ikke nå en Frontier-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP på imap.frontier.com, port 993, som fortsatt svarer selv om Frontiers e-posttjeneste og kundestøtte har vært håndtert av Yahoo siden 20. mars 2024. Fordi kontoen bak adressen er en Yahoo-konto, er påloggingsopplysningen et Yahoo-app-passord som lages på kontoens sikkerhetsside, ikke passordet du bruker i webmail. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Yahoo-app-passord, ikke webmail-passordet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Lag et app-passord under External connections",
-      "p": "På sikkerhetssiden for Yahoo-kontoen finner du <b>External connections</b> og velger <b>Create app password</b>. Kall det <code>mcpemails</code>, kopier koden som vises, og lim den inn i mcpemails sammen med hele frontier.com-adressen din. Frontier-vertene ovenfor er forhåndsutfylt."
+      "p": "På sikkerhetssiden for Yahoo-kontoen finner du <b>External connections</b> og velger <b>Create app password</b>. Kall det <code>mcpemails</code>, kopier koden som vises, og lim den inn i MCPEmails sammen med hele frontier.com-adressen din. Frontier-vertene ovenfor er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -53,7 +53,7 @@
     },
     {
       "h": "Frontier-proxyen er tynnere enn Yahoo-verten andre partnere får",
-      "p": "AT&T, Cox og Rogers eksponerer Yahoos egen IMAP-server, som annonserer MOVE, SPECIAL-USE, IDLE og UIDPLUS. Frontier-proxyen annonserer SASL-IR, UIDPLUS og lite annet: ingen MOVE, ingen IDLE, ingen SPECIAL-USE. I praksis betyr det at flytting av en melding kjøres som COPY, så STORE av slettet-flagget, så EXPUNGE i stedet for én kommando. Mapperoller som Sent og Trash gjenkjennes på navn i stedet for å bli oppgitt av serveren, og det finnes ingen IDLE-push, så ny e-post oppdages ved polling. mcpemails håndterer alt dette, men det er grunnen til at Frontier reagerer tregere enn andre Yahoo-baserte kontoer."
+      "p": "AT&T, Cox og Rogers eksponerer Yahoos egen IMAP-server, som annonserer MOVE, SPECIAL-USE, IDLE og UIDPLUS. Frontier-proxyen annonserer SASL-IR, UIDPLUS og lite annet: ingen MOVE, ingen IDLE, ingen SPECIAL-USE. I praksis betyr det at flytting av en melding kjøres som COPY, så STORE av slettet-flagget, så EXPUNGE i stedet for én kommando. Mapperoller som Sent og Trash gjenkjennes på navn i stedet for å bli oppgitt av serveren, og det finnes ingen IDLE-push, så ny e-post oppdages ved polling. MCPEmails håndterer alt dette, men det er grunnen til at Frontier reagerer tregere enn andre Yahoo-baserte kontoer."
     },
     {
       "h": "Yahoo avgjør om du i det hele tatt får lage et app-passord",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Frontier-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Frontier-kobling, og Frontier drifter ikke lenger e-posttjenesten. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere frontier.com-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Frontier-kobling, og Frontier drifter ikke lenger e-posttjenesten. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere frontier.com-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP-innstillingene for Frontier?",

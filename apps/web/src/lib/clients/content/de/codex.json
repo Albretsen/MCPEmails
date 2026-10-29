@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=cli (final URL; https://developers.openai.com/codex/mcp 308-redirects here; checked 2026-10-24)",
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=app",
+    "https://learn.chatgpt.com/docs/auth (redirect target of https://developers.openai.com/codex/auth)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_cmd.rs (latest release: --url, --bearer-token-env-var, codex mcp login --scopes and --no-browser)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_login.rs (--no-browser prints the authorization URL and asks for the callback URL to be pasted)",
+    "https://github.com/openai/codex/blob/main/codex-rs/cli/src/mcp_cmd.rs (codex mcp add --url detects OAuth and starts the flow)",
+    "https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/auth_status.rs (scopes taken from the 401 challenge first)",
+    "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
+    "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
+  ],
+  "meta": {
+    "title": "E-Mail mit OpenAI Codex verbinden: MCP-Server einrichten",
+    "description": "Fügen Sie OpenAI Codex mit codex mcp add --url ein Postfach hinzu. Codex erkennt OAuth und öffnet den Browser, kein API-Schlüssel. Funktioniert in CLI, IDE-Erweiterung und Desktop-App."
+  },
+  "hero": {
+    "eyebrow": "Codex + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit OpenAI Codex",
+    "titleLine2": "mit einem einzigen Befehl",
+    "lead": "Geben Sie Codex ein echtes Postfach. E-Mails lesen, suchen, entwerfen, senden, beantworten, weiterleiten, planen und organisieren, aus der Codex CLI, der IDE-Erweiterung oder der ChatGPT-Desktop-App, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth im Browser, kein API-Schlüssel",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Führen Sie codex mcp add mcpemails --url https://mcpemails.com/api/mcp aus. Codex erkennt, dass der Server OAuth unterstützt, öffnet den Browser, und Sie geben den Zugriff auf dem Zustimmungsbildschirm von MCPEmails frei. CLI, IDE-Erweiterung und ChatGPT-Desktop-App teilen sich dieselbe Konfiguration, eine Einrichtung deckt also alle drei ab."
+  },
+  "method": {
+    "title": "So verbindet sich Codex: OAuth, kein API-Schlüssel",
+    "body": "Codex durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst, entweder über ein <b>Client-ID-Metadatendokument</b> oder per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Server über die CLI hinzufügen",
+      "p": "Führen Sie den Befehl unten aus. Er schreibt einen Eintrag <code>[mcp_servers.mcpemails]</code> mit <code>url</code> in <code>~/.codex/config.toml</code>, gibt dann <b>Detected OAuth support. Starting OAuth flow…</b> aus und öffnet Ihren Browser."
+    },
+    {
+      "h": "Oder in der Desktop-App bzw. IDE-Erweiterung hinzufügen",
+      "p": "Öffnen Sie in der ChatGPT-Desktop-App <b>Settings</b> und dann <b>MCP servers</b>; in der IDE-Erweiterung öffnen Sie das Zahnradmenü und dann <b>MCP servers</b>. Wählen Sie <b>Add server</b>, geben Sie einen Namen ein, wählen Sie <b>Streamable HTTP</b>, fügen Sie <code>https://mcpemails.com/api/mcp</code> ein, speichern Sie und wählen Sie dann <b>Restart</b> (bzw. <b>Restart extension</b>) und <b>Authenticate</b>."
+    },
+    {
+      "h": "Zugriff freigeben",
+      "p": "Melden Sie sich im Browser bei MCPEmails an, wählen Sie auf dem Zustimmungsbildschirm <b>Nur-Lese-Zugriff</b>, <b>Standard</b> oder <b>Vollzugriff</b> und klicken Sie auf <b>Zugriff erlauben</b>. Ist der Ablauf im Browser nicht gestartet, führen Sie <code>codex mcp login mcpemails</code> aus."
+    },
+    {
+      "h": "Prüfen und etwas fragen",
+      "p": "Führen Sie <code>codex mcp list</code> aus, oder <code>/mcp</code> in einer Codex-Sitzung, um den Server zu sehen. Probieren Sie dann „Fasse alles Ungelesene von heute zusammen“. Codex ruft zuerst <code>inbox_list</code> auf und findet so Ihre Postfächer, Sie müssen also keine IDs einfügen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Desktop-App: wenn Authenticate nie erscheint",
+      "p": "Stand 27. Oktober 2026 meldet sich die Desktop-App nicht immer bei einem Server an, den Sie von Hand hinzufügen (in aktuellen Versionen unter <b>Plugins</b>, <b>Add</b>, <b>Add MCP server</b>). Das Formular hat keinen Anmeldeschritt, und in manchen Versionen erscheint nach dem Neustart keine Schaltfläche <b>Authenticate</b>, oder die Tools kommen nie in einem Chat an. OpenAI hat dazu offene Fehlerberichte, es kann also behoben sein, wenn Sie dies lesen. Bis dahin melden Sie sich im Terminal an: Installieren Sie die CLI mit <code>npm i -g @openai/codex</code>, falls sie fehlt, führen Sie <code>codex mcp login mcpemails</code> aus (mit dem Namen, den Sie im Feld <b>Name</b> eingegeben haben), erlauben Sie den Zugriff im Browser, und starten Sie dann die App neu und öffnen Sie einen neuen Chat. App und CLI teilen sich eine Konfiguration, die App nutzt also diese Anmeldung."
+    },
+    {
+      "h": "Prüfen Sie, welche Karte der Zustimmungsbildschirm zuerst anzeigt",
+      "p": "Codex fordert die Scopes aus unserer 401-Challenge an, und das ist <code>read:email</code>. Bei manchen Registrierungen zeigt der Zustimmungsbildschirm deshalb zuerst <b>Nur-Lese-Zugriff</b> an. Zum Sichten genügt das. Soll Codex auch entwerfen oder senden, wählen Sie <b>Standard</b> oder <b>Vollzugriff</b>, bevor Sie auf Zugriff erlauben klicken. Um den Zugriff später zu erweitern, führen Sie <code>codex mcp login mcpemails</code> erneut aus und wählen die umfassendere Karte, oder Sie nennen die Scopes mit <code>--scopes</code>, zum Beispiel <code>--scopes read:email,search:email,manage:drafts</code>."
+    },
+    {
+      "h": "CLI, IDE-Erweiterung und Desktop-App teilen sich eine Konfiguration",
+      "p": "Auf demselben Rechner lesen alle drei dieselbe <code>~/.codex/config.toml</code>. Fügen Sie den Server in einem davon hinzu, erscheint er also auch in den anderen. Ein Projekt kann zusätzlich eine eigene <code>.codex/config.toml</code> mitbringen, die Codex nur bei vertrauenswürdigen Projekten liest. ChatGPT im Web liest diese Datei überhaupt nicht; dafür nutzen Sie die Anleitung für ChatGPT."
+    },
+    {
+      "h": "Auf einem Rechner ohne grafische Oberfläche den lokalen Browser überspringen",
+      "p": "Auf einem Server, den Sie per SSH erreichen, führen Sie <code>codex mcp login mcpemails --no-browser</code> aus: Codex gibt den Anmeldelink aus, Sie öffnen ihn auf einem beliebigen Rechner und fügen die Adresse, auf der der Browser landet, in Codex wieder ein. In CI erstellen Sie unter Dashboard, API-Schlüssel einen Schlüssel mit Scopes, exportieren ihn und setzen <code>bearer_token_env_var</code> im Server-Eintrag auf den Namen dieser Variable (oder übergeben <code>--bearer-token-env-var</code> an <code>codex mcp add</code>). Codex sendet ihn dann im Header <code>Authorization</code>, und der Schlüssel steht nie in der Konfigurationsdatei."
+    },
+    {
+      "h": "Behalten Sie das Standard-Timeout für Tools bei",
+      "p": "Codex wartet standardmäßig 60 Sekunden auf einen Tool-Aufruf (<code>tool_timeout_sec</code>). Das reicht auch für Massenoperationen: Wer Nachrichten in einem großen Ordner verschiebt oder löscht, stößt vorher an das eigene Zeitlimit des Servers und erhält ein Ergebnis mit der Markierung <code>partial</code>, in dem die noch nicht bearbeiteten Nachrichten unter <code>remaining_message_ids</code> stehen. Codex kann das Tool also mit diesen IDs erneut aufrufen. Ein deutlich niedrigeres Timeout kann einen Aufruf abbrechen, bevor dieses Ergebnis ankommt."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit OpenAI Codex?",
+      "a": "Führen Sie codex mcp add mcpemails --url https://mcpemails.com/api/mcp aus. Codex erkennt die OAuth-Unterstützung, öffnet den Browser, und Sie geben den Zugriff auf dem Zustimmungsbildschirm von MCPEmails frei. Danach hat Codex Tools zum Lesen, Suchen, Entwerfen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Wie sieht der Eintrag in config.toml aus?",
+      "a": "Zwei Zeilen in ~/.codex/config.toml: eine Tabelle namens [mcp_servers.mcpemails] und url = \"https://mcpemails.com/api/mcp\". Für einen Server mit url ist OAuth die Voreinstellung, mehr ist also nicht nötig. Wenn Sie den Eintrag von Hand schreiben, führen Sie codex mcp login mcpemails aus, um sich anzumelden."
+    },
+    {
+      "q": "Brauche ich für Codex einen API-Schlüssel?",
+      "a": "Nein. Codex meldet sich per OAuth an, es wird also nichts Geheimes in die Konfiguration eingetippt. Ein Schlüssel mit Scopes ist für Rechner ohne Browser gedacht: Speichern Sie ihn in einer Umgebungsvariable und lassen Sie bearer_token_env_var auf diese Variable zeigen."
+    },
+    {
+      "q": "Welche Postfächer erreicht Codex auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Codex E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Codex ein echtes Postfach",
+    "sub": "Ein Befehl, eine Anmeldung im Browser. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

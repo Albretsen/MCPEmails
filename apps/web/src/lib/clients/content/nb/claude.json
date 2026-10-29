@@ -14,32 +14,36 @@
     "eyebrow": "Claude + e-post",
     "titleLine1": "Koble innboksen din til Claude",
     "titleLine2": "som en egendefinert kobling",
-    "lead": "Claude har ingen e-postklient av sitt eget. mcpemails er den hostede MCP-serveren som gir den en: les, søk i, send, svar på, videresend, planlegg og organiser ekte e-post fra claude.ai eller Claude Desktop.",
+    "lead": "Claude har ingen e-postklient av sitt eget. MCPEmails er den hostede MCP-serveren som gir den en: les, søk i, send, svar på, videresend, planlegg og organiser ekte e-post fra claude.ai eller Claude Desktop.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Legg til https://mcpemails.com/api/mcp som en egendefinert kobling i Claude, klikk Connect og logg inn med mcpemails-kontoen din. Claude registrerer seg selv automatisk og ber om tilgangene du godkjenner. Det er ingen API-nøkkel å opprette og ingen konfigurasjonsfil å redigere."
+    "answer": "I claude.ai eller Claude Desktop åpner du Customize, Connectors, klikker + Add og deretter Add custom connector. Gi den navnet MCPEmails, lim inn https://mcpemails.com/api/mcp, klikk Continue, behold de oppdagede innloggingsinnstillingene, klikk Add og logg inn med MCPEmails. Du trenger verken å lage en API-nøkkel eller redigere en konfigurasjonsfil."
   },
   "method": {
     "title": "Slik kobler Claude seg til: OAuth, ingen API-nøkkel",
     "body": "Claude kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
   },
+  "answerSection": {
+    "title": "Hvilke MCP-servere fungerer med Claude Desktop for e-post?",
+    "body": "Claude Desktop tar imot enhver ekstern MCP-server som legges til som egendefinert kobling, så en driftet e-postserver som MCPEmails fungerer der akkurat som i claude.ai: åpne <b>Customize</b>, <b>Connectors</b>, legg til <code>https://mcpemails.com/api/mcp</code> og logg inn. Den ene URL-en dekker Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo og alle IMAP-postkasser. Claudes egne koblinger for Gmail og Microsoft 365 finnes også i Claude Desktop, men hver dekker én leverandør, og Microsoft 365-koblingen godtar bare jobb- og skolekontoer. Lokale servere som startes fra <code>claude_desktop_config.json</code> fungerer også; de kjører på datamaskinen din og lagrer e-postinnloggingen i en fil der."
+  },
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord, og Gmail kan også bruke Google-innlogging; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
-      "h": "Åpne koblingsinnstillingene",
-      "p": "I claude.ai eller Claude Desktop åpner du Settings og deretter Connectors."
+      "h": "Åpne koblingssiden",
+      "p": "I claude.ai eller Claude Desktop åpner du <b>Customize</b> og deretter <b>Connectors</b>. Klikk <b>+ Add</b> og deretter <b>Add custom connector</b>."
     },
     {
-      "h": "Legg til en egendefinert kobling",
-      "p": "Klikk Add custom connector, lim inn <code>https://mcpemails.com/api/mcp</code> som koblings-URL, og klikk Add."
+      "h": "Legg til serveren",
+      "p": "Skriv inn et navn, for eksempel MCPEmails, lim inn <code>https://mcpemails.com/api/mcp</code> som URL og klikk <b>Continue</b>. Se over de oppdagede innloggingsinnstillingene (standardvalgene holder), og klikk deretter <b>Add</b>."
     },
     {
-      "h": "Koble til og autoriser",
-      "p": "Klikk Connect og logg inn med mcpemails for å autorisere. Godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel nødvendig."
+      "h": "Logg inn og slå den på",
+      "p": "Logg inn med MCPEmails og godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel trengs. I en samtale klikker du <b>+</b> nede til venstre, velger <b>Connectors</b> og slår på MCPEmails."
     }
   ],
   "gotchas": [
@@ -54,17 +58,21 @@
     {
       "h": "Tilkoblingen baserer seg på polling, så Claude merker ikke ny e-post av seg selv",
       "p": "Det finnes ingen webhooks og ingen push. Claude ser ny e-post når den gjør et kall, altså når du spør. En fast instruks som \"sjekk om det har kommet noe fra økonomi før vi starter\" er det som gjør dette til en rutine; ingenting kommer uten at du ber om det."
+    },
+    {
+      "h": "Free gir én egen kobling, og på Team og Enterprise legger en Owner den til",
+      "p": "Free-abonnementet tillater høyst én egen kobling; med Pro og Max kan du legge til så mange du trenger. På Team og Enterprise legger en Owner til MCPEmails under <b>Organization settings</b>, <b>Connectors</b>. Medlemmene åpner deretter <b>Customize</b>, <b>Connectors</b>, finner den og klikker <b>Connect</b> for å logge inn."
     }
   ],
   "limits": [
-    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Forespørsler begrenses per nøkkel i minutt-, time- og døgnvinduer dimensjonert etter planen din, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. En 429 har Retry-After. Planens tak for fakturerbare handlinger gjelder i tillegg.",
     "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
     "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
   ],
   "faq": [
     {
       "q": "Kan Claude lese e-posten min?",
-      "a": "Ikke av seg selv. Claude kan bare nå en postkasse gjennom en kobling, og en egendefinert kobling som peker mot mcpemails er én måte å gi den det på. Når den er koblet til, kan Claude liste opp, lese, søke i, sende, svare på, videresende, organisere og planlegge e-post på tvers av alle innboksene du har koblet til, begrenset til tilgangene du godkjente."
+      "a": "Ikke av seg selv. Claude kan bare nå en postkasse gjennom en kobling, og en egendefinert kobling som peker mot MCPEmails er én måte å gi den det på. Når den er koblet til, kan Claude liste opp, lese, søke i, sende, svare på, videresende, organisere og planlegge e-post på tvers av alle innboksene du har koblet til, begrenset til tilgangene du godkjente."
     },
     {
       "q": "Trenger jeg en API-nøkkel for Claude?",
@@ -72,7 +80,7 @@
     },
     {
       "q": "Hvilke postkasser kan Claude nå på denne måten?",
-      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, med Google-innlogging som et alternativ for Gmail; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
     },
     {
       "q": "Kan Claude sende e-post uten at jeg ser det?",
@@ -84,7 +92,7 @@
     },
     {
       "q": "Fungerer dette i Claude Desktop i tillegg til claude.ai?",
-      "a": "Ja. Begge når egendefinerte koblinger fra den samme skjermen Settings, Connectors, og begge deler den samme tilkoblingen, så en postkasse du legger til i den ene er tilgjengelig i den andre. For terminalen, se den egne guiden for Claude Code."
+      "a": "Ja. Begge når egendefinerte koblinger fra den samme siden Customize, Connectors, og begge deler den samme tilkoblingen, så en postkasse du legger til i den ene er tilgjengelig i den andre. For terminalen, se den egne guiden for Claude Code."
     }
   ],
   "ctaBand": {

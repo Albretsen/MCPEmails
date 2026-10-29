@@ -37,6 +37,11 @@ import {
   serializeToolForList,
   withListingCardMeta,
   modelAndAppReviewCardToolMeta,
+  modelAndAppUnmountedToolMeta,
+  DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES,
+  SUBSCRIPTION_CARD_TOOL_NAMES,
+  AUTOMATION_APP_TOOL_NAMES,
+  AUTOMATION_CARD_TOOL_NAMES,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -253,7 +258,7 @@ Deno.test("resources/read answers a previous build's fingerprint with today's ca
   // The production bug of 2026-10-13. Claude's host keeps its tools/list across
   // a card deploy and ignores list_changed, so it goes on reading the URI of
   // the build before: f53069d8832a was asked for while 6f24045a029e was live,
-  // and -32002 rendered as "cannot reach MCP Emails" in every chat.
+  // and -32002 rendered as "cannot reach MCPEmails" in every chat.
   for (const staleBuild of ["f53069d8832a", "6f24045a029e", "000000000000", "07359906cb80"]) {
     // Guard the fixture: if a build ever hashes to one of these the loop would
     // be testing the canonical path and proving nothing about stale ones.
@@ -568,9 +573,13 @@ Deno.test("the draft editor's own tools are gated by the SAME flag, and draft_re
     // while the card's own copy says it "can be brought back by asking in this
     // chat": with the card hidden, the model calling this tool is the only way
     // back. `draft_editor_save` stays `["app"]`.
+    //
+    // 2026-10-17: `draft_read` keeps its visibility list but loses the
+    // resource URI, so a model's read mounts no card (it drew a second,
+    // one-line card above every revision). See the dedicated test below.
     assertEquals(
       reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
-      {
+      name === "draft_read" ? { ui: { visibility: ["model", "app"] } } : {
         ui: {
           resourceUri: REVIEW_CARD_RESOURCE_URI,
           visibility: name === "draft_editor_save" ? ["app"] : ["model", "app"],
@@ -604,6 +613,28 @@ Deno.test("the draft editor's own tools are gated by the SAME flag, and draft_re
       !DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name),
       `${name} must not also be in the model-facing list`,
     );
+  }
+});
+
+Deno.test("draft_read mounts no card: visibility only, never the resource URI (2026-10-17)", () => {
+  // Live review in claude.ai: every revision showed two cards, the read's
+  // one-liner and the write's editor, because `draft_read` carried the card's
+  // `resourceUri` and a model calls it before each rewrite. A host mounts UI
+  // only for a tool with a `resourceUri`, so dropping it is the whole fix; the
+  // explicit `["model", "app"]` keeps the tool callable by the card itself
+  // (restore, Refresh, the deferred-body fallback).
+  assertEquals([...DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES], ["draft_read"], "only draft_read");
+  assertEquals(modelAndAppUnmountedToolMeta(), { ui: { visibility: ["model", "app"] } }, "shape");
+  for (const surface of ["consolidated", "per_operation"] as const) {
+    const meta = reviewCardMetaForListing("draft_read", { outbound: true, bulk: true, drafts: true }, surface);
+    assertEquals(meta, { ui: { visibility: ["model", "app"] } }, surface);
+    assert(!JSON.stringify(meta).includes("resourceUri"), `${surface}: no card URI on draft_read`);
+    assert(!JSON.stringify(meta).includes("ui://"), `${surface}: no card URI on draft_read`);
+  }
+  // The rest of the editor's tools still mount the card.
+  for (const name of ["draft", "draft_editor_save", "draft_editor_hide"]) {
+    const meta = reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true });
+    assertEquals(meta?.ui.resourceUri, REVIEW_CARD_RESOURCE_URI, name);
   }
 });
 
@@ -881,8 +912,8 @@ Deno.test("the review card is a small, self-contained HTML5 document", () => {
   // codegen.mjs, which exits non-zero above it — if you are raising one, raise
   // both, and re-read Q3 first.
   assert(
-    REVIEW_CARD_HTML.length < 150_000,
-    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 150 KB raw`,
+    REVIEW_CARD_HTML.length < 178 * 1024,
+    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 178 KB raw (150 KB until 2026-10-17, 175 KB until 2026-10-29, see codegen.mjs)`,
   );
 
   // The published CSP is empty on every axis, so any subresource request would
@@ -999,8 +1030,8 @@ Deno.test("the drafts gate opens all four draft-editor tools, and nothing else",
   }
 
   // And the shapes: `draft_editor_save` adds `visibility: ["app"]`,
-  // `draft_read` and `draft_editor_hide` add `["model", "app"]`, and `draft`
-  // carries no list at all.
+  // `draft_editor_hide` adds `["model", "app"]`, `draft_read` carries the
+  // same list with no card URI (2026-10-17), and `draft` carries no list.
   const byName = new Map(
     withListingCardMeta(TOOL_REGISTRY, { outbound: false, bulk: false, drafts: true })
       .map((tool) => [tool.name, tool] as const),
@@ -1008,7 +1039,11 @@ Deno.test("the drafts gate opens all four draft-editor tools, and nothing else",
   for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
     assertEquals(
       byName.get(name)?._meta,
-      name === "draft_editor_save" ? appOnlyReviewCardToolMeta() : modelAndAppReviewCardToolMeta(),
+      name === "draft_editor_save"
+        ? appOnlyReviewCardToolMeta()
+        : name === "draft_read"
+        ? modelAndAppUnmountedToolMeta()
+        : modelAndAppReviewCardToolMeta(),
       name,
     );
   }
@@ -1195,5 +1230,56 @@ Deno.test("the listing on the wire still goes through serializeToolForList", asy
     for (const key of Object.keys(tool)) {
       assert(allowed.has(key), `${tool.name} leaks ${key} onto the tools/list wire`);
     }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Subscription cleanup (contract §9): gated per workspace, model-and-app.
+// ---------------------------------------------------------------------------
+
+Deno.test("subscription tools carry the card, model-and-app, only with the subscriptions gate open", () => {
+  const shut = { outbound: true, bulk: true, drafts: true };
+  for (const name of SUBSCRIPTION_CARD_TOOL_NAMES) {
+    for (const surface of ["consolidated", "per_operation"] as const) {
+      assertEquals(reviewCardMetaForListing(name, shut, surface), undefined, `${name} ${surface} shut`);
+      assertEquals(
+        reviewCardMetaForListing(name, { ...shut, subscriptions: true }, surface),
+        modelAndAppReviewCardToolMeta(),
+        `${name} ${surface} open`,
+      );
+    }
+    assert(isCardBearingToolName(name), `${name} is card-bearing`);
+  }
+});
+
+Deno.test("the tools/list on the wire drops the subscription tools when the workspace flag is off", async () => {
+  // Introspection mode has no database, so the workspace flag reads as off.
+  const tools = await realToolsListResponse();
+  for (const name of SUBSCRIPTION_CARD_TOOL_NAMES) {
+    assert(!tools.some((tool) => tool.name === name), `${name} is hidden with the flag off`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// The automation card
+// ---------------------------------------------------------------------------
+
+Deno.test("automation card: on its gate, consolidated surface only", () => {
+  const off = { outbound: true, bulk: true, drafts: true, automations: false };
+  const on = { ...off, automations: true };
+  for (const name of AUTOMATION_CARD_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, on), reviewCardToolMeta(), `${name} mounts the card`);
+    assertEquals(reviewCardMetaForListing(name, off), undefined, `${name} gated out`);
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} not per-operation`);
+    assert(isCardBearingToolName(name), `${name} is card-bearing`);
+  }
+  for (const name of AUTOMATION_APP_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, on), appOnlyReviewCardToolMeta(), `${name} is app-only`);
+    assertEquals(reviewCardMetaForListing(name, off), undefined, `${name} gated out`);
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} never per-operation`);
+  }
+  // The per-operation spellings of the automation tools stay card-less.
+  for (const name of ["automation_preview", "automation_get", "automation_disable"]) {
+    assertEquals(reviewCardMetaForListing(name, on, "per_operation"), undefined, `${name} card-less`);
   }
 });

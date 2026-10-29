@@ -6,6 +6,7 @@ import { releasedProviders } from '@/lib/connect/release.mjs';
 import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { MIcon } from '../../../components/MarketingPrimitives';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The hub for the provider landing pages.
@@ -26,6 +27,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
   // The count is whatever is actually public today, not the size of the
   // registry: during the staged rollout those differ, and a description
@@ -40,17 +42,18 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/connect'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
-    twitter: { card: 'summary_large_image', title: `${title} · mcpemails`, description, images: [OG_IMAGE.url] },
+    twitter: { card: 'summary_large_image', title: `${title} · MCPEmails`, description, images: [OG_IMAGE.url] },
   };
 }
 
 export default async function ConnectHubPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
 
@@ -94,7 +97,7 @@ export default async function ConnectHubPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: t('title') },
         ],
       },

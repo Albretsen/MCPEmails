@@ -294,7 +294,7 @@ async function editor(over = {}, opts = {}) {
 
 
 const SIG_HTML =
-  '<p>Here they are.</p>\n<div class="mcpemails-signature"><table><tr><td><img src="https://x.example/logo.png" alt="MCP Emails logo"></td><td>Asgeir<br><a href="https://mcpemails.com">mcpemails.com</a></td></tr></table></div>';
+  '<p>Here they are.</p>\n<div class="mcpemails-signature"><table><tr><td><img src="https://x.example/logo.png" alt="MCPEmails logo"></td><td>Asgeir<br><a href="https://mcpemails.com">mcpemails.com</a></td></tr></table></div>';
 const SIG_TEXT = "Here they are.\n\n-- \nAsgeir\nmcpemails.com";
 
 async function main() {
@@ -412,10 +412,15 @@ async function main() {
     expect("directly under the To row", warn?.previousElementSibling?.contains(to), true);
     expect("the field points at it", to.getAttribute("aria-describedby"), "d-to-warn");
     expect("and is marked invalid", to.getAttribute("aria-invalid"), "true");
+    // No warning while the correction is being typed (live re-test,
+    // 2026-10-17); the next commit says what is still wrong.
     c.input("d-to", "a@b.");
     await settle();
-    expect("still invalid: the warning names the current text", /a@b\. is not a complete/.test(c.text()), true);
+    expect("typing: no warning about half-typed text", !!c.root.querySelector("#d-to-warn"), false);
     expect("not the old text", /a@b does not look/.test(c.text()), false);
+    c.key(to, "Enter");
+    await settle();
+    expect("Enter: the warning names the current text", /a@b\. does not look/.test(c.text()), true);
     c.input("d-to", "a@b.example");
     await settle();
     expect("valid: the warning is gone", !!c.root.querySelector("#d-to-warn"), false);
@@ -425,8 +430,9 @@ async function main() {
 
   group("R5. the Cc Bcc link never wraps");
   {
-    expect("a link in a field row does not wrap", /\.row > \.link \{[^}]*white-space: nowrap/.test(css), true);
-    expect("and does not shrink", /\.row > \.link \{[^}]*flex: 0 0 auto/.test(css), true);
+    // Inside the To box since the live re-test of 2026-10-17 (`.fld > .link`).
+    expect("a link in a field row does not wrap", /\.row > \.link,\s*\.fld > \.link \{[^}]*white-space: nowrap/.test(css), true);
+    expect("and does not shrink", /\.row > \.link,\s*\.fld > \.link \{[^}]*flex: 0 0 auto/.test(css), true);
   }
 
   // ── F. Focus ──────────────────────────────────────────────────────────────
@@ -455,14 +461,17 @@ async function main() {
     await settle();
     expect("signature Edit: focus is in the signature box", c.active()?.id, "d-signature");
     const x = (addr) => c.root.querySelector(`[aria-label="Remove ${addr}"]`);
-    // Focus lands on the chip, not on its remove button: the buttons are out
-    // of the tab order (draft-ux.test.mjs).
+    // A remove button pressed with the pointer leaves focus in the field's
+    // input, never on the button or the document (since 2026-10-19: a chip
+    // focused there blurred the input and committed a partial address;
+    // draft-fields.test.mjs R5). The keyboard's Delete still moves to a chip
+    // (draft-ux.test.mjs).
     c.press(x("a@x.example"));
     await settle();
-    expect("removing the first chip focuses the one that took its place", c.active(), x("b@x.example").parentElement);
+    expect("removing the first chip focuses the field", c.active()?.id, "d-to");
     c.press(x("c@x.example"));
     await settle();
-    expect("removing the last chip focuses the one before", c.active(), x("b@x.example").parentElement);
+    expect("removing the last chip focuses the field", c.active()?.id, "d-to");
     c.press(x("b@x.example"));
     await settle();
     expect("removing the only chip focuses the field", c.active()?.id, "d-to");
@@ -524,7 +533,7 @@ async function main() {
     c.press(c.btn(/^Turn off draft cards…$/));
     await settle();
     expect("the confirm names the dashboard switch", /Show the draft editor\s+card/.test(c.text()), true);
-    expect("and where it is", /MCP Emails dashboard/.test(c.text()), true);
+    expect("and where it is", /MCPEmails dashboard/.test(c.text()), true);
     expectJson("nothing was called yet", c.calls, []);
     c.tools.draft_editor_hide = (args) => ({
       content: [{ type: "text", text: "Draft editor card hidden." }],

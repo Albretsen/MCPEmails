@@ -18,9 +18,9 @@
   "hero": {
     "eyebrow": "mailcow + IA",
     "titleLine1": "Conecta mailcow a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine2": "y a Cursor, ChatGPT o cualquier cliente MCP",
     "lead": "mailcow ya te da Dovecot, Postfix y SOGo en una sola pila. Añade un servidor MCP encima y tu agente podrá leer, buscar, enviar, responder, programar y archivar correo en los buzones que alojas tú mismo.",
-    "answer": "Claude no puede acceder por sí solo a un servidor mailcow. mcpemails es un servidor MCP alojado que se conecta a tu instalación de mailcow por IMAP en el puerto 993, en el nombre de servidor que definiste como MAILCOW_HOSTNAME en mailcow.conf, con la contraseña del buzón de la lista Mailboxes, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor compartido: es tu servidor, tiene que estar publicado en internet y tienes que conectarte exactamente con el nombre de servidor del certificado que emitió acme-mailcow. Una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a un servidor mailcow. MCPEmails es un servidor MCP alojado que se conecta a tu instalación de mailcow por IMAP en el puerto 993, en el nombre de servidor que definiste como MAILCOW_HOSTNAME en mailcow.conf, con la contraseña del buzón de la lista Mailboxes, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor compartido: es tu servidor, tiene que estar publicado en internet y tienes que conectarte exactamente con el nombre de servidor del certificado que emitió acme-mailcow. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde la interfaz de mailcow",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Lee MAILCOW_HOSTNAME en mailcow.conf",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Confirma el buzón y su contraseña",
-      "p": "En la interfaz de mailcow, abre Configuration y luego Mailboxes. Confirma que la dirección está activa y, si no sabes su contraseña, define una nueva ahí. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el servidor MAILCOW_HOSTNAME y las credenciales del buzón."
+      "p": "En la interfaz de mailcow, abre Configuration y luego Mailboxes. Confirma que la dirección está activa y, si no sabes su contraseña, define una nueva ahí. Después añade la bandeja en MCPEmails: elige IMAP / SMTP e introduce el servidor MAILCOW_HOSTNAME y las credenciales del buzón."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -66,13 +66,13 @@
     }
   ],
   "limits": [
-    "Un servidor MCP alojado tiene que abrir una conexión IMAP entrante a tu pila, así que un mailcow publicado solo en una interfaz privada o accesible solo por VPN no se puede conectar de esta forma. mcpemails se puede alojar por tu cuenta junto a mailcow si prefieres que nada externo toque el 993.",
+    "Un servidor MCP alojado tiene que abrir una conexión IMAP entrante a tu pila, así que un mailcow publicado solo en una interfaz privada o accesible solo por VPN no se puede conectar de esta forma. MCPEmails se puede alojar por tu cuenta junto a mailcow si prefieres que nada externo toque el 993.",
     "El envío lo gestiona tu propio Postfix, así que la aceptación de los mensajes más adelante depende por completo de tus registros SPF, DKIM y DMARC y de si tu IP figura en alguna lista."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con mailcow?",
-      "a": "No por sí solo. Claude no tiene un conector para mailcow y no puede abrir una sesión IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu instalación de mailcow le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en ella, en el cliente MCP que uses."
+      "a": "No por sí solo. Claude no tiene un conector para mailcow y no puede abrir una sesión IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como MCPEmails a tu instalación de mailcow le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en ella, en el cliente MCP que uses."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de mailcow?",

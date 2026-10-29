@@ -19,6 +19,9 @@ function requestErrorMessage(error) {
   return error instanceof Error && error.message ? error.message : 'Could not load approvals.';
 }
 
+/** A decision the server refused because the request changed after it was shown. */
+class ChangedError extends Error {}
+
 /**
  * Pending email send decisions. The page intentionally only shows the small
  * review summary supplied by the API, never an email body or attachment.
@@ -40,11 +43,14 @@ export function ApprovalsPanel({ userRole }) {
       const response = await fetch('/api/approvals', { cache: 'no-store' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Could not load approvals.');
-      setItems(Array.isArray(payload.approvals) ? payload.approvals : []);
+      const pending = Array.isArray(payload.approvals) ? payload.approvals : [];
+      setItems(pending);
       setDecided(Array.isArray(payload.decided) ? payload.decided : []);
       setError('');
+      return pending;
     } catch (loadError) {
       setError(requestErrorMessage(loadError));
+      return null;
     } finally {
       setLoading(false);
     }
@@ -55,16 +61,23 @@ export function ApprovalsPanel({ userRole }) {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  const decide = async () => {
+  const decide = async (details) => {
     if (!decisionItem || submitting) return;
     setSubmitting(true);
     try {
       const response = await fetch('/api/approvals', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: decisionItem.item.id, decision: decisionItem.decision }),
+        // The revision this dialog shows. An approve of any other version is
+        // refused as `changed` (src/lib/approvals/decide.ts).
+        body: JSON.stringify({
+          id: decisionItem.item.id,
+          decision: decisionItem.decision,
+          revision: details?.revision ?? null,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
+      if (!response.ok && payload.code === 'changed') throw new ChangedError(payload.error);
       if (!response.ok) throw new Error(payload.error || 'Could not record this decision.');
       setItems(current => current.filter(item => item.id !== decisionItem.item.id));
       // Refresh so the row reappears under "Recently decided" with its
@@ -72,12 +85,32 @@ export function ApprovalsPanel({ userRole }) {
       void load();
       toast({
         message: decisionItem.decision === 'approve'
-          ? 'Email approved and queued for sending.'
+          ? t('approvals.panel.approvedToast')
           : 'Email request rejected.',
         variant: 'success',
       });
       setDecisionItem(null);
     } catch (decisionError) {
+      if (decisionError instanceof ChangedError) {
+        // Not a failure to retry blindly: the request now says something else.
+        // Reload it and keep the dialog open on the CURRENT version, so the
+        // person confirms what will actually be sent.
+        const fresh = await load();
+        const current = fresh?.find((item) => item.id === decisionItem.item.id) ?? null;
+        if (current) {
+          // A new `nonce` remounts the dialog, which reloads its details.
+          setDecisionItem({
+            item: current,
+            decision: decisionItem.decision,
+            changed: true,
+            nonce: (decisionItem.nonce ?? 0) + 1,
+          });
+        } else {
+          setDecisionItem(null);
+          toast({ message: t('approvals.panel.changedGone'), variant: 'error' });
+        }
+        return;
+      }
       const message = requestErrorMessage(decisionError);
       toast({ message, variant: 'error' });
       setError(message);
@@ -157,7 +190,7 @@ export function ApprovalsPanel({ userRole }) {
 
       {!loading && decided.length ? <DecidedTable rows={decided} t={t} /> : null}
 
-      {decisionItem ? <DecisionDialog item={decisionItem.item} decision={decisionItem.decision} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} /> : null}
+      {decisionItem ? <DecisionDialog key={`${decisionItem.item.id}:${decisionItem.nonce ?? 0}`} item={decisionItem.item} decision={decisionItem.decision} changed={decisionItem.changed === true} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} t={t} /> : null}
     </div>
   );
 }
@@ -248,8 +281,45 @@ function ApprovalListSkeleton() {
   );
 }
 
-function DecisionDialog({ item, decision, submitting, onCancel, onConfirm }) {
+/**
+ * The decision dialog. On open it loads this one approval's details
+ * (`GET /api/approvals/[id]`): the current recipients and subject, the Bcc
+ * addresses, the `revision` the decision carries, and whether it can be
+ * approved at all. The queue itself decrypts nothing. Approve waits for those
+ * details; Reject never does, since rejecting is safe whatever the request
+ * says.
+ */
+function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfirm, t }) {
   const approving = decision === 'approve';
+  const [details, setDetails] = useState(null);
+  const [detailsFailed, setDetailsFailed] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/approvals/${item.id}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => null);
+        if (!live) return;
+        if (!response.ok || !payload) setDetailsFailed(true);
+        else setDetails(payload);
+      })
+      .catch(() => { if (live) setDetailsFailed(true); });
+    return () => { live = false; };
+  }, [item.id]);
+
+  const bcc = Array.isArray(details?.bcc) ? details.bcc.filter(Boolean) : [];
+  const bccCount = Math.max(
+    typeof details?.bcc_count === 'number' ? details.bcc_count
+      : typeof item.summary?.bcc_count === 'number' ? item.summary.bcc_count : 0,
+    bcc.length,
+  );
+  const recipients = details
+    ? (details.to?.length ? details.to.join(', ') : 'No recipient supplied')
+    : recipientLabel(item);
+  const subject = details ? details.subject : item.summary?.subject;
+  const notApprovable = details?.approvable === false;
+  const confirmDisabled = submitting || (approving && (!details || notApprovable));
+
   return (
     <div className="scrim" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="approval-decision-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -257,21 +327,49 @@ function DecisionDialog({ item, decision, submitting, onCancel, onConfirm }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <h2 id="approval-decision-title" style={{ margin: 0 }}>{approving ? 'Approve email send?' : 'Reject email send?'}</h2>
-              <div className="sub" style={{ marginTop: 4 }}>{approving ? 'This will queue the prepared email to be sent.' : 'This prepared email will not be sent.'}</div>
+              <div className="sub" style={{ marginTop: 4 }}>{approving ? t('approvals.panel.approveSub') : 'This prepared email will not be sent.'}</div>
             </div>
             <button type="button" onClick={onCancel} disabled={submitting} aria-label="Close" style={{ background: 'transparent', border: 0, color: 'var(--fg-3)', cursor: submitting ? 'not-allowed' : 'pointer', padding: 4 }}><Icon name="x" size={16} /></button>
           </div>
         </div>
         <div className="modal-body">
+          {changed ? (
+            <div className="alert" role="alert" style={{ marginBottom: 12 }}>
+              {t('approvals.panel.changedNotice')}
+            </div>
+          ) : null}
+          {detailsFailed ? (
+            <div className="alert alert-error" role="alert" style={{ marginBottom: 12 }}>
+              {t('approvals.panel.detailsFailed')}
+            </div>
+          ) : null}
+          {approving && notApprovable ? (
+            <div className="alert" role="status" style={{ marginBottom: 12 }}>
+              {t('approvals.review.bodyStoredWithProvider')}
+            </div>
+          ) : null}
           <dl style={{ margin: 0, display: 'grid', gap: 10 }}>
             <div><dt className="sub">Inbox</dt><dd style={{ margin: '2px 0 0' }}>{approvalLabel(item)}</dd></div>
-            <div><dt className="sub">Recipients</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipientLabel(item)}</dd></div>
-            <div><dt className="sub">Subject</dt><dd style={{ margin: '2px 0 0' }}>{item.summary?.subject || '(no subject)'}</dd></div>
+            <div><dt className="sub">Recipients</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipients}</dd></div>
+            {bccCount > 0 ? (
+              <div>
+                <dt className="sub">{t('approvals.review.bcc')}</dt>
+                <dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>
+                  {bcc.length ? bcc.join(', ') : t('approvals.review.bccCount', { count: bccCount })}
+                </dd>
+              </div>
+            ) : null}
+            <div><dt className="sub">Subject</dt><dd style={{ margin: '2px 0 0' }}>{subject || '(no subject)'}</dd></div>
           </dl>
+          <p className="sub" style={{ margin: '12px 0 0' }}>
+            <Link href={`/approvals/${item.id}`}>{t('approvals.panel.openReview')}</Link>
+          </p>
         </div>
         <div className="modal-foot">
           <Btn variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Btn>
-          <Btn variant={approving ? 'primary' : 'danger'} onClick={onConfirm} disabled={submitting}>{submitting ? 'Saving…' : approving ? 'Approve & queue' : 'Reject request'}</Btn>
+          <Btn variant={approving ? 'primary' : 'danger'} onClick={() => onConfirm(details)} disabled={confirmDisabled}>
+            {submitting ? 'Saving…' : approving && !details && !detailsFailed ? t('approvals.panel.loadingDetails') : approving ? t('approvals.panel.approveAndSend') : 'Reject request'}
+          </Btn>
         </div>
       </div>
     </div>

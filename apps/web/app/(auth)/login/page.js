@@ -4,8 +4,8 @@ import { LoginApp } from '../../../components/auth/LoginApp';
 import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 
 export const metadata = {
-  title: 'Sign in · mcpemails',
-  description: 'Sign in to your mcpemails workspace',
+  title: 'Sign in',
+  description: 'Sign in to your MCPEmails workspace',
 };
 
 export default async function LoginPage({ searchParams }) {
@@ -34,5 +34,8 @@ export default async function LoginPage({ searchParams }) {
   // up here. Carry the provider on, shape-checked only (see intent-carry.mjs).
   const connectProvider = connectIntentSlugShape(params?.[CONNECT_INTENT_PARAM]);
 
-  return <LoginApp redirectTo={safeRedirect} connectProvider={connectProvider} />;
+  // `/login?sso=1` (or GET /auth/sso) opens the "Sign in with SSO" form.
+  const initialMode = params?.sso === '1' ? 'sso' : 'password';
+
+  return <LoginApp redirectTo={safeRedirect} connectProvider={connectProvider} initialMode={initialMode} />;
 }

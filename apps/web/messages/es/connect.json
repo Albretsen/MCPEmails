@@ -5,7 +5,7 @@
   },
   "settings": {
     "title": "Los ajustes exactos de IMAP y SMTP de {provider}",
-    "sub": "Cópialos en el formulario de conexión. mcpemails los rellena cuando puede y reintenta el otro transporte estándar si el primero no responde.",
+    "sub": "Cópialos en el formulario de conexión. MCPEmails los rellena cuando puede y reintenta el otro transporte estándar si el primero no responde.",
     "colHost": "Servidor",
     "colPort": "Puerto",
     "colProtocol": "Protocolo",
@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Lo que tu IA puede hacer",
     "title": "Una bandeja de {provider} que tu agente puede usar de verdad",
-    "sub": "Diecisiete herramientas MCP basadas en acciones: enviar, responder, reenviar, programar y organizar. Tu agente termina el trabajo dentro de {provider}."
+    "sub": "{toolCount} herramientas MCP basadas en acciones: enviar, responder, reenviar, programar y organizar. Tu agente termina el trabajo dentro de {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Conecta otro buzón",
-    "sub": "El mismo servidor MCP, las mismas diecisiete herramientas, otro proveedor.",
+    "sub": "El mismo servidor MCP, las mismas {toolCount} herramientas, otro proveedor.",
     "link": "Conecta {provider}",
     "all": "Ver todos los proveedores de correo compatibles"
   },
@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google muestra una pantalla de aplicación no verificada",
-    "body": "Google revisa las aplicaciones que solicitan acceso a Gmail, y mcpemails.com no ha pasado por esa revisión. Al iniciar sesión verás una pantalla de <b>aplicación no verificada</b>, con los pasos para continuar. La conexión en sí no caduca: una vez conectada, la bandeja sigue conectada hasta que revoques el acceso."
+    "body": "Esto solo afecta al inicio de sesión con Google, disponible en los planes Pro y Business; la conexión predeterminada con contraseña de aplicación no muestra ninguna pantalla de Google. Google revisa las aplicaciones que solicitan acceso a Gmail, y mcpemails.com no ha pasado por esa revisión, así que al iniciar sesión con Google verás una pantalla de <b>aplicación no verificada</b>, con los pasos para continuar. La conexión en sí no caduca: una vez conectada, la bandeja sigue conectada hasta que revoques el acceso."
   },
   "hub": {
     "meta": {
@@ -86,8 +86,8 @@
     "breadcrumb": "Proveedores de correo",
     "eyebrow": "Todos los proveedores",
     "title": "Conecta cualquier buzón a tu IA",
-    "lead": "mcpemails habla IMAP y SMTP a secas, así que se conecta a casi cualquier buzón. Abajo está cada proveedor con su guía de configuración: los servidores y puertos exactos, si necesitas una contraseña de aplicación y qué suele fallar.",
-    "answer": "mcpemails se conecta a cualquier proveedor de correo que ofrezca acceso IMAP y SMTP, es decir, casi todos. Cada guía de abajo indica los servidores verificados de ese proveedor, sus puertos y sus requisitos de autenticación, y una bandeja es gratis para siempre.",
+    "lead": "MCPEmails habla IMAP y SMTP a secas, así que se conecta a casi cualquier buzón. Abajo está cada proveedor con su guía de configuración: los servidores y puertos exactos, si necesitas una contraseña de aplicación y qué suele fallar.",
+    "answer": "MCPEmails se conecta a cualquier proveedor de correo que ofrezca acceso IMAP y SMTP, es decir, casi todos. Cada guía de abajo indica los servidores verificados de ese proveedor, sus puertos y sus requisitos de autenticación, y una bandeja es gratis para siempre.",
     "verifiedIntro": "Cada servidor de estas páginas se comprobó el {date} abriendo una conexión TLS real.",
     "countLabel": "{count} proveedores",
     "genericTitle": "¿Tu proveedor no aparece?",

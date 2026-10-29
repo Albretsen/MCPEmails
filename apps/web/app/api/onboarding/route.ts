@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
-import { onboardingActionPayload } from '@/lib/onboarding/state';
-import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { normalizeOnboardingClient, onboardingActionPayload } from '@/lib/onboarding/state';
+import { connectEntryPoint, recordProductFunnelEvent, type ProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { parseFlowBEvent } from '@/lib/onboarding/flow-b.mjs';
+import { STEP_FUNNEL_CATEGORY, isOnboardingStep } from '@/lib/onboarding/flow';
+import { normalizeChipClient } from '@/lib/onboarding/clients.mjs';
+import { resetOnboarding } from '@/lib/onboarding/reset';
+import { isInternalViewer } from '@/lib/onboarding/variant';
+
+type FunnelCategory = Parameters<typeof recordProductFunnelEvent>[1]['category'];
 
 export async function GET(): Promise<NextResponse> {
   const supabase = await createClient();
@@ -18,6 +25,34 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
 }
 
+/**
+ * POST /api/onboarding  { action, ... }
+ *
+ * Dashboard actions (unchanged): started, client_selected {client},
+ * provider_selected {provider, entry_point?}.
+ *
+ * /onboarding flow actions (src/lib/onboarding/, WP-C):
+ *   step_viewed     {step}    funnel onboarding_step_viewed, category step_<id>
+ *   exited          {step}    the dialog was closed (X, Skip or Escape) on that
+ *                             step: funnel onboarding_exited, category step_<id>
+ *   client_changed  {client}  the chip: stores workspaces.onboarding_client,
+ *                             funnel client_changed, category = client
+ *   inbox_reused    {}        "Use <address>" on the inbox step after a reset:
+ *                             stamps onboarding_inbox_connected_at when it is
+ *                             empty and a live inbox exists, so a reload
+ *                             starts at the next step (status inboxes.chosenAt)
+ *   completed       {}        stamps onboarding_completed_at once, funnel
+ *                             onboarding_completed (the dashboard's "Finish
+ *                             setup" link disappears)
+ *   reset           {}        internal accounts, owner only: Settings > Reset
+ *                             onboarding (src/lib/onboarding/reset.ts)
+ *
+ * Flow B (onb_convert = on, src/lib/onboarding/flow-b.mjs parseFlowBEvent):
+ *   flow_b          {event, surface?, plan?, level?, since?}  the second-inbox
+ *                             card, the plan summary, the usage meter and the
+ *                             grace-end note; "shown" rows are deduplicated,
+ *                             dismissals stamp a workspaces column
+ */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,14 +62,107 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }); }
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   const action = body.action;
+  const now = new Date().toISOString();
+
+  if (action === 'step_viewed') {
+    if (!isOnboardingStep(body.step)) return NextResponse.json({ error: 'Invalid step.' }, { status: 400 });
+    await recordProductFunnelEvent(createServiceRoleClient(), {
+      workspaceId, stage: 'onboarding_step_viewed', outcome: 'success', category: STEP_FUNNEL_CATEGORY[body.step],
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'exited') {
+    if (!isOnboardingStep(body.step)) return NextResponse.json({ error: 'Invalid step.' }, { status: 400 });
+    await recordProductFunnelEvent(createServiceRoleClient(), {
+      workspaceId, stage: 'onboarding_exited', outcome: 'success', category: STEP_FUNNEL_CATEGORY[body.step],
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'client_changed') {
+    const client = normalizeChipClient(body.client);
+    if (!client || !normalizeOnboardingClient(client)) return NextResponse.json({ error: 'Invalid client.' }, { status: 400 });
+    const db = createServiceRoleClient();
+    await db.from('workspaces').update({ onboarding_client: client, onboarding_client_selected_at: now }).eq('id', workspaceId);
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'client_changed', outcome: 'success', category: client as FunnelCategory });
+    return NextResponse.json({ ok: true, client });
+  }
+
+  if (action === 'inbox_reused') {
+    const db = createServiceRoleClient();
+    const { data: inbox } = await db.from('inboxes').select('id').eq('workspace_id', workspaceId).is('deleted_at', null).limit(1);
+    if (!inbox?.length) return NextResponse.json({ error: 'No inbox.' }, { status: 409 });
+    await db.from('workspaces').update({ onboarding_inbox_connected_at: now }).eq('id', workspaceId).is('onboarding_inbox_connected_at', null);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'completed') {
+    const db = createServiceRoleClient();
+    const { data: claimed } = await db.from('workspaces')
+      .update({ onboarding_completed_at: now })
+      .eq('id', workspaceId)
+      .is('onboarding_completed_at', null)
+      .select('onboarding_client');
+    if (claimed?.length) {
+      const client = normalizeOnboardingClient(claimed[0]?.onboarding_client) ?? 'unknown';
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'onboarding_completed', outcome: 'success', category: client as FunnelCategory });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'reset') {
+    const db = createServiceRoleClient();
+    // Internal accounts only, and only the workspace owner: a reset rewinds
+    // workspace-wide markers.
+    const { data: ws } = await db.from('workspaces').select('owner_id').eq('id', workspaceId).maybeSingle();
+    if (!ws || ws.owner_id !== user.id || !(await isInternalViewer(user.email ?? null, db))) {
+      return NextResponse.json({ error: 'Not available.' }, { status: 403 });
+    }
+    const result = await resetOnboarding(db, workspaceId);
+    if (!result.ok) return NextResponse.json({ error: 'Could not reset onboarding.' }, { status: 500 });
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'onboarding_reset', outcome: 'success', category: 'unknown' });
+    return NextResponse.json({ ok: true, resetAt: result.resetAt });
+  }
+
+  if (action === 'flow_b') {
+    const parsed = parseFlowBEvent(body);
+    if (!parsed) return NextResponse.json({ error: 'Invalid event.' }, { status: 400 });
+    const db = createServiceRoleClient();
+    if (parsed.stamp === 'plan_summary_dismissed_at') {
+      await db.from('workspaces').update({ plan_summary_dismissed_at: now }).eq('id', workspaceId).is('plan_summary_dismissed_at', null);
+    } else if (parsed.stamp === 'grace_end_note_seen_at') {
+      await db.from('workspaces').update({ grace_end_note_seen_at: now }).eq('id', workspaceId).is('grace_end_note_seen_at', null);
+    }
+    if (parsed.stage) {
+      let record = true;
+      if (parsed.dedupe) {
+        let existing = db.from('product_funnel_events').select('id')
+          .eq('workspace_id', workspaceId).eq('stage', parsed.stage).eq('category', parsed.category);
+        if (parsed.dedupe === 'since' && parsed.since) existing = existing.gte('occurred_at', parsed.since);
+        const { data } = await existing.limit(1);
+        record = !(data && data.length > 0);
+      }
+      if (record) {
+        await recordProductFunnelEvent(db, {
+          workspaceId,
+          stage: parsed.stage as ProductFunnelEvent['stage'],
+          outcome: 'success',
+          category: parsed.category as FunnelCategory,
+        });
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   if (action !== 'started' && action !== 'client_selected' && action !== 'provider_selected') {
     return NextResponse.json({ error: 'Unsupported onboarding action.' }, { status: 400 });
   }
   const payload = onboardingActionPayload(action, action === 'client_selected' ? body.client : body.provider);
   if (!payload) return NextResponse.json({ error: 'Invalid onboarding category.' }, { status: 400 });
 
-  const now = new Date().toISOString();
   const db = createServiceRoleClient();
   const workspaces = db.from('workspaces');
   if (action === 'started') {
@@ -44,11 +172,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const client = payload.client as string;
     await workspaces.update({ onboarding_client: client, onboarding_client_selected_at: now }).eq('id', workspaceId);
     await workspaces.update({ onboarding_stage: 'client_selected' }).eq('id', workspaceId).eq('onboarding_stage', 'started');
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'client_selected', outcome: 'success', category: client as Parameters<typeof recordProductFunnelEvent>[1]['category'] });
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'client_selected', outcome: 'success', category: client as FunnelCategory });
   } else {
     const provider = payload.provider as string;
     await workspaces.update({ onboarding_provider: provider }).eq('id', workspaceId);
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'provider_selected', outcome: 'success', category: provider as Parameters<typeof recordProductFunnelEvent>[1]['category'] });
+    // Which control opened the connect modal this provider was picked in: one
+    // word from a closed list, null for anything else.
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'provider_selected', outcome: 'success', category: provider as FunnelCategory, entryPoint: connectEntryPoint(body.entry_point) });
   }
   return NextResponse.json({ ok: true });
 }

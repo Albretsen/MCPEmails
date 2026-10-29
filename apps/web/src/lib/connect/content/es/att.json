@@ -20,7 +20,7 @@
     "titleLine1": "Conecta AT&T Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de att.net o sbcglobal.net. Lee, busca, envía, responde, programa y organiza correo por IMAP con una secure mail key de AT&T, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede acceder por sí solo a una bandeja de AT&T Mail. mcpemails es un servidor MCP alojado que conecta att.net, sbcglobal.net, bellsouth.net y los demás dominios de AT&T por IMAP en imap.mail.att.net en el puerto 993, autenticándose con una secure mail key de 16 caracteres que creas en myAT&T y no con tu contraseña de AT&T. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a una bandeja de AT&T Mail. MCPEmails es un servidor MCP alojado que conecta att.net, sbcglobal.net, bellsouth.net y los demás dominios de AT&T por IMAP en imap.mail.att.net en el puerto 993, autenticándose con una secure mail key de 16 caracteres que creas en myAT&T y no con tu contraseña de AT&T. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Secure mail key, no tu contraseña",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Introduce la clave, no tu contraseña de AT&T",
-      "p": "En mcpemails elige IMAP / SMTP, introduce tu dirección de AT&T completa y pega la secure mail key en el campo de contraseña. Todos los dominios de AT&T usan <code>imap.mail.att.net</code> y <code>smtp.mail.att.net</code>, así que los servidores ya vienen rellenados."
+      "p": "En MCPEmails elige IMAP / SMTP, introduce tu dirección de AT&T completa y pega la secure mail key en el campo de contraseña. Todos los dominios de AT&T usan <code>imap.mail.att.net</code> y <code>smtp.mail.att.net</code>, así que los servidores ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Tu contraseña de AT&T no se rechaza porque sea incorrecta",
-      "p": "AT&T divide los clientes de correo en dos grupos. Las aplicaciones que AT&T ha integrado con su inicio de sesión OAuth reciben un aviso en el navegador y nunca ven una contraseña. Todas las demás, mcpemails incluido, tienen que presentar una secure mail key. Si pegas la contraseña de tu cuenta de AT&T obtienes un fallo de autenticación idéntico al de una errata, y por mucho que restablezcas la contraseña de la cuenta no se arreglará."
+      "p": "AT&T divide los clientes de correo en dos grupos. Las aplicaciones que AT&T ha integrado con su inicio de sesión OAuth reciben un aviso en el navegador y nunca ven una contraseña. Todas las demás, MCPEmails incluido, tienen que presentar una secure mail key. Si pegas la contraseña de tu cuenta de AT&T obtienes un fallo de autenticación idéntico al de una errata, y por mucho que restablezcas la contraseña de la cuenta no se arreglará."
     },
     {
       "h": "El buzón está en Yahoo, pero la página de contraseñas de aplicación de Yahoo no es la correcta",
@@ -62,17 +62,17 @@
     },
     {
       "h": "Aquí el puerto 465 es TLS implícito, no STARTTLS",
-      "p": "El servidor SMTP que verificamos abre la sesión TLS de inmediato en el puerto 465 y no anuncia STARTTLS en ese puerto. Las guías de configuración antiguas de AT&T que te dicen que marques <b>STARTTLS</b> junto con el puerto 465 describen una combinación que este servidor no completará. mcpemails usa TLS implícito en el 465, que es lo que el servidor ofrece realmente."
+      "p": "El servidor SMTP que verificamos abre la sesión TLS de inmediato en el puerto 465 y no anuncia STARTTLS en ese puerto. Las guías de configuración antiguas de AT&T que te dicen que marques <b>STARTTLS</b> junto con el puerto 465 describen una combinación que este servidor no completará. MCPEmails usa TLS implícito en el 465, que es lo que el servidor ofrece realmente."
     }
   ],
   "limits": [
     "El servidor SMTP de AT&T anuncia un tamaño máximo de mensaje de unos 39 MB, así que AT&T rechaza un envío con adjuntos grandes antes de que salga.",
-    "mcpemails se autentica con la secure mail key y no con los mecanismos OAUTHBEARER y XOAUTH2 que este servidor también anuncia. Es a propósito: la vía OAuth solo está abierta a aplicaciones registradas por AT&T."
+    "MCPEmails se autentica con la secure mail key y no con los mecanismos OAUTHBEARER y XOAUTH2 que este servidor también anuncia. Es a propósito: la vía OAuth solo está abierta a aplicaciones registradas por AT&T."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con AT&T Mail?",
-      "a": "No directamente. Claude no tiene un conector integrado para AT&T. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de att.net o sbcglobal.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para AT&T. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de att.net o sbcglobal.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de AT&T?",

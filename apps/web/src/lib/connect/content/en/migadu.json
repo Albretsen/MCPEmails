@@ -23,23 +23,23 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Migadu on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    "answer": "Claude cannot reach Migadu on its own. MCPEmails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
   },
   "method": {
     "title": "How Migadu connects: IMAP and your mailbox password",
-    "body": "Migadu connects over IMAP/SMTP with the <b>mailbox password</b>, which is not the password for your Migadu admin account. Set or reset it in the Migadu admin area under Mailboxes, then paste it into mcpemails with your address. Every Migadu mailbox uses the same two hosts whatever your domain is, so there is nothing to look up."
+    "body": "Migadu connects over IMAP/SMTP with the <b>mailbox password</b>, which is not the password for your Migadu admin account. Set or reset it in the Migadu admin area under Mailboxes, then paste it into MCPEmails with your address. Every Migadu mailbox uses the same two hosts whatever your domain is, so there is nothing to look up."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Set a mailbox password in Migadu",
       "p": "In the Migadu admin area, open Mailboxes, pick the mailbox and set its password. Mail clients authenticate with that password; your admin login will not work."
     },
     {
-      "h": "Paste it into mcpemails",
+      "h": "Paste it into MCPEmails",
       "p": "Choose IMAP / SMTP, add your Migadu address, the hosts above and the password to connect the inbox securely."
     },
     {
@@ -62,18 +62,18 @@
     },
     {
       "h": "No MOVE, no UIDPLUS, no SPECIAL-USE and no IDLE",
-      "p": "Migadu's advertised capability set omits four extensions that most hosts carry. Without <b>MOVE</b>, relocating a message is performed as a copy, a flag update and an expunge rather than one atomic command. Without <b>UIDPLUS</b>, the server does not report the new identifier of a copied message, so it has to be found by searching the destination. Without <b>SPECIAL-USE</b>, Sent, Drafts, Trash and Archive are matched by name rather than by role, so a mailbox whose folders were renamed needs the folder named explicitly. Without <b>IDLE</b>, there is no push channel at all. None of this stops the connection working, and mcpemails reads on demand rather than waiting on push, but it explains behaviour you will not see on other providers."
+      "p": "Migadu's advertised capability set omits four extensions that most hosts carry. Without <b>MOVE</b>, relocating a message is performed as a copy, a flag update and an expunge rather than one atomic command. Without <b>UIDPLUS</b>, the server does not report the new identifier of a copied message, so it has to be found by searching the destination. Without <b>SPECIAL-USE</b>, Sent, Drafts, Trash and Archive are matched by name rather than by role, so a mailbox whose folders were renamed needs the folder named explicitly. Without <b>IDLE</b>, there is no push channel at all. None of this stops the connection working, and MCPEmails reads on demand rather than waiting on push, but it explains behaviour you will not see on other providers."
     }
   ],
   "limits": [
     "Because the server does not advertise MOVE, a move is not atomic. If a connection drops part way through, a message can briefly exist in both folders.",
     "Folders are matched by name rather than by role, so a mailbox with renamed or non-English folder names may need the target folder named explicitly.",
-    "mcpemails connects a mailbox. Domains, forwardings, rewrites and Migadu's own send and receive quotas stay in the Migadu admin area."
+    "MCPEmails connects a mailbox. Domains, forwardings, rewrites and Migadu's own send and receive quotas stay in the Migadu admin area."
   ],
   "faq": [
     {
       "q": "Does Claude work with Migadu?",
-      "a": "Not on its own. Claude has no built-in Migadu connector. Connecting an MCP server such as mcpemails to your Migadu mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and because the connection is plain IMAP the same mailbox is available in Cursor, ChatGPT and other MCP clients too."
+      "a": "Not on its own. Claude has no built-in Migadu connector. Connecting an MCP server such as MCPEmails to your Migadu mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and because the connection is plain IMAP the same mailbox is available in Cursor, ChatGPT and other MCP clients too."
     },
     {
       "q": "What are the Migadu IMAP and SMTP settings?",

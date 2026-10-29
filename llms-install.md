@@ -1,8 +1,8 @@
-# Installing MCP Emails (instructions for an AI assistant)
+# Installing MCPEmails (instructions for an AI assistant)
 
-You are setting up the MCP Emails server for a user. Follow these steps exactly.
+You are setting up the MCPEmails server for a user. Follow these steps exactly.
 
-MCP Emails is a **hosted** server. There is nothing to clone, build or compile. The npm package `mcpemails` is a thin stdio bridge that forwards JSON-RPC to `https://mcpemails.com/api/mcp`, for clients that can only launch a local command.
+MCPEmails is a **hosted** server. There is nothing to clone, build or compile. The npm package `mcpemails` is a thin stdio bridge that forwards JSON-RPC to `https://mcpemails.com/api/mcp`, for clients that can only launch a local command.
 
 ## Step 1: get an API key from the user
 

@@ -11,34 +11,34 @@
     "status": "active"
   },
   "meta": {
-    "title": "iCloud MCP Server: Connect iCloud Mail to Claude",
-    "description": "Yes, Claude can use iCloud Mail. Connect it with an Apple app-specific password in two minutes, then read, search, send and organize mail from any MCP client."
+    "title": "iCloud and Apple Mail MCP for Claude and ChatGPT",
+    "description": "Use the iCloud inbox you read in Apple Mail from Claude or ChatGPT. Connect it with an app-specific password in two minutes. No Mac needed. One inbox free."
   },
   "hero": {
     "eyebrow": "iCloud Mail + AI",
     "titleLine1": "The iCloud MCP server",
     "titleLine2": "for Claude, Cursor and ChatGPT",
-    "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password, and use the same inbox in every MCP client, not just one.",
+    "lead": "Give Claude or ChatGPT the iCloud inbox you read in Apple Mail. Read, search, send, reply, schedule and organize mail with an Apple app-specific password. It runs hosted, so your Mac can stay off, and the same inbox works in every MCP client.",
     "meta0": "1 inbox free, forever",
     "meta1": "App-specific password, no OAuth",
     "meta2": "Email fetched live, never stored",
-    "answer": "Apple does not offer OAuth for iCloud Mail, so Claude cannot connect to it directly. mcpemails connects your iCloud inbox over IMAP using an Apple app-specific password, which lets Claude, Cursor or any MCP client read, search, send and organize that mail. Setup takes about two minutes and one inbox is free."
+    "answer": "Apple does not offer OAuth for iCloud Mail, so Claude cannot connect to it directly. MCPEmails connects your iCloud inbox over IMAP using an Apple app-specific password, which lets Claude, Cursor or any MCP client read, search, send and organize that mail. Setup takes about two minutes and one inbox is free."
   },
   "method": {
     "title": "How iCloud connects: an app-specific password",
-    "body": "iCloud Mail connects over IMAP/SMTP using an <b>Apple app-specific password</b>. Generate one at account.apple.com under Sign-In and Security → App-Specific Passwords (two-factor authentication required), then paste it into mcpemails with your iCloud address."
+    "body": "iCloud Mail connects over IMAP/SMTP using an <b>Apple app-specific password</b>. Generate one at account.apple.com under Sign-In and Security → App-Specific Passwords (two-factor authentication required), then paste it into MCPEmails with your iCloud address."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Generate an app-specific password",
       "p": "At account.apple.com, go to Sign-In and Security → App-Specific Passwords and create one (two-factor authentication must be on)."
     },
     {
-      "h": "Paste it into mcpemails",
+      "h": "Paste it into MCPEmails",
       "p": "Add your iCloud address and the app-specific password to connect the inbox securely."
     },
     {
@@ -72,7 +72,11 @@
   "faq": [
     {
       "q": "Does Claude work with iCloud Mail?",
-      "a": "Not on its own. Claude has no built-in iCloud connector and Apple publishes no OAuth interface for iCloud Mail. Connecting an MCP server such as mcpemails to the mailbox over IMAP, using an Apple app-specific password, gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+      "a": "Not on its own. Claude has no built-in iCloud connector and Apple publishes no OAuth interface for iCloud Mail. Connecting an MCP server such as MCPEmails to the mailbox over IMAP, using an Apple app-specific password, gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+    },
+    {
+      "q": "Can Claude connect to Apple Mail?",
+      "a": "Not to the app, and it does not need to. Apple Mail displays mailboxes that live with a provider. If yours is an iCloud address, connect it here with an app-specific password and Claude or ChatGPT sees the same folders and messages, apart from folders kept only On My Mac. If Apple Mail shows a Gmail, Outlook, Yahoo or work account, connect that provider instead. MCPEmails is hosted, so your Mac does not have to be on."
     },
     {
       "q": "What are the iCloud Mail IMAP and SMTP settings?",
@@ -89,6 +93,10 @@
     {
       "q": "Is my iCloud mail stored on your servers?",
       "a": "No. Messages are fetched live from Apple over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Revoking the app-specific password in your Apple Account ends the connection at Apple's end straight away."
+    },
+    {
+      "q": "Does it reach iCloud Calendar, Contacts, Notes or Drive?",
+      "a": "No. MCPEmails handles mail only: your iCloud inbox and its folders, over IMAP and SMTP. Calendar, Contacts, Notes, Reminders and iCloud Drive are not connected, and the app-specific password is used for mail and nothing else."
     }
   ],
   "ctaBand": {

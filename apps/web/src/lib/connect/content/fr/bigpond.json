@@ -20,7 +20,7 @@
     "titleLine1": "Connectez la messagerie Telstra BigPond",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte bigpond.com. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec votre mot de passe e-mail Telstra, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Telstra BigPond. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.telstra.com, port 993, avec votre adresse bigpond.com, bigpond.net.au ou telstra.com complète et votre mot de passe e-mail Telstra, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Les boîtes BigPond ont été intégrées à la plateforme Telstra Mail : les anciens noms d'hôte bigpond ne sont donc plus ceux qu'un client doit utiliser. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Telstra BigPond. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.telstra.com, port 993, avec votre adresse bigpond.com, bigpond.net.au ou telstra.com complète et votre mot de passe e-mail Telstra, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Les boîtes BigPond ont été intégrées à la plateforme Telstra Mail : les anciens noms d'hôte bigpond ne sont donc plus ceux qu'un client doit utiliser. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Votre mot de passe e-mail Telstra fonctionne",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Connectez-vous à Telstra Mail dans un navigateur avec l'adresse que vous allez connecter. La documentation de Telstra rappelle que le mot de passe est sensible à la casse, et le vérifier dans le webmail permet de distinguer un vrai problème d'identifiant d'un problème de réglages avant d'aller plus loin."
     },
     {
-      "h": "Saisissez l'adresse complète dans mcpemails",
+      "h": "Saisissez l'adresse complète dans MCPEmails",
       "p": "Choisissez IMAP / SMTP et tapez l'adresse en entier, avec <code>@bigpond.com</code>, <code>@bigpond.net.au</code> ou <code>@telstra.com</code>. Les serveurs Telstra sont préremplis. Ne les remplacez pas par un ancien nom de serveur bigpond que vous auriez encore enregistré dans une autre application de messagerie."
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "h": "Ce serveur n'implémente pas MOVE, organiser le courrier demande donc trois commandes",
-      "p": "Le serveur IMAP de Telstra n'annonce pas l'extension MOVE : classer un message se fait donc par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE. mcpemails s'en charge et le résultat est identique, mais un déplacement n'est pas atomique ici : si la connexion tombe en cours de séquence, le message peut se retrouver dans les deux dossiers, c'est pourquoi une organisation répétée chez ce fournisseur mérite parfois une seconde vérification."
+      "p": "Le serveur IMAP de Telstra n'annonce pas l'extension MOVE : classer un message se fait donc par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE. MCPEmails s'en charge et le résultat est identique, mais un déplacement n'est pas atomique ici : si la connexion tombe en cours de séquence, le message peut se retrouver dans les deux dossiers, c'est pourquoi une organisation répétée chez ce fournisseur mérite parfois une seconde vérification."
     },
     {
       "h": "Sans UIDPLUS, le serveur ne nous communique pas le nouvel identifiant du message",
@@ -62,7 +62,7 @@
     },
     {
       "h": "Passer un compte de POP à IMAP détruit les dossiers POP",
-      "p": "Telstra prévient que tous les dossiers et e-mails POP sont perdus lorsqu'un compte passe de POP à IMAP. Si la boîte que vous connectez fonctionnait en POP avec du courrier classé localement, téléchargez-le ou exportez-le avant de passer le compte en IMAP. mcpemails fonctionne uniquement en IMAP : c'est une décision à prendre une fois, délibérément, avant de connecter."
+      "p": "Telstra prévient que tous les dossiers et e-mails POP sont perdus lorsqu'un compte passe de POP à IMAP. Si la boîte que vous connectez fonctionnait en POP avec du courrier classé localement, téléchargez-le ou exportez-le avant de passer le compte en IMAP. MCPEmails fonctionne uniquement en IMAP : c'est une décision à prendre une fois, délibérément, avant de connecter."
     }
   ],
   "limits": [
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Telstra BigPond ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Telstra intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier BigPond, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Telstra intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier BigPond, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de BigPond ?",

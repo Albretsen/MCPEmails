@@ -21,8 +21,8 @@
     "eyebrow": "Riseup + IA",
     "titleLine1": "Conecta el correo de Riseup a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja real de Riseup. Lee, busca, envía, responde, programa y organiza correo por IMAP, con la peculiaridad de inicio de sesión que rompe la mayoría de las configuraciones explicada y la contrapartida expuesta en lugar de omitida.",
-    "answer": "Claude no puede acceder a un buzón de Riseup por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.riseup.net en el puerto 993, y por SMTP en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. El detalle que decide si el inicio de sesión funciona es el nombre de usuario: Riseup espera solo el nombre de tu cuenta, como joehill, y no la dirección completa joehill@riseup.net. Riseup no emite contraseñas de aplicación para el correo, así que la credencial que guardas es la contraseña de tu cuenta de Riseup. Una bandeja es gratis, para siempre.",
+    "lead": "Dale a tu agente de IA una bandeja real de Riseup. Lee, busca, envía, responde, programa y organiza correo por IMAP. Te explicamos la peculiaridad del inicio de sesión que hace fallar la mayoría de las configuraciones y te contamos la contrapartida sin omitirla.",
+    "answer": "Claude no puede acceder a un buzón de Riseup por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.riseup.net en el puerto 993, y por SMTP en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. El detalle que decide si el inicio de sesión funciona es el nombre de usuario: Riseup espera solo el nombre de tu cuenta, como joehill, y no la dirección completa joehill@riseup.net. Riseup no emite contraseñas de aplicación para el correo, así que la credencial que guardas es la contraseña de tu cuenta de Riseup. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Nombre de cuenta, no la dirección completa",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -41,7 +41,7 @@
       "p": "La página de contraseñas de correo de Riseup advierte que una contraseña con caracteres especiales puede funcionar en <code>mail.riseup.net</code> desde el navegador y aun así fallar en un cliente de correo. Si la tuya tiene caracteres poco comunes y el inicio de sesión se rechaza, cámbiala en account.riseup.net por una larga pero sencilla antes de suponer que falla otra cosa. Riseup no ofrece actualmente autenticación de dos factores en su webmail, así que no hay un segundo factor que sortear."
     },
     {
-      "h": "Añade el buzón en mcpemails con el nombre de cuenta a secas",
+      "h": "Añade el buzón en MCPEmails con el nombre de cuenta a secas",
       "p": "Elige IMAP / SMTP. En el campo de usuario escribe el nombre de tu cuenta de Riseup <b>sin</b> <code>@riseup.net</code>, e introduce la contraseña de tu cuenta. El servidor viene rellenado como <code>mail.riseup.net</code> para ambos sentidos y se verificó mediante una conexión TLS real. Deja desactivada cualquier opción llamada autenticación segura, contraseña cifrada o CRAM-MD5; Riseup pide que no se usen."
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "Conectar cualquier buzón a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de mail.riseup.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. Mucha gente tiene una cuenta de Riseup precisamente para mantener su correspondencia lejos de las grandes empresas tecnológicas comerciales, y conectarla aquí va en contra de eso. Es una decisión sobre tu propio modelo de amenazas más que una limitación técnica, y conviene tomarla antes de conectar, no después.",
+    "Conectar cualquier buzón a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCPEmails obtiene el correo en vivo de mail.riseup.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. Mucha gente tiene una cuenta de Riseup precisamente para mantener su correspondencia lejos de las grandes empresas tecnológicas comerciales, y conectarla aquí va en contra de eso. Es una decisión sobre tu propio modelo de amenazas más que una limitación técnica, y conviene tomarla antes de conectar, no después.",
     "No hay una credencial acotada para el correo. Riseup te deja establecer contraseñas aparte para la VPN y el chat en account.riseup.net, pero el correo no tiene contraseña de aplicación, así que el secreto que se guarda aquí es la contraseña de la cuenta. Revocar esta conexión implica cambiar esa contraseña y volver a introducirla en todos los demás sitios.",
-    "El correo que llega cifrado con OpenPGP aparece en un cliente IMAP como un bloque de texto cifrado armado. mcpemails no tiene ninguna clave privada tuya, así que un agente ve las cabeceras y puede archivar o marcar esos mensajes, pero no leerlos."
+    "El correo que llega cifrado con OpenPGP aparece en un cliente IMAP como un bloque de texto cifrado en formato ASCII armor. MCPEmails no tiene ninguna clave privada tuya, así que un agente ve las cabeceras y puede archivar o marcar esos mensajes, pero no leerlos."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Riseup?",
-      "a": "No directamente. Claude no tiene conector de Riseup y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Riseup le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
+      "a": "No directamente. Claude no tiene conector de Riseup y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de Riseup le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Riseup?",

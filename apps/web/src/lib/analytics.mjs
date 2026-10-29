@@ -1,11 +1,19 @@
 import { track } from '@vercel/analytics';
+import { CONNECT_ENTRY_POINTS } from './analytics/connect-entry-point.mjs';
 
 // This is deliberately a closed schema: callers cannot accidentally attach an
 // identifier, URL, request payload, or mailbox data to a product event.
 export const EVENT_SCHEMA = Object.freeze({
-  signup_started: { method: ['password', 'google', 'github'] },
-  signup_completed: { method: ['password', 'google', 'github'] },
-  inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'] },
+  // signup_completed is a browser beacon and loses signups (Safari and iOS
+  // drop most Google completions). The source of truth is the database: one
+  // product_funnel_events row with stage 'signup_completed' per account,
+  // written by an auth.users trigger (migration 20261026191717), category
+  // email | google | github | microsoft | unknown.
+  signup_started: { method: ['password', 'google', 'github', 'microsoft'] },
+  signup_completed: { method: ['password', 'google', 'github', 'microsoft'] },
+  // `entry_point` is which control opened the connect modal, the same closed
+  // list the funnel rows carry (analytics/connect-entry-point.mjs).
+  inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'], entry_point: CONNECT_ENTRY_POINTS },
   // `connection_method` gained 'imap'. It was 'oauth' | 'app_password', and the
   // dashboard sent 'app_password' for the generic IMAP connector too, which is
   // the single largest provider bucket on this event: the split was wrong for
@@ -15,6 +23,10 @@ export const EVENT_SCHEMA = Object.freeze({
   mcp_connection_started: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'] },
   mcp_connection_authorized: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'], scope_profile: ['read_only', 'read_send', 'custom'] },
   api_key_revealed: { scope_profile: ['read_only', 'read_send', 'custom'] },
+  // A one-click install (install-links.mjs) used on a public page, before any
+  // account exists. The dashboard and onboarding record theirs as activation
+  // events instead. `client` is the install slug; `surface` is the page type.
+  install_link_clicked: { client: ['claude', 'cursor', 'vscode', 'goose', 'claude-code', 'codex', 'gemini-cli'], surface: ['docs'] },
   first_mcp_tool_call: { tool_name: ['inbox_list', 'email_read', 'email_compose', 'email_organize', 'folder', 'draft', 'schedule', 'contact_search'], provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap', 'unknown'], client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'] },
   activation_completed: { activation_path: ['oauth', 'api_key'] },
 });
@@ -51,6 +63,8 @@ export function trackProductEvent(name, properties = {}) {
     if (process.env.NODE_ENV !== 'production') throw error;
     return;
   }
+  // Staging sends no product events; NEXT_PUBLIC_APP_ENV is inlined at build.
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'staging') return;
   track(name, properties);
 }
 

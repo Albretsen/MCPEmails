@@ -20,8 +20,8 @@
     "eyebrow": "Optimum 邮箱 + AI",
     "titleLine1": "将你的 Optimum 收件箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
-    "lead": "Optimum 多年前就已停止发放新地址，但现有的邮箱仍然支持 IMAP。mcpemails 连接这样一个邮箱，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行连接 Optimum 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optimum.net 的 993 端口，用你完整的 optimum.net、optonline.net 或 Suddenlink 地址和 Optimum ID 密码登录。无需生成应用密码，也没有需要开启的开关，因为 Optimum 从未做过这两样东西。请注意，Optimum 自 2021 年 5 月 4 日起不再允许任何人创建新邮箱账户，所以这只适用于你已有的地址，而不能新建。一个收件箱永久免费。",
+    "lead": "Optimum 多年前就已停止发放新地址，但现有的邮箱仍然支持 IMAP。MCPEmails 连接这样一个邮箱，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 Optimum 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optimum.net 的 993 端口，用你完整的 optimum.net、optonline.net 或 Suddenlink 地址和 Optimum ID 密码登录。无需生成应用密码，也没有需要开启的开关，因为 Optimum 从未做过这两样东西。请注意，Optimum 自 2021 年 5 月 4 日起不再允许任何人创建新邮箱账户，所以这只适用于你已有的地址，而不能新建。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Optimum ID 密码，无需应用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "输入地址和 Optimum ID 密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整地址，例如 <code>name@optonline.net</code>，并使用该 Optimum ID 的密码。服务器已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，在用户名栏填写完整地址，例如 <code>name@optonline.net</code>，并使用该 Optimum ID 的密码。服务器已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Optimum 不声明 SASL-IR，而大多数客户端默认它存在",
-      "p": "Optimum 的 IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来和密码错误一模一样，于是人们跑去重置一个本来没问题的 Optimum ID。mcpemails 会识别这个响应并改用两步交换重试，所以在这里已经处理好了，但这正是其他 IMAP 工具在别处正常、却唯独连不上 Optimum 的原因。"
+      "p": "Optimum 的 IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来和密码错误一模一样，于是人们跑去重置一个本来没问题的 Optimum ID。MCPEmails 会识别这个响应并改用两步交换重试，所以在这里已经处理好了，但这正是其他 IMAP 工具在别处正常、却唯独连不上 Optimum 的原因。"
     },
     {
       "h": "Junk 和 Deleted 会自动清空，非 Optimum 域名只保留三天",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用 Optimum 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Optimum 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optimum.net、optonline.net 或 Suddenlink 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Optimum 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optimum.net、optonline.net 或 Suddenlink 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Optimum 的 IMAP 设置是什么？",

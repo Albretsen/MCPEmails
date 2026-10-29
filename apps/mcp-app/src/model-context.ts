@@ -88,7 +88,105 @@ const idOf = (d: DraftFacts): string => d.draft_id || "unknown";
 const BODY_DIFFERS =
   "The body now differs from the text the agent last wrote, and draft_read returns the current text.";
 
+// ---- the request ------------------------------------------------------------
+
+/**
+ * The params of one `ui/update-model-context` request, for what the host
+ * advertised as `hostCapabilities.updateModelContext`.
+ *
+ * ── What the spec and the reference SDK say (checked 2026-10-17) ───────────
+ * ext-apps 2026-01-26 and the current draft, and the v2.0.3 SDK, whose wire
+ * protocol is unchanged from 1.x:
+ *   * params are `{ content?: ContentBlock[], structuredContent? }`;
+ *   * "Each request overwrites the previous context sent by the View", per
+ *     View: Claude's docs say each widget instance pushes its own, so another
+ *     card in the same chat does not overwrite this one's;
+ *   * the host "MAY defer sending the context to the model until the next user
+ *     message" and "SHOULD only send the last update". So nothing reaches the
+ *     model at the moment of a save: it arrives with the user's next message;
+ *   * an EMPTY update clears the context (the reference host treats no
+ *     content and no structuredContent as "clear"). Never send one;
+ *   * the capability's value is `SupportedContentBlockModalities`
+ *     (`text`, `image`, `audio`, `resource`, `resourceLink`,
+ *     `structuredContent`), and a host may refuse a block it did not list
+ *     (-32000 "Invalid content format");
+ *   * the maintainers' guidance (ext-apps#380) is that a host gives the model
+ *     `content` and falls back to `structuredContent` only when `content` is
+ *     empty, and that an app passing `structuredContent` also passes a text
+ *     version in `content`.
+ *
+ * So: the text always goes as one `text` block, the shape every example in the
+ * SDK uses. `structuredContent` is added only when the host LISTED it, because
+ * a host that reads only structured data is the one case where text alone
+ * would not reach the model, and a host that did not list it may refuse it.
+ *
+ * ── What Claude does with it (re-test 2026-10-17) ──────────────────────────
+ * Compared against the spec (specification/draft/apps.mdx) and the SDK's
+ * `App.updateModelContext` (src/app.ts, no capability check, method
+ * "ui/update-model-context", params passed through): the method name, the
+ * params shape and the timing here match, and with Claude advertising
+ * `cap[text,image]` the one `text` block is a modality it listed. Claude
+ * answered all three updates with success (diagnostics `3/0/3`), yet on the
+ * NEXT user turn, asked without tools what the subject was now and what had
+ * changed in the card, it said nothing about edits, saves or sends had reached
+ * it. So claude.ai accepts the request and does not, as of that date, put it
+ * in front of the model on the next turn (the spec's SHOULD), and nothing on
+ * the card's side can change that. How Claude handles it is not documented.
+ * The card still sends it (a host that follows the spec gets it, and Claude
+ * may start to), but nothing may depend on it: the server tells the model the
+ * same facts in the next draft result for that draft, including a model's
+ * `draft_read` (supabase/functions/mcp-server/card-activity.ts), and the
+ * draft tool descriptions send a model to `draft_read` before it states a
+ * draft's current state. `ui/message` would reach the model but posts into
+ * the chat as the user, so it is not used for this.
+ */
+export function modelContextParams(
+  text: string,
+  advertised: unknown,
+): { content: Array<{ type: "text"; text: string }>; structuredContent?: Record<string, unknown> } {
+  const listed =
+    advertised && typeof advertised === "object" && !Array.isArray(advertised)
+      ? Object.keys(advertised as Record<string, unknown>)
+      : [];
+  return {
+    content: [{ type: "text", text }],
+    ...(listed.includes("structuredContent")
+      ? { structuredContent: { source: "MCPEmails draft card", context: text } }
+      : {}),
+  };
+}
+
+/**
+ * `cap[text,structuredContent]`, `cap[]` or `nocap`, for the diagnostics line:
+ * what the host said it accepts, which is the first fact a live check needs.
+ */
+export function modelContextCapability(advertised: unknown): string {
+  if (!advertised || typeof advertised !== "object" || Array.isArray(advertised)) return "nocap";
+  return `cap[${Object.keys(advertised as Record<string, unknown>).join(",")}]`;
+}
+
 // ---- the draft card --------------------------------------------------------
+
+/**
+ * When a fresh draft result first renders.
+ *
+ * Without it the model has no fact that the card is on screen: the tool result
+ * is the same whether or not a host draws the card, so a model in a host it
+ * believes cannot render one told the user "the card probably won't show up"
+ * over a card the user was looking at (2026-10-25). A host that forwards this
+ * delivers it with the next user message, so it serves the turns after the
+ * call. Claude does not forward it (checked 2026-10-25 on claude.ai: the
+ * request is answered ok, and the model reported neither this line nor a later
+ * save line on the next turn), so the server's notice promises nothing. Any later line from this card replaces it, and each of
+ * those also says the card is the MCPEmails card. No body count: the body may
+ * still be deferred (contract §8) when the card first renders.
+ */
+export function draftShownContextLine(draft: DraftFacts): string {
+  return (
+    `The MCPEmails draft card is on screen for the user, who can edit and send it. ` +
+    `Its current draft_id is ${idOf(draft)}. ${draftShape(draft)}`
+  );
+}
 
 /**
  * After a successful save.
@@ -105,7 +203,7 @@ export function draftSavedContextLine(
   opts: { bodyEdited: boolean },
 ): string {
   return (
-    `The user saved edits to a draft in the MCP Emails card at ${contextInstant(draft.last_saved_at)}. ` +
+    `The user saved edits to a draft in the MCPEmails card at ${contextInstant(draft.last_saved_at)}. ` +
     `Its current draft_id is ${idOf(draft)}. ${draftShape(draft)} ` +
     `Body ${wordCount(draft.body?.text)} words. ` +
     (opts.bodyEdited ? BODY_DIFFERS : "This save did not change the body.")
@@ -220,7 +318,7 @@ export function draftCallOutcome(action: DraftAction, call: DraftCall): DraftCal
 
 const PRESSED: Record<DraftAction, string> = {
   send: "pressed Send on",
-  discard: "pressed Discard on",
+  discard: "pressed Delete draft on",
   hide: "asked to hide the draft editor card while viewing",
 };
 
@@ -251,7 +349,7 @@ export function draftActionContextLine(
   switch (outcome.kind) {
     case "sent":
       return (
-        `The user sent draft ${id} from the MCP Emails card at ${contextInstant(outcome.sentAt)}. ${shape} ` +
+        `The user sent draft ${id} from the MCPEmails card at ${contextInstant(outcome.sentAt)}. ${shape} ` +
         `The message has left Drafts, so that draft_id no longer resolves.` +
         (opts.bodyEdited
           ? " The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote."
@@ -259,18 +357,18 @@ export function draftActionContextLine(
       );
     case "held":
       return (
-        `The user pressed Send on draft ${id} in the MCP Emails card. ${shape} ` +
+        `The user pressed Send on draft ${id} in the MCPEmails card. ${shape} ` +
         `The send is held for approval${outcome.approvalId ? ` under approval_id ${outcome.approvalId}` : ""} and nothing has been sent. ` +
         `The draft is still in Drafts under that draft_id.${body}`
       );
     case "discarded":
       return (
-        `The user discarded draft ${id} from the MCP Emails card. ${shape} ` +
+        `The user discarded draft ${id} from the MCPEmails card. ${shape} ` +
         `Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.`
       );
     case "hidden":
       return (
-        `The user hid the MCP Emails draft editor card for ${
+        `The user hid the MCPEmails draft editor card for ${
           opts.scope === "workspace" ? "every inbox in the workspace" : "this inbox"
         }. That is a display setting only. ` +
         `Draft ${id} was not sent, changed or deleted and is still in Drafts under that draft_id. ${shape}${body}`
@@ -279,13 +377,13 @@ export function draftActionContextLine(
       const said = `The server reported: ${quoted(outcome.said || "no reason", SERVER_TEXT_MAX)}.`;
       if (action === "hide") {
         return (
-          `The user asked to hide the MCP Emails draft editor card and it was not hidden. ${said} ` +
+          `The user asked to hide the MCPEmails draft editor card and it was not hidden. ${said} ` +
           `Draft ${id} was not sent, changed or deleted and is still in Drafts under that draft_id. ${shape}${body}`
         );
       }
       if (action === "discard") {
         return (
-          `The user pressed Discard on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
+          `The user pressed Delete draft on draft ${id} in the MCPEmails card and the delete failed. ${shape} ${said} ` +
           `The card still holds the draft under that draft_id.${body}`
         );
       }
@@ -296,7 +394,7 @@ export function draftActionContextLine(
             ? "Whether the message was delivered is not known, so the draft may or may not still be in Drafts."
             : "Nothing was reported as sent, and the card still holds the draft under that draft_id.";
       return (
-        `The user pressed Send on draft ${id} in the MCP Emails card and the send failed. ${shape} ${said} ${after}${body}`
+        `The user pressed Send on draft ${id} in the MCPEmails card and the send failed. ${shape} ${said} ${after}${body}`
       );
     }
     case "no_answer": {
@@ -307,7 +405,7 @@ export function draftActionContextLine(
             ? "The card does not know whether the draft was deleted."
             : "The card does not know whether it was hidden. The draft itself is not affected by that setting.";
       return (
-        `The user ${PRESSED[action]} draft ${id} in the MCP Emails card and the card got no usable answer ` +
+        `The user ${PRESSED[action]} draft ${id} in the MCPEmails card and the card got no usable answer ` +
         `(${quoted(outcome.why, SERVER_TEXT_MAX)}). ${shape} ${unknown}${body}`
       );
     }
@@ -337,11 +435,11 @@ export function outboundRejectContextLine(o: Outbound, answer: Envelope | null):
   if (!answer) return null;
   const about = `the queued send under approval_id ${o.approval_id}`;
   if (answer.state !== "error" && answer.receipt?.outcome === "rejected") {
-    return `The user rejected ${about} in the MCP Emails card. ${outboundShape(o)} Nothing was sent.`;
+    return `The user rejected ${about} in the MCPEmails card. ${outboundShape(o)} Nothing was sent.`;
   }
   if (!answer.receipt) return null;
   return (
-    `The user pressed Reject on ${about} in the MCP Emails card, and that press did not reject it. ` +
+    `The user pressed Reject on ${about} in the MCPEmails card, and that press did not reject it. ` +
     `${outboundShape(o)} The server reported: ${quoted(failureText(null, answer.receipt), SERVER_TEXT_MAX)}.`
   );
 }
@@ -364,7 +462,7 @@ function planShape(plan: Plan): string {
 /** After the user confirmed a plan, from what `bulk_execute` answered. */
 export function bulkExecuteContextLine(plan: Plan, answer: Envelope | null): string | null {
   if (!answer?.receipt) return null;
-  const head = `The user confirmed ${planShape(plan)} in the MCP Emails card.`;
+  const head = `The user confirmed ${planShape(plan)} in the MCPEmails card.`;
   const r = answer.receipt;
   if (answer.state !== "error" && r.outcome === "executed") {
     const n = typeof r.affected_count === "number" ? ` ${r.affected_count} messages were affected.` : "";
@@ -375,5 +473,29 @@ export function bulkExecuteContextLine(plan: Plan, answer: Envelope | null): str
 
 /** After the user cancelled a plan in the card. Local: no server call is made. */
 export function bulkCancelContextLine(plan: Plan): string {
-  return `The user cancelled ${planShape(plan)} in the MCP Emails card. Nothing was changed.`;
+  return `The user cancelled ${planShape(plan)} in the MCPEmails card. Nothing was changed.`;
+}
+
+/**
+ * After the card ran `subscriptions_cleanup` (§9). Counts only: sender names
+ * and addresses come from email and never go into the conversation.
+ */
+export function subscriptionCleanupContextLine(answer: Envelope | null): string | null {
+  const head = "The user confirmed a subscription cleanup in the MCPEmails card.";
+  const s = answer?.subscriptions;
+  if (answer?.card === "subscription_plan" && s && answer.state === "executed") {
+    const n: Record<string, number> = {};
+    for (const r of s.results ?? []) n[r.status] = (n[r.status] ?? 0) + 1;
+    const c = (k: string) => n[k] ?? 0;
+    const parts = `Requested ${c("requested")}, drafts saved for the user to send (not sent) ${c("draft_ready")}, links for the user to open ${c("needs_user")}, failed ${c("failed")}, other ${(s.results?.length ?? 0) - c("requested") - c("draft_ready") - c("needs_user") - c("failed")}`;
+    const b = s.backlog;
+    const tail = b && b.action === "archive"
+      ? ` ${b.moved} existing messages archived${b.has_more ? `, ${b.remaining} left` : ""}.`
+      : "";
+    return `${head} ${parts}.${tail}`;
+  }
+  if (answer?.receipt) {
+    return `${head} The server reported: ${quoted(failureText(null, answer.receipt), SERVER_TEXT_MAX)}.`;
+  }
+  return null;
 }

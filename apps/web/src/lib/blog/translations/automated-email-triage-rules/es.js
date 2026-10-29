@@ -1,12 +1,12 @@
 const translation = {
   title: 'Reglas automáticas de triaje de correo que funcionan sin un modelo de por medio',
   description:
-    'Cómo funcionan las automatizaciones de MCP Emails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
+    'Cómo funcionan las automatizaciones de MCPEmails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
   coverAlt:
-    'Reglas de triaje de correo desatendidas en MCP Emails: una búsqueda guardada más una acción fija según un calendario',
+    'Reglas de triaje de correo desatendidas en MCPEmails: una búsqueda guardada más una acción fija según un calendario',
   content: `Cada mañana le pides a tu agente que despeje el ruido: archivar las notificaciones de compilación, marcar los recibos como leídos, reenviar las facturas a tu contable. Funciona. También cuesta una llamada al modelo cada vez, y el martes hace algo ligeramente distinto de lo que hizo el lunes.
 
-MCP Emails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
+MCPEmails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
 
 **Ir a:** [Qué es una regla](#qué-es-realmente-una-automatización) · [Crea una](#crea-una-previsualiza-crea-activa) · [Qué puede y qué no](#lo-que-una-regla-puede-y-no-puede-hacer) · [Cuándo no escribirla](#cuándo-no-escribir-una-regla)
 
@@ -18,14 +18,14 @@ Tres partes, y nada más.
 - **Una acción.** Exactamente una, de un conjunto cerrado, fijada al crear la regla.
 - **Una cadencia.** \`interval_minutes\`, tomada de una escala fija: 15, 30, 60, 180, 360, 720 o 1440 minutos. Una escala en vez de un entero libre, porque una regla de un minuto no consigue nada salvo que te limiten la tasa de llamadas.
 
-Define también \`max_messages_per_run\` (25 por defecto, 200 como máximo): es el radio de impacto por ejecución y limita cuánto correo puede tocar un filtro defectuoso antes de que una persona vea el registro de ejecuciones. Una regla se ejecuta con la credencial que la creó, y la autoridad se vuelve a derivar en cada ejecución, así que revocar la clave detiene la regla en su siguiente ejecución.
+Define también \`max_messages_per_run\` (25 por defecto, 200 como máximo): es el radio de impacto por ejecución y limita cuánto correo puede tocar un filtro defectuoso antes de que una persona vea el registro de ejecuciones. Una regla se ejecuta con la credencial que la creó, y sus permisos se vuelven a comprobar en cada ejecución, así que revocar la clave detiene la regla en su siguiente ejecución.
 
 ## Por qué una regla supera a pedírselo al agente cada mañana
 
 - **Coste.** Una regla no gasta tokens. La conversación matutina los gasta a diario, sobre correo cuyo tratamiento decidiste hace meses.
 - **Repetibilidad.** El mismo filtro produce la misma acción. No hay un «hoy decidió otra cosa» porque no hay ninguna decisión.
 - **Sin movimientos alucinados.** Una regla no puede inventarse una carpeta, improvisar un destinatario ni actuar según una instrucción encontrada dentro del cuerpo de un correo.
-- **Se ejecuta mientras duermes.** MCP Emails funciona por lo demás con sondeo: el agente comprueba si hay correo nuevo cuando se lo pides. La regla es la parte que no hay que pedir.
+- **Se ejecuta mientras duermes.** MCPEmails funciona por lo demás con sondeo: el agente comprueba si hay correo nuevo cuando se lo pides. La regla es la parte que no hay que pedir.
 
 ## El triaje con agente y las reglas desatendidas hacen cosas distintas
 
@@ -67,7 +67,7 @@ Las cinco acciones de regla:
 
 Lo que una regla no puede hacer:
 
-- **Borrar correo.** Borrar no está disponible para una automatización. Mover a Papelera, Correo no deseado o Spam también se rechaza: todos los proveedores vacían esas carpetas con un temporizador, así que archivar ahí es un borrado con mecha retardada. Archiva en una carpeta tuya y bórrala tú mismo cuando hayas leído el registro de ejecuciones.
+- **Borrar correo.** Borrar no está disponible para una automatización. Mover a la Papelera también se rechaza, en cualquier idioma: todos los proveedores la vacían con un temporizador, así que archivar ahí es un borrado con mecha retardada. Archiva en una carpeta tuya y bórrala tú mismo cuando hayas leído el registro de ejecuciones. Correo no deseado y Spam sí están permitidos, porque archivar ahí el correo que no quieres es un motivo habitual para crear una regla.
 - **Interpretar nada.** Ni resúmenes ni «si suena urgente».
 - **Encadenar dos acciones.** Etiquetar y marcar como leído son dos reglas sobre el mismo filtro.
 
@@ -75,7 +75,7 @@ Lo que una regla no puede hacer:
 
 \`automation_read\` con la acción \`runs\` lista las ejecuciones recientes y sus contadores: coincidencias, procesados, correctos, fallidos y omitidos. La acción \`list\` devuelve todas las reglas del espacio de trabajo con su calendario, su acción y su estado de salud; \`get\` lee una al completo, filtro y estado de fallos incluidos.
 
-El contador que conviene entender es el de omitidos (**skipped**). Un recuento alto de omitidos frente a un recuento bajo de procesados no es un problema: significa que una ejecución solapada se deduplicó correctamente. Cada regla reclama un mensaje antes de actuar sobre él, así que una ejecución reenviada no puede mover el mismo correo dos veces. Las reglas además se detienen solas tras cinco ejecuciones fallidas consecutivas, en lugar de seguir chocando eternamente contra un nombre de carpeta incorrecto.
+El contador que conviene entender es el de omitidos (**skipped**). Un recuento alto de omitidos frente a un recuento bajo de procesados no es un problema: significa que una ejecución solapada se deduplicó correctamente. Cada regla reclama un mensaje antes de actuar sobre él, así que una ejecución relanzada no puede mover el mismo correo dos veces. Las reglas además se detienen solas tras cinco ejecuciones fallidas consecutivas, en lugar de seguir chocando eternamente contra un nombre de carpeta incorrecto.
 
 ## Cuándo no escribir una regla
 
@@ -97,7 +97,7 @@ Después preguntas a tu agente por los treinta mensajes que quedan en lugar de p
 
 ## Las reglas cuentan para las acciones de tu plan
 
-Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Free** son 150 acciones de correo facturables por mes natural UTC, con los primeros 7 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $9 al mes, elimina el límite mensual de acciones y permite 3 buzones conectados. Consulta los [precios](/pricing).
+Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Gratis** son 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Esa asignación mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $9 al mes, ofrece acciones de correo ilimitadas y permite 3 bandejas conectadas. Consulta los [precios](/pricing).
 
 ## Preguntas frecuentes
 
@@ -105,7 +105,7 @@ Cada acción que aplica una regla se contabiliza igual que una interactiva, porq
 No. Una regla es una búsqueda guardada más una acción fija. El correo se compara, nunca se interpreta, y los cuerpos de los mensajes nunca se copian en nada de lo que produce una regla.
 
 **¿Puede una regla borrar mi correo?**  
-No. Borrar no está disponible para las automatizaciones, y mover correo a Papelera, Correo no deseado o Spam se rechaza por la misma razón.
+No. Borrar no está disponible para las automatizaciones, y mover correo a la Papelera se rechaza por la misma razón. Moverlo a Correo no deseado o Spam sí está permitido.
 
 **¿Qué permiso hace falta?**  
 Toda acción de automatización requiere \`manage:automations\`, una concesión distinta de la de leer o enviar, porque tenerla significa que un cliente puede crear reglas permanentes que tocan tu buzón sin supervisión.

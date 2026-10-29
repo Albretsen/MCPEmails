@@ -19,24 +19,24 @@
     "eyebrow": "Gmail + IA",
     "titleLine1": "El servidor MCP de Gmail",
     "titleLine2": "para Claude, Cursor y ChatGPT",
-    "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña de aplicación de Google, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja de Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña de aplicación de Google, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Se conecta con una contraseña de aplicación de Google",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a Gmail. mcpemails es un servidor MCP alojado que se sitúa entre ambos: creas una vez una contraseña de aplicación de Google, pegas una URL en tu cliente MCP, y Claude, Cursor o ChatGPT pueden leer, buscar, enviar, responder y programar tu correo de Gmail. Una bandeja es gratis, para siempre."
+    "answer": "La URL del servidor MCP de Gmail es https://mcpemails.com/api/mcp. MCPEmails es un servidor MCP alojado: crea una contraseña de aplicación de Google, conecta Gmail una vez en el panel y pega esa URL en Claude, ChatGPT o Cursor. En Cursor, añádela en mcpServers dentro de ~/.cursor/mcp.json con el campo url, y Cursor te pedirá iniciar sesión, sin clave de API. El plan Free conecta una bandeja de Gmail para siempre, sin tarjeta, y funciona con una cuenta personal de Google o con Google Workspace."
   },
   "method": {
     "title": "Cómo se conecta Gmail: una contraseña de aplicación de Google",
-    "body": "Gmail se conecta con una <b>contraseña de aplicación de Google</b> por IMAP y SMTP. Google solo ofrece contraseñas de aplicación en cuentas con la <b>verificación en dos pasos activada</b>, así que actívala primero y luego crea una en <b>myaccount.google.com/apppasswords</b>. Son 16 letras minúsculas en cuatro grupos, y se pega en lugar de tu contraseña normal de Google, que no funcionará. Revócala cuando quieras desde esa misma página de Google, o elimina la bandeja en mcpemails."
+    "body": "Gmail se conecta con una <b>contraseña de aplicación de Google</b> por IMAP y SMTP. Google solo ofrece contraseñas de aplicación en cuentas con la <b>verificación en dos pasos activada</b>, así que actívala primero y luego crea una en <b>myaccount.google.com/apppasswords</b>. Son 16 letras minúsculas en cuatro grupos, y se pega en lugar de tu contraseña normal de Google, que no funcionará. Revócala cuando quieras desde esa misma página de Google, o elimina la bandeja en MCPEmails."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Crea una contraseña de aplicación de Google",
-      "p": "Activa la verificación en dos pasos en tu cuenta de Google si aún no lo está, ve a myaccount.google.com/apppasswords y crea una. Pega los 16 caracteres en mcpemails junto con tu dirección de Gmail completa. Los espacios del código no importan."
+      "p": "Activa la verificación en dos pasos en tu cuenta de Google si aún no lo está, ve a myaccount.google.com/apppasswords y crea una. Pega los 16 caracteres en MCPEmails junto con tu dirección de Gmail completa. Los espacios del código no importan."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -46,15 +46,15 @@
   "gotchas": [
     {
       "h": "Google publica su propio servidor MCP de Gmail, y solo para Gmail es el camino más corto",
-      "p": "Google anunció soporte oficial de MCP para sus servicios, incluido un servidor MCP de Workspace que cubre Gmail junto con Drive, Calendar y Chat. No vamos a fingir lo contrario. Si Gmail es el único buzón al que quieres que acceda un asistente, y tu cliente se comunica con el servidor de Google, úsalo. La razón para apuntar mcpemails a Gmail es que el mismo servidor también tiene tu buzón de iCloud, Fastmail, Zoho, Yahoo o IMAP de empresa, los expone todos a través de <b>una sola</b> URL MCP y se comporta igual en Claude, Cursor y ChatGPT. Un conector por proveedor, cada uno con su propia autenticación y sus propios nombres de herramienta, es justo lo que esto evita."
+      "p": "Google anunció soporte oficial de MCP para sus servicios, incluido un servidor MCP de Workspace que cubre Gmail junto con Drive, Calendar y Chat. No vamos a fingir lo contrario. Si Gmail es el único buzón al que quieres que acceda un asistente, y tu cliente se comunica con el servidor de Google, úsalo. La razón para conectar Gmail a MCPEmails es que el mismo servidor también reúne tu buzón de iCloud, Fastmail, Zoho, Yahoo o IMAP de empresa, los expone todos a través de <b>una sola</b> URL MCP y se comporta igual en Claude, Cursor y ChatGPT. Un conector por proveedor, cada uno con su propia autenticación y sus propios nombres de herramienta, es justo lo que esto evita."
     },
     {
-      "h": "En un Gmail del trabajo, tu administrador de Workspace puede bloquear la opción de inicio de sesión con Google",
-      "p": "Esto solo afecta a la opción de inicio de sesión con Google, no a una contraseña de aplicación. Los administradores de Google Workspace controlan el acceso de API de terceros en Security, luego API controls, luego App access control. Un administrador puede bloquear directamente todas las aplicaciones de terceros, o permitir una aplicación solo para ciertos ámbitos OAuth. Cuando eso está activado, Google lo rechaza en su propia pantalla de consentimiento con <code>Error 400: admin_policy_enforced</code>, y la solicitud nunca nos llega. Nada de nuestro lado puede anularlo: un administrador tiene que permitir la aplicación para los ámbitos de Gmail. Las cuentas personales que terminan en <code>@gmail.com</code> no tienen esa política y no se ven afectadas."
+      "h": "Enviar desde otra dirección requiere una dirección de envío verificada",
+      "p": "Un buzón conectado con una contraseña de aplicación envía desde su propia dirección. Para que tu agente envíe desde un alias u otra dirección tuya, añádela en <b>Direcciones de envío</b> en los ajustes de la bandeja en MCPEmails. Enviamos a esa dirección un código de 6 dígitos, y queda disponible en cuanto introduces el código. Gmail también tiene que aceptar la dirección, así que configúrala antes en Gmail, en <b>Enviar como</b>. Una dirección de remitente (From) que no es la del propio buzón ni está verificada se rechaza; no se reescribe en silencio."
     },
     {
       "h": "Gmail tiene etiquetas, no carpetas, así que mover no es mover",
-      "p": "Gmail guarda etiquetas, no carpetas. Por IMAP cada etiqueta aparece como una carpeta, y la opción de inicio de sesión con Google trabaja directamente con las etiquetas, así que en ambos casos un mensaje puede llevar varias etiquetas a la vez y aparecer en varias carpetas. Moverlo significa añadir una etiqueta y quitar otra, y archivar es simplemente quitar <code>INBOX</code>. Eliminar pone el mensaje en la Papelera de Gmail en lugar de borrarlo. Si le pides a un agente que archive correo en una carpeta que aún no existe, primero hay que crear la etiqueta, que después aparecerá en Gmail en todos tus dispositivos."
+      "p": "Gmail guarda etiquetas, no carpetas. Por IMAP cada etiqueta aparece como una carpeta, así que un mensaje puede llevar varias etiquetas a la vez y aparecer en varias carpetas. Moverlo significa añadir una etiqueta y quitar otra, y archivar es simplemente quitar <code>INBOX</code>. Eliminar pone el mensaje en la Papelera de Gmail en lugar de borrarlo. Si le pides a un agente que guarde correo en una carpeta que aún no existe, primero hay que crear la etiqueta, que después aparecerá en Gmail en todos tus dispositivos."
     },
     {
       "h": "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación",
@@ -62,38 +62,42 @@
     }
   ],
   "limits": [
-    "En ambos casos mcpemails solo llega al correo: una contraseña de aplicación se usa únicamente para IMAP y SMTP, y la opción de inicio de sesión con Google solo solicita los ámbitos de Gmail de lectura, envío, modificación y ajustes básicos. Drive, Calendar, Chat y Docs no son accesibles.",
-    "Un administrador de Google Workspace puede cerrar cualquiera de las dos vías desde la Admin console: puede desactivar las contraseñas de aplicación para el dominio y bloquear el acceso de API de terceros para la opción de inicio de sesión con Google. Solo un administrador puede cambiar esas decisiones.",
-    "Eliminar mueve un mensaje a la Papelera de Gmail. El borrado definitivo del correo se hace en el propio Gmail."
+    "MCPEmails solo llega al correo: una contraseña de aplicación se usa únicamente para IMAP y SMTP. Drive, Calendar, Chat y Docs no son accesibles.",
+    "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio desde la consola de administración. Solo un administrador puede cambiar esa decisión.",
+    "Eliminar mueve un mensaje a la Papelera de Gmail. Un borrado permanente sigue los ajustes de IMAP de Gmail: por defecto solo quita la etiqueta desde la que se eliminó el mensaje, y eliminarlo desde la Papelera lo borra para siempre."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Gmail?",
-      "a": "Sí, en cuanto hay algo entre ambos que habla Gmail en nombre de Claude. mcpemails es una de esas cosas: creas una contraseña de aplicación de Google, pegas una URL MCP y Claude puede leer, buscar, enviar, responder, reenviar y programar correo. Google también publica un servidor MCP oficial de Workspace que cubre Gmail. La diferencia práctica es que mcpemails no es solo para Google, así que la misma URL sirve también para tus otros buzones."
+      "a": "Sí, siempre que haya algo entre ambos que hable con Gmail en nombre de Claude. MCPEmails cumple ese papel: creas una contraseña de aplicación de Google, pegas una URL MCP y Claude puede leer, buscar, enviar, responder, reenviar y programar correo. Google también publica un servidor MCP oficial de Workspace que cubre Gmail. La diferencia práctica es que MCPEmails no es solo para Google, así que la misma URL sirve también para tus otros buzones."
+    },
+    {
+      "q": "¿Cuál es la URL del servidor MCP de Gmail y es gratis?",
+      "a": "La URL es https://mcpemails.com/api/mcp, la misma en Claude, ChatGPT, Cursor y cualquier otro cliente MCP. El plan Free conecta una bandeja de Gmail sin tarjeta, para siempre. Los planes de pago añaden más bandejas."
     },
     {
       "q": "¿Existe un servidor MCP oficial de Gmail de Google?",
-      "a": "Sí. Google anunció soporte oficial de MCP para sus servicios, con un servidor MCP de Workspace que abarca Gmail, Drive, Calendar y Chat. Úsalo cuando Gmail sea el único buzón implicado y tu cliente lo admita. Elige un servidor de terceros como mcpemails cuando quieras varios proveedores detrás de una sola URL MCP, o cuando quieras el mismo comportamiento en Claude, Cursor y ChatGPT."
+      "a": "Sí. Google anunció soporte oficial de MCP para sus servicios, con un servidor MCP de Workspace que abarca Gmail, Drive, Calendar y Chat. Úsalo cuando Gmail sea el único buzón implicado y tu cliente lo admita. Elige un servidor de terceros como MCPEmails cuando quieras varios proveedores detrás de una sola URL MCP, o cuando quieras el mismo comportamiento en Claude, Cursor y ChatGPT."
     },
     {
       "q": "¿Necesito una contraseña de aplicación para Gmail?",
-      "a": "Sí. Gmail se conecta por IMAP y SMTP con una contraseña de aplicación de Google, no con tu contraseña normal de Google. Google solo muestra las contraseñas de aplicación en cuentas con la verificación en dos pasos activada, así que actívala primero y luego crea una en myaccount.google.com/apppasswords. Lleva más o menos un minuto. El inicio de sesión con Google sigue estando disponible como alternativa, pero muestra un aviso de aplicación no verificada que tienes que aceptar para continuar."
+      "a": "Sí. Gmail se conecta por IMAP y SMTP con una contraseña de aplicación de Google, no con tu contraseña normal de Google. Google solo muestra las contraseñas de aplicación en cuentas con la verificación en dos pasos activada, así que actívala primero y luego crea una en myaccount.google.com/apppasswords. Lleva más o menos un minuto."
     },
     {
-      "q": "¿Por qué Google rechaza la opción de inicio de sesión con Google en mi cuenta del trabajo?",
-      "a": "Casi siempre por una política del administrador. Los administradores de Google Workspace restringen qué aplicaciones de terceros pueden usar los ámbitos de Gmail en Security, API controls, App access control. Cuando la aplicación no está permitida, Google detiene el proceso con Error 400: admin_policy_enforced antes de que nos llegue nada. Tu administrador tiene que permitir la aplicación, o puedes conectarte con una contraseña de aplicación, si tu dominio las permite. Una cuenta personal de Gmail no se encontrará con esto."
+      "q": "¿Por qué no puedo crear una contraseña de aplicación en mi cuenta del trabajo?",
+      "a": "Google solo ofrece contraseñas de aplicación en cuentas con la verificación en dos pasos activada, así que comprueba eso primero. En una cuenta de Google Workspace, un administrador también puede desactivar las contraseñas de aplicación para todo el dominio, y entonces myaccount.google.com/apppasswords no estará disponible hagas lo que hagas dentro del buzón. Solo tu administrador puede cambiarlo. Una cuenta personal de Gmail no necesita más que la verificación en dos pasos."
     },
     {
       "q": "¿Funciona con un dominio propio de Google Workspace?",
-      "a": "Sí. Un buzón de Workspace en tu propio dominio se conecta con una contraseña de aplicación igual que una dirección gmail.com y se comporta igual después. La única condición es la política del administrador: el dominio tiene que permitir las contraseñas de aplicación o, si usas la opción de inicio de sesión con Google, el acceso de API de terceros tiene que estar permitido para la cuenta; si no, Google bloquea la pantalla de consentimiento."
+      "a": "Sí. Un buzón de Workspace en tu propio dominio se conecta con una contraseña de aplicación igual que una dirección gmail.com y se comporta igual después. La única condición es la política del administrador: el dominio tiene que permitir las contraseñas de aplicación y el acceso IMAP."
     },
     {
       "q": "¿Se almacena mi Gmail en sus servidores?",
-      "a": "No. Los mensajes se obtienen en vivo de Google en cada solicitud y se entregan a tu cliente de IA. Tu contraseña de aplicación, o el token OAuth si usas el inicio de sesión con Google, se cifra en reposo y el cuerpo de los mensajes no se conserva. Revocar la contraseña de aplicación o el acceso en tu cuenta de Google, o eliminar la bandeja en mcpemails, corta la conexión de inmediato."
+      "a": "No. Los mensajes se obtienen en vivo de Google en cada solicitud y se entregan a tu cliente de IA. Tu contraseña de aplicación se cifra en reposo y el cuerpo de los mensajes no se conserva. Revocar la contraseña de aplicación en tu cuenta de Google, o eliminar la bandeja en MCPEmails, corta la conexión de inmediato."
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Gmail",
+    "title": "Dale a tu IA una bandeja de Gmail",
     "sub": "Conecta Gmail en minutos. Una bandeja gratis para siempre, sin tarjeta."
   },
   "guide": {

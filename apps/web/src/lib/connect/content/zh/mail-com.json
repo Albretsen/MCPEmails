@@ -24,18 +24,18 @@
     "titleLine1": "将 Mail.com 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 mail.com 收件箱。开启客户端访问后，即可通过 IMAP 在所有 MCP 客户端（而不只是一个）中读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 mail.com。mcpemails 是一个托管 MCP 服务器，通过 imap.mail.com 端口 993 的 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。mail.com 有两个前提条件：POP3、IMAP 和 SMTP 是 Premium 功能；而且即使是 Premium，访问也默认关闭，直到你在 Email、Settings、POP3 and IMAP 中启用。开启之后，连接一个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 mail.com。MCPEmails 是一个托管 MCP 服务器，通过 imap.mail.com 端口 993 的 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。mail.com 有两个前提条件：POP3、IMAP 和 SMTP 是 Premium 功能；而且即使是 Premium，访问也默认关闭，直到你在 Email、Settings、POP3 and IMAP 中启用。开启之后，连接一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Premium 账户，开启 IMAP",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
     "title": "mail.com 如何连接：Premium IMAP，需手动开启",
-    "body": "mail.com 在 <code>imap.mail.com</code> 端口 993 上通过 TLS 提供 IMAP。对于外发邮件，其帮助中心列出的是端口 587 上的 <code>smtp.mail.com</code>，使用 STARTTLS，并提供端口 465 加 SSL/TLS 作为替代，mcpemails 使用的是后者。mail.com 由 1&1 Mail and Media 运营，与 GMX 和 WEB.DE 同属一个集团，也继承了它们的规矩：<b>浏览器之外的访问是付费功能，而且默认关闭</b>。mail.com 自己的第三方应用页面说明，POP、IMAP 和 SMTP 仅为 Premium 功能；其故障排除页面另外说明，你邮箱中的 POP3 或 IMAP 收取功能默认是关闭的。免费的 mail.com 地址在账户升级之前，无法被本服务或任何其他邮件客户端连接；升级后的账户也仍需勾选该复选框。"
+    "body": "mail.com 在 <code>imap.mail.com</code> 端口 993 上通过 TLS 提供 IMAP。对于外发邮件，其帮助中心列出的是端口 587 上的 <code>smtp.mail.com</code>，使用 STARTTLS，并提供端口 465 加 SSL/TLS 作为替代，MCPEmails 使用的是后者。mail.com 由 1&1 Mail and Media 运营，与 GMX 和 WEB.DE 同属一个集团，也继承了它们的规矩：<b>浏览器之外的访问是付费功能，而且默认关闭</b>。mail.com 自己的第三方应用页面说明，POP、IMAP 和 SMTP 仅为 Premium 功能；其故障排除页面另外说明，你邮箱中的 POP3 或 IMAP 收取功能默认是关闭的。免费的 mail.com 地址在账户升级之前，无法被本服务或任何其他邮件客户端连接；升级后的账户也仍需勾选该复选框。"
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可连接一个收件箱，想用多久就用多久。"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "如果开启了 2FA，创建应用专用密码，然后连接",
-      "p": "开启双重身份验证后，你的普通 mail.com 密码在客户端中将失效。依次点击 <b>profile icon</b>、<b>Security Options</b>、<b>Manage application-specific passwords</b>、<b>Create new application-specific password</b>。mail.com 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入你的完整地址（无论它位于 mail.com 系列的哪个域名）以及该密码。"
+      "p": "开启双重身份验证后，你的普通 mail.com 密码在客户端中将失效。依次点击 <b>profile icon</b>、<b>Security Options</b>、<b>Manage application-specific passwords</b>、<b>Create new application-specific password</b>。mail.com 只显示一次。然后在 MCPEmails 中选择 IMAP / SMTP，输入你的完整地址（无论它位于 mail.com 系列的哪个域名）以及该密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -71,12 +71,12 @@
   ],
   "limits": [
     "免费的 mail.com 邮箱根本无法连接，无论是我们还是任何邮件客户端，因为 POP3、IMAP 和 SMTP 仅限 Premium 账户。",
-    "mail.com 的 IMAP 服务器数据页面还列出了端口 143，除非客户端协商 STARTTLS，否则它是未加密的。mcpemails 只在 993 上以隐式 TLS 连接，不提供明文端口。"
+    "mail.com 的 IMAP 服务器数据页面还列出了端口 143，除非客户端协商 STARTTLS，否则它是未加密的。MCPEmails 只在 993 上以隐式 TLS 连接，不提供明文端口。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 mail.com 吗？",
-      "a": "不能直接使用，而在免费 mail.com 账户上则完全不能。Claude 没有内置的 mail.com 连接器。在已启用 POP3 和 IMAP 的 Premium 邮箱上，连接 mcpemails 这样的 MCP 服务器后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用。"
+      "a": "不能直接使用，而在免费 mail.com 账户上则完全不能。Claude 没有内置的 mail.com 连接器。在已启用 POP3 和 IMAP 的 Premium 邮箱上，连接 MCPEmails 这样的 MCP 服务器后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用。"
     },
     {
       "q": "使用 IMAP 需要 mail.com Premium 吗？",
@@ -84,7 +84,7 @@
     },
     {
       "q": "mail.com 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 imap.mail.com，端口 993，使用隐式 TLS。对于 SMTP，mail.com 文档给出的是 smtp.mail.com，端口 587 加 STARTTLS，以及作为同等替代的端口 465 加 SSL/TLS；mcpemails 使用 465。请用你的完整 mail.com 地址和账户密码登录；如果开启了双重身份验证，则使用应用专用密码。"
+      "a": "IMAP 为 imap.mail.com，端口 993，使用隐式 TLS。对于 SMTP，mail.com 文档给出的是 smtp.mail.com，端口 587 加 STARTTLS，以及作为同等替代的端口 465 加 SSL/TLS；MCPEmails 使用 465。请用你的完整 mail.com 地址和账户密码登录；如果开启了双重身份验证，则使用应用专用密码。"
     },
     {
       "q": "开启双重身份验证后，我的 mail.com 连接断了，为什么？",
@@ -101,6 +101,6 @@
   ],
   "ctaBand": {
     "title": "给你的 AI 一个 Mail.com 收件箱",
-    "sub": "几分钟即可连接 mail.com Premium。mcpemails 上 1 个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 mail.com Premium。MCPEmails 上 1 个收件箱永久免费，无需信用卡。"
   }
 }

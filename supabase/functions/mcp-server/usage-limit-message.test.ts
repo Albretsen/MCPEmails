@@ -135,7 +135,7 @@ Deno.test("Free states the number exactly as passed, with no thousands noise", (
 Deno.test("Free says the first seven days were not counted", () => {
   const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN);
   assertIncludes(text, `first ${FREE_ACTION_GRACE_DAYS} days after signup are not counted`, "the grace sentence");
-  assert(FREE_ACTION_GRACE_DAYS === 7, "the grace constant mirrors c_grace in workspace_action_allowance()");
+  assert(FREE_ACTION_GRACE_DAYS === 3, "the grace constant mirrors free_action_grace_ends_at() for new workspaces");
 });
 
 Deno.test("Free says what keeps working", () => {
@@ -192,6 +192,93 @@ Deno.test("standard wording is the default and is unchanged", () => {
   );
 });
 
+Deno.test("standard and directory Free wording are byte-identical to before the checkout wording existed", () => {
+  // Snapshots taken from the module as it stood at ba554a8e. Adding a wording
+  // must not move a single byte of the two that every client sees today.
+  const standard =
+    "Monthly allowance reached: 150 of 150 email actions used this month on the Free plan. The counter resets on 2026-10-01. Until then every email action in this workspace will be refused, so retrying will not help: this is a plan limit, not a temporary failure. The Free plan includes 150 email actions per calendar month; the first 3 days after signup are not counted. inbox_list and the dashboard keep working. The Personal plan removes the monthly cap for $9 per month at https://mcpemails.com/pricing?from=usage_cap. The current count is at https://mcpemails.com/dashboard/usage.";
+  const directory =
+    "Monthly allowance reached: 150 of 150 email actions used this month on the Free plan. The counter resets on 2026-10-01. Until then every email action in this workspace will be refused, so retrying will not help: this is a plan limit, not a temporary failure. The Free plan includes 150 email actions per calendar month; the first 3 days after signup are not counted. inbox_list and the dashboard keep working. The plans and what each includes are described at https://mcpemails.com/pricing. The current count is at https://mcpemails.com/dashboard/usage.";
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN) === standard, "standard snapshot");
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "standard", CHECKOUT) === standard, "a link passed with standard wording is ignored");
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "directory") === directory, "directory snapshot");
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "directory", CHECKOUT) === directory, "a link passed with directory wording is ignored");
+});
+
+// ---------------------------------------------------------------------------
+// Checkout wording: standard plus a 30-minute link straight to checkout, for a
+// Free owner on a non-OpenAI client (checkout-link.ts decides).
+// ---------------------------------------------------------------------------
+
+const CHECKOUT = { url: `${ORIGIN}/u/${"A".repeat(43)}`, minutes: 30 };
+
+Deno.test("checkout wording leads with the numbers and carries the link and its lifetime", () => {
+  const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN, "checkout", CHECKOUT);
+  assert(text.startsWith("Monthly allowance reached: 150 of 150 email actions"), "numbers first");
+  assertIncludes(text, "2026-10-01", "reset date");
+  assertIncludes(text, CHECKOUT.url, "the link");
+  assertIncludes(text, "for the next 30 minutes", "its lifetime");
+  assertIncludes(text, "signs nobody in", "says what the link does not do");
+  assertIncludes(text, FREE_CAP_UPGRADE_PRICE, "the price");
+  assertIncludes(text, "Personal plan removes the monthly cap", "the remedy as a fact");
+  assertIncludes(text, "the same request succeeds", "what happens after paying");
+  assertIncludes(text, `${plansInfoUrl(ORIGIN)}.`, "all plans");
+  assertIncludes(text, `${ORIGIN}/dashboard/usage`, "the meter");
+  assertIncludes(text, `first ${FREE_ACTION_GRACE_DAYS} days after signup are not counted`, "grace");
+  assertIncludes(text, "inbox_list and the dashboard keep working", "what keeps working");
+  const lower = text.toLowerCase();
+  assertIncludes(lower, "retrying will not help", "retry loop stopped");
+  assertIncludes(lower, "not a temporary failure", "not transient");
+  assertIncludes(lower, "plan limit", "framed as a plan limit");
+  assert(text.indexOf(CHECKOUT.url) === text.lastIndexOf(CHECKOUT.url), "one link to checkout, once");
+});
+
+Deno.test("checkout wording never instructs the model", () => {
+  const text = buildUsageLimitText("free", 10, 10, RESET, ORIGIN, "checkout", CHECKOUT).toLowerCase();
+  for (
+    const phrase of [
+      "tell the user", "you should", "please upgrade", "inform the user", "ask them to", "ask the user",
+      "suggest", "recommend", "encourage", "remind the user", "click", "share this",
+    ]
+  ) {
+    assert(!text.includes(phrase), `checkout must not address the model: found ${JSON.stringify(phrase)}`);
+  }
+});
+
+Deno.test("checkout wording prints the minutes it is handed, for a reused link", () => {
+  const text = buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "checkout", { url: CHECKOUT.url, minutes: 7 });
+  assertIncludes(text, "for the next 7 minutes", "minutes left");
+  assert(!text.includes("30 minutes"), "not the full lifetime");
+  assertIncludes(
+    buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "checkout", { url: CHECKOUT.url, minutes: 1 }),
+    "for the next 1 minute;",
+    "singular",
+  );
+});
+
+Deno.test("checkout wording without a link is exactly standard", () => {
+  const standard = buildUsageLimitText("free", 150, 150, RESET, ORIGIN);
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "checkout") === standard, "no argument");
+  assert(buildUsageLimitText("free", 150, 150, RESET, ORIGIN, "checkout", null) === standard, "null");
+});
+
+Deno.test("checkout wording leaves the paid fair-use text exactly as it is", () => {
+  for (const plan of ["personal", "solo", "pro"]) {
+    assert(
+      buildUsageLimitText(plan, 10, 10, RESET, ORIGIN, "checkout", CHECKOUT) === buildUsageLimitText(plan, 10, 10, RESET, ORIGIN),
+      `${plan}: no link on a paid ceiling`,
+    );
+  }
+});
+
+Deno.test("directory wording never carries a checkout path or a price, whatever it is handed", () => {
+  for (const plan of ["free", "personal", "solo", "pro"]) {
+    const text = buildUsageLimitText(plan, 150, 150, RESET, ORIGIN, "directory", CHECKOUT);
+    assert(!text.includes("/u/"), `${plan}: no checkout link in directory wording`);
+    assert(!text.includes("$"), `${plan}: no price in directory wording`);
+  }
+});
+
 Deno.test("the rate-limit refusal drops its plan sentence for directory clients only", () => {
   assert(rateLimitPlanSentence("directory") === "", "waiting is the whole remedy");
   assertIncludes(rateLimitPlanSentence("standard"), "https://www.mcpemails.com/pricing", "standard keeps its link");
@@ -231,10 +318,10 @@ Deno.test("paid plans never mention the Free grace week", () => {
 
 Deno.test("messages use the plan name the pricing page sells", () => {
   // The internal ids drifted from the marketing names twice: `solo` is now sold
-  // as Pro and `pro` as Team. Naming the internal id would send the user looking
+  // as Pro and `pro` as Business. Naming the internal id would send the user looking
   // for a product that does not exist on the pricing page.
   assertIncludes(buildUsageLimitText("solo", 1, 2, RESET, ORIGIN), "Pro plan", "solo renders as Pro");
-  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Team plan", "pro renders as Team");
+  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Business plan", "pro renders as Business");
   assertIncludes(buildUsageLimitText("free", 1, 2, RESET, ORIGIN), "Free plan", "free renders as Free");
 });
 
@@ -267,5 +354,5 @@ Deno.test("Personal is named by the name it is sold under", () => {
   assert(PLAN_DISPLAY_NAMES.personal === "Personal", "Personal needs its own display name entry");
   // Mirror of planDisplayName in apps/web/src/lib/stripe/plans.ts. Both halves
   // of the product show a plan name; they must show the same one.
-  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Team", "the two drifted ids must keep their sold names");
+  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Business", "the two drifted ids must keep their sold names");
 });

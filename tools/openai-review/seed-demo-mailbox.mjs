@@ -122,7 +122,7 @@ client.on('error', (err) => console.error(`IMAP error: ${err.message}`));
 // ------------------------------------------------------------ helpers
 
 function printPlanHeader(mode) {
-  console.log(`MCP Emails review mailbox seeder: ${mode}`);
+  console.log(`MCPEmails review mailbox seeder: ${mode}`);
   console.log(`Target: ${config.user} @ ${config.host}:${config.port} (${config.secure ? 'TLS' : 'PLAINTEXT'})`);
   console.log(`Seed time: ${now.toISOString()}`);
 }

@@ -11,34 +11,34 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Yahoo Mail a Claude, Cursor y clientes MCP",
-    "description": "Conecta Yahoo Mail a Claude, Cursor y cualquier cliente MCP por IMAP (puerto 993) con una contraseña de aplicación. La normal no sirve. Una bandeja gratis."
+    "title": "MCP de Yahoo Mail: conecta Yahoo Mail a Claude y ChatGPT",
+    "description": "Conecta Yahoo Mail a Claude o ChatGPT con una contraseña de aplicación de Yahoo, por IMAP (puerto 993). La contraseña normal no sirve. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",
     "titleLine1": "Conecta Yahoo Mail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja real de Yahoo en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a Claude o ChatGPT tu bandeja real de Yahoo en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a Yahoo Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993, autenticándose con una contraseña de aplicación de Yahoo creada en External connections (conexiones externas) de tu página Account Security, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Tu contraseña normal de Yahoo nunca se acepta desde un cliente de correo. La configuración lleva un par de minutos y una bandeja es gratis, para siempre."
+    "answer": "Claude no puede acceder por sí solo a Yahoo Mail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993, autenticándose con una contraseña de aplicación de Yahoo creada en External connections (conexiones externas) de tu página Account Security, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Tu contraseña normal de Yahoo nunca se acepta desde un cliente de correo. La configuración lleva un par de minutos y una bandeja es gratis, para siempre."
   },
   "method": {
     "title": "Cómo se conecta Yahoo: con una contraseña de aplicación",
-    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Genera una en Yahoo Account Security (seguridad de la cuenta), en External connections, y pégala en mcpemails junto con tu dirección de Yahoo. Si no ves la opción, activa la verificación en dos pasos y vuelve a mirar. Sin flujo OAuth ni ventanas emergentes del navegador."
+    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Genera una en Yahoo Account Security (seguridad de la cuenta), en External connections, y pégala en MCPEmails junto con tu dirección de Yahoo. Si no ves la opción, activa la verificación en dos pasos y vuelve a mirar. Sin flujo OAuth ni ventanas emergentes del navegador."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Genera una contraseña de aplicación de Yahoo",
       "p": "En Yahoo Account Security, en External connections, genera una contraseña de aplicación. Si la opción no aparece, activa primero la verificación en dos pasos."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCPEmails",
       "p": "Añade tu dirección de Yahoo y la contraseña de aplicación para conectar la bandeja de forma segura."
     },
     {
@@ -65,13 +65,17 @@
     }
   ],
   "limits": [
-    "El servidor de envío de Yahoo anuncia un tamaño máximo de mensaje de unos 41 MB. La lectura de adjuntos a través de mcpemails está limitada a 25 MB por solicitud, así que cualquier cosa más grande hay que descargarla en el propio Yahoo Mail.",
+    "El servidor de envío de Yahoo anuncia un tamaño máximo de mensaje de unos 41 MB. La lectura de adjuntos a través de MCPEmails está limitada a 25 MB por solicitud, así que cualquier cosa más grande hay que descargarla en el propio Yahoo Mail.",
     "Las contraseñas de aplicación no caducan y sobreviven a un cambio de tu contraseña de Yahoo. Eliminar la contraseña de aplicación en Account Security es la única forma de revocar el acceso."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Yahoo Mail?",
-      "a": "No directamente. Claude no tiene un conector integrado para Yahoo. Conectar un servidor MCP como mcpemails a tu buzón de Yahoo por IMAP, con una contraseña de aplicación de Yahoo, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. La misma conexión funciona después sin cambios desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Yahoo. Conectar un servidor MCP como MCPEmails a tu buzón de Yahoo por IMAP, con una contraseña de aplicación de Yahoo, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. La misma conexión funciona después sin cambios desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Puede ChatGPT conectarse a Yahoo Mail?",
+      "a": "Sí, añadiendo MCPEmails como servidor MCP personalizado. En chatgpt.com (con ChatGPT Go o un plan de pago), abre Plugins, Personal, Add, Add custom MCP server, pega la URL de MCPEmails, elige OAuth e inicia sesión. Después escribe @ en un chat y elige MCPEmails para usar la bandeja de Yahoo que conectaste aquí. La misma contraseña de aplicación sirve también para Claude."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Yahoo Mail?",

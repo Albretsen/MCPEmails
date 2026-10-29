@@ -12,7 +12,7 @@ Internal plan id `pro` IS customer-facing **"Team"** ($79/mo).
 Internal `personal` IS "Personal" ($5/mo, $48/yr, 3 inboxes).
 See `apps/web/src/lib/stripe/plans.ts:23` and the catalogue at `apps/web/src/lib/stripe/plans.ts:151-305`.
 
-A funnel row reading `solo_year` and a Stripe invoice line reading "MCP Emails Pro" are the same thing. This document uses the customer-facing names and marks the internal id when it matters.
+A funnel row reading `solo_year` and a Stripe invoice line reading "MCPEmails Pro" are the same thing. This document uses the customer-facing names and marks the internal id when it matters.
 
 ---
 

@@ -21,7 +21,7 @@
     "titleLine1": "通过 IMAP 使用 Onet Poczta，",
     "titleLine2": "在 Claude、Cursor、任意 MCP 客户端中",
     "lead": "Onet 在 2026 年将邮件客户端访问改为付费套餐功能。如果你的账户包含该功能，AI 代理就能通过 IMAP 读取、搜索、发送、回复、定时与整理邮箱。",
-    "answer": "Claude 无法自行连接 Onet 邮箱，而且自 2026 年 3 月 31 日起，任何其他东西也无法连接免费 Onet 账户。Onet 为所有用户停用了 POP3，并将 IMAP 纳入付费邮箱套餐，因此免费账户现在只能使用网页邮箱和手机 App。在付费套餐或保留原有权益的永久账户上，mcpemails 这个托管 MCP 服务器可以用你的 Onet 密码，通过 IMAP 连接 imap.poczta.onet.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端读取、搜索、发送并整理邮件。mcpemails 上一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Onet 邮箱，而且自 2026 年 3 月 31 日起，任何其他东西也无法连接免费 Onet 账户。Onet 为所有用户停用了 POP3，并将 IMAP 纳入付费邮箱套餐，因此免费账户现在只能使用网页邮箱和手机 App。在付费套餐或保留原有权益的永久账户上，MCPEmails 这个托管 MCP 服务器可以用你的 Onet 密码，通过 IMAP 连接 imap.poczta.onet.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端读取、搜索、发送并整理邮件。MCPEmails 上一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "需要付费 Onet 邮箱套餐",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,7 +44,7 @@
       "p": "Onet 不为邮件客户端签发应用专用密码；你用 Onet 账户密码和完整地址认证。如果你正在从旧客户端迁移设置，不要把 POP3 服务器带过来。POP3 是被直接停用而不是逐步淘汰，所以 995 端口上已不会有任何响应。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@onet.pl）并输入密码。Onet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用 Onet Poczta 吗？",
-      "a": "只有在账户拥有 IMAP 时才可以，自 2026 年 3 月起，这意味着付费 Onet 邮箱套餐或保留原有权益的永久账户。满足这一条件后，将 mcpemails 这样的 MCP 服务器指向该邮箱，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "只有在账户拥有 IMAP 时才可以，自 2026 年 3 月起，这意味着付费 Onet 邮箱套餐或保留原有权益的永久账户。满足这一条件后，将 MCPEmails 这样的 MCP 服务器指向该邮箱，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Onet 的 IMAP 和 SMTP 设置是什么？",

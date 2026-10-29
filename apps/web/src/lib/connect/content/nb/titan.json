@@ -23,7 +23,7 @@
     "titleLine1": "Koble Titan Email til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Titan-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Titan Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.titan.email port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Titan avviser alle tredjepartsklienter til du slår på Enable Titan on Other Apps i webmail-innstillingene, og en postkasse med tofaktorautentisering trenger et Titan-programpassord i stedet for det vanlige. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke Titan Email på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.titan.email port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Titan avviser alle tredjepartsklienter til du slår på Enable Titan on Other Apps i webmail-innstillingene, og en postkasse med tofaktorautentisering trenger et Titan-programpassord i stedet for det vanlige. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Tredjepartstilgang må slås på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -34,7 +34,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Det kreves ikke kort, og gratisplanen kobler til én innboks så lenge du vil ha den."
     },
     {
@@ -42,8 +42,8 @@
       "p": "Logg inn i Titan-webmail på app.titan.email, klikk ikonet <b>Settings</b> øverst til høyre, og klikk <b>Enable Titan on Other Apps</b>. En kort omvisning åpnes; klikk knappen igjen for å bekrefte. Mangler den oppføringen og du ser <b>Configure 3rd party apps</b> i stedet, er tredjepartstilgang allerede på for postkassen."
     },
     {
-      "h": "Bekreft vertsnavnene, og lim så alt inn i mcpemails",
-      "p": "De fleste Titan-postkasser bruker vertene som er forhåndsutfylt ovenfor. Administreres domenet ditt gjennom GoDaddy, dokumenterer GoDaddy i stedet <code>imap.secureserver.net</code> på 993 og <code>smtpout.secureserver.net</code> på 465. Kjøpte du Titan fra Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central, dokumenterer Titan <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Velg IMAP / SMTP i mcpemails, skriv inn hele Titan-adressen din og passordet."
+      "h": "Bekreft vertsnavnene, og lim så alt inn i MCPEmails",
+      "p": "De fleste Titan-postkasser bruker vertene som er forhåndsutfylt ovenfor. Administreres domenet ditt gjennom GoDaddy, dokumenterer GoDaddy i stedet <code>imap.secureserver.net</code> på 993 og <code>smtpout.secureserver.net</code> på 465. Kjøpte du Titan fra Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central, dokumenterer Titan <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Velg IMAP / SMTP i MCPEmails, skriv inn hele Titan-adressen din og passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -65,7 +65,7 @@
     },
     {
       "h": "Titans IMAP-server er uvanlig naken, og det endrer oppførselen",
-      "p": "Titans funksjonsbanner annonserer lite utover IMAP4rev1, AUTH=PLAIN og SASL-IR. Den tilbyr ikke MOVE, så flytting av en melding blir en kopi, et flagg og en expunge i stedet for én atomisk kommando, og en avbrutt flytting kan etterlate originalen. Den tilbyr ikke IDLE, så ingen klient kan holde en tilkobling åpen og vente på ny e-post; mcpemails henter direkte per forespørsel, men en skrivebordsklient på samme postkasse vil polle. UIDPLUS og SPECIAL-USE mangler også, og derfor matches mapper her etter navn."
+      "p": "Titans funksjonsbanner annonserer lite utover IMAP4rev1, AUTH=PLAIN og SASL-IR. Den tilbyr ikke MOVE, så flytting av en melding blir en kopi, et flagg og en expunge i stedet for én atomisk kommando, og en avbrutt flytting kan etterlate originalen. Den tilbyr ikke IDLE, så ingen klient kan holde en tilkobling åpen og vente på ny e-post; MCPEmails henter direkte per forespørsel, men en skrivebordsklient på samme postkasse vil polle. UIDPLUS og SPECIAL-USE mangler også, og derfor matches mapper her etter navn."
     }
   ],
   "limits": [
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Titan Email?",
-      "a": "Ikke direkte. Claude har ingen innebygd Titan-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som mcpemails til Titan-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og alle andre MCP-klienter i stedet for bare i én app."
+      "a": "Ikke direkte. Claude har ingen innebygd Titan-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som MCPEmails til Titan-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og alle andre MCP-klienter i stedet for bare i én app."
     },
     {
       "q": "Hvordan vet jeg om postkassen min faktisk er Titan?",

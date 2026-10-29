@@ -98,6 +98,9 @@ export function relativeExpiry(iso: string | null | undefined): string {
   if (ms <= 0) return "expired";
   const min = Math.round(ms / 60000);
   if (min < 60) return `expires in ${min} min`;
+  // 60 to 119 min: rounding to whole hours would call 110 minutes "1h", and a
+  // 60-minute plan (subscriptions) spends its whole first hour in this band.
+  if (min < 120) return `expires in 1h${min > 60 ? ` ${min - 60} min` : ""}`;
   const hours = Math.round(min / 60);
   if (hours < 48) return `expires in ${hours}h`;
   return `expires ${formatDate(iso)}`;
@@ -346,6 +349,111 @@ export function splitBody(text: string): SplitBody {
 export function joinBody(parts: SplitBody): string {
   if (parts.separator === null || parts.signature === null) return parts.message;
   return parts.message + parts.separator + parts.signature;
+}
+
+// ---------------------------------------------------------------------------
+// The quoted original of a reply (2026-10-17)
+// ---------------------------------------------------------------------------
+
+export interface QuotedSplit {
+  /** The person's words and signature: what the editor shows. */
+  head: string;
+  /** The quoted original, from the blank lines above it to the end. */
+  quote: string;
+}
+
+const isBlankLine = (line: string) => line.trim().length === 0;
+
+/**
+ * Split a draft body at the quoted original the server found
+ * (contract.ts#Body.quoted), or null when it found none or the marker does not
+ * describe this text.
+ *
+ * Why: a reply's text is `message, -- , signature, attribution, > lines`, and
+ * `splitBody` takes the LAST `-- ` line, so before this the whole quote was
+ * called the signature: "Asgeir Albretsen + 17 more lines", with the quoted
+ * thread in the signature's Edit box (release review, 2026-10-17).
+ *
+ * `head + quote` is `text` byte for byte, which is the only property a save
+ * depends on: the editor joins the edited head back onto the quote it was
+ * handed, unchanged. The blank lines above the quote, and the line break that
+ * ends the head's last line, belong to the quote, so the head ends where the
+ * person's words do. Same rule as the server's `splitQuotedText`.
+ *
+ * Defensive about `quoted` because it is wire input: anything but a whole
+ * number of lines that the text actually has, followed by something that is
+ * not blank, is treated as no quote at all, which is the old behaviour.
+ */
+export function splitQuote(text: string, quoted: unknown): QuotedSplit | null {
+  if (!quoted || typeof quoted !== "object") return null;
+  const line = (quoted as { line?: unknown }).line;
+  if (typeof line !== "number" || !Number.isInteger(line) || line < 0) return null;
+  let at = 0;
+  for (let i = 0; i < line; i++) {
+    const nl = text.indexOf("\n", at);
+    if (nl === -1) return null;
+    at = nl + 1;
+  }
+  if (text.slice(at).trim().length === 0) return null;
+  while (at > 0) {
+    const prevEnd = at - 1;
+    const prevStart = text.lastIndexOf("\n", prevEnd - 1) + 1;
+    if (!isBlankLine(text.slice(prevStart, prevEnd))) break;
+    at = prevStart;
+  }
+  if (at > 0 && text[at - 1] === "\n") at -= text[at - 2] === "\r" ? 2 : 1;
+  return { head: text.slice(0, at), quote: text.slice(at) };
+}
+
+/** The first non-empty line of a text, trimmed, or null. */
+export function firstLine(text: string): string | null {
+  return text.split(/\r\n|\n|\r/).map((l) => l.trim()).find((l) => l.length > 0) ?? null;
+}
+
+/**
+ * The quote's collapsed line: its attribution ("On ..., Dana wrote:") when it
+ * opens with one, else a plain label. Never a `>` line out of context.
+ */
+export function quotePreview(quote: string): string {
+  const first = firstLine(quote);
+  if (!first || first.startsWith(">") || /^_+$/.test(first)) return "Earlier message";
+  return first;
+}
+
+/**
+ * The opened quote: the quote without its leading blank lines, and without its
+ * attribution line when the collapsed row already shows it ("On ..., Dana
+ * wrote:" read twice, one under the other; live re-test, 2026-10-17). Only a
+ * line ending in ":" is dropped: Outlook's "From: Dana" opens a header block
+ * that reads wrong without its first line.
+ */
+export function quoteBody(quote: string): string {
+  const text = quote.replace(/^(?:[ \t]*\r?\n)+/, "");
+  const preview = quotePreview(quote);
+  const nl = text.search(/\r?\n/);
+  const first = (nl === -1 ? text : text.slice(0, nl)).trim();
+  if (first !== preview || !first.endsWith(":") || nl === -1) return text;
+  const rest = text.slice(nl).replace(/^(?:[ \t]*\r?\n)+/, "");
+  return rest.length > 0 ? rest : text;
+}
+
+/**
+ * True when the message already signs off with the name the signature starts
+ * with: "Best regards,\nAsgeir" over a signature that opens "Asgeir
+ * Albretsen". One of the last two non-empty lines, short enough to be a
+ * sign-off, equal to the signature's first line or the start of it (whole
+ * words). A hint, so it errs toward silence.
+ */
+export function repeatsSignOff(message: string, signatureFirstLine: string | null): boolean {
+  if (!signatureFirstLine) return false;
+  const clean = (s: string) => s.trim().toLowerCase().replace(/[\s,.!;:-]+$/, "");
+  const sig = clean(signatureFirstLine);
+  if (sig.length < 2) return false;
+  const lines = message.split(/\r\n|\n|\r/).filter((l) => l.trim().length > 0).slice(-2);
+  return lines.some((raw) => {
+    const l = clean(raw);
+    return l.length >= 2 && l.length <= 40 && (l === sig || sig.startsWith(`${l} `));
+  });
 }
 
 /**

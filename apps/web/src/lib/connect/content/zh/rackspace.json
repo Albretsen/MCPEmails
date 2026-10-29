@@ -23,7 +23,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Rackspace Email。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
+    "answer": "Claude 无法自行连接 Rackspace Email。MCPEmails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "Rackspace Email 如何连接：IMAP 与邮箱密码",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "获取你的 Rackspace 邮箱密码",
       "p": "在 Cloud Office 控制面板中打开该邮箱并设置其密码。请使用加密主机 secure.emailsrvr.com，而不是未加密的那个。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 Rackspace Email 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace 销售三种不同的邮件产品，只有一种在 emailsrvr 上",
-      "p": "<b>Rackspace Email</b> 是独立的 IMAP 邮箱产品，也是本页介绍的对象。Rackspace 还销售 <b>Hosted Exchange</b>（在 Rackspace 自己的基础设施上运行 Exchange），并转售 <b>Microsoft 365</b>，其邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理。只有 Rackspace Email 在 <code>secure.emailsrvr.com</code> 上响应。Microsoft 365 邮箱请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接；可能需要 IT 管理员先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。如果你的网页邮箱是 Outlook 网页版，那就是 Microsoft 的产品。"
+      "p": "<b>Rackspace Email</b> 是独立的 IMAP 邮箱产品，也是本页介绍的对象。Rackspace 还销售 <b>Hosted Exchange</b>（在 Rackspace 自己的基础设施上运行 Exchange），并转售 <b>Microsoft 365</b>，其邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理。只有 Rackspace Email 在 <code>secure.emailsrvr.com</code> 上响应。Microsoft 365 邮箱请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接；可能需要 IT 管理员先批准一次 MCPEmails，控制台会给你一个审批链接，供你发给管理员。如果你的网页邮箱是 Outlook 网页版，那就是 Microsoft 的产品。"
     },
     {
       "h": "你连接的是代理，看到的能力也是代理的",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用 Rackspace Email 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Rackspace 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且由于使用的是标准 IMAP，同一个邮箱在 Cursor、ChatGPT 和其他 MCP 客户端中同样可用。"
+      "a": "不能单独使用。Claude 没有内置的 Rackspace 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且由于使用的是标准 IMAP，同一个邮箱在 Cursor、ChatGPT 和其他 MCP 客户端中同样可用。"
     },
     {
       "q": "Rackspace Email 的 IMAP 和 SMTP 设置是什么？",

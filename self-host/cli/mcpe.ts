@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-net --allow-env
 // ============================================================
-// mcpe, MCP Emails self-host CLI
+// mcpe, MCPEmails self-host CLI
 // ============================================================
 // Subcommands:
 //   gen-secrets                 Print a ready-to-use .env (run once, on the host)
@@ -161,7 +161,7 @@ async function cmdGenSecrets() {
   const anonJwt = await signJwt(jwtSecret, { role: "anon", iss: "mcpemails-selfhost", iat });
 
   const env = `# ============================================================
-# MCP Emails self-host, generated secrets. KEEP THIS FILE PRIVATE.
+# MCPEmails self-host, generated secrets. KEEP THIS FILE PRIVATE.
 # Regenerating ENCRYPTION_KEY makes already-stored credentials undecryptable.
 # ============================================================
 
@@ -400,7 +400,7 @@ switch (cmd) {
     await cmdRevokeKey(rest[0]);
     break;
   default:
-    console.log(`mcpe, MCP Emails self-host CLI
+    console.log(`mcpe, MCPEmails self-host CLI
 
 Usage: mcpe <command> [flags]
 

@@ -10,6 +10,7 @@ import {
 } from '@/i18n/seo';
 import * as C from '@/lib/compare/email-mcp-servers.mjs';
 import EmailMcpServersView from '../../../components/marketing/EmailMcpServersView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /best-email-mcp-servers: the ranked field of MCP email servers.
@@ -17,8 +18,8 @@ import EmailMcpServersView from '../../../components/marketing/EmailMcpServersVi
  * Sibling of /native-connectors-vs-mcp, which answers the other axis (built-in
  * connectors inside one vendor's app). The two link to each other rather than
  * restating each other, and neither may repeat the "native connectors are
- * draft-only" claim: Anthropic shipped native Gmail send, reply and forward on
- * 18 August 2026.
+ * draft-only" claim: Claude's Gmail connector sends, replies and forwards (see
+ * rule 4 in src/lib/compare/email-mcp-servers.mjs).
  *
  * Why this slug
  * -------------
@@ -49,6 +50,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = C.meta;
   return {
@@ -58,14 +60,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'article',
       url: localePath(locale, C.PATH),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -74,6 +76,7 @@ export async function generateMetadata({ params }) {
 
 export default async function BestEmailMcpServersPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) notFound();
   setRequestLocale(locale);
 
@@ -83,10 +86,19 @@ export default async function BestEmailMcpServersPage({ params }) {
     title: C.meta.title,
     description: C.meta.description,
   });
+  // Dates go on the page's own WebPage node, from the same constants the
+  // visible "Updated" line and the sitemap read. Answer engines weigh freshness
+  // on comparison pages, and an undated comparison reads as an old one.
+  const [webPage, ...restOfBase] = base['@graph'];
   const jsonLd = {
     ...base,
     '@graph': [
-      ...base['@graph'],
+      {
+        ...webPage,
+        datePublished: C.DATE_PUBLISHED,
+        dateModified: C.PAGE_UPDATED,
+      },
+      ...restOfBase,
       // The ranking, as data. Position here must match the order rendered on
       // the page; an ItemList that disagrees with its own prose is a quality
       // signal pointed the wrong way. Our own entry is an internal URL, the
@@ -141,7 +153,7 @@ export default async function BestEmailMcpServersPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <EmailMcpServersView />
+      <EmailMcpServersView locales={LOCALES} />
     </>
   );
 }

@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyze, importSpecifiers, translationUses, literalKeys } from './analyze.mjs';
+import { FULL_LOCALES, SCOPED_LOCALES } from '../../src/i18n/locale-policy.mjs';
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -36,33 +37,61 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.ok(real.routes.length >= 50, `only ${real.routes.length} route files found`);
   assert.deepEqual(byFile.get('app/(auth)/login/page.js')?.needs, ['auth']);
   assert.deepEqual(byFile.get('app/signup/page.js')?.needs, ['auth']);
-  assert.deepEqual(byFile.get('app/authorize/page.js')?.needs, ['auth']);
-  assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['dashboard', 'dashboardChrome']);
+  assert.deepEqual(byFile.get('app/authorize/page.js')?.needs, ['auth', 'onboarding']);
+  assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['convert', 'dashboard', 'dashboardChrome']);
   assert.deepEqual(byFile.get('app/[locale]/page.tsx')?.needs, ['compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/pricing/page.js')?.needs, ['compare', 'home', 'pricing']);
-  assert.deepEqual(byFile.get('app/[locale]/docs/page.js')?.needs, ['compare', 'docs', 'home']);
+  assert.deepEqual(byFile.get('app/[locale]/docs/(catalogue)/page.js')?.needs, ['compare', 'docs', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/blog/[slug]/page.js')?.needs, ['blog', 'compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/for/founders/page.js')?.needs, ['compare', 'forFounders', 'home']);
   assert.ok(byFile.get('app/dashboard/[[...section]]/page.js').keyCount > 500, 'dashboard literal keys were not collected');
-  assert.deepEqual(real.locales.slice().sort(), ['en', 'es', 'fr', 'nb', 'zh']);
+  assert.deepEqual(real.locales.slice().sort(), ['de', 'en', 'es', 'fr', 'nb', 'zh']);
+});
+
+test('the app: every full locale is required, the frozen ones are not', () => {
+  // The locale policy (src/i18n/locale-policy.mjs): en, nb, es and fr must hold
+  // every key a route reads; zh falls back to English at runtime and may lag.
+  assert.deepEqual(real.requiredLocales.slice().sort(), [...FULL_LOCALES, ...SCOPED_LOCALES].sort());
 });
 
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {
   // The fact that makes it safe to stop sending marketing messages to the app
   // and auth routes: their client code reads only what AppLocaleProvider
-  // bundles, or nothing at all.
+  // bundles (AuthLocaleProvider's set is a subset of it), or, under /onboarding,
+  // what OnboardingLocaleProvider bundles, or nothing at all.
+  const appSide = new Set([...real.appNamespaces, ...(real.onboardingNamespaces ?? [])]);
   const offenders = real.routes
     .filter((r) => !r.file.startsWith('app/[locale]/'))
-    .filter((r) => r.needs.some((namespace) => !real.appNamespaces.includes(namespace)))
+    .filter((r) => r.needs.some((namespace) => !appSide.has(namespace)))
     .map((r) => `${r.file} needs [${r.needs}]`);
   assert.deepEqual(offenders, []);
 });
 
-test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider', () => {
+test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider, AuthLocaleProvider, OnboardingLocaleProvider or AuthorizeLocaleProvider', () => {
   const offenders = real.routes
-    .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0 && r.provider !== 'AppLocaleProvider')
+    .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0)
+    .filter((r) => !['AppLocaleProvider', 'AuthLocaleProvider', 'OnboardingLocaleProvider', 'AuthorizeLocaleProvider'].includes(r.provider))
     .map((r) => `${r.file} (${r.provider})`);
   assert.deepEqual(offenders, []);
+});
+
+test('the app: sign-up, login and OAuth consent get the auth-only provider, the dashboard the full one', () => {
+  // The auth screens are the first thing a new visitor downloads; the two
+  // dashboard namespaces (~82 KB a language) stay out of them.
+  const byFile = new Map(real.routes.map((r) => [r.file, r]));
+  assert.deepEqual(real.authNamespaces, ['auth', 'common']);
+  for (const file of ['app/signup/page.js', 'app/(auth)/login/page.js', 'app/(auth)/forgot-password/page.js', 'app/invite/[token]/page.js']) {
+    assert.equal(byFile.get(file)?.provider, 'AuthLocaleProvider', file);
+  }
+  // OAuth consent adds `onboarding` for the inbox step a connector-first user
+  // in the new flow sees there (components/auth/AuthorizeInboxStep.jsx), and
+  // still none of the dashboard's copy.
+  assert.equal(byFile.get('app/authorize/page.js')?.provider, 'AuthorizeLocaleProvider');
+  assert.deepEqual(real.authorizeNamespaces, ['auth', 'common', 'onboarding']);
+  assert.equal(byFile.get('app/dashboard/[[...section]]/page.js')?.provider, 'AppLocaleProvider');
+  // /onboarding has its own budget: none of the dashboard's copy.
+  assert.equal(byFile.get('app/onboarding/page.tsx')?.provider, 'OnboardingLocaleProvider');
+  assert.deepEqual(real.onboardingNamespaces, ['common', 'convert', 'onboarding']);
 });
 
 // ---------------------------------------------------------------------------
@@ -91,10 +120,10 @@ function makeApp(files) {
   return root;
 }
 
-function run(files) {
+function run(files, options) {
   const root = makeApp(files);
   try {
-    return analyze(root);
+    return analyze(root, options);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -189,6 +218,28 @@ test('synthetic: a literal key missing from one locale is reported', () => {
   });
   const missing = result.violations.filter((v) => v.type === 'missing-key');
   assert.deepEqual(missing.map((v) => `${v.locale}:${v.key}`).sort(), ['en:home.hero.missing', 'nb:home.hero.missing']);
+});
+
+test('synthetic: a key missing only in a frozen locale is not reported, one missing in a full locale still is', () => {
+  const files = {
+    'app/layout.js': ROOT_ALL,
+    'app/page.js': "import A from '../components/A';\nexport default function Page() { return <A />; }\n",
+    'components/A.jsx': "'use client';\nimport { useTranslations } from 'next-intl';\nexport default function A() { const t = useTranslations('home'); return <>{t('hero.title')}{t('nav')}</>; }\n",
+    // zh has only the hero, and no pricing or docs file at all.
+    'messages/zh/home.json': JSON.stringify({ hero: { title: 'Ni hao' } }),
+    // nb loses `nav`.
+    'messages/nb/home.json': JSON.stringify({ hero: { title: 'Hei' } }),
+  };
+  const frozen = run(files, { frozenLocales: ['zh'] });
+  assert.deepEqual(frozen.requiredLocales.slice().sort(), ['en', 'nb']);
+  assert.deepEqual(frozen.violations.map((v) => `${v.type}:${v.locale ?? ''}:${v.key ?? ''}`), ['missing-key:nb:home.nav']);
+
+  // The same files with nothing frozen: zh's gaps are violations again.
+  const strict = run(files, { frozenLocales: [] });
+  assert.deepEqual(
+    strict.violations.map((v) => `${v.type}:${v.locale ?? ''}:${v.key ?? ''}`).sort(),
+    ['missing-file::', 'missing-file::', 'missing-key:nb:home.nav', 'missing-key:zh:home.nav'],
+  );
 });
 
 test('parsing helpers', () => {

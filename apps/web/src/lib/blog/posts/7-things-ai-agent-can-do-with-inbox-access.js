@@ -14,7 +14,7 @@ const post = {
 
 Every example below maps to real MCP tools you can call right now. The tools are the same whether you connect Gmail, Outlook, iCloud, Fastmail, or a generic IMAP box. If you haven't wired an agent to your inbox yet, the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) covers the setup; the [2-minute connect walkthrough](/blog/connect-email-to-ai-agent-under-2-minutes) is the fast path.
 
-One honest caveat up front, because it shapes half of this list: **MCP Emails is poll-based, not push.** There are no webhooks and no server-initiated events. The agent doesn't get pinged when mail arrives. It checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. I'll flag where polling matters.
+One honest caveat up front, because it shapes half of this list: **MCPEmails is poll-based, not push.** There are no webhooks and no server-initiated events. The agent doesn't get pinged when mail arrives. It checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. I'll flag where polling matters.
 
 ## The toolset, in one breath
 
@@ -36,7 +36,7 @@ You get added to a 40-message thread at message 38. Nobody is going to read up. 
 
 > Read the thread with subject "Q3 vendor migration" and tell me where it actually landed: what was decided, who owns what, and any open question I need to answer.
 
-\`email_read\` with action search finds the thread (it uses your provider's native search syntax, so Gmail operators, Outlook KQL, and IMAP text search all work), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
+\`email_read\` with action search finds the thread (it takes structured fields such as sender, subject, text and date range, and MCPEmails turns them into each provider's own search), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
 
 ### 3. Draft replies in your voice
 
@@ -80,7 +80,7 @@ This stitches the others together: \`email_read\` (action search, then list) to 
 
 ## What this costs and where the limits sit
 
-All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Personal ($9/month) connects up to three inboxes and raises the burst limit to 120 requests per minute; Pro ($15/month) connects every mailbox you own and raises it to 300; Team ($79/month) adds members with roles, a separate workspace per client, SSO, and 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal at $9/month, and Pro only once you pass three inboxes.
+All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Personal ($9/month) connects up to three inboxes and raises the burst limit to 120 requests per minute; Pro ($15/month) connects up to 10 and raises it to 300; Business ($39/month) includes 10 mailboxes, adds members with roles and a separate workspace per client, and raises it to 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal at $9/month, and Pro only once you pass three inboxes.
 
 When you do hit a limit, the server returns a retryable error with \`data.retry_after\` in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send, because a retry on a timeout can mean two copies of the same message land in someone's inbox.
 

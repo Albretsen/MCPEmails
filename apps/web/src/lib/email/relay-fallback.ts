@@ -36,11 +36,13 @@
  * resolve.
  */
 
+import { isIP } from 'net';
 import type * as net from 'net';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import {
   isRelayOnlyMailHost,
+  MailRelayTargetRefusedError,
   MailRelayUnavailableError,
   openMailRelayTunnel,
   type MailRelayConfig,
@@ -62,6 +64,27 @@ export const LEARNED_RELAY_MAX_AGE_DAYS = 30;
 
 /** How long this process trusts its copy of the learned list. */
 const LEARNED_RELAY_REFRESH_MS = 60_000;
+
+/**
+ * Ceiling on each registry call (list read, learn, count). Mirrors
+ * LEARNED_RELAY_LOAD_TIMEOUT_MS on the edge. The connect form's two protocols
+ * can already spend about 75 seconds of a 90-second route on mail servers, so
+ * a slow database must not be allowed to take the rest.
+ */
+export const RELAY_REGISTRY_TIMEOUT_MS = 1_500;
+
+/** `promise`, or a rejection after `ms`. The losing promise is left to settle on its own. */
+async function bounded<T>(promise: PromiseLike<T>, ms: number, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${what} timed out after ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(promise), timeout]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
 
 /**
  * The transports the relay can carry, per protocol.
@@ -159,10 +182,14 @@ export async function refreshLearnedRelayHosts(db: AnyClient, now: number = Date
   learnedAt = now;
   try {
     const since = new Date(now - LEARNED_RELAY_MAX_AGE_DAYS * 86_400_000).toISOString();
-    const { data, error } = await db
-      .from('mail_relay_hosts')
-      .select('host, protocol')
-      .or(`source.eq.manual,last_learned_at.gt.${since}`);
+    const { data, error } = await bounded(
+      db
+        .from('mail_relay_hosts')
+        .select('host, protocol')
+        .or(`source.eq.manual,last_learned_at.gt.${since}`),
+      RELAY_REGISTRY_TIMEOUT_MS,
+      'learned-host read'
+    );
     if (error) throw new Error(error.message);
     const next: Record<RelayProtocol, Set<string>> = { imap: new Set(), smtp: new Set() };
     for (const row of (data ?? []) as Array<{ host: string; protocol: string }>) {
@@ -197,12 +224,16 @@ export async function learnRelayHost(
 ): Promise<boolean> {
   const target = normalizeHost(host);
   try {
-    const { data, error } = await db.rpc('learn_mail_relay_host', {
-      p_host: target,
-      p_protocol: protocol,
-      p_reason: reason.slice(0, 300),
-      p_runtime: 'web',
-    });
+    const { data, error } = await bounded(
+      db.rpc('learn_mail_relay_host', {
+        p_host: target,
+        p_protocol: protocol,
+        p_reason: reason.slice(0, 300),
+        p_runtime: 'web',
+      }),
+      RELAY_REGISTRY_TIMEOUT_MS,
+      'learn'
+    );
     if (error) throw new Error(error.message);
     const accepted = data === true;
     if (accepted) learned[protocol].add(target);
@@ -219,15 +250,19 @@ export async function recordRelayUse(
   event: { protocol: RelayProtocol; host: string; route: RelayRoute; outcome: RelayOutcome; ms: number; detail?: string | null }
 ): Promise<void> {
   try {
-    const { error } = await db.rpc('record_mail_relay_use', {
-      p_runtime: 'web',
-      p_protocol: event.protocol,
-      p_host: normalizeHost(event.host),
-      p_route: event.route,
-      p_outcome: event.outcome,
-      p_ms: Math.max(0, Math.round(event.ms)),
-      p_detail: event.detail ? String(event.detail).replace(/\s+/g, ' ').slice(0, 200) : undefined,
-    });
+    const { error } = await bounded(
+      db.rpc('record_mail_relay_use', {
+        p_runtime: 'web',
+        p_protocol: event.protocol,
+        p_host: normalizeHost(event.host),
+        p_route: event.route,
+        p_outcome: event.outcome,
+        p_ms: Math.max(0, Math.round(event.ms)),
+        p_detail: event.detail ? String(event.detail).replace(/\s+/g, ' ').slice(0, 200) : undefined,
+      }),
+      RELAY_REGISTRY_TIMEOUT_MS,
+      'count'
+    );
     if (error) throw new Error(error.message);
   } catch (err) {
     console.warn('[relay] could not record use:', err instanceof Error ? err.message : String(err));
@@ -248,6 +283,13 @@ export interface RelayDetection<R> {
   detection: TransportAttemptOutcome<R>;
   /** How the winning (or reported) attempt was reached; null for a direct dial. */
   route: RelayRoute | null;
+  /**
+   * True when a relayed attempt also reached no usable answer from the host
+   * (the relay itself was up). The connect panel uses it to say plainly that
+   * the mail server does not accept connections from our servers. Never true
+   * for a relay that was down, or when the relay was never tried.
+   */
+  relayAlsoFailed?: boolean;
 }
 
 /**
@@ -295,7 +337,10 @@ export async function detectWithRelay<R extends DirectFailure & { ok: boolean }>
           try {
             return await openTunnel(config, host, candidate.port);
           } catch (err) {
-            if (err instanceof MailRelayUnavailableError) relayDown = err.message;
+            // A relay that refused this one target is up; see MailRelayTargetRefusedError.
+            if (err instanceof MailRelayUnavailableError && !(err instanceof MailRelayTargetRefusedError)) {
+              relayDown = err.message;
+            }
             throw err;
           }
         })
@@ -317,13 +362,21 @@ export async function detectWithRelay<R extends DirectFailure & { ok: boolean }>
   const knownRoute = relay ? relayRouteForHost(host, protocol) : null;
   if (relay && knownRoute) {
     const relayed = await viaRelay(relay, knownRoute);
-    if (!relayed.relayDown || knownRoute === 'listed') return { detection: relayed.detection, route: knownRoute };
+    if (!relayed.relayDown || knownRoute === 'listed') {
+      const failedThere =
+        !relayed.relayDown &&
+        !relayed.detection.result.ok &&
+        String(relayed.detection.result.code).toUpperCase() !== 'AUTH_FAILED';
+      return { detection: relayed.detection, route: knownRoute, ...(failedThere ? { relayAlsoFailed: true } : {}) };
+    }
   }
 
   const direct = await detectTransport<R>(transportPlan(protocol, requested), (candidate, timeoutMs) =>
     opts.attempt(candidate, timeoutMs, undefined)
   );
   if (direct.result.ok || knownRoute || !relay) return { detection: direct, route: null };
+  // The relay's filter refuses IP literals, so the retry could only fail.
+  if (isIP(normalizeHost(host).replace(/^\[|\]$/g, '')) !== 0) return { detection: direct, route: null };
   if (!shouldTryRelayAfter(direct.result, opts.authReasonOf(direct.result))) return { detection: direct, route: null };
 
   const retried = await viaRelay(relay, 'fallback');
@@ -334,5 +387,5 @@ export async function detectWithRelay<R extends DirectFailure & { ok: boolean }>
   if (!retried.relayDown && String(retried.detection.result.code).toUpperCase() === 'AUTH_FAILED') {
     return { detection: retried.detection, route: 'fallback' };
   }
-  return { detection: direct, route: null };
+  return { detection: direct, route: null, ...(retried.relayDown ? {} : { relayAlsoFailed: true }) };
 }

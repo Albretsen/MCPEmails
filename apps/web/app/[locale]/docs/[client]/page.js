@@ -5,7 +5,9 @@ import { getClient, clientLocales } from '@/lib/clients/clients.mjs';
 import { getClientContent, clientParams } from '@/lib/clients/content.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
+import { getPreferredClient } from '@/lib/clients/preferred-request';
 import ClientSetupView from '../../../../components/marketing/ClientSetupView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * One setup page per MCP client, at /docs/<slug>.
@@ -30,6 +32,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale, client: slug } = await params;
+  requireLocale(locale);
   const client = getClient(slug);
   const content = await getClientContent(locale, slug);
   if (!client || !content) return {};
@@ -42,14 +45,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, path),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -58,6 +61,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ClientSetupPage({ params }) {
   const { locale, client: slug } = await params;
+  requireLocale(locale);
   const client = getClient(slug);
   if (!client) notFound();
   setRequestLocale(locale);
@@ -86,7 +90,7 @@ export default async function ClientSetupPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ClientSetupView locale={locale} client={client} content={content} />
+      <ClientSetupView locale={locale} client={client} content={content} preferred={await getPreferredClient()} />
     </>
   );
 }

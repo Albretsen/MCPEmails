@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "自托管 MCP Emails",
+    "title": "自托管 MCPEmails",
     "description": "在你自己的机器上运行驱动 mcpemails.com 的同一个 MCP 邮件服务器。采用 AGPL-3.0 开源，凭据用只有你持有的密钥加密，邮件实时获取、绝不存储。"
   },
   "hero": {
     "eyebrow": "开源，AGPL-3.0",
-    "title": "自己运行 MCP Emails。",
+    "title": "自己运行 MCPEmails。",
     "lead": "驱动 mcpemails.com 的同一个 MCP 服务器，运行在你自己的机器上，对接你自己的数据库。你的邮箱凭据绝不会离开你所掌控的基础设施。它们用只有你持有的密钥加密，仅在工具调用需要时才在你的容器内解密。"
   },
   "proof": {
@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "自托管 vs 托管",
-    "intro": "完整的 MCP 服务器和全部 23 个工具在两者中都有。自托管以放弃托管的便利换取完全的掌控。",
+    "intro": "完整的 MCP 服务器及其邮件工具在两者中都有。自托管以放弃托管的便利换取完全的掌控。",
     "thFeature": "",
     "thSelf": "自托管",
     "thHosted": "托管",
@@ -28,10 +28,10 @@
       {
         "feature": "价格",
         "self": "免费，自行运行",
-        "hosted": "免费、$9、$15 或 $79"
+        "hosted": "免费、$9、$15 或 $39"
       },
       {
-        "feature": "MCP 服务器和全部 23 个工具",
+        "feature": "MCP 服务器及其邮件工具",
         "self": "有",
         "hosted": "有"
       },
@@ -51,9 +51,9 @@
         "hosted": "是"
       },
       {
-        "feature": "Gmail / Outlook 登录（OAuth）",
+        "feature": "Outlook 登录（OAuth）",
         "self": "不含",
-        "hosted": "Gmail：有；Outlook：有（工作账户可能需要 IT 管理员批准）"
+        "hosted": "有（工作账户可能需要 IT 管理员批准）"
       },
       {
         "feature": "网页控制台（连接、密钥、活动）",
@@ -71,14 +71,14 @@
         "hosted": "已托管"
       },
       {
-        "feature": "团队工作区、角色、SSO、审计日志",
+        "feature": "成员、角色和多个工作区",
         "self": "不含",
-        "hosted": "Team 套餐"
+        "hosted": "Business 套餐"
       },
       {
         "feature": "支持",
         "self": "社区和 GitHub",
-        "hosted": "邮件和优先支持"
+        "hosted": "付费套餐提供邮件支持"
       },
       {
         "feature": "配置",

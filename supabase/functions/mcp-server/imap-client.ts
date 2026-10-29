@@ -31,7 +31,9 @@ import {
   connectThroughRelay,
   guardRelayTarget,
   imapRelayFor,
+  isIpLiteralHost,
   noteRelayFailure,
+  relayFailureIsRelayDown,
   relayForFallback,
   relayOnlyHost,
   relayConfigured,
@@ -50,13 +52,14 @@ import {
 } from "./relay-registry.ts";
 import {
   firstPartyContext,
+  summaryPreviewBytes,
   summaryPreviewItem,
   summaryReferencesItem,
   wantsThreadHeaders,
 } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
-import { mcpPooledConnect } from "./mcp-imap-pool.ts";
+import { imapSelectCommand } from "./imap-read-only.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
@@ -112,13 +115,33 @@ export function shouldRetryImapThroughRelay(host: string, err: unknown): boolean
   if (!relayForFallback()) return false;
   if (relayRouteFor(host, "imap") !== null) return false;
   if (relayFallbackCoolingDown(host, "imap")) return false;
+  // The relay's filter refuses IP literals, so the retry could only fail.
+  if (isIpLiteralHost(host)) return false;
   if (err instanceof ImapConnectionLimitError || err instanceof MailHostBlockedError) return false;
   const text = err instanceof Error ? err.message : String(err ?? "");
   if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
   if (err instanceof ImapAuthError) return isOriginRefusalText(text);
+  // After the password went out, a server that hangs up (exchange.ionos.eu
+  // drops the connection on a wrong password, 2026-10-15) has answered on the
+  // credential, and a retry would be a second failed sign-in against the
+  // account. A server that merely went quiet has not answered at all, so a
+  // read timeout stays retryable.
+  if (failedAfterPassword(err)) return /IMAP read timeout/.test(text);
   // A name that does not resolve fails identically from anywhere.
   if (/failed to lookup|dns error|name or service not known|no such host|NXDOMAIN/i.test(text)) return false;
   return true;
+}
+
+/** Connect failures that happened after the password exchange began. */
+const afterPassword = new WeakSet<object>();
+
+export function markAfterPassword(err: unknown): void {
+  if (typeof err === "object" && err !== null) afterPassword.add(err);
+}
+
+/** True when `err` came from a connect attempt whose password had already gone out. */
+export function failedAfterPassword(err: unknown): boolean {
+  return typeof err === "object" && err !== null && afterPassword.has(err);
 }
 
 /**
@@ -324,6 +347,16 @@ export interface ImapMessageSummary {
   gmLabels?: string[];
 }
 
+/** One row of {@link ImapClient.fetchHeaderFields}. */
+export interface ImapHeaderFieldsRow {
+  uid: number;
+  flags: string[];
+  /** INTERNALDATE as ISO 8601, or null when the server sent none we can read. */
+  internalDate: string | null;
+  /** The raw `Name: value` lines (folded as sent), 8-bit octets decoded. "" when absent. */
+  headers: string;
+}
+
 export interface ImapRawMessage {
   raw: string;
   flags: string[];
@@ -356,6 +389,13 @@ export interface ImapMailboxCounts {
 
 const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
+
+/**
+ * Budget for the direct TCP connect alone. A healthy mail host answers a SYN in
+ * well under a second from AWS; ten seconds leaves room for a slow one and
+ * still leaves the relay retry time inside the tool call. See dialDirect.
+ */
+export const IMAP_TCP_CONNECT_TIMEOUT_MS = 10_000;
 
 /**
  * How many STATUS commands go out in one write when a folder listing asks for
@@ -539,6 +579,12 @@ export class ImapClient {
    */
   private eofReached = false;
   /**
+   * Set once the password exchange has started on this connection. A failure
+   * after that may be the server's verdict on the credential, so it is not
+   * retried through the relay (see shouldRetryImapThroughRelay).
+   */
+  passwordSent = false;
+  /**
    * Set by {@link destroy}. Distinct from `eofReached` (which means the peer
    * hung up) because the two want different words in the error a caller sees,
    * and because it is also the flag that turns the BadResource a mid-flight
@@ -666,9 +712,12 @@ export class ImapClient {
     // request, so there this is one undefined read and the dial below runs
     // exactly as it always has.
     //
-    // MCP tool calls have their own warm pool (mcp-imap-pool.ts), consulted
-    // only when the first-party hook is absent. Outside a tool call it is null.
-    const pooled = firstPartyContext.getStore()?.imapConnect ?? mcpPooledConnect();
+    // There is deliberately no MCP pool here. One shipped 2026-10-15 (PR #116)
+    // and came out: Supabase ran nearly every call in its own isolate, so 5.8%
+    // of calls reused a connection while every idle one held a slot against
+    // Yahoo's 5-connection cap, and one workspace hit 25 connection_limit
+    // errors in two minutes.
+    const pooled = firstPartyContext.getStore()?.imapConnect;
     if (pooled) return await pooled(cfg, () => ImapClient.dial(cfg));
     return await ImapClient.dial(cfg);
   }
@@ -836,12 +885,14 @@ export class ImapClient {
         return { conn: await connectThroughRelay(relay, target), route };
       } catch (err) {
         if (!(err instanceof RelayUnavailableError)) throw err;
-        noteRelayFailure();
+        // A relay that refused this one target is healthy; see RelayTargetRefusedError.
+        const relayDown = relayFailureIsRelayDown(err);
+        if (relayDown) noteRelayFailure();
         recordRelayUse({
           protocol: "imap",
           host: cfg.host,
           route,
-          outcome: "relay_down",
+          outcome: relayDown ? "relay_down" : "host_refused",
           ms: Date.now() - startedMs,
           detail: err.message,
         });
@@ -849,8 +900,40 @@ export class ImapClient {
         console.warn("[mcp-server] relay: imap falling back to direct egress", { host: cfg.host, error: err.message });
       }
     }
-    const conn = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "imap" });
+    const conn = await ImapClient.dialDirect(cfg);
     return { conn, route: null };
+  }
+
+  /**
+   * The direct TCP dial, bounded by {@link IMAP_TCP_CONNECT_TIMEOUT_MS}.
+   *
+   * Deno.connect waits for the operating system's own connect timeout, around
+   * two minutes, and a host that drops our packets would hold the tool call
+   * that long before the relay retry even started. SMTP has bounded its dial
+   * the same way all along (SMTP_TIMEOUT_MS in smtp-client.ts).
+   */
+  private static async dialDirect(cfg: ImapConnectConfig): Promise<Deno.TcpConn> {
+    const dial = connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "imap" });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`IMAP connect to ${cfg.host}:${cfg.port} timed out after ${IMAP_TCP_CONNECT_TIMEOUT_MS}ms`)),
+        IMAP_TCP_CONNECT_TIMEOUT_MS,
+      );
+    });
+    try {
+      return await Promise.race([dial, timeout]);
+    } catch (err) {
+      // A connect that lands after the timeout still owns a socket.
+      dial.then((conn) => {
+        try {
+          conn.close();
+        } catch { /* already closed */ }
+      }).catch(() => {});
+      throw err;
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
   }
 
   /** Everything after the socket: TLS, greeting, STARTTLS, login, ID. */
@@ -896,7 +979,27 @@ export class ImapClient {
     if (timing) timing.tlsMs += authFromMs - tlsFromMs;
 
     const client = new ImapClient(conn);
+    try {
+      return await ImapClient.greetAndLogin(client, conn, cfg, timing, authFromMs);
+    } catch (err) {
+      // Whatever failed, this socket is finished. Closing it matters most for a
+      // read that timed out: left open, the stalled session keeps one of the
+      // account's connection slots (Yahoo allows 5) while the relay retry opens
+      // another.
+      client.close();
+      if (client.passwordSent) markAfterPassword(err);
+      throw err;
+    }
+  }
 
+  /** The talking half of {@link establish}: greeting, STARTTLS, login, ID. */
+  private static async greetAndLogin(
+    client: ImapClient,
+    conn: Deno.TcpConn | Deno.TlsConn,
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+    authFromMs: number,
+  ): Promise<ImapClient> {
     // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)
     // carrying a connection-limit marker means the account is over its cap —
     // retryable. Other non-OK greetings are a protocol error.
@@ -1028,6 +1131,8 @@ export class ImapClient {
     username: string,
     password: string,
   ): Promise<{ resp: { status: "OK" | "NO" | "BAD"; text: string }; sent: string }> {
+    // From here on the server may already be judging the credential.
+    this.passwordSent = true;
     if (mechanism === "LOGIN") {
       // RFC 3501 LOGIN: quoted strings, or synchronizing literals for anything
       // that is not printable ASCII. The line carries the password; it is never
@@ -1115,14 +1220,29 @@ export class ImapClient {
    * Also captures the untagged `* OK [PERMANENTFLAGS (...)]` response code,
    * which is the ONLY way to learn whether this mailbox accepts custom keywords
    * before trying to set one. See {@link permanentFlags}.
+   *
+   * Sent as EXAMINE (the same mailbox, opened read-only) inside a request from
+   * a read-only key; see imap-read-only.ts. The reply has the same shape.
    */
   selectMailbox(mailbox: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       this.lastPermanentFlags = null;
       this.lastExists = null;
-      await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
-      const resp = await this.readTagged(tag);
+      const command = imapSelectCommand();
+      await this.write(`${tag} ${command} ${quoteMailbox(mailbox)}${CRLF}`);
+      let resp = await this.readTagged(tag);
+      // EXAMINE is mandatory in RFC 3501, but a server that answers it BAD
+      // ("unknown command") must not cost a read-only key its reads: open the
+      // mailbox the way it always was. Reads still fetch with BODY.PEEK, so
+      // unread state is kept either way. NO is a real answer about the
+      // mailbox and is classified below exactly as SELECT's would be.
+      if (command === "EXAMINE" && resp.status === "BAD") {
+        console.warn("[imap] EXAMINE refused BAD, falling back to SELECT", { text: resp.text.slice(0, 120) });
+        const retryTag = this.nextTag();
+        await this.write(`${retryTag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
+        resp = await this.readTagged(retryTag);
+      }
       if (resp.status !== "OK") {
         const failure = classifySelectFailure(mailbox, resp.status, resp.text);
         if (failure.kind === "not_found") {
@@ -1467,14 +1587,55 @@ export class ImapClient {
       maxLiteralBytes: options.maxLiteralBytes,
     });
     const summaries: ImapMessageSummary[] = [];
+    const prefixBytes = previewPart === "" ? 0 : summaryPreviewBytes();
+    const cut = new Map<number, PreviewCut>();
     if (resp.status === "OK") {
       for (const line of resp.untagged) {
         if (!/^\* \d+ FETCH /.test(line)) continue;
-        const parsed = parseFetchLine(line, options.includeCc === true);
+        const parsed = parseFetchLine(line, options.includeCc === true, prefixBytes > 0 ? { prefixBytes, cut } : undefined);
         if (parsed) summaries.push(parsed);
       }
     }
+    if (cut.size > 0) await this.extendCutPreviewsUnlocked(summaries, cut, prefixBytes);
     return { status: resp.status, text: resp.text, summaries };
+  }
+
+  /**
+   * The second look a preview gets when the prefix held no text at all.
+   *
+   * An HTML-only newsletter very often opens with 5-30 KB of `<style>`, so its
+   * 2 KB prefix is CSS from end to end and previews as "" (CSS is never shown).
+   * For those rows only, ONE more UID FETCH asks for the octets that follow
+   * the prefix, up to {@link PREVIEW_EXTENDED_BYTES} in all, and the preview is
+   * decoded again from prefix + continuation. Rows whose prefix had text cost
+   * nothing, and a page of them costs one round trip, not one per row: that
+   * is the bound that matters on Yahoo, where a round trip dominates. A row
+   * still empty after it stays "": there is no text early enough to show.
+   *
+   * Failure here never fails the listing. A NO/BAD reply leaves the rows as
+   * they were; a broken connection still throws, as any command would.
+   */
+  private async extendCutPreviewsUnlocked(
+    summaries: ImapMessageSummary[],
+    cut: Map<number, PreviewCut>,
+    prefixBytes: number,
+  ): Promise<void> {
+    const more = PREVIEW_EXTENDED_BYTES - prefixBytes;
+    if (more <= 0) return;
+    const tag = this.nextTag();
+    await this.write(`${tag} UID FETCH ${[...cut.keys()].join(",")} (UID BODY.PEEK[1]<${prefixBytes}.${more}>)${CRLF}`);
+    const resp = await this.readTagged(tag, { maxLiteralBytes: PREVIEW_EXTENDED_BYTES * 2 });
+    if (resp.status !== "OK") return;
+    const byUid = new Map(summaries.map((s) => [s.uid, s]));
+    for (const line of resp.untagged) {
+      if (!/^\* \d+ FETCH /.test(line)) continue;
+      const continuation = parseContinuationLine(line);
+      if (continuation === null) continue;
+      const entry = cut.get(continuation.uid);
+      const summary = byUid.get(continuation.uid);
+      if (!entry || !summary) continue;
+      summary.preview = cleanPreviewFromBodyPart(entry.source + continuation.source, entry.part);
+    }
   }
 
   /**
@@ -1573,6 +1734,47 @@ export class ImapClient {
         const threadId = /\bX-GM-THRID (\d+)/.exec(line)?.[1];
         const messageId = /\bX-GM-MSGID (\d+)/.exec(line)?.[1];
         if (uid && threadId) out.push({ uid: Number(uid), threadId, messageId: messageId ?? "" });
+      }
+      return out;
+    }, "fetch");
+  }
+
+  /**
+   * `UID FETCH <uids> (UID FLAGS INTERNALDATE BODY.PEEK[HEADER.FIELDS (...)])`:
+   * the named header fields of each message, as one raw header block, with its
+   * flags and arrival time. Subscription cleanup's scan (subscription-scan.ts)
+   * is the only caller; it asks for From, the list headers, DKIM-Signature and
+   * Authentication-Results, every instance of each, in message order.
+   *
+   * PEEK, so nothing is marked read. Field names are checked against the
+   * RFC 5322 field-name grammar before they reach the command line. A NO/BAD
+   * reply throws, as `fetchSummaries` does; a header block over
+   * `maxLiteralBytes` throws {@link ImapMessageTooLargeError} with the socket
+   * left aligned, so the caller may carry on with the next set.
+   */
+  fetchHeaderFields(
+    uids: number[],
+    fields: readonly string[],
+    options: { maxLiteralBytes?: number } = {},
+  ): Promise<ImapHeaderFieldsRow[]> {
+    if (uids.length === 0) return Promise.resolve([]);
+    if (fields.length === 0 || fields.some((f) => !/^[A-Za-z0-9-]+$/.test(f))) {
+      return Promise.reject(new Error("fetchHeaderFields: invalid field name"));
+    }
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(
+        `${tag} UID FETCH ${toUidSet(uids)} (UID FLAGS INTERNALDATE BODY.PEEK[HEADER.FIELDS (${
+          fields.map((f) => f.toUpperCase()).join(" ")
+        })])${CRLF}`,
+      );
+      const resp = await this.readTagged(tag, { maxLiteralBytes: options.maxLiteralBytes ?? 1024 * 1024 });
+      if (resp.status !== "OK") throw new Error(`UID FETCH failed: ${resp.text}`);
+      const out: ImapHeaderFieldsRow[] = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const row = parseHeaderFieldsFetchLine(line);
+        if (row) out.push(row);
       }
       return out;
     }, "fetch");
@@ -1711,6 +1913,27 @@ export class ImapClient {
     if (resp.status !== "OK") {
       throw new Error(`UID STORE failed: ${resp.text}`);
     }
+  }
+
+  /**
+   * Gmail over IMAP (X-GM-EXT-1) only: add or remove Gmail LABELS on messages
+   * of the selected mailbox, `UID STORE <set> ±X-GM-LABELS.SILENT (<labels>)`.
+   * System labels go as Gmail spells them (`\\Inbox`); any other label is sent
+   * as a quoted, modified-UTF-7 encoded name. The message keeps its UID in the
+   * selected mailbox, which is what makes this the way to archive a message
+   * addressed by its All Mail UID (imap-gmail-relocate.ts).
+   */
+  uidStoreGmailLabels(uids: number[], labels: string[], mode: "add" | "remove"): Promise<void> {
+    if (uids.length === 0 || labels.length === 0) return Promise.resolve();
+    const list = labels.map((label) => (/^\\[A-Za-z]+$/.test(label) ? label : quoteMailbox(label))).join(" ");
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID STORE ${toUidSet(uids)} ${mode === "add" ? "+" : "-"}X-GM-LABELS.SILENT (${list})${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`UID STORE failed: ${resp.text}`);
+      }
+    });
   }
 
   /**
@@ -3066,8 +3289,111 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 
 type Token = string | Token[];
 
-/** Parse a single "* N FETCH (...)" line into a summary. */
-function parseFetchLine(line: string, includeCc = false): ImapMessageSummary | null {
+/**
+ * Everything a preview needs to be decoded again from a longer source: the
+ * prefix the summary FETCH returned and what BODYSTRUCTURE says part one is.
+ */
+interface PreviewCut {
+  source: string;
+  part: PreviewPartInfo | null;
+}
+
+/**
+ * How far into part one a preview may look, in octets, when its prefix held no
+ * text: the bounded scan window of `extendCutPreviewsUnlocked`. 32 KB covers
+ * the stylesheet of the newsletter templates seen in real mail (Mailchimp,
+ * Klaviyo, HubSpot: 6-25 KB) and caps a page of 25 such rows at 800 KB.
+ */
+export const PREVIEW_EXTENDED_BYTES = 32 * 1024;
+
+/**
+ * `* N FETCH (UID u BODY[1]<offset> {n} ...)`: the continuation of a cut
+ * preview, or null when the line carries no UID or no body string.
+ */
+function parseContinuationLine(line: string): { uid: number; source: string } | null {
+  const open = line.indexOf("(");
+  if (open === -1) return null;
+  const tokens = tokenize(line.slice(open));
+  const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
+  let uid = 0;
+  let source: string | null = null;
+  for (let i = 0; i < attrs.length; i++) {
+    const key = attrs[i];
+    if (key === "UID" && typeof attrs[i + 1] === "string") uid = Number(attrs[++i]);
+    else if (typeof key === "string" && key.startsWith("BODY[") && typeof attrs[i + 1] === "string") {
+      source = attrs[++i] as string;
+    }
+  }
+  return uid > 0 && source !== null ? { uid, source } : null;
+}
+
+const INTERNALDATE_MONTHS: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+/** RFC 3501 date-time ("17-Jul-1996 02:44:25 -0700") as ISO 8601, or null. */
+export function parseInternalDate(value: string): string | null {
+  const m = /^\s*(\d{1,2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-])(\d{2})(\d{2})\s*$/.exec(value);
+  if (!m) {
+    const ms = Date.parse(value);
+    return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+  }
+  const month = INTERNALDATE_MONTHS[m[2].toLowerCase()];
+  if (month === undefined) return null;
+  const offsetMin = (Number(m[8]) * 60 + Number(m[9])) * (m[7] === "-" ? -1 : 1);
+  const ms = Date.UTC(Number(m[3]), month, Number(m[1]), Number(m[4]), Number(m[5]), Number(m[6])) -
+    offsetMin * 60_000;
+  return new Date(ms).toISOString();
+}
+
+/**
+ * One `* N FETCH (UID u FLAGS (...) INTERNALDATE "..." BODY[HEADER.FIELDS
+ * (...)] {n} ...)` line as a {@link ImapHeaderFieldsRow}, or null without a
+ * UID. Items may come in any order. Exported for subscription-scan.test.ts.
+ */
+export function parseHeaderFieldsFetchLine(line: string): ImapHeaderFieldsRow | null {
+  const open = line.indexOf("(");
+  if (open === -1) return null;
+  const tokens = tokenize(line.slice(open));
+  const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
+  let uid = 0;
+  let flags: string[] = [];
+  let internalDate: string | null = null;
+  let headers = "";
+  for (let i = 0; i < attrs.length; i++) {
+    const key = attrs[i];
+    if (key === "UID" && typeof attrs[i + 1] === "string") {
+      uid = Number(attrs[++i]);
+    } else if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
+      flags = (attrs[++i] as Token[]).filter((t): t is string => typeof t === "string");
+    } else if (key === "INTERNALDATE" && typeof attrs[i + 1] === "string") {
+      internalDate = parseInternalDate(attrs[++i] as string);
+    } else if (
+      // Tokenizes as the atom "BODY[HEADER.FIELDS", the field list, the atom
+      // "]", then the value (see the same branch in parseFetchLine).
+      key === "BODY[HEADER.FIELDS" && Array.isArray(attrs[i + 1]) && attrs[i + 2] === "]" &&
+      typeof attrs[i + 3] === "string"
+    ) {
+      const value = attrs[i + 3] as string;
+      headers = value === "NIL" ? "" : decodeRawHeaderOctets(value);
+      i += 3;
+    }
+  }
+  return Number.isInteger(uid) && uid > 0 ? { uid, flags, internalDate, headers } : null;
+}
+
+/**
+ * Parse a single "* N FETCH (...)" line into a summary.
+ *
+ * `previewCut`, when given, collects the rows whose preview came out "" from a
+ * prefix the fetch cut (exactly `prefixBytes` octets of a longer text part),
+ * for `extendCutPreviewsUnlocked` to look further into.
+ */
+function parseFetchLine(
+  line: string,
+  includeCc = false,
+  previewCut?: { prefixBytes: number; cut: Map<number, PreviewCut> },
+): ImapMessageSummary | null {
   const open = line.indexOf("(");
   if (open === -1) return null;
   const tokens = tokenize(line.slice(open));
@@ -3135,7 +3461,15 @@ function parseFetchLine(line: string, includeCc = false): ImapMessageSummary | n
     }
   }
   if (previewSource !== null) {
-    preview = cleanPreviewFromBodyPart(previewSource, structure ? partOneOfStructure(structure) : null);
+    const part = structure ? partOneOfStructure(structure) : null;
+    preview = cleanPreviewFromBodyPart(previewSource, part);
+    if (
+      preview === "" && uid && previewCut !== undefined && previewSource.length >= previewCut.prefixBytes &&
+      // A text part, or a nested multipart (part null), that goes on past the prefix.
+      (part === null ? structure !== null : part.type === "text" && (part.size == null || part.size > previewSource.length))
+    ) {
+      previewCut.cut.set(uid, { source: previewSource, part });
+    }
   }
 
   if (!uid) return null;

@@ -7,9 +7,9 @@ Email for AI agents. Read, search, send, organize, draft and schedule email acro
 [![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/Albretsen/MCPEmails/blob/main/LICENSE)
 
-This package is a **stdio bridge**. [MCP Emails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
+This package is a **stdio bridge**. [MCPEmails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
 
-Works with Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
+Works with Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
 
 ## Quick start
 
@@ -138,7 +138,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-17 tools you call directly. Most take an `action` argument that selects the specific operation:
+21 tools you call directly. Most take an `action` argument that selects the specific operation:
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
@@ -152,13 +152,17 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `draft` - Creates, updates, sends and deletes drafts (`create`, `reply`, `update`, `send`, `delete`).
 - `schedule_list` - Lists what is queued for future delivery. Read-only.
 - `schedule` - Queues a message for future delivery, or cancels one (`create`, `cancel`).
+- `reminder_list` - Lists the follow-ups and snoozes the server tracks. Read-only. Pro and Business.
+- `reminder` - Follows up on sent mail nobody replied to, and snoozes a message until a time you choose (`follow_up`, `snooze`, `done`, `cancel`). Pro and Business.
 - `signature_get` - Reads the signature and sender name configured for an inbox. Read-only.
 - `signature_set` - Sets the signature appended to outbound mail, and the sender name.
 - `automation_read` - Lists triage rules, reads one, shows run history, dry-runs a filter (`list`, `get`, `runs`, `preview`). Read-only.
 - `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `update`, `enable`, `disable`, `delete`).
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
+- `draft_read` - Reads one unsent draft in full, for example after the user edited it in the draft editor card. Read-only.
+- `draft_editor_hide` - Hides or shows the in-chat draft editor card for one inbox or the whole workspace. A display preference only.
 
-A full-scope key sees 23 tools in `tools/list`: the 17 above plus six app-only tools that drive the review card your MCP client renders for a held send or a previewed bulk operation.
+A full-scope key sees 29 tools in `tools/list`: the 21 above plus eight app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`, `card_automation`) that drive the cards your MCP client renders for a held send, a previewed bulk operation, a draft being edited or an automation rule. There are also 7 workflow prompts in `prompts/list`.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 
@@ -173,7 +177,7 @@ Each tool is gated by the scopes on your API key, so a key issued with read scop
 
 Prefer the environment variable over `--key`. Command-line arguments are visible to any other process on the machine that can list processes.
 
-`--url` exists for self-hosting. The MCP Emails server is source-available and can be run on your own infrastructure; see [the repository](https://github.com/Albretsen/MCPEmails) and [mcpemails.com/security](https://mcpemails.com/security).
+`--url` exists for self-hosting. The MCPEmails server is source-available and can be run on your own infrastructure; see [the repository](https://github.com/Albretsen/MCPEmails) and [mcpemails.com/security](https://mcpemails.com/security).
 
 ## Where your key goes
 

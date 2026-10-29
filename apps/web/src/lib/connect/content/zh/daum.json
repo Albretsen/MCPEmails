@@ -21,7 +21,7 @@
     "titleLine1": "将 Daum Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Daum 或 Hanmail 收件箱。使用 Kakao 应用专用密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 Daum Mail。mcpemails 是一个托管 MCP 服务器，通过 imap.daum.net 端口 993 的 IMAP 与之连接，使用 Kakao 应用专用密码（앱 비밀번호）而不是你的 Kakao 账户密码进行认证。自 2025 年 1 月 2 日起，Daum 要求邮箱背后的 Kakao 账户开启两步验证，并要求每次 IMAP 和 POP3 登录都使用应用专用密码，因此普通密码在任何邮件客户端中都已无效。IMAP 本身是 Daum Mail 设置中的另一个开关，也必须打开。1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 Daum Mail。MCPEmails 是一个托管 MCP 服务器，通过 imap.daum.net 端口 993 的 IMAP 与之连接，使用 Kakao 应用专用密码（앱 비밀번호）而不是你的 Kakao 账户密码进行认证。自 2025 年 1 月 2 日起，Daum 要求邮箱背后的 Kakao 账户开启两步验证，并要求每次 IMAP 和 POP3 登录都使用应用专用密码，因此普通密码在任何邮件客户端中都已无效。IMAP 本身是 Daum Mail 设置中的另一个开关，也必须打开。1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Kakao 应用专用密码，而非你的密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并永久免费，无需信用卡。接下来的两步分别在两个不同的 Kakao 产品中进行，需要在两者之间切换。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "在 Kakao 账户中生成应用专用密码",
-      "p": "前往 accounts.kakao.com，依次打开 계정 보안（账户安全）、2단계 인증（两步验证）、앱 비밀번호（应用专用密码）。在 KakaoTalk 中也可以通过 설정、카카오계정、2단계 인증、앱 비밀번호 进入同一页面。必须先开启两步验证，才能创建应用专用密码。生成一个密码，然后在 mcpemails 中选择 IMAP / SMTP，输入完整的 Daum 或 Hanmail 地址，并粘贴应用专用密码，而不是你的 Kakao 密码。"
+      "p": "前往 accounts.kakao.com，依次打开 계정 보안（账户安全）、2단계 인증（两步验证）、앱 비밀번호（应用专用密码）。在 KakaoTalk 中也可以通过 설정、카카오계정、2단계 인증、앱 비밀번호 进入同一页面。必须先开启两步验证，才能创建应用专用密码。生成一个密码，然后在 MCPEmails 中选择 IMAP / SMTP，输入完整的 Daum 或 Hanmail 地址，并粘贴应用专用密码，而不是你的 Kakao 密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI 客户端",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Daum Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Daum 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 Daum 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，而且同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Daum 连接器，也无法自行建立 IMAP 连接。将 MCPEmails 这样的 MCP 服务器连接到你的 Daum 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，而且同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Daum Mail 的 IMAP 和 SMTP 设置是什么？",

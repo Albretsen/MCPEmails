@@ -133,3 +133,27 @@ test('pinned siblings name real providers and lead the related list', () => {
     assert.deepEqual(rel.slice(0, released.length), released, `${slug} does not lead with its pinned siblings`);
   }
 });
+
+test('a localized page links only providers whose page exists in that locale', () => {
+  // A frozen locale (zh) may lack newer providers. Simulate that by dropping zh
+  // from the pinned siblings of /connect/outlook, which would otherwise lead
+  // its related list, and restore the registry afterwards.
+  const dropped = PINNED_RELATED.outlook.map((s) => PROVIDERS.find((p) => p.slug === s));
+  const saved = dropped.map((p) => p.locales);
+  try {
+    for (const p of dropped) p.locales = p.locales.filter((l) => l !== 'zh');
+
+    const zh = relatedProviders('outlook', 6, after, 'zh');
+    assert.equal(zh.length, 6, 'the list is topped up from providers that do exist in zh');
+    for (const p of zh) assert.ok(p.locales.includes('zh'), `zh page links ${p.slug}, which has no zh page`);
+    for (const p of dropped) assert.ok(!zh.some((r) => r.slug === p.slug), `zh page still links ${p.slug}`);
+
+    // A full locale and the unfiltered call still lead with the pinned siblings.
+    for (const locale of ['nb', null]) {
+      const rel = relatedProviders('outlook', 6, after, locale).map((p) => p.slug);
+      assert.deepEqual(rel.slice(0, dropped.length), PINNED_RELATED.outlook, `locale ${locale}`);
+    }
+  } finally {
+    dropped.forEach((p, i) => { p.locales = saved[i]; });
+  }
+});

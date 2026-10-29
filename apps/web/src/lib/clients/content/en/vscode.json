@@ -16,7 +16,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Run MCP: Add Server from the Command Palette, choose HTTP, and paste https://mcpemails.com/api/mcp. Start the server from the MCP view and authorize when prompted. No API key is involved."
+    "answer": "Run MCP: Add Server from the Command Palette, choose HTTP (HTTP or Server-Sent Events), paste https://mcpemails.com/api/mcp, and pick Global, then Copilot Global. Approve the sign-in prompt to authorize with MCPEmails. No API key is involved."
   },
   "method": {
     "title": "How VS Code connects: OAuth, no API key",
@@ -25,19 +25,19 @@
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password, and Gmail can also use Google sign-in; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
       "h": "Run MCP: Add Server",
       "p": "Open the Command Palette with Shift Cmd P, or Shift Ctrl P on Windows and Linux, and run <b>MCP: Add Server</b>."
     },
     {
-      "h": "Choose HTTP",
-      "p": "Pick <b>HTTP</b>, paste <code>https://mcpemails.com/api/mcp</code>, and give it a name. VS Code writes the entry below into <code>.vscode/mcp.json</code>."
+      "h": "Choose HTTP and Global",
+      "p": "Pick <b>HTTP (HTTP or Server-Sent Events)</b>, paste <code>https://mcpemails.com/api/mcp</code> and enter <code>mcpemails</code> as the server ID. For the destination, choose <b>Global</b>, then <b>Copilot Global</b>. VS Code writes the entry below into <code>~/.copilot/mcp-config.json</code>."
     },
     {
-      "h": "Start it and authorize",
-      "p": "Start the server from the MCP view and complete the sign-in when VS Code prompts. Approve the scopes you want Copilot to hold."
+      "h": "Authorize",
+      "p": "Approve the sign-in prompt and authorize with MCPEmails. Approve the scopes you want Copilot to hold."
     }
   ],
   "gotchas": [
@@ -50,19 +50,19 @@
       "p": "MCP tools are available to Copilot in agent mode. If the mail tools are missing from the tool picker after a successful connection, the usual cause is being in ask or edit mode rather than agent mode. The MCP view is where to confirm the server is actually running."
     },
     {
-      "h": "A .vscode/mcp.json is repository config, so mind what you commit",
-      "p": "The default location is inside the project, which means it can be committed and shared. The URL is public and OAuth tokens are not written here, so the default is safe to share. It stops being safe the moment someone inlines a bearer API key instead. Any key that reaches a repository should be revoked from Dashboard, API Keys."
+      "h": "Pick Global, and keep keys out of repositories",
+      "p": "The Global destination writes <code>~/.copilot/mcp-config.json</code> in your home folder, outside any project. The older <code>.vscode/mcp.json</code>, with a top-level <code>servers</code> object, still works, but the guided flow labels it deprecated, and it sits inside the project where it can be committed. The URL is public and OAuth tokens are not written to either file. That stops being true the moment someone inlines a bearer API key instead. Any key that reaches a repository should be revoked from Dashboard, API Keys."
     }
   ],
   "limits": [
-    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "Requests are rate limited per key in per-minute, hourly and daily windows sized to your plan, so one key can use the plan's full per-minute ceiling and several keys share it. A 429 carries Retry-After. Your plan ceiling on billable actions also applies.",
     "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
     "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
   ],
   "faq": [
     {
       "q": "How do I connect email to VS Code?",
-      "a": "Run MCP: Add Server from the Command Palette, choose HTTP, paste https://mcpemails.com/api/mcp, then start the server and authorize when prompted. Copilot agent mode then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+      "a": "Run MCP: Add Server from the Command Palette, choose HTTP, paste https://mcpemails.com/api/mcp, pick Global, then Copilot Global, and approve the sign-in prompt. Copilot agent mode then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
     },
     {
       "q": "Do I need an API key for VS Code?",
@@ -70,11 +70,11 @@
     },
     {
       "q": "Does this work with Copilot in other editors?",
-      "a": "This page covers VS Code specifically, because the Add Server flow and the mcp.json schema are VS Code features. JetBrains AI Assistant is a separate setup and takes a bearer API key instead of OAuth; there is a page for it."
+      "a": "This page covers VS Code specifically, because the Add Server flow is a VS Code feature. JetBrains AI Assistant is a separate setup and takes a bearer API key instead of OAuth; there is a page for it."
     },
     {
       "q": "Which mailboxes can VS Code reach this way?",
-      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, with Google sign-in as a second option for Gmail; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
     },
     {
       "q": "Can VS Code send email without me seeing it?",

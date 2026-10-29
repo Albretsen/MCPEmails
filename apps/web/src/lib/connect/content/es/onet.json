@@ -21,7 +21,7 @@
     "titleLine1": "Onet Poczta por IMAP,",
     "titleLine2": "en Claude, Cursor, cualquier cliente MCP",
     "lead": "Onet pasó el acceso desde clientes de correo a un plan de pago en 2026. Si tu cuenta lo incluye, un agente de IA puede leer, buscar, enviar, responder, programar y organizar el buzón por IMAP.",
-    "answer": "Claude no puede acceder a un buzón de Onet por sí solo, y desde el 31 de marzo de 2026 tampoco puede hacerlo nada más en una cuenta gratuita de Onet. Onet retiró POP3 para todos y pasó IMAP a sus paquetes de correo de pago, así que una cuenta gratuita ahora es solo webmail y app móvil. Con un plan de pago, o con una de las cuentas perpetuas que conservan sus condiciones anteriores, mcpemails es un servidor MCP alojado que conecta el buzón por IMAP en imap.poczta.onet.pl, puerto 993, con tu contraseña de Onet, y da a Claude, Cursor o cualquier cliente MCP acceso para leer, buscar, enviar y organizar. Una bandeja en mcpemails es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de Onet por sí solo, y desde el 31 de marzo de 2026 tampoco puede hacerlo nada más en una cuenta gratuita de Onet. Onet retiró POP3 para todos y pasó IMAP a sus paquetes de correo de pago, así que una cuenta gratuita ahora es solo webmail y app móvil. Con un plan de pago, o con una de las cuentas perpetuas que conservan sus condiciones anteriores, MCPEmails es un servidor MCP alojado que conecta el buzón por IMAP en imap.poczta.onet.pl, puerto 993, con tu contraseña de Onet, y da a Claude, Cursor o cualquier cliente MCP acceso para leer, buscar, enviar y organizar. Una bandeja en MCPEmails es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Requiere un plan de correo de pago de Onet",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Onet no emite contraseñas específicas de aplicación para clientes de correo; te autenticas con la contraseña de tu cuenta de Onet y la dirección completa. Si migras la configuración de un cliente antiguo, no copies el servidor POP3. POP3 se retiró por completo, no quedó en desuso, así que ya nada te responderá en el puerto 995."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nazwa@onet.pl, e introduce la contraseña. Los servidores y puertos de Onet vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Onet Poczta?",
-      "a": "Solo si la cuenta tiene IMAP, lo que desde marzo de 2026 significa un paquete de correo de pago de Onet o una cuenta perpetua que conserva sus condiciones anteriores. En ese caso, apuntar un servidor MCP como mcpemails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "Solo si la cuenta tiene IMAP, lo que desde marzo de 2026 significa un paquete de correo de pago de Onet o una cuenta perpetua que conserva sus condiciones anteriores. En ese caso, apuntar un servidor MCP como MCPEmails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Onet?",

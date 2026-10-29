@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+  ],
+  "meta": {
+    "title": "E-Mail mit Gemini CLI verbinden: MCP-Setup per httpUrl",
+    "description": "Fügen Sie der Gemini CLI ein echtes Postfach hinzu. Ein Eintrag in settings.json mit httpUrl, dann erkennt die CLI OAuth und öffnet den Ablauf im Browser. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Gemini CLI + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Gemini CLI",
+    "titleLine2": "mit einem Eintrag in den Einstellungen",
+    "lead": "Geben Sie der Gemini CLI ein echtes Postfach. E-Mails aus dem Terminal lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth wird automatisch erkannt",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Fügen Sie in ~/.gemini/settings.json unter mcpServers einen Eintrag mit dem Feld httpUrl und https://mcpemails.com/api/mcp hinzu. Bei der ersten Verbindung liest die CLI die OAuth-Metadaten aus und öffnet den Ablauf im Browser von selbst. Oder führen Sie gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp aus und melden Sie sich danach mit /mcp auth mcpemails an."
+  },
+  "method": {
+    "title": "So verbindet sich Gemini CLI: OAuth, kein API-Schlüssel",
+    "body": "Gemini CLI durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "settings.json öffnen",
+      "p": "Bearbeiten Sie <code>~/.gemini/settings.json</code> für alle Projekte oder <code>.gemini/settings.json</code> innerhalb eines Projekts."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Fügen Sie den Eintrag unten unter <code>mcpServers</code> hinzu. Das Feld für einen Streamable-HTTP-Server heißt hier <code>httpUrl</code>. Oder fügen Sie ihn in einer Zeile hinzu: <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
+    },
+    {
+      "h": "Verbinden",
+      "p": "Bei der ersten Verbindung erkennt die CLI OAuth automatisch anhand der Server-Metadaten und öffnet den Ablauf im Browser. Geben Sie die Scopes frei, die die CLI erhalten soll. Zum Anmelden können Sie in der CLI jederzeit <code>/mcp auth mcpemails</code> ausführen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "httpUrl ist ein anderes Feld als url, und der Unterschied ist der Transport",
+      "p": "In den Einstellungen der Gemini CLI steht <code>httpUrl</code> für einen Streamable-HTTP-Server, und das ist dieser hier. Andere Schlüssel im selben Objekt wählen andere Transporte. Ein Snippet aus einer Cursor-Anleitung, die <code>url</code> verwendet, ergibt hier keine funktionierende Streamable-HTTP-Verbindung."
+    },
+    {
+      "h": "Die Discovery macht das konfigurationsfrei, und sie beginnt mit einer 401",
+      "p": "Der CLI muss niemand sagen, wo sie sich authentifizieren soll. Ein nicht authentifizierter Aufruf erhält eine 401, deren Header <code>WWW-Authenticate</code> auf unsere Metadaten zur geschützten Ressource verweist. Diese nennen den Autorisierungsserver, und dessen Metadaten nennen die Endpunkte für Registrierung, Autorisierung und Token. Deshalb müssen Sie keine Client-ID anlegen und außer der URL nichts einfügen."
+    },
+    {
+      "h": "Eine CLI auf einem geteilten Rechner oder ohne Oberfläche braucht stattdessen den Weg über Schlüssel",
+      "p": "Der Ablauf im Browser braucht einen Browser. Auf einem Build-Agenten oder einem geteilten Rechner ist ein Bearer-API-Schlüssel das ehrliche Setup, mit genau den Scopes, die diese Automatisierung braucht, und abgelegt in der Umgebung statt in einer committeten Einstellungsdatei."
+    },
+    {
+      "h": "Kostenlose und Google-One-Konten nutzen jetzt Antigravity CLI",
+      "p": "Seit dem 18. Juni 2026 hat Google Konten im kostenlosen Tarif und Google-One-Konten von Gemini CLI auf Antigravity CLI umgestellt. Dort tippen Sie <code>/mcp</code>, um den MCP-Manager zu öffnen, oder tragen den Server mit dem Feld <code>serverUrl</code> in <code>mcp_config.json</code> ein."
+    }
+  ],
+  "limits": [
+    "Anfragen werden je Schlüssel in Minuten-, Stunden- und Tagesfenstern begrenzt, die nach Ihrem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Ein 429 trägt Retry-After. Dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Gemini CLI?",
+      "a": "Fügen Sie in ~/.gemini/settings.json unter mcpServers einen Eintrag hinzu, bei dem httpUrl auf https://mcpemails.com/api/mcp gesetzt ist. Bei der ersten Verbindung erkennt die CLI OAuth anhand der Server-Metadaten und öffnet den Ablauf im Browser. Danach hat sie Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Soll ich url oder httpUrl verwenden?",
+      "a": "httpUrl. In den Einstellungen der Gemini CLI wählt dieser Schlüssel den Streamable-HTTP-Transport, und den spricht dieser Server. Ein aus einem anderen Client kopierter url-Eintrag ist der übliche Grund, warum der Server in der Liste erscheint, aber keine Tools liefert."
+    },
+    {
+      "q": "Ist das derselbe Gmail-MCP-Server, den Google veröffentlicht?",
+      "a": "Nein. Google veröffentlicht einen Workspace-MCP-Server, der Gmail neben seinen anderen Diensten abdeckt, und für Gmail allein in einem reinen Google-Workflow ist das der kürzere Weg. MCPEmails ist für den Fall gedacht, dass nicht alle Postfächer bei Google liegen und dieselbe URL auch in Claude, Cursor und ChatGPT funktionieren muss."
+    },
+    {
+      "q": "Welche Postfächer erreicht Gemini CLI auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Gemini CLI E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Gemini CLI ein echtes Postfach",
+    "sub": "Ein Eintrag in den Einstellungen, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

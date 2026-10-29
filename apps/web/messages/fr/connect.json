@@ -5,7 +5,7 @@
   },
   "settings": {
     "title": "Les réglages IMAP et SMTP exacts {elide, select, yes {d''{provider}} other {de {provider}}}",
-    "sub": "Copiez-les dans le formulaire de connexion. mcpemails les préremplit quand il le peut et réessaie l'autre transport standard si le premier ne répond pas.",
+    "sub": "Copiez-les dans le formulaire de connexion. MCPEmails les préremplit quand il le peut et réessaie l'autre transport standard si le premier ne répond pas.",
     "colHost": "Serveur",
     "colPort": "Port",
     "colProtocol": "Protocole",
@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Ce que votre IA peut faire",
     "title": "Une boîte {provider} que votre agent peut vraiment utiliser",
-    "sub": "Dix-sept outils MCP basés sur des actions : envoyer, répondre, transférer, planifier et organiser. Votre agent termine le travail dans {provider}."
+    "sub": "{toolCount} outils MCP basés sur des actions : envoyer, répondre, transférer, planifier et organiser. Votre agent termine le travail dans {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Connecter une autre boîte",
-    "sub": "Le même serveur MCP, les mêmes dix-sept outils, un autre fournisseur.",
+    "sub": "Le même serveur MCP, les mêmes {toolCount} outils, un autre fournisseur.",
     "link": "Connecter {provider}",
     "all": "Voir tous les fournisseurs e-mail pris en charge"
   },
@@ -76,7 +76,7 @@
   },
   "verificationNote": {
     "title": "Google affiche un écran d'application non vérifiée",
-    "body": "Google examine les applications qui demandent l'accès à Gmail, et mcpemails.com n'a pas suivi cet examen. Un écran <b>application non vérifiée</b> s'affiche à la connexion, avec les étapes pour continuer. La connexion elle-même n'expire pas : une fois établie, la boîte reste connectée jusqu'à ce que vous révoquiez l'accès."
+    "body": "Cela ne concerne que la connexion avec Google, proposée avec les offres Pro et Business ; la connexion par défaut avec un mot de passe d'application n'affiche aucun écran Google. Google examine les applications qui demandent l'accès à Gmail, et mcpemails.com n'a pas suivi cet examen : la connexion avec Google affiche donc un écran <b>application non vérifiée</b>, avec les étapes pour continuer. La connexion elle-même n'expire pas : une fois établie, la boîte reste connectée jusqu'à ce que vous révoquiez l'accès."
   },
   "hub": {
     "meta": {
@@ -86,8 +86,8 @@
     "breadcrumb": "Fournisseurs d'e-mail",
     "eyebrow": "Tous les fournisseurs",
     "title": "Connectez n'importe quelle boîte à votre IA",
-    "lead": "mcpemails parle simplement IMAP et SMTP, donc il se connecte à presque toutes les boîtes. Ci-dessous, chaque fournisseur avec son guide de configuration : les serveurs et ports exacts, la nécessité ou non d'un mot de passe d'application, et ce qui coince en général.",
-    "answer": "mcpemails se connecte à tout fournisseur e-mail proposant un accès IMAP et SMTP, c'est-à-dire presque tous. Chaque guide ci-dessous liste les serveurs vérifiés du fournisseur, ses ports et ses exigences d'authentification, et une boîte est gratuite pour toujours.",
+    "lead": "MCPEmails parle simplement IMAP et SMTP, donc il se connecte à presque toutes les boîtes. Ci-dessous, chaque fournisseur avec son guide de configuration : les serveurs et ports exacts, la nécessité ou non d'un mot de passe d'application, et ce qui coince en général.",
+    "answer": "MCPEmails se connecte à tout fournisseur e-mail proposant un accès IMAP et SMTP, c'est-à-dire presque tous. Chaque guide ci-dessous liste les serveurs vérifiés du fournisseur, ses ports et ses exigences d'authentification, et une boîte est gratuite pour toujours.",
     "verifiedIntro": "Chaque nom de serveur de ces pages a été contrôlé le {date} en ouvrant une véritable connexion TLS.",
     "countLabel": "{count} fournisseurs",
     "genericTitle": "Votre fournisseur n'est pas listé ?",

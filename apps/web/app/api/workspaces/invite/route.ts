@@ -153,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!memberLimit.teamRolesEnabled && role !== 'member') {
     return NextResponse.json(
       {
-        error: 'Assigning the Admin and Viewer roles needs the Team plan. On this plan collaborators join as Member.',
+        error: 'Assigning the Admin and Viewer roles needs the Business plan. On this plan collaborators join as Member.',
         error_code: 'team_roles_not_available',
         upgrade_url: '/pricing',
       },

@@ -23,23 +23,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "账户密码或应用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Zoho Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.zoho.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：新 Zoho 邮箱的 IMAP 访问在你开启之前是关闭的；主机名取决于你的 Zoho 数据中心，所以在欧盟或印度创建的账户使用的是不同的主机名。一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 Zoho Mail。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.zoho.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：新 Zoho 邮箱的 IMAP 访问在你开启之前是关闭的；主机名取决于你的 Zoho 数据中心，所以在欧盟或印度创建的账户使用的是不同的主机名。一个收件箱永久免费。"
   },
   "method": {
     "title": "Zoho 如何连接：IMAP 与密码",
-    "body": "Zoho Mail 通过 IMAP/SMTP 连接。先在 Zoho 中开启 IMAP 访问（默认关闭），然后把 Zoho 地址和密码粘贴到 mcpemails。如果使用双重认证、联合登录或 SAML，请生成应用专用密码并改用它。mcpemails 支持所有 Zoho 数据中心区域。"
+    "body": "Zoho Mail 通过 IMAP/SMTP 连接。先在 Zoho 中开启 IMAP 访问（默认关闭），然后把 Zoho 地址和密码粘贴到 MCPEmails。如果使用双重认证、联合登录或 SAML，请生成应用专用密码并改用它。MCPEmails 支持所有 Zoho 数据中心区域。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "开启 IMAP，必要时生成应用密码",
       "p": "在 Zoho Mail 中开启 IMAP 访问（Settings、Mail Accounts、IMAP Access）。如果使用双重认证、联合登录或 SAML，请在 Zoho Account 的 Security 中生成应用专用密码。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "填入你的 Zoho 地址和密码，如有提示请选择你的 Zoho 区域，安全连接收件箱。"
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用 Zoho Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Zoho 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Zoho 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你必须先在邮箱上开启 IMAP 访问。"
+      "a": "不能单独使用。Claude 没有内置的 Zoho 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 Zoho 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你必须先在邮箱上开启 IMAP 访问。"
     },
     {
       "q": "Zoho Mail 的 IMAP 和 SMTP 设置是什么？",

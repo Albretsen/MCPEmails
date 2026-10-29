@@ -1,16 +1,31 @@
 name: Deploy edge function
 
 # Run by hand (Actions tab -> "Deploy edge function" -> Run workflow) to deploy
-# one edge function from main. Uses the SUPABASE_ACCESS_TOKEN repository secret,
-# so a deploy can be started from a phone, or from a cloud session whose network
+# one edge function. Uses the SUPABASE_ACCESS_TOKEN repository secret, so a
+# deploy can be started from a phone, or from a cloud session whose network
 # policy does not reach api.supabase.com.
 #
-# Deploys from main only: concurrent sessions share this repository, and
-# deploying from a stale branch silently reverts other people's live work.
+#   production: from main only, to vars.SUPABASE_REF_PROD (falls back to the
+#               prod ref while the variable is unset).
+#               gh workflow run deploy-edge-function.yml --ref main -f target=production -f function=mcp-server
+#   staging:    from the staging branch only, to vars.SUPABASE_REF_STAGING.
+#               gh workflow run deploy-edge-function.yml --ref staging -f function=mcp-server
+#
+# Each target deploys from its own branch: concurrent sessions share this
+# repository, and deploying from a stale branch silently reverts other
+# people's live work.
 
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: Supabase project to deploy to
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
       function:
         description: Edge function to deploy
         required: true
@@ -19,9 +34,12 @@ on:
         options:
           - mcp-server
           - client-api
+          - system-notify
+          - synthetic-monitor
+          - outlook-token-refresh
 
 concurrency:
-  group: deploy-${{ inputs.function }}
+  group: deploy-${{ inputs.target }}-${{ inputs.function }}
   cancel-in-progress: false
 
 permissions:
@@ -31,10 +49,46 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.function }}
+    name: Deploy ${{ inputs.function }} to ${{ inputs.target }}
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
+      # Which project, and only from that target's branch. Fails loudly rather
+      # than skipping, so a run from the wrong branch is not mistaken for a deploy.
+      - name: Resolve target project
+        id: target
+        env:
+          TARGET: ${{ inputs.target }}
+          REF: ${{ github.ref }}
+          PROD_REF: ${{ vars.SUPABASE_REF_PROD || 'swvaxorwumispmjaaszb' }}
+          STAGING_REF: ${{ vars.SUPABASE_REF_STAGING }}
+        run: |
+          case "$TARGET" in
+            production)
+              if [ "$REF" != "refs/heads/main" ]; then
+                echo "::error::A production deploy runs from main only (this run is on $REF)."
+                exit 1
+              fi
+              project_ref="$PROD_REF" ;;
+            staging)
+              if [ "$REF" != "refs/heads/staging" ]; then
+                echo "::error::A staging deploy runs from the staging branch only (this run is on $REF). For production, pass -f target=production from main."
+                exit 1
+              fi
+              if [ -z "$STAGING_REF" ]; then
+                echo "::error::Repository variable SUPABASE_REF_STAGING is not set."
+                exit 1
+              fi
+              if [ "$STAGING_REF" = "$PROD_REF" ] || [ "$STAGING_REF" = "swvaxorwumispmjaaszb" ]; then
+                echo "::error::SUPABASE_REF_STAGING points at the production project. Refusing."
+                exit 1
+              fi
+              project_ref="$STAGING_REF" ;;
+            *)
+              echo "::error::Unknown target $TARGET."
+              exit 1 ;;
+          esac
+          echo "Deploying ${{ inputs.function }} to $TARGET ($project_ref) from $REF"
+          echo "project_ref=$project_ref" >> "$GITHUB_OUTPUT"
       # 2026-10-15: nothing used to check CI before an edge deploy, so a red
       # main could go live here while Vercel held the web deploy back. Require
       # the same "CI passed" aggregate Vercel gates on, for this exact commit.
@@ -58,7 +112,7 @@ jobs:
               echo "::error::CI has not finished on ${{ github.sha }} ($state). Wait for the CI workflow to go green, then rerun this deploy."
               exit 1 ;;
             *)
-              echo "::error::CI did not pass on ${{ github.sha }} ($state). Fix main before deploying."
+              echo "::error::CI did not pass on ${{ github.sha }} ($state). Fix the branch before deploying."
               exit 1 ;;
           esac
       - uses: actions/checkout@v7
@@ -66,11 +120,33 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.118.0
+      # SIZE CAP (2026-10-24). --use-api uploads the raw sources and the API
+      # refuses anything over 5 MB with a 413. client-api imports the whole
+      # mcp-server tool layer and crossed it on 2026-10-24; mcp-server is not
+      # far behind (scripts/edge-function-size.mjs prints both, CI warns).
+      # The API path stays first because it needs no Docker and has been the
+      # reliable one here. On a 413 only, retry with the CLI's Docker bundler,
+      # which uploads a compressed eszip instead (client-api: 2.7 MB). The
+      # ubuntu runner has Docker. Any other failure still fails the job.
       - name: Deploy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FN: ${{ inputs.function }}
+          PROJECT_REF: ${{ steps.target.outputs.project_ref }}
         run: |
-          supabase functions deploy "${{ inputs.function }}" \
-            --project-ref swvaxorwumispmjaaszb \
-            --no-verify-jwt \
-            --use-api
+          set -o pipefail
+          log=$(mktemp)
+          if supabase functions deploy "$FN" \
+              --project-ref "$PROJECT_REF" \
+              --no-verify-jwt \
+              --use-api 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          if ! grep -qiE '413|exceeds the maximum deployment size' "$log"; then
+            echo "::error::Deploy of $FN failed (not a size error). See the log above."
+            exit 1
+          fi
+          echo "::warning::$FN is over the 5 MB --use-api source cap. Retrying with the Docker bundler."
+          supabase functions deploy "$FN" \
+            --project-ref "$PROJECT_REF" \
+            --no-verify-jwt

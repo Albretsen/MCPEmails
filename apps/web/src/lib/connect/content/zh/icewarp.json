@@ -21,7 +21,7 @@
     "titleLine1": "将 IceWarp 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT 和任意 MCP 客户端",
     "lead": "IceWarp 已经在运行你的邮件、日历和聊天。在它之上加一个 MCP 服务器，就能让 AI 代理直接处理邮箱：读取、搜索、发送、回复、定时和归档，所用凭据与任何桌面客户端相同。",
-    "answer": "Claude 无法自行访问 IceWarp 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 IceWarp 实例，使用端口 993 和隐式 TLS，并用 IceWarp 管理控制台中保存的邮箱密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。IceWarp 是由你托管的软件，所以没有可以公布的共用主机名：服务器必须能从互联网解析和访问，而 993 上的证书必须对你所连接的名称有效。1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 IceWarp 服务器。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 IceWarp 实例，使用端口 993 和隐式 TLS，并用 IceWarp 管理控制台中保存的邮箱密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。IceWarp 是由你托管的软件，所以没有可以公布的共用主机名：服务器必须能从互联网解析和访问，而 993 上的证书必须对你所连接的名称有效。1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "来自控制台的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,16 +32,16 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。1 个收件箱永久免费，无需信用卡，足以用一个真实的 IceWarp 账户来试用。"
     },
     {
       "h": "在管理控制台中打开 IMAP 服务",
-      "p": "进入 System 节点，然后打开 Services，双击 IMAP。确认该服务正在运行，且安全端口为 993。在 System 中顺便打开 Certificates，检查绑定到你打算交给 mcpemails 的主机名上的是哪张证书。"
+      "p": "进入 System 节点，然后打开 Services，双击 IMAP。确认该服务正在运行，且安全端口为 993。在 System 中顺便打开 Certificates，检查绑定到你打算交给 MCPEmails 的主机名上的是哪张证书。"
     },
     {
       "h": "检查账户的 Mailbox Type，然后添加收件箱",
-      "p": "在 Domains and Accounts 下打开该用户，查看 Options 选项卡。<code>Mailbox: Type</code> 设置必须是 IMAP 与 POP3 组合的那个值，而不是单独的 POP3。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 IceWarp 主机名、完整地址和邮箱密码。"
+      "p": "在 Domains and Accounts 下打开该用户，查看 Options 选项卡。<code>Mailbox: Type</code> 设置必须是 IMAP 与 POP3 组合的那个值，而不是单独的 POP3。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入你的 IceWarp 主机名、完整地址和邮箱密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "托管 MCP 服务器必须向你的 IceWarp 主机建立入站连接，所以只在内部网络上发布、或只能通过企业 VPN 访问的服务器，无法用这种方式连接。如果你希望 IMAP 会话留在网络边界之内，mcpemails 可以自托管。",
+    "托管 MCP 服务器必须向你的 IceWarp 主机建立入站连接，所以只在内部网络上发布、或只能通过企业 VPN 访问的服务器，无法用这种方式连接。如果你希望 IMAP 会话留在网络边界之内，MCPEmails 可以自托管。",
     "证书校验是严格的，不能豁免，因此过期的证书或签发给其他名称的证书会被拒绝，而不是带着警告被接受。",
-    "IceWarp 的日历、通讯录和聊天不在此范围内。mcpemails 使用 IMAP 和 SMTP，所以它处理的是邮件，而不是与之并列的群件功能。"
+    "IceWarp 的日历、通讯录和聊天不在此范围内。MCPEmails 使用 IMAP 和 SMTP，所以它处理的是邮件，而不是与之并列的群件功能。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 IceWarp 吗？",
-      "a": "不能单独使用。Claude 没有 IceWarp 连接器，也无法向你运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 IceWarp 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，同一个收件箱随后也可在 Cursor 和 ChatGPT 中使用。"
+      "a": "不能单独使用。Claude 没有 IceWarp 连接器，也无法向你运行的服务器打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 IceWarp 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，同一个收件箱随后也可在 Cursor 和 ChatGPT 中使用。"
     },
     {
       "q": "IceWarp 的 IMAP 和 SMTP 设置是什么？",

@@ -2,21 +2,21 @@ const translation = {
   title: '如何在 2 分钟内把邮箱连接到 AI 智能体（Gmail、Outlook、iCloud、Fastmail 与 IMAP）',
   description: '在 2 分钟内把邮箱连接到 AI 智能体。手把手教你通过 MCP 接入 Gmail、Outlook、iCloud、Fastmail 以及任意 IMAP 邮箱，且邮件从不存储。',
   coverAlt: '在 2 分钟内把邮箱连接到 AI 智能体——通过 MCP 接入 Gmail、Outlook、iCloud、Fastmail 与 IMAP',
-  content: `把邮箱连接到 AI 智能体只需两步：在 MCP Emails 控制台连接邮箱，然后把智能体指向一个 endpoint URL。如果用的是像 claude.ai 这样支持 OAuth 的客户端，到这里就完成了。无需写代码、无需 SDK，而且你的邮件从不存储在任何地方——每一次读取和发送都实时打到你的邮件服务商，智能体拿到后就立即丢弃。
+  content: `把邮箱连接到 AI 智能体只需两步：在 MCPEmails 控制台连接邮箱，然后把智能体指向一个 endpoint URL。如果用的是像 claude.ai 这样支持 OAuth 的客户端，到这里就完成了。无需写代码、无需 SDK，而且你的邮件从不存储在任何地方——每一次读取和发送都实时打到你的邮件服务商，智能体拿到后就立即丢弃。
 
 这是一份快速指南。在下面选择你的邮件服务商，跟着四到五个步骤走，你就能让 Claude（或者 Cursor，或者一个自定义脚本）读取和发送真实邮件，所花的时间大约只够你把这一段读两遍。如果想看更深入的“这是什么、安不安全”版本，请从[让 AI 智能体访问邮箱的完整指南](/blog/how-to-give-your-ai-agent-email-access)开始。
 
 ## 每个服务商都共有的一步：连接你的客户端
 
-在动手连接服务商之前，先决定你的 AI 智能体如何与 MCP Emails 通信。有两条路径，它们都使用同一个 endpoint 和同一套工具。
+在动手连接服务商之前，先决定你的 AI 智能体如何与 MCPEmails 通信。有两条路径，它们都使用同一个 endpoint 和同一套工具。
 
 **路径 A——OAuth 客户端（claude.ai、Claude Desktop、Cursor）。** 不需要 API 密钥。你粘贴一个 URL 并批准一次登录：
 
 1. 在 claude.ai 中，进入 **Customize → Connectors → Add connector**。
 2. 粘贴 endpoint：\`https://www.mcpemails.com/api/mcp\`
-3. 点击 **Connect**，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或者两者都要）。
+3. 点击 **Connect**，登录你的 MCPEmails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或者两者都要）。
 
-客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。
+客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。如果想看针对具体客户端的教程，请参阅[把 Claude 连接到你的邮箱](/blog/connect-claude-to-email)或[把 ChatGPT 连接到你的邮箱](/blog/connect-chatgpt-to-email)。
 
 **路径 B——API 密钥客户端（Cline、JetBrains、cURL、自定义智能体）。** 适用于任何不内置 OAuth 的工具：
 
@@ -30,7 +30,7 @@ const translation = {
 
 ## 逐个连接服务商
 
-### Gmail（应用专用密码，或使用 Google 登录）
+### Gmail（应用专用密码）
 
 Gmail 默认通过 IMAP 使用 Google 应用专用密码连接。
 
@@ -39,7 +39,7 @@ Gmail 默认通过 IMAP 使用 Google 应用专用密码连接。
 3. 输入完整的 Gmail 地址，粘贴应用专用密码，然后点击**连接收件箱**。
 4. 连接会在 Gmail 上测试，随后邮箱显示为已连接。完成。
 
-你的常规 Google 密码在这里不起作用，也从不需要。如果你更想用 Google 登录，可以在同一个窗口中展开**更想用 Google 登录？**，然后点击**使用 Google 连接**；Google 会先显示应用未经验证的警告（点击**高级（Advanced）**，再点击**前往 mcpemails.com（Go to mcpemails.com）**）。这种方式使用 Gmail API，因此搜索可以使用 Gmail 自己的操作符（\`from:\`、\`is:unread\`、\`after:\`），Claude 也能使用真正的标签。应用专用密码方式使用 IMAP 文本搜索，把标签显示为文件夹，并且可以永久删除。[Gmail 指南](/blog/connect-gmail-to-claude)有更多细节。
+你的常规 Google 密码在这里不起作用，也从不需要。通过 IMAP，Gmail 标签会显示为文件夹，搜索使用 MCPEmails 的结构化字段（发件人、主题、日期、未读等），而不是 Gmail 自己的搜索操作符。你可以随时在同一个 Google 页面撤销应用专用密码。如果你使用 Google Workspace 却找不到应用专用密码页面，可能是管理员为该域名关闭了应用专用密码。[Gmail 指南](/blog/connect-gmail-to-claude)有更多细节。
 
 ### Outlook / Microsoft 365（使用 Microsoft 登录）
 
@@ -57,7 +57,7 @@ Outlook 通过 Microsoft 登录连接，而不是密码。无需应用专用密�
 iCloud 不向第三方提供 OAuth，所以你要生成一个应用专用密码。这会多花一分钟。
 
 1. 前往 [appleid.apple.com](https://appleid.apple.com)，登录后打开 **Sign-In and Security** 部分。
-2. 在 **App-Specific Passwords** 下创建一个新密码，并将其命名为“MCP Emails”。
+2. 在 **App-Specific Passwords** 下创建一个新密码，并将其命名为“MCPEmails”。
 3. 复制生成的密码（它的形式类似 \`xxxx-xxxx-xxxx-xxxx\`）。
 4. 在 **Dashboard → Inboxes → Connect Inbox → iCloud** 中，输入你的 iCloud 地址并粘贴那个应用密码。
 
@@ -68,7 +68,7 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 如果你读过旧文档，这里有一个快速纠正：**Fastmail 用应用密码连接，而不是 OAuth。** 别去找什么“用 Fastmail 登录”的按钮——这里没有。
 
 1. 在 Fastmail 中，打开 **Settings → Privacy & Security → Integrations**（或 **App Passwords**）。
-2. 创建一个新的应用密码。给它邮件（IMAP/SMTP）访问权限，并命名为“MCP Emails”。
+2. 创建一个新的应用密码。给它邮件（IMAP/SMTP）访问权限，并命名为“MCPEmails”。
 3. 复制 Fastmail 生成的密码。
 4. 在 **Dashboard → Inboxes → Connect Inbox → Fastmail** 中，输入你的 Fastmail 地址并粘贴。
 
@@ -80,7 +80,7 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 1. 在你的服务商的安全设置里，创建一个**应用密码**（Yahoo、Zoho 和 Yandex 都把它藏在账户安全里）。要用真正的应用密码，而不是你的登录密码——反正现在大多数服务商也已经屏蔽了用普通密码登录 IMAP。
 2. **Dashboard → Inboxes → Connect Inbox → IMAP。**
-3. 输入你的邮箱地址和应用密码。MCP Emails 会自动检测常见的服务器；如果你的比较特殊，就填入你服务商列出的 IMAP 和 SMTP 主机/端口。
+3. 输入你的邮箱地址和应用密码。MCPEmails 会自动检测常见的服务器；如果你的比较特殊，就填入你服务商列出的 IMAP 和 SMTP 主机/端口。
 4. 保存。邮箱即连接完成，随时可用。
 
 关于 iCloud、Fastmail 以及那一长串 IMAP 主机各自的特殊之处，[iCloud、Fastmail 与 IMAP 深度解析](/blog/connect-icloud-fastmail-imap-to-claude)是排查问题的参考资料。
@@ -102,15 +102,15 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`inbox_list\`，然后带上 \`action: "list"\` 和 \`unread: true\` 运行 \`email_read\`，再对每一封带上 \`action: "read"\` 运行 \`email_read\`。如果这能跑通，你的连接就已经生效了。
 
-有一个值得先讲明白的实话提醒：MCP Emails 是基于轮询的。没有 webhook，也没有推送事件，所以智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。
+有一个值得先讲明白的实话提醒：MCPEmails 是基于轮询的。没有 webhook，也没有推送事件，所以智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。
 
 ## 为什么可以放心地快速完成
 
-这里的快不是靠在安全上偷工减料换来的。邮件在每次调用时实时获取、从不存储——正文、主题和附件交给智能体后会立即丢弃。每个邮箱唯一被持久化的东西，是你的 OAuth 令牌或应用密码，它用 AES-256-GCM 加密，只在调用时于一个隔离的函数内部被解密。发送始终经由你自己的服务商，所以你的域名信誉依旧属于你。如果想了解架构细节，请阅读[为什么“邮件从不存储”真的很重要](/blog/why-email-never-stored-matters)。
+这里的快不是靠在安全上偷工减料换来的。邮件在每次调用时实时获取、从不存储：正文、主题和附件交给智能体后会立即丢弃。每个邮箱唯一被持久化的东西，是你的 OAuth 令牌或应用密码。它在存储时用 AES-256-GCM 加密，只有在请求需要时才在我们的服务器上解密，并且从不发送给你的智能体。发送始终经由你自己的服务商，所以你的域名信誉依旧属于你。如果想了解架构细节，请阅读[为什么“邮件从不存储”真的很重要](/blog/why-email-never-stored-matters)。
 
 ## 总结
 
-整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 9 美元，最多可连接三个邮箱；Pro 可连接你拥有的每一个邮箱。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
+整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 9 美元，最多可连接三个邮箱；Pro 最多可连接 10 个。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
 };
 
 export default translation;

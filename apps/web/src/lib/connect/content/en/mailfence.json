@@ -21,7 +21,7 @@
     "titleLine1": "Connect Mailfence to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Mailfence inbox. Read, search, send, reply, schedule and organize mail over IMAP, on any MCP client, with the plan requirement and the two-factor caveat stated up front instead of discovered later.",
-    "answer": "Claude cannot reach Mailfence on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.mailfence.com on port 993, and SMTP at smtp.mailfence.com on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two conditions decide whether it will work: IMAP, POP and SMTP are available on Mailfence's paid plans only, not on the free account, and the login must be your primary address or username rather than an alias. Authentication is your Mailfence password, or better, a service-specific password generated under Settings, Account, Security. One inbox is free at our end, forever.",
+    "answer": "Claude cannot reach Mailfence on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.mailfence.com on port 993, and SMTP at smtp.mailfence.com on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two conditions decide whether it will work: IMAP, POP and SMTP are available on Mailfence's paid plans only, not on the free account, and the login must be your primary address or username rather than an alias. Authentication is your Mailfence password, or better, a service-specific password generated under Settings, Account, Security. One inbox is free at our end, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Paid Mailfence plan required for IMAP",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Generate a service-specific password and turn off what you do not need",
-      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, create a password scoped to IMAP and one for SMTP rather than reusing your account password, and disable POP, xDAV and any other protocol you are not using. Mailfence's own hardening advice is to do exactly this. Then add the mailbox in mcpemails with your <b>primary</b> address or username and that password."
+      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, create a password scoped to IMAP and one for SMTP rather than reusing your account password, and disable POP, xDAV and any other protocol you are not using. Mailfence's own hardening advice is to do exactly this. Then add the mailbox in MCPEmails with your <b>primary</b> address or username and that password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Connecting a Mailfence mailbox to an AI client means that AI provider reads the message content it works with. mcpemails fetches mail live from Mailfence per request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Mailfence's Belgian jurisdiction and its no-tracking stance apply to Mailfence, and do not follow a message into an AI vendor you attach yourself.",
-    "Mailfence's OpenPGP keystore is the whole point of the product for many of its users, and a message encrypted to your key arrives over IMAP as ciphertext. mcpemails holds no private key of yours, so an agent can sort, flag and file those messages but cannot read them. They stay readable in the Mailfence web interface, where the key lives.",
+    "Connecting a Mailfence mailbox to an AI client means that AI provider reads the message content it works with. MCPEmails fetches mail live from Mailfence per request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Mailfence's Belgian jurisdiction and its no-tracking stance apply to Mailfence, and do not follow a message into an AI vendor you attach yourself.",
+    "Mailfence's OpenPGP keystore is the whole point of the product for many of its users, and a message encrypted to your key arrives over IMAP as ciphertext. MCPEmails holds no private key of yours, so an agent can sort, flag and file those messages but cannot read them. They stay readable in the Mailfence web interface, where the key lives.",
     "A free Mailfence account cannot be connected here at all. That is a Mailfence plan restriction rather than a limitation of the MCP server, and there is no workaround short of a paid plan."
   ],
   "faq": [
     {
       "q": "Does Claude work with Mailfence?",
-      "a": "Not directly. Claude has no built-in Mailfence connector. Connecting an MCP server such as mcpemails to a paid Mailfence account over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients without repeating the setup."
+      "a": "Not directly. Claude has no built-in Mailfence connector. Connecting an MCP server such as MCPEmails to a paid Mailfence account over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients without repeating the setup."
     },
     {
       "q": "What are the Mailfence IMAP and SMTP settings?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Can my AI read my OpenPGP-encrypted Mailfence mail?",
-      "a": "No. Mailfence's encryption relies on a key that your AI client does not have and that mcpemails never receives, so an encrypted message arrives over IMAP as an armoured ciphertext block. The agent can see the sender, subject and date and can move or flag the message, but the body is unreadable outside the Mailfence interface."
+      "a": "No. Mailfence's encryption relies on a key that your AI client does not have and that MCPEmails never receives, so an encrypted message arrives over IMAP as an armoured ciphertext block. The agent can see the sender, subject and date and can move or flag the message, but the body is unreadable outside the Mailfence interface."
     },
     {
       "q": "Is my Mailfence mail stored on your servers?",

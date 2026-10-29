@@ -21,7 +21,7 @@
     "titleLine1": "Conecta el correo de GoDaddy a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de GoDaddy. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cuanto sepas en cuál de los varios productos de correo de GoDaddy está realmente tu dirección.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de GoDaddy. mcpemails es un servidor MCP alojado que conecta GoDaddy Professional Email por IMAP en imap.secureserver.net en el puerto 993, autenticándose con tu dirección completa y la contraseña de correo propia de ese buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. GoDaddy vende más de un producto de correo bajo la misma marca, y un buzón de Microsoft 365 comprado a través de GoDaddy es un buzón de Microsoft, que se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, así que comprueba primero cuál tienes. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de GoDaddy. MCPEmails es un servidor MCP alojado que conecta GoDaddy Professional Email por IMAP en imap.secureserver.net en el puerto 993, autenticándose con tu dirección completa y la contraseña de correo propia de ese buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. GoDaddy vende más de un producto de correo bajo la misma marca, y un buzón de Microsoft 365 comprado a través de GoDaddy es un buzón de Microsoft, que se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, así que comprueba primero cuál tienes. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de correo propia del buzón",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -45,13 +45,13 @@
     },
     {
       "h": "Pega la URL MCP en tu IA",
-      "p": "Añade tu dirección y tu contraseña en mcpemails, pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      "p": "Añade tu dirección y tu contraseña en MCPEmails, pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
   "gotchas": [
     {
       "h": "Un buzón de Microsoft 365 comprado a GoDaddy se conecta con Outlook, no por IMAP",
-      "p": "GoDaddy revende Microsoft 365 y ha estado migrando a sus antiguos clientes de Workspace Email a ese producto, así que buena parte de quienes creen tener «un correo de GoDaddy» tienen ahora un buzón de Microsoft con factura de GoDaddy. Esos buzones no están en <code>imap.secureserver.net</code>; están en los servidores de Microsoft, así que conéctalos con la opción Outlook (inicio de sesión con Microsoft) y no con los ajustes de esta página. Como es una cuenta de Microsoft 365 del trabajo, puede que el administrador de TI de tu organización tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. La señal es sencilla: si al iniciar sesión en tu webmail acabas en Outlook en la web, es el producto de Microsoft."
+      "p": "GoDaddy revende Microsoft 365 y ha estado migrando a sus antiguos clientes de Workspace Email a ese producto, así que buena parte de quienes creen tener «un correo de GoDaddy» tienen ahora un buzón de Microsoft con factura de GoDaddy. Esos buzones no están en <code>imap.secureserver.net</code>; están en los servidores de Microsoft, así que conéctalos con la opción Outlook (inicio de sesión con Microsoft) y no con los ajustes de esta página. Como es una cuenta de Microsoft 365 del trabajo, puede que el administrador de TI de tu organización tenga que aprobar MCPEmails una vez primero, y el panel te da un enlace de aprobación para enviárselo. La señal es sencilla: si al iniciar sesión en tu webmail acabas en Outlook en la web, es el producto de Microsoft."
     },
     {
       "h": "La mitad de las guías IMAP de GoDaddy en internet son de un producto que ya no existe",
@@ -63,7 +63,7 @@
     },
     {
       "h": "El servidor IMAP de GoDaddy no anuncia SASL-IR",
-      "p": "El servidor IMAP detrás de <code>imap.secureserver.net</code> se identifica como Fenix y omite la capacidad SASL-IR, así que rechaza la autenticación de un solo paso que envía las credenciales en la misma línea que el comando AUTHENTICATE. Los clientes que dan por hecho SASL-IR reciben un <code>BAD</code> seco sin explicación, idéntico a unas credenciales incorrectas. mcpemails lo detecta y reintenta con el intercambio en dos pasos, así que la conexión funciona, pero por eso otras herramientas IMAP fallan contra GoDaddy y funcionan en otros sitios."
+      "p": "El servidor IMAP detrás de <code>imap.secureserver.net</code> se identifica como Fenix y omite la capacidad SASL-IR, así que rechaza la autenticación de un solo paso que envía las credenciales en la misma línea que el comando AUTHENTICATE. Los clientes que dan por hecho SASL-IR reciben un <code>BAD</code> seco sin explicación, idéntico a unas credenciales incorrectas. MCPEmails lo detecta y reintenta con el intercambio en dos pasos, así que la conexión funciona, pero por eso otras herramientas IMAP fallan contra GoDaddy y funcionan en otros sitios."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de GoDaddy?",
-      "a": "Funciona con GoDaddy Professional Email, el producto basado en Titan, una vez que un servidor MCP como mcpemails se conecta al buzón por IMAP. Claude no tiene un conector integrado para GoDaddy. Un buzón de Microsoft 365 comprado a través de GoDaddy también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
+      "a": "Funciona con GoDaddy Professional Email, el producto basado en Titan, una vez que un servidor MCP como MCPEmails se conecta al buzón por IMAP. Claude no tiene un conector integrado para GoDaddy. Un buzón de Microsoft 365 comprado a través de GoDaddy también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCPEmails una vez primero."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de GoDaddy?",

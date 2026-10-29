@@ -21,18 +21,18 @@
     "titleLine1": "Connectez votre boîte Online.no",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Telenor Online. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois l'accès des clients tiers autorisé sur Mine Sider.",
-    "answer": "Claude ne peut pas atteindre une boîte Telenor Online.no tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.online.no, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux particularités de Telenor déterminent si cela fonctionne : l'autorisation d'utiliser Online e-post dans des programmes de messagerie tiers est un interrupteur sur Mine Sider, et l'identifiant n'est pas votre adresse mais la partie avant @online.no, huit caractères au maximum. Le mot de passe est le mot de passe e-post défini sur Mine Sider, pas votre TelenorID. Une boîte sur mcpemails est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas atteindre une boîte Telenor Online.no tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.online.no, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux particularités de Telenor déterminent si cela fonctionne : l'autorisation d'utiliser Online e-post dans des programmes de messagerie tiers est un interrupteur sur Mine Sider, et l'identifiant n'est pas votre adresse mais la partie avant @online.no, huit caractères au maximum. Le mot de passe est le mot de passe e-post défini sur Mine Sider, pas votre TelenorID. Une boîte sur MCPEmails est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Autorisez les clients tiers sur Mine Sider",
     "meta2": "E-mails récupérés en direct, jamais stockés"
   },
   "method": {
     "title": "Comment Online.no se connecte : une autorisation, un identifiant court et un mot de passe distinct",
-    "body": "Telenor sert IMAP sur <code>imap.online.no</code>, port 993, en TLS implicite, et la soumission SMTP sur <code>smtp.online.no</code>, port 465. Les pages de configuration actuelles de Telenor indiquent <code>mail.online.no</code> pour les deux rôles et précisent que les anciens noms <code>imap.online.no</code> et <code>smtp.online.no</code> fonctionnent aussi ; les deux ont répondu lors d'une connexion TLS réelle, et c'est l'ancienne paire que mcpemails préremplit. Le reste de la configuration est là où Online.no se distingue de tous les autres. Telenor définit l'identifiant comme <b>det som er før @online.no, maks 8 tegn</b> (ce qui précède @online.no, 8 caractères max.), donc la partie locale plutôt que l'adresse complète. L'identifiant de connexion est le mot de passe e-post, et les conditions de Telenor précisent : <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b> (si le client utilise un programme de messagerie, le mot de passe du compte e-mail se définit sur Mine Sider). Et l'autorisation d'utiliser la boîte depuis un programme tiers est elle-même un réglage à activer à cet endroit. Online e-post est un service Telenor payant, pas un bonus gratuit lié à un abonnement haut débit."
+    "body": "Telenor sert IMAP sur <code>imap.online.no</code>, port 993, en TLS implicite, et la soumission SMTP sur <code>smtp.online.no</code>, port 465. Les pages de configuration actuelles de Telenor indiquent <code>mail.online.no</code> pour les deux rôles et précisent que les anciens noms <code>imap.online.no</code> et <code>smtp.online.no</code> fonctionnent aussi ; les deux ont répondu lors d'une connexion TLS réelle, et c'est l'ancienne paire que MCPEmails préremplit. Le reste de la configuration est là où Online.no se distingue de tous les autres. Telenor définit l'identifiant comme <b>det som er før @online.no, maks 8 tegn</b> (ce qui précède @online.no, 8 caractères max.), donc la partie locale plutôt que l'adresse complète. L'identifiant de connexion est le mot de passe e-post, et les conditions de Telenor précisent : <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b> (si le client utilise un programme de messagerie, le mot de passe du compte e-mail se définit sur Mine Sider). Et l'autorisation d'utiliser la boîte depuis un programme tiers est elle-même un réglage à activer à cet endroit. Online e-post est un service Telenor payant, pas un bonus gratuit lié à un abonnement haut débit."
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Toujours sur Mine Sider, définissez le mot de passe du compte de messagerie lui-même. Les conditions d'Online e-post indiquent que lorsqu'un client utilise un programme de messagerie, le mot de passe du compte e-post se définit sur Mine Sider. C'est un identifiant différent de votre connexion TelenorID, et c'est la cause la plus fréquente d'une connexion refusée."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Collez-le dans MCPEmails, puis collez l'URL MCP dans votre IA",
       "p": "Choisissez IMAP / SMTP, saisissez comme identifiant la partie avant <code>@online.no</code> et collez le mot de passe e-post. Les serveurs et ports Telenor sont préremplis et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -59,7 +59,7 @@
     },
     {
       "h": "Le serveur propose uniquement AUTH=LOGIN, sans AUTH=PLAIN",
-      "p": "Online.no répond avec <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>. Cette liste annoncée contient <code>AUTH=LOGIN</code> et pas <code>AUTH=PLAIN</code>, soit l'inverse de presque tous les autres fournisseurs ici. Les bibliothèques clientes modernes utilisent souvent PLAIN par défaut et traitent LOGIN comme une solution de repli historique ; chez Online.no, c'est PLAIN qui manque. Les outils qui ne basculent pas reçoivent un refus d'authentification qui ressemble à un mauvais mot de passe. mcpemails négocie à partir de ce que le serveur annonce réellement."
+      "p": "Online.no répond avec <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>. Cette liste annoncée contient <code>AUTH=LOGIN</code> et pas <code>AUTH=PLAIN</code>, soit l'inverse de presque tous les autres fournisseurs ici. Les bibliothèques clientes modernes utilisent souvent PLAIN par défaut et traitent LOGIN comme une solution de repli historique ; chez Online.no, c'est PLAIN qui manque. Les outils qui ne basculent pas reçoivent un refus d'authentification qui ressemble à un mauvais mot de passe. MCPEmails négocie à partir de ce que le serveur annonce réellement."
     },
     {
       "h": "Les conditions de Telenor limitent ce que vous pouvez mettre dans la ligne From",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Online.no ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur Telenor ou Online.no intégré. Pointer un serveur MCP comme mcpemails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur Telenor ou Online.no intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'Online.no ?",

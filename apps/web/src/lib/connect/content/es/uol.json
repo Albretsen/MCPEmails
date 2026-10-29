@@ -21,7 +21,7 @@
     "titleLine1": "Conecta UOL Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de UOL. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede acceder por sí solo a UOL Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.uol.com.br en el puerto 993, autenticándose con tu contraseña de UOL, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. UOL entrega los buzones con IMAP desactivado: tienes que abrir los ajustes del webmail y usar Ativar IMAP antes de que cualquier cliente pueda iniciar sesión, y mientras no lo hagas, una contraseña correcta será rechazada. El correo saliente pasa por smtps.uol.com.br en el puerto 587 con STARTTLS, a pesar del nombre del servidor. Una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a UOL Mail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.uol.com.br en el puerto 993, autenticándose con tu contraseña de UOL, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. UOL entrega los buzones con IMAP desactivado: tienes que abrir los ajustes del webmail y usar Ativar IMAP antes de que cualquier cliente pueda iniciar sesión, y mientras no lo hagas, una contraseña correcta será rechazada. El correo saliente pasa por smtps.uol.com.br en el puerto 587 con STARTTLS, a pesar del nombre del servidor. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de UOL, con IMAP activado antes",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Deja la pestaña abierta; la parte de UOL lleva alrededor de un minuto."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Inicia sesión en el webmail de UOL, abre Configurações (Ajustes) y usa la opción Ativar IMAP; luego guarda el cambio. Este es el paso que falta en casi todas las conexiones fallidas a UOL. El error de inicio de sesión resultante no menciona en ningún momento que IMAP esté desactivado, así que la gente pierde el tiempo con la contraseña y los puertos."
     },
     {
-      "h": "Introduce tu dirección y tu contraseña en mcpemails",
+      "h": "Introduce tu dirección y tu contraseña en MCPEmails",
       "p": "Elige IMAP / SMTP e introduce la dirección del buzón y tu contraseña de UOL. Los servidores y puertos ya vienen rellenados y se confirmaron con una conexión TLS real. Si al iniciar sesión se rechaza la dirección completa, prueba solo con el nombre de usuario, sin <code>@uol.com.br</code>: UOL documenta el usuario en esa forma más corta y algunos de sus buzones solo lo aceptan así."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "El servidor de salida se llama smtps, y no usa TLS implícito",
-      "p": "Todo en el nombre <code>smtps.uol.com.br</code> sugiere SMTP con TLS implícito en el puerto 465, que es lo que convencionalmente significa la s de <code>smtps</code> y lo que asumen muchas configuraciones copiadas. El servicio de envío de UOL que funciona está en el puerto <b>587 con STARTTLS</b>: la conexión se abre sin cifrar y se actualiza antes de la autenticación. Un cliente configurado con el 465 y TLS implícito suele quedarse colgado hasta agotar el tiempo de espera en lugar de devolver un error útil, lo cual es un fallo mucho peor que un rechazo. Usa el 587 y STARTTLS. mcpemails lo rellena correctamente."
+      "p": "Todo en el nombre <code>smtps.uol.com.br</code> sugiere SMTP con TLS implícito en el puerto 465, que es lo que convencionalmente significa la s de <code>smtps</code> y lo que asumen muchas configuraciones copiadas. El servicio de envío de UOL que funciona está en el puerto <b>587 con STARTTLS</b>: la conexión se abre sin cifrar y se actualiza antes de la autenticación. Un cliente configurado con el 465 y TLS implícito suele quedarse colgado hasta agotar el tiempo de espera en lugar de devolver un error útil, lo cual es un fallo mucho peor que un rechazo. Usa el 587 y STARTTLS. MCPEmails lo rellena correctamente."
     },
     {
       "h": "IMAP está desactivado hasta que lo actives, y el error culpa a tu contraseña",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con UOL Mail?",
-      "a": "No directamente. Claude no tiene un conector integrado para UOL y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de UOL le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para UOL y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de UOL le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de UOL?",

@@ -7,7 +7,7 @@
     "method": "oauth",
     "label": "Connexion avec Microsoft (OAuth 2.0)",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "Rien à saisir. Vous vous connectez avec votre compte Microsoft sur la page de Microsoft et vous approuvez l'accès : aucun mot de passe ni mot de passe d'application n'est saisi ici. Les paramètres IMAP et SMTP publiés pour Outlook.com ne s'appliquent pas : MCP Emails se connecte via Microsoft Graph.",
+    "usernameForm": "Rien à saisir. Vous vous connectez avec votre compte Microsoft sur la page de Microsoft et vous approuvez l'accès : aucun mot de passe ni mot de passe d'application n'est saisi ici. Les paramètres IMAP et SMTP publiés pour Outlook.com ne s'appliquent pas : MCPEmails se connecte via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
@@ -18,20 +18,20 @@
     "eyebrow": "Outlook.com + IA",
     "titleLine1": "Connectez Outlook.com à Claude,",
     "titleLine2": "et à ChatGPT, Cursor, tout client MCP",
-    "lead": "Donnez à votre agent IA votre boîte Outlook.com, Hotmail, Live ou MSN. Connectez-vous avec Microsoft, approuvez l'accès une fois, puis lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails depuis n'importe quel client MCP avec une seule URL.",
+    "lead": "Le connecteur Microsoft 365 intégré à Claude n'accepte que les comptes professionnels ou scolaires. MCPEmails connecte les boîtes personnelles Outlook.com, Hotmail, Live et MSN : connectez-vous avec Microsoft, autorisez l'accès une fois, puis lisez, cherchez, envoyez, répondez, planifiez et classez vos e-mails depuis n'importe quel client MCP avec une seule URL.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Connexion avec Microsoft, sans mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Oui. mcpemails est un serveur MCP hébergé qui connecte un compte Microsoft personnel, une adresse se terminant par outlook.com, hotmail.com, live.com ou msn.com, via Microsoft Graph. Vous cliquez sur Se connecter avec Microsoft, vous vous identifiez, puis vous approuvez l'accès sur l'écran de consentement de Microsoft, où MCP Emails apparaît comme éditeur vérifié. Aucun mot de passe d'application ni paramètre IMAP à saisir, et aucun administrateur n'intervient pour un compte personnel. Collez une URL dans Claude, ChatGPT, Cursor ou tout client MCP, et l'agent peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. Une boîte est gratuite, pour toujours."
+    "answer": "Oui. MCPEmails est un serveur MCP hébergé qui connecte un compte Microsoft personnel, une adresse se terminant par outlook.com, hotmail.com, live.com ou msn.com, via Microsoft Graph. Vous cliquez sur Se connecter avec Microsoft, vous vous identifiez, puis vous approuvez l'accès sur l'écran de consentement de Microsoft, où MCPEmails apparaît comme éditeur vérifié. Aucun mot de passe d'application ni paramètre IMAP à saisir, et aucun administrateur n'intervient pour un compte personnel. Collez une URL dans Claude, ChatGPT, Cursor ou tout client MCP, et l'agent peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. Une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Outlook.com se connecte : connexion avec Microsoft",
-    "body": "Outlook.com se connecte via <b>Microsoft Graph</b> avec OAuth 2.0, et non par IMAP. Vous vous identifiez sur la page de Microsoft et approuvez une courte liste d'autorisations : lire et modifier les e-mails (<b>Mail.ReadWrite</b>), envoyer des e-mails (<b>Mail.Send</b>), rester connecté (<b>offline_access</b>) ainsi que votre profil de base et votre adresse e-mail. Votre mot de passe Microsoft n'est saisi que sur la page de Microsoft et ne nous parvient jamais. Pour vous déconnecter, supprimez la boîte dans mcpemails ou retirez MCP Emails des applications ayant accès à votre compte Microsoft."
+    "body": "Outlook.com se connecte via <b>Microsoft Graph</b> avec OAuth 2.0, et non par IMAP. Vous vous identifiez sur la page de Microsoft et approuvez une courte liste d'autorisations : lire et modifier les e-mails (<b>Mail.ReadWrite</b>), envoyer des e-mails (<b>Mail.Send</b>), rester connecté (<b>offline_access</b>) ainsi que votre profil de base et votre adresse e-mail. Votre mot de passe Microsoft n'est saisi que sur la page de Microsoft et ne nous parvient jamais. Pour vous déconnecter, supprimez la boîte dans MCPEmails ou retirez MCPEmails des applications ayant accès à votre compte Microsoft."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Choisissez Outlook et connectez-vous avec Microsoft",
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "Les mots de passe d'application et les mots de passe IMAP ne fonctionnent pas, d'où l'usage de Microsoft Graph",
-      "p": "Microsoft a mis fin à l'authentification de base pour les comptes personnels se connectant depuis des applications tierces à partir du 16 septembre 2024, et le service IMAP d'Outlook.com ne propose plus qu'OAuth. Beaucoup d'anciens guides conseillent encore de générer un mot de passe d'application ; il ne permet plus de se connecter à la messagerie. mcpemails n'utilise pas du tout IMAP pour Outlook.com : il se connecte avec Microsoft et dialogue avec Microsoft Graph, donc aucun mot de passe à créer et aucun paramètre de serveur à mal saisir."
+      "p": "Microsoft a mis fin à l'authentification de base pour les comptes personnels se connectant depuis des applications tierces à partir du 16 septembre 2024, et le service IMAP d'Outlook.com ne propose plus qu'OAuth. Beaucoup d'anciens guides conseillent encore de générer un mot de passe d'application ; il ne permet plus de se connecter à la messagerie. MCPEmails n'utilise pas du tout IMAP pour Outlook.com : il se connecte avec Microsoft et dialogue avec Microsoft Graph, donc aucun mot de passe à créer et aucun paramètre de serveur à mal saisir."
     },
     {
       "h": "Les adresses hotmail.com, live.com et msn.com relèvent du même service",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Un compte Microsoft sans boîte Outlook est refusé",
-      "p": "Si le compte Microsoft avec lequel vous vous identifiez n'a pas de boîte Exchange Online derrière lui, Microsoft Graph n'a rien à ouvrir : mcpemails refuse la connexion et vous l'indique. Si la messagerie de cette adresse est hébergée sur un autre serveur, connectez-la plutôt en IMAP."
+      "p": "Si le compte Microsoft avec lequel vous vous identifiez n'a pas de boîte Exchange Online derrière lui, Microsoft Graph n'a rien à ouvrir : MCPEmails refuse la connexion et vous l'indique. Si la messagerie de cette adresse est hébergée sur un autre serveur, connectez-la plutôt en IMAP."
     },
     {
       "h": "Un compte Outlook.com tout récent peut être temporairement bloqué à l'envoi",
@@ -73,7 +73,11 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Outlook.com ?",
-      "a": "Oui. Connectez votre boîte Outlook.com à mcpemails en vous identifiant avec Microsoft, collez une URL MCP dans Claude, et Claude peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. La même URL fonctionne dans ChatGPT, Cursor et d'autres clients MCP."
+      "a": "Oui. Connectez votre boîte Outlook.com à MCPEmails en vous identifiant avec Microsoft, collez une URL MCP dans Claude, et Claude peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. La même URL fonctionne dans ChatGPT, Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Pourquoi le connecteur Microsoft 365 de Claude refuse-t-il mon compte Outlook.com ?",
+      "a": "Le connecteur Microsoft 365 intégré à Claude exige un compte professionnel ou scolaire rattaché à un locataire Microsoft Entra, et Anthropic précise que les comptes Microsoft personnels ne sont pas pris en charge : les adresses Outlook.com, Hotmail, Live et MSN sont donc refusées. MCPEmails connecte ces comptes personnels : vous vous connectez avec Microsoft sur la page de Microsoft, puis vous ajoutez MCPEmails à Claude comme connecteur personnalisé avec une seule URL."
     },
     {
       "q": "Cela fonctionne-t-il avec les adresses Hotmail, Live et MSN ?",
@@ -81,7 +85,7 @@
     },
     {
       "q": "Ai-je besoin d'un mot de passe d'application ou de paramètres IMAP ?",
-      "a": "Non. mcpemails connecte Outlook.com via Microsoft Graph une fois que vous vous êtes identifié avec Microsoft : aucun mot de passe d'application à créer, aucun serveur IMAP ou SMTP à saisir. Un mot de passe d'application ne fonctionnerait d'ailleurs pas : Microsoft a cessé d'accepter les mots de passe des applications de messagerie tierces sur les comptes personnels en septembre 2024."
+      "a": "Non. MCPEmails connecte Outlook.com via Microsoft Graph une fois que vous vous êtes identifié avec Microsoft : aucun mot de passe d'application à créer, aucun serveur IMAP ou SMTP à saisir. Un mot de passe d'application ne fonctionnerait d'ailleurs pas : Microsoft a cessé d'accepter les mots de passe des applications de messagerie tierces sur les comptes personnels en septembre 2024."
     },
     {
       "q": "Que peut faire mon IA dans Outlook.com ?",
@@ -89,11 +93,11 @@
     },
     {
       "q": "Est-ce la même chose que connecter un compte Microsoft 365 professionnel ?",
-      "a": "La connexion est la même, l'approbation peut différer. Un compte personnel ne nécessite aucun administrateur. Un compte Microsoft 365 professionnel ou scolaire exige souvent qu'un administrateur informatique approuve d'abord MCP Emails une fois pour toute l'organisation. Dans ce cas, le tableau de bord vous donne un lien d'approbation à envoyer à votre administrateur informatique, qui n'a pas besoin d'un compte MCP Emails pour l'utiliser."
+      "a": "La connexion est la même, l'approbation peut différer. Un compte personnel ne nécessite aucun administrateur. Un compte Microsoft 365 professionnel ou scolaire exige souvent qu'un administrateur informatique approuve d'abord MCPEmails une fois pour toute l'organisation. Dans ce cas, le tableau de bord vous donne un lien d'approbation à envoyer à votre administrateur informatique, qui n'a pas besoin d'un compte MCPEmails pour l'utiliser."
     },
     {
       "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
-      "a": "Non. Les messages sont récupérés en direct chez Microsoft à chaque requête et transmis à votre client IA. Le jeton OAuth issu de votre connexion Microsoft est chiffré au repos et le contenu des messages n'est pas conservé. Supprimer la boîte dans mcpemails met fin immédiatement à la connexion, et vous pouvez aussi retirer MCP Emails des applications ayant accès à votre compte Microsoft."
+      "a": "Non. Les messages sont récupérés en direct chez Microsoft à chaque requête et transmis à votre client IA. Le jeton OAuth issu de votre connexion Microsoft est chiffré au repos et le contenu des messages n'est pas conservé. Supprimer la boîte dans MCPEmails met fin immédiatement à la connexion, et vous pouvez aussi retirer MCPEmails des applications ayant accès à votre compte Microsoft."
     }
   ],
   "ctaBand": {

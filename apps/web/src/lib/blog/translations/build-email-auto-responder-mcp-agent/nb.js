@@ -2,13 +2,13 @@ const translation = {
   title: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent',
   description: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet AI-agent: poll etter ulest e-post, lag utkast og svar trygt med scopes, ratebegrensninger og sikringer.',
   coverAlt: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent — MCPEmails',
-  content: `En automatisk e-postsvarer bygget på MCP Emails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema med \`email_read\` (action \`list\`), leser hver melding med \`email_read\` (action \`read\`), lager et svarutkast og kaller \`email_compose\` (action \`reply\`). Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
+  content: `En automatisk e-postsvarer bygget på MCPEmails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema med \`email_read\` (action \`list\`), leser hver melding med \`email_read\` (action \`read\`), lager et svarutkast og kaller \`email_compose\` (action \`reply\`). Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
 
 Dette er den avanserte enden av historien om å [gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access). Hvis du bare vil ha triagering og morgensammendrag uten å sende noe, les [Triagering og oppsummering av innboks med en AI-agent](/blog/ai-agent-triage-summarize-inbox) først — det er et tryggere sted å starte. Kom tilbake hit når du faktisk vil at agenten skal trykke send.
 
 ## Den ærlige delen: det finnes ingen webhook
 
-De fleste «autosvar»-veiledninger antar at en push-hendelse utløses i det øyeblikket e-post lander. MCP Emails fungerer ikke slik, og det gjør heller ingen MCP-server jeg kjenner til. MCP er en forespørsel/svar-verktøyprotokoll. Serveren svarer når agenten din spør; den ringer aldri deg.
+De fleste «autosvar»-veiledninger antar at en push-hendelse utløses i det øyeblikket e-post lander. MCPEmails fungerer ikke slik, og det gjør heller ingen MCP-server jeg kjenner til. MCP er en forespørsel/svar-verktøyprotokoll. Serveren svarer når agenten din spør; den ringer aldri deg.
 
 Så en ekte automatisk e-postsvarer er en planlegger pluss en poll. Du kjører et tikk hvert N-te sekund eller minutt, ber om uleste meldinger, og behandler det som er nytt. Det er alt. Det er mindre elegant enn en webhook, men det er forutsigbart, og det betyr at *du* styrer takten og rekkevidden.
 
@@ -23,10 +23,10 @@ I dashbordet går du til **API Keys**, oppretter en nøkkel og gir den scopene d
 - \`read:email\` — for å polle, liste og lese meldinger med \`email_read\`.
 - \`send:email\` — for å kalle \`email_compose\` (action \`reply\`).
 
-Nøkkelen vises bare én gang. Kopier den. Den ser ut som \`mcpe_live_...\` og du sender den med på hver forespørsel:
+Nøkkelen vises bare én gang. Kopier den. Den ser ut som \`mcpe_9f86d081...\` og du sender den med på hver forespørsel:
 
 \`\`\`
-Authorization: Bearer mcpe_live_YOUR_KEY
+Authorization: Bearer mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 \`\`\`
 
 MCP-endepunktet er én enkelt URL:
@@ -87,7 +87,7 @@ Hvis du vil at en melding skal slutte å dukke opp som ulest når du har svart, 
 
 ## Ratebegrensninger, og hvorfor du aldri prøver et send-kall på nytt i blinde
 
-Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, uavhengig av plan. Arbeidsområdet ditt har også et burst-tak per nivå: **60 req/min på Gratis, 120 på Personal, 300 på Pro, 1 000 på Team** (se [priser](/pricing)). En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
+Arbeidsområdet ditt har et tak per minutt satt av planen (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
 
 Når du treffer en hastighetsgrense, returnerer serveren en feil du kan prøve på nytt (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
 
@@ -125,7 +125,7 @@ Ikke svar alle. Start med en smal tillatelsesliste — et support-alias, et best
 
 ### Hold et menneske i løkken, i hvert fall i starten
 
-Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCP Emails støtter utkast, så du kan la løkken kalle \`draft\` (action \`create\`) i stedet for \`email_compose\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
+Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCPEmails støtter utkast, så du kan la løkken kalle \`draft\` (action \`create\`) i stedet for \`email_compose\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
 
 ### Stopp løkker og selvsvar
 
@@ -150,7 +150,7 @@ Hvis jeg skulle satt dette i drift for en ekte innboks i morgen, ville jeg start
 
 Det er et system du faktisk kan stole på, og det lar seg generalisere. Den samme løkken med en annen prompt blir en triagebot, en lead-ruter eller en varsler. For en bredere meny over hva en agent kan gjøre når den er koblet til, se [7 ting en AI-agent kan gjøre med innbokstilgang](/blog/7-things-ai-agent-can-do-with-inbox-access). Hvis du fortsatt vurderer om du i det hele tatt skal gi en agent sendetilgang, er [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) verdt tiden din før du går i drift.
 
-Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup): Gratis kobler til én innboks, Personal ($9 per måned) til opptil tre, og Pro til alle du eier; legg til sikringene før du automatiserer.`,
+Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup): Gratis kobler til én innboks, Personal ($9 per måned) til opptil tre, og Pro til opptil 10; legg til sikringene før du automatiserer.`,
 };
 
 export default translation;

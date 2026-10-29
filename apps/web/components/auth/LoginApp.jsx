@@ -11,19 +11,30 @@ import {
   rememberConnectIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
-export function LoginApp({ redirectTo = null, connectProvider = null }) {
+export function LoginApp({ redirectTo = null, connectProvider = null, initialMode = 'password' }) {
   const t = useTranslations('auth');
+  // Arriving from an approval link in an AI chat: say why sign-in is needed,
+  // so the person knows they are in the right place.
+  const approvalContext = typeof redirectTo === 'string' && redirectTo.startsWith('/approvals/')
+    ? <p className="sub auth-context">{t('login.approvalContext')}</p>
+    : null;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [mode, setMode] = useState('password'); // 'password' | 'magic-link'
-  const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent'
+  // The SSO form (and /login?sso=1) exist only once SSO is released
+  // (NEXT_PUBLIC_SSO_ENABLED); until then the page is exactly as before.
+  const ssoOn = ssoUiEnabled();
+  const [mode, setMode] = useState(ssoOn && initialMode === 'sso' ? 'sso' : 'password'); // 'password' | 'magic-link' | 'sso'
+  const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent' | 'redirecting'
   const [serverError, setServerError] = useState('');
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
 
   // This page shows no marketing-consent checkbox, so an account it creates
   // (first OAuth login, magic link) must record none. Drop any tick the signup
@@ -69,6 +80,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
       // set, exactly as before.
       url.searchParams.set('next', withConnectIntent('/dashboard', connectProvider));
     }
+    // A typed work address lets the route say "use SSO" up front when the
+    // company enforces it, instead of after the provider round trip. Only
+    // once SSO is released (NEXT_PUBLIC_SSO_ENABLED): until then the OAuth
+    // URL stays exactly as before and carries no address.
+    if (ssoUiEnabled() && !validateEmail(email)) url.searchParams.set('email', email.trim());
     return url.toString();
   }
 
@@ -88,6 +104,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
   function handleGoogleSignIn() {
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
+  }
+
+  function handleMicrosoftSignIn() {
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
   }
 
   function handleGitHubSignIn() {
@@ -117,7 +138,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
 
     if (error) {
       const isBanned = error.code === 'user_banned' || /banned/i.test(error.message ?? '');
-      setServerError(isBanned ? t('login.errorAccountClosed') : t('login.errorIncorrect'));
+      setServerError(
+        isSsoRequiredError(error) ? t('shared.ssoRequired')
+          : isBanned ? t('login.errorAccountClosed')
+          : t('login.errorIncorrect'),
+      );
       setStep('error');
     } else {
       window.location.href = getRedirectDestination();
@@ -135,15 +160,56 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: buildCallbackUrl() },
+      // Staging never creates an account from a magic link, so a stranger's
+      // address gets no email from it. NEXT_PUBLIC_APP_ENV is inlined at build.
+      options: {
+        emailRedirectTo: buildCallbackUrl(),
+        ...(process.env.NEXT_PUBLIC_APP_ENV === 'staging' ? { shouldCreateUser: false } : {}),
+      },
     });
 
     if (error) {
-      setServerError(error.message ?? t('login.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('login.errorGeneric')));
       setStep('error');
     } else {
       setStep('sent');
     }
+  }
+
+  // SSO: the server looks the domain up in our verified SSO domains and
+  // answers with the identity provider's URL. POST, so the address never sits
+  // in a URL. Unknown, unverified and disabled domains all get one message.
+  async function handleSsoSubmit(e) {
+    e?.preventDefault();
+    const emailErr = validateEmail(email);
+    if (emailErr) { setEmailError(emailErr); return; }
+
+    setStep('redirecting');
+    setServerError('');
+
+    let result = null;
+    try {
+      const res = await fetch('/auth/sso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), next: getSafeRedirect() }),
+      });
+      result = await res.json().catch(() => null);
+    } catch {
+      result = null;
+    }
+
+    if (result?.url) {
+      window.location.href = result.url;
+      return;
+    }
+    if (result?.error === 'invalid_email') {
+      setEmailError(t('login.errorEmailInvalid'));
+      setStep('form');
+      return;
+    }
+    setServerError(result?.error === 'sso_not_configured' ? t('login.ssoNotConfigured') : t('login.ssoUnavailable'));
+    setStep('error');
   }
 
   function handleEmailChange(e) {
@@ -168,7 +234,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
     setPasswordError('');
   }
 
-  const isSubmitting = step === 'submitting' || step === 'sending';
+  const isSubmitting = step === 'submitting' || step === 'sending' || step === 'redirecting';
   const anySocialLoading = socialLoading !== null;
   const anyBusy = isSubmitting || anySocialLoading;
 
@@ -181,6 +247,15 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
@@ -215,8 +290,8 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" />
         </div>
 
         {/* ── Full-page loading (password submit or magic link sending) ──── */}
@@ -226,7 +301,9 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
               <Spinner />
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px' }}>
-              {step === 'sending' ? t('login.sendingYourLink') : t('login.signingYouIn')}
+              {step === 'sending' ? t('login.sendingYourLink')
+                : step === 'redirecting' ? t('login.ssoRedirecting')
+                : t('login.signingYouIn')}
             </h1>
             <p className="sub" style={{ margin: 0 }}>{t('shared.justAMoment')}</p>
           </div>
@@ -258,6 +335,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         {!isSubmitting && step !== 'sent' && mode === 'password' && (
           <div className="auth-card">
             <h1>{t('login.title')}</h1>
+            {approvalContext}
             {socialButtons}
             {errorBanner}
             <form className="auth-fields" onSubmit={handlePasswordSubmit} noValidate>
@@ -299,6 +377,13 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
                 {t('login.switchToMagicLink')}
               </button>
             </div>
+            {ssoOn && (
+              <div style={{ textAlign: 'center', marginTop: 8 }}>
+                <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
+                  {t('login.ssoLink')}
+                </button>
+              </div>
+            )}
             <div className="auth-footer">
               {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
             </div>
@@ -309,6 +394,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         {!isSubmitting && step !== 'sent' && mode === 'magic-link' && (
           <div className="auth-card">
             <h1>{t('login.title')}</h1>
+            {approvalContext}
             {socialButtons}
             <p className="sub" style={{ margin: '0 0 12px' }}>
               {t('login.magicLinkIntro')}
@@ -336,8 +422,48 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
                 {t('login.switchToPassword')}
               </button>
             </div>
+            {ssoOn && (
+              <div style={{ textAlign: 'center', marginTop: 8 }}>
+                <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
+                  {t('login.ssoLink')}
+                </button>
+              </div>
+            )}
             <div className="auth-footer">
               {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
+            </div>
+          </div>
+        )}
+
+        {/* ── SSO form ───────────────────────────────────────────────────── */}
+        {!isSubmitting && step !== 'sent' && mode === 'sso' && (
+          <div className="auth-card">
+            <h1>{t('login.ssoLink')}</h1>
+            <p className="sub" style={{ margin: '0 0 12px' }}>
+              {t('login.ssoIntro')}
+            </p>
+            {errorBanner}
+            <form className="auth-fields" onSubmit={handleSsoSubmit} noValidate>
+              <div className="field">
+                <label htmlFor="login-email-sso">{t('login.emailLabel')}</label>
+                <input
+                  id="login-email-sso"
+                  className={'input' + (emailError ? ' err' : '')}
+                  type="email" placeholder={t('login.emailPlaceholder')} autoComplete="email"
+                  value={email} onChange={handleEmailChange}
+                  aria-invalid={emailError ? 'true' : undefined}
+                  aria-describedby={emailError ? 'login-email-sso-error' : undefined}
+                />
+                {emailError && <div id="login-email-sso-error" className="err-msg" role="alert">{emailError}</div>}
+              </div>
+              <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
+                {t('login.ssoSubmit')}
+              </MBtn>
+            </form>
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <button onClick={() => switchMode('password')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
+                {t('login.switchToPassword')}
+              </button>
             </div>
           </div>
         )}

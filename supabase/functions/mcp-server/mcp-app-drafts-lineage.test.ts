@@ -27,7 +27,7 @@ import { memoryLineageStore } from "./draft-lineage-fake.ts";
 import { applySignature } from "./signature-compose.ts";
 
 const RICH_SIGNATURE_HTML =
-  '<table><tr><td><img src="https://mcpemails.com/logo.png" alt="MCP Emails"></td>' +
+  '<table><tr><td><img src="https://mcpemails.com/logo.png" alt="MCPEmails"></td>' +
   '<td><b>Asgeir Albretsen</b><br><a href="https://mcpemails.com">mcpemails.com</a></td></tr></table>';
 
 const INBOX: DraftEditorProviderInbox = {

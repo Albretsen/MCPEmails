@@ -20,7 +20,7 @@
     "titleLine1": "将 BOL Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 BOL 收件箱。只要邮箱使用的是付费 BOL 套餐而非免费网页邮箱档位，就可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 BOL Mail。mcpemails 是一个托管 MCP 服务器，通过 imap.bol.com.br 端口 993 的 IMAP 与之连接，使用你的 BOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。关键可能在于套餐，而不是协议：据第三方设置指南称，BOL 已从免费账户中取消了 IMAP 和 POP 访问，免费账户仅限网页邮箱，所以免费的 bol.com.br 地址在升级到付费 BOL 套餐之前，可能任何客户端都无法连接。mcpemails 上的 1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 BOL Mail。MCPEmails 是一个托管 MCP 服务器，通过 imap.bol.com.br 端口 993 的 IMAP 与之连接，使用你的 BOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。关键可能在于套餐，而不是协议：据第三方设置指南称，BOL 已从免费账户中取消了 IMAP 和 POP 访问，免费账户仅限网页邮箱，所以免费的 bol.com.br 地址在升级到付费 BOL 套餐之前，可能任何客户端都无法连接。MCPEmails 上的 1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "付费 BOL 套餐，再加你的密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,15 +31,15 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并永久免费，无需信用卡。在继续之前，先确认该邮箱使用的是哪种 BOL 套餐，因为这决定了本页其余内容是否适用。"
     },
     {
       "h": "确认邮箱使用的是付费 BOL 套餐",
-      "p": "登录 BOL 网页邮箱，查看账户的套餐。据第三方指南称，免费 BOL 账户没有可以开启的客户端访问，因为 POP 和 IMAP 已从该档位移除，只有升级到 BOL Completo 才能建立 IMAP 连接。如果账户是免费的，而正确的密码被拒绝，这很可能就是原因；此时请改为在 mcpemails 中连接另一个邮箱，并把 BOL 邮件转发到那里。"
+      "p": "登录 BOL 网页邮箱，查看账户的套餐。据第三方指南称，免费 BOL 账户没有可以开启的客户端访问，因为 POP 和 IMAP 已从该档位移除，只有升级到 BOL Completo 才能建立 IMAP 连接。如果账户是免费的，而正确的密码被拒绝，这很可能就是原因；此时请改为在 MCPEmails 中连接另一个邮箱，并把 BOL 邮件转发到那里。"
     },
     {
-      "h": "在 mcpemails 中输入地址和密码",
+      "h": "在 MCPEmails 中输入地址和密码",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 <code>nome@bol.com.br</code>）以及你的 BOL 密码。服务器地址和端口已预填，并经实时 TLS 连接确认。注意发信端口：BOL 在 465 上使用隐式 TLS，这与其姊妹服务使用的设置不同。"
     },
     {
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "据第三方指南称，IMAP 需要付费 BOL 套餐。如果你的邮箱属于这种情况，mcpemails 也无法绕过，因为登录是在 BOL 的服务器上被拒绝的。",
+    "据第三方指南称，IMAP 需要付费 BOL 套餐。如果你的邮箱属于这种情况，MCPEmails 也无法绕过，因为登录是在 BOL 的服务器上被拒绝的。",
     "不支持 IDLE，因此邮件是轮询获取而不是推送的。你的代理会在下次检查时看到新邮件，而不是在邮件到达的那一刻。",
     "SMTP 服务器接受的邮件最大约为 33 MB。带有更大附件的转发会在发送时被拒绝，而不会进入队列。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 BOL 邮箱吗？",
-      "a": "据称只能在付费 BOL 套餐上使用。Claude 没有内置的 BOL 连接器，也无法自行建立 IMAP 连接，所以需要在邮箱前面接一个 mcpemails 这样的 MCP 服务器。这个连接走的是 IMAP，而据第三方指南称免费 BOL 账户不提供 IMAP，所以免费的 bol.com.br 地址可能需要先升级。"
+      "a": "据称只能在付费 BOL 套餐上使用。Claude 没有内置的 BOL 连接器，也无法自行建立 IMAP 连接，所以需要在邮箱前面接一个 MCPEmails 这样的 MCP 服务器。这个连接走的是 IMAP，而据第三方指南称免费 BOL 账户不提供 IMAP，所以免费的 bol.com.br 地址可能需要先升级。"
     },
     {
       "q": "BOL 的 IMAP 和 SMTP 设置是什么？",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "给你的 AI 一个 BOL 收件箱",
-    "sub": "几分钟即可连接付费 BOL 邮箱。mcpemails 上 1 个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接付费 BOL 邮箱。MCPEmails 上 1 个收件箱永久免费，无需信用卡。"
   }
 }

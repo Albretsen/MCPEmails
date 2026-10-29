@@ -2,18 +2,18 @@ const post = {
   slug: 'automated-email-triage-rules',
   title: 'Automated Email Triage Rules That Run Without a Model in the Loop',
   description:
-    'How MCP Emails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.',
+    'How MCPEmails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
   coverAlt:
-    'Unattended email triage rules in MCP Emails: a stored search plus one fixed action on a schedule',
+    'Unattended email triage rules in MCPEmails: a stored search plus one fixed action on a schedule',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-10-25T09:00:00.000Z',
   tags: ['Automations', 'Inbox triage', 'MCP', 'Email'],
   featured: false,
   content: `Every morning you ask your agent to clear the noise: file the build notifications, mark the receipts read, forward invoices to your bookkeeper. It works. It also costs a model call every time, and it does something slightly different on Tuesday than it did on Monday.
 
-MCP Emails has a second surface for exactly that mail. An **automation** is a stored search plus one fixed action, evaluated on a cadence, with no model in the loop. Mail is matched, never interpreted.
+MCPEmails has a second surface for exactly that mail. An **automation** is a stored search plus one fixed action, evaluated on a cadence, with no model in the loop. Mail is matched, never interpreted.
 
 **Jump to:** [What a rule is](#what-an-automation-actually-is) · [Build one](#build-one-preview-create-enable) · [What it can and cannot do](#what-a-rule-can-and-cannot-do) · [When not to write one](#when-not-to-write-a-rule)
 
@@ -32,7 +32,7 @@ Set \`max_messages_per_run\` too (default 25, maximum 200): it is the per-run bl
 - **Cost.** A rule spends no tokens. The morning conversation spends them daily, on mail whose handling you decided months ago.
 - **Repeatability.** The same filter produces the same action. There is no "it decided differently today" because there is no deciding.
 - **No hallucinated moves.** A rule cannot invent a folder, improvise a recipient, or act on an instruction it found inside an email body.
-- **It runs while you sleep.** MCP Emails is otherwise poll-based: the agent checks for new mail when you ask it to. A rule is the part that needs no asking.
+- **It runs while you sleep.** MCPEmails is otherwise poll-based: the agent checks for new mail when you ask it to. A rule is the part that needs no asking.
 
 ## Agent triage and unattended rules do different jobs
 
@@ -74,7 +74,7 @@ The five rule actions:
 
 What a rule cannot do:
 
-- **Delete mail.** Deleting is not available to an automation. Moving to Trash, Junk or Spam is refused too: every provider empties those on a timer, so filing into them is a delete with a delayed fuse. File to a folder you own and delete it yourself once you have read the run log.
+- **Delete mail.** Deleting is not available to an automation. Moving to Trash is refused too, in any language: every provider empties it on a timer, so filing into it is a delete with a delayed fuse. File to a folder you own and delete it yourself once you have read the run log. Junk and Spam are allowed, since filing unwanted mail there is a common reason to write a rule.
 - **Interpret anything.** No summarizing, no "if it sounds urgent".
 - **Chain two actions.** Labelled and marked read is two rules over the same filter.
 
@@ -104,7 +104,7 @@ Then you ask your agent about the thirty messages left instead of the hundred an
 
 ## Rules count toward your plan's actions
 
-Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. On the **Free** plan that is 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. When a workspace reaches its allowance a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the allowance period ends. **Personal** at $9 per month removes the monthly action cap and allows 3 connected inboxes. See [pricing](/pricing).
+Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. On the **Free** plan that is 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly allowance applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. When a workspace reaches its allowance a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the allowance period ends. **Personal** at $9 per month gives unlimited email actions and allows 3 connected inboxes. See [pricing](/pricing).
 
 ## FAQ
 
@@ -112,7 +112,7 @@ Every action a rule applies is metered exactly like an interactive one, because 
 No. A rule is a stored search plus one fixed action. Mail is matched, never interpreted, and message bodies are never copied into anything a rule produces.
 
 **Can a rule delete my email?**  
-No. Deleting is not available to automations, and moving mail into Trash, Junk or Spam is refused for the same reason.
+No. Deleting is not available to automations, and moving mail into Trash is refused for the same reason. Moving it into Junk or Spam is allowed.
 
 **What scope does this need?**  
 Every automation action requires \`manage:automations\`, a separate grant from reading or sending, because holding it means a client may create standing rules that touch your mailbox unattended.

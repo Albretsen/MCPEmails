@@ -3,7 +3,7 @@ const translation = {
   description:
     "Comment une agence ou un indépendant donne à un agent IA l'accès à plusieurs boîtes clients sans les mélanger : un espace de travail par client, des clés limitées, la lecture seule d'abord et une validation humaine avant chaque envoi.",
   coverAlt:
-    'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCP Emails',
+    'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCPEmails',
   content: `Si vous gérez le courrier de plusieurs clients, vous vivez avec une règle : rien du client A ne doit apparaître dans un fil du client B. Un agent IA ne change pas la règle, il rend simplement plus facile de l'enfreindre. Un seul agent avec un seul identifiant qui atteint toutes les boîtes que vous gérez est à une consigne maladroite de citer la mauvaise facture à la mauvaise personne.
 
 Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entre clients**, quand un identifiant trop large laisse une recherche tomber sur la mauvaise boîte ; le **prestataire qui s'en va**, dont le portable contient toujours une clé API valide ; et l'**envoi non relu**, quand un agent répond au client de votre client, poliment et à côté. Intégrez la séparation à l'accès lui-même et l'agent ne peut plus franchir une frontière, même si une consigne le lui demande.
@@ -14,15 +14,15 @@ Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entr
 
 L'espace de travail est l'unité de séparation. Les boîtes, les membres, les clés API et l'activité vivent à l'intérieur d'un seul, et la frontière est appliquée dans la base de données par la sécurité au niveau des lignes, pas par un filtrage soigneux dans le code applicatif. Une clé émise dans l'espace Acme ne peut pas lire une boîte de Bolt, quoi que dise la consigne.
 
-Avoir plusieurs espaces de travail est une fonction **Team** (79 $/mois, 756 $/an), qui apporte aussi des membres illimités avec des rôles, le SSO (SAML / OIDC), un journal d'audit et un support prioritaire. L'abonnement est rattaché à votre compte et non à un espace, donc un seul abonnement Team couvre tous les espaces clients que vous créez. Nommez chacun d'après le client, n'y connectez que les boîtes de ce client, et passez de l'un à l'autre depuis la barre latérale du tableau de bord.
+Avoir plusieurs espaces de travail est une fonction **Business** (39 $/mois, 374,40 $/an), qui apporte aussi des membres illimités avec des rôles sans surcoût, et 10 boîtes incluses avec 3 $ par mois pour chaque boîte en plus. L'abonnement est rattaché à votre compte et non à un espace, donc un seul abonnement Business couvre tous les espaces clients que vous créez. Nommez chacun d'après le client, n'y connectez que les boîtes de ce client, et passez de l'un à l'autre depuis la barre latérale du tableau de bord.
 
-En dessous de Team, les formules sont pour une personne dans un seul espace : **Pro** (15 $/mois, 144 $/an) connecte un nombre illimité de boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
+En dessous de Business, les formules sont pour une personne dans un seul espace : **Pro** (15 $/mois, 144 $/an) connecte jusqu'à 10 boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
 
 ## Membres et rôles
 
 Quatre rôles : **owner** (propriétaire), **admin**, **member** et **viewer**. Seul le propriétaire peut changer les rôles. Les admins peuvent inviter et retirer des membres, mais pas retirer un autre admin. Les viewers sont en lecture seule, et cela est appliqué jusque dans la couche des identifiants : une clé détenue par un viewer ne peut porter que \`read:email\` et \`search:email\`.
 
-Ajouter des personnes est en soi une fonction Team, puisque Free, Personal et Pro sont des formules mono-utilisateur. Le montage qui fonctionne : le responsable d'un client est admin dans l'espace de ce client et membre d'aucun autre, un junior qui fait du tri est viewer dans le seul espace où il travaille, et personne d'autre que vous ne détient un accès qui couvre tout votre portefeuille.
+Ajouter des personnes est en soi une fonction Business, puisque Free, Personal et Pro sont des formules mono-utilisateur. Le montage qui fonctionne : le responsable d'un client est admin dans l'espace de ce client et membre d'aucun autre, un junior qui fait du tri est viewer dans le seul espace où il travaille, et personne d'autre que vous ne détient un accès qui couvre tout votre portefeuille.
 
 ## Des clés API limitées par mission
 
@@ -64,7 +64,7 @@ Ici, les adresses partagées sont des boîtes ordinaires. Connectez support@ ou 
 
 Votre agent trouve les boîtes avec \`inbox_list\` et s'y adresse par leur nom, vous ne collez donc jamais d'identifiant de boîte dans une consigne. Ensuite l'ensemble est réduit : \`email_read\` et \`email_compose\`, \`email_organize\` et \`email_search_and_move\` pour le tri, \`draft\` et \`schedule\` pour tout ce qui doit attendre une personne.
 
-Posez une attente dès le départ : MCP Emails fonctionne par interrogation. L'agent vérifie le courrier quand vous le lui demandez, ou quand une automatisation planifiée s'exécute. "Nous répondons en 60 secondes" n'est donc pas une promesse que cette architecture permet.
+Posez une attente dès le départ : MCPEmails fonctionne par interrogation. L'agent vérifie le courrier quand vous le lui demandez, ou quand une automatisation planifiée s'exécute. "Nous répondons en 60 secondes" n'est donc pas une promesse que cette architecture permet.
 
 ## Passation et fin de mission
 
@@ -74,7 +74,7 @@ Répétez-le avant d'en avoir besoin. Chaque point est une action dans le tablea
 - **Retirer un membre.** Cela révoque aussi les clés API que cette personne avait créées dans l'espace, et le même démontage a lieu quand quelqu'un part de lui-même.
 - **Rétrograder en viewer.** La rétrogradation révoque ses clés qui portent plus que la lecture, plutôt que d'affaiblir en silence un identifiant sur lequel quelqu'un compte encore.
 - **Déconnecter la boîte.** L'identifiant stocké est la seule donnée de boîte jamais conservée, et la déconnexion le supprime.
-- **Révoquer aussi chez le fournisseur.** Demandez au client de supprimer le mot de passe d'application ou de retirer l'autorisation Google. Ce chemin ne passe pas par vous, et c'est précisément ce qui rassure.
+- **Révoquer aussi chez le fournisseur.** Demandez au client de supprimer le mot de passe d'application ou de retirer l'autorisation Microsoft. Ce chemin ne passe pas par vous, et c'est précisément ce qui rassure.
 
 Il n'existe pas de transfert de propriété : vous ne pouvez donc pas remettre un espace de travail à la fin d'un projet. Un client qui reprend son courrier en interne ouvre son propre compte et connecte ses propres boîtes.
 
@@ -85,15 +85,15 @@ Ce que vous pouvez écrire noir sur blanc :
 - Le contenu des messages n'est jamais stocké. Il est récupéré en direct chez le fournisseur du client à chaque requête, puis abandonné.
 - La seule donnée de boîte conservée est l'identifiant du fournisseur, chiffré au repos en AES-256-GCM, la clé étant gardée séparément.
 - L'activité est journalisée en métadonnées seulement : nom de l'outil, boîte, horodatage et statut, jamais le contenu.
-- Aucun fournisseur d'IA n'est sous-traitant. MCP Emails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel et Stripe.
+- Aucun fournisseur d'IA n'est sous-traitant. MCPEmails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel et Stripe.
 - La seule exception au "jamais stocké" est un message programmé pour plus tard, conservé chiffré jusqu'à son heure d'envoi.
 
 Ne promettez pas que l'injection de consignes est résolue. Elle est contenue, pas résolue, et c'est bien pour cela que les clés en lecture seule, les boîtes restreintes et le blocage avant envoi existent. Ne promettez pas de réaction instantanée, ni des certifications que le produit n'a pas revendiquées. Envoyez celui qui fait la revue de sécurité vers [/security](/security) et rédigez votre contrat pour coller à cette page, pas pour aller au-delà. Le code est public et auto-hébergeable, ce qui répond à un audit mieux que n'importe quelle promesse.
 
 ## Questions fréquentes
 
-**Faut-il un compte MCP Emails distinct par client ?**  
-Non. Un compte, un abonnement Team, un espace de travail par client. L'abonnement suit votre utilisateur, donc chaque espace hérite de la formule.
+**Faut-il un compte MCPEmails distinct par client ?**  
+Non. Un compte, un abonnement Business, un espace de travail par client. L'abonnement suit votre utilisateur, donc chaque espace hérite de la formule.
 
 **Un client peut-il voir le courrier d'un autre ?**  
 Non, si les boîtes de chaque client vivent dans leur propre espace. La séparation est appliquée par la sécurité au niveau des lignes, et une clé émise dans un espace ne peut pas lire les boîtes d'un autre.
@@ -106,7 +106,7 @@ Oui. Une boîte Microsoft 365 se connecte avec la connexion Microsoft, sans mot 
 
 ## Étape suivante
 
-[Créez un compte gratuit](/signup), connectez une boîte client en lecture seule et lancez une consigne de tri avant de toucher à quoi que ce soit d'autre. Quand la séparation compte, passez à Team depuis la [page des tarifs](/pricing). La [documentation](/docs) contient la référence complète des outils et des portées, et [/security](/security) est la page à remettre au responsable sécurité du client.`,
+[Créez un compte gratuit](/signup), connectez une boîte client en lecture seule et lancez une consigne de tri avant de toucher à quoi que ce soit d'autre. Quand la séparation compte, passez à Business depuis la [page des tarifs](/pricing). La [documentation](/docs) contient la référence complète des outils et des portées, et [/security](/security) est la page à remettre au responsable sécurité du client.`,
 };
 
 export default translation;

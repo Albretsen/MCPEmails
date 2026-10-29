@@ -19,8 +19,8 @@
     "eyebrow": "WP.pl Poczta + IA",
     "titleLine1": "Connectez votre boîte WP.pl",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "WP Poczta parle IMAP dès que vous l'activez. mcpemails connecte la boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer le courrier depuis tous les clients MCP plutôt que depuis une seule application.",
-    "answer": "Claude ne peut pas accéder seul à une boîte WP.pl. mcpemails est un serveur MCP hébergé qui la connecte en IMAP sur imap.wp.pl, port 993, en se connectant avec votre adresse complète. Deux choses décident si la connexion fonctionne : IMAP doit être activé dans le webmail sous Opcje, onglet IMAP/POP, et si vous utilisez la connexion en deux étapes, votre mot de passe habituel est refusé et vous devez créer à la place un mot de passe de programme de messagerie. Une fois ces points réglés, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "lead": "WP Poczta parle IMAP dès que vous l'activez. MCPEmails connecte la boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer le courrier depuis tous les clients MCP plutôt que depuis une seule application.",
+    "answer": "Claude ne peut pas accéder seul à une boîte WP.pl. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.wp.pl, port 993, en se connectant avec votre adresse complète. Deux choses décident si la connexion fonctionne : IMAP doit être activé dans le webmail sous Opcje, onglet IMAP/POP, et si vous utilisez la connexion en deux étapes, votre mot de passe habituel est refusé et vous devez créer à la place un mot de passe de programme de messagerie. Une fois ces points réglés, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Activez d'abord IMAP dans Opcje",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Saisissez l'adresse et le mot de passe dans mcpemails sous IMAP / SMTP, avec les serveurs WP préremplis, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT et autorisez."
+      "p": "Saisissez l'adresse et le mot de passe dans MCPEmails sous IMAP / SMTP, avec les serveurs WP préremplis, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT et autorisez."
     }
   ],
   "gotchas": [
@@ -58,7 +58,7 @@
     },
     {
       "h": "AUTH=PLAIN uniquement, et pas de SASL-IR",
-      "p": "<code>imap.wp.pl</code> annonce <code>AUTH=PLAIN</code> et n'annonce pas SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE, et il n'offre rien aux clients figés sur le mécanisme LOGIN. Les deux échecs reviennent sous forme d'un simple refus qui ressemble à de mauvais identifiants. mcpemails réessaie avec l'échange en deux étapes, c'est pourquoi une boîte WP se connecte ici après avoir échoué dans d'autres outils IMAP."
+      "p": "<code>imap.wp.pl</code> annonce <code>AUTH=PLAIN</code> et n'annonce pas SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE, et il n'offre rien aux clients figés sur le mécanisme LOGIN. Les deux échecs reviennent sous forme d'un simple refus qui ressemble à de mauvais identifiants. MCPEmails réessaie avec l'échange en deux étapes, c'est pourquoi une boîte WP se connecte ici après avoir échoué dans d'autres outils IMAP."
     },
     {
       "h": "MOVE et UIDPLUS sont là, mais pas SPECIAL-USE",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail WP.pl ?",
-      "a": "Pas directement. Claude n'a pas de connecteur WP intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier wp.pl, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP. IMAP doit d'abord être activé sur la boîte."
+      "a": "Pas directement. Claude n'a pas de connecteur WP intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier wp.pl, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP. IMAP doit d'abord être activé sur la boîte."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de WP.pl ?",

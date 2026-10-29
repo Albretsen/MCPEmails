@@ -8,8 +8,9 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from './plans.ts
 
 /**
  * The Free action allowance is quoted in three places that cannot import each
- * other: the SQL function that enforces it (c_free_cap / c_grace in
- * supabase/migrations/20260912200000_free_action_cap_150.sql), plans.ts (the
+ * other: the SQL function that enforces it (c_free_cap in
+ * supabase/migrations/20260912200000_free_action_cap_150.sql, the grace in
+ * free_action_grace_ends_at(), 20261017160000), plans.ts (the
  * constants and the Free feature list), and the translated pricing page copy.
  * This file pins the last two to each other. The first is pinned by
  * scripts/verify-action-allowance.sql, run by hand before the edge deploy.
@@ -41,7 +42,7 @@ test('every locale states the allowance on the pricing page, with the same two n
   // noticing, and a copy edit can drop the row entirely. Both are the same
   // failure: the number a customer reads stops being the number that blocks
   // them. The row is required, not optional; Phase 4 shipped it on 2026-09-12.
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const file = path.resolve(here, `../../../messages/${locale}/pricing.json`);
     const copy = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
     const value = comparisonValue(copy, 'actionsFree');
@@ -62,11 +63,26 @@ test('every locale states the allowance on the pricing page, with the same two n
 });
 
 test('no paid comparison value answers the actions row with a number', () => {
-  // A paid ceiling is a silent abuse guard. "No monthly cap, fair use" is the
+  // A paid ceiling is a silent abuse guard. "Unlimited, fair use" is the
   // only answer a paid tier may give in that row; a figure there would sell a
   // limit and invite a customer to price-compare against it.
   const copy = readPricingCopy();
   const value = comparisonValue(copy, 'actionsPaid');
   assert.equal(typeof value, 'string', 'pricing.json has no comparison.values.actionsPaid');
   assert.ok(!/\d/.test(value!), `comparison.values.actionsPaid ("${value}") quotes a number`);
+});
+
+test('every EUR amount shown is the USD amount the catalogue sells, same digits', async () => {
+  // Decided 2026-10-24: EU visitors pay the same digits in EUR, VAT included.
+  // With no EUR currency option on a price (or Stripe unreachable), the page
+  // falls back to the USD cents, so the fallback must BE the sold amount, for
+  // every tier and interval, including Pro after a price switch.
+  const { eurCentsFor } = await import('./eur-prices.ts');
+  const { proSoldAmounts } = await import('./pro-price-change.ts');
+  for (const plan of Object.values(PLANS)) {
+    assert.equal(eurCentsFor(null, plan.monthlyPriceCents), plan.monthlyPriceCents, `${plan.id} monthly`);
+    assert.equal(eurCentsFor(undefined, plan.yearlyPriceCents), plan.yearlyPriceCents, `${plan.id} yearly`);
+  }
+  assert.equal(PLANS.solo.monthlyPriceCents, proSoldAmounts().monthlyCents, 'Pro EUR follows the sold Pro price');
+  assert.equal(PLANS.solo.yearlyPriceCents, proSoldAmounts().yearlyCents, 'Pro EUR follows the sold Pro price');
 });

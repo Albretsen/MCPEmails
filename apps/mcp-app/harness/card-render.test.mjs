@@ -9,7 +9,7 @@
 // The founder's complaint, 2026-10-12: "while it loads it is a thin sliver",
 // and "sometimes the card never appears at all". Both are the same defect seen
 // twice — a card that renders NOTHING, reports height 0, and leaves Claude
-// drawing its own "Widget from MCP Emails draft" header over an empty box. The
+// drawing its own "Widget from MCPEmails draft" header over an empty box. The
 // design had assumed an empty frame is an invisible frame (`.card:empty {
 // display: none }`). It is not, in this host, and that single wrong premise is
 // what every branch checked below was written against.
@@ -388,7 +388,7 @@ async function main() {
     await settle();
     expect("it failed", typeof c.state().connectError, "string");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: not shown here.");
+    expect("one line", c.text(), "MCPEmails: not shown here.");
     expect("and the host was told its size", c.sizes().length > 0, true);
     await c.done();
   }
@@ -435,8 +435,15 @@ async function main() {
     await settle();
     expect("classified foreign", c.state().resultStatus, "foreign");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: no preview for this result.");
+    expect("one line", c.text(), "MCPEmails: done. The reply above has the details.");
     await c.done();
+    // A draft write on an inbox with the editor hidden (listed since 2026-10-28).
+    const d = await boot();
+    await d.settled();
+    d.deliver(toolResult({ draft_id: "Drafts:9", subject: "Hi" }, '{"draft_id":"Drafts:9"}'));
+    await settle();
+    expect("draft: one line", d.text(), "MCPEmails: saved.");
+    await d.done();
   }
 
   group("a cancelled call says so in one line");
@@ -451,7 +458,204 @@ async function main() {
     await settle();
     expect("classified cancelled", c.state().resultStatus, "cancelled");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: cancelled.");
+    expect("one line", c.text(), "MCPEmails: cancelled.");
+    await c.done();
+  }
+
+  // ── 3b. Ordinary outbound results (2026-10-27) ───────────────────────────
+  // The outbound card is listed for every send-capable key now, so the host
+  // mounts it under every plain send. Each must end in one calm line: a
+  // receipt for a send or schedule, a neutral line for anything else.
+
+  group("an ordinary send is a one-line receipt, from the result alone");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent)));
+    await settle();
+    expect("classified as an envelope", c.state().resultStatus, "envelope");
+    expect("a receipt", c.state().envelope?.card, "receipt");
+    expect("one header", c.root.querySelectorAll(".hdr").length, 1);
+    expect("one line", c.text(), "Sent to Dana Reyes +2· Quarterly numbers");
+    expect("no body paragraph", c.root.querySelectorAll("p").length, 0);
+    expect("no warning", c.root.querySelectorAll(".notice").length, 0);
+    await c.done();
+  }
+
+  group("a single forward says forwarded");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainForwarded, JSON.stringify(F.plainForwarded)));
+    await settle();
+    expect("one line", c.text(), "Forwarded to lee@northwind.example· Fwd: Quarterly numbers");
+    await c.done();
+  }
+
+  group("an ordinary schedule names the time");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainScheduled, JSON.stringify(F.plainScheduled)));
+    await settle();
+    expect("a scheduled receipt", c.state().envelope?.receipt?.outcome, "scheduled");
+    expect("headline starts with the time", c.text().startsWith("Scheduled for "), true);
+    expect("then who and what", c.text().endsWith("· to dana@northwind.example · Quarterly numbers"), true);
+    await c.done();
+  }
+
+  group("a refused send is one neutral line, not a failure block");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: {
+        content: [{ type: "text", text: "Confirm in chat first. Nothing was sent." }],
+        isError: true,
+      },
+    });
+    await settle();
+    expect("still foreign", c.state().resultStatus, "foreign");
+    expect("one line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    expect("neutral tone", c.root.querySelector(".dot")?.getAttribute("data-tone"), "neutral");
+    await c.done();
+  }
+
+  group("an isError result shaped like a send is still not a receipt");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: { structuredContent: F.plainSent, isError: true },
+    });
+    await settle();
+    expect("no envelope", c.state().envelope, null);
+    expect("one line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    await c.done();
+  }
+
+  group("a batch forward and an envelope-less held send each get their own line");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainForwardBatch, JSON.stringify(F.plainForwardBatch)));
+    await settle();
+    expect("batch: the generic line, never a receipt", c.text(), "MCPEmails: done. The reply above has the details.");
+    await c.done();
+    const h = await boot();
+    await h.settled();
+    h.deliver(toolResult(F.plainPendingApproval, JSON.stringify(F.plainPendingApproval)));
+    await settle();
+    expect("held", h.text(), "MCPEmails: waiting for approval. The reply above has the link.");
+    await h.done();
+  }
+
+  // ── 3c. The sent card (2026-10-27) ───────────────────────────────────────
+  // With `_meta["mcpemails/sent_card"]` the receipt opens as the message that
+  // went out, and a failure says "Not sent" and why. Without it (a host that
+  // drops result `_meta`) the one-liners above stand.
+
+  const sentMeta = {
+    "mcpemails/sent_card": {
+      outcome: "sent",
+      from: "me@acme.example",
+      cc: ["boss@acme.example"],
+      bcc: [],
+      body_text: "Hi Dana,\nThe numbers are attached.\nBest",
+      truncated: false,
+      attachments: [{ filename: "q3.pdf", size_bytes: 180000 }],
+      sent_copy: true,
+    },
+  };
+
+  group("a send with the sent card shows the message, From, attachments and the Sent copy");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent), sentMeta));
+    await settle();
+    const t = c.text();
+    expect("headline", t.startsWith("Sent to Dana Reyes +2"), true);
+    expect("from", t.includes("me@acme.example"), true);
+    expect("to and cc", t.includes("dana@northwind.example") && t.includes("+2 more · 1 cc"), true);
+    expect("subject", t.includes("Quarterly numbers"), true);
+    expect("body preview", t.includes("The numbers are attached."), true);
+    expect("attachment", t.includes("1 attachment: q3.pdf"), true);
+    expect("sent copy", t.includes("A copy is in your Sent folder."), true);
+    expect(
+      "nothing to act on but look",
+      [...c.root.querySelectorAll("button")].some((b) => /^(Send|Save|Undo|Resend)$/.test(b.textContent.trim())),
+      false,
+    );
+    expect("no warning", c.root.querySelectorAll(".notice").length, 0);
+    await c.done();
+  }
+
+  group("a refused Sent copy is said, the message still shown");
+  {
+    const c = await boot();
+    await c.settled();
+    const meta = { "mcpemails/sent_card": { ...sentMeta["mcpemails/sent_card"], sent_copy: false } };
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent), meta));
+    await settle();
+    expect("says so", c.text().includes("No copy was saved to your Sent folder."), true);
+    await c.done();
+  }
+
+  group("a failed send says Not sent and why");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: {
+        content: [{ type: "text", text: "email_reply failed ..." }],
+        isError: true,
+        _meta: {
+          "mcpemails/sent_card": {
+            outcome: "not_sent",
+            headline: "Not sent",
+            detail: "The original email could not be found. It may have been moved or deleted.",
+          },
+        },
+      },
+    });
+    await settle();
+    expect("one header", c.root.querySelectorAll(".hdr").length, 1);
+    expect("text", c.text(), "Not sentThe original email could not be found. It may have been moved or deleted.");
+    expect("failure tone", c.root.querySelector(".dot")?.getAttribute("data-tone"), "danger");
+    await c.done();
+  }
+
+  group("a success-shaped sent card on an isError result is not a receipt");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver({
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-result",
+      params: { structuredContent: F.plainSent, isError: true, _meta: sentMeta },
+    });
+    await settle();
+    expect("generic line", c.text(), "MCPEmails: did not complete. The reply above says why.");
+    await c.done();
+  }
+
+  group("a plain send after a real card does not replace it");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await settle();
+    c.deliver(toolResult(F.plainSent, JSON.stringify(F.plainSent)));
+    await settle();
+    expect("the editor stayed", c.state().envelope?.card, "draft_editor");
+    expect("status moved only", c.state().resultStatus, "foreign");
     await c.done();
   }
 
@@ -550,7 +754,7 @@ async function main() {
     c.deliver(toolResult(deferredNow(), "Draft saved.", F.draftReplyResultMeta));
     await after(80);
     expect("it rendered", c.state().envelope?.schema_version, F.DEFERRED_V);
-    expect("not the update-the-connector screen", c.text().includes("Update the MCP Emails"), false);
+    expect("not the update-the-connector screen", c.text().includes("Update the MCPEmails"), false);
     expect("the real body is in the box", bodyBox()?.value, REAL_MESSAGE);
     expect("Save is there", !!c.button("Save"), true);
     expect("and the card asked the server for nothing", c.calls.length, 0);
@@ -590,7 +794,7 @@ async function main() {
     await c.done();
   }
 
-  const failedLine = "MCP Emails: open the dashboard to see this.";
+  const failedLine = "MCPEmails: open the dashboard to see this.";
   for (const [name, reply, line] of [
     ["the read is refused", { error: { code: -32000, message: "host refused" } }, failedLine],
     [
@@ -696,6 +900,12 @@ async function main() {
     await c.settled();
     c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
     await after(80);
+    expect(
+      "the fresh result says the card is on screen",
+      c.contexts().at(-1),
+      "The MCPEmails draft card is on screen for the user, who can edit and send it. " +
+        'Its current draft_id is Drafts:2. Subject: "Quarterly numbers". To 1, cc 0, bcc 0.',
+    );
 
     c.type("d-body", "Here they are, revised today.");
     await after(60);
@@ -704,7 +914,7 @@ async function main() {
     expect(
       "a body edit",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:03:00Z. " +
         'Its current draft_id is Drafts:3. Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         `Body 5 words. ${DIFFERS}`,
     );
@@ -718,7 +928,7 @@ async function main() {
     expect(
       "and its line still says the body is not the agent's",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:04:00Z. " +
         'Its current draft_id is Drafts:4. Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
         `Body 5 words. ${DIFFERS}`,
     );
@@ -729,12 +939,12 @@ async function main() {
     expect(
       "sent",
       c.contexts().at(-1),
-      "The user sent draft Drafts:4 from the MCP Emails card at 2026-10-13T10:09:30Z. " +
+      "The user sent draft Drafts:4 from the MCPEmails card at 2026-10-13T10:09:30Z. " +
         'Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
         "The message has left Drafts, so that draft_id no longer resolves. " +
         "The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote.",
     );
-    expect("three lines in all", c.contexts().length, 3);
+    expect("four lines in all", c.contexts().length, 4);
     await c.done();
   }
 
@@ -751,7 +961,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:03:00Z. " +
         'Its current draft_id is Drafts:3. Subject: "Quarterly numbers v2". To 1, cc 0, bcc 0. ' +
         "Body 3 words. This save did not change the body.",
     );
@@ -778,7 +988,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user pressed Send on draft Drafts:2 in the MCP Emails card and the send failed. " +
+      "The user pressed Send on draft Drafts:2 in the MCPEmails card and the send failed. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         'The server reported: "Your email account has exceeded its sending quota. Please try again later.". ' +
         "Nothing was reported as sent, and the card still holds the draft under that draft_id.",
@@ -804,7 +1014,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user pressed Send on draft Drafts:2 in the MCP Emails card. " +
+      "The user pressed Send on draft Drafts:2 in the MCPEmails card. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         `The send is held for approval under approval_id ${F.heldSendMerged.approval_id} and nothing has been sent. ` +
         "The draft is still in Drafts under that draft_id.",
@@ -828,18 +1038,101 @@ async function main() {
     await c.settled();
     c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
     await after(80);
-    c.button("Discard").click();
+    c.button("Delete draft").click();
     await after(60);
-    c.button("Yes, discard").click();
+    c.button("Yes, delete").click();
     await after(80);
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user discarded draft Drafts:2 from the MCP Emails card. " +
+      "The user discarded draft Drafts:2 from the MCPEmails card. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         "Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.",
     );
     await c.done();
+  }
+
+  // ---- the bulk result card with Undo (mcp-server/mcp-app-undo.ts) ---------
+
+  const UNDO_ID = "aaaaaaaa-aaaa-4aaa-8aaa-000000000001";
+  const bulkMoved = {
+    succeeded: 3,
+    failed: 0,
+    operation: "email_search_and_move",
+    results: [],
+    schema_version: "review-card-v1",
+    card: "receipt",
+    state: "executed",
+    receipt: {
+      outcome: "executed",
+      headline: "Moved 3 messages from Inbox to Archive",
+      detail: "",
+      affected_count: 3,
+      dashboard_url: "https://app.example/dashboard",
+    },
+    undo: { undo_id: UNDO_ID, expires_at: "2026-10-28T12:00:00Z" },
+  };
+  const sampleMeta = {
+    "mcpemails/bulk_sample": [
+      { from: "news@example.com", subject: "Weekly digest" },
+      { from: "shop@example.com", subject: "Your receipt" },
+    ],
+  };
+
+  group("a bulk move shows one line, an Undo button and the sample folded");
+  {
+    const c = await boot({
+      onToolCall: (tool, args) =>
+        tool === "bulk_execute" && args.plan_id === UNDO_ID
+          ? {
+            result: {
+              content: [{ type: "text", text: "Undone." }],
+              structuredContent: {
+                schema_version: "review-card-v1",
+                card: "receipt",
+                state: "executed",
+                receipt: {
+                  outcome: "executed",
+                  headline: "Undone. 3 messages moved back to Inbox.",
+                  detail: "",
+                  affected_count: 3,
+                },
+              },
+            },
+          }
+          : null,
+    });
+    await c.settled();
+    c.deliver(toolResult(bulkMoved, JSON.stringify({ succeeded: 3 }), sampleMeta));
+    await settle();
+    expect("headline", c.text().startsWith("Moved 3 messages from Inbox to Archive"), true);
+    expect("Undo button", !!c.button("Undo"), true);
+    expect("sample folded behind Show", c.text().includes("Show 2 of them"), true);
+    expect("sample rows present", c.text().includes("Weekly digest"), true);
+    c.button("Undo").click();
+    await after(50);
+    expect("calls bulk_execute with the undo id only", JSON.stringify(c.calls.map((x) => [x.name, x.args])), JSON.stringify([["bulk_execute", { plan_id: UNDO_ID }]]));
+    expect("says Undone", c.text().startsWith("Undone. 3 messages moved back to Inbox."), true);
+    expect("the button is gone", !!c.button("Undo"), false);
+    await c.done();
+  }
+
+  group("a bulk result without an undo id has no button, and a flag result says done");
+  {
+    const c = await boot();
+    await c.settled();
+    const { undo: _u, ...noUndo } = bulkMoved;
+    c.deliver(toolResult(noUndo, "{}"));
+    await settle();
+    expect("no button", !!c.button("Undo"), false);
+    expect("no sample without _meta", c.text().includes("Show"), false);
+    await c.done();
+    const f = await boot();
+    await f.settled();
+    f.deliver(toolResult({ succeeded: 2, failed: 0, operation: "email_flag", results: [] }, "{}"));
+    await settle();
+    expect("one line", f.text(), "MCPEmails: done. The reply above has the details.");
+    await f.done();
   }
 
   // ---- report ---------------------------------------------------------------

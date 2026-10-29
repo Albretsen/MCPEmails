@@ -4,7 +4,8 @@
     "https://hilfe.web.de/pop-imap/index.html",
     "https://hilfe.web.de/pop-imap/imap/index.html",
     "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
-    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
   ],
   "auth": {
     "method": "account-password",
@@ -25,23 +26,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke WEB.DE på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke WEB.DE på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobler WEB.DE seg til: IMAP og kontopassordet ditt",
-    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-Mail-Einstellungen (e-postinnstillinger), E-Mail empfangen, POP3/IMAP, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. mcpemails bruker 465-paret under og faller tilbake til det andre av seg selv."
+    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-Mail-Einstellungen (e-postinnstillinger), E-Mail empfangen, POP3/IMAP, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. MCPEmails bruker 465-paret under og faller tilbake til det andre av seg selv."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Slå på IMAP-tilgang i WEB.DE",
       "p": "I WEB.DE åpner du E-Mail-Einstellungen (e-postinnstillinger), velger POP3/IMAP under E-Mail empfangen og setter glidebryteren på POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang)."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -60,26 +61,26 @@
     },
     {
       "h": "Å slå på tofaktorautentisering pensjonerer passordet ditt for e-postklienter",
-      "p": "WEB.DEs tofaktorautentisering beskytter webinnloggingen, og når den er på, slutter det vanlige WEB.DE-passordet ditt å virke i alt som snakker IMAP eller SMTP. Du trenger da et <b>anwendungsspezifisches Passwort</b>, generert i postkassen under Account verwalten, så Login & Sicherheit, så Anwendungsspezifische Passwörter verwalten. Opprett ett for e-post, lim det inn i mcpemails i stedet for det vanlige passordet, og la det vanlige passordet være for nettsiden. Uten 2FA er kontopassordet den riktige påloggingen, og det finnes ikke noe app-passord å opprette."
+      "p": "WEB.DE plasserer apppassordet sitt under tofaktorautentisering og beskriver det som passordet for eksterne e-postprogrammer over POP3 og IMAP. Når 2FA beskytter kontoen din, lager du et i en nettleser: klikk på initialene dine, så <b>Account verwalten</b>, så <b>Login & Sicherheit</b>, så <b>App-Passwörter (für externe Apps)</b>, så <b>Neues App-Passwort erstellen</b>. Gi det et navn, for eksempel MCPEmails, og kopier det med en gang, for WEB.DE viser det bare én gang. Lim det inn i MCPEmails i stedet for det vanlige passordet, og behold det vanlige passordet for nettsiden. Uten 2FA er kontopassordet riktig legitimasjon."
     },
     {
-      "h": "Begge SMTP-transportene svarer, så en sendefeil skyldes sjelden porten",
-      "p": "Veiledninger for WEB.DE er uenige om utgående e-post: noen oppgir <code>smtp.web.de</code> på port 465 med implisitt TLS, andre oppgir port 587 med STARTTLS. Begge virker, og testen vår fullførte et TLS-håndtrykk på 465 med serveren som tilbød PLAIN og LOGIN. Å veksle mellom de to portene er derfor bortkastet innsats. Avvises sending, er årsaken glidebryteren for henting, det manglende app-passordet eller en From-adresse som ikke er en av adressene registrert på kontoen."
+      "h": "Begge SMTP-portene virker, så en sendefeil skyldes sjelden porten",
+      "p": "WEB.DE sin hjelp oppgir <code>smtp.web.de</code> på port 587 med STARTTLS, med port 465 og SSL som alternativ, og godtar bare TLS 1.2 eller 1.3. Begge portene virker, og vår test fullførte et TLS-håndtrykk på 465 der serveren tilbød PLAIN og LOGIN, så det er bortkastet å veksle mellom dem. Blir sendingen avvist, er årsaken innhentingsbryteren, det manglende apppassordet eller avsenderadressen: WEB.DE ber deg sende bare fra adresser som beviselig hører til postkassen din."
     }
   ],
   "limits": [
-    "mcpemails kobler bare til WEB.DE-postkassen. WEB.DE Online-Speicher, adresseboken og kalenderen er separate produkter og eksponeres ikke for AI-klienten din.",
+    "MCPEmails kobler bare til WEB.DE-postkassen. WEB.DE Online-Speicher, adresseboken og kalenderen er separate produkter og eksponeres ikke for AI-klienten din.",
     "Glidebryteren for POP3/IMAP er WEB.DE sin å styre, ikke vår. Deaktiverer WEB.DE henting etter en lang periode uten aktivitet, må tilkoblingen slås på igjen i WEB.DE før den virker igjen.",
     "WEB.DE er en forbrukerpostkasse med egne sendegrenser mot misbruk. Bruk den til vanlig korrespondanse, ikke til masse- eller kampanjeutsending."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med WEB.DE?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd WEB.DE-kobling. Peker du en MCP-server som mcpemails mot WEB.DE-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd WEB.DE-kobling. Peker du en MCP-server som MCPEmails mot WEB.DE-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for WEB.DE?",
-      "a": "IMAP er imap.web.de på port 993 med implisitt TLS, og SMTP er smtp.web.de på port 465, også med implisitt TLS. WEB.DE godtar i tillegg 587 med STARTTLS for utgående e-post. Brukernavnet er hele WEB.DE-adressen din inkludert domenet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+      "a": "IMAP er imap.web.de på port 993 med SSL. SMTP er smtp.web.de, på port 587 med STARTTLS slik WEB.DE dokumenterer det, eller på port 465 med SSL, som MCPEmails bruker. Brukernavnet er hele WEB.DE-adressen din med domenet. Begge vertene ble bekreftet med en ekte TLS-tilkobling på datoen som står på denne siden."
     },
     {
       "q": "Hvordan slår jeg på IMAP i WEB.DE?",
@@ -91,7 +92,7 @@
     },
     {
       "q": "Trenger WEB.DE et app-passord?",
-      "a": "Bare hvis du har tofaktorautentisering slått på. Med 2FA av autentiserer det vanlige WEB.DE-passordet e-postklienter når henting er slått på. Med 2FA på genererer du et programspesifikt passord under Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, og bruker det i mcpemails."
+      "a": "Bare hvis du har tofaktorautentisering på. Uten 2FA autentiserer det vanlige WEB.DE-passordet e-postklienter så snart innhenting er slått på. Med 2FA lager du et App-Passwort under Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), og bruker det i MCPEmails. WEB.DE viser det bare én gang; mister du det, sletter du det og lager et nytt."
     },
     {
       "q": "Lagres WEB.DE-e-posten min på serverne deres?",

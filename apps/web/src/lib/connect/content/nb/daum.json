@@ -21,7 +21,7 @@
     "titleLine1": "Koble Daum Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Daum- eller Hanmail-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et Kakao-app-passord, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå Daum Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.daum.net, port 993, og autentiserer med et Kakao-app-passord (앱 비밀번호) i stedet for passordet til Kakao-kontoen din. Siden 2. januar 2025 har Daum krevd totrinnsbekreftelse på Kakao-kontoen bak postkassen og et app-passord for hver IMAP- og POP3-pålogging, så det vanlige passordet virker ikke lenger i noen e-postklient. IMAP er i tillegg en egen bryter i innstillingene for Daum Mail og må også slås på. Én innboks er gratis.",
+    "answer": "Claude kan ikke nå Daum Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.daum.net, port 993, og autentiserer med et Kakao-app-passord (앱 비밀번호) i stedet for passordet til Kakao-kontoen din. Siden 2. januar 2025 har Daum krevd totrinnsbekreftelse på Kakao-kontoen bak postkassen og et app-passord for hver IMAP- og POP3-pålogging, så det vanlige passordet virker ikke lenger i noen e-postklient. IMAP er i tillegg en egen bryter i innstillingene for Daum Mail og må også slås på. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kakao-app-passord, ikke passordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. De to neste stegene skjer på to forskjellige Kakao-tjenester, så regn med å veksle mellom dem."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Lag et app-passord i Kakao-kontoen din",
-      "p": "Gå til accounts.kakao.com og åpne 계정 보안 (Kontosikkerhet), deretter 2단계 인증 (totrinnsbekreftelse), deretter 앱 비밀번호 (app-passord). Det samme skjermbildet finnes i KakaoTalk under 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Totrinnsbekreftelse må være slått på før et app-passord kan opprettes. Lag ett, velg deretter IMAP / SMTP i mcpemails, skriv inn hele Daum- eller Hanmail-adressen din, og lim inn app-passordet i stedet for Kakao-passordet."
+      "p": "Gå til accounts.kakao.com og åpne 계정 보안 (Kontosikkerhet), deretter 2단계 인증 (totrinnsbekreftelse), deretter 앱 비밀번호 (app-passord). Det samme skjermbildet finnes i KakaoTalk under 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Totrinnsbekreftelse må være slått på før et app-passord kan opprettes. Lag ett, velg deretter IMAP / SMTP i MCPEmails, skriv inn hele Daum- eller Hanmail-adressen din, og lim inn app-passordet i stedet for Kakao-passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten din",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Daum Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Daum-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Daum-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Daum-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til Daum-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Daum Mail?",

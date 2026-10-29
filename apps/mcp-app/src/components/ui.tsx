@@ -94,6 +94,55 @@ export function TextLink(props: {
   );
 }
 
+/**
+ * The header row every one-line card starts with: a status dot and the bold
+ * headline on the left, then `extra` beside them. `children` go in the right
+ * half, `.hdr-r`, which is left out when there are none (null or false).
+ * Shared so the markup is written once in the bundle.
+ */
+export function Head(props: {
+  tone: string;
+  title: ComponentChildren;
+  extra?: ComponentChildren;
+  children?: ComponentChildren;
+}) {
+  return (
+    <div class="hdr">
+      <div class="hdr-l">
+        <span class="dot" data-tone={props.tone} aria-hidden="true" />
+        <b>{props.title}</b>
+        {props.extra}
+      </div>
+      {props.children ? <div class="hdr-r">{props.children}</div> : null}
+    </div>
+  );
+}
+
+/** A `.line` paragraph: the small secondary text under a header. */
+export function Line(props: { children: ComponentChildren }) {
+  return <p class="line">{props.children}</p>;
+}
+
+/**
+ * The header's fullscreen link: "Collapse" in fullscreen, otherwise `label`
+ * (Expand, Details) when `can` says the card has more to show.
+ */
+export function FsLink(props: {
+  on: boolean;
+  can: boolean;
+  set: (on: boolean) => void;
+  label: string;
+  title?: string;
+}) {
+  return props.on ? (
+    <TextLink onClick={() => props.set(false)}>Collapse</TextLink>
+  ) : props.can ? (
+    <TextLink onClick={() => props.set(true)} title={props.title}>
+      {props.label}
+    </TextLink>
+  ) : null;
+}
+
 /** How long a one-word answer ("Copied", "Up to date") stays on a link. */
 export const FLASH_MS = 2000;
 
@@ -343,6 +392,10 @@ export function AutoTextarea(props: {
       id={props.id}
       ref={ref}
       class="textarea"
+      // Each box picks its direction from its first strong character, and
+      // `.textarea`'s `unicode-bidi: plaintext` does it per line, so an Arabic
+      // line in a Norwegian message sits on the right (styles.css).
+      dir="auto"
       rows={1}
       aria-label={props.ariaLabel}
       value={props.value}
@@ -362,7 +415,7 @@ export function AutoTextarea(props: {
  *
  * `preview` is the draft editor's read-only formatted view (QA, 2026-10-13):
  *
- *   - images are left out rather than drawn as `[image: MCP Emails logo]`. The
+ *   - images are left out rather than drawn as `[image: MCPEmails logo]`. The
  *     card cannot load them (remote images are tracking pixels and the CSP is
  *     empty), and a bracketed literal read as text the draft contained.
  *   - the server's own signature wrapper (`<div class="mcpemails-signature">`,
@@ -393,5 +446,5 @@ export function HtmlBody(props: { html: string; preview?: boolean }) {
       for (const img of Array.from(node.querySelectorAll(".img-placeholder"))) img.remove();
     }
   }, [props.html, props.preview]);
-  return <div class="body-full body-html" ref={ref} />;
+  return <div class="body-full body-html" dir="auto" ref={ref} />;
 }

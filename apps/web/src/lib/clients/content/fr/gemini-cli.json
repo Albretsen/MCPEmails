@@ -17,7 +17,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth découvert automatiquement",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Ajoutez une entrée sous mcpServers dans ~/.gemini/settings.json avec le champ httpUrl et https://mcpemails.com/api/mcp. À la première connexion, la CLI découvre les métadonnées OAuth et ouvre d'elle-même le flux dans le navigateur."
+    "answer": "Ajoutez une entrée sous mcpServers dans ~/.gemini/settings.json avec le champ httpUrl et https://mcpemails.com/api/mcp. À la première connexion, la CLI découvre les métadonnées OAuth et ouvre d'elle-même le flux dans le navigateur. Ou lancez gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp, puis /mcp auth mcpemails pour vous connecter."
   },
   "method": {
     "title": "Comment Gemini CLI se connecte : OAuth, sans clé API",
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Ouvrez votre settings.json",
@@ -34,11 +34,11 @@
     },
     {
       "h": "Ajoutez le serveur",
-      "p": "Ajoutez l'entrée ci-dessous sous <code>mcpServers</code>. Ici, le champ pour un serveur Streamable HTTP est <code>httpUrl</code>."
+      "p": "Ajoutez l'entrée ci-dessous sous <code>mcpServers</code>. Ici, le champ pour un serveur Streamable HTTP est <code>httpUrl</code>. Ou ajoutez-le en une ligne : <code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>."
     },
     {
       "h": "Connectez-vous",
-      "p": "À la première connexion, la CLI découvre automatiquement OAuth à partir des métadonnées du serveur et ouvre le flux dans le navigateur. Approuvez les autorisations que la CLI doit détenir."
+      "p": "À la première connexion, la CLI découvre automatiquement OAuth à partir des métadonnées du serveur et ouvre le flux dans le navigateur. Approuvez les autorisations que la CLI doit détenir. Pour vous connecter à tout moment, lancez <code>/mcp auth mcpemails</code> dans la CLI."
     }
   ],
   "gotchas": [
@@ -53,10 +53,14 @@
     {
       "h": "Une CLI sur une machine partagée ou sans interface graphique préfère la voie de la clé",
       "p": "Le flux dans le navigateur a besoin d'un navigateur. Sur un agent de build ou une machine partagée, la configuration honnête est une clé API bearer limitée précisément à ce que cette automatisation doit faire, gardée dans l'environnement plutôt que dans un fichier de réglages commité."
+    },
+    {
+      "h": "Les comptes gratuits et Google One passent à Antigravity CLI",
+      "p": "Depuis le 18 juin 2026, Google a transféré les comptes de l'offre gratuite et les comptes Google One de Gemini CLI vers Antigravity CLI. Là, tapez <code>/mcp</code> pour ouvrir le gestionnaire MCP, ou ajoutez le serveur dans <code>mcp_config.json</code> avec le champ <code>serverUrl</code>."
     }
   ],
   "limits": [
-    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Les requêtes sont limitées par clé dans des fenêtres par minute, par heure et par jour dimensionnées selon votre formule : une seule clé peut utiliser tout le plafond par minute de la formule, et plusieurs clés le partagent. Un 429 porte Retry-After. Le plafond d'actions facturables de votre formule s'applique aussi.",
     "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
     "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
   ],
@@ -71,11 +75,11 @@
     },
     {
       "q": "Est-ce la même chose que le serveur MCP Gmail publié par Google ?",
-      "a": "Non. Google publie un serveur MCP Workspace qui couvre Gmail en plus de ses autres services, et pour Gmail seul dans un workflow entièrement Google, c'est le chemin le plus court. mcpemails existe pour le cas où toutes les boîtes ne sont pas chez Google, et où la même URL doit aussi fonctionner dans Claude, Cursor et ChatGPT."
+      "a": "Non. Google publie un serveur MCP Workspace qui couvre Gmail en plus de ses autres services, et pour Gmail seul dans un workflow entièrement Google, c'est le chemin le plus court. MCPEmails existe pour le cas où toutes les boîtes ne sont pas chez Google, et où la même URL doit aussi fonctionner dans Claude, Cursor et ChatGPT."
     },
     {
       "q": "Quelles boîtes Gemini CLI peut-il atteindre ainsi ?",
-      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application, la connexion Google restant une seconde option pour Gmail ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
     },
     {
       "q": "Gemini CLI peut-il envoyer un e-mail sans que je le voie ?",

@@ -20,7 +20,7 @@
     "titleLine1": "Connect mailcow to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
     "lead": "mailcow already gives you Dovecot, Postfix and SOGo in one stack. Add an MCP server on top and your agent can read, search, send, reply, schedule and file mail in the mailboxes you host yourself.",
-    "answer": "Claude cannot reach a mailcow server on its own. mcpemails is a hosted MCP server that connects to your mailcow install over IMAP on port 993, at the hostname you set as MAILCOW_HOSTNAME in mailcow.conf, using the mailbox password from the Mailboxes list, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared host: it is your server, it must be published to the internet, and you must connect using exactly the hostname on the certificate acme-mailcow issued. One inbox is free.",
+    "answer": "Claude cannot reach a mailcow server on its own. MCPEmails is a hosted MCP server that connects to your mailcow install over IMAP on port 993, at the hostname you set as MAILCOW_HOSTNAME in mailcow.conf, using the mailbox password from the Mailboxes list, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared host: it is your server, it must be published to the internet, and you must connect using exactly the hostname on the certificate acme-mailcow issued. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from the mailcow UI",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Read MAILCOW_HOSTNAME out of mailcow.conf",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Confirm the mailbox and its password",
-      "p": "In the mailcow UI, open Configuration then Mailboxes. Confirm the address is active and, if you do not know its password, set a new one there. Then add the inbox in mcpemails: choose IMAP / SMTP, enter the MAILCOW_HOSTNAME host and the mailbox credentials."
+      "p": "In the mailcow UI, open Configuration then Mailboxes. Confirm the address is active and, if you do not know its password, set a new one there. Then add the inbox in MCPEmails: choose IMAP / SMTP, enter the MAILCOW_HOSTNAME host and the mailbox credentials."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -66,13 +66,13 @@
     }
   ],
   "limits": [
-    "A hosted MCP server has to open an inbound IMAP connection to your stack, so mailcow published only on a private interface or reachable only through a VPN cannot be connected this way. mcpemails can be self-hosted alongside mailcow if you would rather nothing external touched 993.",
+    "A hosted MCP server has to open an inbound IMAP connection to your stack, so mailcow published only on a private interface or reachable only through a VPN cannot be connected this way. MCPEmails can be self-hosted alongside mailcow if you would rather nothing external touched 993.",
     "Sending is handled by your own Postfix, so message acceptance downstream depends entirely on your SPF, DKIM and DMARC records and on whether your IP is listed anywhere."
   ],
   "faq": [
     {
       "q": "Does Claude work with mailcow?",
-      "a": "Not on its own. Claude has no mailcow connector and cannot open an IMAP session to a server you run. Connecting an MCP server such as mcpemails to your mailcow install gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, in whichever MCP client you use."
+      "a": "Not on its own. Claude has no mailcow connector and cannot open an IMAP session to a server you run. Connecting an MCP server such as MCPEmails to your mailcow install gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, in whichever MCP client you use."
     },
     {
       "q": "What are the mailcow IMAP and SMTP settings?",

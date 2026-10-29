@@ -18,12 +18,12 @@
   "hero": {
     "eyebrow": "Hostinger + IA",
     "titleLine1": "Conecta Hostinger a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine2": "y a Cursor, ChatGPT o cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Hostinger en minutos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña de tu buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a Hostinger. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a Hostinger. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta Hostinger: IMAP y la contraseña de tu buzón",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Consigue la contraseña de tu buzón de Hostinger",
-      "p": "En hPanel, abre Emails, elige la dirección y define o restablece su contraseña. Esa contraseña es con la que se autentica mcpemails."
+      "p": "En hPanel, abre Emails, elige la dirección y define o restablece su contraseña. Esa contraseña es con la que se autentica MCPEmails."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de Hostinger, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Hostinger?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Hostinger. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Hostinger. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Hostinger?",

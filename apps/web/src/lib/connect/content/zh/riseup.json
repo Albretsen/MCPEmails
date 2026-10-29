@@ -22,7 +22,7 @@
     "titleLine1": "将 Riseup 邮箱连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Riseup 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件；我们会解释让大多数配置失败的登录怪癖，也会直说其中的取舍，而不是一笔带过。",
-    "answer": "Claude 无法自行连接 Riseup 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.riseup.net 的 993 端口，通过 SMTP 连接 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。决定登录成败的细节是用户名：Riseup 只需要你的账户名，例如 joehill，而不是完整的 joehill@riseup.net 地址。Riseup 不为邮件签发应用密码，所以你保存的凭据就是 Riseup 账户密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Riseup 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.riseup.net 的 993 端口，通过 SMTP 连接 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。决定登录成败的细节是用户名：Riseup 只需要你的账户名，例如 joehill，而不是完整的 joehill@riseup.net 地址。Riseup 不为邮件签发应用密码，所以你保存的凭据就是 Riseup 账户密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "账户名，而不是完整地址",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -41,7 +41,7 @@
       "p": "Riseup 的邮件密码页面指出，包含特殊字符的密码可能在浏览器中的 <code>mail.riseup.net</code> 上能用，却在邮件客户端中失败。如果你的密码含有不常见的字符且登录被拒，请先在 account.riseup.net 将其改为一个足够长但字符普通的密码，再考虑其他原因。Riseup 目前不为网页邮箱提供双重认证，所以没有第二重验证需要绕过。"
     },
     {
-      "h": "在 mcpemails 中用纯账户名添加邮箱",
+      "h": "在 MCPEmails 中用纯账户名添加邮箱",
       "p": "选择 IMAP / SMTP。在用户名栏输入你的 Riseup 账户名，<b>不带</b> <code>@riseup.net</code>，并输入账户密码。收发两个方向的主机都已自动填为 <code>mail.riseup.net</code>，并已通过实时 TLS 连接验证。任何标为安全认证、加密密码或 CRAM-MD5 的选项都请保持关闭；Riseup 要求不要使用这些。"
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 mail.riseup.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。很多人持有 Riseup 账户，正是为了让通信远离大型商业科技公司，而在这里连接它恰恰与此背道而驰。这是关于你自身威胁模型的判断，而不是技术限制，值得在连接之前而不是之后想清楚。",
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它所处理的邮件内容。MCPEmails 每次请求都实时从 mail.riseup.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。很多人持有 Riseup 账户，正是为了让通信远离大型商业科技公司，而在这里连接它恰恰与此背道而驰。这是关于你自身威胁模型的判断，而不是技术限制，值得在连接之前而不是之后想清楚。",
     "邮件没有范围受限的凭据。Riseup 允许你在 account.riseup.net 为 VPN 和聊天分别设置密码，但邮件没有应用密码，所以这里保存的密钥就是账户密码。撤销此连接意味着修改该密码，并在其他所有地方重新输入。",
-    "以 OpenPGP 加密方式到达的邮件，在 IMAP 客户端中是一段 ASCII 封装的密文。mcpemails 不持有你的任何私钥，因此代理能看到邮件头，也能归档或标记这些邮件，但无法阅读其内容。"
+    "以 OpenPGP 加密方式到达的邮件，在 IMAP 客户端中是一段 ASCII 封装的密文。MCPEmails 不持有你的任何私钥，因此代理能看到邮件头，也能归档或标记这些邮件，但无法阅读其内容。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Riseup 邮箱吗？",
-      "a": "不能直接使用。Claude 没有 Riseup 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Riseup 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有 Riseup 连接器，自身也不会 IMAP。将 MCPEmails 这样的 MCP 服务器连接到你的 Riseup 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Riseup 的 IMAP 和 SMTP 设置是什么？",

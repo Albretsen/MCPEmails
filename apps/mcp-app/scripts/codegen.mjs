@@ -23,9 +23,36 @@ const repoRoot = resolve(appRoot, "../..");
 const BUNDLE = resolve(appRoot, "dist/index.html");
 const OUT = resolve(repoRoot, "supabase/functions/mcp-server/ui/review-card.html.ts");
 
-// Raw bytes. Target <50 KB, hard failure over 150 KB (findings Q3).
+// Raw bytes. Target <50 KB, hard failure over 178 KB (findings Q3).
+//
+// The cap was 150 KB until the release review of 2026-10-17, whose fixes
+// (formatting kept on a plain-text edit, a reply's quote as its own section,
+// recipient suggestions, attachment chips, the delete confirm and the narrow
+// layout) took the bundle from ~140 KB to ~160 KB raw, ~52 KB gzipped. No
+// single dependency grew; it is product code. Claude caches the bundle by
+// build id; the reference host re-fetches it per call (Q4), so the cap stays a
+// hard failure and was raised once, deliberately, not removed.
+//
+// 2026-10-20: 169.1 KB, 5.9 KB under the cap. Switching the minifier from
+// esbuild to Oxc (vite.config.ts) and sharing one FNV helper took it to
+// 166.6 KB with no product change. The largest remaining contributors are
+// product code: DraftEditor (~26 KB minified), App (~16 KB), the shared
+// html-text-merge.ts (~12 KB) and Preact (~13 KB with hooks).
+//
+// 2026-10-27: the automation card (components/Automation.tsx) added 1.9 KB,
+// 170.8 -> 172.7 KB, with no new CSS: it reuses Head, Line, Segmented, Notice
+// and the bulk plan's `.samples` list, and the server writes the rule's
+// sentence so the card does not have to. Two other cards were being built at
+// the same time against the same 4.2 KB of headroom.
+//
+// 2026-10-29: raised to 178 KB, the second deliberate raise. Main stood at
+// 174.8 KB, and remembering a draft the server already called gone
+// (persist.ts#goneDraft) adds 0.9 KB. Without it every reopened chat re-read
+// each old card's sent or deleted draft, the largest source of failed tool
+// calls in activity_log (~150-180 a day). The memo is one function and one
+// wrapper; nothing smaller does the job.
 const TARGET_RAW = 50 * 1024;
-const MAX_RAW = 150 * 1024;
+const MAX_RAW = 178 * 1024;
 
 if (!existsSync(BUNDLE)) {
   console.error(`codegen: ${BUNDLE} not found — run \`npm run build:bundle\` first.`);

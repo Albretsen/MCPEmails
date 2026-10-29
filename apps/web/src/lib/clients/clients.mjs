@@ -13,26 +13,32 @@
 // Two things follow from that rule and must be kept:
 //
 //  1. `auth` is per client and is not guessable. Claude, ChatGPT, Cursor,
-//     VS Code, Windsurf, Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
+//     VS Code, Devin Desktop (formerly Windsurf), Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
 //     browser flow against /.well-known/oauth-authorization-server (RFC 7591
 //     dynamic registration, authorization code + PKCE with S256, public
-//     clients only). Cline, JetBrains and raw HTTP callers do not, and paste a
+//     clients only). Cline, JetBrains, n8n and raw HTTP callers do not, and paste a
 //     scoped API key into an Authorization header instead. Publishing the
 //     wrong one of those two for a client sends the reader down a path that
 //     cannot complete.
 //
 //  2. The config field names differ per client and are not interchangeable:
 //     Cursor wants `url` under `mcpServers`, VS Code wants `type` + `url`
-//     under `servers`, Windsurf wants `serverUrl`, Gemini CLI wants `httpUrl`,
-//     and Zed wants `url` under `context_servers`.
+//     under `mcpServers` in ~/.copilot/mcp-config.json (the older
+//     .vscode/mcp.json used `servers` and is now labelled deprecated),
+//     Devin Desktop (formerly Windsurf) wants `serverUrl`, Gemini CLI wants
+//     `httpUrl`, and Zed wants `url` under `context_servers`.
 //
 // Prose lives in src/lib/clients/content/<locale>/<slug>.json, deliberately
 // NOT in a next-intl namespace: src/i18n/request.ts hands every marketing
-// namespace to every marketing page, so putting thirteen clients' copy there
+// namespace to every marketing page, so putting every client's copy there
 // would put all of it in the bundle of the home page too.
 
-/** The endpoint every one of these pages tells the reader to paste. */
-export const MCP_URL = 'https://mcpemails.com/api/mcp';
+/**
+ * The endpoint every one of these pages tells the reader to paste. Defined in
+ * mcp-url.mjs (built from NEXT_PUBLIC_APP_URL, so staging points at staging)
+ * and shared with install-links.mjs.
+ */
+export { MCP_URL } from './mcp-url.mjs';
 
 export const CLIENT_CATEGORIES = [
   { id: 'assistant', label: 'AI assistants', anchor: 'assistants' },
@@ -40,7 +46,7 @@ export const CLIENT_CATEGORIES = [
   { id: 'terminal', label: 'Terminals, CLIs and scripts', anchor: 'terminals' },
 ];
 
-export const CLIENTS = [
+export const ALL_CLIENTS = [
   {
     slug: 'claude',
     name: 'Claude',
@@ -52,7 +58,8 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'claude', href: '/blog/connect-claude-to-email' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'claude-code',
@@ -65,12 +72,26 @@ export const CLIENTS = [
     configFile: 'terminal',
     config: (url) => `claude mcp add --transport http mcpemails ${url}`,
     guide: 'https://code.claude.com/docs/en/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+  },
+  {
+    slug: 'codex',
+    name: 'OpenAI Codex',
+    shortName: 'Codex',
+    surface: 'the Codex CLI, IDE extension and ChatGPT desktop app',
+    category: 'terminal',
+    logo: 'openai',
+    color: '#000000',
+    auth: 'oauth',
+    configFile: 'terminal',
+    config: (url) => `codex mcp add mcpemails --url ${url}`,
+    guide: 'https://learn.chatgpt.com/docs/extend/mcp?surface=cli',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
   },
   {
     slug: 'chatgpt',
     name: 'ChatGPT',
-    surface: 'ChatGPT Apps and connectors, developer mode',
+    surface: 'ChatGPT plugins, custom MCP server on chatgpt.com',
     category: 'assistant',
     logo: 'chatgpt',
     color: '#000000',
@@ -78,7 +99,73 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+  },
+  {
+    slug: 'cowork',
+    name: 'Claude Cowork',
+    surface: 'Cowork in Claude Desktop and on the web',
+    category: 'assistant',
+    logo: 'claude',
+    color: '#D97757',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'gemini',
+    name: 'Gemini',
+    surface: 'the Gemini app, Connected Apps, Custom apps',
+    category: 'assistant',
+    logo: 'gemini',
+    color: '#8E75B2',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://support.google.com/gemini/answer/17209137',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'grok',
+    name: 'Grok',
+    surface: 'Grok custom connectors on grok.com',
+    category: 'assistant',
+    logo: 'grok',
+    color: '#000000',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.x.ai/grok/connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'le-chat',
+    name: 'Le Chat',
+    surface: 'Le Chat by Mistral AI, now Vibe',
+    category: 'assistant',
+    logo: 'mistral',
+    color: '#FA520F',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'perplexity',
+    name: 'Perplexity',
+    surface: 'perplexity.ai custom connectors',
+    category: 'assistant',
+    logo: 'perplexity',
+    color: '#1FB8CD',
+    auth: 'oauth',
+    configFile: null,
+    config: null,
+    guide: 'https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
   },
   {
     slug: 'cursor',
@@ -97,7 +184,8 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://cursor.com/docs/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'vscode',
@@ -107,9 +195,9 @@ export const CLIENTS = [
     logo: 'vscode',
     color: '#0078D4',
     auth: 'oauth',
-    configFile: '.vscode/mcp.json',
+    configFile: '~/.copilot/mcp-config.json',
     config: (url) => `{
-  "servers": {
+  "mcpServers": {
     "mcpemails": {
       "type": "http",
       "url": "${url}"
@@ -117,7 +205,8 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'cline',
@@ -130,17 +219,20 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'windsurf',
     name: 'Windsurf',
-    surface: 'Cascade in Windsurf',
+    surface: 'Cascade in Devin Desktop, formerly Windsurf',
     category: 'editor',
     logo: 'windsurf',
     color: '#0B100F',
     auth: 'oauth',
-    configFile: '~/.codeium/windsurf/mcp_config.json',
+    // macOS and Linux path; on Windows it is %APPDATA%\devin\mcp_config.json.
+    // Windsurf was renamed Devin Desktop on 2026-06-02; the slug stays.
+    configFile: '~/.config/devin/mcp_config.json',
     config: (url) => `{
   "mcpServers": {
     "mcpemails": {
@@ -148,8 +240,9 @@ export const CLIENTS = [
     }
   }
 }`,
-    guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    guide: 'https://docs.devin.ai/desktop/cascade/mcp',
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'gemini-cli',
@@ -168,7 +261,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'zed',
@@ -187,7 +280,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://zed.dev/docs/ai/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'jetbrains',
@@ -200,7 +293,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'raycast',
@@ -213,7 +306,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://manual.raycast.com/ai/model-context-protocol',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'warp',
@@ -226,7 +319,33 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+  },
+  {
+    slug: 'n8n',
+    name: 'n8n',
+    surface: 'the AI Agent node in n8n workflows',
+    category: 'terminal',
+    logo: 'n8n',
+    color: '#EA4B71',
+    auth: 'apikey',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
+  },
+  {
+    slug: 'openclaw',
+    name: 'OpenClaw',
+    surface: 'OpenClaw agents, via the Gateway',
+    category: 'assistant',
+    logo: 'openclaw',
+    color: '#E05540',
+    auth: 'oauth',
+    configFile: 'terminal',
+    config: (url) => `openclaw mcp add mcpemails --url ${url} --transport streamable-http --auth oauth`,
+    guide: 'https://docs.openclaw.ai/tools/mcp',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
   },
   {
     slug: 'curl',
@@ -243,9 +362,26 @@ export const CLIENTS = [
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
     guide: null,
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
 ];
+
+/**
+ * Clients whose page is written but not public yet.
+ *
+ * A client page goes live only once a real connection test has shown that
+ * client connecting to MCP_URL and running a read tool. Until then its entry
+ * and copy stay in the repo, so the parity tests keep checking them, but it
+ * has no route, no sitemap entry, no hub card and no search entry. Remove a
+ * slug here once its test passes; a failed test means the page is fixed or
+ * deleted, never released as is.
+ *
+ * Nothing is held right now.
+ */
+export const HELD_CLIENTS = new Set([]);
+
+/** Every public client, in registry order. */
+export const CLIENTS = ALL_CLIENTS.filter((c) => !HELD_CLIENTS.has(c.slug));
 
 const BY_SLUG = new Map(CLIENTS.map((c) => [c.slug, c]));
 

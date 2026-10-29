@@ -20,7 +20,7 @@
     "titleLine1": "Koble GreenGeeks-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte GreenGeeks-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet du satte da adressen ble opprettet.",
-    "answer": "Claude kan ikke nå en GreenGeeks-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. GreenGeeks kjører standard cPanel og har ikke noe felles vertsnavn for e-post: verten din bygges fra ditt eget domene eller fra serveren kontoen din ligger på, og cPanel viser den nøyaktige verdien under Email Accounts, deretter Connect Devices, i blokken Mail Client Manual Settings. Du autentiserer med postkassepassordet, ikke innloggingen til GreenGeeks-dashbordet, og én innboks er gratis.",
+    "answer": "Claude kan ikke nå en GreenGeeks-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. GreenGeeks kjører standard cPanel og har ikke noe felles vertsnavn for e-post: verten din bygges fra ditt eget domene eller fra serveren kontoen din ligger på, og cPanel viser den nøyaktige verdien under Email Accounts, deretter Connect Devices, i blokken Mail Client Manual Settings. Du autentiserer med postkassepassordet, ikke innloggingen til GreenGeeks-dashbordet, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra cPanel",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Sett eller bekreft postkassepassordet",
-      "p": "IMAP sjekker passordet som hører til e-postadressen, og det er atskilt fra passordet til GreenGeeks-dashbordet og fra cPanel-innloggingen. Har du det ikke, bruker du <b>Manage</b> på adresseraden i Email Accounts for å sette et nytt, og limer det deretter inn i mcpemails med hele adressen som brukernavn."
+      "p": "IMAP sjekker passordet som hører til e-postadressen, og det er atskilt fra passordet til GreenGeeks-dashbordet og fra cPanel-innloggingen. Har du det ikke, bruker du <b>Manage</b> på adresseraden i Email Accounts for å sette et nytt, og limer det deretter inn i MCPEmails med hele adressen som brukernavn."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "GreenGeeks har grenser for utgående sending per time på delte planer. Automatisert sending i stort volum fra en AI-agent kan treffe dem, og feilen viser seg som en utsatt eller avvist sending, ikke som en tilkoblingsfeil.",
-    "mcpemails kobler bare til postkassen. Aliaser, videresendinger, autosvar og spaminnstillinger blir værende i cPanel."
+    "MCPEmails kobler bare til postkassen. Aliaser, videresendinger, autosvar og spaminnstillinger blir værende i cPanel."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med GreenGeeks-e-post?",
-      "a": "Ikke direkte. Claude leveres uten noen kobling for cPanel-baserte e-postverter. Kobler du en MCP-server som mcpemails til GreenGeeks-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene du ville lagt inn i Thunderbird eller Apple Mail."
+      "a": "Ikke direkte. Claude leveres uten noen kobling for cPanel-baserte e-postverter. Kobler du en MCP-server som MCPEmails til GreenGeeks-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene du ville lagt inn i Thunderbird eller Apple Mail."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for GreenGeeks?",

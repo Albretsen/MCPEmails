@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + AI",
     "titleLine1": "Koble freenet.de-innboksen din",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "freenet støtter IMAP, men har det bak en bryter selskapet helst vil at du lar være. Slå den på én gang, så kobler mcpemails til postkassen slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
-    "answer": "Claude kan ikke nå en freenet.de-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på mx.freenet.de, port 993, og autentiserer med hele adressen din og passordet for freenet Mail. Det eneste du må gjøre først, er å krysse av for POP3, IMAP und SMTP aktivieren i innstillingene for postkassen, fordi freenet har all klienttilgang bak den avkrysningsboksen og anbefaler å la den være av. Når den er på, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
+    "lead": "freenet støtter IMAP, men har det bak en bryter selskapet helst vil at du lar være. Slå den på én gang, så kobler MCPEmails til postkassen slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
+    "answer": "Claude kan ikke nå en freenet.de-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på mx.freenet.de, port 993, og autentiserer med hele adressen din og passordet for freenet Mail. Det eneste du må gjøre først, er å krysse av for POP3, IMAP und SMTP aktivieren i innstillingene for postkassen, fordi freenet har all klienttilgang bak den avkrysningsboksen og anbefaler å la den være av. Når den er på, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Klienttilgang må slås på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Skriv inn adressen og passordet for freenet Mail",
-      "p": "Velg IMAP / SMTP i mcpemails og skriv inn hele adressen som <code>name@freenet.de</code> med passordet til postkassen. Begge retninger bruker <code>mx.freenet.de</code>, som er forhåndsutfylt her og ble bekreftet via en faktisk TLS-tilkobling."
+      "p": "Velg IMAP / SMTP i MCPEmails og skriv inn hele adressen som <code>name@freenet.de</code> med passordet til postkassen. Begge retninger bruker <code>mx.freenet.de</code>, som er forhåndsutfylt her og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -53,7 +53,7 @@
     },
     {
       "h": "Ett vertsnavn for begge retninger, og freenet mener det bokstavelig",
-      "p": "Det finnes verken <code>imap.freenet.de</code> eller <code>smtp.freenet.de</code>. Innkommende og utgående bruker begge <code>mx.freenet.de</code>, som ser feil ut for alle som er vant til de vanlige prefiksene, og som stille blir «rettet» av folk som setter opp ting etter hukommelsen. freenet skriver også i samme tabell at du ikke skal bruke IP-adresser eller alternative navn i stedet, fordi det skaper problemer i bruk."
+      "p": "Det finnes ingen <code>imap.freenet.de</code> og ingen <code>smtp.freenet.de</code>. Både innkommende og utgående bruker <code>mx.freenet.de</code>, noe som ser feil ut for alle som er vant til de vanlige prefiksene, og som stille blir «rettet» av folk som setter opp ting etter hukommelsen. freenet sier også i den samme tabellen at du ikke skal bytte ut navnet med IP-adresser eller alternative navn, og at kryptering er påkrevd på hver tilkobling, så en ukryptert innlogging avvises selv med riktig passord."
     },
     {
       "h": "Mappene heter inbox, sent og drafts, med små bokstaver",
@@ -71,11 +71,11 @@
   "faq": [
     {
       "q": "Fungerer Claude med freenet.de-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd freenet-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere freenet.de-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter. Klienttilgang må først slås på i postkassen."
+      "a": "Ikke direkte. Claude har ingen innebygd freenet-kobling. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere freenet.de-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter. Klienttilgang må først slås på i postkassen."
     },
     {
-      "q": "Hva er IMAP- og SMTP-innstillingene for freenet?",
-      "a": "Begge er mx.freenet.de. IMAP er port 993 med implisitt TLS eller 143 med STARTTLS, og SMTP er port 465 med implisitt TLS eller 587 med STARTTLS, med SMTP-autentisering slått på. Brukernavnet er hele adressen din. Vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+      "q": "Hvilken server bruker freenet for IMAP og SMTP?",
+      "a": "Begge er mx.freenet.de. freenet oppgir to kombinasjoner: SSL/TLS, med IMAP på port 993 og SMTP på port 465, eller STARTTLS, med IMAP på port 143 og SMTP på port 587. Kryptering er påkrevd, og SMTP-autentisering må være på. Brukernavnet er hele adressen din, for eksempel name@freenet.de. MCPEmails bruker 993 og 465, og vertene ble bekreftet med en ekte TLS-tilkobling på datoen som står på denne siden."
     },
     {
       "q": "Hvorfor avviser freenet passordet mitt i en e-postklient?",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Utsteder freenet app-passord?",
-      "a": "Nei. Det finnes ikke noe app-spesifikt passord å lage. En klient autentiserer med passordet til selve freenet Mail-postkassen, når klienttilgang er slått på. Vil du tilbakekalle en tilkobling, fjerner du krysset i aktiveringsboksen eller endrer postkassepassordet."
+      "a": "freenet sine instruksjoner for e-postprogrammer nevner ikke noe apppassord. En klient logger inn med hele adressen din og passordet til selve freenet Mail-postkassen, når klienttilgang er slått på. Vil du trekke tilbake en tilkobling, fjerner du haken i aktiveringsboksen eller bytter postkassepassordet."
     },
     {
       "q": "Lagres freenet-e-posten min på serverne deres?",

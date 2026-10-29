@@ -13,13 +13,13 @@ MCP står for [Model Context Protocol](https://modelcontextprotocol.io). Det er 
 
 Før MCP måtte du, hvis du ville at agenten din skulle bruke en kalender, en database og e-posten din, skrive tre forskjellige integrasjoner med tre forskjellige former. MCP løser det. En tjeneste eksponerer evnene sine som **verktøy** (navngitte handlinger modellen kan kalle) over en standard transport, og enhver MCP-kompatibel klient vet hvordan den skal oppdage og kalle dem.
 
-Det som betyr noe her: en MCP-server trenger ikke å bo på maskinen din. MCP Emails kjører over **Streamable HTTP** på én enkelt endepunkt-URL. Du limer inn den URL-en i klienten din, og du er tilkoblet. Ingen SDK, ingen pakkeinstallasjon, ingen lokal prosess å passe på.
+Det som betyr noe her: en MCP-server trenger ikke å bo på maskinen din. MCPEmails kjører over **Streamable HTTP** på én enkelt endepunkt-URL. Du limer inn den URL-en i klienten din, og du er tilkoblet. Ingen SDK, ingen pakkeinstallasjon, ingen lokal prosess å passe på.
 
 ## Så hva er en MCP-*e-postserver*?
 
 En MCP-e-postserver er en MCP-server hvis verktøy tilfeldigvis handler om e-post. Den sitter mellom AI-agenten din og en ekte postkasse, og oversetter «agentens intensjoner» til «leverandøroperasjoner».
 
-Her er den konkrete versjonen. Du kobler Gmail, Outlook, iCloud, Fastmail eller hvilken som helst IMAP-innboks til serveren én gang. Serveren eksponerer deretter e-post som en håndfull verktøy. Når agenten din vil håndtere e-post, kaller den ett av disse verktøyene, serveren snakker med Gmails API (eller Microsoft Graph, eller IMAP) på dine vegne, og den returnerer et rent resultat.
+Her er den konkrete versjonen. Du kobler Gmail, Outlook, iCloud, Fastmail eller hvilken som helst IMAP-innboks til serveren én gang. Serveren eksponerer deretter e-post som en håndfull verktøy. Når agenten din vil håndtere e-post, kaller den ett av disse verktøyene, serveren snakker med leverandøren din over IMAP og SMTP (eller Microsoft Graph for Outlook) på dine vegne, og den returnerer et rent resultat.
 
 En nyttig måte å se det på: MCP-e-postserveren er en **oversetter og en utkaster**. Oversetter-delen gjør agentens enkle forespørsel («les den siste meldingen fra utleieren min») om til riktig leverandørspesifikt API-kall, og gjør det rotete svaret (MIME-deler, koding, tråd-headere) om til noe lesbart igjen. Utkaster-delen avgjør hva agenten har lov til å gjøre — bare lese, eller lese og sende — og slipper den aldri i nærheten av det faktiske passordet ditt.
 
@@ -29,7 +29,7 @@ Dette er kjernen i det, så jeg vil bremse litt ned her.
 
 Hvis du noen gang har satt opp e-post i en e-postklient, har du møtt IMAP og SMTP. Det er protokollene e-post kjører på, og de er ikke vennlige. IMAP tvinger deg til å sjonglere mappetilstand, meldingsflagg, delvise henting og en spørresyntaks som varierer fra server til server. SMTP tvinger deg til å håndbygge MIME-meldinger med riktige headere, ellers havner svaret ditt i feil tråd. Å gi alt det til en språkmodell er en dårlig idé. Modellen vil bomme på kodingen, lekke en legitimasjon inn i en logg, eller fyre av en feilformatert sending.
 
-En MCP-e-postserver erstatter det med **verb**. Agenten ser ikke protokoller. Den ser en kort meny med handlinger. MCP Emails leverer en håndfull konsoliderte verktøy, og disse tre er arbeidshestene i hverdagen:
+En MCP-e-postserver erstatter det med **verb**. Agenten ser ikke protokoller. Den ser en kort meny med handlinger. MCPEmails leverer en håndfull konsoliderte verktøy, og disse tre er arbeidshestene i hverdagen:
 
 \`\`\`json
 {
@@ -49,9 +49,9 @@ Skiftet fra «her er et bibliotek, finn ut av det» til «her er tre verb, hvert
 
 Den naive måten å gi en agent e-posttilgang på er å slippe postkassepassordet ditt inn i en prompt eller en konfigurasjon og la den kjøre en IMAP-klient. Ikke gjør dette. Et passord er en hovednøkkel — det gir tilgang til alt, for alltid, uten noen måte å begrense det til «bare lesing» og ingen ren måte å trekke det tilbake på uten å endre det overalt.
 
-Verb er annerledes. Når agenten din kobler seg til MCP Emails, får den et token som er begrenset til nøyaktig det du godkjente: \`read:email\`, \`send:email\`, eller begge. Agenten holder en evne, ikke en legitimasjon. Hvis du bare ga lesetilgang, finnes det ikke noe send-verb i menyen dens — den kan fysisk ikke sende e-post til noen.
+Verb er annerledes. Når agenten din kobler seg til MCPEmails, får den et token som er begrenset til nøyaktig det du godkjente: \`read:email\`, \`send:email\`, eller begge. Agenten holder en evne, ikke en legitimasjon. Hvis du bare ga lesetilgang, finnes det ikke noe send-verb i menyen dens — den kan fysisk ikke sende e-post til noen.
 
-Og selve hemmeligheten? Den blir liggende på serveren, kryptert. MCP Emails lagrer én ting per innboks: et OAuth-token eller app-passord, kryptert med AES-256-GCM, dekryptert bare inne i en isolert funksjon i det øyeblikket et kall skjer. E-posten din selv blir aldri lagret. Hvert verktøykall henter meldingen direkte fra leverandøren din og forkaster den i det øyeblikket agenten har den. Innholdet i e-posten din ligger ikke i en database et sted og venter på å lekke. Hvis du vil ha den lengre versjonen av hvorfor det designvalget betyr noe, skrev jeg om det i [hvorfor det er viktig at e-posten din aldri lagres](/blog/why-email-never-stored-matters).
+Og selve hemmeligheten? Den blir liggende på serveren, kryptert. MCPEmails lagrer én ting per innboks: et app-passord eller OAuth-token, kryptert med AES-256-GCM, dekryptert på serverne våre bare når en forespørsel trenger det, og aldri sendt til agenten din. E-posten din selv blir aldri lagret. Hvert verktøykall henter meldingen direkte fra leverandøren din og forkaster den i det øyeblikket agenten har den. Innholdet i e-posten din ligger ikke i en database et sted og venter på å lekke. Hvis du vil ha den lengre versjonen av hvorfor det designvalget betyr noe, skrev jeg om det i [hvorfor det er viktig at e-posten din aldri lagres](/blog/why-email-never-stored-matters).
 
 Evne-ikke-legitimasjon-modellen er også grunnen til at du kan [tilbakekalle en tilkobling med ett klikk](/blog/oauth-vs-api-keys-ai-email-access) fra dashbordet. Å tilbakekalle et verb er øyeblikkelig og kirurgisk. Å rotere et lekket passord er det ikke.
 
@@ -76,7 +76,7 @@ En hostet MCP-e-postserver håndterer leverandørmangfoldet og legitimasjonssikk
 
 En MCP-e-postserver gjør innboksen din om til et sett med trygge, navngitte handlinger en AI-agent kan kalle over en standardprotokoll. Agenten får verb begrenset til det du tillot. Passordet ditt blir liggende på serveren, kryptert. Den faktiske e-posten din blir aldri lagret. For den fullstendige gjennomgangen av hvordan du kobler dette sammen fra ende til ende, start med pilarguiden om [å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access), eller hopp videre og [koble til en innboks på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-Vil du prøve det? [Start gratis](/signup) — alle planer er ubegrensede, ingen kort kreves — eller les [dokumentasjonen](/docs) for verktøyreferansen og endepunkt-URL-en.`,
+Vil du prøve det? [Start gratis](/signup), uten kort og med én tilkoblet innboks, eller les [dokumentasjonen](/docs) for verktøyreferansen og endepunkt-URL-en.`,
 };
 
 export default translation;

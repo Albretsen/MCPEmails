@@ -19,7 +19,7 @@
     "titleLine1": "Koble Domeneshop-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Domeneshop-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med postkassepassordet du satte i kontrollpanelet hos Domeneshop.",
-    "answer": "Claude kan ikke nå en Domeneshop-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.domeneshop.no, port 993, og autentiserer med hele e-postadressen din og passordet du valgte for postkassen i kontrollpanelet hos Domeneshop, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen ekstra bryter å slå på hos Domeneshop, men sending har en særregel som er beskrevet nedenfor. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Domeneshop-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.domeneshop.no, port 993, og autentiserer med hele e-postadressen din og passordet du valgte for postkassen i kontrollpanelet hos Domeneshop, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen ekstra bryter å slå på hos Domeneshop, men sending har en særregel som er beskrevet nedenfor. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra kontrollpanelet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Logg inn på domene.shop, åpne domenet ditt og gå til E-post. Hver adresse som står der, har sitt eget passord, satt da adressen ble opprettet. Hvis ingen husker det, setter du et nytt på det skjermbildet. Påloggingen til Domeneshop-kontoen er ikke postkassepassordet og fungerer ikke mot IMAP."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel post@dittdomene.no, og lim inn postkassepassordet. Domeneshops verter og porter er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "Domeneshop avviser SMTP-innsending fra skynettverk med 550 [ACR04]",
-      "p": "Det er denne som overrasker folk, og den er en policy, ikke en feil. Domeneshop dokumenterer <code>smtp.domeneshop.no</code> som en server for personlig e-post sendt fra din egen PC, Mac, telefon eller nettbrett, og uttrykkelig ikke for sending fra skytjenester, webservere, nyhetsbrev, markedsføring, masseutsendelser, annen automatisert sending eller dedikerte e-postservere. En innsending som kommer fra IP-området til en skyleverandør, avvises permanent med et <code>550</code>-svar som inneholder koden <code>[ACR04]</code>. Å prøve igjen fra samme nettverk hjelper aldri, og meldingen ser ut som et autentiseringsproblem selv om påloggingsopplysningene dine er i orden. mcpemails omgår dette med en <b>reserverute for utgående trafikk</b> som ikke ligger i IP-områdene til en stor skyleverandør, så en vanlig sending i menneskelig skala fra agenten din går ut. Reserveruten endrer ikke Domeneshops policy: masseutsendelser og automatisert massesending via Domeneshop er fortsatt ikke tillatt, og du bør ikke bygge et nyhetsbrev på toppen av det."
+      "p": "Det er denne som overrasker folk, og den er en policy, ikke en feil. Domeneshop dokumenterer <code>smtp.domeneshop.no</code> som en server for personlig e-post sendt fra din egen PC, Mac, telefon eller nettbrett, og uttrykkelig ikke for sending fra skytjenester, webservere, nyhetsbrev, markedsføring, masseutsendelser, annen automatisert sending eller dedikerte e-postservere. En innsending som kommer fra IP-området til en skyleverandør, avvises permanent med et <code>550</code>-svar som inneholder koden <code>[ACR04]</code>. Å prøve igjen fra samme nettverk hjelper aldri, og meldingen ser ut som et autentiseringsproblem selv om påloggingsopplysningene dine er i orden. MCPEmails omgår dette med en <b>reserverute for utgående trafikk</b> som ikke ligger i IP-områdene til en stor skyleverandør, så en vanlig sending i menneskelig skala fra agenten din går ut. Reserveruten endrer ikke Domeneshops policy: masseutsendelser og automatisert massesending via Domeneshop er fortsatt ikke tillatt, og du bør ikke bygge et nyhetsbrev på toppen av det."
     },
     {
       "h": "IMAP-serveren annonserer AUTH=PLAIN og ingenting annet",
@@ -67,7 +67,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Domeneshop-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd kobling for Domeneshop. Peker du en MCP-server som mcpemails mot Domeneshop-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd kobling for Domeneshop. Peker du en MCP-server som MCPEmails mot Domeneshop-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Domeneshop?",
@@ -75,7 +75,7 @@
     },
     {
       "q": "Hvorfor feiler sending med 550 [ACR04]?",
-      "a": "Domeneshop avviser SMTP-innsending fra IP-områder for sky og webhotell som et tiltak mot misbruk. Avvisningen er permanent og har ingenting med passordet ditt å gjøre. mcpemails sender berørte meldinger via en reserverute for utgående trafikk som ikke ligger i de områdene, slik at vanlige sendinger går gjennom. Massesending via Domeneshop er fortsatt i strid med deres oppgitte policy."
+      "a": "Domeneshop avviser SMTP-innsending fra IP-områder for sky og webhotell som et tiltak mot misbruk. Avvisningen er permanent og har ingenting med passordet ditt å gjøre. MCPEmails sender berørte meldinger via en reserverute for utgående trafikk som ikke ligger i de områdene, slik at vanlige sendinger går gjennom. Massesending via Domeneshop er fortsatt i strid med deres oppgitte policy."
     },
     {
       "q": "Trenger Domeneshop et app-passord?",

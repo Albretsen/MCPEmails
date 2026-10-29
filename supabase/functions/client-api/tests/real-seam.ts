@@ -171,7 +171,9 @@ export function gmailHandler(world: GmailWorld): harness.ProviderHandler {
       const id = harness.messageIdOf(call);
       const message = world.messages.find((m) => m.id === id);
       if (!message) return harness.json({ error: { code: 404, message: "Not Found" } }, 404);
-      return harness.json(url.searchParams.get("format") === "metadata" ? harness.gmailMeta(message) : harness.gmailFull(message));
+      const format = url.searchParams.get("format");
+      if (format === "raw") return harness.json(harness.gmailRaw(message));
+      return harness.json(format === "metadata" ? harness.gmailMeta(message) : harness.gmailFull(message));
     }
     if (call.method === "POST" && path === "/messages/send") {
       const body = call.body ? JSON.parse(call.body) as { raw: string } : { raw: "" };

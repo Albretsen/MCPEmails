@@ -6,10 +6,10 @@ import { useTranslations } from 'next-intl';
  * The public page a Microsoft 365 administrator lands on after following a
  * shared admin-consent link (/auth/outlook/admin-consent/result).
  *
- * The reader is an admin, not an MCP Emails user, so it says what happened in
+ * The reader is an admin, not an MCPEmails user, so it says what happened in
  * their organisation and what their colleagues do next, and offers nothing
  * that needs an account. The one link into the product is for the colleague
- * case (someone who also uses MCP Emails and wants to connect now).
+ * case (someone who also uses MCPEmails and wants to connect now).
  *
  * @param {{ status: 'granted'|'cancelled'|'failed'|'link_invalid'|'link_expired'|'timed_out'|'unavailable' }} props
  */
@@ -54,7 +54,7 @@ export function AdminConsentResult({ status }) {
     <div className="auth-shell">
       <div className="auth-wrap">
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" />
         </div>
 
         <div className="auth-card">

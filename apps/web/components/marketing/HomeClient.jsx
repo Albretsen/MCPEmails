@@ -6,7 +6,8 @@ import {
   Nav, Hero, Trusted, WhatIs, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
   Pricing, Faq, Footer
 } from './Sections';
-import { DemoVideo } from './DemoVideo';
+import { ReferralBanner } from './ReferralBanner';
+import { useDisplayCurrency } from './useDisplayCurrency';
 
 const TWEAK_DEFAULTS = {
   heroVariant: 'pipe',
@@ -14,18 +15,15 @@ const TWEAK_DEFAULTS = {
 };
 
 /**
- * `showDemoVideo` is the treatment flag for the homepage A/B test. It is
- * assigned server-side and passed down; when it is false this component renders
- * exactly what it rendered before the test existed, so the control arm is the
- * unchanged home page.
- *
  * @param {{
  *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
- *   showDemoVideo?: boolean,
+ *   eurEnabled?: boolean,
  * }} props
  */
-export default function HomeClient({ stripePrices, showDemoVideo = false }) {
+export default function HomeClient({ stripePrices, eurEnabled = false }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  // 'eur' only for an EU visitor while STRIPE_EUR_PRICES is on; see the hook.
+  const currency = useDisplayCurrency(eurEnabled);
 
   // Apply dark mode (also persisted so other pages match)
   useEffect(() => {
@@ -55,12 +53,7 @@ export default function HomeClient({ stripePrices, showDemoVideo = false }) {
       <Nav onSignIn={onSignIn} onGetStarted={onGetStarted} />
       <main>
         <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
-        {/* Directly under the hero, and deliberately ABOVE the demo-video slot:
-            the video is the treatment arm of a running experiment, so putting
-            the proof bar after it would move the bar's depth between arms and
-            confound the test. Here it sits at the same place in both. */}
         <FeaturedReview />
-        {showDemoVideo && <DemoVideo />}
         <Trusted />
         <WhatIs />
         <Features />
@@ -69,10 +62,11 @@ export default function HomeClient({ stripePrices, showDemoVideo = false }) {
         <Examples />
         <Quote />
         <Reviews />
-        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
-        <Faq />
+        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} currency={currency} />
+        <Faq currency={currency} />
       </main>
       <Footer />
+      <ReferralBanner />
 
       <TweaksPanel>
         <TweakSection label="Hero" />

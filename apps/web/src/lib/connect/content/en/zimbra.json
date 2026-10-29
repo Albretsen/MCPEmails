@@ -22,7 +22,7 @@
     "titleLine1": "Connect Zimbra to Claude,",
     "titleLine2": "Cursor, ChatGPT and any MCP client",
     "lead": "Zimbra has held your organisation's mail for years, and it speaks perfectly ordinary IMAP. That is all an AI agent needs to read, search, send, reply, schedule and file inside a real mailbox.",
-    "answer": "Claude cannot reach a Zimbra server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP at your own hostname, on port 993 where the Zimbra proxy is installed, using the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Zimbra is software your organisation runs, so there is no shared hostname to publish, and the port is worth checking rather than assuming: 993 and 143 belong to the Zimbra proxy, while mailboxd itself listens on 7993 and 7143. The server has to be reachable from the internet and its certificate has to validate. One inbox is free.",
+    "answer": "Claude cannot reach a Zimbra server on its own. MCPEmails is a hosted MCP server that connects to yours over IMAP at your own hostname, on port 993 where the Zimbra proxy is installed, using the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Zimbra is software your organisation runs, so there is no shared hostname to publish, and the port is worth checking rather than assuming: 993 and 143 belong to the Zimbra proxy, while mailboxd itself listens on 7993 and 7143. The server has to be reachable from the internet and its certificate has to validate. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password, IMAP enabled in the COS",
     "meta2": "Email fetched live, never stored"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required, which is enough to try this against a real Zimbra account."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Check the class of service, then add the account",
-      "p": "Open Configure, then Class of Service, then the class the account belongs to, and look at the POP/IMAP options under Preferences. A class with IMAP switched off refuses every account in it. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your Zimbra hostname, the full address and the mailbox password."
+      "p": "Open Configure, then Class of Service, then the class the account belongs to, and look at the POP/IMAP options under Preferences. A class with IMAP switched off refuses every account in it. Then add the inbox in MCPEmails: choose IMAP / SMTP, enter your Zimbra hostname, the full address and the mailbox password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Your Zimbra server has to accept an inbound IMAP connection from the internet. A deployment published only inside the corporate network or behind a VPN cannot be reached by a hosted service. mcpemails can be self-hosted inside the same network instead, which is often the easier conversation to have with a security team than opening a port.",
+    "Your Zimbra server has to accept an inbound IMAP connection from the internet. A deployment published only inside the corporate network or behind a VPN cannot be reached by a hosted service. MCPEmails can be self-hosted inside the same network instead, which is often the easier conversation to have with a security team than opening a port.",
     "Only mail crosses an IMAP connection. Zimbra's calendars, contacts, tasks and briefcase are served through its own web client and through CalDAV, CardDAV or the Zimbra API, so an agent connected this way works with mail alone.",
     "Sending goes out through your own Zimbra MTA, so deliverability is governed by your SPF, DKIM and DMARC records exactly as it is for every other client on the server."
   ],
   "faq": [
     {
       "q": "Does Claude work with Zimbra?",
-      "a": "Not directly. Claude has no Zimbra connector and cannot open an IMAP session to a server your organisation runs. Connecting an MCP server such as mcpemails to your Zimbra host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, using the same credentials the Zimbra Web Client uses, and the same inbox then works in Cursor or ChatGPT."
+      "a": "Not directly. Claude has no Zimbra connector and cannot open an IMAP session to a server your organisation runs. Connecting an MCP server such as MCPEmails to your Zimbra host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, using the same credentials the Zimbra Web Client uses, and the same inbox then works in Cursor or ChatGPT."
     },
     {
       "q": "What are the Zimbra IMAP and SMTP settings?",

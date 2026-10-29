@@ -20,7 +20,7 @@
     "titleLine1": "Conecta el correo de InMotion Hosting",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón real de InMotion. Lee, busca, envía, responde, programa y organiza correo por IMAP en el nombre de servidor seguro que InMotion asigna a tu servidor.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de InMotion Hosting. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. InMotion no tiene un único servidor de correo compartido: para una conexión segura usas el nombre de servidor seguro de tu cuenta, con la forma secureNN.inmotionhosting.com, donde NN es el número de servidor que aparece en los detalles técnicos de tu Account Management Panel. La autenticación usa la contraseña definida en el buzón en cPanel, y una bandeja es gratis.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de InMotion Hosting. MCPEmails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. InMotion no tiene un único servidor de correo compartido: para una conexión segura usas el nombre de servidor seguro de tu cuenta, con la forma secureNN.inmotionhosting.com, donde NN es el número de servidor que aparece en los detalles técnicos de tu Account Management Panel. La autenticación usa la contraseña definida en el buzón en cPanel, y una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde cPanel",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Define la contraseña del buzón en cPanel",
-      "p": "IMAP comprueba la contraseña de la dirección concreta, no tu acceso a AMP. En cPanel abre <b>Email Accounts</b>, haz clic en <b>Manage</b> en la dirección y define una contraseña. Después introdúcela en mcpemails con la dirección completa como nombre de usuario y <code>secureNN.inmotionhosting.com</code> como servidor."
+      "p": "IMAP comprueba la contraseña de la dirección concreta, no tu acceso a AMP. En cPanel abre <b>Email Accounts</b>, haz clic en <b>Manage</b> en la dirección y define una contraseña. Después introdúcela en MCPEmails con la dirección completa como nombre de usuario y <code>secureNN.inmotionhosting.com</code> como servidor."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de InMotion Hosting?",
-      "a": "No directamente. Claude no tiene un conector para InMotion. Conectar un servidor MCP como mcpemails a tu buzón de InMotion por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio."
+      "a": "No directamente. Claude no tiene un conector para InMotion. Conectar un servidor MCP como MCPEmails a tu buzón de InMotion por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de InMotion Hosting?",

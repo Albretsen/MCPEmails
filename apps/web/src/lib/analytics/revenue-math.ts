@@ -21,12 +21,26 @@
  * coupon, and against the price table they would each read as full revenue.
  * Priced from Stripe they correctly contribute nothing.
  *
+ * ONE-TIME PAYMENTS ARE NOT MRR. The 3-month Personal pass is a payment-mode
+ * Checkout and creates no subscription, so nothing here ever sees it; its
+ * charge and any refund land in the cash tiles through cash-math.ts. Do not
+ * add an "MRR equivalent" for it (src/lib/billing/pass.ts).
+ *
  * WHAT IS DELIBERATELY NOT MODELLED: expansion and contraction. Net new MRR
  * here is new minus churned, not new plus expansion minus contraction minus
  * churn. Doing it properly needs a stored MRR history to diff against, and
  * with a customer count in single digits an upgrade is visible on the tile
  * anyway. When the history exists, this is the function to revisit.
+ *
+ * EVERY FIGURE IS IN USD, NET OF VAT. Subscriptions in other currencies are
+ * converted at the monthly rate in fx.ts (live ones at the current month,
+ * ended ones at the month they ended), and a VAT-inclusive price counts only
+ * its net share (`taxInclusiveRatio`). Before the EUR launch the board picked
+ * one currency and dropped the rest, which would have hidden every EU
+ * customer from MRR on day one.
  */
+
+import { monthOf, toUsdMinor } from './fx.ts';
 
 /** A Stripe subscription reduced to the facts the money math needs. */
 export type SubscriptionFacts = {
@@ -53,10 +67,38 @@ export type SubscriptionFacts = {
   grossMonthlyMinor: number;
   /** Coupon reductions, already normalised to a month. */
   discount: DiscountFacts;
+  /**
+   * Share of what the customer pays that is ours rather than the tax
+   * authority's, 0..1. Below 1 only for a VAT-inclusive price, where the
+   * amount includes the tax: the latest invoice's `total_excluding_tax /
+   * total`. Missing means 1, which is right for every tax-exclusive price
+   * (the tax is added on top and never touched our list price). See
+   * `taxInclusiveRatio` for how kiosk-revenue.ts fills it.
+   */
+  taxInclusiveRatio?: number;
   /** Plan and interval as a person would say it, or 'Other'. */
   planLabel: string;
   /** One of our own accounts rather than a customer's. */
   internal: boolean;
+  /**
+   * Live but paused (Stripe pause_collection, and the paid period has ended):
+   * not MRR, not churn. Its own level on the board. See `pausedNow`.
+   */
+  paused?: boolean;
+};
+
+/** One rail row: how many customers, and their net monthly money. */
+export type Movement = { customers: number; mrrMinor: number };
+
+export type Movements = {
+  /** Started paying inside the window and still on track to renew. */
+  new: Movement;
+  /** Billing ended inside the window. */
+  stopped: Movement;
+  /** Still paying, scheduled to stop at period end. */
+  leaving: Movement;
+  /** Still paying, card failing, not scheduled to stop. */
+  failing: Movement;
 };
 
 export type DiscountFacts = {
@@ -100,11 +142,46 @@ export function scheduledToStop(subscription: {
   return subscription.cancel_at_period_end === true || subscription.cancel_at != null;
 }
 
+/**
+ * True while a pause is running: pause_collection is set, the paid period it
+ * starts after (metadata mcpe_pause_from) has ended, and Stripe has not
+ * resumed collection yet. A pause that is only scheduled is still MRR: that
+ * month is paid. Mirrors pauseState in src/lib/billing/pause.ts, kept here so
+ * the money math has no billing imports.
+ */
+export function pausedNow(
+  subscription: {
+    pause_collection?: { behavior?: string | null; resumes_at?: number | null } | null;
+    metadata?: Record<string, string> | null;
+  },
+  nowSeconds: number,
+): boolean {
+  const pc = subscription.pause_collection;
+  if (!pc?.behavior) return false;
+  if (pc.resumes_at != null && nowSeconds >= pc.resumes_at) return false;
+  const from = Number(subscription.metadata?.mcpe_pause_from ?? '');
+  return !Number.isFinite(from) || from === 0 || from <= nowSeconds;
+}
+
 /** Statuses where the money is live but not arriving. */
 const AT_RISK_STATUSES = new Set(['past_due', 'unpaid']);
 
+/** One currency's share of live MRR, for "of which EUR". */
+export type CurrencyShare = {
+  currency: string;
+  /** Live paying subscriptions billed in it. */
+  customers: number;
+  /** Net MRR in that currency's own minor units, before conversion. */
+  mrrMinor: number;
+  /** The same money in USD minor units; null when fx.ts has no rate for it. */
+  mrrUsdMinor: number | null;
+};
+
 export type RevenueSummary = {
-  /** Currency every figure below is denominated in. */
+  /**
+   * Currency every figure below is denominated in. Always 'usd' now: other
+   * currencies are converted, see the module note.
+   */
   currency: string;
   /** Normalised monthly recurring revenue, minor units, external accounts. */
   mrrMinor: number;
@@ -122,6 +199,12 @@ export type RevenueSummary = {
   /** Live, paying, and already set to stop at the end of the period. */
   leavingMinor: number;
   leavingCustomers: number;
+  /**
+   * Live but paused: not in MRR or paying customers, and not churn. The
+   * figure is what they pay per month once billing resumes.
+   */
+  pausedCustomers: number;
+  pausedMinor: number;
   /** Subscriptions that started inside the window, and what they were worth. */
   newMrrMinor: number;
   newCustomers: number;
@@ -147,14 +230,26 @@ export type RevenueSummary = {
   /** cancelled / base, 0..1, null when nobody paid in the window. */
   customerChurnRate: number | null;
   revenueChurnRate: number | null;
+  /**
+   * The movement rail's rows, with every customer on at most one of them.
+   * The fields above overlap on purpose (a cancel scheduled inside the window
+   * is both "cancelled" and "leaving"), and a rail that listed them side by
+   * side counted the same people twice. See `disjointMovements`.
+   */
+  movements: Movements;
   /** Where the money sits, biggest first. */
   byPlan: { label: string; customers: number; mrrMinor: number }[];
   /** Our own live subscriptions, excluded from every figure above. */
   internalCustomers: number;
   /**
-   * Currencies held by live subscriptions other than the reported one. Non
-   * empty means the headline understates the true total and the tile says so,
-   * rather than adding francs to dollars and calling the result revenue.
+   * Live paying money per billing currency, biggest USD share first. Native
+   * and converted, so the board can say "of which EUR" without redoing FX.
+   */
+  byCurrency: CurrencyShare[];
+  /**
+   * Currencies held by live paying subscriptions that fx.ts has no rate for.
+   * Non empty means the headline understates the true total and the tile says
+   * so, rather than adding francs to dollars and calling the result revenue.
    */
   otherCurrencies: string[];
 };
@@ -183,11 +278,92 @@ export function monthlyFromInterval(
   return amountMinor / months;
 }
 
-/** List price less coupons, floored at zero. Stripe never bills a negative. */
+/**
+ * List price less coupons, less any VAT included in it, floored at zero.
+ * Stripe never bills a negative. In the subscription's own currency.
+ */
 export function netMonthlyMinor(facts: SubscriptionFacts): number {
   const afterPercent = facts.grossMonthlyMinor * (1 - clampPercent(facts.discount.percentOff) / 100);
   const afterFlat = afterPercent - Math.max(0, facts.discount.amountOffMonthlyMinor);
-  return Math.max(0, Math.round(afterFlat));
+  return Math.max(0, Math.round(afterFlat * clampRatio(facts.taxInclusiveRatio)));
+}
+
+function clampRatio(ratio: number | undefined): number {
+  if (ratio == null || !Number.isFinite(ratio)) return 1;
+  return Math.min(1, Math.max(0, ratio));
+}
+
+/* ------------------------------------------------- Stripe price and tax */
+
+/** The parts of a Stripe price the amount and tax rules read. */
+export type PriceShape = {
+  currency: string;
+  unit_amount: number | null;
+  tax_behavior?: string | null;
+  currency_options?: CurrencyOptions | null;
+};
+
+/** `Price.currency_options`: the same price in other currencies. */
+export type CurrencyOptions = Record<string, { unit_amount: number | null; tax_behavior?: string | null }>;
+
+/**
+ * What one unit of a price costs in the subscription's currency.
+ *
+ * A EUR subscriber on a multi-currency price still has `price.currency` USD
+ * and `price.unit_amount` in cents: the euro amount lives in
+ * `currency_options.eur`, which Stripe only returns when asked for. Reading
+ * `unit_amount` alone would book 900 cents as 900 euro cents. Returns null
+ * when the price is in another currency and no option for this one is known,
+ * so the caller can fall back to pricing it in the price's own currency.
+ */
+export function priceInCurrency(
+  price: PriceShape,
+  currency: string,
+  options: CurrencyOptions | null | undefined = price.currency_options,
+): { unitAmount: number | null; taxBehavior: string | null } | null {
+  if (price.currency === currency) {
+    return { unitAmount: price.unit_amount, taxBehavior: price.tax_behavior ?? null };
+  }
+  const option = options?.[currency];
+  if (!option) return null;
+  return { unitAmount: option.unit_amount, taxBehavior: option.tax_behavior ?? price.tax_behavior ?? null };
+}
+
+/** The parts of a Stripe invoice the VAT share is read from. */
+export type InvoiceTaxShape = {
+  total: number;
+  total_excluding_tax: number | null;
+  total_taxes?: { amount: number; tax_behavior: string }[] | null;
+};
+
+/**
+ * The share of a VAT-inclusive subscription that is ours, from its latest
+ * invoice: `total_excluding_tax / total`.
+ *
+ * Inclusive when the price says so (`tax_behavior: 'inclusive'`, on the price
+ * or on its currency option) or when the invoice itself carries inclusive tax.
+ * Undefined, which the math reads as 1, for a tax-exclusive price: there the
+ * invoice total is list price PLUS tax, and the same division would wrongly
+ * shave the tax off money we actually keep.
+ *
+ * Also undefined when the invoice is missing or unexpanded, so an inclusive
+ * price with no invoice read yet counts gross. That overstates by the VAT rate
+ * until its first invoice, which is the direction a reader can see coming. An
+ * inclusive price whose latest invoice collected no tax (a customer outside a
+ * registered country, or a legacy subscription before `automatic_tax` is on)
+ * reads 1, which is the truth: none of it went to a tax authority.
+ */
+export function taxInclusiveRatio(
+  inclusivePrice: boolean,
+  invoice: InvoiceTaxShape | string | null | undefined,
+): number | undefined {
+  if (!invoice || typeof invoice === 'string') return undefined;
+  const invoiceInclusive = (invoice.total_taxes ?? []).some(
+    (tax) => tax.tax_behavior === 'inclusive' && tax.amount > 0,
+  );
+  if (!inclusivePrice && !invoiceInclusive) return undefined;
+  if (!(invoice.total > 0) || invoice.total_excluding_tax == null) return undefined;
+  return clampRatio(invoice.total_excluding_tax / invoice.total);
 }
 
 function clampPercent(percent: number): number {
@@ -209,11 +385,25 @@ export function summarizeSubscriptions(
   const external = subscriptions.filter((sub) => !sub.internal);
   const live = external.filter((sub) => LIVE_STATUSES.has(sub.status));
 
-  const currency = primaryCurrency(live);
-  const inCurrency = live.filter((sub) => sub.currency === currency);
-  const otherCurrencies = [...new Set(live.filter((sub) => sub.currency !== currency).map((sub) => sub.currency))].sort();
+  // Every row is priced once, in USD, at the rate of the month it was last
+  // billing in: now for a live subscription, the month it ended otherwise.
+  // A fully comped row needs no rate (nothing times anything is nothing), so
+  // an unknown currency can only ever hide money, never a comped customer.
+  const price = (sub: SubscriptionFacts) => {
+    const native = netMonthlyMinor(sub);
+    const usd = native === 0 ? 0 : toUsdMinor(native, sub.currency, monthOf(sub.endedAt ?? nowSeconds));
+    return { sub, native, monthly: usd };
+  };
+  const converted = (rows: { sub: SubscriptionFacts; native: number; monthly: number | null }[]) =>
+    rows.filter((row): row is { sub: SubscriptionFacts; native: number; monthly: number } => row.monthly !== null);
 
-  const priced = inCurrency.map((sub) => ({ sub, monthly: netMonthlyMinor(sub) }));
+  const livePriced = live.map(price);
+  const otherCurrencies = [...new Set(livePriced.filter((row) => row.monthly === null).map((row) => row.sub.currency))].sort();
+  const pricedAll = converted(livePriced);
+  // A paused subscription is live (Stripe keeps it `active`) but bills
+  // nothing until it resumes, so it is not MRR and not a paying customer.
+  const paused = pricedAll.filter((row) => row.sub.paused === true);
+  const priced = pricedAll.filter((row) => row.sub.paused !== true);
   const paying = priced.filter((row) => row.monthly > 0);
 
   const mrrMinor = Math.round(sum(paying.map((row) => row.monthly)));
@@ -229,12 +419,12 @@ export function summarizeSubscriptions(
   // Only `canceled` is churn. `incomplete_expired` also carries an `ended_at`,
   // but it is an abandoned checkout that never paid, and counting it booked
   // lost revenue from people who were never customers.
-  const churned = external
-    .filter((sub) => sub.status === 'canceled')
-    .filter((sub) => sub.endedAt !== null && sub.endedAt >= windowStart && sub.endedAt <= nowSeconds)
-    .filter((sub) => sub.currency === currency)
-    .map((sub) => ({ sub, monthly: netMonthlyMinor(sub) }))
-    .filter((row) => row.monthly > 0);
+  const churned = converted(
+    external
+      .filter((sub) => sub.status === 'canceled')
+      .filter((sub) => sub.endedAt !== null && sub.endedAt >= windowStart && sub.endedAt <= nowSeconds)
+      .map(price),
+  ).filter((row) => row.monthly > 0);
 
   const churnedMrrMinor = Math.round(sum(churned.map((row) => row.monthly)));
   const newMrrMinor = Math.round(sum(fresh.map((row) => row.monthly)));
@@ -243,21 +433,22 @@ export function summarizeSubscriptions(
   // point in the window. Live ones, plus ones that ended inside it. Only
   // `canceled` counts as having ended from paying: `incomplete_expired` is an
   // abandoned checkout that never paid anything.
-  const base = external
-    .filter((sub) => sub.currency === currency)
-    .filter((sub) =>
-      LIVE_STATUSES.has(sub.status)
-      || (sub.status === 'canceled' && sub.endedAt !== null && sub.endedAt >= windowStart))
-    .map((sub) => ({ sub, monthly: netMonthlyMinor(sub) }))
-    .filter((row) => row.monthly > 0);
+  const base = converted(
+    external
+      .filter((sub) =>
+        LIVE_STATUSES.has(sub.status)
+        || (sub.status === 'canceled' && sub.endedAt !== null && sub.endedAt >= windowStart))
+      .map(price),
+  ).filter((row) => row.monthly > 0);
   const cancelled = base.filter(
     (row) => row.sub.canceledAt !== null && row.sub.canceledAt >= windowStart && row.sub.canceledAt <= nowSeconds,
   );
   const baseMrrMinor = Math.round(sum(base.map((row) => row.monthly)));
+  const movements = disjointMovements(paying, churned, windowStart);
   const cancelledMrrMinor = Math.round(sum(cancelled.map((row) => row.monthly)));
 
   return {
-    currency,
+    currency: 'usd',
     mrrMinor,
     arrMinor: mrrMinor * 12,
     payingCustomers: paying.length,
@@ -267,6 +458,8 @@ export function summarizeSubscriptions(
     atRiskCustomers: atRisk.length,
     leavingMinor: Math.round(sum(leaving.map((row) => row.monthly))),
     leavingCustomers: leaving.length,
+    pausedCustomers: paused.length,
+    pausedMinor: Math.round(sum(paused.map((row) => row.monthly))),
     newMrrMinor,
     newCustomers: fresh.length,
     churnedMrrMinor,
@@ -278,32 +471,62 @@ export function summarizeSubscriptions(
     churnBaseMrrMinor: baseMrrMinor,
     customerChurnRate: base.length > 0 ? cancelled.length / base.length : null,
     revenueChurnRate: baseMrrMinor > 0 ? cancelledMrrMinor / baseMrrMinor : null,
+    movements,
     byPlan: groupByPlan(paying),
     internalCustomers: subscriptions.filter((sub) => sub.internal && LIVE_STATUSES.has(sub.status)).length,
+    byCurrency: groupByCurrency(livePriced.filter((row) => row.native > 0)),
     otherCurrencies,
   };
 }
 
 /**
- * The currency the board reports in: whichever one holds the most live money.
+ * Put each customer on exactly one movement row.
  *
- * Defaults to USD when there are no live subscriptions at all, so an empty
- * account still renders "$0" rather than a blank where the symbol should be.
+ * Precedence, first match wins: billing stopped, set to stop, card failing,
+ * new. A customer who signed up this month and already scheduled a cancel is
+ * "set to stop", not also "new"; a failing card that is also set to stop is
+ * leaving either way, so it is not double counted as "card failing". Ended
+ * subscriptions are never live, so `stopped` cannot meet the other three.
  */
-function primaryCurrency(live: SubscriptionFacts[]): string {
-  const totals = new Map<string, number>();
-  for (const sub of live) {
-    totals.set(sub.currency, (totals.get(sub.currency) ?? 0) + netMonthlyMinor(sub));
+function disjointMovements(
+  paying: { sub: SubscriptionFacts; monthly: number }[],
+  churned: { sub: SubscriptionFacts; monthly: number }[],
+  windowStart: number,
+): Movements {
+  const row = (rows: { monthly: number }[]): Movement => ({
+    customers: rows.length,
+    mrrMinor: Math.round(sum(rows.map((r) => r.monthly))),
+  });
+  const leaving = paying.filter((r) => r.sub.cancelAtPeriodEnd);
+  const failing = paying.filter((r) => !r.sub.cancelAtPeriodEnd && AT_RISK_STATUSES.has(r.sub.status));
+  const fresh = paying.filter(
+    (r) => !r.sub.cancelAtPeriodEnd && !AT_RISK_STATUSES.has(r.sub.status) && r.sub.createdAt >= windowStart,
+  );
+  return { new: row(fresh), stopped: row(churned), leaving: row(leaving), failing: row(failing) };
+}
+
+/**
+ * Live paying money per billing currency, native and converted. Rows with no
+ * rate are kept here with a null USD figure: this is the one place they are
+ * still counted, so "of which XYZ" never loses a customer either.
+ */
+function groupByCurrency(rows: { sub: SubscriptionFacts; native: number; monthly: number | null }[]): CurrencyShare[] {
+  const byCode = new Map<string, { customers: number; native: number; usd: number | null }>();
+  for (const { sub, native, monthly } of rows) {
+    const entry = byCode.get(sub.currency) ?? { customers: 0, native: 0, usd: 0 };
+    entry.customers += 1;
+    entry.native += native;
+    entry.usd = entry.usd === null || monthly === null ? null : entry.usd + monthly;
+    byCode.set(sub.currency, entry);
   }
-  let best = 'usd';
-  let bestTotal = -1;
-  for (const [currency, total] of totals) {
-    if (total > bestTotal) {
-      best = currency;
-      bestTotal = total;
-    }
-  }
-  return best;
+  return [...byCode.entries()]
+    .map(([currency, entry]) => ({
+      currency,
+      customers: entry.customers,
+      mrrMinor: Math.round(entry.native),
+      mrrUsdMinor: entry.usd === null ? null : Math.round(entry.usd),
+    }))
+    .sort((a, b) => (b.mrrUsdMinor ?? -1) - (a.mrrUsdMinor ?? -1) || a.currency.localeCompare(b.currency));
 }
 
 function groupByPlan(rows: { sub: SubscriptionFacts; monthly: number }[]) {

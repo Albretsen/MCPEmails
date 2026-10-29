@@ -19,8 +19,8 @@ export const ACQUISITION_QUERY_KEYS = Object.freeze({
  * it hides (which listing actually sends people who pay) unanswerable.
  *
  * The same strings are pinned by three CHECK constraints and by the signup
- * trigger's own allowlist in
- * supabase/migrations/20260915190000_widen_acquisition_sources.sql. A value
+ * trigger's own allowlist, newest in
+ * supabase/migrations/20261025090000_referrals.sql. A value
  * this file emits that the database has not been taught is not a soft failure:
  * the CHECK rejects the write, or the trigger silently NULLs it. The drift test
  * in acquisition-context.test.mjs reads that migration and compares the two
@@ -39,15 +39,36 @@ export const SOURCES = new Set([
   'claude', 'chatgpt', 'perplexity',
   // MCP directories and listings, the channel this whole widening is for.
   'smithery', 'glama', 'cursor', 'lobehub', 'pulsemcp', 'mcpservers', 'mcp_so', 'freemcp',
+  // Listings that only a tagged link can name (2026-10-19). Each has its own
+  // utm_source in docs/LISTINGS.md. Without these, npm, the MCP registry and
+  // Docker recorded as `other`, the three GitHub lists all as `github`, and the
+  // Claude, ChatGPT and Cursor directories in the same bucket as a plain
+  // referral from that product. Referrer hosts never produce these.
+  'npm', 'mcp_registry', 'docker',
+  'github_punkpeye', 'github_tensorblock', 'github_bestof',
+  'claude_directory', 'chatgpt_directory', 'cursor_directory',
+  // AI assistants that were filed under a bigger name until 2026-10-22: Gemini
+  // as organic_google (gemini.google.com ends in google.com) and Copilot as
+  // `other`.
+  'gemini', 'copilot',
+  // Connector installs (2026-10-22). A logged-out user who connects an MCP
+  // client is sent from /authorize to /login by the system browser with no
+  // referrer, so every one of them used to be `direct`. Named after the client
+  // that started the OAuth flow (connectorSourceFromAuthorize), and kept apart
+  // from `claude`, `chatgpt` and `cursor`, which mean a link someone clicked.
+  'connector_claude', 'connector_chatgpt', 'connector_cursor', 'connector_vscode', 'connector_other',
+  // A signup that started on a referral link (2026-10-25). /r/<code> redirects
+  // to the home page with acq=referral; see referralSourceFromLocation.
+  'referral',
   'other',
 ]);
 export const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
-export const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh']);
+export const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh', 'de']);
 export const UTM_MEDIA = new Set([
-  'organic', 'paid_search', 'social', 'email', 'referral', 'affiliate', 'display', 'other',
+  'organic', 'paid_search', 'social', 'email', 'referral', 'affiliate', 'display', 'directory', 'other',
 ]);
 export const UTM_CAMPAIGNS = new Set([
-  'launch', 'newsletter', 'content', 'product', 'partner', 'community', 'other',
+  'launch', 'newsletter', 'content', 'product', 'partner', 'community', 'listing', 'other',
 ]);
 
 /**
@@ -58,12 +79,16 @@ export const UTM_CAMPAIGNS = new Set([
  *
  * Several hosts deliberately share one category (chat.openai.com and
  * openai.com, x.com and t.co, cursor.com and cursor.directory), because the
- * question the kiosk asks is "which channel", not "which hostname". No entry is
- * a suffix of another entry it should not win over, so the order below is for
- * reading, not for matching.
+ * question the kiosk asks is "which channel", not "which hostname". The first
+ * match wins. Only one entry sits under another: gemini.google.com, which has
+ * to come before google.com or Gemini answers count as Google searches.
  */
 const HOST_SOURCES = Object.freeze([
+  ['gemini.google.com', 'gemini'],
   ['google.com', 'organic_google'],
+  // The Android Google app sends `android-app://<package>/...` as referrer,
+  // which parses with the package name as its hostname.
+  ['com.google.android.googlequicksearchbox', 'organic_google'],
   ['bing.com', 'organic_bing'],
   ['duckduckgo.com', 'organic_duckduckgo'],
   ['reddit.com', 'reddit'],
@@ -80,6 +105,7 @@ const HOST_SOURCES = Object.freeze([
   ['chat.openai.com', 'chatgpt'],
   ['openai.com', 'chatgpt'],
   ['perplexity.ai', 'perplexity'],
+  ['copilot.microsoft.com', 'copilot'],
   ['smithery.ai', 'smithery'],
   ['glama.ai', 'glama'],
   ['cursor.com', 'cursor'],
@@ -93,16 +119,24 @@ const HOST_SOURCES = Object.freeze([
   ['freemcp.space', 'freemcp'],
 ]);
 
+/**
+ * Google's country search domains: google.de, google.no, google.co.uk,
+ * google.com.au and so on. Only `google.com` is in the table above, so a search
+ * from any other country used to be filed as `other`.
+ */
+const GOOGLE_COUNTRY_HOST = /(?:^|\.)google\.(?:com?\.)?[a-z]{2}$/;
+
 export function sourceFromHost(hostname) {
   const host = hostname.toLowerCase().replace(/\.$/, '');
   for (const [domain, source] of HOST_SOURCES) {
     if (host === domain || host.endsWith(`.${domain}`)) return source;
   }
+  if (GOOGLE_COUNTRY_HOST.test(host)) return 'organic_google';
   return 'other';
 }
 
 export function localeAndPath(pathname) {
-  const match = pathname.match(/^\/(nb|es|fr|zh)(?=\/|$)/);
+  const match = pathname.match(/^\/(nb|es|fr|zh|de)(?=\/|$)/);
   const locale = match?.[1] ?? 'en';
   const path = pathname.slice(match?.[0].length ?? 0) || '/';
   return { locale, path };
@@ -187,20 +221,33 @@ const UTM_SOURCES = Object.freeze([
   ['t.co', 'x_twitter'],
   ['linkedin', 'linkedin'],
   ['lnkd', 'linkedin'],
+  // Each listing value before the bare product name it starts with, or
+  // `github`, `claude`, `chatgpt` and `cursor` would claim it first.
+  ['github_punkpeye', 'github_punkpeye'],
+  ['github_tensorblock', 'github_tensorblock'],
+  ['github_bestof', 'github_bestof'],
   ['github', 'github'],
+  ['claude_directory', 'claude_directory'],
   ['claude', 'claude'],
   ['anthropic', 'claude'],
+  ['chatgpt_directory', 'chatgpt_directory'],
   ['chatgpt', 'chatgpt'],
   ['openai', 'chatgpt'],
   ['perplexity', 'perplexity'],
   ['smithery', 'smithery'],
   ['glama', 'glama'],
+  ['cursor_directory', 'cursor_directory'],
   ['cursor', 'cursor'],
   ['lobehub', 'lobehub'],
   ['pulsemcp', 'pulsemcp'],
   ['mcpservers', 'mcpservers'],
   ['mcp.so', 'mcp_so'],
   ['freemcp', 'freemcp'],
+  ['npm', 'npm'],
+  ['mcp_registry', 'mcp_registry'],
+  ['docker', 'docker'],
+  ['gemini', 'gemini'],
+  ['copilot', 'copilot'],
 ]);
 
 /** `t.co` may begin the value or follow a separator, never a letter or digit. */
@@ -225,6 +272,7 @@ export function mediumFromUtm(value) {
   if (medium === 'social' || medium === 'paid_social') return 'social';
   if (medium === 'email' || medium === 'newsletter') return 'email';
   if (medium === 'organic' || medium === 'referral' || medium === 'affiliate' || medium === 'display') return medium;
+  if (medium === 'directory') return 'directory';
   return 'other';
 }
 
@@ -238,6 +286,7 @@ export function campaignFromUtm(value) {
   if (campaign.includes('product')) return 'product';
   if (campaign.includes('partner')) return 'partner';
   if (campaign.includes('community')) return 'community';
+  if (campaign === 'listing') return 'listing';
   return 'other';
 }
 
@@ -271,6 +320,111 @@ export function isGoogleAdsClick(searchParams, utmSource, utmMedium) {
   return utmSource === 'google_ads' || (utmSource === 'organic_google' && utmMedium === 'paid_search');
 }
 
+/**
+ * `?ref=` and `?source=` as a fallback for utm_source. Directories and READMEs
+ * often tag links that way instead of with UTM. Both keys are also used as
+ * plain free text (`?ref=nav`, a person's handle), so unlike utm_source only a
+ * value that names a channel we know counts; anything else is ignored rather
+ * than turned into `other`.
+ */
+export function sourceFromRefParams(searchParams) {
+  for (const key of ['ref', 'source']) {
+    const category = sourceFromUtm(searchParams.get(key));
+    if (category && category !== 'other') return category;
+  }
+  return null;
+}
+
+/**
+ * Seeded oauth_clients rows (supabase/migrations/20260525130000 and
+ * 20260525210003). Their ids are ours, so they name the client outright.
+ */
+export const SEEDED_CONNECTOR_CLIENTS = Object.freeze({
+  'claude-desktop': 'connector_claude',
+  'claude-ai-web': 'connector_claude',
+  'claude-code': 'connector_claude',
+  'cursor-v1': 'connector_cursor',
+});
+
+/**
+ * Exact hostnames of a CIMD client_id URL or an https redirect_uri, by client.
+ * The same hosts as VENDORS in src/lib/oauth/client-identity.ts (a test keeps
+ * them in step). Compared exactly, never by suffix.
+ */
+export const CONNECTOR_HOSTS = Object.freeze([
+  [['claude.ai', 'www.claude.ai', 'claude.com', 'www.claude.com', 'anthropic.com', 'www.anthropic.com',
+    'console.anthropic.com', 'platform.claude.com'], 'connector_claude'],
+  [['chatgpt.com', 'chat.openai.com', 'openai.com', 'www.openai.com', 'platform.openai.com'], 'connector_chatgpt'],
+  [['cursor.com', 'www.cursor.com', 'cursor.sh'], 'connector_cursor'],
+  [['vscode.dev', 'insiders.vscode.dev'], 'connector_vscode'],
+]);
+
+/** Native-app redirect schemes, as NATIVE_APP_SCHEMES in client-identity.ts. */
+export const CONNECTOR_SCHEMES = Object.freeze({
+  'claude:': 'connector_claude',
+  'cursor:': 'connector_cursor',
+  'vscode:': 'connector_vscode',
+  'vscode-insiders:': 'connector_vscode',
+});
+
+function connectorFromUrl(value) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (CONNECTOR_SCHEMES[parsed.protocol]) return CONNECTOR_SCHEMES[parsed.protocol];
+  if (parsed.protocol !== 'https:') return null;
+  const host = parsed.hostname.toLowerCase();
+  for (const [hosts, source] of CONNECTOR_HOSTS) if (hosts.includes(host)) return source;
+  return null;
+}
+
+/**
+ * The connector a first touch belongs to, or null when it is not one.
+ *
+ * WHY (2026-10-22). A logged-out user who connects an MCP client lands on
+ * /login?redirect=/authorize?client_id=...&redirect_uri=..., opened by the
+ * client in the system browser with no referrer, so roughly a third of all
+ * `direct` signups were connector installs. The client is read from the
+ * authorize request itself, in this order: a seeded client id, the host of a
+ * CIMD client_id URL (VS Code and claude.ai use one), then the redirect_uri
+ * scheme or host. Nothing from it is stored except the category. A dynamically
+ * registered client's self-chosen name is never read: it is not in the URL,
+ * and it is not trustworthy. Any other authorize request is `connector_other`.
+ */
+export function connectorSourceFromAuthorize(url) {
+  const { path } = localeAndPath(url.pathname);
+  if (!/^\/(login|signup)\/?$/.test(path)) return null;
+  const target = url.searchParams.get('redirect');
+  if (!target || !target.startsWith('/') || target.startsWith('//')) return null;
+  let authorize;
+  try {
+    authorize = new URL(target, url.origin);
+  } catch {
+    return null;
+  }
+  if (authorize.origin !== url.origin || authorize.pathname !== '/authorize') return null;
+  const clientId = authorize.searchParams.get('client_id');
+  if (!clientId) return null;
+  if (Object.hasOwn(SEEDED_CONNECTOR_CLIENTS, clientId)) return SEEDED_CONNECTOR_CLIENTS[clientId];
+  if (/^https:\/\//i.test(clientId)) {
+    const fromClientId = connectorFromUrl(clientId);
+    if (fromClientId) return fromClientId;
+  }
+  return connectorFromUrl(authorize.searchParams.get('redirect_uri') ?? '') ?? 'connector_other';
+}
+
+/**
+ * 'referral' when the landing URL carries acq=referral, which only our own
+ * /r/<code> redirect adds. No other value of `acq` is read here: on a landing
+ * page it is user-controlled, and only this one is ours to recognise.
+ */
+export function referralSourceFromLocation(url) {
+  return url.searchParams.get(ACQUISITION_QUERY_KEYS.source) === 'referral' ? 'referral' : null;
+}
+
 export function acquisitionFromLocation(url, referrerUrl = null) {
   let utmSource = sourceFromUtm(url.searchParams.get('utm_source'));
   const utmMedium = mediumFromUtm(url.searchParams.get('utm_medium'));
@@ -280,8 +434,16 @@ export function acquisitionFromLocation(url, referrerUrl = null) {
   const paidGoogle = isGoogleAdsClick(url.searchParams, utmSource, utmMedium);
   if (paidGoogle && utmSource === 'organic_google') utmSource = 'google_ads';
   const { locale } = localeAndPath(url.pathname);
+  // A connector install is named after the client even when the browser did
+  // send a referrer (claude.ai opens the flow in a new tab): it is still an
+  // install, not a click on a link. Tagged links and ad clicks never reach
+  // /authorize, so the order below only matters in theory.
+  const tagged = utmSource ?? sourceFromRefParams(url.searchParams);
   return sanitizedAcquisition({
-    source: paidGoogle ? 'google_ads' : (utmSource ?? externalReferrer),
+    // A referral link wins over everything: the person was sent by a friend,
+    // whatever page or tag the friend's link happened to carry.
+    source: referralSourceFromLocation(url)
+      ?? (paidGoogle ? 'google_ads' : (tagged ?? connectorSourceFromAuthorize(url) ?? externalReferrer)),
     landing: landingFromPath(url.pathname),
     landingPath: safeLandingPath(url.pathname),
     locale,

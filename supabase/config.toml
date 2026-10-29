@@ -127,3 +127,9 @@ verify_jwt = false
 # and the function authenticates the X-Dispatch-Secret header itself.
 [functions.outlook-token-refresh]
 verify_jwt = false
+
+# Called by the emit_system_event trigger through pg_net, which sends no
+# Supabase JWT. The function checks its own x-system-notify-token header
+# against SYSTEM_NOTIFY_TOKEN, so the gateway check is off (as deployed).
+[functions.system-notify]
+verify_jwt = false

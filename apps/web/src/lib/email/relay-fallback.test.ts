@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type * as net from 'net';
-import { MailRelayUnavailableError, type MailRelayConfig } from './mail-relay.ts';
+import { MailRelayTargetRefusedError, MailRelayUnavailableError, type MailRelayConfig } from './mail-relay.ts';
 import {
   detectWithRelay,
   isOriginRefusalText,
+  RELAY_REGISTRY_TIMEOUT_MS,
   refreshLearnedRelayHosts,
   relayRouteForHost,
   resetRelayFallbackCacheForTests,
@@ -187,6 +188,52 @@ test('a relay that is down leaves the direct failure as the answer, and is count
   assert.deepEqual(calls.map((call) => [call.fn, call.args.p_outcome]), [['record_mail_relay_use', 'relay_down']]);
 });
 
+test('an IP-literal host gets no relay retry: the relay filter refuses it', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db, calls } = fakeDb();
+  const { attempt, seen } = scripted({});
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: '203.0.113.9', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.detection.result.code, 'CONNECTION_TIMEOUT');
+  assert.equal(seen.some((key) => key.startsWith('relay:')), false);
+  assert.equal(calls.length, 0);
+});
+
+test('a relay that refuses the one target (403) is counted as the host, not the relay, failing', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db, calls } = fakeDb();
+  const { attempt } = scripted({});
+  await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.allsimple.net', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt,
+    openTunnel: async () => {
+      throw new MailRelayTargetRefusedError('Relay refused the tunnel (403).');
+    },
+  });
+  assert.deepEqual(calls.map((call) => [call.fn, call.args.p_outcome]), [['record_mail_relay_use', 'host_refused']]);
+});
+
+test('a database that never answers costs a bounded wait, not the route', async () => {
+  resetRelayFallbackCacheForTests();
+  const never = new Promise<never>(() => {});
+  const db = {
+    rpc: () => never,
+    from: () => ({ select: () => ({ or: () => never }) }),
+  } as never;
+  const startedMs = Date.now();
+  await refreshLearnedRelayHosts(db);
+  const { attempt } = scripted({ 'relay:993': { ok: true } });
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.allsimple.net', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.detection.result.ok, true, 'the mailbox still connects');
+  // One list read, one count, one learn: each capped.
+  assert.ok(Date.now() - startedMs < 3 * RELAY_REGISTRY_TIMEOUT_MS + 1_000, `took ${Date.now() - startedMs}ms`);
+});
+
 test('through the relay the server refused the password: that is the truer answer', async () => {
   resetRelayFallbackCacheForTests();
   const { db, calls } = fakeDb();
@@ -251,4 +298,45 @@ test('no relay configured: the connect form behaves exactly as before', async ()
   assert.equal(out.route, null);
   assert.ok(seen.every((key) => key.startsWith('direct:')));
   assert.equal(calls.length, 0);
+  assert.equal(out.relayAlsoFailed, undefined, 'never claimed when the relay was not tried');
+});
+
+// ── relayAlsoFailed: what the connect panel's "does not accept connections
+// from our servers" sentence rests on ────────────────────────────────────────
+
+test('direct and relayed attempts both unanswered: the direct failure, flagged relayAlsoFailed', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({});
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.school.example', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.route, null);
+  assert.equal(out.detection.result.code, 'CONNECTION_TIMEOUT');
+  assert.equal(out.relayAlsoFailed, true);
+});
+
+test('a relay that is down is not the host refusing us: no relayAlsoFailed', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({});
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.school.example', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelDown,
+  });
+  assert.equal(out.route, null);
+  assert.equal(out.relayAlsoFailed, undefined);
+});
+
+test('a relayed attempt that worked is never flagged', async () => {
+  resetRelayFallbackCacheForTests();
+  const { db } = fakeDb();
+  const { attempt } = scripted({ 'relay:993': { ok: true } });
+  const out = await detectWithRelay<Result>({
+    protocol: 'imap', host: 'mail.allsimple.net', requested: { port: 993, security: 'tls' },
+    relay: RELAY, db, authReasonOf: () => null, attempt, openTunnel: tunnelOk,
+  });
+  assert.equal(out.detection.result.ok, true);
+  assert.equal(out.relayAlsoFailed, undefined);
 });

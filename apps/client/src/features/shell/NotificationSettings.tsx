@@ -43,7 +43,7 @@ function DeviceNote({ state }: { state: PushState }) {
       return (
         <p className={s.dialogNote}>
           On iPhone and iPad, notifications only work for apps on the Home Screen. Tap{" "}
-          <Share size={13} aria-label="Share" className={s.noticeGlyph} /> in Safari, then <strong>Add to Home Screen</strong>, open mcpemails
+          <Share size={13} aria-label="Share" className={s.noticeGlyph} /> in Safari, then <strong>Add to Home Screen</strong>, open MCPEmails
           from there and come back to this screen.
         </p>
       );
@@ -82,9 +82,15 @@ export function NotificationSettings({ controller = getPushController() }: { con
 
   const close = () => useUiStore.getState().setMenu(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options: { heal?: boolean } = {}) => {
     if (!controller) return;
-    setState(await controller.state());
+    const next = await controller.state();
+    // "On" here is what THIS browser holds. The server may have dropped the
+    // row since (the push service answered "gone", too many failures, another
+    // device turned it off for this endpoint): re-register it when the dialog
+    // opens, so the switch and the server agree before anything is shown.
+    if (options.heal && next.subscribed) await controller.sync({ force: true }).catch(() => {});
+    setState(next);
     try {
       setPrefs(await controller.preferences());
       setLoadError(null);
@@ -94,7 +100,7 @@ export function NotificationSettings({ controller = getPushController() }: { con
   }, [controller]);
 
   useEffect(() => {
-    void refresh();
+    void refresh({ heal: true });
   }, [refresh]);
 
   // Straight from the click: browsers only show the permission prompt in
@@ -102,8 +108,14 @@ export function NotificationSettings({ controller = getPushController() }: { con
   const turnOn = async () => {
     if (!controller) return;
     setBusy(true);
-    const result = await controller.enable();
-    setBusy(false);
+    let result: Awaited<ReturnType<PushController["enable"]>>;
+    try {
+      result = await controller.enable();
+    } catch {
+      result = "failed";
+    } finally {
+      setBusy(false);
+    }
     if (result === "enabled") showToast("Notifications are on");
     else if (result === "blocked") showToast("Notifications are blocked. You can allow them in your browser's site settings.");
     else if (result === "failed") showToast({ text: "Notifications could not be turned on. Try again.", kind: "error" });
@@ -114,9 +126,14 @@ export function NotificationSettings({ controller = getPushController() }: { con
   const turnOff = async () => {
     if (!controller) return;
     setBusy(true);
-    await controller.disable();
-    setBusy(false);
-    showToast("Notifications are off on this device");
+    try {
+      await controller.disable();
+      showToast("Notifications are off on this device");
+    } catch {
+      showToast({ text: "Notifications could not be turned off. Try again.", kind: "error" });
+    } finally {
+      setBusy(false);
+    }
     await refresh();
   };
 
@@ -150,6 +167,9 @@ export function NotificationSettings({ controller = getPushController() }: { con
   };
 
   const inboxes = prefs?.inboxes ?? [];
+  const serverReady = prefs?.configured !== false;
+  /** This browser says on, the server has no device for this account: the registration did not stick. */
+  const notOnServer = state?.subscribed === true && prefs !== null && prefs.subscribed_devices === 0;
   const mode: PayloadMode = inboxes.length > 0 && inboxes.every((p) => p.payload_mode === "private") ? "private" : "rich";
   const quiet = inboxes.find((p) => p.quiet_hours)?.quiet_hours ?? null;
   const setAll = (patch: Partial<InboxPushPreference>) => void save(inboxes.map((p) => ({ inbox_id: p.inbox_id, ...patch })));
@@ -185,13 +205,23 @@ export function NotificationSettings({ controller = getPushController() }: { con
                       Turn off
                     </Button>
                   ) : (
-                    <Button variant="primary" size="sm" disabled={busy || state.availability !== "ready"} onClick={() => void turnOn()}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={busy || state.availability !== "ready" || !serverReady}
+                      onClick={() => void turnOn()}
+                    >
                       Turn on notifications
                     </Button>
                   )}
                 </div>
                 <DeviceNote state={state} />
                 {prefs && !prefs.configured ? <p className={s.dialogNote}>The server is not set up to send notifications yet.</p> : null}
+                {notOnServer ? (
+                  <p className={s.dialogNote} role="alert">
+                    This device could not be registered for notifications. Turn them off and on again.
+                  </p>
+                ) : null}
               </section>
 
               {loadError ? (

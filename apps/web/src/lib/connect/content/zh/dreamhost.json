@@ -20,7 +20,7 @@
     "titleLine1": "将 DreamHost 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 DreamHost 收件箱。使用 DreamHost 面板中的邮件用户密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 DreamHost 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.dreamhost.com 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和该地址的邮件用户密码进行认证；DreamHost 将这个密码与你登录面板所用的密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有应用专用密码，也没有需要启用的 IMAP 开关。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 DreamHost 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 imap.dreamhost.com 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和该地址的邮件用户密码进行认证；DreamHost 将这个密码与你登录面板所用的密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有应用专用密码，也没有需要启用的 IMAP 开关。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮件用户密码，而非面板登录密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "登录 DreamHost 面板，打开 Mail，然后打开 Manage Email，找到该地址并点击 Manage。滚动到 Change Password 部分，生成一个密码或自行设置。DreamHost 的文档说明，这一操作无法在网页邮箱中完成：你必须使用面板或单独的邮箱管理界面。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮件用户密码。服务器 imap.dreamhost.com 和 smtp.dreamhost.com 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "短用户名常常能用，这恰恰是个陷阱",
-      "p": "DreamHost 自己的说明指出，客户端可能需要完整邮箱地址才能连接，但很多时候只需要 @ 符号前面的部分。在单域名账户上，这种模糊性无伤大雅；可一旦你的两个域名中有本地部分相同的地址，就成了问题，因为短格式已无法唯一确定一个邮箱。请始终输入完整地址。mcpemails 发送的就是完整地址。"
+      "p": "DreamHost 自己的说明指出，客户端可能需要完整邮箱地址才能连接，但很多时候只需要 @ 符号前面的部分。在单域名账户上，这种模糊性无伤大雅；可一旦你的两个域名中有本地部分相同的地址，就成了问题，因为短格式已无法唯一确定一个邮箱。请始终输入完整地址。MCPEmails 发送的就是完整地址。"
     }
   ],
   "limits": [
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Claude 能用于 DreamHost 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 DreamHost 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 DreamHost 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 DreamHost 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 DreamHost 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "DreamHost 的 IMAP 和 SMTP 设置是什么？",

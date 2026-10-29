@@ -22,7 +22,7 @@
     "titleLine1": "Connectez Zimbra à Claude,",
     "titleLine2": "Cursor, ChatGPT et tout client MCP",
     "lead": "Zimbra héberge le courrier de votre organisation depuis des années, et il parle un IMAP tout à fait ordinaire. C'est tout ce dont un agent IA a besoin pour lire, rechercher, envoyer, répondre, planifier et classer dans une vraie boîte.",
-    "answer": "Claude ne peut pas accéder seul à un serveur Zimbra. mcpemails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur votre propre nom de serveur, sur le port 993 là où le proxy Zimbra est installé, avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Zimbra est un logiciel que votre organisation exploite elle-même : il n'y a donc pas de nom de serveur commun à publier, et mieux vaut vérifier le port que le supposer. Les ports 993 et 143 appartiennent au proxy Zimbra, tandis que mailboxd lui-même écoute sur 7993 et 7143. Le serveur doit être joignable depuis internet et son certificat doit être valide. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à un serveur Zimbra. MCPEmails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur votre propre nom de serveur, sur le port 993 là où le proxy Zimbra est installé, avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Zimbra est un logiciel que votre organisation exploite elle-même : il n'y a donc pas de nom de serveur commun à publier, et mieux vaut vérifier le port que le supposer. Les ports 993 et 143 appartiennent au proxy Zimbra, tandis que mailboxd lui-même écoute sur 7993 et 7143. Le serveur doit être joignable depuis internet et son certificat doit être valide. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte, IMAP activé dans la COS",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. Une boîte est gratuite pour toujours, sans carte bancaire, ce qui suffit pour essayer avec un vrai compte Zimbra."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Vérifiez la classe de service, puis ajoutez le compte",
-      "p": "Ouvrez Configure, puis Class of Service, puis la classe à laquelle appartient le compte, et regardez les options POP/IMAP sous Preferences. Une classe dont l'IMAP est désactivé refuse tous ses comptes. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, saisissez le nom de votre serveur Zimbra, l'adresse complète et le mot de passe de la boîte."
+      "p": "Ouvrez Configure, puis Class of Service, puis la classe à laquelle appartient le compte, et regardez les options POP/IMAP sous Preferences. Une classe dont l'IMAP est désactivé refuse tous ses comptes. Ajoutez ensuite la boîte dans MCPEmails : choisissez IMAP / SMTP, saisissez le nom de votre serveur Zimbra, l'adresse complète et le mot de passe de la boîte."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Votre serveur Zimbra doit accepter une connexion IMAP entrante depuis internet. Un déploiement publié uniquement sur le réseau de l'entreprise ou derrière un VPN est hors de portée d'un service hébergé. mcpemails peut à la place être auto-hébergé sur ce même réseau, ce qui est souvent plus facile à défendre auprès d'une équipe sécurité que l'ouverture d'un port.",
+    "Votre serveur Zimbra doit accepter une connexion IMAP entrante depuis internet. Un déploiement publié uniquement sur le réseau de l'entreprise ou derrière un VPN est hors de portée d'un service hébergé. MCPEmails peut à la place être auto-hébergé sur ce même réseau, ce qui est souvent plus facile à défendre auprès d'une équipe sécurité que l'ouverture d'un port.",
     "Seul le courrier transite par une connexion IMAP. Les agendas, contacts, tâches et le porte-documents de Zimbra sont servis par son propre client web et par CalDAV, CardDAV ou l'API Zimbra : un agent connecté de cette façon ne travaille donc que sur le courrier.",
     "L'envoi passe par votre propre MTA Zimbra : la délivrabilité dépend donc de vos enregistrements SPF, DKIM et DMARC, exactement comme pour tout autre client du serveur."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Zimbra ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Zimbra et ne peut pas ouvrir de session IMAP vers un serveur exploité par votre organisation. Connecter un serveur MCP comme mcpemails à votre serveur Zimbra donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte qu'il héberge, avec les mêmes identifiants que le Zimbra Web Client, et la même boîte fonctionne ensuite dans Cursor ou ChatGPT."
+      "a": "Pas directement. Claude n'a pas de connecteur Zimbra et ne peut pas ouvrir de session IMAP vers un serveur exploité par votre organisation. Connecter un serveur MCP comme MCPEmails à votre serveur Zimbra donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte qu'il héberge, avec les mêmes identifiants que le Zimbra Web Client, et la même boîte fonctionne ensuite dans Cursor ou ChatGPT."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Zimbra ?",

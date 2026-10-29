@@ -18,7 +18,8 @@
  *     decoration.
  *
  * Server components throughout: the board ships no JavaScript except the small
- * refresh ticker.
+ * refresh ticker and FlashValue, which tints a signup or subscription number
+ * for a moment when a refresh changes it.
  */
 
 import type { ReactNode } from 'react';
@@ -28,6 +29,7 @@ import type { ReactNode } from 'react';
 // the sake of two pure functions.
 import { NO_DATA, formatCount } from '../charts/format';
 import { TileLink } from './TileLink';
+import { FlashValue } from './FlashValue';
 
 /**
  * A framed tile. Everything on the board sits in one of these.
@@ -90,6 +92,9 @@ export function BigNumber({
   caption,
   spark,
   sparkColor,
+  plot,
+  flash,
+  goodDirection,
 }: {
   value: string | number;
   suffix?: string;
@@ -97,6 +102,19 @@ export function BigNumber({
   caption?: ReactNode;
   spark?: number[];
   sparkColor?: string;
+  /** A chart in the spark's slot, taking the tile's leftover height the same way. */
+  plot?: ReactNode;
+  /**
+   * Tint the number when a refresh changes it. Only signup and subscription
+   * figures set this: everything else on the board moves on most ticks, and a
+   * wall that lights up every five minutes stops meaning anything.
+   */
+  flash?: boolean;
+  /**
+   * Which way is good news, for the flash. Falls back to the trend's, then to
+   * up. Set it on tiles that count trouble.
+   */
+  goodDirection?: 'up' | 'down';
 }) {
   const tone = trendTone(trend);
   const text = typeof value === 'number' ? formatCount(value) : value;
@@ -105,13 +123,23 @@ export function BigNumber({
   // never get there; the money tile can, once MRR needs a thousands separator
   // beside a currency symbol and a "/mo". Long values step down a size.
   const long = text.length >= 7;
+  const className = `kiosk-big-value${long ? ' is-long' : ''}`;
+  const content = (
+    <>
+      {text}
+      {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
+    </>
+  );
   return (
     <div className="kiosk-big">
       <div className="kiosk-big-row">
-        <span className={`kiosk-big-value${long ? ' is-long' : ''}`}>
-          {text}
-          {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
-        </span>
+        {flash ? (
+          <FlashValue text={text} goodDirection={goodDirection ?? trend?.goodDirection} className={className}>
+            {content}
+          </FlashValue>
+        ) : (
+          <span className={className}>{content}</span>
+        )}
         {trend && tone && (
           <span className={`kiosk-trend is-${tone}`}>
             {trend.percent > 0 ? '▲' : trend.percent < 0 ? '▼' : '■'}
@@ -121,6 +149,7 @@ export function BigNumber({
       </div>
       {caption && <p className="kiosk-big-caption">{caption}</p>}
       {spark && spark.length > 1 && <KioskSpark values={spark} color={sparkColor} />}
+      {plot}
     </div>
   );
 }
@@ -328,14 +357,22 @@ export function SplitList({ rows }: { rows: { label: string; count: number }[] }
   );
 }
 
-/** Two to four small numbers under a headline. */
-export function FactRow({ facts }: { facts: { label: string; value: string | number }[] }) {
+/** Two to four small numbers under a headline. `flash` works as on BigNumber. */
+export function FactRow({
+  facts,
+}: {
+  facts: { label: string; value: string | number; flash?: boolean; goodDirection?: 'up' | 'down' }[];
+}) {
   return (
     <dl className="kiosk-facts">
       {facts.map((fact) => (
         <div key={fact.label}>
           <dt>{fact.label}</dt>
-          <dd>{typeof fact.value === 'number' ? formatCount(fact.value) : fact.value}</dd>
+          <dd>
+            {fact.flash ? (
+              <FlashValue text={typeof fact.value === 'number' ? formatCount(fact.value) : fact.value} goodDirection={fact.goodDirection} />
+            ) : typeof fact.value === 'number' ? formatCount(fact.value) : fact.value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -399,40 +436,66 @@ export function GroupedColumns({
   buckets,
   series,
 }: {
-  buckets: { label: string; values: number[]; partial?: boolean }[];
+  /**
+   * `projected[i]`, on a partial bucket, is where series i is expected to
+   * finish. It draws as a dashed hollow column with the real count filled
+   * inside it, the same convention as the daily strip.
+   */
+  buckets: { label: string; values: number[]; partial?: boolean; projected?: (number | null | undefined)[] }[];
   series: { name: string; color: string }[];
 }) {
-  const max = Math.max(1, ...buckets.flatMap((bucket) => bucket.values));
+  const max = Math.max(
+    1,
+    ...buckets.flatMap((bucket) => [...bucket.values, ...(bucket.projected ?? []).map((value) => value ?? 0)]),
+  );
   // The tallest bar stops short of the top of the plot so the count printed
   // above it has somewhere to sit. Without the reserve it rides up into the
   // tile's own heading.
   const CEILING = 88;
+  const height = (value: number) => (value === 0 ? '0' : `${Math.max(4, (value / max) * CEILING)}%`);
   return (
     <div className="kiosk-chart">
       <div className="kiosk-cols" role="img" aria-label={`${series.map((entry) => entry.name).join(' and ')} by week`}>
         {buckets.map((bucket) => (
           <div className={`kiosk-col${bucket.partial ? ' is-partial' : ''}`} key={bucket.label}>
             <div className="kiosk-col-bars">
-              {bucket.values.map((value, index) => (
-                <span
-                  key={series[index]?.name ?? index}
-                  className="kiosk-col-bar"
-                  style={{
-                    height: value === 0 ? '0' : `${Math.max(4, (value / max) * CEILING)}%`,
-                    // A partial bucket is outlined in its series colour rather
-                    // than filled with it, so it reads as "not finished" from
-                    // across the room without needing the label.
-                    background: bucket.partial
-                      ? `color-mix(in srgb, ${series[index]?.color ?? 'var(--kiosk-accent)'} 26%, transparent)`
-                      : series[index]?.color ?? 'var(--kiosk-accent)',
-                    borderTop: bucket.partial
-                      ? `2px dashed ${series[index]?.color ?? 'var(--kiosk-accent)'}`
-                      : undefined,
-                  }}
-                >
-                  {value > 0 && <b>{formatCount(value)}</b>}
-                </span>
-              ))}
+              {bucket.values.map((value, index) => {
+                const color = series[index]?.color ?? 'var(--kiosk-accent)';
+                const target = bucket.partial ? bucket.projected?.[index] : undefined;
+                if (target !== undefined && target !== null) {
+                  const outer = Math.max(target, value);
+                  return (
+                    <span
+                      key={series[index]?.name ?? index}
+                      className="kiosk-col-bar is-projected"
+                      style={{
+                        height: height(outer),
+                        background: `color-mix(in srgb, ${color} 18%, transparent)`,
+                        borderTop: `2px dashed ${color}`,
+                      }}
+                    >
+                      <b>{formatCount(value)} <em>/ ~{formatCount(outer)}</em></b>
+                      <span className="kiosk-day-sofar" style={{ height: `${outer ? (value / outer) * 100 : 0}%`, background: color }} />
+                    </span>
+                  );
+                }
+                return (
+                  <span
+                    key={series[index]?.name ?? index}
+                    className="kiosk-col-bar"
+                    style={{
+                      height: height(value),
+                      // A partial bucket is outlined in its series colour rather
+                      // than filled with it, so it reads as "not finished" from
+                      // across the room without needing the label.
+                      background: bucket.partial ? `color-mix(in srgb, ${color} 26%, transparent)` : color,
+                      borderTop: bucket.partial ? `2px dashed ${color}` : undefined,
+                    }}
+                  >
+                    {value > 0 && <b>{formatCount(value)}</b>}
+                  </span>
+                );
+              })}
             </div>
             <span className="kiosk-col-label">
               {bucket.label}
@@ -449,6 +512,63 @@ export function GroupedColumns({
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * One column per day, small enough for a strip tile.
+ *
+ * A column with `projected` is the day still being lived: the solid part is
+ * what has happened, the dashed hollow above it is what the projection says is
+ * still to come, and the number on top is the projection, muted, so it never
+ * reads as a count.
+ */
+export function DailyColumns({
+  columns,
+  color = 'var(--kiosk-accent)',
+}: {
+  columns: { label: string; value: number; projected?: number }[];
+  color?: string;
+}) {
+  const max = Math.max(1, ...columns.map((column) => Math.max(column.value, column.projected ?? 0)));
+  const CEILING = 82;
+  const height = (value: number) => (value === 0 ? '0' : `${Math.max(4, (value / max) * CEILING)}%`);
+  return (
+    <div className="kiosk-cols kiosk-days" role="img" aria-label="Signups per day">
+      {columns.map((column, index) => {
+        const live = column.projected !== undefined;
+        return (
+          <div className={`kiosk-col${live ? ' is-partial' : ''}`} key={index}>
+            <div className="kiosk-col-bars">
+              {live ? (
+                <span
+                  className="kiosk-col-bar is-projected"
+                  style={{
+                    height: height(column.projected ?? 0),
+                    background: `color-mix(in srgb, ${color} 18%, transparent)`,
+                    borderTop: `2px dashed ${color}`,
+                  }}
+                >
+                  <b>~{formatCount(column.projected ?? 0)}</b>
+                  <span
+                    className="kiosk-day-sofar"
+                    style={{
+                      height: `${column.projected ? (column.value / column.projected) * 100 : 0}%`,
+                      background: color,
+                    }}
+                  />
+                </span>
+              ) : (
+                <span className="kiosk-col-bar" style={{ height: height(column.value), background: color }}>
+                  {column.value > 0 && <b>{formatCount(column.value)}</b>}
+                </span>
+              )}
+            </div>
+            <span className="kiosk-col-label">{column.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

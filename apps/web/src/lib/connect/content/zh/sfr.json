@@ -21,7 +21,7 @@
     "titleLine1": "将你的 SFR 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 SFR 收件箱。用属于邮箱本身、而不是客户账户的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 SFR 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.sfr.fr 的 993 端口，用你完整的 sfr.fr 地址和 SFR Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。值得提前了解的故障点是凭据：SFR Mail 有自己的密码，与你的 Espace Client 密码分开，修改其中一个不会改变另一个。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 SFR 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.sfr.fr 的 993 端口，用你完整的 sfr.fr 地址和 SFR Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。值得提前了解的故障点是凭据：SFR Mail 有自己的密码，与你的 Espace Client 密码分开，修改其中一个不会改变另一个。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "SFR Mail 密码，而不是 Espace Client 密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,18 +44,18 @@
       "p": "SFR 允许用户在同一个邮箱配置页面中，在线路附带的主地址之外创建额外的地址和别名。如果你不想把所有熟人都在用的地址交给代理，可以在那里再创建一个并连接它。服务器和端口都相同。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@sfr.fr），粘贴 SFR Mail 密码。SFR 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
     {
       "h": "Espace Client 密码和 SFR Mail 密码是两回事",
-      "p": "这是在 SFR 上最浪费时间的故障，因为两种凭据属于同一个人，日常都被叫作 <b>mot de passe SFR</b>（SFR 密码），而且输入邮件客户端时哪一个都不会给出能说明问题的错误。它们是相互独立的账户：修改其中一个不会改变另一个，即使你过去曾有意把它们设成同一个值、并以为它们仍然同步。客户端登录被拒时，请进入 SFR Mail 本身重置邮箱密码，然后在 mcpemails 中使用完全相同的值。"
+      "p": "这是在 SFR 上最浪费时间的故障，因为两种凭据属于同一个人，日常都被叫作 <b>mot de passe SFR</b>（SFR 密码），而且输入邮件客户端时哪一个都不会给出能说明问题的错误。它们是相互独立的账户：修改其中一个不会改变另一个，即使你过去曾有意把它们设成同一个值、并以为它们仍然同步。客户端登录被拒时，请进入 SFR Mail 本身重置邮箱密码，然后在 MCPEmails 中使用完全相同的值。"
     },
     {
       "h": "不支持 SASL-IR，默认它存在的客户端会收到一个光秃秃的 BAD",
-      "p": "SFR 的 IMAP 问候语短得不能再短（<code>* OK IMAP4 ready</code>），也不声明 <code>SASL-IR</code>。因此服务器会拒绝在 <code>AUTHENTICATE</code> 命令中一并发送凭据的一步认证，回复一个不带任何说明的 <code>BAD</code>，与凭据错误无法区分。考虑到上面提到的密码混淆，这是一个特别糟糕的组合：SFR 登录失败最可能的两个原因产生的是同一条消息。mcpemails 会识别 <code>BAD</code> 并用两步交换重试，所以这一半已经替你处理好了。"
+      "p": "SFR 的 IMAP 问候语短得不能再短（<code>* OK IMAP4 ready</code>），也不声明 <code>SASL-IR</code>。因此服务器会拒绝在 <code>AUTHENTICATE</code> 命令中一并发送凭据的一步认证，回复一个不带任何说明的 <code>BAD</code>，与凭据错误无法区分。考虑到上面提到的密码混淆，这是一个特别糟糕的组合：SFR 登录失败最可能的两个原因产生的是同一条消息。MCPEmails 会识别 <code>BAD</code> 并用两步交换重试，所以这一半已经替你处理好了。"
     },
     {
       "h": "发信上限为 20 MB，对法国 ISP 来说偏低",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用 SFR Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 SFR 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 SFR 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "SFR 的 IMAP 和 SMTP 设置是什么？",

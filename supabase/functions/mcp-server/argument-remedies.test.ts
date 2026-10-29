@@ -241,7 +241,7 @@ async function call(name: string, args: Record<string, unknown>): Promise<string
     { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } },
     1,
     oauthToken("OAuth: ChatGPT"),
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   ) as CallResponse;
   return response.result?.content?.[0]?.text ?? "";
 }
@@ -261,8 +261,8 @@ Deno.test("a reply with a to says how a reply is addressed, on both surfaces", a
 
 Deno.test("email_list refuses since and names email_search", async () => {
   const text = await call("email_list", { since: "2026-10-01", before: "2026-10-10" });
-  assertStringIncludes(text, "arguments.since is not an argument of email_list; email_search takes it.");
-  assertStringIncludes(text, "arguments.before is not an argument of email_list; email_search takes it.");
+  assertStringIncludes(text, "arguments.since is not an argument of email_list; a search with only since or before needs no other criterion; email_search takes it.");
+  assertStringIncludes(text, "arguments.before is not an argument of email_list; a search with only since or before needs no other criterion; email_search takes it.");
 });
 
 Deno.test("email_search with another operation's action says which tool runs it", async () => {

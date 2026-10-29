@@ -239,7 +239,7 @@ export function insufficientScopeDescription(
       ? parts.join("")
       : `${parts.slice(0, -1).join(`,${glue}`)} and${glue}${parts[parts.length - 1]}`;
   return `This needs permission to ${join(wordings.map((w) => w[0]), " to ")}. ` +
-    `Reconnect MCP Emails and approve ${join(wordings.map((w) => w[1]), " ")}.`;
+    `Reconnect MCPEmails and approve ${join(wordings.map((w) => w[1]), " ")}.`;
 }
 
 /**
@@ -268,10 +268,10 @@ export function insufficientScopeToolResult(
   const primary = required.find((s) => SCOPE_TOKEN.test(s)) ?? "";
   const description = primary
     ? insufficientScopeDescription(primary, additional)
-    : "This needs a permission this connection was not granted. Reconnect MCP Emails and approve it.";
+    : "This needs a permission this connection was not granted. Reconnect MCPEmails and approve it.";
   const missing = primary ? [primary, ...additional.filter((s) => s !== primary)] : [];
   const text = primary
-    ? `${description} This connection to MCP Emails was not granted ` +
+    ? `${description} This connection to MCPEmails was not granted ` +
       `${missing.length > 1 ? "those permissions" : "that permission"} ` +
       `(missing scope${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}), so nothing was done. ` +
       `Try again once ${missing.length > 1 ? "they are" : "it is"} approved.`

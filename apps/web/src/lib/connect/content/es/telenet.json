@@ -21,18 +21,18 @@
     "titleLine1": "Conecta tu buzón de Telenet",
     "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Telenet. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón que estableces en MyTelenet.",
-    "answer": "Claude no puede acceder a un buzón de Telenet por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.telenet.be en el puerto 993, autenticándose con tu dirección telenet.be completa y la contraseña establecida en ese buzón en MyTelenet, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Telenet no emite contraseñas específicas de aplicación ni tiene un interruptor de acceso para clientes: cada buzón se crea, y recibe su contraseña, en la pantalla Je mailbox de MyTelenet. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de Telenet por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.telenet.be en el puerto 993, autenticándose con tu dirección telenet.be completa y la contraseña establecida en ese buzón en MyTelenet, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Telenet no emite contraseñas específicas de aplicación ni tiene un interruptor de acceso para clientes: cada buzón se crea, y recibe su contraseña, en la pantalla Je mailbox de MyTelenet. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde MyTelenet",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
   },
   "method": {
     "title": "Cómo se conecta Telenet: IMAP contra un proxy, con una contraseña por buzón",
-    "body": "Telenet ofrece IMAP en <code>imap.telenet.be</code> en el puerto 993 sobre TLS implícito. Para el correo saliente, las propias páginas de configuración de Telenet documentan <code>smtp.telenet.be</code> en el puerto 587 con TLS y SMTP autenticado; el mismo servidor responde también en el puerto 465 con TLS implícito, que es lo que mcpemails rellena. Telenet es explícita sobre el formato del nombre de usuario: <b>Gebruikersnaam: je volledige e-mailadres</b> (nombre de usuario: tu dirección de correo completa). La contraseña es la asociada a cada buzón y no una credencial de aplicación aparte, y los buzones se crean y administran en MyTelenet: un <b>beheerder</b> (administrador) de la cuenta puede crear hasta diez buzones, un <b>gebruiker</b> (usuario) normal, uno. Lo que responde en esos nombres de servidor es un proxy (<code>* OK IMAP4rev1 proxy server ready</code>) situado delante del almacén de correo, lo que explica el escaso conjunto de capacidades que se describe más abajo."
+    "body": "Telenet ofrece IMAP en <code>imap.telenet.be</code> en el puerto 993 sobre TLS implícito. Para el correo saliente, las propias páginas de configuración de Telenet documentan <code>smtp.telenet.be</code> en el puerto 587 con TLS y SMTP autenticado; el mismo servidor responde también en el puerto 465 con TLS implícito, que es lo que MCPEmails rellena. Telenet es explícita sobre el formato del nombre de usuario: <b>Gebruikersnaam: je volledige e-mailadres</b> (nombre de usuario: tu dirección de correo completa). La contraseña es la asociada a cada buzón y no una credencial de aplicación aparte, y los buzones se crean y administran en MyTelenet: un <b>beheerder</b> (administrador) de la cuenta puede crear hasta diez buzones, un <b>gebruiker</b> (usuario) normal, uno. Lo que responde en esos nombres de servidor es un proxy (<code>* OK IMAP4rev1 proxy server ready</code>) situado delante del almacén de correo, lo que explica el escaso conjunto de capacidades que se describe más abajo."
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -44,14 +44,14 @@
       "p": "Un administrador de la cuenta puede crear hasta diez buzones de Telenet, un usuario normal, uno. Si prefieres no darle a un agente la dirección que usas desde hace quince años, crea un segundo buzón en la misma cuenta y conecta ese. Es el mismo servidor, los mismos puertos y una contraseña que puedes cambiar sin alterar nada más."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, como naam@telenet.be, y pega la contraseña del buzón. Los servidores y puertos de Telenet vienen rellenados y se verificaron mediante una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
   "gotchas": [
     {
       "h": "Cambiar tu contraseña de Telenet rompe sin avisar todos los clientes conectados",
-      "p": "Telenet lo dice con todas las letras en su propia guía de configuración: si cambias la contraseña de tu nombre de usuario o dirección de correo de Telenet, <b>verander dan ook het wachtwoord in je e-mailprogramma</b> (cambia también la contraseña en tu programa de correo). No hay contraseña de aplicación que aísle al cliente de la cuenta, así que un cambio rutinario de contraseña en MyTelenet desconecta también al agente. El fallo aparece como un error de autenticación horas después, mucho después de que nadie lo relacione con lo que hizo en el portal. Si cambias la contraseña de Telenet, actualiza mcpemails en el mismo momento."
+      "p": "Telenet lo dice con todas las letras en su propia guía de configuración: si cambias la contraseña de tu nombre de usuario o dirección de correo de Telenet, <b>verander dan ook het wachtwoord in je e-mailprogramma</b> (cambia también la contraseña en tu programa de correo). No hay contraseña de aplicación que aísle al cliente de la cuenta, así que un cambio rutinario de contraseña en MyTelenet desconecta también al agente. El fallo aparece como un error de autenticación horas después, mucho después de que nadie lo relacione con lo que hizo en el portal. Si cambias la contraseña de Telenet, actualiza MCPEmails en el mismo momento."
     },
     {
       "h": "Estás hablando con un proxy, y no anuncia ni MOVE ni SPECIAL-USE",
@@ -69,16 +69,16 @@
   "limits": [
     "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
     "El límite de envío de 20 MB es el techo práctico de todo lo que tu agente envíe desde este buzón.",
-    "Telenet no emite contraseñas específicas de aplicación, así que la credencial que le das a mcpemails es la propia contraseña del buzón. Cámbiala en MyTelenet y actualízala aquí al mismo tiempo."
+    "Telenet no emite contraseñas específicas de aplicación, así que la credencial que le das a MCPEmails es la propia contraseña del buzón. Cámbiala en MyTelenet y actualízala aquí al mismo tiempo."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Telenet?",
-      "a": "No por sí solo. Claude no tiene un conector de Telenet integrado. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector de Telenet integrado. Apuntar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Telenet?",
-      "a": "IMAP es imap.telenet.be en el puerto 993 con SSL. Para el correo saliente, Telenet documenta smtp.telenet.be en el puerto 587 con TLS y SMTP autenticado; el mismo servidor responde también en el 465 con TLS implícito, que es lo que usa mcpemails. El nombre de usuario es tu dirección telenet.be completa."
+      "a": "IMAP es imap.telenet.be en el puerto 993 con SSL. Para el correo saliente, Telenet documenta smtp.telenet.be en el puerto 587 con TLS y SMTP autenticado; el mismo servidor responde también en el 465 con TLS implícito, que es lo que usa MCPEmails. El nombre de usuario es tu dirección telenet.be completa."
     },
     {
       "q": "¿Necesita Telenet una contraseña de aplicación?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "¿Por qué mi cliente de correo de Telenet dejó de funcionar tras un cambio de contraseña?",
-      "a": "Porque el cliente usa directamente la contraseña de la cuenta. La propia recomendación de Telenet es cambiar la contraseña en tu programa de correo cada vez que la cambies para tu nombre de usuario o dirección de Telenet. Actualiza la contraseña guardada en mcpemails con el nuevo valor y la conexión se reanuda de inmediato."
+      "a": "Porque el cliente usa directamente la contraseña de la cuenta. La propia recomendación de Telenet es cambiar la contraseña en tu programa de correo cada vez que la cambies para tu nombre de usuario o dirección de Telenet. Actualiza la contraseña guardada en MCPEmails con el nuevo valor y la conexión se reanuda de inmediato."
     },
     {
       "q": "¿Cuántos buzones de Telenet puedo crear?",

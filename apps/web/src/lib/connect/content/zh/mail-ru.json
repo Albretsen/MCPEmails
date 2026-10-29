@@ -22,23 +22,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用专用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 Mail.ru。mcpemails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
+    "answer": "Claude 无法自行访问 Mail.ru。MCPEmails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "Mail.ru 如何连接：IMAP 与应用专用密码",
-    "body": "Mail.ru 通过 IMAP/SMTP 连接，需要一个<b>外部应用专用密码</b>。你登录网站所用的密码在邮件客户端中无法使用。请在 Mail.ru 的 Security、Passwords for external applications 中创建一个，然后连同你的 Mail.ru 地址一起粘贴到 mcpemails。Mail.ru 要求账户先绑定手机号，才会签发这种密码。"
+    "body": "Mail.ru 通过 IMAP/SMTP 连接，需要一个<b>外部应用专用密码</b>。你登录网站所用的密码在邮件客户端中无法使用。请在 Mail.ru 的 Security、Passwords for external applications 中创建一个，然后连同你的 Mail.ru 地址一起粘贴到 MCPEmails。Mail.ru 要求账户先绑定手机号，才会签发这种密码。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "创建外部应用专用密码",
-      "p": "在 Mail.ru 中打开 Security，创建一个外部应用专用密码。mcpemails 需要的是这个密码，而不是你在网站上使用的那个。"
+      "p": "在 Mail.ru 中打开 Security，创建一个外部应用专用密码。MCPEmails 需要的是这个密码，而不是你在网站上使用的那个。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 Mail.ru 地址、上方设置表中的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -66,12 +66,12 @@
   ],
   "limits": [
     "Mail.ru 不支持 IDLE，所以新邮件是在代理查询时发现的，而不是在到达的那一刻推送。",
-    "Mail.ru 的提交服务器声明的单封邮件上限约为 70 MB。通过 mcpemails 读取附件时，每次请求上限为 25 MB。"
+    "Mail.ru 的提交服务器声明的单封邮件上限约为 70 MB。通过 MCPEmails 读取附件时，每次请求上限为 25 MB。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Mail.ru 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Mail.ru 连接器。使用外部应用专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Mail.ru 连接器。使用外部应用专用密码，通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Mail.ru 的 IMAP 和 SMTP 设置是什么？",

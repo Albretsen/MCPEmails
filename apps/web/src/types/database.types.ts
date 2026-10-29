@@ -129,6 +129,60 @@ export type Database = {
           },
         ]
       }
+      activation_marker_corrections_20261026: {
+        Row: {
+          corrected_at: string
+          new_first_tool_used_at: string | null
+          old_first_tool_client: string | null
+          old_first_tool_name: string | null
+          old_first_tool_path: string | null
+          old_first_tool_provider: string | null
+          old_first_tool_used_at: string | null
+          old_onboarding_stage: string | null
+          old_technical_activated_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          corrected_at?: string
+          new_first_tool_used_at?: string | null
+          old_first_tool_client?: string | null
+          old_first_tool_name?: string | null
+          old_first_tool_path?: string | null
+          old_first_tool_provider?: string | null
+          old_first_tool_used_at?: string | null
+          old_onboarding_stage?: string | null
+          old_technical_activated_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          corrected_at?: string
+          new_first_tool_used_at?: string | null
+          old_first_tool_client?: string | null
+          old_first_tool_name?: string | null
+          old_first_tool_path?: string | null
+          old_first_tool_provider?: string | null
+          old_first_tool_used_at?: string | null
+          old_onboarding_stage?: string | null
+          old_technical_activated_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_marker_corrections_20261026_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "activation_marker_corrections_20261026_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           api_key_id: string | null
@@ -1130,6 +1184,7 @@ export type Database = {
       api_keys: {
         Row: {
           card_build_notified: string | null
+          card_listed: boolean | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -1147,6 +1202,7 @@ export type Database = {
         }
         Insert: {
           card_build_notified?: string | null
+          card_listed?: boolean | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1164,6 +1220,7 @@ export type Database = {
         }
         Update: {
           card_build_notified?: string | null
+          card_listed?: boolean | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1337,6 +1394,24 @@ export type Database = {
           },
         ]
       }
+      auth_hook_switches: {
+        Row: {
+          enabled: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auth_logs: {
         Row: {
           created_at: string
@@ -1408,6 +1483,7 @@ export type Database = {
           payload: Json
           period_start: string | null
           recipient: string
+          recovered_by: string | null
           resend_id: string | null
           scope_key: string
           send_after: string
@@ -1430,6 +1506,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key: string
           send_after: string
@@ -1452,6 +1529,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient?: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key?: string
           send_after?: string
@@ -1681,6 +1759,71 @@ export type Database = {
           },
         ]
       }
+      business_founder_places: {
+        Row: {
+          created_at: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          interval: string
+          owner_id: string
+          stripe_subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          interval?: string
+          owner_id?: string
+          stripe_subscription_id?: string
+        }
+        Relationships: []
+      }
+      cancellation_feedback: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          period_end: string | null
+          reason: string
+          source: string
+          stripe_customer_id: string | null
+          subscription_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          period_end?: string | null
+          reason: string
+          source: string
+          stripe_customer_id?: string | null
+          subscription_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          period_end?: string | null
+          reason?: string
+          source?: string
+          stripe_customer_id?: string | null
+          subscription_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_cancel_feedback: {
         Row: {
           created_at: string
@@ -1726,6 +1869,229 @@ export type Database = {
           },
           {
             foreignKeyName: "checkout_cancel_feedback_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_links: {
+        Row: {
+          billing_interval: string
+          blocked_tool: string | null
+          client_label: string
+          completed_at: string | null
+          created_at: string
+          expires_at: string
+          first_opened_at: string | null
+          id: string
+          open_count: number
+          owner_user_id: string
+          plan_id: string
+          stripe_session_expires_at: string | null
+          stripe_session_id: string | null
+          token_hash: string
+          variant: string
+          workspace_id: string
+        }
+        Insert: {
+          billing_interval?: string
+          blocked_tool?: string | null
+          client_label?: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at: string
+          first_opened_at?: string | null
+          id: string
+          open_count?: number
+          owner_user_id: string
+          plan_id?: string
+          stripe_session_expires_at?: string | null
+          stripe_session_id?: string | null
+          token_hash: string
+          variant?: string
+          workspace_id: string
+        }
+        Update: {
+          billing_interval?: string
+          blocked_tool?: string | null
+          client_label?: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          first_opened_at?: string | null
+          id?: string
+          open_count?: number
+          owner_user_id?: string
+          plan_id?: string
+          stripe_session_expires_at?: string | null
+          stripe_session_id?: string | null
+          token_hash?: string
+          variant?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_links_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "checkout_links_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      draft_card_activity: {
+        Row: {
+          action: string
+          api_key_id: string
+          bcc_count: number | null
+          cc_count: number | null
+          created_at: string
+          draft_id: string
+          fields: string[]
+          id: string
+          inbox_id: string
+          line_id: string | null
+          occurred_at: string
+          reported_at: string | null
+          revision: number | null
+          to_count: number | null
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          api_key_id: string
+          bcc_count?: number | null
+          cc_count?: number | null
+          created_at?: string
+          draft_id: string
+          fields?: string[]
+          id?: string
+          inbox_id: string
+          line_id?: string | null
+          occurred_at: string
+          reported_at?: string | null
+          revision?: number | null
+          to_count?: number | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          api_key_id?: string
+          bcc_count?: number | null
+          cc_count?: number | null
+          created_at?: string
+          draft_id?: string
+          fields?: string[]
+          id?: string
+          inbox_id?: string
+          line_id?: string | null
+          occurred_at?: string
+          reported_at?: string | null
+          revision?: number | null
+          to_count?: number | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_card_activity_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      draft_events: {
+        Row: {
+          api_key_id: string | null
+          card_offered: boolean | null
+          event: string
+          id: string
+          inbox_id: string | null
+          line_id: string | null
+          occurred_at: string
+          source: string
+          via_card: boolean
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          card_offered?: boolean | null
+          event: string
+          id?: string
+          inbox_id?: string | null
+          line_id?: string | null
+          occurred_at?: string
+          source?: string
+          via_card?: boolean
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          card_offered?: boolean | null
+          event?: string
+          id?: string
+          inbox_id?: string | null
+          line_id?: string | null
+          occurred_at?: string
+          source?: string
+          via_card?: boolean
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_events_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_events_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_events_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1907,6 +2273,147 @@ export type Database = {
         }
         Relationships: []
       }
+      first30_dry_run_log: {
+        Row: {
+          decision: string
+          detail: Json | null
+          error: string | null
+          first_paid_at: string | null
+          id: number
+          owner_internal: boolean | null
+          reason: string | null
+          recipient_matches_owner: boolean | null
+          run_at: string
+          run_id: string
+          subscription_active: boolean | null
+          template: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          decision: string
+          detail?: Json | null
+          error?: string | null
+          first_paid_at?: string | null
+          id?: never
+          owner_internal?: boolean | null
+          reason?: string | null
+          recipient_matches_owner?: boolean | null
+          run_at?: string
+          run_id: string
+          subscription_active?: boolean | null
+          template?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          decision?: string
+          detail?: Json | null
+          error?: string | null
+          first_paid_at?: string | null
+          id?: never
+          owner_internal?: boolean | null
+          reason?: string | null
+          recipient_matches_owner?: boolean | null
+          run_at?: string
+          run_id?: string
+          subscription_active?: boolean | null
+          template?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      growth_activity_daily: {
+        Row: {
+          calls: number
+          day: string
+          errors: number
+          first_success_at: string | null
+          first_success_starts: boolean | null
+          last_call_at: string
+          last_success_at: string | null
+          last_value_success_at: string | null
+          rate_limited: number
+          session_starts: number
+          successes: number
+          value_successes: number
+          workspace_id: string
+        }
+        Insert: {
+          calls: number
+          day: string
+          errors: number
+          first_success_at?: string | null
+          first_success_starts?: boolean | null
+          last_call_at: string
+          last_success_at?: string | null
+          last_value_success_at?: string | null
+          rate_limited: number
+          session_starts: number
+          successes: number
+          value_successes: number
+          workspace_id: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          errors?: number
+          first_success_at?: string | null
+          first_success_starts?: boolean | null
+          last_call_at?: string
+          last_success_at?: string | null
+          last_value_success_at?: string | null
+          rate_limited?: number
+          session_starts?: number
+          successes?: number
+          value_successes?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      growth_milestone_unlocks: {
+        Row: {
+          day: string
+          id: string
+          note: string
+          recorded_at: string
+        }
+        Insert: {
+          day: string
+          id: string
+          note: string
+          recorded_at?: string
+        }
+        Update: {
+          day?: string
+          id?: string
+          note?: string
+          recorded_at?: string
+        }
+        Relationships: []
+      }
+      growth_tool_daily: {
+        Row: {
+          calls: number
+          day: string
+          error_code: string | null
+          status: string
+          tool_name: string
+        }
+        Insert: {
+          calls: number
+          day: string
+          error_code?: string | null
+          status: string
+          tool_name: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          error_code?: string | null
+          status?: string
+          tool_name?: string
+        }
+        Relationships: []
+      }
       inbox_grandfather_revocations_20260901: {
         Row: {
           distinct_addresses_ever: number
@@ -1938,6 +2445,129 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_send_brakes: {
+        Row: {
+          fanout_hold_until: string | null
+          inbox_id: string
+          refusal_pause_until: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          fanout_hold_until?: string | null
+          inbox_id: string
+          refusal_pause_until?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          fanout_hold_until?: string | null
+          inbox_id?: string
+          refusal_pause_until?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_send_brakes_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: true
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_send_brakes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_send_brakes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_sender_aliases: {
+        Row: {
+          code_attempts: number
+          code_expires_at: string | null
+          code_hash: string | null
+          code_sent_at: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          email_address: string
+          id: string
+          inbox_id: string
+          updated_at: string
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address: string
+          id?: string
+          inbox_id: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          inbox_id?: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_sender_aliases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1997,12 +2627,15 @@ export type Database = {
       }
       inboxes: {
         Row: {
+          ai_instructions: string | null
+          ai_instructions_updated_at: string | null
           bulk_review_mode: string
           created_at: string
           deleted_at: string | null
           display_name: string | null
           draft_editor_hidden: boolean
           email_address: string
+          folder_overrides: Json | null
           id: string
           imap_host: string | null
           imap_password: string | null
@@ -2016,6 +2649,8 @@ export type Database = {
           oauth_refresh_token: string | null
           oauth_scope: string | null
           oauth_token_expires_at: string | null
+          parked_at: string | null
+          parked_reason: string | null
           provider: string
           send_approval_required: boolean
           send_review_mode: string
@@ -2036,12 +2671,15 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          ai_instructions?: string | null
+          ai_instructions_updated_at?: string | null
           bulk_review_mode?: string
           created_at?: string
           deleted_at?: string | null
           display_name?: string | null
           draft_editor_hidden?: boolean
           email_address: string
+          folder_overrides?: Json | null
           id?: string
           imap_host?: string | null
           imap_password?: string | null
@@ -2055,6 +2693,8 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          parked_at?: string | null
+          parked_reason?: string | null
           provider: string
           send_approval_required?: boolean
           send_review_mode?: string
@@ -2075,12 +2715,15 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          ai_instructions?: string | null
+          ai_instructions_updated_at?: string | null
           bulk_review_mode?: string
           created_at?: string
           deleted_at?: string | null
           display_name?: string | null
           draft_editor_hidden?: boolean
           email_address?: string
+          folder_overrides?: Json | null
           id?: string
           imap_host?: string | null
           imap_password?: string | null
@@ -2094,6 +2737,8 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          parked_at?: string | null
+          parked_reason?: string | null
           provider?: string
           send_approval_required?: boolean
           send_review_mode?: string
@@ -2152,7 +2797,11 @@ export type Database = {
         Row: {
           detail: string | null
           email: string
+          finished_at: string | null
           provider_message_id: string | null
+          recovered_at: string | null
+          recovered_session_id: string | null
+          recovered_via_link: boolean | null
           sent_at: string
           status: string
           template: string
@@ -2162,7 +2811,11 @@ export type Database = {
         Insert: {
           detail?: string | null
           email: string
+          finished_at?: string | null
           provider_message_id?: string | null
+          recovered_at?: string | null
+          recovered_session_id?: string | null
+          recovered_via_link?: boolean | null
           sent_at?: string
           status?: string
           template: string
@@ -2172,7 +2825,11 @@ export type Database = {
         Update: {
           detail?: string | null
           email?: string
+          finished_at?: string | null
           provider_message_id?: string | null
+          recovered_at?: string | null
+          recovered_session_id?: string | null
+          recovered_via_link?: boolean | null
           sent_at?: string
           status?: string
           template?: string
@@ -2353,6 +3010,94 @@ export type Database = {
             foreignKeyName: "mcp_client_capabilities_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      morning_briefs: {
+        Row: {
+          claimed_at: string | null
+          consecutive_failures: number
+          created_at: string
+          enabled: boolean
+          hour: number
+          inbox_id: string | null
+          last_error_code: string | null
+          last_local_date: string | null
+          last_outcome: string | null
+          last_run_at: string | null
+          last_sent_at: string | null
+          lease_token: string | null
+          locale: string
+          next_due_at: string | null
+          paused_at: string | null
+          timezone: string
+          updated_at: string
+          vip_senders: string[]
+          workspace_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          inbox_id?: string | null
+          last_error_code?: string | null
+          last_local_date?: string | null
+          last_outcome?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          lease_token?: string | null
+          locale?: string
+          next_due_at?: string | null
+          paused_at?: string | null
+          timezone?: string
+          updated_at?: string
+          vip_senders?: string[]
+          workspace_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          inbox_id?: string | null
+          last_error_code?: string | null
+          last_local_date?: string | null
+          last_outcome?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          lease_token?: string | null
+          locale?: string
+          next_due_at?: string | null
+          paused_at?: string | null
+          timezone?: string
+          updated_at?: string
+          vip_senders?: string[]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "morning_briefs_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "morning_briefs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "morning_briefs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -2666,6 +3411,67 @@ export type Database = {
           },
         ]
       }
+      onboarding_morning_brief_optins: {
+        Row: {
+          client: string | null
+          created_at: string
+          locale: string
+          send_at: string
+          sent_at: string | null
+          status: string
+          time_zone: string
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          locale?: string
+          send_at: string
+          sent_at?: string | null
+          status?: string
+          time_zone: string
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          locale?: string
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+          time_zone?: string
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "onboarding_morning_brief_optins_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outbound_idempotency: {
         Row: {
           api_key_id: string
@@ -2726,11 +3532,88 @@ export type Database = {
           },
         ]
       }
+      outbound_send_events: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          id: number
+          inbox_id: string
+          kind: string
+          messages: number
+          recipient_hash: string | null
+          workspace_id: string
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          id?: never
+          inbox_id: string
+          kind: string
+          messages?: number
+          recipient_hash?: string | null
+          workspace_id: string
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          id?: never
+          inbox_id?: string
+          kind?: string
+          messages?: number
+          recipient_hash?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outbound_send_events_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_send_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "outbound_send_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_switches: {
+        Row: {
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled: boolean
+          key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_funnel_events: {
         Row: {
           auth_reason: string | null
           category: string
           connection_type: string | null
+          entry_point: string | null
           error_category: string | null
           id: number
           occurred_at: string
@@ -2743,6 +3626,7 @@ export type Database = {
           auth_reason?: string | null
           category: string
           connection_type?: string | null
+          entry_point?: string | null
           error_category?: string | null
           id?: never
           occurred_at?: string
@@ -2755,6 +3639,7 @@ export type Database = {
           auth_reason?: string | null
           category?: string
           connection_type?: string | null
+          entry_point?: string | null
           error_category?: string | null
           id?: never
           occurred_at?: string
@@ -2916,6 +3801,296 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          disabled_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          disabled_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          disabled_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_rewards: {
+        Row: {
+          amount_cents: number | null
+          currency: string | null
+          entitlement_until: string | null
+          id: string
+          issued_at: string
+          kind: string
+          referral_id: string
+          side: string
+          stripe_balance_txn_id: string | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          currency?: string | null
+          entitlement_until?: string | null
+          id?: string
+          issued_at?: string
+          kind: string
+          referral_id: string
+          side: string
+          stripe_balance_txn_id?: string | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          currency?: string | null
+          entitlement_until?: string | null
+          id?: string
+          issued_at?: string
+          kind?: string
+          referral_id?: string
+          side?: string
+          stripe_balance_txn_id?: string | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          attached_at: string
+          attached_via: string
+          code: string
+          first_charge_at: string | null
+          first_charge_id: string | null
+          first_invoice_id: string | null
+          friend_user_id: string
+          friend_workspace_id: string | null
+          hold_reason: string | null
+          id: string
+          ip_hash: string | null
+          qualified_at: string | null
+          qualifies_at: string | null
+          referrer_user_id: string
+          status: string
+          updated_at: string
+          void_reason: string | null
+        }
+        Insert: {
+          attached_at?: string
+          attached_via: string
+          code: string
+          first_charge_at?: string | null
+          first_charge_id?: string | null
+          first_invoice_id?: string | null
+          friend_user_id: string
+          friend_workspace_id?: string | null
+          hold_reason?: string | null
+          id?: string
+          ip_hash?: string | null
+          qualified_at?: string | null
+          qualifies_at?: string | null
+          referrer_user_id: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+        }
+        Update: {
+          attached_at?: string
+          attached_via?: string
+          code?: string
+          first_charge_at?: string | null
+          first_charge_id?: string | null
+          first_invoice_id?: string | null
+          friend_user_id?: string
+          friend_workspace_id?: string | null
+          hold_reason?: string | null
+          id?: string
+          ip_hash?: string | null
+          qualified_at?: string | null
+          qualifies_at?: string | null
+          referrer_user_id?: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "referrals_friend_workspace_id_fkey"
+            columns: ["friend_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "referrals_friend_workspace_id_fkey"
+            columns: ["friend_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminders: {
+        Row: {
+          api_key_id: string | null
+          claimed_at: string | null
+          completed_at: string | null
+          condition: string
+          consecutive_failures: number
+          created_at: string
+          due_at: string
+          folder: string | null
+          id: string
+          inbox_id: string
+          kind: string
+          last_checked_at: string | null
+          last_error_code: string | null
+          lease_token: string | null
+          message_digest: string
+          message_ref: Json
+          next_check_at: string | null
+          replied_at: string | null
+          returned_at: string | null
+          status: string
+          summary: Json | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          condition?: string
+          consecutive_failures?: number
+          created_at?: string
+          due_at: string
+          folder?: string | null
+          id?: string
+          inbox_id: string
+          kind: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          lease_token?: string | null
+          message_digest: string
+          message_ref: Json
+          next_check_at?: string | null
+          replied_at?: string | null
+          returned_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          condition?: string
+          consecutive_failures?: number
+          created_at?: string
+          due_at?: string
+          folder?: string | null
+          id?: string
+          inbox_id?: string
+          kind?: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          lease_token?: string | null
+          message_digest?: string
+          message_ref?: Json
+          next_check_at?: string | null
+          replied_at?: string | null
+          returned_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "reminders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retention_switches: {
+        Row: {
+          auto_go_live_at: string | null
+          decided_at: string | null
+          decision: string | null
+          decision_detail: Json | null
+          key: string
+          last_probe_at: string | null
+          mode: string
+          updated_at: string
+        }
+        Insert: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_go_live_at?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          decision_detail?: Json | null
+          key?: string
+          last_probe_at?: string | null
+          mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scheduled_sends: {
         Row: {
           created_at: string
@@ -2989,12 +4164,14 @@ export type Database = {
           decided_by_api_key_id: string | null
           decided_via: string | null
           decision_note: string | null
+          dispatch_scheduled_send_id: string | null
           expires_at: string | null
           id: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted: boolean
+          revision: number
           send_at: string | null
           status: string
           summary: Json
@@ -3008,12 +4185,14 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json
@@ -3027,12 +4206,14 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id?: string
           operation?: string
           payload?: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json
@@ -3061,6 +4242,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "send_approvals_dispatch_scheduled_send_id_fkey"
+            columns: ["dispatch_scheduled_send_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_sends"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "send_approvals_inbox_id_fkey"
             columns: ["inbox_id"]
             isOneToOne: false
@@ -3083,8 +4271,190 @@ export type Database = {
           },
         ]
       }
+      sso_audit_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          connection_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          ip_address: unknown
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_audit_events_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "sso_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_connections: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_role: string
+          display_name: string
+          enforced: boolean
+          id: string
+          status: string
+          supabase_sso_provider_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_role?: string
+          display_name: string
+          enforced?: boolean
+          id?: string
+          status?: string
+          supabase_sso_provider_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_role?: string
+          display_name?: string
+          enforced?: boolean
+          id?: string
+          status?: string
+          supabase_sso_provider_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_connections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_domains: {
+        Row: {
+          connection_id: string
+          created_at: string
+          domain: string
+          id: string
+          updated_at: string
+          verification_token: string
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          domain: string
+          id?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_domains_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "sso_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_domains_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_domains_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
+          cancellation_reason: string | null
           event_created: string | null
           event_id: string
           event_type: string | null
@@ -3092,6 +4462,7 @@ export type Database = {
           stripe_customer_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id: string
           event_type?: string | null
@@ -3099,6 +4470,7 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id?: string
           event_type?: string | null
@@ -3106,6 +4478,111 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          api_key_id: string | null
+          backlog_action: string | null
+          backlog_leased_until: string | null
+          backlog_moved: number
+          backlog_remaining: number
+          created_at: string
+          expires_at: string
+          id: string
+          inbox_id: string
+          progress: Json | null
+          scanned: number
+          sender_count: number
+          senders: Json
+          senders_encrypted: boolean
+          summary: Json
+          truncated: boolean
+          used_at: string | null
+          used_by_api_key_id: string | null
+          window_days: number
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          backlog_action?: string | null
+          backlog_leased_until?: string | null
+          backlog_moved?: number
+          backlog_remaining?: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          inbox_id: string
+          progress?: Json | null
+          scanned?: number
+          sender_count: number
+          senders: Json
+          senders_encrypted?: boolean
+          summary?: Json
+          truncated?: boolean
+          used_at?: string | null
+          used_by_api_key_id?: string | null
+          window_days: number
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          backlog_action?: string | null
+          backlog_leased_until?: string | null
+          backlog_moved?: number
+          backlog_remaining?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inbox_id?: string
+          progress?: Json | null
+          scanned?: number
+          sender_count?: number
+          senders?: Json
+          senders_encrypted?: boolean
+          summary?: Json
+          truncated?: boolean
+          used_at?: string | null
+          used_by_api_key_id?: string | null
+          window_days?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plans_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_plans_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_plans_used_by_api_key_id_fkey"
+            columns: ["used_by_api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_plans_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "subscription_plans_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
@@ -3588,12 +5065,130 @@ export type Database = {
           },
         ]
       }
+      unsubscribe_requests: {
+        Row: {
+          api_key_id: string | null
+          check_after: string | null
+          check_attempts: number
+          check_leased_at: string | null
+          checked_at: string | null
+          claimed_at: string | null
+          created_at: string
+          display_name: string | null
+          draft_id: string | null
+          error: string | null
+          from_address: string | null
+          http_status: number | null
+          id: string
+          idempotency_key: string
+          inbox_id: string
+          method: string
+          plan_id: string | null
+          requested_at: string | null
+          sender_domain: string | null
+          sender_key: string
+          status: string
+          updated_at: string
+          url_host: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          check_after?: string | null
+          check_attempts?: number
+          check_leased_at?: string | null
+          checked_at?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          display_name?: string | null
+          draft_id?: string | null
+          error?: string | null
+          from_address?: string | null
+          http_status?: number | null
+          id?: string
+          idempotency_key: string
+          inbox_id: string
+          method: string
+          plan_id?: string | null
+          requested_at?: string | null
+          sender_domain?: string | null
+          sender_key: string
+          status: string
+          updated_at?: string
+          url_host?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          check_after?: string | null
+          check_attempts?: number
+          check_leased_at?: string | null
+          checked_at?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          display_name?: string | null
+          draft_id?: string | null
+          error?: string | null
+          from_address?: string | null
+          http_status?: number | null
+          id?: string
+          idempotency_key?: string
+          inbox_id?: string
+          method?: string
+          plan_id?: string | null
+          requested_at?: string | null
+          sender_domain?: string | null
+          sender_key?: string
+          status?: string
+          updated_at?: string
+          url_host?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unsubscribe_requests_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_requests_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_requests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_requests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_limit_events: {
         Row: {
           cap: number
           created_at: string
           effective_plan: string
           id: string
+          limit_kind: string
           meter_version: number
           occurred_at: string
           used_actions: number
@@ -3604,6 +5199,7 @@ export type Database = {
           created_at?: string
           effective_plan: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions: number
@@ -3614,6 +5210,7 @@ export type Database = {
           created_at?: string
           effective_plan?: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions?: number
@@ -3641,6 +5238,15 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          inbox_keep_order: Json | null
+          last_decline_code: string | null
+          park_on_end_marked_at: string | null
+          park_on_end_subscription_id: string | null
+          pause_history: Json
+          pause_resumes_at: string | null
+          paused_from: string | null
+          pending_plan: string | null
+          pending_plan_effective_at: string | null
           plan: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -3652,6 +5258,15 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          inbox_keep_order?: Json | null
+          last_decline_code?: string | null
+          park_on_end_marked_at?: string | null
+          park_on_end_subscription_id?: string | null
+          pause_history?: Json
+          pause_resumes_at?: string | null
+          paused_from?: string | null
+          pending_plan?: string | null
+          pending_plan_effective_at?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -3663,6 +5278,15 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          inbox_keep_order?: Json | null
+          last_decline_code?: string | null
+          park_on_end_marked_at?: string | null
+          park_on_end_subscription_id?: string | null
+          pause_history?: Json
+          pause_resumes_at?: string | null
+          paused_from?: string | null
+          pending_plan?: string | null
+          pending_plan_effective_at?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -3679,6 +5303,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_passes: {
+        Row: {
+          amount_minor: number | null
+          created_at: string
+          currency: string | null
+          ends_at: string
+          expired_at: string | null
+          id: string
+          plan: string
+          product: string
+          refunded_at: string | null
+          reminder_queued_at: string | null
+          starts_at: string
+          status: string
+          stripe_checkout_session_id: string
+          stripe_payment_intent_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_minor?: number | null
+          created_at?: string
+          currency?: string | null
+          ends_at: string
+          expired_at?: string | null
+          id?: string
+          plan?: string
+          product?: string
+          refunded_at?: string | null
+          reminder_queued_at?: string | null
+          starts_at: string
+          status: string
+          stripe_checkout_session_id: string
+          stripe_payment_intent_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_minor?: number | null
+          created_at?: string
+          currency?: string | null
+          ends_at?: string
+          expired_at?: string | null
+          id?: string
+          plan?: string
+          product?: string
+          refunded_at?: string | null
+          reminder_queued_at?: string | null
+          starts_at?: string
+          status?: string
+          stripe_checkout_session_id?: string
+          stripe_payment_intent_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_usage_entitlement_audit: {
         Row: {
@@ -3712,6 +5390,7 @@ export type Database = {
           granted_by: string | null
           kind: string
           reason: string
+          referral_personal_until: string | null
           source: string
           unlimited_inboxes: boolean
           updated_at: string
@@ -3724,6 +5403,7 @@ export type Database = {
           granted_by?: string | null
           kind: string
           reason: string
+          referral_personal_until?: string | null
           source: string
           unlimited_inboxes?: boolean
           updated_at?: string
@@ -3736,6 +5416,7 @@ export type Database = {
           granted_by?: string | null
           kind?: string
           reason?: string
+          referral_personal_until?: string | null
           source?: string
           unlimited_inboxes?: boolean
           updated_at?: string
@@ -3767,6 +5448,7 @@ export type Database = {
           id: string
           marketing_consent_at: string | null
           marketing_consent_source: string | null
+          sso_provider_id: string | null
           unsubscribe_token: string
           unsubscribed_at: string | null
           unsubscribed_categories: string[]
@@ -3780,6 +5462,7 @@ export type Database = {
           id: string
           marketing_consent_at?: string | null
           marketing_consent_source?: string | null
+          sso_provider_id?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
@@ -3793,12 +5476,184 @@ export type Database = {
           id?: string
           marketing_consent_at?: string | null
           marketing_consent_source?: string | null
+          sso_provider_id?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
           updated_at?: string
         }
         Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          attempt: number
+          created_at: string
+          delivered_at: string | null
+          endpoint_id: string
+          error_code: string | null
+          event_id: string
+          event_type: string
+          id: string
+          inbox_id: string | null
+          last_attempt_at: string | null
+          lease_id: string | null
+          leased_until: string | null
+          message_count: number
+          message_ids: string[] | null
+          next_attempt_at: string | null
+          response_code: number | null
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          delivered_at?: string | null
+          endpoint_id: string
+          error_code?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          inbox_id?: string | null
+          last_attempt_at?: string | null
+          lease_id?: string | null
+          leased_until?: string | null
+          message_count?: number
+          message_ids?: string[] | null
+          next_attempt_at?: string | null
+          response_code?: number | null
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          delivered_at?: string | null
+          endpoint_id?: string
+          error_code?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          inbox_id?: string | null
+          last_attempt_at?: string | null
+          lease_id?: string | null
+          leased_until?: string | null
+          message_count?: number
+          message_ids?: string[] | null
+          next_attempt_at?: string | null
+          response_code?: number | null
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          consecutive_failures: number
+          created_at: string
+          created_by: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          events: string[]
+          failing_since: string | null
+          id: string
+          inbox_ids: string[] | null
+          last_success_at: string | null
+          payload_mode: string
+          secret_ciphertext: string
+          secret_prefix: string
+          updated_at: string
+          url: string
+          workspace_id: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          events?: string[]
+          failing_since?: string | null
+          id?: string
+          inbox_ids?: string[] | null
+          last_success_at?: string | null
+          payload_mode?: string
+          secret_ciphertext: string
+          secret_prefix: string
+          updated_at?: string
+          url: string
+          workspace_id: string
+        }
+        Update: {
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          events?: string[]
+          failing_since?: string | null
+          id?: string
+          inbox_ids?: string[] | null
+          last_success_at?: string | null
+          payload_mode?: string
+          secret_ciphertext?: string
+          secret_prefix?: string
+          updated_at?: string
+          url?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_endpoints_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "webhook_endpoints_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workspace_invites: {
         Row: {
@@ -3974,6 +5829,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          acquisition_country: string | null
           acquisition_device: string | null
           acquisition_email_segment: string | null
           acquisition_landing: string | null
@@ -3994,33 +5850,51 @@ export type Database = {
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
+          bulk_undo_hidden: boolean
           card_diagnostics: boolean
+          chat_checkout_link_enabled: boolean
+          chat_send_confirm_enabled: boolean
           created_at: string
           deleted_at: string | null
           display_name: string
           draft_editor_enabled: boolean
           draft_editor_hidden: boolean
           free_action_cap_exempt: boolean
+          grace_end_note_seen_at: string | null
           grandfathered: boolean
           id: string
+          inbox_swapped_at: string | null
           onboarding_client: string | null
           onboarding_client_selected_at: string | null
+          onboarding_completed_at: string | null
           onboarding_connection_verified_at: string | null
           onboarding_credential_issued_at: string | null
           onboarding_inbox_connected_at: string | null
           onboarding_provider: string | null
+          onboarding_reset_at: string | null
           onboarding_stage: string
           onboarding_started_at: string | null
           onboarding_technical_activated_at: string | null
           onboarding_value_activated_at: string | null
+          onboarding_welcome_shown_at: string | null
           owner_id: string
+          payment_issue_kind: string | null
+          payment_issue_since: string | null
+          payment_notice_shown_on: string | null
           plan: string
+          plan_summary_dismissed_at: string | null
+          pro_features_enabled: boolean
+          pro_unlimited_inboxes_exempt: boolean
+          referral_enabled: boolean
+          sends_frozen_at: string | null
           slug: string
           stripe_customer_id: string | null
+          subscription_cleanup_enabled: boolean
           updated_at: string
           web_client_enabled: boolean
         }
         Insert: {
+          acquisition_country?: string | null
           acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
@@ -4041,33 +5915,51 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
+          chat_checkout_link_enabled?: boolean
+          chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name: string
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
           free_action_cap_exempt?: boolean
+          grace_end_note_seen_at?: string | null
           grandfathered?: boolean
           id?: string
+          inbox_swapped_at?: string | null
           onboarding_client?: string | null
           onboarding_client_selected_at?: string | null
+          onboarding_completed_at?: string | null
           onboarding_connection_verified_at?: string | null
           onboarding_credential_issued_at?: string | null
           onboarding_inbox_connected_at?: string | null
           onboarding_provider?: string | null
+          onboarding_reset_at?: string | null
           onboarding_stage?: string
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
+          onboarding_welcome_shown_at?: string | null
           owner_id: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
+          plan_summary_dismissed_at?: string | null
+          pro_features_enabled?: boolean
+          pro_unlimited_inboxes_exempt?: boolean
+          referral_enabled?: boolean
+          sends_frozen_at?: string | null
           slug: string
           stripe_customer_id?: string | null
+          subscription_cleanup_enabled?: boolean
           updated_at?: string
           web_client_enabled?: boolean
         }
         Update: {
+          acquisition_country?: string | null
           acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
@@ -4088,29 +5980,46 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
+          chat_checkout_link_enabled?: boolean
+          chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name?: string
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
           free_action_cap_exempt?: boolean
+          grace_end_note_seen_at?: string | null
           grandfathered?: boolean
           id?: string
+          inbox_swapped_at?: string | null
           onboarding_client?: string | null
           onboarding_client_selected_at?: string | null
+          onboarding_completed_at?: string | null
           onboarding_connection_verified_at?: string | null
           onboarding_credential_issued_at?: string | null
           onboarding_inbox_connected_at?: string | null
           onboarding_provider?: string | null
+          onboarding_reset_at?: string | null
           onboarding_stage?: string
           onboarding_started_at?: string | null
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
+          onboarding_welcome_shown_at?: string | null
           owner_id?: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
+          plan_summary_dismissed_at?: string | null
+          pro_features_enabled?: boolean
+          pro_unlimited_inboxes_exempt?: boolean
+          referral_enabled?: boolean
+          sends_frozen_at?: string | null
           slug?: string
           stripe_customer_id?: string | null
+          subscription_cleanup_enabled?: boolean
           updated_at?: string
           web_client_enabled?: boolean
         }
@@ -4149,12 +6058,112 @@ export type Database = {
       }
     }
     Functions: {
+      _app_base_url: { Args: never; Returns: string }
+      _functions_base_url: { Args: never; Returns: string }
       accept_workspace_invite: {
         Args: { p_token_hash: string }
         Returns: {
           role: string
           workspace_id: string
           workspace_slug: string
+        }[]
+      }
+      activation_segments: {
+        Args: { days?: number }
+        Returns: {
+          segment: string
+          segment_index: number
+          total_workspaces: number
+          workspaces: number
+        }[]
+      }
+      activity_log_retention_preview: {
+        Args: { p_min_days?: number }
+        Returns: {
+          plan: string
+          rows_kept_by_audit_floor: number
+          rows_to_delete: number
+          rows_total: number
+          window_days: number
+        }[]
+      }
+      activity_log_retention_window_days: {
+        Args: { p_plan: string }
+        Returns: number
+      }
+      activity_log_retention_workspace_windows: {
+        Args: never
+        Returns: {
+          days: number
+          plan: string
+          workspace_id: string
+        }[]
+      }
+      activity_log_tool_is_read_only: {
+        Args: { p_tool: string }
+        Returns: boolean
+      }
+      auth_azure_email_verified: { Args: { p_data: Json }; Returns: boolean }
+      auth_hook_before_user_created: { Args: { event: Json }; Returns: Json }
+      auth_hook_custom_access_token: { Args: { event: Json }; Returns: Json }
+      auth_hook_switch_on: { Args: { p_name: string }; Returns: boolean }
+      auth_signup_refusal: { Args: { p_user: Json }; Returns: string }
+      auth_token_refusal: {
+        Args: { p_authentication_method: string; p_user_id: string }
+        Returns: string
+      }
+      checkout_link_attach_session: {
+        Args: {
+          p_id: string
+          p_session_expires_at: string
+          p_session_id: string
+        }
+        Returns: string
+      }
+      checkout_link_complete: { Args: { p_id: string }; Returns: undefined }
+      checkout_link_issue: {
+        Args: {
+          p_blocked_tool: string
+          p_client_label: string
+          p_id: string
+          p_owner_user_id: string
+          p_token_hash: string
+          p_ttl_minutes?: number
+          p_variant: string
+          p_workspace_id: string
+        }
+        Returns: {
+          expires_at: string
+          id: string
+          reused: boolean
+        }[]
+      }
+      checkout_link_open: {
+        Args: { p_token_hash: string }
+        Returns: {
+          billing_interval: string
+          client_label: string
+          completed_at: string
+          expires_at: string
+          first_open: boolean
+          id: string
+          owner_user_id: string
+          plan_id: string
+          stripe_session_expires_at: string
+          stripe_session_id: string
+          workspace_id: string
+        }[]
+      }
+      checkout_link_readout: {
+        Args: { p_since?: string }
+        Returns: {
+          checkout_sessions: number
+          client_label: string
+          completed: number
+          links: number
+          opened: number
+          resumed: number
+          variant: string
         }[]
       }
       claim_billing_emails: {
@@ -4171,6 +6180,7 @@ export type Database = {
           payload: Json
           period_start: string | null
           recipient: string
+          recovered_by: string | null
           resend_id: string | null
           scope_key: string
           send_after: string
@@ -4188,6 +6198,18 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_onboarding_welcome: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      claim_usage_meter_note: {
+        Args: {
+          p_level: number
+          p_period_start: string
+          p_workspace_id: string
+        }
+        Returns: boolean
+      }
       create_workspace: {
         Args: { p_name: string }
         Returns: {
@@ -4197,12 +6219,25 @@ export type Database = {
           slug: string
         }[]
       }
+      dispatch_activation_help: { Args: never; Returns: undefined }
       dispatch_billing_lifecycle: {
         Args: { p_mode?: string }
         Returns: undefined
       }
+      dispatch_black_week_email: { Args: never; Returns: undefined }
+      dispatch_eur_launch: { Args: never; Returns: undefined }
+      dispatch_first_30_days: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
+      dispatch_morning_briefs: { Args: never; Returns: undefined }
+      dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
+      dispatch_pass_expiry: { Args: never; Returns: undefined }
+      dispatch_paywall_followup: { Args: never; Returns: undefined }
+      dispatch_pro_price_notice: { Args: never; Returns: undefined }
+      dispatch_referrals: { Args: never; Returns: undefined }
+      dispatch_reminders: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
+      dispatch_site_feed: { Args: { p_job: string }; Returns: undefined }
+      dispatch_subscription_followup: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
       draft_lineage_record: {
         Args: {
@@ -4227,6 +6262,8 @@ export type Database = {
         Returns: {
           comped_scale: boolean
           plan: string
+          pro_unlimited_inboxes: boolean
+          referral_personal: boolean
           unlimited_inboxes: boolean
         }[]
       }
@@ -4284,6 +6321,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      free_action_grace_ends_at: {
+        Args: { p_created_at: string }
+        Returns: string
+      }
       get_current_user_sessions: {
         Args: never
         Returns: {
@@ -4335,6 +6376,10 @@ export type Database = {
           new_grants: number
         }[]
       }
+      grant_referral_personal: {
+        Args: { p_days?: number; p_reason?: string; p_user_id: string }
+        Returns: string
+      }
       growth_acquisition_channels: {
         Args: { p_days?: number }
         Returns: {
@@ -4374,6 +6419,11 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      growth_activity_rollup_refresh: {
+        Args: { p_from?: string }
+        Returns: number
+      }
+      growth_client_family: { Args: { p_client_name: string }; Returns: string }
       growth_client_mix: {
         Args: never
         Returns: {
@@ -4403,6 +6453,74 @@ export type Database = {
           successes: number
           technical_activations: number
           value_activations: number
+        }[]
+      }
+      growth_draft_card_daily: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          day: string
+          drafted: number
+          hidden: number
+          saved: number
+          sent_agent: number
+          sent_card: number
+        }[]
+      }
+      growth_draft_card_reach: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          enabled: number
+          enabled_inboxes: number
+          hidden_inboxes: number
+          hidden_workspaces: number
+          workspaces: number
+        }[]
+      }
+      growth_draft_card_stats: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+          p_release_at?: string
+        }
+        Returns: {
+          calls: number
+          card_workspaces: number
+          deleted_agent: number
+          deleted_card: number
+          drafted: number
+          drafted_card: number
+          eligible_card: number
+          eligible_plain: number
+          errors: number
+          family: string
+          hidden: number
+          lines: number
+          lines_listed: number
+          mature_lines: number
+          mature_listed: number
+          period: string
+          returned_card: number
+          returned_plain: number
+          saved: number
+          sent_agent: number
+          sent_card: number
+          w_calls: number
+          w_deleted: number
+          w_errors: number
+          w_lines: number
+          w_lines_listed: number
+          w_mature: number
+          w_mature_listed: number
+          w_sent_day: number
+          w_sent_day_listed: number
+          w_touched: number
+          w_touched_listed: number
+          workspaces: number
         }[]
       }
       growth_engagement_bands: {
@@ -4496,6 +6614,55 @@ export type Database = {
           provider: string
         }[]
       }
+      growth_onboarding_arms: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          assigned: number
+          completed: number
+          connect_failed_ws: number
+          connect_ws: number
+          convert: string
+          draft_3d: number
+          first_assigned_at: string
+          flow: string
+          habit_7d: number
+          inbox_1d: number
+          mature_1d: number
+          mature_30d: number
+          mature_3d: number
+          mature_7d: number
+          paid_30d: number
+          paid_any: number
+          value_1d: number
+        }[]
+      }
+      growth_onboarding_daily: {
+        Args: {
+          p_days: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          convert_off: number
+          convert_on: number
+          created: number
+          day: string
+          flow_control: number
+          flow_new: number
+          mature_1d: number
+          value_1d: number
+        }[]
+      }
+      growth_onboarding_steps: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          category: string
+          convert: string
+          flow: string
+          stage: string
+          workspaces: number
+        }[]
+      }
       growth_people_counts: {
         Args: {
           p_days?: number
@@ -4562,6 +6729,32 @@ export type Database = {
           paying_scale: number
           paying_solo: number
           paying_workspaces: number
+        }[]
+      }
+      growth_signup_pace: {
+        Args: {
+          p_days?: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          day: string
+          new_users: number
+        }[]
+      }
+      growth_signup_trend: {
+        Args: {
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+          p_weeks?: number
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          week_start: string
+          workspaces: number
         }[]
       }
       growth_upgrade_pressure: {
@@ -4827,6 +7020,14 @@ export type Database = {
           workspaces: number
         }[]
       }
+      growth_window_sessions: {
+        Args: { p_first_starts: boolean[]; p_starts: number[] }
+        Returns: number
+      }
+      inbox_folder_overrides_valid: {
+        Args: { overrides: Json }
+        Returns: boolean
+      }
       internal_account_domains: { Args: never; Returns: string[] }
       internal_account_emails: { Args: never; Returns: string[] }
       invoke_outlook_token_refresh: { Args: never; Returns: undefined }
@@ -4857,6 +7058,30 @@ export type Database = {
           workspace_id: string
         }[]
       }
+      lease_webhook_deliveries: {
+        Args: { p_lease_seconds?: number; p_limit?: number }
+        Returns: {
+          attempt: number
+          backoff_until: string
+          created_at: string
+          delivery_id: string
+          endpoint_enabled: boolean
+          endpoint_id: string
+          event_id: string
+          inbox_id: string
+          inbox_last_error: string
+          lease_id: string
+          mail_host: string
+          message_count: number
+          message_ids: string[]
+          payload_mode: string
+          plan_allowed: boolean
+          provider: string
+          secret_ciphertext: string
+          url: string
+          workspace_id: string
+        }[]
+      }
       mark_synthetic_monitor_incident_alerted: {
         Args: { p_incident_id: string }
         Returns: undefined
@@ -4865,7 +7090,75 @@ export type Database = {
         Args: { p_incident_id: string }
         Returns: undefined
       }
+      mcp_tools_call_gate: {
+        Args: {
+          p_include_allowance: boolean
+          p_key_hash: string
+          p_key_window_starts: string[]
+          p_meter_version: number
+          p_reserve_tool_name: string
+          p_workspace_window_start: string
+        }
+        Returns: Json
+      }
+      mcp_tools_call_preflight: {
+        Args: {
+          p_include_allowance: boolean
+          p_key_hash: string
+          p_key_window_starts: string[]
+          p_workspace_window_start: string
+        }
+        Returns: Json
+      }
+      my_referral_summary: {
+        Args: never
+        Returns: {
+          attached_at: string
+          entitlement_until: string
+          id: string
+          qualified_at: string
+          qualifies_at: string
+          reward_cents: number
+          reward_kind: string
+          status: string
+        }[]
+      }
       my_workspace_ids: { Args: never; Returns: string[] }
+      onboarding_convert_on: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      outbound_send_gate: {
+        Args: {
+          p_commit: boolean
+          p_content_hash: string
+          p_daily_limit: number
+          p_fanout_limit: number
+          p_fanout_window_ms: number
+          p_human_approved: boolean
+          p_inbox_id: string
+          p_messages: number
+          p_recipient_hashes: string[]
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      outbound_send_refusal: {
+        Args: {
+          p_inbox_id: string
+          p_pause_ms: number
+          p_threshold: number
+          p_window_ms: number
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      purge_activity_log_batch: {
+        Args: { p_limit?: number; p_min_days?: number }
+        Returns: number
+      }
+      purge_operational_history: { Args: never; Returns: Json }
+      purge_outbound_send_events: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -4883,6 +7176,23 @@ export type Database = {
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean
+      }
+      record_business_founder_place: {
+        Args: {
+          p_interval: string
+          p_owner_id: string
+          p_subscription_id: string
+        }
+        Returns: boolean
+      }
+      record_inbox_cap_event: {
+        Args: {
+          p_cap: number
+          p_inbox_count: number
+          p_plan: string
+          p_workspace_id: string
+        }
+        Returns: undefined
       }
       record_mail_relay_use: {
         Args: {
@@ -4927,6 +7237,23 @@ export type Database = {
           p_workspace_id: string
         }
         Returns: boolean
+      }
+      record_webhook_attempt: {
+        Args: {
+          p_abandon_code?: string
+          p_delivery_id: string
+          p_error_code: string
+          p_lease_id: string
+          p_max_failing_seconds: number
+          p_max_failures: number
+          p_next_at: string
+          p_ok: boolean
+          p_response_code: number
+        }
+        Returns: {
+          endpoint_disabled: boolean
+          endpoint_id: string
+        }[]
       }
       reserve_action_usage: {
         Args: {
@@ -4979,6 +7306,8 @@ export type Database = {
           revoked_session_id: string
         }[]
       }
+      scheduled_sends_operator_workspace_ids: { Args: never; Returns: string[] }
+      signup_method_category: { Args: { p_provider: string }; Returns: string }
       signup_scoreboard: {
         Args: never
         Returns: {
@@ -4988,8 +7317,80 @@ export type Database = {
           total: number
         }[]
       }
+      site_feed_emails_handled: {
+        Args: { p_internal_emails?: string[] }
+        Returns: number
+      }
+      sso_admin_test_sign_in_seen: {
+        Args: { p_connection_id: string }
+        Returns: boolean
+      }
+      sso_admin_workspace_ids: { Args: never; Returns: string[] }
+      sso_enforced_connection_for_email: {
+        Args: { p_email: string }
+        Returns: {
+          connection_id: string
+          owner_id: string
+          supabase_sso_provider_id: string
+          workspace_id: string
+        }[]
+      }
+      sso_is_consumer_domain: { Args: { p_domain: string }; Returns: boolean }
+      sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
+      sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
       sync_inbox_watch_state: { Args: never; Returns: undefined }
+      usage_month_summary: {
+        Args: { p_since: string; p_workspace_id: string }
+        Returns: {
+          drafts: number
+          reads: number
+          sends: number
+        }[]
+      }
+      user_active_pass: {
+        Args: { p_user: string }
+        Returns: {
+          ends_at: string
+        }[]
+      }
+      webhook_capped_inboxes: {
+        Args: { p_workspace_id?: string }
+        Returns: {
+          inbox_id: string
+          workspace_id: string
+        }[]
+      }
+      webhook_enqueue_event: {
+        Args: {
+          p_event_id: string
+          p_inbox_id: string
+          p_message_count: number
+          p_message_ids: string[]
+        }
+        Returns: number
+      }
+      webhook_has_targets: { Args: { p_inbox_id: string }; Returns: boolean }
+      webhooks_plan_allowed: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
       workspace_action_allowance: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          cap: number
+          exempt: boolean
+          exempt_reason: string
+          grace_ends_at: string
+          in_grace: boolean
+          owner_id: string
+          period_end: string
+          period_start: string
+          plan: string
+          remaining: number
+          used: number
+        }[]
+      }
+      workspace_action_allowance_terms: {
         Args: { p_workspace_id: string }
         Returns: {
           cap: number
@@ -5026,6 +7427,15 @@ export type Database = {
           calls: number
           inbox_id: string
           last_success_at: string
+        }[]
+      }
+      workspace_pro_features: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          comped_scale: boolean
+          plan: string
+          public_launch: boolean
+          rollout_enabled: boolean
         }[]
       }
       workspace_usage_summary: {

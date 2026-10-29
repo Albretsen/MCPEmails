@@ -87,7 +87,7 @@
   gap: 0.55em;
   /* The wordmark is the header's only compressible element, and it compresses
      by ELLIPSIS rather than by wrapping. A flex item's default `min-width:auto`
-     lets it shrink to min-content, which for "MCP Emails" is two lines, and a
+     lets it shrink to min-content, which for "MCPEmails" is two lines, and a
      two-line header steals height from a board whose rows are fractions of
      whatever the header leaves. Below about 800 logical pixels — an operator's
      narrow window, never the panel — the view name gives way instead. */
@@ -451,6 +451,21 @@
   color: var(--fg-1);
 }
 .kiosk-big-value.is-long { font-size: clamp(21px, 4.4dvh, 48px); }
+/* A signup or subscription number a refresh just changed (FlashValue). Only
+   the digits change colour, briefly: green for good news, red for bad, amber
+   when it cannot be compared. No background or glow, so the tile itself never
+   looks like it changed state; the health banner is the only thing allowed to
+   stay lit. */
+.kiosk-flash { animation: kiosk-flash 1.6s ease-out 2; }
+.kiosk-flash.is-flash-good { --kiosk-flash: var(--kiosk-good); }
+.kiosk-flash.is-flash-bad  { --kiosk-flash: var(--kiosk-bad); }
+.kiosk-flash.is-flash-warn { --kiosk-flash: var(--kiosk-warn); }
+@keyframes kiosk-flash {
+  0% { color: var(--kiosk-flash); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-flash { animation-duration: 0.01s; animation-iteration-count: 1; }
+}
 .kiosk-big-suffix { font-size: 0.42em; font-weight: 550; color: var(--fg-3); margin-left: 0.12em; letter-spacing: 0; }
 .kiosk-trend {
   font-size: clamp(10px, 1.6dvh, 16px);
@@ -960,3 +975,17 @@
   opacity: 0.7;
 }
 .kiosk-col.is-partial .kiosk-col-bar b { color: var(--fg-4); }
+
+/* ---------- Signups per day (strip tile) ---------- */
+
+/* Fourteen columns in a tile three of twelve wide: narrower gaps than the
+   weekly chart, and the plot takes the BigNumber's slack like a spark does. */
+.kiosk-days { flex: 1 1 0; min-height: 0; margin-top: clamp(4px, 0.8dvh, 10px); gap: clamp(1px, 0.25vw, 5px); }
+.kiosk-days .kiosk-col-bar { max-width: none; }
+/* A projected column: dashed hollow to the projection, the real count filled
+   from the floor inside it. Used by today's column and the current week's. */
+.kiosk-col-bar.is-projected { display: flex; align-items: flex-end; }
+.kiosk-day-sofar { display: block; width: 100%; border-radius: 2px 2px 0 0; }
+.kiosk-col .kiosk-col-bar.is-projected b { white-space: nowrap; color: var(--fg-2); }
+.kiosk-col .kiosk-col-bar.is-projected b em { font-style: normal; color: var(--fg-4); }
+.kiosk-days .kiosk-col.is-partial .kiosk-col-label { color: var(--fg-2); font-weight: 650; }

@@ -1,5 +1,6 @@
 import { permanentRedirect } from 'next/navigation';
 import * as C from '@/lib/compare/email-mcp-servers.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The page this route used to serve now lives at C.PATH
@@ -23,6 +24,7 @@ export function generateStaticParams() {
 
 export default async function LegacyComparisonRedirect({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   // Keep a non-default locale prefix if one was used, so /nb/<old> lands on
   // /nb/<new> and gets that route's own 404 rather than a silent language flip.
   const prefix = locale && locale !== 'en' ? `/${locale}` : '';

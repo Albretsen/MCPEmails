@@ -6,8 +6,11 @@ import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { consumeStateNonce } from '@/lib/oauth/state';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { IDENTITY_SCOPES } from '@/lib/oauth/metadata';
+import { lookupWorkspaceRole, scopesAllowedForRole } from '@/lib/oauth/grant-role';
+import { viewerScopeList } from '@/lib/api-keys/scopes';
 
 /**
  * POST /api/oauth/authorize
@@ -229,7 +232,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'redirect_uri does not match registered URIs.' }, { status: 400 });
   }
 
-  const approvedScopes = requestedScopes.filter((s) => oauthClient.scopes_allowed.includes(s));
+  // Before any code is minted: never hand back a javascript:, data:, file:, ...
+  // redirect_to, even for a row that was registered before register/route.ts
+  // refused those schemes. Checked on the REGISTERED redirect_uri, never on
+  // the composed redirect_to below: that carries the client's own `state`,
+  // which may legitimately hold a URL. The consent component navigates to redirect_to on
+  // our own origin. See lib/oauth/redirect-scheme.ts.
+  if (!isSafeRedirectScheme(redirect_uri)) {
+    return NextResponse.json({ error: 'redirect_uri uses a URL scheme that is not allowed.' }, { status: 400 });
+  }
+
+  const clientApprovedScopes = requestedScopes.filter((s) => oauthClient.scopes_allowed.includes(s));
 
   // At least one scope must be granted — a connection with no scopes can call
   // zero tools, so it is never a useful grant. (The consent UI also disables the
@@ -237,23 +250,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //
   // Checked BEFORE the identity scopes are appended, so `openid` alone can
   // never stand in for a real permission.
-  if (approvedScopes.length === 0) {
+  if (clientApprovedScopes.length === 0) {
     return NextResponse.json(
       { error: 'Select at least one permission to grant.' },
       { status: 400 },
     );
-  }
-
-  // Identity scopes, appended after that check. Taken from what the client
-  // asked for rather than from the consent checkboxes, because they are not
-  // checkboxes: see IDENTITY_SCOPE_SET.
-  const grantedIdentityScopes = Array.isArray(identity_scopes)
-    ? (identity_scopes as unknown[]).filter(
-        (s): s is string => typeof s === 'string' && IDENTITY_SCOPE_SET.has(s),
-      )
-    : [];
-  for (const scope of grantedIdentityScopes) {
-    if (!approvedScopes.includes(scope)) approvedScopes.push(scope);
   }
 
   // ── Workspace resolution ──────────────────────────────────────────────────
@@ -263,6 +264,45 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!workspaceId) {
     return NextResponse.json({ error: 'No workspace found for this user.' }, { status: 400 });
+  }
+
+  // ── Role cap ──────────────────────────────────────────────────────────────
+  // The grant becomes an api_keys row at /api/oauth/token, so it must obey the
+  // same role rule as a key made on the API keys page: a viewer may hold only
+  // the read-only allow-list. The consent page already offers a viewer nothing
+  // else; this is the server-side rule for a POST that asks for more anyway.
+  // Owner, admin and member are unaffected (scopesAllowedForRole returns the
+  // list unchanged for them).
+  const { role: callerRole, error: roleError } = await lookupWorkspaceRole(supabase, workspaceId, user.id);
+  if (roleError) {
+    console.error('oauth_authorize_role_lookup_error', roleError.message);
+    return NextResponse.json({ error: 'Could not check your workspace role. Try again.' }, { status: 500 });
+  }
+  if (!callerRole) {
+    return NextResponse.json({ error: 'No workspace found for this user.' }, { status: 400 });
+  }
+
+  const approvedScopes = scopesAllowedForRole(callerRole, clientApprovedScopes);
+  if (approvedScopes.length === 0) {
+    return NextResponse.json(
+      {
+        error: `You are a viewer in this workspace, so you can only grant read-only access (${viewerScopeList()}). Ask a workspace owner or admin to connect this app with more access.`,
+        error_code: 'insufficient_role',
+      },
+      { status: 403 },
+    );
+  }
+
+  // Identity scopes, appended after those checks. Taken from what the client
+  // asked for rather than from the consent checkboxes, because they are not
+  // checkboxes: see IDENTITY_SCOPE_SET.
+  const grantedIdentityScopes = Array.isArray(identity_scopes)
+    ? (identity_scopes as unknown[]).filter(
+        (s): s is string => typeof s === 'string' && IDENTITY_SCOPE_SET.has(s),
+      )
+    : [];
+  for (const scope of grantedIdentityScopes) {
+    if (!approvedScopes.includes(scope)) approvedScopes.push(scope);
   }
 
   // ── Inbox ownership validation ────────────────────────────────────────────

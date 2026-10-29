@@ -23,23 +23,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe du compte ou d'application, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à Zoho Mail. mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur imap.zoho.com, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Deux points doivent d'abord être réglés : l'accès IMAP est désactivé sur une nouvelle boîte Zoho tant que vous ne l'activez pas, et le nom de serveur dépend de votre centre de données Zoho, si bien qu'un compte créé dans l'UE ou en Inde en utilise un autre. Une boîte est gratuite, pour toujours."
+    "answer": "Claude ne peut pas accéder seul à Zoho Mail. MCPEmails est un serveur MCP hébergé qui le connecte en IMAP sur imap.zoho.com, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Deux points doivent d'abord être réglés : l'accès IMAP est désactivé sur une nouvelle boîte Zoho tant que vous ne l'activez pas, et le nom de serveur dépend de votre centre de données Zoho, si bien qu'un compte créé dans l'UE ou en Inde en utilise un autre. Une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Zoho se connecte : IMAP et un mot de passe",
-    "body": "Zoho Mail se connecte en IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), puis collez votre adresse et votre mot de passe Zoho dans mcpemails. Si vous utilisez l'authentification à deux facteurs, la connexion fédérée ou SAML, générez un mot de passe spécifique à l'application et utilisez-le à la place. mcpemails prend en charge toutes les régions de centres de données Zoho."
+    "body": "Zoho Mail se connecte en IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), puis collez votre adresse et votre mot de passe Zoho dans MCPEmails. Si vous utilisez l'authentification à deux facteurs, la connexion fédérée ou SAML, générez un mot de passe spécifique à l'application et utilisez-le à la place. MCPEmails prend en charge toutes les régions de centres de données Zoho."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Activez l'IMAP et, si besoin, créez un mot de passe d'application",
       "p": "Dans Zoho Mail, activez l'accès IMAP (Settings, Mail Accounts, IMAP Access). Si vous utilisez l'authentification à deux facteurs, la connexion fédérée ou SAML, générez un mot de passe spécifique à l'application dans Zoho Account, Security."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Ajoutez votre adresse Zoho et le mot de passe, et choisissez votre région Zoho si on vous le demande, pour connecter la boîte en toute sécurité."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Zoho Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Zoho intégré. Connecter un serveur MCP comme mcpemails à votre boîte Zoho en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP. Vous devez d'abord activer l'accès IMAP sur la boîte."
+      "a": "Pas seul. Claude n'a pas de connecteur Zoho intégré. Connecter un serveur MCP comme MCPEmails à votre boîte Zoho en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP. Vous devez d'abord activer l'accès IMAP sur la boîte."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Zoho Mail ?",

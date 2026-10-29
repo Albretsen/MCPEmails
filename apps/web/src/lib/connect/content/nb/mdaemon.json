@@ -21,8 +21,8 @@
     "eyebrow": "MDaemon + AI",
     "titleLine1": "Koble MDaemon til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "MDaemon har kjørt e-post på din egen Windows-server i årevis uten å spørre noen om lov. Å sette en AI-agent på den trenger ikke endre det: mcpemails kobler til over vanlig IMAP og henter hver melding direkte.",
-    "answer": "Claude kan ikke nå en MDaemon-server på egen hånd. mcpemails er en driftet MCP-server som kobler til din over IMAP på ditt eget vertsnavn, på IMAP SSL-porten, som MDaemon setter til 993 som standard, med kontopassordet fra Account Manager. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten i den postkassen. MDaemon er programvare du kjører selv, så det finnes ingen felles vert å slå opp: serveren må være tilgjengelig fra internett, kontoen må ha IMAP-tilgang aktivert, og screeningfunksjonene i MDaemon må slippe tilkoblingen gjennom. Én innboks er gratis.",
+    "lead": "MDaemon har kjørt e-post på din egen Windows-server i årevis uten å spørre noen om lov. Å sette en AI-agent på den trenger ikke endre det: MCPEmails kobler til over vanlig IMAP og henter hver melding direkte.",
+    "answer": "Claude kan ikke nå en MDaemon-server på egen hånd. MCPEmails er en driftet MCP-server som kobler til din over IMAP på ditt eget vertsnavn, på IMAP SSL-porten, som MDaemon setter til 993 som standard, med kontopassordet fra Account Manager. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten i den postkassen. MDaemon er programvare du kjører selv, så det finnes ingen felles vert å slå opp: serveren må være tilgjengelig fra internett, kontoen må ha IMAP-tilgang aktivert, og screeningfunksjonene i MDaemon må slippe tilkoblingen gjennom. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassord, IMAP-tilgang på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort, så du kan teste dette mot en ekte MDaemon-postkasse først."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Aktiver IMAP-tilgang på kontoen",
-      "p": "Åpne Account Manager, finn postkassen, og på Mail Services-skjermen dens sørger du for at <b>Enable IMAP access</b> er huket av. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, skriv inn MDaemon-vertsnavnet ditt, hele adressen og kontopassordet."
+      "p": "Åpne Account Manager, finn postkassen, og på Mail Services-skjermen dens sørger du for at <b>Enable IMAP access</b> er huket av. Legg deretter til innboksen i MCPEmails: velg IMAP / SMTP, skriv inn MDaemon-vertsnavnet ditt, hele adressen og kontopassordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "MDaemon-servere står som regel bak en bedriftsbrannmur med bare port 25 publisert, og dette krever i tillegg en innkommende IMAP-tilkobling. Å åpne 993 mot internett er en beslutning for den som eier brannmuren, ikke en innstilling i MDaemon. Hvis svaret er nei, kan mcpemails driftes selv på det samme interne nettverket, der den når MDaemon på samme måte som en skrivebordsklient på lokalnettet allerede gjør.",
+    "MDaemon-servere står som regel bak en bedriftsbrannmur med bare port 25 publisert, og dette krever i tillegg en innkommende IMAP-tilkobling. Å åpne 993 mot internett er en beslutning for den som eier brannmuren, ikke en innstilling i MDaemon. Hvis svaret er nei, kan MCPEmails driftes selv på det samme interne nettverket, der den når MDaemon på samme måte som en skrivebordsklient på lokalnettet allerede gjør.",
     "TLS-validering er streng. MDaemons standard selvsignerte sertifikat, eller et utløpt sertifikat, blir avvist uten mulighet til å fortsette likevel.",
     "Sending går ut gjennom din egen MDaemon SMTP-tjeneste, så leveringsevnen avhenger av SPF-, DKIM- og DMARC-postene dine og av omdømmet til adressen serveren din sender fra."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med MDaemon?",
-      "a": "Ikke direkte. Claude har ingen MDaemon-kobling og kan ikke åpne en IMAP-socket mot en server du drifter. Ved å koble en MCP-server som mcpemails til MDaemon-verten din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse på den, med de samme påloggingsopplysningene som enhver skrivebordsklient ville brukt."
+      "a": "Ikke direkte. Claude har ingen MDaemon-kobling og kan ikke åpne en IMAP-socket mot en server du drifter. Ved å koble en MCP-server som MCPEmails til MDaemon-verten din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse på den, med de samme påloggingsopplysningene som enhver skrivebordsklient ville brukt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for MDaemon?",

@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail no tiene IMAP",
     "titleLine2": "ni SMTP, y no hay bridge",
     "lead": "Tuta, antes Tutanota, no ofrece ninguno de los protocolos que necesita un cliente de correo o un servidor MCP, y a diferencia de Proton no incluye un bridge local que los simule. Esta página explica por qué y qué tienes realmente a tu alcance.",
-    "answer": "No, y no hay forma de sortearlo. Tuta no ofrece ningún acceso IMAP, POP ni SMTP, así que mcpemails no puede conectar un buzón de Tuta, ni tampoco Thunderbird, Apple Mail ni ningún otro cliente. Es consecuencia de cómo funciona el cifrado de Tuta: los asuntos, los cuerpos, los adjuntos, los contactos y las entradas del calendario se cifran con una clave que nunca sale de tu dispositivo, y los servidores de Tuta solo guardan texto cifrado. El IMAP estándar da por hecho un servidor capaz de leer asuntos, ordenar, buscar y entregar texto en claro a un cliente, que es justo la capacidad que Tuta eliminó. A diferencia de Proton, tampoco hay una aplicación bridge que ejecutar en local, así que si quieres un agente de IA trabajando con el correo, tiene que ser un buzón en un proveedor que hable IMAP, y mcpemails conecta uno de esos gratis."
+    "answer": "No, y no hay forma de sortearlo. Tuta no ofrece ningún acceso IMAP, POP ni SMTP, así que MCPEmails no puede conectar un buzón de Tuta, ni tampoco Thunderbird, Apple Mail ni ningún otro cliente. Es consecuencia de cómo funciona el cifrado de Tuta: los asuntos, los cuerpos, los adjuntos, los contactos y las entradas del calendario se cifran con una clave que nunca sale de tu dispositivo, y los servidores de Tuta solo guardan texto cifrado. El IMAP estándar da por hecho un servidor capaz de leer asuntos, ordenar, buscar y entregar texto en claro a un cliente, que es justo la capacidad que Tuta eliminó. A diferencia de Proton, tampoco hay una aplicación bridge que ejecutar en local, así que si quieres un agente de IA trabajando con el correo, tiene que ser un buzón en un proveedor que hable IMAP, y MCPEmails conecta uno de esos gratis."
   },
   "method": {
     "title": "Cómo se conecta Tuta: solo a través de sus propias aplicaciones",
@@ -29,12 +29,12 @@
   },
   "setup": [
     {
-      "h": "Crea la cuenta gratis de mcpemails",
+      "h": "Crea la cuenta gratis de MCPEmails",
       "p": "Una dirección de correo, sin tarjeta. Una bandeja conectada es gratis para siempre, y los dos pasos siguientes deciden qué va en ella."
     },
     {
       "h": "Elige la dirección con la que quieres que trabaje un agente",
-      "p": "Es una decisión real, no un trámite. Elige un buzón en un proveedor que ofrezca IMAP: tu propio dominio, una cuenta del trabajo, Fastmail, Migadu, Gmail. La correspondencia que debe estar tras el cifrado de Tuta debe quedarse en Tuta, y el correo que quieres clasificar, responder y archivar automáticamente vive en la cuenta conectada."
+      "p": "Es una decisión real, no un trámite. Elige un buzón en un proveedor que ofrezca IMAP: tu propio dominio, una cuenta del trabajo, Fastmail, Migadu, Gmail. La correspondencia que merece el cifrado de Tuta debe quedarse en Tuta, y el correo que quieres clasificar, responder y archivar automáticamente vive en la cuenta conectada."
     },
     {
       "h": "Traslada el archivo si necesitas allí el historial",
@@ -52,7 +52,7 @@
     },
     {
       "h": "No existe un bridge de Tuta, y la gente llega esperando uno",
-      "p": "Proton resolvió el mismo problema de cifrado con una aplicación de escritorio local que descifra en tu máquina y sirve IMAP a un cliente en el mismo ordenador. Tuta no ofrece nada equivalente. No hay ningún componente compatible, oficial ni de otro tipo, que convierta una cuenta de Tuta en un punto de acceso IMAP en ninguna máquina, así que el truco de localhost que con Proton al menos funciona para un cliente de escritorio aquí no existe."
+      "p": "Proton resolvió el mismo problema de cifrado con una aplicación de escritorio local que descifra en tu máquina y sirve IMAP a un cliente en el mismo ordenador. Tuta no ofrece nada equivalente. No hay ningún componente compatible, oficial ni de otro tipo, que convierta una cuenta de Tuta en un endpoint IMAP en ninguna máquina, así que el truco de localhost que con Proton al menos funciona para un cliente de escritorio aquí no existe."
     },
     {
       "h": "Los directorios de ajustes publican nombres de servidor de Tuta que no existen",
@@ -82,7 +82,7 @@
     },
     {
       "q": "¿Hay un bridge de Tuta como Proton Mail Bridge?",
-      "a": "No. Proton ofrece una aplicación de escritorio que descifra en local y proporciona IMAP a los clientes del mismo ordenador. Tuta no tiene ningún componente así en ningún plan, así que tampoco hay un punto de acceso local. Las herramientas de terceros que dicen hacer de bridge con Tuta no se basan en ninguna interfaz compatible, y darle a una tu contraseña de Tuta le da tu buzón."
+      "a": "No. Proton ofrece una aplicación de escritorio que descifra en local y proporciona IMAP a los clientes del mismo ordenador. Tuta no tiene ningún componente así en ningún plan, así que tampoco hay un endpoint local. Las herramientas de terceros que dicen hacer de bridge con Tuta no se basan en ninguna interfaz compatible, y darle a una tu contraseña de Tuta le da tu buzón."
     },
     {
       "q": "¿Puedo exportar mi correo de Tuta?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Qué hago si quiero que un agente de IA gestione mi correo?",
-      "a": "Usa dos direcciones a propósito. Mantén la correspondencia privada en Tuta, donde nada automatizado puede llegar, y usa un buzón IMAP aparte para el correo que quieres que un agente clasifique, responda, programe y archive. mcpemails conecta ese segundo buzón a Claude, Cursor o ChatGPT, con una bandeja gratis, y nunca ve el de Tuta."
+      "a": "Usa dos direcciones a propósito. Mantén la correspondencia privada en Tuta, donde nada automatizado puede llegar, y usa un buzón IMAP aparte para el correo que quieres que un agente clasifique, responda, programe y archive. MCPEmails conecta ese segundo buzón a Claude, Cursor o ChatGPT, con una bandeja gratis, y nunca ve el de Tuta."
     }
   ],
   "ctaBand": {

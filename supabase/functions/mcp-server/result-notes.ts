@@ -66,7 +66,7 @@ export const RESULT_NOTES_SCHEMA: Record<string, unknown> = {
   description:
     "Server notes about how this call was handled — for example an argument " +
     "that was not applied because the selected action does not accept it. " +
-    "Written by MCP Emails, not taken from any message, and absent when there " +
+    "Written by MCPEmails, not taken from any message, and absent when there " +
     "is nothing to report.",
 };
 
@@ -144,8 +144,8 @@ export function attachResultNote(response: unknown, note: string): void {
   // mutating, and only re-serialize on an exact match: a handler that builds
   // its text block by some other route keeps whatever it wrote, because
   // replacing prose we did not write with JSON would be a worse bug than the
-  // one being fixed. jsonOk offers exactly two styles, so there are two
-  // candidates to test.
+  // one being fixed. jsonOk is compact; the indented candidate is kept so a
+  // hand-built block that still pretty-prints keeps its formatting.
   const first = content && content[0] && typeof content[0] === "object"
     ? content[0] as { text?: unknown }
     : null;

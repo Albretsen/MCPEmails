@@ -14,32 +14,36 @@
     "eyebrow": "Claude + email",
     "titleLine1": "Connect your inbox to Claude",
     "titleLine2": "as a custom connector",
-    "lead": "Claude has no mail client of its own. mcpemails is the hosted MCP server that gives it one: read, search, send, reply, forward, schedule and organize real mail from claude.ai or Claude Desktop.",
+    "lead": "Claude has no mail client of its own. MCPEmails is the hosted MCP server that gives it one: read, search, send, reply, forward, schedule and organize real mail from claude.ai or Claude Desktop.",
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Add https://mcpemails.com/api/mcp as a custom connector in Claude, click Connect, and sign in with your mcpemails account. Claude registers itself automatically and asks for the scopes you approve. There is no API key to create and no config file to edit."
+    "answer": "In claude.ai or Claude Desktop, open Customize, Connectors, click + Add, then Add custom connector. Name it MCPEmails, paste https://mcpemails.com/api/mcp, click Continue, keep the detected sign-in settings, click Add and sign in with MCPEmails. There is no API key to create and no config file to edit."
   },
   "method": {
     "title": "How Claude connects: OAuth, no API key",
     "body": "Claude runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
   },
+  "answerSection": {
+    "title": "Which MCP servers work with Claude Desktop for email?",
+    "body": "Claude Desktop takes any remote MCP server added as a custom connector, so a hosted email server such as MCPEmails works there exactly as it does in claude.ai: open <b>Customize</b>, <b>Connectors</b>, add <code>https://mcpemails.com/api/mcp</code> and sign in. That one URL covers Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo and any IMAP mailbox. Claude's own Gmail and Microsoft 365 connectors also appear in Claude Desktop, but each covers one provider, and the Microsoft 365 one accepts only work or school accounts. Local servers started from <code>claude_desktop_config.json</code> work too; they run on your computer and keep your mail login in a file there."
+  },
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password, and Gmail can also use Google sign-in; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
-      "h": "Open the connector settings",
-      "p": "In claude.ai or Claude Desktop, open Settings, then Connectors."
+      "h": "Open the connector page",
+      "p": "In claude.ai or Claude Desktop, open <b>Customize</b>, then <b>Connectors</b>. Click <b>+ Add</b>, then <b>Add custom connector</b>."
     },
     {
-      "h": "Add a custom connector",
-      "p": "Click Add custom connector, paste <code>https://mcpemails.com/api/mcp</code> as the connector URL, then click Add."
+      "h": "Add the server",
+      "p": "Enter a name such as MCPEmails, paste <code>https://mcpemails.com/api/mcp</code> as the URL and click <b>Continue</b>. Review the detected sign-in settings (the defaults are fine), then click <b>Add</b>."
     },
     {
-      "h": "Connect and authorize",
-      "p": "Click Connect and sign in with mcpemails to authorize. Approve the scopes you want Claude to hold. No API key needed."
+      "h": "Sign in and turn it on",
+      "p": "Sign in with MCPEmails and approve the scopes you want Claude to hold. No API key needed. In a chat, click <b>+</b> at the lower left, choose <b>Connectors</b> and toggle MCPEmails on."
     }
   ],
   "gotchas": [
@@ -54,17 +58,21 @@
     {
       "h": "The connection is polled, so Claude will not notice mail on its own",
       "p": "There are no webhooks and no push. Claude sees new mail when it makes a call, which means when you ask. A standing instruction like \"check for anything from finance before we start\" is what turns that into a routine; nothing arrives unprompted."
+    },
+    {
+      "h": "Free holds one custom connector, and on Team and Enterprise an Owner adds it",
+      "p": "The Free plan allows one custom connector at most; on Pro and Max you can add as many as you need. On Team and Enterprise, an Owner adds MCPEmails under <b>Organization settings</b>, <b>Connectors</b>. Members then open <b>Customize</b>, <b>Connectors</b>, find it and click <b>Connect</b> to sign in."
     }
   ],
   "limits": [
-    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "Requests are rate limited per key in per-minute, hourly and daily windows sized to your plan, so one key can use the plan's full per-minute ceiling and several keys share it. A 429 carries Retry-After. Your plan ceiling on billable actions also applies.",
     "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
     "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
   ],
   "faq": [
     {
       "q": "Can Claude read my email?",
-      "a": "Not by itself. Claude can reach a mailbox only through a connector, and a custom connector pointed at mcpemails is one way to give it one. Once connected, Claude can list, read, search, send, reply, forward, organize and schedule mail across every inbox you have attached, limited to the scopes you approved."
+      "a": "Not by itself. Claude can reach a mailbox only through a connector, and a custom connector pointed at MCPEmails is one way to give it one. Once connected, Claude can list, read, search, send, reply, forward, organize and schedule mail across every inbox you have attached, limited to the scopes you approved."
     },
     {
       "q": "Do I need an API key for Claude?",
@@ -72,7 +80,7 @@
     },
     {
       "q": "Which mailboxes can Claude reach this way?",
-      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, with Google sign-in as a second option for Gmail; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
     },
     {
       "q": "Can Claude send email without me seeing it?",
@@ -84,7 +92,7 @@
     },
     {
       "q": "Does this work in Claude Desktop as well as claude.ai?",
-      "a": "Yes. Both reach custom connectors from the same Settings, Connectors screen and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide."
+      "a": "Yes. Both reach custom connectors from the same Customize, Connectors page and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide."
     }
   ],
   "ctaBand": {

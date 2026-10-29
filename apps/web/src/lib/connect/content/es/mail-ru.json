@@ -17,28 +17,28 @@
   "hero": {
     "eyebrow": "Mail.ru + IA",
     "titleLine1": "Conecta Mail.ru a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine2": "y a Cursor, ChatGPT o cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Mail.ru en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a Mail.ru. mcpemails es un servidor MCP alojado que lo conecta por IMAP con una contraseña de aplicación, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a Mail.ru. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con una contraseña de aplicación, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta Mail.ru: IMAP y una contraseña de aplicación",
-    "body": "Mail.ru se conecta por IMAP/SMTP con una <b>contraseña para aplicaciones externas</b>. La contraseña con la que inicias sesión en el sitio web no funciona desde un cliente de correo. Crea una en Mail.ru en Security, Passwords for external applications, y pégala en mcpemails con tu dirección de Mail.ru. Mail.ru exige un número de teléfono en la cuenta antes de emitirla."
+    "body": "Mail.ru se conecta por IMAP/SMTP con una <b>contraseña para aplicaciones externas</b>. La contraseña con la que inicias sesión en el sitio web no funciona desde un cliente de correo. Crea una en Mail.ru en Security, Passwords for external applications, y pégala en MCPEmails con tu dirección de Mail.ru. Mail.ru exige un número de teléfono en la cuenta antes de emitirla."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Crea una contraseña para aplicaciones externas",
-      "p": "En Mail.ru, abre Security y crea una contraseña para aplicaciones externas. Esa es la contraseña que necesita mcpemails, no la que usas en el sitio web."
+      "p": "En Mail.ru, abre Security y crea una contraseña para aplicaciones externas. Esa es la contraseña que necesita MCPEmails, no la que usas en el sitio web."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de Mail.ru, los servidores de la tabla de ajustes de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -66,12 +66,12 @@
   ],
   "limits": [
     "Mail.ru no admite IDLE, así que el correo nuevo se encuentra cuando tu agente consulta, no se recibe al instante en cuanto llega.",
-    "El servidor de envío de Mail.ru anuncia un máximo de mensaje de unos 70 MB. La lectura de adjuntos a través de mcpemails está limitada a 25 MB por solicitud."
+    "El servidor de envío de Mail.ru anuncia un máximo de mensaje de unos 70 MB. La lectura de adjuntos a través de MCPEmails está limitada a 25 MB por solicitud."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Mail.ru?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Mail.ru. Conectar un servidor MCP como mcpemails al buzón por IMAP, con una contraseña para aplicaciones externas, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Mail.ru. Conectar un servidor MCP como MCPEmails al buzón por IMAP, con una contraseña para aplicaciones externas, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Mail.ru?",

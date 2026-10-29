@@ -22,7 +22,7 @@
     "titleLine1": "Koble SmarterMail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "SmarterMail gir allerede brukerne dine webmail, kalendere og chat. En MCP-server legger til det ene den ikke kan: en AI-agent som leser, søker, sender, svarer, planlegger og arkiverer e-post i selve postkassen.",
-    "answer": "Claude når ikke en SmarterMail-server på egen hånd. mcpemails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SmarterMail er programvare du eller verten din kjører, så det finnes ikke noe felles vertsnavn: serveren må kunne nås fra internett, postkassen må ha IMAP i Service Access-innstillingene, og SmarterMails misbruksdeteksjon må ikke blokkere adressen som kobler til. Én innboks er gratis.",
+    "answer": "Claude når ikke en SmarterMail-server på egen hånd. MCPEmails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SmarterMail er programvare du eller verten din kjører, så det finnes ikke noe felles vertsnavn: serveren må kunne nås fra internett, postkassen må ha IMAP i Service Access-innstillingene, og SmarterMails misbruksdeteksjon må ikke blokkere adressen som kobler til. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord, IMAP i Service Access",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Sjekk Service Access på postkassen, og legg den så til",
-      "p": "Åpne brukeren og bekreft at IMAP er slått på i Service Access-innstillingene. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn SmarterMail-vertsnavnet ditt, hele postkasseadressen og passordet. Er du domeneadministrator og ikke systemadministrator, er dette skjermen du selv har tilgang til."
+      "p": "Åpne brukeren og bekreft at IMAP er slått på i Service Access-innstillingene. Legg så til innboksen i MCPEmails: velg IMAP / SMTP, skriv inn SmarterMail-vertsnavnet ditt, hele postkasseadressen og passordet. Er du domeneadministrator og ikke systemadministrator, er dette skjermen du selv har tilgang til."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "En hostet MCP-server må nå SmarterMail-maskinen din utenfra. En server som bare er bundet til en intern adresse, eller bare publisert til kontorets adresseområde, kan ikke kobles til på denne måten. mcpemails kan selvhostes hvis du heller vil at IMAP-økten aldri forlater nettverket ditt.",
+    "En hostet MCP-server må nå SmarterMail-maskinen din utenfra. En server som bare er bundet til en intern adresse, eller bare publisert til kontorets adresseområde, kan ikke kobles til på denne måten. MCPEmails kan selvhostes hvis du heller vil at IMAP-økten aldri forlater nettverket ditt.",
     "Sertifikatvalidering er streng, så bindingen på 993 trenger et sertifikat som er gyldig for vertsnavnet du skriver inn. SmarterMail på Windows bruker ofte et sertifikat fra Windows-sertifikatlageret, og et som er utstedt for maskinnavnet i stedet for e-postvertsnavnet, blir avvist.",
     "Bare e-post går over denne tilkoblingen. SmarterMails kalendere, kontakter, oppgaver og chat betjenes av eget webgrensesnitt og av Exchange ActiveSync eller EWS, ikke av IMAP."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med SmarterMail?",
-      "a": "Ikke på egen hånd. Claude har ingen SmarterMail-kobling og kan ikke åpne en IMAP-økt mot en server du eller verten din kjører. Kobler du en MCP-server som mcpemails til SmarterMail-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
+      "a": "Ikke på egen hånd. Claude har ingen SmarterMail-kobling og kan ikke åpne en IMAP-økt mot en server du eller verten din kjører. Kobler du en MCP-server som MCPEmails til SmarterMail-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for SmarterMail?",

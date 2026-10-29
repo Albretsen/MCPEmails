@@ -23,10 +23,11 @@ import { THEME_BOOTSTRAP_SCRIPT } from '@/lib/theme-bootstrap';
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT IS ALLOWED TO RUN, AND WHY
  * ─────────────────────────────────────────────────────────────────────────────
- *  'self'            — /_next/static/** chunks and /_vercel/insights/script.js
- *                      (Vercel Analytics injects that one from a useEffect with
- *                      document.createElement, so it is a same-origin src load,
- *                      not an inline script, and needs no nonce).
+ *  'self'            — /_next/static/** chunks, /_vercel/insights/script.js
+ *                      and /_vercel/speed-insights/script.js (Vercel Analytics
+ *                      and Speed Insights inject those from a useEffect with
+ *                      document.createElement, so they are same-origin src
+ *                      loads, not inline scripts, and need no nonce).
  *  'nonce-<random>'  — Next's inline bootstrap + RSC flight scripts. Next reads
  *                      the nonce back out of the CSP on the REQUEST (see
  *                      proxy.ts) and stamps it onto the tags it emits. No app
@@ -43,8 +44,9 @@ import { THEME_BOOTSTRAP_SCRIPT } from '@/lib/theme-bootstrap';
  *                      today (checkout is a server-side redirect to Stripe's
  *                      hosted page), but the allowlist is harmless and Elements
  *                      has been on and off the roadmap.
- *  va.vercel-scripts.com — @vercel/analytics loads its DEBUG build from there in
- *                      development; in production the script is same-origin.
+ *  va.vercel-scripts.com — @vercel/analytics and @vercel/speed-insights load
+ *                      their DEBUG builds from there in development; in
+ *                      production the scripts are same-origin.
  *
  * A nonce and a hash coexist happily: a script runs if it matches ANY source
  * expression. Note that the presence of either one makes browsers IGNORE
@@ -125,7 +127,29 @@ function themeScriptHash(): Promise<string> {
  * AFTER `script-src`, or Next will read the nonce out of the wrong directive
  * (or find none) and every inline framework script will be blocked.
  */
-export async function buildContentSecurityPolicy(nonce: string): Promise<string> {
+/**
+ * Pages whose own code calls a third-party origin from the browser, and the
+ * origins each may call. Scoped per path so the rest of the site keeps the
+ * tight base `connect-src`.
+ *
+ * /tools/email-settings-lookup (any locale prefix) resolves MX records over
+ * Cloudflare DNS-over-HTTPS and reads Mozilla's ISPDB. Both answer with
+ * Access-Control-Allow-Origin: *.
+ */
+const EXTRA_CONNECT_SRC: Array<{ path: RegExp; origins: string[] }> = [
+  {
+    path: /^(?:\/[a-z]{2})?\/tools\/email-settings-lookup\/?$/,
+    origins: ['https://cloudflare-dns.com', 'https://autoconfig.thunderbird.net'],
+  },
+];
+
+/** The extra connect-src origins `pathname` is allowed, or none. */
+export function extraConnectSrc(pathname: string | undefined): string[] {
+  if (!pathname) return [];
+  return EXTRA_CONNECT_SRC.filter((entry) => entry.path.test(pathname)).flatMap((entry) => entry.origins);
+}
+
+export async function buildContentSecurityPolicy(nonce: string, pathname?: string): Promise<string> {
   const isProduction = process.env.NODE_ENV === 'production';
 
   const scriptSrc = [
@@ -145,7 +169,7 @@ export async function buildContentSecurityPolicy(nonce: string): Promise<string>
     `script-src ${scriptSrc.join(' ')}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+    ["connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com", ...extraConnectSrc(pathname)].join(' '),
     "font-src 'self' https://fonts.gstatic.com",
     'frame-src https://js.stripe.com https://hooks.stripe.com',
     "frame-ancestors 'none'",

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sniffImageType } from '@/lib/inboxes/image-sniff';
+import {
+  canManageInboxes,
+  fetchWorkspaceRole,
+  insufficientRoleBody,
+} from '@/lib/workspace/roles';
 
 /**
  * POST /api/inboxes/[id]/signature/image
@@ -16,11 +22,14 @@ import { checkRateLimit } from '@/lib/rate-limit';
  *  2. Fetch the inbox via the RLS-scoped client. The inboxes SELECT policy
  *     guarantees the row is in a workspace the user belongs to and is not
  *     soft-deleted, so a returned row is proof of authorization (404 otherwise).
+ *  2b. Role check: like PATCH, editing a signature is an operator action
+ *     (owner/admin/member). Viewers are read-only and get 403.
  *  3. Write (here: the Storage upload) via the service-role client, using the
  *     inbox's own workspace_id in the object key — never a client-supplied one.
  *
- * Abuse guards: the current controls are (a) auth (steps 1–2), (b) a strict
- * mime allowlist (raster only, no SVG), (c) a 2 MB size cap, and (d) a light
+ * Abuse guards: the current controls are (a) auth (steps 1–2b), (b) a strict
+ * raster-only allowlist (no SVG) checked against the file's MAGIC BYTES, not
+ * just its declared type, (c) a 2 MB size cap, and (d) a light
  * per-inbox rate limit below. A tighter per-user quota / total-bytes cap is a
  * follow-up (see Phase 1 Task 5 in the dev plan).
  */
@@ -110,6 +119,16 @@ export async function POST(
 
   const workspaceId = inbox.workspace_id;
 
+  // 2b. Membership is not permission: the uploaded image ends up in the
+  //     signature appended to every message the workspace sends.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot change inbox settings.'),
+      { status: 403 },
+    );
+  }
+
   // Light per-inbox abuse guard: at most 30 uploads per 10 minutes. Fails open
   // on infrastructure errors, so it never blocks a legitimate upload.
   const limited = await checkRateLimit(`signature:image:${inboxId}`, 30, 10 * 60 * 1000);
@@ -122,13 +141,25 @@ export async function POST(
 
   // 3. Upload via the service-role client. Key uses the inbox's OWN
   //    workspace_id (from the authorized row above), never a client value.
-  const key = `${workspaceId}/${inboxId}/${crypto.randomUUID()}.${ext}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
+
+  // The declared type comes from the filename. The stored object is served
+  // publicly with the type we give it, so the bytes must really be one of the
+  // allowed raster formats, and the stored type and extension are the sniffed
+  // ones. A renamed SVG or HTML file is refused here.
+  const sniffed = sniffImageType(bytes);
+  if (!sniffed) {
+    return NextResponse.json(
+      { error: 'Unsupported image type. Allowed: png, jpeg, gif, webp.' },
+      { status: 400 }
+    );
+  }
+  const key = `${workspaceId}/${inboxId}/${crypto.randomUUID()}.${sniffed.ext}`;
 
   const service = createServiceRoleClient();
   const { error: uploadError } = await service.storage
     .from('signature-assets')
-    .upload(key, bytes, { contentType, upsert: false });
+    .upload(key, bytes, { contentType: sniffed.contentType, upsert: false });
 
   if (uploadError) {
     console.error('[signature-image] Upload failed:', uploadError.message);

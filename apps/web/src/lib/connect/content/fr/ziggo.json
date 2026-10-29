@@ -20,7 +20,7 @@
     "titleLine1": "Connectez votre boîte Ziggo",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Ziggo. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec l'e-mailwachtwoord (mot de passe e-mail) défini dans Mijn Ziggo.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Ziggo. mcpemails est un serveur MCP hébergé qui la connecte en IMAP sur imap.ziggo.nl, port 993, en s'authentifiant avec votre adresse complète et l'e-mailwachtwoord (mot de passe e-mail) défini pour cette adresse dans Mijn Ziggo, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Ziggo n'a ni mot de passe d'application ni option d'accès client à activer, mais le courrier sortant fait exception dans cette catégorie : il passe en STARTTLS sur smtp.ziggo.nl, port 587, et non en TLS implicite sur le port 465. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Ziggo. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.ziggo.nl, port 993, en s'authentifiant avec votre adresse complète et l'e-mailwachtwoord (mot de passe e-mail) défini pour cette adresse dans Mijn Ziggo, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Ziggo n'a ni mot de passe d'application ni option d'accès client à activer, mais le courrier sortant fait exception dans cette catégorie : il passe en STARTTLS sur smtp.ziggo.nl, port 587, et non en TLS implicite sur le port 465. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "E-mailwachtwoord défini dans Mijn Ziggo",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Avec un abonnement internet, Ziggo vous permet de créer jusqu'à six adresses e-mail ; un abonnement téléphone seul n'en donne qu'une. Si vous préférez ne pas confier votre adresse principale à un agent, créez-en une deuxième dans Mijn Ziggo et connectez-la à la place. Notez que l'adresse principale est liée à l'abonnement internet et disparaît si vous le résiliez."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple naam@ziggo.nl, et collez l'e-mailwachtwoord. Les serveurs et ports Ziggo sont préremplis, y compris le port de soumission STARTTLS, et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec le courrier Ziggo ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Ziggo intégré. Pointer un serveur MCP comme mcpemails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur Ziggo intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Ziggo ?",

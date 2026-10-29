@@ -7,6 +7,9 @@ import { clientHubLocales } from '@/lib/clients/content.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { MIcon } from '../../../../components/MarketingPrimitives';
+import { requireLocale } from '@/i18n/require-locale';
+import { orderClients } from '@/lib/clients/preferred.mjs';
+import { getPreferredClient } from '@/lib/clients/preferred-request';
 
 /**
  * The hub for the per-client setup pages.
@@ -27,6 +30,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const locales = clientHubLocales();
   if (!locales.includes(locale)) return {};
   const ui = clientUi(locale).hub;
@@ -40,14 +44,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/docs/clients'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -56,6 +60,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ClientHubPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const available = clientsForLocale(locale);
   if (available.length === 0) notFound();
   setRequestLocale(locale);
@@ -63,9 +68,14 @@ export default async function ClientHubPage({ params }) {
   const ui = clientUi(locale).hub;
   const count = available.length;
   const oauth = available.filter((c) => c.auth === 'oauth').length;
+  // The visible list puts the visitor's AI assistant first in its group
+  // (src/lib/clients/preferred.mjs). The JSON-LD ItemList below keeps the
+  // registry order for everyone, so crawlers and visitors without one see the
+  // same page.
+  const preferred = await getPreferredClient();
   const groups = CLIENT_CATEGORIES.map((c) => ({
     ...c,
-    clients: available.filter((x) => x.category === c.id),
+    clients: orderClients(available.filter((x) => x.category === c.id), preferred, (x) => x.slug),
   })).filter((g) => g.clients.length > 0);
   const url = localePath(locale, '/docs/clients');
   const title = fill(ui.meta.title, { count });
@@ -97,7 +107,7 @@ export default async function ClientHubPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: 'Docs', item: localePath(locale, '/docs') },
           { '@type': 'ListItem', position: 3, name: ui.breadcrumb },
         ],
@@ -168,7 +178,7 @@ export default async function ClientHubPage({ params }) {
           </div>
         </section>
 
-        <Footer />
+        <Footer locales={clientHubLocales()} />
       </div>
     </>
   );

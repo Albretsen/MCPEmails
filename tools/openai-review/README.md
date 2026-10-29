@@ -1,6 +1,6 @@
 # OpenAI review demo mailbox
 
-OpenAI reviews the "MCP Emails" ChatGPT app against the demo mailbox
+OpenAI reviews the "MCPEmails" ChatGPT app against the demo mailbox
 **demo@mcpemails.com** (generic IMAP at Migadu: `imap.migadu.com:993`, TLS).
 Reviewers leave it dirty (moved messages, test sends, new folders). This tool
 puts it back to a known state: 19 synthetic messages, documented one by one in

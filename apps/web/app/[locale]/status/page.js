@@ -5,6 +5,7 @@ import { getStatusContent } from '@/lib/status/content.mjs';
 import { getStatusSnapshot } from '@/lib/status/monitor';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import StatusView, { StatusBanner } from '../../../components/marketing/StatusView';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/status.css';
 
 /**
@@ -34,6 +35,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const content = await getStatusContent(locale);
   const { title, description } = content.meta;
   return {
@@ -43,14 +45,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/status'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -59,6 +61,7 @@ export async function generateMetadata({ params }) {
 
 export default async function StatusPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const [content, snapshot] = await Promise.all([

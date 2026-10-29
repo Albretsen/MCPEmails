@@ -181,6 +181,7 @@ const caller: BulkCaller = {
   workspace_id: WORKSPACE,
   name: "Claude",
   inbox_ids: null,
+  scopes: ["read:email", "delete:email", "manage:folders"],
 };
 
 const GMAIL_FACTS = {
@@ -625,6 +626,113 @@ Deno.test("an empty allowlist denies everything", async () => {
   const result = await runBulkExecute(deps, { ...caller, inbox_ids: [] }, { plan_id: planId });
   assertEquals(spy.calls.length, 0, "an empty allowlist grants nothing");
   assertEquals(envelopeOf(result).receipt.error_code, "not_found", "and says nothing else");
+});
+
+// ---------------------------------------------------------------------------
+// The plan's own scope (u07, 2026-10-16)
+//
+// bulk_execute's tool gate admits delete:email OR manage:folders, because a
+// plan_id does not say which kind of plan it is. Before this, a move-only key
+// could run a (permanent) delete plan another key prepared. The scope the
+// plan's ACTION needs is now checked against the row, before the claim.
+// ---------------------------------------------------------------------------
+
+const MOVE_ONLY: BulkCaller = { ...caller, id: "88888888-8888-4888-8888-888888888888", scopes: ["read:email", "manage:folders"] };
+const DELETE_ONLY: BulkCaller = { ...caller, id: "66666666-6666-4666-8666-666666666666", scopes: ["read:email", "delete:email"] };
+
+Deno.test("a move-only key cannot run a delete plan, and the plan stays pending", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps, { permanent: false });
+
+  const result = await runBulkExecute(deps, MOVE_ONLY, { plan_id: planId });
+
+  assertEquals(spy.calls.length, 0, "no mail is touched");
+  assertEquals(result.result.isError, true, "the call is an error");
+  assertEquals(result.logErrorCode, "scope_denied", "logged as a scope refusal");
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.card, "receipt", "rendered as a receipt the card understands");
+  assertEquals(envelope.receipt.error_code, "scope_denied", "naming the cause");
+  assertEquals(envelope.receipt.affected_count, 0, "with nothing affected");
+  assertEquals(store.bulk_plans[0].status, "pending", "the plan is NOT claimed or retired");
+  assertEquals(store.bulk_plans[0].executed_by_api_key_id ?? null, null, "and records no executor");
+});
+
+Deno.test("a move-only key cannot run a PERMANENT delete plan", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps, { permanent: true });
+
+  const result = await runBulkExecute(deps, MOVE_ONLY, { plan_id: planId });
+
+  assertEquals(spy.calls.length, 0, "the permanent delete never runs");
+  assertEquals(envelopeOf(result).receipt.error_code, "scope_denied", "refused for scope");
+  assertEquals(store.bulk_plans[0].status, "pending", "left for a key that may run it");
+
+  // The key that may run it still can, so the refusal cost the user nothing.
+  const ran = await runBulkExecute(deps, caller, { plan_id: planId });
+  assertEquals(spy.calls.length, 1, "the creating key still runs it");
+  assertEquals(spy.calls[0].permanent, true, "with the frozen permanent flag");
+  assertEquals(envelopeOf(ran).receipt.outcome, "executed", "and it is executed");
+});
+
+Deno.test("search_and_delete needs delete:email too", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps, { action: "search_and_delete" });
+  assertEquals(store.bulk_plans[0].action, "search_and_delete", "seeded as a search delete");
+
+  const result = await runBulkExecute(deps, MOVE_ONLY, { plan_id: planId });
+  assertEquals(spy.calls.length, 0, "no mail is touched");
+  assertEquals(envelopeOf(result).receipt.error_code, "scope_denied", "refused for scope");
+});
+
+Deno.test("a delete-only key cannot run a move plan, a move-only key can", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps, {
+    action: "move_batch",
+    destination_id: "Label_Archive",
+    destination_label: "Archive",
+  });
+
+  const denied = await runBulkExecute(deps, DELETE_ONLY, { plan_id: planId });
+  assertEquals(spy.calls.length, 0, "a move needs manage:folders");
+  assertEquals(envelopeOf(denied).receipt.error_code, "scope_denied", "refused for scope");
+  assertEquals(store.bulk_plans[0].status, "pending", "still pending");
+
+  const ran = await runBulkExecute(deps, MOVE_ONLY, { plan_id: planId });
+  assertEquals(spy.calls.length, 1, "manage:folders runs a move plan");
+  assertEquals(spy.calls[0].action, "move_batch", "the stored action");
+  assertEquals(envelopeOf(ran).receipt.outcome, "executed", "executed");
+});
+
+Deno.test("a delete-only key runs its own delete plan (the normal card flow)", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps, { permanent: false });
+
+  const ran = await runBulkExecute(deps, DELETE_ONLY, { plan_id: planId });
+  assertEquals(spy.calls.length, 1, "delete:email runs a delete plan");
+  assertEquals(envelopeOf(ran).receipt.outcome, "executed", "executed");
+});
+
+Deno.test("a plan with an unknown stored action is refused, fail closed", async () => {
+  const store = newStore();
+  const spy = newSpy();
+  const deps = makeDeps(store, spy);
+  const planId = await seedPlan(deps);
+  store.bulk_plans[0].action = "empty_mailbox";
+
+  const result = await runBulkExecute(deps, caller, { plan_id: planId });
+  assertEquals(spy.calls.length, 0, "nothing runs");
+  assertEquals(envelopeOf(result).receipt.error_code, "scope_denied", "refused");
+  assertEquals(store.bulk_plans[0].status, "pending", "and the row is not claimed");
 });
 
 Deno.test("a malformed plan_id never reaches the database", async () => {

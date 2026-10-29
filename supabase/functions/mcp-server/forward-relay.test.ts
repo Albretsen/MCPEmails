@@ -104,7 +104,7 @@ const ORIGINAL = octets(MARKETING);
 
 function relay(overrides: Partial<Parameters<typeof buildRelayForwardMime>[0]> = {}) {
   return buildRelayForwardMime({
-    from: "MCP Emails <hello@mcpemails.com>",
+    from: "MCPEmails <hello@mcpemails.com>",
     to: ["archive@example.com"],
     subject: "Fwd: Big sale – today",
     messageId: "test-relay-1",
@@ -172,7 +172,7 @@ Deno.test("a standard parser sees the HTML, the cid image and the PDF in the for
 Deno.test("the outer message is what a mail client would build: mixed, intro first, original second", () => {
   const { bytes } = relay();
   const head = bytesToSingleByteString(bytes.subarray(0, 600));
-  assertStringIncludes(head, "From: MCP Emails <hello@mcpemails.com>\r\n");
+  assertStringIncludes(head, "From: MCPEmails <hello@mcpemails.com>\r\n");
   assertStringIncludes(head, "To: archive@example.com\r\n");
   assertStringIncludes(head, "Subject: =?UTF-8?B?");
   assertStringIncludes(head, "Message-ID: <test-relay-1@mcpemails.com>\r\n");

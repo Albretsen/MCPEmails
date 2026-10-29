@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
 import { validateImapCredential, type ImapValidationResult } from '@/lib/email/validate-imap';
 import { validateSmtpCredential, type SmtpValidationResult } from '@/lib/email/validate-smtp';
@@ -11,6 +13,7 @@ import { normalizeSecurity, parseConnectionMode, usesImap, usesSmtp, type Connec
 import { mailRelayConfigFromEnv } from '@/lib/email/mail-relay';
 import { detectWithRelay, refreshLearnedRelayHosts } from '@/lib/email/relay-fallback';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { connectFailureContext } from '@/lib/email/auth-failure-help';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
@@ -239,6 +242,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'plan_limit' });
+      await recordInboxCapHit(workspaceId, inboxLimit);
       // 402 with a stable machine-readable body; the dashboard owns the
       // localised sentence. See inboxLimitErrorBody for why nothing here
       // interpolates the internal plan slug.
@@ -272,7 +276,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let resolvedImapSecurity = imapSecurity;
   let imapAdjusted = false;
   if (withImap) {
-    const { detection: imapDetection, route: imapRoute } = await detectWithRelay<ImapValidationResult>({
+    const { detection: imapDetection, route: imapRoute, relayAlsoFailed: imapRelayAlsoFailed } = await detectWithRelay<ImapValidationResult>({
       protocol: 'imap',
       host: imapHost,
       requested: { port: imapPort, security: imapSecurity },
@@ -324,9 +328,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // that section only when it can tell a transport failure from a credential
       // one. Sending no code left those failures indistinguishable from a bad
       // password, which is the one cause Advanced settings cannot fix.
-      const body: Record<string, string> = {
+      const body: Record<string, string | boolean> = {
         error: validation.message,
         error_code: validation.code.toLowerCase(),
+        // What the connect panel needs to pick its fix row: the host it should
+        // name, the phase that failed and whether the relay retry was tried
+        // too. Server configuration the user typed, never the address or the
+        // password (see connectFailureContext).
+        ...connectFailureContext({ host: imapHost, phase: validation.phase, viaRelay: Boolean(imapRoute), relayAlsoFailed: imapRelayAlsoFailed }),
       };
       // A rejected login is 72.9% of every connection failure here, and until now
       // every one of them produced the same "check your password". Which of the
@@ -391,7 +400,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Relayed exactly like IMAP above; a host checked through the relay is
     // checked, and then stored, on 587 with STARTTLS whatever was submitted,
     // because the relay cannot carry 465 (relay-fallback.ts, RELAYED_TRANSPORTS).
-    const { detection: smtpDetection, route: smtpRoute } = await detectWithRelay<SmtpValidationResult>({
+    const { detection: smtpDetection, route: smtpRoute, relayAlsoFailed: smtpRelayAlsoFailed } = await detectWithRelay<SmtpValidationResult>({
       protocol: 'smtp',
       host: smtpHost,
       requested: { port: smtpPort, security: smtpSecurity },
@@ -463,6 +472,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           error: smtpValidation.message,
           error_code: smtpValidation.code.toLowerCase(),
           ...(smtpAuthFailure?.fields ?? {}),
+          ...connectFailureContext({
+            host: smtpHost,
+            phase: `smtp_${smtpValidation.phase}`,
+            viaRelay: Boolean(smtpRoute),
+            relayAlsoFailed: smtpRelayAlsoFailed,
+            // Only true when this connection carried IMAP and it just passed.
+            imapOk: withImap,
+          }),
         },
         { status: 422 },
       );
@@ -553,6 +570,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Business bills mailboxes past ten: bring the add-on quantity in step.
+  // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
+  if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));
   // Tell the client when the settings it submitted are not the ones now stored,
   // so the dashboard can say so rather than silently disagreeing with the form
   // the user is still looking at.

@@ -1,5 +1,6 @@
 import { routing } from './routing';
 import { PLANS } from '@/lib/stripe/plans';
+import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
 
 export const APP_URL = (
@@ -31,13 +32,14 @@ export function metaAlternates(locale: string, pathname: string) {
 /**
  * hreflang for a page that exists in only some locales.
  *
- * The provider landing pages are the first pages here that are not translated
- * five ways: the long tail of hosting providers and regional ISPs ships in
- * English only, because 400-odd machine-translated pages about Bahnhof's IMAP
- * host is precisely the scaled-content pattern search engines demote. An
- * hreflang pointing at a locale that does not exist is worse than no hreflang,
- * so the alternates have to be built from the same list that decides which
- * pages get generated.
+ * Per the locale policy (src/i18n/locale-policy.mjs), en, nb, es and fr are
+ * kept fully translated, while zh is frozen: existing zh pages stay, but a new
+ * provider, client page or blog post may ship without one. /best-email-mcp-servers
+ * is English-only by design, and a blog post exists only in the locales it is
+ * translated into. An hreflang pointing at a locale that does not exist is
+ * worse than no hreflang, so the alternates have to be built from the same
+ * list that decides which pages get generated. The footer language switcher
+ * reads the same list (src/i18n/language-switcher.mjs).
  */
 export function languageAlternatesFor(
   pathname: string,
@@ -75,7 +77,7 @@ export const OG_IMAGE = {
   url: `${APP_URL}/opengraph-image`,
   width: 1200,
   height: 630,
-  alt: 'mcpemails: Give your AI agent an inbox',
+  alt: 'MCPEmails: Give your AI agent an inbox',
 } as const;
 
 export const OG_LOCALE: Record<string, string> = {
@@ -84,6 +86,7 @@ export const OG_LOCALE: Record<string, string> = {
   es: 'es_ES',
   fr: 'fr_FR',
   zh: 'zh_CN',
+  de: 'de_DE',
 };
 
 /**
@@ -99,11 +102,26 @@ export const OG_LOCALE: Record<string, string> = {
  * discount on the same subscription rather than a separate product, and
  * publishing both as sibling Offers reads as two competing prices.
  */
-function planOffers(url: string) {
-  return (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
+/**
+ * `founder` is the Business founder offer while it is open on /pricing: the
+ * Business Offer then carries the founder monthly price, valid until its last
+ * day, in USD and (same digits, like every EUR price) in EUR. Absent, every
+ * price is the catalogue's.
+ */
+function planOffers(
+  url: string,
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
+) {
+  const usd = (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const price = (plan.monthlyPriceCents / 100).toString();
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
     return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
@@ -121,6 +139,37 @@ function planOffers(url: string) {
       },
     };
   });
+  if (!eur) return usd;
+  // EU visitors pay the same digits in EUR, VAT included
+  // (src/lib/stripe/eur-prices.ts). Paid tiers only: Free has no currency.
+  // The USD offers above stay exactly as they were.
+  const eurOffers = (['personal', 'solo', 'pro'] as const).map((id) => {
+    const plan = PLANS[id];
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
+    return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
+      '@type': 'Offer',
+      name: plan.name,
+      description: plan.description,
+      url,
+      price,
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      eligibleRegion: EU_COUNTRIES.map((code) => ({ '@type': 'Country', name: code })),
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price,
+        priceCurrency: 'EUR',
+        valueAddedTaxIncluded: true,
+        unitText: 'MONTH',
+        billingDuration: 1,
+        billingIncrement: 1,
+      },
+    };
+  });
+  return [...usd, ...eurOffers];
 }
 
 /**
@@ -207,7 +256,8 @@ export function homeJsonLd(
       {
         '@type': 'Organization',
         '@id': orgId,
-        name: 'mcpemails',
+        name: 'MCPEmails',
+        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
         // No `sameAs` entry: @mcpemails does not exist on X. Add the real
@@ -216,14 +266,15 @@ export function homeJsonLd(
       {
         '@type': 'WebSite',
         '@id': siteId,
-        name: 'mcpemails',
+        name: 'MCPEmails',
+        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
         url: APP_URL,
         inLanguage: locale,
         publisher: { '@id': orgId },
       },
       {
         '@type': 'SoftwareApplication',
-        name: 'mcpemails',
+        name: 'MCPEmails',
         url: home,
         description,
         applicationCategory: 'BusinessApplication',
@@ -246,7 +297,7 @@ export function homeJsonLd(
           'Idempotency keys for safe outbound email retries',
           'Provider compatibility profiles',
           'Original email export as .eml (message/rfc822)',
-          'Verified Gmail send-as aliases',
+          'Verified Send As addresses for Gmail and IMAP inboxes',
           'Threaded reply drafts',
           'Outlook / Microsoft 365 via Microsoft Graph',
         ],
@@ -276,6 +327,58 @@ export function homeJsonLd(
 }
 
 /**
+ * Structured data for /developers: the product as a `SoftwareApplication`
+ * described for developers, plus WebPage + BreadcrumbList.
+ *
+ * The offers are the same catalogue as the home page's (planOffers), so the
+ * developer page can never quote a different price. The brand is inline, as on
+ * /pricing, because the Organization node exists only in the home page graph.
+ */
+export function developersJsonLd(
+  locale: string,
+  { title, description, featureList }: { title: string; description: string; featureList: string[] },
+) {
+  const url = localePath(locale, '/developers');
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': url,
+        url,
+        name: title,
+        description,
+        inLanguage: locale,
+        isPartOf: { '@id': `${APP_URL}/#website` },
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+        mainEntity: { '@id': `${url}#software` },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        name: 'MCPEmails',
+        '@id': `${url}#software`,
+        url,
+        description,
+        applicationCategory: 'DeveloperApplication',
+        applicationSubCategory: 'Email API',
+        operatingSystem: 'Web',
+        brand: { '@type': 'Brand', name: 'MCPEmails' },
+        featureList,
+        offers: planOffers(localePath(locale, '/pricing')),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 2, name: title },
+        ],
+      },
+    ],
+  };
+}
+
+/**
  * Structured data for /pricing: the plan catalogue as a `Product` with one
  * `Offer` per tier, plus the standard WebPage + BreadcrumbList.
  *
@@ -297,7 +400,11 @@ export function homeJsonLd(
  */
 export function pricingJsonLd(
   locale: string,
-  { title, description }: { title: string; description: string }
+  { title, description }: { title: string; description: string },
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -308,17 +415,17 @@ export function pricingJsonLd(
       {
         '@type': 'Product',
         '@id': `${url}#plans`,
-        name: 'mcpemails',
+        name: 'MCPEmails',
         description,
         url,
         image: [OG_IMAGE.url],
         brand: {
           '@type': 'Organization',
           '@id': `${APP_URL}/#organization`,
-          name: 'mcpemails',
+          name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url),
+        offers: planOffers(url, { eur, founder }),
       },
     ],
   };
@@ -362,7 +469,7 @@ export function docsJsonLd(
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: title, item: url },
         ],
       },
@@ -432,7 +539,7 @@ export function connectJsonLd(
       '@type': 'BreadcrumbList',
       '@id': `${url}#breadcrumb`,
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+        { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
         // The hub is a real, crawlable page, so it belongs in the trail. A
         // two-item breadcrumb on a page that sits three levels down is the
         // kind of mismatch that gets the whole block ignored.
@@ -481,7 +588,7 @@ export function pageJsonLd(
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: title },
         ],
       },

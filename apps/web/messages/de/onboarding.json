@@ -1,0 +1,361 @@
+{
+  "shell": {
+    "title": "MCPEmails einrichten",
+    "progress": "Schritt {current} von {total}",
+    "exit": "Einrichtung schließen",
+    "loading": "Ihre Einrichtung wird geladen",
+    "statusError": "Ihre Einrichtung konnte nicht geladen werden. Laden Sie die Seite neu, um es noch einmal zu versuchen.",
+    "skip": "Überspringen"
+  },
+  "chip": {
+    "using": "Mit {client}",
+    "change": "Ändern",
+    "label": "Die KI-App, die Sie mit MCPEmails nutzen",
+    "more": "Weitere Apps"
+  },
+  "steps": {
+    "inbox": {
+      "title": "Postfach verbinden",
+      "reuseTitle": "Ein Postfach ist bereits verbunden",
+      "reuse": "{address} verwenden",
+      "connectAnother": "Anderes Postfach verbinden",
+      "lead": "Das Postfach, das Ihre KI lesen und beantworten soll.",
+      "emailLabel": "E-Mail-Adresse",
+      "useSignup": "{address} verwenden",
+      "detecting": "Anbieter wird gesucht",
+      "detected": "{provider}",
+      "notRight": "Ändern",
+      "chooseLead": "Welcher Anbieter ist es?",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "Andere (IMAP)"
+      },
+      "gmail": {
+        "step1Title": "Bestätigung in zwei Schritten aktivieren.",
+        "step1Body": "Schon aktiv? Dann überspringen.",
+        "step1Link": "Bestätigung in zwei Schritten öffnen",
+        "step2Title": "App-Passwort erstellen.",
+        "step2Body": "Geben Sie MCPEmails als Namen ein und klicken Sie auf Erstellen. Google zeigt die 16 Buchstaben nur einmal an. Kopieren Sie sie also, bevor Sie die Seite schließen.",
+        "step2Link": "App-Passwort erstellen",
+        "step3Title": "Unten einfügen.",
+        "missingTitle": "Keine Seite für App-Passwörter?",
+        "missingBody": "Dafür gibt es drei Gründe: Die Bestätigung in zwei Schritten ist aus (Schritt 1), ein Admin Ihrer Firma oder Schule hat App-Passwörter abgeschaltet, oder das Konto nutzt das Erweiterte Sicherheitsprogramm oder nur Sicherheitsschlüssel.",
+        "workspace": "Dieses Konto wird von Ihrem Unternehmen verwaltet. Meldet Schritt 2, dass die Einstellung nicht verfügbar ist, muss Ihr Admin die Bestätigung in zwei Schritten und App-Passwörter erlauben."
+      },
+      "icloud": {
+        "step1Title": "Öffnen Sie Ihren Apple Account.",
+        "step1Link": "account.apple.com öffnen",
+        "step2Title": "Wählen Sie Anmeldung und Sicherheit, dann App-spezifische Passwörter.",
+        "step2Body": "Erstellen Sie ein neues und nennen Sie es MCPEmails.",
+        "step3Title": "Unten einfügen.",
+        "step3Body": "Apple zeigt es nur einmal an, im Format xxxx-xxxx-xxxx-xxxx.",
+        "missingTitle": "Option fehlt?",
+        "missingBody": "Die Zwei-Faktor-Authentifizierung muss aktiv sein. Wenn Sie Ihr Apple-Account-Passwort kürzlich zurückgesetzt haben, funktionieren ältere app-spezifische Passwörter nicht mehr. Erstellen Sie dann ein neues."
+      },
+      "yahoo": {
+        "step1Title": "Öffnen Sie die Kontosicherheit von {provider}.",
+        "step1Link": "App-Passwort erstellen",
+        "step2Title": "Wählen Sie unter Externe Verbindungen die Option App-Passwort erstellen.",
+        "step2Body": "Geben Sie MCPEmails ein und klicken Sie dann auf Passwort generieren.",
+        "step3Title": "Fügen Sie die 16 Buchstaben unten ein.",
+        "missingTitle": "Nicht da, oder heißt es, die Funktion sei gerade nicht verfügbar?",
+        "missingBody": "Aktivieren Sie die Bestätigung in zwei Schritten und laden Sie die Seite neu. Bei neuen Konten kann es bis zu zwei Wochen dauern. Nutzen Sie einen Browser, in dem Sie sich sonst anmelden, kein privates Fenster."
+      },
+      "gmx": {
+        "step1Title": "IMAP bei {provider} einschalten.",
+        "step1Body": "Öffnen Sie im Webmail die E-Mail-Einstellungen, dann POP3/IMAP, und aktivieren Sie POP3- und IMAP-Zugriff erlauben.",
+        "step1Link": "So schalten Sie IMAP ein",
+        "step2Title": "Zwei-Faktor-Authentifizierung aktiv?",
+        "step2Body": "Erstellen Sie unter Sicherheit ein anwendungsspezifisches Passwort. Es wird nur einmal angezeigt. Ist die Zwei-Faktor-Authentifizierung aus, nutzen Sie Ihr normales {provider}-Passwort.",
+        "step3Title": "Unten einfügen.",
+        "missingTitle": "Hat funktioniert und geht nicht mehr?",
+        "missingBody": "{provider} kann IMAP wieder abschalten. Prüfen Sie Schritt 1."
+      },
+      "microsoft": {
+        "step1Title": "Klicken Sie auf Mit Microsoft verbinden und melden Sie sich auf der Seite von Microsoft an.",
+        "step2Title": "Bestätigen Sie die Berechtigungen.",
+        "note": "Hier ist kein Passwort nötig. Sie melden sich auf der Seite von Microsoft an.",
+        "connect": "Mit Microsoft verbinden",
+        "adminTitle": "Arbeits- oder Schulkonto?",
+        "adminBody": "In vielen Organisationen muss ein Admin neue Apps freigeben, bevor Sie sich anmelden können. Fragt Microsoft nach einer Admin-Freigabe, schicken Sie Ihrem Admin diesen Link. Ihr Admin braucht kein MCPEmails-Konto.",
+        "adminLink": "Link für Ihren Admin holen",
+        "adminCopy": "Link kopieren",
+        "adminCopied": "Kopiert",
+        "adminError": "Der Link konnte nicht erstellt werden. Versuchen Sie es noch einmal."
+      },
+      "proton": {
+        "title": "Proton Mail braucht Proton Bridge",
+        "body": "Proton Mail funktioniert mit Mail-Apps nur über Proton Bridge, die auf Ihrem eigenen Computer läuft. MCPEmails läuft in der Cloud und erreicht sie nicht, deshalb lässt sich ein Proton-Postfach nicht verbinden."
+      },
+      "imap": {
+        "step1": "Nutzen Sie Ihre vollständige E-Mail-Adresse und das Passwort des Postfachs selbst, nicht den Login für Ihr Hosting oder Kundencenter.",
+        "step2": "Hat das Postfach Zwei-Faktor-Authentifizierung, erstellen Sie in den Sicherheitseinstellungen Ihres Anbieters ein App-Passwort und nutzen Sie dieses.",
+        "appPasswordLink": "App-Passwort bei {provider} erstellen",
+        "servers": "Server: {host}",
+        "manualLead": "Wir konnten Ihre Mailserver nicht finden. Ihr Anbieter nennt sie auf seinen Hilfeseiten.",
+        "imapHost": "Posteingangsserver (IMAP)",
+        "smtpHost": "Postausgangsserver (SMTP)",
+        "port": "Port",
+        "username": "Anmeldename, falls er nicht Ihre E-Mail-Adresse ist",
+        "advanced": "Erweitert"
+      },
+      "password": {
+        "labelApp": "App-Passwort",
+        "labelMailbox": "Passwort",
+        "spaces": "Leerzeichen sind kein Problem.",
+        "show": "Anzeigen",
+        "hide": "Verbergen",
+        "warnAccount": "Das sieht wie ein normales Passwort aus. {provider} braucht hier ein App-Passwort: 16 Buchstaben.",
+        "warnLength": "Ein App-Passwort hat 16 Buchstaben. Prüfen Sie, ob Sie alles kopiert haben.",
+        "warnNote": "Sie können es trotzdem versuchen."
+      },
+      "trust": {
+        "appPassword": "Ein App-Passwort öffnet nur Ihre Mail. Verschlüsselt in Stockholm gespeichert und jederzeit widerrufbar.",
+        "mailboxPassword": "Verschlüsselt in Stockholm gespeichert. Jederzeit trennbar."
+      },
+      "connect": "Verbinden",
+      "progress": {
+        "title": "{address} wird verbunden",
+        "server": "Mailserver gefunden",
+        "signedIn": "Angemeldet",
+        "read": "Postfach gelesen"
+      },
+      "proof": {
+        "title": "Verbunden",
+        "count": "{count, plural, one {# Nachricht} other {# Nachrichten}} in Ihrem Posteingang",
+        "newest": "Neueste",
+        "noSubject": "(kein Betreff)",
+        "private": "Nur für Sie sichtbar, live aus Ihrem Postfach gelesen.",
+        "ready": "Ihr Postfach ist verbunden und bereit.",
+        "continue": "Weiter"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "Bei {provider} ist der IMAP-Zugriff für dieses Postfach ausgeschaltet. Schalten Sie ihn ein und versuchen Sie es noch einmal.",
+          "app_password_required": "{provider} braucht hier ein App-Passwort, nicht Ihr normales Passwort.",
+          "account_password_used": "Das sieht wie Ihr normales {provider}-Passwort aus. Nutzen Sie stattdessen ein App-Passwort.",
+          "app_password_length": "Das App-Passwort scheint unvollständig. Es sollte 16 Buchstaben haben.",
+          "provider_refused_signin": "{provider} hat die Anmeldung selbst abgelehnt, nicht das Passwort. Melden Sie sich im Browser bei {provider} an, bestätigen Sie eventuelle Sicherheitsabfragen und versuchen Sie es dann noch einmal.",
+          "login_username_required": "Dieser Server erwartet einen Anmeldenamen, der nicht Ihre E-Mail-Adresse ist. Sie finden ihn in den Einstellungen Ihres Anbieters. Tragen Sie ihn unter Erweitert ein.",
+          "password_rejected": "{provider} hat dieses Passwort nicht akzeptiert. Prüfen Sie es und fügen Sie es erneut ein."
+        },
+        "network": "MCPEmails ist gerade nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es noch einmal.",
+        "limit": "Dieser Workspace hat bereits alle Postfächer, die sein Plan umfasst.",
+        "sessionExpired": "Sie wurden abgemeldet. Melden Sie sich erneut an und kommen Sie dann auf diese Seite zurück.",
+        "notAllowed": "Nur Workspace-Inhaber und Admins können ein Postfach verbinden.",
+        "alreadyConnected": "Dieses Postfach ist in diesem Workspace schon verbunden.",
+        "useMicrosoft": "Das ist ein Microsoft-Postfach. Es wird über die Microsoft-Anmeldung verbunden, nicht mit einem Passwort.",
+        "smtpRejected": "Lesen funktioniert, aber der Server hat die Anmeldung zum Senden abgelehnt.",
+        "blocked": "Der Mailserver hat unsere Verbindung abgelehnt. Manche Anbieter sperren Cloud-Server.",
+        "hostNotFound": "Wir konnten diesen Mailserver nicht finden. Prüfen Sie den Servernamen.",
+        "unreachable": "Der Mailserver hat nicht geantwortet. Prüfen Sie Servername und Port.",
+        "tls": "Die sichere Verbindung zum Mailserver ist fehlgeschlagen. Versuchen Sie den anderen Port.",
+        "hostRefused": "Mit diesem Servernamen oder Port können wir uns nicht verbinden. Prüfen Sie die Servereinstellungen.",
+        "saveFailed": "Angemeldet, aber das Speichern ist fehlgeschlagen. Versuchen Sie es gleich noch einmal.",
+        "generic": "Das hat nicht geklappt. Versuchen Sie es noch einmal oder verbinden Sie ein anderes Postfach.",
+        "link": {
+          "twoStep": "Bestätigung in zwei Schritten öffnen",
+          "appPasswords": "Seite für App-Passwörter bei {provider} öffnen",
+          "imapSetting": "So schalten Sie IMAP bei {provider} ein",
+          "providerHelp": "Hilfeseite von {provider}",
+          "adminGuide": "Anleitung von Google für Ihren Admin"
+        },
+        "kept": "Ihre Adresse bleibt stehen, ein neuer Versuch ist also nur ein Einfügen.",
+        "readOnly": "Nur zum Lesen verbinden",
+        "readOnlyNote": "Ihre KI kann lesen und suchen, aber nicht senden.",
+        "different": "Anderes Postfach verbinden",
+        "support": "Diesen Fehler an den Support senden",
+        "supportNote": "Wir bekommen den Fehler und Ihren Anbieter, nie Ihr Passwort.",
+        "signIn": "Erneut anmelden",
+        "seePlans": "Pläne ansehen"
+      },
+      "outlookError": {
+        "admin_consent_required": "Ihre Organisation braucht eine Admin-Freigabe für MCPEmails, bevor Sie sich anmelden können. Schicken Sie Ihrem Admin den Link unten.",
+        "outlook_cancelled": "Sie haben auf der Seite von Microsoft abgebrochen. Klicken Sie auf Mit Microsoft verbinden, um es noch einmal zu versuchen.",
+        "generic": "Die Microsoft-Anmeldung wurde nicht abgeschlossen. Versuchen Sie es noch einmal."
+      },
+      "emailPlaceholder": "sie@beispiel.de"
+    },
+    "add_to_ai": {
+      "title": "MCPEmails zu {client} hinzufügen",
+      "lead": "Es geht von selbst weiter, sobald {client} verbunden ist.",
+      "urlLabel": "Server-URL von MCPEmails",
+      "linkAfter": "Bestätigen Sie in {client} und melden Sie sich bei MCPEmails an.",
+      "claudeAfter": "Klicken Sie in Claude auf Weiter, dann auf Hinzufügen und dann auf Verbinden.",
+      "commandAfter": "Starten Sie dann {client} und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "configLead": "Fügen Sie dies in {file} ein, laden Sie {client} neu und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "genericOauth": "Fügen Sie in {client} einen MCP-Server vom Typ HTTP hinzu, fügen Sie die URL unten ein und melden Sie sich bei MCPEmails an, wenn Sie gefragt werden.",
+      "manual": "Von Hand einrichten",
+      "continue": "Ist hinzugefügt",
+      "chatgpt": {
+        "step1": "Öffnen Sie auf chatgpt.com Plugins und klicken Sie oben rechts auf Add.",
+        "step2": "Wählen Sie Add custom MCP server, nennen Sie ihn MCPEmails und fügen Sie die URL unten als Server URL ein.",
+        "step3": "Setzen Sie den Haken bei I understand and want to continue, klicken Sie auf Create as a plugin, dann auf Connect MCPEmails, und erlauben Sie den Zugriff.",
+        "step4": "Tippen Sie in einem Chat @MCPEmails, um es zu nutzen.",
+        "note": "Eigene MCP-Server funktionieren mit dem Go-Tarif und allen bezahlten Tarifen, im Browser auf chatgpt.com."
+      },
+      "key": {
+        "creating": "API-Schlüssel für {client} wird erstellt",
+        "ready": "Wir haben einen API-Schlüssel für {client} mit Standardzugriff erstellt (lesen, Entwürfe, senden). Kopieren Sie ihn jetzt: Er wird nur einmal angezeigt.",
+        "failed": "Der API-Schlüssel konnte nicht erstellt werden. Erstellen Sie einen im Dashboard unter API-Schlüssel.",
+        "limit": "Ihr Tarif hat keinen Platz für einen weiteren API-Schlüssel. Entfernen Sie einen im Dashboard und laden Sie diese Seite neu.",
+        "retry": "Noch einmal versuchen",
+        "header": "Header",
+        "label": "API-Schlüssel"
+      },
+      "cline": {
+        "step1": "Öffnen Sie in Cline MCP Servers und dann den Tab Remote Servers.",
+        "step2": "Nennen Sie ihn MCPEmails, fügen Sie die URL ein und setzen Sie Transport Type auf Streamable HTTP.",
+        "step3": "Fügen Sie den Header unten hinzu und klicken Sie auf Add Server."
+      },
+      "jetbrains": {
+        "step1": "Öffnen Sie Settings, dann Tools, AI Assistant, Model Context Protocol (MCP).",
+        "step2": "Klicken Sie auf Add, wählen Sie Streamable HTTP und fügen Sie die URL ein.",
+        "step3": "Fügen Sie den Header unten hinzu und speichern Sie."
+      },
+      "curl": "Rufen Sie den Server mit diesem Schlüssel auf. Im nächsten Schritt bekommen Sie eine erste Anfrage zum Senden.",
+      "phone": {
+        "claudeTitle": "Auf dem Handy im Browser hinzufügen",
+        "claudeBody": "Kopieren Sie diesen Link und fügen Sie ihn in Safari oder Chrome ein. Ein Antippen öffnet vielleicht die Claude-App, und dort lassen sich keine Konnektoren hinzufügen. Danach funktioniert MCPEmails auch in der App.",
+        "copyLink": "Link kopieren",
+        "otherBody": "{client} wird an einem Computer eingerichtet. Wir können Ihnen diesen Schritt per E-Mail schicken, damit Sie ihn dort öffnen.",
+        "showHere": "Schritte trotzdem hier zeigen"
+      }
+    },
+    "first_prompt": {
+      "title": "In {client} ausprobieren",
+      "lead": "Fügen Sie das in einen neuen Chat ein.",
+      "leadCode": "Fügen Sie das in {client} ein.",
+      "leadApi": "Senden Sie Ihre erste Anfrage:",
+      "open": "{client} öffnen"
+    },
+    "wait": {
+      "title": "Warten auf {client}"
+    },
+    "it_works": {
+      "title": "Es funktioniert",
+      "success": {
+        "read": "{client} hat gerade Ihren Posteingang gelesen.",
+        "search": "{client} hat gerade Ihren Posteingang durchsucht.",
+        "draft": "{client} hat gerade einen Entwurf in Ihrem Postfach gespeichert.",
+        "organize": "{client} hat gerade Ihren Posteingang aufgeräumt.",
+        "generic": "{client} hat gerade Ihr Postfach genutzt.",
+        "connected": "{client} ist mit Ihrem Postfach verbunden."
+      },
+      "finish": "Fertig",
+      "secondInbox": {
+        "title": "Ihr anderes Postfach verbinden",
+        "lead": "Die meisten verbinden ein zweites Postfach: Arbeit und Privates in einem Chat.",
+        "cta": "Weiteres Postfach verbinden",
+        "paidNote": "Free umfasst ein Postfach. Beim nächsten sehen Sie die Planoptionen, mit Mit Free weitermachen direkt daneben."
+      }
+    }
+  },
+  "nav": {
+    "continue": "Weiter",
+    "back": "Zurück",
+    "done": "Fertig"
+  },
+  "placeholder": "Dieser Schritt ist noch in Arbeit.",
+  "actions": {
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "emailMe": "Diesen Link per E-Mail schicken",
+    "emailSent": "An {email} gesendet.",
+    "emailFailed": "Die E-Mail konnte nicht gesendet werden. Versuchen Sie es in einer Minute noch einmal."
+  },
+  "ladder": {
+    "waiting": "Warten auf {client}",
+    "connected": "{client} verbunden",
+    "ask": "Etwas fragen",
+    "works": "Es funktioniert",
+    "listening": "Warten auf {client}",
+    "stopped": "Wir warten nicht mehr. Laden Sie diese Seite neu, nachdem Sie den Prompt ausprobiert haben."
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} hat sich noch nicht verbunden",
+      "claude": "Laden Sie claude.ai neu und starten Sie einen neuen Chat. Beenden Sie Claude Desktop ganz und öffnen Sie es neu.",
+      "chatgpt": "Öffnen Sie einen neuen Chat auf chatgpt.com, tippen Sie @ und wählen Sie MCPEmails.",
+      "editor": "Laden Sie das Fenster von {client} neu und prüfen Sie, ob MCPEmails in der MCP-Liste als verbunden erscheint. Wenn nicht, fügen Sie die URL noch einmal ein.",
+      "cli": "Beenden Sie {client}, starten Sie es neu und prüfen Sie, ob MCPEmails aufgeführt und verbunden ist.",
+      "api": "Senden Sie die Anfrage noch einmal und prüfen Sie, ob der Authorization-Header Ihren Schlüssel enthält."
+    },
+    "noCall": {
+      "title": "{client} ist verbunden, hat MCPEmails aber noch nicht genutzt",
+      "claude": "Schalten Sie MCPEmails in diesem Chat ein (+ > Connectors) oder starten Sie einen neuen Chat und fügen Sie den Prompt erneut ein.",
+      "chatgpt": "Tippen Sie im Chat @ und wählen Sie MCPEmails, dann fügen Sie den Prompt erneut ein.",
+      "other": "Starten Sie einen neuen Chat und fügen Sie den Prompt erneut ein. Er nennt MCPEmails, damit {client} weiß, was zu tun ist."
+    },
+    "reconnect": {
+      "title": "Immer noch nichts?",
+      "body": "Entfernen Sie MCPEmails aus {client}, fügen Sie es erneut hinzu und starten Sie einen neuen Chat.",
+      "docs": "Anleitung für {client}",
+      "back": "Einrichtungsschritt noch einmal zeigen",
+      "email": "Schritte per E-Mail schicken"
+    }
+  },
+  "failure": {
+    "auth": "Ihr Mailanbieter hat das Passwort des Postfachs abgelehnt. Verbinden Sie das Postfach im Dashboard neu.",
+    "timeout": "Ihr Mailserver hat zu lange gebraucht. Fragen Sie noch einmal nach einem kürzeren Zeitraum.",
+    "provider": "Ihr Mailanbieter hat einen Fehler gemeldet. Versuchen Sie es in einer Minute noch einmal.",
+    "scope": "Der Zugriff, den Sie {client} gegeben haben, erlaubt das nicht. Fragen Sie nach etwas anderem oder verbinden Sie neu mit mehr Zugriff.",
+    "inbox": "{client} hat kein verbundenes Postfach gefunden. Prüfen Sie Ihre Postfächer im Dashboard.",
+    "params": "{client} hat eine Anfrage gesendet, die MCPEmails nicht lesen konnte. Meistens wird sie automatisch wiederholt.",
+    "generic": "Die letzte Anfrage von {client} ist fehlgeschlagen. Fragen Sie noch einmal."
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "Sieh dir mit MCPEmails meinen Posteingang der letzten 2 Tage an und sag mir, welche E-Mails heute eine Antwort von mir brauchen. Eine Zeile pro E-Mail: wer, was die Person will und bis wann. Nichts senden, entwerfen, verschieben oder löschen.",
+      "code": "Nutze die MCPEmails-Tools, um meinen Posteingang der letzten 2 Tage anzusehen, und sag mir, welche E-Mails heute eine Antwort von mir brauchen. Eine Zeile pro E-Mail: wer, was die Person will und bis wann. Nichts senden, entwerfen, verschieben oder löschen."
+    },
+    "draftReplies": {
+      "drafts": "Wähle aus dieser Liste die 3 E-Mails, die am dringendsten eine Antwort brauchen, und speichere zu jeder einen Antwortentwurf in meinem Entwürfe-Ordner, in meinem üblichen Ton. Nichts senden.",
+      "readOnly": "Wähle aus dieser Liste die 3 E-Mails, die am dringendsten eine Antwort brauchen, und schreib zu jeder hier im Chat eine kurze Antwort. Nichts senden oder speichern."
+    },
+    "morningBrief": {
+      "chat": "Gib mir mit MCPEmails mein Morgen-Briefing: was seit gestern gekommen ist, was heute eine Antwort braucht und alles mit einer Frist diese Woche. Höchstens 10 Zeilen. Nichts ändern.",
+      "code": "Nutze die MCPEmails-Tools für mein Morgen-Briefing: was seit gestern gekommen ist, was heute eine Antwort braucht und alles mit einer Frist diese Woche. Höchstens 10 Zeilen. Nichts ändern."
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "Ihr Einrichtungslink für MCPEmails",
+      "intro": "Öffnen Sie diesen Link an Ihrem Computer, um MCPEmails zu {client} hinzuzufügen:"
+    },
+    "helpSteps": {
+      "subject": "So verbinden Sie MCPEmails mit {client}",
+      "intro": "So bringen Sie {client} mit MCPEmails zum Laufen:",
+      "prompt": "Fügen Sie dann diesen Prompt in den neuen Chat ein:",
+      "guide": "Anleitung:",
+      "resume": "Hier geht es weiter:"
+    },
+    "morning": {
+      "subject": "Ihr Prompt für das Morgen-Briefing",
+      "intro": "Guten Morgen. Fügen Sie das in {client} ein, um Ihr Morgen-Briefing zu bekommen:"
+    },
+    "footer": "Sie haben diese E-Mail bei der Einrichtung von MCPEmails angefordert. Sie wird einmal gesendet."
+  },
+  "chatReturn": {
+    "title": "Verbunden. Gehen Sie zurück zu {client} und fragen Sie noch einmal.",
+    "lead": "Ihr Postfach ist bereit. Stellen Sie {client} dieselbe Frage noch einmal oder beginnen Sie hiermit:",
+    "prompt": "Sieh dir meinen Posteingang der letzten 24 Stunden an und sag mir, welche E-Mails eine Antwort von mir brauchen.",
+    "copy": "Prompt kopieren",
+    "copied": "Kopiert",
+    "open": "{client} öffnen",
+    "yourApp": "Ihre KI-App",
+    "dashboard": "Zum Dashboard"
+  }
+}

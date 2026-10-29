@@ -1,10 +1,16 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { planDisplayName } from '@/lib/stripe/plans';
+import { REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
+import { founderTermsVisible } from '@/lib/stripe/founder-offer-server';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'terms' });
   const title = t.has('meta.title') ? t('meta.title') : 'Terms of Service';
   const description = t.has('meta.description')
@@ -17,14 +23,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/terms'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -37,32 +43,43 @@ const CONTACT_EMAIL = 'legal@mcpemails.com';
 
 /* Service-provider identification required by the Norwegian ehandelsloven § 8:
    legal name, geographic address, the register we are enrolled in, and our
-   organisation number. These values must match our entry in Enhetsregisteret,
-   so do not edit them without checking brreg.no first. "MCPEmails" is only the
-   trading name of the service; the contracting legal person is Albretsen
-   Consulting. */
-const COMPANY_NAME = 'Albretsen Consulting';
+   organisation number. These values must match our entry in Foretaksregisteret
+   (brreg.no), so do not edit them without checking there first. "MCPEmails" is
+   only the trading name of the service; the contracting legal person is
+   Albretsen AS (aksjeselskap, registered 2026-10-19), which takes over
+   MCPEmails from the founder's former sole proprietorship, Albretsen
+   Consulting (926 646 753), on 2026-11-01. */
+const COMPANY_NAME = 'Albretsen AS';
 const COMPANY_OWNER = 'Asgeir Albretsen';
-const COMPANY_ORG_NUMBER = '926 646 753';
-const COMPANY_REGISTER = 'Enhetsregisteret';
+const COMPANY_ORG_NUMBER = '938 702 373';
+const COMPANY_REGISTER = 'Foretaksregisteret';
 const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
+/* No VAT number on purpose. Albretsen AS has applied for MVA registration but
+   it is not confirmed, so the page must not print a VAT number or claim VAT
+   registration. When Skatteetaten confirms it, add COMPANY_VAT_NUMBER back
+   (format "NO 938 702 373 MVA", checked against the registration letter) and
+   restore the VAT sentence in terms.agreement.p1b in every locale. */
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
 export default async function TermsPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('terms');
+  const referralTerms = {
+    free: planDisplayName('free'),
+    personal: planDisplayName('personal'),
+    cap: REWARD_CAP_PER_YEAR,
+  };
+  const showFounderClause = await founderTermsVisible({ locale });
   const richTags = {
     b: (c) => <strong>{c}</strong>,
-    privacy: (c) => <a href="/privacy">{c}</a>,
-    pricing: (c) => <a href="/pricing">{c}</a>,
+    privacy: (c) => <Link href="/privacy">{c}</Link>,
+    pricing: (c) => <Link href="/pricing">{c}</Link>,
     email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
-    odr: (c) => (
-      <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">
-        {c}
-      </a>
-    ),
+    withdrawal: (c) => <Link href="/withdrawal">{c}</Link>,
+    cancel: (c) => <Link href="/cancel">{c}</Link>,
   };
   return (
     <div>
@@ -195,6 +212,35 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h57')}</h4>
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
+
+              {/* 5.8 is the non-renewing 3-month Personal pass. Its 14-day
+                  full refund is the same policy as 5.4, and /withdrawal and
+                  /cancel cite both. Change them together. */}
+              <h4>{t('plansAndPayment.h58')}</h4>
+              <p>{t.rich('plansAndPayment.p58', richTags)}</p>
+
+              {/* 5.9 Pausing. 5.8 is the Personal 3-month pass (PR #243). */}
+              <h4>{t('plansAndPayment.h59')}</h4>
+              <p>{t('plansAndPayment.p59')}</p>
+
+              {/* 5.10 The Business founder price clause: only once the offer
+                  has started or a founder subscription exists, never in zh,
+                  and hidden when the check cannot be made. */}
+              {showFounderClause && (
+                <>
+                  <h4>{t('plansAndPayment.h510')}</h4>
+                  <p>{t('plansAndPayment.p510')}</p>
+                </>
+              )}
+
+              {/* 5.11 The referral program. The plan names and the yearly cap
+                  are parameters, so the terms cannot drift from the catalogue
+                  or from REWARD_CAP_PER_YEAR. The id is the dashboard's
+                  "Program terms" link target. */}
+              <h4 id="referral-program">{t('plansAndPayment.h511')}</h4>
+              <p>{t('plansAndPayment.p511a')}</p>
+              <p>{t('plansAndPayment.p511b', referralTerms)}</p>
+              <p>{t('plansAndPayment.p511c')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}
@@ -356,9 +402,9 @@ export default async function TermsPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${CONTACT_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/privacy">
+            <Link className="btn btn-on-dark btn-lg" href="/privacy">
               {t('cta.privacyBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

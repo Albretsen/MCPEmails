@@ -36,6 +36,8 @@ interface World {
   stripeFails: boolean;
   /** Every Supabase and Stripe call, in order. */
   log: string[];
+  /** The filters of each Supabase call, keyed like `log` entries, in order. */
+  calls: Array<{ entry: string; filters: Array<[string, string, unknown]> }>;
   cancelParams: Array<{ id: string; params: Record<string, unknown> }>;
 }
 
@@ -53,6 +55,7 @@ function reset(overrides: Partial<World> = {}): void {
     ],
     stripeFails: false,
     log: [],
+    calls: [],
     cancelParams: [],
     ...overrides,
   };
@@ -60,8 +63,10 @@ function reset(overrides: Partial<World> = {}): void {
 
 /** A chainable PostgREST stand-in that logs `table.op` when the query runs. */
 function query(table: string, op: string) {
+  const filters: Array<[string, string, unknown]> = [];
   const result = () => {
     world.log.push(`db:${table}.${op}`);
+    world.calls.push({ entry: `db:${table}.${op}`, filters });
     if (table === 'workspaces' && op === 'select') return { data: world.workspaces, error: null };
     if (table === 'user_billing' && op === 'select') {
       return { data: world.billing, error: world.billingError };
@@ -69,8 +74,14 @@ function query(table: string, op: string) {
     return { data: null, error: null };
   };
   const builder: Record<string, unknown> = {};
-  for (const name of ['select', 'eq', 'is', 'in', 'order', 'range']) {
+  for (const name of ['select', 'order', 'range']) {
     builder[name] = () => builder;
+  }
+  for (const name of ['eq', 'is', 'in']) {
+    builder[name] = (column: string, value: unknown) => {
+      filters.push([name, column, value]);
+      return builder;
+    };
   }
   builder.maybeSingle = async () => result();
   builder.then = (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
@@ -254,4 +265,49 @@ test('DELETE with the wrong confirmation email is 400 and never calls Stripe', a
   const res = await DELETE(request({ confirmEmail: 'someone@else.test' }));
   assert.equal(res.status, 400);
   assert.deepEqual(world.log, []);
+});
+
+// ── The user's own credentials, in EVERY workspace ─────────────────────────
+// Owned workspaces are torn down wholesale, but in a team workspace the user
+// was only a member of, dropping the membership row used to leave every key
+// they minted there (and every OAuth chain that can mint more) fully live.
+
+/** The calls that revoke the user's own credentials, by user id, not workspace. */
+function ownCredentialCalls() {
+  const credentialWrites = new Set(['db:api_keys.update', 'db:oauth_refresh_tokens.update', 'db:oauth_auth_codes.delete']);
+  return world.calls.filter((c) =>
+    credentialWrites.has(c.entry)
+    && c.filters.some(([op, column, value]) =>
+      op === 'eq' && (column === 'created_by' || column === 'user_id') && value === USER.id)
+    && !c.filters.some(([, column]) => column === 'workspace_id'));
+}
+
+test('DELETE revokes the user\'s keys, refresh chains and pending codes everywhere, before memberships go', async () => {
+  // A member-only account: owns nothing, belongs to someone else's workspace.
+  reset({ workspaces: [], billing: null, subs: [] });
+  const res = await DELETE(request());
+  assert.equal(res.status, 200);
+
+  const own = ownCredentialCalls().map((c) => c.entry);
+  assert.ok(own.includes('db:api_keys.update'), `keys by created_by: ${own.join(', ')}`);
+  assert.ok(own.includes('db:oauth_refresh_tokens.update'), 'refresh chains by user_id');
+  assert.ok(own.includes('db:oauth_auth_codes.delete'), 'pending codes by user_id');
+
+  const membershipsGone = world.log.indexOf('db:workspace_members.delete');
+  assert.ok(membershipsGone > -1);
+  for (const entry of ['db:api_keys.update', 'db:oauth_refresh_tokens.update', 'db:oauth_auth_codes.delete']) {
+    assert.ok(world.log.indexOf(entry) < membershipsGone, `${entry} must precede the membership delete: ${world.log.join(', ')}`);
+  }
+});
+
+test('DELETE for an owner still revokes their own credentials in workspaces they do not own', async () => {
+  const res = await DELETE(request());
+  assert.equal(res.status, 200);
+  assert.equal(ownCredentialCalls().length, 3);
+});
+
+test('DELETE still touches no credential when Stripe fails', async () => {
+  reset({ stripeFails: true });
+  await DELETE(request());
+  assert.deepEqual(ownCredentialCalls(), []);
 });

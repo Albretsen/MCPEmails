@@ -1,7 +1,7 @@
 const translation = {
   title: 'Est-il prudent de donner à un agent IA l’accès à vos e-mails ? Ce qu’il faut savoir',
   description: 'Donner l’accès à vos e-mails à un agent IA est-il prudent ? La vraie réponse : ça dépend de l’architecture. Voici les risques réels et la checklist qui sécurise tout.',
-  coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails — risques et protections expliqués — MCP Emails',
+  coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails — risques et protections expliqués — MCPEmails',
   content: `Réponse courte : ça peut l’être, mais la sécurité tient à l’architecture, pas au discours marketing. Donner l’accès à vos e-mails à un agent IA est prudent quand le service récupère vos messages en direct au lieu de les copier, chiffre correctement vos identifiants, fonctionne avec des permissions minimales et vous laisse couper l’accès en un clic. Ça devient risqué dès que l’un de ces quatre points manque. L’astuce, c’est de savoir quelles questions poser avant de connecter une boîte mail.
 
 C’est l’objection que j’entends le plus souvent, et elle est légitime. Votre boîte de réception, c’est votre centre de réinitialisation de mots de passe, vos archives de contrats, votre vie privée. Confier les clés à un modèle de langage paraît imprudent. Soyons donc honnêtes sur ce qui peut réellement mal tourner, puis voyons à quoi ressemble une configuration soignée. Si vous voulez d’abord la vue d’ensemble, le guide de référence sur [comment donner à votre agent IA l’accès aux e-mails](/blog/how-to-give-your-ai-agent-email-access) couvre toute la mise en place ; ce billet-ci porte spécifiquement sur la question de la confiance.
@@ -28,11 +28,11 @@ L’erreur classique consiste à accorder l’accès complet à la boîte mail q
 
 ## À quoi ressemble vraiment une configuration sûre
 
-Voici comment MCP Emails traite chaque risque. Je suis partial — c’est moi qui l’ai conçu — mais les choix de conception sont vérifiables, et vous devriez tenir n’importe quel outil que vous choisissez à la même exigence.
+Voici comment MCPEmails traite chaque risque. Je suis partial — c’est moi qui l’ai conçu — mais les choix de conception sont vérifiables, et vous devriez tenir n’importe quel outil que vous choisissez à la même exigence.
 
-**Vos e-mails ne sont jamais stockés.** Chaque appel d’outil interroge votre fournisseur en temps réel, via l’API Gmail, Microsoft Graph ou IMAP/SMTP. Les corps de messages, les objets et les pièces jointes transitent vers l’agent puis sont aussitôt supprimés. La seule chose que nous conservons par boîte mail, c’est un identifiant chiffré pour que l’appel suivant puisse être effectué. Il n’y a pas de copie de votre boîte à compromettre, parce que cette copie n’existe pas.
+**Vos e-mails ne sont jamais stockés.** Chaque appel d’outil interroge votre fournisseur en temps réel, via IMAP/SMTP pour Gmail et la plupart des autres fournisseurs, ou via Microsoft Graph pour Outlook. Les corps de messages, les objets et les pièces jointes transitent vers l’agent puis sont aussitôt supprimés. La seule chose que nous conservons par boîte mail, c’est un identifiant chiffré pour que l’appel suivant puisse être effectué. Il n’y a pas de copie de votre boîte à compromettre, parce que cette copie n’existe pas.
 
-**Les identifiants sont chiffrés au repos en AES-256-GCM.** Votre jeton OAuth ou votre mot de passe d’application est chiffré avant même de toucher la base de données, et le déchiffrement n’a lieu qu’à l’intérieur d’une edge function isolée, au moment de l’appel. La clé de chiffrement est un secret d’environnement stocké séparément de la base de données : un simple vidage de la base ne sert donc à rien. C’est le seul élément de vos données que nous conservons, et c’est celui que nous traitons avec le plus de soin.
+**Les identifiants sont chiffrés au repos en AES-256-GCM.** Votre mot de passe d’application ou votre jeton OAuth est chiffré avant même de toucher la base de données. Il est déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin, et il n’est jamais envoyé à votre agent. La clé de chiffrement est conservée comme secret serveur, séparée de la base de données : un simple vidage de la base ne sert donc à rien. C’est le seul élément de vos données que nous conservons, et c’est celui que nous traitons avec le plus de soin.
 
 **Les permissions sont minimales par conception.** Quand vous connectez un agent, vous approuvez exactement deux permissions possibles : \`read:email\` et \`send:email\`. Vous voulez un agent qui résume mais ne peut jamais envoyer ? Accordez uniquement \`read:email\`. Le système n’a pas de bouton « accès complet », parce qu’il n’y aurait rien à y gagner. Si vous hésitez sur la façon dont les agents s’authentifient, [OAuth vs clés d’API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) explique laquelle utiliser et quand.
 
@@ -47,7 +47,7 @@ Passez en revue ces points avant de connecter quoi que ce soit, le nôtre comme 
 1. **Stocke-t-il vos e-mails, ou les récupère-t-il en direct ?** La récupération en direct est la seule réponse qui maintient votre rayon d’explosion à zéro. Les copies stockées sont une responsabilité permanente.
 2. **Comment les identifiants sont-ils chiffrés, et où se trouve la clé ?** « Chiffré au repos » ne veut pas dire grand-chose si la clé est rangée à côté de la base de données. Vous voulez un chiffrement robuste (AES-256-GCM) et une clé conservée séparément.
 3. **Pouvez-vous restreindre l’accès à la lecture seule ?** Si la seule option est un accès tout ou rien, passez votre chemin. Vous devriez pouvoir accorder la lecture sans l’envoi.
-4. **Qui envoie le message ?** Envoyer via votre propre fournisseur garde la délivrabilité et la réputation sous votre contrôle. Un envoi relayé par le fournisseur, non.
+4. **Qui envoie le message ?** Envoyer via votre propre fournisseur garde la délivrabilité et la réputation sous votre contrôle. Un envoi depuis le propre domaine du prestataire, non.
 5. **Pouvez-vous révoquer en un clic ?** Une révocation instantanée et en libre-service fait la différence entre une frayeur et un incident.
 6. **Y a-t-il un humain dans la boucle pour les envois ?** Pour tout ce qui est irréversible, l’agent devrait rédiger et vous devriez valider. C’est votre meilleure défense contre l’injection de prompt.
 

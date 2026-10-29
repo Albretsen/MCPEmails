@@ -1,64 +1,72 @@
 const translation = {
-  title: 'Conecta Claude a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)',
+  title: 'Conecta Claude a tu correo: iCloud, Apple Mail, Yahoo, IMAP',
   description:
-    'Una guía práctica para conectar Claude a Gmail, Outlook y Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o cualquier buzón IMAP mediante MCP. Sin código y sin almacenar correo.',
+    'Cómo conectar Claude a iCloud, Yahoo, Outlook o cualquier bandeja IMAP por MCP, incluidas las cuentas que lees en Apple Mail. Unos dos minutos, sin código, nada almacenado.',
   coverAlt:
-    'Conecta Claude a Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y correo IMAP con MCP Emails',
-  content: `Claude puede leer, buscar, organizar y enviar tu correo, pero necesita un servidor MCP para llegar a un buzón real. MCP Emails es ese puente: conecta un buzón una vez, añade un endpoint seguro a Claude y Claude obtiene el mismo conjunto de herramientas de correo con Gmail, Outlook y Microsoft 365, iCloud, Fastmail, Yahoo, Zoho y otros proveedores IMAP.
+    'Conecta Claude a Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y correo IMAP con MCPEmails',
+  content: `Claude puede leer, buscar, organizar y enviar tu correo, pero necesita un servidor MCP para llegar a una bandeja de entrada real. MCPEmails es ese puente: conecta una bandeja una vez, añade un endpoint seguro a Claude y Claude obtiene el mismo conjunto de herramientas de correo con Gmail, Outlook y Microsoft 365, iCloud, Fastmail, Yahoo, Zoho y otros proveedores IMAP.
 
-No hay código que escribir, ningún SDK que instalar ni clave de API que usar cuando te conectas mediante el flujo OAuth de Claude. El correo se obtiene en tiempo real de tu proveedor para cada solicitud y MCP Emails no lo almacena.
+No hay código que escribir, ningún SDK que instalar ni clave de API que usar cuando te conectas mediante el flujo OAuth de Claude. El correo se obtiene en tiempo real de tu proveedor para cada solicitud y MCPEmails no lo almacena.
 
-**Ve a tu proveedor:** [Gmail](#gmail-y-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-y-microsoft-365) · [Yahoo, Zoho, Yandex o IMAP personalizado](#yahoo-zoho-yandex-e-imap-personalizado)
+**Ve a tu proveedor:** [Gmail](#gmail-y-google-workspace) · [iCloud](#icloud-mail) · [Apple Mail](#apple-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-y-microsoft-365) · [Yahoo, Zoho, Yandex o IMAP personalizado](#yahoo-zoho-yandex-e-imap-personalizado)
 
 ## Lo que necesitas
 
-- Un **plan o aplicación de Claude compatible con conectores personalizados**.
-- Una cuenta gratuita de **MCP Emails**: [créala aquí](/signup).
-- Un buzón de correo. Outlook se conecta con Iniciar sesión con Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho y la mayoría de los demás proveedores usan una contraseña específica de aplicación, y Gmail también ofrece Iniciar sesión con Google.
+- **Claude** en la web (claude.ai) o en Claude Desktop. Todos los planes de Claude pueden añadir conectores personalizados: Free permite uno, y Pro y Max no tienen límite.
+- Una cuenta gratuita de **MCPEmails**: [créala aquí](/signup).
+- Una bandeja de correo. Outlook se conecta con Iniciar sesión con Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho y la mayoría de los demás proveedores usan una contraseña específica de aplicación.
 
-## Paso 1: Conecta tu buzón a MCP Emails
+## Paso 1: Conecta tu bandeja a MCPEmails
 
-En el panel de MCP Emails, abre **Inboxes → Connect Inbox** y elige tu proveedor.
+En el panel de MCPEmails, abre **Bandejas de entrada → Conectar bandeja** y elige tu proveedor.
 
 ### Gmail y Google Workspace
 
-Elige **Gmail**, crea una contraseña de aplicación de Google (tu cuenta de Google necesita la verificación en dos pasos para ello) y pégala junto con tu dirección de Gmail. También puedes elegir Iniciar sesión con Google. En ambos casos, tu contraseña normal de Google nunca se comparte con MCP Emails. Consulta la [guía específica de Gmail](/blog/connect-gmail-to-claude) si un administrador de Workspace controla el acceso a aplicaciones.
+Elige **Gmail**, crea una contraseña de aplicación de Google en myaccount.google.com/apppasswords (Google solo la ofrece si la verificación en dos pasos está activada) y pega las 16 letras junto con tu dirección de Gmail completa. Tu contraseña normal de Google no funciona aquí, y puedes revocar la contraseña de aplicación cuando quieras. Consulta la [guía específica de Gmail](/blog/connect-gmail-to-claude) si un administrador de Workspace ha desactivado las contraseñas de aplicación en tu dominio. Consulta los [ajustes y límites de Gmail](/connect/gmail) y la [página de configuración de Google Workspace](/connect/google-workspace).
 
 ### iCloud Mail
 
-Crea una contraseña específica de aplicación en tu cuenta de Apple, elige **iCloud** e introduce esa contraseña, no la normal de tu cuenta de Apple. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) incluye los pasos exactos.
+Crea una contraseña específica de aplicación en tu cuenta de Apple, elige **iCloud** e introduce esa contraseña, no la normal de tu cuenta de Apple. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) incluye los pasos exactos. Consulta también [Conectar iCloud Mail a Claude](/connect/icloud).
+
+### Apple Mail
+
+Apple Mail es una app de correo, así que Claude se conecta a la cuenta que hay detrás y no a la app. Una dirección de iCloud se conecta como se explica arriba. Una cuenta de Gmail, Outlook, Yahoo o del trabajo se conecta con su propio proveedor. Las carpetas guardadas solo En mi Mac no están en ningún servidor, así que Claude no puede verlas. No hace falta que nada se ejecute en tu Mac.
 
 ### Fastmail
 
-Crea en Fastmail una contraseña de aplicación con acceso a Mail, elige **Fastmail** y pégala en MCP Emails. Consérvala hasta que la prueba de conexión termine correctamente.
+Crea en Fastmail una contraseña de aplicación con acceso a Mail, elige **Fastmail** y pégala en MCPEmails. Consérvala hasta que la prueba de conexión termine correctamente. Consulta los [ajustes de Fastmail para Claude](/connect/fastmail).
 
 ### Outlook y Microsoft 365
 
-Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de aplicación: elige **Outlook**, haz clic en **Conectar con Microsoft** y aprueba. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) tiene los detalles.
+Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de aplicación: elige **Outlook**, haz clic en **Conectar con Microsoft** y aprueba. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) tiene los detalles. Consulta la [página de configuración de Outlook](/connect/outlook) o la [página de configuración de Microsoft 365](/connect/office365).
 
 ### Yahoo, Zoho, Yandex e IMAP personalizado
 
-Crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes comunes se detectan automáticamente; los dominios personalizados pueden requerir el host, puerto y modo de seguridad IMAP/SMTP indicados por el proveedor.
+Crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes comunes se detectan automáticamente; los dominios personalizados pueden requerir el host, puerto y modo de seguridad IMAP/SMTP indicados por el proveedor. Los ajustes de cada uno están en las páginas de [Yahoo Mail](/connect/yahoo), [Zoho Mail](/connect/zoho), [Yandex Mail](/connect/yandex) e [IMAP personalizado](/connect/imap). También puedes ver [todos los proveedores compatibles](/connect).
 
-Puedes conectar más de un buzón. Claude los descubre con \`inbox_list\`, así que no tienes que pegar identificadores de buzón en un prompt.
+Puedes conectar más de una bandeja. Claude los descubre con \`inbox_list\`, así que no tienes que pegar identificadores de buzón en un prompt.
 
-¿Necesitas ayuda para cada proveedor? Consulta la [configuración multidispositivo en dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes), la [guía de Gmail](/blog/connect-gmail-to-claude) o la [guía de iCloud, Fastmail e IMAP](/blog/connect-icloud-fastmail-imap-to-claude).
+¿Necesitas ayuda para cada proveedor? Consulta la [guía de configuración multiproveedor en dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes), la [guía de Gmail](/blog/connect-gmail-to-claude) o la [guía de iCloud, Fastmail e IMAP](/blog/connect-icloud-fastmail-imap-to-claude).
 
-## Paso 2: Añade MCP Emails a Claude
+## Paso 2: Añade MCPEmails a Claude
 
 En claude.ai o Claude Desktop:
 
-1. Abre **Settings → Connectors**.
-2. Elige **Add custom connector**.
-3. Pega esta URL:
+1. Abre **Customize → Connectors**.
+2. Haz clic en **+ Add** y después en **Add custom connector**.
+3. Llámalo MCPEmails y pega esta URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Selecciona **Connect**, inicia sesión en MCP Emails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+4. Haz clic en **Continue**, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en **Add**.
+5. Inicia sesión en MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+6. En un chat, haz clic en **+** abajo a la izquierda, elige **Connectors** y activa MCPEmails.
 
-Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCP Emails cuando quieras. Si usas un cliente sin OAuth, emplea una clave de API limitada; [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica ese camino.
+En un plan Team o Enterprise, un Owner añade el conector una vez en **Organization settings → Connectors**. Después, los miembros abren **Customize → Connectors**, buscan MCPEmails y hacen clic en **Connect**.
+
+Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCPEmails cuando quieras. Si usas un cliente sin OAuth, usa una clave de API con permisos limitados; [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica esa opción. Para problemas específicos de Claude, consulta la [página de configuración de Claude](/docs/claude).
 
 ## Paso 3: Dale a Claude una primera tarea segura
 
@@ -66,7 +74,7 @@ Empieza con una solicitud de solo lectura:
 
 > Resume mis tres correos no leídos más recientes y marca todo lo que necesite una respuesta hoy.
 
-Claude primero encuentra el buzón conectado y después lista y lee los mensajes relevantes. Cuando funcione, prueba:
+Claude primero encuentra la bandeja conectada y después lista y lee los mensajes relevantes. Cuando funcione, prueba:
 
 - «Busca la factura de Stripe del mes pasado y dime el importe.»
 - «Redacta una respuesta al último mensaje de Alex, pero no la envíes.»
@@ -77,21 +85,21 @@ Para rutinas repetibles, usa la [guía de triaje de la bandeja de entrada](/blog
 
 ## Lo que Claude puede hacer después de conectarse
 
-MCP Emails ofrece a Claude herramientas de correo concretas, no una contraseña ni una conexión IMAP en bruto:
+MCPEmails ofrece a Claude herramientas de correo concretas, no una contraseña ni una conexión IMAP en bruto:
 
-- **Leer y buscar:** \`email_read\` enumera mensajes, lee mensajes completos y busca correo. Las búsquedas de Gmail también admiten operadores como \`from:\` e \`is:unread\`.
+- **Leer y buscar:** \`email_read\` enumera mensajes, lee mensajes completos y busca correo por remitente, asunto, fecha, estado de no leído y otros campos estructurados. En Gmail, las etiquetas aparecen como carpetas.
 - **Enviar, responder y reenviar:** \`email_compose\` envía a través de tu propio proveedor y dirección.
 - **Organizar:** \`email_organize\` mueve, etiqueta, marca y archiva mensajes.
 - **Trabajar con borradores, carpetas, programación y contactos:** \`draft\`, \`folder\`, \`schedule\` y \`contact_search\` cubren el resto de un flujo práctico de correo.
 
-MCP Emails funciona por sondeo: Claude comprueba el correo nuevo cuando se lo pides, en vez de recibir un evento push en el instante en que llega un mensaje.
+MCPEmails funciona por sondeo: Claude comprueba el correo nuevo cuando se lo pides, en vez de recibir un evento push en el instante en que llega un mensaje.
 
 ## Solución de problemas de conexión y configuración de Claude
 
 - **El proveedor rechaza la contraseña:** usa una contraseña de aplicación generada por el proveedor, no la contraseña con la que entras en la web. Regénérala después de activar la autenticación de dos factores si es necesario.
-- **Una conexión IMAP personalizada agota el tiempo:** confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
-- **Claude se conecta pero no ve correo:** comprueba primero que el buzón esté activo en MCP Emails, vuelve a conectar Claude con **read:email** y pídele que llame a **inbox_list**.
-- **Claude puede leer pero no enviar:** vuelve a conectarlo con **send:email** y verifica que la conexión admita SMTP o el envío nativo del proveedor.
+- **Una conexión IMAP personalizada agota el tiempo de espera:** confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
+- **Claude se conecta pero no ve el correo:** comprueba primero que la bandeja esté activa en MCPEmails, vuelve a conectar Claude y aprueba **read:email**. Pide a Claude que llame a **inbox_list** antes de leer mensajes.
+- **Claude puede leer pero no enviar:** vuelve a conectarlo con **send:email** y verifica que la conexión con el proveedor admita SMTP o el envío nativo del proveedor.
 
 Si sigues bloqueado, consulta la [matriz de proveedores](/docs/providers), abre la [guía de inicio](/docs#quickstart) y prueba una solicitud de solo lectura antes de activar el envío.
 
@@ -99,16 +107,16 @@ Si sigues bloqueado, consulta la [matriz de proveedores](/docs/providers), abre 
 
 Sí, siempre que concedas solo el acceso necesario y mantengas a una persona implicada en las acciones salientes.
 
-- **El correo no se almacena.** MCP Emails obtiene el contenido de cada mensaje en tiempo real y lo descarta tras entregarlo. La credencial cifrada necesaria para reconectar con tu proveedor es el único dato del buzón que se conserva.
-- **Tu proveedor mantiene el control de autenticación.** Outlook, y la opción Iniciar sesión con Google de Gmail, usan OAuth, así que MCP Emails nunca recibe tu contraseña. Con la contraseña de aplicación de Gmail y los proveedores IMAP, usa una contraseña específica de aplicación revocable en lugar de tu contraseña normal.
-- **Los permisos son explícitos.** Da acceso de solo lectura si Claude no debe enviar nunca. Añade el permiso de envío solo cuando lo necesites y revócalo cuando quieras.
+- **El correo no se almacena.** MCPEmails obtiene el contenido de cada mensaje en tiempo real y lo descarta tras entregarlo. La credencial cifrada necesaria para reconectar con tu proveedor es el único dato del buzón que se conserva.
+- **Tu proveedor mantiene el control de la autenticación.** Outlook usa OAuth, así que MCPEmails nunca ve tu contraseña de Microsoft. Con Gmail y los demás proveedores que usan contraseña de aplicación, esa contraseña es una credencial aparte, no la contraseña de tu cuenta, y puedes revocarla cuando quieras.
+- **Los permisos son explícitos.** Da acceso de solo lectura si Claude no debe enviar nunca. Añade el permiso de envío solo cuando lo necesites, y revoca cualquiera de los dos accesos cuando quieras.
 
 Trata el cuerpo de cada correo como una entrada no fiable. Pide a Claude que redacte antes de enviar, revisa los mensajes externos y no dejes que las instrucciones dentro de un correo anulen tu intención. La [guía de seguridad para el acceso al correo](/blog/is-it-safe-to-give-ai-agent-email-access) explica el modelo de amenazas con más detalle.
 
 ## Preguntas frecuentes
 
 **¿Puede Claude conectarse a Gmail, Outlook o iCloud?**  
-Gmail se conecta con una contraseña de aplicación de Google o con Iniciar sesión con Google, Outlook con Iniciar sesión con Microsoft e iCloud con una contraseña específica de aplicación. Una cuenta de trabajo o educativa de Microsoft 365 puede necesitar antes que un administrador de TI apruebe la aplicación una sola vez. MCP Emails también admite Fastmail e IMAP genérico, lo que cubre servicios como Yahoo y Zoho.
+Gmail se conecta con una contraseña de aplicación de Google, Outlook con Iniciar sesión con Microsoft e iCloud con una contraseña específica de aplicación. Una cuenta de trabajo o educativa de Microsoft 365 puede necesitar antes que un administrador de TI apruebe la aplicación una sola vez. MCPEmails también admite Fastmail e IMAP genérico, lo que cubre servicios como Yahoo y Zoho.
 
 **¿Necesito una clave de API?**  
 No para el flujo de conector OAuth de Claude. Pega la URL del endpoint e inicia sesión. Las claves de API son para clientes MCP sin OAuth integrado.
@@ -116,12 +124,12 @@ No para el flujo de conector OAuth de Claude. Pega la URL del endpoint e inicia 
 **¿Puede Claude enviar correo?**  
 Sí, si concedes \`send:email\`. Empieza con acceso de solo lectura o pide primero borradores si quieres una revisión humana.
 
-**¿MCP Emails almacena mi buzón?**  
-No. Los mensajes se leen en tiempo real de tu proveedor y se descartan. MCP Emails solo almacena la credencial cifrada necesaria para esas solicitudes en tiempo real.
+**¿MCPEmails almacena mi bandeja de entrada?**  
+No. Los mensajes se leen en tiempo real de tu proveedor y se descartan. MCPEmails solo almacena la credencial cifrada necesaria para esas solicitudes en tiempo real.
 
 ## Siguiente paso
 
-[Empieza gratis](/signup), conecta el buzón, añade \`https://mcpemails.com/api/mcp\` a Claude y pídele que resuma tu correo no leído. Consulta la [documentación](/docs) para ver la referencia completa de herramientas MCP y capacidades por proveedor.`,
+[Empieza gratis](/signup), conecta tu bandeja, añade \`https://mcpemails.com/api/mcp\` a Claude y pídele que resuma tu correo no leído. Consulta la [documentación](/docs) para ver la referencia completa de herramientas MCP y capacidades por proveedor.`,
 };
 
 export default translation;

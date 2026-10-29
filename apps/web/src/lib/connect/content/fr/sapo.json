@@ -19,7 +19,7 @@
     "titleLine1": "SAPO Mail via IMAP,",
     "titleLine2": "dans Claude, Cursor, tout client MCP",
     "lead": "SAPO réserve l'accès par client de messagerie à son offre Premium. Si votre compte en bénéficie, un agent IA peut lire, rechercher, envoyer, répondre, planifier et organiser la boîte via IMAP.",
-    "answer": "Claude ne peut pas accéder seul à une boîte SAPO, et sur un compte SAPO Base gratuit, rien d'autre ne le peut non plus : SAPO indique dans sa propre documentation que o acesso IMAP/POP está disponível apenas para contas Premium. Sur un compte Premium, mcpemails est un serveur MCP hébergé qui connecte la boîte via IMAP sur imap.sapo.pt, port 993, avec votre adresse et votre mot de passe SAPO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option à activer : c'est l'offre qui fait barrière. Une boîte sur mcpemails est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte SAPO, et sur un compte SAPO Base gratuit, rien d'autre ne le peut non plus : SAPO indique dans sa propre documentation que o acesso IMAP/POP está disponível apenas para contas Premium. Sur un compte Premium, MCPEmails est un serveur MCP hébergé qui connecte la boîte via IMAP sur imap.sapo.pt, port 993, avec votre adresse et votre mot de passe SAPO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option à activer : c'est l'offre qui fait barrière. Une boîte sur MCPEmails est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Nécessite un compte SAPO Premium",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Vérifiez si le compte SAPO est Base ou Premium",
@@ -42,7 +42,7 @@
       "p": "SAPO ne délivre aucun mot de passe propre à une application. L'identifiant est votre mot de passe SAPO habituel, avec l'adresse complète comme nom d'utilisateur, en entrée comme en sortie. Si le webmail l'accepte et le client non, le compte est presque certainement sur l'offre Base plutôt que Premium."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Collez-le dans MCPEmails, puis collez l'URL MCP dans votre IA",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nome@sapo.pt, puis le mot de passe. Les serveurs et ports SAPO sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "Seulement PLAIN en IMAP, PLAIN et LOGIN en SMTP",
-      "p": "La bannière IMAP propose <code>AUTH=PLAIN</code> et rien d'autre, sans <code>AUTH=LOGIN</code>. Les bibliothèques clientes codées en dur sur le mécanisme LOGIN, fréquent dans les outils écrits pour Exchange, sont refusées à l'étape d'authentification avec une erreur qui ressemble à de mauvais identifiants. Côté SMTP, PLAIN et LOGIN sont tous deux acceptés, si bien que les deux moitiés d'un même compte peuvent se comporter différemment dans un même client. mcpemails négocie ce que chaque côté propose réellement."
+      "p": "La bannière IMAP propose <code>AUTH=PLAIN</code> et rien d'autre, sans <code>AUTH=LOGIN</code>. Les bibliothèques clientes codées en dur sur le mécanisme LOGIN, fréquent dans les outils écrits pour Exchange, sont refusées à l'étape d'authentification avec une erreur qui ressemble à de mauvais identifiants. Côté SMTP, PLAIN et LOGIN sont tous deux acceptés, si bien que les deux moitiés d'un même compte peuvent se comporter différemment dans un même client. MCPEmails négocie ce que chaque côté propose réellement."
     },
     {
       "h": "Ni MOVE ni SPECIAL-USE, sur une boîte aux dossiers en portugais",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec SAPO Mail ?",
-      "a": "Uniquement sur un compte Premium. SAPO réserve IMAP, POP et SMTP au Premium, donc un compte Base gratuit ne peut être connecté par aucun client de messagerie ni serveur MCP. Avec Premium, pointer mcpemails vers la boîte donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor et ChatGPT."
+      "a": "Uniquement sur un compte Premium. SAPO réserve IMAP, POP et SMTP au Premium, donc un compte Base gratuit ne peut être connecté par aucun client de messagerie ni serveur MCP. Avec Premium, pointer MCPEmails vers la boîte donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor et ChatGPT."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de SAPO ?",

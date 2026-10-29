@@ -22,23 +22,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå AOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå AOL Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobles AOL Mail til: IMAP og et app-passord",
-    "body": "AOL Mail kobles til over IMAP/SMTP med et <b>AOL-app-passord</b>. Det vanlige AOL-passordet ditt autentiserer ikke en e-postklient, så en avvist pålogging her skyldes nesten alltid et manglende app-passord. Slå på 2-Step Verification, generer et app-passord under Account Info, Account Security, og lim det deretter inn i mcpemails sammen med hele AOL-adressen din."
+    "body": "AOL Mail kobles til over IMAP/SMTP med et <b>AOL-app-passord</b>. Det vanlige AOL-passordet ditt autentiserer ikke en e-postklient, så en avvist pålogging her skyldes nesten alltid et manglende app-passord. Slå på 2-Step Verification, generer et app-passord under Account Info, Account Security, og lim det deretter inn i MCPEmails sammen med hele AOL-adressen din."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Generer et AOL-app-passord",
       "p": "I AOL Mail åpner du Account Info, Account Security, slår på 2-Step Verification hvis det er av, og genererer et app-passord. Kopier det med en gang, AOL viser det bare én gang."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg til AOL Mail-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "AOLs innsendingsserver oppgir en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom mcpemails er begrenset til 25 MB per forespørsel.",
+    "AOLs innsendingsserver oppgir en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom MCPEmails er begrenset til 25 MB per forespørsel.",
     "Et app-passord forblir gyldig etter at du har byttet AOL-passordet. Å slette det på AOL-siden Account Security er den eneste måten å stenge tilgangen på."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med AOL Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd AOL-kobling. Kobler du en MCP-server som mcpemails til AOL-postkassen din over IMAP med et AOL-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd AOL-kobling. Kobler du en MCP-server som MCPEmails til AOL-postkassen din over IMAP med et AOL-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for AOL Mail?",

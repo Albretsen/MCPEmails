@@ -17,11 +17,14 @@
  */
 
 import { connectGuardedTcp } from "./host-guard.ts";
+import { assertOutboundRecipientsAllowed } from "./outbound-allowlist.ts";
 import {
   connectThroughRelay,
   guardRelayTarget,
+  isIpLiteralHost,
   noteRelayFailure,
   noteRelaySuccess,
+  relayFailureIsRelayDown,
   type RelayConfig,
   relayFor,
   relayForFallback,
@@ -73,6 +76,50 @@ export class SmtpNotSentError extends Error {
     this.name = "SmtpNotSentError";
     this.retryable = retryable;
   }
+}
+
+/**
+ * The server refused the From address itself: this login may not send as it.
+ *
+ * Raised for a Send As alias the provider does not recognise for the account,
+ * for example iCloud refusing an address that is not an alias of the Apple ID,
+ * or Exchange's SendAsDenied. Not sent, and not retryable: every attempt from
+ * this address fails the same way until the user changes the provider's alias
+ * settings or sends from another address.
+ *
+ * Covers two points in the exchange. A refused MAIL FROM is before DATA, so
+ * nothing was transmitted. A 5xx answer to the end of DATA is a permanent
+ * refusal of the message (RFC 5321 4.2.5), so it was not accepted for delivery
+ * either; iCloud and Exchange check the From header there, after the body.
+ * Only replies whose wording names sender ownership are classified this way
+ * (see isSenderOwnershipRefusal), so IP and reputation blocks keep their
+ * existing handling.
+ */
+export class SmtpSenderRefusedError extends SmtpNotSentError {
+  constructor(message: string) {
+    super(message, false);
+    this.name = "SmtpSenderRefusedError";
+  }
+}
+
+const SENDER_OWNERSHIP_RE = new RegExp(
+  [
+    String.raw`not (?:one of )?your (?:own )?address`,
+    String.raw`not owned by`,
+    String.raw`send ?as ?denied`,
+    String.raw`not (?:allowed|authori[sz]ed|permitted) to send (?:as|from|on behalf)`,
+    String.raw`sender address (?:is )?(?:not allowed|not owned|does not belong|not authori[sz]ed)`,
+    String.raw`from address (?:is )?(?:not (?:allowed|owned|authori[sz]ed|verified|permitted)|does not belong)`,
+    String.raw`(?:from|sender) (?:address )?(?:does not|doesn't) match`,
+    String.raw`does not match (?:the )?(?:authenticated|login|logged[- ]in)`,
+    String.raw`\b5\.7\.60\b`,
+  ].join("|"),
+  "i",
+);
+
+/** True for a 5xx reply that blames the From address's ownership. */
+export function isSenderOwnershipRefusal(reply: Pick<SmtpReply, "code" | "text">): boolean {
+  return reply.code >= 500 && reply.code < 600 && SENDER_OWNERSHIP_RE.test(reply.text);
 }
 
 export type SmtpSecurity = "tls" | "starttls";
@@ -150,6 +197,12 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
   if (msg.recipients.length === 0) {
     throw new Error("SMTP send: no recipients");
   }
+  // A test deploy's recipient allowlist (outbound-allowlist.ts). Every SMTP
+  // send passes here; unset in production, where this does nothing.
+  assertOutboundRecipientsAllowed(msg.recipients);
+  // Before any connection: an address that could break its command line is
+  // refused here, deterministically and with nothing written to a socket.
+  assertEnvelopeSafe(msg);
 
   // So a host the web app learned a minute ago is relayed here too.
   if (relayConfigured()) await refreshLearnedRelayHosts();
@@ -189,6 +242,32 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
 }
 
 /**
+ * Refuse an envelope whose MAIL FROM or RCPT TO address could break out of its
+ * SMTP command line (2026-10-16).
+ *
+ * The addresses are interpolated into `MAIL FROM:<...>` / `RCPT TO:<...>`, so a
+ * CR or LF in one is a second SMTP command in the user's authenticated session
+ * (an extra RCPT, a whole extra DATA), and `<`, `>` or whitespace rewrite the
+ * command's own syntax. No real address holds any of them. Thrown as a
+ * non-retryable {@link SmtpNotSentError}: nothing was sent, and trying again
+ * cannot help.
+ */
+export function assertEnvelopeSafe(msg: Pick<SmtpMessage, "from" | "recipients">): void {
+  const bad = [msg.from, ...msg.recipients].find((address) =>
+    // deno-lint-ignore no-control-regex
+    typeof address !== "string" || address.length === 0 || /[\x00-\x20\x7F<>]/.test(address)
+  );
+  if (bad !== undefined) {
+    // deno-lint-ignore no-control-regex
+    const shown = String(bad).replace(/[\x00-\x1F\x7F]/g, "?").slice(0, 200);
+    throw new SmtpNotSentError(
+      `SMTP envelope refused: "${shown}" is not a valid email address (it contains whitespace, a control character or an angle bracket). Nothing was sent.`,
+      false,
+    );
+  }
+}
+
+/**
  * Should a failed submission be tried once more through the relay?
  *
  * Only for a host that is not relayed already (otherwise the failure came
@@ -209,6 +288,8 @@ export function shouldRetrySmtpThroughRelay(host: string, err: unknown): boolean
   if (!relayForFallback()) return false;
   if (relayRouteFor(host, "smtp") !== null) return false;
   if (relayFallbackCoolingDown(host, "smtp")) return false;
+  // The relay's filter refuses IP literals, so the retry could only fail.
+  if (isIpLiteralHost(host)) return false;
   const text = err instanceof Error ? err.message : String(err ?? "");
   if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
   if (err instanceof SmtpAuthError) return isOriginRefusalText(text);
@@ -262,6 +343,9 @@ async function submitOnce(
   msg: SmtpMessage,
   mode: SmtpConnectMode = "auto",
 ): Promise<void> {
+  // Checked again at the line that writes the envelope (defence in depth: a
+  // future caller of submitOnce must not be able to skip it).
+  assertEnvelopeSafe(msg);
   // Flipped the instant the server answers DATA with 354: the next byte we
   // write is the message itself, and no failure past here is safe to retry.
   let dataAccepted = false;
@@ -315,14 +399,21 @@ async function submitOnce(
     // original with `Content-Transfer-Encoding: 8bit` parts is exactly that;
     // everything our own builder writes is base64 and stays 7-bit.
     const eightBit = messageHasEightBit(msg.rawMessage) && advertises8BitMime(capabilities.lines);
-    await session.command(`MAIL FROM:<${msg.from}>${eightBit ? " BODY=8BITMIME" : ""}`, 250);
+    const mailFromLine = `MAIL FROM:<${msg.from}>${eightBit ? " BODY=8BITMIME" : ""}`;
+    const mailFrom = await session.commandRaw(mailFromLine);
+    if (mailFrom.code !== 250) {
+      if (isSenderOwnershipRefusal(mailFrom)) {
+        throw new SmtpSenderRefusedError(`SMTP MAIL FROM <${msg.from}> refused: ${mailFrom.code} ${mailFrom.text}`);
+      }
+      throw mailFromRefusal(msg.from, mailFrom);
+    }
     for (const rcpt of msg.recipients) {
       // 250 = accepted, 251 = forwarded.
       const r = await session.commandRaw(`RCPT TO:<${rcpt}>`);
       if (r.code !== 250 && r.code !== 251) {
         throw new SmtpNotSentError(
           `SMTP RCPT TO <${rcpt}> rejected: ${r.code} ${r.text}`,
-          !isRecipientAddressRejection(r),
+          isRetryableEnvelopeRefusal(r),
         );
       }
     }
@@ -330,7 +421,13 @@ async function submitOnce(
     await session.command("DATA", 354);
     dataAccepted = true;
     await session.writeData(msg.rawMessage);
-    await session.expect(250);
+    const accepted = await session.readReplyRaw();
+    if (accepted.code !== 250) {
+      if (isSenderOwnershipRefusal(accepted)) {
+        throw new SmtpSenderRefusedError(`SMTP message from <${msg.from}> refused: ${accepted.code} ${accepted.text}`);
+      }
+      throw new Error(`SMTP: expected 250, got ${accepted.code} ${accepted.text}`);
+    }
 
     await session.commandRaw("QUIT");
     if (relayedRoute) {
@@ -354,6 +451,48 @@ async function submitOnce(
   } finally {
     session.close();
   }
+}
+
+/**
+ * A MAIL FROM answer other than 250, as a not-sent envelope verdict.
+ *
+ * Worded like the RCPT TO refusal so shouldRetrySmtpThroughRelay can tell the
+ * server judged the envelope and only sends it through the relay when the
+ * reply blames where we connect from (an ACR04, a listed IP). A plain policy
+ * refusal (`550 5.7.1 ... Command rejected`) fails the same from any address.
+ * Before 2026-10-21 this was a bare Error that submitOnce wrapped as a
+ * retryable not-sent error without the "MAIL FROM" words, so every MAIL-stage
+ * refusal earned a relay retry.
+ *
+ * Retryable or not by {@link isRetryableEnvelopeRefusal}, the same rule as a
+ * refused RCPT TO.
+ */
+export function mailFromRefusal(from: string, reply: SmtpReply): SmtpNotSentError {
+  return new SmtpNotSentError(
+    `SMTP MAIL FROM <${from}> refused: ${reply.code} ${reply.text}`,
+    isRetryableEnvelopeRefusal(reply),
+  );
+}
+
+/**
+ * Can a refused MAIL FROM or RCPT TO succeed if it is tried again later?
+ *
+ * A 4xx reply is transient by definition (greylisting, a rate limit), so yes,
+ * unless it names a bad address (5.1.x). A 5xx reply is permanent (RFC 5321
+ * 4.2.1) with one exception: an origin block whose own words blame the address
+ * we connect from (the ACR04 family, relay-registry.ts isOriginRefusalText).
+ * That one is about the egress IP, so the relay retry or a later attempt from
+ * a fresh isolate can get through.
+ *
+ * Before 2026-10-29 every 5xx without a 5.1.x class was retryable. On
+ * 2026-10-28 one provider refused 48 scheduled sends at RCPT TO with
+ * `550 Outgoing mail from <address> blocked`, an account-level block, and the
+ * dispatcher retried each one once a minute for its whole defer window.
+ */
+export function isRetryableEnvelopeRefusal(reply: SmtpReply): boolean {
+  if (isRecipientAddressRejection(reply)) return false;
+  if (reply.code >= 500) return isOriginRefusalText(reply.text);
+  return true;
 }
 
 function errorText(err: unknown): string {
@@ -605,6 +744,10 @@ class SmtpSession {
 
   /** Send a command and return the parsed reply without asserting. */
   async commandRaw(line: string): Promise<SmtpReply> {
+    // One command is one line. A CR or LF inside it would be a second command.
+    if (/[\r\n]/.test(line)) {
+      throw new Error(`SMTP: refused to write a command containing a line break ("${line.split(" ")[0]}")`);
+    }
     await writeAllBytes(this.conn, this.encoder.encode(line + "\r\n"));
     return this.readReply();
   }
@@ -616,6 +759,11 @@ class SmtpSession {
       throw new Error(`SMTP: expected ${expected}, got ${reply.code} ${reply.text}`);
     }
     return reply;
+  }
+
+  /** Read a reply (no command) without asserting the code. */
+  async readReplyRaw(): Promise<SmtpReply> {
+    return await this.readReply();
   }
 
   /** Write the DATA payload with dot-stuffing and the terminating <CRLF>.<CRLF>. */
@@ -742,12 +890,14 @@ async function openRelayedSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpCon
     return { conn, cfg, route };
   } catch (err) {
     if (!(err instanceof RelayUnavailableError)) throw err;
-    noteRelayFailure();
+    // A relay that refused this one target is healthy; see RelayTargetRefusedError.
+    const relayDown = relayFailureIsRelayDown(err);
+    if (relayDown) noteRelayFailure();
     recordRelayUse({
       protocol: "smtp",
       host: cfg.host,
       route,
-      outcome: "relay_down",
+      outcome: relayDown ? "relay_down" : "host_refused",
       ms: Date.now() - startedMs,
       detail: err.message,
     });
@@ -788,12 +938,13 @@ async function openFallbackSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpCo
     return { conn, cfg, route: "fallback" };
   } catch (err) {
     if (err instanceof RelayUnavailableError) {
-      noteRelayFailure();
+      const relayDown = relayFailureIsRelayDown(err);
+      if (relayDown) noteRelayFailure();
       recordRelayUse({
         protocol: "smtp",
         host: cfg.host,
         route: "fallback",
-        outcome: "relay_down",
+        outcome: relayDown ? "relay_down" : "host_refused",
         ms: Date.now() - startedMs,
         detail: err.message,
       });

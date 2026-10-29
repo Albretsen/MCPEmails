@@ -24,7 +24,40 @@
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à OVH. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez."
+    "answer": "Claude ne peut pas accéder seul à OVH. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
+  },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP, E-mail Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, E-mail Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "Les deux premières lignes concernent MX Plan. Le 4 de ex4 et pro4 est votre propre numéro de serveur, affiché dans l'espace client OVHcloud, onglet Informations générales. Pour toute autre adresse, utilisez la",
+      "label": "recherche de paramètres e-mail",
+      "href": "/tools/email-settings-lookup"
+    }
   },
   "persona": {
     "intro": "Plusieurs boîtes d'entreprise chez OVH ?",
@@ -33,19 +66,19 @@
   },
   "method": {
     "title": "Comment OVH se connecte : IMAP et le mot de passe de votre boîte",
-    "body": "Une boîte OVH MX Plan se connecte en IMAP/SMTP avec le mot de passe de la boîte défini dans l'espace client OVH, et les deux serveurs sont <code>ssl0.ovh.net</code>. OVH Hosted Exchange est un service différent : ses serveurs ressemblent à <code>ex4.mail.ovh.net</code> et le courrier sortant passe en STARTTLS sur le port 587, jamais 465, ce qui explique que les réglages de l'hébergement mutualisé restent simplement bloqués face à lui. mcpemails reconnaît les deux et choisit la bonne paire."
+    "body": "Une boîte OVH MX Plan se connecte en IMAP/SMTP avec le mot de passe de la boîte défini dans l'espace client OVH, et les deux serveurs sont <code>ssl0.ovh.net</code>. OVH Hosted Exchange est un service différent : ses serveurs ressemblent à <code>ex4.mail.ovh.net</code> et le courrier sortant passe en STARTTLS sur le port 587, jamais 465, ce qui explique que les réglages de l'hébergement mutualisé restent simplement bloqués face à lui. MCPEmails reconnaît les deux et choisit la bonne paire."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Obtenez le mot de passe de votre boîte OVH",
       "p": "Dans l'espace client OVH, ouvrez le service e-mail, choisissez l'adresse et changez son mot de passe. Notez le serveur de messagerie qu'OVH affiche pour cette boîte s'il ne s'agit pas de ssl0.ovh.net."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse OVH, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -64,7 +97,7 @@
     },
     {
       "h": "Rien dans votre adresse n'indique quel produit OVH vous avez",
-      "p": "Les trois produits servent le courrier sur votre propre domaine, si bien que <code>you@yourdomain.fr</code> a exactement le même aspect quel que soit le produit. La réponse se trouve dans l'OVHcloud Control Panel sous Web Cloud, où MX Plan apparaît sous Emails, Email Pro a sa propre section et Hosted Exchange une autre. Vérifiez-le d'abord, car tous les autres réglages en dépendent. Si votre commande OVH portait sur Microsoft 365 plutôt que sur le Hosted Exchange d'OVH, la boîte est hébergée sur les serveurs de Microsoft : connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer."
+      "p": "Les trois produits servent le courrier sur votre propre domaine, si bien que <code>you@yourdomain.fr</code> a exactement le même aspect quel que soit le produit. La réponse se trouve dans l'OVHcloud Control Panel sous Web Cloud, où MX Plan apparaît sous Emails, Email Pro a sa propre section et Hosted Exchange une autre. Vérifiez-le d'abord, car tous les autres réglages en dépendent. Si votre commande OVH portait sur Microsoft 365 plutôt que sur le Hosted Exchange d'OVH, la boîte est hébergée sur les serveurs de Microsoft : connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCPEmails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer."
     },
     {
       "h": "MX Plan tourne sous Dovecot sans MOVE, UIDPLUS ni SPECIAL-USE",
@@ -79,7 +112,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie OVH ?",
-      "a": "Pas seul. Claude n'a pas de connecteur OVHcloud intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. La seule chose à établir d'abord, c'est à quel produit de messagerie OVH appartient l'adresse, car les noms de serveurs diffèrent complètement de l'un à l'autre."
+      "a": "Pas seul. Claude n'a pas de connecteur OVHcloud intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. La seule chose à établir d'abord, c'est à quel produit de messagerie OVH appartient l'adresse, car les noms de serveurs diffèrent complètement de l'un à l'autre."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'OVH ?",
@@ -104,7 +137,7 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes OVH sur un seul agent",
-    "sub": "Connectez votre première boîte OVH gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte OVH gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
   "seeAlso": {
     "intro": "Une boîte Microsoft 365 achetée via OVHcloud ?",

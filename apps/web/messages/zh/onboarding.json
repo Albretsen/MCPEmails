@@ -1,0 +1,361 @@
+{
+  "shell": {
+    "title": "设置 MCPEmails",
+    "progress": "第 {current} 步，共 {total} 步",
+    "exit": "关闭设置",
+    "loading": "正在加载你的设置",
+    "statusError": "无法加载你的设置。请刷新页面重试。",
+    "skip": "跳过设置"
+  },
+  "chip": {
+    "using": "使用 {client}",
+    "change": "更改",
+    "label": "你与 MCPEmails 一起使用的 AI 应用",
+    "more": "更多应用"
+  },
+  "steps": {
+    "inbox": {
+      "title": "连接你的收件箱",
+      "reuseTitle": "已连接一个收件箱",
+      "reuse": "使用 {address}",
+      "connectAnother": "连接另一个收件箱",
+      "lead": "你希望 AI 读取和回复的那个。",
+      "emailLabel": "邮箱地址",
+      "useSignup": "使用 {address}",
+      "detecting": "正在识别你的邮箱服务商",
+      "detected": "{provider}",
+      "notRight": "更改",
+      "chooseLead": "是哪个服务商？",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "其他（IMAP）"
+      },
+      "gmail": {
+        "step1Title": "开启两步验证。",
+        "step1Body": "已经开启？跳过此步。",
+        "step1Link": "打开两步验证",
+        "step2Title": "创建应用专用密码。",
+        "step2Body": "名称填写 MCPEmails，然后点击创建。Google 只显示一次这 16 个字母，请在关闭页面前复制。",
+        "step2Link": "创建应用专用密码",
+        "step3Title": "粘贴到下方。",
+        "missingTitle": "找不到应用专用密码页面？",
+        "missingBody": "原因有三种：两步验证未开启（第 1 步），工作或学校的管理员关闭了应用专用密码，或者该帐号使用了高级保护或仅使用安全密钥。",
+        "workspace": "此帐号由你的公司管理。如果第 2 步提示该设置不可用，需要管理员允许两步验证和应用专用密码。"
+      },
+      "icloud": {
+        "step1Title": "打开你的 Apple 账户。",
+        "step1Link": "打开 account.apple.com",
+        "step2Title": "选择登录与安全，然后选择 App 专用密码。",
+        "step2Body": "生成一个新密码，并命名为 MCPEmails。",
+        "step3Title": "粘贴到下方。",
+        "step3Body": "Apple 只显示一次，格式为 xxxx-xxxx-xxxx-xxxx。",
+        "missingTitle": "找不到该选项？",
+        "missingBody": "必须开启双重认证。如果你最近重设过 Apple 账户密码，旧的 App 专用密码已失效，请重新生成一个。"
+      },
+      "yahoo": {
+        "step1Title": "打开 {provider} 帐号安全页面。",
+        "step1Link": "创建应用密码",
+        "step2Title": "在外部连接下，选择创建应用密码。",
+        "step2Body": "输入 MCPEmails，然后点击生成密码。",
+        "step3Title": "将 16 个字母粘贴到下方。",
+        "missingTitle": "没有这个选项，或提示暂时不可用？",
+        "missingBody": "开启两步验证后刷新页面。新帐号可能需要等待最多两周。请使用你平时登录的浏览器，不要用无痕窗口。"
+      },
+      "gmx": {
+        "step1Title": "在 {provider} 中开启 IMAP。",
+        "step1Body": "在网页邮箱中打开 E-Mail-Einstellungen，然后进入 POP3/IMAP，开启 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。",
+        "step1Link": "如何开启 IMAP",
+        "step2Title": "开启了双重认证？",
+        "step2Body": "在 Sicherheit（安全）下创建应用专用密码。它只显示一次。如果未开启双重认证，请使用你平时的 {provider} 密码。",
+        "step3Title": "粘贴到下方。",
+        "missingTitle": "以前能用，现在不行了？",
+        "missingBody": "{provider} 可能会再次关闭 IMAP。请检查第 1 步。"
+      },
+      "microsoft": {
+        "step1Title": "点击使用 Microsoft 连接，并在 Microsoft 页面上登录。",
+        "step2Title": "接受权限页面。",
+        "note": "这里不需要密码。你会在 Microsoft 自己的页面上登录。",
+        "connect": "使用 Microsoft 连接",
+        "adminTitle": "工作或学校帐户？",
+        "adminBody": "许多组织要求管理员先批准新应用，你才能登录。如果 Microsoft 要求管理员批准，请把这个链接发给管理员。管理员不需要 MCPEmails 帐户。",
+        "adminLink": "获取给管理员的链接",
+        "adminCopy": "复制链接",
+        "adminCopied": "已复制",
+        "adminError": "无法创建链接。请重试。"
+      },
+      "proton": {
+        "title": "Proton Mail 需要 Proton Bridge",
+        "body": "Proton Mail 只能通过 Proton Bridge 与邮件应用配合使用，而 Bridge 运行在你自己的电脑上。MCPEmails 运行在云端，无法连接到它，因此无法连接 Proton 邮箱。"
+      },
+      "imap": {
+        "step1": "使用完整的邮箱地址和该邮箱本身的密码，而不是主机或控制面板的登录密码。",
+        "step2": "如果邮箱开启了双重认证，请在服务商的安全设置中创建应用专用密码并使用它。",
+        "appPasswordLink": "创建 {provider} 应用专用密码",
+        "servers": "服务器：{host}",
+        "manualLead": "没有找到你的邮件服务器。你的服务商会在帮助页面中列出。",
+        "imapHost": "收件服务器（IMAP）",
+        "smtpHost": "发件服务器（SMTP）",
+        "port": "端口",
+        "username": "登录名（如果不是你的邮箱地址）",
+        "advanced": "高级"
+      },
+      "password": {
+        "labelApp": "应用专用密码",
+        "labelMailbox": "密码",
+        "spaces": "包含空格也没关系。",
+        "show": "显示",
+        "hide": "隐藏",
+        "warnAccount": "这看起来像普通密码。{provider} 在这里需要应用专用密码：16 个字母。",
+        "warnLength": "应用专用密码有 16 个字母。请确认已完整复制。",
+        "warnNote": "你仍然可以试试。"
+      },
+      "trust": {
+        "appPassword": "应用专用密码只能访问你的邮件。加密存储在斯德哥尔摩，可随时撤销。",
+        "mailboxPassword": "加密存储在斯德哥尔摩。可随时断开。"
+      },
+      "connect": "连接",
+      "progress": {
+        "title": "正在连接 {address}",
+        "server": "已找到邮件服务器",
+        "signedIn": "已登录",
+        "read": "已读取邮箱"
+      },
+      "proof": {
+        "title": "已连接",
+        "count": "收件箱中有 {count} 封邮件",
+        "newest": "最新",
+        "noSubject": "（无主题）",
+        "private": "仅你可见，直接从你的邮箱实时读取。",
+        "ready": "你的邮箱已连接并可以使用。",
+        "continue": "继续"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider} 已为此邮箱关闭 IMAP 访问。请开启后重试。",
+          "app_password_required": "{provider} 在这里需要应用专用密码，而不是你的普通密码。",
+          "account_password_used": "这看起来像你的普通 {provider} 密码。请改用应用专用密码。",
+          "app_password_length": "这个应用专用密码似乎不完整。它应该有 16 个字母。",
+          "provider_refused_signin": "{provider} 拒绝的是这次登录本身，而不是密码。请在浏览器中登录 {provider}，处理任何安全提示后重试。",
+          "login_username_required": "此服务器需要一个不同于邮箱地址的登录名。请在服务商的设置中找到它，并填写在高级中。",
+          "password_rejected": "{provider} 没有接受这个密码。请检查后重新粘贴。"
+        },
+        "network": "无法连接到 MCPEmails。请检查网络后重试。",
+        "limit": "此工作区已达到其套餐包含的邮箱数量。",
+        "sessionExpired": "你已退出登录。请重新登录，然后回到此页面。",
+        "notAllowed": "只有工作区所有者和管理员可以连接邮箱。",
+        "alreadyConnected": "此邮箱已在该工作区中连接。",
+        "useMicrosoft": "这是 Microsoft 邮箱，需要通过 Microsoft 登录连接，而不是密码。",
+        "smtpRejected": "读取正常，但服务器拒绝了用于发送的登录。",
+        "blocked": "邮件服务器拒绝了我们的连接。部分服务商会屏蔽云服务器。",
+        "hostNotFound": "找不到该邮件服务器。请检查服务器名称。",
+        "unreachable": "邮件服务器没有响应。请检查服务器名称和端口。",
+        "tls": "与邮件服务器的安全连接失败。请尝试另一个端口。",
+        "hostRefused": "无法连接到该服务器名称或端口。请检查服务器设置。",
+        "saveFailed": "已登录，但保存失败。请稍后重试。",
+        "generic": "没有成功。请重试，或连接其他邮箱。",
+        "link": {
+          "twoStep": "打开两步验证",
+          "appPasswords": "打开 {provider} 应用专用密码页面",
+          "imapSetting": "如何在 {provider} 开启 IMAP",
+          "providerHelp": "{provider} 帮助页面",
+          "adminGuide": "Google 给管理员的指南"
+        },
+        "kept": "你的地址已保留，重试只需再粘贴一次。",
+        "readOnly": "仅以只读方式连接",
+        "readOnlyNote": "你的 AI 可以读取和搜索，但不能发送。",
+        "different": "连接其他邮箱",
+        "support": "将此错误发送给支持团队",
+        "supportNote": "我们只会收到错误信息和你的服务商，绝不会收到你的密码。",
+        "signIn": "重新登录",
+        "seePlans": "查看方案"
+      },
+      "outlookError": {
+        "admin_consent_required": "你的组织需要管理员批准 MCPEmails 后你才能登录。请把下面的链接发给管理员。",
+        "outlook_cancelled": "你在 Microsoft 页面上取消了。点击使用 Microsoft 连接即可重试。",
+        "generic": "Microsoft 登录未完成。请重试。"
+      },
+      "emailPlaceholder": "you@example.com"
+    },
+    "add_to_ai": {
+      "title": "将 MCPEmails 添加到 {client}",
+      "lead": "{client} 连接后会自动继续。",
+      "urlLabel": "MCPEmails 服务器 URL",
+      "linkAfter": "在 {client} 中确认，然后登录 MCPEmails。",
+      "claudeAfter": "在 Claude 中点击继续，再点击添加，然后点击连接。",
+      "commandAfter": "然后启动 {client}，在提示时登录 MCPEmails。",
+      "configLead": "把这段加入 {file}，重新加载 {client}，在提示时登录 MCPEmails。",
+      "genericOauth": "在 {client} 中添加一个 HTTP 类型的 MCP 服务器，粘贴下面的 URL，在提示时登录 MCPEmails。",
+      "manual": "手动设置",
+      "continue": "我已添加",
+      "chatgpt": {
+        "step1": "在 chatgpt.com 上打开 Plugins，点击右上角的 Add。",
+        "step2": "选择 Add custom MCP server，命名为 MCPEmails，并把下面的 URL 粘贴为 Server URL。",
+        "step3": "勾选 I understand and want to continue，点击 Create as a plugin，然后点击 Connect MCPEmails 并允许访问。",
+        "step4": "在对话中输入 @MCPEmails 即可使用。",
+        "note": "自定义 MCP 服务器适用于 Go 方案和所有付费方案，需要在浏览器中打开 chatgpt.com。"
+      },
+      "key": {
+        "creating": "正在为 {client} 创建 API 密钥",
+        "ready": "我们已为 {client} 创建了一个标准权限的 API 密钥（读取、草稿、发送）。请现在复制：它只显示一次。",
+        "failed": "无法创建 API 密钥。请在控制台的 API 密钥页面创建一个。",
+        "limit": "你的方案已没有空间再添加 API 密钥。请先在控制台删除一个，然后刷新此页面。",
+        "retry": "重试",
+        "header": "请求头",
+        "label": "API 密钥"
+      },
+      "cline": {
+        "step1": "在 Cline 中打开 MCP Servers，然后打开 Remote Servers 标签页。",
+        "step2": "命名为 MCPEmails，粘贴 URL，并将 Transport Type 设为 Streamable HTTP。",
+        "step3": "添加下面的请求头，然后点击 Add Server。"
+      },
+      "jetbrains": {
+        "step1": "打开 Settings，然后依次打开 Tools、AI Assistant、Model Context Protocol (MCP)。",
+        "step2": "点击 Add，选择 Streamable HTTP 并粘贴 URL。",
+        "step3": "添加下面的请求头并保存。"
+      },
+      "curl": "用这个密钥调用服务器。下一步会给你第一个可发送的请求。",
+      "phone": {
+        "claudeTitle": "在手机上，请通过浏览器添加",
+        "claudeBody": "复制此链接并粘贴到 Safari 或 Chrome 中。直接点击可能会打开 Claude 应用，而应用中无法添加连接器。添加后，MCPEmails 在应用中也能使用。",
+        "copyLink": "复制链接",
+        "otherBody": "{client} 需要在电脑上设置。我们可以把这一步发到你的邮箱，方便你在电脑上打开。",
+        "showHere": "仍在这里显示步骤"
+      }
+    },
+    "first_prompt": {
+      "title": "在 {client} 中试一试",
+      "lead": "把这段粘贴到新对话中。",
+      "leadCode": "把这段粘贴到 {client} 中。",
+      "leadApi": "发送你的第一个请求：",
+      "open": "打开 {client}"
+    },
+    "wait": {
+      "title": "正在等待 {client}"
+    },
+    "it_works": {
+      "title": "已成功",
+      "success": {
+        "read": "{client} 刚刚读取了你的收件箱。",
+        "search": "{client} 刚刚搜索了你的收件箱。",
+        "draft": "{client} 刚刚在你的邮箱中保存了一封草稿。",
+        "organize": "{client} 刚刚整理了你的收件箱。",
+        "generic": "{client} 刚刚使用了你的邮箱。",
+        "connected": "{client} 已连接到你的邮箱。"
+      },
+      "finish": "完成",
+      "secondInbox": {
+        "title": "连接你的另一个收件箱",
+        "lead": "大多数人会再连接一个收件箱：工作和个人邮件在同一个对话里。",
+        "cta": "再连接一个收件箱",
+        "paidNote": "Free 包含一个收件箱。连接下一个时会显示方案选项，旁边就是“继续使用 Free”。"
+      }
+    }
+  },
+  "nav": {
+    "continue": "继续",
+    "back": "返回",
+    "done": "完成"
+  },
+  "placeholder": "此步骤仍在建设中。",
+  "actions": {
+    "copy": "复制",
+    "copied": "已复制",
+    "emailMe": "把这个链接发到我的邮箱",
+    "emailSent": "已发送到 {email}。",
+    "emailFailed": "无法发送邮件，请一分钟后重试。"
+  },
+  "ladder": {
+    "waiting": "正在等待 {client}",
+    "connected": "{client} 已连接",
+    "ask": "向它提问",
+    "works": "已成功",
+    "listening": "正在等待 {client}",
+    "stopped": "已停止等待。试过提示词后请刷新此页面。"
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client} 尚未连接",
+      "claude": "刷新 claude.ai 并开始新对话。如果使用 Claude Desktop，请完全退出应用后重新打开。",
+      "chatgpt": "在 chatgpt.com 上开始新对话，输入 @ 并选择 MCPEmails。",
+      "editor": "重新加载 {client} 窗口，检查 MCPEmails 在 MCP 列表中显示为已连接。如果没有，请重新粘贴 URL。",
+      "cli": "退出并重新启动 {client}，然后检查 MCPEmails 已列出并已连接。",
+      "api": "重新发送请求，并检查 Authorization 请求头中带有你的密钥。"
+    },
+    "noCall": {
+      "title": "{client} 已连接，但还没有使用 MCPEmails",
+      "claude": "在此对话中开启 MCPEmails（+ > Connectors），或开始新对话，然后重新粘贴提示词。",
+      "chatgpt": "在对话中输入 @ 并选择 MCPEmails，然后重新粘贴提示词。",
+      "other": "开始新对话并重新粘贴提示词。提示词中提到了 MCPEmails，{client} 就知道要使用它。"
+    },
+    "reconnect": {
+      "title": "还是不行？",
+      "body": "从 {client} 中移除 MCPEmails，重新添加，然后开始新对话。",
+      "docs": "{client} 设置指南",
+      "back": "重新显示设置步骤",
+      "email": "把步骤发到我的邮箱"
+    }
+  },
+  "failure": {
+    "auth": "你的邮件服务商拒绝了收件箱密码。请在控制台中重新连接收件箱。",
+    "timeout": "你的邮件服务器响应太慢。请缩短时间范围后再问一次。",
+    "provider": "你的邮件服务商返回了错误。请一分钟后重试。",
+    "scope": "你授予 {client} 的权限不允许这样做。请换个请求，或用更多权限重新连接。",
+    "inbox": "{client} 没有找到已连接的收件箱。请在控制台中检查你的收件箱。",
+    "params": "{client} 发送了 MCPEmails 无法读取的请求。它通常会自动重试。",
+    "generic": "{client} 的上一个请求失败了。请再问一次。"
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "使用 MCPEmails，查看我过去 2 天的收件箱，告诉我今天哪些邮件需要我回复。每封一行：谁、想要什么、截止何时。不要发送、起草、移动或删除任何内容。",
+      "code": "使用 MCPEmails 工具查看我过去 2 天的收件箱，告诉我今天哪些邮件需要我回复。每封一行：谁、想要什么、截止何时。不要发送、起草、移动或删除任何内容。"
+    },
+    "draftReplies": {
+      "drafts": "从这个列表中选出最需要回复的 3 封邮件，用我平常的语气为每封写一封回复草稿，保存到我的草稿文件夹。不要发送任何内容。",
+      "readOnly": "从这个列表中选出最需要回复的 3 封邮件，直接在对话中为每封写一段简短回复。不要发送或保存任何内容。"
+    },
+    "morningBrief": {
+      "chat": "使用 MCPEmails，给我今天的晨间简报：从昨天到现在收到了什么、今天需要回复什么、以及本周有截止日期的事项。不超过 10 行。不要更改任何内容。",
+      "code": "使用 MCPEmails 工具给我今天的晨间简报：从昨天到现在收到了什么、今天需要回复什么、以及本周有截止日期的事项。不超过 10 行。不要更改任何内容。"
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "你的 MCPEmails 设置链接",
+      "intro": "在电脑上打开此链接，把 MCPEmails 添加到 {client}："
+    },
+    "helpSteps": {
+      "subject": "如何将 MCPEmails 连接到 {client}",
+      "intro": "让 {client} 与 MCPEmails 正常配合的方法：",
+      "prompt": "然后把这段提示词粘贴到新对话中：",
+      "guide": "设置指南：",
+      "resume": "从上次中断的地方继续："
+    },
+    "morning": {
+      "subject": "你的晨间简报提示词",
+      "intro": "早上好。把这段粘贴到 {client} 中，获取你的晨间简报："
+    },
+    "footer": "你在设置 MCPEmails 时请求了这封邮件。它只发送一次。"
+  },
+  "chatReturn": {
+    "title": "已连接。回到 {client} 再问一次。",
+    "lead": "你的邮箱已就绪。再向 {client} 问一次同样的问题，或者从这句开始：",
+    "prompt": "查看我过去 24 小时的收件箱，告诉我哪些邮件需要我回复。",
+    "copy": "复制提示词",
+    "copied": "已复制",
+    "open": "打开 {client}",
+    "yourApp": "你的 AI 应用",
+    "dashboard": "前往控制台"
+  }
+}

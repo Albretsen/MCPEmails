@@ -81,10 +81,18 @@ export interface DbCall {
   target: string;
   query: string;
   body: unknown;
+  /** PostgREST answers already delivered when this request was issued. */
+  answeredBefore: number;
 }
 
 export interface World {
   inbox: Record<string, unknown>;
+  /** Further inboxes in the workspace, after `inbox`; empty for most tests. */
+  extraInboxes: Record<string, unknown>[];
+  /** Rows a list GET on another table returns (default: none). */
+  dbRows: Record<string, unknown[]>;
+  /** PostgREST answers delivered so far. */
+  dbAnswered: number;
   handler: ProviderHandler;
   /** Every non-PostgREST request, in issue order. */
   calls: ProviderCall[];
@@ -114,11 +122,32 @@ export function json(body: unknown, status = 200, headers: Record<string, string
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-function answerDb(w: World, method: string, target: string, wantsObject: boolean): Response {
+function answerDb(w: World, method: string, target: string, wantsObject: boolean, query = ""): Response {
   if (target === "inboxes" && method === "GET") {
-    return wantsObject ? json(w.inbox) : json([w.inbox]);
+    if (w.extraInboxes.length === 0) return wantsObject ? json(w.inbox) : json([w.inbox]);
+    // Several inboxes: a list returns them all, a single-row read the one
+    // whose id the query names (the first when it names none).
+    const all = [w.inbox, ...w.extraInboxes];
+    const idFilter = new URLSearchParams(query).get("id");
+    const id = idFilter?.replace(/^eq\./, "");
+    if (wantsObject) return json(all.find((row) => row.id === id) ?? w.inbox);
+    // A list honours an `id=eq.` or `id=in.(...)` filter, as PostgREST would
+    // (maybeSingle reads a list and refuses more than one row).
+    if (idFilter?.startsWith("eq.")) return json(all.filter((row) => row.id === id));
+    if (idFilter?.startsWith("in.(")) {
+      const ids = idFilter.slice(4, -1).split(",").map((s) => s.replace(/^"|"$/g, ""));
+      return json(all.filter((row) => ids.includes(String(row.id))));
+    }
+    return json(all);
   }
-  if (method === "GET") return wantsObject ? json(null) : json([]);
+  // An RPC a test gave rows for (e.g. "rpc/workspace_pro_features"); any
+  // other RPC keeps its empty 204.
+  if (method === "POST" && target.startsWith("rpc/") && Object.hasOwn(w.dbRows, target)) {
+    return json(w.dbRows[target]);
+  }
+  if (method === "GET") return wantsObject ? json(null) : json(w.dbRows[target] ?? []);
+  // An RPC answers the rows a test put under "rpc/<name>"; otherwise nothing.
+  if (method === "POST" && target.startsWith("rpc/") && w.dbRows[target]) return json(w.dbRows[target]);
   return new Response(null, { status: 204 });
 }
 
@@ -142,11 +171,12 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
     try {
       body = bodyText ? JSON.parse(bodyText) : null;
     } catch { /* not JSON */ }
-    w.db.push({ method, target, query: url.search, body });
+    w.db.push({ method, target, query: url.search, body, answeredBefore: w.dbAnswered });
     const wantsObject = (headers.get("accept") ?? "").includes("vnd.pgrst.object");
     return sleep(0).then(() => {
       w.activity++;
-      return answerDb(w, method, target, wantsObject);
+      w.dbAnswered++;
+      return answerDb(w, method, target, wantsObject, url.search);
     });
   }
 
@@ -279,6 +309,9 @@ export function alreadyExpired(): string {
 function newWorld(inbox: Record<string, unknown>, handler: ProviderHandler): World {
   return {
     inbox,
+    extraInboxes: [],
+    dbRows: {},
+    dbAnswered: 0,
     handler,
     calls: [],
     db: [],
@@ -347,6 +380,21 @@ export async function runTool<T>(
   body: () => Promise<T>,
 ): Promise<RunOutcome<T>> {
   const w = newWorld(inbox, handler);
+  const value = await inWorld(w, body);
+  return { value, world: w };
+}
+
+/** {@link runTool} for a workspace with several inboxes, listed in this order. */
+export async function runToolWithInboxes<T>(
+  inboxes: Record<string, unknown>[],
+  handler: ProviderHandler,
+  body: () => Promise<T>,
+  dbRows: Record<string, unknown[]> = {},
+): Promise<RunOutcome<T>> {
+  const [first, ...rest] = inboxes;
+  const w = newWorld(first, handler);
+  w.extraInboxes = rest;
+  w.dbRows = dbRows;
   const value = await inWorld(w, body);
   return { value, world: w };
 }
@@ -463,6 +511,24 @@ export function gmailFull(m: FakeGmailMessage): Record<string, unknown> {
       headers: gmailHeaders(m),
       parts,
     },
+  };
+}
+
+/**
+ * A `messages.get?format=raw` body: the message as RFC 822 (headers, then the
+ * text part), base64url-encoded, as Gmail returns it. Header values are the
+ * fixture's, which a raw message holds undecoded.
+ */
+export function gmailRaw(m: FakeGmailMessage): Record<string, unknown> {
+  const headers = gmailHeaders(m).map((h) => `${h.name}: ${h.value}`);
+  const raw = [...headers, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "", m.text ?? ""].join("\r\n");
+  return {
+    id: m.id,
+    threadId: m.threadId ?? `thread-${m.id}`,
+    labelIds: m.labelIds ?? ["INBOX"],
+    snippet: m.snippet ?? "",
+    raw: b64url(raw),
+    internalDate: m.internalDate ?? "1767225600000",
   };
 }
 

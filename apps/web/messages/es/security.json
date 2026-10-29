@@ -38,7 +38,7 @@
       },
       {
         "data": "Token de OAuth o contraseña de aplicación",
-        "accessed": "Se descifra solo dentro de una función aislada en el momento de la llamada",
+        "accessed": "Se descifra en nuestros servidores solo para la petición que lo necesita",
         "stored": "Sí, cifrado en reposo con AES-256-GCM; la clave se guarda por separado"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Sí, cifrado en reposo hasta enviarse, luego se conserva como tu historial"
       },
       {
+        "data": "Envíos retenidos para tu aprobación",
+        "accessed": "Se conservan hasta que alguien los aprueba o rechaza, o caducan a las 24 horas",
+        "stored": "Sí, cifrados en reposo, luego se conservan como tu historial de aprobaciones"
+      },
+      {
         "data": "Actividad de llamadas a herramientas (metadatos)",
         "accessed": "Se registra para tu propio registro de auditoría",
         "stored": "Solo nombre de la herramienta, bandeja, marca de tiempo y estado. Ningún contenido de correo"
       }
     ],
-    "outro": "La única excepción deliberada es un mensaje que pides al agente que programe para más tarde. Tenemos que conservarlo hasta la hora de envío, así que lo almacenamos cifrado mientras tanto y luego guardamos un registro para tu historial."
+    "outro": "Las excepciones deliberadas son los mensajes salientes que tienen que esperar: un mensaje que pides al agente que programe para más tarde y un envío retenido para tu aprobación. Tenemos que conservarlos hasta que salen, así que los almacenamos cifrados mientras tanto y luego guardamos un registro para tu historial."
   },
   "verify": {
     "title": "3. No tienes que confiar en mí, puedes comprobarlo",
@@ -86,7 +91,7 @@
     "intro": "Tus tokens son lo único sensible que conservamos, así que reciben la protección más fuerte que podemos darles:",
     "measures": [
       "Todos los datos en tránsito se cifran usando TLS 1.2 o superior. Las conexiones que no admiten TLS se rechazan.",
-      "Los tokens de OAuth y las credenciales de IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda por separado de los datos cifrados y nunca se ubica junto a ellos.",
+      "Los tokens de OAuth y las credenciales de IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda como secreto del servidor, separada de la base de datos, y nunca se almacena junto a los datos cifrados.",
       "Las API keys se cifran con hash SHA-256 antes de almacenarse. La clave en bruto no se puede recuperar a partir del hash.",
       "El acceso a la base de datos está protegido por políticas de Row-Level Security que impiden que un espacio de trabajo alcance los datos de otro, incluso si una consulta está mal escrita.",
       "El acceso administrativo a la infraestructura de producción requiere autenticación de varios factores y queda registrado."
@@ -108,12 +113,17 @@
       {
         "provider": "Supabase",
         "purpose": "Base de datos, autenticación, funciones edge",
-        "location": "UE (Estocolmo, Suecia)"
+        "location": "Datos almacenados en la UE (Estocolmo, Suecia); el correo se procesa en directo en EE. UU. (Este)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Alojamiento del sitio web y del panel",
-        "location": "Edge global, la región más cercana al usuario"
+        "purpose": "Alojamiento del sitio web, del panel y del endpoint MCP",
+        "location": "CDN global; servidores en EE. UU. (Este) y en la UE (Estocolmo)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relé de correo para los pocos proveedores que rechazan conexiones desde direcciones de la nube (un túnel TLS: no puede leer el correo ni las contraseñas)",
+        "location": "Alemania (UE)"
       },
       {
         "provider": "Stripe",
@@ -140,13 +150,13 @@
   },
   "selfhost": {
     "title": "Ejecútalo tú mismo, no confíes en nadie (nosotros incluidos)",
-    "p1": "MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta exactamente el mismo servidor MCP que tú puedes auto-alojar. Eso significa que \"el correo se obtiene en vivo y nunca se almacena\" es algo que puedes verificar ejecutándolo y observando la red, no algo que tengas que aceptar por fe.",
+    "p1": "MCPEmails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta exactamente el mismo servidor MCP que tú puedes auto-alojar. Eso significa que \"el correo se obtiene en vivo y nunca se almacena\" es algo que puedes verificar ejecutándolo y observando la red, no algo que tengas que aceptar por fe.",
     "p2": "El auto-alojamiento prioriza IMAP/SMTP: conecta cualquier buzón con una contraseña de aplicación, y tus credenciales se cifran bajo una clave que solo tú posees. Un solo comando levanta todo el stack en tu propia máquina.",
     "cta": "Lee la guía de auto-alojamiento"
   },
   "operator": {
     "title": "Quién lleva esto",
-    "p1": "Una sola persona: yo. Soy Asgeir Albretsen y opero como Albretsen Consulting, una empresa individual noruega (enkeltpersonforetak), número de organización 926 646 753, con sede en Bergen, Noruega. Los commits también son míos, bajo <gh>github.com/Albretsen</gh>, así que el nombre de esta página y el nombre del código son el mismo. Hay más detalle en la <about>página «Acerca de»</about>, y la identificación legal completa está en los <terms>términos</terms>.",
+    "p1": "Una sola persona: yo. Soy Asgeir Albretsen y llevo MCPEmails a través de Albretsen AS, una sociedad de responsabilidad limitada noruega (aksjeselskap) de mi propiedad, número de organización 938 702 373, con sede en Bergen, Noruega. Los commits también son míos, bajo <gh>github.com/Albretsen</gh>, así que el nombre de esta página y el nombre del código son el mismo. Hay más detalle en la <about>página «Acerca de»</about>, y la identificación legal completa está en los <terms>términos</terms>.",
     "p2": "Que todo dependa de una sola persona es un riesgo real, y la respuesta no es prometer que siempre estaré aquí. MCPEmails es público bajo AGPL-3.0 y el servicio alojado ejecuta ese mismo código, así que si lo dejo, o si simplemente dejas de confiar en mí, puedes clonar el repositorio y ejecutarlo en tu propia infraestructura con tus propias claves. <selfhostpage>La guía de auto-alojamiento</selfhostpage> es el procedimiento completo. Prefiero ser una persona con nombre a la que puedes escribir y a la que puedes dejar, que un proveedor anónimo en el que solo puedes confiar.",
     "p3": "El correo de soporte y de seguridad no pasa por ninguna cola. Llega a mí, y respondo cada mensaje personalmente."
   }

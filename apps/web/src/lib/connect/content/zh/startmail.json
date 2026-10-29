@@ -21,7 +21,7 @@
     "titleLine1": "将 StartMail 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 StartMail 收件箱。使用一个可单独撤销的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 StartMail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.startmail.com 的 993 端口，通过 SMTP 连接 smtp.startmail.com 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。你的 StartMail 账户密码完全无法让邮件客户端通过认证：StartMail 会在设置的受信任设备部分为每台连接的设备单独生成一个密码，并且只显示一次。请以完整的 StartMail 地址作为用户名，以生成的值作为密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 StartMail。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.startmail.com 的 993 端口，通过 SMTP 连接 smtp.startmail.com 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。你的 StartMail 账户密码完全无法让邮件客户端通过认证：StartMail 会在设置的受信任设备部分为每台连接的设备单独生成一个密码，并且只显示一次。请以完整的 StartMail 地址作为用户名，以生成的值作为密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "生成的设备密码，只显示一次",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "在浏览器中登录 StartMail，打开 <b>Settings</b>，进入管理 IMAP 访问的 <b>trusted devices</b>（受信任设备）部分。选择 <b>Add device</b>，以这个连接为它命名。StartMail 会生成一个随机密码并只显示一次，所以请在关闭对话框前复制。该部分也控制账户的 IMAP 访问，所以如果你还没用上密码登录就被拒绝，请检查那里是否已开启 IMAP。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，以完整的 StartMail 地址作为用户名，粘贴生成的设备密码。发信也使用同一个值：StartMail 用设备凭据而不是账户密码对提交进行认证。服务器已自动填为 <code>imap.startmail.com</code> 和 <code>smtp.startmail.com</code>，并已通过实时 TLS 连接验证。"
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "将 StartMail 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 imap.startmail.com 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。StartMail 的荷兰托管和不追踪立场描述的是 StartMail，并不会随邮件进入你自己接入的 AI 厂商。请把这当作一个关于你愿意暴露哪些往来邮件的决定，而不是你所购买的隐私的延伸。",
-    "PGP 加密的邮件对代理来说是不可读的。StartMail 的密钥处理在你的 StartMail 账户中进行，服务于其自身的网页界面；IMAP 客户端收到的是一段 ASCII 封装的密文，mcpemails 不持有你的任何私钥。代理能看到发件人、主题和日期，也能归档或标记这些会话，但无法阅读内容。",
+    "将 StartMail 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。MCPEmails 每次请求都实时从 imap.startmail.com 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。StartMail 的荷兰托管和不追踪立场描述的是 StartMail，并不会随邮件进入你自己接入的 AI 厂商。请把这当作一个关于你愿意暴露哪些往来邮件的决定，而不是你所购买的隐私的延伸。",
+    "PGP 加密的邮件对代理来说是不可读的。StartMail 的密钥处理在你的 StartMail 账户中进行，服务于其自身的网页界面；IMAP 客户端收到的是一段 ASCII 封装的密文，MCPEmails 不持有你的任何私钥。代理能看到发件人、主题和日期，也能归档或标记这些会话，但无法阅读内容。",
     "StartMail 的 SMTP 服务器声明的邮件大小上限约为 37 MB，低于这里的大多数服务商。代理尝试发送的大附件会在提交时被拒绝，而不是稍后退信，所以较大的文件请使用链接。"
   ],
   "faq": [
     {
       "q": "Claude 能用 StartMail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 StartMail 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 StartMail 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 StartMail 连接器，自身也不会 IMAP。将 MCPEmails 这样的 MCP 服务器连接到你的 StartMail 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "StartMail 的 IMAP 和 SMTP 设置是什么？",
@@ -90,7 +90,7 @@
     },
     {
       "q": "我的 AI 能读取 StartMail 中 PGP 加密的邮件吗？",
-      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 mcpemails 从不会收到你的私钥。这些邮件在 StartMail 自己的界面中仍然可读，密钥处理就在那里进行。你的代理仍然可以对它们进行分类、标记和归档，也能阅读所有未加密到达的邮件。"
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 MCPEmails 从不会收到你的私钥。这些邮件在 StartMail 自己的界面中仍然可读，密钥处理就在那里进行。你的代理仍然可以对它们进行分类、标记和归档，也能阅读所有未加密到达的邮件。"
     },
     {
       "q": "我的 StartMail 邮件会存储在你们的服务器上吗？",

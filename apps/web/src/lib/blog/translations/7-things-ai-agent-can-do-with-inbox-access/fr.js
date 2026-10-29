@@ -7,7 +7,7 @@ const translation = {
 
 Chaque exemple ci-dessous correspond à de vrais outils MCP que vous pouvez appeler dès maintenant. Les outils sont les mêmes que vous connectiez Gmail, Outlook, iCloud, Fastmail ou une boîte IMAP générique. Si vous n’avez pas encore relié un agent à votre boîte mail, le [guide complet pour donner à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access) couvre la configuration ; le [tutoriel de connexion en 2 minutes](/blog/connect-email-to-ai-agent-under-2-minutes) est la voie rapide.
 
-Une mise au point honnête d’entrée, car elle façonne la moitié de cette liste : **MCP Emails fonctionne par interrogation, pas par notification push.** Il n’y a ni webhooks, ni événements initiés par le serveur. L’agent n’est pas prévenu quand un message arrive. Il vérifie selon un calendrier. Cela ressemble à une limite, et pour quelques cas d’usage c’en est une, mais cela signifie aussi que rien ne se déclenche sans une horloge que vous contrôlez. Je signalerai les endroits où l’interrogation compte.
+Une mise au point honnête d’entrée, car elle façonne la moitié de cette liste : **MCPEmails fonctionne par interrogation, pas par notification push.** Il n’y a ni webhooks, ni événements initiés par le serveur. L’agent n’est pas prévenu quand un message arrive. Il vérifie selon un calendrier. Cela ressemble à une limite, et pour quelques cas d’usage c’en est une, mais cela signifie aussi que rien ne se déclenche sans une horloge que vous contrôlez. Je signalerai les endroits où l’interrogation compte.
 
 ## La trousse à outils, d’un seul souffle
 
@@ -29,7 +29,7 @@ On vous ajoute à un fil de 40 messages au message 38. Personne ne va tout relir
 
 > Lis le fil dont l’objet est « Q3 vendor migration » et dis-moi où ça a réellement abouti : ce qui a été décidé, qui est responsable de quoi et toute question ouverte à laquelle je dois répondre.
 
-\`email_read\` avec l’action search trouve le fil (il utilise la syntaxe de recherche native de votre fournisseur, donc les opérateurs Gmail, le KQL d’Outlook et la recherche textuelle IMAP fonctionnent tous), puis \`email_read\` avec l’action read récupère le texte brut analysé de chaque message. Cette action read peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
+\`email_read\` avec l’action search trouve le fil (il reçoit des champs structurés comme l’expéditeur, l’objet, le texte et une plage de dates, et MCPEmails les traduit dans la recherche propre à chaque fournisseur), puis \`email_read\` avec l’action read récupère le texte brut analysé de chaque message. Cette action read peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
 
 ### 3. Rédiger des réponses dans votre style
 
@@ -73,7 +73,7 @@ Cela combine les autres : \`email_read\` (action search, puis list) pour rassemb
 
 ## Ce que ça coûte et où se situent les limites
 
-Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Personal (9 $/mois) connecte jusqu'à trois boîtes et porte la limite de pointe à 120 requêtes par minute ; Pro (15 $/mois) connecte toutes les boîtes que vous possédez et la porte à 300 ; Team (79 $/mois) ajoute des membres avec rôles, un espace de travail distinct par client, le SSO et 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal à 9 $/mois, et Pro seulement au-delà de trois boîtes.
+Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Personal (9 $/mois) connecte jusqu'à trois boîtes et porte la limite de pointe à 120 requêtes par minute ; Pro (15 $/mois) en connecte jusqu'à 10 et la porte à 300 ; Business (39 $/mois) inclut 10 boîtes, ajoute des membres avec rôles et un espace de travail distinct par client, et la porte à 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal à 9 $/mois, et Pro seulement au-delà de trois boîtes.
 
 Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 

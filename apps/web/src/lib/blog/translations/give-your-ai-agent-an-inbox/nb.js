@@ -11,7 +11,7 @@ Dette innlegget går gjennom hvorfor den siste biten er villedende vanskelig, og
 
 E-post ser ut som et løst problem. Det er det ikke — i hvert fall ikke for en autonom agent. Tre ting står i veien:
 
-1. **Autentisering er leverandørspesifikk.** Gmail vil ha OAuth med riktige scopes. Outlook vil ha Microsoft-identitet. Fastmail vil ha et app-passord. Hver av dem har sin egen token-livssyklus og sine egne feilmoduser.
+1. **Autentisering er leverandørspesifikk.** Gmail vil ha et app-passord og totrinnsbekreftelse. Outlook vil ha Microsoft-identitet. Fastmail vil ha et app-passord. Hver av dem har sin egen token-livssyklus og sine egne feilmoduser.
 2. **Innloggingsdetaljer er radioaktive.** Du vil aldri ha et postboks-passord liggende i en chat-logg, en loggføringslinje eller et vektorlager. Aldri.
 3. **«Formen» på e-post er rotete.** MIME, tråding, HTML kontra ren tekst, vedlegg, mapper som egentlig er etiketter. En agent trenger et rent, forutsigbart grensesnitt — ikke rå RFC 5322.
 

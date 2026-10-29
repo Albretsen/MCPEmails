@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Status",
+    "description": "Live-Verfügbarkeit des MCP-Endpunkts von MCPEmails, gemessen durch eine automatische Prüfung, die alle fünf Minuten gegen die Produktion läuft. Echte aufgezeichnete Werte, keine Marketingzahl."
+  },
+  "hero": {
+    "eyebrow": "Status",
+    "title": "Systemstatus",
+    "lead": "Ein Skript-Client verbindet sich alle fünf Minuten mit dem öffentlichen MCP-Endpunkt, listet die Tools auf, listet ein Postfach auf und liest eine Nachricht. Alles unten ist aus dem gezählt, was diese Prüfungen aufgezeichnet haben."
+  },
+  "overall": {
+    "operational": "Alle Systeme funktionieren",
+    "degraded": "Eingeschränkt",
+    "down": "Schwerer Ausfall",
+    "unknown": "Status unbekannt"
+  },
+  "overallNote": {
+    "operational": "Die letzte Prüfung war erfolgreich.",
+    "degraded": "Die letzte Prüfung ist einmal fehlgeschlagen. Der Monitor wartet auf einen zweiten Fehlschlag in Folge, bevor er Alarm auslöst, das Problem kann also schon behoben sein.",
+    "down": "Prüfungen schlagen gerade fehl, und es wurde Alarm ausgelöst.",
+    "unknown": "Wir sehen das letzte Ergebnis des Monitors gerade nicht und können Ihnen daher den aktuellen Zustand nicht nennen. Das ist ein Fehler in der Überwachung, keine Aussage über das Produkt."
+  },
+  "checked": {
+    "now": "Letzte Prüfung vor weniger als einer Minute",
+    "minutes": "Letzte Prüfung vor {minutes} Minuten",
+    "one": "Letzte Prüfung vor 1 Minute",
+    "never": "Keine Prüfung aufgezeichnet",
+    "at": "Letzte Prüfung {time}"
+  },
+  "uptime": {
+    "label": "Verfügbarkeit, letzte {days} Tage",
+    "checks": "{checks} Prüfungen, eine alle {cadence} Minuten",
+    "failed": "{failed} davon fehlgeschlagen",
+    "failedNone": "keine davon fehlgeschlagen",
+    "since": "Durchgehende Überwachung seit {date}.",
+    "noFigure": "Zu wenige aufgezeichnete Prüfungen in diesem Zeitraum, um einen Wert zu veröffentlichen."
+  },
+  "components": {
+    "title": "Was geprüft wird",
+    "lead": "Ein Durchlauf durch die vier Schritte, in dieser Reihenfolge. Ein Durchlauf stoppt beim ersten Fehler, daher wird jeder Schritt nur an den Prüfungen gemessen, die ihn erreicht haben.",
+    "thStep": "Schritt",
+    "thNow": "Jetzt",
+    "thWindow": "Letzte {days} Tage",
+    "state": {
+      "operational": "Funktioniert",
+      "failing": "Fehlerhaft",
+      "unknown": "Zuletzt nicht erreicht"
+    },
+    "noData": "Keine Daten",
+    "attempted": "{attempted} Prüfungen",
+    "items": {
+      "initialize": {
+        "name": "Verbindung",
+        "detail": "Der MCP-Handshake mit mcpemails.com, mit einem echten API-Schlüssel."
+      },
+      "tools_list": {
+        "name": "Tool-Liste",
+        "detail": "Der Server gibt dem Client seinen Tool-Katalog zurück."
+      },
+      "inbox_list": {
+        "name": "Postfachliste",
+        "detail": "Die verbundenen Postfächer werden für diesen Schlüssel zurückgegeben."
+      },
+      "email_read": {
+        "name": "E-Mail lesen",
+        "detail": "Eine Nachricht wird durchgängig live beim E-Mail-Anbieter abgerufen."
+      }
+    }
+  },
+  "history": {
+    "title": "Letzte {days} Tage",
+    "allOk": "{date}: {checks} Prüfungen, alle erfolgreich",
+    "someFailed": "{date}: {checks} Prüfungen, {failed} fehlgeschlagen",
+    "noData": "{date}: keine Prüfungen aufgezeichnet",
+    "legendOk": "Alle Prüfungen erfolgreich",
+    "legendBlip": "Eine Prüfung wieder erholt",
+    "legendFailed": "Einige Prüfungen fehlgeschlagen",
+    "legendNone": "Keine Daten",
+    "oldest": "Vor {days} Tagen",
+    "newest": "Heute"
+  },
+  "incidents": {
+    "title": "Störungen",
+    "lead": "Eine einzelne fehlgeschlagene Prüfung, die fünf Minuten später wieder erfolgreich ist, zählt oben gegen die Verfügbarkeit, wird hier aber nicht als Störung aufgeführt. Das ist dieselbe Grenze, die auch der Alarm zieht: zwei Fehlschläge in Folge oder ein Fehler einer Art, die nicht am Netzwerk eines anderen liegen kann.",
+    "none": "Keine Störung in den letzten {days} Tagen.",
+    "blips": "{count} einzelne fehlgeschlagene Prüfungen in diesem Zeitraum, jede beim nächsten Durchlauf wieder erfolgreich.",
+    "blipsOne": "1 einzelne fehlgeschlagene Prüfung in diesem Zeitraum, beim nächsten Durchlauf wieder erfolgreich.",
+    "checks": "{count} Prüfungen in Folge fehlgeschlagen",
+    "checksOne": "1 Prüfung fehlgeschlagen",
+    "recovered": "Behoben {time}",
+    "openStill": "Seitdem keine erfolgreiche Prüfung aufgezeichnet",
+    "paged": "Alarm beim ersten Fehlschlag",
+    "affected": "Betroffen: {step}",
+    "class": {
+      "public_endpoint": "Der Endpunkt hat nicht geantwortet",
+      "authentication": "Der API-Schlüssel wurde abgelehnt",
+      "mcp_protocol": "Eine fehlerhafte MCP-Antwort",
+      "database": "Die Datenbank",
+      "provider_read": "Der E-Mail-Anbieter hat nicht rechtzeitig geantwortet",
+      "provider_send": "Der E-Mail-Anbieter hat einen Versand abgelehnt",
+      "alert_delivery": "Zustellung der Alarme",
+      "internal": "Ein Fehler im Monitor selbst"
+    }
+  },
+  "scope": {
+    "title": "Was diese Seite aussagt und was nicht",
+    "points": [
+      "Die Prüfung läuft von einem Standort aus per Cronjob alle fünf Minuten. Ein Ausfall von weniger als fünf Minuten kann daher unbemerkt bleiben, und die Zeitangaben hier sind so genau wie die Prüfung, die ihn erfasst hat, nicht sekundengenau.",
+      "Sie testet vier Codepfade. Senden, Planen, Entwürfe und Ordneraktionen stehen nicht auf dieser Seite, weil nichts sie regelmäßig misst. Ein Wert dafür wäre geraten.",
+      "Sie liest ein echtes Postfach bei einem Anbieter. Ein Fehler, der dem E-Mail-Anbieter zugeschrieben wird, ist eine schlechte Minute dieses Anbieters und nicht unbedingt etwas, das Sie bei Ihrem bemerkt hätten.",
+      "Nichts hier stammt aus Kundenverkehr. Kein Konto, kein Workspace und keine Nachricht wird gezählt, ausgewertet oder angezeigt."
+    ]
+  },
+  "unavailable": {
+    "title": "Wir können unseren eigenen Monitor gerade nicht lesen",
+    "body": "Der Überwachungsverlauf ist vorübergehend nicht lesbar, es gibt also keine verlässliche Zahl, die wir Ihnen zeigen könnten. Diese Seite sagt das lieber offen, als den letzten bekannten Wert zu wiederholen. Der Monitor selbst läuft weiter und löst Alarme aus, ob diese Seite ihn erreicht oder nicht."
+  },
+  "footer": {
+    "source": "Jede Zahl auf dieser Seite wird beim Aufruf aus den aufgezeichneten Durchläufen des Monitors gezählt. Nichts wird von Hand eingetragen.",
+    "securityLink": "Wie wir mit Ihren E-Mails und Zugangsdaten umgehen",
+    "contact": "Stimmt etwas nicht, obwohl diese Seite alles für in Ordnung hält? Schreiben Sie an {email}."
+  },
+  "punct": {
+    "join": ". ",
+    "end": ".",
+    "space": " "
+  }
+}

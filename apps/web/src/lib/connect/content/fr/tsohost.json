@@ -21,7 +21,7 @@
     "titleLine1": "Connectez l'e-mail Tsohost à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Tsohost. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, avec les réglages tirés du seul écran qui fait encore foi après deux migrations.",
-    "answer": "Claude ne peut pas atteindre une boîte Tsohost tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en simple IMAP sur le port 993 et en SMTP sur le 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'existe pas de serveur de messagerie tsohost.com partagé vers lequel pointer un client : le nom du serveur est construit à partir de votre propre domaine ou du nom de votre serveur d'hébergement, et la version qui fait foi est affichée dans cPanel, sous Email Accounts, puis Connect Devices. L'authentification se fait avec le mot de passe défini sur cette boîte précise, jamais avec l'identifiant de votre panneau de contrôle. La marque tsoHost a été absorbée par 123 Reg : commencez donc par le Control Panel de 123 Reg. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas atteindre une boîte Tsohost tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en simple IMAP sur le port 993 et en SMTP sur le 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'existe pas de serveur de messagerie tsohost.com partagé vers lequel pointer un client : le nom du serveur est construit à partir de votre propre domaine ou du nom de votre serveur d'hébergement, et la version qui fait foi est affichée dans cPanel, sous Email Accounts, puis Connect Devices. L'authentification se fait avec le mot de passe défini sur cette boîte précise, jamais avec l'identifiant de votre panneau de contrôle. La marque tsoHost a été absorbée par 123 Reg : commencez donc par le Control Panel de 123 Reg. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte, défini dans cPanel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Ajoutez la boîte dans mcpemails avec l'adresse complète et ce mot de passe, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Ajoutez la boîte dans MCPEmails avec l'adresse complète et ce mot de passe, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
   "gotchas": [
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "mcpemails connecte la boîte, pas le compte d'hébergement. Les redirections, alias, réponses automatiques, filtres anti-spam et le DNS restent dans cPanel et le Control Panel de 123 Reg, et votre client IA ne peut ni les voir ni les modifier.",
+    "MCPEmails connecte la boîte, pas le compte d'hébergement. Les redirections, alias, réponses automatiques, filtres anti-spam et le DNS restent dans cPanel et le Control Panel de 123 Reg, et votre client IA ne peut ni les voir ni les modifier.",
     "Si l'adresse s'avère être une boîte Titan plutôt qu'une boîte cPanel, aucun des réglages ci-dessus ne s'applique. Connectez-la plutôt comme une boîte Titan, avec les serveurs de Titan et le mot de passe de la boîte défini dans le panneau de contrôle Titan.",
     "Cette page décrit la messagerie cPanel telle qu'elle existe après la migration. Les noms de serveurs de l'ancienne plateforme tsoHost, d'avant le passage à cPanel, ne correspondent plus à l'emplacement de votre boîte et ne mèneront pas à elle."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Tsohost ?",
-      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les hébergeurs de messagerie cPanel. Connecter un serveur MCP comme mcpemails à votre boîte Tsohost en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les identifiants qu'utiliserait un client de messagerie de bureau, et la même connexion fonctionne depuis Cursor et ChatGPT."
+      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les hébergeurs de messagerie cPanel. Connecter un serveur MCP comme MCPEmails à votre boîte Tsohost en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les identifiants qu'utiliserait un client de messagerie de bureau, et la même connexion fonctionne depuis Cursor et ChatGPT."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Tsohost ?",
