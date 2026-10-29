@@ -10,6 +10,10 @@ import { createResend } from '@/lib/email/resend';
  * way to mail arbitrary text to a third party.
  *
  * Requires RESEND_API_KEY; sends from RESEND_FROM_EMAIL like the invite mail.
+ * That address must be on a domain verified in our Resend account
+ * (mcpemails.com). Otherwise Resend refuses every code with "domain is not
+ * verified", which happened from 2026-10-25 until the variable was moved off
+ * an old domain on 2026-10-29. A change to the variable needs a deploy.
  */
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'MCPEmails <invites@mcpemails.com>';
