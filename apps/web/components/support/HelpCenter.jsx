@@ -131,9 +131,20 @@ function SectionNav({ sections, label }) {
 
   useEffect(() => {
     let frame = 0;
+    // The line sits a little below the top of whatever scrolls: the window on
+    // /help, `.page` (under the top bar) in the dashboard. A jump puts a
+    // heading scroll-margin-top (80px) below that top, so 120px clears it.
+    const first = document.getElementById(sections[0]?.id);
+    let scroller = first?.parentElement ?? null;
+    while (scroller && scroller !== document.body) {
+      const { overflowY } = window.getComputedStyle(scroller);
+      if ((overflowY === 'auto' || overflowY === 'scroll') && scroller.scrollHeight > scroller.clientHeight) break;
+      scroller = scroller.parentElement;
+    }
+    const scrollerTop = () => (scroller && scroller !== document.body ? scroller.getBoundingClientRect().top : 0);
     const update = () => {
       frame = 0;
-      const line = 140;
+      const line = scrollerTop() + 120;
       let current = sections[0]?.id ?? null;
       for (const s of sections) {
         const el = document.getElementById(s.id);
