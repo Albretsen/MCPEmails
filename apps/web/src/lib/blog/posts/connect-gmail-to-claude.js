@@ -1,17 +1,19 @@
 const post = {
   slug: 'connect-gmail-to-claude',
-  title: 'How to Connect Gmail to Claude (in 2 Minutes, No Code)',
+  title: 'How to Connect Gmail to Claude: Built-in Connector or MCP',
   description:
-    'Connect Gmail to Claude over MCP in about two minutes: a Google app password, one endpoint URL, no API key, no code. Claude reads, searches and sends your mail live, and your email is never stored.',
+    "Claude's built-in Gmail connector covers one Gmail account inside Claude. When you also need Outlook, IMAP, several inboxes or other AI apps, connect Gmail to Claude over MCP in two minutes with an app password and one URL.",
   cover: '/blog/cover-connect-gmail-to-claude.svg',
   coverAlt:
     'How to connect Gmail to Claude in two minutes over MCP: a Google app password, one endpoint URL, no email stored',
   authorId: 'asgeir',
   publishedAt: '2026-06-23T09:00:00.000Z',
-  updatedAt: '2026-10-26T09:00:00.000Z',
+  updatedAt: '2026-10-29T09:00:00.000Z',
   tags: ['Tutorial', 'Gmail', 'Claude', 'MCP'],
   featured: false,
-  content: `To connect Gmail to Claude, you do two things: connect your Gmail inbox once in the MCPEmails dashboard with a Google app password, then paste a single endpoint URL into Claude's connector settings and approve a sign-in. That's the whole job: no code, no SDK, no API key. It takes about two minutes, and Claude never stores your email: every read and send goes to Gmail live and is discarded the moment Claude has it.
+  content: `Claude has its own Gmail connector. If all you want is one Gmail account inside Claude, switch that on in Claude's connector settings and you are done. MCPEmails fits when you need more: Outlook, iCloud, Yahoo or any IMAP mailbox next to Gmail, several inboxes in one chat, or the same inbox in ChatGPT, Cursor and other MCP apps. The rest of this guide sets that up.
+
+To connect Gmail to Claude through MCPEmails, you do two things: connect your Gmail inbox once in the MCPEmails dashboard with a Google app password, then paste a single endpoint URL into Claude's connector settings and approve a sign-in. That's the whole job: no code, no SDK, no API key. It takes about two minutes, and Claude never stores your email: every read and send goes to Gmail live and is discarded the moment Claude has it.
 
 This is the focused, Gmail-only walkthrough. If you run several mailboxes or a non-Gmail provider, the [connect any email in under two minutes](/blog/connect-email-to-ai-agent-under-2-minutes) guide covers Outlook, iCloud, Fastmail, and IMAP too.
 

@@ -1,9 +1,11 @@
 const translation = {
-  title: 'Comment connecter Gmail à Claude (en 2 minutes, sans code)',
+  title: 'Comment connecter Gmail à Claude : connecteur intégré ou MCP',
   description:
     'Connectez Gmail à Claude via MCP en environ deux minutes : un mot de passe d\'application Google, une URL d\'endpoint, aucune clé API, aucun code. Claude lit, recherche et envoie vos e-mails en direct, et vos e-mails ne sont jamais stockés.',
   coverAlt: 'Comment connecter Gmail à Claude en deux minutes via MCP : un mot de passe d\'application Google, une URL d\'endpoint, aucun e-mail stocké',
-  content: `Pour connecter Gmail à Claude, vous faites deux choses : connectez une fois votre boîte Gmail dans le tableau de bord MCPEmails avec un mot de passe d'application Google, puis collez une seule URL d'endpoint dans les paramètres de connecteur de Claude et approuvez une connexion. C'est tout le travail : aucun code, aucun SDK, aucune clé API. Cela prend environ deux minutes, et Claude ne stocke jamais vos e-mails : chaque lecture et chaque envoi passe par Gmail en direct et est aussitôt supprimé une fois que Claude l'a reçu.
+  content: `Claude a son propre connecteur Gmail. Si vous voulez seulement un compte Gmail dans Claude, activez-le dans les paramètres de connecteurs de Claude, et c'est fini. MCPEmails sert quand il vous en faut plus : Outlook, iCloud, Yahoo ou n'importe quelle boîte IMAP à côté de Gmail, plusieurs boîtes dans la même conversation, ou la même boîte dans ChatGPT, Cursor et d'autres applications MCP. La suite de ce guide explique comment le mettre en place.
+
+Pour connecter Gmail à Claude avec MCPEmails, vous faites deux choses : connectez une fois votre boîte Gmail dans le tableau de bord MCPEmails avec un mot de passe d'application Google, puis collez une seule URL d'endpoint dans les paramètres de connecteur de Claude et approuvez une connexion. C'est tout le travail : aucun code, aucun SDK, aucune clé API. Cela prend environ deux minutes, et Claude ne stocke jamais vos e-mails : chaque lecture et chaque envoi passe par Gmail en direct et est aussitôt supprimé une fois que Claude l'a reçu.
 
 Voici le guide ciblé, dédié uniquement à Gmail. Si vous gérez plusieurs boîtes mail ou un fournisseur autre que Gmail, le guide [connectez n'importe quel e-mail en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) couvre aussi Outlook, iCloud, Fastmail et IMAP.
 

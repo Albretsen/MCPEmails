@@ -20,13 +20,13 @@
   },
   "hero": {
     "eyebrow": "IMAP + AI",
-    "titleLine1": "Connect any IMAP mailbox to Claude,",
-    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "titleLine1": "The IMAP MCP server for any mailbox,",
+    "titleLine2": "in Claude, Cursor, ChatGPT and any MCP client",
     "lead": "Connect every mailbox your company runs, whoever hosts it: info@, sales@, invoices@ and your own. Your AI agent reads, searches, sends, replies, schedules and organizes that mail over plain IMAP and SMTP, and the same mailboxes work in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
     "meta1": "Any IMAP host, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude has no IMAP client of its own. MCPEmails is a hosted MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, a company's role addresses connect the same way as a personal one, and one inbox is free."
+    "answer": "Claude has no IMAP client of its own. MCPEmails is a hosted IMAP MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, a company's role addresses connect the same way as a personal one, and one inbox is free."
   },
   "persona": {
     "intro": "Running several company mailboxes?",

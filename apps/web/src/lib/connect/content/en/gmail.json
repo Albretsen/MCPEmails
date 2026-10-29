@@ -23,7 +23,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Connects with a Google app password",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Gmail on its own. MCPEmails is a hosted MCP server that sits between them: you create a Google app password once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
+    "answer": "The Gmail MCP server URL is https://mcpemails.com/api/mcp. MCPEmails is a hosted MCP server: create a Google app password, connect Gmail once in the dashboard, then paste that URL into Claude, ChatGPT or Cursor. In Cursor, add it under mcpServers in ~/.cursor/mcp.json with the field url, and Cursor asks you to sign in, with no API key. The Free plan connects one Gmail inbox, forever, with no card, and works with a personal Google account or Google Workspace."
   },
   "method": {
     "title": "How Gmail connects: a Google app password",
@@ -70,6 +70,10 @@
     {
       "q": "Does Claude work with Gmail?",
       "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. MCPEmails is one such thing: you create a Google app password, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that MCPEmails is not Google-only, so the same URL serves your other mailboxes too."
+    },
+    {
+      "q": "What is the Gmail MCP server URL, and is it free?",
+      "a": "The URL is https://mcpemails.com/api/mcp, the same in Claude, ChatGPT, Cursor and every other MCP client. The Free plan connects one Gmail inbox with no card, forever. Paid plans add more inboxes."
     },
     {
       "q": "Is there an official Gmail MCP server from Google?",

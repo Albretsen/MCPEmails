@@ -20,13 +20,13 @@
   },
   "hero": {
     "eyebrow": "IMAP + IA",
-    "titleLine1": "Conecta cualquier buzón IMAP a Claude",
-    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "titleLine1": "El servidor MCP IMAP para cualquier buzón,",
+    "titleLine2": "en Claude, Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Conecta todos los buzones de tu empresa, los aloje quien los aloje: info@, sales@, invoices@ y el tuyo. Tu agente de IA lee, busca, envía, responde, programa y organiza ese correo por IMAP y SMTP estándar, y los mismos buzones funcionan en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Cualquier servidor IMAP, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no tiene un cliente IMAP propio. MCPEmails es un servidor MCP alojado que inicia sesión en tu servidor de correo por IMAP y SMTP con la dirección, el servidor y la contraseña que ya te dio tu proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Funciona cualquier servidor que hable IMAP, las direcciones genéricas de una empresa se conectan igual que una personal, y una bandeja es gratis."
+    "answer": "Claude no tiene un cliente IMAP propio. MCPEmails es un servidor MCP IMAP alojado que inicia sesión en tu servidor de correo por IMAP y SMTP con la dirección, el servidor y la contraseña que ya te dio tu proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Funciona cualquier servidor que hable IMAP, las direcciones genéricas de una empresa se conectan igual que una personal, y una bandeja es gratis."
   },
   "persona": {
     "intro": "¿Gestionas varios buzones de empresa?",

@@ -23,7 +23,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kobles til med et Google-app-passord",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå Gmail på egen hånd. MCPEmails er en driftet MCP-server som står mellom dem: du lager et Google-app-passord én gang, limer én URL inn i MCP-klienten din, og så kan Claude, Cursor eller ChatGPT lese, søke i, sende, svare på og planlegge Gmail-e-posten din. Én innboks er gratis, for alltid."
+    "answer": "URL-en til Gmail MCP-serveren er https://mcpemails.com/api/mcp. MCPEmails er en driftet MCP-server: lag et Google-apppassord, koble til Gmail én gang i dashbordet, og lim deretter inn URL-en i Claude, ChatGPT eller Cursor. I Cursor legger du den under mcpServers i ~/.cursor/mcp.json med feltet url, og Cursor ber deg logge inn, uten API-nøkkel. Free-planen kobler til én Gmail-innboks for alltid, uten kort, og fungerer med en privat Google-konto eller Google Workspace."
   },
   "method": {
     "title": "Slik kobles Gmail til: et Google-app-passord",
@@ -70,6 +70,10 @@
     {
       "q": "Fungerer Claude med Gmail?",
       "a": "Ja, så snart det står noe mellom dem som snakker Gmail på vegne av Claude. MCPEmails er én slik løsning: du lager et Google-app-passord, limer inn én MCP-URL, og Claude kan lese, søke, sende, svare på, videresende og planlegge e-post. Google publiserer også en offisiell Workspace MCP-server som dekker Gmail. Den praktiske forskjellen er at MCPEmails ikke bare er for Google, så den samme URL-en betjener også de andre postkassene dine."
+    },
+    {
+      "q": "Hva er URL-en til Gmail MCP-serveren, og er den gratis?",
+      "a": "URL-en er https://mcpemails.com/api/mcp, den samme i Claude, ChatGPT, Cursor og alle andre MCP-klienter. Free-planen kobler til én Gmail-innboks uten kort, for alltid. Betalte planer gir flere innbokser."
     },
     {
       "q": "Finnes det en offisiell Gmail MCP-server fra Google?",

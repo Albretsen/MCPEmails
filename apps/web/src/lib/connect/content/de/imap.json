@@ -20,13 +20,13 @@
   },
   "hero": {
     "eyebrow": "IMAP + KI",
-    "titleLine1": "Jedes IMAP-Postfach mit Claude verbinden,",
-    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "titleLine1": "Der IMAP-MCP-Server für jedes Postfach,",
+    "titleLine2": "in Claude, Cursor, ChatGPT und jedem MCP-Client",
     "lead": "Verbinden Sie jedes Postfach Ihres Unternehmens, egal wo es gehostet wird: info@, vertrieb@, rechnungen@ und Ihr eigenes. Ihr KI-Agent liest, sucht, sendet, beantwortet, plant und sortiert diese E-Mails über ganz normales IMAP und SMTP, und dieselben Postfächer funktionieren in jedem MCP-Client, nicht nur in einem.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Jeder IMAP-Host, keine OAuth-Einrichtung",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude hat keinen eigenen IMAP-Client. MCPEmails ist ein gehosteter MCP-Server, der sich per IMAP und SMTP an Ihrem Mailserver anmeldet, mit der Adresse, dem Host und dem Passwort, die Sie von Ihrem Anbieter ohnehin haben. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Jeder Host, der IMAP spricht, funktioniert, Funktionsadressen eines Unternehmens verbinden sich genauso wie eine private, und ein Postfach ist kostenlos."
+    "answer": "Claude hat keinen eigenen IMAP-Client. MCPEmails ist ein gehosteter IMAP-MCP-Server, der sich per IMAP und SMTP an Ihrem Mailserver anmeldet, mit der Adresse, dem Host und dem Passwort, die Sie von Ihrem Anbieter ohnehin haben. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Jeder Host, der IMAP spricht, funktioniert, Funktionsadressen eines Unternehmens verbinden sich genauso wie eine private, und ein Postfach ist kostenlos."
   },
   "persona": {
     "intro": "Sie betreuen mehrere Firmenpostfächer?",

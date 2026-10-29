@@ -1,9 +1,11 @@
 const translation = {
-  title: 'Cómo conectar Gmail con Claude (en 2 minutos, sin código)',
+  title: 'Cómo conectar Claude con Gmail: conector propio o MCP',
   description:
-    'Conecta Gmail con Claude a través de MCP en unos dos minutos: una contraseña de aplicación de Google, una URL de endpoint, sin API key, sin código. Claude lee, busca y envía tu correo en directo, y tu correo nunca se almacena.',
+    'Claude ya trae un conector de Gmail para una cuenta. Te contamos cuándo basta y cómo conectar Claude con Gmail por MCP en dos minutos si además usas Outlook, IMAP, varias bandejas u otras apps de IA.',
   coverAlt: 'Cómo conectar Gmail con Claude en dos minutos a través de MCP: una contraseña de aplicación de Google, una URL de endpoint, sin correo almacenado',
-  content: `Para conectar Gmail con Claude, haces dos cosas: conectas tu bandeja de Gmail una vez en el panel de MCPEmails con una contraseña de aplicación de Google y, después, pegas una única URL de endpoint en los ajustes de conectores de Claude y apruebas un inicio de sesión. Eso es todo: sin código, sin SDK, sin clave de API. Tarda unos dos minutos, y Claude nunca almacena tu correo: cada lectura y cada envío va a Gmail en directo y se descarta en cuanto Claude lo tiene.
+  content: `¿Cómo conectar Claude con Gmail? Si solo quieres una cuenta de Gmail dentro de Claude, lo más rápido es el conector de Gmail que Claude ya trae: actívalo en los ajustes de conectores de Claude y listo. MCPEmails tiene sentido cuando necesitas algo más: Outlook, iCloud, Yahoo o cualquier buzón IMAP junto a Gmail, varias bandejas en la misma conversación, o la misma bandeja en ChatGPT, Cursor y otras apps compatibles con MCP. El resto de esta guía explica cómo configurarlo.
+
+Para conectar Claude con Gmail a través de MCPEmails, haces dos cosas: conectas tu bandeja de Gmail una vez en el panel de MCPEmails con una contraseña de aplicación de Google y, después, pegas una única URL de endpoint en los ajustes de conectores de Claude y apruebas un inicio de sesión. Eso es todo: sin código, sin SDK, sin clave de API. Tarda unos dos minutos, y Claude nunca almacena tu correo: cada lectura y cada envío va a Gmail en directo y se descarta en cuanto Claude lo tiene.
 
 Esta es la guía centrada exclusivamente en Gmail. Si gestionas varias bandejas o un proveedor que no es Gmail, la guía [conecta cualquier correo en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) cubre también Outlook, iCloud, Fastmail e IMAP.
 

@@ -1,10 +1,12 @@
 const translation = {
-  title: 'Gmail mit Claude verbinden: in 2 Minuten, ohne Code',
+  title: 'Gmail mit Claude verbinden: integrierter Konnektor oder MCP',
   description:
     'Gmail in etwa zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, kein API-Schlüssel, kein Code. Claude liest, durchsucht und sendet Ihre E-Mails live, und Ihre E-Mails werden nie gespeichert.',
   coverAlt:
     'Gmail in zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, keine E-Mail gespeichert',
-  content: `Um Gmail mit Claude zu verbinden, erledigen Sie zwei Dinge: Sie verbinden Ihr Gmail-Postfach einmal im Dashboard von MCPEmails mit einem Google-App-Passwort, dann fügen Sie eine einzige Endpunkt-URL in die Konnektor-Einstellungen von Claude ein und bestätigen eine Anmeldung. Das ist alles: kein Code, kein SDK, kein API-Schlüssel. Es dauert etwa zwei Minuten, und Ihre E-Mails werden nie gespeichert: Jeder Lese- und Sendevorgang geht live an Gmail und wird verworfen, sobald Claude die Daten hat.
+  content: `Claude hat einen eigenen Gmail-Konnektor. Wenn Sie nur ein Gmail-Konto in Claude nutzen wollen, schalten Sie ihn in den Konnektor-Einstellungen von Claude ein, und Sie sind fertig. MCPEmails lohnt sich, wenn Sie mehr brauchen: Outlook, iCloud, Yahoo oder ein beliebiges IMAP-Postfach neben Gmail, mehrere Postfächer im selben Chat oder dasselbe Postfach in ChatGPT, Cursor und anderen MCP-Apps. Der Rest dieser Anleitung richtet das ein.
+
+Um Gmail über MCPEmails mit Claude zu verbinden, erledigen Sie zwei Dinge: Sie verbinden Ihr Gmail-Postfach einmal im Dashboard von MCPEmails mit einem Google-App-Passwort, dann fügen Sie eine einzige Endpunkt-URL in die Konnektor-Einstellungen von Claude ein und bestätigen eine Anmeldung. Das ist alles: kein Code, kein SDK, kein API-Schlüssel. Es dauert etwa zwei Minuten, und Ihre E-Mails werden nie gespeichert: Jeder Lese- und Sendevorgang geht live an Gmail und wird verworfen, sobald Claude die Daten hat.
 
 Dies ist die Anleitung nur für Gmail. Wenn Sie mehrere Postfächer oder einen anderen Anbieter nutzen, deckt die Anleitung [beliebige E-Mail in unter zwei Minuten verbinden](/blog/connect-email-to-ai-agent-under-2-minutes) auch Outlook, iCloud, Fastmail und IMAP ab.
 

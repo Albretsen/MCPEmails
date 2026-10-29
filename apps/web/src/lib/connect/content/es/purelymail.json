@@ -29,6 +29,13 @@
     "meta1": "Contraseña del buzón o contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
   },
+  "settingsTop": {
+    "lookup": {
+      "intro": "¿Vas a configurar otra dirección?",
+      "label": "Busca los ajustes IMAP y SMTP de cualquier dominio",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "method": {
     "title": "Cómo se conecta Purelymail: IMAP y la contraseña propia del buzón",
     "body": "Purelymail sirve IMAP en <code>imap.purelymail.com</code>, puerto 993, sobre TLS, y SMTP en <code>smtp.purelymail.com</code>, puerto 465, también con TLS implícito. No hay nada que activar antes. Purelymail trata IMAP, POP3 y SMTP como un acceso normal y cada buzón los tiene desde el momento en que se crea, lo que ya lo pone por delante de la mayoría de los proveedores de webmail. En lo que la gente se equivoca aquí es en <b>qué credenciales escribe</b>. Purelymail separa tu <b>cuenta</b> (account), que es el inicio de sesión del portal de gestión y la factura fija de $10 al año, de tus <b>usuarios</b> (users), que son los buzones que realmente envían y reciben. IMAP quiere un usuario: la dirección completa con el dominio, más la contraseña propia de ese usuario. Esto vale tanto si la dirección está en un dominio compartido de Purelymail como en un dominio personalizado que hayas traído tú, porque los nombres de servidor son los mismos para todos los clientes."

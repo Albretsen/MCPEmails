@@ -20,13 +20,13 @@
   },
   "hero": {
     "eyebrow": "IMAP + AI",
-    "titleLine1": "Koble enhver IMAP-postkasse til Claude,",
-    "titleLine2": "og Cursor, ChatGPT og enhver MCP-klient",
+    "titleLine1": "IMAP MCP-serveren for enhver postkasse,",
+    "titleLine2": "i Claude, Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Koble til alle postkassene bedriften din har, uansett hvem som drifter dem: info@, salg@, faktura@ og din egen. AI-agenten din leser, søker, sender, svarer, planlegger og organiserer den e-posten over vanlig IMAP og SMTP, og de samme postkassene fungerer i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Enhver IMAP-vert, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude har ingen egen IMAP-klient. MCPEmails er en driftet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren din allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, en bedrifts funksjonsadresser kobles til på samme måte som en personlig adresse, og én innboks er gratis."
+    "answer": "Claude har ingen egen IMAP-klient. MCPEmails er en driftet IMAP MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren din allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, en bedrifts funksjonsadresser kobles til på samme måte som en personlig adresse, og én innboks er gratis."
   },
   "persona": {
     "intro": "Har du flere bedriftspostkasser å holde styr på?",

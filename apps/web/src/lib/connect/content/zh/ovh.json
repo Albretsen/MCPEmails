@@ -26,6 +26,39 @@
     "meta2": "邮件实时获取，绝不存储",
     "answer": "Claude 无法自行连接 OVH。MCPEmails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP，Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP，Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP，Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP，Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "前两行是 MX Plan 的设置。ex4 和 pro4 中的 4 是你自己的服务器编号，可在 OVHcloud 控制面板的“常规信息”中找到。其他地址请使用",
+      "label": "邮箱设置查询工具",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "persona": {
     "intro": "在 OVH 有好几个公司邮箱？",
     "label": "看看每个套餐能连接多少个邮箱",

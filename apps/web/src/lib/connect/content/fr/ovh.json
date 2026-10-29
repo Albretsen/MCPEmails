@@ -26,6 +26,39 @@
     "meta2": "E-mails récupérés en direct, jamais stockés",
     "answer": "Claude ne peut pas accéder seul à OVH. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP, E-mail Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, E-mail Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "Les deux premières lignes concernent MX Plan. Le 4 de ex4 et pro4 est votre propre numéro de serveur, affiché dans l'espace client OVHcloud, onglet Informations générales. Pour toute autre adresse, utilisez la",
+      "label": "recherche de paramètres e-mail",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "persona": {
     "intro": "Plusieurs boîtes d'entreprise chez OVH ?",
     "label": "Voyez ce que chaque offre connecte",

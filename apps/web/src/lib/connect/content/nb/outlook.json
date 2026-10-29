@@ -18,7 +18,7 @@
     "eyebrow": "Outlook.com + AI",
     "titleLine1": "Koble Outlook.com til Claude,",
     "titleLine2": "og ChatGPT, Cursor, alle MCP-klienter",
-    "lead": "Gi AI-agenten din innboksen din på Outlook.com, Hotmail, Live eller MSN. Logg inn med Microsoft, godkjenn tilgangen én gang, og les, søk, send, svar, planlegg og organiser e-post fra alle MCP-klienter med én URL.",
+    "lead": "Claudes egen Microsoft 365-kobling godtar bare jobb- og skolekontoer. MCPEmails kobler til private innbokser hos Outlook.com, Hotmail, Live og MSN: logg inn med Microsoft, godkjenn tilgangen én gang, og les, søk, send, svar, planlegg og organiser e-post fra alle MCP-klienter med én URL.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Logg inn med Microsoft, uten app-passord",
     "meta2": "E-post hentes direkte, lagres aldri",
@@ -74,6 +74,10 @@
     {
       "q": "Fungerer Claude med Outlook.com?",
       "a": "Ja. Koble Outlook.com-postkassen din til MCPEmails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Den samme URL-en fungerer i ChatGPT, Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hvorfor avviser Claudes Microsoft 365-kobling Outlook.com-kontoen min?",
+      "a": "Den innebygde Microsoft 365-koblingen i Claude krever en jobb- eller skolekonto i en Microsoft Entra-tenant, og Anthropic oppgir at private Microsoft-kontoer ikke støttes. Adresser hos Outlook.com, Hotmail, Live og MSN blir derfor avvist. MCPEmails kobler til nettopp disse private kontoene: du logger inn med Microsoft på Microsofts egen side, og legger deretter til MCPEmails i Claude som en egendefinert kobling med én URL."
     },
     {
       "q": "Fungerer det med Hotmail-, Live- og MSN-adresser?",

@@ -29,6 +29,13 @@
     "meta1": "Mailbox password, or app password",
     "meta2": "Email fetched live, never stored"
   },
+  "settingsTop": {
+    "lookup": {
+      "intro": "Setting up a different address?",
+      "label": "Look up the IMAP and SMTP settings for any domain",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "method": {
     "title": "How Purelymail connects: IMAP and the mailbox's own password",
     "body": "Purelymail serves IMAP at <code>imap.purelymail.com</code> on port 993 over TLS, and SMTP at <code>smtp.purelymail.com</code> on port 465, also implicit TLS. There is nothing to enable first. Purelymail treats IMAP, POP3 and SMTP as ordinary access and every mailbox has them from the moment it is created, which already puts it ahead of most webmail providers. What people get wrong here is <b>which credentials they type</b>. Purelymail keeps your <b>account</b>, the login for the management portal and the flat $10 a year bill, separate from your <b>users</b>, which are the mailboxes that actually send and receive. IMAP wants a user: the complete address including the domain, plus that user's own password. This is true whether the address sits on a shared Purelymail domain or on a custom domain you brought yourself, because the hostnames are the same for every customer."
