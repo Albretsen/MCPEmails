@@ -41,7 +41,7 @@ function ClientLogo({ color, logo, size = 44 }) {
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        margin: '0 auto 18px',
+        marginBottom: 18,
       }}
     >
       <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
@@ -95,7 +95,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
     <div>
       <Nav />
 
-      <section className="pricing-page-hero is-centered">
+      <section className="pricing-page-hero">
         <div className="container">
           <ClientLogo color={client.color} logo={client.logo} />
           <div className="eye-label">{content.hero.eyebrow}</div>
@@ -117,12 +117,12 @@ export default function ClientSetupView({ locale, client, content, preferred = n
               labels={{ ctaPrimary: ui.ctaPrimary, ctaSecondary: ui.ctaSecondary, ...ui.install }}
             />
           ) : (
-            <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+            <div className="hero-cta" style={{ marginTop: 24 }}>
               <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
               <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
             </div>
           )}
-          <div className="hero-meta" style={{ justifyContent: 'center' }}>
+          <div className="hero-meta">
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
                 <MIcon name="check" size={14} color="var(--mint-600)" /> {content.hero[k]}
@@ -203,7 +203,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
           </div>
 
           {config && (
-            <div style={{ maxWidth: 820, margin: '28px auto 0' }}>
+            <div style={{ maxWidth: 820, marginTop: 28 }}>
               <CodeBlock label={configLabel} code={config} />
             </div>
           )}
@@ -309,7 +309,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
         <div className="container">
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
-          <div className="hero-cta" style={{ justifyContent: 'center' }}>
+          <div className="hero-cta">
             <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>

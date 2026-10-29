@@ -127,7 +127,7 @@ export default async function ClientHubPage({ params }) {
             <h1 className="pricing-page-h1">{ui.title}</h1>
             <p className="pricing-page-lead">{fill(ui.lead, { count })}</p>
             <p className="pricing-page-answer">{fill(ui.answer, { count, oauth })}</p>
-            <p className="connect-verified" style={{ justifyContent: 'center' }}>
+            <p className="connect-verified">
               <MIcon name="check" size={13} color="var(--mint-600)" />{' '}
               <code className="connect-host">{MCP_URL}</code>
             </p>
@@ -172,7 +172,7 @@ export default async function ClientHubPage({ params }) {
           <div className="container">
             <h2>{ui.genericTitle}</h2>
             <p className="sub">{ui.genericSub}</p>
-            <div className="hero-cta" style={{ justifyContent: 'center' }}>
+            <div className="hero-cta">
               <Link className="btn btn-primary btn-lg" href="/docs">{ui.genericCta}</Link>
             </div>
           </div>
