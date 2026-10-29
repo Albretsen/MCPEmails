@@ -45,6 +45,44 @@ export const SIGNATURE_TEXT_DELIMITER = "\n\n-- \n";
 /** The class on the wrapper div that marks our own HTML signature block. */
 export const SIGNATURE_HTML_CLASS = "mcpemails-signature";
 
+/**
+ * The HTML signature block as it is appended after a body: the wrapper div
+ * and nothing else. Any space above the signature is the person's own, typed
+ * into the signature (see `keepTypedBlankLines`); none is added here. The
+ * wrapper's opening tag stays exact: html-text-merge.ts and
+ * `storedSignatureBlockOf` find it by string.
+ */
+export function signatureHtmlBlock(innerHtml: string): string {
+  return `\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+}
+
+/** An empty paragraph, as the dashboard editor stores a blank line. */
+const EMPTY_PARAGRAPH = /<p\b[^>]*>\s*<\/p>/gi;
+
+/** Empty paragraphs (and whitespace) at the very end of a signature. */
+const TRAILING_EMPTY_PARAGRAPHS = /(?:\s*<p\b[^>]*>\s*<\/p>)+\s*$/i;
+
+/**
+ * Make the blank lines a person typed into their signature show in the sent
+ * mail.
+ *
+ * The dashboard editor (TipTap) stores a blank line as `<p></p>`, and its
+ * preview renders it as one line. In a mail client an empty paragraph has no
+ * height, so a blank line typed above the name, the only way to put space
+ * between the message and the signature, never arrived (14 of 137 live
+ * signatures opened with one on 2026-10-29). `<p><br></p>` is what the editor
+ * itself shows, so that is what is sent.
+ *
+ * Trailing empty paragraphs are left alone: TipTap appends one after a heading,
+ * a list or an image on its own, so they are not something the person typed.
+ */
+export function keepTypedBlankLines(html: string): string {
+  const trailing = TRAILING_EMPTY_PARAGRAPHS.exec(html);
+  const end = trailing ? trailing.index : html.length;
+  return html.slice(0, end).replace(EMPTY_PARAGRAPH, (m) => m.replace(/\s*<\/p>$/i, "<br></p>")) +
+    html.slice(end);
+}
+
 /** Minimal HTML-escape for deriving HTML from plain text. */
 export function escapeSignatureHtml(text: string): string {
   return text
@@ -150,7 +188,7 @@ export function composeSignatureBlocks(
   // outcome than sending without one. Every write path uses the throwing
   // version, so this only ever bites on rows written before that was true.
   const html = storedHtml
-    ? sanitizeSignatureHtmlSafe(storedHtml)
+    ? keepTypedBlankLines(sanitizeSignatureHtmlSafe(storedHtml))
     : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
   // Guard against a signature that strips down to nothing. The check has to be
@@ -231,7 +269,7 @@ export function applySignature<T extends { textBody: string; htmlBody?: string }
   if (!sig) return params;
 
   const sigTextBlock = `${SIGNATURE_TEXT_DELIMITER}${sig.text}`;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${sig.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(sig.html);
 
   if (params.htmlBody && params.htmlBody.trim()) {
     // Caller already supplied rich HTML — append to both parts so the
@@ -483,7 +521,7 @@ export function rebuildHtmlKeepingSignature(
 ): string | null {
   const split = splitAtSignature(text, inbox, storedHtml, storedText);
   if (!split) return null;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(split.html);
   const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";
   return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
 }

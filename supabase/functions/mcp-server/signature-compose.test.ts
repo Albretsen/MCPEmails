@@ -16,7 +16,7 @@
 //
 // Run: deno test supabase/functions/mcp-server/
 // ---------------------------------------------------------------------------
-import { assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   applySignature,
   applySignatureOnce,
@@ -77,6 +77,31 @@ Deno.test("the HTML part a text-only send synthesizes IS plainTextBodyToHtml", (
     `${plainTextBodyToHtml("Hello & goodbye\nline two")}\n` +
       `<div class="${SIGNATURE_HTML_CLASS}">${sig.html}</div>`,
   );
+});
+
+Deno.test("no space is added above a signature: it sits right under the message", () => {
+  const params = applySignature<{ textBody: string; htmlBody?: string }>(
+    { textBody: "Best,\nAsgeir" },
+    { signature_enabled: true, signature_text: null, signature_html: "<table><tr><td>Asgeir</td></tr></table>" },
+  );
+  assert(params.htmlBody!.includes(`Asgeir\n<div class="${SIGNATURE_HTML_CLASS}"><table>`));
+});
+
+Deno.test("a blank line typed into the signature is sent as one, the way the editor shows it", () => {
+  const sig = (html: string) =>
+    composeSignatureBlocks({ signature_enabled: true, signature_text: null, signature_html: html })!.html;
+  // Above the name: the space between the message and the signature.
+  assertEquals(sig("<p></p><p>Asgeir</p>"), "<p><br></p><p>Asgeir</p>");
+  assertEquals(sig("<p></p><p></p><p>Asgeir</p>"), "<p><br></p><p><br></p><p>Asgeir</p>");
+  // Between lines.
+  assertEquals(sig("<p>Asgeir</p><p></p><p>CEO</p>"), "<p>Asgeir</p><p><br></p><p>CEO</p>");
+  // Already visible: unchanged.
+  assertEquals(sig("<p><br></p><p>Asgeir</p>"), "<p><br></p><p>Asgeir</p>");
+  // TipTap's own trailing paragraph after a heading or image is not a typed line.
+  assertEquals(sig("<h2>Ada</h2><p></p>"), "<h2>Ada</h2><p></p>");
+  assertEquals(sig("<p>Ada</p><p></p><p></p>"), "<p>Ada</p><p></p><p></p>");
+  // No signature content at all is still no signature.
+  assertEquals(composeSignatureBlocks({ signature_enabled: true, signature_text: null, signature_html: "<p></p>" }), null);
 });
 
 Deno.test("a signature lands exactly once in each part of a fresh send", () => {
