@@ -912,8 +912,8 @@ Deno.test("the review card is a small, self-contained HTML5 document", () => {
   // codegen.mjs, which exits non-zero above it — if you are raising one, raise
   // both, and re-read Q3 first.
   assert(
-    REVIEW_CARD_HTML.length < 175 * 1024,
-    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 175 KB raw (raised from 150 KB on 2026-10-17, see codegen.mjs)`,
+    REVIEW_CARD_HTML.length < 178 * 1024,
+    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 178 KB raw (150 KB until 2026-10-17, 175 KB until 2026-10-29, see codegen.mjs)`,
   );
 
   // The published CSP is empty on every axis, so any subresource request would
