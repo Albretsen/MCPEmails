@@ -86,13 +86,13 @@ function FullNav({ onSignIn, onGetStarted, user }) {
     <header className="nav">
       <div className="container nav-row">
         <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
+        {/* Compare and Self-host live in the mobile menu and the footer: with
+            them the row needs about 1240 px in French, wider than the container. */}
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/pricing">{t('nav.pricing')}</Link>
-          <Link href="/native-connectors-vs-mcp">{tc('links.compare')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
-          <Link href="/self-hosting">{t('nav.selfHost')}</Link>
           <Link href="/blog">{t('nav.blog')}</Link>
         </nav>
         <div className="nav-grow" />
