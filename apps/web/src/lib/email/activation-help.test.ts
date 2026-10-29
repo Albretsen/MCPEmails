@@ -486,8 +486,8 @@ test('templates: Claude not linked gets the prefilled claude.ai dialog as its bu
     { email: 'first_call_help', state: 'linked_no_call', client: 'claude' },
   ] as const) {
     const composed = templates.composeActivationHelp({ content, locale: 'en', ctaUrl: 'https://mcpemails.test/dashboard', unsubscribeToken: TOKEN })!;
-    assert.ok(!composed.text.includes('claude.ai/customize'), `${content.client}/${content.state}`);
-    assert.ok(composed.text.includes('https://mcpemails.test/dashboard'), `${content.client}/${content.state}`);
+    assert.doesNotMatch(composed.text, /: https:\/\/claude\.ai\//, `${content.client}/${content.state}`);
+    assert.match(composed.text, /^Open the dashboard: https:\/\/mcpemails\.test\/dashboard$/m, `${content.client}/${content.state}`);
   }
 });
 
