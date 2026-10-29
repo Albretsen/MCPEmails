@@ -46,17 +46,31 @@ export const SIGNATURE_TEXT_DELIMITER = "\n\n-- \n";
 export const SIGNATURE_HTML_CLASS = "mcpemails-signature";
 
 /**
- * The HTML signature block as it is appended after a body: an empty line, then
- * the wrapper div. The text part puts a blank line before `-- `; without the
- * spacer the HTML part ran the signature straight under the last line of the
- * message ("Best,\nAsgeir" with the logo on the next line), which is what most
- * clients render. `<div><br></div>` is one empty line whether the body ends in
- * inline text or in a block, which a bare `<br>` is not. The wrapper's opening
- * tag stays exact: html-text-merge.ts and `storedSignatureBlockOf` find it by
- * string.
+ * A signature whose markup already opens with space above it: a line break, an
+ * empty paragraph or div, or a block clients give a top margin (`<p>`, a
+ * heading, a list). The dashboard editor stores `<p>…</p>`, and some people
+ * start their signature with a blank line on purpose. 67 of 137 live
+ * signatures did one or the other on 2026-10-29.
+ */
+const SIGNATURE_OPENS_WITH_GAP =
+  /^\s*(?:<br\b|<p\b|<h[1-6]\b|<ul\b|<ol\b|<blockquote\b|<div>\s*(?:<br\s*\/?>\s*)?<\/div>)/i;
+
+/**
+ * The HTML signature block as it is appended after a body: the wrapper div,
+ * with one empty line before it when the signature does not bring its own.
+ *
+ * The text part always has a blank line before `-- `. Without the spacer, a
+ * signature that starts with text or a table (a logo card) ran straight under
+ * the last line of the message in the HTML part, which is what clients render
+ * (seen on a real reply 2026-10-29). A signature that already opens with space
+ * keeps exactly what it had, so nobody's layout gains a second gap.
+ * `<div><br></div>` is one empty line whether the body ends in inline text or
+ * in a block, which a bare `<br>` is not. The wrapper's opening tag stays
+ * exact: html-text-merge.ts and `storedSignatureBlockOf` find it by string.
  */
 export function signatureHtmlBlock(innerHtml: string): string {
-  return `\n<div><br></div>\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+  const spacer = SIGNATURE_OPENS_WITH_GAP.test(innerHtml) ? "" : "\n<div><br></div>";
+  return `${spacer}\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
 }
 
 /** Minimal HTML-escape for deriving HTML from plain text. */

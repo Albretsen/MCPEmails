@@ -82,11 +82,34 @@ Deno.test("the HTML part a text-only send synthesizes IS plainTextBodyToHtml", (
 Deno.test("the HTML signature sits one empty line below the message, like the text part", () => {
   // Found on a real reply 2026-10-29: the text part had "Asgeir\n\n-- \n", the
   // HTML part ran the signature straight under "Asgeir".
-  const params = applySignature<{ textBody: string; htmlBody?: string }>({ textBody: "Best,\nAsgeir" }, RICH_SIG_INBOX);
+  const cardInbox: SignatureInbox = {
+    signature_enabled: true,
+    signature_text: null,
+    signature_html: "<table><tr><td>Asgeir Albretsen</td></tr></table>",
+  };
+  const params = applySignature<{ textBody: string; htmlBody?: string }>({ textBody: "Best,\nAsgeir" }, cardInbox);
   assert(params.textBody.includes("Asgeir\n\n-- \n"));
   assert(params.htmlBody!.includes(`Asgeir\n<div><br></div>\n<div class="${SIGNATURE_HTML_CLASS}">`));
   // Still found by the code that keeps a stored signature on edit.
-  assertEquals(storedSignatureBlockOf(params.htmlBody), composeSignatureBlocks(RICH_SIG_INBOX)!.html);
+  assertEquals(storedSignatureBlockOf(params.htmlBody), composeSignatureBlocks(cardInbox)!.html);
+});
+
+Deno.test("a signature that brings its own space above it gets no second gap", () => {
+  for (const html of ["<br>Asgeir", "<p></p><p>Asgeir</p>", "<p>Asgeir</p>", "<div><br></div>Asgeir", "<h3>Asgeir</h3>"]) {
+    const params = applySignature<{ textBody: string; htmlBody?: string }>(
+      { textBody: "Best" },
+      { signature_enabled: true, signature_text: null, signature_html: html },
+    );
+    assert(!params.htmlBody!.includes("<div><br></div>\n<div class="), html);
+  }
+  // A table (a logo card) or plain text has no space of its own and gets one.
+  for (const html of ["<table><tr><td>Asgeir</td></tr></table>", "Asgeir<br>MCPEmails", "<div>Asgeir</div>"]) {
+    const params = applySignature<{ textBody: string; htmlBody?: string }>(
+      { textBody: "Best" },
+      { signature_enabled: true, signature_text: null, signature_html: html },
+    );
+    assert(params.htmlBody!.includes(`<div><br></div>\n<div class="${SIGNATURE_HTML_CLASS}">`), html);
+  }
 });
 
 Deno.test("a signature lands exactly once in each part of a fresh send", () => {
