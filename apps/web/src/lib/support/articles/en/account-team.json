@@ -23,7 +23,7 @@
     {
       "id": "create-workspace",
       "title": "Create another workspace",
-      "summary": "Extra workspaces are a Team feature. A new workspace inherits your plan.",
+      "summary": "Extra workspaces are a Business feature. A new workspace inherits your plan.",
       "keywords": "new workspace create add second client business team plan multiple workspaces",
       "steps": [
         "Click the workspace name at the top of the sidebar.",
@@ -43,7 +43,7 @@
     {
       "id": "invite-member",
       "title": "Invite someone to your workspace",
-      "summary": "Owners and admins invite people from Members. Inviting needs the Team plan.",
+      "summary": "Owners and admins invite people from Members. Inviting needs the Business plan.",
       "keywords": "invite member colleague collaborator team add user seat email resend cancel invite",
       "steps": [
         "Open Members.",
@@ -188,13 +188,13 @@
     {
       "id": "choose-a-plan",
       "title": "Choose the right plan",
-      "summary": "Count the people who sign in first, then the mailboxes.",
-      "keywords": "plan plans free personal pro team compare which plan inboxes seats upgrade price",
+      "summary": "Count the mailboxes first, then the people who sign in.",
+      "keywords": "plan plans free personal pro business team compare which plan inboxes seats upgrade price",
       "steps": [
         "Free: one inbox and 150 email actions a month.",
-        "Personal: up to 3 inboxes and no monthly action cap.",
-        "Pro: unlimited inboxes for one person.",
-        "Team: more than one login, with roles and a workspace per client.",
+        "Personal: up to 3 inboxes and unlimited email actions.",
+        "Pro: up to 10 inboxes for one person.",
+        "Business: 10 inboxes or more, members with roles and a workspace per client.",
         "See Pricing for prices and the full comparison."
       ],
       "links": [
@@ -230,13 +230,13 @@
     {
       "id": "data-and-privacy",
       "title": "What we store about your email",
-      "summary": "Email content is never stored, except messages you schedule. Mailbox passwords are encrypted.",
+      "summary": "Email content is never stored, except scheduled or held sends. Mailbox passwords are encrypted.",
       "keywords": "privacy data stored storage encryption encrypted gdpr eu training credentials password token delete export",
       "steps": [
         "Mail your assistant reads or sends now is fetched live and never stored.",
-        "A scheduled message is stored until it is sent, then kept as history.",
+        "A scheduled or held message is stored until it is sent, then kept as history.",
         "Mailbox passwords and tokens are encrypted with AES-256-GCM.",
-        "Account data is stored in the EU. Your email never trains AI models.",
+        "Account data is stored in the EU, in Stockholm. Your email never trains AI models.",
         "To request a copy of your data, write to us."
       ],
       "links": [
@@ -256,7 +256,7 @@
     },
     {
       "id": "self-hosting",
-      "title": "Host MCP Emails yourself",
+      "title": "Host MCPEmails yourself",
       "summary": "It is open source (AGPL-3.0) and runs with docker-compose, for IMAP and SMTP mailboxes.",
       "keywords": "self host self-host open source agpl docker docker-compose own server on premise",
       "body": [

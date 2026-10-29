@@ -4,7 +4,7 @@
   "articles": [
     {
       "id": "what-is-mcp-emails",
-      "title": "MCP Emails 能做什么",
+      "title": "MCPEmails 能做什么",
       "summary": "通过一个 URL，把你的邮箱连接到 Claude、ChatGPT 和 Cursor 等 AI 助手。",
       "keywords": "mcp emails 是什么 mcpemails 介绍 概览 工作原理 mcp 服务器 mcp server ai 助手 智能体 agent 存储 隐私",
       "body": [
@@ -54,7 +54,7 @@
         "其他邮箱或你自己的域名：选择“IMAP / SMTP”。"
       ],
       "body": [
-        "Free 可连接一个邮箱，Personal 可连接三个。Pro 和 Team 不限收件箱数量。"
+        "Free 可连接一个邮箱，Personal 三个，Pro 最多 10 个。Business 含 10 个，还可以再添加。"
       ],
       "links": [
         {
@@ -102,7 +102,7 @@
         "管理员批准后，再次点击“使用 Microsoft 连接”。"
       ],
       "body": [
-        "你的管理员不需要 MCP Emails 账户。Microsoft 账户无法通过 IMAP 用密码连接。"
+        "你的管理员不需要 MCPEmails 账户。Microsoft 账户无法通过 IMAP 用密码连接。"
       ],
       "links": [
         {
@@ -170,8 +170,9 @@
       "steps": [
         "在 Claude 中打开 Customize，然后打开 Connectors。",
         "点击 Add，然后点击 Add custom connector。",
-        "将 https://mcpemails.com/api/mcp 粘贴为 URL，然后点击 Add。",
-        "点击 Connect，并用你的 MCP Emails 账户登录。"
+        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，然后点击 Continue。",
+        "检查登录设置，然后点击 Add。",
+        "点击 Connect，并用你的 MCPEmails 账户登录。"
       ],
       "links": [
         {
@@ -187,15 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "连接 ChatGPT",
-      "summary": "在 ChatGPT 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，然后登录。",
+      "summary": "在 chatgpt.com 上把 https://mcpemails.com/api/mcp 添加为自定义 MCP 服务器，然后登录。",
       "keywords": "chatgpt openai 开发者模式 developer mode 连接器 connector 插件 应用 apps 自定义 mcp 服务器 oauth 设置",
       "steps": [
-        "按照 ChatGPT 指南添加自定义连接器。ChatGPT 经常更改菜单名称。",
-        "服务器 URL 填 https://mcpemails.com/api/mcp，登录方式选 OAuth。",
-        "授权 MCP Emails，并选择它可以使用哪些收件箱。"
+        "在 chatgpt.com 上打开 Plugins，点击 Add，然后点击 Add custom MCP server。",
+        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，并选择 OAuth。",
+        "勾选 I understand and want to continue，然后点击 Create as a plugin。",
+        "登录 MCPEmails，并选择它可以使用哪些收件箱。",
+        "在对话中输入 @ 并选择 MCPEmails。后续问题需要用到邮件时请再次选择它。"
       ],
       "body": [
-        "适用于 chatgpt.com 的 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。"
+        "需在浏览器中使用 chatgpt.com，适用于 ChatGPT Go 和所有付费套餐。在 Business 和 Enterprise 上，可能需要管理员来添加。"
       ],
       "links": [
         {
@@ -216,7 +219,7 @@
       "steps": [
         "编辑 ~/.cursor/mcp.json（所有项目）或 .cursor/mcp.json（单个项目）。",
         "在 mcpServers 下添加一个服务器，并将 url 设为 https://mcpemails.com/api/mcp。",
-        "Cursor 提示时，用你的 MCP Emails 账户登录。"
+        "Cursor 提示时，用你的 MCPEmails 账户登录。"
       ],
       "links": [
         {

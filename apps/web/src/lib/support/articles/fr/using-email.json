@@ -98,7 +98,7 @@
       "summary": "Si votre client IA l’affiche, un brouillon préparé apparaît sous forme de carte à modifier et envoyer.",
       "keywords": "carte d’édition de brouillon dans la conversation modifier envoyer annuler supprimer enregistrer carte masquer désactiver afficher draft editor card",
       "body": [
-        "Masquez la carte pour une boîte dans Boîtes, View details, ou pour tout l’espace de travail dans Paramètres, Carte d’édition de brouillon."
+        "Masquez la carte pour une boîte dans ses détails, sous Boîtes, ou pour tout l’espace de travail dans Paramètres, Carte d’édition de brouillon."
       ],
       "steps": [
         "Modifiez les destinataires, l’objet ou le texte dans la carte, puis enregistrez. Enregistrer n’envoie rien.",
@@ -198,7 +198,7 @@
       "summary": "Chaque boîte a sa signature et son nom d’expéditeur. Réglez-les dans Boîtes ou via votre assistant.",
       "keywords": "signature formule de politesse pied de page logo image nom d’expéditeur nom affiché nom de l’expéditeur réponse transfert html sender name",
       "steps": [
-        "Dans Boîtes, choisissez View details sur la boîte, puis ouvrez Signature & sending.",
+        "Dans Boîtes, cliquez sur la boîte, puis ouvrez Signature & sending.",
         "Remplissez Nom d’expéditeur et choisissez Enregistrer le nom.",
         "Sous Signature e-mail, utilisez Texte enrichi ou Source HTML, puis choisissez Enregistrer la signature.",
         "Sous Sur les réponses et transferts, choisissez Toujours ajouter, Première réponse seulement ou Ne jamais ajouter.",
@@ -218,9 +218,9 @@
       "keywords": "plusieurs boîtes boîtes mail comptes quelle boîte adresse d’expédition changer envoyer en tant que alias multiple inboxes send as",
       "steps": [
         "Nommez l’adresse, par exemple : « Réponds depuis sales@ au dernier e-mail d’Anna. »",
-        "Sur Gmail, demandez à envoyer depuis une adresse Send As que Gmail a vérifiée.",
+        "Envoyez depuis un alias vérifié par Gmail, ou ajouté sous Adresses d'envoi.",
         "Une boîte manque ? Vérifiez l’Accès aux boîtes de cette clé dans Clés API.",
-        "Free connecte une boîte, Personal trois, et Pro et Team toutes vos boîtes."
+        "Free connecte une boîte, Personal trois, Pro jusqu’à 10 et Business 10 ou plus."
       ],
       "links": [
         {
@@ -236,7 +236,7 @@
     {
       "id": "built-in-email-routines",
       "title": "Utiliser les routines e-mail intégrées",
-      "summary": "Certains clients IA proposent des routines MCP Emails prêtes à l’emploi. Elles ne tournent que si vous les lancez.",
+      "summary": "Certains clients IA proposent des routines MCPEmails prêtes à l’emploi. Elles ne tournent que si vous les lancez.",
       "keywords": "routines prompts tri suivi relance briefing du matin décisions nettoyage brouillons de réponse envois programmés triage follow-up",
       "steps": [
         "Regardez dans le menu des prompts ou des commandes de votre client IA. Tous ne les affichent pas.",

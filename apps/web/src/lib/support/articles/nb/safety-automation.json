@@ -8,9 +8,9 @@
       "summary": "Slå på Gjennomgang før sending for en innboks, så venter hver forberedt sending på godkjenningen din.",
       "keywords": "gjennomgang godkjenning før sending hold igjen godkjenn gjennomgangskort bare i dashbordet send umiddelbart sikkerhet send review",
       "steps": [
-        "I Innbokser velger du View details på innboksen.",
+        "I Innbokser klikker du på innboksen for å åpne detaljene.",
         "Åpne Signature & sending.",
-        "Velg Gjennomgangskort i samtalen, eller Gjennomgang bare i dashbordet.",
+        "Velg Godkjenn på mcpemails.com, med et kort i chatten, eller Godkjenn bare på mcpemails.com.",
         "Velg Lagre signatur. Det lagrer også gjennomgangsinnstillingen."
       ],
       "body": [
@@ -30,7 +30,7 @@
       "keywords": "godkjenninger ventende sending godkjenn avvis tilbakeholdt e-post venter gjennomgang utløpt 24 timer eier administrator approvals",
       "steps": [
         "Gå til Godkjenninger.",
-        "Velg Review & approve, så Approve & queue for å sende den.",
+        "Velg Review & approve, så Godkjenn og send.",
         "Eller velg Reject, så Reject request. Ingenting sendes."
       ],
       "body": [
@@ -164,7 +164,7 @@
       "summary": "Bruk viser verktøykall per dag, per verktøy og per innboks, og månedskvoten til et Free-arbeidsområde.",
       "keywords": "bruk forbruk statistikk kall per dag per verktøy per innboks historikk kvote måler dashbord usage",
       "body": [
-        "Historikken dekker 30 dager på Free og Personal, 90 på Pro og 365 på Team. Et Free-arbeidsområde ser også hvor mange av de 150 månedlige e-posthandlingene som er brukt, og når tellingen nullstilles."
+        "Historikken dekker 30 dager på Free, 90 på Personal og 2 år på Pro og Business. Et Free-arbeidsområde ser også hvor mange av de 150 månedlige e-posthandlingene som er brukt, og når tellingen nullstilles."
       ],
       "links": [
         {
@@ -183,7 +183,7 @@
       "summary": "For mange forespørsler på kort tid. Vent så mange sekunder som feilen oppgir, og prøv igjen.",
       "keywords": "hastighetsgrense rate limit 429 too many requests for mange forespørsler retry_after per minutt burst strupet senk farten",
       "body": [
-        "Hver API-nøkkel tillater 100 forespørsler i minuttet, 1 000 i timen og 10 000 i døgnet. Hvert arbeidsområde har også et tak per minutt: Free 60, Personal 120, Pro 300, Team 1 000."
+        "Hver API-nøkkel har en grense per minutt, per time og per døgn, tilpasset planen din. Hvert arbeidsområde har også et tak per minutt: Free 60, Personal 120, Pro 300, Business 1 000."
       ],
       "links": [
         {
@@ -198,7 +198,7 @@
       "summary": "På Free får eieren av arbeidsområdet en e-post ved 80 % og 100 % av månedskvoten.",
       "keywords": "varsel e-post bruk advarsel 80 prosent grense nådd automatisering pauset varsling",
       "body": [
-        "Når kvoten er brukt opp, settes automatiseringer på pause, og du får en e-post med datoen de fortsetter. Betalte planer har ingen månedlig grense, så disse e-postene gjelder ikke."
+        "Når kvoten er brukt opp, settes automatiseringer på pause, og du får en e-post med datoen de fortsetter. Personal, Pro og Business har ubegrensede e-posthandlinger, så disse e-postene gjelder ikke."
       ],
       "links": [
         {
@@ -210,10 +210,10 @@
     {
       "id": "new-mail-alerts",
       "title": "Få assistenten til å reagere på ny e-post",
-      "summary": "MCP Emails har ingen push-varsler. Be assistenten sjekke ulest e-post, eller bruk en automatisering.",
+      "summary": "MCPEmails starter aldri assistenten selv. Be den sjekke ulest e-post, eller bruk en automatisering.",
       "keywords": "varsler ny e-post push webhook varsel utløser poll innkommende e-post sanntid notifications",
       "body": [
-        "En innkommende e-post starter aldri et kall til assistenten av seg selv. La assistenten sjekke ulest e-post etter en tidsplan, eller la en automatisering sortere den."
+        "En innkommende e-post starter aldri et kall til assistenten av seg selv. La assistenten sjekke ulest e-post etter en tidsplan, eller la en automatisering sortere den. På Pro og Business kan en webhook under API-nøkler varsle din egen URL."
       ],
       "links": [
         {

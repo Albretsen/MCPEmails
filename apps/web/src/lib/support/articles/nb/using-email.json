@@ -98,7 +98,7 @@
       "summary": "Der AI-klienten viser det, dukker et ferdig utkast opp som et kort du kan redigere og sende.",
       "keywords": "utkastredigering kort i chatten rediger send angre forkast lagre kort skjul slå av vis draft card",
       "body": [
-        "Skjul kortet for én postkasse i Innbokser, View details, eller for hele arbeidsområdet i Innstillinger, Kort for utkastredigering."
+        "Skjul kortet for én postkasse i detaljene under Innbokser, eller for hele arbeidsområdet i Innstillinger, Kort for utkastredigering."
       ],
       "steps": [
         "Rediger mottakerne, emnet eller teksten i kortet, og lagre. Lagring sender ingenting.",
@@ -198,7 +198,7 @@
       "summary": "Hver innboks har egen signatur og eget avsendernavn. Angi dem i Innbokser eller spør assistenten.",
       "keywords": "signatur hilsen bunntekst logo bilde avsendernavn visningsnavn fra-navn svar videresend html signature",
       "steps": [
-        "I Innbokser velger du View details på postkassen, og åpner Signature & sending.",
+        "I Innbokser klikker du på postkassen og åpner Signature & sending.",
         "Fyll inn Avsendernavn og velg Lagre navn.",
         "Under E-postsignatur bruker du Riktekst eller HTML-kilde, og velger Lagre signatur.",
         "Under På svar og videresendinger velger du Legg alltid til, Bare første svar eller Aldri legg til.",
@@ -218,9 +218,9 @@
       "keywords": "flere innbokser flere postkasser kontoer hvilken innboks fra-adresse bytt send som alias send as",
       "steps": [
         "Nevn adressen, for eksempel: \"Svar fra salg@ på den siste e-posten fra Anna.\"",
-        "På Gmail kan du be om å sende fra en Send As-adresse Gmail har bekreftet.",
+        "Send fra et alias Gmail har bekreftet, eller et du har lagt til under Send som-adresser.",
         "Mangler en innboks? Sjekk Innbokstilgang for den nøkkelen under API-nøkler.",
-        "Free kobler til én postkasse, Personal tre, og Pro og Team alle postkasser."
+        "Free kobler til én postkasse, Personal tre, Pro opptil 10 og Business 10 eller flere."
       ],
       "links": [
         {
@@ -236,7 +236,7 @@
     {
       "id": "built-in-email-routines",
       "title": "Bruk de innebygde e-postrutinene",
-      "summary": "Noen AI-klienter viser ferdige MCP Emails-rutiner. De kjører bare når du starter dem.",
+      "summary": "Noen AI-klienter viser ferdige MCPEmails-rutiner. De kjører bare når du starter dem.",
       "keywords": "rutiner prompter triage oppfølging morgenoversikt beslutninger rydd opp svarutkast planlagte sendinger",
       "steps": [
         "Se i prompt- eller kommandomenyen i AI-klienten. Ikke alle klienter viser dem.",

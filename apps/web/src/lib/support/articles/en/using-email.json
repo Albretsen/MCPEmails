@@ -98,7 +98,7 @@
       "summary": "Where your AI client shows it, a prepared draft appears as a card you can edit and send.",
       "keywords": "draft editor card in-chat edit send undo discard save card hide turn off show",
       "body": [
-        "Hide the card for one mailbox in Inboxes, View details, or for the whole workspace in Settings, Draft editor card."
+        "Hide the card for one mailbox in its details under Inboxes, or for the whole workspace in Settings, Draft editor card."
       ],
       "steps": [
         "Edit the recipients, subject or text in the card, then save. Saving sends nothing.",
@@ -198,7 +198,7 @@
       "summary": "Each inbox has its own signature and sender name. Set them in Inboxes or ask your assistant.",
       "keywords": "signature sign-off footer logo image sender name display name from name reply forward html",
       "steps": [
-        "In Inboxes, choose View details on the mailbox, then open Signature & sending.",
+        "In Inboxes, click the mailbox, then open Signature & sending.",
         "Fill in Sender name and choose Save name.",
         "Under Email signature, use Rich text or HTML source, then choose Save signature.",
         "Under On replies & forwards, choose Always add, First reply only or Never add.",
@@ -218,9 +218,9 @@
       "keywords": "multiple inboxes several mailboxes accounts which inbox from address switch send as alias",
       "steps": [
         "Name the address, for example: \"Reply from sales@ to Anna's last email.\"",
-        "On Gmail, ask to send from a Send As address Gmail has verified.",
+        "Send from an alias Gmail has verified, or one added under Send As addresses.",
         "Missing an inbox? Check that key's Inbox access under API keys.",
-        "Free connects one mailbox, Personal three, and Pro and Team every mailbox."
+        "Free connects one mailbox, Personal three, Pro up to 10 and Business 10 or more."
       ],
       "links": [
         {
@@ -236,7 +236,7 @@
     {
       "id": "built-in-email-routines",
       "title": "Use the built-in email routines",
-      "summary": "Some AI clients list ready-made MCP Emails routines. They run only when you start them.",
+      "summary": "Some AI clients list ready-made MCPEmails routines. They run only when you start them.",
       "keywords": "routines prompts triage follow-up morning brief decisions clean up reply drafts scheduled sends",
       "steps": [
         "Look in your AI client's prompt or command menu. Not every client shows them.",

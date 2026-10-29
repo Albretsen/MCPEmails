@@ -23,7 +23,7 @@
     {
       "id": "create-workspace",
       "title": "再创建一个工作区",
-      "summary": "额外的工作区是 Team 功能。新工作区沿用你的套餐。",
+      "summary": "额外的工作区是 Business 功能。新工作区沿用你的套餐。",
       "keywords": "新建工作区 创建 添加 第二个 客户 业务 team 套餐 多个工作区 workspace",
       "steps": [
         "点击侧边栏顶部的工作区名称。",
@@ -43,7 +43,7 @@
     {
       "id": "invite-member",
       "title": "邀请他人加入工作区",
-      "summary": "所有者和管理员在“成员”中邀请他人。邀请需要 Team 套餐。",
+      "summary": "所有者和管理员在“成员”中邀请他人。邀请需要 Business 套餐。",
       "keywords": "邀请 成员 同事 协作者 团队 添加用户 席位 邮件 重新发送 取消邀请 invite",
       "steps": [
         "打开“成员”。",
@@ -188,13 +188,13 @@
     {
       "id": "choose-a-plan",
       "title": "选择合适的套餐",
-      "summary": "先数需要登录的人数，再数邮箱数量。",
-      "keywords": "套餐 方案 免费 free personal pro team 比较 选哪个 收件箱 席位 升级 价格 plan",
+      "summary": "先数邮箱数量，再数需要登录的人数。",
+      "keywords": "套餐 方案 免费 free personal pro business team 比较 选哪个 收件箱 席位 升级 价格 plan",
       "steps": [
         "Free：一个收件箱，每月 150 次邮件操作。",
-        "Personal：最多 3 个收件箱，没有每月操作上限。",
-        "Pro：一人使用，收件箱不限。",
-        "Team：多人登录，带角色，每个客户一个工作区。",
+        "Personal：最多 3 个收件箱，邮件操作不限量。",
+        "Pro：一人使用，最多 10 个收件箱。",
+        "Business：10 个或更多收件箱，带角色的成员，每个客户一个工作区。",
         "价格和完整对比请见价格页面。"
       ],
       "links": [
@@ -230,13 +230,13 @@
     {
       "id": "data-and-privacy",
       "title": "我们存储了哪些邮件数据",
-      "summary": "除你定时发送的邮件外，邮件内容从不存储。邮箱密码经过加密。",
+      "summary": "除定时发送和待审批的邮件外，邮件内容从不存储。邮箱密码经过加密。",
       "keywords": "隐私 数据 存储 加密 gdpr 欧盟 eu 训练 凭据 密码 令牌 删除 导出 privacy",
       "steps": [
         "助手当下读取或发送的邮件都是实时获取的，从不存储。",
-        "定时邮件在发送前会被存储，发送后作为历史记录保留。",
+        "定时或待审批的邮件在发送前会被存储，发送后作为历史记录保留。",
         "邮箱密码和令牌使用 AES-256-GCM 加密。",
-        "账户数据存储在欧盟。你的邮件从不用于训练 AI 模型。",
+        "账户数据存储在欧盟的斯德哥尔摩。你的邮件从不用于训练 AI 模型。",
         "如需获取你的数据副本，请给我们写信。"
       ],
       "links": [
@@ -256,7 +256,7 @@
     },
     {
       "id": "self-hosting",
-      "title": "自行托管 MCP Emails",
+      "title": "自行托管 MCPEmails",
       "summary": "它是开源的（AGPL-3.0），用 docker-compose 运行，支持 IMAP 和 SMTP 邮箱。",
       "keywords": "自托管 自行托管 开源 agpl docker docker-compose 自己的服务器 本地部署 self-host",
       "body": [

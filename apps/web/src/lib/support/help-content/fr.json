@@ -153,7 +153,7 @@
       "summary": "Retirez une boîte, un espace de travail ou tout votre compte depuis le tableau de bord.",
       "keywords": "déconnecter retirer boîte supprimer compte espace de travail fermer zone de danger disconnect delete account",
       "steps": [
-        "Boîte : dans Boîtes, choisissez Déconnecter sur sa ligne. Son identifiant enregistré est effacé.",
+        "Boîte : dans Boîtes, cliquez dessus et choisissez Déconnecter. Son identifiant enregistré est effacé.",
         "Espace de travail : dans Paramètres, sous Espace de travail, choisissez Supprimer l'espace de travail.",
         "Compte : dans Paramètres, sous Zone de danger, choisissez Supprimer le compte. C’est irréversible.",
         "Supprimer le compte résilie immédiatement une formule payante, sans remboursement.",

@@ -192,7 +192,7 @@
       "summary": "Remove one mailbox, one workspace or your whole account from the dashboard.",
       "keywords": "disconnect remove inbox mailbox delete account workspace close danger zone",
       "steps": [
-        "Mailbox: in Inboxes, choose Disconnect on its row. Its stored credential is removed.",
+        "Mailbox: in Inboxes, click it and choose Disconnect. Its stored credential is removed.",
         "Workspace: in Settings, under Workspace, choose Delete workspace.",
         "Account: in Settings, under Danger zone, choose Delete account. This cannot be undone.",
         "Deleting the account cancels a paid plan at once, with no refund.",

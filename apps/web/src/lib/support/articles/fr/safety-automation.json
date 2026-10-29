@@ -8,9 +8,9 @@
       "summary": "Activez la revue avant envoi sur une boîte pour que chaque envoi préparé attende votre approbation.",
       "keywords": "revue envoi approbation retenir approuver avant d’envoyer carte de revue tableau de bord uniquement envoyer immédiatement sécurité send review approval",
       "steps": [
-        "Dans Boîtes, choisissez View details sur la boîte.",
+        "Dans Boîtes, cliquez sur la boîte pour ouvrir ses détails.",
         "Ouvrez Signature & sending.",
-        "Choisissez Carte de revue dans la conversation, ou Revue uniquement dans le tableau de bord.",
+        "Choisissez Approuver sur mcpemails.com, avec une carte dans le chat, ou Approuver uniquement sur mcpemails.com.",
         "Choisissez Enregistrer la signature. Cela enregistre aussi le réglage de revue."
       ],
       "body": [
@@ -30,7 +30,7 @@
       "keywords": "approbations en attente envoi approuver rejeter e-mail retenu revue expiré 24 heures propriétaire administrateur approvals",
       "steps": [
         "Allez dans Approbations.",
-        "Sélectionnez Review & approve, puis Approve & queue pour l’envoyer.",
+        "Sélectionnez Review & approve, puis Approuver et envoyer.",
         "Ou sélectionnez Reject, puis Reject request. Rien n’est envoyé."
       ],
       "body": [
@@ -164,7 +164,7 @@
       "summary": "Usage montre les appels d’outils par jour, par outil et par boîte, plus le quota mensuel d’un espace Free.",
       "keywords": "usage utilisation analytique appels par jour par outil par boîte historique quota compteur tableau de bord",
       "body": [
-        "L’historique couvre 30 jours sur Free et Personal, 90 sur Pro et 365 sur Team. Un espace Free voit aussi combien de ses 150 actions e-mail mensuelles sont utilisées et quand le compteur se réinitialise."
+        "L’historique couvre 30 jours sur Free, 90 sur Personal et 2 ans sur Pro et Business. Un espace Free voit aussi combien de ses 150 actions e-mail mensuelles sont utilisées et quand le compteur se réinitialise."
       ],
       "links": [
         {
@@ -183,7 +183,7 @@
       "summary": "Trop de requêtes en peu de temps. Attendez le nombre de secondes indiqué par l’erreur, puis réessayez.",
       "keywords": "limite de débit 429 trop de requêtes retry_after par minute rafale ralenti bridé rate limit too many requests",
       "body": [
-        "Chaque clé API autorise 100 requêtes par minute, 1 000 par heure et 10 000 par jour. Chaque espace de travail a aussi un plafond par minute : Free 60, Personal 120, Pro 300, Team 1 000."
+        "Chaque clé API a une limite par minute, par heure et par jour, adaptée à votre formule. Chaque espace de travail a aussi un plafond par minute : Free 60, Personal 120, Pro 300, Business 1 000."
       ],
       "links": [
         {
@@ -198,7 +198,7 @@
       "summary": "Sur Free, le propriétaire de l’espace reçoit un e-mail à 80 % et 100 % du quota mensuel.",
       "keywords": "notification e-mail utilisation avertissement 80 pour cent limite atteinte automatisation en pause alerte quota",
       "body": [
-        "Quand le quota est épuisé, les automatisations se mettent en pause et vous recevez un e-mail indiquant la date de reprise. Les formules payantes n’ont pas de plafond mensuel, ces e-mails ne les concernent donc pas."
+        "Quand le quota est épuisé, les automatisations se mettent en pause et vous recevez un e-mail indiquant la date de reprise. Personal, Pro et Business offrent des actions e-mail illimitées, ces e-mails ne les concernent donc pas."
       ],
       "links": [
         {
@@ -210,10 +210,10 @@
     {
       "id": "new-mail-alerts",
       "title": "Faire réagir votre assistant aux nouveaux e-mails",
-      "summary": "MCP Emails n’envoie pas d’alertes push. Faites vérifier les non lus par votre assistant, ou utilisez une automatisation.",
+      "summary": "MCPEmails ne lance jamais votre assistant. Faites vérifier les non lus, ou utilisez une automatisation.",
       "keywords": "notifications nouveaux e-mails push webhook alerte déclencheur interrogation e-mail entrant temps réel",
       "body": [
-        "Un e-mail entrant ne déclenche jamais seul un appel de l’assistant. Faites vérifier les non lus par votre assistant à intervalle régulier, ou laissez une automatisation les trier."
+        "Un e-mail entrant ne déclenche jamais seul un appel de l’assistant. Faites vérifier les non lus par votre assistant à intervalle régulier, ou laissez une automatisation les trier. Sur Pro et Business, un webhook dans Clés API peut prévenir votre propre URL."
       ],
       "links": [
         {

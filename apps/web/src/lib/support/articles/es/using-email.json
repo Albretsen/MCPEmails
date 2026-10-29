@@ -98,7 +98,7 @@
       "summary": "Si tu cliente de IA lo admite, un borrador preparado aparece como una tarjeta que puedes editar y enviar.",
       "keywords": "editor de borradores tarjeta en el chat editar enviar deshacer descartar guardar ocultar desactivar mostrar draft editor card",
       "body": [
-        "Oculta la tarjeta para un buzón en Bandejas de entrada, View details, o para todo el espacio de trabajo en Ajustes, Tarjeta del editor de borradores."
+        "Oculta la tarjeta para un buzón en sus detalles, en Bandejas de entrada, o para todo el espacio de trabajo en Ajustes, Tarjeta del editor de borradores."
       ],
       "steps": [
         "Edita los destinatarios, el asunto o el texto en la tarjeta y guarda. Guardar no envía nada.",
@@ -198,7 +198,7 @@
       "summary": "Cada bandeja tiene su propia firma y nombre de remitente. Configúralos en Bandejas de entrada o pídeselo a tu asistente.",
       "keywords": "firma despedida pie logo imagen nombre del remitente nombre para mostrar nombre de envío responder reenviar html signature sender name",
       "steps": [
-        "En Bandejas de entrada, elige View details en el buzón y abre Signature & sending.",
+        "En Bandejas de entrada, haz clic en el buzón y abre Signature & sending.",
         "Rellena Nombre del remitente y elige Guardar nombre.",
         "En Firma de correo, usa Texto enriquecido o Código HTML y elige Guardar firma.",
         "En En respuestas y reenvíos, elige Añadir siempre, Solo en la primera respuesta o No añadir nunca.",
@@ -218,9 +218,9 @@
       "keywords": "varias bandejas múltiples buzones cuentas qué bandeja dirección de envío cambiar enviar como alias send as",
       "steps": [
         "Nombra la dirección, por ejemplo: \"Responde desde sales@ al último correo de Anna.\"",
-        "En Gmail, pide enviar desde una dirección Send As que Gmail haya verificado.",
+        "Envía desde un alias que Gmail haya verificado, o uno añadido en Direcciones de envío.",
         "¿Falta una bandeja? Revisa el Acceso a bandejas de esa clave en Claves de API.",
-        "Free conecta un buzón, Personal tres, y Pro y Team todos los que quieras."
+        "Free conecta un buzón, Personal tres, Pro hasta 10 y Business 10 o más."
       ],
       "links": [
         {
@@ -236,7 +236,7 @@
     {
       "id": "built-in-email-routines",
       "title": "Usar las rutinas de correo integradas",
-      "summary": "Algunos clientes de IA muestran rutinas listas de MCP Emails. Solo se ejecutan cuando tú las inicias.",
+      "summary": "Algunos clientes de IA muestran rutinas listas de MCPEmails. Solo se ejecutan cuando tú las inicias.",
       "keywords": "rutinas prompts triaje seguimiento resumen matinal decisiones limpiar borradores de respuesta envíos programados routines",
       "steps": [
         "Busca en el menú de prompts o comandos de tu cliente de IA. No todos los clientes las muestran.",

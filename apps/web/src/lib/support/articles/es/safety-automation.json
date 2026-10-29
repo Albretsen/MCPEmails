@@ -8,9 +8,9 @@
       "summary": "Activa la revisión en una bandeja para que cada envío preparado espere tu aprobación.",
       "keywords": "revisión de envíos aprobación retener aprobar antes de enviar tarjeta de revisión solo en el panel enviar de inmediato seguridad send review approval",
       "steps": [
-        "En Bandejas de entrada, elige View details en la bandeja.",
+        "En Bandejas de entrada, haz clic en la bandeja para abrir sus detalles.",
         "Abre Signature & sending.",
-        "Elige Tarjeta de revisión en la conversación, o Revisar solo en el panel.",
+        "Elige Aprobar en mcpemails.com, con una tarjeta en el chat, o Aprobar solo en mcpemails.com.",
         "Elige Guardar firma. Esto también guarda el ajuste de revisión."
       ],
       "body": [
@@ -30,7 +30,7 @@
       "keywords": "aprobaciones pendiente envío aprobar rechazar correo retenido en espera revisión caducado 24 horas propietario administrador approvals",
       "steps": [
         "Ve a Aprobaciones.",
-        "Elige Review & approve y luego Approve & queue para enviarlo.",
+        "Elige Review & approve y luego Aprobar y enviar.",
         "O elige Rechazar y luego Reject request. No se envía nada."
       ],
       "body": [
@@ -164,7 +164,7 @@
       "summary": "Uso muestra llamadas por día, por herramienta y por bandeja, y la cuota mensual de un espacio Free.",
       "keywords": "uso analítica llamadas por día por herramienta por bandeja historial cuota contador panel usage",
       "body": [
-        "El historial cubre 30 días en Free y Personal, 90 en Pro y 365 en Team. Un espacio Free también ve cuántas de sus 150 acciones de correo mensuales lleva usadas y cuándo se reinicia el contador."
+        "El historial cubre 30 días en Free, 90 en Personal y 2 años en Pro y Business. Un espacio Free también ve cuántas de sus 150 acciones de correo mensuales lleva usadas y cuándo se reinicia el contador."
       ],
       "links": [
         {
@@ -183,7 +183,7 @@
       "summary": "Demasiadas peticiones en poco tiempo. Espera los segundos que indica el error y reintenta.",
       "keywords": "límite de tasa 429 demasiadas peticiones retry_after por minuto ráfaga limitado ir más despacio rate limit",
       "body": [
-        "Cada clave de API permite 100 peticiones por minuto, 1.000 por hora y 10.000 por día. Cada espacio de trabajo tiene además un tope por minuto: Free 60, Personal 120, Pro 300, Team 1.000."
+        "Cada clave de API tiene un límite por minuto, por hora y por día, según tu plan. Cada espacio de trabajo tiene además un tope por minuto: Free 60, Personal 120, Pro 300, Business 1.000."
       ],
       "links": [
         {
@@ -198,7 +198,7 @@
       "summary": "En Free, el propietario del espacio recibe un correo al 80% y al 100% de la cuota mensual.",
       "keywords": "notificación correo uso aviso 80 por ciento límite alcanzado automatización en pausa alerta",
       "body": [
-        "Cuando se agota la cuota, las automatizaciones se pausan y recibes un correo con la fecha en que se reanudan. Los planes de pago no tienen tope mensual, así que estos correos no se aplican."
+        "Cuando se agota la cuota, las automatizaciones se pausan y recibes un correo con la fecha en que se reanudan. Personal, Pro y Business tienen acciones de correo ilimitadas, así que estos correos no se aplican."
       ],
       "links": [
         {
@@ -210,10 +210,10 @@
     {
       "id": "new-mail-alerts",
       "title": "Hacer que tu asistente reaccione al correo nuevo",
-      "summary": "MCP Emails no tiene avisos push. Pide a tu asistente que mire el correo no leído, o usa una automatización.",
+      "summary": "MCPEmails nunca inicia tu asistente. Pídele que mire el correo no leído, o usa una automatización.",
       "keywords": "notificaciones correo nuevo push webhook alerta disparador sondeo correo entrante tiempo real",
       "body": [
-        "Un correo entrante nunca inicia por sí solo una llamada al asistente. Haz que tu asistente revise el correo no leído de forma periódica, o deja que una automatización lo ordene."
+        "Un correo entrante nunca inicia por sí solo una llamada al asistente. Haz que tu asistente revise el correo no leído de forma periódica, o deja que una automatización lo ordene. En Pro y Business, un webhook en Claves de API puede avisar a tu propia URL."
       ],
       "links": [
         {

@@ -192,7 +192,7 @@
       "summary": "Entfernen Sie ein Postfach, einen Workspace oder Ihr ganzes Konto im Dashboard.",
       "keywords": "trennen entfernen postfach löschen konto workspace schließen gefahrenzone disconnect delete account danger zone",
       "steps": [
-        "Postfach: Wählen Sie unter Postfächer in seiner Zeile Trennen. Die gespeicherten Zugangsdaten werden entfernt.",
+        "Postfach: Klicken Sie unter Postfächer auf das Postfach und wählen Sie Trennen. Die gespeicherten Zugangsdaten werden entfernt.",
         "Workspace: Wählen Sie in den Einstellungen unter Workspace die Option Workspace löschen.",
         "Konto: Wählen Sie in den Einstellungen unter Gefahrenbereich die Option Konto löschen. Das lässt sich nicht rückgängig machen.",
         "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort, ohne Erstattung.",

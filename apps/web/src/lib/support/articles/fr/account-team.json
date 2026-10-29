@@ -23,7 +23,7 @@
     {
       "id": "create-workspace",
       "title": "Créer un autre espace de travail",
-      "summary": "Les espaces supplémentaires sont une fonction Team. Un nouvel espace hérite de votre formule.",
+      "summary": "Les espaces supplémentaires sont une fonction Business. Un nouvel espace hérite de votre formule.",
       "keywords": "nouvel espace de travail créer ajouter deuxième client entreprise formule team plusieurs espaces de travail new workspace",
       "steps": [
         "Cliquez sur le nom de l’espace de travail en haut de la barre latérale.",
@@ -43,7 +43,7 @@
     {
       "id": "invite-member",
       "title": "Inviter quelqu’un dans votre espace de travail",
-      "summary": "Les propriétaires et administrateurs invitent depuis Membres. Inviter nécessite la formule Team.",
+      "summary": "Les propriétaires et administrateurs invitent depuis Membres. Inviter nécessite la formule Business.",
       "keywords": "inviter membre collègue collaborateur équipe ajouter utilisateur siège e-mail renvoyer annuler l’invitation invite",
       "steps": [
         "Ouvrez Membres.",
@@ -188,13 +188,13 @@
     {
       "id": "choose-a-plan",
       "title": "Choisir la bonne formule",
-      "summary": "Comptez d’abord les personnes qui se connectent, puis les boîtes.",
-      "keywords": "formule formules plan free personal pro team comparer quelle formule boîtes sièges passer à une formule supérieure prix",
+      "summary": "Comptez d’abord les boîtes, puis les personnes qui se connectent.",
+      "keywords": "formule formules plan free personal pro business team comparer quelle formule boîtes sièges passer à une formule supérieure prix",
       "steps": [
         "Free : une boîte et 150 actions e-mail par mois.",
-        "Personal : jusqu’à 3 boîtes et aucun plafond mensuel d’actions.",
-        "Pro : boîtes illimitées pour une personne.",
-        "Team : plusieurs connexions, avec des rôles et un espace de travail par client.",
+        "Personal : jusqu’à 3 boîtes et des actions e-mail illimitées.",
+        "Pro : jusqu’à 10 boîtes pour une personne.",
+        "Business : 10 boîtes ou plus, des membres avec des rôles et un espace de travail par client.",
         "Consultez Tarifs pour les prix et la comparaison complète."
       ],
       "links": [
@@ -230,13 +230,13 @@
     {
       "id": "data-and-privacy",
       "title": "Ce que nous stockons de vos e-mails",
-      "summary": "Le contenu des e-mails n’est jamais stocké, sauf les messages programmés. Les mots de passe des boîtes sont chiffrés.",
+      "summary": "Le contenu des e-mails n’est jamais stocké, sauf les envois programmés ou retenus. Les mots de passe sont chiffrés.",
       "keywords": "confidentialité données stockées stockage chiffrement chiffré rgpd ue entraînement identifiants mot de passe jeton supprimer exporter privacy gdpr",
       "steps": [
         "Les e-mails que votre assistant lit ou envoie sur le moment sont récupérés en direct et jamais stockés.",
-        "Un message programmé est stocké jusqu’à son envoi, puis conservé dans l’historique.",
+        "Un message programmé ou retenu est stocké jusqu’à son envoi, puis conservé dans l’historique.",
         "Les mots de passe et jetons des boîtes sont chiffrés en AES-256-GCM.",
-        "Les données de compte sont stockées dans l’UE. Vos e-mails n’entraînent jamais de modèles d’IA.",
+        "Les données de compte sont stockées dans l’UE, à Stockholm. Vos e-mails n’entraînent jamais de modèles d’IA.",
         "Pour demander une copie de vos données, écrivez-nous."
       ],
       "links": [
@@ -256,7 +256,7 @@
     },
     {
       "id": "self-hosting",
-      "title": "Héberger MCP Emails vous-même",
+      "title": "Héberger MCPEmails vous-même",
       "summary": "Il est open source (AGPL-3.0) et tourne avec docker-compose, pour les boîtes IMAP et SMTP.",
       "keywords": "auto-hébergement auto-héberger open source agpl docker docker-compose propre serveur sur site self host self-hosting",
       "body": [

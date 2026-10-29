@@ -23,7 +23,7 @@
     {
       "id": "create-workspace",
       "title": "Opprett et nytt arbeidsområde",
-      "summary": "Flere arbeidsområder er en Team-funksjon. Et nytt arbeidsområde arver planen din.",
+      "summary": "Flere arbeidsområder er en Business-funksjon. Et nytt arbeidsområde arver planen din.",
       "keywords": "nytt arbeidsområde opprett legg til andre kunde bedrift team-plan flere arbeidsområder workspace",
       "steps": [
         "Klikk navnet på arbeidsområdet øverst i sidepanelet.",
@@ -43,7 +43,7 @@
     {
       "id": "invite-member",
       "title": "Inviter noen til arbeidsområdet ditt",
-      "summary": "Eiere og administratorer inviterer folk fra Medlemmer. Invitasjoner krever Team-planen.",
+      "summary": "Eiere og administratorer inviterer folk fra Medlemmer. Invitasjoner krever Business-planen.",
       "keywords": "inviter medlem kollega samarbeidspartner team legg til bruker plass e-post send på nytt avbryt invitasjon",
       "steps": [
         "Åpne Medlemmer.",
@@ -188,13 +188,13 @@
     {
       "id": "choose-a-plan",
       "title": "Velg riktig plan",
-      "summary": "Tell først hvor mange som skal logge inn, så postkassene.",
-      "keywords": "plan planer free personal pro team sammenlign hvilken plan innbokser brukere oppgrader pris abonnement",
+      "summary": "Tell først postkassene, så hvor mange som skal logge inn.",
+      "keywords": "plan planer free personal pro business team sammenlign hvilken plan innbokser brukere oppgrader pris abonnement",
       "steps": [
         "Free: én innboks og 150 e-posthandlinger i måneden.",
-        "Personal: opptil 3 innbokser og ingen månedlig grense for handlinger.",
-        "Pro: ubegrenset antall innbokser for én person.",
-        "Team: mer enn én innlogging, med roller og et arbeidsområde per kunde.",
+        "Personal: opptil 3 innbokser og ubegrensede e-posthandlinger.",
+        "Pro: opptil 10 innbokser for én person.",
+        "Business: 10 innbokser eller flere, medlemmer med roller og et arbeidsområde per kunde.",
         "Se Priser for priser og full sammenligning."
       ],
       "links": [
@@ -230,13 +230,13 @@
     {
       "id": "data-and-privacy",
       "title": "Hva vi lagrer om e-posten din",
-      "summary": "E-postinnhold lagres aldri, bortsett fra meldinger du planlegger. Postkassepassord er kryptert.",
+      "summary": "E-postinnhold lagres aldri, unntatt planlagte og holdte sendinger. Postkassepassord er kryptert.",
       "keywords": "personvern data lagret lagring kryptering kryptert gdpr eu trening opplæring påloggingsdata passord token slett eksport",
       "steps": [
         "E-post assistenten leser eller sender nå, hentes direkte og lagres aldri.",
-        "En planlagt melding lagres til den er sendt, og beholdes så som historikk.",
+        "En planlagt eller holdt melding lagres til den er sendt, og beholdes så som historikk.",
         "Postkassepassord og tokener krypteres med AES-256-GCM.",
-        "Kontodata lagres i EU. E-posten din brukes aldri til å trene AI-modeller.",
+        "Kontodata lagres i EU, i Stockholm. E-posten din brukes aldri til å trene AI-modeller.",
         "For å be om en kopi av dataene dine, skriv til oss."
       ],
       "links": [
@@ -256,7 +256,7 @@
     },
     {
       "id": "self-hosting",
-      "title": "Kjør MCP Emails selv",
+      "title": "Kjør MCPEmails selv",
       "summary": "Det er åpen kildekode (AGPL-3.0) og kjører med docker-compose, for IMAP- og SMTP-postkasser.",
       "keywords": "selvhosting selv hoste self-host åpen kildekode open source agpl docker docker-compose egen server lokalt",
       "body": [

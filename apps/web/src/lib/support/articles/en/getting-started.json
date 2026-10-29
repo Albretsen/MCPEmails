@@ -4,7 +4,7 @@
   "articles": [
     {
       "id": "what-is-mcp-emails",
-      "title": "What MCP Emails does",
+      "title": "What MCPEmails does",
       "summary": "It connects your mailboxes to AI assistants like Claude, ChatGPT and Cursor through one URL.",
       "keywords": "what is mcp emails mcpemails about overview how it works mcp server ai assistant agent stored privacy",
       "body": [
@@ -54,7 +54,7 @@
         "Any other mailbox or your own domain: choose IMAP / SMTP."
       ],
       "body": [
-        "Free connects one mailbox and Personal connects three. Pro and Team have no inbox limit."
+        "Free connects one mailbox, Personal three and Pro up to 10. Business includes 10 and can add more."
       ],
       "links": [
         {
@@ -102,7 +102,7 @@
         "After they approve, choose Connect with Microsoft again."
       ],
       "body": [
-        "Your admin does not need an MCP Emails account. Microsoft accounts cannot connect with a password over IMAP."
+        "Your admin does not need an MCPEmails account. Microsoft accounts cannot connect with a password over IMAP."
       ],
       "links": [
         {
@@ -170,8 +170,9 @@
       "steps": [
         "In Claude, open Customize, then Connectors.",
         "Choose Add, then Add custom connector.",
-        "Paste https://mcpemails.com/api/mcp as the URL, then choose Add.",
-        "Choose Connect and sign in with your MCP Emails account."
+        "Name it MCPEmails, paste https://mcpemails.com/api/mcp and choose Continue.",
+        "Check the sign-in settings, then choose Add.",
+        "Choose Connect and sign in with your MCPEmails account."
       ],
       "links": [
         {
@@ -187,15 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "Connect ChatGPT",
-      "summary": "Add https://mcpemails.com/api/mcp as a custom connector in ChatGPT, then sign in.",
+      "summary": "Add https://mcpemails.com/api/mcp as a custom MCP server on chatgpt.com, then sign in.",
       "keywords": "chatgpt openai developer mode connector plugin apps custom mcp server oauth setup",
       "steps": [
-        "Follow the ChatGPT guide to add a custom connector. ChatGPT renames its menus often.",
-        "Use https://mcpemails.com/api/mcp as the server URL and OAuth to sign in.",
-        "Authorize MCP Emails and pick which inboxes it may use."
+        "On chatgpt.com, open Plugins, choose Add, then Add custom MCP server.",
+        "Name it MCPEmails, paste https://mcpemails.com/api/mcp and choose OAuth.",
+        "Tick I understand and want to continue, then choose Create as a plugin.",
+        "Sign in to MCPEmails and pick which inboxes it may use.",
+        "In a chat, type @ and pick MCPEmails. Pick it again when a follow-up needs your mail."
       ],
       "body": [
-        "This works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors."
+        "This works in a browser on chatgpt.com with ChatGPT Go or a paid plan. On Business and Enterprise, an admin may need to add it."
       ],
       "links": [
         {
@@ -216,7 +219,7 @@
       "steps": [
         "Edit ~/.cursor/mcp.json (all projects) or .cursor/mcp.json (one project).",
         "Under mcpServers, add a server with url set to https://mcpemails.com/api/mcp.",
-        "When Cursor prompts you, sign in with your MCP Emails account."
+        "When Cursor prompts you, sign in with your MCPEmails account."
       ],
       "links": [
         {

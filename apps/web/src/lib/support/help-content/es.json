@@ -153,7 +153,7 @@
       "summary": "Quita un buzón, un espacio de trabajo o toda la cuenta desde el panel.",
       "keywords": "desconectar quitar bandeja buzón eliminar cuenta espacio de trabajo cerrar zona de peligro",
       "steps": [
-        "Buzón: en Bandejas de entrada, elige Desconectar en su fila. Se borra su credencial guardada.",
+        "Buzón: en Bandejas de entrada, haz clic en él y elige Desconectar. Se borra su credencial guardada.",
         "Espacio de trabajo: en Ajustes, en Espacio de trabajo, elige Eliminar espacio de trabajo.",
         "Cuenta: en Ajustes, en Zona de peligro, elige Eliminar cuenta. No se puede deshacer.",
         "Eliminar la cuenta cancela al momento un plan de pago, sin reembolso.",

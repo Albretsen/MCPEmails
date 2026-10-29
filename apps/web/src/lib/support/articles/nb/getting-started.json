@@ -4,7 +4,7 @@
   "articles": [
     {
       "id": "what-is-mcp-emails",
-      "title": "Hva MCP Emails gjør",
+      "title": "Hva MCPEmails gjør",
       "summary": "Det kobler postkassene dine til AI-assistenter som Claude, ChatGPT og Cursor via én URL.",
       "keywords": "hva er mcp emails mcpemails om oversikt hvordan virker det mcp-server mcp server ai-assistent agent lagret personvern",
       "body": [
@@ -54,7 +54,7 @@
         "Alle andre postkasser eller ditt eget domene: velg IMAP / SMTP."
       ],
       "body": [
-        "Free kobler til én postkasse og Personal tre. Pro og Team har ingen grense for innbokser."
+        "Free kobler til én postkasse, Personal tre og Pro opptil 10. Business har 10 inkludert og kan legge til flere."
       ],
       "links": [
         {
@@ -102,7 +102,7 @@
         "Når de har godkjent, velger du Koble til med Microsoft igjen."
       ],
       "body": [
-        "Administratoren trenger ikke en MCP Emails-konto. Microsoft-kontoer kan ikke kobles til med passord over IMAP."
+        "Administratoren trenger ikke en MCPEmails-konto. Microsoft-kontoer kan ikke kobles til med passord over IMAP."
       ],
       "links": [
         {
@@ -170,8 +170,9 @@
       "steps": [
         "I Claude åpner du Tilpasning, så Tilkoblinger.",
         "Velg Legg til, så Legg til egendefinert tilkobling.",
-        "Lim inn https://mcpemails.com/api/mcp som URL, og velg Legg til.",
-        "Velg Connect og logg inn med MCP Emails-kontoen din."
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg Fortsett.",
+        "Sjekk innstillingene for innlogging, og velg Legg til.",
+        "Velg Connect og logg inn med MCPEmails-kontoen din."
       ],
       "links": [
         {
@@ -187,15 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "Koble til ChatGPT",
-      "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert tilkobling i ChatGPT, og logg inn.",
+      "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert MCP-server på chatgpt.com, og logg inn.",
       "keywords": "chatgpt openai utviklermodus developer mode connector plugin apper egendefinert mcp-server oauth oppsett",
       "steps": [
-        "Følg ChatGPT-veiledningen for å legge til en egendefinert tilkobling. ChatGPT endrer menynavnene ofte.",
-        "Bruk https://mcpemails.com/api/mcp som server-URL og OAuth for å logge inn.",
-        "Godkjenn MCP Emails og velg hvilke innbokser den kan bruke."
+        "På chatgpt.com åpner du Plugins, velger Add og så Add custom MCP server.",
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg OAuth.",
+        "Huk av for I understand and want to continue, og velg Create as a plugin.",
+        "Logg inn på MCPEmails og velg hvilke innbokser den kan bruke.",
+        "I en chat skriver du @ og velger MCPEmails. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
       ],
       "body": [
-        "Dette virker på chatgpt.com med Plus, Pro, Business, Enterprise og Edu. Free- og Go-kontoer kan ikke legge til egendefinerte tilkoblinger."
+        "Dette virker i nettleseren på chatgpt.com med ChatGPT Go eller et betalt abonnement. På Business og Enterprise kan en administrator måtte legge den til."
       ],
       "links": [
         {
@@ -216,7 +219,7 @@
       "steps": [
         "Rediger ~/.cursor/mcp.json (alle prosjekter) eller .cursor/mcp.json (ett prosjekt).",
         "Under mcpServers legger du til en server med url satt til https://mcpemails.com/api/mcp.",
-        "Når Cursor spør, logger du inn med MCP Emails-kontoen din."
+        "Når Cursor spør, logger du inn med MCPEmails-kontoen din."
       ],
       "links": [
         {

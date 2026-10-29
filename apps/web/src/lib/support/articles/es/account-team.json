@@ -23,7 +23,7 @@
     {
       "id": "create-workspace",
       "title": "Crear otro espacio de trabajo",
-      "summary": "Los espacios de trabajo adicionales son una función de Team. Uno nuevo hereda tu plan.",
+      "summary": "Los espacios de trabajo adicionales son una función de Business. Uno nuevo hereda tu plan.",
       "keywords": "nuevo espacio de trabajo crear añadir segundo cliente empresa plan team varios espacios de trabajo workspace",
       "steps": [
         "Haz clic en el nombre del espacio de trabajo, arriba en la barra lateral.",
@@ -43,7 +43,7 @@
     {
       "id": "invite-member",
       "title": "Invitar a alguien a tu espacio de trabajo",
-      "summary": "Los propietarios y administradores invitan desde Miembros. Invitar requiere el plan Team.",
+      "summary": "Los propietarios y administradores invitan desde Miembros. Invitar requiere el plan Business.",
       "keywords": "invitar miembro colega colaborador equipo añadir usuario puesto correo reenviar cancelar invitación invite",
       "steps": [
         "Abre Miembros.",
@@ -188,13 +188,13 @@
     {
       "id": "choose-a-plan",
       "title": "Elegir el plan adecuado",
-      "summary": "Cuenta primero las personas que inician sesión y luego los buzones.",
-      "keywords": "plan planes free personal pro team comparar qué plan bandejas puestos mejorar precio",
+      "summary": "Cuenta primero los buzones y luego las personas que inician sesión.",
+      "keywords": "plan planes free personal pro business team comparar qué plan bandejas puestos mejorar precio",
       "steps": [
         "Free: una bandeja y 150 acciones de correo al mes.",
-        "Personal: hasta 3 bandejas y sin tope mensual de acciones.",
-        "Pro: bandejas ilimitadas para una persona.",
-        "Team: más de un acceso, con roles y un espacio de trabajo por cliente.",
+        "Personal: hasta 3 bandejas y acciones de correo ilimitadas.",
+        "Pro: hasta 10 bandejas para una persona.",
+        "Business: 10 bandejas o más, miembros con roles y un espacio de trabajo por cliente.",
         "Consulta Precios para ver los precios y la comparación completa."
       ],
       "links": [
@@ -230,13 +230,13 @@
     {
       "id": "data-and-privacy",
       "title": "Qué guardamos de tu correo",
-      "summary": "El contenido de los correos nunca se guarda, salvo los que programas. Las contraseñas de buzón van cifradas.",
+      "summary": "El contenido de los correos nunca se guarda, salvo envíos programados o retenidos. Las contraseñas van cifradas.",
       "keywords": "privacidad datos almacenados almacenamiento cifrado rgpd gdpr ue entrenamiento credenciales contraseña token eliminar exportar privacy",
       "steps": [
         "El correo que tu asistente lee o envía en el momento se obtiene en directo y nunca se guarda.",
-        "Un mensaje programado se guarda hasta que se envía y luego queda como historial.",
+        "Un mensaje programado o retenido se guarda hasta que se envía y luego queda como historial.",
         "Las contraseñas y tokens de buzón se cifran con AES-256-GCM.",
-        "Los datos de la cuenta se guardan en la UE. Tu correo nunca entrena modelos de IA.",
+        "Los datos de la cuenta se guardan en la UE, en Estocolmo. Tu correo nunca entrena modelos de IA.",
         "Para pedir una copia de tus datos, escríbenos."
       ],
       "links": [
@@ -256,7 +256,7 @@
     },
     {
       "id": "self-hosting",
-      "title": "Alojar MCP Emails tú mismo",
+      "title": "Alojar MCPEmails tú mismo",
       "summary": "Es de código abierto (AGPL-3.0) y funciona con docker-compose, para buzones IMAP y SMTP.",
       "keywords": "autoalojar self-host self-hosting código abierto open source agpl docker docker-compose servidor propio on premise",
       "body": [

@@ -153,7 +153,7 @@
       "summary": "Fjern én postkasse, ett arbeidsområde eller hele kontoen fra dashbordet.",
       "keywords": "koble fra fjern innboks postkasse slett konto arbeidsområde avslutt faresone",
       "steps": [
-        "Postkasse: i Innbokser velger du Koble fra på raden. Den lagrede påloggingen fjernes.",
+        "Postkasse: i Innbokser klikker du på den og velger Koble fra. Den lagrede påloggingen fjernes.",
         "Arbeidsområde: i Innstillinger, under Arbeidsområde, velger du Slett arbeidsområde.",
         "Konto: i Innstillinger, under Faresone, velger du Slett konto. Det kan ikke angres.",
         "Sletter du kontoen, sies en betalt plan opp med en gang, uten refusjon.",

@@ -8,9 +8,9 @@
       "summary": "Set Review before sending on an inbox so every prepared send waits for your approval.",
       "keywords": "send review approval hold approve before sending review card dashboard only send immediately safety",
       "steps": [
-        "In Inboxes, choose View details on the inbox.",
+        "In Inboxes, click the inbox to open its details.",
         "Open Signature & sending.",
-        "Choose Review card in the conversation, or Review in the dashboard only.",
+        "Choose Approve on mcpemails.com, with a card in the chat, or Approve on mcpemails.com only.",
         "Choose Save signature. This saves the review setting too."
       ],
       "body": [
@@ -30,7 +30,7 @@
       "keywords": "approvals pending send approve reject held email waiting review expired 24 hours owner admin",
       "steps": [
         "Go to Approvals.",
-        "Select Review & approve, then Approve & queue to send it.",
+        "Select Review & approve, then Approve & send.",
         "Or select Reject, then Reject request. Nothing is sent."
       ],
       "body": [
@@ -164,7 +164,7 @@
       "summary": "Usage shows tool calls per day, by tool and by inbox, plus a Free workspace's monthly allowance.",
       "keywords": "usage analytics calls per day by tool by inbox history allowance meter dashboard",
       "body": [
-        "History covers 30 days on Free and Personal, 90 on Pro and 365 on Team. A Free workspace also sees how many of its 150 monthly email actions are used and when the count resets."
+        "History covers 30 days on Free, 90 on Personal and 2 years on Pro and Business. A Free workspace also sees how many of its 150 monthly email actions are used and when the count resets."
       ],
       "links": [
         {
@@ -183,7 +183,7 @@
       "summary": "Too many requests in a short time. Wait the seconds the error gives, then retry.",
       "keywords": "rate limit 429 too many requests retry_after per minute burst throttled slow down",
       "body": [
-        "Each API key allows 100 requests a minute, 1,000 an hour and 10,000 a day. Each workspace also has a per-minute ceiling: Free 60, Personal 120, Pro 300, Team 1,000."
+        "Each API key has a per-minute, hourly and daily limit, sized to your plan. Each workspace also has a per-minute ceiling: Free 60, Personal 120, Pro 300, Business 1,000."
       ],
       "links": [
         {
@@ -198,7 +198,7 @@
       "summary": "On Free, the workspace owner gets an email at 80% and 100% of the monthly allowance.",
       "keywords": "notification email usage warning 80 percent limit reached automation paused alert",
       "body": [
-        "When the allowance is used up, automations pause and you get an email naming the date they resume. Paid plans have no monthly cap, so these emails do not apply."
+        "When the allowance is used up, automations pause and you get an email naming the date they resume. Personal, Pro and Business have unlimited email actions, so these emails do not apply."
       ],
       "links": [
         {
@@ -210,10 +210,10 @@
     {
       "id": "new-mail-alerts",
       "title": "Get your assistant to react to new mail",
-      "summary": "MCP Emails has no push alerts. Ask your assistant to check for unread mail, or use an automation.",
+      "summary": "MCPEmails never starts your assistant. Ask it to check for unread mail, or use an automation.",
       "keywords": "notifications new mail push webhook alert trigger poll incoming email real time",
       "body": [
-        "An incoming email never starts an assistant call on its own. Have your assistant check unread mail on a schedule, or let an automation sort it."
+        "An incoming email never starts an assistant call on its own. Have your assistant check unread mail on a schedule, or let an automation sort it. On Pro and Business, a webhook under API keys can notify your own URL."
       ],
       "links": [
         {
