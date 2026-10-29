@@ -13,6 +13,8 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { claudeInstallHref, getInstallAction } from '../clients/install-links.mjs';
+import { MCP_URL } from '../clients/mcp-url.mjs';
 
 process.env.NEXT_PUBLIC_APP_URL = 'https://mcpemails.test';
 delete process.env.RESEND_API_KEY;
@@ -456,10 +458,36 @@ test('templates: every body in every locale has the footer, the opt-out and no b
   }
 });
 
-test('templates: one link back into the product per email', () => {
+test('templates: one link per email, back into the product or (Claude not linked) the Claude install', () => {
   for (const { locale, name, composed } of allBodies()) {
     const productLinks = composed.text.match(/https:\/\/mcpemails\.test\/dashboard\S*/g) ?? [];
-    assert.equal(productLinks.length, 1, `${locale}/${name}`);
+    const installLinks = composed.text.match(/https:\/\/claude\.ai\/customize\/connectors\S*/g) ?? [];
+    assert.equal(productLinks.length + installLinks.length, 1, `${locale}/${name}`);
+  }
+});
+
+test('templates: Claude not linked gets the prefilled claude.ai dialog as its button, others the dashboard', () => {
+  for (const locale of templates.ACTIVATION_HELP_LOCALES) {
+    const claude = templates.composeActivationHelp({
+      content: { email: 'first_call_help', state: 'not_linked', client: 'claude' },
+      locale,
+      ctaUrl: 'https://mcpemails.test/dashboard',
+      unsubscribeToken: TOKEN,
+    })!;
+    const href = claudeInstallHref(MCP_URL);
+    assert.ok(claude.text.includes(href), locale);
+    assert.ok(claude.html.includes(href.replace(/&/g, '&amp;')), locale);
+    assert.ok(!claude.text.includes('mcpemails.test/dashboard'), locale);
+    assert.ok(claude.text.includes(getInstallAction('claude', { locale })!.note!), locale);
+  }
+  for (const content of [
+    { email: 'first_call_help', state: 'not_linked', client: 'chatgpt' },
+    { email: 'first_call_help', state: 'not_linked', client: 'other' },
+    { email: 'first_call_help', state: 'linked_no_call', client: 'claude' },
+  ] as const) {
+    const composed = templates.composeActivationHelp({ content, locale: 'en', ctaUrl: 'https://mcpemails.test/dashboard', unsubscribeToken: TOKEN })!;
+    assert.doesNotMatch(composed.text, /: https:\/\/claude\.ai\//, `${content.client}/${content.state}`);
+    assert.match(composed.text, /^Open the dashboard: https:\/\/mcpemails\.test\/dashboard$/m, `${content.client}/${content.state}`);
   }
 });
 

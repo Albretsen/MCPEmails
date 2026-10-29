@@ -23,6 +23,10 @@ export const EVENT_SCHEMA = Object.freeze({
   mcp_connection_started: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'] },
   mcp_connection_authorized: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'], scope_profile: ['read_only', 'read_send', 'custom'] },
   api_key_revealed: { scope_profile: ['read_only', 'read_send', 'custom'] },
+  // A one-click install (install-links.mjs) used on a public page, before any
+  // account exists. The dashboard and onboarding record theirs as activation
+  // events instead. `client` is the install slug; `surface` is the page type.
+  install_link_clicked: { client: ['claude', 'cursor', 'vscode', 'goose', 'claude-code', 'codex', 'gemini-cli'], surface: ['docs'] },
   first_mcp_tool_call: { tool_name: ['inbox_list', 'email_read', 'email_compose', 'email_organize', 'folder', 'draft', 'schedule', 'contact_search'], provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap', 'unknown'], client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'] },
   activation_completed: { activation_path: ['oauth', 'api_key'] },
 });

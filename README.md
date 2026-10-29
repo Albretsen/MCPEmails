@@ -7,6 +7,10 @@
 [![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
+[![Add to Claude](https://img.shields.io/badge/Add%20to-Claude-D97757?logo=claude&logoColor=white)](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=MCPEmails&connectorUrl=https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp)
+[![Add to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=mcpemails&config=eyJ1cmwiOiJodHRwczovL21jcGVtYWlscy5jb20vYXBpL21jcCJ9)
+[![Install in VS Code](https://img.shields.io/badge/Install%20in-VS%20Code-0098FF?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=mcpemails&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp%22%7D)
+
 > Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted on our servers only for the request that needs them.
 
 🔗 **[mcpemails.com](https://mcpemails.com)** · 📚 **[Docs](https://mcpemails.com/docs)** · 💳 **[Pricing](https://mcpemails.com/pricing)**
@@ -48,7 +52,11 @@ Permissions are scoped per key, so you can hand an agent `read:email` only, or g
 
 ## Quick start (connecting an agent)
 
-**Claude Desktop / Cursor (OAuth):** add a remote MCP server pointing at `https://mcpemails.com/api/mcp` and approve the consent screen. Pick the scopes the agent should have.
+**One click (OAuth):** [Add to Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=MCPEmails&connectorUrl=https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp), [Add to Cursor](https://cursor.com/install-mcp?name=mcpemails&config=eyJ1cmwiOiJodHRwczovL21jcGVtYWlscy5jb20vYXBpL21jcCJ9) or [Install in VS Code](https://insiders.vscode.dev/redirect/mcp/install?name=mcpemails&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp%22%7D). Each opens the client with the server filled in; sign in (or create an account) and connect your inbox when it asks. Claude Free allows one custom connector.
+
+**Claude Code:** `claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp`
+
+**Other OAuth clients:** add a remote MCP server pointing at `https://mcpemails.com/api/mcp` and approve the consent screen. Pick the scopes the agent should have.
 
 **API key (any MCP client):** create a key in the dashboard, choose its scopes and (optionally) restrict it to specific inboxes, then send it as a bearer token:
 

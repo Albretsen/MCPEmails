@@ -127,6 +127,23 @@ export function vscodeInstallHref(url = MCP_URL, { insiders = false } = {}) {
   return `${insiders ? 'vscode-insiders' : 'vscode'}:mcp/install?${encodeURIComponent(json)}`;
 }
 
+/**
+ * https forms of the Cursor and VS Code links, for places that drop custom
+ * schemes: GitHub strips cursor: and vscode: hrefs from a README. Each page
+ * redirects to the app link above (checked 2026-10-29: Cursor's install-mcp
+ * page, and vscode.dev's redirect answering 302 to vscode:mcp/install).
+ * Not in Cursor's or VS Code's docs, so the README test pins them to
+ * this file and a change shows up in one place.
+ */
+export function cursorWebInstallHref(url = MCP_URL) {
+  return `https://cursor.com/install-mcp?name=${INSTALL_SERVER_ID}&config=${b64(JSON.stringify({ url }))}`;
+}
+
+export function vscodeWebInstallHref(url = MCP_URL) {
+  const q = new URLSearchParams({ name: INSTALL_SERVER_ID, config: JSON.stringify({ type: 'http', url }) });
+  return `https://insiders.vscode.dev/redirect/mcp/install?${q.toString()}`;
+}
+
 /** Goose extension deep link for a remote Streamable HTTP server. */
 export function gooseInstallHref(url = MCP_URL) {
   const q = new URLSearchParams({
@@ -202,6 +219,18 @@ export function getInstallAction(clientSlug, { locale = 'en', mcpUrl = MCP_URL }
     default:
       return null;
   }
+}
+
+/**
+ * The install action a public /docs/<slug> page shows in its hero, or null.
+ * Only links and commands: ChatGPT's steps are already the page itself. The
+ * docs slug `gemini` is the Gemini app, which has no install action, so it
+ * must not fall through to the Gemini CLI alias.
+ */
+export function docsPageInstallAction(docsSlug, opts) {
+  if (docsSlug === 'gemini') return null;
+  const action = getInstallAction(docsSlug, opts);
+  return action && (action.kind === 'link' || action.kind === 'command') ? action : null;
 }
 
 /**

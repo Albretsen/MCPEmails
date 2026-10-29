@@ -32,6 +32,8 @@
 
 import { unsubscribeUrl } from '@/lib/email/lifecycle';
 import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
+import { getInstallAction } from '@/lib/clients/install-links.mjs';
+import { MCP_URL } from '@/lib/clients/mcp-url.mjs';
 
 export const ACTIVATION_HELP_CATEGORY = 'lifecycle' as const;
 
@@ -110,6 +112,8 @@ interface Copy {
     title: string;
     cta: string;
     notLinked: (client: string) => string[];
+    /** Replaces notLinked's second line when the button installs the app itself (Claude). */
+    notLinkedOneClick: (client: string) => string;
     linkedNoCall: (client: string) => string[];
     toggle: Record<HelpClient, string>;
     tryLine: (prompt: string) => string;
@@ -194,6 +198,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `Your inbox is connected to MCPEmails, but ${client} is not linked to it yet.`,
         `It takes about a minute. The dashboard has the steps for ${client}.`,
       ],
+      notLinkedOneClick: (client) => `It takes about a minute. The button below opens ${client} with MCPEmails already filled in. Add it, then sign in to MCPEmails when ${client} asks.`,
       linkedNoCall: (client) => [
         `Your inbox and ${client} are both connected to MCPEmails, but nothing has been asked yet.`,
       ],
@@ -283,6 +288,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `Innboksen din er koblet til MCPEmails, men ${client} er ikke koblet til ennå.`,
         `Det tar omtrent ett minutt. Dashbordet har stegene for ${client}.`,
       ],
+      notLinkedOneClick: (client) => `Det tar omtrent ett minutt. Knappen under åpner ${client} med MCPEmails ferdig utfylt. Legg den til, og logg inn på MCPEmails når ${client} ber om det.`,
       linkedNoCall: (client) => [
         `Både innboksen din og ${client} er koblet til MCPEmails, men ingenting er spurt om ennå.`,
       ],
@@ -372,6 +378,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `Ihr Postfach ist mit MCPEmails verbunden, aber ${client} ist noch nicht damit verknüpft.`,
         `Das dauert etwa eine Minute. Im Dashboard finden Sie die Schritte für ${client}.`,
       ],
+      notLinkedOneClick: (client) => `Das dauert etwa eine Minute. Der Button unten öffnet ${client} mit MCPEmails bereits eingetragen. Fügen Sie es hinzu und melden Sie sich bei MCPEmails an, wenn ${client} danach fragt.`,
       linkedNoCall: (client) => [
         `Ihr Postfach und ${client} sind beide mit MCPEmails verbunden, aber es wurde noch nichts gefragt.`,
       ],
@@ -461,6 +468,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `Tu buzón está conectado a MCPEmails, pero todavía no has vinculado ${client}.`,
         `Se tarda un minuto más o menos. En el panel están los pasos para ${client}.`,
       ],
+      notLinkedOneClick: (client) => `Se tarda un minuto más o menos. El botón de abajo abre ${client} con MCPEmails ya rellenado. Añádelo e inicia sesión en MCPEmails cuando ${client} te lo pida.`,
       linkedNoCall: (client) => [
         `Tu buzón y ${client} ya están conectados a MCPEmails, pero todavía no se ha preguntado nada.`,
       ],
@@ -550,6 +558,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `Votre boîte est connectée à MCPEmails, mais le lien avec ${client} n'est pas encore fait.`,
         `Cela prend environ une minute. Le tableau de bord indique les étapes pour ${client}.`,
       ],
+      notLinkedOneClick: (client) => `Cela prend environ une minute. Le bouton ci-dessous ouvre ${client} avec MCPEmails déjà rempli. Ajoutez-le, puis connectez-vous à MCPEmails quand ${client} vous le demande.`,
       linkedNoCall: (client) => [
         `Votre boîte et ${client} sont tous les deux connectés à MCPEmails, mais aucune question n'a encore été posée.`,
       ],
@@ -639,6 +648,7 @@ const COPY: Record<HelpLocale, Copy> = {
         `你的邮箱已经连接到 MCPEmails，但还没有关联 ${client}。`,
         `大约只需要一分钟。控制台里有 ${client} 的操作步骤。`,
       ],
+      notLinkedOneClick: (client) => `大约只需要一分钟。点击下方按钮会打开 ${client}，并已预先填好 MCPEmails。添加后，在 ${client} 提示时登录 MCPEmails 即可。`,
       linkedNoCall: (client) => [
         `你的邮箱和 ${client} 都已连接到 MCPEmails，但还没有提出任何问题。`,
       ],
@@ -768,7 +778,7 @@ export type ActivationHelpContent =
 export interface ComposeInput {
   content: ActivationHelpContent;
   locale: HelpLocale;
-  /** The one link back into the product (dashboard connect step or overview). */
+  /** The one link back into the product (dashboard connect step or overview). The Claude not_linked email uses the claude.ai install link instead. */
   ctaUrl: string;
   /** The recipient's own users.unsubscribe_token. Required; null = no email. */
   unsubscribeToken: string | null | undefined;
@@ -787,6 +797,8 @@ function body(c: Copy, content: ActivationHelpContent, locale: HelpLocale): {
   title: string;
   paragraphs: string[];
   cta: string;
+  /** Set when the button leaves the product (an install link); else input.ctaUrl. */
+  ctaUrl?: string;
 } {
   if (content.email === 'connection_help') {
     const label = content.label ?? '';
@@ -799,6 +811,20 @@ function body(c: Copy, content: ActivationHelpContent, locale: HelpLocale): {
     };
   }
   const client = c.e2.clientName[content.client];
+  // Claude not linked yet: the button is the prefilled claude.ai connector
+  // dialog (install-links.mjs) instead of the dashboard. Only https links work
+  // in mail, so cursor: and vscode: never appear here; ChatGPT has no link.
+  const install = content.state === 'not_linked' ? oneClickInstall(content.client, locale) : null;
+  if (install) {
+    const [first] = c.e2.notLinked(client);
+    return {
+      subject: c.e2.subject.not_linked(client),
+      title: c.e2.title,
+      paragraphs: [first, c.e2.notLinkedOneClick(client), ...(install.note ? [install.note] : []), c.e2.tryLine(STARTER_PROMPT[locale]), c.replyLine],
+      cta: install.label,
+      ctaUrl: install.href,
+    };
+  }
   const intro = content.state === 'not_linked' ? c.e2.notLinked(client) : [
     ...c.e2.linkedNoCall(client),
     c.e2.toggle[content.client],
@@ -811,12 +837,21 @@ function body(c: Copy, content: ActivationHelpContent, locale: HelpLocale): {
   };
 }
 
+/** The https install link for a help-email client, or null when it has none. */
+function oneClickInstall(client: HelpClient, locale: HelpLocale): { href: string; label: string; note: string | null } | null {
+  if (client !== 'claude') return null;
+  const action = getInstallAction('claude', { locale, mcpUrl: MCP_URL });
+  if (action?.kind !== 'link' || !action.href?.startsWith('https://')) return null;
+  return { href: action.href, label: action.label, note: action.note ?? null };
+}
+
 export function composeActivationHelp(input: ComposeInput): ComposedActivationHelp | null {
   const token = typeof input.unsubscribeToken === 'string' ? input.unsubscribeToken.trim() : '';
   if (!token) return null;
   const c = COPY[input.locale] ?? COPY.en;
   const unsub = unsubscribeUrl(token, ACTIVATION_HELP_CATEGORY);
   const b = body(c, input.content, input.locale);
+  const ctaUrl = b.ctaUrl ?? input.ctaUrl;
 
   const text = [
     c.greeting,
@@ -827,7 +862,7 @@ export function composeActivationHelp(input: ComposeInput): ComposedActivationHe
       const tight = /^\d\. /.test(para) && next !== undefined && /^\d\. /.test(next);
       return tight ? [para] : [para, ''];
     }),
-    `${b.cta}: ${input.ctaUrl}`,
+    `${b.cta}: ${ctaUrl}`,
     '',
     'Asgeir',
     'MCPEmails',
@@ -842,7 +877,7 @@ export function composeActivationHelp(input: ComposeInput): ComposedActivationHe
     lang: c.lang,
     title: b.title,
     html: p(c.greeting) + b.paragraphs.map((para) => p(para)).join('') + p('Asgeir'),
-    ctaUrl: input.ctaUrl,
+    ctaUrl,
     ctaLabel: b.cta,
     footerNote: c.footerNote,
     unsubscribeUrl: unsub,

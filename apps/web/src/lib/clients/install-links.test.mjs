@@ -1,11 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  getInstallAction, decodeInstallTarget, installSlug, INSTALLABLE_CLIENTS,
-  claudeInstallHref, cursorInstallHref, vscodeInstallHref, gooseInstallHref,
+  getInstallAction, decodeInstallTarget, installSlug, INSTALLABLE_CLIENTS, docsPageInstallAction,
+  claudeInstallHref, cursorInstallHref, vscodeInstallHref, gooseInstallHref, cursorWebInstallHref, vscodeWebInstallHref, INSTALL_COMMANDS,
 } from './install-links.mjs';
 import { MCP_URL, PRODUCTION_MCP_URL } from './mcp-url.mjs';
-import { MCP_URL as CLIENTS_MCP_URL } from './clients.mjs';
+import { MCP_URL as CLIENTS_MCP_URL, CLIENTS } from './clients.mjs';
+import { EVENT_SCHEMA } from '../analytics.mjs';
+import { clientUi } from './ui.mjs';
 
 test('one MCP URL: clients.mjs re-exports mcp-url.mjs, and it is production when no APP_URL is set', () => {
   assert.equal(CLIENTS_MCP_URL, MCP_URL);
@@ -98,4 +101,49 @@ test('a custom mcpUrl (staging) flows into every action', () => {
     const a = getInstallAction(slug, { mcpUrl: staging });
     if (a.kind !== 'steps') assert.equal(decodeInstallTarget(a), staging, slug);
   }
+});
+
+test('docs pages: an install action only where the page client really has one', () => {
+  const kinds = Object.fromEntries(CLIENTS.map((c) => [c.slug, docsPageInstallAction(c.slug)?.kind ?? null]));
+  assert.equal(kinds.claude, 'link');
+  assert.equal(kinds.cowork, 'link');
+  assert.equal(kinds.cursor, 'link');
+  assert.equal(kinds.vscode, 'link');
+  assert.equal(kinds['claude-code'], 'command');
+  assert.equal(kinds.codex, 'command');
+  assert.equal(kinds['gemini-cli'], 'command');
+  // The Gemini app page must not get the Gemini CLI command through the alias.
+  assert.equal(kinds.gemini, null);
+  // ChatGPT has steps only, and they are the page already.
+  assert.equal(kinds.chatgpt, null);
+  for (const slug of ['cline', 'windsurf', 'zed', 'jetbrains', 'curl']) assert.equal(kinds[slug], null, slug);
+  for (const c of CLIENTS) {
+    const action = docsPageInstallAction(c.slug);
+    if (action) assert.equal(decodeInstallTarget(action), MCP_URL, c.slug);
+  }
+});
+
+test('docs pages: every action client is an allowed analytics value, and every locale has the install copy', () => {
+  const allowed = EVENT_SCHEMA.install_link_clicked.client;
+  for (const c of CLIENTS) {
+    const action = docsPageInstallAction(c.slug);
+    if (action) assert.ok(allowed.includes(action.client), c.slug);
+  }
+  for (const locale of ['en', 'nb', 'es', 'fr', 'zh', 'de']) {
+    const install = clientUi(locale).page.install;
+    for (const k of ['after', 'command', 'copy', 'copied']) assert.ok(install?.[k], `${locale}.${k}`);
+    assert.ok(install.after.includes('{client}'), locale);
+    assert.ok(!/[\u2014<>]/.test(Object.values(install).join(' ')), locale);
+  }
+});
+
+test('README install badges are the links this file builds, for the production URL', () => {
+  const readme = readFileSync(new URL('../../../../../README.md', import.meta.url), 'utf8');
+  for (const href of [claudeInstallHref(PRODUCTION_MCP_URL), cursorWebInstallHref(PRODUCTION_MCP_URL), vscodeWebInstallHref(PRODUCTION_MCP_URL), INSTALL_COMMANDS['claude-code'](PRODUCTION_MCP_URL)]) {
+    assert.ok(readme.includes(href), href);
+  }
+  // The web forms carry the same server as the app links they redirect to.
+  const cursorConfig = new URL(cursorWebInstallHref(PRODUCTION_MCP_URL)).searchParams.get('config');
+  assert.equal(cursorInstallHref(PRODUCTION_MCP_URL).endsWith(`config=${cursorConfig}`), true);
+  assert.equal(JSON.parse(new URL(vscodeWebInstallHref(PRODUCTION_MCP_URL)).searchParams.get('config')).url, PRODUCTION_MCP_URL);
 });

@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-29',
+    kind: 'added',
+    title: 'One-click install on the client setup guides',
+    body:
+      "The setup guides for Claude, Claude Cowork, Cursor and VS Code now open the app with MCPEmails already filled in, and the Claude Code, Codex and Gemini CLI guides have the install command ready to copy.",
+  },
+  {
     date: '2026-10-28',
     kind: 'fixed',
     title: 'Home page examples in your language',
