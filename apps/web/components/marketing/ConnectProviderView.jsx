@@ -145,7 +145,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
     <div>
       <Nav />
 
-      <section className="pricing-page-hero is-centered">
+      <section className="pricing-page-hero">
         <div className="container">
           <div className="eye-label">{content.hero.eyebrow}</div>
           <h1 className="pricing-page-h1">
@@ -173,13 +173,13 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <Link href={content.persona.href}>{content.persona.label}</Link>
             </p>
           )}
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+          <div className="hero-cta" style={{ marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
           </div>
-          <div className="hero-meta" style={{ justifyContent: 'center' }}>
+          <div className="hero-meta">
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
                 <MIcon name="check" size={14} color="var(--mint-600)" /> {content.hero[k]}
@@ -506,7 +506,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         <div className="container">
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
-          <div className="hero-cta" style={{ justifyContent: 'center' }}>
+          <div className="hero-cta">
             <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>

@@ -42,7 +42,7 @@ export default function BusinessView({ copy, locale }) {
             {hero.titleLine1}<br />{hero.titleLine2}
           </h1>
           <p className="pricing-page-lead">{hero.lead}</p>
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+          <div className="hero-cta" style={{ marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{hero.ctaPrimary}</a>
             <a className="btn btn-secondary btn-lg" href="#day">{hero.ctaSecondary}</a>
           </div>
@@ -148,7 +148,7 @@ export default function BusinessView({ copy, locale }) {
             <h2>{providers.title}</h2>
             <p className="sub">{providers.sub}</p>
           </div>
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+          <div className="hero-cta" style={{ marginTop: 8, flexWrap: 'wrap' }}>
             <Link className="btn btn-secondary" href="/connect/imap">{providers.ctaImap}</Link>
             <Link className="btn btn-secondary" href="/connect/gmail">{providers.ctaGmail}</Link>
             <Link className="btn btn-secondary" href="/connect/office365">{providers.ctaMicrosoft}</Link>

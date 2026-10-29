@@ -690,23 +690,23 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             locale={locale}
             where="pricing"
             className="pricing-footnote"
-            style={{ textAlign: 'center', margin: '0 auto 24px', maxWidth: 720, color: 'var(--fg-2)' }}
+            style={{ margin: '0 0 24px', maxWidth: 720, color: 'var(--fg-2)' }}
           />
           <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} currency={currency} seasonalOffers={seasonalOffers} />
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
+          <p className="pricing-footnote" style={{ marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
           {/* A company reading these cards has to find out that Pro is the
               plan for one person running several company mailboxes. The FAQ
               says so too; this is the line people see. */}
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
+          <p className="pricing-footnote" style={{ marginTop: 8 }}>
             {t.rich('cardsFootnote.business', {
               business: (chunks) => <Link href="/for/business">{chunks}</Link>,
             })}
           </p>
           {/* Enterprise is a conversation, not a fifth card: a DPA, invoice
               billing and Microsoft 365 admin help, all by email. */}
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 16 }}>
+          <p className="pricing-footnote" style={{ marginTop: 16 }}>
             <strong>{t('enterprise.title')}</strong>{' '}
             {t.rich('enterprise.body', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
