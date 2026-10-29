@@ -830,6 +830,59 @@ async function main() {
     await c.done();
   }
 
+  group("7d. a draft the server already called gone is not asked about again on the next reopen");
+  {
+    for (const [headline, ends] of [
+      ["This draft was already sent.", true],
+      ["This draft is no longer in your mailbox.", false],
+    ]) {
+      const first = await boot();
+      first.tools.draft_read = () => failedResult("draft_not_found", headline);
+      first.deliver(TOOL_INPUT);
+      first.push(draftEnvelope({ last_saved_at: OLD() }));
+      await settle();
+      await settle();
+      expect(`${headline} first reopen asks once`, first.calls.length, 1);
+      const s = first.storage();
+      await first.done();
+
+      const again = await boot({ storage: s });
+      again.tools.draft_read = () => failedResult("draft_not_found", headline);
+      again.deliver(TOOL_INPUT);
+      again.push(draftEnvelope({ last_saved_at: OLD() }));
+      await settle();
+      await settle();
+      expectJson(`${headline} second reopen asks nothing`, again.calls.filter((x) => x.name === "draft_read"), []);
+      expect(`${headline} same ending`, again.isEditor(), !ends);
+      expect(
+        `${headline} same words`,
+        ends ? /^(?!.*Here they are).*(Sent|already sent)/.test(again.text()) : /could not be found in Drafts/.test(again.text()),
+        true,
+      );
+      if (!ends) {
+        // Check again is the person asking: it goes to the server, and a draft
+        // found there is forgotten as gone.
+        again.tools.draft_read = () => draftResult({ origin: "read" });
+        again.press(again.btn(/^Check again$/));
+        await settle();
+        await settle();
+        expect("Check again asks the server", again.calls.filter((x) => x.name === "draft_read").length, 1);
+        const s2 = again.storage();
+        await again.done();
+        const third = await boot({ storage: s2 });
+        third.tools.draft_read = () => draftResult({ origin: "read" });
+        third.deliver(TOOL_INPUT);
+        third.push(draftEnvelope({ last_saved_at: OLD() }));
+        await settle();
+        await settle();
+        expect("found again: the next reopen asks", third.calls.some((x) => x.name === "draft_read"), true);
+        await third.done();
+      } else {
+        await again.done();
+      }
+    }
+  }
+
   group("7c. a draft saved in the card comes back current after the chat is reopened");
   {
     const c = await editor();

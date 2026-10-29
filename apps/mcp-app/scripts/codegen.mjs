@@ -44,8 +44,15 @@ const OUT = resolve(repoRoot, "supabase/functions/mcp-server/ui/review-card.html
 // and the bulk plan's `.samples` list, and the server writes the rule's
 // sentence so the card does not have to. Two other cards were being built at
 // the same time against the same 4.2 KB of headroom.
+//
+// 2026-10-29: raised to 178 KB, the second deliberate raise. Main stood at
+// 174.8 KB, and remembering a draft the server already called gone
+// (persist.ts#goneDraft) adds 0.9 KB. Without it every reopened chat re-read
+// each old card's sent or deleted draft, the largest source of failed tool
+// calls in activity_log (~150-180 a day). The memo is one function and one
+// wrapper; nothing smaller does the job.
 const TARGET_RAW = 50 * 1024;
-const MAX_RAW = 175 * 1024;
+const MAX_RAW = 178 * 1024;
 
 if (!existsSync(BUNDLE)) {
   console.error(`codegen: ${BUNDLE} not found — run \`npm run build:bundle\` first.`);
