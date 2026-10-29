@@ -24,6 +24,10 @@
     "title": "Slik kobler Claude seg til: OAuth, ingen API-nøkkel",
     "body": "Claude kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
   },
+  "answerSection": {
+    "title": "Hvilke MCP-servere fungerer med Claude Desktop for e-post?",
+    "body": "Claude Desktop tar imot enhver ekstern MCP-server som legges til som egendefinert kobling, så en driftet e-postserver som MCPEmails fungerer der akkurat som i claude.ai: åpne <b>Customize</b>, <b>Connectors</b>, legg til <code>https://mcpemails.com/api/mcp</code> og logg inn. Den ene URL-en dekker Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo og alle IMAP-postkasser. Claudes egne koblinger for Gmail og Microsoft 365 finnes også i Claude Desktop, men hver dekker én leverandør, og Microsoft 365-koblingen godtar bare jobb- og skolekontoer. Lokale servere som startes fra <code>claude_desktop_config.json</code> fungerer også; de kjører på datamaskinen din og lagrer e-postinnloggingen i en fil der."
+  },
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",

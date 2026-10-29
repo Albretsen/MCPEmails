@@ -22,6 +22,10 @@
     "title": "Slik kobler Cursor seg til: OAuth, ingen API-nøkkel",
     "body": "Cursor kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
   },
+  "answerSection": {
+    "title": "Eksempel: Gmail i Cursor",
+    "body": "Koble til Gmail i MCPEmails-dashbordet med et Google-apppassord, legg til <code>mcpemails</code>-oppføringen nedenfor i <code>~/.cursor/mcp.json</code> og logg inn når Cursor ber om det. Be så agenten i Cursor om noe som «finn feilrapporten Anna sendte til Gmailen min i går, og skriv et utkast til svar om at rettelsen kommer i dag». Den søker i Gmail, leser tråden og lagrer svaret som et Gmail-utkast som du ser over før noe sendes."
+  },
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",

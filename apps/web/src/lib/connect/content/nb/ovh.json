@@ -26,6 +26,39 @@
     "meta2": "E-post hentes direkte, lagres aldri",
     "answer": "Claude når ikke OVH på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "De to første radene gjelder MX Plan. Tallet 4 i ex4 og pro4 er ditt eget servernummer, som står i OVHcloud Control Panel under General information. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "persona": {
     "intro": "Flere bedriftspostkasser hos OVH?",
     "label": "Se hva hver plan kobler til",

@@ -23,7 +23,7 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Verbindung per Google App-Passwort",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude kann Gmail nicht selbst erreichen. MCPEmails ist ein gehosteter MCP-Server, der dazwischen sitzt: Sie erstellen einmal ein Google App-Passwort, fügen eine URL in Ihren MCP-Client ein, und Claude, Cursor oder ChatGPT können Ihr Gmail lesen, durchsuchen, E-Mails senden, beantworten und planen. Ein Postfach ist dauerhaft kostenlos."
+    "answer": "Die URL des Gmail-MCP-Servers lautet https://mcpemails.com/api/mcp. MCPEmails ist ein gehosteter MCP-Server: Erstellen Sie ein Google-App-Passwort, verbinden Sie Gmail einmal im Dashboard und fügen Sie die URL dann in Claude, ChatGPT oder Cursor ein. In Cursor tragen Sie sie unter mcpServers in ~/.cursor/mcp.json im Feld url ein, und Cursor fordert Sie zur Anmeldung auf, ohne API-Schlüssel. Der Free-Plan verbindet ein Gmail-Postfach dauerhaft und ohne Karte, mit einem privaten Google-Konto oder mit Google Workspace."
   },
   "method": {
     "title": "So verbindet sich Gmail: mit einem Google App-Passwort",
@@ -70,6 +70,10 @@
     {
       "q": "Funktioniert Claude mit Gmail?",
       "a": "Ja, sobald etwas dazwischen sitzt, das für Claude mit Gmail spricht. MCPEmails ist so ein Dienst: Sie erstellen ein Google App-Passwort, fügen eine MCP-URL ein, und Claude kann E-Mails lesen, suchen, senden, beantworten, weiterleiten und planen. Google bietet außerdem einen offiziellen Workspace MCP-Server an, der Gmail abdeckt. Der praktische Unterschied: MCPEmails ist nicht auf Google beschränkt, dieselbe URL bedient also auch Ihre anderen Postfächer."
+    },
+    {
+      "q": "Wie lautet die URL des Gmail-MCP-Servers, und ist er kostenlos?",
+      "a": "Die URL ist https://mcpemails.com/api/mcp, dieselbe in Claude, ChatGPT, Cursor und jedem anderen MCP-Client. Der Free-Plan verbindet ein Gmail-Postfach ohne Karte, dauerhaft. Bezahlte Pläne bieten mehr Postfächer."
     },
     {
       "q": "Gibt es einen offiziellen Gmail MCP-Server von Google?",

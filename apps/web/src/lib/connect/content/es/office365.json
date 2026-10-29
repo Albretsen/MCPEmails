@@ -17,9 +17,9 @@
   },
   "hero": {
     "eyebrow": "Microsoft 365 + IA",
-    "titleLine1": "Conecta el correo de Microsoft 365",
-    "titleLine2": "a Claude, ChatGPT y Cursor",
-    "lead": "Dale a tu agente de IA tu buzón de Outlook del trabajo o del centro educativo. Inicia sesión con Microsoft y, si tu organización lo exige, envía a tu administrador de TI un enlace para aprobar MCPEmails para todos.",
+    "titleLine1": "Conectar Outlook del trabajo con Claude:",
+    "titleLine2": "Microsoft 365 en Claude, ChatGPT y Cursor",
+    "lead": "Así se conecta Outlook con Claude cuando el buzón es de Microsoft 365, del trabajo o de un centro educativo: inicia sesión con Microsoft y, si tu organización lo exige, envía a tu administrador de TI un enlace para aprobar MCPEmails para todos.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "Enlace de aprobación para el administrador de TI incluido",

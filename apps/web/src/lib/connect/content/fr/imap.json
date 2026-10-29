@@ -20,13 +20,13 @@
   },
   "hero": {
     "eyebrow": "IMAP + IA",
-    "titleLine1": "Connectez toute boîte IMAP à Claude,",
-    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "titleLine1": "Le serveur MCP IMAP pour toute boîte mail,",
+    "titleLine2": "dans Claude, Cursor, ChatGPT et tout client MCP",
     "lead": "Connectez toutes les boîtes de votre entreprise, quel que soit leur hébergeur : info@, sales@, invoices@ et la vôtre. Votre agent IA lit, recherche, envoie, répond, planifie et organise ce courrier en IMAP et SMTP standard, et les mêmes boîtes fonctionnent dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Tout serveur IMAP, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude n'a pas de client IMAP à lui. MCPEmails est un serveur MCP hébergé qui se connecte à votre serveur mail en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout serveur qui parle IMAP fonctionne, les adresses génériques d'une entreprise se connectent de la même façon qu'une adresse personnelle, et une boîte est gratuite."
+    "answer": "Claude n'a pas de client IMAP à lui. MCPEmails est un serveur MCP IMAP hébergé qui se connecte à votre serveur mail en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout serveur qui parle IMAP fonctionne, les adresses génériques d'une entreprise se connectent de la même façon qu'une adresse personnelle, et une boîte est gratuite."
   },
   "persona": {
     "intro": "Vous gérez plusieurs boîtes d'entreprise ?",

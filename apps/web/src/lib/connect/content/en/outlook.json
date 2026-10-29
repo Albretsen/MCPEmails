@@ -18,7 +18,7 @@
     "eyebrow": "Outlook.com + AI",
     "titleLine1": "Connect Outlook.com to Claude,",
     "titleLine2": "and ChatGPT, Cursor, any MCP client",
-    "lead": "Give your AI agent your Outlook.com, Hotmail, Live or MSN inbox. Sign in with Microsoft, approve access once, and read, search, send, reply, schedule and organize mail from every MCP client with one URL.",
+    "lead": "Claude's own Microsoft 365 connector accepts only work or school accounts. MCPEmails connects personal Outlook.com, Hotmail, Live and MSN inboxes: sign in with Microsoft, approve access once, and read, search, send, reply, schedule and organize mail from every MCP client with one URL.",
     "meta0": "1 inbox free, forever",
     "meta1": "Sign in with Microsoft, no app password",
     "meta2": "Email fetched live, never stored",
@@ -74,6 +74,10 @@
     {
       "q": "Does Claude work with Outlook.com?",
       "a": "Yes. Connect your Outlook.com mailbox to MCPEmails by signing in with Microsoft, paste one MCP URL into Claude, and Claude can read, search, send, reply, forward, schedule and file your mail. The same URL works in ChatGPT, Cursor and other MCP clients."
+    },
+    {
+      "q": "Why does Claude's Microsoft 365 connector reject my Outlook.com account?",
+      "a": "Claude's built-in Microsoft 365 connector needs a work or school account in a Microsoft Entra tenant, and Anthropic states that personal Microsoft accounts are not supported, so Outlook.com, Hotmail, Live and MSN addresses are turned away. MCPEmails connects those personal accounts: you sign in with Microsoft on Microsoft's own page, then add MCPEmails to Claude as a custom connector with one URL."
     },
     {
       "q": "Does it work with Hotmail, Live and MSN addresses?",

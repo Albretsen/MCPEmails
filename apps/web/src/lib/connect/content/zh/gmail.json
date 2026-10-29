@@ -23,7 +23,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "用 Google 应用专用密码连接",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 Gmail。MCPEmails 是位于两者之间的托管 MCP 服务器：你只需创建一次 Google 应用专用密码，把一个 URL 粘贴到你的 MCP 客户端，Claude、Cursor 或 ChatGPT 就能读取、搜索、发送、回复和定时你的 Gmail 邮件。1 个收件箱永久免费。"
+    "answer": "Gmail MCP 服务器的 URL 是 https://mcpemails.com/api/mcp 。MCPEmails 是托管的 MCP 服务器：创建一个 Google 应用专用密码，在控制台中连接一次 Gmail，然后把这个 URL 粘贴到 Claude、ChatGPT 或 Cursor。在 Cursor 中，把它加到 ~/.cursor/mcp.json 的 mcpServers 下，字段名为 url，Cursor 会提示你登录，无需 API 密钥。Free 套餐永久免费连接一个 Gmail 邮箱，无需绑卡，个人 Google 账户和 Google Workspace 都可以。"
   },
   "method": {
     "title": "Gmail 如何连接：Google 应用专用密码",
@@ -70,6 +70,10 @@
     {
       "q": "Claude 能用于 Gmail 吗？",
       "a": "能，只要在两者之间有一个替 Claude 与 Gmail 通信的东西。MCPEmails 就是其中之一：你创建一个 Google 应用专用密码，粘贴一个 MCP URL，Claude 就能读取、搜索、发送、回复、转发和定时邮件。Google 也发布了覆盖 Gmail 的官方 Workspace MCP 服务器。实际的区别在于，MCPEmails 不限于 Google，所以同一个 URL 也能为你的其他邮箱服务。"
+    },
+    {
+      "q": "Gmail MCP 服务器的 URL 是什么？免费吗？",
+      "a": "URL 是 https://mcpemails.com/api/mcp ，在 Claude、ChatGPT、Cursor 和其他所有 MCP 客户端中都一样。Free 套餐永久免费连接一个 Gmail 邮箱，无需绑卡。付费套餐可以连接更多邮箱。"
     },
     {
       "q": "Google 有官方的 Gmail MCP 服务器吗？",

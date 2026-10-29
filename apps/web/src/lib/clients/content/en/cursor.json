@@ -22,6 +22,10 @@
     "title": "How Cursor connects: OAuth, no API key",
     "body": "Cursor runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
   },
+  "answerSection": {
+    "title": "Example: Gmail in Cursor",
+    "body": "Connect Gmail in the MCPEmails dashboard with a Google app password, add the <code>mcpemails</code> entry shown below to <code>~/.cursor/mcp.json</code> and sign in when Cursor asks. Then ask Cursor's agent something like \"find the bug report Anna sent to my Gmail yesterday and draft a reply saying the fix ships today\". It searches your Gmail, reads the thread and saves the reply as a Gmail draft for you to check before it goes anywhere."
+  },
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",

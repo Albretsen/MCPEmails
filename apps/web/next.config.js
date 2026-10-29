@@ -295,6 +295,11 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/home', destination: '/', permanent: true },
+      // /docs/claude covers claude.ai and Claude Desktop on one page, but
+      // Google ranks the guessed /docs/claude-desktop URL (a 404) for "MCP
+      // servers for Claude Desktop email". Send it, in every locale, there.
+      { source: '/docs/claude-desktop', destination: '/docs/claude', permanent: true },
+      { source: '/:locale(nb|es|fr|de|zh)/docs/claude-desktop', destination: '/:locale/docs/claude', permanent: true },
     ];
   },
 };

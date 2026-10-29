@@ -49,6 +49,76 @@ export default async function ConnectProviderView({ locale, provider, content, m
   // JSON-LD carries, because both come from providerFaq.
   const faq = providerFaq({ content, provider, multiMailbox, chatgptCopy: chatgpt?.copy });
   const gpt = chatgpt ? chatgptSection(chatgpt.copy, provider.name) : null;
+  // Pages whose hosts people search for by name (ex4.mail.ovh.net,
+  // smtp.purelymail.com) set `settingsTop`: the settings table moves straight
+  // under the hero, gains any extra rows the page lists (OVH's numbered
+  // Exchange and Email Pro hosts) and links the settings lookup tool. Every
+  // other page keeps the table in its usual place, below the method callout.
+  const settingsTop = content.settingsTop ?? null;
+  const settingsSection = provider.imap && provider.smtp ? (
+    <section className="section" style={{ paddingTop: 40, paddingBottom: 0 }}>
+      <div className="container">
+        <h2 className="providers-h2">{t('settings.title', named)}</h2>
+        <p className="providers-sub">{t('settings.sub')}</p>
+        <div className="comparison-wrap">
+          <table className="comparison-tbl providers-conn-tbl">
+            <thead>
+              <tr>
+                <th className="feat-col" style={{ minWidth: 150 }}>{t('settings.colProtocol')}</th>
+                <th style={{ minWidth: 200 }}>{t('settings.colHost')}</th>
+                <th style={{ minWidth: 110 }}>{t('settings.colPort')}</th>
+                <th style={{ minWidth: 140 }}>{t('settings.colSecurity')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['imap', 'smtp'].map((protocol) => (
+                <tr key={protocol}>
+                  <td className="feat-name">{t(`settings.${protocol}`)}</td>
+                  <td className="tbl-val">
+                    <code className="connect-host">{provider[protocol].host}</code>
+                  </td>
+                  <td className="tbl-val" style={{ fontSize: 13 }}>{provider[protocol].port}</td>
+                  <td className="tbl-val" style={{ fontSize: 13 }}>
+                    {t(`settings.security.${provider[protocol].security}`)}
+                  </td>
+                </tr>
+              ))}
+              {settingsTop?.rows?.map((row) => (
+                <tr key={`${row.label}-${row.port}`}>
+                  <td className="feat-name">{row.label}</td>
+                  <td className="tbl-val">
+                    <code className="connect-host">{row.host}</code>
+                  </td>
+                  <td className="tbl-val" style={{ fontSize: 13 }}>{row.port}</td>
+                  <td className="tbl-val" style={{ fontSize: 13 }}>
+                    {t(`settings.security.${row.security}`)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="connect-verified">
+          <MIcon name="check" size={13} color="var(--mint-600)" />{' '}
+          {t('settings.verified', { date: ev.verifiedOn, host: provider.imap.host })}
+          {ev.authMechs?.length > 0 &&
+            ` ${t('settings.mechs', { mechs: ev.authMechs.join(', ') })}`}
+        </p>
+        {content.auth?.usernameForm && (
+          <p className="connect-verified">
+            <MIcon name="user" size={13} color="var(--fg-3)" />{' '}
+            {t('settings.username')} {content.auth.usernameForm}
+          </p>
+        )}
+        {settingsTop?.lookup?.href && (
+          <p className="how-guide-link" style={{ marginTop: 12 }}>
+            {settingsTop.lookup.intro}{' '}
+            <Link href={settingsTop.lookup.href}>{settingsTop.lookup.label}</Link>
+          </p>
+        )}
+      </div>
+    </section>
+  ) : null;
 
   return (
     <div>
@@ -97,6 +167,8 @@ export default async function ConnectProviderView({ locale, provider, content, m
           </div>
         </div>
       </section>
+
+      {settingsTop && settingsSection}
 
       <section className="section" style={{ paddingTop: 56, paddingBottom: 0 }}>
         <div className="container">
@@ -148,52 +220,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         competing page has: these hosts were not copied from a directory, they
         answered a TLS handshake under exactly this name on that date.
       */}
-      {provider.imap && provider.smtp && (
-        <section className="section" style={{ paddingTop: 40, paddingBottom: 0 }}>
-          <div className="container">
-            <h2 className="providers-h2">{t('settings.title', named)}</h2>
-            <p className="providers-sub">{t('settings.sub')}</p>
-            <div className="comparison-wrap">
-              <table className="comparison-tbl providers-conn-tbl">
-                <thead>
-                  <tr>
-                    <th className="feat-col" style={{ minWidth: 150 }}>{t('settings.colProtocol')}</th>
-                    <th style={{ minWidth: 200 }}>{t('settings.colHost')}</th>
-                    <th style={{ minWidth: 110 }}>{t('settings.colPort')}</th>
-                    <th style={{ minWidth: 140 }}>{t('settings.colSecurity')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {['imap', 'smtp'].map((protocol) => (
-                    <tr key={protocol}>
-                      <td className="feat-name">{t(`settings.${protocol}`)}</td>
-                      <td className="tbl-val">
-                        <code className="connect-host">{provider[protocol].host}</code>
-                      </td>
-                      <td className="tbl-val" style={{ fontSize: 13 }}>{provider[protocol].port}</td>
-                      <td className="tbl-val" style={{ fontSize: 13 }}>
-                        {t(`settings.security.${provider[protocol].security}`)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="connect-verified">
-              <MIcon name="check" size={13} color="var(--mint-600)" />{' '}
-              {t('settings.verified', { date: ev.verifiedOn, host: provider.imap.host })}
-              {ev.authMechs?.length > 0 &&
-                ` ${t('settings.mechs', { mechs: ev.authMechs.join(', ') })}`}
-            </p>
-            {content.auth?.usernameForm && (
-              <p className="connect-verified">
-                <MIcon name="user" size={13} color="var(--fg-3)" />{' '}
-                {t('settings.username')} {content.auth.usernameForm}
-              </p>
-            )}
-          </div>
-        </section>
-      )}
+      {!settingsTop && settingsSection}
 
       <section className="section principles">
         <div className="container">

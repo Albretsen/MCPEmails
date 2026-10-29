@@ -29,6 +29,13 @@
     "meta1": "Mot de passe de la boîte, ou mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés"
   },
+  "settingsTop": {
+    "lookup": {
+      "intro": "Vous configurez une autre adresse ?",
+      "label": "Trouvez les paramètres IMAP et SMTP de n'importe quel domaine",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "method": {
     "title": "Comment Purelymail se connecte : IMAP et le mot de passe propre à la boîte",
     "body": "Purelymail sert l'IMAP sur <code>imap.purelymail.com</code> au port 993 en TLS, et le SMTP sur <code>smtp.purelymail.com</code> au port 465, également en TLS implicite. Il n'y a rien à activer au préalable. Purelymail considère l'IMAP, le POP3 et le SMTP comme un accès ordinaire, et chaque boîte en dispose dès sa création, ce qui le place déjà devant la plupart des fournisseurs de webmail. Là où l'on se trompe, c'est sur <b>les identifiants à saisir</b>. Purelymail sépare votre <b>compte</b>, qui sert à vous connecter au portail de gestion et porte la facture forfaitaire de 10 $ par an, de vos <b>utilisateurs</b>, c'est-à-dire les boîtes qui envoient et reçoivent réellement. L'IMAP attend un utilisateur : l'adresse complète, domaine compris, plus le mot de passe propre à cet utilisateur. C'est vrai que l'adresse soit sur un domaine Purelymail partagé ou sur un domaine personnalisé que vous avez apporté, car les noms de serveurs sont les mêmes pour tous les clients."

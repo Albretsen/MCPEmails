@@ -15,10 +15,10 @@
     "description": "Conecta el correo de Outlook.com, Hotmail, Live o MSN a Claude, ChatGPT, Cursor o cualquier cliente MCP. Inicia sesión con Microsoft, sin contraseña de aplicación. Una bandeja gratis, para siempre."
   },
   "hero": {
-    "eyebrow": "Outlook.com + IA",
-    "titleLine1": "Conecta Outlook.com a Claude,",
-    "titleLine2": "y a ChatGPT, Cursor o cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA tu bandeja de Outlook.com, Hotmail, Live o MSN. Inicia sesión con Microsoft, aprueba el acceso una vez y lee, busca, envía, responde, programa y organiza el correo desde cualquier cliente MCP con una sola URL.",
+    "eyebrow": "Claude para Outlook",
+    "titleLine1": "Cómo conectar Outlook con Claude,",
+    "titleLine2": "y con ChatGPT, Cursor o cualquier cliente MCP",
+    "lead": "Para conectar Outlook con Claude, añade tu bandeja a MCPEmails iniciando sesión con Microsoft y pega una URL en Claude. El conector de Microsoft 365 que trae Claude solo acepta cuentas del trabajo o de un centro educativo; MCPEmails conecta cuentas personales de Outlook.com, Hotmail, Live y MSN, y desde cualquier cliente MCP puedes leer, buscar, enviar, responder, programar y organizar el correo.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -74,6 +74,10 @@
     {
       "q": "¿Funciona Claude con Outlook.com?",
       "a": "Sí. Conecta tu buzón de Outlook.com a MCPEmails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. La misma URL funciona en ChatGPT, Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Por qué el conector de Microsoft 365 de Claude rechaza mi cuenta de Outlook.com?",
+      "a": "El conector de Microsoft 365 integrado en Claude exige una cuenta del trabajo o de un centro educativo dentro de un inquilino de Microsoft Entra, y Anthropic indica que las cuentas personales de Microsoft no son compatibles, así que rechaza las direcciones de Outlook.com, Hotmail, Live y MSN. MCPEmails conecta esas cuentas personales: inicias sesión con Microsoft en la propia página de Microsoft y luego añades MCPEmails a Claude como conector personalizado con una URL."
     },
     {
       "q": "¿Funciona con direcciones de Hotmail, Live y MSN?",

@@ -22,6 +22,10 @@
     "title": "Cursor 如何连接：OAuth，无需 API 密钥",
     "body": "Cursor 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
   },
+  "answerSection": {
+    "title": "示例：在 Cursor 中使用 Gmail",
+    "body": "在 MCPEmails 控制台中用 Google 应用专用密码连接 Gmail，把下面的 <code>mcpemails</code> 条目加到 <code>~/.cursor/mcp.json</code>，并在 Cursor 提示时登录。然后对 Cursor 的代理说：“找到 Anna 昨天发到我 Gmail 的错误报告，起草一封回复，说明修复今天上线。”它会搜索你的 Gmail、阅读邮件线程，并把回复保存为 Gmail 草稿，供你在发送前检查。"
+  },
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",

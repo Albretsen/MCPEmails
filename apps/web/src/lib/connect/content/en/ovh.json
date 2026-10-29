@@ -26,6 +26,39 @@
     "meta2": "Email fetched live, never stored",
     "answer": "Claude cannot reach OVH on its own. MCPEmails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
   },
+  "settingsTop": {
+    "rows": [
+      {
+        "label": "IMAP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Hosted Exchange",
+        "host": "ex4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      },
+      {
+        "label": "IMAP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 993,
+        "security": "tls"
+      },
+      {
+        "label": "SMTP, Email Pro",
+        "host": "pro4.mail.ovh.net",
+        "port": 587,
+        "security": "starttls"
+      }
+    ],
+    "lookup": {
+      "intro": "The first two rows are MX Plan. The 4 in ex4 and pro4 is your own server number, shown in the OVHcloud Control Panel under General information. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "persona": {
     "intro": "Several company mailboxes at OVH?",
     "label": "See what each plan connects",

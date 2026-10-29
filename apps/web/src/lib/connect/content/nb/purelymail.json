@@ -29,6 +29,13 @@
     "meta1": "Postkassepassord, eller app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
+  "settingsTop": {
+    "lookup": {
+      "intro": "Skal du sette opp en annen adresse?",
+      "label": "Slå opp IMAP- og SMTP-innstillingene for et hvilket som helst domene",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "method": {
     "title": "Slik kobler Purelymail seg til: IMAP og postkassens eget passord",
     "body": "Purelymail tilbyr IMAP på <code>imap.purelymail.com</code> port 993 over TLS, og SMTP på <code>smtp.purelymail.com</code> port 465, også med implisitt TLS. Det er ingenting å slå på først. Purelymail behandler IMAP, POP3 og SMTP som vanlig tilgang, og alle postkasser har dem fra det øyeblikket de opprettes, noe som allerede setter den foran de fleste webmail-leverandører. Det folk gjør feil her, er <b>hvilke påloggingsdetaljer de skriver</b>. Purelymail holder <b>kontoen</b> din, innloggingen til administrasjonsportalen og den faste regningen på $10 i året, adskilt fra <b>brukerne</b> dine, som er postkassene som faktisk sender og mottar. IMAP vil ha en bruker: den fullstendige adressen med domenet, pluss den brukerens eget passord. Det gjelder enten adressen ligger på et delt Purelymail-domene eller på et eget domene du tok med, fordi vertsnavnene er de samme for alle kunder."

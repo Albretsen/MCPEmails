@@ -22,6 +22,10 @@
     "title": "So verbindet sich Cursor: OAuth, kein API-Schlüssel",
     "body": "Cursor durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
   },
+  "answerSection": {
+    "title": "Beispiel: Gmail in Cursor",
+    "body": "Verbinden Sie Gmail im Dashboard von MCPEmails mit einem Google-App-Passwort, tragen Sie den unten gezeigten Eintrag <code>mcpemails</code> in <code>~/.cursor/mcp.json</code> ein und melden Sie sich an, wenn Cursor fragt. Bitten Sie den Agenten in Cursor dann etwa: „Finde den Fehlerbericht, den Anna gestern an mein Gmail geschickt hat, und entwirf eine Antwort, dass der Fix heute kommt.“ Er durchsucht Ihr Gmail, liest den Verlauf und speichert die Antwort als Gmail-Entwurf, den Sie vor dem Senden prüfen."
+  },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen und Postfach verbinden",

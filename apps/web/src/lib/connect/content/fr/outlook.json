@@ -18,7 +18,7 @@
     "eyebrow": "Outlook.com + IA",
     "titleLine1": "Connectez Outlook.com à Claude,",
     "titleLine2": "et à ChatGPT, Cursor, tout client MCP",
-    "lead": "Donnez à votre agent IA votre boîte Outlook.com, Hotmail, Live ou MSN. Connectez-vous avec Microsoft, approuvez l'accès une fois, puis lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails depuis n'importe quel client MCP avec une seule URL.",
+    "lead": "Le connecteur Microsoft 365 intégré à Claude n'accepte que les comptes professionnels ou scolaires. MCPEmails connecte les boîtes personnelles Outlook.com, Hotmail, Live et MSN : connectez-vous avec Microsoft, autorisez l'accès une fois, puis lisez, cherchez, envoyez, répondez, planifiez et classez vos e-mails depuis n'importe quel client MCP avec une seule URL.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Connexion avec Microsoft, sans mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés",
@@ -74,6 +74,10 @@
     {
       "q": "Claude fonctionne-t-il avec Outlook.com ?",
       "a": "Oui. Connectez votre boîte Outlook.com à MCPEmails en vous identifiant avec Microsoft, collez une URL MCP dans Claude, et Claude peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. La même URL fonctionne dans ChatGPT, Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Pourquoi le connecteur Microsoft 365 de Claude refuse-t-il mon compte Outlook.com ?",
+      "a": "Le connecteur Microsoft 365 intégré à Claude exige un compte professionnel ou scolaire rattaché à un locataire Microsoft Entra, et Anthropic précise que les comptes Microsoft personnels ne sont pas pris en charge : les adresses Outlook.com, Hotmail, Live et MSN sont donc refusées. MCPEmails connecte ces comptes personnels : vous vous connectez avec Microsoft sur la page de Microsoft, puis vous ajoutez MCPEmails à Claude comme connecteur personnalisé avec une seule URL."
     },
     {
       "q": "Cela fonctionne-t-il avec les adresses Hotmail, Live et MSN ?",

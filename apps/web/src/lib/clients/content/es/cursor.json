@@ -22,6 +22,10 @@
     "title": "Cómo se conecta Cursor: OAuth, sin clave de API",
     "body": "Cursor ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
   },
+  "answerSection": {
+    "title": "Ejemplo: Gmail en Cursor",
+    "body": "Conecta Gmail en el panel de MCPEmails con una contraseña de aplicación de Google, añade la entrada <code>mcpemails</code> que ves abajo a <code>~/.cursor/mcp.json</code> e inicia sesión cuando Cursor te lo pida. Después pide al agente de Cursor algo como «busca el informe de error que Ana me envió ayer a Gmail y prepara una respuesta diciendo que el arreglo sale hoy». Busca en tu Gmail, lee el hilo y guarda la respuesta como borrador de Gmail para que la revises antes de enviarla."
+  },
   "setup": [
     {
       "h": "Crea una cuenta gratis y conecta un buzón",

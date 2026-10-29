@@ -29,6 +29,13 @@
     "meta1": "邮箱密码，或应用密码",
     "meta2": "邮件实时获取，绝不存储"
   },
+  "settingsTop": {
+    "lookup": {
+      "intro": "要设置其他地址？",
+      "label": "查询任意域名的 IMAP 和 SMTP 设置",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
   "method": {
     "title": "Purelymail 如何连接：IMAP 与邮箱自己的密码",
     "body": "Purelymail 在 <code>imap.purelymail.com</code> 的 993 端口通过 TLS 提供 IMAP，在 <code>smtp.purelymail.com</code> 的 465 端口提供 SMTP，同样是隐式 TLS。不需要先开启任何东西。Purelymail 把 IMAP、POP3 和 SMTP 视为普通访问方式，每个邮箱从创建那一刻起就拥有它们，这已经领先于大多数网页邮箱服务商。人们在这里出错的是<b>输入了哪套凭据</b>。Purelymail 将你的<b>账户</b>（管理门户的登录，以及每年固定 $10 的账单）与你的<b>用户</b>（真正收发邮件的邮箱）分开。IMAP 需要的是用户：包括域名的完整地址，加上该用户自己的密码。无论地址位于 Purelymail 的共享域名上，还是你自带的自定义域名上，都是如此，因为所有客户的主机名都相同。"

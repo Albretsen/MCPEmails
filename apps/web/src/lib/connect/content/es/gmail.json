@@ -23,7 +23,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Se conecta con una contraseña de aplicación de Google",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a Gmail. MCPEmails es un servidor MCP alojado que se sitúa entre ambos: creas una vez una contraseña de aplicación de Google, pegas una URL en tu cliente MCP, y Claude, Cursor o ChatGPT pueden leer, buscar, enviar, responder y programar tu correo de Gmail. Una bandeja es gratis, para siempre."
+    "answer": "La URL del servidor MCP de Gmail es https://mcpemails.com/api/mcp. MCPEmails es un servidor MCP alojado: crea una contraseña de aplicación de Google, conecta Gmail una vez en el panel y pega esa URL en Claude, ChatGPT o Cursor. En Cursor, añádela en mcpServers dentro de ~/.cursor/mcp.json con el campo url, y Cursor te pedirá iniciar sesión, sin clave de API. El plan Free conecta una bandeja de Gmail para siempre, sin tarjeta, y funciona con una cuenta personal de Google o con Google Workspace."
   },
   "method": {
     "title": "Cómo se conecta Gmail: una contraseña de aplicación de Google",
@@ -70,6 +70,10 @@
     {
       "q": "¿Funciona Claude con Gmail?",
       "a": "Sí, siempre que haya algo entre ambos que hable con Gmail en nombre de Claude. MCPEmails cumple ese papel: creas una contraseña de aplicación de Google, pegas una URL MCP y Claude puede leer, buscar, enviar, responder, reenviar y programar correo. Google también publica un servidor MCP oficial de Workspace que cubre Gmail. La diferencia práctica es que MCPEmails no es solo para Google, así que la misma URL sirve también para tus otros buzones."
+    },
+    {
+      "q": "¿Cuál es la URL del servidor MCP de Gmail y es gratis?",
+      "a": "La URL es https://mcpemails.com/api/mcp, la misma en Claude, ChatGPT, Cursor y cualquier otro cliente MCP. El plan Free conecta una bandeja de Gmail sin tarjeta, para siempre. Los planes de pago añaden más bandejas."
     },
     {
       "q": "¿Existe un servidor MCP oficial de Gmail de Google?",

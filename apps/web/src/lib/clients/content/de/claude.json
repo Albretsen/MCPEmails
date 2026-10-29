@@ -24,6 +24,10 @@
     "title": "So verbindet sich Claude: OAuth, kein API-Schlüssel",
     "body": "Claude durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
   },
+  "answerSection": {
+    "title": "Welche MCP-Server funktionieren mit Claude Desktop für E-Mail?",
+    "body": "Claude Desktop nimmt jeden entfernten MCP-Server als benutzerdefinierten Konnektor an, daher funktioniert ein gehosteter E-Mail-Server wie MCPEmails dort genauso wie in claude.ai: Öffnen Sie <b>Customize</b>, <b>Connectors</b>, fügen Sie <code>https://mcpemails.com/api/mcp</code> hinzu und melden Sie sich an. Diese eine URL deckt Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo und jedes IMAP-Postfach ab. Die eigenen Konnektoren von Claude für Gmail und Microsoft 365 erscheinen ebenfalls in Claude Desktop, decken aber jeweils nur einen Anbieter ab, und der Microsoft 365-Konnektor akzeptiert nur Arbeits- oder Schulkonten. Lokale Server, die über <code>claude_desktop_config.json</code> gestartet werden, funktionieren auch; sie laufen auf Ihrem Rechner und speichern Ihre Mail-Zugangsdaten dort in einer Datei."
+  },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen und Postfach verbinden",

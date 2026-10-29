@@ -24,6 +24,10 @@
     "title": "Claude 如何连接：OAuth，无需 API 密钥",
     "body": "Claude 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
   },
+  "answerSection": {
+    "title": "哪些 MCP 服务器可以在 Claude Desktop 中处理邮件？",
+    "body": "Claude Desktop 支持以自定义连接器方式添加的任何远程 MCP 服务器，因此 MCPEmails 这类托管邮件服务器在其中的用法与 claude.ai 完全相同：打开 <b>Customize</b>、<b>Connectors</b>，添加 <code>https://mcpemails.com/api/mcp</code> 并登录。这一个 URL 即可覆盖 Gmail、Outlook.com、Microsoft 365、iCloud、Yahoo 和任意 IMAP 邮箱。Claude 自带的 Gmail 和 Microsoft 365 连接器也会出现在 Claude Desktop 中，但每个只支持一个服务商，而且 Microsoft 365 连接器只接受工作或学校账户。通过 <code>claude_desktop_config.json</code> 启动的本地服务器也可以使用，它们运行在你的电脑上，并把邮箱登录信息保存在本地文件中。"
+  },
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",

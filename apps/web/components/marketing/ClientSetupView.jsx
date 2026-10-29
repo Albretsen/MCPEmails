@@ -147,6 +147,21 @@ export default function ClientSetupView({ locale, client, content, preferred = n
       </section>
 
       {/*
+        Optional direct answer to one question this page ranks for but did not
+        answer in so many words ("which MCP servers work with Claude Desktop
+        for email", "cursor gmail mcp"). Plain heading and paragraph, so a
+        search snippet can quote it.
+      */}
+      {content.answerSection?.title && (
+        <section className="section" id="answer" style={{ paddingTop: 40, paddingBottom: 0 }}>
+          <div className="container">
+            <h2 className="providers-h2">{content.answerSection.title}</h2>
+            <p className="providers-sub"><RichText>{content.answerSection.body}</RichText></p>
+          </div>
+        </section>
+      )}
+
+      {/*
         The endpoint, the transport and which of the two auth paths this client
         takes. Whether a client does OAuth or wants a bearer key is the single
         fact that decides whether someone's setup completes, and it is the fact
