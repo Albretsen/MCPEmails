@@ -21,8 +21,9 @@ body { margin: 0; }
 .nav-links { display: flex; gap: 22px; }
 .nav-links a {
   font-family: var(--font-sans); font-size: 14px; color: var(--fg-2);
-  font-weight: 500; text-decoration: none;
+  font-weight: 500; text-decoration: none; white-space: nowrap;
 }
+.nav-cta .btn { white-space: nowrap; }
 .nav-links a:hover { color: var(--fg-1); text-decoration: none; }
 .nav-grow { flex: 1; }
 .nav-cta { display: flex; gap: 8px; align-items: center; }
@@ -455,6 +456,14 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   font-family: var(--font-sans); font-size: 15.5px; color: var(--fg-3);
   line-height: 1.65; max-width: 640px; margin: 0 0 28px;
   padding-left: 14px; border-left: 2px solid var(--border-1);
+}
+/* Centred variant for the /connect/<provider> and /docs/<client> heroes, whose
+   logo, buttons and checklist sit on the centre line. */
+.pricing-page-hero.is-centered { text-align: center; }
+.pricing-page-hero.is-centered .pricing-page-h1 { max-width: 900px; margin-left: auto; margin-right: auto; text-wrap: balance; }
+.pricing-page-hero.is-centered .pricing-page-lead { max-width: 600px; margin-left: auto; margin-right: auto; text-wrap: pretty; }
+.pricing-page-hero.is-centered .pricing-page-answer {
+  max-width: 600px; margin: 0 auto; padding-left: 0; border-left: 0; font-size: 14.5px; text-wrap: pretty;
 }
 /* Pointer from a connect page to its long-form guide, so the pair reads as
    product page plus walkthrough rather than two pages chasing one query. */
@@ -1347,7 +1356,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   font-size: 15px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   /* Show hamburger, hide desktop nav + cta */
   /* margin-left: auto pins it to the right edge: .nav-grow, the spacer that
      does that on desktop, is hidden below. */
@@ -1358,6 +1367,9 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 
   /* Show mobile drawer when rendered */
   .nav-mobile-menu { display: flex; }
+}
+
+@media (max-width: 767px) {
 
   /* Ensure footer copy fields don't overflow on very small screens */
   .footer .footer-copy-field {

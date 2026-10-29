@@ -54,7 +54,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
     <div>
       <Nav />
 
-      <section className="pricing-page-hero">
+      <section className="pricing-page-hero is-centered">
         <div className="container">
           <div className="eye-label">{content.hero.eyebrow}</div>
           <h1 className="pricing-page-h1">

@@ -95,7 +95,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
     <div>
       <Nav />
 
-      <section className="pricing-page-hero">
+      <section className="pricing-page-hero is-centered">
         <div className="container">
           <ClientLogo color={client.color} logo={client.logo} />
           <div className="eye-label">{content.hero.eyebrow}</div>
