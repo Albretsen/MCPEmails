@@ -815,3 +815,50 @@ export function lastDashboardUrl(): string | null {
   const url = read().d;
   return typeof url === "string" && /^https:\/\//i.test(url) ? url : null;
 }
+
+// ---------------------------------------------------------------------------
+// Drafts the server already called gone (2026-10-29).
+//
+// Every reopen of a chat remounts every card in it, and each one checks its
+// replayed draft with `draft_read` (App.tsx#readDraft, the stub re-request, the
+// focus check). For a draft that was sent or deleted, often in the person's own
+// mail app, that answer is `draft_not_found` every time: one long chat with
+// four old cards made ~120 failed reads a day, the top source of errors in
+// activity_log. A draft id the server could not find does not come back (an
+// IMAP UID is never reused, nor is a Gmail or Outlook id), so the answer is
+// remembered here and the automatic checks reuse it. A read the person asks
+// for (Refresh, Check again) still goes to the server, and a read that finds
+// the draft forgets the entry.
+//
+// Stored under its own key: a salted hash of inbox and draft id, when, and how
+// the draft ended as a number. No id and no server text. Expired entries are
+// dropped on every write, so the map holds a week of not-found answers.
+// ---------------------------------------------------------------------------
+
+const GONE_KEY = "mcpemails.gone.v1";
+const GONE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * How a draft ended (0 unknown, 1 sent, 2 discarded) when the server already
+ * said it is gone, else null. `how` records that answer, or with null forgets
+ * it; left out, this only reads.
+ */
+export function goneDraft(inboxId: unknown, draftId: unknown, how?: number | null): number | null {
+  try {
+    const k = hash(`gone ${inboxId} ${draftId}`);
+    const now = Date.now();
+    const g: Record<string, [number, number]> = JSON.parse(localStorage.getItem(GONE_KEY) || "{}");
+    // Forgetting what was never stored writes nothing: localStorage holds
+    // this key only once a draft was actually not found.
+    if (how !== undefined && (how !== null || g[k])) {
+      if (how === null) delete g[k];
+      else g[k] = [now, how];
+      for (const x in g) if (!(now - g[x][0] < GONE_TTL_MS)) delete g[x];
+      localStorage.setItem(GONE_KEY, JSON.stringify(g));
+    }
+    const e = g[k];
+    return e && now - e[0] < GONE_TTL_MS && (e[1] === 1 || e[1] === 2 || e[1] === 0) ? e[1] : null;
+  } catch {
+    return null;
+  }
+}

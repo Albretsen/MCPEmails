@@ -37,7 +37,7 @@ import {
   subscriptionCleanupContextLine,
   type DraftCall as ModelDraftCall,
 } from "../model-context";
-import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
+import { cardKey, goneDraft, isRestoreStub, lastDashboardUrl } from "../persist";
 import { claimDraft, onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
 import {
   acceptDeferredBody,
@@ -177,6 +177,42 @@ interface DraftCall {
 function closedHow(headline: string | null | undefined): "sent" | "discarded" | null {
   const h = String(headline ?? "");
   return /already sent/i.test(h) ? "sent" : /discarded/i.test(h) ? "discarded" : null;
+}
+
+/**
+ * `draft_read`, remembering a not-found answer (persist.ts#goneDraft). An
+ * `automatic` read (a check nobody asked for) of a draft the server already
+ * called gone gets that answer back, as far as the card reads it, without a
+ * call; a read the person asked for always asks.
+ */
+async function readDraftOnce(
+  bridge: HostBridge,
+  args: { inbox_id?: string; draft_id?: string },
+  automatic: boolean,
+): Promise<ToolResultParams> {
+  const known = automatic ? goneDraft(args.inbox_id, args.draft_id) : null;
+  if (known !== null) {
+    return {
+      structuredContent: {
+        schema_version: SCHEMA_VERSION,
+        card: "receipt",
+        state: "error",
+        receipt: {
+          outcome: "failed",
+          // The server's own headline where it named the ending: closedHow reads it.
+          headline: [, "This draft was already sent.", "This draft was discarded."][known],
+          error_code: "draft_not_found",
+        },
+      },
+    } as unknown as ToolResultParams;
+  }
+  const result = await bridge.callServerTool("draft_read", args);
+  const env = envelopeFrom(result);
+  if (env?.receipt?.error_code === "draft_not_found") {
+    const how = closedHow(env.receipt.headline);
+    goneDraft(args.inbox_id, args.draft_id, how === "sent" ? 1 : how ? 2 : 0);
+  } else if (env?.draft) goneDraft(args.inbox_id, args.draft_id, null);
+  return result;
 }
 
 /** `email_compose` -> `Email compose`. Falls back to the product name. */
@@ -405,7 +441,7 @@ export function App(props: { bridge: HostBridge }) {
     key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
-    opts: { failAs?: DraftAction; quiet?: boolean } = {},
+    opts: { failAs?: DraftAction; quiet?: boolean; auto?: boolean } = {},
   ): Promise<DraftCall> => {
     // `failAs`: the action the user sees as failed, when it is not the one the
     // busy state names (the save half of "Save and send" is a save).
@@ -432,7 +468,9 @@ export function App(props: { bridge: HostBridge }) {
       clearDraftError();
     }
     try {
-      result = await bridge.callServerTool(tool, args);
+      result = await (tool === "draft_read"
+        ? readDraftOnce(bridge, args, !!opts.auto)
+        : bridge.callServerTool(tool, args));
       const next = envelopeFrom(result);
       raw = next;
       lastAnswer.current = Date.now();
@@ -631,10 +669,7 @@ export function App(props: { bridge: HostBridge }) {
     const asked = d.draft_id;
     try {
       const next = envelopeFrom(
-        await bridge.callServerTool("draft_read", {
-          inbox_id: d.identity?.inbox_id,
-          draft_id: asked,
-        }),
+        await readDraftOnce(bridge, { inbox_id: d.identity?.inbox_id, draft_id: asked }, true),
       );
       if (seq !== callSeq.current || busyNow.current !== null) return;
       // The draft was sent or discarded since this card last looked. Say so,
@@ -972,8 +1007,9 @@ export function App(props: { bridge: HostBridge }) {
       const now = getState().envelope;
       return asked.card === "draft_editor" && !!now && !isRestoreStub(now);
     };
-    bridge
-      .callServerTool(call.tool, call.args)
+    (call.tool === "draft_read"
+      ? readDraftOnce(bridge, call.args, true)
+      : bridge.callServerTool(call.tool, call.args))
       .then((result) => {
         stubRead.current = false;
         if (overEditor()) return settleOverEditor(asked, result);
