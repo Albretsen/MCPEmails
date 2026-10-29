@@ -30,6 +30,13 @@ const EN = {
     authKey: 'API key',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} opens with MCPEmails filled in. Confirm it, then create your account and pick your inbox in the browser page that follows.',
+      command: 'Or run this in your terminal',
+      copy: 'Copy',
+      copied: 'Copied',
+    },
     breadcrumb: 'MCP clients',
     ctaPrimary: 'Connect your inbox',
     ctaSecondary: 'Read the docs',
@@ -110,6 +117,13 @@ const NB = {
     authKey: 'API-nøkkel',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} åpnes med MCPEmails ferdig utfylt. Bekreft, og opprett kontoen og velg innboksen på nettsiden som åpnes etterpå.',
+      command: 'Eller kjør dette i terminalen',
+      copy: 'Kopier',
+      copied: 'Kopiert',
+    },
     breadcrumb: 'MCP-klienter',
     ctaPrimary: 'Koble til innboksen din',
     ctaSecondary: 'Les dokumentasjonen',
@@ -190,6 +204,13 @@ const ES = {
     authKey: 'Clave de API',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} se abre con MCPEmails ya rellenado. Confírmalo y luego crea tu cuenta y elige tu bandeja en la página del navegador que aparece.',
+      command: 'O ejecuta esto en tu terminal',
+      copy: 'Copiar',
+      copied: 'Copiado',
+    },
     breadcrumb: 'Clientes MCP',
     ctaPrimary: 'Conecta tu bandeja',
     ctaSecondary: 'Lee la documentación',
@@ -270,6 +291,13 @@ const FR = {
     authKey: 'Clé API',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} s\'ouvre avec MCPEmails déjà rempli. Confirmez, puis créez votre compte et choisissez votre boîte dans la page du navigateur qui suit.',
+      command: 'Ou exécutez ceci dans votre terminal',
+      copy: 'Copier',
+      copied: 'Copié',
+    },
     breadcrumb: 'Clients MCP',
     ctaPrimary: 'Connecter votre boîte',
     ctaSecondary: 'Lire la documentation',
@@ -350,6 +378,13 @@ const ZH = {
     authKey: 'API 密钥',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} 会打开并预先填好 MCPEmails。确认后，在随后打开的浏览器页面中创建账户并选择收件箱。',
+      command: '或者在终端中运行',
+      copy: '复制',
+      copied: '已复制',
+    },
     breadcrumb: 'MCP 客户端',
     ctaPrimary: '连接你的收件箱',
     ctaSecondary: '阅读文档',
@@ -430,6 +465,13 @@ const DE = {
     authKey: 'API-Schlüssel',
   },
   page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: '{client} öffnet sich mit MCPEmails bereits eingetragen. Bestätigen Sie, dann erstellen Sie Ihr Konto und wählen Ihr Postfach auf der folgenden Browserseite.',
+      command: 'Oder im Terminal ausführen',
+      copy: 'Kopieren',
+      copied: 'Kopiert',
+    },
     breadcrumb: 'MCP-Clients',
     ctaPrimary: 'Postfach verbinden',
     ctaSecondary: 'Zur Dokumentation',

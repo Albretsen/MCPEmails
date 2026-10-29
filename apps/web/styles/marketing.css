@@ -927,6 +927,13 @@ a.review-source:hover { color: var(--fg-1); text-decoration: none; }
 }
 .docs-code-wrap .copy-btn:hover { background: var(--ink-600); color: #fff; }
 
+/* /docs/<client> hero: the line under the one-click install (DocsInstallCta). */
+.docs-install-after {
+  max-width: 560px; margin: 12px auto 0;
+  font-size: 13.5px; line-height: 1.55; color: var(--fg-3); text-align: center;
+}
+.docs-install-command { max-width: 620px; margin: 20px auto 0; text-align: left; }
+
 /* Endpoint section */
 .docs-endpoint-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;

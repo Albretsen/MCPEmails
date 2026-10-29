@@ -8,6 +8,8 @@ import { MCP_URL, getClient, relatedClients } from '@/lib/clients/clients.mjs';
 import { orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
 import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
+import { docsPageInstallAction } from '@/lib/clients/install-links.mjs';
+import DocsInstallCta from './DocsInstallCta';
 
 /**
  * A per-client setup page, rendered on the server.
@@ -18,8 +20,9 @@ import { clientUi, fill } from '@/lib/clients/ui.mjs';
  * every marketing page. Nav and Footer are the only things here that hydrate.
  *
  * Every class name used here already exists in styles/marketing.css, borrowed
- * from the provider landing pages and the docs page. This component adds no
- * CSS of its own.
+ * from the provider landing pages and the docs page. The hero buttons are the
+ * one client island (DocsInstallCta), for the click event, the copy button and
+ * the phone check.
  */
 
 /** The client's official logo glyph, white on a rounded tile in its brand colour. */
@@ -84,6 +87,9 @@ export default function ClientSetupView({ locale, client, content, preferred = n
   const isTerminal = client.configFile === 'terminal';
   const configLabel = isTerminal ? ui.config.terminal : (client.configFile ?? ui.config.json);
   const config = client.config ? client.config(MCP_URL) : null;
+  const found = docsPageInstallAction(client.slug, { locale, mcpUrl: MCP_URL });
+  // Cowork needs a paid Claude plan, so the Claude Free note does not apply there.
+  const install = found && client.slug === 'cowork' ? { ...found, note: undefined } : found;
 
   return (
     <div>
@@ -103,10 +109,19 @@ export default function ClientSetupView({ locale, client, content, preferred = n
             these; there is no reason to relearn that here.
           */}
           {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
-            <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
-          </div>
+          {install ? (
+            <DocsInstallCta
+              action={install}
+              clientName={install.client === 'claude' ? 'Claude' : name}
+              signupHref={signupHref}
+              labels={{ ctaPrimary: ui.ctaPrimary, ctaSecondary: ui.ctaSecondary, ...ui.install }}
+            />
+          ) : (
+            <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+              <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
+              <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
+            </div>
+          )}
           <div className="hero-meta" style={{ justifyContent: 'center' }}>
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
