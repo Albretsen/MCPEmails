@@ -8,7 +8,7 @@ const translation = {
 
 Esta página te ayuda a saber en qué caso estás. Los datos sobre los productos de Anthropic y Google se consultaron en sus propias páginas en octubre de 2026. Esos productos cambian a menudo, así que cada sección enlaza la página en la que se apoya.
 
-**Ir a:** [Gmail](#gmail-el-conector-propio-de-claude) · [Microsoft 365](#outlook-y-microsoft-365-solo-cuentas-de-trabajo) · [Lo que no cubren los conectores integrados](#lo-que-no-cubren-los-conectores-integrados) · [MCPEmails](#cómo-mcpemails-cubre-ese-hueco) · [Preguntas frecuentes](#preguntas-frecuentes)
+**Ir a:** [Gmail](#gmail-el-conector-propio-de-claude) · [Microsoft 365](#outlook-y-microsoft-365-solo-cuentas-de-trabajo) · [Lo que no cubren los conectores integrados](#lo-que-no-cubren-los-conectores-integrados) · [MCPEmails](#cómo-mcpemails-cubre-ese-hueco) · [Envío](#puede-claude-enviar-correos) · [Preguntas frecuentes](#preguntas-frecuentes)
 
 ## Gmail: el conector propio de Claude
 
@@ -79,13 +79,36 @@ El correo se obtiene en directo de tu proveedor en cada solicitud y no se almace
 
 La [guía paso a paso para configurar Claude](/blog/connect-claude-to-email) recorre cada pantalla y cada proveedor, y la [página de configuración de Claude](/docs/claude) cubre los errores del conector.
 
-## ¿Puede Claude enviar correos sin preguntar?
+## ¿Puede Claude enviar correos?
 
-Depende del conector y de ti.
+Sí. Muchas páginas siguen diciendo que Claude solo puede leer tu correo, pero los artículos de ayuda actuales de Anthropic dicen otra cosa. Que Claude pueda enviar depende del conector y de lo que permitiste al conectarlo.
+
+### El conector de Gmail de Claude
+
+Según el [artículo de Anthropic sobre Google Workspace](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), consultado de nuevo a finales de octubre de 2026, el conector de Gmail puede redactar correos, listar tus borradores guardados y enviar, responder y reenviar. Por defecto, Claude te pide aprobación antes de cada envío, respuesta o reenvío. En los planes Team y Enterprise, un propietario activa el conector y decide si los miembros pueden dejar que esas acciones se ejecuten sin preguntar cada vez.
+
+Envía desde la única cuenta de Google que conectaste. Claude solo ve los metadatos de los adjuntos, no su contenido.
+
+### El conector de Microsoft 365 de Claude
+
+Empieza en solo lectura. Cuando se activan las herramientas de escritura, para lo que un administrador global de Microsoft Entra tiene que aprobar los permisos ampliados, Claude puede enviar y reenviar correo, y crear, editar y eliminar borradores. Las herramientas de escritura rechazan cualquier mensaje con adjuntos, y las direcciones personales de Outlook.com y Hotmail quedan excluidas.
+
+### Cómo envía MCPEmails
+
+A través de MCPEmails, Claude envía desde cualquier buzón conectado: Gmail, Outlook, iCloud, Yahoo, un buzón IMAP de empresa y más. Tú decides cuánto de eso puede hacer, en cuatro sitios.
+
+- **El acceso que concedes.** Al añadir MCPEmails a Claude, eliges **Solo lectura** (Claude no puede enviar ni crear borradores), **Estándar** (añade los borradores y el envío) o **Acceso completo** (añade la programación, las carpetas y la eliminación). También puedes limitar la conexión a algunos de tus buzones.
+- **Primero, un borrador.** Cuando le pides a Claude que escriba un correo, MCPEmails le indica que lo guarde como borrador en tu buzón en lugar de enviarlo. En Claude y ChatGPT el borrador se abre en una tarjeta editable dentro del chat, donde puedes cambiar los destinatarios, el asunto y el texto, guardarlo o enviarlo con unos segundos para deshacer. También está en la carpeta Borradores de tu app de correo.
+- **Revisión antes de enviar.** Se configura por buzón en el panel. **Preguntar primero en el chat** hace que Claude te muestre el correo en la conversación y espere tu sí antes de enviarlo. **Aprobar en mcpemails.com** retiene cada envío, respuesta, reenvío y envío de borrador hasta que un propietario o administrador del espacio de trabajo lo aprueba, con la sesión iniciada en MCPEmails en un navegador; Claude no puede aprobarlo por sí mismo. Consulta [aprobación humana de los envíos de correo de la IA](/blog/approve-ai-agent-email-sends).
+- **Un justificante después de cada envío.** Claude muestra la dirección de envío, los destinatarios, el asunto y si hay una copia en tu carpeta Enviados, o el motivo por el que falló un envío.
+
+Cada buzón envía a través de su propio proveedor, así que el mensaje sale desde tu dirección real con tu nombre de remitente y tu firma, y la respuesta llega a tu bandeja de entrada habitual. Claude también puede [programar un correo para más tarde](/blog/schedule-email-with-claude-and-chatgpt).
+
+### ¿Puede Claude enviar correos sin preguntar?
 
 - **El conector de Gmail de Claude** pregunta por defecto antes de cada envío, respuesta y reenvío.
 - **El conector de Microsoft 365 de Claude** no puede enviar nada hasta que se activan las herramientas de escritura.
-- **MCPEmails** solo envía si le diste a Claude acceso de envío al conectarlo. Con **Solo lectura**, Claude no puede enviar. Para un buzón en el que cada mensaje saliente deba revisarse, activa **Revisión antes de enviar** en los ajustes de esa bandeja de entrada: cada envío espera entonces a que un propietario o administrador del espacio de trabajo lo apruebe, con la sesión iniciada en MCPEmails en un navegador. Claude no puede aprobarlo por sí mismo. Consulta [aprobación humana de los envíos de correo de la IA](/blog/approve-ai-agent-email-sends).
+- **MCPEmails** envía sin más preguntas solo si concediste acceso de envío y dejaste desactivada la **Revisión antes de enviar** en ese buzón. Los permisos de herramientas del propio Claude añaden una capa más: en **Customize → Connectors** puedes configurar cada herramienta de MCPEmails como **Always allow**, **Needs approval** o **Blocked**.
 
 Uses el camino que uses, trata lo que hay dentro de un correo como datos, no como instrucciones. Un mensaje puede contener texto escrito para manipular a una IA, y un paso de revisión lo detecta antes de que nada salga de tu buzón. La [guía de seguridad sobre el acceso al correo](/blog/is-it-safe-to-give-ai-agent-email-access) explica los riesgos con más detalle.
 
@@ -95,7 +118,10 @@ Uses el camino que uses, trata lo que hay dentro de un correo como datos, no com
 Sí, una vez que conectas un buzón. Gmail y las cuentas de trabajo de Microsoft 365 se conectan con los conectores propios de Claude. Yahoo, iCloud, Outlook.com personal y los buzones IMAP se conectan a través de un servidor MCP como MCPEmails, añadido a Claude como conector personalizado.
 
 **¿Puede Claude enviar correos?**
-Sí. El conector de Gmail de Claude puede enviar, responder y reenviar, y por defecto te pide aprobación antes. El conector de Microsoft 365 puede enviar cuando se activan las herramientas de escritura. Con MCPEmails, Claude envía desde cualquier buzón conectado si le diste acceso de envío al conectarlo.
+Sí. El conector de Gmail de Claude puede enviar, responder y reenviar, y por defecto te pide aprobación antes. El conector de Microsoft 365 puede enviar cuando se activan las herramientas de escritura. Con MCPEmails, Claude envía desde cualquier buzón conectado si le diste acceso de envío al conectarlo, y guarda primero como borrador el correo que le pides que escriba.
+
+**¿Puede enviar correos el conector de Gmail de Claude?**
+Sí. Anthropic enumera enviar, responder y reenviar entre las acciones del conector de Gmail, y por defecto cada una te pide aprobación. Envía desde la única cuenta de Google que conectaste.
 
 **¿Puede Claude leer mi Gmail?**
 Sí, con el conector de Gmail integrado en Claude, para la cuenta de Google que conectes. Para usar más de una cuenta de Google, o Gmail junto a otros proveedores en el mismo chat, conéctalas a través de MCPEmails con una contraseña de aplicación de Google.

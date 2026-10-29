@@ -40,6 +40,8 @@ Sur un compte professionnel ou scolaire, Microsoft peut vous arrêter avant l'é
 2. Votre administrateur l'ouvre, se connecte avec son compte administrateur Microsoft et approuve MCPEmails une seule fois pour toute l'organisation. Il n'a pas besoin de compte MCPEmails.
 3. Revenez au tableau de bord et connectez Outlook comme à l'étape 1. Cela passe désormais comme pour un compte personnel.
 
+Pour que votre administrateur sache exactement quelles autorisations il approuve, envoyez-lui avec le lien [la page sur l'approbation de l'administrateur dans Microsoft 365](/docs/microsoft-365-admin-consent).
+
 Votre administrateur approuve l'application pour l'organisation, et chaque personne se connecte toujours avec son propre compte et ne connecte que sa propre boîte.
 
 ### Si le compte n'a pas de boîte Exchange

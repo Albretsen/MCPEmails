@@ -12,7 +12,7 @@ const translation = {
 
 ## Hvorfor én agent er bedre enn å bytte e-postklient
 
-En e-postklient viser deg kontoer. Den svarer ikke på spørsmål. «Hvilken av kontoene mine fikk Stripe-kvitteringen?» er et søk på tvers av tre postkasser pluss en vurdering. En agent med tilgang til hver postkasse gjør det i én forespørsel, og du slipper å være den som ruter. Den andre gevinsten: ett sett med vaner, fordi de samme verktøyene ligger bak hver konto.
+En e-postklient viser deg kontoer. Den svarer ikke på spørsmål. «Hvilken av kontoene mine fikk Stripe-kvitteringen?» er et søk på tvers av tre postkasser pluss en vurdering. En agent med tilgang til hver postkasse gjør det i én forespørsel, og du slipper å være den som ruter. Den andre gevinsten: ett sett med vaner, fordi de samme verktøyene ligger bak hver konto. [Flere e-postkontoer i Claude og ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) viser oppsettet av koblingen i begge appene.
 
 ## Agenten finner postkassene selv
 

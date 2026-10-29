@@ -118,7 +118,7 @@ Free 可连接 1 个收件箱。Personal 每月 9 美元，3 个收件箱且邮�
 
 ## 下一步
 
-[创建免费账户](/signup)，连接你的企业邮箱，设好发件人名称，再把 \`https://mcpemails.com/api/mcp\` 添加到你的客户端。然后先让它调用 \`inbox_list\` 并总结昨天的未读邮件，再考虑授予任何可以发信的权限。`,
+[创建免费账户](/signup)，连接你的企业邮箱，设好发件人名称，再把 \`https://mcpemails.com/api/mcp\` 添加到你的客户端。然后先让它调用 \`inbox_list\` 并总结昨天的未读邮件，再考虑授予任何可以发信的权限。有不止一个公司邮箱？[在 Claude 和 ChatGPT 中使用多个邮箱账户](/blog/multiple-email-accounts-in-claude-and-chatgpt) 说明了它们如何共用一个连接器。`,
 };
 
 export default translation;

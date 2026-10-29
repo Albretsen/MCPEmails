@@ -151,6 +151,7 @@ export const ROUTES = [
   ['app/[locale]/docs/[client]/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/api/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/clients/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/docs/microsoft-365-admin-consent/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/(catalogue)/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/(catalogue)/providers/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/providers/data/page.js', 'iad1', '0', '-'],

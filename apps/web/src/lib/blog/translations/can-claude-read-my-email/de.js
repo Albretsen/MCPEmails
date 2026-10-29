@@ -8,7 +8,7 @@ const translation = {
 
 Diese Seite klärt, welcher Fall auf Sie zutrifft. Die Angaben zu den Produkten von Anthropic und Google stammen von deren eigenen Seiten, gelesen im Oktober 2026. Diese Produkte ändern sich oft, deshalb verlinkt jeder Abschnitt die Seite, auf die er sich stützt.
 
-**Direkt zu:** [Gmail](#gmail-der-eigene-konnektor-von-claude) · [Microsoft 365](#outlook-und-microsoft-365-nur-geschäftliche-konten) · [Was die integrierten Konnektoren nicht abdecken](#was-die-integrierten-konnektoren-nicht-abdecken) · [MCPEmails](#wie-mcpemails-die-lücke-schließt) · [FAQ](#faq)
+**Direkt zu:** [Gmail](#gmail-der-eigene-konnektor-von-claude) · [Microsoft 365](#outlook-und-microsoft-365-nur-geschäftliche-konten) · [Was die integrierten Konnektoren nicht abdecken](#was-die-integrierten-konnektoren-nicht-abdecken) · [MCPEmails](#wie-mcpemails-die-lücke-schließt) · [Senden](#kann-claude-e-mails-senden) · [FAQ](#faq)
 
 ## Gmail: der eigene Konnektor von Claude
 
@@ -79,13 +79,36 @@ E-Mails werden für jede Anfrage live bei Ihrem Anbieter abgerufen und nicht ges
 
 Die [Schritt-für-Schritt-Anleitung für Claude](/blog/connect-claude-to-email) geht jeden Bildschirm und jeden Anbieter durch, und die [Einrichtungsseite für Claude](/docs/claude) behandelt Fehler beim Konnektor.
 
-## Kann Claude E-Mails senden, ohne zu fragen?
+## Kann Claude E-Mails senden?
 
-Das hängt vom Konnektor ab und von Ihnen.
+Ja. Viele Seiten behaupten noch, Claude könne Ihre E-Mails nur lesen, doch die aktuellen Hilfeartikel von Anthropic sagen etwas anderes. Ob Claude senden kann, hängt vom Konnektor ab und davon, was Sie beim Verbinden erlaubt haben.
+
+### Der Gmail-Konnektor von Claude
+
+Laut [Google-Workspace-Artikel von Anthropic](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), Ende Oktober 2026 erneut gelesen, kann der Gmail-Konnektor E-Mails entwerfen, Ihre gespeicherten Entwürfe auflisten sowie senden, antworten und weiterleiten. Standardmäßig bittet Claude vor jedem Senden, Antworten oder Weiterleiten um Ihre Zustimmung. In den Tarifen Team und Enterprise aktiviert ein Inhaber den Konnektor und entscheidet, ob Mitglieder diese Aktionen ohne Rückfrage laufen lassen dürfen.
+
+Er sendet von dem einen Google-Konto, das Sie verbunden haben. Claude sieht nur die Metadaten von Anhängen, nicht ihren Inhalt.
+
+### Der Microsoft 365-Konnektor von Claude
+
+Er startet schreibgeschützt. Sobald die Schreib-Tools aktiviert sind, wofür ein Globaler Administrator von Microsoft Entra die erweiterten Berechtigungen genehmigen muss, kann Claude E-Mails senden und weiterleiten sowie Entwürfe erstellen, bearbeiten und löschen. Die Schreib-Tools lehnen jede Nachricht mit Anhang ab, und private Adressen bei Outlook.com und Hotmail können sich gar nicht verbinden.
+
+### Wie MCPEmails sendet
+
+Über MCPEmails sendet Claude aus jedem verbundenen Postfach: Gmail, Outlook, iCloud, Yahoo, ein Firmenpostfach per IMAP und mehr. Wie viel davon Claude darf, legen Sie an vier Stellen fest.
+
+- **Der Zugriff, den Sie gewähren.** Wenn Sie MCPEmails zu Claude hinzufügen, wählen Sie **Nur-Lese-Zugriff** (Claude kann weder senden noch Entwürfe anlegen), **Standard** (dazu Entwürfe und Senden) oder **Vollzugriff** (dazu Planen, Ordner und Löschen). Sie können die Verbindung auch auf einige Ihrer Postfächer beschränken.
+- **Zuerst ein Entwurf.** Wenn Sie Claude bitten, eine E-Mail zu schreiben, weist MCPEmails Claude an, sie als Entwurf in Ihrem Postfach zu speichern, statt sie zu senden. In Claude und ChatGPT öffnet sich der Entwurf in einer bearbeitbaren Karte im Chat, in der Sie Empfänger, Betreff und Text ändern, ihn speichern oder ihn senden können, mit ein paar Sekunden Zeit zum Rückgängigmachen. Er liegt außerdem im Entwürfe-Ordner Ihres Mailprogramms.
+- **Vor dem Senden prüfen.** Wird im Dashboard pro Postfach eingestellt. **Zuerst im Chat fragen** lässt Claude Ihnen die E-Mail in der Unterhaltung zeigen und auf Ihr Ja warten, bevor gesendet wird. **Auf mcpemails.com freigeben** hält jedes Senden, Antworten, Weiterleiten und jeden Versand eines Entwurfs zurück, bis ein Inhaber oder Admin des Workspace ihn freigibt, der dazu im Browser bei MCPEmails angemeldet ist; Claude kann ihn nicht selbst freigeben. Siehe [menschliche Freigabe für E-Mails von KI-Agenten](/blog/approve-ai-agent-email-sends).
+- **Eine Bestätigung nach jedem Versand.** Claude zeigt die Absenderadresse, die Empfänger, den Betreff und ob eine Kopie in Ihrem Ordner für gesendete Objekte liegt, oder den Grund, warum ein Versand fehlgeschlagen ist.
+
+Jedes Postfach sendet über seinen eigenen Anbieter, die Nachricht geht also von Ihrer echten Adresse mit Ihrem Absendernamen und Ihrer Signatur raus, und die Antwort landet in Ihrem normalen Posteingang. Claude kann eine E-Mail auch [für später planen](/blog/schedule-email-with-claude-and-chatgpt).
+
+### Kann Claude E-Mails senden, ohne zu fragen?
 
 - **Der Gmail-Konnektor von Claude** fragt standardmäßig vor jedem Senden, Antworten und Weiterleiten.
 - **Der Microsoft 365-Konnektor von Claude** kann überhaupt nicht senden, bis die Schreib-Tools aktiviert sind.
-- **MCPEmails** sendet nur, wenn Sie Claude beim Verbinden Zugriff zum Senden gegeben haben. Mit **Nur-Lese-Zugriff** kann Claude nicht senden. Für ein Postfach, bei dem jede ausgehende Nachricht geprüft werden soll, schalten Sie in den Einstellungen dieses Postfachs **Vor dem Senden prüfen** ein: Jeder Versand wartet dann, bis ein Inhaber oder Admin des Workspace ihn freigibt, der dazu im Browser bei MCPEmails angemeldet ist. Claude kann ihn nicht selbst freigeben. Siehe [menschliche Freigabe für E-Mails von KI-Agenten](/blog/approve-ai-agent-email-sends).
+- **MCPEmails** sendet nur dann ohne weitere Rückfrage, wenn Sie Zugriff zum Senden gewährt und **Vor dem Senden prüfen** für dieses Postfach ausgeschaltet gelassen haben. Die eigenen Tool-Berechtigungen von Claude bilden eine weitere Ebene: Unter **Anpassen → Konnektoren** können Sie jedes Tool von MCPEmails auf immer zulassen, Genehmigung erforderlich oder blockiert stellen.
 
 Welchen Weg Sie auch nutzen: Behandeln Sie den Inhalt einer E-Mail als Daten, nicht als Anweisungen. Eine Nachricht kann Text enthalten, der eine KI steuern soll, und ein Prüfschritt fängt ihn ab, bevor etwas Ihr Postfach verlässt. Der [Leitfaden zur Sicherheit beim E-Mail-Zugriff](/blog/is-it-safe-to-give-ai-agent-email-access) erklärt die Risiken genauer.
 
@@ -95,7 +118,10 @@ Welchen Weg Sie auch nutzen: Behandeln Sie den Inhalt einer E-Mail als Daten, ni
 Ja, sobald ein Postfach verbunden ist. Gmail und geschäftliche Microsoft 365-Konten verbinden sich über die eigenen Konnektoren von Claude. Postfächer bei Yahoo, iCloud, privatem Outlook.com und IMAP verbinden sich über einen MCP-Server wie MCPEmails, den Sie als benutzerdefinierten Konnektor zu Claude hinzufügen.
 
 **Kann Claude E-Mails senden?**
-Ja. Der Gmail-Konnektor von Claude kann senden, antworten und weiterleiten und fragt standardmäßig vorher nach Ihrer Zustimmung. Der Microsoft 365-Konnektor kann senden, sobald die Schreib-Tools aktiviert sind. Über MCPEmails sendet Claude aus jedem verbundenen Postfach, wenn Sie beim Verbinden Zugriff zum Senden gegeben haben.
+Ja. Der Gmail-Konnektor von Claude kann senden, antworten und weiterleiten und fragt standardmäßig vorher nach Ihrer Zustimmung. Der Microsoft 365-Konnektor kann senden, sobald die Schreib-Tools aktiviert sind. Über MCPEmails sendet Claude aus jedem verbundenen Postfach, wenn Sie beim Verbinden Zugriff zum Senden gegeben haben, und speichert eine E-Mail, um die Sie bitten, zuerst als Entwurf.
+
+**Kann der Gmail-Konnektor von Claude E-Mails senden?**
+Ja. Anthropic nennt für den Gmail-Konnektor Senden, Antworten und Weiterleiten, jeweils standardmäßig mit Rückfrage nach Ihrer Zustimmung. Er sendet von dem einen Google-Konto, das Sie verbunden haben.
 
 **Kann Claude mein Gmail lesen?**
 Ja, mit dem integrierten Gmail-Konnektor von Claude, für das Google-Konto, das Sie verbinden. Um mehr als ein Google-Konto zu nutzen oder Gmail im selben Chat zusammen mit anderen Anbietern, verbinden Sie die Konten mit einem App-Passwort von Google über MCPEmails.

@@ -73,6 +73,8 @@ https://mcpemails.com/api/mcp
 - **整理：** \`email_organize\`（移动、复制、标记、归档）。Gmail 标签会显示为文件夹，所以带有多个标签的邮件会出现在多个文件夹中，移动邮件会改变它的标签，归档则会把它从收件箱中移除。
 - **草稿、文件夹、定时发送、联系人：** \`draft\`、\`folder\`、\`schedule\` 和 \`contact_search\` 让整套工具更加完整。
 
+Claude 也有自己的 Gmail 连接器，它同样可以发送邮件。[Claude 能读取我的邮件并发送邮件吗？](/blog/can-claude-read-my-email) 按邮箱逐一把它和 MCPEmails 做了比较。
+
 有一点要事先说明：MCPEmails 是基于轮询的。没有推送 webhook，所以 Claude 是在你让它检查时才对新邮件作出反应，而不是在邮件抵达的那一刻。对于几乎所有助手类工作流而言，这正是恰到好处的模型。
 
 ## 把 Gmail 连接到 Claude 安全吗？

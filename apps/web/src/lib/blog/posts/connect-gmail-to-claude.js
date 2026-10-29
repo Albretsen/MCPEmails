@@ -83,6 +83,8 @@ Once connected, Claude works through a small set of consolidated tools, so it ca
 - **Organize:** \`email_organize\` (move, copy, flag, archive). Gmail labels show up as folders, so a message with several labels appears in several folders, moving it changes its labels, and archiving removes it from the Inbox.
 - **Drafts, folders, scheduling, contacts:** \`draft\`, \`folder\`, \`schedule\`, and \`contact_search\` round out the set.
 
+Claude also has a Gmail connector of its own, and it can send too. [Can Claude read my email and send emails?](/blog/can-claude-read-my-email) compares it with MCPEmails, mailbox by mailbox.
+
 One thing to expect up front: MCPEmails is poll-based. There are no push webhooks, so Claude reacts to new mail when you ask it to check, not the instant a message arrives. For almost every assistant workflow, that's exactly the right model.
 
 ## Is it safe to connect Gmail to Claude?

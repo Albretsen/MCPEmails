@@ -43,6 +43,7 @@ const MARKETING_PAGES: {
   { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/docs/api', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/docs/microsoft-365-admin-consent', lastModified: '2026-10-29', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/developers', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/native-connectors-vs-mcp', lastModified: NATIVE_MODIFIED, changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },

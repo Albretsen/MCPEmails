@@ -190,6 +190,8 @@ test('the Outlook guide is indexable now that the connector is live', () => {
 const EM_DASH_CLEAN_SLUGS = [
   'can-claude-read-my-email',
   'chatgpt-icloud-mail-plugin',
+  'daily-email-briefing-with-claude-and-chatgpt',
+  'multiple-email-accounts-in-claude-cowork',
   'claude-custom-connectors-explained',
   'connect-chatgpt-to-email',
   'connect-chatgpt-to-outlook-com-hotmail',
