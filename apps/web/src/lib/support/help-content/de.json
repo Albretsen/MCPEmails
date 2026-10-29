@@ -10,7 +10,7 @@
   },
   "search": {
     "label": "Hilfe durchsuchen",
-    "placeholder": "Anbieter, Clients, Dokumentation und Fragen durchsuchen",
+    "placeholder": "Frage oder Stichwort eingeben",
     "empty": "Kein Treffer.",
     "emptyLink": "Schreiben Sie uns unten",
     "kinds": {
@@ -20,6 +20,18 @@
       "faq": "FAQ",
       "article": "Artikel"
     }
+  },
+  "nav": {
+    "label": "Hilfethemen",
+    "contact": "Kontakt"
+  },
+  "feedback": {
+    "question": "War das hilfreich?",
+    "yes": "Ja",
+    "no": "Nein",
+    "thanks": "Danke für Ihre Rückmeldung.",
+    "thanksNo": "Danke. Sagen Sie uns, was gefehlt hat, dann ergänzen wir es.",
+    "contactLink": "Schreiben Sie uns"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -212,7 +224,7 @@
   ],
   "contact": {
     "heading": "Schreiben Sie uns",
-    "lead": "Jede Nachricht wird von einem Menschen gelesen und per E-Mail beantwortet.",
+    "lead": "Jede Nachricht wird von einem Menschen gelesen und per E-Mail beantwortet. Rechnen Sie mit einer Antwort innerhalb eines Werktags.",
     "emailLine": "Schreiben Sie an {email} oder senden Sie hier eine Nachricht.",
     "openForm": "Nachricht schreiben"
   },

@@ -10,7 +10,7 @@
   },
   "search": {
     "label": "Buscar en la ayuda",
-    "placeholder": "Busca proveedores, clientes, documentación y preguntas",
+    "placeholder": "Escribe una pregunta o una palabra",
     "empty": "Sin resultados.",
     "emptyLink": "Escríbenos abajo",
     "kinds": {
@@ -20,6 +20,18 @@
       "faq": "Pregunta",
       "article": "Artículo"
     }
+  },
+  "nav": {
+    "label": "Temas de ayuda",
+    "contact": "Contacto"
+  },
+  "feedback": {
+    "question": "¿Te ha sido útil?",
+    "yes": "Sí",
+    "no": "No",
+    "thanks": "Gracias por decírnoslo.",
+    "thanksNo": "Gracias. Cuéntanos qué faltaba y lo corregiremos.",
+    "contactLink": "Escríbenos"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -59,8 +71,14 @@
         "Comprueba los nombres de servidor con nuestras guías de proveedores."
       ],
       "links": [
-        { "label": "Guía de IMAP genérico", "href": "/connect/imap" },
-        { "label": "Compatibilidad por proveedor", "href": "/docs/providers" }
+        {
+          "label": "Guía de IMAP genérico",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Compatibilidad por proveedor",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
@@ -76,10 +94,22 @@
         "Pégala tal como se muestra. Los espacios se ignoran."
       ],
       "links": [
-        { "label": "Guía de Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Guía de iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Guía de Gmail", "href": "/connect/gmail" },
-        { "label": "Guía de Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Guía de Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Guía de iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Guía de Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guía de Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
@@ -94,7 +124,10 @@
         "Conecta con tu dirección completa y esa contraseña de aplicación."
       ],
       "links": [
-        { "label": "Guía de Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Guía de Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -110,8 +143,14 @@
         "Pide al asistente que liste primero tus bandejas. El correo se obtiene cuando el asistente lo pide, así que nada llega por sí solo."
       ],
       "links": [
-        { "label": "Guías de clientes", "href": "/docs/clients" },
-        { "label": "Códigos de error", "href": "/docs#errors" }
+        {
+          "label": "Guías de clientes",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Códigos de error",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
@@ -127,8 +166,14 @@
         "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."
       ],
       "links": [
-        { "label": "Preguntas sobre precios", "href": "/pricing#faq" },
-        { "label": "Límites de tasa", "href": "/docs#rate-limits" }
+        {
+          "label": "Preguntas sobre precios",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Límites de tasa",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
@@ -143,8 +188,14 @@
         "¿Un primer cobro inesperado? Escríbenos en 14 días y te lo devolvemos entero."
       ],
       "links": [
-        { "label": "Ajustes del panel", "href": "/dashboard/settings" },
-        { "label": "Planes y precios", "href": "/pricing" }
+        {
+          "label": "Ajustes del panel",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Planes y precios",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -160,14 +211,20 @@
         "Para aprovechar el tiempo pagado, cancela primero y elimina la cuenta después."
       ],
       "links": [
-        { "label": "Bandejas del panel", "href": "/dashboard/inboxes" },
-        { "label": "Ajustes del panel", "href": "/dashboard/settings" }
+        {
+          "label": "Bandejas del panel",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Ajustes del panel",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Escríbenos",
-    "lead": "Una persona lee cada mensaje y responde por correo.",
+    "lead": "Una persona lee cada mensaje y responde por correo. Recibirás respuesta en un día laborable.",
     "emailLine": "Escríbenos a {email} o envía un mensaje aquí.",
     "openForm": "Escribir un mensaje"
   },

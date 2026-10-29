@@ -10,7 +10,7 @@
   },
   "search": {
     "label": "搜索帮助",
-    "placeholder": "搜索邮箱服务商、客户端、文档和常见问题",
+    "placeholder": "输入问题或关键词",
     "empty": "没有匹配结果。",
     "emptyLink": "在下方给我们写信",
     "kinds": {
@@ -20,6 +20,18 @@
       "faq": "常见问题",
       "article": "文章"
     }
+  },
+  "nav": {
+    "label": "帮助主题",
+    "contact": "联系我们"
+  },
+  "feedback": {
+    "question": "这篇文章有帮助吗？",
+    "yes": "有",
+    "no": "没有",
+    "thanks": "感谢你的反馈。",
+    "thanksNo": "感谢。告诉我们缺少了什么，我们会补上。",
+    "contactLink": "给我们写信"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -59,8 +71,14 @@
         "对照我们的服务商指南核对服务器名称。"
       ],
       "links": [
-        { "label": "通用 IMAP 指南", "href": "/connect/imap" },
-        { "label": "服务商兼容性", "href": "/docs/providers" }
+        {
+          "label": "通用 IMAP 指南",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "服务商兼容性",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
@@ -76,10 +94,22 @@
         "按显示的样子粘贴即可，空格会被忽略。"
       ],
       "links": [
-        { "label": "Yahoo Mail 指南", "href": "/connect/yahoo" },
-        { "label": "iCloud 邮件指南", "href": "/connect/icloud" },
-        { "label": "Gmail 指南", "href": "/connect/gmail" },
-        { "label": "Zoho Mail 指南", "href": "/connect/zoho" }
+        {
+          "label": "Yahoo Mail 指南",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "iCloud 邮件指南",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Gmail 指南",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Zoho Mail 指南",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
@@ -94,7 +124,10 @@
         "使用完整地址和该应用密码连接。"
       ],
       "links": [
-        { "label": "Yandex Mail 指南", "href": "/connect/yandex" }
+        {
+          "label": "Yandex Mail 指南",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -110,8 +143,14 @@
         "先让助手列出你的收件箱。邮件是在助手请求时实时获取的，不会自动推送过来。"
       ],
       "links": [
-        { "label": "客户端配置指南", "href": "/docs/clients" },
-        { "label": "错误代码", "href": "/docs#errors" }
+        {
+          "label": "客户端配置指南",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "错误代码",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
@@ -127,8 +166,14 @@
         "2026-09-12 之前创建的工作区不计量。如果你在这样的工作区看到了上限，请给我们写信。"
       ],
       "links": [
-        { "label": "价格常见问题", "href": "/pricing#faq" },
-        { "label": "速率限制", "href": "/docs#rate-limits" }
+        {
+          "label": "价格常见问题",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "速率限制",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
@@ -143,8 +188,14 @@
         "首次扣款出乎意料？请在 14 天内给我们写信，我们会全额退款。"
       ],
       "links": [
-        { "label": "控制台设置", "href": "/dashboard/settings" },
-        { "label": "套餐与价格", "href": "/pricing" }
+        {
+          "label": "控制台设置",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "套餐与价格",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -160,14 +211,20 @@
         "如果想用完已付费的时间，请先取消，之后再删除。"
       ],
       "links": [
-        { "label": "控制台收件箱", "href": "/dashboard/inboxes" },
-        { "label": "控制台设置", "href": "/dashboard/settings" }
+        {
+          "label": "控制台收件箱",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "控制台设置",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "给我们写信",
-    "lead": "每条消息都有真人阅读，并通过邮件回复。",
+    "lead": "每条消息都有真人阅读，并通过邮件回复。一般一个工作日内回复。",
     "emailLine": "发送邮件至 {email}，或在这里留言。",
     "openForm": "写留言"
   },

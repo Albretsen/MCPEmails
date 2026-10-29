@@ -53,6 +53,11 @@ session. Everyone else gets 404.
      call it any more.
    - `app/api/support/help-data/route.ts` (the dashboard help section's
      data): drop the 404 branches. GET answers 200, other methods 405.
+   - `app/api/support/article-feedback/route.ts` ("Was this helpful?"):
+     drop the 404 branches. POST answers 204, other methods 405.
+   - `components/dashboard/CommandPalette.jsx`: drop the `supportVisible`
+     prop and the `gated` flag on the Help entry. In `App.jsx`, prefetch the
+     help data without the `supportVisible` check.
    - `app/dashboard/[[...section]]/page.js`, `components/dashboard/App.jsx`,
      `Sidebar.jsx`, `ConnectModal.jsx`: delete the `supportVisible` prop and
      render the sidebar item and the "Still stuck? Contact support" link
@@ -73,8 +78,10 @@ session. Everyone else gets 404.
    - Tests:
      - delete `release-gate.test.ts` and the hidden or 404 cases in
        `app/api/support/*/route.test.ts`, `sidebar-help-link.test.mjs`,
-       `connect-support-link-ui.test.mjs`, `support-help-link-ui.test.mjs` and
-       `app/api/support/help-data/route.test.ts`; keep the visible cases;
+       `connect-support-link-ui.test.mjs`, `support-help-link-ui.test.mjs`,
+       `app/api/support/help-data/route.test.ts` and
+       `app/api/support/article-feedback/route.test.ts`; keep the visible
+       cases;
      - remove deleted files from the `test:support*` scripts in
        `apps/web/package.json`.
 3. **Sitemap.** In `apps/web/app/sitemap.ts`, add this to `MARKETING_PAGES`

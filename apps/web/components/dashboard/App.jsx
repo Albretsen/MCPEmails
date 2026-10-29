@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -10,7 +10,7 @@ import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
-import { HelpSection } from './HelpSection';
+import { HelpSection, prefetchHelpData } from './HelpSection';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
@@ -253,6 +253,19 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const timer = setTimeout(() => warmSignatureEditor(), 200);
     return () => clearTimeout(timer);
   }, []);
+
+  // Same idea for Help & support: fetch its data once the page is idle, so
+  // opening the section from the sidebar or ⌘K shows it at once.
+  const locale = useLocale();
+  useEffect(() => {
+    if (!supportVisible) return undefined; // SUPPORT_RELEASE_GATE
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(() => prefetchHelpData(locale), { timeout: 4000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => prefetchHelpData(locale), 1500);
+    return () => clearTimeout(timer);
+  }, [supportVisible, locale]);
 
   // Keep the active section in sync with browser back/forward navigation.
   useEffect(() => {
@@ -1520,6 +1533,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         inboxes={inboxes}
         members={members}
         keys={keys}
+        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       />
 
       <TweaksPanel>

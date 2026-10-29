@@ -105,16 +105,46 @@ test('every article starts collapsed, with title and summary in the summary line
   assert.equal(s.includes('Some context.'), false, 'the body is not in the summary');
 });
 
-test('the contact block, with the mailto, comes before the first category', async (t) => {
+test('the contact block, with the mailto, comes after the last category', async (t) => {
   setHash('');
   const view = await render(t);
   const contact = view.container.querySelector('#contact');
-  const firstCategory = view.container.querySelector('.help-category');
+  const categories = view.container.querySelectorAll('.help-category');
+  const lastCategory = categories[categories.length - 1];
   assert.equal(contact === null, false);
-  assert.equal(Boolean(contact.compareDocumentPosition(firstCategory) & window.Node.DOCUMENT_POSITION_FOLLOWING), true);
+  assert.equal(Boolean(contact.compareDocumentPosition(lastCategory) & window.Node.DOCUMENT_POSITION_PRECEDING), true);
   const mail = contact.querySelector('a[href^="mailto:"]');
   assert.equal(mail.getAttribute('href'), 'mailto:support@mcpemails.com');
   assert.equal(contact.textContent.includes(en.contact.heading), true);
+  assert.equal(contact.textContent.includes('one business day'), true);
+});
+
+test('the section nav links every category and the contact block', async (t) => {
+  setHash('');
+  const view = await render(t);
+  const links = [...view.container.querySelectorAll('.help-nav a')].map((a) => a.getAttribute('href'));
+  const ids = [...view.container.querySelectorAll('.help-category')].map((c) => `#${c.id}`);
+  assert.deepEqual(links, [...ids, '#contact']);
+  assert.equal(view.container.querySelector('.help-nav a').getAttribute('aria-current'), 'location');
+});
+
+test('"Was this helpful?" posts the answer once and says thanks', async (t) => {
+  setHash('');
+  window.localStorage.clear();
+  const posts = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => { posts.push([url, JSON.parse(init.body)]); return { ok: true, status: 204 }; };
+  t.after(() => { globalThis.fetch = realFetch; });
+  const view = await render(t);
+  const article = view.container.querySelector('details.help-article');
+  const no = [...article.querySelectorAll('.help-feedback-btn')].find((b) => b.textContent === en.feedback.no);
+  await flush(() => no.click());
+  assert.equal(posts.length, 1);
+  assert.equal(posts[0][0], '/api/support/article-feedback');
+  assert.deepEqual(posts[0][1], { articleId: article.id.replace(/^article-/, ''), locale: 'en', helpful: false });
+  assert.equal(article.querySelector('.help-feedback-btn'), null, 'the buttons are gone');
+  assert.equal(article.textContent.includes(en.feedback.thanksNo), true);
+  assert.equal(article.querySelector('.help-feedback a').getAttribute('href'), '#contact');
 });
 
 test('the form is behind one click, and the button opens it', async (t) => {

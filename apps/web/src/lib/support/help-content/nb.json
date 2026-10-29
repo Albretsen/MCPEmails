@@ -10,7 +10,7 @@
   },
   "search": {
     "label": "Søk i hjelp",
-    "placeholder": "Søk i leverandører, klienter, dokumentasjon og spørsmål",
+    "placeholder": "Skriv et spørsmål eller et ord",
     "empty": "Ingen treff.",
     "emptyLink": "Skriv til oss nedenfor",
     "kinds": {
@@ -20,6 +20,18 @@
       "faq": "Spørsmål",
       "article": "Artikkel"
     }
+  },
+  "nav": {
+    "label": "Hjelpeemner",
+    "contact": "Kontakt oss"
+  },
+  "feedback": {
+    "question": "Var dette nyttig?",
+    "yes": "Ja",
+    "no": "Nei",
+    "thanks": "Takk for tilbakemeldingen.",
+    "thanksNo": "Takk. Fortell oss hva som manglet, så retter vi det.",
+    "contactLink": "Skriv til oss"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -59,8 +71,14 @@
         "Sjekk servernavnene mot leverandørveiledningene våre."
       ],
       "links": [
-        { "label": "Veiledning for generisk IMAP", "href": "/connect/imap" },
-        { "label": "Kompatibilitet per leverandør", "href": "/docs/providers" }
+        {
+          "label": "Veiledning for generisk IMAP",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Kompatibilitet per leverandør",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
@@ -76,10 +94,22 @@
         "Lim det inn slik det vises. Mellomrom ignoreres."
       ],
       "links": [
-        { "label": "Veiledning for Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Veiledning for iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Veiledning for Gmail", "href": "/connect/gmail" },
-        { "label": "Veiledning for Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Veiledning for Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Veiledning for iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Veiledning for Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Veiledning for Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
@@ -94,7 +124,10 @@
         "Koble til med hele adressen din og det app-passordet."
       ],
       "links": [
-        { "label": "Veiledning for Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Veiledning for Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -110,8 +143,14 @@
         "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."
       ],
       "links": [
-        { "label": "Oppsett for klienter", "href": "/docs/clients" },
-        { "label": "Feilkoder", "href": "/docs#errors" }
+        {
+          "label": "Oppsett for klienter",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Feilkoder",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
@@ -127,8 +166,14 @@
         "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."
       ],
       "links": [
-        { "label": "Spørsmål om priser", "href": "/pricing#faq" },
-        { "label": "Hastighetsgrenser", "href": "/docs#rate-limits" }
+        {
+          "label": "Spørsmål om priser",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Hastighetsgrenser",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
@@ -143,8 +188,14 @@
         "Uventet første belastning? Skriv til oss innen 14 dager, så får du hele beløpet tilbake."
       ],
       "links": [
-        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" },
-        { "label": "Planer og priser", "href": "/pricing" }
+        {
+          "label": "Innstillinger i dashbordet",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Planer og priser",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -160,14 +211,20 @@
         "Vil du bruke tiden du har betalt for, si opp først og slett senere."
       ],
       "links": [
-        { "label": "Innbokser i dashbordet", "href": "/dashboard/inboxes" },
-        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" }
+        {
+          "label": "Innbokser i dashbordet",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Innstillinger i dashbordet",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Skriv til oss",
-    "lead": "Et menneske leser hver melding og svarer på e-post.",
+    "lead": "Et menneske leser hver melding og svarer på e-post. Du får svar innen én virkedag.",
     "emailLine": "Send e-post til {email}, eller skriv en melding her.",
     "openForm": "Skriv en melding"
   },

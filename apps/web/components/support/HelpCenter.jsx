@@ -1,19 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Btn } from '../Primitives';
 import { articleLinkHref, SUPPORT_EMAIL } from '@/lib/support/help-links.mjs';
 import HelpSearch from './HelpSearch';
 import ContactForm from './ContactForm';
 
 /**
- * The help center: search, the contact block, then the articles by category.
+ * The help center: search, the articles by category, then the contact block.
  * Rendered by the public /help page and by the dashboard's help section.
  *
- * Order is deliberate. Contacting us sits directly under the search, above
- * every article, so it is visible without scrolling: the email address as a
- * mailto, and a button that opens the form in place. Articles start collapsed
- * (`<details>`, title and one-line summary visible) and open on demand.
+ * Layout. A section list sits on the left (a row of links on narrow screens)
+ * and jumps to each category and to the contact block; the section in view is
+ * marked. Contact comes last, after the articles, and the search's empty state
+ * and the nav both link to it. Articles start collapsed (`<details>`, title
+ * and one-line summary visible), open on demand, and end with "Was this
+ * helpful?" (POST /api/support/article-feedback, remembered per article in
+ * this browser so the answer shows on the next visit).
  *
  * Opening from outside:
  *  - `#article-<id>` in the URL (on load and on every hash change) opens that
@@ -61,7 +64,115 @@ function splitOn(template, token) {
   return at === -1 ? [s, ''] : [s.slice(0, at), s.slice(at + token.length)];
 }
 
-function Article({ article, locale, onLinkClick }) {
+const VOTE_KEY = 'mcpe_help_vote:';
+
+const noSubscribe = () => () => {};
+
+function storedVote(id) {
+  try {
+    const v = window.localStorage.getItem(`${VOTE_KEY}${id}`);
+    return v === 'yes' || v === 'no' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** "Was this helpful?" Yes / No. The answer is sent once per click and kept in this browser. */
+function ArticleFeedback({ articleId, locale, copy }) {
+  // The server has no localStorage, so its snapshot is null and the stored
+  // answer appears after hydration without a mismatch.
+  const stored = useSyncExternalStore(noSubscribe, () => storedVote(articleId), () => null);
+  const [clicked, setClicked] = useState(null);
+  const vote = clicked ?? stored;
+
+  const send = (answer) => {
+    setClicked(answer);
+    try {
+      window.localStorage.setItem(`${VOTE_KEY}${articleId}`, answer);
+    } catch { /* the vote is still sent */ }
+    fetch('/api/support/article-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      keepalive: true,
+      body: JSON.stringify({ articleId, locale, helpful: answer === 'yes' }),
+    }).catch(() => {});
+  };
+
+  if (vote) {
+    return (
+      <p className="help-feedback help-feedback-done" role="status">
+        {vote === 'yes' ? copy.thanks : (
+          <>
+            {copy.thanksNo} <a href="#contact">{copy.contactLink}</a>
+          </>
+        )}
+      </p>
+    );
+  }
+  return (
+    <div className="help-feedback">
+      <span>{copy.question}</span>
+      <button type="button" className="help-feedback-btn" onClick={() => send('yes')}>{copy.yes}</button>
+      <button type="button" className="help-feedback-btn" onClick={() => send('no')}>{copy.no}</button>
+    </div>
+  );
+}
+
+/**
+ * The section list. Marks the section nearest the top of the viewport. The
+ * observer's root is the viewport; the dashboard scrolls `.page`, whose box is
+ * the viewport's lower part, so the same margins work in both places.
+ */
+function SectionNav({ sections, label }) {
+  const [active, setActive] = useState(sections[0]?.id ?? null);
+  const visible = useRef(new Map());
+
+  useEffect(() => {
+    if (typeof IntersectionObserver !== 'function') return undefined;
+    const map = visible.current;
+    const observer = new IntersectionObserver((entries) => {
+      for (const e of entries) map.set(e.target.id, e.isIntersecting);
+      const first = sections.find((s) => map.get(s.id));
+      if (first) setActive(first.id);
+    }, { rootMargin: '-80px 0px -55% 0px' });
+    for (const s of sections) {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [sections]);
+
+  return (
+    <nav className="help-nav" aria-label={label}>
+      <ul>
+        {sections.map((s) => (
+          <li key={s.id}>
+            <a
+              href={`#${s.id}`}
+              className={s.id === active ? 'active' : undefined}
+              aria-current={s.id === active ? 'location' : undefined}
+              onClick={(e) => {
+                const el = document.getElementById(s.id);
+                if (!el || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                scrollTo(el);
+                setActive(s.id);
+                try {
+                  window.history.replaceState(window.history.state, '', `#${s.id}`);
+                } catch { /* scrolled either way */ }
+              }}
+            >
+              {s.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function Article({ article, locale, onLinkClick, feedbackCopy }) {
   return (
     <details className="help-article" id={`${ARTICLE_PREFIX}${article.id}`}>
       <summary>
@@ -85,6 +196,7 @@ function Article({ article, locale, onLinkClick }) {
             })}
           </div>
         ) : null}
+        {feedbackCopy ? <ArticleFeedback articleId={article.id} locale={locale} copy={feedbackCopy} /> : null}
       </div>
     </details>
   );
@@ -146,6 +258,10 @@ export default function HelpCenter({
   const contact = copy.contact ?? {};
   const [emailBefore, emailAfter] = splitOn(contact.emailLine, '{email}');
   const email = SUPPORT_EMAIL;
+  const sections = [
+    ...categories.map((c) => ({ id: `help-cat-${c.area}`, title: c.title })),
+    { id: 'contact', title: copy.nav?.contact ?? contact.heading },
+  ];
 
   return (
     <div className={`help-center help-center-${variant}`}>
@@ -167,43 +283,49 @@ export default function HelpCenter({
         <HelpSearch index={index} copy={copy.search} onSelect={onSelect} />
       </header>
 
-      <section id="contact" className="help-contact help-contact-block" aria-labelledby="help-contact">
-        <h2 id="help-contact">{contact.heading}</h2>
-        <p className="help-muted">{contact.lead}</p>
-        <p className="help-contact-email">
-          {emailBefore}
-          <a href={`mailto:${email}`}>{email}</a>
-          {emailAfter}
-        </p>
-        {formOpen ? (
-          <ContactForm
-            copy={copy}
-            signedInEmail={form.signedInEmail ?? null}
-            context={form.context ?? null}
-            formToken={form.formToken ?? ''}
-            initialCategory={form.initialCategory ?? 'connect'}
-            initialSubject={form.initialSubject ?? ''}
-            providerName={form.providerName ?? null}
-            meta={form.meta ?? {}}
-            categories={supportCategories}
-          />
-        ) : (
-          <div className="help-actions">
-            <Btn variant="primary" onClick={() => setFormOpen(true)}>{contact.openForm}</Btn>
-          </div>
-        )}
-        {formFooter}
-      </section>
+      <div className="help-layout">
+        <SectionNav sections={sections} label={copy.nav?.label ?? ''} />
 
-      {categories.map((c) => (
-        <section key={c.area} className="help-category" aria-labelledby={`help-cat-${c.area}`} data-area={c.area}>
-          <h2 id={`help-cat-${c.area}`}>{c.title}</h2>
-          {c.lead ? <p className="help-muted">{c.lead}</p> : null}
-          {c.articles.map((a) => (
-            <Article key={a.id} article={a} locale={locale} onLinkClick={onLinkClick} />
+        <div className="help-main">
+          {categories.map((c) => (
+            <section key={c.area} id={`help-cat-${c.area}`} className="help-category" aria-labelledby={`help-cat-${c.area}-h`} data-area={c.area}>
+              <h2 id={`help-cat-${c.area}-h`}>{c.title}</h2>
+              {c.lead ? <p className="help-muted">{c.lead}</p> : null}
+              {c.articles.map((a) => (
+                <Article key={a.id} article={a} locale={locale} onLinkClick={onLinkClick} feedbackCopy={copy.feedback} />
+              ))}
+            </section>
           ))}
-        </section>
-      ))}
+
+          <section id="contact" className="help-contact help-contact-block" aria-labelledby="help-contact">
+            <h2 id="help-contact">{contact.heading}</h2>
+            <p className="help-muted">{contact.lead}</p>
+            <p className="help-contact-email">
+              {emailBefore}
+              <a href={`mailto:${email}`}>{email}</a>
+              {emailAfter}
+            </p>
+            {formOpen ? (
+              <ContactForm
+                copy={copy}
+                signedInEmail={form.signedInEmail ?? null}
+                context={form.context ?? null}
+                formToken={form.formToken ?? ''}
+                initialCategory={form.initialCategory ?? 'connect'}
+                initialSubject={form.initialSubject ?? ''}
+                providerName={form.providerName ?? null}
+                meta={form.meta ?? {}}
+                categories={supportCategories}
+              />
+            ) : (
+              <div className="help-actions">
+                <Btn variant="primary" onClick={() => setFormOpen(true)}>{contact.openForm}</Btn>
+              </div>
+            )}
+            {formFooter}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

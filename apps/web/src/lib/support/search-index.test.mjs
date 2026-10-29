@@ -160,9 +160,24 @@ test('diacritics and case do not matter', () => {
   assert.equal(ids('ZÜRICH'), 'c');
 });
 
-test('every word must match (AND)', () => {
+test('one or two words must all match', () => {
   assert.equal(ids('yahoo password'), 'b');
   assert.equal(ids('yahoo nothingmatches'), '');
+});
+
+test('a typo, a plural and filler words still find the entry', () => {
+  assert.equal(ids('pasword'), 'b');
+  assert.equal(ids('passwords'), 'b');
+  assert.equal(ids('how do i get my app password'), 'b');
+});
+
+test('keyword hits outrank title and hint hits', () => {
+  const p = prepareIndex([
+    { id: 'hint', kind: 'docs', title: 'Something', hint: 'refund policy', terms: '' },
+    { id: 'title', kind: 'docs', title: 'Refund window', hint: '', terms: '' },
+    { id: 'kw', kind: 'article', title: 'Change your plan', hint: '', terms: 'refund cancel' },
+  ]);
+  assert.deepEqual(searchIndex(p, 'refund').map((e) => e.id), ['kw', 'title', 'hint']);
 });
 
 test('title hits rank above hint and term hits, title starts first', () => {
@@ -186,6 +201,14 @@ test('the real index finds the obvious things', async () => {
   assert.equal(searchIndex(p, 'hotmail')[0].id, 'provider:outlook');
   assert.equal(searchIndex(p, 'yandex imap').some((e) => e.id === 'article:yandex-imap-disabled'), true);
   assert.equal(searchIndex(p, 'cursor')[0].id, 'client:cursor');
+});
+
+test('the real index answers questions typed as sentences', async () => {
+  const p = prepareIndex(await indexFor('en'));
+  const top = (q, n = 3) => searchIndex(p, q).slice(0, n).map((e) => e.id);
+  assert.ok(top('claude cant see my emails').includes('article:assistant-sees-nothing'), top('claude cant see my emails').join());
+  assert.ok(top('how do i cancel my subscription').some((id) => id.includes('cancel')), top('how do i cancel my subscription').join());
+  assert.ok(top('my password is not working').includes('article:imap-password-rejected'), top('my password is not working').join());
 });
 
 test('clip strips rich-text tags and never leaves an angle bracket', () => {

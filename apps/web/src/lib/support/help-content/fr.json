@@ -10,7 +10,7 @@
   },
   "search": {
     "label": "Rechercher dans l’aide",
-    "placeholder": "Fournisseurs, clients, documentation et questions",
+    "placeholder": "Tapez une question ou un mot",
     "empty": "Aucun résultat.",
     "emptyLink": "Écrivez-nous ci-dessous",
     "kinds": {
@@ -20,6 +20,18 @@
       "faq": "Question",
       "article": "Article"
     }
+  },
+  "nav": {
+    "label": "Rubriques d’aide",
+    "contact": "Nous contacter"
+  },
+  "feedback": {
+    "question": "Cet article vous a-t-il aidé ?",
+    "yes": "Oui",
+    "no": "Non",
+    "thanks": "Merci pour votre retour.",
+    "thanksNo": "Merci. Dites-nous ce qui manquait et nous le corrigerons.",
+    "contactLink": "Écrivez-nous"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -59,8 +71,14 @@
         "Vérifiez les noms des serveurs dans nos guides par fournisseur."
       ],
       "links": [
-        { "label": "Guide IMAP générique", "href": "/connect/imap" },
-        { "label": "Compatibilité par fournisseur", "href": "/docs/providers" }
+        {
+          "label": "Guide IMAP générique",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Compatibilité par fournisseur",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
@@ -76,10 +94,22 @@
         "Collez-le tel qu’il s’affiche. Les espaces sont ignorés."
       ],
       "links": [
-        { "label": "Guide Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Guide iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Guide Gmail", "href": "/connect/gmail" },
-        { "label": "Guide Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Guide Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Guide iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Guide Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guide Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
@@ -94,7 +124,10 @@
         "Connectez-vous avec votre adresse complète et ce mot de passe d’application."
       ],
       "links": [
-        { "label": "Guide Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Guide Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -110,8 +143,14 @@
         "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
       ],
       "links": [
-        { "label": "Guides des clients", "href": "/docs/clients" },
-        { "label": "Codes d’erreur", "href": "/docs#errors" }
+        {
+          "label": "Guides des clients",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Codes d’erreur",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
@@ -127,8 +166,14 @@
         "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."
       ],
       "links": [
-        { "label": "Questions sur les tarifs", "href": "/pricing#faq" },
-        { "label": "Limites de débit", "href": "/docs#rate-limits" }
+        {
+          "label": "Questions sur les tarifs",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Limites de débit",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
@@ -143,8 +188,14 @@
         "Premier prélèvement inattendu ? Écrivez-nous sous 14 jours pour un remboursement complet."
       ],
       "links": [
-        { "label": "Paramètres du tableau de bord", "href": "/dashboard/settings" },
-        { "label": "Formules et tarifs", "href": "/pricing" }
+        {
+          "label": "Paramètres du tableau de bord",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Formules et tarifs",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -160,14 +211,20 @@
         "Pour profiter du temps payé, résiliez d’abord et supprimez plus tard."
       ],
       "links": [
-        { "label": "Boîtes du tableau de bord", "href": "/dashboard/inboxes" },
-        { "label": "Paramètres du tableau de bord", "href": "/dashboard/settings" }
+        {
+          "label": "Boîtes du tableau de bord",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Paramètres du tableau de bord",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Écrivez-nous",
-    "lead": "Une personne lit chaque message et répond par e-mail.",
+    "lead": "Une personne lit chaque message et répond par e-mail. Comptez une réponse sous un jour ouvré.",
     "emailLine": "Écrivez-nous à {email}, ou envoyez un message ici.",
     "openForm": "Écrire un message"
   },

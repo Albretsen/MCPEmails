@@ -40,6 +40,45 @@ export function dashboardSectionFor(href) {
   return pathSegmentToSection(m[1]);
 }
 
+// The dashboard calls prefetchHelpData() once it is idle, so opening Help
+// usually finds its data already loaded. A prefetched response is handed out
+// once: the next visit fetches again, so the form token is never stale.
+const prefetched = new Map();
+
+function fetchHelpData(url) {
+  return fetch(url, { cache: 'no-store', credentials: 'same-origin' })
+    .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))));
+}
+
+function loadHelpData(url) {
+  const pending = prefetched.get(url);
+  if (pending) {
+    prefetched.delete(url);
+    return pending.catch(() => fetchHelpData(url));
+  }
+  return fetchHelpData(url);
+}
+
+/** Starts loading the plain help URL (no form seed) in this locale. */
+export function prefetchHelpData(locale) {
+  const url = helpDataUrl(locale, '');
+  if (prefetched.has(url)) return;
+  const pending = fetchHelpData(url);
+  pending.catch(() => {});
+  prefetched.set(url, pending);
+}
+
+function HelpSkeleton({ label }) {
+  return (
+    <div className="help-skeleton" role="status" aria-label={label}>
+      <div className="help-skeleton-bar help-skeleton-title" />
+      <div className="help-skeleton-bar" style={{ width: '60%' }} />
+      <div className="help-skeleton-bar help-skeleton-input" />
+      {[70, 55, 65, 50].map((w) => <div key={w} className="help-skeleton-bar" style={{ width: `${w}%` }} />)}
+    </div>
+  );
+}
+
 export function HelpSection({ onNavigateSection }) {
   const locale = useLocale();
   const tr = useTranslations('dashboardChrome');
@@ -50,8 +89,7 @@ export function HelpSection({ onNavigateSection }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(helpDataUrl(locale, window.location.search), { cache: 'no-store', credentials: 'same-origin' })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+    loadHelpData(helpDataUrl(locale, window.location.search))
       .then((data) => {
         if (!cancelled) setState({ status: 'ready', data, locale });
       })
@@ -66,9 +104,11 @@ export function HelpSection({ onNavigateSection }) {
   if (state.status !== 'ready') {
     return (
       <div className="page">
-        <p className="help-muted" role={state.status === 'error' ? 'alert' : 'status'}>
-          {tr(state.status === 'error' ? 'help.loadError' : 'help.loading')}
-        </p>
+        {state.status === 'error' ? (
+          <p className="help-muted" role="alert">{tr('help.loadError')}</p>
+        ) : (
+          <HelpSkeleton label={tr('help.loading')} />
+        )}
       </div>
     );
   }

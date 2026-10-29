@@ -70,11 +70,12 @@ async function render(t, { locale = 'en', messages = chromeEn, onNavigateSection
   return view;
 }
 
-test('loads in the app locale, forwarding the connect seed, with one loading line', async (t) => {
+test('loads in the app locale, forwarding the connect seed, behind a skeleton', async (t) => {
   window.history.replaceState(null, '', '/dashboard/help?topic=connect&provider=yahoo&code=auth_failed&junk=1#contact');
   const { calls, release } = stubFetch(t, () => ({ ok: true, status: 200, json: async () => PAYLOAD }));
   const view = await render(t, { locale: 'nb', messages: chromeNb });
-  assert.equal(view.container.textContent, chromeNb.help.loading);
+  assert.equal(view.container.querySelector('[role=status]').getAttribute('aria-label'), chromeNb.help.loading);
+  assert.equal(view.container.querySelector('.help-center'), null);
   assert.equal(calls.length, 1);
   assert.equal(calls[0], '/api/support/help-data?locale=nb&topic=connect&provider=yahoo&code=auth_failed');
   release();
