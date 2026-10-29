@@ -37,7 +37,7 @@
 // one sentence saying it was not sent and why, in the user's words. A host
 // that drops result `_meta` gets the one-liners above, unchanged.
 //
-// Kept deliberately small: the bundle sits at its 175 KB cap (codegen.mjs).
+// Kept deliberately small: the bundle sits near its hard cap (codegen.mjs).
 // ---------------------------------------------------------------------------
 
 import type { ToolResultParams } from "./bridge";
