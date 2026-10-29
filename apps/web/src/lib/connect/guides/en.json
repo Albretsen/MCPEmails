@@ -1,5 +1,15 @@
 {
   "intro": "Step-by-step guides:",
   "claude": "How to connect Claude to your email",
-  "imap": "Claude IMAP connector guide"
+  "imap": "Claude IMAP connector guide",
+  "moreIntro": "More guides:",
+  "personal": "Walkthrough for personal accounts",
+  "connectors": "Custom connectors in Claude, explained",
+  "schedule": "Schedule an email from the chat",
+  "inboxZero": "Inbox zero with AI",
+  "agentInbox": "Give your AI agent an inbox",
+  "clientsIntro": "Use this inbox in your AI app:",
+  "clientsAll": "All supported apps",
+  "lookupIntro": "Need the server names and ports?",
+  "lookupLabel": "Look up IMAP and SMTP settings"
 }

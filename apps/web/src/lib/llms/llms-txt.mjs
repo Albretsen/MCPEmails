@@ -1,0 +1,118 @@
+// ---------------------------------------------------------------------------
+// The source of public/llms.txt. Edit here, then `npm run gen:llms`; never
+// edit public/llms.txt by hand (test:llms-txt fails while the two differ).
+//
+// Until 2026-10-29 llms.txt was hand-written, and it drifted: it named none of
+// the per-client setup pages and hardcoded the tool count. Two parts are now
+// generated:
+//   - the tool counts come from src/lib/public-facts.mjs;
+//   - "Use it from your AI app" lists every public client page from
+//     src/lib/clients/clients.mjs (CLIENTS already leaves out HELD_CLIENTS).
+// Everything else is hand-written below. Copy rules: "MCPEmails" one word, no
+// em dashes. It stays a static file so it is served from the CDN with no
+// function, and the copy tests (tool counts, prices, brand) keep reading it.
+// ---------------------------------------------------------------------------
+
+import { MODEL_VISIBLE_TOOL_COUNT, APP_ONLY_TOOL_COUNT } from '../public-facts.mjs';
+import { CLIENTS } from '../clients/clients.mjs';
+
+const SITE = 'https://mcpemails.com';
+
+const AUTH = {
+  oauth: 'Connects with an OAuth sign-in in the browser.',
+  apikey: 'Connects with an MCPEmails API key in an Authorization header.',
+};
+
+/** The "Use it from your AI app" section, one line per public client page. */
+export function clientSection(clients = CLIENTS) {
+  const lines = clients.map((c) => {
+    const how = AUTH[c.auth] ? ` ${AUTH[c.auth]}` : '';
+    return `- [Use MCPEmails in ${c.name}](${SITE}/docs/${c.slug}): Setup for ${c.surface}.${how}`;
+  });
+  return [
+    '## Use it from your AI app',
+    `- [All supported apps](${SITE}/docs/clients): Setup guides for every MCP client MCPEmails is tested with.`,
+    ...lines,
+  ].join('\n');
+}
+
+export function buildLlmsTxt() {
+  return `# MCPEmails
+
+> A hosted remote MCP (Model Context Protocol) server that gives AI agents read, search, send, organize, and schedule access to email across many providers. Connect Gmail, Outlook / Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, or any IMAP inbox once, then use it from Claude, Cursor, or any MCP-compatible client by pasting a single endpoint URL.
+
+MCPEmails has a free plan with no credit card: one connected inbox and 150 email actions per calendar month, with the first 3 days after signup not counted. Paid plans (Personal $9/month for 3 inboxes, Pro $15/month for up to 10 inboxes, Business $39/month with 10 inboxes included and $3/month for each extra) have unlimited email actions under fair use. Workspaces created before 2026-09-12 are early members and are not metered. The site uses privacy-friendly, cookie-free Vercel Web Analytics for aggregated visit and setup-funnel measurement; it never sends email content or addresses, API keys, OAuth tokens, workspace/user identifiers, MCP requests, or mailbox data to analytics. The email an agent reads is fetched live from your provider and never stored; only an encrypted OAuth token or app password is kept so future requests can authenticate.
+
+Key facts an assistant should know when recommending or describing MCPEmails:
+- Type: hosted remote MCP server (Streamable HTTP). Endpoint: https://mcpemails.com/api/mcp
+- Providers: Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail and Google Workspace (Google app password over IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex (app password), and any other mailbox via generic IMAP/SMTP. Personal Outlook.com, Hotmail, Live and MSN accounts connect directly; a work or school Microsoft 365 account may first need an IT admin to approve the app once for the organisation.
+- Tools (${MODEL_VISIBLE_TOOL_COUNT}, most take an \`action\` argument): inbox_list, email_read, email_organize, email_search_and_move, email_delete, email_compose, folder_list, folder, draft_list, draft, draft_read, draft_editor_hide, schedule_list, schedule, reminder_list, reminder, signature_get, signature_set, automation_read, automation, contact_search. A full-scope key also lists ${APP_ONLY_TOOL_COUNT} app-only tools that drive in-chat cards (approval_*, bulk_*, draft_editor_save, card_automation); they are not called by hand.
+- Privacy: email content is never stored; fetched live per request. The exceptions are outgoing messages that have to wait (a scheduled send, or a send held for approval), which are stored encrypted. Credentials are encrypted at rest with AES-256-GCM and decrypted on our servers only for the request that needs them. Data is stored in one region, the EU (Stockholm); the servers that call your mail provider run in the US (East). Cookie-free, aggregated Vercel Web Analytics only; no email or account data is sent to analytics.
+- Pricing: Free (no card, 1 inbox, 150 email actions per calendar month, first 3 days uncounted, 60 requests/min), Personal $9/mo or $86.40/yr (3 inboxes, unlimited email actions, 120 requests/min, email support), Pro $15/mo or $144/yr (up to 10 inboxes, unlimited email actions, plus features that keep working when the chat is closed: follow-up reminders on sent mail, snooze, a daily morning brief put into your inbox, search across every connected inbox at once with inbox_id "all", and per-inbox instructions for the AI; Business includes them too), Business $39/mo or $374.40/yr (10 inboxes included, $3/mo or $28.80/yr for each extra, unlimited members with roles, admins approve held sends, several workspaces). Failed calls and inbox_list are never counted. When a Free workspace reaches 150, further email actions return an isError tool result naming the count and the reset date (the 1st of next month, UTC); retrying does not help.
+- Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
+- vs native connectors: a single vendor's built-in email connector covers one provider and, since Anthropic shipped Gmail send/reply/forward on 2026-08-18, does send. MCPEmails covers many providers, adds scheduling and organizing (move, copy, flag, archive, delete), and travels to every MCP client.
+
+## Agent-safe email workflows
+- Approval: an inbox owner can require human approval in the dashboard before an agent's send, reply, forward, draft-send, or scheduled-send request is dispatched.
+- Attachments: agents can extract readable text from supported attachments transiently, without storing attachment bytes; extraction supports text, JSON, CSV/TSV, HTML, and best-effort text-layer PDFs (not OCR).
+- Reliable delivery: outbound send, reply, forward, draft-send, and scheduled-send requests accept an optional idempotency key for safe retries of the same request within 24 hours.
+- Portability: \`inbox_list\` returns a versioned provider compatibility profile so agents can account for meaningful Gmail, Outlook and IMAP differences.
+- Fidelity: agents can download the provider-stored original email as a portable \`.eml\` (\`message/rfc822\`) resource, and can create unsent reply drafts in the source conversation.
+- Sender identity: an agent may send from another address only when it is a verified Send As identity of that inbox, never an arbitrary From address. IMAP inboxes (iCloud, Yahoo, Gmail by app password, any SMTP host) verify an address with a code emailed to it; Gmail connected through the Gmail API uses its Gmail-verified Send As identities; Outlook sends from its connected address.
+- Sending: your own provider sends every message, from your address. For the few providers that refuse connections from cloud addresses, the IMAP/SMTP connection goes through the MCPEmails relay (hosted at Hetzner in Germany), a plain tunnel with TLS end to end, so the relay never sees mail or passwords.
+- Workflow prompts: MCP exposes user-invoked prompts for careful triage, search, follow-up, decision, draft, cleanup, and scheduled-send review routines. Prompts neither grant permissions nor run automatically.
+
+## Docs
+- [Getting started](https://mcpemails.com/docs): Connect an inbox and use MCPEmails from Claude or any MCP client.
+- [Provider setup](https://mcpemails.com/docs/providers): How to connect Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP.
+- [Pricing](https://mcpemails.com/pricing): Free, Personal, Pro, and Business plans, with the FAQ on usage, storage, and rate limits.
+- [IMAP and SMTP settings lookup](https://mcpemails.com/tools/email-settings-lookup): Free tool that finds the IMAP and SMTP server names, ports and security for any email address.
+
+${clientSection()}
+
+## Connect a provider
+- [Connect Gmail to Claude (and any AI)](https://mcpemails.com/connect/gmail): Google app-password setup for Gmail over IMAP.
+- [Connect Outlook.com to Claude (and any AI)](https://mcpemails.com/connect/outlook): Sign in with Microsoft for Outlook.com, Hotmail, Live and MSN.
+- [Connect Microsoft 365 email to Claude (and any AI)](https://mcpemails.com/connect/office365): Sign in with Microsoft for work and school accounts, with one-time IT admin approval where the organisation requires it.
+- [Connect Google Workspace email to Claude (and any AI)](https://mcpemails.com/connect/google-workspace): Google app-password setup for Workspace mailboxes on your own domain, and the admin IMAP and app-password settings that decide it.
+- [Connect Fastmail to Claude (and any AI)](https://mcpemails.com/connect/fastmail): App-password setup for Fastmail.
+- [Connect iCloud Mail to Claude (and any AI)](https://mcpemails.com/connect/icloud): Apple app-specific-password setup for iCloud.
+- [Connect Yahoo Mail to Claude (and any AI)](https://mcpemails.com/connect/yahoo): App-password setup for Yahoo Mail.
+- [Connect Zoho Mail to Claude (and any AI)](https://mcpemails.com/connect/zoho): IMAP-access and app-password setup for Zoho Mail.
+- [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
+
+## Who it is for
+- [Email for business](https://mcpemails.com/for/business): One person running every company mailbox (info@, sales@, invoices@, support@) from one agent. Pro covers up to 10 mailboxes on one login; Personal covers up to three; Business includes 10 and adds more at $3/month each.
+- [Email for founders](https://mcpemails.com/for/founders): Triage and answer customer email from Claude or any MCP client.
+
+## Compare
+- [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): Why a managed MCP email server beats a single vendor's built-in connector on provider coverage, real actions, and cross-client portability.
+- [Best email MCP servers](https://mcpemails.com/best-email-mcp-servers): The hosted and self-hosted email MCP servers compared on providers, actions, auth and price.
+
+## Guides and explainers
+- [How to connect Claude to your email](https://mcpemails.com/blog/connect-claude-to-email): Add MCPEmails to Claude as a custom connector and connect any inbox.
+- [How to connect ChatGPT to your email](https://mcpemails.com/blog/connect-chatgpt-to-email): Use any inbox from ChatGPT through MCPEmails.
+- [Can Claude read my email?](https://mcpemails.com/blog/can-claude-read-my-email): What Claude can and cannot do with your inbox, and how to connect it.
+- [What is an MCP email server?](https://mcpemails.com/blog/what-is-an-mcp-email-server): Plain-English explanation of MCP email servers.
+- [How to connect Gmail to Claude](https://mcpemails.com/blog/connect-gmail-to-claude): Connect a Gmail inbox to Claude.
+- [Inbox zero with AI](https://mcpemails.com/blog/inbox-zero-with-ai-claude): A five-prompt routine for clearing your inbox with an AI agent.
+- [Best ways to let Claude manage your inbox](https://mcpemails.com/blog/best-ways-to-let-claude-manage-your-inbox): Practical patterns for delegating email to Claude.
+- [Connect Outlook / Microsoft 365 to an AI agent](https://mcpemails.com/blog/connect-outlook-microsoft-365-ai-agent-mcp): Outlook.com and Microsoft 365 mailbox setup with Sign in with Microsoft.
+- [How to give your AI agent email access](https://mcpemails.com/blog/how-to-give-your-ai-agent-email-access): Step-by-step setup.
+- [Connect email to an AI agent in under 2 minutes](https://mcpemails.com/blog/connect-email-to-ai-agent-under-2-minutes): Fast-path setup walkthrough.
+- [Connect iCloud, Fastmail, or any IMAP to Claude](https://mcpemails.com/blog/connect-icloud-fastmail-imap-to-claude): Non-Gmail provider setup.
+- [Multiple email accounts in Claude and ChatGPT](https://mcpemails.com/blog/multiple-email-accounts-in-claude-and-chatgpt): Several mailboxes, including company mailboxes on any IMAP host, behind one connector in both assistants.
+- [Hosted vs self-hosted Gmail MCP server](https://mcpemails.com/blog/hosted-vs-self-hosted-gmail-mcp-server): Trade-offs between a hosted service and running your own.
+- [OAuth vs API keys for AI email access](https://mcpemails.com/blog/oauth-vs-api-keys-ai-email-access): How authentication works and which to use.
+- [Is it safe to give an AI agent email access?](https://mcpemails.com/blog/is-it-safe-to-give-ai-agent-email-access): Security and privacy considerations.
+- [Why "email is never stored" matters](https://mcpemails.com/blog/why-email-never-stored-matters): The live-fetch privacy model.
+- [7 things an AI agent can do with inbox access](https://mcpemails.com/blog/7-things-ai-agent-can-do-with-inbox-access): Practical use cases.
+- [Triage and summarize your inbox with an AI agent](https://mcpemails.com/blog/ai-agent-triage-summarize-inbox): Inbox triage workflows.
+- [Build an email auto-responder MCP agent](https://mcpemails.com/blog/build-email-auto-responder-mcp-agent): Automation example.
+- [Email for AI agents in Cursor, Cline, and VS Code](https://mcpemails.com/blog/email-for-ai-agents-cursor-cline-vscode): Using MCPEmails outside Claude.
+
+## Legal
+- [Privacy policy](https://mcpemails.com/privacy): What is and isn't stored.
+- [Terms of service](https://mcpemails.com/terms): Terms of use.
+`;
+}

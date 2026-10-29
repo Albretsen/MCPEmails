@@ -11,6 +11,24 @@ import { withProvider } from '@/lib/connect/multi-mailbox.mjs';
 import { chatgptSection } from '@/lib/connect/chatgpt.mjs';
 import { providerFaq } from '@/lib/connect/faq.mjs';
 import { MODEL_VISIBLE_TOOL_COUNT } from '@/lib/public-facts.mjs';
+import { clientsForLocale } from '@/lib/clients/clients.mjs';
+import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
+
+/**
+ * The client setup pages linked from the "Use this inbox in your AI app" line,
+ * in this order, where the client page exists in the page's locale (and is not
+ * held, which clientsForLocale already filters). The rest are one click away
+ * through the hub link at the end of the line.
+ */
+export const PROVIDER_PAGE_CLIENTS = ['claude', 'chatgpt', 'cursor', 'vscode', 'codex', 'claude-code', 'cline', 'windsurf', 'gemini-cli'];
+
+export function providerPageClients(locale) {
+  const available = new Map(clientsForLocale(locale).map((c) => [c.slug, c]));
+  return PROVIDER_PAGE_CLIENTS.filter((slug) => available.has(slug)).map((slug) => {
+    const c = available.get(slug);
+    return { slug, name: c.shortName ?? c.name, href: `/docs/${slug}` };
+  });
+}
 
 /**
  * What a shared string needs to know about a provider name to stay
@@ -35,12 +53,15 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, chatgpt = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   // Only providers whose page exists in this locale: next-intl's Link adds the
   // locale prefix, so a provider missing here would be a link to a 404.
   const related = relatedProviders(provider.slug, 6, new Date(), locale);
   const guideLinks = guides ? guideLinksFor(content) : [];
+  const connectable = Boolean(content?.auth?.method) && content.auth.method !== 'none';
+  const clientLinks = guides?.clientsIntro && connectable ? providerPageClients(locale) : [];
+  const showLookup = Boolean(guides?.lookupLabel) && connectable && LOOKUP_LOCALES.includes(locale);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
@@ -261,6 +282,45 @@ export default async function ConnectProviderView({ locale, provider, content, m
                   <Link href={g.href}>{guides[g.key]}</Link>
                 </span>
               ))}
+            </p>
+          )}
+          {/*
+            Under-linked buyer posts, two per page by rotation (lib/connect/
+            guides.mjs). An untranslated post is linked at its English URL.
+          */}
+          {guides?.moreIntro && moreGuides.length > 0 && (
+            <p className="how-guide-link">
+              {guides.moreIntro}{' '}
+              {moreGuides.map((g, i) => (
+                <span key={g.key}>
+                  {i > 0 && ' · '}
+                  {g.localized
+                    ? <Link href={g.href}>{guides[g.key]}</Link>
+                    : <a href={g.href}>{guides[g.key]}</a>}
+                </span>
+              ))}
+            </p>
+          )}
+          {/*
+            The per-client setup pages. Client names are the anchors: they
+            point at /docs/<client>, never at a blog post.
+          */}
+          {clientLinks.length > 0 && (
+            <p className="how-guide-link connect-client-links">
+              {guides.clientsIntro}{' '}
+              {clientLinks.map((c, i) => (
+                <span key={c.slug}>
+                  {i > 0 && ' · '}
+                  <Link href={c.href}>{c.name}</Link>
+                </span>
+              ))}
+              {' · '}
+              <Link href="/docs/clients">{guides.clientsAll}</Link>
+            </p>
+          )}
+          {showLookup && (
+            <p className="how-guide-link">
+              {guides.lookupIntro} <Link href={LOOKUP_PATH}>{guides.lookupLabel}</Link>
             </p>
           )}
           <p className="how-guide-link">

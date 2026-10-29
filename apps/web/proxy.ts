@@ -9,7 +9,17 @@ import { routing } from '@/i18n/routing';
 import {
   AI_CLIENT_COOKIE, AI_CLIENT_HEADER, aiClientFromRequest, normalizeAiClient, serializeAiClientCookie,
 } from '@/lib/clients/preferred.mjs';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+
+const DEFAULT_LOCALE_PREFIX = new RegExp(`^/${routing.defaultLocale}(?:/|$)`);
+
+/** next-intl's temporary redirect off the default-locale prefix, made permanent. */
+function permanentDefaultLocaleRedirect(request: NextRequest, response: NextResponse): NextResponse {
+  if (response.status !== 307 || !DEFAULT_LOCALE_PREFIX.test(request.nextUrl.pathname)) return response;
+  const location = response.headers.get('location');
+  if (!location) return response;
+  return NextResponse.redirect(new URL(location, request.url), 308);
+}
 
 /**
  * Next.js proxy entry point (formerly middleware.ts; renamed in Next.js 16).
@@ -267,7 +277,11 @@ async function routeRequest(request: NextRequest) {
   }
 
   if (isLocalizedRoute(request.nextUrl.pathname)) {
-    const response = intlMiddleware(request);
+    let response = intlMiddleware(request);
+    // With localePrefix 'as-needed', next-intl answers /en and /en/<path> with
+    // a 307 to the unprefixed URL. That redirect never changes, so it is a
+    // permanent one (308), the same as http to https and www to the apex.
+    response = permanentDefaultLocaleRedirect(request, response);
     response.headers.set('Cache-Control', MARKETING_CACHE_CONTROL);
     // next-intl sets a NEXT_LOCALE cookie on every response. With
     // localeDetection disabled the locale is fully URL-determined, so the

@@ -1,5 +1,15 @@
 {
   "intro": "Schritt-für-Schritt-Anleitungen:",
   "claude": "So verbinden Sie Claude mit Ihren E-Mails",
-  "imap": "Anleitung zum Claude-IMAP-Konnektor"
+  "imap": "Anleitung zum Claude-IMAP-Konnektor",
+  "moreIntro": "Weitere Anleitungen:",
+  "personal": "Anleitung für private Konten",
+  "connectors": "Benutzerdefinierte Konnektoren in Claude erklärt",
+  "schedule": "Eine E-Mail aus dem Chat planen",
+  "inboxZero": "Inbox Zero mit KI",
+  "agentInbox": "Geben Sie Ihrem KI-Agenten ein Postfach",
+  "clientsIntro": "Nutzen Sie dieses Postfach in Ihrer KI-App:",
+  "clientsAll": "Alle unterstützten Apps",
+  "lookupIntro": "Brauchen Sie Servernamen und Ports?",
+  "lookupLabel": "IMAP- und SMTP-Server herausfinden"
 }
