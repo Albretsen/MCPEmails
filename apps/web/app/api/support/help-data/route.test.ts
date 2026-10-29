@@ -90,7 +90,7 @@ test('locale: a supported one is used, anything else is English', async () => {
   const nb = await (await route.GET(req('GET', '?locale=nb'))).json();
   assert.equal(nb.locale, 'nb');
   assert.notEqual(nb.copy.hero.title, (await (await route.GET(req('GET', '?locale=en'))).json()).copy.hero.title);
-  assert.equal((await (await route.GET(req('GET', '?locale=de'))).json()).locale, 'en');
+  assert.equal((await (await route.GET(req('GET', '?locale=it'))).json()).locale, 'en');
   assert.equal((await (await route.GET(req('GET'))).json()).locale, 'en');
 });
 

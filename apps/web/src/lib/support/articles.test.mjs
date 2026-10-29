@@ -83,7 +83,7 @@ test('a malformed locale file falls back to English for that area', async () => 
 test('an unknown locale reads English', async () => {
   const seen = [];
   const load = async (locale, area) => { seen.push(`${locale}/${area}`); return null; };
-  await getHelpArticles('de', { help: HELP, load });
+  await getHelpArticles('it', { help: HELP, load });
   assert.equal(seen.every((k) => k.startsWith('en/')), true, seen.join(' '));
 });
 

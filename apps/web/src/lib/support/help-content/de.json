@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Hilfe",
     "title": "Wie können wir helfen?",
-    "lead": "Durchsuchen Sie die Anleitungen, lesen Sie die kurzen Lösungen für die häufigsten Probleme oder schreiben Sie uns unten."
+    "lead": "Durchsuchen Sie die Anleitungen, öffnen Sie unten ein Thema oder schreiben Sie uns."
   },
   "search": {
     "label": "Hilfe durchsuchen",
@@ -18,7 +18,7 @@
       "client": "Client",
       "docs": "Doku",
       "faq": "FAQ",
-      "article": "Lösung"
+      "article": "Artikel"
     }
   },
   "hints": {
@@ -49,51 +49,73 @@
     {
       "id": "imap-password-rejected",
       "title": "Der Mailserver lehnt mein Passwort ab",
-      "summary": "Bei E-Mail auf Ihrer eigenen Domain oder bei einem Hoster liegt ein abgelehntes Passwort fast immer am falschen Passwort oder am falschen Benutzernamen.",
+      "summary": "Fast immer das falsche Passwort oder der falsche Benutzername. Nutzen Sie das Login des Postfachs.",
       "keywords": "imap smtp passwort abgelehnt falsch login benutzername anmeldung cpanel plesk hosting eigene domain auth fehlgeschlagen password rejected wrong username",
       "steps": [
-        "Verwenden Sie das Passwort des Postfachs selbst. Das Login für Ihr Hosting-Konto oder Ihr Control Panel ist ein anderes Passwort, auch bei derselben Adresse.",
-        "Verwenden Sie die vollständige E-Mail-Adresse als Benutzernamen. Wenn Sie einen separaten Benutzernamen eingegeben haben, leeren Sie das Feld, sofern Ihr Hoster Ihnen keinen genannt hat.",
-        "Ist für das Postfach Zwei-Faktor-Authentifizierung aktiv, brauchen Sie ein App-Passwort statt des Postfachpassworts.",
-        "Passwort unbekannt? Setzen Sie es dort zurück, wo Ihr Hoster Ihre E-Mail-Adressen auflistet. In cPanel unter E-Mail-Konten, dann Verwalten. In Plesk unter den Mail-Konten.",
-        "Gleichen Sie den Servernamen mit den Einstellungen Ihres Anbieters ab. Unsere Anbieter-Anleitungen nennen geprüfte IMAP- und SMTP-Hosts."
+        "Nutzen Sie das Passwort des Postfachs, nicht das Login für Hosting oder Control Panel.",
+        "Nutzen Sie die vollständige E-Mail-Adresse als Benutzernamen.",
+        "Hat das Postfach eine Zwei-Faktor-Anmeldung, nutzen Sie ein App-Passwort.",
+        "Setzen Sie das Passwort dort zurück, wo Ihr Hoster die E-Mail-Konten auflistet (cPanel: E-Mail-Konten).",
+        "Gleichen Sie die Servernamen mit unseren Anbieter-Anleitungen ab."
       ],
       "links": [
-        { "label": "Allgemeine IMAP-Anleitung", "href": "/connect/imap" },
-        { "label": "Kompatibilität der Anbieter", "href": "/docs/providers" }
+        {
+          "label": "Allgemeine IMAP-Anleitung",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Kompatibilität der Anbieter",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
       "id": "app-password-required",
-      "title": "App-Passwort erforderlich (Yahoo, iCloud, Gmail, Zoho)",
-      "summary": "Diese Anbieter akzeptieren Ihr normales Passwort nicht aus einer Mail-App. Erstellen Sie ein App-Passwort und fügen Sie stattdessen dieses ein.",
+      "title": "App-Passwort nötig (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Diese Anbieter lehnen Ihr normales Passwort hier ab. Erstellen Sie ein App-Passwort und fügen Sie es ein.",
       "keywords": "app-passwort app-spezifisches anwendungsspezifisches passwort yahoo icloud apple gmail google zoho bestätigung in zwei schritten 2-step app password",
       "steps": [
-        "Yahoo: Öffnen Sie die Kontosicherheit und erstellen Sie dort ein App-Passwort. Es besteht aus 16 Kleinbuchstaben ohne Leerzeichen.",
-        "iCloud: Melden Sie sich bei account.apple.com an, öffnen Sie Anmeldung und Sicherheit, dann App-spezifische Passwörter. Es besteht aus 16 Kleinbuchstaben in vier Gruppen.",
-        "Gmail: Aktivieren Sie die Bestätigung in zwei Schritten und erstellen Sie dann eines unter myaccount.google.com/apppasswords. Ein Google-Workspace-Administrator kann App-Passwörter für die ganze Domain abschalten. Gmail lässt sich auch per Anmeldung mit Google verbinden.",
-        "Zoho: Erstellen Sie im Zoho-Konto unter Sicherheit ein anwendungsspezifisches Passwort und schalten Sie in den Einstellungen von Zoho Mail den IMAP-Zugriff ein. Er ist standardmäßig aus.",
-        "Fügen Sie das App-Passwort so ein, wie es angezeigt wird. Leerzeichen werden ignoriert."
+        "Yahoo: Kontosicherheit, dann App-Passwort generieren.",
+        "iCloud: account.apple.com, Anmeldung und Sicherheit, dann App-spezifische Passwörter.",
+        "Gmail: Bestätigung in zwei Schritten aktivieren, dann myaccount.google.com/apppasswords öffnen.",
+        "Zoho: ein anwendungsspezifisches Passwort erstellen und IMAP in den Einstellungen von Zoho Mail einschalten.",
+        "Fügen Sie es so ein, wie es angezeigt wird. Leerzeichen werden ignoriert."
       ],
       "links": [
-        { "label": "Anleitung für Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Anleitung für iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Anleitung für Gmail", "href": "/connect/gmail" },
-        { "label": "Anleitung für Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Anleitung für Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Anleitung für iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Anleitung für Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Anleitung für Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
       "id": "yandex-imap-disabled",
       "title": "Yandex: IMAP-Zugriff ist ausgeschaltet",
-      "summary": "Yandex lehnt jede Mail-App ab, bis der IMAP-Zugriff eingeschaltet ist, und die Ablehnung sieht genauso aus wie ein falsches Passwort.",
+      "summary": "Yandex lehnt Mail-Apps ab, bis IMAP an ist. Es sieht aus wie ein falsches Passwort.",
       "keywords": "yandex imap deaktiviert aus app-passwort mail-programme yandex 360 disabled app password",
       "steps": [
-        "Öffnen Sie in Yandex Mail die Einstellungen und dort den Bereich für Mail-Programme. Aktivieren Sie den IMAP-Zugriff sowie App-Passwörter und OAuth-Tokens. Beides ist nötig.",
-        "Öffnen Sie auf id.yandex.com den Bereich Sicherheit, dann App-Passwörter, und erstellen Sie eines vom Typ Mail. Yandex zeigt es nur einmal an.",
-        "Verbinden Sie sich mit Ihrer vollständigen Yandex-Adresse und diesem App-Passwort. Ihr Kontopasswort funktioniert hier nie, auch nicht ohne Zwei-Faktor-Authentifizierung."
+        "Öffnen Sie in Yandex Mail die Einstellungen, dann Mail-Programme.",
+        "Aktivieren Sie den IMAP-Zugriff sowie App-Passwörter und OAuth-Tokens.",
+        "Erstellen Sie auf id.yandex.com ein App-Passwort vom Typ Mail.",
+        "Verbinden Sie sich mit Ihrer vollständigen Adresse und diesem App-Passwort."
       ],
       "links": [
-        { "label": "Anleitung für Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Anleitung für Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -109,14 +131,20 @@
         "Bitten Sie den Assistenten zuerst, Ihre Postfächer aufzulisten. E-Mails werden abgerufen, wenn der Assistent danach fragt. Von allein kommt nichts an."
       ],
       "links": [
-        { "label": "Einrichtungsanleitungen für Clients", "href": "/docs/clients" },
-        { "label": "Fehlercodes", "href": "/docs#errors" }
+        {
+          "label": "Einrichtungsanleitungen für Clients",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Fehlercodes",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
       "id": "usage-limit-reached",
       "title": "Nutzungslimit erreicht",
-      "summary": "Ein Free-Workspace hat 150 E-Mail-Aktionen pro Kalendermonat. Sind sie aufgebraucht, werden E-Mail-Aktionen bis zum 1. des nächsten Monats (UTC) abgelehnt.",
+      "summary": "Free enthält 150 E-Mail-Aktionen pro Monat. Danach warten Aktionen bis zum 1. (UTC).",
       "keywords": "nutzungslimit kontingent obergrenze 150 aktionen free tarif kostenlos abgelehnt zurückgesetzt usage limit quota",
       "steps": [
         "Wie viele Aktionen Sie verbraucht haben, sehen Sie im Dashboard unter Nutzung.",
@@ -126,47 +154,67 @@
         "Workspaces, die vor dem 2026-09-12 erstellt wurden, werden nicht gezählt. Wenn Sie bei einem davon das Limit sehen, schreiben Sie uns."
       ],
       "links": [
-        { "label": "FAQ zu Preisen", "href": "/pricing#faq" },
-        { "label": "Ratenlimits", "href": "/docs#rate-limits" }
+        {
+          "label": "FAQ zu Preisen",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Ratenlimits",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
       "id": "change-or-cancel-plan",
       "title": "Tarif wechseln oder kündigen",
-      "summary": "Upgraden, downgraden oder kündigen Sie jederzeit in den Einstellungen im Dashboard.",
+      "summary": "Wechseln oder kündigen Sie jederzeit in den Einstellungen unter Abrechnung & Tarif.",
       "keywords": "tarif upgrade downgrade wechseln kündigen abonnement abrechnung rechnung rückerstattung stripe portal zahlung karte plan cancel",
       "steps": [
-        "Öffnen Sie im Dashboard die Einstellungen. Der Bereich Abrechnung zeigt Ihren Tarif und die Tarife, zu denen Sie wechseln können.",
-        "Zum Kündigen, Ändern der Karte oder Herunterladen von Rechnungen öffnen Sie im selben Bereich das Abrechnungsportal. Es wird von Stripe betrieben.",
-        "Eine Kündigung beendet die nächste Verlängerung. Sie behalten, was Sie bezahlt haben, bis zum Ende des laufenden Zeitraums und wechseln dann zu Free mit einem verbundenen Postfach.",
-        "Wenn die erste Abbuchung eines neuen Abonnements nicht Ihren Erwartungen entsprach, schreiben Sie uns innerhalb von 14 Tagen, und wir erstatten sie vollständig. Angebrochene Zeiträume werden nicht erstattet."
+        "Öffnen Sie die Einstellungen, dann Abrechnung & Tarif.",
+        "Wählen Sie Abrechnung verwalten, um zu kündigen, die Karte zu ändern oder Rechnungen abzurufen.",
+        "Eine Kündigung beendet die Verlängerung. Ihr Tarif bleibt bis zum Ende des Zeitraums.",
+        "Unerwartete erste Abbuchung? Schreiben Sie uns innerhalb von 14 Tagen, und wir erstatten sie vollständig."
       ],
       "links": [
-        { "label": "Einstellungen im Dashboard", "href": "/dashboard/settings" },
-        { "label": "Tarife und Preise", "href": "/pricing" }
+        {
+          "label": "Einstellungen im Dashboard",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Tarife und Preise",
+          "href": "/pricing"
+        }
       ]
     },
     {
       "id": "disconnect-or-delete",
       "title": "Postfach trennen oder Konto löschen",
-      "summary": "Entfernen Sie ein Postfach, einen Workspace oder das ganze Konto im Dashboard.",
+      "summary": "Entfernen Sie ein Postfach, einen Workspace oder Ihr ganzes Konto im Dashboard.",
       "keywords": "trennen entfernen postfach löschen konto workspace schließen gefahrenzone disconnect delete account danger zone",
       "steps": [
-        "Um ein Postfach zu trennen, öffnen Sie im Dashboard die Postfächer, wählen es aus und klicken auf Trennen. Das gespeicherte Passwort oder Token wird entfernt.",
-        "Um einen Workspace zu schließen, öffnen Sie die Einstellungen, dann die Gefahrenbereich, und wählen Workspace löschen. Ihr Konto und Ihre anderen Workspaces bleiben erhalten.",
-        "Um alles zu löschen, öffnen Sie die Einstellungen, dann die Gefahrenbereich, und wählen Konto löschen. Sie bestätigen durch Eingabe Ihrer E-Mail-Adresse, und es lässt sich nicht rückgängig machen.",
-        "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort, ohne Erstattung für den Rest des Zeitraums. Wenn Sie die bezahlte Zeit behalten möchten, kündigen Sie zuerst im Abrechnungsportal und löschen das Konto am Ende des Zeitraums."
+        "Postfach: Wählen Sie unter Postfächer in seiner Zeile Trennen. Die gespeicherten Zugangsdaten werden entfernt.",
+        "Workspace: Wählen Sie in den Einstellungen unter Workspace die Option Workspace löschen.",
+        "Konto: Wählen Sie in den Einstellungen unter Gefahrenbereich die Option Konto löschen. Das lässt sich nicht rückgängig machen.",
+        "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort, ohne Erstattung.",
+        "Um die bezahlte Zeit zu nutzen, kündigen Sie zuerst und löschen später."
       ],
       "links": [
-        { "label": "Postfächer im Dashboard", "href": "/dashboard/inboxes" },
-        { "label": "Einstellungen im Dashboard", "href": "/dashboard/settings" }
+        {
+          "label": "Postfächer im Dashboard",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Einstellungen im Dashboard",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Schreiben Sie uns",
     "lead": "Jede Nachricht wird von einem Menschen gelesen und per E-Mail beantwortet.",
-    "emailAlt": "Lieber per E-Mail? Schreiben Sie an {email}."
+    "emailLine": "Schreiben Sie an {email} oder senden Sie hier eine Nachricht.",
+    "openForm": "Nachricht schreiben"
   },
   "categories": {
     "connect": "Ein Postfach verbinden",

@@ -575,5 +575,9 @@
     "resetBody": "Nur für interne Konten. Setzt den Einrichtungsfortschritt und die Markierungen für den ersten Aufruf in diesem Workspace zurück, damit Sie die Einrichtung erneut durchlaufen können. Postfächer und Schlüssel bleiben verbunden.",
     "resetButton": "Einrichtung zurücksetzen",
     "resetFailed": "Die Einrichtung konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut."
+  },
+  "help": {
+    "loading": "Hilfe wird geladen…",
+    "loadError": "Hilfe konnte nicht geladen werden. Laden Sie die Seite neu oder schreiben Sie an support@mcpemails.com."
   }
 }
