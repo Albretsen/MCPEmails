@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Btn } from '../Primitives';
 import { articleLinkHref, SUPPORT_EMAIL } from '@/lib/support/help-links.mjs';
 import HelpSearch from './HelpSearch';
@@ -120,27 +120,41 @@ function ArticleFeedback({ articleId, locale, copy }) {
 }
 
 /**
- * The section list. Marks the section nearest the top of the viewport. The
- * observer's root is the viewport; the dashboard scrolls `.page`, whose box is
- * the viewport's lower part, so the same margins work in both places.
+ * The section list. Marks the last section whose heading has scrolled past a
+ * line near the top of the viewport (the first section until then, the last
+ * one once the page is scrolled to the end). Scroll events are caught in the
+ * capture phase, so this works for the marketing page (window scrolls) and
+ * the dashboard (`.page` scrolls) alike.
  */
 function SectionNav({ sections, label }) {
   const [active, setActive] = useState(sections[0]?.id ?? null);
-  const visible = useRef(new Map());
 
   useEffect(() => {
-    if (typeof IntersectionObserver !== 'function') return undefined;
-    const map = visible.current;
-    const observer = new IntersectionObserver((entries) => {
-      for (const e of entries) map.set(e.target.id, e.isIntersecting);
-      const first = sections.find((s) => map.get(s.id));
-      if (first) setActive(first.id);
-    }, { rootMargin: '-80px 0px -55% 0px' });
-    for (const s of sections) {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const line = 140;
+      let current = sections[0]?.id ?? null;
+      for (const s of sections) {
+        const el = document.getElementById(s.id);
+        if (el && el.getBoundingClientRect().top <= line) current = s.id;
+      }
+      // Scrolled to the end: the last section may be too short to reach the line.
+      const last = document.getElementById(sections[sections.length - 1]?.id);
+      if (last && last.getBoundingClientRect().bottom <= window.innerHeight + 2) current = last.id;
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+    return () => {
+      document.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('resize', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [sections]);
 
   return (
@@ -258,10 +272,11 @@ export default function HelpCenter({
   const contact = copy.contact ?? {};
   const [emailBefore, emailAfter] = splitOn(contact.emailLine, '{email}');
   const email = SUPPORT_EMAIL;
-  const sections = [
+  const contactTitle = copy.nav?.contact ?? contact.heading;
+  const sections = useMemo(() => [
     ...categories.map((c) => ({ id: `help-cat-${c.area}`, title: c.title })),
-    { id: 'contact', title: copy.nav?.contact ?? contact.heading },
-  ];
+    { id: 'contact', title: contactTitle },
+  ], [categories, contactTitle]);
 
   return (
     <div className={`help-center help-center-${variant}`}>

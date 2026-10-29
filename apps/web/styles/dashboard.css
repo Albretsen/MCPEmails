@@ -124,8 +124,7 @@ body { background: var(--bg-page); }
 }
 .topbar .crumbs { font-family: var(--font-sans); font-size: 14px; color: var(--fg-3); display:flex; align-items:center; gap:8px; }
 .topbar .crumbs .here { color: var(--fg-1); font-weight: 600; white-space: nowrap; }
-.topbar .crumbs > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.topbar .crumbs { min-width: 0; flex-shrink: 1; }
+.topbar .crumbs > span:first-child { white-space: nowrap; }
 .topbar .crumbs .sep { color: var(--fg-4); }
 .topbar .grow { flex: 1; }
 .topbar .search {
