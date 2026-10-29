@@ -11,7 +11,7 @@
     "adminConsentGrantedAction": "Conectar Outlook",
     "adminConsentFailed": "Microsoft no confirmó la aprobación, así que Outlook sigue bloqueado. Para aprobarlo hace falta una cuenta de administrador de Microsoft 365; envía el enlace de aprobación a tu administrador de TI.",
     "adminConsentFailedAction": "Obtener el enlace de aprobación",
-    "outlookEmailMissing": "Tu cuenta de Microsoft no nos devolvió ninguna dirección de correo, así que no pudimos conectarla. Prueba con otra cuenta de Microsoft o escribe a soporte en hello@mcpemails.com.",
+    "outlookEmailMissing": "Tu cuenta de Microsoft no nos devolvió ninguna dirección de correo, así que no pudimos conectarla. Prueba con otra cuenta de Microsoft o escribe a soporte en support@mcpemails.com.",
     "inboxExistsOtherProvider": "Esa dirección ya está conectada con otro método (por ejemplo IMAP, Gmail u Outlook), así que no hemos tocado esa bandeja. Si quieres cambiar cómo está conectada, elimina primero esa bandeja y vuelve a conectarla.",
     "outlookNoMailbox": "Esta cuenta de Microsoft no tiene buzón de Outlook (Exchange Online), así que no hay nada que conectar. Es habitual en cuentas de administrador sin licencia de Exchange o cuando el correo de la organización está alojado en otro sitio. Si tu correo está en otro servidor, conecta la dirección por IMAP.",
     "connectionFailed": "La conexión de la bandeja de entrada falló ({error}). Inténtalo de nuevo.",
@@ -551,7 +551,7 @@
     "timed_outBody": "La aprobación tardó demasiado o terminó en otro navegador. Abre el enlace de aprobación de nuevo en este navegador.",
     "unavailableTitle": "Algo salió mal",
     "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
-    "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
+    "closeHint": "¿Preguntas? Escribe a support@mcpemails.com.",
     "openApp": "Abrir MCPEmails"
   },
   "seasonal": {

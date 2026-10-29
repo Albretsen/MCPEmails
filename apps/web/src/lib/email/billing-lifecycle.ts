@@ -72,7 +72,7 @@
  *   LIFECYCLE_EMAIL_FROM  OPTIONAL, read via lifecycleFrom() in
  *                         src/lib/email/lifecycle.ts. The win-back sender.
  *   CANCEL_REPLY_TO       OPTIONAL. Where "what stopped working for you?" lands.
- *                         Default: hello@mcpemails.com.
+ *                         Default: support@mcpemails.com.
  *
  * The win-backs additionally require the recipient's `users.unsubscribe_token`
  * in the payload. Without one, composition returns null and nothing is sent:
@@ -108,8 +108,9 @@ import { issueFeedbackToken } from '@/lib/billing/feedback-token';
 // Configuration
 // ---------------------------------------------------------------------------
 
-const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_BILLING_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
+// Replies and "write to" links go to the support mailbox; the sender stays hello@.
+const SUPPORT_ADDRESS = 'support@mcpemails.com';
+const DEFAULT_BILLING_FROM = `MCPEmails <hello@mcpemails.com>`;
 const DEFAULT_APP_URL = 'https://mcpemails.com';
 
 function appUrl(): string {

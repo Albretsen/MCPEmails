@@ -11,7 +11,7 @@
     "adminConsentGrantedAction": "Koble til Outlook",
     "adminConsentFailed": "Microsoft bekreftet ikke godkjenningen, så Outlook er fortsatt blokkert. Godkjenningen krever en administratorkonto i Microsoft 365; send godkjenningslenken til IT-ansvarlig.",
     "adminConsentFailedAction": "Få godkjenningslenken",
-    "outlookEmailMissing": "Microsoft-kontoen din ga oss ingen e-postadresse, så vi kunne ikke koble den til. Prøv en annen Microsoft-konto, eller kontakt support på hello@mcpemails.com.",
+    "outlookEmailMissing": "Microsoft-kontoen din ga oss ingen e-postadresse, så vi kunne ikke koble den til. Prøv en annen Microsoft-konto, eller kontakt support på support@mcpemails.com.",
     "inboxExistsOtherProvider": "Den adressen er allerede koblet til med en annen metode (for eksempel IMAP, Gmail eller Outlook), så vi rørte ikke den innboksen. Vil du bytte tilkoblingsmetode, må du først fjerne den innboksen og så koble den til på nytt.",
     "outlookNoMailbox": "Denne Microsoft-kontoen har ingen Outlook-postkasse (Exchange Online), så det er ingenting å koble til. Det er vanlig for administratorkontoer uten Exchange-lisens, eller når organisasjonens e-post ligger hos en annen leverandør. Ligger e-posten din på en annen server, kobler du adressen til med IMAP i stedet.",
     "connectionFailed": "Tilkobling av innboks mislyktes ({error}). Prøv igjen.",
@@ -551,7 +551,7 @@
     "timed_outBody": "Godkjenningen tok for lang tid eller ble fullført i en annen nettleser. Åpne godkjenningslenken igjen i denne nettleseren.",
     "unavailableTitle": "Noe gikk galt",
     "unavailableBody": "Vi kunne ikke starte godkjenningen. Prøv igjen om noen minutter.",
-    "closeHint": "Spørsmål? Skriv til hello@mcpemails.com.",
+    "closeHint": "Spørsmål? Skriv til support@mcpemails.com.",
     "openApp": "Åpne MCPEmails"
   },
   "seasonal": {

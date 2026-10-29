@@ -67,7 +67,7 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
  * /pricing would both mislead (paying more does not buy actions) and waste
  * the trip.
  */
-export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
+export const USAGE_LIMIT_SUPPORT_EMAIL = "support@mcpemails.com";
 
 /**
  * Days after signup during which a Free workspace's actions are not counted.

@@ -20,7 +20,7 @@ import { fill } from '@/lib/status/content.mjs';
  * however long the cache holds it, and lets the reader judge the freshness.
  */
 /** Same address the site footer publishes. Kept in sync by hand, one place each. */
-const CONTACT_EMAIL = 'hello@mcpemails.com';
+const CONTACT_EMAIL = 'support@mcpemails.com';
 
 export default function StatusView({ locale, content, snapshot }) {
   const c = content;

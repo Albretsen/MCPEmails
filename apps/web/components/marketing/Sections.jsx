@@ -1410,7 +1410,7 @@ function LanguageSwitcher({ locales = routing.locales }) {
 
 // Public MCP endpoint shown across the site (canonical apex host).
 const FOOTER_MCP_URL = "https://mcpemails.com/api/mcp";
-const FOOTER_CONTACT_EMAIL = "hello@mcpemails.com";
+const FOOTER_CONTACT_EMAIL = "support@mcpemails.com";
 
 /* A single copyable contact row in the footer (email or MCP endpoint).
    Renders the value, an optional link (mailto), and a copy-to-clipboard button. */

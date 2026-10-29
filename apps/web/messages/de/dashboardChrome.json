@@ -11,7 +11,7 @@
     "adminConsentGrantedAction": "Outlook verbinden",
     "adminConsentFailed": "Microsoft hat die Genehmigung nicht bestätigt, Outlook ist also weiterhin blockiert. Für die Genehmigung ist ein Administratorkonto für Microsoft 365 nötig. Senden Sie den Genehmigungslink an Ihre IT-Abteilung.",
     "adminConsentFailedAction": "Genehmigungslink holen",
-    "outlookEmailMissing": "Ihr Microsoft-Konto hat uns keine E-Mail-Adresse übermittelt, daher konnten wir es nicht verbinden. Versuchen Sie ein anderes Microsoft-Konto oder wenden Sie sich an den Support unter hello@mcpemails.com.",
+    "outlookEmailMissing": "Ihr Microsoft-Konto hat uns keine E-Mail-Adresse übermittelt, daher konnten wir es nicht verbinden. Versuchen Sie ein anderes Microsoft-Konto oder wenden Sie sich an den Support unter support@mcpemails.com.",
     "inboxExistsOtherProvider": "Diese Adresse ist bereits über eine andere Methode verbunden (zum Beispiel IMAP, Gmail oder Outlook). Wir haben dieses Postfach daher nicht verändert. Wenn Sie die Verbindungsart wechseln möchten, entfernen Sie das Postfach zuerst und verbinden es dann neu.",
     "outlookNoMailbox": "Dieses Microsoft-Konto hat kein Outlook-Postfach (Exchange Online), es gibt also nichts zu verbinden. Das ist bei Admin-Konten ohne Exchange-Lizenz üblich oder wenn die E-Mails der Organisation woanders gehostet werden. Liegen Ihre E-Mails auf einem anderen Server, verbinden Sie die Adresse stattdessen per IMAP.",
     "connectionFailed": "Verbindung des Postfachs fehlgeschlagen ({error}). Bitte versuchen Sie es erneut.",
@@ -551,7 +551,7 @@
     "timed_outBody": "Die Genehmigung hat zu lange gedauert oder wurde in einem anderen Browser abgeschlossen. Öffnen Sie den Genehmigungslink erneut in diesem Browser.",
     "unavailableTitle": "Etwas ist schiefgelaufen",
     "unavailableBody": "Wir konnten die Genehmigung nicht starten. Bitte versuchen Sie es in ein paar Minuten erneut.",
-    "closeHint": "Fragen? Schreiben Sie an hello@mcpemails.com.",
+    "closeHint": "Fragen? Schreiben Sie an support@mcpemails.com.",
     "openApp": "MCPEmails öffnen"
   },
   "seasonal": {

@@ -76,8 +76,9 @@ import { euroizeAmounts } from '@/lib/stripe/eur-prices';
 // Configuration
 // ---------------------------------------------------------------------------
 
-const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
+// Replies and "write to" links go to the support mailbox; the sender stays hello@.
+const SUPPORT_ADDRESS = 'support@mcpemails.com';
+const DEFAULT_FROM = `MCPEmails <hello@mcpemails.com>`;
 const DEFAULT_APP_URL = 'https://mcpemails.com';
 
 function appUrl(): string {

@@ -569,7 +569,7 @@ test('a Stripe-keyed row keeps the original (template, scope_key) key', () => {
   );
 });
 
-test('a workspace-keyed row sends on the transactional path: hello@, no List-Unsubscribe, workspace key', async () => {
+test('a workspace-keyed row sends on the transactional path: hello@ sender, support@ reply-to, no List-Unsubscribe, workspace key', async () => {
   const calls: Array<{ headers: Headers; body: Record<string, unknown> }> = [];
   const realFetch = globalThis.fetch;
   process.env.RESEND_API_KEY = 'test_key';
@@ -591,7 +591,7 @@ test('a workspace-keyed row sends on the transactional path: hello@, no List-Uns
     assert.equal(calls.length, 1, 'one attempt, never a retry');
     const [call] = calls;
     assert.equal(call.body.from, 'MCPEmails <hello@mcpemails.com>');
-    assert.equal(call.body.reply_to, 'hello@mcpemails.com');
+    assert.equal(call.body.reply_to, 'support@mcpemails.com');
     assert.equal(call.body.to, TO);
     assert.equal(call.body.subject, '150 of 150 email actions used, paused until 2026-10-01');
     assert.ok(String(call.body.text).length > 120, 'the plain-text part must be present');
@@ -1072,6 +1072,6 @@ test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branc
   assert.equal(out.length, 240);
   assert.equal(
     createHash('sha256').update(JSON.stringify(out)).digest('hex'),
-    '1ff6cec493bd715f37316807c860cc1befba91a603cdc2a4e7cd5214768672e9',
+    '91b08191b55e5363312decd7c8e90daa5f2da7cae126b4f5162288674894f31e',
   );
 });

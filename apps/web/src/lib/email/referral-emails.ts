@@ -31,8 +31,9 @@ import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
 import { appUrl } from '@/lib/email/lifecycle';
 import { p, shell } from '@/lib/email/billing-lifecycle';
 
-const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
+// Replies and "write to" links go to the support mailbox; the sender stays hello@.
+const SUPPORT_ADDRESS = 'support@mcpemails.com';
+const DEFAULT_FROM = `MCPEmails <hello@mcpemails.com>`;
 
 export type ReferralEmailTemplate =
   | 'referral_referrer_credit'

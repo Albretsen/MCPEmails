@@ -48,6 +48,7 @@ const LINKEDIN_URL = 'https://www.linkedin.com/in/asgeir-albretsen/';
 const REPO_URL = 'https://github.com/Albretsen/MCPEmails';
 const SELFHOST_GUIDE_URL = 'https://github.com/Albretsen/MCPEmails/tree/main/self-host';
 const CONTACT_EMAIL = 'hello@mcpemails.com';
+const SUPPORT_EMAIL = 'support@mcpemails.com';
 const SECURITY_EMAIL = 'security@mcpemails.com';
 
 /**
@@ -104,6 +105,7 @@ function aboutJsonLd(locale, { title, description }) {
         logo: `${APP_URL}/favicon.svg`,
         founder: { '@id': personId },
         email: CONTACT_EMAIL,
+        contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: SUPPORT_EMAIL },
         // Norwegian organisation number, as registered in Foretaksregisteret.
         // No vatID until the MVA registration of Albretsen AS is confirmed;
         // then add vatID: 'NO938702373MVA'.
@@ -144,7 +146,7 @@ export default async function AboutPage({ params }) {
     terms: (c) => <Link href="/terms">{c}</Link>,
     privacy: (c) => <Link href="/privacy">{c}</Link>,
     security: (c) => <Link href="/security">{c}</Link>,
-    hello: (c) => <a href={`mailto:${CONTACT_EMAIL}`}>{c}</a>,
+    hello: (c) => <a href={`mailto:${SUPPORT_EMAIL}`}>{c}</a>,
     securityEmail: (c) => <a href={`mailto:${SECURITY_EMAIL}`}>{c}</a>,
     github: extLink(GITHUB_URL),
     repo: extLink(REPO_URL),

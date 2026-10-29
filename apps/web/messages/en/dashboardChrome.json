@@ -11,7 +11,7 @@
     "adminConsentGrantedAction": "Connect Outlook",
     "adminConsentFailed": "Microsoft did not confirm the approval, so Outlook is still blocked. Approving needs a Microsoft 365 administrator account; send the approval link to your IT admin.",
     "adminConsentFailedAction": "Get the approval link",
-    "outlookEmailMissing": "Your Microsoft account did not give us an email address, so we could not connect it. Try a different Microsoft account, or contact support at hello@mcpemails.com.",
+    "outlookEmailMissing": "Your Microsoft account did not give us an email address, so we could not connect it. Try a different Microsoft account, or contact support at support@mcpemails.com.",
     "inboxExistsOtherProvider": "That address is already connected with a different method (for example IMAP, Gmail or Outlook), so we left that inbox untouched. If you want to switch how it is connected, remove that inbox first and then connect it again.",
     "outlookNoMailbox": "This Microsoft account has no Outlook mailbox (Exchange Online), so there is nothing to connect. This is common for admin accounts without an Exchange licence, or when the organisation's mail is hosted elsewhere. If your mail lives on another server, connect the address with IMAP instead.",
     "connectionFailed": "Inbox connection failed ({error}). Please try again.",
@@ -551,7 +551,7 @@
     "timed_outBody": "The approval took too long or finished in a different browser. Open the approval link again in this browser.",
     "unavailableTitle": "Something went wrong",
     "unavailableBody": "We could not start the approval. Please try again in a few minutes.",
-    "closeHint": "Questions? Email hello@mcpemails.com.",
+    "closeHint": "Questions? Email support@mcpemails.com.",
     "openApp": "Open MCPEmails"
   },
   "seasonal": {

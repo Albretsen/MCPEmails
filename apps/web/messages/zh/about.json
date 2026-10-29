@@ -58,7 +58,7 @@
     "title": "联系方式",
     "p1": "这里没有客服队列。你的消息直接到我这里，由我回复。",
     "points": [
-      "<hello>hello@mcpemails.com</hello>：产品、账号、账单或 bug 相关问题。一般一个工作日内回复。",
+      "<hello>support@mcpemails.com</hello>：产品、账号、账单或 bug 相关问题。一般一个工作日内回复。",
       "<securityEmail>security@mcpemails.com</securityEmail>：漏洞报告。24 小时内确认收到。披露流程（含安全港条款）见<security>安全页面</security>。",
       "我在挪威卑尔根。北美时间当天较晚发来的消息，我通常会在欧洲时间次日上午回复。"
     ]
