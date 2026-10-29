@@ -193,6 +193,7 @@ const EM_DASH_CLEAN_SLUGS = [
   'connect-chatgpt-to-email',
   'connect-claude-to-email',
   'connect-claude-to-outlook-com-hotmail',
+  'connect-claude-to-apple-mail',
   'connect-gmail-to-claude',
   'connect-outlook-microsoft-365-ai-agent-mcp',
   'manage-multiple-email-accounts-with-ai',
