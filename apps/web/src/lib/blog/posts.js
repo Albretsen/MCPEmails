@@ -60,6 +60,7 @@ import claudeCustomConnectorsExplained from './posts/claude-custom-connectors-ex
 import whatIsAnAppPassword from './posts/what-is-an-app-password';
 import scheduleEmailWithClaudeAndChatgpt from './posts/schedule-email-with-claude-and-chatgpt';
 import connectClaudeOutlookComHotmail from './posts/connect-claude-to-outlook-com-hotmail';
+import connectClaudeToAppleMail from './posts/connect-claude-to-apple-mail';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -101,6 +102,7 @@ const MODULE_POSTS = [
   whatIsAnAppPassword,
   scheduleEmailWithClaudeAndChatgpt,
   connectClaudeOutlookComHotmail,
+  connectClaudeToAppleMail,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -212,6 +214,7 @@ const RELEVANCE_ORDER = [
   'multiple-email-accounts-in-claude-and-chatgpt',
   'can-claude-read-my-email',
   'connect-email-to-ai-agent-under-2-minutes',
+  'connect-claude-to-apple-mail',
   'claude-custom-connectors-explained',
   // Multi-mailbox is the buyer profile: every paying workspace to date runs two
   // or more inboxes, and inbox COUNT is the value metric the plans are priced
