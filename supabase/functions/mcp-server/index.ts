@@ -382,6 +382,7 @@ import {
   heldSendSnapshot,
   includeSignatureForSend,
   plainTextBodyToHtml,
+  signatureHtmlBlock,
   signatureHtmlToText,
   signatureOutcome,
   type SignatureOutcome,
@@ -14397,7 +14398,7 @@ async function replyImapMessage(
       const replySubject = /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`;
       const origFromHeader = decodeEncodedWords(getHeader(h, "from") ?? "");
       const origDateHeader = getHeader(h, "date") ?? "";
-      const origBodyText = original.text ?? (original.html ? stripHtmlToText(original.html) : "");
+      const origBodyText = preferredBodyText(original.text, original.html, { keepLinks: false }) ?? "";
 
       const fromAddrs = parseAddressHeader(getHeader(h, "from"));
       const toAddrs = parseAddressHeader(getHeader(h, "to"));
@@ -17280,7 +17281,7 @@ function applyReplyForwardSignature<
   }
 
   const sigTextBlock = `\n\n-- \n${sig.text}`;
-  const sigHtmlBlock = `\n<div class="mcpemails-signature">${sig.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(sig.html);
 
   // For a forward with no intro the signature becomes the only new text; the
   // leading blank lines are still fine ahead of the forwarded-message block.
@@ -30784,7 +30785,7 @@ async function executeCreateReplyDraft(
         references = [getHeader(headers, "references"), inReplyTo].filter(Boolean).join(" ");
         originalFrom = decodeEncodedWords(getHeader(headers, "from") ?? "");
         originalDate = getHeader(headers, "date") ?? "";
-        originalBody = parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html) : "");
+        originalBody = preferredBodyText(parsed.text, parsed.html, { keepLinks: false }) ?? "";
       } finally { await client.logout().catch(() => {}); }
     }
     if (!to.length) throw new Error("reply_recipients_not_found");

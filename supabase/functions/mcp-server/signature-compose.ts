@@ -45,6 +45,20 @@ export const SIGNATURE_TEXT_DELIMITER = "\n\n-- \n";
 /** The class on the wrapper div that marks our own HTML signature block. */
 export const SIGNATURE_HTML_CLASS = "mcpemails-signature";
 
+/**
+ * The HTML signature block as it is appended after a body: an empty line, then
+ * the wrapper div. The text part puts a blank line before `-- `; without the
+ * spacer the HTML part ran the signature straight under the last line of the
+ * message ("Best,\nAsgeir" with the logo on the next line), which is what most
+ * clients render. `<div><br></div>` is one empty line whether the body ends in
+ * inline text or in a block, which a bare `<br>` is not. The wrapper's opening
+ * tag stays exact: html-text-merge.ts and `storedSignatureBlockOf` find it by
+ * string.
+ */
+export function signatureHtmlBlock(innerHtml: string): string {
+  return `\n<div><br></div>\n<div class="${SIGNATURE_HTML_CLASS}">${innerHtml}</div>`;
+}
+
 /** Minimal HTML-escape for deriving HTML from plain text. */
 export function escapeSignatureHtml(text: string): string {
   return text
@@ -231,7 +245,7 @@ export function applySignature<T extends { textBody: string; htmlBody?: string }
   if (!sig) return params;
 
   const sigTextBlock = `${SIGNATURE_TEXT_DELIMITER}${sig.text}`;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${sig.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(sig.html);
 
   if (params.htmlBody && params.htmlBody.trim()) {
     // Caller already supplied rich HTML — append to both parts so the
@@ -483,7 +497,7 @@ export function rebuildHtmlKeepingSignature(
 ): string | null {
   const split = splitAtSignature(text, inbox, storedHtml, storedText);
   if (!split) return null;
-  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
+  const sigHtmlBlock = signatureHtmlBlock(split.html);
   const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";
   return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
 }

@@ -16,7 +16,7 @@
 //
 // Run: deno test supabase/functions/mcp-server/
 // ---------------------------------------------------------------------------
-import { assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   applySignature,
   applySignatureOnce,
@@ -74,9 +74,19 @@ Deno.test("the HTML part a text-only send synthesizes IS plainTextBodyToHtml", (
   const sig = composeSignatureBlocks(TEXT_SIG_INBOX)!;
   assertEquals(
     params.htmlBody,
-    `${plainTextBodyToHtml("Hello & goodbye\nline two")}\n` +
+    `${plainTextBodyToHtml("Hello & goodbye\nline two")}\n<div><br></div>\n` +
       `<div class="${SIGNATURE_HTML_CLASS}">${sig.html}</div>`,
   );
+});
+
+Deno.test("the HTML signature sits one empty line below the message, like the text part", () => {
+  // Found on a real reply 2026-10-29: the text part had "Asgeir\n\n-- \n", the
+  // HTML part ran the signature straight under "Asgeir".
+  const params = applySignature<{ textBody: string; htmlBody?: string }>({ textBody: "Best,\nAsgeir" }, RICH_SIG_INBOX);
+  assert(params.textBody.includes("Asgeir\n\n-- \n"));
+  assert(params.htmlBody!.includes(`Asgeir\n<div><br></div>\n<div class="${SIGNATURE_HTML_CLASS}">`));
+  // Still found by the code that keeps a stored signature on edit.
+  assertEquals(storedSignatureBlockOf(params.htmlBody), composeSignatureBlocks(RICH_SIG_INBOX)!.html);
 });
 
 Deno.test("a signature lands exactly once in each part of a fresh send", () => {
