@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYNTHETIC_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The IMAP-connected mailbox the health-check steps (initialize/tools_list/
@@ -24,7 +24,7 @@ type StepName = "initialize" | "tools_list" | "inbox_list" | "email_read" | "int
 type FailureClass = "public_endpoint" | "authentication" | "mcp_protocol" | "database" | "provider_read" | "internal";
 type StepResult = { name: StepName; status: "succeeded" | "failed"; duration_ms: number; error_code?: string };
 type Incident = { id: string; fingerprint: string; should_alert?: boolean; should_recover?: boolean };
-type McpResponse = { result?: { isError?: boolean; structuredContent?: { inboxes?: Array<{ inbox_id?: unknown; email_address?: unknown }> } }; error?: { code?: unknown; data?: unknown } };
+type McpResponse = { result?: { isError?: boolean; _meta?: Record<string, unknown>; structuredContent?: { inboxes?: Array<{ inbox_id?: unknown; email_address?: unknown }> } }; error?: { code?: unknown; data?: unknown } };
 
 // Codes raised by callMcp when no MCP response ever came back. These describe
 // the transport, not the server's behaviour, so they classify as
@@ -32,6 +32,13 @@ type McpResponse = { result?: { isError?: boolean; structuredContent?: { inboxes
 // in record_synthetic_monitor_failure and therefore needs two consecutive
 // failures before it pages. A single hung request is not an incident.
 const TRANSPORT_FAILURE_CODES = new Set(["public_endpoint", "request_timeout", "endpoint_unreachable"]);
+
+// A tool result with isError: true whose `_meta` names no error code. The
+// server records the real code (auth_failed, connection_limit, ...) in
+// activity_log, so a failed email_read looks it up there instead of storing a
+// generic code: on 2026-10-29 a one-off Migadu login refusal reached the
+// dashboard as `unexpected_response`.
+const TOOL_ERROR_CODE = "tool_error";
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -41,7 +48,17 @@ function safeCode(value: unknown): string {
   return typeof value === "string" && /^[a-z0-9_-]{1,80}$/i.test(value) ? value : "unexpected_response";
 }
 
+/** The `error_code` of the first namespaced `_meta` entry that carries one. */
+function metaErrorCode(meta: Record<string, unknown> | undefined): string | null {
+  for (const value of Object.values(meta ?? {})) {
+    const code = typeof value === "object" && value !== null ? (value as { error_code?: unknown }).error_code : undefined;
+    if (typeof code === "string") return safeCode(code);
+  }
+  return null;
+}
+
 function mcpFailureCode(body: McpResponse | null): string {
+  if (!body?.error && body?.result?.isError) return metaErrorCode(body.result._meta) ?? TOOL_ERROR_CODE;
   if (body?.error?.code === -32602) {
     // JSON-schema paths are controlled field names, not request values.
     const rawData = body.error.data as { errors?: Array<{ path?: unknown }> } | Array<{ path?: unknown }> | undefined;
@@ -78,6 +95,27 @@ async function callMcp(apiKey: string, id: number, method: string, params?: Reco
   if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "authentication" : "public_endpoint");
   if (!body || body.error || body.result?.isError) throw new Error(mcpFailureCode(body));
   return body;
+}
+
+/**
+ * The error code the server logged for a failed call on `inboxId` since
+ * `sinceMs`, or null. The activity_log row can land just after the response,
+ * so this looks a few times before giving up.
+ */
+async function loggedErrorCode(supabase: SupabaseClient, inboxId: string, sinceMs: number): Promise<string | null> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 500));
+    const { data } = await supabase.from("activity_log")
+      .select("error_code")
+      .eq("inbox_id", inboxId)
+      .eq("status", "error")
+      .gte("created_at", new Date(sinceMs).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const code = data?.[0]?.error_code;
+    if (typeof code === "string" && code) return safeCode(code);
+  }
+  return null;
 }
 
 function findInboxId(response: McpResponse, emailAddress: string): string | null {
@@ -130,14 +168,17 @@ Deno.serve(async (request) => {
     failedStep = step;
     steps.push({ name: step, status: "failed", duration_ms: 0, error_code: safeCode(code) });
   };
-  const runStep = async (name: Exclude<StepName, "internal">, method: string, params?: Record<string, unknown>): Promise<McpResponse | null> => {
+  const runStep = async (name: Exclude<StepName, "internal">, method: string, params?: Record<string, unknown>, inboxId?: string): Promise<McpResponse | null> => {
     const stepStarted = Date.now();
     try {
       const result = await callMcp(apiKey!, steps.length + 1, method, params);
       steps.push({ name, status: "succeeded", duration_ms: Date.now() - stepStarted });
       return result;
     } catch (error) {
-      const code = error instanceof Error ? error.message : "internal";
+      let code = error instanceof Error ? error.message : "internal";
+      // Clock skew between this isolate and the database is small; a second of
+      // slack keeps the server's own row inside the window.
+      if (code === TOOL_ERROR_CODE && inboxId) code = await loggedErrorCode(supabase, inboxId, stepStarted - 1_000) ?? code;
       // Transport codes win over the per-step default: a request that never
       // returned proves nothing about the MCP layer or the provider, and the
       // step name is still carried in the fingerprint for diagnosis.
@@ -162,7 +203,7 @@ Deno.serve(async (request) => {
     const inboxes = !failureClass ? await runStep("inbox_list", "tools/call", { name: "inbox_list", arguments: {} }) : null;
     const dedicatedInboxId = inboxes ? findInboxId(inboxes, EXPECT_INBOX) : null;
     if (!failureClass && !dedicatedInboxId) fail("mcp_protocol", "inbox_list", "monitor_inbox_not_found");
-    if (!failureClass) await runStep("email_read", "tools/call", { name: "email_read", arguments: { action: "list", limit: 1 } });
+    if (!failureClass) await runStep("email_read", "tools/call", { name: "email_read", arguments: { action: "list", limit: 1 } }, dedicatedInboxId ?? undefined);
   }
 
   const duration_ms = Date.now() - started;
