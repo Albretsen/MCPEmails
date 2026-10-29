@@ -1,6 +1,6 @@
 const post = {
   slug: 'connect-chatgpt-to-email',
-  title: 'Connect ChatGPT to Your Email with MCP (Gmail, Outlook, iCloud and IMAP)',
+  title: 'Connect ChatGPT to Your Email: Yahoo, iCloud, Outlook, IMAP',
   description:
     'Step by step: connect Gmail, Outlook, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.',
   cover: '/blog/cover-email-for-ai-agents-cursor-cline-vscode.svg',

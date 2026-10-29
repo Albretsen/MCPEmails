@@ -1,14 +1,14 @@
 const translation = {
-  title: 'Koble Claude til e-posten din med MCP (Gmail, Outlook, iCloud og IMAP)',
+  title: 'Koble Claude til e-posten: iCloud, Apple Mail, Yahoo, IMAP',
   description:
-    'En praktisk guide til å koble Claude til Gmail, Outlook og Microsoft 365, iCloud, Fastmail, Yahoo, Zoho eller enhver IMAP-innboks over MCP. Uten kode og uten lagring av e-post.',
+    'Slik kobler du Claude til iCloud, Yahoo, Outlook eller en hvilken som helst IMAP-innboks via MCP, også kontoene du leser i Apple Mail. Rundt to minutter, ingen kode, ingenting lagres.',
   coverAlt:
     'Koble Claude til Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho og IMAP-e-post med MCPEmails',
   content: `Claude kan lese, søke i, organisere og sende e-post, men trenger en MCP-server for å nå en ekte innboks. MCPEmails er broen: koble til en innboks én gang, legg ett sikkert endepunkt til i Claude, og Claude får et konsekvent sett med e-postverktøy på tvers av Gmail, Outlook og Microsoft 365, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-leverandører.
 
 Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når du kobler til gjennom Claudes OAuth-flyt. E-post hentes live fra leverandøren din ved hver forespørsel og lagres ikke av MCPEmails.
 
-**Gå til leverandøren din:** [Gmail](#gmail-og-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-og-microsoft-365) · [Yahoo, Zoho, Yandex eller egendefinert IMAP](#yahoo-zoho-yandex-og-egendefinert-imap)
+**Gå til leverandøren din:** [Gmail](#gmail-og-google-workspace) · [iCloud](#icloud-mail) · [Apple Mail](#apple-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-og-microsoft-365) · [Yahoo, Zoho, Yandex eller egendefinert IMAP](#yahoo-zoho-yandex-og-egendefinert-imap)
 
 ## Dette trenger du
 
@@ -27,6 +27,10 @@ Velg **Gmail**, lag et Google-apppassord på myaccount.google.com/apppasswords (
 ### iCloud Mail
 
 Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk dette passordet, ikke det vanlige Apple-passordet. [Guiden for iCloud og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) viser de nøyaktige stegene. Se også [Koble iCloud Mail til Claude](/connect/icloud).
+
+### Apple Mail
+
+Apple Mail er en e-postapp, så Claude kobles til kontoen bak den, ikke til appen. En iCloud-adresse kobles til som beskrevet over. En Gmail-, Outlook-, Yahoo- eller jobbkonto kobles til via sin egen leverandør. Mapper som bare ligger På min Mac, finnes ikke på noen server, så Claude ser dem ikke. Ingenting trenger å kjøre på Macen.
 
 ### Fastmail
 
