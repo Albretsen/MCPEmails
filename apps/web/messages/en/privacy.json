@@ -182,7 +182,7 @@
     "relayLocation": "Germany (EU)",
     "resendPurpose": "Sending account, billing and support email, and marketing email if you opted in",
     "resendData": "Your email address and name, and the content of the emails we send you, including support confirmations that repeat your message. Never your mailbox content",
-    "resendLocation": "US",
+    "resendLocation": "EU (Ireland); Resend Inc. is a US company",
     "migaduPurpose": "Hosting our own mailboxes: the support mailbox and the noreply address that sends sign-up and password emails",
     "migaduData": "Your email address, the sign-up and password emails we send you, and what you write to support",
     "migaduLocation": "Switzerland / EU",

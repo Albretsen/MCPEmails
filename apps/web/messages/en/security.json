@@ -138,7 +138,7 @@
       {
         "provider": "Resend",
         "purpose": "Account, billing and support email, and marketing email if you opted in (never mailbox content)",
-        "location": "US"
+        "location": "EU (Ireland); Resend Inc. is a US company"
       },
       {
         "provider": "Migadu",
