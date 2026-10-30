@@ -105,6 +105,8 @@
 .help-feedback-btn:hover { border-color: var(--border-2); background: var(--bg-sunken); }
 .help-feedback-btn:focus-visible { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
 .help-feedback-done { display: block; }
+/* Beats `.help-article-body p`, which would zero the top margin of the thanks line. */
+.help-article-body .help-feedback { margin: 14px 0 0; }
 
 /* Placeholder while the dashboard section loads its data. */
 .help-skeleton { max-width: 760px; }
