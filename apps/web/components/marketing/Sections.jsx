@@ -1533,6 +1533,7 @@ export function Footer({ locales } = {}) {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
+            <Link href="/dpa">{t('footer.linkDpa')}</Link>
             {/* The withdrawal function (Art. 11a CRD, Directive (EU)
                 2023/2673): the label names the action and the link opens the
                 form with withdrawal preselected. The /withdrawal explainer is

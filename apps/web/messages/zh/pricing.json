@@ -88,7 +88,7 @@
   },
   "enterprise": {
     "title": "企业版：联系我们",
-    "body": "提供数据处理协议（DPA）、发票付款，并协助你的 IT 管理员批准 Microsoft 365。请写信至 <contact>hello@mcpemails.com</contact>。"
+    "body": "提供<dpa>数据处理协议（DPA）</dpa>、发票付款，并协助你的 IT 管理员批准 Microsoft 365。请写信至 <contact>hello@mcpemails.com</contact>。"
   },
   "comparison": {
     "eyebrow": "完整对比",

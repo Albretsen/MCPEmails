@@ -171,6 +171,7 @@ export const ROUTES = [
   ['app/[locale]/tools/email-settings-lookup/page.js', 'iad1', '0', '-'],
   ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
   ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/dpa/page.js', 'iad1', '0', '-'],
   ['app/[locale]/billing/feedback/page.js', 'iad1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/first-30-days/page.tsx', 'arn1', '2+', '-'],
