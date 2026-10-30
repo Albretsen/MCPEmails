@@ -44,7 +44,7 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-10-31',
+    date: '2026-10-30',
     kind: 'fixed',
     title: 'Inboxes page shows when a password was refused',
     body:
