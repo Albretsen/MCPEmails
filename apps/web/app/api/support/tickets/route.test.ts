@@ -184,7 +184,7 @@ test('signed in: 201 with ref, row stored with context, both emails sent and rec
   assert.equal(toSupport.payload.subject, '[MCPE-1001] Connecting a mailbox: Yahoo will not connect');
   assert.equal(toCustomer.payload.replyTo, 'support@mcpemails.com');
   assert.equal(JSON.stringify(toCustomer.payload).includes('MSGMARK-route'), false);
-  assert.equal(toSupport.opts.idempotencyKey, 'support-ticket-MCPE-1001');
+  assert.equal(toSupport.opts.idempotencyKey, 'support-production-ticket-MCPE-1001');
 });
 
 test('signed out: email from the body, no context, no user', async () => {

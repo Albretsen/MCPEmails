@@ -23,6 +23,7 @@
  */
 import type { Resend } from 'resend';
 import { createResend } from '@/lib/email/resend';
+import { appEnv } from '@/lib/env/app-env';
 
 import { planDisplayName } from '@/lib/stripe/plans';
 import type { TicketContext } from '@/lib/support/context';
@@ -130,6 +131,16 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
   return { subject, body, htmlBody };
 }
 
+/**
+ * Resend Idempotency-Key for a ticket or contract email. Staging and production
+ * share one Resend account and both number refs from MCPE-1001, so the key
+ * carries the environment: without it production's first tickets reused keys
+ * staging had spent that day and Resend refused them (409 within 24 hours).
+ */
+export function supportIdempotencyKey(prefix: string, kind: string, ref: string): string {
+  return `${prefix}-${appEnv()}-${kind}-${ref}`.slice(0, 256);
+}
+
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   return key ? createResend(key) : null;
@@ -159,7 +170,7 @@ async function send(
         html: message.htmlBody,
         text: message.body,
       },
-      { idempotencyKey: `support-${kind}-${ref}`.slice(0, 256) },
+      { idempotencyKey: supportIdempotencyKey('support', kind, ref) },
     );
     if (error) {
       console.error(`[support-email] ${kind} FAILED for ${ref}: ${safeCode(error.message)}`);
