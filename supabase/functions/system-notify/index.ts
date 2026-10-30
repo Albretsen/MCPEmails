@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
+import { renderEmailSendFailedEmail } from "./email-send-failed.ts";
 import { renderEurLaunchEmail } from "./eur-launch.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
@@ -415,6 +416,10 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     // day), a launch that stopped part way, the launch going live, or legacy
     // swap failures. Wording comes from the dispatcher; see ./eur-launch.ts.
     return renderEurLaunchEmail(payload);
+  }
+  if (eventType === "email.send_failed") {
+    // Resend refused a send from the web app; see ./email-send-failed.ts.
+    return renderEmailSendFailedEmail(payload);
   }
   return null;
 }

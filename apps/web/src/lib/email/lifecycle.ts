@@ -65,6 +65,16 @@ export function lifecycleFrom(): string {
 }
 
 /**
+ * Where a reply to a lifecycle email goes. LIFECYCLE_EMAIL_FROM can point at
+ * a sending-only subdomain (updates.mcpemails.com) that has no mailbox, so
+ * every lifecycle send sets this explicitly instead of letting replies follow
+ * the From address and bounce.
+ */
+export function lifecycleReplyTo(): string {
+  return process.env.LIFECYCLE_EMAIL_REPLY_TO ?? DEFAULT_FROM;
+}
+
+/**
  * The opt-out URL for one person.
  *
  * The token is a random uuid stored on the user row, never the user id: a link
