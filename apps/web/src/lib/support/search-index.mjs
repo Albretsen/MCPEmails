@@ -26,8 +26,12 @@ import { MODEL_VISIBLE_TOOL_COUNT } from '../public-facts.mjs';
 
 export const HINT_MAX = 80;
 
-/** Article keywords are cut to this many characters, on a word boundary. */
-export const TERMS_MAX = 160;
+/**
+ * Article keywords are cut to this many characters, on a word boundary.
+ * Translated keyword lists run longer than English (they keep the English
+ * terms too), and at 160 the French Gmail article lost its 2FA words.
+ */
+export const TERMS_MAX = 260;
 
 /** Search terms cut on a word boundary, without an ellipsis (they are never shown). */
 export function clipTerms(text, max = TERMS_MAX) {

@@ -71,7 +71,7 @@
       "id": "connect-gmail",
       "title": "连接 Gmail",
       "summary": "粘贴 Google 应用密码，或改用 Google 账号登录。",
-      "keywords": "gmail google 连接 应用密码 app password 两步验证 2-step verification google 登录 oauth 未经验证的应用 警告 高级 不安全",
+      "keywords": "gmail google 连接 应用密码 app password 两步验证 2-step verification google 登录 oauth 未经验证的应用 警告 高级 不安全 双重验证 双因素认证 2fa mfa",
       "steps": [
         "在你的 Google 账号中开启两步验证。",
         "在 myaccount.google.com/apppasswords 创建一个应用密码。",
@@ -119,7 +119,7 @@
       "id": "connect-imap-mailbox",
       "title": "用 IMAP 连接任意邮箱",
       "summary": "选择“IMAP / SMTP”，填写邮箱地址、服务器名称和邮箱密码。",
-      "keywords": "imap smtp 自定义域名 自有域名 主机 虚拟主机 cpanel plesk 工作邮箱 服务器设置 主机名 端口 ssl tls starttls 仅接收 仅发送",
+      "keywords": "imap smtp 自定义域名 自有域名 主机 虚拟主机 cpanel plesk 工作邮箱 服务器设置 主机名 端口 ssl tls starttls 仅接收 仅发送 双重验证 2fa mfa smtp 错误 发送失败",
       "steps": [
         "点击“连接收件箱”，然后选择“IMAP / SMTP”。",
         "填写你的邮箱地址。已知服务商会自动填好服务器设置。",

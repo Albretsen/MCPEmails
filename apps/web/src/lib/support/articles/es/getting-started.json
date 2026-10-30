@@ -71,7 +71,7 @@
       "id": "connect-gmail",
       "title": "Conectar Gmail",
       "summary": "Pega una contraseña de aplicación de Google, o inicia sesión con Google.",
-      "keywords": "gmail google conectar contraseña de aplicación verificación en dos pasos inicio de sesión con google oauth aviso app no verificada avanzado no seguro app password",
+      "keywords": "gmail google conectar contraseña de aplicación verificación en dos pasos inicio de sesión con google oauth aviso app no verificada avanzado no seguro app password autenticación de dos factores doble factor 2fa mfa two factor",
       "steps": [
         "Activa la verificación en dos pasos en tu cuenta de Google.",
         "Crea una contraseña de aplicación en myaccount.google.com/apppasswords.",
@@ -119,7 +119,7 @@
       "id": "connect-imap-mailbox",
       "title": "Conectar cualquier buzón con IMAP",
       "summary": "Elige IMAP / SMTP e introduce tu dirección, los servidores y la contraseña del buzón.",
-      "keywords": "imap smtp dominio propio personalizado hosting cpanel plesk buzón de trabajo configuración del servidor host puerto ssl tls starttls solo recibir solo enviar",
+      "keywords": "imap smtp dominio propio personalizado hosting cpanel plesk buzón de trabajo configuración del servidor host puerto ssl tls starttls solo recibir solo enviar dos factores 2fa mfa error smtp envío fallido",
       "steps": [
         "Elige Conectar bandeja y luego IMAP / SMTP.",
         "Introduce tu dirección de correo. Con los proveedores conocidos, los servidores se rellenan solos.",

@@ -25,7 +25,7 @@
       "id": "search-misses-messages",
       "title": "Find messages a search missed",
       "summary": "Name the folder, use whole words, and on Outlook search words and filters separately.",
-      "keywords": "search missing not found folder archive sent imap gmail outlook whole word trash spam filter",
+      "keywords": "search missing not found folder archive sent imap gmail outlook whole word trash spam filter sent folder sent copy sent mail sent items sent email",
       "steps": [
         "On IMAP mailboxes, name your archive or sent folder. Only the Inbox is searched.",
         "On Gmail and Outlook, name Trash to search it. Gmail also skips Spam.",

@@ -25,7 +25,7 @@
       "id": "search-misses-messages",
       "title": "找到搜索漏掉的邮件",
       "summary": "说明文件夹，使用完整词语；在 Outlook 上把关键词和筛选条件分开搜索。",
-      "keywords": "搜索 找不到 漏掉 文件夹 归档 已发送 垃圾箱 垃圾邮件 完整词语 筛选 imap gmail outlook trash spam",
+      "keywords": "搜索 找不到 漏掉 文件夹 归档 已发送 垃圾箱 垃圾邮件 完整词语 筛选 imap gmail outlook trash spam 已发送邮件 发送副本 sent folder",
       "steps": [
         "在 IMAP 邮箱上，请说明归档或已发送文件夹。默认只搜索收件箱。",
         "在 Gmail 和 Outlook 上，要搜索垃圾箱请说明 Trash。Gmail 还会跳过 Spam。",
