@@ -709,6 +709,7 @@ import {
   supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
 import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
+import { sealApprovalSummary } from "./approval-summary.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -20073,7 +20074,9 @@ async function queueSendApproval(
       operation,
       payload: { v: 1, data: ciphertext },
       payload_encrypted: true,
-      summary,
+      // Encrypted like the payload (2026-10-30): recipients and subject are
+      // not stored in clear. Readers accept both shapes (approval-summary.ts).
+      summary: await sealApprovalSummary(summary, encryptForStorage),
       expires_at: expiresAt,
       ...(sendAt ? { send_at: sendAt } : {}),
     },

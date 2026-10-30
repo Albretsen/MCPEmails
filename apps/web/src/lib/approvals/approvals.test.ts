@@ -276,6 +276,17 @@ test('a Bcc the summary under-counts is shown as what will be sent', async () =>
   assert.deepEqual(review.recipients.bcc, ['drop@evil.example']);
 });
 
+test('an encrypted summary (2026-10-30 on) renders the same recipients and subject', async () => {
+  const sealed = {
+    v: 1,
+    data: encryptToken(JSON.stringify({ to: ['colleague@example.com'], cc: ['boss@example.com'], bcc_count: 1, subject: 'Sealed notes' })),
+  };
+  const review = await loadApprovalForReview(db(approval({ summary: sealed })), ID, USER);
+  if (review === 'not_found') throw new Error('not found');
+  assert.equal(review.subject, 'Sealed notes');
+  assert.deepEqual(review.recipients.cc, ['boss@example.com']);
+});
+
 test('F-04-04: a draft send shows the recorded body, files and Bcc', async () => {
   const row = approval({
     operation: 'draft_send',
