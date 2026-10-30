@@ -277,6 +277,12 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         task: name,
         error_name: error instanceof Error ? error.name : "error",
       }),
+    // A disconnected inbox must not stay in this workspace's cached inbox
+    // list for the rest of its TTL. Other isolates still hold theirs for up to
+    // INBOX_LIST_TTL_MS; there is no cross-isolate signal.
+    onInboxGone: () => {
+      inboxLists.delete(membership.workspace_id);
+    },
     now,
   });
 

@@ -85,6 +85,13 @@ export interface MailEnv {
   /** A login this request dialled worked for an inbox whose row carries a refusal marker: clear it. */
   onLoginAccepted?: (inboxId: string) => void;
   /**
+   * The executor answered that this inbox is gone or needs reconnecting (for
+   * example it was disconnected in the dashboard). The row cache is already
+   * evicted; this lets the caller drop what else it holds for the workspace,
+   * such as its inbox list.
+   */
+  onInboxGone?: (inboxId: string) => void;
+  /**
    * When this request arrived, as `pool.arrival()` taken at the top of the
    * handler: its place in every per-inbox IMAP queue it joins. Absent (tests,
    * the assistant): the moment each op reaches the pool.
@@ -195,6 +202,11 @@ function partialConnectionError(result: unknown): ApiError {
 export type MailOutcome =
   | { type: "json"; result: unknown; timings: OpTimings }
   | { type: "binary"; body: Uint8Array<ArrayBuffer>; contentType: string; filename: string; timings: OpTimings };
+
+/** Tool error codes after which a cached `inboxes` row must be read again. */
+const INBOX_ROW_EVICT_CODES = new Set(["auth_failed", "inbox_not_found", "inbox_needs_reconnect"]);
+/** Tool error codes that mean the inbox is no longer usable as listed. */
+const INBOX_GONE_CODES = new Set(["inbox_not_found", "inbox_needs_reconnect"]);
 
 /** `inboxes` rows, per isolate, for at most `ttlMs`. Keyed by inbox id, checked against the workspace. */
 export class InboxRowCache {
@@ -521,8 +533,11 @@ export async function runExecutor(
 
     if (isErrorOutcome(outcome)) {
       const code = outcome.logErrorCode;
-      if (options.inboxId && (code === "auth_failed" || code === "inbox_not_found")) {
+      if (options.inboxId && INBOX_ROW_EVICT_CODES.has(String(code))) {
         env.inboxes.forget(options.inboxId);
+      }
+      if (options.inboxId && INBOX_GONE_CODES.has(String(code))) {
+        env.onInboxGone?.(options.inboxId);
       }
     }
     return outcome;

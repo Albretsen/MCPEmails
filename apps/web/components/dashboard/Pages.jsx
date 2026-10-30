@@ -5900,6 +5900,8 @@ function PasswordSection() {
 /* ------------------------------------------------------------------ */
 function DeleteAccountSection({ email }) {
   const t = useTranslations('dashboard');
+  // The confirmation email is written in the interface language.
+  const { locale } = useAppLocale();
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -5929,7 +5931,7 @@ function DeleteAccountSection({ email }) {
       const res = await fetch('/api/user/delete-account', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmEmail: confirmValue.trim() }),
+        body: JSON.stringify({ confirmEmail: confirmValue.trim(), locale }),
       });
       if (!res.ok) {
         let msg = t('settings.deleteAccount.errFailed');

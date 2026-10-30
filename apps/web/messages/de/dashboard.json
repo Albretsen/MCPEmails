@@ -234,7 +234,7 @@
       "title": "Postfach trennen?",
       "sub": "Der Zugriff wird entzogen und das Postfach aus Ihrem Workspace entfernt.",
       "cancel": "Abbrechen",
-      "body": "Alle API-Schlüssel, die derzeit auf dieses Postfach zugreifen dürfen, verlieren den Zugriff sofort. Sie können das Postfach jederzeit neu verbinden.",
+      "body": "Alle API-Schlüssel, die derzeit auf dieses Postfach zugreifen dürfen, verlieren den Zugriff sofort, und geplante E-Mails, die noch nicht aus diesem Postfach versendet wurden, werden storniert. Sie können das Postfach jederzeit neu verbinden.",
       "disconnecting": "Wird getrennt…",
       "disconnect": "Trennen"
     },
