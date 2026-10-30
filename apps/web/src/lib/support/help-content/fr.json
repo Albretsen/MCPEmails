@@ -63,7 +63,7 @@
       "id": "imap-password-rejected",
       "title": "Le serveur de messagerie refuse mon mot de passe",
       "summary": "Presque toujours un mauvais mot de passe ou identifiant. Utilisez celui de la boîte elle-même.",
-      "keywords": "imap smtp mot de passe refusé incorrect connexion identifiant nom d’utilisateur cpanel plesk hébergement propre domaine échec d’authentification password rejected",
+      "keywords": "imap smtp mot de passe refusé incorrect connexion identifiant nom d’utilisateur cpanel plesk hébergement propre domaine échec d’authentification password rejected erreur smtp envoi échoué erreur",
       "steps": [
         "Utilisez le mot de passe de la boîte, pas celui de votre hébergement ou du panneau de contrôle.",
         "Utilisez l’adresse e-mail complète comme identifiant.",
@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "Mot de passe d’application requis (Yahoo, iCloud, Gmail, Zoho)",
       "summary": "Ces fournisseurs refusent ici votre mot de passe habituel. Créez un mot de passe d’application et collez-le.",
-      "keywords": "mot de passe d’application spécifique yahoo icloud apple gmail google zoho validation en deux étapes app password app-specific 2-step verification",
+      "keywords": "mot de passe d’application spécifique yahoo icloud apple gmail google zoho validation en deux étapes app password app-specific 2-step verification double authentification 2fa mfa",
       "steps": [
         "Yahoo : Account Security, puis Generate app password.",
         "iCloud : account.apple.com, Sign-In and Security, puis App-Specific Passwords.",

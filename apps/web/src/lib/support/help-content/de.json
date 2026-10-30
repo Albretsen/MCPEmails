@@ -63,7 +63,7 @@
       "id": "imap-password-rejected",
       "title": "Der Mailserver lehnt mein Passwort ab",
       "summary": "Fast immer das falsche Passwort oder der falsche Benutzername. Nutzen Sie das Login des Postfachs.",
-      "keywords": "imap smtp passwort abgelehnt falsch login benutzername anmeldung cpanel plesk hosting eigene domain auth fehlgeschlagen password rejected wrong username",
+      "keywords": "imap smtp passwort abgelehnt falsch login benutzername anmeldung cpanel plesk hosting eigene domain auth fehlgeschlagen password rejected wrong username smtp-fehler senden fehlgeschlagen fehler",
       "steps": [
         "Nutzen Sie das Passwort des Postfachs, nicht das Login für Hosting oder Control Panel.",
         "Nutzen Sie die vollständige E-Mail-Adresse als Benutzernamen.",
@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "App-Passwort nötig (Yahoo, iCloud, Gmail, Zoho)",
       "summary": "Diese Anbieter lehnen Ihr normales Passwort hier ab. Erstellen Sie ein App-Passwort und fügen Sie es ein.",
-      "keywords": "app-passwort app-spezifisches anwendungsspezifisches passwort yahoo icloud apple gmail google zoho bestätigung in zwei schritten 2-step app password",
+      "keywords": "app-passwort app-spezifisches anwendungsspezifisches passwort yahoo icloud apple gmail google zoho bestätigung in zwei schritten 2-step app password zwei-faktor 2fa mfa",
       "steps": [
         "Yahoo: Kontosicherheit, dann App-Passwort generieren.",
         "iCloud: account.apple.com, Anmeldung und Sicherheit, dann App-spezifische Passwörter.",

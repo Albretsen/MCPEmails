@@ -63,7 +63,7 @@
       "id": "imap-password-rejected",
       "title": "The mail server rejects my password",
       "summary": "Almost always the wrong password or username. Use the mailbox's own login.",
-      "keywords": "imap smtp password rejected wrong login username cpanel plesk hosting own domain auth failed",
+      "keywords": "imap smtp password rejected wrong login username cpanel plesk hosting own domain auth failed smtp error send failed error",
       "steps": [
         "Use the mailbox password, not your hosting or control panel login.",
         "Use the full email address as the username.",
@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "App password needed (Yahoo, iCloud, Gmail, Zoho)",
       "summary": "These providers refuse your normal password here. Create an app password and paste it.",
-      "keywords": "app password app-specific application-specific yahoo icloud apple gmail google zoho 2-step verification",
+      "keywords": "app password app-specific application-specific yahoo icloud apple gmail google zoho 2-step verification two factor 2fa two-step mfa",
       "steps": [
         "Yahoo: Account Security, then Generate app password.",
         "iCloud: account.apple.com, Sign-In and Security, then App-Specific Passwords.",

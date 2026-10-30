@@ -63,7 +63,7 @@
       "id": "imap-password-rejected",
       "title": "邮件服务器拒绝了我的密码",
       "summary": "几乎总是密码或用户名填错了。请使用邮箱本身的登录信息。",
-      "keywords": "imap smtp 密码 被拒 错误 登录 用户名 cpanel plesk 主机 自有域名",
+      "keywords": "imap smtp 密码 被拒 错误 登录 用户名 cpanel plesk 主机 自有域名 smtp 错误 发送失败",
       "steps": [
         "请填写邮箱密码，而不是主机或控制面板的登录密码。",
         "用户名请使用完整的邮箱地址。",
@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "需要应用密码（Yahoo、iCloud、Gmail、Zoho）",
       "summary": "这些服务商在这里不接受你的普通密码。请创建应用密码并粘贴。",
-      "keywords": "应用密码 应用专用密码 app password yahoo icloud apple gmail google zoho 两步验证",
+      "keywords": "应用密码 应用专用密码 app password yahoo icloud apple gmail google zoho 两步验证 双重验证 2fa mfa",
       "steps": [
         "Yahoo：打开“账户安全”，然后选择“生成应用密码”。",
         "iCloud：登录 account.apple.com，打开“登录与安全”，再打开“App 专用密码”。",

@@ -63,7 +63,7 @@
       "id": "imap-password-rejected",
       "title": "E-postserveren avviser passordet mitt",
       "summary": "Nesten alltid feil passord eller brukernavn. Bruk postkassens egen innlogging.",
-      "keywords": "imap smtp passord avvist feil innlogging brukernavn cpanel plesk webhotell eget domene autentisering feilet",
+      "keywords": "imap smtp passord avvist feil innlogging brukernavn cpanel plesk webhotell eget domene autentisering feilet smtp-feil sending feilet feil",
       "steps": [
         "Bruk postkassepassordet, ikke innloggingen til webhotellet eller kontrollpanelet.",
         "Bruk hele e-postadressen som brukernavn.",
@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "App-passord kreves (Yahoo, iCloud, Gmail, Zoho)",
       "summary": "Disse leverandørene avviser det vanlige passordet ditt her. Lag et app-passord og lim det inn.",
-      "keywords": "app-passord app password app-spesifikt applikasjonsspesifikt yahoo icloud apple gmail google zoho totrinnsbekreftelse 2-step verification",
+      "keywords": "app-passord app password app-spesifikt applikasjonsspesifikt yahoo icloud apple gmail google zoho totrinnsbekreftelse 2-step verification tofaktor 2fa totrinns mfa",
       "steps": [
         "Yahoo: Account Security, så Generate app password.",
         "iCloud: account.apple.com, Sign-In and Security, så App-Specific Passwords.",

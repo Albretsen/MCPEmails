@@ -27,7 +27,17 @@ The `support@mcpemails.com` mailbox is not gated. It is just an address.
    ```
    Without it "Was this helpful?" still answers 204, but every vote is
    dropped (the upsert fails and is only logged).
-3. Plus any retention migration added in the fix round (see PR).
+3. Then apply `supabase/migrations/20261030210000_support_retention.sql`
+   the same way. It needs step 2 first (it purges `help_article_feedback`)
+   and the retention migration from #410 (it re-creates
+   `purge_operational_history()` with one extra call):
+   ```bash
+   npx supabase db query --linked -f supabase/migrations/20261030210000_support_retention.sql
+   npx supabase migration repair --status applied 20261030210000 --linked
+   ```
+   It deletes votes keyed by a hashed IP after 180 days and scrubs tickets
+   from people without an account after 730 days, on the existing daily
+   purge cron.
 4. There are no new env vars. The feature reads ones that are already set in
    Production and Preview: `CSRF_SECRET` (HMACs for the preview cookie, the
    form token and the IP hash, each under its own label), `RESEND_API_KEY`,
