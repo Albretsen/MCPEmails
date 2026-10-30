@@ -43,14 +43,20 @@ export function dashboardSectionFor(href) {
 // The dashboard calls prefetchHelpData() once it is idle, so opening Help
 // usually finds its data already loaded. A prefetched response is handed out
 // once: the next visit fetches again, so the form token is never stale.
+// The section reuses a prefetch still in flight for its URL, and once the
+// section has started loading in a locale the prefetch for that locale is
+// skipped (on a direct load of /dashboard/help it would be a second request
+// nobody reads).
 const prefetched = new Map();
+const sectionLocales = new Set();
 
 function fetchHelpData(url) {
   return fetch(url, { cache: 'no-store', credentials: 'same-origin' })
     .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))));
 }
 
-function loadHelpData(url) {
+function loadHelpData(url, locale) {
+  sectionLocales.add(locale || 'en');
   const pending = prefetched.get(url);
   if (pending) {
     prefetched.delete(url);
@@ -62,10 +68,16 @@ function loadHelpData(url) {
 /** Starts loading the plain help URL (no form seed) in this locale. */
 export function prefetchHelpData(locale) {
   const url = helpDataUrl(locale, '');
-  if (prefetched.has(url)) return;
+  if (prefetched.has(url) || sectionLocales.has(locale || 'en')) return;
   const pending = fetchHelpData(url);
   pending.catch(() => {});
   prefetched.set(url, pending);
+}
+
+/** For tests: forget every prefetch and section load. */
+export function resetHelpDataCache() {
+  prefetched.clear();
+  sectionLocales.clear();
 }
 
 function HelpSkeleton({ label }) {
@@ -89,7 +101,7 @@ export function HelpSection({ onNavigateSection }) {
 
   useEffect(() => {
     let cancelled = false;
-    loadHelpData(helpDataUrl(locale, window.location.search))
+    loadHelpData(helpDataUrl(locale, window.location.search), locale)
       .then((data) => {
         if (!cancelled) setState({ status: 'ready', data, locale });
       })

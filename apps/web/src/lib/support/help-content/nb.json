@@ -31,7 +31,8 @@
     "no": "Nei",
     "thanks": "Takk for tilbakemeldingen.",
     "thanksNo": "Takk. Fortell oss hva som manglet, så retter vi det.",
-    "contactLink": "Skriv til oss"
+    "contactLink": "Skriv til oss",
+    "change": "Endre svar"
   },
   "hints": {
     "provider": "{category} · {domain}",

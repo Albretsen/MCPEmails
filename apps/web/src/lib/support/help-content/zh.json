@@ -31,7 +31,8 @@
     "no": "没有",
     "thanks": "感谢你的反馈。",
     "thanksNo": "感谢。告诉我们缺少了什么，我们会补上。",
-    "contactLink": "给我们写信"
+    "contactLink": "给我们写信",
+    "change": "更改回答"
   },
   "hints": {
     "provider": "{category} · {domain}",

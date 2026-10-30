@@ -77,16 +77,26 @@ function storedVote(id) {
   }
 }
 
-/** "Was this helpful?" Yes / No. The answer is sent once per click and kept in this browser. */
+// A text button: "Change answer" sits in the thanks line, not as a second
+// row of buttons.
+const CHANGE_BUTTON = { background: 'none', border: 0, padding: 0, font: 'inherit', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' };
+
+/**
+ * "Was this helpful?" Yes / No. The answer is sent once per click and kept in
+ * this browser. "Change answer" brings the buttons back; the server upserts,
+ * so a second answer replaces the first.
+ */
 function ArticleFeedback({ articleId, locale, copy }) {
   // The server has no localStorage, so its snapshot is null and the stored
   // answer appears after hydration without a mismatch.
   const stored = useSyncExternalStore(noSubscribe, () => storedVote(articleId), () => null);
   const [clicked, setClicked] = useState(null);
+  const [changing, setChanging] = useState(false);
   const vote = clicked ?? stored;
 
   const send = (answer) => {
     setClicked(answer);
+    setChanging(false);
     try {
       window.localStorage.setItem(`${VOTE_KEY}${articleId}`, answer);
     } catch { /* the vote is still sent */ }
@@ -99,14 +109,19 @@ function ArticleFeedback({ articleId, locale, copy }) {
     }).catch(() => {});
   };
 
-  if (vote) {
+  if (vote && !changing) {
     return (
-      <p className="help-feedback help-feedback-done" role="status">
-        {vote === 'yes' ? copy.thanks : (
-          <>
-            {copy.thanksNo} <a href="#contact">{copy.contactLink}</a>
-          </>
-        )}
+      <p className="help-feedback help-feedback-done">
+        <span role="status">
+          {vote === 'yes' ? copy.thanks : (
+            <>
+              {copy.thanksNo} <a href="#contact">{copy.contactLink}</a>
+            </>
+          )}
+        </span>{' '}
+        <button type="button" className="help-feedback-change" style={CHANGE_BUTTON} onClick={() => setChanging(true)}>
+          {copy.change}
+        </button>
       </p>
     );
   }

@@ -202,6 +202,7 @@
     "errorBannerOne": "1 Postfach hat den Zugriff verloren und muss neu verbunden werden.",
     "errorBannerMany": "{count} Postfächer haben den Zugriff verloren und müssen neu verbunden werden.",
     "errorBannerSupport": "Erneutes Verbinden klappt nicht? Schreiben Sie uns",
+    "errorBannerSupportSubject": "Ein Postfach lässt sich nicht neu verbinden",
     "colLabel": "Bezeichnung",
     "colAddress": "Adresse",
     "colProvider": "Anbieter",

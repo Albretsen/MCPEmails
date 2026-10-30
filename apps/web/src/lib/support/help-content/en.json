@@ -31,7 +31,8 @@
     "no": "No",
     "thanks": "Thanks for letting us know.",
     "thanksNo": "Thanks. Tell us what was missing and we will fix it.",
-    "contactLink": "Write to us"
+    "contactLink": "Write to us",
+    "change": "Change answer"
   },
   "hints": {
     "provider": "{category} · {domain}",

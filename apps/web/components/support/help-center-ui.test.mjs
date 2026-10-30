@@ -147,6 +147,32 @@ test('"Was this helpful?" posts the answer once and says thanks', async (t) => {
   assert.equal(article.querySelector('.help-feedback a').getAttribute('href'), '#contact');
 });
 
+test('"Change answer" brings Yes/No back and the new answer replaces the old one', async (t) => {
+  setHash('');
+  window.localStorage.clear();
+  const posts = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => { posts.push(JSON.parse(init.body).helpful); return { ok: true, status: 204 }; };
+  t.after(() => { globalThis.fetch = realFetch; });
+  const view = await render(t);
+  const article = view.container.querySelector('details.help-article');
+  const id = article.id.replace(/^article-/, '');
+  const button = (label) => [...article.querySelectorAll('.help-feedback-btn')].find((b) => b.textContent === label) ?? null;
+  await flush(() => button(en.feedback.no).click());
+  assert.equal(window.localStorage.getItem(`mcpe_help_vote:${id}`), 'no');
+  const change = article.querySelector('.help-feedback-change');
+  assert.equal(change?.textContent, en.feedback.change);
+  assert.equal(change.closest('.help-feedback-done') !== null, true, 'sits in the thanks line');
+  await flush(() => change.click());
+  assert.equal(article.querySelectorAll('.help-feedback-btn').length, 2, 'Yes and No are back');
+  assert.equal(article.textContent.includes(en.feedback.thanksNo), false);
+  await flush(() => button(en.feedback.yes).click());
+  assert.equal(posts.join(','), 'false,true');
+  assert.equal(window.localStorage.getItem(`mcpe_help_vote:${id}`), 'yes');
+  assert.equal(article.textContent.includes(en.feedback.thanks), true);
+  assert.equal(article.querySelectorAll('.help-feedback-btn').length, 0);
+});
+
 test('the form is behind one click, and the button opens it', async (t) => {
   setHash('');
   const view = await render(t);

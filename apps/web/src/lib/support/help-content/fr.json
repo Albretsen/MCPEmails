@@ -31,7 +31,8 @@
     "no": "Non",
     "thanks": "Merci pour votre retour.",
     "thanksNo": "Merci. Dites-nous ce qui manquait et nous le corrigerons.",
-    "contactLink": "Écrivez-nous"
+    "contactLink": "Écrivez-nous",
+    "change": "Modifier ma réponse"
   },
   "hints": {
     "provider": "{category} · {domain}",

@@ -202,6 +202,7 @@
     "errorBannerOne": "1 inbox has lost access and needs to be reconnected.",
     "errorBannerMany": "{count} inboxes have lost access and need to be reconnected.",
     "errorBannerSupport": "Reconnect not working? Email support",
+    "errorBannerSupportSubject": "Reconnecting an inbox does not work",
     "colLabel": "Label",
     "colAddress": "Address",
     "colProvider": "Provider",
