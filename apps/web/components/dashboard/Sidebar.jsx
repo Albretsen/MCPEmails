@@ -22,7 +22,7 @@ import { Link } from '@/i18n/navigation';
  *   - `onClose` is called when the user taps the overlay backdrop.
  *   - Clicking a nav item also calls `onClose` so the drawer closes.
  */
-export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralVisible = false, isOpen, onClose }) {
+export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, referralVisible = false, isOpen, onClose }) {
   const tr = useTranslations('dashboardChrome');
   const router = useRouter();
   const [wsMenuOpen, setWsMenuOpen] = useState(false);
@@ -279,19 +279,16 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
               <span>{it.label}</span>
             </a>
           ))}
-          {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop.
-              A dashboard section like the others: /dashboard/help renders the
+          {/* A dashboard section like the others: /dashboard/help renders the
               help center inside the app shell, with SPA navigation and the
               active state. The public /help page is unchanged. */}
-          {supportVisible && (
-            <a href={sectionToPath('help')}
-               className={"nav-item" + (route === 'help' ? " active" : "")}
-               aria-current={route === 'help' ? "page" : undefined}
-               onClick={e => handleNavClick(e, 'help')}>
-              <Icon name="mail" size={16} />
-              <span>{tr('sidebar.navHelp')}</span>
-            </a>
-          )}
+          <a href={sectionToPath('help')}
+             className={"nav-item" + (route === 'help' ? " active" : "")}
+             aria-current={route === 'help' ? "page" : undefined}
+             onClick={e => handleNavClick(e, 'help')}>
+            <Icon name="mail" size={16} />
+            <span>{tr('sidebar.navHelp')}</span>
+          </a>
         </nav>
 
         <div className="footer-user">

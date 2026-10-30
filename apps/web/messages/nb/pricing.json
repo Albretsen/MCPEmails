@@ -34,7 +34,7 @@
         "Bruksanalyse",
         "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
         "Ubegrenset antall API-nøkler",
-        "Fellesskapsstøtte"
+        "Hjelpesenter og e-poststøtte"
       ]
     },
     "personal": {
@@ -47,7 +47,7 @@
         "3 tilkoblede innbokser",
         "Ubegrensede e-posthandlinger",
         "2x høyere burst-grense",
-        "E-poststøtte"
+        "Prioritert e-poststøtte"
       ]
     },
     "solo": {
@@ -154,8 +154,9 @@
       "support": {
         "label": "Kundestøtte",
         "rows": {
-          "community": "Fellesskapsforum",
-          "email": "E-poststøtte"
+          "community": "Hjelpesenter",
+          "email": "E-poststøtte",
+          "priority": "Prioritert e-poststøtte"
         }
       }
     },
@@ -188,7 +189,7 @@
       },
       {
         "q": "Hva gir Personal utover Free?",
-        "a": "To innbokser til, ubegrensede e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt du bruker til vanlig ligger også i Free: lese, søke, organisere, skrive, sende og planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Funksjonene som jobber videre når chatten er lukket, som oppfølgingspåminnelser, utsettelse og morgenoppsummeringen, ligger i Pro."
+        "a": "To innbokser til, ubegrensede e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og prioritert e-poststøtte, der Free har hjelpesenteret og vanlig e-poststøtte. Det er hele listen. Alt du bruker til vanlig ligger også i Free: lese, søke, organisere, skrive, sende og planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Funksjonene som jobber videre når chatten er lukket, som oppfølgingspåminnelser, utsettelse og morgenoppsummeringen, ligger i Pro."
       },
       {
         "q": "Hva regnes som en e-posthandling?",
@@ -204,7 +205,7 @@
       },
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Business?",
-        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og e-poststøtte. Pro jobber også videre når chatten er lukket: oppfølgingspåminnelser på e-post du har sendt, utsettelse, en daglig morgenoppsummering i innboksen, ett søk i alle tilkoblede innbokser og instruksjoner til AI-en per innboks. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt. Alt i Pro er inkludert."
+        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og prioritert e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og prioritert e-poststøtte. Pro jobber også videre når chatten er lukket: oppfølgingspåminnelser på e-post du har sendt, utsettelse, en daglig morgenoppsummering i innboksen, ett søk i alle tilkoblede innbokser og instruksjoner til AI-en per innboks. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt. Alt i Pro er inkludert."
       },
       {
         "q": "Vi er et firma med flere postkasser. Hvilken plan trenger vi?",
@@ -232,7 +233,7 @@
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",
-        "a": "Ja. MCPEmails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; medlemmer og roller hører til Business, og e-poststøtte følger med alle betalte planer."
+        "a": "Ja. MCPEmails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; medlemmer og roller hører til Business, og prioritert e-poststøtte følger med alle betalte planer."
       }
     ]
   },

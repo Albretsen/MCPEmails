@@ -9,8 +9,7 @@
  *                              (decision D3, src/lib/billing/park-on-cancel.ts)
  *
  * Off by default. While off, internal accounts (isInternalAccount: our
- * domains, GROWTH_INTERNAL_EMAILS) still see both, the same internal-first
- * rollout as Help & support (src/lib/support/release-gate.ts).
+ * domains, GROWTH_INTERNAL_EMAILS) still see both: an internal-first rollout.
  *
  * READ AT CALL TIME, never captured at module scope: a warm lambda keeps
  * whatever it booted with (see src/lib/billing/lifecycle-mode.ts).

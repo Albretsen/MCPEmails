@@ -25,9 +25,7 @@ export const DASHBOARD_SECTIONS = [
   'invite',
   'settings',
   'security',
-  // SUPPORT_RELEASE_GATE: internal-only while Help & support is gated. The
-  // dashboard page 404s /dashboard/help for everyone the gate hides, and App
-  // never renders the section for them.
+  // Help & support: the help center inside the app shell.
   'help',
 ];
 

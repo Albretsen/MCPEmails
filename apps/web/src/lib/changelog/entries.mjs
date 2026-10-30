@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-30',
+    kind: 'added',
+    title: 'Help articles and support in the dashboard',
+    body:
+      "You can now search help articles and write to support from Help & support in the dashboard and at mcpemails.com/help. When an inbox fails to connect, the error offers a Contact support link that opens the form with the provider and error already filled in.",
+  },
+  {
+    date: '2026-10-30',
     kind: 'improved',
     title: 'Account deletion confirmation and Google access',
     body:

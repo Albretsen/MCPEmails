@@ -808,7 +808,8 @@ test('placeholder (table signature): the HTML source frame, because that is the 
 test('idle preload: the dashboard asks for the editor once it is idle, not during mount', async (t) => {
   const view = await renderInboxes(t);
   assert.equal(warmCalls, 0, 'nothing is fetched while the dashboard is mounting');
-  assert.equal(idleCallbacks.filter(Boolean).length, 1, 'one idle callback is scheduled');
+  // Two: this editor preload and the help section's data prefetch (App.jsx).
+  assert.equal(idleCallbacks.filter(Boolean).length, 2, 'two idle callbacks are scheduled');
   await flush(() => { for (const cb of idleCallbacks.splice(0)) cb?.({ didTimeout: false, timeRemaining: () => 10 }); });
   assert.equal(warmCalls, 1, 'idle: the load starts, before anyone has pointed at an inbox');
   assert.equal(view.title(), null, 'and nothing is opened by it');
@@ -816,7 +817,7 @@ test('idle preload: the dashboard asks for the editor once it is idle, not durin
 
 test('idle preload: leaving the dashboard before it is idle cancels it', async (t) => {
   const view = await renderInboxes(t);
-  assert.equal(idleCallbacks.filter(Boolean).length, 1);
+  assert.equal(idleCallbacks.filter(Boolean).length, 2);
   await view.unmount();
   assert.equal(idleCallbacks.filter(Boolean).length, 0, 'cancelled on unmount');
   assert.equal(warmCalls, 0);

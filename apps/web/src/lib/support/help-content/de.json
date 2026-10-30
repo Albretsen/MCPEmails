@@ -278,10 +278,5 @@
   "success": {
     "withRef": "Danke, Ihre Nachricht ist bei uns angekommen. Ihre Referenz lautet {ref}. Wir antworten per E-Mail.",
     "noRef": "Danke, Ihre Nachricht ist bei uns angekommen. Wir antworten per E-Mail."
-  },
-  "preview": {
-    "link": "Formular im abgemeldeten Zustand testen",
-    "note": "Setzt ein Vorschau-Cookie für diesen Browser. Melden Sie sich ab und öffnen Sie diese Seite erneut.",
-    "clear": "Vorschau des abgemeldeten Formulars beenden"
   }
 }

@@ -63,7 +63,6 @@
 .help-actions { display: flex; }
 .help-error { margin: 0; color: var(--red-500); font-size: 14px; }
 .help-success { font-size: 16px; color: var(--fg-1); padding: 16px; border: 1px solid var(--border-1); border-radius: 8px; background: var(--bg-surface); }
-.help-gate { font-size: 13px; color: var(--fg-3); margin-top: 12px; }
 
 /* Section nav: a sticky list on the left, a scrolling row of links when narrow.
    The dashboard scrolls inside .page, the marketing page under its sticky nav. */

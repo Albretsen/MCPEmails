@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
-// GET /api/support/help-data, every method, for hidden and visible callers.
+// GET /api/support/help-data, every method, signed in and signed out.
 //
 // Run with: npm run test:help-center
 //
 // The viewer and the context read are stubbed (no session, no database); the
-// gate decision arrives through the stubbed viewer exactly as it would from
+// session arrives through the stubbed viewer exactly as it would from
 // getSupportViewer(). Everything else is real: the copy, the articles, the
 // search index and the form token.
 // ---------------------------------------------------------------------------
@@ -17,8 +17,8 @@ const nodeMock = mock as unknown as {
   module: (specifier: string, options: { namedExports?: Record<string, unknown> }) => void;
 };
 
-type Viewer = { visible: boolean; user: { id: string; email: string } | null };
-let viewer: Viewer = { visible: false, user: null };
+type Viewer = { user: { id: string; email: string } | null };
+let viewer: Viewer = { user: null };
 const contextReads: string[] = [];
 nodeMock.module('@/lib/support/viewer', { namedExports: { getSupportViewer: async () => viewer } });
 nodeMock.module('@/lib/support/context', {
@@ -34,26 +34,14 @@ const route = (await import('./route.ts')) as unknown as Record<string, (r: Requ
 const { checkSupportFormToken } = await import('@/lib/support/form-token');
 
 const METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as const;
-const HIDDEN: Viewer = { visible: false, user: { id: 'u2', email: 'customer@example.net' } };
-const INTERNAL: Viewer = { visible: true, user: { id: 'u1', email: 'staff@example.com' } };
-const PREVIEW_ONLY: Viewer = { visible: true, user: null };
+const SIGNED_IN: Viewer = { user: { id: 'u1', email: 'staff@example.com' } };
+const SIGNED_OUT: Viewer = { user: null };
 
 const req = (method: string, query = '') =>
   new Request(`https://mcpemails.test/api/support/help-data${query}`, { method });
 
-test('hidden caller: the unmatched 404 on every method, no data read', async () => {
-  viewer = HIDDEN;
-  contextReads.length = 0;
-  for (const m of METHODS) {
-    const res = await route[m](req(m, '?locale=en'));
-    assert.equal(res.status, 404, m);
-    if (m !== 'HEAD') assert.deepEqual(await res.json(), { error: 'Not found.' });
-  }
-  assert.equal(contextReads.length, 0);
-});
-
-test('visible caller: 405 with Allow: GET on every other method', async () => {
-  viewer = INTERNAL;
+test('405 with Allow: GET on every other method', async () => {
+  viewer = SIGNED_IN;
   for (const m of METHODS.filter((x) => x !== 'GET')) {
     const res = await route[m](req(m));
     assert.equal(res.status, 405, m);
@@ -61,8 +49,8 @@ test('visible caller: 405 with Allow: GET on every other method', async () => {
   }
 });
 
-test('visible signed-in GET: the whole payload, uncached', async () => {
-  viewer = INTERNAL;
+test('signed-in GET: the whole payload, uncached', async () => {
+  viewer = SIGNED_IN;
   contextReads.length = 0;
   const res = await route.GET(req('GET', '?locale=en'));
   assert.equal(res.status, 200);
@@ -86,7 +74,7 @@ test('visible signed-in GET: the whole payload, uncached', async () => {
 });
 
 test('locale: a supported one is used, anything else is English', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   const nb = await (await route.GET(req('GET', '?locale=nb'))).json();
   assert.equal(nb.locale, 'nb');
   assert.notEqual(nb.copy.hero.title, (await (await route.GET(req('GET', '?locale=en'))).json()).copy.hero.title);
@@ -95,7 +83,7 @@ test('locale: a supported one is used, anything else is English', async () => {
 });
 
 test('topic, provider and code seed the form and the context', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   const body = await (await route.GET(req('GET', '?locale=en&topic=connect&provider=yahoo&code=auth_failed'))).json();
   assert.equal(body.form.initialCategory, 'connect');
   assert.equal(body.form.providerName, 'Yahoo Mail');
@@ -109,8 +97,8 @@ test('topic, provider and code seed the form and the context', async () => {
   assert.equal(junk.form.open, false);
 });
 
-test('visible through the preview cookie only: signed out, no context read', async () => {
-  viewer = PREVIEW_ONLY;
+test('signed out: no context read', async () => {
+  viewer = SIGNED_OUT;
   contextReads.length = 0;
   const body = await (await route.GET(req('GET', '?locale=fr'))).json();
   assert.equal(body.signedIn, false);

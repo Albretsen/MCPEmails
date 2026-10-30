@@ -278,10 +278,5 @@
   "success": {
     "withRef": "Takk, vi har fått meldingen din. Referansen din er {ref}. Vi svarer på e-post.",
     "noRef": "Takk, vi har fått meldingen din. Vi svarer på e-post."
-  },
-  "preview": {
-    "link": "Test skjemaet som utlogget",
-    "note": "Setter en forhåndsvisningscookie i denne nettleseren. Logg ut, og åpne denne siden igjen.",
-    "clear": "Avslutt forhåndsvisning av utlogget skjema"
   }
 }

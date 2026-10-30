@@ -11,9 +11,7 @@ About MCPEmails and Asgeir Albretsen · MCPEmails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -71,7 +69,7 @@ Self-hosting guide
 Source code
 Contact
 There is no support queue. Your message arrives with me, and I answer it.
-hello@mcpemails.com
+support@mcpemails.com
 for the product, your account, billing, or a bug. Expect a reply within one business day.
 security@mcpemails.com
 for vulnerability reports. Expect an acknowledgement within 24 hours. The disclosure process, including safe harbour, is on the
@@ -85,7 +83,7 @@ Run it yourself
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -116,6 +114,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -134,6 +133,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here
@@ -142,4 +142,4 @@ Impressum
 © 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
 MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/about","url":"https://mcpemails.com/about","name":"About MCPEmails and Asgeir Albretsen","description":"MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/about#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/about#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"About MCPEmails and Asgeir Albretsen"}]},{"@type":"Person","@id":"https://mcpemails.com/#asgeir-albretsen","name":"Asgeir Albretsen","jobTitle":"Software developer","url":"https://albretsen.no","mainEntityOfPage":{"@id":"https://mcpemails.com/about"},"sameAs":["https://github.com/Albretsen","https://albretsen.no","https://www.linkedin.com/in/asgeir-albretsen/"],"address":{"@type":"PostalAddress","addressLocality":"Bergen","addressCountry":"NO"},"alumniOf":{"@type":"CollegeOrUniversity","name":"University of Bergen"},"worksFor":{"@id":"https://mcpemails.com/#organization"}},{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"MCPEmails","legalName":"Albretsen AS","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg","founder":{"@id":"https://mcpemails.com/#asgeir-albretsen"},"email":"hello@mcpemails.com","identifier":"938702373","address":{"@type":"PostalAddress","streetAddress":"Håsteins gate 9","postalCode":"5160","addressLocality":"Laksevåg","addressCountry":"NO"}}]}
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/about","url":"https://mcpemails.com/about","name":"About MCPEmails and Asgeir Albretsen","description":"MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/about#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/about#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"About MCPEmails and Asgeir Albretsen"}]},{"@type":"Person","@id":"https://mcpemails.com/#asgeir-albretsen","name":"Asgeir Albretsen","jobTitle":"Software developer","url":"https://albretsen.no","mainEntityOfPage":{"@id":"https://mcpemails.com/about"},"sameAs":["https://github.com/Albretsen","https://albretsen.no","https://www.linkedin.com/in/asgeir-albretsen/"],"address":{"@type":"PostalAddress","addressLocality":"Bergen","addressCountry":"NO"},"alumniOf":{"@type":"CollegeOrUniversity","name":"University of Bergen"},"worksFor":{"@id":"https://mcpemails.com/#organization"}},{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"MCPEmails","legalName":"Albretsen AS","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg","founder":{"@id":"https://mcpemails.com/#asgeir-albretsen"},"email":"hello@mcpemails.com","contactPoint":{"@type":"ContactPoint","contactType":"customer support","email":"support@mcpemails.com"},"identifier":"938702373","address":{"@type":"PostalAddress","streetAddress":"Håsteins gate 9","postalCode":"5160","addressLocality":"Laksevåg","addressCountry":"NO"}}]}

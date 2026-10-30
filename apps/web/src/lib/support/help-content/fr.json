@@ -278,10 +278,5 @@
   "success": {
     "withRef": "Merci, nous avons bien reçu votre message. Votre référence est {ref}. Nous répondons par e-mail.",
     "noRef": "Merci, nous avons bien reçu votre message. Nous répondons par e-mail."
-  },
-  "preview": {
-    "link": "Tester le formulaire déconnecté",
-    "note": "Enregistre un cookie d’aperçu dans ce navigateur. Déconnectez-vous, puis rouvrez cette page.",
-    "clear": "Arrêter l’aperçu du formulaire déconnecté"
   }
 }

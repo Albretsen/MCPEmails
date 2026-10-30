@@ -182,7 +182,8 @@ const TABLE_SECTIONS = [
     key: 'support',
     rows: [
       { key: 'community', free: true,  personal: true,  solo: true,  pro: true },
-      { key: 'email',     free: false, personal: true,  solo: true,  pro: true },
+      { key: 'email',     free: true,  personal: true,  solo: true,  pro: true },
+      { key: 'priority',  free: false, personal: true,  solo: true,  pro: true },
     ],
   },
 ];

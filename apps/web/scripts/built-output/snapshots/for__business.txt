@@ -11,9 +11,7 @@ AI Email for Business: Every Company Mailbox on One Agent · MCPEmails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -97,7 +95,7 @@ Free, Personal and Pro are all one login. What changes is how many mailboxes tha
 Free: one mailbox
 Start with the busiest address. 150 email actions a month, the first 3 days uncounted, no card required.
 Personal, $9 a month: up to three
-For a company with two or three addresses. Unlimited email actions, a higher burst rate limit and email support.
+For a company with two or three addresses. Unlimited email actions, a higher burst rate limit and priority email support.
 Pro, $15 a month: four to ten
 Up to 10 mailboxes, still on one login. The plan for one person running a business with an address per department.
 Business, at $39 a month, includes 10 mailboxes and charges $3 a month for each one after that. Members with roles cost nothing extra, and you can run a separate workspace per company or client.
@@ -124,7 +122,7 @@ Read the docs
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -155,6 +153,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -173,6 +172,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here

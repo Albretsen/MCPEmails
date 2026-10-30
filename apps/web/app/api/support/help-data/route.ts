@@ -2,32 +2,25 @@
  * GET /api/support/help-data?locale=xx: everything the dashboard's help
  * section (/dashboard/help) needs to render the help center client-side.
  *
- *   visible caller, GET        200 { email, signedIn, signedInEmail, context,
- *                                    formToken, form, ticketCategories,
- *                                    locale, index,
- *                                    categories, copy }
- *   visible caller, other      405
- *   anyone else, any method    the unmatched-path 404
+ *   GET     200 { email, signedIn, signedInEmail, context, formToken, form,
+ *                 ticketCategories, locale, index, categories, copy }
+ *   other   405
  *
  * The dashboard's locale lives in the browser, not the URL, and a section
  * switch is a client-side render, so the section asks for its data here rather
  * than through the server page. `topic`, `provider`, `code` and `from` seed the
  * contact form exactly as they do on /help.
- *
- * The gate goes at release: drop the 404 branches. // SUPPORT_RELEASE_GATE
  */
 import { getTicketContextPreview } from '@/lib/support/context';
 import { issueSupportFormToken } from '@/lib/support/form-token';
 import { getHelpCenterData, seedContactForm } from '@/lib/support/help-center-data.mjs';
 import { SUPPORT_CATEGORIES } from '@/lib/support/help-content.mjs';
 import { SUPPORT_EMAIL } from '@/lib/support/help-links.mjs';
-import { supportJson, supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
+import { supportJson, supportMethodNotAllowed } from '@/lib/support/http';
 import { getSupportViewer } from '@/lib/support/viewer';
 
 export async function GET(request: Request): Promise<Response> {
   const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
-
   const params = new URL(request.url).searchParams;
   const data = await getHelpCenterData(params.get('locale') ?? 'en', { inApp: true });
   const seed = seedContactForm(
@@ -61,8 +54,6 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 async function otherMethod(): Promise<Response> {
-  const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
   return supportMethodNotAllowed('GET');
 }
 

@@ -1677,20 +1677,16 @@ function needsReconnect(status) {
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
 /**
- * "Reconnect not working?" on the Inboxes error banner. With the help center
- * visible it opens the contact form on the connect topic, naming the provider
- * when every errored inbox shares one; otherwise an email to support@ with a
- * translated subject.
+ * "Reconnect not working?" on the Inboxes error banner. It opens the contact
+ * form on the connect topic, naming the provider when every errored inbox
+ * shares one.
  */
-export function reconnectSupportHref(erroredInboxes, supportVisible, mailSubject) {
-  if (supportVisible) { // SUPPORT_RELEASE_GATE: at release keep only this branch.
-    const providers = [...new Set(erroredInboxes.map(ib => ib.provider).filter(Boolean))];
-    return supportContactHref(providers.length === 1 ? providers[0] : null, null);
-  }
-  return `mailto:support@mcpemails.com?subject=${encodeURIComponent(mailSubject)}`;
+export function reconnectSupportHref(erroredInboxes) {
+  const providers = [...new Set(erroredInboxes.map(ib => ib.provider).filter(Boolean))];
+  return supportContactHref(providers.length === 1 ? providers[0] : null, null);
 }
 
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, supportVisible = false /* SUPPORT_RELEASE_GATE */, onContactSupport = null }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -2055,11 +2051,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               : t('inboxes.errorBannerMany', { count: erroredCount })}
           </span>
           <a
-            href={reconnectSupportHref(erroredInboxes, supportVisible, t('inboxes.errorBannerSupportSubject'))}
+            href={reconnectSupportHref(erroredInboxes)}
             onClick={(e) => {
               // The help center opens in place (App switches sections); a
-              // mailto or a modified click is left to the browser.
-              if (!supportVisible || !onContactSupport || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // SUPPORT_RELEASE_GATE
+              // modified click is left to the browser.
+              if (!onContactSupport || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
               e.preventDefault();
               onContactSupport(e.currentTarget.getAttribute('href'));
             }}
@@ -6546,7 +6542,7 @@ function BillingSection({
   // back: the grant lifts `maxInboxes` and nothing else, it survives onto a
   // paid plan (nothing clears the entitlement when a subscription activates),
   // and Personal raises their burst rate 60/min to 120/min and adds the
-  // billing portal and email support. (The Free action allowance is not a
+  // billing portal and priority email support. (The Free action allowance is not a
   // delta for this cohort: every workspace from before 2026-09-12 is exempt
   // from it for good.) So it is a strict upgrade for them, and hiding the
   // card meant the cohort could not buy at all: the card was the only way to

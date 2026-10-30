@@ -8,8 +8,7 @@
  * with no write. A malformed body (not JSON, over 1 KB, a missing or oversized
  * id, a non-boolean `helpful`, a locale that is not a help locale) is 400.
  * HelpCenter.jsx fires and forgets, so the status never reaches the reader.
- *
- * SUPPORT_RELEASE_GATE: hidden callers get the unmatched 404 on every method.
+ * Every method other than POST answers 405.
  */
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
@@ -17,7 +16,7 @@ import {
   parseArticleFeedback,
   voterKey,
 } from '@/lib/support/article-feedback';
-import { supportJson, supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
+import { supportJson, supportMethodNotAllowed } from '@/lib/support/http';
 import { clientIp, hashSupportIp } from '@/lib/support/ip';
 import { readBodyWithLimit } from '@/lib/support/read-body';
 import { getSupportViewer } from '@/lib/support/viewer';
@@ -29,9 +28,6 @@ function noContent(): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
-
   const read = await readBodyWithLimit(request, MAX_BODY_BYTES);
   if (!read.ok) return supportJson({ error: read.reason === 'too_large' ? 'body_too_large' : 'invalid_body' }, 400);
   let body: unknown = null;
@@ -45,6 +41,7 @@ export async function POST(request: Request): Promise<Response> {
     if (parsed.kind === 'invalid') return supportJson({ error: parsed.error }, 400);
     if (parsed.kind === 'unknown_article') return noContent();
     const vote = parsed.vote;
+    const viewer = await getSupportViewer();
     const userId = viewer.user?.id ?? null;
     const key = voterKey(userId, userId ? null : hashSupportIp(clientIp(request.headers)));
     if (!key) return noContent();
@@ -64,8 +61,6 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 async function otherMethod(): Promise<Response> {
-  const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
   return supportMethodNotAllowed('POST');
 }
 

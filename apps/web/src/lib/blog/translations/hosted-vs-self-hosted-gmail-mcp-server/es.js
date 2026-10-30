@@ -81,7 +81,7 @@ Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado
 
 ## Cuánto cuesta en dólares
 
-MCPEmails es gratis para empezar: una bandeja conectada, claves de API ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días y soporte de la comunidad. [Personal cuesta $9/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte por correo), Pro cuesta $15/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta $39/mes (10 buzones incluidos más $3/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCPEmails es gratis para empezar: una bandeja conectada, claves de API ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días, el centro de ayuda y soporte por correo. [Personal cuesta $9/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte prioritario por correo), Pro cuesta $15/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta $39/mes (10 buzones incluidos más $3/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
 
 ## ¿Cuál deberías elegir?
 

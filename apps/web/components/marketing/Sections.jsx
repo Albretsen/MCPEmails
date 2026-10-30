@@ -12,7 +12,6 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
-import { SupportHelpLink } from '../support/SupportHelpLink';
 import { CheckoutReassurance } from '../CheckoutReassurance';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { routing } from '@/i18n/routing';
@@ -1529,8 +1528,7 @@ export function Footer({ locales } = {}) {
             <Link href="/about">{t('footer.linkAbout')}</Link>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/status">{t('footer.linkStatus')}</Link>
-            {/* SUPPORT_RELEASE_GATE: becomes a plain <Link href="/help"> at release. */}
-            <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
+            <Link href="/help">{t('footer.linkHelp')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
             {/* The withdrawal function (Art. 11a CRD, Directive (EU)

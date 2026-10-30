@@ -356,7 +356,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Usage analytics',
       'Gmail, Outlook, iCloud, Fastmail and any IMAP',
       'Unlimited API keys',
-      'Community support',
+      'Help center and email support',
     ],
     highlighted: false,
   },
@@ -406,7 +406,8 @@ export const PLANS: Record<PlanId, Plan> = {
     // 1 -> 3, the monthly action cap (Free's public 150 -> none that a
     // customer can reach; the paid ceiling stays a silent abuse guard and is
     // never quoted as a number), maxRequestsPerMinute 60 -> 120, supportTier
-    // community -> email, billingPortalEnabled, and analyticsRetentionDays
+    // community -> email (shown as priority email support; Free shows the
+    // help center and email support), billingPortalEnabled, and analyticsRetentionDays
     // 30 -> 90. The history window is left out on purpose: this array ships in
     // the purchase confirmation email, which nothing re-checks when a window
     // moves; the pricing page's comparison table carries it. Pro and Business
@@ -416,7 +417,7 @@ export const PLANS: Record<PlanId, Plan> = {
       '3 connected inboxes',
       'No monthly action cap',
       '2x higher burst rate limit',
-      'Email support',
+      'Priority email support',
     ],
     highlighted: false,
   },
@@ -516,8 +517,9 @@ export const PLANS: Record<PlanId, Plan> = {
       // until the feature does, so no copy can be generated from them.
       ssoEnabled: false,
       auditLogEnabled: false,
-      // There is no priority queue behind "priority"; email support is what
-      // every paid plan actually gets.
+      // There is no separate queue behind the "priority" tier id. Every paid
+      // plan is shown as "Priority email support": the ticket email names the
+      // plan (src/lib/support/emails.ts), so paid tickets can be answered first.
       supportTier: 'email',
       webhooksEnabled: true,
     },
