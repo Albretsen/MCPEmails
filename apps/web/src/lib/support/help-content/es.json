@@ -86,7 +86,7 @@
       "id": "app-password-required",
       "title": "Hace falta una contraseña de aplicación (Yahoo, iCloud, Gmail, Zoho)",
       "summary": "Estos proveedores rechazan aquí tu contraseña normal. Crea una contraseña de aplicación y pégala.",
-      "keywords": "contraseña de aplicación específica yahoo icloud apple gmail google zoho verificación en dos pasos app password dos factores 2fa mfa",
+      "keywords": "contraseña de aplicación específica yahoo icloud apple gmail google zoho verificación en dos pasos app password dos factores doble factor 2fa mfa",
       "steps": [
         "Yahoo: Account Security y luego Generate app password.",
         "iCloud: account.apple.com, Sign-In and Security y luego App-Specific Passwords.",

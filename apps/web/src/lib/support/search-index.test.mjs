@@ -277,10 +277,10 @@ test('the real English index puts the right entry first', async () => {
     yahoo: 'provider:yahoo',
     'claude connector': 'article:connect-claude',
     'rate limit': 'docs:rate-limits',
-    'two factor': 'article:connect-gmail',
-    '2fa': 'article:connect-gmail',
-    mfa: 'article:connect-gmail',
-    'smtp error': 'article:connect-imap-mailbox',
+    'two factor': 'article:app-password-required',
+    '2fa': 'article:app-password-required',
+    mfa: 'article:app-password-required',
+    'smtp error': 'article:imap-password-rejected',
     error: 'docs:errors',
     'where is my sent email': 'article:search-misses-messages',
     'api key': 'article:api-keys-and-revoking',
@@ -297,10 +297,10 @@ test('the real English index puts the right entry first', async () => {
 
 test('the real nb, fr, es and zh indexes find the same answers in their own words', async () => {
   const CASES = {
-    nb: { 'slette konto': 'article:disconnect-or-delete', refusjon: 'article:change-or-cancel-plan', 'app-passord': 'article:app-password-required', tofaktor: 'article:connect-gmail' },
-    fr: { 'supprimer compte': 'article:disconnect-or-delete', 'double authentification': 'article:connect-gmail', 'clé api': 'article:api-keys-and-revoking' },
-    es: { 'eliminar cuenta': 'article:disconnect-or-delete', 'doble factor': 'article:connect-gmail', 'clave api': 'article:api-keys-and-revoking' },
-    zh: { 双重验证: 'article:connect-gmail', 删除账户: 'article:disconnect-or-delete' },
+    nb: { 'slette konto': 'article:disconnect-or-delete', refusjon: 'article:change-or-cancel-plan', 'app-passord': 'article:app-password-required', tofaktor: 'article:app-password-required' },
+    fr: { 'supprimer compte': 'article:disconnect-or-delete', 'double authentification': 'article:app-password-required', 'clé api': 'article:api-keys-and-revoking' },
+    es: { 'eliminar cuenta': 'article:disconnect-or-delete', 'doble factor': 'article:app-password-required', 'clave api': 'article:api-keys-and-revoking' },
+    zh: { 双重验证: 'article:app-password-required', 删除账户: 'article:disconnect-or-delete' },
   };
   const wrong = [];
   for (const [locale, cases] of Object.entries(CASES)) {
