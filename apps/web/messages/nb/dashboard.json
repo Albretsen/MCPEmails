@@ -210,6 +210,7 @@
     "statusConnected": "Tilkoblet",
     "statusPending": "Venter",
     "statusError": "Feil",
+    "statusNeedsReconnect": "Må kobles til på nytt",
     "statusParked": "Parkert",
     "parkedNote": "Parkert fordi planen din har færre innbokser. Den kommer tilbake når du oppgraderer. Ingenting er slettet.",
     "makeActive": "Gjør aktiv",

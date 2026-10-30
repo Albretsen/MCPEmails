@@ -210,6 +210,7 @@
     "statusConnected": "Conectada",
     "statusPending": "Pendiente",
     "statusError": "Error",
+    "statusNeedsReconnect": "Hay que reconectarla",
     "statusParked": "En espera",
     "parkedNote": "En espera porque tu plan incluye menos bandejas. Vuelve cuando mejores tu plan. No se ha eliminado nada.",
     "makeActive": "Activar",

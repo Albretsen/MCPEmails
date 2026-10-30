@@ -258,7 +258,11 @@
     "from": "Åpnet fra",
     "provider": "Leverandør",
     "code": "Feilkode",
-    "never": "Legges aldri ved: passord, tokener eller innholdet i e-posten din."
+    "never": "Legges aldri ved: passord, tokener eller innholdet i e-posten din.",
+    "healthConnected": "Tilkoblet",
+    "healthPending": "Venter",
+    "healthNeedsReconnect": "Må kobles til på nytt",
+    "healthUnavailable": "Kan ikke brukes"
   },
   "errors": {
     "invalid_json": "Noe gikk galt da skjemaet ble sendt. Last inn siden på nytt og prøv igjen.",

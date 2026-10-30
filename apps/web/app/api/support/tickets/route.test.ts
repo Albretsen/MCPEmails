@@ -33,7 +33,7 @@ const contextTables: Record<string, Array<Record<string, unknown>>> = {
   workspace_members: [{ user_id: 'u-internal', workspace_id: 'w1', joined_at: '2026-01-01' }],
   workspaces: [{ id: 'w1', plan: 'solo', deleted_at: null }],
   inboxes: [
-    { workspace_id: 'w1', provider: 'imap', service: 'yahoo', imap_host: 'imap.mail.yahoo.com', status: 'error', last_error: 'AUTHENTICATIONFAILED', deleted_at: null, imap_password: 'SECRETPW' },
+    { workspace_id: 'w1', email_address: 'staff-box@example.com', provider: 'imap', service: 'yahoo', imap_host: 'imap.mail.yahoo.com', status: 'error', last_error: 'AUTHENTICATIONFAILED', deleted_at: null, imap_password: 'SECRETPW' },
   ],
 };
 
@@ -169,7 +169,17 @@ test('signed in: 201 with ref, row stored with context, both emails sent and rec
   assert.deepEqual(row.context, {
     workspace_id: 'w1',
     plan: 'solo',
-    mailboxes: [{ provider: 'imap', service: 'yahoo', host: 'imap.mail.yahoo.com', status: 'error', last_error_code: 'AUTHENTICATIONFAILED' }],
+    mailboxes: [{
+      email: 'staff-box@example.com',
+      provider: 'imap',
+      service: 'yahoo',
+      service_name: 'Yahoo Mail',
+      host: 'imap.mail.yahoo.com',
+      status: 'error',
+      health: 'reconnect_required',
+      last_error_code: 'AUTHENTICATIONFAILED',
+      last_error_text: 'AUTHENTICATIONFAILED',
+    }],
     from: 'connect-modal',
     provider: 'yahoo',
     code: 'auth_failed',

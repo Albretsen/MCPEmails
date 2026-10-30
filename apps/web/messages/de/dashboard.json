@@ -210,6 +210,7 @@
     "statusConnected": "Verbunden",
     "statusPending": "Ausstehend",
     "statusError": "Fehler",
+    "statusNeedsReconnect": "Neu verbinden nötig",
     "statusParked": "Geparkt",
     "parkedNote": "Geparkt, weil Ihr Tarif weniger Postfächer umfasst. Es kommt zurück, sobald Sie upgraden. Nichts wurde gelöscht.",
     "makeActive": "Aktivieren",

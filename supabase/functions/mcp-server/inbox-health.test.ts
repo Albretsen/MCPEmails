@@ -14,6 +14,7 @@ import {
   loginRefusedMarker,
 } from "./inbox-health.ts";
 import * as clientApiHealth from "../client-api/mail/health.ts";
+import { OUTLOOK_NO_MAILBOX_MESSAGE } from "./outlook-graph.ts";
 
 const APP = "https://mcpemails.com";
 const reconnectUrl = (provider: string, id: string) =>
@@ -130,4 +131,19 @@ Deno.test("inboxHealthWrite: mark on a password-mailbox auth failure, clear on a
   // The hot path: a success on an unmarked row, or an unrelated error, writes nothing.
   assertEquals(inboxHealthWrite({ ...base, logStatus: "success", logErrorCode: null, provider: "imap" }), null);
   assertEquals(inboxHealthWrite({ rowHadMarker: true, logStatus: "error", logErrorCode: "provider_error", provider: "imap" }), null);
+});
+
+// The web app (apps/web/src/lib/inboxes/health.ts) mirrors inboxHealthStatus
+// for the dashboard and the support form. Both read this one case table.
+Deno.test("inboxHealthStatus matches the shared case table the web app also runs", async () => {
+  const table = JSON.parse(await Deno.readTextFile(new URL("./inbox-health.cases.json", import.meta.url))) as {
+    noMailboxMessage: string;
+    cases: Array<{ name: string; row: { provider: string; status?: string; last_error?: string | null }; expected: string }>;
+  };
+  assertEquals(table.noMailboxMessage, OUTLOOK_NO_MAILBOX_MESSAGE);
+  assert(table.cases.length >= 10);
+  for (const c of table.cases) {
+    const row = { ...c.row, last_error: c.row.last_error === "@noMailbox" ? table.noMailboxMessage : c.row.last_error };
+    assertEquals(inboxHealthStatus(row, OUTLOOK_NO_MAILBOX_MESSAGE) ?? "ok", c.expected, c.name);
+  }
 });

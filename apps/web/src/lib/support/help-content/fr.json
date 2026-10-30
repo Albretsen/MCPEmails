@@ -258,7 +258,11 @@
     "from": "Ouvert depuis",
     "provider": "Fournisseur",
     "code": "Code d’erreur",
-    "never": "Jamais joints : mots de passe, jetons ou contenu de vos e-mails."
+    "never": "Jamais joints : mots de passe, jetons ou contenu de vos e-mails.",
+    "healthConnected": "Connectée",
+    "healthPending": "En attente",
+    "healthNeedsReconnect": "À reconnecter",
+    "healthUnavailable": "Inutilisable"
   },
   "errors": {
     "invalid_json": "L’envoi du formulaire a échoué. Rechargez la page et réessayez.",

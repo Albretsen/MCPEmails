@@ -210,6 +210,7 @@
     "statusConnected": "Connectée",
     "statusPending": "En attente",
     "statusError": "Erreur",
+    "statusNeedsReconnect": "À reconnecter",
     "statusParked": "En veille",
     "parkedNote": "En veille, car votre offre comprend moins de boîtes. Elle revient dès que vous passez à une offre supérieure. Rien n'a été supprimé.",
     "makeActive": "Activer",

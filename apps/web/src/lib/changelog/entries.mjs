@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-30',
+    kind: 'fixed',
+    title: 'Inboxes page shows when a password was refused',
+    body:
+      "When your mail server refuses an inbox's password, the Inboxes page now marks it Needs reconnect with a Reconnect button, where before it could still read Connected. The support form lists each mailbox by its address and says whether it is connected.",
+  },
+  {
+    date: '2026-10-30',
     kind: 'added',
     title: 'Help articles and support in the dashboard',
     body:

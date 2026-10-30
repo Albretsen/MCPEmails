@@ -21,11 +21,15 @@ export function slugParam(value) {
   return SLUG_RE.test(lower) ? lower : null;
 }
 
-/** The provider's display name for a slug from the connect modal, or null. */
+/**
+ * The provider's display name for a slug from the connect modal, or null.
+ * The generic IMAP form reads "IMAP", as the mailbox list in the contact
+ * form's "what we attach" box does (serviceDisplayName in context.ts).
+ */
 export function providerName(slug) {
   if (!slug) return null;
-  const resolved = slug === 'generic' ? 'imap' : slug;
-  return getProvider(resolved)?.name ?? null;
+  if (slug === 'generic' || slug === 'imap') return 'IMAP';
+  return getProvider(slug)?.name ?? null;
 }
 
 /** A supported locale, English otherwise. */

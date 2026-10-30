@@ -29,7 +29,19 @@ function fill(template, values) {
   );
 }
 
-function AttachDisclosure({ copy, context }) {
+/**
+ * The health from src/lib/inboxes/health.ts in words. Older contexts without
+ * `health` fall back to the row status.
+ */
+function healthWords(a, m) {
+  if (m.health === 'reconnect_required') return a.healthNeedsReconnect;
+  if (m.health === 'unavailable') return a.healthUnavailable;
+  if (m.status === 'pending') return a.healthPending;
+  if (m.status === 'error') return a.healthNeedsReconnect;
+  return a.healthConnected;
+}
+
+function AttachDisclosure({ copy, context, providerName = null }) {
   const a = copy.attach;
   const mailboxes = Array.isArray(context?.mailboxes) ? context.mailboxes : [];
   return (
@@ -46,15 +58,15 @@ function AttachDisclosure({ copy, context }) {
             <ul>
               {mailboxes.map((m, i) => (
                 <li key={i} data-mailbox="">
-                  {[m.service || m.provider, m.host, m.status].filter(Boolean).join(' · ')}
-                  {m.last_error_code ? ` · ${fill(a.lastError, { code: m.last_error_code })}` : ''}
+                  {[m.email, m.service_name, healthWords(a, m)].filter(Boolean).join(' · ')}
+                  {m.last_error_text ? ` · ${fill(a.lastError, { code: m.last_error_text })}` : ''}
                 </li>
               ))}
             </ul>
           ) : null}
         </li>
         {context?.from ? <li>{a.from}: {context.from}</li> : null}
-        {context?.provider ? <li>{a.provider}: {context.provider}</li> : null}
+        {context?.provider ? <li>{a.provider}: {providerName ?? context.provider}</li> : null}
         {context?.code ? <li>{a.code}: {context.code}</li> : null}
       </ul>
       <p className="help-muted">{a.never}</p>
@@ -228,7 +240,7 @@ export default function ContactForm({
         </div>
         <input type="hidden" name="formToken" value={formToken} />
 
-        {signedIn ? <AttachDisclosure copy={copy} context={context} /> : null}
+        {signedIn ? <AttachDisclosure copy={copy} context={context} providerName={providerName} /> : null}
 
         <div className="help-actions">
           <Btn type="submit" variant="primary" busy={sending}>

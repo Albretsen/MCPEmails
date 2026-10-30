@@ -210,6 +210,7 @@
     "statusConnected": "Connected",
     "statusPending": "Pending",
     "statusError": "Error",
+    "statusNeedsReconnect": "Needs reconnect",
     "statusParked": "Parked",
     "parkedNote": "Parked because your plan includes fewer inboxes. It comes back when you upgrade. Nothing was deleted.",
     "makeActive": "Make active",
