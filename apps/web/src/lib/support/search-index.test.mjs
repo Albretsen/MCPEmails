@@ -11,7 +11,8 @@
 //    guide copy in it by accident, which would add hundreds of KB.
 //  - articles: 400 bytes per entry on average. Measured at about 320 with 59
 //    articles (help center v2). Hints are clipped to 80 characters and terms to
-//    160, so only an article set that keeps growing moves this total.
+//    260 (most keyword lists are far shorter), so only an article set that
+//    keeps growing moves this total.
 //  - the whole index: 64 KB. Measured at 43 KB for English with 59 articles;
 //    this is the number that matters to a reader on a slow connection, and it
 //    leaves room for roughly 50 more articles before anyone has to look again.
@@ -21,7 +22,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { getSearchIndex, HINT_MAX, TERMS_MAX, clip, clipTerms } from './search-index.mjs';
-import { prepareIndex, searchIndex, normalize, MAX_RESULTS } from './search-filter.mjs';
+import { prepareIndex, searchIndex, normalize, oneEdit, MAX_RESULTS } from './search-filter.mjs';
 import { getHelpContent, HELP_LOCALES } from './help-content.mjs';
 import { getHelpArticles, flattenArticles } from './articles.mjs';
 import { releasedProviders } from '../connect/release.mjs';
@@ -209,6 +210,109 @@ test('the real index answers questions typed as sentences', async () => {
   assert.ok(top('claude cant see my emails').includes('article:assistant-sees-nothing'), top('claude cant see my emails').join());
   assert.ok(top('how do i cancel my subscription').some((id) => id.includes('cancel')), top('how do i cancel my subscription').join());
   assert.ok(top('my password is not working').includes('article:imap-password-rejected'), top('my password is not working').join());
+});
+
+test('oneEdit counts a swap of neighbours as one edit, not two', () => {
+  assert.equal(oneEdit('gmial', 'gmail'), true);
+  assert.equal(oneEdit('fastmial', 'fastmail'), true);
+  assert.equal(oneEdit('gmal', 'gmail'), true);
+  assert.equal(oneEdit('gmial', 'gmali'), false, 'two swaps');
+  assert.equal(oneEdit('abcd', 'badc'), false);
+});
+
+test('a 4-letter typo needs its first letter; a short word never swallows a long one', () => {
+  const p = prepareIndex([
+    { id: 'gmail', kind: 'provider', title: 'Gmail', hint: '', terms: '' },
+    { id: 'mail', kind: 'provider', title: 'Yahoo Mail', hint: '', terms: '' },
+    { id: 'lend', kind: 'docs', title: 'Lend', hint: '', terms: '' },
+  ]);
+  assert.deepEqual(searchIndex(p, 'gmal').map((e) => e.id), ['gmail']);
+  assert.deepEqual(searchIndex(p, 'gmail').map((e) => e.id), ['gmail']);
+  assert.deepEqual(searchIndex(p, 'send').map((e) => e.id), []);
+});
+
+test('a query of filler words alone finds nothing, unless it is a keyword phrase', () => {
+  const p = prepareIndex([
+    { id: 'kw', kind: 'article', title: 'Something broke', hint: 'the help page', terms: 'connector not working' },
+    { id: 'other', kind: 'article', title: 'The other one', hint: 'help', terms: 'help the issue' },
+  ]);
+  assert.deepEqual(searchIndex(p, 'help').map((e) => e.id), []);
+  assert.deepEqual(searchIndex(p, 'the').map((e) => e.id), []);
+  assert.deepEqual(searchIndex(p, 'not working').map((e) => e.id), ['kw']);
+  assert.deepEqual(searchIndex(p, 'it is not').map((e) => e.id), []);
+});
+
+test('a query word in the title breaks a tie between equal keyword hits', () => {
+  const p = prepareIndex([
+    { id: 'client', kind: 'client', title: 'Cline', hint: '', terms: 'cline api key' },
+    { id: 'article', kind: 'article', title: 'Create an API key', hint: '', terms: 'api key token' },
+  ]);
+  assert.deepEqual(searchIndex(p, 'api key').map((e) => e.id), ['article', 'client']);
+});
+
+test('the real English index puts the right entry first', async () => {
+  const p = prepareIndex(await indexFor('en'));
+  const first = (q) => searchIndex(p, q)[0]?.id ?? 'none';
+  const CASES = {
+    'gmail app password': 'article:app-password-required',
+    'outlook wont connect': 'article:connect-outlook-microsoft-365',
+    'delete account': 'article:disconnect-or-delete',
+    chatgpt: 'client:chatgpt',
+    imap: 'provider:imap',
+    'draft not showing': 'article:draft-editor-card',
+    icloud: 'provider:icloud',
+    cancel: 'article:change-or-cancel-plan',
+    fastmail: 'provider:fastmail',
+    gmial: 'provider:gmail',
+    fastmial: 'provider:fastmail',
+    gmal: 'provider:gmail',
+    passwords: 'article:imap-password-rejected',
+    help: 'none',
+    the: 'none',
+    'not working': 'article:assistant-sees-nothing',
+    'cant send email': 'article:send-new-email',
+    "can't send email": 'article:send-new-email',
+    invoice: 'article:change-or-cancel-plan',
+    'change plan': 'article:change-or-cancel-plan',
+    yahoo: 'provider:yahoo',
+    'claude connector': 'article:connect-claude',
+    'rate limit': 'docs:rate-limits',
+    'two factor': 'article:connect-gmail',
+    '2fa': 'article:connect-gmail',
+    mfa: 'article:connect-gmail',
+    'smtp error': 'article:connect-imap-mailbox',
+    error: 'docs:errors',
+    'where is my sent email': 'article:search-misses-messages',
+    'api key': 'article:api-keys-and-revoking',
+    token: 'article:api-keys-and-revoking',
+    send: 'article:send-new-email',
+    spam: 'article:search-misses-messages',
+  };
+  const wrong = Object.entries(CASES)
+    .filter(([q, id]) => first(q) !== id)
+    .map(([q, id]) => `${q}: got ${first(q)}, want ${id}`);
+  assert.deepEqual(wrong, []);
+  assert.equal(['faq:', 'article:change-or-cancel-plan'].some((x) => first('refund').startsWith(x)), true, first('refund'));
+});
+
+test('the real nb, fr, es and zh indexes find the same answers in their own words', async () => {
+  const CASES = {
+    nb: { 'slette konto': 'article:disconnect-or-delete', refusjon: 'article:change-or-cancel-plan', 'app-passord': 'article:app-password-required', tofaktor: 'article:connect-gmail' },
+    fr: { 'supprimer compte': 'article:disconnect-or-delete', 'double authentification': 'article:connect-gmail', 'clé api': 'article:api-keys-and-revoking' },
+    es: { 'eliminar cuenta': 'article:disconnect-or-delete', 'doble factor': 'article:connect-gmail', 'clave api': 'article:api-keys-and-revoking' },
+    zh: { 双重验证: 'article:connect-gmail', 删除账户: 'article:disconnect-or-delete' },
+  };
+  const wrong = [];
+  for (const [locale, cases] of Object.entries(CASES)) {
+    const p = prepareIndex(await indexFor(locale));
+    for (const [q, id] of Object.entries(cases)) {
+      const got = searchIndex(p, q)[0]?.id ?? 'none';
+      if (got !== id) wrong.push(`${locale} ${q}: got ${got}, want ${id}`);
+    }
+  }
+  assert.deepEqual(wrong, []);
+  const fr = prepareIndex(await indexFor('fr'));
+  assert.equal(searchIndex(fr, 'remboursement').some((e) => e.id === 'article:change-or-cancel-plan'), true);
 });
 
 test('clip strips rich-text tags and never leaves an angle bracket', () => {

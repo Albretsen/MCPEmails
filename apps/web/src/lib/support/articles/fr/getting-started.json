@@ -71,7 +71,7 @@
       "id": "connect-gmail",
       "title": "Connecter Gmail",
       "summary": "Collez un mot de passe d’application Google, ou connectez-vous plutôt avec Google.",
-      "keywords": "gmail google connecter mot de passe d’application validation en deux étapes connexion google oauth avertissement application non validée paramètres avancés non sécurisé app password 2-step verification",
+      "keywords": "gmail google connecter mot de passe d’application validation en deux étapes connexion google oauth avertissement application non validée paramètres avancés non sécurisé app password 2-step verification double authentification deux facteurs 2fa mfa two factor",
       "steps": [
         "Activez la validation en deux étapes dans votre compte Google.",
         "Créez un mot de passe d’application sur myaccount.google.com/apppasswords.",
@@ -119,7 +119,7 @@
       "id": "connect-imap-mailbox",
       "title": "Connecter n’importe quelle boîte en IMAP",
       "summary": "Choisissez IMAP / SMTP et saisissez votre adresse, les noms des serveurs et le mot de passe de la boîte.",
-      "keywords": "imap smtp domaine personnalisé propre domaine hébergement cpanel plesk boîte professionnelle paramètres serveur hôte port ssl tls starttls réception uniquement envoi uniquement",
+      "keywords": "imap smtp domaine personnalisé propre domaine hébergement cpanel plesk boîte professionnelle paramètres serveur hôte port ssl tls starttls réception uniquement envoi uniquement double authentification 2fa mfa erreur smtp échec d’envoi",
       "steps": [
         "Choisissez Connecter la boîte, puis IMAP / SMTP.",
         "Saisissez votre adresse e-mail. Pour les fournisseurs connus, les réglages du serveur se remplissent seuls.",

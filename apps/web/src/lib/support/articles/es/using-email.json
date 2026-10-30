@@ -25,7 +25,7 @@
       "id": "search-misses-messages",
       "title": "Encontrar mensajes que una búsqueda no encontró",
       "summary": "Nombra la carpeta, usa palabras completas y en Outlook busca palabras y filtros por separado.",
-      "keywords": "búsqueda falta no encontrado carpeta archivo enviados imap gmail outlook palabra completa papelera spam correo no deseado filtro",
+      "keywords": "búsqueda falta no encontrado carpeta archivo enviados imap gmail outlook palabra completa papelera spam correo no deseado filtro carpeta de enviados copia enviada correo enviado sent folder",
       "steps": [
         "En buzones IMAP, nombra tu carpeta de archivo o de enviados. Solo se busca en la bandeja de entrada.",
         "En Gmail y Outlook, nombra la Papelera para buscar en ella. Gmail también omite el Spam.",

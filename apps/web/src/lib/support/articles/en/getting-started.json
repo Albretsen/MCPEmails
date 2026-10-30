@@ -71,7 +71,7 @@
       "id": "connect-gmail",
       "title": "Connect Gmail",
       "summary": "Paste a Google app password, or sign in with Google instead.",
-      "keywords": "gmail google connect app password 2-step verification google sign-in oauth unverified app warning advanced unsafe",
+      "keywords": "gmail google connect app password 2-step verification google sign-in oauth unverified app warning advanced unsafe two factor 2fa two-step mfa",
       "steps": [
         "Turn on 2-Step Verification in your Google account.",
         "Create an app password at myaccount.google.com/apppasswords.",
@@ -119,7 +119,7 @@
       "id": "connect-imap-mailbox",
       "title": "Connect any mailbox with IMAP",
       "summary": "Choose IMAP / SMTP and enter your address, server names and mailbox password.",
-      "keywords": "imap smtp custom domain own domain hosting cpanel plesk work mailbox server settings host port ssl tls starttls receive only send only",
+      "keywords": "imap smtp custom domain own domain hosting cpanel plesk work mailbox server settings host port ssl tls starttls receive only send only two factor 2fa mfa smtp error send failed sending failed",
       "steps": [
         "Choose Connect inbox, then IMAP / SMTP.",
         "Enter your email address. Known providers fill in the server settings.",

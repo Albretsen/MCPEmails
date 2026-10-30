@@ -25,7 +25,7 @@
       "id": "search-misses-messages",
       "title": "Finn meldinger et søk gikk glipp av",
       "summary": "Nevn mappen, bruk hele ord, og søk etter ord og filtre hver for seg på Outlook.",
-      "keywords": "søk mangler ikke funnet finner ikke mappe arkiv sendt imap gmail outlook hele ord papirkurv søppelpost spam filter",
+      "keywords": "søk mangler ikke funnet finner ikke mappe arkiv sendt imap gmail outlook hele ord papirkurv søppelpost spam filter sendt-mappen sendte e-poster sendt kopi sent folder",
       "steps": [
         "På IMAP-postkasser nevner du arkiv- eller sendtmappen. Bare innboksen blir søkt i.",
         "På Gmail og Outlook nevner du papirkurven for å søke i den. Gmail hopper også over Spam.",

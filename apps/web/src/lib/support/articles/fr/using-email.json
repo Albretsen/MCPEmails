@@ -25,7 +25,7 @@
       "id": "search-misses-messages",
       "title": "Retrouver des messages qu’une recherche a manqués",
       "summary": "Nommez le dossier, utilisez des mots entiers et, sur Outlook, cherchez mots et filtres séparément.",
-      "keywords": "recherche manquant introuvable dossier archives envoyés imap gmail outlook mot entier corbeille spam filtre search",
+      "keywords": "recherche manquant introuvable dossier archives envoyés imap gmail outlook mot entier corbeille spam filtre search dossier envoyés copie envoyée e-mail envoyé sent folder",
       "steps": [
         "Sur les boîtes IMAP, nommez votre dossier d’archives ou d’envoyés. Seule la boîte de réception est parcourue.",
         "Sur Gmail et Outlook, nommez la Corbeille pour y chercher. Gmail ignore aussi le Spam.",

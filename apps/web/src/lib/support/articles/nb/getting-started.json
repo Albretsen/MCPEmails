@@ -71,7 +71,7 @@
       "id": "connect-gmail",
       "title": "Koble til Gmail",
       "summary": "Lim inn et app-passord fra Google, eller logg inn med Google i stedet.",
-      "keywords": "gmail google koble til app-passord app password totrinnsbekreftelse 2-step verification google-innlogging oauth ubekreftet app advarsel avansert usikker",
+      "keywords": "gmail google koble til app-passord app password totrinnsbekreftelse 2-step verification google-innlogging oauth ubekreftet app advarsel avansert usikker tofaktor tofaktorautentisering totrinns 2fa mfa two factor",
       "steps": [
         "Slå på totrinnsbekreftelse i Google-kontoen din.",
         "Lag et app-passord på myaccount.google.com/apppasswords.",
@@ -119,7 +119,7 @@
       "id": "connect-imap-mailbox",
       "title": "Koble til hvilken som helst postkasse med IMAP",
       "summary": "Velg IMAP / SMTP og skriv inn adressen, servernavnene og postkassepassordet.",
-      "keywords": "imap smtp eget domene webhotell hosting cpanel plesk jobbpostkasse serverinnstillinger vert port ssl tls starttls kun motta kun sende",
+      "keywords": "imap smtp eget domene webhotell hosting cpanel plesk jobbpostkasse serverinnstillinger vert port ssl tls starttls kun motta kun sende tofaktor 2fa mfa smtp-feil smtp feil sending feilet",
       "steps": [
         "Velg Koble til innboks, så IMAP / SMTP.",
         "Skriv inn e-postadressen din. Kjente leverandører fyller inn serverinnstillingene.",
