@@ -53,6 +53,7 @@ import { neutralizeList, neutralizeMaybe, neutralizeText } from "./text-safety.t
 import { plainTextBodyToHtml } from "./signature-compose.ts";
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 import { approvedDraftSnapshotFrom } from "./draft-send-snapshot.ts";
+import { openApprovalSummary, sealApprovalSummary } from "./approval-summary.ts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -397,7 +398,8 @@ interface ApprovalRow {
   operation: string;
   payload: unknown;
   payload_encrypted: boolean | null;
-  summary: Record<string, unknown> | null;
+  /** Stored shape: the `{v,data}` wrapper, or a plain object on older rows. */
+  summary: unknown;
   send_at: string | null;
   status: string;
   created_at: string | null;
@@ -748,7 +750,8 @@ async function buildOutboundEnvelope(
   row: ApprovalRow,
 ): Promise<Record<string, unknown>> {
   const snapshot = await readSnapshot(deps, row);
-  const summary = (row.summary ?? {}) as Record<string, unknown>;
+  // Encrypted since 2026-10-30; older rows hold the plain object (both read).
+  const summary = await openApprovalSummary(row.summary, deps.decrypt);
 
   const { data: inbox } = await deps.db
     .from("inboxes")
@@ -1373,7 +1376,10 @@ export async function runApprovalUpdate(
         // Refreshing the summary is not cosmetic: it is what the dashboard queue
         // and the approve page render. `row.summary` is passed so a reply's
         // provider-resolved recipients and subject survive a body-only edit.
-        summary: summaryFromSnapshot(updated, row.summary),
+        summary: await sealApprovalSummary(
+          summaryFromSnapshot(updated, await openApprovalSummary(row.summary, deps.decrypt)),
+          deps.encrypt,
+        ),
       })
       .eq("id", row.id)
       .eq("workspace_id", caller.workspace_id)

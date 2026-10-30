@@ -186,6 +186,12 @@ const OTHER_INBOX = "66666666-6666-4666-8666-666666666666";
 const KEY = "77777777-7777-4777-8777-777777777777";
 
 const CIPHER_PREFIX = "cipher:";
+
+/** The stored summary, decrypted with the fake cipher (sealed since 2026-10-30). */
+// deno-lint-ignore no-explicit-any
+function storedSummary(row: any): Record<string, any> {
+  return JSON.parse(String(row.summary.data).slice(CIPHER_PREFIX.length));
+}
 const SECRET_BODY = "Wire the funds to account 12345. SENTINEL-BODY-TEXT";
 
 const SNAPSHOT = {
@@ -941,10 +947,13 @@ Deno.test("approval_update re-encrypts the snapshot AND refreshes the summary", 
   });
 
   const row = store.send_approvals[0];
-  assertEquals(row.summary.subject, "Edited subject", "summary subject refreshed");
-  assertEquals(row.summary.to, ["a@x.com"], "recipients preserved");
-  assertEquals(row.summary.bcc_count, 1, "bcc count preserved");
-  assertEquals(row.summary.attachment_count, 1, "attachment count preserved");
+  // Stored encrypted since 2026-10-30, like the payload.
+  assertEquals(row.summary.v, 1, "summary stored as the encrypted wrapper");
+  const summary = storedSummary(row);
+  assertEquals(summary.subject, "Edited subject", "summary subject refreshed");
+  assertEquals(summary.to, ["a@x.com"], "recipients preserved");
+  assertEquals(summary.bcc_count, 1, "bcc count preserved");
+  assertEquals(summary.attachment_count, 1, "attachment count preserved");
   assertEquals(row.payload_encrypted, true, "still encrypted at rest");
 
   const stored = JSON.parse(String(row.payload.data).slice(CIPHER_PREFIX.length));
@@ -1272,8 +1281,37 @@ Deno.test("approval_update preserves a reply's resolved summary end to end", asy
     body_text: "edited reply body",
   });
   const row = store.send_approvals[0];
-  assertEquals(row.summary.to, ["ada@x.com"], "recipients survive the edit");
-  assertEquals(row.summary.subject, "Re: Q3 numbers", "subject survives the edit");
+  assertEquals(storedSummary(row).to, ["ada@x.com"], "recipients survive the edit");
+  assertEquals(storedSummary(row).subject, "Re: Q3 numbers", "subject survives the edit");
+});
+
+Deno.test("an encrypted summary renders on the card, and an edit keeps it encrypted", async () => {
+  // Rows written since 2026-10-30 hold the summary as {v, data}; older rows
+  // (the test above) hold the plain object. Both must render the same.
+  const sealed = {
+    v: 1,
+    data: CIPHER_PREFIX + JSON.stringify({
+      to: ["ada@x.com"],
+      cc: [],
+      bcc_count: 0,
+      subject: "Re: sealed numbers",
+      attachment_count: 0,
+    }),
+  };
+  const store = freshStore({
+    operation: "email_reply",
+    payload: { v: 1, data: CIPHER_PREFIX + JSON.stringify({ message_id: "m1", body: "original" }) },
+    summary: sealed,
+  });
+  const result = await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: "edited reply body",
+  });
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.outbound.subject, "Re: sealed numbers", "card subject from the sealed summary");
+  const row = store.send_approvals[0];
+  assertEquals(row.summary.v, 1, "still the encrypted wrapper");
+  assertEquals(storedSummary(row).to, ["ada@x.com"], "recipients survive the edit");
 });
 
 Deno.test("the outbound envelope neutralises every field a reviewer scans", async () => {

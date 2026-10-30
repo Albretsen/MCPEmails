@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { isUnsendableLegacyDraft, readPayload, reviewerBccFor } from '@/lib/approvals/payload';
+import { isUnsendableLegacyDraft, readPayload, readSummary, reviewerBccFor } from '@/lib/approvals/payload';
 import { neutralizeList, neutralizeText } from '@/lib/textSafety';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -51,7 +51,7 @@ export async function GET(
     : { data: null };
   if (!approval || !membership) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
 
-  const summary = (approval.summary ?? {}) as Record<string, unknown>;
+  const summary = readSummary(approval.summary);
   const payload = readPayload(approval);
   const bcc = reviewerBccFor(approval, membership.role);
   const summaryBccCount = typeof summary.bcc_count === 'number' ? summary.bcc_count : 0;

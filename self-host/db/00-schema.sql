@@ -658,6 +658,146 @@ END;
 $$;
 
 -- ============================================================
+-- Send history retention: purge_send_history()
+-- (migration 20261030120000_retention_low_risk.sql, identical body). Clears
+-- the stored message of finished scheduled sends and decided approvals after
+-- 7 days, deletes approvals after 90 days, and drops expired idempotency keys
+-- and bulk plans. The hosted schema runs it daily from pg_cron; self-host has
+-- no pg_cron, so run `SELECT public.purge_send_history();` daily from your own
+-- scheduler. Some tables it names are created further down; plpgsql
+-- resolves names at call time, so that order is fine.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.purge_send_history()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  c_batch    constant integer := 1000;
+  v_n        integer;
+  v_sends    integer := 0;
+  v_retired  integer := 0;
+  v_cleared  integer := 0;
+  v_deleted  integer := 0;
+  v_idem     integer := 0;
+  v_plans    integer := 0;
+BEGIN
+  -- scheduled_sends: message body of finished sends.
+  LOOP
+    UPDATE public.scheduled_sends
+    SET    payload = '{}'::jsonb,
+           payload_encrypted = true
+    WHERE  id IN (
+      SELECT s.id
+      FROM   public.scheduled_sends s
+      WHERE  s.status IN ('sent', 'error', 'cancelled')
+        AND  s.updated_at < now() - interval '7 days'
+        AND  s.payload <> '{}'::jsonb
+        AND  NOT (s.payload_encrypted = false
+                  AND jsonb_typeof(s.payload) = 'object'
+                  AND s.payload ? 'approval_id')
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_sends := v_sends + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  -- send_approvals: retire requests that expired while nobody looked.
+  UPDATE public.send_approvals
+  SET    status = 'expired',
+         decided_at = coalesce(expires_at, created_at + interval '24 hours')
+  WHERE  status = 'pending'
+    AND  coalesce(expires_at, created_at + interval '24 hours') < now() - interval '1 day';
+  GET DIAGNOSTICS v_retired = ROW_COUNT;
+
+  -- send_approvals: message body 7 days after the decision.
+  LOOP
+    UPDATE public.send_approvals
+    SET    payload = '{}'::jsonb
+    WHERE  id IN (
+      SELECT a.id
+      FROM   public.send_approvals a
+      WHERE  a.status IN ('approved', 'rejected', 'cancelled', 'expired')
+        AND  coalesce(a.decided_at, a.created_at) < now() - interval '7 days'
+        AND  a.payload <> '{}'::jsonb
+        AND  NOT EXISTS (
+               SELECT 1 FROM public.scheduled_sends s
+               WHERE  s.status IN ('pending', 'sending')
+                 AND  (s.id = a.dispatch_scheduled_send_id
+                       OR (s.payload_encrypted = false
+                           AND jsonb_typeof(s.payload) = 'object'
+                           AND s.payload ->> 'approval_id' = a.id::text))
+             )
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_cleared := v_cleared + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  -- send_approvals: the record itself after 90 days.
+  LOOP
+    DELETE FROM public.send_approvals
+    WHERE  id IN (
+      SELECT a.id
+      FROM   public.send_approvals a
+      WHERE  a.status <> 'pending'
+        AND  a.created_at < now() - interval '90 days'
+        AND  NOT EXISTS (
+               SELECT 1 FROM public.scheduled_sends s
+               WHERE  s.status IN ('pending', 'sending')
+                 AND  (s.id = a.dispatch_scheduled_send_id
+                       OR (s.payload_encrypted = false
+                           AND jsonb_typeof(s.payload) = 'object'
+                           AND s.payload ->> 'approval_id' = a.id::text))
+             )
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_deleted := v_deleted + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  LOOP
+    DELETE FROM public.outbound_idempotency
+    WHERE  id IN (
+      SELECT id FROM public.outbound_idempotency
+      WHERE  expires_at < now() - interval '1 day'
+      LIMIT  c_batch * 5
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_idem := v_idem + v_n;
+    EXIT WHEN v_n < c_batch * 5;
+  END LOOP;
+
+  LOOP
+    DELETE FROM public.bulk_plans
+    WHERE  id IN (
+      SELECT id FROM public.bulk_plans
+      WHERE  expires_at < now() - interval '7 days'
+      LIMIT  c_batch * 5
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_plans := v_plans + v_n;
+    EXIT WHEN v_n < c_batch * 5;
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'scheduled_sends_cleared', v_sends,
+    'send_approvals_retired', v_retired,
+    'send_approvals_cleared', v_cleared,
+    'send_approvals_deleted', v_deleted,
+    'outbound_idempotency', v_idem,
+    'bulk_plans', v_plans
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.purge_send_history() FROM PUBLIC, anon, authenticated;
+
+-- ============================================================
 -- The rest of the data plane, copied from the hosted schema (pg_dump of
 -- public, 2026-10-15) with RLS policies, grants to anon/authenticated and
 -- auth.users foreign keys removed (they point at public.users here).

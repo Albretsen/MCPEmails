@@ -1,6 +1,6 @@
 import { neutralizeList, neutralizeNullable, neutralizeText } from '@/lib/textSafety';
 import { canDecide, isExpired } from './decide';
-import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload } from './payload';
+import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload, readSummary } from './payload';
 
 export { reviewerBccFor } from './payload';
 
@@ -273,7 +273,7 @@ export async function loadApprovalForReview(
 
   const role = String(membership.role ?? 'viewer');
   const inbox = approval.inboxes ?? {};
-  const summary = (approval.summary ?? {}) as Record<string, unknown>;
+  const summary = readSummary(approval.summary);
   const state = effectiveState(approval);
 
   let decidedByLabel: string | null = null;
