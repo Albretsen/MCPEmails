@@ -2,7 +2,7 @@
 -- Support tickets (the /help contact form)
 -- ============================================================
 -- Covers migration 20261016090000_support_tickets:
---   - the human ref (MCPE-1001, MCPE-1002, ...) and the defaults
+--   - the human ref (MCPE-4827 and up, with gaps) and the defaults
 --   - the constraints that mirror the API's validation and length caps
 --   - service-role only: a browser session can neither read nor write it
 --   - deleting the user keeps the ticket but drops the link to them
@@ -12,7 +12,7 @@
 
 BEGIN;
 
-SELECT plan(13);
+SELECT plan(16);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -38,7 +38,7 @@ VALUES ('fd000000-0000-0000-0000-000000000002', 'visitor@rls-test.invalid',
 -- ------------------------------------------------------------
 SELECT ok(
   (SELECT ref ~ '^MCPE-[0-9]{4,}$' FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000001'),
-  'a ticket gets a human ref like MCPE-1001');
+  'a ticket gets a human ref like MCPE-4827');
 
 SELECT ok(
   (SELECT substr(b.ref, 6)::bigint > substr(a.ref, 6)::bigint
@@ -46,6 +46,23 @@ SELECT ok(
     WHERE a.id = 'fd000000-0000-0000-0000-000000000001'
       AND b.id = 'fd000000-0000-0000-0000-000000000002'),
   'refs count up');
+
+-- 20261030220000: refs start high and skip numbers between tickets.
+SELECT ok(
+  (SELECT substr(ref, 6)::bigint >= 4827 FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000001'),
+  'refs start at MCPE-4827 or later');
+
+SELECT ok(
+  (SELECT substr(b.ref, 6)::bigint - substr(a.ref, 6)::bigint BETWEEN 2 AND 7
+     FROM public.support_tickets a, public.support_tickets b
+    WHERE a.id = 'fd000000-0000-0000-0000-000000000001'
+      AND b.id = 'fd000000-0000-0000-0000-000000000002'),
+  'consecutive refs skip 1 to 6 numbers');
+
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.next_support_ticket_ref()', 'execute')
+  AND NOT has_function_privilege('authenticated', 'public.next_support_ticket_ref()', 'execute'),
+  'only service_role can mint a ref');
 
 SELECT is(
   (SELECT status FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000002'),
