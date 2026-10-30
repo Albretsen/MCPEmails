@@ -58,7 +58,7 @@ const MARKETING_PAGES: {
   // The monitor writes a new run every five minutes, so the page's content
   // changes daily even when nothing ships.
   { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },
-  { path: '/help', lastModified: '2026-10-31', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/help', lastModified: '2026-10-30', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/privacy', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/withdrawal', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },

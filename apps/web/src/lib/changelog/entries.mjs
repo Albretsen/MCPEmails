@@ -44,7 +44,7 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-10-31',
+    date: '2026-10-30',
     kind: 'added',
     title: 'Help articles and support in the dashboard',
     body:

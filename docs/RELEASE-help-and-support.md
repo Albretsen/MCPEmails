@@ -1,6 +1,6 @@
 # Releasing Help & support
 
-> **Released 2026-10-31.** The release PR ("Help & support: release to
+> **Released 2026-10-30.** The release PR ("Help & support: release to
 > everyone") ran the whole checklist below: the gate, the preview and
 > visibility routes and their tests are deleted, `/help` is indexable and in
 > the sitemap, the pricing-copy diff and the hand review are applied, and the
