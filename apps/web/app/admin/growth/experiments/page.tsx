@@ -146,7 +146,7 @@ function Results({ experiment, stats }: { experiment: ExperimentRecord; stats: E
               <th scope="col">Variant</th>
               <th scope="col" className="xp-col-weight">Weight</th>
               <th scope="col">Assigned</th>
-              <th scope="col">Signed up</th>
+              <th scope="col">With account</th>
               <th scope="col">Converted</th>
               <th scope="col">Conversion</th>
               <th scope="col">Retention eligible</th>
@@ -201,11 +201,14 @@ function Results({ experiment, stats }: { experiment: ExperimentRecord; stats: E
 
       <p className="xp-note">
         {tooSmall
-          ? 'Fewer than 10 sign-ups per variant so far. Counts are shown instead of rates and nothing here is a result yet.'
-          : 'Rates are plain counts divided by sign-ups. With samples this size a few people moving changes the picture, so read the counts, not the decimals.'}
+          ? 'Fewer than 10 accounts per variant so far. Counts are shown instead of rates and nothing here is a result yet.'
+          : 'Rates are plain counts divided by accounts. With samples this size a few people moving changes the picture, so read the counts, not the decimals.'}
       </p>
       <p className="xp-note">
-        {`Retention counts ${GOAL_WORDS[experiment.retention_goal]} within ${days} days of signup; only accounts older than ${days} days are eligible.`}
+        With account: for a visitor split, the accounts created after the visitor was assigned; for a workspace split, every assigned workspace that still exists. Converted means a paid charge on or after assignment.
+      </p>
+      <p className="xp-note">
+        {`Retention counts ${GOAL_WORDS[experiment.retention_goal]} within ${days} days of signup (of assignment, for a workspace split); only accounts that far along are eligible.`}
       </p>
     </form>
   );
