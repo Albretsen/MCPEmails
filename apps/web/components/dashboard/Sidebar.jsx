@@ -280,16 +280,17 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             </a>
           ))}
           {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop.
-              Not a dashboard section: /help is a marketing page, so this is the
-              locale-aware Link (same as the /pricing upsell above). The
-              dashboard's locale lives in the client provider, not the URL, and
-              Link reads it from there, so a Norwegian user lands on /nb/help
-              and an English one on /help. */}
+              A dashboard section like the others: /dashboard/help renders the
+              help center inside the app shell, with SPA navigation and the
+              active state. The public /help page is unchanged. */}
           {supportVisible && (
-            <Link href="/help" className="nav-item" onClick={() => { if (onClose) onClose(); }}>
+            <a href={sectionToPath('help')}
+               className={"nav-item" + (route === 'help' ? " active" : "")}
+               aria-current={route === 'help' ? "page" : undefined}
+               onClick={e => handleNavClick(e, 'help')}>
               <Icon name="mail" size={16} />
               <span>{tr('sidebar.navHelp')}</span>
-            </Link>
+            </a>
           )}
         </nav>
 
@@ -395,6 +396,7 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sid
     invite: tr('sidebar.navInvite'),
     settings: tr('sidebar.navSettings'),
     security: tr('sidebar.navSecurity'),
+    help:     tr('sidebar.navHelp'),
   };
   return (
     <header className="topbar">

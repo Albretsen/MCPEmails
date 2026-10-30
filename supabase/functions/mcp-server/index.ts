@@ -1126,7 +1126,8 @@ function authFailedResult(
 function outlookNoMailboxText(): string {
   return `Unable to use this Outlook inbox. ${OUTLOOK_NO_MAILBOX_MESSAGE} ` +
     `The inbox has been marked 'error' in the MCPEmails dashboard. Tell the ` +
-    `user this; do not retry and do not ask them to reconnect.`;
+    `user this; do not retry and do not ask them to reconnect. If IMAP does ` +
+    `not fit their setup, they can email support@mcpemails.com.`;
 }
 
 /**
@@ -35550,7 +35551,8 @@ async function handleToolsCall(
       toolResult = jsonRpcErrorBody(
         id,
         -32603, // Internal error
-        `Internal error executing tool '${toolName}'. Please try again.`,
+        `Internal error executing tool '${toolName}'. Please try again. If it keeps ` +
+          `failing, the user can email support@mcpemails.com.`,
       );
       logStatus = "error";
       logErrorCode = String(-32603);

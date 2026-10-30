@@ -238,17 +238,33 @@ const SESSION_EXPIRED_CODE = 'session_expired';
 /**
  * The "Still stuck? Contact support" target for a failed connect.
  *
- * /help reads `topic`, `provider` and `code` to preselect the contact form and
- * `#contact` scrolls to it. Each value is URL-encoded, and an empty one is left
- * out rather than sent as `provider=`, so /help never has to tell "unknown"
- * from "blank". The path has no locale prefix: the caller renders it through
- * the locale-aware Link, which adds /nb, /es, ... from the app's own locale.
+ * The dashboard's own help section, since the person is already in the app.
+ * It reads `topic`, `provider` and `code` to preselect the contact form and
+ * `#contact` opens it. Each value is URL-encoded, and an empty one is left out
+ * rather than sent as `provider=`, so the form never has to tell "unknown"
+ * from "blank". No locale prefix: the dashboard is not under app/[locale].
  */
 export function supportContactHref(provider, code) {
   const params = [['topic', 'connect'], ['provider', provider], ['code', code]]
     .filter(([, v]) => typeof v === 'string' && v.trim() !== '')
     .map(([k, v]) => `${k}=${encodeURIComponent(v.trim())}`);
-  return `/help?${params.join('&')}#contact`;
+  return `/dashboard/help?${params.join('&')}#contact`;
+}
+
+/**
+ * The same contact for anyone the help center is hidden from: an email to
+ * support@ with the provider and error code in the subject, so the reply can
+ * start from what went wrong. Only slug-shaped values are included.
+ */
+export function supportMailtoHref(provider, code) {
+  const clean = (v) => (typeof v === 'string' && /^[a-z0-9_.-]{1,64}$/i.test(v.trim()) ? v.trim() : null);
+  const p = clean(provider);
+  const c = clean(code);
+  const subject = p || c ? `Connect failed: ${[p, c && `(${c})`].filter(Boolean).join(' ')}` : 'Connect failed';
+  const body = ['Sent from the connect dialog in the dashboard.', p && `Provider: ${p}`, c && `Error code: ${c}`, '', 'What I tried:', '']
+    .filter((l) => l !== null && l !== undefined && l !== false)
+    .join('\n');
+  return `mailto:support@mcpemails.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 /**
@@ -646,6 +662,10 @@ export function ConnectModal({
   // rides on the rows this modal already writes and changes nothing on screen.
   entryPoint = null,
   supportVisible = false, // SUPPORT_RELEASE_GATE
+  // Called with the help href on a plain click of "Contact support", so the
+  // dashboard can switch to its help section without a reload. Without it the
+  // link is an ordinary navigation to the same place.
+  onContactSupport = null,
   // 'outlook_cancelled' when the Outlook callback came back with the person
   // having declined Microsoft's consent screen (App.jsx reads ?error=).
   returnNotice = null,
@@ -4147,14 +4167,26 @@ export function ConnectModal({
                     </>
                   )}
 
-                  {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop. */}
-                  {supportVisible && (
-                    <Link
+                  {/* SUPPORT_RELEASE_GATE: at release drop the mailto branch, the condition and the prop. */}
+                  {supportVisible ? (
+                    <a
                       href={supportContactHref(provider, shownFailureCode)}
+                      style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
+                      onClick={(e) => {
+                        if (!onContactSupport || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        onContactSupport(e.currentTarget.getAttribute('href'));
+                      }}
+                    >
+                      {tr('connect.errorContactSupport')}
+                    </a>
+                  ) : (
+                    <a
+                      href={supportMailtoHref(provider, shownFailureCode)}
                       style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
                     >
                       {tr('connect.errorContactSupport')}
-                    </Link>
+                    </a>
                   )}
                 </div>
               )}

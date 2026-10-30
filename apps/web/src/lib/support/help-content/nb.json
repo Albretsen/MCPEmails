@@ -6,11 +6,11 @@
   "hero": {
     "eyebrow": "Hjelp",
     "title": "Hva kan vi hjelpe med?",
-    "lead": "Søk i veiledningene, les de korte løsningene på problemene vi ser oftest, eller skriv til oss nedenfor."
+    "lead": "Søk i veiledningene, åpne et emne nedenfor, eller skriv til oss."
   },
   "search": {
     "label": "Søk i hjelp",
-    "placeholder": "Søk i leverandører, klienter, dokumentasjon og spørsmål",
+    "placeholder": "Skriv et spørsmål eller et ord",
     "empty": "Ingen treff.",
     "emptyLink": "Skriv til oss nedenfor",
     "kinds": {
@@ -18,8 +18,21 @@
       "client": "Klient",
       "docs": "Dokumentasjon",
       "faq": "Spørsmål",
-      "article": "Løsning"
+      "article": "Artikkel"
     }
+  },
+  "nav": {
+    "label": "Hjelpeemner",
+    "contact": "Kontakt oss"
+  },
+  "feedback": {
+    "question": "Var dette nyttig?",
+    "yes": "Ja",
+    "no": "Nei",
+    "thanks": "Takk for tilbakemeldingen.",
+    "thanksNo": "Takk. Fortell oss hva som manglet, så retter vi det.",
+    "contactLink": "Skriv til oss",
+    "change": "Endre svar"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -49,51 +62,73 @@
     {
       "id": "imap-password-rejected",
       "title": "E-postserveren avviser passordet mitt",
-      "summary": "På eget domene eller e-post hos et webhotell er et avvist passord nesten alltid feil passord eller feil brukernavn.",
-      "keywords": "imap smtp passord avvist feil innlogging brukernavn cpanel plesk webhotell eget domene",
+      "summary": "Nesten alltid feil passord eller brukernavn. Bruk postkassens egen innlogging.",
+      "keywords": "imap smtp passord avvist feil innlogging brukernavn cpanel plesk webhotell eget domene autentisering feilet smtp-feil sending feilet feil",
       "steps": [
-        "Bruk passordet til selve postkassen. Innloggingen til hostingkontoen eller kontrollpanelet er et annet passord, selv når det er samme adresse.",
-        "Bruk hele e-postadressen som brukernavn. Har du skrevet inn et eget brukernavn, tøm feltet, med mindre leverandøren har gitt deg et.",
-        "Er tofaktorautentisering slått på for postkassen, trenger den et app-passord i stedet for postkassepassordet.",
-        "Usikker på passordet? Tilbakestill det der leverandøren viser e-postadressene dine. I cPanel er det E-postkontoer, så Administrer. I Plesk er det E-postkontoer.",
-        "Sjekk servernavnet mot leverandørens egne innstillinger. Leverandørveiledningene våre viser verifiserte IMAP- og SMTP-servere."
+        "Bruk postkassepassordet, ikke innloggingen til webhotellet eller kontrollpanelet.",
+        "Bruk hele e-postadressen som brukernavn.",
+        "Har postkassen tofaktorinnlogging, bruk et app-passord.",
+        "Tilbakestill passordet der webhotellet viser e-postkontoene (cPanel: Email Accounts).",
+        "Sjekk servernavnene mot leverandørveiledningene våre."
       ],
       "links": [
-        { "label": "Veiledning for generisk IMAP", "href": "/connect/imap" },
-        { "label": "Kompatibilitet per leverandør", "href": "/docs/providers" }
+        {
+          "label": "Veiledning for generisk IMAP",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Kompatibilitet per leverandør",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
       "id": "app-password-required",
       "title": "App-passord kreves (Yahoo, iCloud, Gmail, Zoho)",
-      "summary": "Disse leverandørene godtar ikke det vanlige passordet ditt fra en e-postapp. Lag et app-passord og lim inn det i stedet.",
-      "keywords": "app-passord app-spesifikt applikasjonsspesifikt yahoo icloud apple gmail google zoho totrinnsbekreftelse",
+      "summary": "Disse leverandørene avviser det vanlige passordet ditt her. Lag et app-passord og lim det inn.",
+      "keywords": "app-passord app password app-spesifikt applikasjonsspesifikt yahoo icloud apple gmail google zoho totrinnsbekreftelse 2-step verification tofaktor 2fa totrinns mfa",
       "steps": [
-        "Yahoo: åpne Kontosikkerhet, så Generer app-passord. Det er 16 små bokstaver uten mellomrom.",
-        "iCloud: logg inn på account.apple.com, åpne Pålogging og sikkerhet, så App-spesifikke passord. Det er 16 små bokstaver, vist i fire grupper.",
-        "Gmail: slå på totrinnsbekreftelse, og lag så ett på myaccount.google.com/apppasswords. En Google Workspace-administrator kan slå av app-passord for hele domenet. Gmail kan også kobles til ved å logge inn med Google.",
-        "Zoho: lag et applikasjonsspesifikt passord i Zoho-kontoen under Sikkerhet, og slå på IMAP-tilgang i innstillingene til Zoho Mail. Den er av som standard.",
-        "Lim inn app-passordet slik det vises. Mellomrom ignoreres."
+        "Yahoo: Account Security, så Generate app password.",
+        "iCloud: account.apple.com, Sign-In and Security, så App-Specific Passwords.",
+        "Gmail: slå på totrinnsbekreftelse, og gå til myaccount.google.com/apppasswords.",
+        "Zoho: lag et applikasjonsspesifikt passord, og slå på IMAP i innstillingene til Zoho Mail.",
+        "Lim det inn slik det vises. Mellomrom ignoreres."
       ],
       "links": [
-        { "label": "Veiledning for Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Veiledning for iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Veiledning for Gmail", "href": "/connect/gmail" },
-        { "label": "Veiledning for Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Veiledning for Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Veiledning for iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Veiledning for Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Veiledning for Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
       "id": "yandex-imap-disabled",
       "title": "Yandex: IMAP-tilgang er slått av",
-      "summary": "Yandex avviser alle e-postapper til IMAP-tilgang er slått på, og avvisningen ser nøyaktig ut som feil passord.",
-      "keywords": "yandex imap av slått av app-passord e-postklienter yandex 360",
+      "summary": "Yandex avviser e-postapper til IMAP er slått på. Det ser ut som feil passord.",
+      "keywords": "yandex imap av slått av app-passord app password e-postklienter mail clients yandex 360",
       "steps": [
-        "I Yandex Mail åpner du Innstillinger, så E-postklienter. Slå på IMAP-tilgang, og slå på app-passord og OAuth-tokener. Begge trengs.",
-        "På id.yandex.com åpner du Sikkerhet, så App-passord, og lager ett av typen E-post. Yandex viser det bare én gang.",
-        "Koble til med hele Yandex-adressen din og det app-passordet. Kontopassordet virker aldri her, heller ikke uten tofaktorautentisering."
+        "I Yandex Mail åpner du Settings, så Mail clients.",
+        "Slå på IMAP-tilgang, og app-passord og OAuth-tokener.",
+        "På id.yandex.com lager du et app-passord av typen Mail.",
+        "Koble til med hele adressen din og det app-passordet."
       ],
       "links": [
-        { "label": "Veiledning for Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Veiledning for Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -109,41 +144,58 @@
         "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."
       ],
       "links": [
-        { "label": "Oppsett for klienter", "href": "/docs/clients" },
-        { "label": "Feilkoder", "href": "/docs#errors" }
+        {
+          "label": "Oppsett for klienter",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Feilkoder",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
       "id": "usage-limit-reached",
       "title": "Bruksgrensen er nådd",
-      "summary": "Et Free-arbeidsområde har 150 e-posthandlinger per kalendermåned. Når de er brukt opp, avvises e-posthandlinger til den 1. i neste måned (UTC).",
-      "keywords": "bruksgrense kvote tak 150 handlinger gratis free avvist nullstilles",
+      "summary": "Free har 150 e-posthandlinger i måneden. Deretter venter handlinger til den 1. (UTC).",
+      "keywords": "bruksgrense kvote tak 150 handlinger gratis free plan avvist nullstilles usage limit",
       "steps": [
         "Se hvor mange handlinger du har brukt under Bruk i dashbordet.",
         "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 3 dagene etter registrering.",
         "Å prøve på nytt hjelper ikke. Kvoten nullstilles den 1. i neste måned (UTC), og pausede automatiseringer fortsetter av seg selv.",
-        "Personal, Pro og Business har ubegrensede e-posthandlinger, innenfor rimelig bruk.",
-        "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."
+        "Personal, Pro og Business har ubegrensede e-posthandlinger, innenfor rimelig bruk."
       ],
       "links": [
-        { "label": "Spørsmål om priser", "href": "/pricing#faq" },
-        { "label": "Hastighetsgrenser", "href": "/docs#rate-limits" }
+        {
+          "label": "Spørsmål om priser",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Hastighetsgrenser",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
       "id": "change-or-cancel-plan",
       "title": "Endre eller si opp planen",
-      "summary": "Oppgrader, nedgrader eller si opp når som helst fra Innstillinger i dashbordet.",
+      "summary": "Endre eller si opp når som helst i Innstillinger, under Fakturering og abonnement.",
       "keywords": "plan oppgrader nedgrader si opp abonnement fakturering faktura refusjon stripe portal betaling kort",
       "steps": [
-        "Åpne Innstillinger i dashbordet. Faktureringsdelen viser planen din og de andre du kan bytte til.",
-        "For å si opp, bytte kort eller laste ned fakturaer, åpne faktureringsportalen fra samme del. Den drives av Stripe.",
-        "Oppsigelse stopper neste fornyelse. Du beholder det du har betalt for ut inneværende periode, og går så over til Free med én tilkoblet innboks.",
-        "Var den første belastningen på et nytt abonnement ikke som forventet, skriv til oss innen 14 dager, så refunderer vi hele beløpet. Delperioder refunderes ikke."
+        "Åpne Innstillinger, så Fakturering og abonnement.",
+        "Velg Administrer fakturering for å si opp, bytte kort eller hente fakturaer.",
+        "Oppsigelse stopper fornyelsen. Du beholder planen ut perioden.",
+        "Uventet første belastning? Skriv til oss innen 14 dager, så får du hele beløpet tilbake."
       ],
       "links": [
-        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" },
-        { "label": "Planer og priser", "href": "/pricing" }
+        {
+          "label": "Innstillinger i dashbordet",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Planer og priser",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -152,21 +204,29 @@
       "summary": "Fjern én postkasse, ett arbeidsområde eller hele kontoen fra dashbordet.",
       "keywords": "koble fra fjern innboks postkasse slett konto arbeidsområde avslutt faresone",
       "steps": [
-        "For å koble fra én postkasse, åpne Innbokser i dashbordet, velg den og velg Koble fra. Det lagrede passordet eller tokenet fjernes.",
-        "For å avslutte et arbeidsområde, åpne Innstillinger, så Faresone, og velg Slett arbeidsområde. Kontoen din og andre arbeidsområder blir værende.",
-        "For å slette alt, åpne Innstillinger, så Faresone, og velg Slett konto. Du bekrefter ved å skrive inn e-postadressen din, og det kan ikke angres.",
-        "Når du sletter kontoen, sies en betalt plan opp med en gang, uten refusjon for resten av perioden. Vil du beholde tiden du har betalt for, sier du opp i faktureringsportalen først og sletter kontoen når perioden er over."
+        "Postkasse: i Innbokser klikker du på den og velger Koble fra. Den lagrede påloggingen fjernes.",
+        "Arbeidsområde: i Innstillinger, under Arbeidsområde, velger du Slett arbeidsområde.",
+        "Konto: i Innstillinger, under Faresone, velger du Slett konto. Det kan ikke angres.",
+        "Hver av disse avbryter planlagte e-poster som fortsatt venter på å bli sendt fra postkassene som fjernes. Sletter du kontoen, ber vi også Google avslutte tilgangen vår til Gmail-innbokser koblet til med Google-innlogging, og du får en bekreftelse på e-post.",
+        "Sletter du kontoen, sies en betalt plan opp med en gang. Ubrukt tid refunderes ikke automatisk: innen 14 dager etter første belastning kan du skrive til oss. Vil du bruke tiden du har betalt for, si opp først og slett senere."
       ],
       "links": [
-        { "label": "Innbokser i dashbordet", "href": "/dashboard/inboxes" },
-        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" }
+        {
+          "label": "Innbokser i dashbordet",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Innstillinger i dashbordet",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Skriv til oss",
-    "lead": "Et menneske leser hver melding og svarer på e-post.",
-    "emailAlt": "Foretrekker du e-post? Skriv til {email}."
+    "lead": "Vi svarer på e-post innen én virkedag.",
+    "emailLine": "Send e-post til {email}, eller skriv en melding her.",
+    "openForm": "Skriv en melding"
   },
   "categories": {
     "connect": "Koble til en postkasse",

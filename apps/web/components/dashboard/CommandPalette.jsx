@@ -22,6 +22,8 @@ const PAGES = [
   { id: 'automations', labelKey: 'commandPalette.pageAutomations', icon: 'zap', keywords: 'automation rule triage schedule unattended filter move label forward recurring' },
   { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
   { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },
+  // SUPPORT_RELEASE_GATE: listed only while supportVisible; at release drop `gated`.
+  { id: 'help',     labelKey: 'commandPalette.pageHelp',     icon: 'mail',     keywords: 'support contact question faq guide docs articles problem', gated: true },
 ];
 
 function matches(query, ...fields) {
@@ -41,7 +43,7 @@ function matches(query, ...fields) {
  * @param members    live member rows ({ userId, displayName, email, role })
  * @param keys       live API key rows ({ id, name })
  */
-export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [], members = [], keys = [] }) {
+export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [], members = [], keys = [], supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const tr = useTranslations('dashboardChrome');
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -53,6 +55,7 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
     const q = query.trim();
 
     const pageItems = PAGES
+      .filter(p => !p.gated || supportVisible)
       .map(p => ({ ...p, label: p.labelKey ? tr(p.labelKey) : p.label }))
       .filter(p => matches(q, p.label, p.keywords))
       .map(p => ({ key: `page:${p.id}`, label: p.label, icon: p.icon, sub: tr('commandPalette.groupTitlePage'), run: () => setRoute(p.id) }));
@@ -82,7 +85,7 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
       { title: tr('commandPalette.groupMembers'), items: memberItems },
       { title: tr('commandPalette.groupApiKeys'), items: keyItems },
     ].filter(g => g.items.length > 0);
-  }, [query, inboxes, members, keys, setRoute, onConnect, tr]);
+  }, [query, inboxes, members, keys, setRoute, onConnect, tr, supportVisible]);
 
   // Flatten for keyboard navigation.
   const flat = useMemo(() => groups.flatMap(g => g.items), [groups]);

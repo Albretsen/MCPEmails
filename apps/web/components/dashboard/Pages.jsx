@@ -40,6 +40,7 @@ import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { MorningBriefSection } from './MorningBriefSection';
 import { InboxInstructionsEditor } from './InboxInstructionsEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
+import { supportContactHref } from './ConnectModal';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { trimLeadingQuietDays } from '@/lib/analytics/retention';
@@ -1675,7 +1676,21 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
+/**
+ * "Reconnect not working?" on the Inboxes error banner. With the help center
+ * visible it opens the contact form on the connect topic, naming the provider
+ * when every errored inbox shares one; otherwise an email to support@ with a
+ * translated subject.
+ */
+export function reconnectSupportHref(erroredInboxes, supportVisible, mailSubject) {
+  if (supportVisible) { // SUPPORT_RELEASE_GATE: at release keep only this branch.
+    const providers = [...new Set(erroredInboxes.map(ib => ib.provider).filter(Boolean))];
+    return supportContactHref(providers.length === 1 ? providers[0] : null, null);
+  }
+  return `mailto:support@mcpemails.com?subject=${encodeURIComponent(mailSubject)}`;
+}
+
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, supportVisible = false /* SUPPORT_RELEASE_GATE */, onContactSupport = null }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1687,7 +1702,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  const erroredInboxes = inboxes.filter(ib => ib.status === "error" && !ib.parked);
+  const erroredCount = erroredInboxes.length;
   // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
   // hold a slot under the cap: the same count the server's checkInboxLimit uses.
   const activeCount = inboxes.filter(ib => !ib.parked).length;
@@ -2038,6 +2054,19 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               ? t('inboxes.errorBannerOne')
               : t('inboxes.errorBannerMany', { count: erroredCount })}
           </span>
+          <a
+            href={reconnectSupportHref(erroredInboxes, supportVisible, t('inboxes.errorBannerSupportSubject'))}
+            onClick={(e) => {
+              // The help center opens in place (App switches sections); a
+              // mailto or a modified click is left to the browser.
+              if (!supportVisible || !onContactSupport || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // SUPPORT_RELEASE_GATE
+              e.preventDefault();
+              onContactSupport(e.currentTarget.getAttribute('href'));
+            }}
+            style={{ marginLeft: 'auto', color: 'var(--red-700)', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+          >
+            {t('inboxes.errorBannerSupport')}
+          </a>
         </div>
       )}
 

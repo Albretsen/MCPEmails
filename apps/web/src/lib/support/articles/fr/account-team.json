@@ -1,0 +1,273 @@
+{
+  "area": "account-team",
+  "title": "Compte, équipe et facturation",
+  "articles": [
+    {
+      "id": "switch-workspace",
+      "title": "Changer d’espace de travail ou le renommer",
+      "summary": "Chaque espace de travail a ses boîtes, clés API et membres. Changez-en en haut de la barre latérale.",
+      "keywords": "espace de travail changer basculer renommer nom barre latérale menu espaces de travail client entreprise workspace",
+      "steps": [
+        "Cliquez sur le nom de l’espace de travail en haut de la barre latérale.",
+        "Choisissez un autre espace sous Espaces de travail.",
+        "Pour le renommer, ouvrez Paramètres, modifiez Nom de l'espace de travail, puis Enregistrer les modifications.",
+        "Seul le propriétaire ou un administrateur peut renommer un espace de travail."
+      ],
+      "links": [
+        {
+          "label": "Paramètres",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "create-workspace",
+      "title": "Créer un autre espace de travail",
+      "summary": "Les espaces supplémentaires sont une fonction Business. Un nouvel espace hérite de votre formule.",
+      "keywords": "nouvel espace de travail créer ajouter deuxième client entreprise formule team plusieurs espaces de travail new workspace",
+      "steps": [
+        "Cliquez sur le nom de l’espace de travail en haut de la barre latérale.",
+        "Choisissez Nouvel espace de travail.",
+        "Saisissez un Nom de l'espace de travail et choisissez Créer l'espace de travail."
+      ],
+      "body": [
+        "Votre formule appartient à votre compte, donc tous les espaces que vous possédez la partagent. Sur les autres formules, Nouvel espace de travail mène plutôt aux formules."
+      ],
+      "links": [
+        {
+          "label": "Formules et tarifs",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "invite-member",
+      "title": "Inviter quelqu’un dans votre espace de travail",
+      "summary": "Les propriétaires et administrateurs invitent depuis Membres. Inviter nécessite la formule Business.",
+      "keywords": "inviter membre collègue collaborateur équipe ajouter utilisateur siège e-mail renvoyer annuler l’invitation invite",
+      "steps": [
+        "Ouvrez Membres.",
+        "Sous Inviter un collaborateur, saisissez son adresse e-mail et choisissez un rôle.",
+        "Choisissez Envoyer l'invitation. Le lien d’acceptation est valable 7 jours.",
+        "Si l’e-mail n’est pas arrivé, choisissez Renvoyer sur l’invitation en attente.",
+        "Pour la retirer, choisissez Annuler l'invitation."
+      ],
+      "links": [
+        {
+          "label": "Membres",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "accept-invite",
+      "title": "Accepter une invitation à un espace de travail",
+      "summary": "Ouvrez le lien de l’e-mail d’invitation et connectez-vous avec l’adresse à laquelle elle a été envoyée.",
+      "keywords": "accepter invitation rejoindre espace de travail lien expiré autre e-mail mauvais compte accept invite",
+      "steps": [
+        "Ouvrez le lien d’acceptation de l’e-mail d’invitation dans les 7 jours.",
+        "Connectez-vous ou inscrivez-vous avec l’adresse exacte à laquelle l’invitation a été envoyée.",
+        "Lien expiré ? Demandez à un propriétaire ou un administrateur de choisir Renvoyer. Les anciens liens cessent alors de fonctionner."
+      ]
+    },
+    {
+      "id": "member-roles",
+      "title": "Ce que chaque rôle peut faire",
+      "summary": "Propriétaire, Administrateur, Membre et Observateur. Les observateurs peuvent seulement lire.",
+      "keywords": "rôle rôles autorisations propriétaire administrateur membre observateur lecture seule droits d’accès owner admin viewer",
+      "steps": [
+        "Propriétaire : contrôle total, y compris la facturation, la suppression de l’espace et le changement des rôles.",
+        "Administrateur : invite et retire des membres et renomme l’espace de travail.",
+        "Membre : connecte des boîtes, modifie les signatures, crée des clés API et lance des automatisations.",
+        "Observateur : lecture seule. Ses clés API ne peuvent utiliser que les outils de lecture."
+      ],
+      "links": [
+        {
+          "label": "Membres",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "manage-members",
+      "title": "Changer un rôle, retirer un membre ou partir",
+      "summary": "Les changements s’appliquent tout de suite. Un membre retiré ou qui part perd ses clés API de l’espace.",
+      "keywords": "changer de rôle retirer un membre exclure quitter l’espace de travail révoquer l’accès promouvoir rétrograder",
+      "steps": [
+        "Dans Membres, le propriétaire change les rôles dans la colonne Rôle.",
+        "Retirez quelqu’un avec le bouton de sa ligne, puis confirmez Supprimer le membre.",
+        "Les administrateurs peuvent retirer membres et observateurs, mais pas d’autres administrateurs.",
+        "Pour quitter un espace où vous avez été invité, choisissez Quitter l'espace de travail.",
+        "Le propriétaire ne peut pas partir. Supprimez plutôt l’espace de travail dans Paramètres."
+      ],
+      "links": [
+        {
+          "label": "Membres",
+          "href": "/dashboard/members"
+        },
+        {
+          "label": "Supprimer un espace de travail",
+          "href": "/help#article-disconnect-or-delete"
+        }
+      ]
+    },
+    {
+      "id": "profile-email-language",
+      "title": "Changer votre nom, votre e-mail ou votre langue",
+      "summary": "Modifiez votre profil et la langue du tableau de bord dans Paramètres, sous Compte.",
+      "keywords": "profil nom affiché adresse e-mail changer langue paramètres régionaux français paramètres compte",
+      "steps": [
+        "Ouvrez Paramètres.",
+        "Modifiez Nom affiché et choisissez Enregistrer les modifications.",
+        "Choisissez Changer l'e-mail et saisissez la nouvelle adresse.",
+        "Cliquez sur le lien de confirmation envoyé à la nouvelle adresse pour terminer.",
+        "Choisissez une langue sous Langue."
+      ],
+      "links": [
+        {
+          "label": "Paramètres",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "password-and-sign-in",
+      "title": "Changer ou réinitialiser votre mot de passe",
+      "summary": "Changez-le dans Paramètres, ou réinitialisez-le via Mot de passe oublié ? sur la page de connexion.",
+      "keywords": "mot de passe changer réinitialiser oublié connexion se connecter lien magique google github password reset",
+      "steps": [
+        "Dans Paramètres, remplissez Mot de passe actuel et Nouveau mot de passe, puis Mettre à jour le mot de passe.",
+        "Utilisez au moins 8 caractères.",
+        "Oublié ? Choisissez Mot de passe oublié ? sur la page de connexion. Le lien est valable 60 minutes.",
+        "Vous pouvez aussi vous connecter avec Google, GitHub ou un lien magique."
+      ],
+      "links": [
+        {
+          "label": "Paramètres",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "active-sessions",
+      "title": "Déconnecter vos autres appareils",
+      "summary": "Sécurité liste chaque appareil connecté à votre compte. Vous restez connecté sur celui-ci.",
+      "keywords": "sessions appareils se déconnecter déconnexion autres appareils navigateurs sécurité ordinateur volé",
+      "steps": [
+        "Ouvrez Sécurité.",
+        "Vérifiez la liste sous Sessions actives.",
+        "Choisissez le bouton de déconnexion à cet endroit pour fermer toutes les sessions sauf celle-ci."
+      ],
+      "links": [
+        {
+          "label": "Sécurité",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "audit-log",
+      "title": "Voir quels appels d’outils ont été faits",
+      "summary": "Le journal d’audit de Sécurité liste chaque appel d’outil MCP, avec sa boîte, sa clé API et son statut.",
+      "keywords": "journal d’audit activité historique appels d’outils qui quoi quand clé api sécurité traçabilité audit log",
+      "steps": [
+        "Ouvrez Sécurité.",
+        "Faites défiler jusqu’à Journal d'audit.",
+        "Chaque ligne montre l’outil, la boîte, la clé API, le statut, l’horodatage et la durée."
+      ],
+      "body": [
+        "Le journal n’enregistre jamais l’objet, le contenu ni les destinataires des e-mails."
+      ],
+      "links": [
+        {
+          "label": "Sécurité",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "choose-a-plan",
+      "title": "Choisir la bonne formule",
+      "summary": "Comptez d’abord les boîtes, puis les personnes qui se connectent.",
+      "keywords": "formule formules plan free personal pro business team comparer quelle formule boîtes sièges passer à une formule supérieure prix",
+      "steps": [
+        "Free : une boîte et 150 actions e-mail par mois.",
+        "Personal : jusqu’à 3 boîtes et des actions e-mail illimitées.",
+        "Pro : jusqu’à 10 boîtes pour une personne.",
+        "Business : 10 boîtes ou plus, des membres avec des rôles et un espace de travail par client.",
+        "Consultez Tarifs pour les prix et la comparaison complète."
+      ],
+      "links": [
+        {
+          "label": "Formules et tarifs",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "change-plan-or-interval",
+      "title": "Ce que coûte un changement de formule ou de facturation",
+      "summary": "Vous voyez le montant exact et le confirmez avant tout changement.",
+      "keywords": "passer à une formule supérieure inférieure changer de formule annuel mensuel intervalle prorata crédit prélèvement paiement non abouti refusé facture upgrade downgrade",
+      "steps": [
+        "Dans Paramètres, sous Facturation et formule, choisissez Mensuel ou Annuel, puis le bouton Choisir de la formule.",
+        "Les nouveaux abonnés paient sur Stripe. Les abonnés existants voient d’abord le montant, puis confirment.",
+        "Un changement de formule est calculé au prorata. Votre date de renouvellement ne change pas.",
+        "Passer du mensuel à l’annuel, ou l’inverse, crédite le temps non utilisé. Votre période de facturation redémarre ce jour-là.",
+        "Paiement non abouti ? Votre formule ne change pas. Choisissez Payer la facture pour finaliser."
+      ],
+      "links": [
+        {
+          "label": "Paramètres",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Résilier ou être remboursé",
+          "href": "/help#article-change-or-cancel-plan"
+        }
+      ]
+    },
+    {
+      "id": "data-and-privacy",
+      "title": "Ce que nous stockons de vos e-mails",
+      "summary": "Le contenu des e-mails n’est jamais stocké, sauf les envois programmés ou retenus. Les mots de passe sont chiffrés.",
+      "keywords": "confidentialité données stockées stockage chiffrement chiffré rgpd ue entraînement identifiants mot de passe jeton supprimer exporter privacy gdpr",
+      "steps": [
+        "Les e-mails que votre assistant lit ou envoie sur le moment sont récupérés en direct et jamais stockés.",
+        "Un message programmé ou retenu est stocké jusqu’à son envoi ou la décision. Son contenu est effacé 7 jours plus tard, et les demandes retenues sont supprimées après 90 jours.",
+        "Les mots de passe et jetons des boîtes sont chiffrés en AES-256-GCM.",
+        "Les données de compte sont stockées dans l’UE, à Stockholm. Vos e-mails n’entraînent jamais de modèles d’IA.",
+        "Pour demander une copie de vos données, écrivez-nous."
+      ],
+      "links": [
+        {
+          "label": "Politique de confidentialité",
+          "href": "/privacy"
+        },
+        {
+          "label": "Sécurité",
+          "href": "/security"
+        },
+        {
+          "label": "Contacter le support",
+          "href": "/help#contact"
+        }
+      ]
+    },
+    {
+      "id": "self-hosting",
+      "title": "Héberger MCPEmails vous-même",
+      "summary": "Il est open source (AGPL-3.0) et tourne avec docker-compose, pour les boîtes IMAP et SMTP.",
+      "keywords": "auto-hébergement auto-héberger open source agpl docker docker-compose propre serveur sur site self host self-hosting",
+      "body": [
+        "Vos identifiants sont chiffrés avec une clé que vous seul détenez. La connexion Gmail et Outlook et le tableau de bord restent sur le service hébergé."
+      ],
+      "links": [
+        {
+          "label": "Guide d’auto-hébergement",
+          "href": "/self-hosting"
+        }
+      ]
+    }
+  ]
+}

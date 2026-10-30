@@ -1,13 +1,15 @@
 // ---------------------------------------------------------------------------
 // ConnectModal: "Still stuck? Contact support" under a failed connect.
 //
-// Run with: npm run test:support-entry-points
+// Run with: npm run test:support-ui
 //
-// v1 of /help is internal-only, so the line appears only when the dashboard
+// Help & support is internal-only, so the line appears only when the dashboard
 // hands the modal `supportVisible` (SUPPORT_RELEASE_GATE). When it does, the
-// link carries the selected provider and the route's `error_code` so /help can
-// preselect the form: `/help?topic=connect&provider=<slug>&code=<code>#contact`,
-// each value URL-encoded and an empty one left out.
+// link opens the dashboard's own help section with the selected provider and
+// the route's `error_code` so the form arrives filled in:
+// `/dashboard/help?topic=connect&provider=<slug>&code=<code>#contact`, each
+// value URL-encoded and an empty one left out. A plain click hands that href
+// to `onContactSupport` (App switches sections without a reload).
 //
 // The real modal is rendered with the real English messages; only `fetch` is
 // replaced, to answer the connect route with a failure.
@@ -38,7 +40,7 @@ const STILL_STUCK = chrome.connect.errorContactSupport;
  * Mount the modal on the generic card at its credentials step. `reply` is what
  * the connect route answers with.
  */
-async function openForm(t, { supportVisible, reply }) {
+async function openForm(t, { supportVisible, reply, onContactSupport }) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -62,6 +64,7 @@ async function openForm(t, { supportVisible, reply }) {
     onAdminConsentLink: () => {},
   };
   if (supportVisible !== undefined) props.supportVisible = supportVisible;
+  if (onContactSupport) props.onContactSupport = onContactSupport;
   const view = await mount(createElement(AppLocaleProvider, null, createElement(ToastProvider, null,
     createElement(ConnectModal, props))));
   t.after(async () => {
@@ -115,8 +118,25 @@ test('supportVisible + a route failure: the link carries provider and code', asy
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
-  assert.equal(link.getAttribute('href'), '/help?topic=connect&provider=generic&code=auth_failed#contact');
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=generic&code=auth_failed#contact');
   assert.equal(q(view, 'cm-form-error').parentElement.contains(link), true, 'it sits in the error area');
+});
+
+test('a plain click hands the in-app href to onContactSupport, with no navigation', async (t) => {
+  const opened = [];
+  const { view, requests } = await openForm(t, { supportVisible: true, reply: AUTH_FAILED, onContactSupport: (h) => opened.push(h) });
+  await fillAndSubmit(view);
+  await waitFor(() => requests.length === 1, { message: 'the connect request' });
+  const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
+  // dispatchEvent rather than .click(): its return value says whether the
+  // default (the navigation) was cancelled, which the modal's own listeners
+  // would otherwise hide by stopping propagation.
+  let notCancelled = null;
+  await flush(() => {
+    notCancelled = link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+  });
+  assert.equal(opened.join(','), '/dashboard/help?topic=connect&provider=generic&code=auth_failed#contact');
+  assert.equal(notCancelled, false, 'the navigation was cancelled');
 });
 
 test('the code is URL-encoded', async (t) => {
@@ -125,24 +145,28 @@ test('the code is URL-encoded', async (t) => {
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
-  assert.equal(link.getAttribute('href'), '/help?topic=connect&provider=generic&code=odd%20code%26x%3D1#contact');
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=generic&code=odd%20code%26x%3D1#contact');
 });
 
-test('not visible: the same failure shows no contact link', async (t) => {
+test('not visible: the same failure offers an email to support@ instead', async (t) => {
   const { view, requests } = await openForm(t, { supportVisible: false, reply: AUTH_FAILED });
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   await waitFor(() => q(view, 'cm-form-error'), { message: 'the error headline' });
-  assert.equal(linkNamed(view, STILL_STUCK) === null, true);
-  assert.equal(view.container.textContent.includes(STILL_STUCK), false);
+  const link = linkNamed(view, STILL_STUCK);
+  assert.equal(link === null, false);
+  const href = link.getAttribute('href');
+  assert.equal(href.startsWith('mailto:support@mcpemails.com?subject='), true, href);
+  const subject = decodeURIComponent(new URL(href).searchParams.get('subject'));
+  assert.equal(subject.startsWith('Connect failed: generic'), true, subject);
 });
 
-test('prop omitted: hidden by default', async (t) => {
+test('prop omitted: the email fallback, not the help center', async (t) => {
   const { view, requests } = await openForm(t, { reply: AUTH_FAILED });
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   await waitFor(() => q(view, 'cm-form-error'), { message: 'the error headline' });
-  assert.equal(linkNamed(view, STILL_STUCK) === null, true);
+  assert.equal(linkNamed(view, STILL_STUCK).getAttribute('href').startsWith('mailto:support@mcpemails.com'), true);
 });
 
 test('a client-side validation error after a route failure drops the old code', async (t) => {
@@ -154,14 +178,83 @@ test('a client-side validation error after a route failure drops the old code', 
   await type(q(view, 'cm-imap-host'), '');
   await submitOnly(view);
   await waitFor(
-    () => linkNamed(view, STILL_STUCK)?.getAttribute('href') === '/help?topic=connect&provider=generic#contact',
+    () => linkNamed(view, STILL_STUCK)?.getAttribute('href') === '/dashboard/help?topic=connect&provider=generic#contact',
     { message: 'the link without the stale code' },
   );
   assert.equal(requests.length, 1, 'the second submit never reached the route');
 });
 
 test('supportContactHref omits empty values and encodes the rest', () => {
-  assert.equal(supportContactHref('', null), '/help?topic=connect#contact');
-  assert.equal(supportContactHref('yahoo', ''), '/help?topic=connect&provider=yahoo#contact');
-  assert.equal(supportContactHref('a b', 'c/d'), '/help?topic=connect&provider=a%20b&code=c%2Fd#contact');
+  assert.equal(supportContactHref('', null), '/dashboard/help?topic=connect#contact');
+  assert.equal(supportContactHref('yahoo', ''), '/dashboard/help?topic=connect&provider=yahoo#contact');
+  assert.equal(supportContactHref('a b', 'c/d'), '/dashboard/help?topic=connect&provider=a%20b&code=c%2Fd#contact');
+});
+
+// ── The Inboxes page's "Reconnect not working?" banner link ─────────────────
+//
+// Same gate: with the help center visible it opens the contact form on the
+// connect topic (naming the provider when every errored inbox shares one), in
+// place; otherwise an email to support@ with a translated subject. The real
+// dashboard is rendered at Inboxes.
+
+const { DashboardApp } = await import('./App.jsx');
+const { reconnectSupportHref } = await import('./Pages.jsx');
+const dashboardEn = (await import('../../messages/en/dashboard.json', { with: { type: 'json' } })).default;
+const BANNER_LINK = dashboardEn.inboxes.errorBannerSupport;
+
+function errored(address, provider) {
+  return {
+    id: `ib-${address}`, label: address.split('@')[0], address, provider, service: null, status: 'error', parked: false,
+    lastError: 'Login failed', hasImap: provider !== 'gmail', calls: 0, createdAt: '2026-09-01T00:00:00.000Z', lastCallAt: null,
+    draftEditorHidden: false, sendReviewMode: 'off', sendApprovalRequired: false,
+  };
+}
+
+async function renderInboxesBanner(t, { supportVisible, inboxes }) {
+  const previousFetch = globalThis.fetch;
+  // The help section's data is not under test: it answers with an error line.
+  globalThis.fetch = async (url) => (String(url).startsWith('/api/support/help-data')
+    ? { ok: false, status: 404, json: async () => ({}) }
+    : { ok: true, status: 200, json: async () => ({}) });
+  window.history.replaceState(null, '', '/dashboard/inboxes');
+  const view = await mount(createElement(AppLocaleProvider, null,
+    createElement(DashboardApp, {
+      initialRoute: 'inboxes',
+      user: { displayName: 'Ada', email: 'ada@example.com', initials: 'A', id: 'u-0001' },
+      workspace: { id: 'ws-0001', slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: true, draftEditorEnabled: false, draftEditorHidden: false },
+      workspaces: [], activeWorkspaceId: 'ws-0001', mcpUrl: 'https://mcpemails.com/api/mcp', userRole: 'owner',
+      planLimits: { maxInboxes: 10, historyDays: 30 }, stripePrices: null, overviewStats: {}, activityFeed: [],
+      inboxes, apiKeys: [], usageData: {}, auditLog: [], members: [], pendingInvites: [],
+      supportVisible,
+    })));
+  t.after(async () => {
+    await view.unmount();
+    globalThis.fetch = previousFetch;
+    window.history.replaceState(null, '', '/');
+  });
+  return view;
+}
+
+test('Inboxes banner, help center visible: the contact form, prefilled for the provider', async (t) => {
+  const view = await renderInboxesBanner(t, { supportVisible: true, inboxes: [errored('a@example.com', 'yahoo')] });
+  const link = await waitFor(() => linkNamed(view, BANNER_LINK), { message: 'the banner link' });
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=yahoo#contact');
+  await flush(() => link.click());
+  assert.equal(window.location.pathname, '/dashboard/help', 'the help section opened in place');
+  assert.equal(window.location.search, '?topic=connect&provider=yahoo');
+});
+
+test('Inboxes banner, help center hidden: an email with the translated subject', async (t) => {
+  const view = await renderInboxesBanner(t, { supportVisible: false, inboxes: [errored('a@example.com', 'yahoo')] });
+  const link = await waitFor(() => linkNamed(view, BANNER_LINK), { message: 'the banner link' });
+  const href = link.getAttribute('href');
+  assert.equal(href.startsWith('mailto:support@mcpemails.com?subject='), true, href);
+  assert.equal(decodeURIComponent(href.split('subject=')[1]), dashboardEn.inboxes.errorBannerSupportSubject);
+});
+
+test('reconnectSupportHref: a provider only when every errored inbox shares it', () => {
+  const two = [errored('a@example.com', 'yahoo'), errored('b@example.com', 'gmail')];
+  assert.equal(reconnectSupportHref(two, true, 'x'), '/dashboard/help?topic=connect#contact');
+  assert.equal(reconnectSupportHref([errored('a@example.com', 'gmail'), errored('b@example.com', 'gmail')], true, 'x'), '/dashboard/help?topic=connect&provider=gmail#contact');
+  assert.equal(reconnectSupportHref(two, false, 'Ny tilkobling'), 'mailto:support@mcpemails.com?subject=Ny%20tilkobling');
 });

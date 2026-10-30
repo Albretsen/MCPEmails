@@ -201,6 +201,8 @@
     "capCompare": "Comparar todos los planes",
     "errorBannerOne": "1 bandeja ha perdido el acceso y necesita reconectarse.",
     "errorBannerMany": "{count} bandejas han perdido el acceso y necesitan reconectarse.",
+    "errorBannerSupport": "¿No funciona la reconexión? Escríbenos",
+    "errorBannerSupportSubject": "No consigo reconectar una bandeja",
     "colLabel": "Etiqueta",
     "colAddress": "Dirección",
     "colProvider": "Proveedor",

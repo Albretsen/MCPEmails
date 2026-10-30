@@ -6,11 +6,11 @@
   "hero": {
     "eyebrow": "Help",
     "title": "How can we help?",
-    "lead": "Search the guides, read the short fixes for the problems we see most, or write to us below."
+    "lead": "Search the guides, open a topic below, or write to us."
   },
   "search": {
     "label": "Search help",
-    "placeholder": "Search providers, clients, docs and questions",
+    "placeholder": "Type a question or a word",
     "empty": "No match.",
     "emptyLink": "Write to us below",
     "kinds": {
@@ -18,8 +18,21 @@
       "client": "Client",
       "docs": "Docs",
       "faq": "FAQ",
-      "article": "Fix"
+      "article": "Article"
     }
+  },
+  "nav": {
+    "label": "Help topics",
+    "contact": "Contact us"
+  },
+  "feedback": {
+    "question": "Was this helpful?",
+    "yes": "Yes",
+    "no": "No",
+    "thanks": "Thanks for letting us know.",
+    "thanksNo": "Thanks. Tell us what was missing and we will fix it.",
+    "contactLink": "Write to us",
+    "change": "Change answer"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -49,51 +62,73 @@
     {
       "id": "imap-password-rejected",
       "title": "The mail server rejects my password",
-      "summary": "On your own domain or a hosting company's mail, a rejected password is almost always the wrong password or the wrong username.",
-      "keywords": "imap smtp password rejected wrong login username cpanel plesk hosting own domain auth failed",
+      "summary": "Almost always the wrong password or username. Use the mailbox's own login.",
+      "keywords": "imap smtp password rejected wrong login username cpanel plesk hosting own domain auth failed smtp error send failed error",
       "steps": [
-        "Use the password of the mailbox itself. The login for your hosting account or control panel is a different password, even when it is the same address.",
-        "Use the full email address as the username. If you typed a separate username, clear that field unless your host gave you one.",
-        "If two-factor authentication is on for the mailbox, it needs an app password instead of the mailbox password.",
-        "Not sure of the password? Reset it where your host lists your email addresses. In cPanel that is Email Accounts, then Manage. In Plesk it is Mail Accounts.",
-        "Check the server name against your provider's own settings. Our provider guides list verified IMAP and SMTP hosts."
+        "Use the mailbox password, not your hosting or control panel login.",
+        "Use the full email address as the username.",
+        "If the mailbox has two-factor sign-in, use an app password.",
+        "Reset the password where your host lists email accounts (cPanel: Email Accounts).",
+        "Check the server names against our provider guides."
       ],
       "links": [
-        { "label": "Generic IMAP guide", "href": "/connect/imap" },
-        { "label": "Provider compatibility", "href": "/docs/providers" }
+        {
+          "label": "Generic IMAP guide",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Provider compatibility",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
       "id": "app-password-required",
-      "title": "App password required (Yahoo, iCloud, Gmail, Zoho)",
-      "summary": "These providers do not accept your normal password from a mail app. Create an app password and paste that instead.",
-      "keywords": "app password app-specific application-specific yahoo icloud apple gmail google zoho 2-step verification",
+      "title": "App password needed (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "These providers refuse your normal password here. Create an app password and paste it.",
+      "keywords": "app password app-specific application-specific yahoo icloud apple gmail google zoho 2-step verification two factor 2fa two-step mfa",
       "steps": [
-        "Yahoo: open Account Security, then Generate app password. It is 16 lowercase letters with no spaces.",
-        "iCloud: sign in at account.apple.com, open Sign-In and Security, then App-Specific Passwords. It is 16 lowercase letters shown in four groups.",
-        "Gmail: turn on 2-Step Verification, then create one at myaccount.google.com/apppasswords. A Google Workspace administrator can switch app passwords off for the whole domain. Gmail can also connect by signing in with Google.",
-        "Zoho: create an application-specific password in Zoho Account under Security, and switch IMAP access on in Zoho Mail settings. It is off by default.",
-        "Paste the app password as shown. Spaces are ignored."
+        "Yahoo: Account Security, then Generate app password.",
+        "iCloud: account.apple.com, Sign-In and Security, then App-Specific Passwords.",
+        "Gmail: turn on 2-Step Verification, then visit myaccount.google.com/apppasswords.",
+        "Zoho: create an application-specific password, and turn IMAP on in Zoho Mail settings.",
+        "Paste it as shown. Spaces are ignored."
       ],
       "links": [
-        { "label": "Yahoo Mail guide", "href": "/connect/yahoo" },
-        { "label": "iCloud Mail guide", "href": "/connect/icloud" },
-        { "label": "Gmail guide", "href": "/connect/gmail" },
-        { "label": "Zoho Mail guide", "href": "/connect/zoho" }
+        {
+          "label": "Yahoo Mail guide",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "iCloud Mail guide",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Gmail guide",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Zoho Mail guide",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
       "id": "yandex-imap-disabled",
       "title": "Yandex: IMAP access is switched off",
-      "summary": "Yandex refuses every mail app until IMAP access is on, and the refusal looks exactly like a wrong password.",
+      "summary": "Yandex refuses mail apps until IMAP is on. It looks like a wrong password.",
       "keywords": "yandex imap disabled off app password mail clients yandex 360",
       "steps": [
-        "In Yandex Mail, open Settings, then Mail clients. Enable IMAP access, and turn on app passwords and OAuth tokens. Both are required.",
-        "At id.yandex.com, open Security, then App passwords, and create one of type Mail. Yandex shows it only once.",
-        "Connect with your full Yandex address and that app password. Your account password never works here, even without two-factor authentication."
+        "In Yandex Mail, open Settings, then Mail clients.",
+        "Enable IMAP access, plus app passwords and OAuth tokens.",
+        "At id.yandex.com, create an app password of type Mail.",
+        "Connect with your full address and that app password."
       ],
       "links": [
-        { "label": "Yandex Mail guide", "href": "/connect/yandex" }
+        {
+          "label": "Yandex Mail guide",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -109,64 +144,89 @@
         "Ask the assistant to list your inboxes first. Mail is fetched when the assistant asks for it, so nothing arrives on its own."
       ],
       "links": [
-        { "label": "Client setup guides", "href": "/docs/clients" },
-        { "label": "Error codes", "href": "/docs#errors" }
+        {
+          "label": "Client setup guides",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Error codes",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
       "id": "usage-limit-reached",
       "title": "Usage limit reached",
-      "summary": "A Free workspace has 150 email actions a calendar month. When they are used up, email actions are refused until the 1st of the next month (UTC).",
+      "summary": "Free includes 150 email actions a month. After that, actions wait until the 1st (UTC).",
       "keywords": "usage limit allowance cap 150 actions free plan refused reset quota",
       "steps": [
         "See how many actions you have used under Usage in the dashboard.",
         "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 3 days after signup.",
         "Retrying does not help. The allowance resets on the 1st of the next month (UTC), and paused automations resume on their own.",
-        "Personal, Pro and Business have unlimited email actions, subject to fair use.",
-        "Workspaces created before 2026-09-12 are not metered. If you see the limit on one of those, write to us."
+        "Personal, Pro and Business have unlimited email actions, subject to fair use."
       ],
       "links": [
-        { "label": "Pricing FAQ", "href": "/pricing#faq" },
-        { "label": "Rate limits", "href": "/docs#rate-limits" }
+        {
+          "label": "Pricing FAQ",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Rate limits",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
       "id": "change-or-cancel-plan",
       "title": "Change or cancel your plan",
-      "summary": "Upgrade, downgrade or cancel any time from Settings in the dashboard.",
+      "summary": "Change or cancel any time in Settings, under Billing & plan.",
       "keywords": "plan upgrade downgrade cancel subscription billing invoice refund stripe portal payment card",
       "steps": [
-        "Open Settings in the dashboard. The billing section shows your plan and the others you can move to.",
-        "To cancel, change your card or download invoices, open the billing portal from the same section. Stripe runs it.",
-        "Cancelling stops the next renewal. You keep what you paid for until the end of the current period, then move to Free with one connected inbox.",
-        "If the first charge on a new subscription was not what you expected, write to us within 14 days and we refund it in full. Partial periods are not refunded."
+        "Open Settings, then Billing & plan.",
+        "Choose Manage billing to cancel, change your card or get invoices.",
+        "Cancelling stops renewal. You keep your plan until the period ends.",
+        "Unexpected first charge? Write to us within 14 days for a full refund."
       ],
       "links": [
-        { "label": "Dashboard settings", "href": "/dashboard/settings" },
-        { "label": "Plans and pricing", "href": "/pricing" }
+        {
+          "label": "Dashboard settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Plans and pricing",
+          "href": "/pricing"
+        }
       ]
     },
     {
       "id": "disconnect-or-delete",
       "title": "Disconnect a mailbox or delete your account",
-      "summary": "Remove one mailbox, one workspace or the whole account from the dashboard.",
+      "summary": "Remove one mailbox, one workspace or your whole account from the dashboard.",
       "keywords": "disconnect remove inbox mailbox delete account workspace close danger zone",
       "steps": [
-        "To disconnect one mailbox, open Inboxes in the dashboard, select it and choose Disconnect. Its stored password or token is removed.",
-        "To close a workspace, open Settings, then Danger zone, and choose Delete workspace. Your account and other workspaces stay.",
-        "To delete everything, open Settings, then Danger zone, and choose Delete account. You confirm by typing your email address, and it cannot be undone.",
-        "Deleting the account cancels a paid plan at once, with no refund for the rest of the period. To keep the time you have paid for, cancel in the billing portal first and delete the account when the period ends."
+        "Mailbox: in Inboxes, click it and choose Disconnect. Its stored credential is removed.",
+        "Workspace: in Settings, under Workspace, choose Delete workspace.",
+        "Account: in Settings, under Danger zone, choose Delete account. This cannot be undone.",
+        "Each of these cancels the scheduled emails still waiting to send from the mailboxes removed. Deleting the account also asks Google to end our access to any Gmail inbox connected with Google sign-in, and we email you a confirmation.",
+        "Deleting the account cancels a paid plan at once. Unused time is not refunded automatically: within 14 days of a first charge, write to us. To use the time you paid for, cancel first and delete later."
       ],
       "links": [
-        { "label": "Dashboard inboxes", "href": "/dashboard/inboxes" },
-        { "label": "Dashboard settings", "href": "/dashboard/settings" }
+        {
+          "label": "Dashboard inboxes",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Dashboard settings",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Write to us",
-    "lead": "A person reads every message and replies by email.",
-    "emailAlt": "Prefer email? Write to {email}."
+    "lead": "We reply by email within one business day.",
+    "emailLine": "Email us at {email}, or send a message here.",
+    "openForm": "Write a message"
   },
   "categories": {
     "connect": "Connecting a mailbox",

@@ -6,11 +6,11 @@
   "hero": {
     "eyebrow": "Ayuda",
     "title": "¿En qué podemos ayudarte?",
-    "lead": "Busca en las guías, lee las soluciones breves a los problemas que más vemos o escríbenos abajo."
+    "lead": "Busca en las guías, abre un tema más abajo o escríbenos."
   },
   "search": {
     "label": "Buscar en la ayuda",
-    "placeholder": "Busca proveedores, clientes, documentación y preguntas",
+    "placeholder": "Escribe una pregunta o una palabra",
     "empty": "Sin resultados.",
     "emptyLink": "Escríbenos abajo",
     "kinds": {
@@ -18,8 +18,21 @@
       "client": "Cliente",
       "docs": "Docs",
       "faq": "Pregunta",
-      "article": "Solución"
+      "article": "Artículo"
     }
+  },
+  "nav": {
+    "label": "Temas de ayuda",
+    "contact": "Contacto"
+  },
+  "feedback": {
+    "question": "¿Te ha sido útil?",
+    "yes": "Sí",
+    "no": "No",
+    "thanks": "Gracias por decírnoslo.",
+    "thanksNo": "Gracias. Cuéntanos qué faltaba y lo corregiremos.",
+    "contactLink": "Escríbenos",
+    "change": "Cambiar respuesta"
   },
   "hints": {
     "provider": "{category} · {domain}",
@@ -49,51 +62,73 @@
     {
       "id": "imap-password-rejected",
       "title": "El servidor de correo rechaza mi contraseña",
-      "summary": "En un dominio propio o en el correo de un hosting, una contraseña rechazada casi siempre es la contraseña equivocada o el usuario equivocado.",
-      "keywords": "imap smtp contraseña rechazada incorrecta acceso usuario cpanel plesk hosting dominio propio",
+      "summary": "Casi siempre es la contraseña o el usuario equivocados. Usa el acceso propio del buzón.",
+      "keywords": "imap smtp contraseña rechazada incorrecta acceso usuario cpanel plesk hosting dominio propio autenticación fallida password rejected error smtp envío fallido error",
       "steps": [
-        "Usa la contraseña del propio buzón. El acceso a tu cuenta de hosting o al panel de control es otra contraseña, aunque sea la misma dirección.",
-        "Usa la dirección de correo completa como usuario. Si escribiste un usuario aparte, vacía ese campo salvo que tu proveedor te haya dado uno.",
-        "Si el buzón tiene activada la autenticación en dos pasos, necesita una contraseña de aplicación en lugar de la contraseña del buzón.",
-        "¿No sabes la contraseña? Restablécela donde tu proveedor muestra tus direcciones de correo. En cPanel es Cuentas de correo y luego Administrar. En Plesk es Cuentas de correo.",
-        "Comprueba el nombre del servidor con los ajustes de tu proveedor. Nuestras guías de proveedores indican servidores IMAP y SMTP verificados."
+        "Usa la contraseña del buzón, no el acceso a tu hosting o panel de control.",
+        "Usa la dirección de correo completa como usuario.",
+        "Si el buzón tiene verificación en dos pasos, usa una contraseña de aplicación.",
+        "Restablece la contraseña donde tu proveedor lista las cuentas de correo (cPanel: Email Accounts).",
+        "Comprueba los nombres de servidor con nuestras guías de proveedores."
       ],
       "links": [
-        { "label": "Guía de IMAP genérico", "href": "/connect/imap" },
-        { "label": "Compatibilidad por proveedor", "href": "/docs/providers" }
+        {
+          "label": "Guía de IMAP genérico",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Compatibilidad por proveedor",
+          "href": "/docs/providers"
+        }
       ]
     },
     {
       "id": "app-password-required",
       "title": "Hace falta una contraseña de aplicación (Yahoo, iCloud, Gmail, Zoho)",
-      "summary": "Estos proveedores no aceptan tu contraseña normal desde una app de correo. Crea una contraseña de aplicación y pégala en su lugar.",
-      "keywords": "contraseña de aplicación específica yahoo icloud apple gmail google zoho verificación en dos pasos app password",
+      "summary": "Estos proveedores rechazan aquí tu contraseña normal. Crea una contraseña de aplicación y pégala.",
+      "keywords": "contraseña de aplicación específica yahoo icloud apple gmail google zoho verificación en dos pasos app password dos factores doble factor 2fa mfa",
       "steps": [
-        "Yahoo: abre Seguridad de la cuenta y luego Generar contraseña de aplicación. Son 16 letras minúsculas sin espacios.",
-        "iCloud: entra en account.apple.com, abre Inicio de sesión y seguridad y luego Contraseñas específicas para apps. Son 16 letras minúsculas en cuatro grupos.",
-        "Gmail: activa la verificación en dos pasos y crea una en myaccount.google.com/apppasswords. Un administrador de Google Workspace puede desactivarlas en todo el dominio. Gmail también puede conectarse iniciando sesión con Google.",
-        "Zoho: crea una contraseña específica de aplicación en Cuenta de Zoho, dentro de Seguridad, y activa el acceso IMAP en los ajustes de Zoho Mail. Viene desactivado.",
-        "Pega la contraseña de aplicación tal como se muestra. Los espacios se ignoran."
+        "Yahoo: Account Security y luego Generate app password.",
+        "iCloud: account.apple.com, Sign-In and Security y luego App-Specific Passwords.",
+        "Gmail: activa la verificación en dos pasos y entra en myaccount.google.com/apppasswords.",
+        "Zoho: crea una contraseña específica de aplicación y activa IMAP en los ajustes de Zoho Mail.",
+        "Pégala tal como se muestra. Los espacios se ignoran."
       ],
       "links": [
-        { "label": "Guía de Yahoo Mail", "href": "/connect/yahoo" },
-        { "label": "Guía de iCloud Mail", "href": "/connect/icloud" },
-        { "label": "Guía de Gmail", "href": "/connect/gmail" },
-        { "label": "Guía de Zoho Mail", "href": "/connect/zoho" }
+        {
+          "label": "Guía de Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Guía de iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Guía de Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guía de Zoho Mail",
+          "href": "/connect/zoho"
+        }
       ]
     },
     {
       "id": "yandex-imap-disabled",
       "title": "Yandex: el acceso IMAP está desactivado",
-      "summary": "Yandex rechaza cualquier app de correo hasta que el acceso IMAP está activado, y el rechazo parece exactamente una contraseña incorrecta.",
+      "summary": "Yandex rechaza las apps de correo hasta que IMAP está activado. Parece una contraseña incorrecta.",
       "keywords": "yandex imap desactivado contraseña de aplicación clientes de correo yandex 360",
       "steps": [
-        "En Yandex Mail, abre Ajustes y luego Clientes de correo. Activa el acceso IMAP y activa las contraseñas de aplicación y los tokens OAuth. Hacen falta los dos.",
-        "En id.yandex.com, abre Seguridad, luego Contraseñas de aplicación, y crea una de tipo Correo. Yandex la muestra una sola vez.",
-        "Conecta con tu dirección completa de Yandex y esa contraseña de aplicación. La contraseña de tu cuenta nunca funciona aquí, ni siquiera sin autenticación en dos pasos."
+        "En Yandex Mail, abre Settings y luego Mail clients.",
+        "Activa el acceso IMAP, y también las contraseñas de aplicación y los tokens OAuth.",
+        "En id.yandex.com, crea una contraseña de aplicación de tipo Mail.",
+        "Conecta con tu dirección completa y esa contraseña de aplicación."
       ],
       "links": [
-        { "label": "Guía de Yandex Mail", "href": "/connect/yandex" }
+        {
+          "label": "Guía de Yandex Mail",
+          "href": "/connect/yandex"
+        }
       ]
     },
     {
@@ -109,41 +144,58 @@
         "Pide al asistente que liste primero tus bandejas. El correo se obtiene cuando el asistente lo pide, así que nada llega por sí solo."
       ],
       "links": [
-        { "label": "Guías de clientes", "href": "/docs/clients" },
-        { "label": "Códigos de error", "href": "/docs#errors" }
+        {
+          "label": "Guías de clientes",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Códigos de error",
+          "href": "/docs#errors"
+        }
       ]
     },
     {
       "id": "usage-limit-reached",
       "title": "Límite de uso alcanzado",
-      "summary": "Un espacio de trabajo Free tiene 150 acciones de correo por mes natural. Cuando se agotan, se rechazan hasta el día 1 del mes siguiente (UTC).",
+      "summary": "Free incluye 150 acciones de correo al mes. Después, las acciones esperan hasta el día 1 (UTC).",
       "keywords": "límite de uso cuota tope 150 acciones plan gratuito free rechazado reinicio",
       "steps": [
         "Mira cuántas acciones has usado en Uso, dentro del panel.",
         "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 3 días tras el registro.",
         "Reintentar no sirve. El límite se reinicia el día 1 del mes siguiente (UTC) y las automatizaciones en pausa se reanudan solas.",
-        "Personal, Pro y Business tienen acciones ilimitadas, sujeto a un uso justo.",
-        "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."
+        "Personal, Pro y Business tienen acciones ilimitadas, sujeto a un uso justo."
       ],
       "links": [
-        { "label": "Preguntas sobre precios", "href": "/pricing#faq" },
-        { "label": "Límites de tasa", "href": "/docs#rate-limits" }
+        {
+          "label": "Preguntas sobre precios",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Límites de tasa",
+          "href": "/docs#rate-limits"
+        }
       ]
     },
     {
       "id": "change-or-cancel-plan",
       "title": "Cambiar o cancelar tu plan",
-      "summary": "Mejora, baja de plan o cancela cuando quieras desde Ajustes en el panel.",
+      "summary": "Cambia o cancela cuando quieras en Ajustes, dentro de Facturación y plan.",
       "keywords": "plan mejorar bajar cancelar suscripción facturación factura reembolso stripe portal pago tarjeta",
       "steps": [
-        "Abre Ajustes en el panel. La sección de facturación muestra tu plan y los demás a los que puedes cambiar.",
-        "Para cancelar, cambiar la tarjeta o descargar facturas, abre el portal de facturación desde esa misma sección. Lo gestiona Stripe.",
-        "Cancelar detiene la siguiente renovación. Conservas lo que pagaste hasta el final del periodo actual y luego pasas a Free con una bandeja conectada.",
-        "Si el primer cobro de una suscripción nueva no era lo que esperabas, escríbenos en un plazo de 14 días y te lo devolvemos entero. Los periodos parciales no se reembolsan."
+        "Abre Ajustes y luego Facturación y plan.",
+        "Elige Gestionar facturación para cancelar, cambiar la tarjeta o descargar facturas.",
+        "Cancelar detiene la renovación. Conservas tu plan hasta que termine el periodo.",
+        "¿Un primer cobro inesperado? Escríbenos en 14 días y te lo devolvemos entero."
       ],
       "links": [
-        { "label": "Ajustes del panel", "href": "/dashboard/settings" },
-        { "label": "Planes y precios", "href": "/pricing" }
+        {
+          "label": "Ajustes del panel",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Planes y precios",
+          "href": "/pricing"
+        }
       ]
     },
     {
@@ -152,21 +204,29 @@
       "summary": "Quita un buzón, un espacio de trabajo o toda la cuenta desde el panel.",
       "keywords": "desconectar quitar bandeja buzón eliminar cuenta espacio de trabajo cerrar zona de peligro",
       "steps": [
-        "Para desconectar un buzón, abre Bandejas de entrada en el panel, selecciónalo y elige Desconectar. Se borra su contraseña o token guardado.",
-        "Para cerrar un espacio de trabajo, abre Ajustes, luego Zona de peligro, y elige Eliminar espacio de trabajo. Tu cuenta y tus otros espacios se mantienen.",
-        "Para eliminarlo todo, abre Ajustes, luego Zona de peligro, y elige Eliminar cuenta. Lo confirmas escribiendo tu dirección de correo y no se puede deshacer.",
-        "Eliminar la cuenta cancela al momento un plan de pago, sin reembolso por el resto del periodo. Para conservar el tiempo que ya pagaste, cancélalo primero en el portal de facturación y elimina la cuenta cuando termine el periodo."
+        "Buzón: en Bandejas de entrada, haz clic en él y elige Desconectar. Se borra su credencial guardada.",
+        "Espacio de trabajo: en Ajustes, en Espacio de trabajo, elige Eliminar espacio de trabajo.",
+        "Cuenta: en Ajustes, en Zona de peligro, elige Eliminar cuenta. No se puede deshacer.",
+        "Cada una de estas acciones cancela los correos programados que aún esperan para enviarse desde los buzones eliminados. Al eliminar la cuenta, también pedimos a Google que retire nuestro acceso a cualquier bandeja de Gmail conectada con el inicio de sesión de Google, y te enviamos una confirmación por correo.",
+        "Eliminar la cuenta cancela al momento un plan de pago. El tiempo no usado no se reembolsa automáticamente: dentro de los 14 días posteriores al primer cobro, escríbenos. Para aprovechar el tiempo pagado, cancela primero y elimina la cuenta después."
       ],
       "links": [
-        { "label": "Bandejas del panel", "href": "/dashboard/inboxes" },
-        { "label": "Ajustes del panel", "href": "/dashboard/settings" }
+        {
+          "label": "Bandejas del panel",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Ajustes del panel",
+          "href": "/dashboard/settings"
+        }
       ]
     }
   ],
   "contact": {
     "heading": "Escríbenos",
-    "lead": "Una persona lee cada mensaje y responde por correo.",
-    "emailAlt": "¿Prefieres el correo? Escribe a {email}."
+    "lead": "Respondemos por correo en un plazo de un día laborable.",
+    "emailLine": "Escríbenos a {email} o envía un mensaje aquí.",
+    "openForm": "Escribir un mensaje"
   },
   "categories": {
     "connect": "Conectar un buzón",

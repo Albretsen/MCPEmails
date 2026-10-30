@@ -1,0 +1,251 @@
+{
+  "area": "using-email",
+  "title": "Utiliser vos e-mails avec votre assistant",
+  "articles": [
+    {
+      "id": "read-and-search-email",
+      "title": "Lire et rechercher vos e-mails",
+      "summary": "Demandez en langage courant, par expéditeur, objet ou date. La lecture ne modifie jamais votre boîte.",
+      "keywords": "lire rechercher trouver lister non lus messages boîte de réception résumer expéditeur objet date pièce jointe suivi étoile dossier read search",
+      "steps": [
+        "Demandez ce qui est nouveau, par exemple : « Montre mes e-mails non lus d’aujourd’hui. »",
+        "Décrivez un message par expéditeur, destinataire, mots de l’objet, dates ou pièces jointes.",
+        "Demandez à votre assistant de continuer la lecture quand un long e-mail s’arrête trop tôt.",
+        "Nommez un dossier, comme Envoyés ou Archives, pour y lire les e-mails.",
+        "Demandez-lui de marquer les messages comme lus. La lecture seule ne le fait jamais."
+      ],
+      "links": [
+        {
+          "label": "Référence des outils",
+          "href": "/docs#tools"
+        }
+      ]
+    },
+    {
+      "id": "search-misses-messages",
+      "title": "Retrouver des messages qu’une recherche a manqués",
+      "summary": "Nommez le dossier, utilisez des mots entiers et, sur Outlook, cherchez mots et filtres séparément.",
+      "keywords": "recherche manquant introuvable dossier archives envoyés imap gmail outlook mot entier corbeille spam filtre search dossier envoyés copie envoyée e-mail envoyé sent folder",
+      "steps": [
+        "Sur les boîtes IMAP, nommez votre dossier d’archives ou d’envoyés. Seule la boîte de réception est parcourue.",
+        "Sur Gmail et Outlook, nommez la Corbeille pour y chercher. Gmail ignore aussi le Spam.",
+        "Sur Gmail et Outlook, utilisez des mots entiers pour l’objet. Les morceaux de mots ne trouvent rien.",
+        "Sur Outlook, demandez les mots et les filtres comme non lu ou dates dans des recherches séparées.",
+        "Sur les boîtes IMAP, le filtre « contient une pièce jointe » est ignoré."
+      ],
+      "links": [
+        {
+          "label": "Compatibilité par fournisseur",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "send-new-email",
+      "title": "Envoyer un nouvel e-mail",
+      "summary": "Dites à qui écrire et quoi dire. Un e-mail envoyé ne peut pas être rattrapé.",
+      "keywords": "envoyer écrire rédiger nouvel e-mail destinataire à cc cci répondre à contact adresse trouver quelqu’un approbation send",
+      "steps": [
+        "Demandez, par exemple : « Écris à ola@example.com pour demander si jeudi à 10 h lui convient. »",
+        "Demandez « Quelle est l’adresse e-mail d’Anna ? » pour la retrouver dans vos e-mails récents.",
+        "Ajoutez Cc, Cci ou une adresse de réponse. Jusqu’à 50 destinataires par champ.",
+        "Demandez plutôt un brouillon si vous voulez d’abord le relire.",
+        "Si l’approbation des envois est active, un propriétaire ou un administrateur doit l’approuver dans Approbations."
+      ],
+      "links": [
+        {
+          "label": "Approbations",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "reply-and-forward",
+      "title": "Répondre à un e-mail ou le transférer",
+      "summary": "Les réponses restent dans la conversation. Un transfert arrive tel que l’original, pièces jointes comprises.",
+      "keywords": "répondre répondre à tous réponse transférer tr fwd fil conversation pièces jointes note eml reply forward",
+      "steps": [
+        "Demandez, par exemple : « Réponds à Ola que jeudi me convient. »",
+        "Dites « répondre à tous » pour inclure tout le monde. Sinon, seul l’expéditeur la reçoit.",
+        "Pour transférer, nommez le message et les nouveaux destinataires, plus une note si vous voulez.",
+        "Demandez à exclure les pièces jointes, ou à transférer l’original en pièce jointe.",
+        "Transférez jusqu’à 50 messages aux mêmes personnes en une seule demande."
+      ],
+      "links": []
+    },
+    {
+      "id": "save-as-draft",
+      "title": "Enregistrer un e-mail en brouillon",
+      "summary": "Demandez un brouillon pour relire un e-mail. Il est enregistré dans le dossier Brouillons de votre boîte.",
+      "keywords": "brouillon enregistrer non envoyé relire plus tard modifier mettre à jour brouillon de réponse dossier brouillons draft",
+      "steps": [
+        "Demandez, par exemple : « Prépare une réponse à Ola, mais ne l’envoie pas. »",
+        "Ouvrez-le depuis le dossier Brouillons de votre application de messagerie habituelle, si vous le souhaitez.",
+        "Demandez à votre assistant de changer le texte, l’objet ou les destinataires, ou d’ajouter des fichiers.",
+        "Demandez-lui d’envoyer le brouillon quand il est prêt. L’envoi est irréversible.",
+        "Demandez-lui de lister vos brouillons ou d’en supprimer un."
+      ],
+      "links": [
+        {
+          "label": "Modifier les brouillons dans la conversation",
+          "href": "/help#article-draft-editor-card"
+        }
+      ]
+    },
+    {
+      "id": "draft-editor-card",
+      "title": "Modifier et envoyer un brouillon dans la conversation",
+      "summary": "Si votre client IA l’affiche, un brouillon préparé apparaît sous forme de carte à modifier et envoyer.",
+      "keywords": "carte d’édition de brouillon dans la conversation modifier envoyer annuler supprimer enregistrer carte masquer désactiver afficher draft editor card",
+      "body": [
+        "Masquez la carte pour une boîte dans ses détails, sous Boîtes, ou pour tout l’espace de travail dans Paramètres, Carte d’édition de brouillon."
+      ],
+      "steps": [
+        "Modifiez les destinataires, l’objet ou le texte dans la carte, puis enregistrez. Enregistrer n’envoie rien.",
+        "Choisissez Send. Appuyez sur Undo dans les secondes qui suivent pour garder le brouillon.",
+        "Utilisez l’icône de corbeille pour supprimer le brouillon chez votre fournisseur.",
+        "Sur les boîtes Gmail et IMAP, demandez à votre assistant de modifier les brouillons avec pièces jointes.",
+        "Pour masquer les cartes, ouvrez More options et choisissez Turn off draft cards…"
+      ],
+      "links": [
+        {
+          "label": "Boîtes",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Paramètres",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "email-attachments",
+      "title": "Envoyer, lire et enregistrer des pièces jointes",
+      "summary": "Joignez jusqu’à 20 fichiers (10 Mo au total), lisez le texte d’un fichier ou téléchargez jusqu’à 25 Mo.",
+      "keywords": "pièce jointe joindre fichier pdf csv télécharger extraire lire taille limite 10 Mo 25 Mo eml original attachment",
+      "steps": [
+        "Demandez à votre assistant de joindre un fichier à un e-mail ou un brouillon.",
+        "Nommez un fichier déjà dans votre boîte pour le renvoyer sans le téléverser à nouveau.",
+        "Demandez-lui de lire le texte d’un fichier : texte brut, CSV, HTML, JSON ou PDF avec couche texte.",
+        "Les images et PDF numérisés ne sont pas lus.",
+        "Demandez l’original d’un e-mail pour obtenir le message complet en fichier .eml."
+      ],
+      "links": []
+    },
+    {
+      "id": "organize-email",
+      "title": "Déplacer, archiver et marquer des messages",
+      "summary": "Déplacez, copiez, archivez, marquez des messages et gérez les dossiers. La plupart des actions sont réversibles.",
+      "keywords": "déplacer archiver dossier libellé suivi étoile marquer lu non lu copier organiser trier créer renommer supprimer dossier libellés gmail en masse move archive labels",
+      "body": [
+        "Gmail utilise des libellés : un déplacement ajoute le libellé et retire le message de la boîte de réception."
+      ],
+      "steps": [
+        "Demandez, par exemple : « Déplace les reçus de cette semaine dans le dossier Reçus. »",
+        "Demandez à archiver des messages, à les marquer d’un drapeau ou à le retirer, ou à les marquer comme lus ou non lus.",
+        "Demandez à déplacer tout ce qu’une recherche trouve, jusqu’à 500 messages par demande.",
+        "Demandez à créer, renommer ou supprimer des dossiers. Supprimer un dossier est irréversible.",
+        "La copie fonctionne partout sauf sur Gmail connecté via la connexion Google."
+      ],
+      "links": [
+        {
+          "label": "Compatibilité par fournisseur",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "delete-email",
+      "title": "Supprimer des e-mails",
+      "summary": "Les e-mails supprimés vont dans la Corbeille. Une suppression définitive la contourne et est irréversible.",
+      "keywords": "supprimer effacer corbeille définitif expunge en masse nettoyer delete trash",
+      "steps": [
+        "Demandez à supprimer un message, une liste de messages ou tout ce qu’une recherche trouve.",
+        "Jusqu’à 500 messages sont supprimés par demande.",
+        "Ne demandez une suppression définitive que si c’est vraiment voulu.",
+        "Gmail connecté via la connexion Google ne prend en charge que la Corbeille.",
+        "Vérifiez que votre connecteur ou votre clé API a l’autorisation de suppression."
+      ],
+      "links": [
+        {
+          "label": "Clés API",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "schedule-email",
+      "title": "Programmer un e-mail pour plus tard",
+      "summary": "Indiquez une heure future et son fuseau horaire. L’envoi peut avoir jusqu’à une minute de retard.",
+      "keywords": "programmer planifier envoyer plus tard différé heure future file d’attente annuler programmé demain matin fuseau horaire schedule send later",
+      "steps": [
+        "Demandez, par exemple : « Envoie ceci à Ola demain à 09:00, heure d’Oslo. »",
+        "Demandez « Quels e-mails sont programmés ? » pour voir la file d’attente.",
+        "Demandez à en annuler un avant que son envoi ne commence.",
+        "Donnez-lui les fichiers directement. Les fichiers d’autres e-mails ne peuvent pas être réutilisés ici.",
+        "Si l’approbation des envois est active, il attend d’abord dans Approbations."
+      ],
+      "links": [
+        {
+          "label": "Approbations",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "signature-and-sender-name",
+      "title": "Définir votre signature et votre nom d’expéditeur",
+      "summary": "Chaque boîte a sa signature et son nom d’expéditeur. Réglez-les dans Boîtes ou via votre assistant.",
+      "keywords": "signature formule de politesse pied de page logo image nom d’expéditeur nom affiché nom de l’expéditeur réponse transfert html sender name",
+      "steps": [
+        "Dans Boîtes, cliquez sur la boîte, puis ouvrez Signature & sending.",
+        "Remplissez Nom d’expéditeur et choisissez Enregistrer le nom.",
+        "Sous Signature e-mail, utilisez Texte enrichi ou Source HTML, puis choisissez Enregistrer la signature.",
+        "Sous Sur les réponses et transferts, choisissez Toujours ajouter, Première réponse seulement ou Ne jamais ajouter.",
+        "Activez Intégrer les images au message si votre logo ne s’affiche pas."
+      ],
+      "links": [
+        {
+          "label": "Boîtes",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "multiple-inboxes",
+      "title": "Travailler avec plusieurs boîtes",
+      "summary": "Dites quelle adresse utiliser. Demandez « Quelles boîtes ai-je ? » pour toutes les voir.",
+      "keywords": "plusieurs boîtes boîtes mail comptes quelle boîte adresse d’expédition changer envoyer en tant que alias multiple inboxes send as",
+      "steps": [
+        "Nommez l’adresse, par exemple : « Réponds depuis sales@ au dernier e-mail d’Anna. »",
+        "Envoyez depuis un alias vérifié par Gmail, ou ajouté sous Adresses d'envoi.",
+        "Une boîte manque ? Vérifiez l’Accès aux boîtes de cette clé dans Clés API.",
+        "Free connecte une boîte, Personal trois, Pro jusqu’à 10 et Business 10 ou plus."
+      ],
+      "links": [
+        {
+          "label": "Clés API",
+          "href": "/dashboard/keys"
+        },
+        {
+          "label": "Tarifs",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "built-in-email-routines",
+      "title": "Utiliser les routines e-mail intégrées",
+      "summary": "Certains clients IA proposent des routines MCPEmails prêtes à l’emploi. Elles ne tournent que si vous les lancez.",
+      "keywords": "routines prompts tri suivi relance briefing du matin décisions nettoyage brouillons de réponse envois programmés triage follow-up",
+      "steps": [
+        "Regardez dans le menu des prompts ou des commandes de votre client IA. Tous ne les affichent pas.",
+        "Morning inbox triage classe les e-mails non lus récents sans rien modifier.",
+        "Follow-up radar trouve les conversations qui attendent une réponse.",
+        "Prepare reply drafts rédige des brouillons à relire.",
+        "Clean up safely propose un plan avant de modifier quoi que ce soit."
+      ],
+      "links": []
+    }
+  ]
+}

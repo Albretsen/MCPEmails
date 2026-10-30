@@ -95,6 +95,11 @@ export default function ErrorPage({ reset }) {
           <p className="sub">
             An unexpected error occurred. This has been noted and we&rsquo;ll
             look into it. You can try reloading, or head back to the dashboard.
+            If it keeps happening, email{' '}
+            <a href="mailto:support@mcpemails.com" style={{ color: 'var(--brand)' }}>
+              support@mcpemails.com
+            </a>
+            .
           </p>
 
           {/* Primary CTA: retry */}

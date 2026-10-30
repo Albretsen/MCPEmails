@@ -11,10 +11,11 @@
     "adminConsentGrantedAction": "Connecter Outlook",
     "adminConsentFailed": "Microsoft n'a pas confirmé l'approbation : Outlook reste donc bloqué. L'approbation nécessite un compte administrateur Microsoft 365 ; envoyez le lien d'approbation à votre administrateur informatique.",
     "adminConsentFailedAction": "Obtenir le lien d'approbation",
-    "outlookEmailMissing": "Votre compte Microsoft ne nous a transmis aucune adresse e-mail, nous n'avons donc pas pu le connecter. Essayez avec un autre compte Microsoft ou contactez le support à hello@mcpemails.com.",
+    "outlookEmailMissing": "Votre compte Microsoft ne nous a transmis aucune adresse e-mail, nous n'avons donc pas pu le connecter. Essayez avec un autre compte Microsoft ou contactez le support à support@mcpemails.com.",
     "inboxExistsOtherProvider": "Cette adresse est déjà connectée par une autre méthode (par exemple IMAP, Gmail ou Outlook) : nous n'avons pas touché à cette boîte. Pour changer de méthode de connexion, supprimez d'abord cette boîte, puis connectez-la à nouveau.",
     "outlookNoMailbox": "Ce compte Microsoft n'a pas de boîte aux lettres Outlook (Exchange Online), il n'y a donc rien à connecter. C'est fréquent pour les comptes administrateur sans licence Exchange, ou lorsque la messagerie de l'organisation est hébergée ailleurs. Si votre messagerie est sur un autre serveur, connectez l'adresse en IMAP.",
     "connectionFailed": "Échec de la connexion de la boîte ({error}). Veuillez réessayer.",
+    "contactSupport": "Contacter le support",
     "checkoutSuccess": "Bienvenue dans {plan}. Votre abonnement s'active maintenant ; cela peut prendre un moment.",
     "checkoutSuccessPlanFallback": "votre nouvelle formule",
     "checkoutFeedback": {
@@ -484,6 +485,7 @@
     "pageApprovals": "Approbations",
     "pageSettings": "Paramètres",
     "pageSecurity": "Sécurité",
+    "pageHelp": "Aide et support",
     "groupTitlePage": "Page",
     "actionConnectInbox": "Connecter une boîte",
     "groupTitleAction": "Action",
@@ -551,7 +553,7 @@
     "timed_outBody": "L'approbation a pris trop de temps ou s'est terminée dans un autre navigateur. Ouvrez à nouveau le lien d'approbation dans ce navigateur.",
     "unavailableTitle": "Un problème est survenu",
     "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
-    "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
+    "closeHint": "Des questions ? Écrivez à support@mcpemails.com.",
     "openApp": "Ouvrir MCPEmails"
   },
   "seasonal": {
@@ -575,5 +577,9 @@
     "resetBody": "Comptes internes uniquement. Efface la progression de la configuration et les marqueurs du premier appel de cet espace de travail pour refaire le parcours. Les boîtes de réception et les clés restent connectées.",
     "resetButton": "Réinitialiser la prise en main",
     "resetFailed": "Impossible de réinitialiser la prise en main. Réessayez."
+  },
+  "help": {
+    "loading": "Chargement de l’aide…",
+    "loadError": "Impossible de charger l’aide. Rechargez la page ou écrivez à support@mcpemails.com."
   }
 }

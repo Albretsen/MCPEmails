@@ -123,7 +123,8 @@ body { background: var(--bg-page); }
   display: flex; align-items: center; gap: 16px;
 }
 .topbar .crumbs { font-family: var(--font-sans); font-size: 14px; color: var(--fg-3); display:flex; align-items:center; gap:8px; }
-.topbar .crumbs .here { color: var(--fg-1); font-weight: 600; }
+.topbar .crumbs .here { color: var(--fg-1); font-weight: 600; white-space: nowrap; }
+.topbar .crumbs > span:first-child { white-space: nowrap; }
 .topbar .crumbs .sep { color: var(--fg-4); }
 .topbar .grow { flex: 1; }
 .topbar .search {
@@ -879,10 +880,30 @@ body { background: var(--bg-page); }
   /* colour set per-variant below */
 }
 
+/* Message text and the optional action, side by side */
+.toast-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 /* Message text */
 .toast-msg {
   flex: 1;
   line-height: var(--lh-base);
+}
+
+/* A long message with an action: the button goes under the text */
+.toast-stacked {
+  align-items: flex-start;
+  max-width: 400px;
+}
+.toast-stacked .toast-body {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 /* Optional inline action button */

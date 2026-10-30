@@ -1,0 +1,226 @@
+{
+  "area": "safety-automation",
+  "title": "安全与自动化",
+  "articles": [
+    {
+      "id": "turn-on-send-review",
+      "title": "发送前审核邮件",
+      "summary": "为收件箱设置“发送前审核”，每封准备发送的邮件都会等待你批准。",
+      "keywords": "发送审核 审批 暂缓 批准 发送前审核 审核卡片 仅在控制台 立即发送 安全 send review approval",
+      "steps": [
+        "在“收件箱”中，点击该收件箱打开详情。",
+        "打开 Signature & sending。",
+        "选择“在 mcpemails.com 上批准，聊天中显示卡片”或“仅在 mcpemails.com 上批准”。",
+        "点击“保存签名”。审核设置也会一起保存。"
+      ],
+      "body": [
+        "在这两种审核模式下，只有工作区所有者或管理员在已登录的浏览器中批准后，邮件才会送出。“立即发送”会关闭审核。"
+      ],
+      "links": [
+        {
+          "label": "收件箱",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "approve-held-send",
+      "title": "批准或拒绝暂缓的发送",
+      "summary": "暂缓的发送在“审批”中等待，由所有者或管理员批准或拒绝。",
+      "keywords": "审批 待处理 发送 批准 拒绝 暂缓 邮件 等待 审核 过期 24 小时 所有者 管理员 approvals",
+      "steps": [
+        "打开“审批”。",
+        "点击 Review & approve，再点击“批准并发送”。",
+        "或者点击 Reject，再点击 Reject request。不会发送任何内容。"
+      ],
+      "body": [
+        "24 小时内无人处理的请求会过期，且永远不会发送。如果仍想发送，请让助手重新准备。"
+      ],
+      "links": [
+        {
+          "label": "审批",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "use-workflow-prompts",
+      "title": "运行现成的工作流",
+      "summary": "从“工作流”中把流程复制给助手，例如 Morning inbox triage。",
+      "keywords": "工作流 提示词 流程 模板 晨间分类 跟进 决策跟踪 清理 复制提示词 workflows prompts triage",
+      "steps": [
+        "打开“工作流”。",
+        "在某个流程上点击 Copy prompt。",
+        "粘贴到你的 AI 助手中，并填写方括号里的内容。"
+      ],
+      "body": [
+        "支持 MCP 提示词的客户端也可以直接列出这些流程。提示词不会增加任何权限：每个操作仍由你的连接的权限范围控制。"
+      ],
+      "links": [
+        {
+          "label": "工作流",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "stop-bulk-run",
+      "title": "停止正在进行的批量操作",
+      "summary": "“工作流”会列出正在运行的批量移动和标记。Stop 会停止尚未开始的部分。",
+      "keywords": "批量 运行 停止 取消 大批量 进度 批量移动 标记 bulk stop",
+      "steps": [
+        "打开“工作流”，滚动到 Large-work controls。",
+        "在正在运行的那一行点击 Stop。"
+      ],
+      "body": [
+        "Stop 不会撤销已经改动过的邮件。"
+      ],
+      "links": [
+        {
+          "label": "工作流",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "create-automation",
+      "title": "创建自动化",
+      "summary": "自动化按计划运行一个保存的搜索，并对匹配的邮件执行一个固定操作。",
+      "keywords": "自动化 规则 计划 定时 筛选 分类 收件箱整理 无人值守 新建自动化 预览匹配 automation",
+      "steps": [
+        "打开“自动化”，点击“新建自动化”。",
+        "选择收件箱、API 密钥、运行频率和每次处理的邮件数。",
+        "在“匹配哪些邮件”下设置筛选条件，然后点击“预览匹配”。",
+        "在“要做什么”下选择操作，然后点击“创建自动化”。",
+        "在“状态”列中把它切换为“已开启”。新建的自动化默认关闭。"
+      ],
+      "body": [
+        "只有工作区所有者和管理员可以创建或修改自动化。如果助手的密钥拥有 manage:automations 权限，助手也可以创建。"
+      ],
+      "links": [
+        {
+          "label": "自动化",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-safety",
+      "title": "自动化能做什么、不能做什么",
+      "summary": "自动化可以移动、加标签、标为已读、转发或起草回复，但永远不会删除邮件。",
+      "keywords": "自动化 安全 删除 转发 审批 草稿 回复 模板 影响范围 限制 每次运行 api 密钥 api key",
+      "steps": [
+        "转发总是先在“审批”中等待，直到有人批准。",
+        "起草回复只保存草稿，不会发送任何内容。",
+        "每次运行最多处理你设定的邮件数（1 到 200）。",
+        "它以所属 API 密钥的身份运行。撤销该密钥即可停止它。"
+      ],
+      "links": [
+        {
+          "label": "自动化安全模型",
+          "href": "/docs#automation-safety"
+        }
+      ]
+    },
+    {
+      "id": "automation-run-log",
+      "title": "查看自动化做了什么",
+      "summary": "“运行记录”显示每次运行，以及每封邮件的处理结果。",
+      "keywords": "运行记录 历史 自动化 邮件 已执行 失败 跳过 等待审批 run log",
+      "steps": [
+        "打开“自动化”，在该自动化上点击“运行记录”。",
+        "在某次运行上点击“邮件明细”，查看每封邮件及其结果。"
+      ],
+      "body": [
+        "删除自动化后，其运行记录仍会保留。"
+      ],
+      "links": [
+        {
+          "label": "自动化",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-switched-off",
+      "title": "自动化自己关闭了",
+      "summary": "连续失败 5 次后，自动化会关闭。解决原因后再重新开启。",
+      "keywords": "自动化 失败 已停用 自动关闭 反复失败 错误 重新连接 密钥已撤销 disabled",
+      "steps": [
+        "打开“自动化”，查看该行显示的原因。",
+        "解决问题，例如重新连接收件箱，或改用一个有效的 API 密钥。",
+        "在“状态”列中重新切换为“已开启”。"
+      ],
+      "links": [
+        {
+          "label": "自动化",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "read-usage-page",
+      "title": "看懂“用量”页面",
+      "summary": "“用量”显示每天、按工具、按收件箱的工具调用次数，以及 Free 工作区的每月额度。",
+      "keywords": "用量 分析 调用次数 每天 按工具 按收件箱 历史 额度 计量 控制台 usage",
+      "body": [
+        "历史记录在 Free 上保留一个月，Personal 上 90 天，Pro 和 Business 上 2 年。Free 工作区还能看到每月 150 次邮件操作已用了多少，以及何时重置。"
+      ],
+      "links": [
+        {
+          "label": "用量",
+          "href": "/dashboard/usage"
+        },
+        {
+          "label": "已达到使用上限",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "rate-limited",
+      "title": "助手被限速了",
+      "summary": "短时间内请求太多。等待错误中给出的秒数后再重试。",
+      "keywords": "限速 速率限制 429 请求过多 too many requests retry_after 每分钟 突发 限流 rate limit",
+      "body": [
+        "每个 API 密钥都有每分钟、每小时和每天的上限，随套餐调整。每个工作区还有每分钟上限：Free 60，Personal 120，Pro 300，Business 1,000。"
+      ],
+      "links": [
+        {
+          "label": "速率限制",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "usage-notification-emails",
+      "title": "关于用量的邮件",
+      "summary": "在 Free 上，每月额度用到 80% 和 100% 时，工作区所有者会收到邮件。",
+      "keywords": "通知 邮件 用量 警告 80% 达到上限 自动化已暂停 提醒 notification",
+      "body": [
+        "额度用完后，自动化会暂停，你会收到一封邮件，告知它们恢复的日期。Personal、Pro 和 Business 的邮件操作不限量，因此不会收到这些邮件。"
+      ],
+      "links": [
+        {
+          "label": "已达到使用上限",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "new-mail-alerts",
+      "title": "让助手对新邮件做出反应",
+      "summary": "MCPEmails 从不主动启动助手。让助手检查未读邮件，或使用自动化。",
+      "keywords": "通知 新邮件 推送 webhook 提醒 触发 轮询 收到邮件 实时 push",
+      "body": [
+        "收到的邮件本身永远不会触发助手调用。可以让助手定期检查未读邮件，或让自动化来整理。在 Pro 和 Business 上，可在“API 密钥”中设置 Webhook，通知你自己的 URL。"
+      ],
+      "links": [
+        {
+          "label": "自动化",
+          "href": "/dashboard/automations"
+        }
+      ]
+    }
+  ]
+}

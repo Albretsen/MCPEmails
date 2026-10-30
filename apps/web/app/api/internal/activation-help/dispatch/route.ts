@@ -35,8 +35,7 @@ import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { budgetExhausted } from '@/lib/billing/dispatch-freshness';
-import { lifecycleFrom } from '@/lib/email/lifecycle';
-import { SUPPORT_EMAIL } from '@/lib/support/help-content.mjs';
+import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import {
   activationHelpMaxPerRun,
   activationHelpMode,
@@ -76,7 +75,7 @@ const resendSender: Sender = async (email) => {
       {
         from: lifecycleFrom(),
         to: email.to,
-        replyTo: SUPPORT_EMAIL,
+        replyTo: lifecycleReplyTo(),
         subject: email.subject,
         html: email.html,
         text: email.text,

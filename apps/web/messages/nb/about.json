@@ -58,7 +58,7 @@
     "title": "Kontakt",
     "p1": "Det er ingen supportkø. Meldingen din kommer rett til meg, og jeg svarer selv.",
     "points": [
-      "<hello>hello@mcpemails.com</hello> for spørsmål om produktet, kontoen din, fakturering eller feil. Du får svar innen én virkedag.",
+      "<hello>support@mcpemails.com</hello> for spørsmål om produktet, kontoen din, fakturering eller feil. Du får svar innen én virkedag.",
       "<securityEmail>security@mcpemails.com</securityEmail> for å melde sårbarheter. Du får bekreftelse innen 24 timer. Hele prosessen, inkludert juridisk vern for deg som melder i god tro, står på <security>sikkerhetssiden</security>.",
       "Jeg holder til i Bergen. Sender du en melding sent på dagen i Nord-Amerika, får du som regel svar neste morgen, europeisk tid."
     ]

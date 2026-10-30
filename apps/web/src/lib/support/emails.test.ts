@@ -43,7 +43,7 @@ test('support email: message first, then the context block', () => {
     'Category: Billing (billing)',
     'Source: form_signed_in',
     'Workspace: 00000000-0000-4000-8000-000000000001',
-    'Plan: solo',
+    'Plan: Pro (solo)',
     'imap | yahoo | imap.mail.yahoo.com | error | error: AUTHENTICATIONFAILED',
     'From: connect-modal',
     'Provider: yahoo',
@@ -51,6 +51,12 @@ test('support email: message first, then the context block', () => {
   ]) {
     assert.equal(body.includes(line), true, line);
   }
+});
+
+test('support email: the plan shows its display name, never the bare slug', () => {
+  const { body } = buildSupportTicketEmail(input);
+  assert.equal(/^Plan: solo$/m.test(body), false);
+  assert.equal(body.includes('Plan: Pro (solo)'), true);
 });
 
 test('support email: HTML escapes the visitor text', () => {
@@ -76,7 +82,8 @@ test('confirmation: gives the ref and NEVER the subject or message', () => {
   assert.equal(all.includes(SUBJECT_MARK), false);
   assert.equal(all.includes(MESSAGE_MARK), false);
   assert.equal(all.includes('Refund'), false);
-  assert.equal(all.toLowerCase().includes('a person will'), true);
+  assert.equal(all.includes('We reply by email within one business day.'), true);
+  assert.equal(all.toLowerCase().includes('a person will'), false);
 });
 
 test('oneLine strips CR/LF and controls', () => {

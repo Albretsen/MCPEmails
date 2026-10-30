@@ -1,6 +1,7 @@
-/* /help: search, articles, contact form. Tokens only; loaded by app/[locale]/help/page.js. */
+/* Help center (components/support/HelpCenter.jsx): search, section nav, collapsed articles, contact block.
+   Tokens only; loaded by app/[locale]/help/page.js and the dashboard page. */
 
-.help-wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+.help-wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
 .help-section { padding: 40px 0; border-top: 1px solid var(--border-1); }
 .help-section h2 { font-size: 26px; margin: 0 0 8px; }
 .help-muted { color: var(--fg-3); font-size: 14px; margin: 8px 0; }
@@ -25,10 +26,31 @@
 .help-result-hint { font-size: 13px; color: var(--fg-3); }
 .help-empty { margin: 10px 0 0; color: var(--fg-2); font-size: 14px; }
 
-.help-article { padding: 20px 0; scroll-margin-top: 80px; }
-.help-article + .help-article { border-top: 1px dashed var(--border-1); }
-.help-article h3 { font-size: 18px; margin: 0 0 6px; }
-.help-article ol { margin: 10px 0; padding-left: 22px; color: var(--fg-2); line-height: 1.6; }
+.help-center-app { max-width: 1040px; }
+.help-head { margin-bottom: 24px; }
+
+.help-contact-block {
+  margin: 0 0 24px; padding: 20px 24px; border: 1px solid var(--border-1);
+  border-radius: 12px; background: var(--bg-surface); text-align: left;
+}
+.help-contact-block h2 { font-size: 20px; margin: 0 0 4px; }
+.help-contact-email { font-size: 15px; color: var(--fg-1); margin: 8px 0 14px; }
+
+.help-category { padding: 24px 0 8px; text-align: left; }
+.help-category h2 { font-size: 20px; margin: 0 0 8px; }
+
+.help-article { border-top: 1px solid var(--border-1); scroll-margin-top: 80px; }
+.help-article:last-child { border-bottom: 1px solid var(--border-1); }
+.help-article summary { cursor: pointer; padding: 12px 0 12px 20px; position: relative; list-style: none; }
+.help-article summary::-webkit-details-marker { display: none; }
+.help-article summary::before { content: '\25B8'; position: absolute; left: 2px; top: 12px; color: var(--fg-3); font-size: 13px; }
+.help-article[open] summary::before { content: '\25BE'; }
+.help-article-title { display: block; font-size: 15px; font-weight: 600; color: var(--fg-1); }
+.help-article-summary { display: block; font-size: 14px; color: var(--fg-3); margin-top: 2px; }
+.help-article[open] .help-article-summary { color: var(--fg-2); }
+.help-article-body { padding: 0 0 14px 20px; color: var(--fg-2); font-size: 14.5px; line-height: 1.6; }
+.help-article-body p { margin: 0 0 8px; }
+.help-article ol { margin: 6px 0 10px; padding-left: 22px; color: var(--fg-2); line-height: 1.6; }
 .help-article-links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
 
 .help-contact { scroll-margin-top: 80px; }
@@ -42,3 +64,52 @@
 .help-error { margin: 0; color: var(--red-500); font-size: 14px; }
 .help-success { font-size: 16px; color: var(--fg-1); padding: 16px; border: 1px solid var(--border-1); border-radius: 8px; background: var(--bg-surface); }
 .help-gate { font-size: 13px; color: var(--fg-3); margin-top: 12px; }
+
+/* Section nav: a sticky list on the left, a scrolling row of links when narrow.
+   The dashboard scrolls inside .page, the marketing page under its sticky nav. */
+.help-head { max-width: 760px; }
+.help-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; align-items: start; }
+.help-main { min-width: 0; max-width: 760px; }
+.help-nav { position: sticky; top: 16px; text-align: left; }
+.help-center-page .help-nav { top: 88px; }
+.help-nav ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--border-1); }
+.help-nav a {
+  display: block; padding: 6px 12px; margin-left: -1px; border-left: 2px solid transparent;
+  font-size: 14px; color: var(--fg-2); text-decoration: none; line-height: 1.35;
+}
+.help-nav a:hover { color: var(--fg-1); text-decoration: none; }
+.help-nav a.active { color: var(--brand); border-left-color: var(--brand); font-weight: 500; }
+.help-category { scroll-margin-top: 80px; }
+
+@media (max-width: 899px) {
+  .help-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .help-nav { position: static; margin: 0 -16px; }
+  .help-nav ul {
+    display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 4px; border-left: 0;
+    scrollbar-width: none;
+  }
+  .help-nav ul::-webkit-scrollbar { display: none; }
+  .help-nav a {
+    white-space: nowrap; margin: 0; padding: 6px 12px; border: 1px solid var(--border-1);
+    border-radius: 999px; background: var(--bg-surface);
+  }
+  .help-nav a.active { border-color: var(--brand); }
+}
+
+/* "Was this helpful?" at the end of an open article. */
+.help-feedback { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; font-size: 13.5px; color: var(--fg-3); }
+.help-feedback-btn {
+  font: inherit; font-size: 13px; color: var(--fg-1); background: var(--bg-surface); cursor: pointer;
+  border: 1px solid var(--border-1); border-radius: 6px; padding: 3px 12px;
+}
+.help-feedback-btn:hover { border-color: var(--border-2); background: var(--bg-sunken); }
+.help-feedback-btn:focus-visible { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+.help-feedback-done { display: block; }
+/* Beats `.help-article-body p`, which would zero the top margin of the thanks line. */
+.help-article-body .help-feedback { margin: 14px 0 0; }
+
+/* Placeholder while the dashboard section loads its data. */
+.help-skeleton { max-width: 760px; }
+.help-skeleton-bar { height: 14px; border-radius: 6px; background: var(--bg-sunken); margin: 0 0 12px; }
+.help-skeleton-title { height: 28px; width: 45%; }
+.help-skeleton-input { height: 40px; margin: 20px 0 28px; }

@@ -201,6 +201,8 @@
     "capCompare": "Sammenlign alle planer",
     "errorBannerOne": "1 innboks har mistet tilgang og må kobles til på nytt.",
     "errorBannerMany": "{count} innbokser har mistet tilgang og må kobles til på nytt.",
+    "errorBannerSupport": "Fungerer ikke ny tilkobling? Skriv til oss",
+    "errorBannerSupportSubject": "Ny tilkobling av en innboks fungerer ikke",
     "colLabel": "Etikett",
     "colAddress": "Adresse",
     "colProvider": "Leverandør",

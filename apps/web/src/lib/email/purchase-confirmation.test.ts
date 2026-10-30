@@ -154,8 +154,8 @@ test('carries the next action, subscription management and support address', () 
   assert.match(email.body, /\/dashboard\/settings/);
   assert.match(email.htmlBody, /\/dashboard\/settings/);
   assert.match(email.body, /cancel at any time/);
-  assert.match(email.body, /hello@mcpemails\.com/);
-  assert.match(email.htmlBody, /hello@mcpemails\.com/);
+  assert.match(email.body, /support@mcpemails\.com/);
+  assert.match(email.htmlBody, /support@mcpemails\.com/);
 });
 
 test('house style: no em dashes anywhere in the customer copy', () => {
@@ -340,7 +340,7 @@ test('sends from the brand address with a support reply-to, exactly once', async
   assert.equal(calls.length, 1, 'exactly one send attempt: a retry could duplicate the email');
   assert.match(calls[0].url, /resend\.com/);
   assert.equal(calls[0].payload.from, 'MCPEmails <hello@mcpemails.com>');
-  assert.equal(calls[0].payload.reply_to, 'hello@mcpemails.com');
+  assert.equal(calls[0].payload.reply_to, 'support@mcpemails.com');
   assert.equal(calls[0].payload.to, 'buyer@example.com');
   assert.match(String(calls[0].payload.subject), /Personal subscription is active/);
   // Both parts ride along; neither may leak the internal plan id.
@@ -365,7 +365,7 @@ test('the sender is overridable, but works with nothing set', async () => {
 
   assert.equal(calls[0].payload.from, 'MCPEmails <billing@mcpemails.com>');
   // The override must not touch the reply-to: support still reads the replies.
-  assert.equal(calls[0].payload.reply_to, 'hello@mcpemails.com');
+  assert.equal(calls[0].payload.reply_to, 'support@mcpemails.com');
 });
 
 test('a Resend failure is swallowed, never thrown at the webhook', async () => {

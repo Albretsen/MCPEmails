@@ -71,7 +71,7 @@
  *   LIFECYCLE_EMAIL_FROM  OPTIONAL, read via lifecycleFrom() in
  *                         src/lib/email/lifecycle.ts. The win-back sender.
  *   CANCEL_REPLY_TO       OPTIONAL. Where "what stopped working for you?" lands.
- *                         Default: hello@mcpemails.com.
+ *                         Default: support@mcpemails.com.
  *
  * The win-backs additionally require the recipient's `users.unsubscribe_token`
  * in the payload. Without one, composition returns null and nothing is sent:
@@ -98,7 +98,7 @@ import { createResend } from '@/lib/email/resend';
 
 import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
-import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
+import { lifecycleFrom, lifecycleReplyTo, unsubscribeUrl } from '@/lib/email/lifecycle';
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { CANCEL_REASONS, CANCEL_REASON_EMAIL_LABELS } from '@/lib/billing/cancel-reasons';
 import { issueFeedbackToken } from '@/lib/billing/feedback-token';
@@ -107,8 +107,9 @@ import { issueFeedbackToken } from '@/lib/billing/feedback-token';
 // Configuration
 // ---------------------------------------------------------------------------
 
-const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_BILLING_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
+// Replies and "write to" links go to the support mailbox; the sender stays hello@.
+const SUPPORT_ADDRESS = 'support@mcpemails.com';
+const DEFAULT_BILLING_FROM = `MCPEmails <hello@mcpemails.com>`;
 const DEFAULT_APP_URL = 'https://mcpemails.com';
 
 function appUrl(): string {
@@ -814,9 +815,9 @@ function facts(rows: Array<[string, string]>): string {
  * would put a registration number in the middle of a sentence written to sound
  * like a person.
  */
-const SUPPORT_FOOTER = `Something look wrong, or is this a bad time? Reply to this email or write to <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. A person reads it, and at our size that person is the one who wrote the software.`;
+const SUPPORT_FOOTER = `Something look wrong, or is this a bad time? Reply to this email or write to <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. We reply within one business day.`;
 
-const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply to this email or write to ${SUPPORT_ADDRESS}. A person reads it, and at our size that person is the one who wrote the software.`;
+const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply to this email or write to ${SUPPORT_ADDRESS}. We reply within one business day.`;
 
 /**
  * The cancellation email gets its own footer, because the standard one ends in
@@ -2122,12 +2123,16 @@ export async function sendBillingLifecycleEmail(
         ? lifecycleFrom()
         : process.env.BILLING_EMAIL_FROM ?? DEFAULT_BILLING_FROM;
 
-    // The cancellation question is the one email whose entire purpose is the
-    // reply, so it can be pointed somewhere other than the support address.
+    // Win-backs go out from the founder sender, so a reply goes back to the
+    // founder (lifecycleReplyTo), never to support@. Transactional mail keeps
+    // support@. The cancellation question is the one transactional email whose
+    // entire purpose is the reply, so it can be pointed elsewhere.
     const replyTo =
-      input.template === 'cancel_ask'
-        ? process.env.CANCEL_REPLY_TO ?? SUPPORT_ADDRESS
-        : SUPPORT_ADDRESS;
+      category === 'marketing'
+        ? lifecycleReplyTo()
+        : input.template === 'cancel_ask'
+          ? process.env.CANCEL_REPLY_TO ?? SUPPORT_ADDRESS
+          : SUPPORT_ADDRESS;
 
     // List-Unsubscribe on MARKETING ONLY. Putting it on a payment-failure
     // notice would advertise an opt-out from a message the customer is not

@@ -9,7 +9,7 @@ import { Nav, Footer } from './Sections';
  * the other static marketing pages use them.
  */
 
-const CONTACT_EMAIL = 'hello@mcpemails.com';
+const CONTACT_EMAIL = 'support@mcpemails.com';
 
 function formatDay(iso, locale) {
   // UTC, so a reader west of Greenwich never sees an entry dated a day early.
