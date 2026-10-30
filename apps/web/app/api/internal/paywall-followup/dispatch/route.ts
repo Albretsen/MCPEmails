@@ -31,7 +31,7 @@ import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { budgetExhausted } from '@/lib/billing/dispatch-freshness';
-import { lifecycleFrom } from '@/lib/email/lifecycle';
+import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import {
   paywallFollowupMaxPerRun,
   paywallFollowupMode,
@@ -75,6 +75,7 @@ const resendSender: Sender = async (email) => {
     const { data, error } = await resend.emails.send(
       {
         from: lifecycleFrom(),
+        replyTo: lifecycleReplyTo(),
         to: email.to,
         subject: email.subject,
         html: email.html,
