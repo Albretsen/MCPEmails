@@ -15,6 +15,10 @@
 .help-input:hover { border-color: var(--border-2); }
 .help-input:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
 .help-textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
+/* iOS Safari zooms the page when a focused field is under 16px. Phones get 16px; desktop keeps 15px. Never cap zoom instead. */
+@media (max-width: 640px) {
+  .help-input { font-size: 16px; }
+}
 
 .help-search { margin-top: 24px; }
 .help-results { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--border-1); border-radius: 8px; background: var(--bg-surface); }

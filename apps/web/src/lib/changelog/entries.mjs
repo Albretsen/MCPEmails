@@ -307,7 +307,7 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'added',
-    title: 'MCP Emails in German',
+    title: 'MCPEmails in German',
     body:
       'The website, sign-up, dashboard, setup guides for every AI client and the pages for German, Austrian and Swiss mailbox providers such as GMX, WEB.DE and T-Online are now in German. Checkout opens in German for German visitors too.',
   },
@@ -335,7 +335,7 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'changed',
-    title: 'MCP Emails is run by Albretsen AS',
+    title: 'MCPEmails is run by Albretsen AS',
     body:
       'From 1 November 2026 the service is provided by Albretsen AS (org. no. 938 702 373), a Norwegian limited company owned by the same founder at the same address. The terms, privacy policy and email footers name the new company.',
   },
@@ -435,7 +435,7 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Mail hosts that turn away cloud servers now connect',
     body:
-      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCP Emails now retries those connections through a separate route and remembers which providers need it.',
+      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCPEmails now retries those connections through a separate route and remembers which providers need it.',
   },
   {
     date: '2026-10-15',
@@ -456,7 +456,7 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Inline cards in Claude keep working after an update',
     body:
-      'After we shipped a new version, Claude could show "can\'t reach MCP Emails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
+      'After we shipped a new version, Claude could show "can\'t reach MCPEmails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
   },
   {
     date: '2026-10-13',
@@ -877,7 +877,7 @@ export const ENTRIES = [
   {
     date: '2026-08-29',
     kind: 'added',
-    title: 'Who is behind MCP Emails',
+    title: 'Who is behind MCPEmails',
     body:
       'A new About page, and the legal entity, organisation number and registered address in the Terms and Privacy pages.',
   },
@@ -1146,7 +1146,7 @@ export const ENTRIES = [
   {
     date: '2026-05-26',
     kind: 'added',
-    title: 'MCP Emails is live',
+    title: 'MCPEmails is live',
     body:
       'Connect a mailbox and work it from an AI assistant: list, read, search, send and reply. Gmail and Fastmail to start, with Claude connecting over OAuth and other clients using an API key.',
   },

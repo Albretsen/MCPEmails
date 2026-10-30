@@ -19,9 +19,11 @@
  * one or two words every word must match; with more, at least 60 percent must,
  * so one stray word ("claude cant see my emails") no longer empties the list.
  * Each query word that hits the keywords and is also a whole word of the
- * title adds 3, so among entries whose keywords match equally the one titled
- * for the query wins, while a title-only hit still ranks below ("api key"
- * finds the API key article, not a client page whose terms say "api key"). A
+ * title adds 3 (2 when the query word reaches that word by one typo, so
+ * "outlok" still picks the Outlook article), so among entries whose keywords
+ * match equally the one titled for the query wins, while a title-only hit
+ * still ranks below ("api key" finds the API key article, not a client page
+ * whose terms say "api key"). A
  * title that starts with the first word adds 1 more, then index order decides.
  *
  * TYPOS. One edit (insert, delete, substitute, or swap two neighbours, so
@@ -121,6 +123,18 @@ function fieldScore(q, field) {
   return best;
 }
 
+/**
+ * True when a query word is one typo away from a word that is both a keyword
+ * and a whole word of the title ("outlok" and the Outlook article), so a typo
+ * still earns a (smaller) title bonus.
+ */
+function typoTitled(q, item) {
+  for (const t of item.titleWords) {
+    if (typoOk(q, t) && item.fields[0].words.includes(t)) return true;
+  }
+  return false;
+}
+
 /** A filler-only query: only a phrase of 2+ words written verbatim in the keywords counts. */
 function fillerPhrase(prepared, all, limit) {
   if (all.length < 2) return [];
@@ -143,18 +157,20 @@ export function searchIndex(prepared, query, limit = MAX_RESULTS) {
     let score = 0;
     let matched = 0;
     let titled = 0;
+    let typoTitledCount = 0;
     for (const w of q) {
       let best = 0;
       for (const f of item.fields) best = Math.max(best, fieldScore(w, f));
       if (best > 0) matched++;
       score += best;
-      // Only a word the keywords also hit, and not by a typo: the bonus breaks
-      // ties between keyword hits and never lifts a title-only hit over one.
+      // Only a word the keywords also hit: the bonus breaks ties between
+      // keyword hits and never lifts a title-only hit over one.
       if (item.titleWords.has(w) && fieldScore(w, item.fields[0]) > 3) titled++;
+      else if (typoTitled(w, item)) typoTitledCount++;
     }
     if (matched < needed) continue;
     if (matched === q.length) score += 20;
-    score += 3 * titled;
+    score += 3 * titled + 2 * typoTitledCount;
     if (item.title.startsWith(q[0])) score += 1;
     hits.push({ item, score });
   }

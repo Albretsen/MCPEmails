@@ -250,12 +250,25 @@ test('a query word in the title breaks a tie between equal keyword hits', () => 
   assert.deepEqual(searchIndex(p, 'api key').map((e) => e.id), ['article', 'client']);
 });
 
+test('a typo of a title word still breaks the tie, by less than the exact word', () => {
+  const p = prepareIndex([
+    { id: 'general', kind: 'article', title: 'Pick how to connect', hint: '', terms: 'connect outlook gmail' },
+    { id: 'outlook', kind: 'article', title: 'Connect Outlook', hint: '', terms: 'outlook connect' },
+    { id: 'titleonly', kind: 'docs', title: 'Outlook connect notes', hint: '', terms: '' },
+  ]);
+  assert.deepEqual(searchIndex(p, 'outlok connect').map((e) => e.id), ['outlook', 'general', 'titleonly']);
+  assert.deepEqual(searchIndex(p, 'outlook connect').map((e) => e.id), ['outlook', 'general', 'titleonly']);
+});
+
 test('the real English index puts the right entry first', async () => {
   const p = prepareIndex(await indexFor('en'));
   const first = (q) => searchIndex(p, q)[0]?.id ?? 'none';
   const CASES = {
     'gmail app password': 'article:app-password-required',
     'outlook wont connect': 'article:connect-outlook-microsoft-365',
+    'outlok wont connect': 'article:connect-outlook-microsoft-365',
+    'gmial app password': 'article:app-password-required',
+    icoud: 'provider:icloud',
     'delete account': 'article:disconnect-or-delete',
     chatgpt: 'client:chatgpt',
     imap: 'provider:imap',
