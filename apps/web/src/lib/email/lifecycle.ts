@@ -26,7 +26,9 @@
  *   LIFECYCLE_EMAIL_FROM  The win-back sender. Deliberately a different address
  *                         from the transactional one.
  *                         Default: Asgeir Albretsen <asgeir@mcpemails.com>,
- *                         which is a real mailbox on the account.
+ *                         which is a real mailbox on the account. Production
+ *                         uses asgeir@updates.mcpemails.com (Resend-only
+ *                         subdomain, no mailbox; replies via lifecycleReplyTo).
  *   NEXT_PUBLIC_APP_URL   Base URL for links.
  */
 
