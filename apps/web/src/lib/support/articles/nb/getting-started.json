@@ -8,7 +8,7 @@
       "summary": "Det kobler postkassene dine til AI-assistenter som Claude, ChatGPT og Cursor via én URL.",
       "keywords": "hva er mcp emails mcpemails om oversikt hvordan virker det mcp-server mcp server ai-assistent agent lagret personvern",
       "body": [
-        "E-post hentes direkte for hver forespørsel og lagres ikke. Bare det krypterte postkassepassordet eller tilgangstokenet ditt blir lagret."
+        "E-post hentes direkte for hver forespørsel og lagres ikke. Unntaket er planlagte eller holdte meldinger, som lagres til de er sendt. Ellers lagres bare det krypterte postkassepassordet eller tilgangstokenet ditt."
       ],
       "links": [
         {
@@ -170,9 +170,9 @@
       "steps": [
         "I Claude åpner du Tilpasning, så Tilkoblinger.",
         "Velg Legg til, så Legg til egendefinert tilkobling.",
-        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg Fortsett.",
-        "Sjekk innstillingene for innlogging, og velg Legg til.",
-        "Velg Connect og logg inn med MCPEmails-kontoen din."
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg Fortsett. Sjekk innstillingene for innlogging, og velg Legg til.",
+        "Velg Connect og logg inn med MCPEmails-kontoen din.",
+        "I en samtale klikker du + nede til venstre, velger Connectors og slår på MCPEmails."
       ],
       "links": [
         {
@@ -191,14 +191,14 @@
       "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert MCP-server på chatgpt.com, og logg inn.",
       "keywords": "chatgpt openai utviklermodus developer mode connector plugin apper egendefinert mcp-server oauth oppsett",
       "steps": [
-        "På chatgpt.com åpner du Plugins, velger Add og så Add custom MCP server.",
-        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg OAuth.",
+        "På chatgpt.com åpner du Plugins og deretter Personal, velger Add og så Add custom MCP server.",
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection og velg OAuth.",
         "Huk av for I understand and want to continue, og velg Create as a plugin.",
         "Logg inn på MCPEmails og velg hvilke innbokser den kan bruke.",
         "I en chat skriver du @ og velger MCPEmails. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
       ],
       "body": [
-        "Dette virker i nettleseren på chatgpt.com med ChatGPT Go eller et betalt abonnement. På Business og Enterprise kan en administrator måtte legge den til."
+        "Dette virker i nettleseren på chatgpt.com med ChatGPT Go eller et betalt abonnement; mobilappen kan ikke legge den til. På Business og Enterprise kan en administrator eller eier måtte legge den til."
       ],
       "links": [
         {

@@ -162,8 +162,7 @@
         "Se hvor mange handlinger du har brukt under Bruk i dashbordet.",
         "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 3 dagene etter registrering.",
         "Å prøve på nytt hjelper ikke. Kvoten nullstilles den 1. i neste måned (UTC), og pausede automatiseringer fortsetter av seg selv.",
-        "Personal, Pro og Business har ubegrensede e-posthandlinger, innenfor rimelig bruk.",
-        "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."
+        "Personal, Pro og Business har ubegrensede e-posthandlinger, innenfor rimelig bruk."
       ],
       "links": [
         {
@@ -207,8 +206,8 @@
         "Postkasse: i Innbokser klikker du på den og velger Koble fra. Den lagrede påloggingen fjernes.",
         "Arbeidsområde: i Innstillinger, under Arbeidsområde, velger du Slett arbeidsområde.",
         "Konto: i Innstillinger, under Faresone, velger du Slett konto. Det kan ikke angres.",
-        "Sletter du kontoen, sies en betalt plan opp med en gang, uten refusjon.",
-        "Vil du bruke tiden du har betalt for, si opp først og slett senere."
+        "Hver av disse avbryter planlagte e-poster som fortsatt venter på å bli sendt fra postkassene som fjernes. Sletter du kontoen, ber vi også Google avslutte tilgangen vår til Gmail-innbokser koblet til med Google-innlogging, og du får en bekreftelse på e-post.",
+        "Sletter du kontoen, sies en betalt plan opp med en gang. Ubrukt tid refunderes ikke automatisk: innen 14 dager etter første belastning kan du skrive til oss. Vil du bruke tiden du har betalt for, si opp først og slett senere."
       ],
       "links": [
         {

@@ -164,7 +164,7 @@
       "summary": "Usage montre les appels d’outils par jour, par outil et par boîte, plus le quota mensuel d’un espace Free.",
       "keywords": "usage utilisation analytique appels par jour par outil par boîte historique quota compteur tableau de bord",
       "body": [
-        "L’historique couvre 30 jours sur Free, 90 sur Personal et 2 ans sur Pro et Business. Un espace Free voit aussi combien de ses 150 actions e-mail mensuelles sont utilisées et quand le compteur se réinitialise."
+        "L’historique couvre un mois sur Free, 90 jours sur Personal et 2 ans sur Pro et Business. Un espace Free voit aussi combien de ses 150 actions e-mail mensuelles sont utilisées et quand le compteur se réinitialise."
       ],
       "links": [
         {

@@ -9,7 +9,7 @@
  * THE CONFIRMATION NEVER ECHOES THE SUBJECT OR MESSAGE. The signed-out form
  * sends it to whatever address was typed, so echoing visitor text would let
  * anyone use our domain to deliver their words to a third party. It says only
- * that we received a request, its ref, and that a person will reply.
+ * that we received a request, its ref, and when we reply.
  *
  * ENGLISH ONLY, like purchase-confirmation.ts and for a similar reason: the
  * request carries no reliable language (the interface locale lives in
@@ -24,6 +24,7 @@
 import type { Resend } from 'resend';
 import { createResend } from '@/lib/email/resend';
 
+import { planDisplayName } from '@/lib/stripe/plans';
 import type { TicketContext } from '@/lib/support/context';
 import { SUPPORT_CATEGORY_LABELS, type SupportCategory, type SupportTicketSource } from '@/lib/support/validation';
 
@@ -77,7 +78,8 @@ function contextLines(input: TicketEmailInput): string[] {
     `Category: ${SUPPORT_CATEGORY_LABELS[input.category]} (${input.category})`,
     `Source: ${input.source}`,
     `Workspace: ${c.workspace_id ?? '-'}`,
-    `Plan: ${c.plan ?? '-'}`,
+    // Display name for reading, slug in brackets for support lookups.
+    `Plan: ${c.plan ? `${planDisplayName(c.plan)} (${c.plan})` : '-'}`,
     'Mailboxes:',
     ...mailboxes,
     `From: ${c.from ?? '-'}`,
@@ -109,7 +111,7 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
     '',
     `We received your support request. Its reference is ${ref}.`,
     '',
-    'A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.',
+    'We reply by email within one business day. If you want to add anything, reply to this email and keep the reference in the subject.',
     '',
     'If you did not contact MCPEmails, you can ignore this email.',
     '',
@@ -121,7 +123,7 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;font-size:15px;line-height:1.6;">
 <p>Hi,</p>
 <p>We received your support request. Its reference is <strong>${escapeHtml(ref)}</strong>.</p>
-<p>A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.</p>
+<p>We reply by email within one business day. If you want to add anything, reply to this email and keep the reference in the subject.</p>
 <p style="color:#64748b;font-size:13px;">If you did not contact MCPEmails, you can ignore this email.</p>
 <p>MCPEmails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
 </body></html>`;

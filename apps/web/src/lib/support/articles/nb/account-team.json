@@ -234,7 +234,7 @@
       "keywords": "personvern data lagret lagring kryptering kryptert gdpr eu trening opplæring påloggingsdata passord token slett eksport",
       "steps": [
         "E-post assistenten leser eller sender nå, hentes direkte og lagres aldri.",
-        "En planlagt eller holdt melding lagres til den er sendt, og beholdes så som historikk.",
+        "En planlagt eller holdt melding lagres til den er sendt eller avgjort. Innholdet slettes 7 dager etter det, og holdte forespørsler slettes etter 90 dager.",
         "Postkassepassord og tokener krypteres med AES-256-GCM.",
         "Kontodata lagres i EU, i Stockholm. E-posten din brukes aldri til å trene AI-modeller.",
         "For å be om en kopi av dataene dine, skriv til oss."

@@ -234,7 +234,7 @@
       "keywords": "privacy data stored storage encryption encrypted gdpr eu training credentials password token delete export",
       "steps": [
         "Mail your assistant reads or sends now is fetched live and never stored.",
-        "A scheduled or held message is stored until it is sent, then kept as history.",
+        "A scheduled or held message is stored until it is sent or decided. Its content is cleared 7 days after that, and held requests are deleted after 90 days.",
         "Mailbox passwords and tokens are encrypted with AES-256-GCM.",
         "Account data is stored in the EU, in Stockholm. Your email never trains AI models.",
         "To request a copy of your data, write to us."

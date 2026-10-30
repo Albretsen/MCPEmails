@@ -8,7 +8,7 @@
       "summary": "通过一个 URL，把你的邮箱连接到 Claude、ChatGPT 和 Cursor 等 AI 助手。",
       "keywords": "mcp emails 是什么 mcpemails 介绍 概览 工作原理 mcp 服务器 mcp server ai 助手 智能体 agent 存储 隐私",
       "body": [
-        "邮件在每次请求时实时获取，不会被存储。我们只保存你加密后的邮箱密码或访问令牌。"
+        "邮件在每次请求时实时获取，不会被存储。例外是定时或待审批的邮件，会存储到发送为止。除此之外，我们只保存你加密后的邮箱密码或访问令牌。"
       ],
       "links": [
         {
@@ -170,9 +170,9 @@
       "steps": [
         "在 Claude 中打开 Customize，然后打开 Connectors。",
         "点击 Add，然后点击 Add custom connector。",
-        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，然后点击 Continue。",
-        "检查登录设置，然后点击 Add。",
-        "点击 Connect，并用你的 MCPEmails 账户登录。"
+        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，然后点击 Continue。检查登录设置，然后点击 Add。",
+        "点击 Connect，并用你的 MCPEmails 账户登录。",
+        "在对话中点击左下角的 +，选择 Connectors，然后打开 MCPEmails 的开关。"
       ],
       "links": [
         {
@@ -191,14 +191,14 @@
       "summary": "在 chatgpt.com 上把 https://mcpemails.com/api/mcp 添加为自定义 MCP 服务器，然后登录。",
       "keywords": "chatgpt openai 开发者模式 developer mode 连接器 connector 插件 应用 apps 自定义 mcp 服务器 oauth 设置",
       "steps": [
-        "在 chatgpt.com 上打开 Plugins，点击 Add，然后点击 Add custom MCP server。",
-        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，并选择 OAuth。",
+        "在 chatgpt.com 上打开 Plugins，再打开 Personal，点击 Add，然后点击 Add custom MCP server。",
+        "命名为 MCPEmails，在 Connection 下粘贴 https://mcpemails.com/api/mcp，并选择 OAuth。",
         "勾选 I understand and want to continue，然后点击 Create as a plugin。",
         "登录 MCPEmails，并选择它可以使用哪些收件箱。",
         "在对话中输入 @ 并选择 MCPEmails。后续问题需要用到邮件时请再次选择它。"
       ],
       "body": [
-        "需在浏览器中使用 chatgpt.com，适用于 ChatGPT Go 和所有付费套餐。在 Business 和 Enterprise 上，可能需要管理员来添加。"
+        "需在浏览器中使用 chatgpt.com，适用于 ChatGPT Go 和所有付费套餐；移动应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
       ],
       "links": [
         {

@@ -22,7 +22,7 @@ const { default: en } = await import('../../src/lib/support/help-content/en.json
 
 const CONTEXT = {
   workspace_id: 'ws-0001',
-  plan: 'free',
+  plan: 'solo',
   mailboxes: [{ provider: 'imap', service: 'yahoo', host: 'imap-host-fixture', status: 'error', last_error_code: 'auth_failed' }],
   from: 'connect-modal',
   provider: 'yahoo',
@@ -100,6 +100,13 @@ test('signed in: no email field, the address read-only, and the attach disclosur
   assert.equal(text.includes(en.attach.never), true);
 });
 
+test('signed in: the plan shows its display name, never the raw slug', async (t) => {
+  const { container } = await render(t, { signedInEmail: 'staff@example.com', context: CONTEXT });
+  const line = container.querySelector('[data-plan]').textContent;
+  assert.equal(line, `${en.attach.plan}: Pro`);
+  assert.equal(line.includes('solo'), false);
+});
+
 test('submit (signed out) posts the exact JSON, honeypot empty, token included', async (t) => {
   reply = { status: 201, body: { ok: true, ref: 'MCPE-1001' } };
   const { container } = await render(t, {
@@ -175,4 +182,14 @@ test('a silent drop (ref null) shows the generic success', async (t) => {
   await fillAndSend(container, { email: 'person@example.com' });
   const ok = await waitFor(() => container.querySelector('.help-success'), { message: 'the success line' });
   assert.equal(ok.textContent, en.success.noRef);
+});
+
+test('a validation error clears once the user edits a field', async (t) => {
+  const { container } = await render(t);
+  await typeInto(container.querySelector('#help-email'), 'person@example.com');
+  await flush(() => container.querySelector('button[type="submit"]').click());
+  assert.equal(container.querySelector('.help-error').textContent, en.errors.subject_required);
+  await typeInto(container.querySelector('#help-subject'), 'Yahoo will not connect');
+  assert.equal(container.querySelector('.help-error') === null, true);
+  assert.equal(calls.length, 0);
 });

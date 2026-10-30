@@ -162,8 +162,7 @@
         "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
         "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 3 premiers jours après l’inscription.",
         "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
-        "Personal, Pro et Business offrent des actions illimitées, dans la limite d’un usage raisonnable.",
-        "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."
+        "Personal, Pro et Business offrent des actions illimitées, dans la limite d’un usage raisonnable."
       ],
       "links": [
         {
@@ -207,8 +206,8 @@
         "Boîte : dans Boîtes, cliquez dessus et choisissez Déconnecter. Son identifiant enregistré est effacé.",
         "Espace de travail : dans Paramètres, sous Espace de travail, choisissez Supprimer l'espace de travail.",
         "Compte : dans Paramètres, sous Zone de danger, choisissez Supprimer le compte. C’est irréversible.",
-        "Supprimer le compte résilie immédiatement une formule payante, sans remboursement.",
-        "Pour profiter du temps payé, résiliez d’abord et supprimez plus tard."
+        "Chacune de ces actions annule les e-mails programmés encore en attente d’envoi depuis les boîtes retirées. La suppression du compte demande aussi à Google de retirer notre accès à toute boîte Gmail connectée avec la connexion Google, et vous recevez une confirmation par e-mail.",
+        "Supprimer le compte résilie immédiatement une formule payante. Le temps non utilisé n’est pas remboursé automatiquement : dans les 14 jours suivant un premier prélèvement, écrivez-nous. Pour profiter du temps payé, résiliez d’abord et supprimez plus tard."
       ],
       "links": [
         {

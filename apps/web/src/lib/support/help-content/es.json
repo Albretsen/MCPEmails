@@ -162,8 +162,7 @@
         "Mira cuántas acciones has usado en Uso, dentro del panel.",
         "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 3 días tras el registro.",
         "Reintentar no sirve. El límite se reinicia el día 1 del mes siguiente (UTC) y las automatizaciones en pausa se reanudan solas.",
-        "Personal, Pro y Business tienen acciones ilimitadas, sujeto a un uso justo.",
-        "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."
+        "Personal, Pro y Business tienen acciones ilimitadas, sujeto a un uso justo."
       ],
       "links": [
         {
@@ -207,8 +206,8 @@
         "Buzón: en Bandejas de entrada, haz clic en él y elige Desconectar. Se borra su credencial guardada.",
         "Espacio de trabajo: en Ajustes, en Espacio de trabajo, elige Eliminar espacio de trabajo.",
         "Cuenta: en Ajustes, en Zona de peligro, elige Eliminar cuenta. No se puede deshacer.",
-        "Eliminar la cuenta cancela al momento un plan de pago, sin reembolso.",
-        "Para aprovechar el tiempo pagado, cancela primero y elimina la cuenta después."
+        "Cada una de estas acciones cancela los correos programados que aún esperan para enviarse desde los buzones eliminados. Al eliminar la cuenta, también pedimos a Google que retire nuestro acceso a cualquier bandeja de Gmail conectada con el inicio de sesión de Google, y te enviamos una confirmación por correo.",
+        "Eliminar la cuenta cancela al momento un plan de pago. El tiempo no usado no se reembolsa automáticamente: dentro de los 14 días posteriores al primer cobro, escríbenos. Para aprovechar el tiempo pagado, cancela primero y elimina la cuenta después."
       ],
       "links": [
         {
@@ -224,7 +223,7 @@
   ],
   "contact": {
     "heading": "Escríbenos",
-    "lead": "Respondemos por correo en un día laborable.",
+    "lead": "Respondemos por correo en un plazo de un día laborable.",
     "emailLine": "Escríbenos a {email} o envía un mensaje aquí.",
     "openForm": "Escribir un mensaje"
   },

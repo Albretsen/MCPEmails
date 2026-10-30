@@ -8,7 +8,7 @@
       "summary": "Il relie vos boîtes mail à des assistants IA comme Claude, ChatGPT et Cursor via une seule URL.",
       "keywords": "qu’est-ce que mcp emails mcpemails présentation fonctionnement serveur mcp assistant ia agent stockage confidentialité what is mcp server ai assistant",
       "body": [
-        "Les e-mails sont récupérés en direct à chaque demande et ne sont pas stockés. Seul le mot de passe ou le jeton d’accès de votre boîte est conservé, chiffré."
+        "Les e-mails sont récupérés en direct à chaque demande et ne sont pas stockés, sauf les envois programmés ou retenus, stockés jusqu’à leur envoi. Pour le reste, seul le mot de passe ou le jeton d’accès de votre boîte est conservé, chiffré."
       ],
       "links": [
         {
@@ -170,9 +170,9 @@
       "steps": [
         "Dans Claude, ouvrez Customize, puis Connectors.",
         "Choisissez Add, puis Add custom connector.",
-        "Nommez-le MCPEmails, collez https://mcpemails.com/api/mcp et choisissez Continue.",
-        "Vérifiez les réglages de connexion, puis choisissez Add.",
-        "Choisissez Connect et connectez-vous avec votre compte MCPEmails."
+        "Nommez-le MCPEmails, collez https://mcpemails.com/api/mcp et choisissez Continue. Vérifiez les réglages de connexion, puis choisissez Add.",
+        "Choisissez Connect et connectez-vous avec votre compte MCPEmails.",
+        "Dans une conversation, cliquez sur + en bas à gauche, choisissez Connectors et activez MCPEmails."
       ],
       "links": [
         {
@@ -191,14 +191,14 @@
       "summary": "Ajoutez https://mcpemails.com/api/mcp comme serveur MCP personnalisé sur chatgpt.com, puis connectez-vous.",
       "keywords": "chatgpt openai mode développeur connecteur plugin applications serveur mcp personnalisé oauth configuration developer mode custom connector",
       "steps": [
-        "Sur chatgpt.com, ouvrez Plugins, choisissez Add, puis Add custom MCP server.",
-        "Nommez-le MCPEmails, collez https://mcpemails.com/api/mcp et choisissez OAuth.",
+        "Sur chatgpt.com, ouvrez Plugins, puis Personal, choisissez Add, puis Add custom MCP server.",
+        "Nommez-le MCPEmails, collez https://mcpemails.com/api/mcp sous Connection et choisissez OAuth.",
         "Cochez I understand and want to continue, puis choisissez Create as a plugin.",
         "Connectez-vous à MCPEmails et choisissez les boîtes qu’il peut utiliser.",
         "Dans une conversation, tapez @ et choisissez MCPEmails. Choisissez-le à nouveau quand une question de suivi porte sur vos e-mails."
       ],
       "body": [
-        "Cela fonctionne dans un navigateur sur chatgpt.com, avec ChatGPT Go ou une formule payante. Sur Business et Enterprise, un administrateur devra peut-être l’ajouter."
+        "Cela fonctionne dans un navigateur sur chatgpt.com, avec ChatGPT Go ou une formule payante ; l’application mobile ne permet pas de l’ajouter. Sur Business et Enterprise, un administrateur ou un propriétaire devra peut-être l’ajouter."
       ],
       "links": [
         {

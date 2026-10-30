@@ -164,7 +164,7 @@
       "summary": "Uso muestra llamadas por día, por herramienta y por bandeja, y la cuota mensual de un espacio Free.",
       "keywords": "uso analítica llamadas por día por herramienta por bandeja historial cuota contador panel usage",
       "body": [
-        "El historial cubre 30 días en Free, 90 en Personal y 2 años en Pro y Business. Un espacio Free también ve cuántas de sus 150 acciones de correo mensuales lleva usadas y cuándo se reinicia el contador."
+        "El historial cubre un mes en Free, 90 días en Personal y 2 años en Pro y Business. Un espacio Free también ve cuántas de sus 150 acciones de correo mensuales lleva usadas y cuándo se reinicia el contador."
       ],
       "links": [
         {

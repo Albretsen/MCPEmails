@@ -164,7 +164,7 @@
       "summary": "Usage shows tool calls per day, by tool and by inbox, plus a Free workspace's monthly allowance.",
       "keywords": "usage analytics calls per day by tool by inbox history allowance meter dashboard",
       "body": [
-        "History covers 30 days on Free, 90 on Personal and 2 years on Pro and Business. A Free workspace also sees how many of its 150 monthly email actions are used and when the count resets."
+        "History covers a month on Free, 90 days on Personal and 2 years on Pro and Business. A Free workspace also sees how many of its 150 monthly email actions are used and when the count resets."
       ],
       "links": [
         {

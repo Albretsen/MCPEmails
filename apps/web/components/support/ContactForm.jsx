@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Btn } from '../Primitives';
+import { planDisplayName } from '@/lib/stripe/plans';
 
 /**
  * The /help contact form. Posts JSON to /api/support/tickets.
@@ -37,7 +38,7 @@ function AttachDisclosure({ copy, context }) {
       <p className="help-muted">{a.intro}</p>
       <ul>
         {context?.workspace_id ? <li>{a.workspace}: {context.workspace_id}</li> : null}
-        {context?.plan ? <li>{a.plan}: {context.plan}</li> : null}
+        {context?.plan ? <li data-plan="">{a.plan}: {planDisplayName(context.plan)}</li> : null}
         <li>
           {a.mailboxes}:{' '}
           {mailboxes.length === 0 ? a.noMailboxes : null}
@@ -85,6 +86,12 @@ export default function ContactForm({
   const [done, setDone] = useState(null); // { ref: string | null }
 
   const errorLine = (code) => copy.errors[code] ?? copy.errors.unknown;
+
+  // Editing any field clears a stale validation or send error.
+  const edit = (setter) => (e) => {
+    setter(e.target.value);
+    if (error) setError(null);
+  };
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -153,7 +160,7 @@ export default function ContactForm({
             name="category"
             className="help-input"
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={edit(setCategory)}
           >
             {categories.map((c) => (
               <option key={c} value={c}>{copy.categories[c]}</option>
@@ -177,7 +184,7 @@ export default function ContactForm({
               autoComplete="email"
               maxLength={LIMITS.email}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={edit(setEmail)}
             />
           </div>
         )}
@@ -190,7 +197,7 @@ export default function ContactForm({
             className="help-input"
             maxLength={LIMITS.subject}
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            onChange={edit(setSubject)}
           />
         </div>
 
@@ -203,7 +210,7 @@ export default function ContactForm({
             rows={7}
             maxLength={LIMITS.message}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={edit(setMessage)}
           />
         </div>
 

@@ -234,7 +234,7 @@
       "keywords": "privacidad datos almacenados almacenamiento cifrado rgpd gdpr ue entrenamiento credenciales contraseña token eliminar exportar privacy",
       "steps": [
         "El correo que tu asistente lee o envía en el momento se obtiene en directo y nunca se guarda.",
-        "Un mensaje programado o retenido se guarda hasta que se envía y luego queda como historial.",
+        "Un mensaje programado o retenido se guarda hasta que se envía o se decide. Su contenido se borra 7 días después, y las solicitudes retenidas se eliminan a los 90 días.",
         "Las contraseñas y tokens de buzón se cifran con AES-256-GCM.",
         "Los datos de la cuenta se guardan en la UE, en Estocolmo. Tu correo nunca entrena modelos de IA.",
         "Para pedir una copia de tus datos, escríbenos."

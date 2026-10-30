@@ -234,7 +234,7 @@
       "keywords": "confidentialité données stockées stockage chiffrement chiffré rgpd ue entraînement identifiants mot de passe jeton supprimer exporter privacy gdpr",
       "steps": [
         "Les e-mails que votre assistant lit ou envoie sur le moment sont récupérés en direct et jamais stockés.",
-        "Un message programmé ou retenu est stocké jusqu’à son envoi, puis conservé dans l’historique.",
+        "Un message programmé ou retenu est stocké jusqu’à son envoi ou la décision. Son contenu est effacé 7 jours plus tard, et les demandes retenues sont supprimées après 90 jours.",
         "Les mots de passe et jetons des boîtes sont chiffrés en AES-256-GCM.",
         "Les données de compte sont stockées dans l’UE, à Stockholm. Vos e-mails n’entraînent jamais de modèles d’IA.",
         "Pour demander une copie de vos données, écrivez-nous."

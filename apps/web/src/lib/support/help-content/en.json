@@ -162,8 +162,7 @@
         "See how many actions you have used under Usage in the dashboard.",
         "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 3 days after signup.",
         "Retrying does not help. The allowance resets on the 1st of the next month (UTC), and paused automations resume on their own.",
-        "Personal, Pro and Business have unlimited email actions, subject to fair use.",
-        "Workspaces created before 2026-09-12 are not metered. If you see the limit on one of those, write to us."
+        "Personal, Pro and Business have unlimited email actions, subject to fair use."
       ],
       "links": [
         {
@@ -207,8 +206,8 @@
         "Mailbox: in Inboxes, click it and choose Disconnect. Its stored credential is removed.",
         "Workspace: in Settings, under Workspace, choose Delete workspace.",
         "Account: in Settings, under Danger zone, choose Delete account. This cannot be undone.",
-        "Deleting the account cancels a paid plan at once, with no refund.",
-        "To use the time you paid for, cancel first and delete later."
+        "Each of these cancels the scheduled emails still waiting to send from the mailboxes removed. Deleting the account also asks Google to end our access to any Gmail inbox connected with Google sign-in, and we email you a confirmation.",
+        "Deleting the account cancels a paid plan at once. Unused time is not refunded automatically: within 14 days of a first charge, write to us. To use the time you paid for, cancel first and delete later."
       ],
       "links": [
         {

@@ -164,7 +164,7 @@
       "summary": "Bruk viser verktøykall per dag, per verktøy og per innboks, og månedskvoten til et Free-arbeidsområde.",
       "keywords": "bruk forbruk statistikk kall per dag per verktøy per innboks historikk kvote måler dashbord usage",
       "body": [
-        "Historikken dekker 30 dager på Free, 90 på Personal og 2 år på Pro og Business. Et Free-arbeidsområde ser også hvor mange av de 150 månedlige e-posthandlingene som er brukt, og når tellingen nullstilles."
+        "Historikken dekker en måned på Free, 90 dager på Personal og 2 år på Pro og Business. Et Free-arbeidsområde ser også hvor mange av de 150 månedlige e-posthandlingene som er brukt, og når tellingen nullstilles."
       ],
       "links": [
         {

@@ -8,7 +8,7 @@
       "summary": "It connects your mailboxes to AI assistants like Claude, ChatGPT and Cursor through one URL.",
       "keywords": "what is mcp emails mcpemails about overview how it works mcp server ai assistant agent stored privacy",
       "body": [
-        "Mail is fetched live for each request and not stored. Only your encrypted mailbox password or access token is kept."
+        "Mail is fetched live for each request and not stored. The exception is scheduled or held sends, which are stored until they are sent. Apart from those, only your encrypted mailbox password or access token is kept."
       ],
       "links": [
         {
@@ -170,9 +170,9 @@
       "steps": [
         "In Claude, open Customize, then Connectors.",
         "Choose Add, then Add custom connector.",
-        "Name it MCPEmails, paste https://mcpemails.com/api/mcp and choose Continue.",
-        "Check the sign-in settings, then choose Add.",
-        "Choose Connect and sign in with your MCPEmails account."
+        "Name it MCPEmails, paste https://mcpemails.com/api/mcp and choose Continue. Check the sign-in settings, then choose Add.",
+        "Choose Connect and sign in with your MCPEmails account.",
+        "In a chat, click + at the lower left, choose Connectors and toggle MCPEmails on."
       ],
       "links": [
         {
@@ -191,14 +191,14 @@
       "summary": "Add https://mcpemails.com/api/mcp as a custom MCP server on chatgpt.com, then sign in.",
       "keywords": "chatgpt openai developer mode connector plugin apps custom mcp server oauth setup",
       "steps": [
-        "On chatgpt.com, open Plugins, choose Add, then Add custom MCP server.",
-        "Name it MCPEmails, paste https://mcpemails.com/api/mcp and choose OAuth.",
+        "On chatgpt.com, open Plugins, then Personal, choose Add, then Add custom MCP server.",
+        "Name it MCPEmails, paste https://mcpemails.com/api/mcp under Connection and choose OAuth.",
         "Tick I understand and want to continue, then choose Create as a plugin.",
         "Sign in to MCPEmails and pick which inboxes it may use.",
         "In a chat, type @ and pick MCPEmails. Pick it again when a follow-up needs your mail."
       ],
       "body": [
-        "This works in a browser on chatgpt.com with ChatGPT Go or a paid plan. On Business and Enterprise, an admin may need to add it."
+        "This works in a browser on chatgpt.com with ChatGPT Go or a paid plan; the mobile app cannot add one. On Business and Enterprise, an admin or owner may need to add it."
       ],
       "links": [
         {

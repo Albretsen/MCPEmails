@@ -162,8 +162,7 @@
         "Wie viele Aktionen Sie verbraucht haben, sehen Sie im Dashboard unter Nutzung.",
         "Das Auflisten Ihrer Postfächer und alles, was Sie im Dashboard tun, wird nie gezählt, und in den ersten 3 Tagen nach der Registrierung wird gar nichts gezählt.",
         "Erneute Versuche helfen nicht. Das Kontingent wird am 1. des nächsten Monats (UTC) zurückgesetzt, und pausierte Automatisierungen laufen von selbst weiter.",
-        "Personal, Pro und Business haben unbegrenzte E-Mail-Aktionen, im Rahmen einer fairen Nutzung.",
-        "Workspaces, die vor dem 2026-09-12 erstellt wurden, werden nicht gezählt. Wenn Sie bei einem davon das Limit sehen, schreiben Sie uns."
+        "Personal, Pro und Business haben unbegrenzte E-Mail-Aktionen, im Rahmen einer fairen Nutzung."
       ],
       "links": [
         {
@@ -207,8 +206,8 @@
         "Postfach: Klicken Sie unter Postfächer auf das Postfach und wählen Sie Trennen. Die gespeicherten Zugangsdaten werden entfernt.",
         "Workspace: Wählen Sie in den Einstellungen unter Workspace die Option Workspace löschen.",
         "Konto: Wählen Sie in den Einstellungen unter Gefahrenbereich die Option Konto löschen. Das lässt sich nicht rückgängig machen.",
-        "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort, ohne Erstattung.",
-        "Um die bezahlte Zeit zu nutzen, kündigen Sie zuerst und löschen später."
+        "Jeder dieser Schritte storniert geplante E-Mails, die noch aus den entfernten Postfächern versendet werden sollten. Beim Löschen des Kontos bitten wir außerdem Google, unseren Zugriff auf jedes mit Google-Anmeldung verbundene Gmail-Postfach zu beenden, und Sie erhalten eine Bestätigung per E-Mail.",
+        "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort. Ungenutzte Zeit wird nicht automatisch erstattet: Schreiben Sie uns innerhalb von 14 Tagen nach der ersten Abbuchung. Um die bezahlte Zeit zu nutzen, kündigen Sie zuerst und löschen später."
       ],
       "links": [
         {
