@@ -2,7 +2,7 @@
 -- Support tickets (the /help contact form)
 -- ============================================================
 -- Covers migration 20261016090000_support_tickets:
---   - the human ref (MCPE-4827, MCPE-4828, ...) and the defaults
+--   - the human ref (random, like MCPE-7KQ4XM) and the defaults
 --   - the constraints that mirror the API's validation and length caps
 --   - service-role only: a browser session can neither read nor write it
 --   - deleting the user keeps the ticket but drops the link to them
@@ -37,20 +37,21 @@ VALUES ('fd000000-0000-0000-0000-000000000002', 'visitor@rls-test.invalid',
 -- 1. Ref and defaults
 -- ------------------------------------------------------------
 SELECT ok(
-  (SELECT ref ~ '^MCPE-[0-9]{4,}$' FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000001'),
-  'a ticket gets a human ref like MCPE-4827');
+  (SELECT ref ~ '^MCPE-[2-9A-HJKMNP-TV-Z]{6}$' FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000001'),
+  'a ticket gets a random human ref like MCPE-7KQ4XM');
 
 SELECT ok(
-  (SELECT substr(b.ref, 6)::bigint > substr(a.ref, 6)::bigint
+  (SELECT a.ref <> b.ref
      FROM public.support_tickets a, public.support_tickets b
     WHERE a.id = 'fd000000-0000-0000-0000-000000000001'
       AND b.id = 'fd000000-0000-0000-0000-000000000002'),
-  'refs count up');
+  'two tickets get different refs');
 
--- 20261030220000: refs start high.
+-- 20261030220000: refs are random codes, not a counter.
 SELECT ok(
-  (SELECT substr(ref, 6)::bigint >= 4827 FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000001'),
-  'refs start at MCPE-4827 or later');
+  NOT has_function_privilege('anon', 'public.next_support_ticket_ref()', 'execute')
+  AND NOT has_function_privilege('authenticated', 'public.next_support_ticket_ref()', 'execute'),
+  'only service_role can mint a ref');
 
 SELECT is(
   (SELECT status FROM public.support_tickets WHERE id = 'fd000000-0000-0000-0000-000000000002'),
