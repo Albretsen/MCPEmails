@@ -234,7 +234,7 @@
       "title": "¿Desconectar bandeja?",
       "sub": "Esto revocará el acceso y eliminará esta bandeja de tu espacio de trabajo.",
       "cancel": "Cancelar",
-      "body": "Cualquier clave de API autorizada actualmente para acceder a esta bandeja perderá el acceso de inmediato. Puedes reconectar esta bandeja en cualquier momento.",
+      "body": "Cualquier clave de API autorizada actualmente para acceder a esta bandeja perderá el acceso de inmediato, y se cancelarán los correos programados que aún no se hayan enviado desde ella. Puedes reconectar esta bandeja en cualquier momento.",
       "disconnecting": "Desconectando…",
       "disconnect": "Desconectar"
     },

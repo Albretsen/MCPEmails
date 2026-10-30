@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-30',
+    kind: 'improved',
+    title: 'Account deletion confirmation and Google access',
+    body:
+      "Deleting your account now sends a confirmation email that lists what was removed and the date the remaining records are erased, and ends MCPEmails' access to your Gmail inboxes in your Google account, as disconnecting a single inbox already did. Disconnecting an inbox also cancels the scheduled emails still queued for it.",
+  },
+  {
     date: '2026-10-29',
     kind: 'added',
     title: 'One-click install on the client setup guides',

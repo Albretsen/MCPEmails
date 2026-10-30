@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { CARD_LISTING_STALE } from '@/lib/mcp/card-listing';
+import { cancelQueuedMail, revokeGmailGrantsForWorkspaces } from '@/lib/inboxes/teardown';
 
 const MAX_NAME_LEN = 60;
 
@@ -311,6 +312,11 @@ export async function DELETE(
     );
   }
 
+  // 5b. Revoke the Google grant of every Gmail inbox, while the tokens still
+  //     exist (step 6 nulls them). Best effort and bounded: a revoke failure
+  //     never blocks the delete (lib/inboxes/teardown.ts).
+  await revokeGmailGrantsForWorkspaces(service, [workspaceId], { label: 'workspaces/delete' });
+
   // 6. Tear down the workspace, scoped to this id. Order mirrors delete-account.
   const now = new Date().toISOString();
   const steps = [
@@ -352,6 +358,10 @@ export async function DELETE(
       { status: 500 },
     );
   }
+
+  // Scheduled sends and held approvals of its inboxes are cancelled, with
+  // their stored message removed. Best effort.
+  await cancelQueuedMail(service, { workspaceIds: [workspaceId] }, 'workspaces/delete');
 
   // Its mailboxes no longer count toward a Business bill. After the response.
   after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));

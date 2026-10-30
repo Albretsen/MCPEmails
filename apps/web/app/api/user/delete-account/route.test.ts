@@ -18,6 +18,8 @@
 import assert from 'node:assert/strict';
 import test, { mock, beforeEach } from 'node:test';
 
+process.env.ENCRYPTION_KEY ??= 'a'.repeat(64);
+
 /** `mock.module` post-dates the pinned @types/node, same cast as checkout-core.test.ts. */
 const nodeMock = mock as unknown as {
   module: (specifier: string, options: { namedExports?: Record<string, unknown> }) => void;
@@ -39,6 +41,14 @@ interface World {
   /** The filters of each Supabase call, keyed like `log` entries, in order. */
   calls: Array<{ entry: string; filters: Array<[string, string, unknown]> }>;
   cancelParams: Array<{ id: string; params: Record<string, unknown> }>;
+  /** Gmail inbox rows the grant lookup returns (tokens encrypted). */
+  inboxes: Array<Record<string, unknown>>;
+  /** Google revoke calls, by token. */
+  revoked: string[];
+  googleFails: boolean;
+  /** Work queued with next/server `after()`. */
+  after: Array<() => unknown>;
+  emails: Array<{ to: string; locale: string }>;
 }
 
 let world: World;
@@ -57,6 +67,11 @@ function reset(overrides: Partial<World> = {}): void {
     log: [],
     calls: [],
     cancelParams: [],
+    inboxes: [],
+    revoked: [],
+    googleFails: false,
+    after: [],
+    emails: [],
     ...overrides,
   };
 }
@@ -68,6 +83,7 @@ function query(table: string, op: string) {
     world.log.push(`db:${table}.${op}`);
     world.calls.push({ entry: `db:${table}.${op}`, filters });
     if (table === 'workspaces' && op === 'select') return { data: world.workspaces, error: null };
+    if (table === 'inboxes' && op === 'select') return { data: world.inboxes, error: null };
     if (table === 'user_billing' && op === 'select') {
       return { data: world.billing, error: world.billingError };
     }
@@ -149,8 +165,29 @@ nodeMock.module('@/lib/stripe/client', {
 });
 
 // Plain Node cannot resolve `next/server` outside the Next toolchain.
+nodeMock.module('@/lib/email/account-deleted', {
+  namedExports: {
+    accountDeletedLocale: (v: unknown) => (typeof v === 'string' && ['en', 'nb', 'fr'].includes(v) ? v : null),
+    sendAccountDeletedEmail: async (p: { to: string; locale: string }) => {
+      world.emails.push({ to: p.to, locale: p.locale });
+    },
+  },
+});
+
+// Google's revoke endpoint is the only fetch the route makes.
+globalThis.fetch = (async (input: string | URL) => {
+  const url = new URL(String(input));
+  world.log.push('google:revoke');
+  if (world.googleFails) throw new Error('Google is down');
+  world.revoked.push(url.searchParams.get('token') ?? '');
+  return new Response('', { status: 200 });
+}) as typeof fetch;
+
 nodeMock.module('next/server', {
   namedExports: {
+    after: (fn: () => unknown) => {
+      world.after.push(fn);
+    },
     NextRequest: Request,
     NextResponse: {
       json: (body: unknown, init?: ResponseInit) => Response.json(body, init),
@@ -310,4 +347,78 @@ test('DELETE still touches no credential when Stripe fails', async () => {
   reset({ stripeFails: true });
   await DELETE(request());
   assert.deepEqual(ownCredentialCalls(), []);
+});
+
+// ── Google grants (F) ───────────────────────────────────────────────────────
+// Single-inbox disconnect always revoked the Google grant; account delete only
+// nulled the tokens, which leaves the grant listed in the user's Google
+// account. It now revokes first, best effort.
+
+const { encryptToken } = await import('../../../../src/lib/crypto.ts');
+
+function gmailInboxes() {
+  return [
+    { id: 'in-1', imap_host: null, oauth_refresh_token: encryptToken('refresh-1'), oauth_access_token: encryptToken('access-1') },
+    { id: 'in-2', imap_host: null, oauth_refresh_token: null, oauth_access_token: encryptToken('access-2') },
+    // An app-password Gmail inbox has no grant.
+    { id: 'in-3', imap_host: 'imap.gmail.com', oauth_refresh_token: null, oauth_access_token: null },
+  ];
+}
+
+test('DELETE revokes the Google grant of every Gmail inbox, before the tokens are nulled', async () => {
+  reset({ inboxes: gmailInboxes() });
+  const res = await DELETE(request());
+  assert.equal(res.status, 200);
+  assert.deepEqual(world.revoked.sort(), ['access-2', 'refresh-1'], 'refresh token preferred, app-password skipped');
+  const lastRevoke = world.log.lastIndexOf('google:revoke');
+  const tokensNulled = world.log.indexOf('db:inboxes.update');
+  assert.ok(lastRevoke > -1 && tokensNulled > lastRevoke, `revoke before the inbox update: ${world.log.join(', ')}`);
+  const lookup = world.calls.find((c) => c.entry === 'db:inboxes.select');
+  assert.ok(lookup?.filters.some(([op, col, v]) => op === 'eq' && col === 'provider' && v === 'gmail'));
+});
+
+test('DELETE still deletes the account when Google revocation fails', async () => {
+  reset({ inboxes: gmailInboxes(), googleFails: true });
+  const res = await DELETE(request());
+  assert.equal(res.status, 200);
+  assert.ok(world.log.includes('db:inboxes.update'), 'the inboxes are still torn down');
+  assert.ok(world.log.includes('auth:ban'));
+});
+
+test('DELETE never asks Google anything when Stripe fails', async () => {
+  reset({ inboxes: gmailInboxes(), stripeFails: true });
+  await DELETE(request());
+  assert.deepEqual(world.revoked, []);
+});
+
+// ── Queued mail (B5) and the confirmation email (B6) ──────────────────────
+
+test('DELETE cancels pending scheduled sends and held approvals of the owned workspaces', async () => {
+  const res = await DELETE(request());
+  assert.equal(res.status, 200);
+  for (const table of ['scheduled_sends', 'send_approvals']) {
+    const call = world.calls.find((c) => c.entry === `db:${table}.update`);
+    assert.ok(call, `${table} updated`);
+    assert.ok(call.filters.some(([op, col, v]) => op === 'in' && col === 'workspace_id' && JSON.stringify(v) === '["ws-1"]'));
+    assert.ok(call.filters.some(([op, col, v]) => op === 'eq' && col === 'status' && v === 'pending'));
+  }
+});
+
+test('DELETE sends the confirmation after the response, in the requested language', async () => {
+  const res = await DELETE(request({ confirmEmail: USER.email, locale: 'nb' }));
+  assert.equal(res.status, 200);
+  assert.equal(world.emails.length, 0, 'not before the response');
+  for (const fn of world.after) await fn();
+  assert.deepEqual(world.emails, [{ to: USER.email, locale: 'nb' }]);
+});
+
+test('DELETE falls back to English for an unknown language, and sends nothing when it fails', async () => {
+  await DELETE(request({ confirmEmail: USER.email, locale: 'xx' }));
+  for (const fn of world.after) await fn();
+  assert.deepEqual(world.emails, [{ to: USER.email, locale: 'en' }]);
+
+  reset({ stripeFails: true });
+  await DELETE(request());
+  for (const fn of world.after) await fn();
+  assert.deepEqual(world.emails, []);
 });
