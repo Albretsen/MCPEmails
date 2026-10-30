@@ -117,7 +117,7 @@ export default async function ConnectHubPage({ params }) {
             <p className="pricing-page-lead">{t('lead', { count: available.length })}</p>
             <p className="pricing-page-answer">{t('answer', { count: available.length })}</p>
             {verifiedOn && (
-              <p className="connect-verified" style={{ justifyContent: 'center' }}>
+              <p className="connect-verified">
                 <MIcon name="check" size={13} color="var(--mint-600)" />{' '}
                 {t('verifiedIntro', { date: verifiedOn })}
               </p>
@@ -162,7 +162,7 @@ export default async function ConnectHubPage({ params }) {
           <div className="container">
             <h2>{t('genericTitle')}</h2>
             <p className="sub">{t('genericSub')}</p>
-            <div className="hero-cta" style={{ justifyContent: 'center' }}>
+            <div className="hero-cta">
               <Link className="btn btn-primary btn-lg" href="/connect/imap">{t('genericCta')}</Link>
             </div>
           </div>

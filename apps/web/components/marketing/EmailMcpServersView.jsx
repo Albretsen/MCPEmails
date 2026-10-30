@@ -19,21 +19,19 @@ import * as C from '@/lib/compare/email-mcp-servers.mjs';
  * LAYOUT RULES, learned the hard way on 12 September 2026
  * ---------------------------------------------------------------------------
  * Everything on this page hangs off ONE left edge, the container's, and nothing
- * is centred except the shared CTA band at the foot. Two specific mistakes made
+ * is centred, the shared CTA band at the foot included. Two specific mistakes made
  * the first version of this page look like three pages stacked up, and both are
  * easy to reintroduce:
  *
- *  - `.hero-cta` and `.hero-meta` are flex rows that several other marketing
- *    pages override with `justifyContent: 'center'` while leaving the h1 and
- *    lead above them left-aligned. That override is copied from page to page
- *    and it is wrong every time: it puts the buttons on a different axis from
- *    the heading they belong to. Do not add it back here.
+ *  - `.hero-cta` and `.hero-meta` are flex rows that other marketing pages
+ *    used to override with `justifyContent: 'center'` while leaving the h1 and
+ *    lead above them left-aligned. That puts the buttons on a different axis
+ *    from the heading they belong to. Do not add it back, here or elsewhere.
  *
- *  - `.connect-callout` carries `max-width: 720px; margin: 0 auto`, so it
- *    centres itself regardless of what it sits under. Dropping one inside a
- *    left-aligned column produces a narrower box floating under a wider box.
- *    This page therefore uses no callout: the ranking method is plain text with
- *    a rule down its left edge, at the same measure as everything else.
+ *  - The `.connect-*` blocks (callout, gotchas, FAQ, related links) used to
+ *    carry `margin: 0 auto`, which centred a narrower box under a wider one.
+ *    They now sit on the left edge too. This page still uses no callout: the
+ *    ranking method is plain text with a rule down its left edge.
  *
  * `COL` is that measure. marketing.css puts prose at 720-760px
  * (.section-head, .faq-list, .providers-sub) and reserves the full 1136px

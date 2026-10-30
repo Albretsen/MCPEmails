@@ -1,5 +1,15 @@
 {
   "intro": "Steg-for-steg-guider:",
   "claude": "Slik kobler du Claude til e-posten din",
-  "imap": "Guide til Claude IMAP-koblingen"
+  "imap": "Guide til Claude IMAP-koblingen",
+  "moreIntro": "Flere guider:",
+  "personal": "Gjennomgang for private kontoer",
+  "connectors": "Egendefinerte koblinger i Claude, forklart",
+  "schedule": "Planlegg en e-post fra chatten",
+  "inboxZero": "Tom innboks med AI",
+  "agentInbox": "Gi AI-agenten din en innboks",
+  "clientsIntro": "Bruk denne innboksen i AI-appen din:",
+  "clientsAll": "Alle støttede apper",
+  "lookupIntro": "Trenger du servernavn og porter?",
+  "lookupLabel": "Finn IMAP- og SMTP-innstillinger"
 }

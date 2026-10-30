@@ -19,7 +19,7 @@ One AI agent across all of them removes the switching, but only if the agent kno
 
 ## Why one agent beats switching mail clients
 
-A mail client shows you accounts. It does not answer questions. "Which of my accounts did the Stripe receipt land in?" is a search across three mailboxes plus a judgement. An agent with access to every mailbox does that in one request, and you stop being the router. The second gain: one set of habits, because the same tools sit behind every account.
+A mail client shows you accounts. It does not answer questions. "Which of my accounts did the Stripe receipt land in?" is a search across three mailboxes plus a judgement. An agent with access to every mailbox does that in one request, and you stop being the router. The second gain: one set of habits, because the same tools sit behind every account. [Multiple email accounts in Claude and ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) covers the connector setup in both apps.
 
 ## Your agent finds the mailboxes itself
 

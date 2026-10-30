@@ -357,12 +357,11 @@ export function BillingReferralCredit({ onOpenInvite }) {
 }
 
 /**
- * "Have a referral code?": one line, shown while the API says a code can
- * still be entered (before the first paid charge and within the entry
- * window). Any refusal reads as the same one line, so the field cannot be used
- * to probe which codes exist or why one was refused.
+ * The referral code field and its Apply button. Any refusal reads as the same
+ * one line, so the field cannot be used to probe which codes exist or why one
+ * was refused.
  */
-export function ReferralCodeEntry({ onApplied }) {
+export function ReferralCodeEntry({ onApplied, autoFocus = false }) {
   const t = useTranslations('dashboard');
   const [code, setCode] = useState('');
   const [state, setState] = useState('idle'); // idle | busy | applied | refused | failed
@@ -398,19 +397,18 @@ export function ReferralCodeEntry({ onApplied }) {
   }
   return (
     <form onSubmit={submit} data-referral-code-entry="" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-      <label htmlFor="referral-code" style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' }}>
-        {t('referral.codeEntryLabel')}
-      </label>
       <input
         id="referral-code"
-        className="input"
+        className="input mono"
+        aria-label={t('referral.codeEntryLabel')}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder={t('referral.codeEntryPlaceholder')}
         autoComplete="off"
+        autoFocus={autoFocus}
         spellCheck={false}
         maxLength={16}
-        style={{ width: 140, textTransform: 'uppercase' }}
+        style={{ width: 150, height: 28, fontSize: 12.5, textTransform: 'uppercase', letterSpacing: '0.04em' }}
       />
       <Btn type="submit" variant="secondary" size="sm" busy={state === 'busy'} disabled={!code.trim()}>
         {t('referral.codeEntryApply')}
@@ -425,14 +423,46 @@ export function ReferralCodeEntry({ onApplied }) {
 }
 
 /**
- * Everything the Overview shows for the program, in one place: the code field
- * while a code can be entered, otherwise the tile when it is earned.
+ * Settings > Billing: "Have a referral code?" as one quiet link while the API
+ * says a code can still be entered (before the first paid charge and within
+ * the entry window). Clicking it opens the field. It lives here, next to the
+ * plan, rather than on the Overview, where every new account saw an empty
+ * form it mostly had no use for.
+ */
+export function BillingReferralCode() {
+  const t = useTranslations('dashboard');
+  const { status, data } = useReferralSummary(true);
+  const [open, setOpen] = useState(false);
+  // No refetch after a code is applied: canEnterCode would turn false and
+  // take the confirmation line away with the field.
+  if (status !== 'ready' || !data?.enabled || !data.canEnterCode) return null;
+  if (open) return <ReferralCodeEntry autoFocus />;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px', margin: '0 0 16px' }}>
+      <Icon name="gift" size={14} color="var(--fg-3)" />
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        data-billing-referral-code=""
+        style={{
+          background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+          fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)',
+          textDecoration: 'underline', textUnderlineOffset: 3,
+        }}
+      >
+        {t('referral.codeEntryLabel')}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * What the Overview shows for the program: the tile once it is earned. The
+ * code field lives in Settings > Billing (BillingReferralCode), so nothing
+ * shows here while a code can still be entered.
  */
 export function OverviewReferral({ eligible, onOpenInvite }) {
   const { status, data } = useReferralSummary(true);
-  if (status !== 'ready' || !data?.enabled) return null;
-  // No refetch after a code is applied: canEnterCode would turn false and
-  // take the confirmation line away with the field.
-  if (data.canEnterCode) return <ReferralCodeEntry />;
+  if (status !== 'ready' || !data?.enabled || data.canEnterCode) return null;
   return eligible ? <ReferralTile onOpen={onOpenInvite} /> : null;
 }

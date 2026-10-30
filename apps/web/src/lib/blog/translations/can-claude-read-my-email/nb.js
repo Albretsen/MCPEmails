@@ -8,7 +8,7 @@ const translation = {
 
 Denne siden hjelper deg å finne ut hvilket tilfelle som gjelder deg. Fakta om produktene til Anthropic og Google er hentet fra selskapenes egne sider i oktober 2026. Produktene endrer seg ofte, så hver del lenker til siden den bygger på.
 
-**Hopp til:** [Gmail](#gmail-claudes-egen-kobling) · [Microsoft 365](#outlook-og-microsoft-365-bare-jobbkontoer) · [Det de innebygde koblingene ikke dekker](#det-de-innebygde-koblingene-ikke-dekker) · [MCPEmails](#slik-fyller-mcpemails-hullet) · [Vanlige spørsmål](#vanlige-spørsmål)
+**Hopp til:** [Gmail](#gmail-claudes-egen-kobling) · [Microsoft 365](#outlook-og-microsoft-365-bare-jobbkontoer) · [Det de innebygde koblingene ikke dekker](#det-de-innebygde-koblingene-ikke-dekker) · [MCPEmails](#slik-fyller-mcpemails-hullet) · [Sending](#kan-claude-sende-e-post) · [Vanlige spørsmål](#vanlige-spørsmål)
 
 ## Gmail: Claudes egen kobling
 
@@ -79,13 +79,36 @@ E-posten hentes direkte fra leverandøren din for hver forespørsel og lagres ik
 
 [Steg-for-steg-guiden for oppsett i Claude](/blog/connect-claude-to-email) går gjennom hvert skjermbilde og hver leverandør, og [oppsettsiden for Claude](/docs/claude) tar for seg feil med koblingen.
 
-## Kan Claude sende e-post uten å spørre?
+## Kan Claude sende e-post?
 
-Det kommer an på koblingen og på deg.
+Ja. Mange sider sier fortsatt at Claude bare kan lese e-posten din, men Anthropics nåværende hjelpeartikler sier noe annet. Om Claude kan sende, kommer an på koblingen og på hva du tillot da du koblet den til.
+
+### Claudes Gmail-kobling
+
+Ifølge [Anthropics artikkel om Google Workspace](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), lest på nytt i slutten av oktober 2026, kan Gmail-koblingen lage utkast, liste opp utkastene du har lagret, og sende, svare og videresende. Som standard ber Claude om godkjenningen din før hver sending, hvert svar og hver videresending. På Team- og Enterprise-abonnementer slår en eier på koblingen og bestemmer om medlemmer kan la disse handlingene kjøre uten å bli spurt hver gang.
+
+Den sender fra den ene Google-kontoen du har koblet til. Claude ser bare metadata om vedlegg, ikke innholdet.
+
+### Claudes Microsoft 365-kobling
+
+Den starter skrivebeskyttet. Når skriveverktøyene er slått på, noe som krever at en global administrator i Microsoft Entra godkjenner de utvidede tillatelsene, kan Claude sende og videresende e-post og lage, redigere og slette utkast. Skriveverktøyene avviser alle meldinger med vedlegg, og personlige Outlook.com- og Hotmail-adresser kan ikke brukes til å koble til i det hele tatt.
+
+### Slik sender MCPEmails
+
+Gjennom MCPEmails sender Claude fra hvilken som helst tilkoblet postkasse: Gmail, Outlook, iCloud, Yahoo, en IMAP-postkasse i firmaet og flere. Du bestemmer hvor mye av dette den får gjøre, på fire steder.
+
+- **Tilgangen du gir.** Når du legger til MCPEmails i Claude, velger du **Skrivebeskyttet** (Claude kan ikke sende eller lage utkast), **Standard** (legger til utkast og sending) eller **Full tilgang** (legger til planlegging, mapper og sletting). Du kan også begrense tilkoblingen til noen av postkassene dine.
+- **Utkast først.** Når du ber Claude skrive en e-post, ber MCPEmails den lagre e-posten som et utkast i postkassen din i stedet for å sende den. I Claude og ChatGPT åpnes utkastet i et redigerbart kort i samtalen, der du kan endre mottakere, emne og tekst, lagre det, eller sende det med noen sekunder til å angre. Det ligger også i Utkast-mappen i e-postappen din.
+- **Gjennomgang før sending.** Stilles inn per postkasse i dashbordet. **Spør i chatten først** får Claude til å vise deg e-posten i samtalen og vente på ja fra deg før den sender. **Godkjenn på mcpemails.com** holder tilbake hver sending, hvert svar, hver videresending og hver sending av utkast til en eier eller administrator av arbeidsområdet godkjenner den, logget på MCPEmails i en nettleser; Claude kan ikke godkjenne den selv. Se [menneskelig godkjenning av e-post som KI sender](/blog/approve-ai-agent-email-sends).
+- **En kvittering etter hver sending.** Claude viser avsenderadressen, mottakerne, emnet og om en kopi ligger i Sendt-mappen, eller årsaken til at en sending feilet.
+
+Hver postkasse sender gjennom sin egen leverandør, så meldingen går ut fra din ekte adresse med ditt avsendernavn og din signatur, og svaret havner i den vanlige innboksen din. Claude kan også [planlegge en e-post til senere](/blog/schedule-email-with-claude-and-chatgpt).
+
+### Kan Claude sende e-post uten å spørre?
 
 - **Claudes Gmail-kobling** spør som standard før hver sending, hvert svar og hver videresending.
 - **Claudes Microsoft 365-kobling** kan ikke sende i det hele tatt før skriveverktøyene er slått på.
-- **MCPEmails** sender bare hvis du ga Claude tilgang til å sende da du koblet den til. Med **Skrivebeskyttet** kan Claude ikke sende. For en postkasse der hver utgående melding skal sjekkes, slår du på **Gjennomgang før sending** i innstillingene for den innboksen: hver sending venter da til en eier eller administrator av arbeidsområdet godkjenner den, logget på MCPEmails i en nettleser. Claude kan ikke godkjenne den selv. Se [menneskelig godkjenning av e-post som KI sender](/blog/approve-ai-agent-email-sends).
+- **MCPEmails** sender uten flere spørsmål bare hvis du ga tilgang til å sende og lot **Gjennomgang før sending** være av for den postkassen. Claudes egne verktøytillatelser legger til ett lag til: under **Customize → Connectors** kan du sette hvert MCPEmails-verktøy til å alltid tillates, kreve godkjenning eller være blokkert.
 
 Uansett hvilken vei du velger, bør du behandle innholdet i en e-post som data, ikke som instruksjoner. En melding kan inneholde tekst som er skrevet for å styre en KI, og et gjennomgangssteg fanger den opp før noe forlater postkassen din. [Guiden om sikker e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) forklarer risikoene nærmere.
 
@@ -95,7 +118,10 @@ Uansett hvilken vei du velger, bør du behandle innholdet i en e-post som data, 
 Ja, når en postkasse er koblet til. Gmail og Microsoft 365-jobbkontoer kobles til gjennom Claudes egne koblinger. Yahoo, iCloud, personlig Outlook.com og IMAP-postkasser kobles til gjennom en MCP-server som MCPEmails, lagt til i Claude som en egendefinert kobling.
 
 **Kan Claude sende e-post?**
-Ja. Claudes Gmail-kobling kan sende, svare og videresende, og ber som standard om godkjenningen din først. Microsoft 365-koblingen kan sende når skriveverktøyene er slått på. Gjennom MCPEmails sender Claude fra hvilken som helst tilkoblet postkasse hvis du ga den tilgang til å sende da du koblet den til.
+Ja. Claudes Gmail-kobling kan sende, svare og videresende, og ber som standard om godkjenningen din først. Microsoft 365-koblingen kan sende når skriveverktøyene er slått på. Gjennom MCPEmails sender Claude fra hvilken som helst tilkoblet postkasse hvis du ga den tilgang til å sende da du koblet den til, og en e-post du ber den skrive, lagres først som et utkast.
+
+**Kan Claudes Gmail-kobling sende e-post?**
+Ja. Anthropic oppgir sending, svar og videresending for Gmail-koblingen, og hver av dem ber som standard om godkjenningen din. Den sender fra den ene Google-kontoen du har koblet til.
 
 **Kan Claude lese Gmailen min?**
 Ja, med Claudes innebygde Gmail-kobling, for Google-kontoen du kobler til. Vil du bruke mer enn én Google-konto, eller Gmail sammen med andre leverandører i samme samtale, kobler du dem til gjennom MCPEmails med et Google-apppassord.

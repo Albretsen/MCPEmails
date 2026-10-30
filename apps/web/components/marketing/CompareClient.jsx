@@ -48,10 +48,10 @@ export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
             {c.hero.titleLine1}<br />{c.hero.titleLine2}
           </h1>
           <p className="pricing-page-lead">{c.hero.lead}</p>
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 12 }}>
+          <p className="pricing-footnote" style={{ marginTop: 12 }}>
             {fill(c.hero.updated)}
           </p>
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+          <div className="hero-cta" style={{ marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{c.hero.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{c.hero.ctaSecondary}</Link>
           </div>
@@ -130,7 +130,7 @@ export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
               </tbody>
             </table>
           </div>
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 20 }}>
+          <p className="pricing-footnote" style={{ marginTop: 20 }}>
             {fill(c.table.footnote)}
           </p>
         </div>
@@ -174,7 +174,7 @@ export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
           </div>
           <ul
             style={{
-              margin: '0 auto',
+              margin: 0,
               padding: 0,
               maxWidth: 760,
               listStyle: 'none',

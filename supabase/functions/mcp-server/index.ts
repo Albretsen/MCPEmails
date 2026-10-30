@@ -709,6 +709,7 @@ import {
   supabaseSubscriptionStore,
 } from "./subscription-cleanup.ts";
 import { decryptStoredToken, encryptForStorage } from "./storage-crypto.ts";
+import { sealApprovalSummary } from "./approval-summary.ts";
 import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
@@ -11479,6 +11480,10 @@ interface InboxRow {
  * `supabase/migrations` first, deploy `mcp-server` second. The three readers
  * above make an out-of-order deploy degrade instead of break; they are not a
  * licence to skip the order.
+ *
+ * `deleted_at` is always NULL on a row this select returns (every caller
+ * filters on it). It rides along so a cached copy (client-api, first-party.ts)
+ * can be checked for it too, in resolveInbox.
  */
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
@@ -11486,7 +11491,7 @@ const INBOX_SELECT_COLUMNS =
   "imap_host, imap_port, imap_tls, imap_security, imap_username, imap_password, " +
   "smtp_host, smtp_port, smtp_tls, smtp_security, status, last_error, " +
   "signature_html, signature_text, signature_enabled, " +
-  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required";
+  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required, deleted_at";
 
 /**
  * The SASL login username for IMAP/SMTP auth. Most providers authenticate with
@@ -11988,8 +11993,14 @@ async function resolveInbox(
   // undefined there and the query below runs exactly as before.
   const firstParty = firstPartyContext.getStore();
   const cached = firstParty?.inboxRow?.(inboxId, apiKey.workspace_id) as InboxRow | null | undefined;
+  // A disconnected inbox (deleted_at set) is never served from the cache. The
+  // cache only ever holds rows loaded with deleted_at IS NULL, so this guards
+  // a stale copy rather than a fresh one; the cache's 60 s TTL and the evict
+  // on inbox_not_found (client-api/mail/run.ts) bound how long a copy lives in
+  // another isolate.
   if (
     cached && cached.workspace_id === apiKey.workspace_id && cached.status === "active" &&
+    (cached as { deleted_at?: unknown }).deleted_at == null &&
     !inboxIsParked(cached as { parked_at?: unknown })
   ) {
     return cached;
@@ -20074,7 +20085,9 @@ async function queueSendApproval(
       operation,
       payload: { v: 1, data: ciphertext },
       payload_encrypted: true,
-      summary,
+      // Encrypted like the payload (2026-10-30): recipients and subject are
+      // not stored in clear. Readers accept both shapes (approval-summary.ts).
+      summary: await sealApprovalSummary(summary, encryptForStorage),
       expires_at: expiresAt,
       ...(sendAt ? { send_at: sendAt } : {}),
     },

@@ -47,6 +47,8 @@ On a work or school account, Microsoft may stop you before the consent screen an
 2. Your admin opens it, signs in with their Microsoft admin account, and approves MCPEmails once for the whole organisation. They do not need an MCPEmails account.
 3. Come back to the dashboard and connect Outlook as in Step 1. It now goes through like a personal account.
 
+To show your admin exactly which permissions they approve, send them [the Microsoft 365 admin approval page](/docs/microsoft-365-admin-consent) along with the link.
+
 Your admin approves the app for the organisation, and each person still signs in with their own account and connects only their own mailbox.
 
 ### If the account has no Exchange mailbox

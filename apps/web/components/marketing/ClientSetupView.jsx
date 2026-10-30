@@ -10,6 +10,7 @@ import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { docsPageInstallAction } from '@/lib/clients/install-links.mjs';
 import DocsInstallCta from './DocsInstallCta';
+import ConnectFolds, { ConnectFold } from './ConnectFolds';
 
 /**
  * A per-client setup page, rendered on the server.
@@ -41,7 +42,7 @@ function ClientLogo({ color, logo, size = 44 }) {
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        margin: '0 auto 18px',
+        marginBottom: 18,
       }}
     >
       <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
@@ -95,7 +96,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
     <div>
       <Nav />
 
-      <section className="pricing-page-hero is-centered">
+      <section className="pricing-page-hero">
         <div className="container">
           <ClientLogo color={client.color} logo={client.logo} />
           <div className="eye-label">{content.hero.eyebrow}</div>
@@ -103,12 +104,6 @@ export default function ClientSetupView({ locale, client, content, preferred = n
             {content.hero.titleLine1}<br />{content.hero.titleLine2}
           </h1>
           <p className="pricing-page-lead">{content.hero.lead}</p>
-          {/*
-            The direct answer to the query, quotable on its own. The provider
-            pages ranked and returned no clicks until they carried one of
-            these; there is no reason to relearn that here.
-          */}
-          {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
           {install ? (
             <DocsInstallCta
               action={install}
@@ -117,12 +112,12 @@ export default function ClientSetupView({ locale, client, content, preferred = n
               labels={{ ctaPrimary: ui.ctaPrimary, ctaSecondary: ui.ctaSecondary, ...ui.install }}
             />
           ) : (
-            <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+            <div className="hero-cta" style={{ marginTop: 24 }}>
               <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
               <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
             </div>
           )}
-          <div className="hero-meta" style={{ justifyContent: 'center' }}>
+          <div className="hero-meta">
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
                 <MIcon name="check" size={14} color="var(--mint-600)" /> {content.hero[k]}
@@ -132,50 +127,25 @@ export default function ClientSetupView({ locale, client, content, preferred = n
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 56, paddingBottom: 0 }}>
-        <div className="container">
-          <div className="connect-callout">
-            <MIcon name="lock" size={20} color="var(--cobalt-600)" />
-            <div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>{content.method.title}</h2>
-              <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>
-                <RichText>{content.method.body}</RichText>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/*
-        Optional direct answer to one question this page ranks for but did not
-        answer in so many words ("which MCP servers work with Claude Desktop
-        for email", "cursor gmail mcp"). Plain heading and paragraph, so a
-        search snippet can quote it.
-      */}
-      {content.answerSection?.title && (
-        <section className="section" id="answer" style={{ paddingTop: 40, paddingBottom: 0 }}>
-          <div className="container">
-            <h2 className="providers-h2">{content.answerSection.title}</h2>
-            <p className="providers-sub"><RichText>{content.answerSection.body}</RichText></p>
-          </div>
-        </section>
-      )}
-
       {/*
         The endpoint, the transport and which of the two auth paths this client
         takes. Whether a client does OAuth or wants a bearer key is the single
         fact that decides whether someone's setup completes, and it is the fact
-        a generic "paste the URL" page leaves out.
+        a generic "paste the URL" page leaves out. Under the table sits the
+        direct answer to the query (hero.answer), quotable on its own: the
+        provider pages ranked and returned no clicks until they carried one.
+        The auth detail folds under that, and the optional worked example
+        ("cursor gmail mcp") closes the section.
       */}
-      <section className="section" style={{ paddingTop: 40, paddingBottom: 0 }}>
+      <section className="section connect-intro">
         <div className="container">
           <h2 className="providers-h2">{ui.endpoint.title}</h2>
-          <p className="providers-sub">{fill(ui.endpoint.sub, { client: client.name })}</p>
+          <p className="providers-sub">{content.hero.answer ?? fill(ui.endpoint.sub, { client: client.name })}</p>
           <div className="comparison-wrap">
             <table className="comparison-tbl providers-conn-tbl">
               <thead>
                 <tr>
-                  <th className="feat-col" style={{ minWidth: 170 }}>{ui.endpoint.colField}</th>
+                  <th className="feat-col">{ui.endpoint.colField}</th>
                   <th>{ui.endpoint.colValue}</th>
                 </tr>
               </thead>
@@ -197,6 +167,17 @@ export default function ClientSetupView({ locale, client, content, preferred = n
               </tbody>
             </table>
           </div>
+          <div className="connect-folds" style={{ marginTop: 16 }}>
+            <ConnectFold icon="lock" color="var(--cobalt-600)" title={content.method.title}>
+              <p><RichText>{content.method.body}</RichText></p>
+            </ConnectFold>
+          </div>
+          {content.answerSection?.title && (
+            <div className="connect-intro-block">
+              <h2 className="providers-h2">{content.answerSection.title}</h2>
+              <p className="providers-sub"><RichText>{content.answerSection.body}</RichText></p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -218,7 +199,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
           </div>
 
           {config && (
-            <div style={{ maxWidth: 820, margin: '28px auto 0' }}>
+            <div style={{ maxWidth: 820, marginTop: 28 }}>
               <CodeBlock label={configLabel} code={config} />
             </div>
           )}
@@ -253,27 +234,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
               <div className="eye-label">{ui.gotchas.eyebrow}</div>
               <h2>{fill(ui.gotchas.title, { client: name })}</h2>
             </div>
-            <div className="connect-gotchas">
-              {content.gotchas.map((g, i) => (
-                <div className="connect-gotcha" key={i}>
-                  <MIcon name="alert-triangle" size={17} color="var(--amber-700)" />
-                  <div>
-                    <h3>{g.h}</h3>
-                    <p><RichText>{g.p}</RichText></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {content.limits?.length > 0 && (
-              <div className="connect-limits">
-                <h3>{ui.limits.title}</h3>
-                <ul>
-                  {content.limits.map((l, i) => (
-                    <li key={i}><RichText>{l}</RichText></li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <ConnectFolds gotchas={content.gotchas} limitsTitle={ui.limits.title} limits={content.limits} />
           </div>
         </section>
       )}
@@ -324,7 +285,7 @@ export default function ClientSetupView({ locale, client, content, preferred = n
         <div className="container">
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
-          <div className="hero-cta" style={{ justifyContent: 'center' }}>
+          <div className="hero-cta">
             <a className="btn btn-primary btn-lg" href={signupHref}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>

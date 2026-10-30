@@ -57,3 +57,52 @@ export async function getGuideCopy(locale) {
   const mod = await import(`./guides/${safe}.json`);
   return mod.default;
 }
+
+/**
+ * The "More guides" line: buyer posts that had one or two incoming links on
+ * 2026-10-29. Generic anchors only, for the reason at the top of this file.
+ * Each page shows two of ROTATING, chosen by the provider slug, so the ~100
+ * provider pages spread their links across all four posts instead of every
+ * page carrying the same list. The personal Microsoft account page also leads
+ * with the personal-account walkthrough.
+ *
+ * Not every post is translated into every locale, so each link says whether
+ * it exists in the page's locale: `localized` links render as locale-aware
+ * Links, the rest as plain anchors to the English post.
+ */
+export const MORE_GUIDE_POSTS = Object.freeze({
+  personal: '/blog/connect-claude-to-outlook-com-hotmail',
+  connectors: '/blog/claude-custom-connectors-explained',
+  schedule: '/blog/schedule-email-with-claude-and-chatgpt',
+  inboxZero: '/blog/inbox-zero-with-ai-claude',
+  agentInbox: '/blog/give-your-ai-agent-an-inbox',
+});
+
+const ROTATING = ['connectors', 'schedule', 'inboxZero', 'agentInbox'];
+const PERSONAL_MICROSOFT = new Set(['outlook']);
+
+function slugHash(slug) {
+  let h = 0;
+  for (const ch of String(slug)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h;
+}
+
+/**
+ * [{ key, href, localized }] for one provider page. `postLocales(slug)` returns
+ * the locales a post is translated into (posts.js owns that answer).
+ */
+export function moreGuideLinksFor({ providerSlug, content, locale, postLocales }) {
+  const method = content?.auth?.method;
+  if (!method || method === 'none') return [];
+  const start = slugHash(providerSlug) % ROTATING.length;
+  const keys = [ROTATING[start], ROTATING[(start + 1) % ROTATING.length]];
+  if (PERSONAL_MICROSOFT.has(providerSlug)) keys.unshift('personal');
+  const own = content.guide?.href;
+  return keys
+    .filter((k) => MORE_GUIDE_POSTS[k] !== own)
+    .map((k) => {
+      const href = MORE_GUIDE_POSTS[k];
+      const locales = postLocales(href.slice('/blog/'.length)) ?? ['en'];
+      return { key: k, href, localized: locale === 'en' || locales.includes(locale) };
+    });
+}

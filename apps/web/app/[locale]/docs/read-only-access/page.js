@@ -142,7 +142,7 @@ export default async function ReadOnlyAccessPage({ params }) {
           <div className="container">
             <h2>{copy.cta.title}</h2>
             <p className="sub">{copy.cta.sub}</p>
-            <div className="hero-cta" style={{ justifyContent: 'center' }}>
+            <div className="hero-cta">
               <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{copy.cta.button}</a>
               <Link className="btn btn-secondary btn-lg" href="/docs/providers">{copy.cta.providers}</Link>
             </div>

@@ -1948,6 +1948,36 @@ export type Database = {
           },
         ]
       }
+      deleted_account_tally: {
+        Row: {
+          deleted_at: string
+          ever_paid: boolean
+          id: number
+          plan_at_deletion: string | null
+          purged_at: string
+          signed_up_at: string
+          was_internal: boolean
+        }
+        Insert: {
+          deleted_at: string
+          ever_paid: boolean
+          id?: never
+          plan_at_deletion?: string | null
+          purged_at?: string
+          signed_up_at: string
+          was_internal: boolean
+        }
+        Update: {
+          deleted_at?: string
+          ever_paid?: boolean
+          id?: never
+          plan_at_deletion?: string | null
+          purged_at?: string
+          signed_up_at?: string
+          was_internal?: boolean
+        }
+        Relationships: []
+      }
       draft_card_activity: {
         Row: {
           action: string
@@ -2411,6 +2441,42 @@ export type Database = {
           error_code?: string | null
           status?: string
           tool_name?: string
+        }
+        Relationships: []
+      }
+      inbox_autofill_lookups: {
+        Row: {
+          created_at: string
+          domain: string
+          id: number
+          imap_host: string | null
+          kind: string | null
+          smtp_host: string | null
+          source: string
+          surface: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: never
+          imap_host?: string | null
+          kind?: string | null
+          smtp_host?: string | null
+          source: string
+          surface: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: never
+          imap_host?: string | null
+          kind?: string | null
+          smtp_host?: string | null
+          source?: string
+          surface?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2951,6 +3017,30 @@ export type Database = {
           route?: string
           runtime?: string
           total_ms?: number
+        }
+        Relationships: []
+      }
+      maintenance_cursors: {
+        Row: {
+          done_at: string | null
+          job: string
+          next_block: number
+          relname: string
+          updated_at: string
+        }
+        Insert: {
+          done_at?: string | null
+          job: string
+          next_block?: number
+          relname: string
+          updated_at?: string
+        }
+        Update: {
+          done_at?: string | null
+          job?: string
+          next_block?: number
+          relname?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4057,6 +4147,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      retention_purge_settings: {
+        Row: {
+          accounts_per_run: number
+          dry_run: boolean
+          id: number
+          inboxes_per_run: number
+          updated_at: string
+        }
+        Insert: {
+          accounts_per_run?: number
+          dry_run?: boolean
+          id?: number
+          inboxes_per_run?: number
+          updated_at?: string
+        }
+        Update: {
+          accounts_per_run?: number
+          dry_run?: boolean
+          id?: number
+          inboxes_per_run?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       retention_switches: {
         Row: {
@@ -5443,6 +5557,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string | null
           email: string
           id: string
@@ -5457,6 +5572,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           email: string
           id: string
@@ -5471,6 +5587,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           email?: string
           id?: string
@@ -7024,6 +7141,16 @@ export type Database = {
         Args: { p_first_starts: boolean[]; p_starts: number[] }
         Returns: number
       }
+      inbox_autofill_scoreboard: {
+        Args: { p_days?: number }
+        Returns: {
+          lookups: number
+          result: string
+          source: string
+          suggested: boolean
+          surface: string
+        }[]
+      }
       inbox_folder_overrides_valid: {
         Args: { overrides: Json }
         Returns: boolean
@@ -7157,8 +7284,11 @@ export type Database = {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
       }
+      purge_deleted_accounts: { Args: never; Returns: Json }
+      purge_disconnected_inboxes: { Args: never; Returns: Json }
       purge_operational_history: { Args: never; Returns: Json }
       purge_outbound_send_events: { Args: never; Returns: Json }
+      purge_send_history: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -7307,6 +7437,10 @@ export type Database = {
         }[]
       }
       scheduled_sends_operator_workspace_ids: { Args: never; Returns: string[] }
+      scrub_legacy_activity_log_client_info: {
+        Args: { p_blocks?: number }
+        Returns: Json
+      }
       signup_method_category: { Args: { p_provider: string }; Returns: string }
       signup_scoreboard: {
         Args: never
@@ -7339,6 +7473,7 @@ export type Database = {
       sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
       sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
       sync_inbox_watch_state: { Args: never; Returns: undefined }
+      try_timestamptz: { Args: { p_value: string }; Returns: string }
       usage_month_summary: {
         Args: { p_since: string; p_workspace_id: string }
         Returns: {

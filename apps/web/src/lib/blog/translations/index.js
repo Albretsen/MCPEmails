@@ -143,6 +143,14 @@ import t130 from './connect-claude-to-apple-mail/es';
 import t131 from './connect-claude-to-apple-mail/fr';
 import t132 from './connect-claude-to-apple-mail/nb';
 import t133 from './connect-claude-to-apple-mail/de';
+import t134 from './daily-email-briefing-with-claude-and-chatgpt/es';
+import t135 from './daily-email-briefing-with-claude-and-chatgpt/fr';
+import t136 from './daily-email-briefing-with-claude-and-chatgpt/nb';
+import t137 from './daily-email-briefing-with-claude-and-chatgpt/de';
+import t138 from './multiple-email-accounts-in-claude-cowork/es';
+import t139 from './multiple-email-accounts-in-claude-cowork/fr';
+import t140 from './multiple-email-accounts-in-claude-cowork/nb';
+import t141 from './multiple-email-accounts-in-claude-cowork/de';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -177,6 +185,8 @@ const TRANSLATIONS = {
   'schedule-email-with-claude-and-chatgpt': { es: t122, fr: t123, nb: t124, de: t125 },
   'connect-claude-to-outlook-com-hotmail': { es: t126, fr: t127, nb: t128, de: t129 },
   'connect-claude-to-apple-mail': { es: t130, fr: t131, nb: t132, de: t133 },
+  'daily-email-briefing-with-claude-and-chatgpt': { es: t134, fr: t135, nb: t136, de: t137 },
+  'multiple-email-accounts-in-claude-cowork': { es: t138, fr: t139, nb: t140, de: t141 },
 };
 
 export default TRANSLATIONS;

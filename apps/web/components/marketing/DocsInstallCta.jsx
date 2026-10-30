@@ -37,7 +37,7 @@ export default function DocsInstallCta({ action, clientName, signupHref, labels 
   if (showLink) {
     return (
       <>
-        <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+        <div className="hero-cta" style={{ marginTop: 24 }}>
           <a
             className="btn btn-primary btn-lg"
             href={action.href}
@@ -76,7 +76,7 @@ export default function DocsInstallCta({ action, clientName, signupHref, labels 
     };
     return (
       <>
-        <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>{plain}</div>
+        <div className="hero-cta" style={{ marginTop: 24 }}>{plain}</div>
         <div className="docs-code-wrap docs-install-command" data-testid="docs-install-command">
           <div className="docs-code-bar">
             <span className="docs-code-lang">{labels.command}</span>
@@ -91,7 +91,7 @@ export default function DocsInstallCta({ action, clientName, signupHref, labels 
     );
   }
 
-  return <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>{plain}</div>;
+  return <div className="hero-cta" style={{ marginTop: 24 }}>{plain}</div>;
 }
 
 const subscribeNothing = () => () => {};

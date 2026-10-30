@@ -24,8 +24,8 @@ export const revalidate = 3600;
  * Only public marketing pages are included; dashboard, auth, and API routes
  * are private and must not appear in search indexes.
  *
- * Each entry lists its hreflang alternates so search engines discover the
- * Norwegian (/nb/...) variants. The canonical `url` is the default-locale URL.
+ * Each page is listed once per locale it exists in, and every one of those
+ * entries lists the same hreflang alternates (see withLocaleVariants).
  */
 const MARKETING_PAGES: {
   path: string;
@@ -43,6 +43,7 @@ const MARKETING_PAGES: {
   { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/docs/api', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/docs/microsoft-365-admin-consent', lastModified: '2026-10-29', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/developers', lastModified: '2026-10-24', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/native-connectors-vs-mcp', lastModified: NATIVE_MODIFIED, changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
@@ -172,5 +173,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
     alternates: { languages: languageAlternatesFor(path, locales) },
   }));
 
-  return [...staticEntries, ...providerEntries, ...postEntries, ...partialLocaleEntries];
+  return withLocaleVariants([...staticEntries, ...providerEntries, ...postEntries, ...partialLocaleEntries]);
+}
+
+/**
+ * One <url> per language version, each carrying the same full alternate set.
+ *
+ * Google's hreflang sitemap guidance asks for a <url> element for every
+ * language version, not one English <url> whose alternates are the only place
+ * the /nb, /es, /fr, /zh and /de URLs appear. The entries above are built with
+ * the English URL; this copies each one to every locale URL in its own
+ * alternates, so a page that exists only in English (the comparison, the
+ * provider dataset) stays English only, and a post translated into two
+ * locales gets exactly two more entries.
+ */
+function withLocaleVariants(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  const out: MetadataRoute.Sitemap = [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const languages = entry.alternates?.languages ?? {};
+    const urls = [
+      entry.url,
+      ...Object.entries(languages)
+        .filter(([lang]) => lang !== 'x-default')
+        .map(([, url]) => url as string),
+    ];
+    for (const url of urls) {
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      out.push({ ...entry, url });
+    }
+  }
+  return out;
 }

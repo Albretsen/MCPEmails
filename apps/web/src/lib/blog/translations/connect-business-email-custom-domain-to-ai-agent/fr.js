@@ -118,7 +118,7 @@ Free connecte 1 boîte. Personal coûte 9 $/mois pour 3 boîtes avec des actions
 
 ## Prochaine étape
 
-[Créez un compte gratuit](/signup), connectez votre boîte professionnelle, définissez le nom d'expéditeur et ajoutez \`https://mcpemails.com/api/mcp\` à votre client. Demandez-lui ensuite d'appeler \`inbox_list\` et de résumer les messages non lus d'hier, avant de lui accorder quoi que ce soit qui envoie.`,
+[Créez un compte gratuit](/signup), connectez votre boîte professionnelle, définissez le nom d'expéditeur et ajoutez \`https://mcpemails.com/api/mcp\` à votre client. Demandez-lui ensuite d'appeler \`inbox_list\` et de résumer les messages non lus d'hier, avant de lui accorder quoi que ce soit qui envoie. Vous gérez plusieurs boîtes d'entreprise ? [Plusieurs comptes e-mail dans Claude et ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) montre comment elles partagent un seul connecteur.`,
 };
 
 export default translation;

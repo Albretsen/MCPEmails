@@ -28,7 +28,8 @@ globalThis.self ??= globalThis.window;
 
 const { default: AppLocaleProvider } = await import('../i18n/AppLocaleProvider.jsx');
 const {
-  InvitePanel, ReferralTile, ReferralCodeEntry, BillingReferralCredit, referralTileEligible, TILE_DISMISSED_KEY,
+  InvitePanel, ReferralTile, ReferralCodeEntry, BillingReferralCredit, BillingReferralCode, OverviewReferral,
+  referralTileEligible, TILE_DISMISSED_KEY,
 } = await import('./InvitePanel.jsx');
 const en = (await import('../../messages/en/dashboard.json', { with: { type: 'json' } })).default;
 const R = en.referral;
@@ -195,6 +196,33 @@ test('code entry: a refusal is one line and the field stays', async (t) => {
 test('code entry: a network failure says to try again', async (t) => {
   const { view } = await renderCodeEntry(t, { postThrows: true });
   await waitFor(() => view.container.querySelector('[role="alert"]')?.textContent === R.codeEntryNetwork, { message: 'network line' });
+});
+
+test('Billing code link: opens the field while a code can be entered', async (t) => {
+  stubFetch(t, { get: summary({ canEnterCode: true }) });
+  const view = await render(t, createElement(BillingReferralCode));
+  await waitFor(() => view.container.querySelector('[data-billing-referral-code]'), { message: 'link shown' });
+  assert.equal(view.container.querySelectorAll('input').length, 0);
+  assert.equal(view.container.querySelector('[data-billing-referral-code]').textContent, R.codeEntryLabel);
+  await flush(async () => { view.container.querySelector('[data-billing-referral-code]').click(); });
+  assert.equal(view.container.querySelectorAll('[data-referral-code-entry] input').length, 1);
+});
+
+test('Billing code link: nothing once a code can no longer be entered', async (t) => {
+  const requests = stubFetch(t, { get: summary({ canEnterCode: false }) });
+  const view = await render(t, createElement(BillingReferralCode));
+  await waitFor(() => requests.some((r) => r.url === '/api/referrals'), { message: 'summary requested' });
+  await flush(async () => {});
+  assert.equal(view.container.textContent, '');
+});
+
+test('Overview: no code field while a code can be entered', async (t) => {
+  const requests = stubFetch(t, { get: summary({ canEnterCode: true }) });
+  const view = await render(t, createElement(OverviewReferral, { eligible: true, onOpenInvite: () => {} }));
+  await waitFor(() => requests.some((r) => r.url === '/api/referrals'), { message: 'summary requested' });
+  await flush(async () => {});
+  assert.equal(view.container.querySelectorAll('input').length, 0);
+  assert.equal(view.container.textContent, '');
 });
 
 test('tile eligibility: paid needs 10 sends and 14 paid days; Free needs 5 active days', () => {

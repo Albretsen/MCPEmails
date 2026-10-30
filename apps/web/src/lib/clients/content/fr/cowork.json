@@ -29,7 +29,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, et connectez votre boîte dans Dashboard, Inboxes. Une boîte est gratuite, pour toujours."
     },
     {
       "h": "Ouvrez la page des connecteurs",
@@ -64,7 +64,7 @@
   ],
   "limits": [
     "Cowork lui-même nécessite un plan Claude payant (Pro, Max, Team ou Enterprise).",
-    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé.",
     "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais une tâche Cowork de lui-même. Cowork voit le courrier quand une tâche le demande.",
     "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
   ],

@@ -235,7 +235,7 @@
       "title": "Koble fra innboks?",
       "sub": "Dette vil oppheve tilgang og fjerne denne innboksen fra arbeidsområdet ditt.",
       "cancel": "Avbryt",
-      "body": "Alle API-nøkler som for øyeblikket er autorisert til å få tilgang til denne innboksen, vil miste tilgangen umiddelbart. Du kan koble til denne innboksen på nytt når som helst.",
+      "body": "Alle API-nøkler som for øyeblikket er autorisert til å få tilgang til denne innboksen, vil miste tilgangen umiddelbart, og planlagte e-poster som ennå ikke er sendt fra den, blir kansellert. Du kan koble til denne innboksen på nytt når som helst.",
       "disconnecting": "Kobler fra…",
       "disconnect": "Koble fra"
     },

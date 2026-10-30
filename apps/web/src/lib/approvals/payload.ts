@@ -29,6 +29,35 @@ export function readPayload(approval: any): Record<string, unknown> | null {
   }
 }
 
+/**
+ * Reads `send_approvals.summary` in either stored shape.
+ *
+ * Since 2026-10-30 mcp-server stores the summary (recipients, subject, counts)
+ * as the same AES-256-GCM wrapper `{ v: 1, data }` as the payload. Rows written
+ * before that hold the plain object, and are read as they are until the 90-day
+ * approval retention removes them. Mirror of
+ * supabase/functions/mcp-server/approval-summary.ts#openApprovalSummary.
+ * A wrapper that does not decrypt reads as an empty summary, which every
+ * renderer already handles. Server-only: it decrypts.
+ */
+export function readSummary(stored: unknown): Record<string, unknown> {
+  if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return {};
+  const record = stored as Record<string, unknown>;
+  const sealed =
+    Object.keys(record).length === 2 &&
+    record.v === 1 &&
+    typeof record.data === 'string' &&
+    record.data.length > 0;
+  if (!sealed) return record;
+  try {
+    const parsed = JSON.parse(decryptToken(record.data as string));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    console.error('[approvals] Failed to decrypt approval summary:', (error as Error)?.message);
+    return {};
+  }
+}
+
 /** The `draft_snapshot` a held draft send carries, or null. */
 export function draftSnapshotFrom(payload: Record<string, unknown> | null): Record<string, any> | null {
   const raw = payload?.draft_snapshot;

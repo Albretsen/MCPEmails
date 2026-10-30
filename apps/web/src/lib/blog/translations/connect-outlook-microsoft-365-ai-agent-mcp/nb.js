@@ -40,6 +40,8 @@ På en jobb- eller skolekonto kan Microsoft stoppe deg før samtykkeskjermen og 
 2. IT-ansvarlig åpner den, logger inn med Microsoft-administratorkontoen sin og godkjenner MCPEmails én gang for hele organisasjonen. IT-ansvarlig trenger ingen MCPEmails-konto.
 3. Gå tilbake til dashbordet og koble til Outlook som i steg 1. Nå går det gjennom som for en personlig konto.
 
+Send gjerne [siden om administratorgodkjenning i Microsoft 365](/docs/microsoft-365-admin-consent) sammen med lenken, så ser IT-ansvarlig nøyaktig hvilke tillatelser som godkjennes.
+
 IT-ansvarlig godkjenner appen for organisasjonen, og hver person logger fortsatt inn med sin egen konto og kobler bare til sin egen postkasse.
 
 ### Hvis kontoen ikke har en Exchange-postkasse

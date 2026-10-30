@@ -235,7 +235,7 @@
       "title": "Disconnect inbox?",
       "sub": "This will revoke access and remove this inbox from your workspace.",
       "cancel": "Cancel",
-      "body": "Any API keys currently authorised to access this inbox will lose access immediately. You can reconnect this inbox at any time.",
+      "body": "Any API keys currently authorised to access this inbox will lose access immediately, and scheduled emails still waiting to be sent from it are cancelled. You can reconnect this inbox at any time.",
       "disconnecting": "Disconnecting…",
       "disconnect": "Disconnect"
     },

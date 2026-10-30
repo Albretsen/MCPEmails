@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
+import ConnectFolds, { ConnectFold } from './ConnectFolds';
 import { relatedProviders } from '@/lib/connect/release.mjs';
 import { guideLinksFor } from '@/lib/connect/guides.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
@@ -11,6 +12,24 @@ import { withProvider } from '@/lib/connect/multi-mailbox.mjs';
 import { chatgptSection } from '@/lib/connect/chatgpt.mjs';
 import { providerFaq } from '@/lib/connect/faq.mjs';
 import { MODEL_VISIBLE_TOOL_COUNT } from '@/lib/public-facts.mjs';
+import { clientsForLocale } from '@/lib/clients/clients.mjs';
+import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
+
+/**
+ * The client setup pages linked from the "Use this inbox in your AI app" line,
+ * in this order, where the client page exists in the page's locale (and is not
+ * held, which clientsForLocale already filters). The rest are one click away
+ * through the hub link at the end of the line.
+ */
+export const PROVIDER_PAGE_CLIENTS = ['claude', 'chatgpt', 'cursor', 'vscode', 'codex', 'claude-code', 'cline', 'windsurf', 'gemini-cli'];
+
+export function providerPageClients(locale) {
+  const available = new Map(clientsForLocale(locale).map((c) => [c.slug, c]));
+  return PROVIDER_PAGE_CLIENTS.filter((slug) => available.has(slug)).map((slug) => {
+    const c = available.get(slug);
+    return { slug, name: c.shortName ?? c.name, href: `/docs/${slug}` };
+  });
+}
 
 /**
  * What a shared string needs to know about a provider name to stay
@@ -35,12 +54,15 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, chatgpt = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   // Only providers whose page exists in this locale: next-intl's Link adds the
   // locale prefix, so a provider missing here would be a link to a 404.
   const related = relatedProviders(provider.slug, 6, new Date(), locale);
   const guideLinks = guides ? guideLinksFor(content) : [];
+  const connectable = Boolean(content?.auth?.method) && content.auth.method !== 'none';
+  const clientLinks = guides?.clientsIntro && connectable ? providerPageClients(locale) : [];
+  const showLookup = Boolean(guides?.lookupLabel) && connectable && LOOKUP_LOCALES.includes(locale);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
@@ -124,21 +146,13 @@ export default async function ConnectProviderView({ locale, provider, content, m
     <div>
       <Nav />
 
-      <section className="pricing-page-hero is-centered">
+      <section className="pricing-page-hero">
         <div className="container">
           <div className="eye-label">{content.hero.eyebrow}</div>
           <h1 className="pricing-page-h1">
             {content.hero.titleLine1}<br />{content.hero.titleLine2}
           </h1>
           <p className="pricing-page-lead">{content.hero.lead}</p>
-          {/*
-            Direct answer to the question the query actually asks. These pages
-            ranked between 4.7 and 9.2 and returned zero clicks: the snippet had
-            nothing quotable to pull.
-          */}
-          {content.hero.answer && (
-            <p className="pricing-page-answer">{content.hero.answer}</p>
-          )}
           {/*
             Optional pointer for the company-mailbox operator. /connect/imap
             sends them to /for/business: more than half of the business-domain
@@ -152,13 +166,13 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <Link href={content.persona.href}>{content.persona.label}</Link>
             </p>
           )}
-          <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
+          <div className="hero-cta" style={{ marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
           </div>
-          <div className="hero-meta" style={{ justifyContent: 'center' }}>
+          <div className="hero-meta">
             {['meta0', 'meta1', 'meta2'].map((k) => content.hero[k] && (
               <span className="item" key={k}>
                 <MIcon name="check" size={14} color="var(--mint-600)" /> {content.hero[k]}
@@ -172,6 +186,15 @@ export default async function ConnectProviderView({ locale, provider, content, m
 
       <section className="section" style={{ paddingTop: 56, paddingBottom: 0 }}>
         <div className="container">
+          {/*
+            Direct answer to the question the query actually asks. These pages
+            ranked between 4.7 and 9.2 and returned zero clicks: the snippet had
+            nothing quotable to pull. It sits just under the hero rather than in
+            it, so the hero stays one lead line and the buttons.
+          */}
+          {content.hero.answer && (
+            <p className="providers-sub">{content.hero.answer}</p>
+          )}
           <div className="connect-callout">
             <MIcon name="lock" size={20} color="var(--cobalt-600)" />
             <div>
@@ -197,16 +220,11 @@ export default async function ConnectProviderView({ locale, provider, content, m
           )}
 
           {showGmailVerification && (
-            <div role="note" className="connect-callout connect-callout-warn">
-              <MIcon name="alert-triangle" size={18} color="var(--amber-700)" />
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: 14, color: 'var(--amber-700)' }}>
-                  {t('verificationNote.title')}
-                </h3>
-                <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 13.5, lineHeight: 1.6 }}>
-                  <RichText>{t('verificationNote.body')}</RichText>
-                </p>
-              </div>
+            <div className="connect-folds" style={{ marginTop: 16 }}>
+              {/* t.raw: the body carries <b>, which t() rejects as an unknown rich-text tag. */}
+              <ConnectFold icon="alert-triangle" color="var(--amber-700)" title={t('verificationNote.title')}>
+                <p><RichText>{t.raw('verificationNote.body')}</RichText></p>
+              </ConnectFold>
             </div>
           )}
         </div>
@@ -290,6 +308,45 @@ export default async function ConnectProviderView({ locale, provider, content, m
               ))}
             </p>
           )}
+          {/*
+            Under-linked buyer posts, two per page by rotation (lib/connect/
+            guides.mjs). An untranslated post is linked at its English URL.
+          */}
+          {guides?.moreIntro && moreGuides.length > 0 && (
+            <p className="how-guide-link">
+              {guides.moreIntro}{' '}
+              {moreGuides.map((g, i) => (
+                <span key={g.key}>
+                  {i > 0 && ' · '}
+                  {g.localized
+                    ? <Link href={g.href}>{guides[g.key]}</Link>
+                    : <a href={g.href}>{guides[g.key]}</a>}
+                </span>
+              ))}
+            </p>
+          )}
+          {/*
+            The per-client setup pages. Client names are the anchors: they
+            point at /docs/<client>, never at a blog post.
+          */}
+          {clientLinks.length > 0 && (
+            <p className="how-guide-link connect-client-links">
+              {guides.clientsIntro}{' '}
+              {clientLinks.map((c, i) => (
+                <span key={c.slug}>
+                  {i > 0 && ' · '}
+                  <Link href={c.href}>{c.name}</Link>
+                </span>
+              ))}
+              {' · '}
+              <Link href="/docs/clients">{guides.clientsAll}</Link>
+            </p>
+          )}
+          {showLookup && (
+            <p className="how-guide-link">
+              {guides.lookupIntro} <Link href={LOOKUP_PATH}>{guides.lookupLabel}</Link>
+            </p>
+          )}
           <p className="how-guide-link">
             {t('matrix.intro')} <Link href="/docs/providers">{t('matrix.label')}</Link>
           </p>
@@ -370,27 +427,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <div className="eye-label">{t('gotchas.eyebrow')}</div>
               <h2>{t('gotchas.title', { provider: provider.name })}</h2>
             </div>
-            <div className="connect-gotchas">
-              {content.gotchas.map((g, i) => (
-                <div className="connect-gotcha" key={i}>
-                  <MIcon name="alert-triangle" size={17} color="var(--amber-700)" />
-                  <div>
-                    <h3>{g.h}</h3>
-                    <p><RichText>{g.p}</RichText></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {content.limits?.length > 0 && (
-              <div className="connect-limits">
-                <h3>{t('limits.title', named)}</h3>
-                <ul>
-                  {content.limits.map((l, i) => (
-                    <li key={i}><RichText>{l}</RichText></li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <ConnectFolds gotchas={content.gotchas} limitsTitle={t('limits.title', named)} limits={content.limits} />
           </div>
         </section>
       )}
@@ -446,7 +483,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         <div className="container">
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
-          <div className="hero-cta" style={{ justifyContent: 'center' }}>
+          <div className="hero-cta">
             <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>

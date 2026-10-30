@@ -75,6 +75,8 @@ Una vez conectado, Claude trabaja con un pequeño conjunto de herramientas conso
 - **Organizar:** \`email_organize\` (mover, copiar, marcar, archivar). Las etiquetas de Gmail aparecen como carpetas, así que un mensaje con varias etiquetas aparece en varias carpetas, moverlo cambia sus etiquetas y archivarlo lo quita de la bandeja de entrada.
 - **Borradores, carpetas, programación y contactos:** \`draft\`, \`folder\`, \`schedule\` y \`contact_search\` completan el conjunto.
 
+Claude también tiene un conector de Gmail propio, y también puede enviar. [¿Puede Claude leer tu correo y enviar emails?](/blog/can-claude-read-my-email) lo compara con MCPEmails, buzón por buzón.
+
 Conviene saberlo de entrada: MCPEmails funciona por sondeo. No hay webhooks push, así que Claude reacciona al correo nuevo cuando le pides que lo revise, no en el instante en que llega un mensaje. Para casi cualquier flujo de trabajo de asistente, ese es exactamente el modelo adecuado.
 
 ## ¿Es seguro conectar Gmail con Claude?

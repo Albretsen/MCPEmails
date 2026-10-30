@@ -235,7 +235,7 @@
       "title": "Déconnecter la boîte ?",
       "sub": "Cela révoquera l'accès et retirera cette boîte de votre espace de travail.",
       "cancel": "Annuler",
-      "body": "Toutes les clés API actuellement autorisées à accéder à cette boîte perdront l'accès immédiatement. Vous pouvez reconnecter cette boîte à tout moment.",
+      "body": "Toutes les clés API actuellement autorisées à accéder à cette boîte perdront l'accès immédiatement, et les e-mails programmés qui n'en sont pas encore partis seront annulés. Vous pouvez reconnecter cette boîte à tout moment.",
       "disconnecting": "Déconnexion…",
       "disconnect": "Déconnecter"
     },

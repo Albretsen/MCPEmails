@@ -12,7 +12,7 @@ Un solo agente de IA sobre todas ellas elimina el cambio constante, pero solo si
 
 ## Por qué un solo agente supera cambiar de cliente de correo
 
-Un cliente de correo te muestra cuentas. No responde preguntas. «¿En cuál de mis cuentas llegó el recibo de Stripe?» es una búsqueda en tres buzones más una valoración. Un agente con acceso a todos los buzones hace eso en una sola solicitud, y dejas de hacer tú de intermediario. La segunda ventaja: un único conjunto de hábitos, porque las mismas herramientas están detrás de cada cuenta.
+Un cliente de correo te muestra cuentas. No responde preguntas. «¿En cuál de mis cuentas llegó el recibo de Stripe?» es una búsqueda en tres buzones más una valoración. Un agente con acceso a todos los buzones hace eso en una sola solicitud, y dejas de hacer tú de intermediario. La segunda ventaja: un único conjunto de hábitos, porque las mismas herramientas están detrás de cada cuenta. [Varias cuentas de correo en Claude y ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) explica la configuración del conector en las dos apps.
 
 ## El agente encuentra los buzones por su cuenta
 
