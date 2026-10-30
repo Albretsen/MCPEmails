@@ -68,7 +68,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: 'Hi,',
     deleted: (email, date) => `Your MCPEmails account (${email}) was deleted on ${date}.`,
     immediate:
-      'We have already deleted the stored passwords and tokens of your connected inboxes, revoked your API keys and AI app connections, cancelled queued scheduled emails, cancelled any subscription, and asked Google to end our access to your Gmail inboxes.',
+      'We have already deleted the stored passwords and tokens of your connected inboxes, revoked your API keys and AI app connections, cancelled queued scheduled emails, cancelled any subscription, and, for any Gmail inbox connected with Google sign-in, asked Google to end our access.',
     rest: (date) =>
       `The rest of your account data, including workspace and inbox settings, the activity log and your send history, will be erased by ${date}. After that it cannot be restored.`,
     payments: 'Invoices and payment records are kept by our payment processor, Stripe, as accounting law requires.',
@@ -80,7 +80,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: 'Hei,',
     deleted: (email, date) => `MCPEmails-kontoen din (${email}) ble slettet ${date}.`,
     immediate:
-      'Vi har allerede slettet de lagrede passordene og tokenene for innboksene dine, trukket tilbake API-nøklene og tilkoblingene til AI-apper, kansellert planlagte e-poster som ventet, avsluttet eventuelle abonnementer og bedt Google om å fjerne tilgangen vår til Gmail-innboksene dine.',
+      'Vi har allerede slettet de lagrede passordene og tokenene for innboksene dine, trukket tilbake API-nøklene og tilkoblingene til AI-apper, kansellert planlagte e-poster som ventet, avsluttet eventuelle abonnementer og, for Gmail-innbokser koblet til med Google-pålogging, bedt Google om å fjerne tilgangen vår.',
     rest: (date) =>
       `Resten av kontodataene dine, blant annet innstillinger for arbeidsområder og innbokser, aktivitetsloggen og sendehistorikken, blir slettet innen ${date}. Etter det kan de ikke gjenopprettes.`,
     payments: 'Fakturaer og betalingsopplysninger oppbevares av betalingsleverandøren vår, Stripe, slik regnskapsreglene krever.',
@@ -92,7 +92,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: 'Hallo,',
     deleted: (email, date) => `Ihr MCPEmails-Konto (${email}) wurde am ${date} gelöscht.`,
     immediate:
-      'Wir haben bereits die gespeicherten Passwörter und Tokens Ihrer verbundenen Postfächer gelöscht, Ihre API-Schlüssel und Verbindungen zu KI-Apps widerrufen, wartende geplante E-Mails storniert, ein bestehendes Abonnement gekündigt und Google gebeten, unseren Zugriff auf Ihre Gmail-Postfächer zu beenden.',
+      'Wir haben bereits die gespeicherten Passwörter und Tokens Ihrer verbundenen Postfächer gelöscht, Ihre API-Schlüssel und Verbindungen zu KI-Apps widerrufen, wartende geplante E-Mails storniert, ein bestehendes Abonnement gekündigt und Google bei Gmail-Postfächern, die per Google-Anmeldung verbunden waren, gebeten, unseren Zugriff zu beenden.',
     rest: (date) =>
       `Die übrigen Kontodaten, darunter Workspace- und Postfacheinstellungen, das Aktivitätsprotokoll und Ihr Versandverlauf, werden bis zum ${date} gelöscht. Danach lassen sie sich nicht wiederherstellen.`,
     payments: 'Rechnungen und Zahlungsbelege bewahrt unser Zahlungsdienstleister Stripe auf, wie es das Buchhaltungsrecht verlangt.',
@@ -104,7 +104,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: 'Hola:',
     deleted: (email, date) => `Tu cuenta de MCPEmails (${email}) se eliminó el ${date}.`,
     immediate:
-      'Ya hemos borrado las contraseñas y los tokens guardados de tus bandejas conectadas, revocado tus claves de API y las conexiones con apps de IA, cancelado los correos programados pendientes, cancelado cualquier suscripción y pedido a Google que retire nuestro acceso a tus bandejas de Gmail.',
+      'Ya hemos borrado las contraseñas y los tokens guardados de tus bandejas conectadas, revocado tus claves de API y las conexiones con apps de IA, cancelado los correos programados pendientes, cancelado cualquier suscripción y, en las bandejas de Gmail conectadas con el inicio de sesión de Google, pedido a Google que retire nuestro acceso.',
     rest: (date) =>
       `El resto de los datos de tu cuenta, como los ajustes de espacios de trabajo y bandejas, el registro de actividad y tu historial de envíos, se borrará antes del ${date}. Después no se podrá recuperar.`,
     payments: 'Las facturas y los registros de pago los conserva nuestro procesador de pagos, Stripe, como exige la normativa contable.',
@@ -116,7 +116,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: 'Bonjour,',
     deleted: (email, date) => `Votre compte MCPEmails (${email}) a été supprimé le ${date}.`,
     immediate:
-      'Nous avons déjà supprimé les mots de passe et jetons enregistrés de vos boîtes connectées, révoqué vos clés API et les connexions aux apps d’IA, annulé les e-mails programmés en attente, résilié tout abonnement et demandé à Google de retirer notre accès à vos boîtes Gmail.',
+      'Nous avons déjà supprimé les mots de passe et jetons enregistrés de vos boîtes connectées, révoqué vos clés API et les connexions aux apps d’IA, annulé les e-mails programmés en attente, résilié tout abonnement et, pour les boîtes Gmail connectées avec la connexion Google, demandé à Google de retirer notre accès.',
     rest: (date) =>
       `Le reste des données de votre compte, dont les réglages des espaces de travail et des boîtes, le journal d’activité et votre historique d’envoi, sera effacé d’ici le ${date}. Il ne pourra plus être restauré ensuite.`,
     payments: 'Les factures et les justificatifs de paiement sont conservés par notre prestataire de paiement, Stripe, comme l’exige le droit comptable.',
@@ -128,7 +128,7 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
     greeting: '你好，',
     deleted: (email, date) => `你的 MCPEmails 账户（${email}）已于 ${date} 删除。`,
     immediate:
-      '我们已删除你所连接收件箱的已存储密码和令牌，撤销了你的 API 密钥和 AI 应用连接，取消了排队中的定时邮件和任何订阅，并已请求 Google 终止我们对你 Gmail 收件箱的访问。',
+      '我们已删除你所连接收件箱的已存储密码和令牌，撤销了你的 API 密钥和 AI 应用连接，取消了排队中的定时邮件和任何订阅，并已针对通过 Google 登录连接的 Gmail 收件箱，请求 Google 终止我们的访问。',
     rest: (date) => `其余账户数据，包括工作区和收件箱设置、活动日志以及发送记录，将在 ${date} 之前清除，之后无法恢复。`,
     payments: '发票和付款记录由我们的支付服务商 Stripe 按会计法规要求保存。',
     notYou: (support) => `如果这不是你本人的操作，请回复此邮件或写信至 ${support}。`,
