@@ -8,7 +8,7 @@ const { issueSupportFormToken } = await import('./form-token.ts');
 const { validateTicketRequest, sanitizeSlug, normalizeEmail, SUPPORT_CATEGORIES, SUPPORT_LIMITS } = await import(
   './validation.ts'
 );
-const { hashSupportIp, clientIp } = await import('./ip.ts');
+const { hashSupportIp, clientIp, normaliseIp } = await import('./ip.ts');
 
 const NOW = 1_760_000_000_000;
 const formToken = issueSupportFormToken(NOW - 30_000);
@@ -142,4 +142,32 @@ test('IP: first x-forwarded-for entry, x-real-ip fallback, keyed hash', () => {
   } finally {
     process.env.CSRF_SECRET = 'ab'.repeat(32);
   }
+});
+
+test('IP: IPv4 is kept as is, IPv6 is keyed by its /64', () => {
+  assert.equal(normaliseIp('203.0.113.5'), '203.0.113.5');
+  assert.equal(normaliseIp(' 203.0.113.5 '), '203.0.113.5');
+  assert.equal(normaliseIp('203.0.113.5:4433'), '203.0.113.5');
+  assert.equal(normaliseIp('2001:db8:1:2:3:4:5:6'), '2001:db8:1:2::/64');
+  assert.equal(normaliseIp('2001:DB8:1:2::ffff'), '2001:db8:1:2::/64');
+  assert.equal(normaliseIp('2001:0db8:0001:0002:aaaa:bbbb:cccc:dddd'), '2001:db8:1:2::/64');
+  assert.equal(normaliseIp('2001:db8::1'), '2001:db8:0:0::/64');
+  assert.equal(normaliseIp('[2001:db8:1:2::9]:443'), '2001:db8:1:2::/64');
+  assert.equal(normaliseIp('fe80::1%eth0'), 'fe80:0:0:0::/64');
+  assert.equal(normaliseIp('::1'), '0:0:0:0::/64');
+  // IPv4-mapped IPv6 is the IPv4 address, in both spellings.
+  assert.equal(normaliseIp('::ffff:203.0.113.5'), '203.0.113.5');
+  assert.equal(normaliseIp('::FFFF:cb00:7105'), '203.0.113.5');
+  assert.equal(normaliseIp('0:0:0:0:0:ffff:203.0.113.5'), '203.0.113.5');
+  // Unparseable input is used as given.
+  assert.equal(normaliseIp('not-an-ip'), 'not-an-ip');
+  assert.equal(normaliseIp('1:2:3'), '1:2:3');
+  assert.equal(normaliseIp('1::2::3'), '1::2::3');
+});
+
+test('IP: rotating within one /64 keeps the same hash, another /64 does not', () => {
+  const a = hashSupportIp('2001:db8:1:2::1');
+  assert.equal(a, hashSupportIp('2001:db8:1:2:dead:beef:0:7'));
+  assert.notEqual(a, hashSupportIp('2001:db8:1:3::1'));
+  assert.equal(hashSupportIp('::ffff:203.0.113.5'), hashSupportIp('203.0.113.5'));
 });

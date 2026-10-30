@@ -704,6 +704,40 @@ test('the send attaches List-Unsubscribe to marketing and to nothing else', asyn
   }
 });
 
+test('a win-back replies to the founder (lifecycleReplyTo), billing notices to support@', async () => {
+  const replyTos: unknown[] = [];
+  const realFetch = globalThis.fetch;
+  process.env.RESEND_API_KEY = 'test_key';
+  delete process.env.LIFECYCLE_EMAIL_REPLY_TO;
+  delete process.env.CANCEL_REPLY_TO;
+
+  globalThis.fetch = (async (_url: string, init: RequestInit) => {
+    replyTos.push(JSON.parse(String(init.body)).reply_to);
+    return new Response(JSON.stringify({ id: 'msg_1' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }) as typeof globalThis.fetch;
+
+  try {
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_14', scopeKey: 'sub_1:1', payload: payload() });
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_30', scopeKey: 'sub_1:2', payload: payload() });
+    await sendBillingLifecycleEmail({ to: TO, template: 'dunning_1', scopeKey: 'in_1', payload: payload() });
+    process.env.LIFECYCLE_EMAIL_REPLY_TO = 'Founder <founder@example.com>';
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_14', scopeKey: 'sub_1:3', payload: payload() });
+    assert.deepEqual(replyTos, [
+      'Asgeir Albretsen <asgeir@mcpemails.com>',
+      'Asgeir Albretsen <asgeir@mcpemails.com>',
+      'support@mcpemails.com',
+      'Founder <founder@example.com>',
+    ]);
+  } finally {
+    globalThis.fetch = realFetch;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.LIFECYCLE_EMAIL_REPLY_TO;
+  }
+});
+
 test('the sender never throws, and reports failure instead', async () => {
   const realFetch = globalThis.fetch;
   process.env.RESEND_API_KEY = 'test_key';

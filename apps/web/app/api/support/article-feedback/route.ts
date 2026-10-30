@@ -2,10 +2,12 @@
  * POST /api/support/article-feedback: the "Was this helpful?" answer under a
  * help article. Body: `{ articleId, locale, helpful }`.
  *
- * Answers 204 whether or not the vote was stored, like the other feedback
- * beacons: the article says thanks either way, and a failed write must never
- * look like a broken page. A body that is not a vote for a real article is
- * dropped without a write.
+ * A well-formed vote answers 204 whether or not it was stored: the article
+ * says thanks either way, and a failed write must never look like a broken
+ * page. A well-formed vote for an article id that does not exist is also 204,
+ * with no write. A malformed body (not JSON, over 1 KB, a missing or oversized
+ * id, a non-boolean `helpful`, a locale that is not a help locale) is 400.
+ * HelpCenter.jsx fires and forgets, so the status never reaches the reader.
  *
  * SUPPORT_RELEASE_GATE: hidden callers get the unmatched 404 on every method.
  */
@@ -15,8 +17,9 @@ import {
   parseArticleFeedback,
   voterKey,
 } from '@/lib/support/article-feedback';
-import { supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
+import { supportJson, supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
 import { clientIp, hashSupportIp } from '@/lib/support/ip';
+import { readBodyWithLimit } from '@/lib/support/read-body';
 import { getSupportViewer } from '@/lib/support/viewer';
 
 const MAX_BODY_BYTES = 1024;
@@ -29,17 +32,19 @@ export async function POST(request: Request): Promise<Response> {
   const viewer = await getSupportViewer();
   if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
 
+  const read = await readBodyWithLimit(request, MAX_BODY_BYTES);
+  if (!read.ok) return supportJson({ error: read.reason === 'too_large' ? 'body_too_large' : 'invalid_body' }, 400);
+  let body: unknown = null;
   try {
-    const raw = await request.text().catch(() => '');
-    if (raw.length > MAX_BODY_BYTES) return noContent();
-    let body: unknown = null;
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      return noContent();
-    }
-    const vote = await parseArticleFeedback(body);
-    if (!vote) return noContent();
+    body = JSON.parse(read.text);
+  } catch {
+    return supportJson({ error: 'invalid_body' }, 400);
+  }
+  try {
+    const parsed = await parseArticleFeedback(body);
+    if (parsed.kind === 'invalid') return supportJson({ error: parsed.error }, 400);
+    if (parsed.kind === 'unknown_article') return noContent();
+    const vote = parsed.vote;
     const userId = viewer.user?.id ?? null;
     const key = voterKey(userId, userId ? null : hashSupportIp(clientIp(request.headers)));
     if (!key) return noContent();

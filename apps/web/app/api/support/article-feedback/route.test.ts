@@ -103,24 +103,45 @@ test('a signed-out vote is keyed by a hash of the IP, never the address', async 
   assert.equal(upserts[0].row.user_id, null);
 });
 
-test('junk is answered 204 and never written', async () => {
+test('a malformed body is 400 and never written', async () => {
   viewer = INTERNAL;
   upserts.length = 0;
-  for (const body of [
-    'not json',
-    { articleId: 'no-such-article', locale: 'en', helpful: true },
-    { articleId: 'imap-password-rejected', locale: 'en', helpful: 'yes' },
-    { articleId: 'imap-password-rejected', helpful: true, padding: 'x'.repeat(2000) },
-  ]) {
+  const cases: [unknown, string][] = [
+    ['not json', 'invalid_body'],
+    ['[1,2]', 'invalid_body'],
+    ['null', 'invalid_body'],
+    [{ locale: 'en', helpful: true }, 'invalid_article_id'],
+    [{ articleId: '', locale: 'en', helpful: true }, 'invalid_article_id'],
+    [{ articleId: 'a'.repeat(121), locale: 'en', helpful: true }, 'invalid_article_id'],
+    [{ articleId: 'imap-password-rejected', locale: 'en', helpful: 'yes' }, 'invalid_helpful'],
+    [{ articleId: 'imap-password-rejected', locale: 'en' }, 'invalid_helpful'],
+    [{ articleId: 'imap-password-rejected', locale: 'xx', helpful: true }, 'invalid_locale'],
+    [{ articleId: 'imap-password-rejected', locale: 7, helpful: true }, 'invalid_locale'],
+    [{ articleId: 'imap-password-rejected', helpful: true, padding: 'x'.repeat(2000) }, 'body_too_large'],
+    [{ articleId: 'x'.repeat(100 * 1024), helpful: true }, 'body_too_large'],
+    // 400 characters, 1200 bytes: the cap is in bytes.
+    [{ articleId: 'imap-password-rejected', helpful: true, padding: '字'.repeat(400) }, 'body_too_large'],
+  ];
+  for (const [body, error] of cases) {
     const res = await route.POST(post(body));
-    assert.equal(res.status, 204);
+    assert.equal(res.status, 400, JSON.stringify(body).slice(0, 80));
+    assert.deepEqual(await res.json(), { error });
   }
   assert.equal(upserts.length, 0);
 });
 
-test('an unknown locale is stored as English', async () => {
+test('a well-formed vote for an unknown article is 204 with no write', async () => {
   viewer = INTERNAL;
   upserts.length = 0;
-  await route.POST(post({ articleId: 'imap-password-rejected', locale: 'xx', helpful: true }));
+  const res = await route.POST(post({ articleId: 'no-such-article', locale: 'en', helpful: true }));
+  assert.equal(res.status, 204);
+  assert.equal(upserts.length, 0);
+});
+
+test('a vote without a locale is stored as English', async () => {
+  viewer = INTERNAL;
+  upserts.length = 0;
+  const res = await route.POST(post({ articleId: 'imap-password-rejected', helpful: true }));
+  assert.equal(res.status, 204);
   assert.equal(upserts[0].row.locale, 'en');
 });

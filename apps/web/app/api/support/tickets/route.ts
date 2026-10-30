@@ -11,6 +11,7 @@ import { getTicketContextPreview } from '@/lib/support/context';
 import { sendSupportConfirmationEmail, sendSupportTicketEmail } from '@/lib/support/emails';
 import { supportJson, supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
 import { clientIp, hashSupportIp } from '@/lib/support/ip';
+import { readBodyWithLimit } from '@/lib/support/read-body';
 import { createSupabaseTicketStore, submitSupportTicket } from '@/lib/support/tickets';
 import { getSupportViewer } from '@/lib/support/viewer';
 
@@ -21,8 +22,11 @@ export async function POST(request: Request): Promise<Response> {
   const viewer = await getSupportViewer();
   if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
 
-  const rawBody = await request.text().catch(() => '');
-  if (rawBody.length > MAX_BODY_BYTES) return supportJson({ ok: false, error: 'message_too_long' }, 400);
+  const read = await readBodyWithLimit(request, MAX_BODY_BYTES);
+  if (!read.ok) {
+    return supportJson({ ok: false, error: read.reason === 'too_large' ? 'message_too_long' : 'invalid_json' }, 400);
+  }
+  const rawBody = read.text;
 
   let store;
   try {
