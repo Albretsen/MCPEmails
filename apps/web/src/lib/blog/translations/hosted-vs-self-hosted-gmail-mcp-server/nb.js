@@ -65,7 +65,7 @@ Du registrerer deg, går til **Dashboard → Inboxes → Connect Inbox**, velger
 
 ### Legitimasjon er kryptert og e-post lagres aldri
 
-Innbokslegitimasjonen (apppassordet eller OAuth-tokenet) er det eneste som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Nøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, og legitimasjonen dekrypteres på serverne våre bare når en forespørsel trenger den. Den sendes aldri til agenten din. Selve e-posten lagres aldri i det hele tatt. Hvert \`email_read\`-kall (enten du lister, leser eller søker) treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
+Innbokslegitimasjonen (apppassordet eller OAuth-tokenet) er det som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Utover det beholdes bare de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt. Nøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, og legitimasjonen dekrypteres på serverne våre bare når en forespørsel trenger den. Den sendes aldri til agenten din. Selve e-posten lagres aldri i det hele tatt. Hvert \`email_read\`-kall (enten du lister, leser eller søker) treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
 
 ### Multi-leverandør følger med gratis
 

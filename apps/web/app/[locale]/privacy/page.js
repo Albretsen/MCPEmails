@@ -67,6 +67,7 @@ export default async function PrivacyPage({ params }) {
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     c: (c) => <code>{c}</code>,
+    dpa: (c) => <Link href="/dpa">{c}</Link>,
   };
   return (
     <div>
@@ -102,7 +103,7 @@ export default async function PrivacyPage({ params }) {
                   b: (c) => <strong>{c}</strong>,
                 })}
               </p>
-              <p>{t('whoWeAre.p2')}</p>
+              <p>{t.rich('whoWeAre.p2', richTags)}</p>
               <p>
                 {t.rich('whoWeAre.p3', {
                   companyName: COMPANY_NAME,
@@ -194,6 +195,7 @@ export default async function PrivacyPage({ params }) {
                 <li>{t.rich('howWeUseData.googleScopeReadonly', richTags)}</li>
                 <li>{t.rich('howWeUseData.googleScopeSend', richTags)}</li>
                 <li>{t.rich('howWeUseData.googleScopeModify', richTags)}</li>
+                <li>{t.rich('howWeUseData.googleScopeSettings', richTags)}</li>
               </ul>
               <p>{t('howWeUseData.googleLimitedIntro')}</p>
               <ul>
@@ -283,7 +285,7 @@ export default async function PrivacyPage({ params }) {
             <LegalSection id="third-parties" title={t('thirdParties.title')}>
 
               <h4>{t('thirdParties.infraTitle')}</h4>
-              <p>{t('thirdParties.infraP')}</p>
+              <p>{t.rich('thirdParties.infraP', richTags)}</p>
 
               <div className="legal-table-wrap">
                 <table className="legal-table">
@@ -313,6 +315,18 @@ export default async function PrivacyPage({ params }) {
                       <td>{t('thirdParties.relayPurpose')}</td>
                       <td>{t('thirdParties.relayData')}</td>
                       <td>{t('thirdParties.relayLocation')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Resend</strong></td>
+                      <td>{t('thirdParties.resendPurpose')}</td>
+                      <td>{t('thirdParties.resendData')}</td>
+                      <td>{t('thirdParties.resendLocation')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Migadu</strong></td>
+                      <td>{t('thirdParties.migaduPurpose')}</td>
+                      <td>{t('thirdParties.migaduData')}</td>
+                      <td>{t('thirdParties.migaduLocation')}</td>
                     </tr>
                     <tr>
                       <td><strong>Stripe</strong> {t('thirdParties.stripeProvider')}</td>

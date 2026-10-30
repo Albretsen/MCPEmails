@@ -80,6 +80,7 @@ export default async function TermsPage({ params }) {
     email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
     withdrawal: (c) => <Link href="/withdrawal">{c}</Link>,
     cancel: (c) => <Link href="/cancel">{c}</Link>,
+    dpa: (c) => <Link href="/dpa">{c}</Link>,
   };
   return (
     <div>

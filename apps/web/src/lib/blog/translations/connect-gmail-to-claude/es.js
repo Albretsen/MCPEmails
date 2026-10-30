@@ -83,7 +83,7 @@ Conviene saberlo de entrada: MCPEmails funciona por sondeo. No hay webhooks push
 
 Versión corta: sí, y el diseño está construido en torno a ello.
 
-- **Tu correo nunca se almacena.** Los cuerpos, los asuntos y los adjuntos se obtienen en directo en cada llamada, se entregan a Claude y se descartan de inmediato. Lo único que se guarda por bandeja es la credencial cifrada, tu contraseña de aplicación. Aquí tienes [por qué importa de verdad que "el correo nunca se almacena"](/blog/why-email-never-stored-matters).
+- **Tu correo nunca se almacena.** Los cuerpos, los asuntos y los adjuntos se obtienen en directo en cada llamada, se entregan a Claude y se descartan de inmediato. Por cada bandeja se guarda la credencial cifrada, tu contraseña de aplicación, además de los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse. Aquí tienes [por qué importa de verdad que "el correo nunca se almacena"](/blog/why-email-never-stored-matters).
 - **Tú controlas el alcance.** Aprueba solo lectura y Claude literalmente no puede enviar. Aprueba ambos y aun así podrás revocar cualquiera de los dos en cualquier momento.
 - **Sin compartir contraseñas.** Tu contraseña normal de Google nunca llega a MCPEmails. Una contraseña de aplicación es una credencial aparte que puedes revocar en myaccount.google.com/apppasswords cuando quieras, o puedes eliminar la bandeja en MCPEmails.
 
@@ -95,7 +95,7 @@ El modelo de amenazas completo (qué está cifrado, qué vería y qué no vería
 No. Claude admite OAuth, así que pegas la URL del endpoint y apruebas un inicio de sesión. Las claves de API son solo para clientes sin OAuth integrado.
 
 **¿Claude almacena mis mensajes de Gmail?**
-No. El correo se obtiene en directo desde Gmail en cada solicitud y se descarta justo después de que Claude lo lea. No se retiene nada salvo tu credencial cifrada (la contraseña de aplicación).
+No. El correo se obtiene en directo desde Gmail en cada solicitud y se descarta justo después de que Claude lo lea. No se retiene nada del correo que lee Claude; lo que se guarda es tu credencial cifrada (la contraseña de aplicación).
 
 **¿Puede Claude enviar correo desde mi Gmail?**
 Sí, si concedes el permiso \`send:email\`. Los envíos salen a través de Gmail como mensajes normales desde tu propia cuenta. Concede solo lectura si prefieres que Claude no envíe nunca.

@@ -12,8 +12,8 @@
     "title": "1. Den korte versjonen",
     "intro": "Hvis du ikke leser noe annet på denne siden:",
     "points": [
-      "E-posten din hentes i sanntid ved hver forespørsel og forkastes i det øyeblikket svaret er sendt. Vi beholder ingen kopi av noen meldingstekst, emnefelt, vedlegg eller kontakt.",
-      "Vi lagrer nøyaktig én sensitiv ting per innboks: et tilgangstoken eller app-passord, kryptert med AES-256-GCM, slik at vi kan utføre det neste kallet du ber om.",
+      "E-posten din hentes live ved hver forespørsel og forkastes i det øyeblikket svaret er sendt. Vi beholder ingen kopi av e-posten agenten din leser.",
+      "Per innboks lagrer vi et tilgangstoken eller app-passord, kryptert med AES-256-GCM, slik at vi kan gjøre neste kall du ber om. Noen funksjoner tar vare på en liten del av en melding mens du bruker dem: planlagte og tilbakeholdte sendinger, oppfølging og utsettelse, og kjøreloggen for automatiseringer. Avsnitt 2 viser hver av dem.",
       "Vi trener aldri noen KI-modell på e-posten din, og vi sender aldri e-posten din til en modell vi selv velger. Agenten din er det eneste som leser den, under din kontroll.",
       "Tilgang er begrenset av legitimasjonen du konfigurerer: API-nøkler kan avgrenses til valgte innbokser eller få tilgang til alle innboksene i arbeidsområdet. Du kan når som helst tilbakekalle leverandørtilgang fra innstillingene hos Google, Microsoft eller leverandøren din.",
       "Koden som driver tjenesten er åpen. Du kan lese den, revidere den eller drifte hele greia selv."
@@ -49,12 +49,22 @@
       {
         "data": "Meldinger du planlegger for senere",
         "accessed": "Holdes til sendetidspunktet, deretter sendt",
-        "stored": "Ja, kryptert i hvile til den er sendt, deretter beholdt som din historikk"
+        "stored": "Ja, kryptert i hvile til den er sendt; innholdet slettes 7 dager etter sending"
       },
       {
         "data": "Sendinger som venter på godkjenning",
         "accessed": "Holdes til noen godkjenner eller avviser dem, eller de utløper etter 24 timer",
-        "stored": "Ja, kryptert i hvile, deretter beholdt som godkjenningshistorikken din"
+        "stored": "Ja, kryptert i hvile. Innholdet slettes 7 dager etter avgjørelsen; godkjenningsoppføringen (mottakere og emne, kryptert) beholdes i 90 dager"
+      },
+      {
+        "data": "Oppfølging og utsettelse",
+        "accessed": "Sjekkes i bakgrunnen til påminnelsen er fullført",
+        "stored": "Emne, avsender og mottakere, kryptert, til påminnelsen er fullført. Aldri brødteksten"
+      },
+      {
+        "data": "Kjørelogg for automatiseringer",
+        "accessed": "Skrives når en automatisering behandler en melding",
+        "stored": "Avsender og de første 120 tegnene i emnet, i 90 dager. Aldri brødteksten"
       },
       {
         "data": "Verktøykall-aktivitet (metadata)",
@@ -62,13 +72,13 @@
         "stored": "Kun verktøynavn, innboks, tidsstempel og status. Ikke noe e-postinnhold"
       }
     ],
-    "outro": "De bevisste unntakene er utgående meldinger som må vente: en melding du ber agenten planlegge for senere, og en sending som holdes tilbake for godkjenning. Vi må holde på dem til de sendes, så vi lagrer dem kryptert i mellomtiden, og beholder deretter en oppføring for historikken din."
+    "outro": "De bevisste unntakene er funksjoner som må huske deler av en melding: en planlagt eller tilbakeholdt sending, en oppfølging eller utsettelse, og kjøreloggen for automatiseringer. Hver av dem beholder bare det den trenger, så lenge tabellen over sier."
   },
   "verify": {
     "title": "3. Du trenger ikke å stole på meg, du kan sjekke",
     "p1": "\"En tilfeldig person vibe-kodet dette\" er en rimelig bekymring for ethvert driftet verktøy som berører e-posten din. Det riktige svaret er ikke et større løfte. Det er å fjerne behovet for å ta meg på ordet.",
     "points": [
-      "<b>Les koden.</b> Serveren som driver MCPEmails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token) og hva den ikke beholder (e-posten din).",
+      "<b>Les koden.</b> Serveren som driver MCPEmails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token, pluss funksjonsoppføringene i tabellen over) og hva den ikke beholder (e-posten agenten din leser).",
       "<selfhost><b>Drift den selv.</b></selfhost> Hvis du heller ikke vil bruke den driftede tjenesten i det hele tatt, kan du kjøre den samme koden på din egen infrastruktur med dine egne nøkler: en Docker-oppsett med én kommando ligger i <selfhost>self-host/</selfhost>.",
       "<b>Bruk en avgrenset, tilbakekallbar tilkobling.</b> Du kobler til med OAuth eller et app-passord som kun gir tilgang til e-post, og du kan tilbakekalle den med ett klikk hos leverandøren din, uten at jeg er involvert.",
       "<b>Se hva den gjør.</b> Hvert verktøykall agenten din gjør registreres i en aktivitetslogg du kan lese, så du ser nøyaktig hva som ble lest og når."
@@ -81,14 +91,14 @@
     "points": [
       "<b>Innbokstilgang kan konfigureres.</b> API-nøkler kan avgrenses til valgte innbokser eller bevisst få tilgang til alle innbokser i et arbeidsområde. En avgrenset nøkkel kan ikke nå en innboks den ikke har fått tilgang til.",
       "<b>Destruktive handlinger er adskilt og merket.</b> Sending og sletting er egne verktøy med separate omfang; sletting krever <code>confirm: true</code>. Om klienten viser brukeren en bekreftelse, styres av klientens policy.",
-      "<b>Minst mulig privilegier.</b> Tilkoblinger ber om tilgang til å lese og skrive e-post, ikke kontoomfattende kontroll. Selv et fullstendig kompromittert token er begrenset av omfanget du innvilget.",
+      "<b>Bare e-post.</b> Tilkoblinger ber om tilgang til e-post, aldri til hele kontoen din: ingen kalender, filer eller kontakter. Innenfor e-post er tilgangen bred, fordi verktøyene trenger det: lese, organisere, slette og sende. Med Google-pålogging lar Gmail oss også lese «Send e-post som»-adressene dine. Hva agenten din får gjøre med tilgangen, begrenses av tillatelsene du gir hver KI-app eller API-nøkkel, og av innboksbegrensninger.",
       "<b>Hastighetsbegrenset.</b> Hver nøkkel er hastighetsbegrenset, så en løpsk eller kapret agent kan ikke utløse tusenvis av handlinger ubemerket."
     ],
     "outro": "Ikke løst. Begrenset: irreversible handlinger er sikret, og API-nøkkelomfang og innboksbegrensninger kan redusere skadeomfanget."
   },
   "credentials": {
     "title": "5. Slik beskyttes legitimasjonen din",
-    "intro": "Tokenene dine er det eneste sensitive vi holder på, så de får den sterkeste beskyttelsen vi kan gi dem:",
+    "intro": "Tokenene og passordene til innboksene dine er det mest sensitive vi holder på, så de får den sterkeste beskyttelsen vi kan gi dem:",
     "measures": [
       "All data under overføring krypteres med TLS 1.2 eller høyere. Tilkoblinger som ikke støtter TLS avvises.",
       "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen holdes som en serverhemmelighet, adskilt fra databasen, og lagres aldri sammen med de krypterte dataene.",
@@ -105,7 +115,7 @@
   },
   "subprocessors": {
     "title": "7. Underleverandører",
-    "intro": "Vi holder listen over selskaper som berører data kort, og hvert er bundet av en databehandleravtale. Legg merke til hva som mangler: ingen KI-leverandør står på denne listen. MCPEmails sender ikke e-posten din til noen egen modell. Agenten din gjør det, under din kontroll og leverandørens datapolicy.",
+    "intro": "Vi holder listen over selskaper som berører data kort. Hvert av dem behandler data bare etter våre instruksjoner, under en databehandleravtale eller leverandørens standardvilkår for databehandling, og vår <dpa>databehandleravtale</dpa> er tilgjengelig for kunder som trenger en. Legg merke til hva som mangler: ingen KI-leverandør står på denne listen. MCPEmails sender ikke e-posten din til noen egen modell. Agenten din gjør det, under din kontroll og leverandørens datapolicy.",
     "thProvider": "Leverandør",
     "thPurpose": "Formål",
     "thLocation": "Plassering",
@@ -124,6 +134,16 @@
         "provider": "Hetzner",
         "purpose": "E-postrelé for de få leverandørene som avviser tilkoblinger fra skyadresser (en TLS-tunnel: det kan ikke lese e-post eller passord)",
         "location": "Tyskland (EU)"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "E-post om konto, fakturering og support, og markedsførings-e-post hvis du har samtykket (aldri innhold fra postkassen din)",
+        "location": "USA"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Våre egne support- og noreply-postkasser (e-post om registrering og passord, supporthenvendelser)",
+        "location": "Sveits / EU"
       },
       {
         "provider": "Stripe",

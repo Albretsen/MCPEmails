@@ -29,7 +29,7 @@
   "why": {
     "title": "Por qué lo hice",
     "p1": "Quería que mis propios agentes trabajaran con mi bandeja de entrada. Todas las opciones que encontré pedían antes una copia de mi correo: sincronizarlo, indexarlo y guardarlo en la base de datos de otro mientras existiera la cuenta. Para un buzón lleno de facturas, contratos y restablecimientos de contraseña, era mucho ceder a cambio de algo que solo necesitaba de vez en cuando.",
-    "p2": "Así que hice la versión que yo sí estaba dispuesto a usar. El correo se consulta en directo cuando tu agente lo pide y se descarta en cuanto se envía la respuesta, así que no queda ninguna copia guardada. Lo único que se conserva es la credencial del buzón, cifrada en reposo, porque la necesita la siguiente llamada. Uso MCPEmails con mi propio correo todos los días."
+    "p2": "Así que hice la versión que yo sí estaba dispuesto a usar. El correo se consulta en directo cuando tu agente lo pide y se descarta en cuanto se envía la respuesta, así que no queda ninguna copia guardada. Por cada buzón se conserva la credencial, cifrada en reposo, porque la necesita la siguiente llamada, además de los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse. Uso MCPEmails con mi propio correo todos los días."
   },
   "trusting": {
     "title": "En qué estás confiando",

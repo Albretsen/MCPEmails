@@ -88,7 +88,7 @@ MCPEmails sender ikke ny e-post til Claude av seg selv. Claude sjekker når du b
 
 ## Lagres Outlook.com-e-posten min noe sted?
 
-Nei. Hver gang Claude ber om en melding, henter MCPEmails den direkte fra Microsoft, sender den videre til Claude og forkaster den. Det eneste som lagres for innboksen, er OAuth-tokenet fra Microsoft-påloggingen din, og det lagres kryptert. For å koble fra sletter du innboksen i MCPEmails, eller fjerner MCPEmails fra appene som har tilgang til Microsoft-kontoen din. [Hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters) forklarer modellen, og [er det trygt å gi en AI-agent tilgang til e-post?](/blog/is-it-safe-to-give-ai-agent-email-access) tar for seg hva du bør passe på, for eksempel instruksjoner som er gjemt inne i en e-post.
+Nei. Hver gang Claude ber om en melding, henter MCPEmails den direkte fra Microsoft, sender den videre til Claude og forkaster den. For innboksen lagres OAuth-tokenet fra Microsoft-påloggingen din, kryptert, pluss de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt. For å koble fra sletter du innboksen i MCPEmails, eller fjerner MCPEmails fra appene som har tilgang til Microsoft-kontoen din. [Hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters) forklarer modellen, og [er det trygt å gi en AI-agent tilgang til e-post?](/blog/is-it-safe-to-give-ai-agent-email-access) tar for seg hva du bør passe på, for eksempel instruksjoner som er gjemt inne i en e-post.
 
 ## Vanlige spørsmål
 

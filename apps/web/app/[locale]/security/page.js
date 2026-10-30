@@ -201,7 +201,7 @@ export default async function SecurityPage({ params }) {
 
             {/* 7 - Subprocessors */}
             <LegalSection id="subprocessors" title={t('subprocessors.title')}>
-              <p>{t('subprocessors.intro')}</p>
+              <p>{t.rich('subprocessors.intro', { dpa: (c) => <Link href="/dpa">{c}</Link> })}</p>
               <div className="legal-table-wrap">
                 <table className="legal-table">
                   <thead>

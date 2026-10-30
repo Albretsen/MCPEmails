@@ -12,8 +12,8 @@
     "title": "1. Die Kurzfassung",
     "intro": "Falls Sie sonst nichts auf dieser Seite lesen:",
     "points": [
-      "Ihre E-Mails werden bei jeder Anfrage live abgerufen und verworfen, sobald die Antwort gesendet ist. Wir behalten keine Kopie von Nachrichtentext, Betreff, Anhang oder Kontakt.",
-      "Pro Postfach speichern wir genau eine sensible Sache: ein Zugriffstoken oder App-Passwort, verschlüsselt mit AES-256-GCM, damit wir Ihren nächsten Aufruf ausführen können.",
+      "Ihre E-Mails werden bei jeder Anfrage live abgerufen und verworfen, sobald die Antwort gesendet ist. Von den E-Mails, die Ihr Agent liest, behalten wir keine Kopie.",
+      "Pro Postfach speichern wir ein Zugriffstoken oder App-Passwort, verschlüsselt mit AES-256-GCM, damit wir den nächsten Aufruf ausführen können, um den Sie bitten. Einige Funktionen bewahren einen kleinen Teil einer Nachricht auf, solange Sie sie nutzen: geplante und zurückgehaltene Sendungen, Nachfassen und Zurückstellen sowie das Ausführungsprotokoll der Automatisierungen. Abschnitt 2 nennt jede davon.",
       "Wir trainieren nie ein KI-Modell mit Ihren E-Mails und senden sie nie an ein Modell unserer Wahl. Nur Ihr Agent liest sie, unter Ihrer Kontrolle.",
       "Der Zugriff hängt von den Zugangsdaten ab, die Sie einrichten: API-Schlüssel lassen sich auf ausgewählte Postfächer beschränken oder für alle Postfächer im Workspace freigeben. Den Anbieterzugriff können Sie jederzeit in den Einstellungen von Google, Microsoft oder Ihrem Anbieter widerrufen.",
       "Der Code, auf dem der Dienst läuft, ist öffentlich. Sie können ihn lesen, prüfen oder alles selbst hosten."
@@ -49,12 +49,22 @@
       {
         "data": "Geplante Nachrichten",
         "accessed": "Bis zum Sendezeitpunkt vorgehalten, dann versendet",
-        "stored": "Ja, verschlüsselt bis zum Versand, danach als Ihr Verlauf"
+        "stored": "Ja, verschlüsselt bis zum Versand; der Inhalt wird 7 Tage nach dem Versand gelöscht"
       },
       {
         "data": "Sendungen, die auf Ihre Freigabe warten",
         "accessed": "Vorgehalten, bis jemand sie freigibt oder ablehnt, oder sie nach 24 Stunden ablaufen",
-        "stored": "Ja, verschlüsselt gespeichert, danach als Ihr Freigabeverlauf aufbewahrt"
+        "stored": "Ja, verschlüsselt gespeichert. Der Inhalt wird 7 Tage nach der Entscheidung gelöscht; der Freigabedatensatz (Empfänger und Betreff, verschlüsselt) bleibt 90 Tage erhalten"
+      },
+      {
+        "data": "Nachfassen und Zurückstellen",
+        "accessed": "Im Hintergrund geprüft, bis die Erinnerung erledigt ist",
+        "stored": "Betreff, Absender und Empfänger, verschlüsselt, bis die Erinnerung erledigt ist. Nie der Nachrichtentext"
+      },
+      {
+        "data": "Ausführungsprotokoll der Automatisierungen",
+        "accessed": "Geschrieben, wenn eine Automatisierung auf eine Nachricht angewendet wird",
+        "stored": "Absender und die ersten 120 Zeichen des Betreffs, 90 Tage lang. Nie der Nachrichtentext"
       },
       {
         "data": "Tool-Aufrufe (Metadaten)",
@@ -62,13 +72,13 @@
         "stored": "Nur Tool-Name, Postfach, Zeitstempel und Status. Kein E-Mail-Inhalt"
       }
     ],
-    "outro": "Die bewussten Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, die der Agent später senden soll, und eine Sendung, die auf Ihre Freigabe wartet. Wir müssen sie vorhalten, bis sie rausgehen, speichern sie so lange verschlüsselt und behalten danach einen Eintrag für Ihren Verlauf."
+    "outro": "Die bewussten Ausnahmen sind Funktionen, die sich einen Teil einer Nachricht merken müssen: eine geplante oder zurückgehaltene Sendung, Nachfassen oder Zurückstellen und das Ausführungsprotokoll der Automatisierungen. Jede behält nur, was sie braucht, und nur so lange, wie die Tabelle oben angibt."
   },
   "verify": {
     "title": "3. Sie müssen mir nicht vertrauen, Sie können es prüfen",
     "p1": "„Das hat irgendwer schnell zusammengecodet“ ist eine berechtigte Sorge bei jedem gehosteten Tool, das auf Ihre E-Mails zugreift. Die richtige Antwort ist kein größeres Versprechen, sondern dass Sie mir gar nicht aufs Wort glauben müssen.",
     "points": [
-      "<b>Lesen Sie den Code.</b> Der Server hinter MCPEmails ist öffentlich auf GitHub. Sie sehen genau, was er speichert (ein verschlüsseltes Token) und was nicht (Ihre E-Mails).",
+      "<b>Lesen Sie den Code.</b> Der Server hinter MCPEmails ist öffentlich auf GitHub. Sie sehen genau, was er speichert (ein verschlüsseltes Token und die oben genannten Funktionsdaten) und was nicht (die E-Mails, die Ihr Agent liest).",
       "<selfhost><b>Hosten Sie es selbst.</b></selfhost> Wenn Sie den gehosteten Dienst gar nicht nutzen möchten, betreiben Sie denselben Code auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln: Ein Docker-Stack mit einem einzigen Befehl liegt in <selfhost>self-host/</selfhost>.",
       "<b>Nutzen Sie eine begrenzte, widerrufbare Verbindung.</b> Sie verbinden sich per OAuth oder App-Passwort, das nur E-Mail-Zugriff gewährt, und können es bei Ihrem Anbieter mit einem Klick widerrufen, ganz ohne mich.",
       "<b>Sehen Sie, was passiert.</b> Jeder Tool-Aufruf Ihres Agenten landet in einem Aktivitätsprotokoll, das Sie lesen können. So sehen Sie genau, worauf wann zugegriffen wurde."
@@ -81,14 +91,14 @@
     "points": [
       "<b>Der Postfachzugriff ist konfigurierbar.</b> API-Schlüssel lassen sich auf ausgewählte Postfächer beschränken oder bewusst für alle Postfächer eines Workspace freigeben. Ein beschränkter Schlüssel erreicht kein Postfach, für das er nicht freigegeben wurde.",
       "<b>Destruktive Aktionen sind getrennt und gekennzeichnet.</b> Senden und Löschen sind eigene Tools mit eigenen Berechtigungen; Löschen erfordert <code>confirm: true</code>. Ob ein Client eine Bestätigung beim Nutzer einholt, bestimmt die Richtlinie dieses Clients.",
-      "<b>Minimale Rechte.</b> Verbindungen fordern Lese- und Schreibzugriff auf E-Mails an, keine Kontrolle über das ganze Konto. Selbst ein vollständig kompromittiertes Token ist auf die von Ihnen erteilten Rechte begrenzt.",
+      "<b>Nur E-Mail.</b> Verbindungen fordern Zugriff auf E-Mails an, nie auf Ihr ganzes Konto: keinen Kalender, keine Dateien, keine Kontakte. Innerhalb der E-Mails ist der Zugriff weit, weil die Tools ihn brauchen: lesen, organisieren, löschen und senden. Mit der Google-Anmeldung dürfen wir bei Gmail außerdem Ihre Adressen unter „Senden als“ lesen. Was Ihr Agent mit diesem Zugriff tun darf, begrenzen die Berechtigungen, die Sie jeder KI-App oder jedem API-Schlüssel geben, und Einschränkungen auf bestimmte Postfächer.",
       "<b>Ratenlimits.</b> Jeder Schlüssel hat ein Ratenlimit. Ein außer Kontrolle geratener oder gekaperter Agent kann also nicht unbemerkt Tausende Aktionen auslösen."
     ],
     "outro": "Nicht gelöst, aber eingedämmt: Unumkehrbare Aktionen sind abgesichert, und die Berechtigungen von API-Schlüsseln sowie Postfachbeschränkungen können den möglichen Schaden begrenzen."
   },
   "credentials": {
     "title": "5. So werden Ihre Zugangsdaten geschützt",
-    "intro": "Ihre Tokens sind das einzig Sensible, das wir aufbewahren. Deshalb bekommen sie den stärksten Schutz, den wir bieten können:",
+    "intro": "Die Tokens und Passwörter Ihrer Postfächer sind das Sensibelste, was wir aufbewahren. Deshalb bekommen sie den stärksten Schutz, den wir bieten können:",
     "measures": [
       "Alle Daten werden bei der Übertragung mit TLS 1.2 oder höher verschlüsselt. Verbindungen ohne TLS werden abgelehnt.",
       "OAuth-Tokens und IMAP-Zugangsdaten werden im Ruhezustand mit AES-256-GCM verschlüsselt. Der Schlüssel liegt als Server-Secret getrennt von der Datenbank und wird nie zusammen mit den verschlüsselten Daten gespeichert.",
@@ -105,7 +115,7 @@
   },
   "subprocessors": {
     "title": "7. Unterauftragsverarbeiter",
-    "intro": "Die Liste der Unternehmen, die überhaupt mit Daten in Berührung kommen, halten wir kurz, und jedes ist an einen Auftragsverarbeitungsvertrag gebunden. Beachten Sie, was fehlt: Kein KI-Anbieter steht auf dieser Liste. MCPEmails sendet Ihre E-Mails an kein eigenes Modell. Das tut Ihr Agent, unter Ihrer Kontrolle und nach den Datenrichtlinien seines Anbieters.",
+    "intro": "Die Liste der Unternehmen, die überhaupt mit Daten in Berührung kommen, halten wir kurz. Jedes verarbeitet Daten nur nach unseren Weisungen, auf Grundlage eines Auftragsverarbeitungsvertrags oder der Standardbedingungen des Anbieters zur Datenverarbeitung, und unser <dpa>Auftragsverarbeitungsvertrag</dpa> steht Kunden zur Verfügung, die einen brauchen. Beachten Sie, was fehlt: Kein KI-Anbieter steht auf dieser Liste. MCPEmails sendet Ihre E-Mails an kein eigenes Modell. Das tut Ihr Agent, unter Ihrer Kontrolle und nach den Datenrichtlinien seines Anbieters.",
     "thProvider": "Anbieter",
     "thPurpose": "Zweck",
     "thLocation": "Standort",
@@ -124,6 +134,16 @@
         "provider": "Hetzner",
         "purpose": "Mail-Relay für die wenigen Anbieter, die Verbindungen von Cloud-Adressen ablehnen (ein TLS-Tunnel: Es kann weder E-Mails noch Passwörter lesen)",
         "location": "Deutschland (EU)"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "Konto-, Abrechnungs- und Support-E-Mails sowie Marketing-E-Mails, wenn Sie eingewilligt haben (nie Inhalte aus Ihrem Postfach)",
+        "location": "USA"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Unsere eigenen Support- und noreply-Postfächer (Registrierungs- und Passwort-E-Mails, Support-Nachrichten)",
+        "location": "Schweiz / EU"
       },
       {
         "provider": "Stripe",

@@ -72,7 +72,7 @@ You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and 
 
 ### Credentials are encrypted and email is never stored
 
-The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key is kept as a server secret, separate from the database, and the credential is decrypted on our servers only when a request needs it. It's never sent to your agent. The email itself is never stored at all. Every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
+The inbox credential (the app password or OAuth token) is what is persisted per inbox, and it's encrypted with AES-256-GCM at rest. Beyond that, only the few details a feature you turn on needs are kept, such as a scheduled message waiting to go out. The key is kept as a server secret, separate from the database, and the credential is decrypted on our servers only when a request needs it. It's never sent to your agent. The email itself is never stored at all. Every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
 
 ### Multi-provider comes free
 

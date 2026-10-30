@@ -65,9 +65,9 @@ Pick OAuth, not "no authentication". This server refuses anonymous calls, so a c
 
 ## Step 3: Approve only the scopes you need
 
-The consent screen is ours, not OpenAI's. The first consent starts at \`read:email\`, which is enough for triage, summarizing and finding things, and takes every irreversible action off the table while you decide how far to go. The other scopes are \`send:email\`, \`search:email\` and \`manage:automations\`.
+The consent screen is ours, not OpenAI's. For ChatGPT it opens on **Full access**, because ChatGPT does not come back to ask for more access later. Pick a narrower level before you click **Allow access** if you want one: **Read-only** is enough for triage, summarizing and finding things, and takes every irreversible action off the table. **Customize permissions** lists all nine permissions (read, search, send, folders, delete, drafts, contacts, scheduling and automations). The screen also lets every inbox in the workspace be reached by default, including ones you connect later; choose specific inboxes there to limit it.
 
-Granting too little is recoverable: a call that needs a scope your token lacks comes back as a 403 with an insufficient-scope error, so the client can re-consent for that scope and retry. An inbox owner can also require [human approval](/blog/approve-ai-agent-email-sends) in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it.
+Granting too little is recoverable. When a tool needs a permission ChatGPT's connection lacks, the tool result says which one is missing and asks ChatGPT to reconnect. An inbox owner can also require [human approval](/blog/approve-ai-agent-email-sends) in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it.
 
 ## Step 4: Give ChatGPT a safe first task
 
