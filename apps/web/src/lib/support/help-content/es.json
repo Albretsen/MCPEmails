@@ -258,7 +258,11 @@
     "from": "Abierto desde",
     "provider": "Proveedor",
     "code": "Código de error",
-    "never": "Nunca se adjuntan contraseñas, tokens ni el contenido de tu correo."
+    "never": "Nunca se adjuntan contraseñas, tokens ni el contenido de tu correo.",
+    "healthConnected": "Conectada",
+    "healthPending": "Pendiente",
+    "healthNeedsReconnect": "Hay que reconectarla",
+    "healthUnavailable": "No se puede usar"
   },
   "errors": {
     "invalid_json": "Algo falló al enviar el formulario. Recarga la página e inténtalo de nuevo.",

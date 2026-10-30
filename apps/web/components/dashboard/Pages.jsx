@@ -11,6 +11,7 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { inboxHealth, lastErrorForDisplay } from '@/lib/inboxes/health';
 import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
@@ -1144,7 +1145,9 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   // non-deleted inbox, so a mailbox whose credentials had expired was invisible
   // here and still occupied a slot against the cap.
   const inboxCount = inboxes?.length ?? 0;
-  const activeInboxCount = (inboxes ?? []).filter((i) => i.status === 'active').length;
+  // An 'active' row whose password the mail server refused is not active:
+  // the mcp-server reports it as reconnect_required (src/lib/inboxes/health.ts).
+  const activeInboxCount = (inboxes ?? []).filter((i) => i.status === 'active' && inboxRowHealth(i) === 'ok').length;
   // The overview strip shows at most a fortnight, but it cannot show more days
   // than the plan's analytics window actually contains: on Free that window is
   // 7 days, so slicing a flat 14 would label a 7-bar chart "last 14 days".
@@ -1667,8 +1670,23 @@ export function WorkflowsPage({ mcpUrl, userRole }) {
  * not on its status: an IMAP row re-opens the connect form it was created
  * with, an OAuth row goes to /auth/gmail or /auth/outlook.
  */
-function needsReconnect(status) {
-  return status === 'error';
+function needsReconnect(ib) {
+  return ib.status === 'error' || inboxRowHealth(ib) === 'reconnect_required';
+}
+
+/**
+ * The mcp-server's rule (src/lib/inboxes/health.ts) on a dashboard inbox
+ * object. Catches the case `status` alone misses: an 'active' row whose
+ * password the mail server refused, which AI clients are told needs
+ * reconnecting and which used to show a green "Connected" here.
+ */
+function inboxRowHealth(ib) {
+  return inboxHealth({ provider: ib.provider, status: ib.status, last_error: ib.lastError });
+}
+
+/** 'active' on the row, but the server refused its password. */
+function loginRefused(ib) {
+  return ib.status === 'active' && inboxRowHealth(ib) === 'reconnect_required';
 }
 
 // `businessShaped` is computed ONCE in App.jsx (isBusinessShapedWorkspace) and
@@ -1698,7 +1716,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredInboxes = inboxes.filter(ib => ib.status === "error" && !ib.parked);
+  // Same rule as the Reconnect button: 'error' rows and refused passwords.
+  const erroredInboxes = inboxes.filter(ib => needsReconnect(ib) && !ib.parked);
   const erroredCount = erroredInboxes.length;
   // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
   // hold a slot under the cap: the same count the server's checkInboxLimit uses.
@@ -2116,11 +2135,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         </div>
                       </div>
                     ) : null}
-                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "active" && !loginRefused(ib) ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge> : null}
                     {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {!ib.parked && ib.status === "error"   ? (
+                    {!ib.parked && (ib.status === "error" || loginRefused(ib)) ? (
                       <div>
-                        <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
+                        <Badge tone="red" dot="red">{loginRefused(ib) ? t('inboxes.statusNeedsReconnect') : t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
                           <div style={{
                             marginTop: 4,
@@ -2130,7 +2149,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                             lineHeight: 1.4,
                             fontFamily: "var(--font-sans)",
                           }}>
-                            {ib.lastError}
+                            {lastErrorForDisplay(ib.lastError)}
                           </div>
                         ) : null}
                       </div>
@@ -2143,7 +2162,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         {t('inboxes.makeActive')}
                       </Btn>
                     ) : null}
-                    {needsReconnect(ib.status) ? (
+                    {needsReconnect(ib) ? (
                       <Btn
                         variant="secondary"
                         size="sm"
@@ -2187,9 +2206,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           </div>
           <div className="inbox-list-mobile">
             {inboxes.map(ib => {
-              const isError = ib.status === 'error';
-              const canReconnect = needsReconnect(ib.status);
+              const refused = loginRefused(ib);
+              const isError = ib.status === 'error' || refused;
+              const canReconnect = needsReconnect(ib);
               const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : refused ? <Badge tone="red" dot="red">{t('inboxes.statusNeedsReconnect')}</Badge>
                 : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
@@ -2218,7 +2239,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
                   {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
-                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{lastErrorForDisplay(ib.lastError)}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {ib.parked && canSwap ? (
@@ -3596,8 +3617,10 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const usesOauth = !inbox.hasImap;
   const compatibility = compatibilityForInbox(inbox.provider);
 
+  const refused = loginRefused(inbox);
   const statusLabel =
     inbox.parked               ? t('inboxes.statusParked')    :
+    refused                    ? t('inboxes.statusNeedsReconnect') :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
@@ -3605,6 +3628,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
   const statusBadge =
     inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
+    refused                    ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
@@ -3663,7 +3687,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
           {/* Surface the most recent error prominently so a broken connection
               is self-explanatory. */}
-          {inbox.status === 'error' && inbox.lastError && (
+          {(inbox.status === 'error' || refused) && inbox.lastError && (
             <div style={{
               padding: '10px 12px',
               marginBottom: 16,
@@ -3675,7 +3699,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               color: 'var(--red-700)',
               lineHeight: 1.5,
             }}>
-              {inbox.lastError}
+              {lastErrorForDisplay(inbox.lastError)}
             </div>
           )}
 

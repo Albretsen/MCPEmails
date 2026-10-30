@@ -23,9 +23,17 @@ const { default: en } = await import('../../src/lib/support/help-content/en.json
 const CONTEXT = {
   workspace_id: 'ws-0001',
   plan: 'solo',
-  mailboxes: [{ provider: 'imap', service: 'yahoo', host: 'imap-host-fixture', status: 'error', last_error_code: 'auth_failed' }],
+  mailboxes: [
+    { email: 'yahoo-box@example.com', provider: 'imap', service: 'yahoo', service_name: 'Yahoo Mail', host: 'imap-host-fixture', status: 'error', health: 'reconnect_required', last_error_code: 'auth_failed', last_error_text: 'auth_failed' },
+    {
+      email: 'hello@example.com', provider: 'imap', service: 'generic', service_name: 'IMAP', host: 'imap.migadu.example', status: 'active', health: 'reconnect_required',
+      last_error_code: "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-10-04T20:04:04.730Z)",
+      last_error_text: "The mail server refused this mailbox's password. Reconnect this inbox to restore access.",
+    },
+    { email: 'ok@example.com', provider: 'gmail', service: null, service_name: 'Gmail', host: null, status: 'active', health: 'ok', last_error_code: null, last_error_text: null },
+  ],
   from: 'connect-modal',
-  provider: 'yahoo',
+  provider: 'generic',
   code: 'auth_failed',
 };
 
@@ -95,9 +103,27 @@ test('signed in: no email field, the address read-only, and the attach disclosur
   const text = details.textContent;
   assert.equal(text.includes(en.attach.summary), true);
   assert.equal(text.includes('ws-0001'), true);
-  assert.equal(text.includes('imap-host-fixture'), true);
   assert.equal(text.includes('auth_failed'), true);
   assert.equal(text.includes(en.attach.never), true);
+});
+
+test('signed in: each mailbox is its address, a provider name and its health in words', async (t) => {
+  const { container } = await render(t, { signedInEmail: 'staff@example.com', context: CONTEXT, providerName: 'IMAP' });
+  const lines = [...container.querySelectorAll('[data-mailbox]')].map((li) => li.textContent);
+  assert.equal(lines.length, 3);
+  const lastError = (code) => en.attach.lastError.replace('{code}', code);
+  assert.equal(lines[0], `yahoo-box@example.com · Yahoo Mail · ${en.attach.healthNeedsReconnect} · ${lastError('auth_failed')}`);
+  // 'active' on the row, refused by the server: the same answer the mcp-server gives.
+  assert.equal(
+    lines[1],
+    `hello@example.com · IMAP · ${en.attach.healthNeedsReconnect} · ${lastError("The mail server refused this mailbox's password. Reconnect this inbox to restore access.")}`,
+  );
+  assert.equal(lines[2], `ok@example.com · Gmail · ${en.attach.healthConnected}`);
+  const text = container.querySelector('details.help-attach').textContent;
+  for (const raw of ['(Checked', 'generic', 'imap.migadu.example', ' active']) {
+    assert.equal(text.includes(raw), false, raw);
+  }
+  assert.equal(text.includes(`${en.attach.provider}: IMAP`), true);
 });
 
 test('signed in: the plan shows its display name, never the raw slug', async (t) => {

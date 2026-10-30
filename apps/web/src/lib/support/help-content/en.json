@@ -258,7 +258,11 @@
     "from": "Opened from",
     "provider": "Provider",
     "code": "Error code",
-    "never": "Never attached: passwords, tokens or the content of your mail."
+    "never": "Never attached: passwords, tokens or the content of your mail.",
+    "healthConnected": "Connected",
+    "healthPending": "Pending",
+    "healthNeedsReconnect": "Needs reconnect",
+    "healthUnavailable": "Cannot be used"
   },
   "errors": {
     "invalid_json": "Something went wrong sending the form. Reload the page and try again.",

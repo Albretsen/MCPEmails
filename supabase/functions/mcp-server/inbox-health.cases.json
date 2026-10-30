@@ -1,0 +1,43 @@
+{
+  "_comment": "One case table for two implementations of the same rule: inboxHealthStatus() in supabase/functions/mcp-server/inbox-health.ts (null means ok) and inboxHealth() in apps/web/src/lib/inboxes/health.ts. inbox-health.test.ts (Deno) and apps/web/src/lib/inboxes/health.test.ts (node) both read this file, so the two cannot drift. noMailboxMessage must equal OUTLOOK_NO_MAILBOX_MESSAGE (outlook-graph.ts) and OUTLOOK_NO_MAILBOX_REASON (apps/web outlook-oauth.ts); both tests check it.",
+  "noMailboxMessage": "This Microsoft account has no Outlook / Exchange Online mailbox that Microsoft Graph can reach. Microsoft accepted the sign-in, but there is no mailbox behind it: typically an administrator account without an Exchange Online licence, or an organisation whose mail is hosted somewhere else. Reconnecting will not change this. If the address's mail is hosted on another server, remove this inbox and connect the address with IMAP instead.",
+  "cases": [
+    { "name": "active, no error", "row": { "provider": "imap", "status": "active", "last_error": null }, "expected": "ok" },
+    {
+      "name": "active with the login-refused marker",
+      "row": { "provider": "imap", "status": "active", "last_error": "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-10-04T20:04:04.730Z)" },
+      "expected": "reconnect_required"
+    },
+    {
+      "name": "fastmail, active with the marker",
+      "row": { "provider": "fastmail", "status": "active", "last_error": "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-10-26T10:00:00.000Z)" },
+      "expected": "reconnect_required"
+    },
+    {
+      "name": "marker text without a timestamp is not the marker",
+      "row": { "provider": "imap", "status": "active", "last_error": "The mail server refused this mailbox's password. Reconnect this inbox to restore access." },
+      "expected": "ok"
+    },
+    {
+      "name": "marker with a bad timestamp is not the marker",
+      "row": { "provider": "imap", "status": "active", "last_error": "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-13-99T99:99:99.999Z)" },
+      "expected": "ok"
+    },
+    { "name": "active with another error", "row": { "provider": "imap", "status": "active", "last_error": "Sent copy failed" }, "expected": "ok" },
+    {
+      "name": "gmail in error",
+      "row": { "provider": "gmail", "status": "error", "last_error": "Gmail refresh token revoked — user must reconnect." },
+      "expected": "reconnect_required"
+    },
+    { "name": "imap in error, no last_error", "row": { "provider": "imap", "status": "error", "last_error": null }, "expected": "reconnect_required" },
+    { "name": "outlook in error with the no-mailbox message", "row": { "provider": "outlook", "status": "error", "last_error": "@noMailbox" }, "expected": "unavailable" },
+    { "name": "outlook active with the no-mailbox message", "row": { "provider": "outlook", "status": "active", "last_error": "@noMailbox" }, "expected": "ok" },
+    { "name": "outlook in error, other reason", "row": { "provider": "outlook", "status": "error", "last_error": "invalid_grant" }, "expected": "reconnect_required" },
+    { "name": "pending", "row": { "provider": "imap", "status": "pending" }, "expected": "ok" },
+    {
+      "name": "pending with the marker",
+      "row": { "provider": "imap", "status": "pending", "last_error": "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-10-04T20:04:04.730Z)" },
+      "expected": "ok"
+    }
+  ]
+}

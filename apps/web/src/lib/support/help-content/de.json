@@ -258,7 +258,11 @@
     "from": "Geöffnet von",
     "provider": "Anbieter",
     "code": "Fehlercode",
-    "never": "Nie beigefügt: Passwörter, Tokens oder der Inhalt Ihrer E-Mails."
+    "never": "Nie beigefügt: Passwörter, Tokens oder der Inhalt Ihrer E-Mails.",
+    "healthConnected": "Verbunden",
+    "healthPending": "Ausstehend",
+    "healthNeedsReconnect": "Neu verbinden nötig",
+    "healthUnavailable": "Nicht nutzbar"
   },
   "errors": {
     "invalid_json": "Beim Senden des Formulars ist etwas schiefgegangen. Laden Sie die Seite neu und versuchen Sie es erneut.",

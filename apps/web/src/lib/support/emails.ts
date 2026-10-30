@@ -64,11 +64,26 @@ export function oneLine(value: string): string {
   return value.replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function mailboxHealthLabel(m: TicketContext['mailboxes'][number]): string {
+  if (m.health === 'reconnect_required') return `needs reconnect (status ${m.status})`;
+  if (m.health === 'unavailable') return `unavailable (status ${m.status})`;
+  return m.status;
+}
+
 function contextLines(input: TicketEmailInput): string[] {
   const c = input.context;
   const mailboxes = c.mailboxes.length
     ? c.mailboxes.map((m) =>
-        `  - ${[m.provider, m.service, m.host, m.status, m.last_error_code ? `error: ${m.last_error_code}` : null]
+        // Address first: five inboxes on one host are otherwise identical.
+        // Health is the mcp-server's rule; the raw row status follows when
+        // they differ (an 'active' row whose password was refused).
+        `  - ${[
+          m.email ?? '(no address)',
+          m.service ? `${m.provider}/${m.service}` : m.provider,
+          m.host,
+          mailboxHealthLabel(m),
+          m.last_error_code ? `error: ${m.last_error_code}` : null,
+        ]
           .filter(Boolean)
           .join(' | ')}`,
       )

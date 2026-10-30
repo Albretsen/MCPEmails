@@ -258,7 +258,11 @@
     "from": "打开来源",
     "provider": "服务商",
     "code": "错误代码",
-    "never": "绝不附带：密码、令牌或你的邮件内容。"
+    "never": "绝不附带：密码、令牌或你的邮件内容。",
+    "healthConnected": "已连接",
+    "healthPending": "待处理",
+    "healthNeedsReconnect": "需要重新连接",
+    "healthUnavailable": "无法使用"
   },
   "errors": {
     "invalid_json": "提交表单时出错。请刷新页面后重试。",
