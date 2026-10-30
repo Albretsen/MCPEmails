@@ -30,7 +30,6 @@ import ContactForm from './ContactForm';
  *  - form: { signedInEmail, context, formToken, initialCategory,
  *    initialSubject, providerName, meta, open }
  *  - supportCategories: the ticket categories, in display order
- *  - formFooter: rendered under the form (the staff preview links on /help)
  *  - onNavigate(href, event): called on a plain click of an article link; true
  *    means it was handled (the dashboard switches sections without a reload)
  */
@@ -250,7 +249,6 @@ export default function HelpCenter({
   index = [],
   form = {},
   supportCategories,
-  formFooter = null,
   onNavigate,
 }) {
   const [formOpen, setFormOpen] = useState(Boolean(form.open));
@@ -353,7 +351,6 @@ export default function HelpCenter({
                 <Btn variant="primary" onClick={() => setFormOpen(true)}>{contact.openForm}</Btn>
               </div>
             )}
-            {formFooter}
           </section>
 
           {categories.map((c) => (

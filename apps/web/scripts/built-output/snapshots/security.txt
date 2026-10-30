@@ -11,9 +11,7 @@ AI Email Agent Security: OAuth, Encryption & Privacy · MCPEmails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -148,7 +146,7 @@ Read the privacy policy
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -179,6 +177,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -197,6 +196,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here

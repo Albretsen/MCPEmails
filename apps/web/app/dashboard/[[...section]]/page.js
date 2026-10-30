@@ -29,7 +29,6 @@ import {
   ownerIsOnFounderPrice,
   withFounderSubscriberPrices,
 } from '../../../src/lib/stripe/founder-display';
-import { supportVisibleTo } from '@/lib/support/release-gate';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
@@ -892,11 +891,6 @@ export default async function DashboardPage({ params, searchParams }) {
   const displayName = userRecord?.display_name ?? user.user_metadata?.full_name ?? '';
   const email = userRecord?.email ?? user.email ?? '';
   const initials = computeInitials(displayName || null, email);
-  // Help & support entry points (sidebar item, connect-error contact line).
-  // Internal-only in v1; at release this becomes `true` and the prop goes away.
-  const supportVisible = supportVisibleTo(email || null); // SUPPORT_RELEASE_GATE
-  // SUPPORT_RELEASE_GATE: /dashboard/help is a 404 to everyone the gate hides.
-  if (initialRoute === 'help' && !supportVisible) notFound();
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
   // The 2026-08-19 repricing grandfather: every user who existed before inboxes
@@ -1207,7 +1201,6 @@ export default async function DashboardPage({ params, searchParams }) {
       auditLog={auditLog}
       members={members}
       pendingInvites={pendingInvites}
-      supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       referralTileFacts={referralTileFacts}
       chatReturn={setup ? null : chatReturn}
       setup={setup}

@@ -11,9 +11,7 @@ IMAP- und SMTP-Einstellungen für jede E-Mail-Adresse finden · MCPEmails
 Funktionen
 So funktioniert es
 Preise
-Vergleichen
 Doku
-Self-Hosting
 Blog
 Anmelden
 Kostenlos starten
@@ -151,7 +149,7 @@ Anbieter ansehen
 [alt] MCPEmails
 Ein gehosteter MCP-Server, der KI-Agenten Lese- und Sendezugriff auf Ihr Postfach gibt, ohne die gelesenen E-Mails je zu speichern.
 Kontakt
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Kontakt kopieren
 Kopieren
 MCP-Endpunkt
@@ -182,6 +180,7 @@ Unterstützte Anbieter
 Nur-Lese-Zugriff
 Entwicklerhandbuch
 MCP-Clients einrichten
+IMAP- und SMTP-Server herausfinden
 Blog
 Changelog
 Verbinden
@@ -199,6 +198,7 @@ Unternehmen
 Über uns
 Sicherheit
 Status
+Hilfe & Support
 Datenschutz
 Nutzungsbedingungen
 Vertrag hier widerrufen

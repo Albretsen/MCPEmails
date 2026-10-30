@@ -278,10 +278,5 @@
   "success": {
     "withRef": "Gracias, hemos recibido tu mensaje. Tu referencia es {ref}. Te responderemos por correo.",
     "noRef": "Gracias, hemos recibido tu mensaje. Te responderemos por correo."
-  },
-  "preview": {
-    "link": "Probar el formulario sin sesión",
-    "note": "Guarda una cookie de vista previa en este navegador. Cierra sesión y vuelve a abrir esta página.",
-    "clear": "Dejar de previsualizar el formulario sin sesión"
   }
 }

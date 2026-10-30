@@ -9,4 +9,4 @@ Microsoft 365 approval · MCPEmails
 [alt] MCPEmails
 The approval did not go through
 Microsoft did not confirm the approval. Approving needs a Microsoft 365 administrator account, such as a Global Administrator or Cloud Application Administrator. Sign in with one and open the link again.
-Questions? Email hello@mcpemails.com.
+Questions? Email support@mcpemails.com.

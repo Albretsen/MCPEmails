@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // /api/support/tickets end to end through the exported handlers, every method,
-// for a caller the gate hides it from and one it shows it to.
+// signed in and signed out.
 //
 // Stubbed: the viewer (who is asking), the service-role Supabase client (an
 // in-memory support_tickets plus the context tables), next/headers, and the
@@ -20,8 +20,8 @@ const nodeMock = mock as unknown as {
   module: (specifier: string, options: { namedExports?: Record<string, unknown> }) => void;
 };
 
-type Viewer = { visible: boolean; user: { id: string; email: string } | null };
-let viewer: Viewer = { visible: false, user: null };
+type Viewer = { user: { id: string; email: string } | null };
+let viewer: Viewer = { user: null };
 
 type Ticket = Record<string, unknown> & { id: string; ref: string; created_at: string };
 const tickets: Ticket[] = [];
@@ -117,9 +117,8 @@ function call(method: (typeof METHODS)[number], body?: unknown, headers: Record<
   return handler(new Request(URL_, init));
 }
 
-const INTERNAL = { visible: true, user: { id: 'u-internal', email: 'staff@mcpemails.com' } };
-const PREVIEW_SIGNED_OUT = { visible: true, user: null };
-const HIDDEN = { visible: false, user: { id: 'u-ext', email: 'customer@example.net' } };
+const SIGNED_IN = { user: { id: 'u-internal', email: 'staff@mcpemails.com' } };
+const SIGNED_OUT = { user: null };
 
 function ticketBody(over: Record<string, unknown> = {}) {
   return {
@@ -136,29 +135,15 @@ function ticketBody(over: Record<string, unknown> = {}) {
 }
 
 test.beforeEach(() => {
-  viewer = HIDDEN;
+  viewer = SIGNED_OUT;
   tickets.length = 0;
   sends.length = 0;
   failInsert = false;
   failSend = false;
 });
 
-test('hidden caller: every method is the unmatched-path 404, and nothing is stored', async () => {
-  for (const viewerState of [HIDDEN, { visible: false, user: null }]) {
-    viewer = viewerState;
-    for (const method of METHODS) {
-      const res = await call(method, ticketBody({ email: 'a@example.com' }));
-      assert.equal(res.status, 404, method);
-      assert.equal(res.headers.get('cache-control'), 'no-store');
-      if (method !== 'HEAD') assert.deepEqual(await res.json(), { error: 'Not found.' });
-    }
-  }
-  assert.equal(tickets.length, 0);
-  assert.equal(sends.length, 0);
-});
-
-test('visible caller: every method but POST is 405 with Allow: POST', async () => {
-  viewer = INTERNAL;
+test('every method but POST is 405 with Allow: POST', async () => {
+  viewer = SIGNED_IN;
   for (const method of METHODS.filter((m) => m !== 'POST')) {
     const res = await call(method);
     assert.equal(res.status, 405, method);
@@ -167,7 +152,7 @@ test('visible caller: every method but POST is 405 with Allow: POST', async () =
 });
 
 test('signed in: 201 with ref, row stored with context, both emails sent and recorded', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   const res = await call('POST', ticketBody({ email: 'ignored@example.com' }), { 'x-forwarded-for': '203.0.113.9' });
   assert.equal(res.status, 201);
   assert.deepEqual(await res.json(), { ok: true, ref: 'MCPE-1001' });
@@ -202,8 +187,8 @@ test('signed in: 201 with ref, row stored with context, both emails sent and rec
   assert.equal(toSupport.opts.idempotencyKey, 'support-ticket-MCPE-1001');
 });
 
-test('signed out with a preview cookie: email from the body, no context, no user', async () => {
-  viewer = PREVIEW_SIGNED_OUT;
+test('signed out: email from the body, no context, no user', async () => {
+  viewer = SIGNED_OUT;
   const missing = await call('POST', ticketBody());
   assert.equal(missing.status, 400);
   assert.deepEqual(await missing.json(), { ok: false, error: 'invalid_email' });
@@ -219,7 +204,7 @@ test('signed out with a preview cookie: email from the body, no context, no user
 });
 
 test('400s: bad JSON, bad category, missing form token', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   const cases: Array<[unknown, string]> = [
     ['{not json', 'invalid_json'],
     [ticketBody({ category: 'sales' }), 'invalid_category'],
@@ -235,7 +220,7 @@ test('400s: bad JSON, bad category, missing form token', async () => {
 });
 
 test('honeypot or too fast: 200 with a null ref, nothing stored, nothing sent', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   for (const body of [ticketBody({ website: 'https://spam.example' }), ticketBody({ formToken: issueSupportFormToken(Date.now()) })]) {
     const res = await call('POST', body);
     assert.equal(res.status, 200);
@@ -246,7 +231,7 @@ test('honeypot or too fast: 200 with a null ref, nothing stored, nothing sent', 
 });
 
 test('429 once the per-email hourly limit is reached', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   for (let i = 0; i < 3; i++) assert.equal((await call('POST', ticketBody())).status, 201);
   const res = await call('POST', ticketBody());
   assert.equal(res.status, 429);
@@ -255,7 +240,7 @@ test('429 once the per-email hourly limit is reached', async () => {
 });
 
 test('send fails but the row is kept: still 201, sent-at columns stay NULL', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   failSend = true;
   const res = await call('POST', ticketBody());
   assert.equal(res.status, 201);
@@ -266,7 +251,7 @@ test('send fails but the row is kept: still 201, sent-at columns stay NULL', asy
 });
 
 test('insert fails: 500 server_error and nothing is sent', async () => {
-  viewer = INTERNAL;
+  viewer = SIGNED_IN;
   failInsert = true;
   const res = await call('POST', ticketBody());
   assert.equal(res.status, 500);

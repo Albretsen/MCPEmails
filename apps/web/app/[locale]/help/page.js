@@ -1,6 +1,5 @@
-import { cache } from 'react';
-import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { getSupportViewer } from '@/lib/support/viewer';
 import { issueSupportFormToken } from '@/lib/support/form-token';
 import { getTicketContextPreview } from '@/lib/support/context';
@@ -17,28 +16,36 @@ import '../../../styles/help.css';
  * /dashboard/help, fed by GET /api/support/help-data.
  *
  * Articles are collapsed sections on this page (anchors `#article-<id>`), not
- * sub-routes: there is one gate and one noindex to remove at release, and the
- * search opens an article in place.
+ * sub-routes, so the search opens an article in place and there is one URL to
+ * index per locale.
  *
- * Dynamic by nature (it reads the session and the preview cookie), so no
- * generateStaticParams. Not in the sitemap.
+ * Dynamic by nature (it reads the session to prefill the contact form), so no
+ * generateStaticParams. Listed in the sitemap.
  */
-
-// One session read per request, shared by generateMetadata and the page.
-const viewerForRequest = cache(getSupportViewer);
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   requireLocale(locale);
-  const viewer = await viewerForRequest();
-  // SUPPORT_RELEASE_GATE: noindex while internal-only. Remove at release.
-  const robots = { index: false, follow: false };
-  if (!viewer.visible) return { robots }; // SUPPORT_RELEASE_GATE
   const content = await getHelpContent(locale);
+  const { title, description } = content.meta;
   return {
-    title: content.meta.title,
-    description: content.meta.description,
-    robots, // SUPPORT_RELEASE_GATE
+    title,
+    description,
+    alternates: metaAlternates(locale, '/help'),
+    openGraph: {
+      type: 'website',
+      url: localePath(locale, '/help'),
+      title: `${title} · MCPEmails`,
+      description,
+      locale: OG_LOCALE[locale],
+      images: [OG_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} · MCPEmails`,
+      description,
+      images: [OG_IMAGE.url],
+    },
   };
 }
 
@@ -47,8 +54,7 @@ export default async function HelpPage({ params, searchParams }) {
   requireLocale(locale);
   setRequestLocale(locale);
 
-  const viewer = await viewerForRequest();
-  if (!viewer.visible) notFound(); // SUPPORT_RELEASE_GATE
+  const viewer = await getSupportViewer();
 
   const sp = await searchParams;
   const [data, baseContext] = await Promise.all([
@@ -80,18 +86,6 @@ export default async function HelpPage({ params, searchParams }) {
               meta: seed.meta,
               open: seed.open,
             }}
-            formFooter={
-              /* SUPPORT_RELEASE_GATE: staff-only preview of the signed-out form. Remove at release. */
-              viewer.user ? (
-                <p className="help-gate">
-                  <a href="/api/support/preview">{data.copy.preview.link}</a> {data.copy.preview.note}
-                </p>
-              ) : (
-                <p className="help-gate">
-                  <a href="/api/support/preview?clear=1">{data.copy.preview.clear}</a>
-                </p>
-              )
-            }
           />
         </div>
       </section>

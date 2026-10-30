@@ -9,7 +9,7 @@ import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
-import { ConnectModal, supportContactHref, supportMailtoHref } from './ConnectModal';
+import { ConnectModal, supportContactHref } from './ConnectModal';
 import { HelpSection, prefetchHelpData } from './HelpSection';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
@@ -152,7 +152,7 @@ const SETUP_PARAMS = ['setup', 'client', 'provider', 'step', 'from', 'exp', 'sig
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null, setup = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, referralTileFacts = null, chatReturn = null, setup = null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -258,26 +258,24 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // opening the section from the sidebar or ⌘K shows it at once.
   const locale = useLocale();
   useEffect(() => {
-    if (!supportVisible) return undefined; // SUPPORT_RELEASE_GATE
     if (typeof window.requestIdleCallback === 'function') {
       const handle = window.requestIdleCallback(() => prefetchHelpData(locale), { timeout: 4000 });
       return () => window.cancelIdleCallback(handle);
     }
     const timer = setTimeout(() => prefetchHelpData(locale), 1500);
     return () => clearTimeout(timer);
-  }, [supportVisible, locale]);
+  }, [locale]);
 
   // Keep the active section in sync with browser back/forward navigation.
   useEffect(() => {
     const onPopState = () => {
       const segment = window.location.pathname.replace(/^\/dashboard\/?/, '').split('/')[0];
       const resolved = pathSegmentToSection(segment);
-      // SUPPORT_RELEASE_GATE: the help section does not exist for hidden users.
-      setRouteState(resolved === 'help' && !supportVisible ? 'overview' : (resolved ?? 'overview'));
+      setRouteState(resolved ?? 'overview');
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [supportVisible]);
+  }, []);
   // Make workspace stateful so that a rename (PATCH /api/workspaces/[id])
   // is immediately reflected in the sidebar name + breadcrumb without a page reload.
   const [editedWorkspace, setWorkspace] = useState(serverWorkspace ?? null);
@@ -536,16 +534,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
   // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
   // "Contact support" on a connect failure that a retry will not fix: the
-  // in-app help form when the help center is visible, else an email to
-  // support@ that carries the error code.
+  // in-app help form, seeded with the provider and error code.
   const contactSupportAction = (provider, code) => ({
     label: tr('app.contactSupport'),
     onClick: () => {
-      if (supportVisible) { // SUPPORT_RELEASE_GATE: at release keep only this branch.
-        window.location.assign(supportContactHref(provider, code));
-      } else {
-        window.location.assign(supportMailtoHref(provider, code));
-      }
+      window.location.assign(supportContactHref(provider, code));
     },
   });
 
@@ -1417,7 +1410,6 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         workspaces={workspaces}
         activeWorkspaceId={activeWorkspaceId}
         canCreateWorkspace={canCreateWorkspace}
-        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         referralVisible={workspace?.referralEnabled === true}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -1449,7 +1441,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} supportVisible={supportVisible} /* SUPPORT_RELEASE_GATE */ onContactSupport={openHelpFromConnect} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} onContactSupport={openHelpFromConnect} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
@@ -1464,8 +1456,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           </div>
         )}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
-        {/* SUPPORT_RELEASE_GATE: at release drop `supportVisible &&`. */}
-        {route === "help" && supportVisible && <HelpSection key={helpKey} onNavigateSection={setRoute} />}
+        {route === "help" && <HelpSection key={helpKey} onNavigateSection={setRoute} />}
       </div>
 
       {/* atInboxLimit is false whenever maxInboxes is null, which is how every
@@ -1508,7 +1499,6 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           continueOnFree={serverWorkspace?.onboarding?.convert === 'on'}
           gmailOauthAllowed={workspace?.gmailOAuthAllowed === true}
           onAdminConsentLink={() => setShowAdminLink(true)}
-          supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
           onContactSupport={openHelpFromConnect}
         />
       )}
@@ -1547,7 +1537,6 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         inboxes={inboxes}
         members={members}
         keys={keys}
-        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       />
 
       <TweaksPanel>

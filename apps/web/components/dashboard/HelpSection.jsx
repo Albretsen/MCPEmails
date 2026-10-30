@@ -9,9 +9,6 @@ import { pathSegmentToSection } from './routes';
  * The dashboard's help section (/dashboard/help): the same help center as
  * /help, inside the app shell.
  *
- * SUPPORT_RELEASE_GATE: App renders this only when `supportVisible`, and the
- * data route answers 404 to anyone the gate hides.
- *
  * Its data comes from GET /api/support/help-data, in the app's own locale
  * (which lives in the browser, not the URL). `topic`, `provider`, `code` and
  * `from` in the page URL are passed along so the connect modal's "Contact

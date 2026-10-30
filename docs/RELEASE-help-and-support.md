@@ -1,5 +1,11 @@
 # Releasing Help & support
 
+> **Released 2026-10-31.** The release PR ("Help & support: release to
+> everyone") ran the whole checklist below: the gate, the preview and
+> visibility routes and their tests are deleted, `/help` is indexable and in
+> the sitemap, the pricing-copy diff and the hand review are applied, and the
+> changelog has its entry. The rest of this file is kept as history.
+
 Help & support shipped internal-only in v1: `/help` (search, troubleshooting
 articles, contact form), the ticket API, and the entry points in the dashboard
 sidebar, the connect modal, the error pages and the marketing footer. Everything

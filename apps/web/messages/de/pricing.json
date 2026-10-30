@@ -34,7 +34,7 @@
         "Nutzungsanalyse",
         "Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach",
         "Unbegrenzt viele API-Schlüssel",
-        "Community-Support"
+        "Hilfecenter und E-Mail-Support"
       ]
     },
     "personal": {
@@ -47,7 +47,7 @@
         "3 verbundene Postfächer",
         "Unbegrenzte E-Mail-Aktionen",
         "2x höheres Burst-Ratenlimit",
-        "E-Mail-Support"
+        "Bevorzugter E-Mail-Support"
       ]
     },
     "solo": {
@@ -154,8 +154,9 @@
       "support": {
         "label": "Support",
         "rows": {
-          "community": "Community-Forum",
-          "email": "E-Mail-Support"
+          "community": "Hilfecenter",
+          "email": "E-Mail-Support",
+          "priority": "Bevorzugter E-Mail-Support"
         }
       }
     },
@@ -188,7 +189,7 @@
       },
       {
         "q": "Was bietet Personal zusätzlich zu Free?",
-        "a": "Zwei weitere verbundene Postfächer, unbegrenzte E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles, was Sie täglich nutzen, ist auch in Free enthalten: lesen, suchen, organisieren, entwerfen, senden und Sendungen planen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Die Funktionen, die bei geschlossenem Chat weiterarbeiten, etwa Nachfass-Erinnerungen, Zurückstellen und das Morgen-Briefing, gehören zu Pro."
+        "a": "Zwei weitere verbundene Postfächer, unbegrenzte E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und bevorzugten E-Mail-Support, während Free das Hilfecenter und den normalen E-Mail-Support hat. Das ist die ganze Liste. Alles, was Sie täglich nutzen, ist auch in Free enthalten: lesen, suchen, organisieren, entwerfen, senden und Sendungen planen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Die Funktionen, die bei geschlossenem Chat weiterarbeiten, etwa Nachfass-Erinnerungen, Zurückstellen und das Morgen-Briefing, gehören zu Pro."
       },
       {
         "q": "Was zählt als E-Mail-Aktion?",
@@ -204,7 +205,7 @@
       },
       {
         "q": "Was ist der Unterschied zwischen Personal, Pro und Business?",
-        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, zwei Jahre statt 90 Tage Analyseverlauf und E-Mail-Support. Pro arbeitet außerdem weiter, wenn der Chat geschlossen ist: Nachfass-Erinnerungen für gesendete E-Mails, Zurückstellen, ein tägliches Morgen-Briefing im Posteingang, eine Suche über alle verbundenen Postfächer und Anweisungen für Ihre KI pro Postfach. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute. Alles aus Pro ist enthalten."
+        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und bevorzugtem E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, zwei Jahre statt 90 Tage Analyseverlauf und bevorzugter E-Mail-Support. Pro arbeitet außerdem weiter, wenn der Chat geschlossen ist: Nachfass-Erinnerungen für gesendete E-Mails, Zurückstellen, ein tägliches Morgen-Briefing im Posteingang, eine Suche über alle verbundenen Postfächer und Anweisungen für Ihre KI pro Postfach. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute. Alles aus Pro ist enthalten."
       },
       {
         "q": "Wir sind ein Unternehmen mit mehreren Postfächern. Welchen Tarif brauchen wir?",
@@ -232,7 +233,7 @@
       },
       {
         "q": "Kann ich es selbst hosten, statt zu bezahlen?",
-        "a": "Ja. MCPEmails ist Open Source unter AGPL-3.0 und kostenlos selbst zu hosten. Ein docker-compose-Stack betreibt denselben MCP-Server, und Ihre Postfach-Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Self-Hosting deckt IMAP- und SMTP-Postfächer ab. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben im gehosteten Dienst, wo sie in jedem Tarif funktionieren, auch in Free; Mitglieder und Rollen gibt es in Business, E-Mail-Support in jedem bezahlten Tarif."
+        "a": "Ja. MCPEmails ist Open Source unter AGPL-3.0 und kostenlos selbst zu hosten. Ein docker-compose-Stack betreibt denselben MCP-Server, und Ihre Postfach-Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Self-Hosting deckt IMAP- und SMTP-Postfächer ab. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben im gehosteten Dienst, wo sie in jedem Tarif funktionieren, auch in Free; Mitglieder und Rollen gibt es in Business, bevorzugten E-Mail-Support in jedem bezahlten Tarif."
       }
     ]
   },

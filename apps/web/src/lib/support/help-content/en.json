@@ -278,10 +278,5 @@
   "success": {
     "withRef": "Thanks, we have your message. Your reference is {ref}. We reply by email.",
     "noRef": "Thanks, we have your message. We reply by email."
-  },
-  "preview": {
-    "link": "Test the signed-out form",
-    "note": "Sets a preview cookie for this browser. Sign out, then open this page again.",
-    "clear": "Stop previewing the signed-out form"
   }
 }
