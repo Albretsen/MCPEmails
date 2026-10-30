@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { buildSupportTicketEmail, buildSupportConfirmationEmail, sendSupportTicketEmail, oneLine, SUPPORT_FROM, SUPPORT_INBOX } =
+const { buildSupportTicketEmail, buildSupportConfirmationEmail, sendSupportTicketEmail, oneLine, SUPPORT_FROM, SUPPORT_INBOX, supportIdempotencyKey } =
   await import('./emails.ts');
 
 // Distinctive markers: if either appears in the confirmation, visitor text leaked.
@@ -118,7 +118,7 @@ test('sends: support email goes to support@ with Reply-To the customer; confirma
   assert.deepEqual([confirmation.reply_to].flat(), [SUPPORT_INBOX]);
   assert.equal(JSON.stringify(confirmation).includes(MESSAGE_MARK), false);
   const keys = sent.map((s) => s.headers.get('idempotency-key'));
-  assert.deepEqual(keys, ['support-ticket-MCPE-1001', 'support-confirmation-MCPE-1001']);
+  assert.deepEqual(keys, ['support-production-ticket-MCPE-1001', 'support-production-confirmation-MCPE-1001']);
 });
 
 test('sends never throw: no key, or a network failure, is false', async (t) => {
@@ -134,4 +134,21 @@ test('sends never throw: no key, or a network failure, is false', async (t) => {
     delete process.env.RESEND_API_KEY;
   });
   assert.equal(await sendSupportTicketEmail(input), false);
+});
+
+test('the Resend idempotency key differs between staging and production for the same ref', () => {
+  // Both environments share one Resend account and number refs from MCPE-1001.
+  const saved = process.env.APP_ENV;
+  try {
+    process.env.APP_ENV = 'staging';
+    const staging = supportIdempotencyKey('support', 'ticket', 'MCPE-1001');
+    delete process.env.APP_ENV;
+    const production = supportIdempotencyKey('support', 'ticket', 'MCPE-1001');
+    assert.notEqual(staging, production);
+    assert.equal(production, 'support-production-ticket-MCPE-1001');
+    assert.equal(supportIdempotencyKey('support', 'ticket', 'MCPE-1001'), production, 'same env and ref: same key, so a retry still dedupes');
+  } finally {
+    if (saved === undefined) delete process.env.APP_ENV;
+    else process.env.APP_ENV = saved;
+  }
 });
