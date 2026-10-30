@@ -189,3 +189,72 @@ test('supportContactHref omits empty values and encodes the rest', () => {
   assert.equal(supportContactHref('yahoo', ''), '/dashboard/help?topic=connect&provider=yahoo#contact');
   assert.equal(supportContactHref('a b', 'c/d'), '/dashboard/help?topic=connect&provider=a%20b&code=c%2Fd#contact');
 });
+
+// ── The Inboxes page's "Reconnect not working?" banner link ─────────────────
+//
+// Same gate: with the help center visible it opens the contact form on the
+// connect topic (naming the provider when every errored inbox shares one), in
+// place; otherwise an email to support@ with a translated subject. The real
+// dashboard is rendered at Inboxes.
+
+const { DashboardApp } = await import('./App.jsx');
+const { reconnectSupportHref } = await import('./Pages.jsx');
+const dashboardEn = (await import('../../messages/en/dashboard.json', { with: { type: 'json' } })).default;
+const BANNER_LINK = dashboardEn.inboxes.errorBannerSupport;
+
+function errored(address, provider) {
+  return {
+    id: `ib-${address}`, label: address.split('@')[0], address, provider, service: null, status: 'error', parked: false,
+    lastError: 'Login failed', hasImap: provider !== 'gmail', calls: 0, createdAt: '2026-09-01T00:00:00.000Z', lastCallAt: null,
+    draftEditorHidden: false, sendReviewMode: 'off', sendApprovalRequired: false,
+  };
+}
+
+async function renderInboxesBanner(t, { supportVisible, inboxes }) {
+  const previousFetch = globalThis.fetch;
+  // The help section's data is not under test: it answers with an error line.
+  globalThis.fetch = async (url) => (String(url).startsWith('/api/support/help-data')
+    ? { ok: false, status: 404, json: async () => ({}) }
+    : { ok: true, status: 200, json: async () => ({}) });
+  window.history.replaceState(null, '', '/dashboard/inboxes');
+  const view = await mount(createElement(AppLocaleProvider, null,
+    createElement(DashboardApp, {
+      initialRoute: 'inboxes',
+      user: { displayName: 'Ada', email: 'ada@example.com', initials: 'A', id: 'u-0001' },
+      workspace: { id: 'ws-0001', slug: 'acme', plan: 'pro', compedScale: null, displayName: 'Acme', isOwner: true, draftEditorEnabled: false, draftEditorHidden: false },
+      workspaces: [], activeWorkspaceId: 'ws-0001', mcpUrl: 'https://mcpemails.com/api/mcp', userRole: 'owner',
+      planLimits: { maxInboxes: 10, historyDays: 30 }, stripePrices: null, overviewStats: {}, activityFeed: [],
+      inboxes, apiKeys: [], usageData: {}, auditLog: [], members: [], pendingInvites: [],
+      supportVisible,
+    })));
+  t.after(async () => {
+    await view.unmount();
+    globalThis.fetch = previousFetch;
+    window.history.replaceState(null, '', '/');
+  });
+  return view;
+}
+
+test('Inboxes banner, help center visible: the contact form, prefilled for the provider', async (t) => {
+  const view = await renderInboxesBanner(t, { supportVisible: true, inboxes: [errored('a@example.com', 'yahoo')] });
+  const link = await waitFor(() => linkNamed(view, BANNER_LINK), { message: 'the banner link' });
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=yahoo#contact');
+  await flush(() => link.click());
+  assert.equal(window.location.pathname, '/dashboard/help', 'the help section opened in place');
+  assert.equal(window.location.search, '?topic=connect&provider=yahoo');
+});
+
+test('Inboxes banner, help center hidden: an email with the translated subject', async (t) => {
+  const view = await renderInboxesBanner(t, { supportVisible: false, inboxes: [errored('a@example.com', 'yahoo')] });
+  const link = await waitFor(() => linkNamed(view, BANNER_LINK), { message: 'the banner link' });
+  const href = link.getAttribute('href');
+  assert.equal(href.startsWith('mailto:support@mcpemails.com?subject='), true, href);
+  assert.equal(decodeURIComponent(href.split('subject=')[1]), dashboardEn.inboxes.errorBannerSupportSubject);
+});
+
+test('reconnectSupportHref: a provider only when every errored inbox shares it', () => {
+  const two = [errored('a@example.com', 'yahoo'), errored('b@example.com', 'gmail')];
+  assert.equal(reconnectSupportHref(two, true, 'x'), '/dashboard/help?topic=connect#contact');
+  assert.equal(reconnectSupportHref([errored('a@example.com', 'gmail'), errored('b@example.com', 'gmail')], true, 'x'), '/dashboard/help?topic=connect&provider=gmail#contact');
+  assert.equal(reconnectSupportHref(two, false, 'Ny tilkobling'), 'mailto:support@mcpemails.com?subject=Ny%20tilkobling');
+});

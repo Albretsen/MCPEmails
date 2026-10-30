@@ -17,7 +17,7 @@ import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 installDom();
 
 const { NextIntlClientProvider } = await import('next-intl');
-const { HelpSection, helpDataUrl, dashboardSectionFor } = await import('./HelpSection.jsx');
+const { HelpSection, helpDataUrl, dashboardSectionFor, prefetchHelpData, resetHelpDataCache } = await import('./HelpSection.jsx');
 const chromeEn = (await import('../../messages/en/dashboardChrome.json', { with: { type: 'json' } })).default;
 const chromeNb = (await import('../../messages/nb/dashboardChrome.json', { with: { type: 'json' } })).default;
 const helpEn = (await import('../../src/lib/support/help-content/en.json', { with: { type: 'json' } })).default;
@@ -66,6 +66,7 @@ async function render(t, { locale = 'en', messages = chromeEn, onNavigateSection
   t.after(async () => {
     await view.unmount();
     window.history.replaceState(null, '', '/dashboard');
+    resetHelpDataCache();
   });
   return view;
 }
@@ -113,4 +114,35 @@ test('helpDataUrl and dashboardSectionFor', () => {
   assert.equal(dashboardSectionFor('/dashboard/settings'), 'settings');
   assert.equal(dashboardSectionFor('/dashboard/nope'), null);
   assert.equal(dashboardSectionFor('/pricing'), null);
+});
+
+test('a direct load of Help: the idle prefetch afterwards sends no second request', async (t) => {
+  resetHelpDataCache();
+  window.history.replaceState(null, '', '/dashboard/help');
+  const { calls, release } = stubFetch(t, () => ({ ok: true, status: 200, json: async () => PAYLOAD }));
+  const view = await render(t);
+  assert.equal(calls.length, 1);
+  prefetchHelpData('en');
+  assert.equal(calls.length, 1, 'the section is loading: no prefetch');
+  release();
+  await waitFor(() => view.container.querySelector('.help-center'), { message: 'the help center' });
+  prefetchHelpData('en');
+  assert.equal(calls.length, 1, 'the section has loaded: still no prefetch');
+});
+
+test('a prefetch still in flight is reused, and handed out once', async (t) => {
+  resetHelpDataCache();
+  window.history.replaceState(null, '', '/dashboard/help');
+  const { calls, release } = stubFetch(t, () => ({ ok: true, status: 200, json: async () => PAYLOAD }));
+  prefetchHelpData('en');
+  assert.equal(calls.length, 1);
+  const first = await mount(createElement(NextIntlClientProvider, { locale: 'en', messages: { dashboardChrome: chromeEn } },
+    createElement(HelpSection, { onNavigateSection: () => {} })));
+  assert.equal(calls.length, 1, 'the section took the prefetch in flight');
+  release();
+  await waitFor(() => first.container.querySelector('.help-center'), { message: 'the help center' });
+  await first.unmount();
+  const second = await render(t);
+  await waitFor(() => second.container.querySelector('.help-center'), { message: 'the help center again' });
+  assert.equal(calls.length, 2, 'the next visit fetches a fresh form token');
 });

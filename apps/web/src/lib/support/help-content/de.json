@@ -31,7 +31,8 @@
     "no": "Nein",
     "thanks": "Danke für Ihre Rückmeldung.",
     "thanksNo": "Danke. Sagen Sie uns, was gefehlt hat, dann ergänzen wir es.",
-    "contactLink": "Schreiben Sie uns"
+    "contactLink": "Schreiben Sie uns",
+    "change": "Antwort ändern"
   },
   "hints": {
     "provider": "{category} · {domain}",
