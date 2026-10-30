@@ -57,14 +57,13 @@
  * win-backs go out from the lifecycle address instead, so a reply to one lands
  * with a person rather than in the support mailbox.
  *
- * THAT SPLIT DOES NOT ISOLATE SENDER REPUTATION, and an earlier version of this
- * comment claimed it did. Mailbox providers score the sending DOMAIN, and
- * Resend has only `mcpemails.com` verified (checked 2026-09-07), so hello@ and
- * asgeir@ share one domain and one DKIM key. Spam complaints on a win-back
- * would follow the purchase confirmation. Real isolation needs a separate
- * subdomain verified in Resend with its own DKIM. At two win-backs to a handful
- * of churned customers that is not yet worth the DNS, but nothing here should
- * be read as protection that exists.
+ * Sender reputation is split by DOMAIN, not by address. Since 2026-10-30
+ * production sets LIFECYCLE_EMAIL_FROM to asgeir@updates.mcpemails.com, a
+ * sending-only subdomain verified in Resend with its own DKIM key, so spam
+ * complaints on a win-back stay off the root domain that carries receipts and
+ * the real Migadu mailboxes. Replies go to lifecycleReplyTo(), since the
+ * subdomain has no mailbox. Without that env var both senders share the root
+ * domain and one DKIM key again.
  *
  * ENVIRONMENT (all read at call time, never at module load):
  *   RESEND_API_KEY        Resend API key. Missing = no send, logged, not thrown.
