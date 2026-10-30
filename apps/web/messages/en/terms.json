@@ -13,7 +13,7 @@
     "title": "1. Agreement to These Terms",
     "p1": "These Terms of Service (\"Terms\") constitute a legally binding agreement between you (\"you\" or \"User\") and {company}, a Norwegian private limited company (aksjeselskap) with organisation number <b>{orgNumber}</b>, owned and operated by {owner} and trading as \"MCPEmails\" (\"MCPEmails\", \"we\", \"us\", or \"our\"). They govern your access to and use of the MCPEmails service, including the website at <b>mcpemails.com</b>, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the \"Service\"). Your contract is with {company}; \"MCPEmails\" is a trading name, not a separate legal entity.",
     "p1b": "Service provider identification: {company}, organisation number {orgNumber}, registered in {register} (the Norwegian Register of Business Enterprises, operated by Brønnøysundregistrene). Registered address: {companyAddress}. Legal enquiries: <email></email>.",
-    "p2": "By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our <privacy>Privacy Policy</privacy>, which is incorporated into these Terms by reference.",
+    "p2": "By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our <privacy>Privacy Policy</privacy>, which is incorporated into these Terms by reference. If you use the Service to process other people's personal data, our <dpa>Data Processing Agreement</dpa> also forms part of these Terms.",
     "p3": "If you are accepting these Terms on behalf of a company or other legal entity, you represent and warrant that you have the authority to bind that entity, in which case \"you\" refers to that entity.",
     "p4": "If you do not agree to these Terms, do not create an account or use the Service."
   },
@@ -26,8 +26,8 @@
       "OAuth integration with supported email providers to obtain and manage delegated access to your mailboxes.",
       "A usage and audit log showing which tools your agents have called and when."
     ],
-    "p2": "MCPEmails acts as a protocol bridge. We do not store the email content your agent reads on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. The exception is a message you schedule to send later, which we store only until it is delivered. See our <privacy>Privacy Policy</privacy> for a full description of what data we do and do not retain.",
-    "p2b": "Email content is delivered only to the MCP client or AI agent that you have connected and choose to use. Once content reaches that client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails does not select an AI provider on your behalf and retains no copy of your email content.",
+    "p2": "MCPEmails acts as a protocol bridge. We do not store the email content your agent reads on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. The exceptions are outgoing messages that have to wait (a message you schedule for later, or a send held for approval) and the few details some features keep, such as a reminder's subject. We keep those only for the periods set out in our <privacy>Privacy Policy</privacy>, which describes in full what data we do and do not retain.",
+    "p2b": "Email content is delivered only to the MCP client or AI agent you have connected, and to a webhook address you set up yourself. Once content reaches that client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails does not select an AI provider on your behalf and retains no copy of your email content.",
     "p3": "We reserve the right to modify, suspend, or discontinue any part of the Service at any time. Where practicable we will give at least 30 days' notice of material changes to paid users."
   },
   "accountRegistration": {
@@ -123,7 +123,7 @@
   "accountTermination": {
     "title": "8. Account Termination",
     "h81": "8.1 Termination by you",
-    "p81a": "You may close your account at any time by navigating to <b>Dashboard → Settings → Delete Account</b> and following the confirmation steps. Account deletion is permanent. All connected inbox configurations, API keys, and audit logs associated with your workspace will be deleted within 30 days of the deletion request.",
+    "p81a": "You may close your account at any time by navigating to <b>Dashboard → Settings → Delete Account</b> and following the confirmation steps. Account deletion is permanent. All connected inbox configurations, API keys, activity logs and messages you sent to support that are associated with your account will be deleted within 30 days of the deletion request. Deleted data can remain in encrypted database backups for up to 7 more days, after which the backups expire.",
     "p81b": "If you are on a paid plan, closing your account stops future billing but does not entitle you to a refund of any amounts already charged, except as described in Section 5.4.",
     "h82": "8.2 Termination by MCPEmails for cause",
     "p82": "We may suspend or terminate your account immediately, without prior notice or liability, if:",
@@ -144,7 +144,7 @@
     "list85": [
       "Your right to access and use the Service immediately ceases.",
       "All API keys associated with your account are immediately revoked.",
-      "OAuth token grants issued to MCPEmails by your email provider are revoked where the provider supports it; otherwise stored tokens are deleted and you can remove the app in your provider account. Your email provider may take up to 24 hours to reflect a revocation.",
+      "Stored inbox credentials are deleted and Google grants are revoked. Microsoft offers no way for us to revoke a grant, so its access tokens stop working on their own within about an hour; you can also remove MCPEmails in your Microsoft account. App passwords can be revoked at your email provider.",
       "Your data will be deleted in accordance with our retention schedule described in the Privacy Policy."
     ],
     "p85after": "The following provisions survive termination: Section 6 (Intellectual Property), Section 7 (Disclaimers and Limitation of Liability), Section 8.5 (Effect of Termination), Section 9 (Governing Law and Disputes), and any other provisions that by their nature should survive."

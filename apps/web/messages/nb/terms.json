@@ -13,7 +13,7 @@
     "title": "1. Aksept av disse vilkårene",
     "p1": "Disse vilkårene for bruk («Vilkårene») utgjør en juridisk bindende avtale mellom deg («du» eller «Bruker») og {company}, et norsk aksjeselskap med organisasjonsnummer <b>{orgNumber}</b>, eid og drevet av {owner}, som tilbyr tjenesten under navnet «MCPEmails» («MCPEmails», «vi», «oss» eller «vår»). Vilkårene regulerer din tilgang til og bruk av MCPEmails-tjenesten, inkludert nettstedet på <b>mcpemails.com</b>, dashbordet, API-endepunktet for Model Context Protocol (MCP), og all tilhørende programvare og dokumentasjon (samlet kalt «Tjenesten»). Avtalen din er inngått med {company}; «MCPEmails» er navnet på tjenesten, ikke en egen juridisk enhet.",
     "p1b": "Opplysninger om tjenesteyteren: {company}, organisasjonsnummer {orgNumber}, registrert i {register} (som drives av Brønnøysundregistrene). Forretningsadresse: {companyAddress}. Juridiske henvendelser: <email></email>.",
-    "p2": "Ved å opprette en konto, akseptere disse Vilkårene eller bruke en hvilken som helst del av Tjenesten, bekrefter du at du er minst 16 år gammel (eller den laveste alderen for digitalt samtykke i din jurisdiksjon, dersom denne er høyere), at du har rettslig handleevne til å inngå en bindende avtale, og at du samtykker til å være bundet av disse Vilkårene og vår <privacy>Personvernerklæring</privacy>, som ved henvisning inngår som en del av disse Vilkårene.",
+    "p2": "Ved å opprette en konto, akseptere disse Vilkårene eller bruke en hvilken som helst del av Tjenesten, bekrefter du at du er minst 16 år gammel (eller den laveste alderen for digitalt samtykke i din jurisdiksjon, dersom denne er høyere), at du har rettslig handleevne til å inngå en bindende avtale, og at du samtykker til å være bundet av disse Vilkårene og vår <privacy>Personvernerklæring</privacy>, som ved henvisning inngår som en del av disse Vilkårene. Hvis du bruker tjenesten til å behandle andres personopplysninger, er også vår <dpa>databehandleravtale</dpa> en del av disse vilkårene.",
     "p3": "Dersom du aksepterer disse Vilkårene på vegne av et selskap eller en annen juridisk enhet, innestår og garanterer du for at du har fullmakt til å binde den enheten, og i så fall viser «du» til den enheten.",
     "p4": "Dersom du ikke samtykker til disse Vilkårene, må du ikke opprette en konto eller bruke Tjenesten."
   },
@@ -26,8 +26,8 @@
       "OAuth-integrasjon med støttede e-postleverandører for å innhente og administrere delegert tilgang til dine postkasser.",
       "En bruks- og revisjonslogg som viser hvilke verktøy agentene dine har kalt og når."
     ],
-    "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnholdet agenten din leser på våre servere; vi henter det i sanntid fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Unntaket er en melding du planlegger å sende senere, som vi kun lagrer frem til den er levert. Se vår <privacy>Personvernerklæring</privacy> for en fullstendig beskrivelse av hvilke data vi beholder og ikke beholder.",
-    "p2b": "E-postinnhold leveres kun til MCP-klienten eller AI-agenten som du har koblet til og selv velger å bruke. Når innholdet når denne klienten, reguleres det av klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails velger ikke en AI-leverandør på dine vegne og beholder ingen kopi av e-postinnholdet ditt.",
+    "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnholdet agenten din leser på våre servere; vi henter det i sanntid fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Unntakene er utgående meldinger som må vente (en melding du planlegger å sende senere, eller en sending som venter på godkjenning) og de få opplysningene noen funksjoner tar vare på, for eksempel emnet i en påminnelse. Disse beholder vi bare så lenge vår <privacy>Personvernerklæring</privacy> angir, og den beskriver fullstendig hvilke data vi beholder og ikke beholder.",
+    "p2b": "E-postinnhold leveres kun til MCP-klienten eller AI-agenten du har koblet til, og til en webhook-adresse du selv setter opp. Når innholdet når denne klienten, reguleres det av klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails velger ikke en AI-leverandør på dine vegne og beholder ingen kopi av e-postinnholdet ditt.",
     "p3": "Vi forbeholder oss retten til å endre, suspendere eller avvikle enhver del av Tjenesten når som helst. Der det er praktisk mulig vil vi gi minst 30 dagers varsel om vesentlige endringer til betalende brukere."
   },
   "accountRegistration": {
@@ -123,7 +123,7 @@
   "accountTermination": {
     "title": "8. Oppsigelse av konto",
     "h81": "8.1 Oppsigelse fra deg",
-    "p81a": "Du kan stenge kontoen din når som helst ved å gå til <b>Dashbord → Innstillinger → Slett konto</b> og følge bekreftelsestrinnene. Sletting av konto er permanent. Alle tilkoblede innbokskonfigurasjoner, API-nøkler og revisjonslogger knyttet til ditt arbeidsområde vil bli slettet innen 30 dager etter sletteforespørselen.",
+    "p81a": "Du kan stenge kontoen din når som helst ved å gå til <b>Dashbord → Innstillinger → Slett konto</b> og følge bekreftelsestrinnene. Sletting av konto er permanent. Alle tilkoblede innbokskonfigurasjoner, API-nøkler, aktivitetslogger og meldinger du har sendt til support som er knyttet til kontoen din, slettes innen 30 dager etter sletteforespørselen. Slettede data kan ligge i krypterte sikkerhetskopier av databasen i opptil 7 dager til, før sikkerhetskopiene utløper.",
     "p81b": "Dersom du er på en betalt plan, stopper stenging av kontoen din fremtidig fakturering, men gir deg ikke rett til refusjon av beløp som allerede er belastet, med unntak av det som er beskrevet i punkt 5.4.",
     "h82": "8.2 Oppsigelse fra MCPEmails av saklig grunn",
     "p82": "Vi kan suspendere eller si opp kontoen din umiddelbart, uten forutgående varsel eller ansvar, dersom:",
@@ -144,7 +144,7 @@
     "list85": [
       "Din rett til å aksessere og bruke Tjenesten opphører umiddelbart.",
       "Alle API-nøkler knyttet til kontoen din tilbakekalles umiddelbart.",
-      "OAuth-tokentildelinger utstedt til MCPEmails av din e-postleverandør tilbakekalles der leverandøren støtter det; ellers slettes lagrede tokener, og du kan fjerne appen i kontoen din hos leverandøren. Din e-postleverandør kan bruke opptil 24 timer på å reflektere en tilbakekalling.",
+      "Lagret innloggingsinformasjon for innbokser slettes, og Google-tilganger tilbakekalles. Microsoft gir oss ingen mulighet til å tilbakekalle en tilgang, så tilgangstokenene deres slutter å virke av seg selv innen omtrent en time; du kan også fjerne MCPEmails i Microsoft-kontoen din. App-passord kan du tilbakekalle hos e-postleverandøren din.",
       "Dine data vil bli slettet i samsvar med vår oppbevaringsplan som er beskrevet i Personvernerklæringen."
     ],
     "p85after": "Følgende bestemmelser består etter oppsigelse: Punkt 6 (Immaterielle rettigheter), punkt 7 (Ansvarsfraskrivelser og ansvarsbegrensning), punkt 8.5 (Virkning av oppsigelse), punkt 9 (Lovvalg og tvister), samt andre bestemmelser som etter sin art bør bestå."

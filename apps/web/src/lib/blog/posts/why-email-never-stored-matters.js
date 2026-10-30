@@ -2,7 +2,7 @@ const post = {
   slug: 'why-email-never-stored-matters',
   title: "Why 'Email Never Stored' Matters When Connecting AI to Your Inbox",
   description:
-    'Email never stored means MCPEmails fetches your mail live and discards it, keeping only an encrypted token. See why that beats tools that copy your whole inbox.',
+    'Email never stored means MCPEmails fetches your mail live and discards it, keeping an encrypted token per inbox. See why that beats tools that copy your whole inbox.',
   cover: '/blog/cover-why-email-never-stored-matters.svg',
   coverAlt: 'Email fetched live and discarded versus a second copy stored in a vendor database',
   authorId: 'asgeir',
@@ -10,7 +10,7 @@ const post = {
   updatedAt: "2026-06-22T09:00:00.000Z",
   tags: ['Security', 'Privacy', 'Email'],
   featured: false,
-  content: `When you connect an AI agent to your inbox, the single most important question is where your email ends up. With MCPEmails the answer is: nowhere. Every tool call fetches your mail live from Gmail, Microsoft Graph, or your IMAP server, hands it to the agent, and throws it away. The only thing we keep is an encrypted token so the next call can happen.
+  content: `When you connect an AI agent to your inbox, the single most important question is where your email ends up. With MCPEmails the answer is: nowhere. Every tool call fetches your mail live from Gmail, Microsoft Graph, or your IMAP server, hands it to the agent, and throws it away. What we keep per inbox is an encrypted token, so the next call can happen, plus the few details a feature you turn on needs, such as a scheduled message waiting to go out.
 
 That sounds like a small implementation detail. It isn't. It's the difference between handing an agent a *key to your house* and handing it a *photocopy of everything in your house*, kept forever in someone else's filing cabinet. A lot of "AI email" tools quietly do the second thing. This post is about why that matters and how the architecture actually differs.
 
@@ -57,7 +57,7 @@ agent  ←  parsed result  ←  MCP server
                          (body discarded, nothing written)
 \`\`\`
 
-The credential is the only thing at rest, and it's encrypted with **AES-256-GCM**. It's decrypted on our servers only when a request needs it and is never sent to your agent, and the encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
+The credential is the only secret we keep at rest, and it's encrypted with **AES-256-GCM**. It's decrypted on our servers only when a request needs it and is never sent to your agent, and the encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
 
 Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider: Gmail or another provider over SMTP, or Microsoft Graph for Outlook. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
 

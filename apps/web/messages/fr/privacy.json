@@ -6,13 +6,13 @@
   "hero": {
     "eyebrow": "Mentions légales",
     "title": "Politique de confidentialité",
-    "lead": "Nous avons conçu MCPEmails en faisant de la confidentialité un principe fondamental. Le contenu des e-mails que votre agent lit n'est jamais stocké sur nos serveurs ; il transite vers votre agent puis disparaît. Les exceptions sont les messages sortants qui doivent attendre : un message que vous programmez pour un envoi ultérieur, ou un envoi retenu pour votre approbation, que nous stockons chiffré. Cette politique explique ce que nous collectons réellement, et pourquoi.",
+    "lead": "Nous avons conçu MCPEmails en faisant de la confidentialité un principe fondamental. Le contenu des e-mails que votre agent lit n'est jamais stocké sur nos serveurs ; il transite vers votre agent puis disparaît. Quelques fonctionnalités que vous activez conservent une partie d'un message pendant une durée limitée, par exemple un message que vous programmez pour un envoi ultérieur ou un envoi retenu pour votre approbation. La section 2.5 les détaille une par une. Cette politique explique ce que nous collectons réellement, et pourquoi.",
     "dates": "Dernière mise à jour : {lastUpdated}  ·  Entrée en vigueur : {effectiveDate}"
   },
   "whoWeAre": {
     "title": "1. Qui nous sommes",
     "p1": "Le service MCPEmails disponible à l'adresse <b>mcpemails.com</b> est exploité par {companyName}, une société à responsabilité limitée de droit norvégien (aksjeselskap) détenue et dirigée par {ownerName}, exerçant sous le nom commercial « MCPEmails ». Dans la présente politique, « MCPEmails », « nous » et « notre » désignent {companyName}. Le service comprend toutes les pages du tableau de bord, les points de terminaison de l'API et le serveur Model Context Protocol (MCP) que les agents IA utilisent pour accéder aux comptes de messagerie connectés.",
-    "p2": "Aux fins de la législation applicable en matière de protection des données (y compris le Règlement général sur la protection des données de l'UE, le « RGPD »), MCPEmails est le responsable du traitement des données de compte et d'utilisation. Concernant le contenu des e-mails, nous agissons en tant que sous-traitant pour votre compte : nous transmettons le contenu que vous nous autorisez à récupérer, et nous ne le stockons pas.",
+    "p2": "Aux fins de la législation applicable en matière de protection des données (y compris le Règlement général sur la protection des données de l'UE, le « RGPD »), MCPEmails est le responsable du traitement des données de compte et d'utilisation. Concernant le contenu des e-mails, nous agissons en tant que sous-traitant pour votre compte : nous transmettons le contenu que vous nous autorisez à récupérer, et nous ne le stockons pas. Si vous utilisez MCPEmails pour traiter les données personnelles d'autres personnes, par exemple les e-mails d'une équipe ou de vos clients, notre <dpa>accord de traitement des données</dpa> précise comment nous les traitons pour votre compte.",
     "p3": "Identification du prestataire de services : {companyName} est une société à responsabilité limitée de droit norvégien (aksjeselskap), détenue par {ownerName}, qui préside également son conseil d'administration. Elle est immatriculée au {register}, le registre norvégien des entreprises tenu par Brønnøysundregistrene, sous le numéro d'organisation <b>{orgNumber}</b>. Notre siège social est situé à l'adresse {companyAddress}.",
     "p4": "Vous pouvez nous contacter au sujet de la confidentialité à l'adresse <email></email>."
   },
@@ -27,14 +27,14 @@
     "logsTitle": "2.4 Journaux d'utilisation et d'audit",
     "logsP": "Pour chaque appel d'outil MCP effectué par votre agent, nous enregistrons : le nom de l'outil (par ex. <c>email_read</c>), la clé d'API ayant effectué l'appel, la boîte de réception consultée, l'horodatage et la réussite ou non de l'appel. Nous n'enregistrons<b> pas</b> les objets, corps, destinataires ou tout autre contenu d'e-mail dans ces journaux.",
     "emailContentTitle": "2.5 Contenu des e-mails : non stocké",
-    "emailContentP": "Lorsque votre agent appelle <c>email_read</c> (pour lister, lire ou rechercher) ou tout autre outil de lecture, nous récupérons le contenu demandé en direct auprès de votre fournisseur de messagerie et le renvoyons à votre agent dans la même réponse HTTP. Ce contenu n'est jamais écrit sur disque, mis en cache ni journalisé. Une fois la réponse HTTP envoyée, nous ne conservons aucune copie d'un quelconque corps d'e-mail, objet, pièce jointe ou coordonnée de contact. Il existe deux exceptions, toutes deux des messages sortants qui doivent attendre. Les envois programmés : lorsque vous demandez à votre agent de programmer un message pour une remise ultérieure, nous stockons ce message sortant (ses destinataires, son objet, son corps et toute pièce jointe) dans notre base de données jusqu'à son envoi, puis nous en conservons la trace à des fins d'audit et de dépannage. Les envois retenus pour approbation : lorsqu'une boîte exige une approbation, l'envoi, la réponse, le transfert ou l'envoi de brouillon demandé par votre agent est stocké chiffré dans notre base de données jusqu'à ce qu'un membre de l'espace de travail l'approuve ou le refuse, ou jusqu'à son expiration au bout de 24 heures, et la trace est conservée ensuite comme historique des approbations. Le courrier que votre agent lit, et celui qu'il envoie immédiatement sans approbation préalable, n'est jamais stocké.",
-    "emailContentAgentP": "Le contenu de vos e-mails n'est transmis qu'au client MCP ou à l'agent IA que <b>vous</b> avez connecté et que vous utilisez (par exemple Claude, Cursor ou un autre client MCP de votre choix). Lorsque vous invoquez un outil, MCPEmails transmet le contenu demandé à ce client afin qu'il puisse répondre à votre demande. MCPEmails ne transmet pas le contenu de vos e-mails à un fournisseur d'IA qu'il choisirait lui-même. Une fois le contenu parvenu au client que vous avez choisi, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails agit uniquement comme intermédiaire et ne conserve aucune copie du contenu.",
+    "emailContentP": "Lorsque votre agent appelle <c>email_read</c> (pour lister, lire ou rechercher) ou tout autre outil de lecture, nous récupérons le contenu demandé en direct auprès de votre fournisseur de messagerie et le renvoyons à votre agent dans la même réponse HTTP. Ce contenu n'est jamais écrit sur disque, mis en cache ni journalisé. Une fois la réponse HTTP envoyée, nous ne conservons aucune copie d'un quelconque corps d'e-mail, objet, pièce jointe ou coordonnée de contact. Quelques fonctionnalités doivent conserver une partie d'un message, et seulement lorsque vous les utilisez. Les envois programmés : nous stockons le message sortant (destinataires, objet, corps et pièces jointes), chiffré, jusqu'à son envoi, et effaçons son contenu 7 jours après l'envoi. Les envois retenus pour approbation : lorsqu'une boîte exige une approbation, l'envoi, la réponse, le transfert ou l'envoi de brouillon demandé par votre agent est stocké chiffré jusqu'à ce qu'un membre de l'espace de travail l'approuve ou le refuse, ou jusqu'à son expiration au bout de 24 heures. Son contenu est effacé 7 jours après cette décision, et la trace de l'approbation, avec les destinataires et l'objet chiffrés, est conservée 90 jours comme historique des approbations. Les relances et mises en attente : nous conservons l'objet, l'expéditeur et les destinataires du message, chiffrés, jusqu'à ce que le rappel soit terminé ou annulé. Les automatisations : le journal d'exécution conserve pendant 90 jours l'expéditeur et les 120 premiers caractères de l'objet de chaque message traité par une automatisation, pour que vous puissiez voir ce qu'elle a fait et l'annuler. Le courrier que votre agent lit, et celui qu'il envoie immédiatement sans approbation préalable, n'est jamais stocké.",
+    "emailContentAgentP": "Le contenu de vos e-mails n'est transmis qu'au client MCP ou à l'agent IA que <b>vous</b> avez connecté et que vous utilisez (par exemple Claude, Cursor ou un autre client MCP de votre choix). Lorsque vous invoquez un outil, MCPEmails transmet le contenu demandé à ce client afin qu'il puisse répondre à votre demande. MCPEmails ne transmet pas le contenu de vos e-mails à un fournisseur d'IA qu'il choisirait lui-même. Une fois le contenu parvenu au client que vous avez choisi, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails agit uniquement comme intermédiaire et ne conserve aucune copie du contenu. Si vous configurez un webhook (Pro et Business), nous envoyons aussi des avis de nouveaux e-mails à l'adresse web que vous indiquez. Par défaut, un avis ne contient que des identifiants de message ; si vous choisissez d'inclure les en-têtes, il contient aussi l'expéditeur et l'objet de chaque nouveau message.",
     "technicalTitle": "2.6 Données techniques et opérationnelles",
-    "technicalP": "Nous collectons des données opérationnelles standard côté serveur, notamment les adresses IP (pour la limitation du débit et la prévention des abus), les horodatages des requêtes, les codes de statut HTTP et les types d'erreurs. Ces données sont conservées sous une forme agrégée et anonymisée et ne sont plus liées à des comptes individuels au-delà de 30 jours.",
+    "technicalP": "Nous collectons des données opérationnelles courantes côté serveur : adresses IP (pour la limitation de débit et la prévention des abus), horodatages des requêtes, codes de statut HTTP et types d'erreur. Lorsque vous vous connectez, connectez une application d'IA ou qu'une application d'IA renouvelle son accès, nous enregistrons aussi l'adresse IP et l'agent utilisateur dans un journal de sécurité lié à votre compte, afin que vous et nous puissions examiner un accès inattendu. Les adresses IP et agents utilisateurs bruts de nos journaux de sécurité sont supprimés au bout de 30 jours ; ensuite, seuls des chiffres agrégés et anonymisés subsistent.",
     "cookiesTitle": "2.7 Cookies et stockage local",
-    "cookiesP": "Le tableau de bord dépose un cookie de session propriétaire émis par Supabase Auth pour vous maintenir connecté. Si vous cochez la case d'e-mails marketing du formulaire d'inscription puis continuez avec Google ou GitHub, nous déposons également un cookie propriétaire de courte durée (<c>mcpe_signup_mc</c>) qui conserve ce choix pendant la redirection de connexion. Il expire au bout de 15 minutes et est supprimé dès votre retour. Nous n'utilisons pas de cookies de suivi, de cookies publicitaires ni aucun cookie tiers. Nous stockons deux petites valeurs propriétaires dans le stockage local de votre navigateur et nulle part ailleurs : votre préférence de thème (<c>mcpe-theme</c>) et une trace de la façon dont vous avez découvert le site (<c>mcpe-acquisition</c>). La seconde ne contient qu'une catégorie générale de source de trafic (par exemple <c>reddit</c> ou <c>organic_google</c>) et le type de page d'arrivée, jamais d'identifiant, de terme de recherche ni d'URL complète. Elle est conservée jusqu'à 30 jours et ne sert pas à vous suivre sur d'autres sites.",
+    "cookiesP": "Nous ne déposons que des cookies propriétaires, jamais de cookies tiers. Un cookie de session émis par Supabase Auth vous maintient connecté, et <c>mcpe_active_ws</c> mémorise le dernier espace de travail que vous avez ouvert. Des cookies de courte durée conservent un choix pendant une redirection de connexion : <c>mcpe_signup_mc</c> (votre choix concernant les e-mails marketing, 15 minutes) et les cookies de connexion Outlook, supprimés dès votre retour. Si vous arrivez par un lien de parrainage, <c>mcpe_ref</c> conserve le code de parrainage jusqu'à 60 jours pour que le parrainage puisse être crédité à votre inscription. <c>mx_subject</c> est un identifiant aléatoire, conservé jusqu'à 12 mois, qui nous permet de savoir si deux visites viennent du même navigateur afin de mesurer des tests du site. Il n'est dérivé d'aucune information vous concernant et n'est jamais partagé avec des annonceurs ou d'autres sites. Si vous créez un compte, nous le relions à ce compte pour compter quelle version d'une page a mené à l'inscription. <c>mx_ai_client</c> mémorise pendant 30 jours au plus l'assistant d'IA d'où vous venez, pour que le site affiche les étapes de configuration correspondantes. Dans le stockage local de votre navigateur, nous conservons votre thème (<c>mcpe-theme</c>), votre langue (<c>mcpe-locale</c>), la façon dont vous avez découvert le site (<c>mcpe-acquisition</c> : une catégorie générale de source de trafic comme <c>reddit</c> ou <c>organic_google</c> et le type de page d'arrivée, jamais un terme de recherche ni une URL complète ; conservée jusqu'à 30 jours et enregistrée avec votre espace de travail si vous vous inscrivez) et quelques préférences d'affichage du tableau de bord. Nous n'utilisons pas de cookies publicitaires ni de cookies qui vous suivent sur d'autres sites.",
     "productAnalyticsTitle": "2.8 Analytique produit",
-    "productAnalyticsP": "Nous utilisons Vercel Web Analytics pour une analytique produit respectueuse de la vie privée et sans cookie. Nous mesurons les visites et un petit parcours de configuration avec des catégories agrégées uniquement. Nous n'envoyons jamais le contenu ou les adresses des e-mails, les clés API, les jetons OAuth, les identifiants utilisateur ou d'espace de travail, les requêtes MCP ou les données de boîte mail. Consultez la <link>documentation Vercel Analytics</link>. Cette configuration n'utilisant ni cookie ni identifiant non essentiel, aucune bannière de consentement n'est requise selon notre politique choisie."
+    "productAnalyticsP": "Nous utilisons Vercel Web Analytics pour une analytique produit respectueuse de la vie privée et sans cookie. Nous mesurons les visites et un petit parcours de configuration avec des catégories agrégées uniquement. Nous n'envoyons jamais le contenu ou les adresses des e-mails, les clés API, les jetons OAuth, les identifiants utilisateur ou d'espace de travail, les requêtes MCP ou les données de boîte mail. Consultez la <link>documentation Vercel Analytics</link>. Vercel Web Analytics ne dépose aucun cookie. Le cookie <c>mx_subject</c> décrit à la section 2.7 est le nôtre et ne sert qu'à mesurer des tests de notre site."
   },
   "howWeUseData": {
     "title": "3. Comment nous utilisons vos données",
@@ -44,7 +44,7 @@
     "securityTitle": "3.2 Sécurité et prévention des abus",
     "securityP": "Nous utilisons les adresses IP, les débits de requêtes et les schémas d'erreurs pour détecter et bloquer les activités abusives, appliquer des limites de débit et protéger la disponibilité du service pour tous les utilisateurs. La base légale réside dans nos <b>intérêts légitimes</b> à exploiter un service sécurisé.",
     "analyticsTitle": "3.3 Analyse de l'utilisation et amélioration du produit",
-    "analyticsP": "Nous utilisons des données d'utilisation agrégées et anonymisées (nombre d'appels d'outils, taux d'erreur, latence) pour comprendre comment le service est utilisé et hiérarchiser les améliorations. Les analyses restent agrégées : nous n'utilisons pas de données d'utilisation au niveau individuel à cette fin. Les signaux individuels de compte et d'utilisation servent uniquement à appliquer les limites des plans (section 3.4) et, si vous y avez consenti, à choisir quel e-mail marketing vous envoyer (section 3.9). La base légale réside dans nos <b>intérêts légitimes</b> à améliorer le service.",
+    "analyticsP": "Nous utilisons des données d'utilisation agrégées et anonymisées (nombre d'appels d'outils, taux d'erreur, latence) pour comprendre comment le service est utilisé et hiérarchiser les améliorations. Les statistiques produit sont agrégées. Nous utilisons les signaux individuels de compte et d'utilisation pour appliquer les limites des plans (section 3.4), envoyer les e-mails d'aide à la configuration décrits à la section 3.10, mesurer des tests de notre site (section 2.7), vous aider quand quelque chose échoue et, si vous y avez consenti, choisir quel e-mail marketing vous envoyer (section 3.9). La base légale réside dans nos <b>intérêts légitimes</b> à améliorer le service.",
     "billingTitle": "3.4 Facturation et application des plans",
     "billingP": "Nous utilisons les compteurs d'utilisation pour déterminer si votre espace de travail a atteint les limites du plan et pour calculer votre facture sur les plans payants. La base légale est l’<b>exécution d'un contrat</b>.",
     "legalTitle": "3.5 Conformité légale",
@@ -58,10 +58,11 @@
     ],
     "googleTitle": "3.7 Services d'API Google : usage limité",
     "googleP1": "L'utilisation et le transfert par MCPEmails vers toute autre application des informations reçues des API Google (y compris l'API Gmail) respecteront la <link>politique de Google relative aux données utilisateur des services d'API</link>, y compris les exigences d’<b>usage limité</b>.",
-    "googleP2": "Lorsque vous connectez un compte Gmail, vous accordez à MCPEmails les portées Gmail suivantes. Nous demandons chaque portée uniquement pour fournir les fonctionnalités que vous invoquez via votre agent IA, et nous les utilisons uniquement pour votre compte :",
+    "googleP2": "Lorsque vous connectez un compte Gmail avec la connexion Google (OAuth), vous accordez à MCPEmails les portées Gmail suivantes. Si vous connectez plutôt Gmail avec un mot de passe d'application, aucune portée d'API Google n'est accordée et votre boîte est accessible via IMAP et SMTP. Nous demandons chaque portée uniquement pour fournir les fonctionnalités que vous invoquez via votre agent IA, et nous les utilisons uniquement pour votre compte :",
     "googleScopeReadonly": "<c>gmail.readonly</c> : lister les messages et lire le contenu des messages afin que votre agent puisse rechercher, lire et résumer des e-mails à votre demande.",
     "googleScopeSend": "<c>gmail.send</c> : composer et envoyer des messages que votre agent crée à votre demande.",
     "googleScopeModify": "<c>gmail.modify</c> : organiser votre messagerie selon vos instructions, notamment appliquer et retirer des libellés, marquer des messages comme lus ou non lus, archiver des messages, déplacer des messages entre dossiers et placer des messages à la corbeille.",
+    "googleScopeSettings": "<c>gmail.settings.basic</c> : lire vos adresses Gmail « Envoyer des e-mails en tant que » et la signature définie pour elles, pour que votre agent puisse envoyer depuis un alias que Google a déjà validé pour vous, avec votre signature Gmail. Nous lisons seulement ces paramètres et ne les modifions jamais.",
     "googleLimitedIntro": "Conformément aux exigences d'usage limité, MCPEmails :",
     "googleLimitedList": [
       "utilise les données utilisateur de Google uniquement pour fournir et améliorer les fonctionnalités destinées aux utilisateurs décrites ci-dessus ;",
@@ -70,7 +71,7 @@
       "n'utilise pas les données utilisateur de Google pour développer, améliorer ou entraîner des modèles d'IA ou d'apprentissage automatique généralisés ou non personnalisés ;",
       "ne permet pas à des humains de lire les données utilisateur de Google, sauf si (a) vous donnez votre consentement explicite pour des messages spécifiques, (b) cela est nécessaire à des fins de sécurité telles que l'investigation d'abus, (c) cela est requis pour se conformer à la loi applicable, ou (d) les données ont été agrégées et anonymisées."
     ],
-    "googleP3": "Comme décrit à la section 2.5, le contenu d'e-mail récupéré via l'API Gmail est acheminé vers votre agent dans la même requête et n'est jamais stocké, mis en cache ni journalisé par MCPEmails.",
+    "googleP3": "En dehors des quelques données de fonctionnalités listées à la section 2.5, le contenu d'e-mail récupéré via l'API Gmail est acheminé vers votre agent dans la même requête et n'est jamais stocké, mis en cache ni journalisé par MCPEmails.",
     "microsoftTitle": "3.8 API Microsoft : accès à la boîte et révocation",
     "microsoftP1": "Lorsque vous connectez une boîte Outlook ou Microsoft 365, Microsoft vous demande d'approuver un ensemble d'autorisations précis et nommé : lire et organiser votre courrier, et envoyer du courrier en votre nom. Nous utilisons cet accès uniquement pour exécuter les fonctions que vous demandez à un agent IA d'effectuer sur votre boîte, comme lire, rechercher, organiser, rédiger et envoyer. Nous ne l'utilisons pas pour constituer une copie de votre boîte, et nous n'utilisons jamais le contenu des messages, ni rien qui en dérive, à des fins publicitaires ou marketing.",
     "microsoftRevokeP": "Vous pouvez retirer cet accès à tout moment, directement auprès de Microsoft et sans nous le demander. Pour un compte Microsoft personnel, utilisez <personal>Autorisations du compte Microsoft</personal>. Pour un compte professionnel ou scolaire, utilisez <work>Mes applications</work>. La révocation y met immédiatement fin à notre accès à cette boîte. Si votre administrateur informatique a approuvé MCPEmails pour toute l'organisation, seul un administrateur peut retirer cette approbation valable pour toute l'organisation.",
@@ -116,7 +117,7 @@
       },
       {
         "category": "Journal d'activité des appels d'outils MCP",
-        "period": "Jusqu'à 90 jours sur Free et Personal, jusqu'à 2 ans sur Pro et Business",
+        "period": "Free : affiché 30 jours, stocké 90. Personal : 90 jours. Pro et Business : 2 ans",
         "reason": "Sécurité ; historique d'usage dans votre tableau de bord"
       },
       {
@@ -125,32 +126,47 @@
         "reason": "Historique de facturation ; analyse produit"
       },
       {
-        "category": "Journaux opérationnels du serveur (IP, statut)",
+        "category": "Journaux du serveur et de sécurité (adresse IP, agent utilisateur, statut)",
         "period": "30 jours bruts ; agrégat anonymisé conservé",
         "reason": "Prévention des abus ; disponibilité"
       },
       {
-        "category": "Contenu des e-mails (lu ou envoyé immédiatement)",
+        "category": "Contenu des e-mails que votre agent lit ou envoie immédiatement",
         "period": "Non stocké ; conservation nulle",
         "reason": "Confidentialité dès la conception"
       },
       {
         "category": "Messages d'envoi programmé",
-        "period": "Jusqu'à l'envoi ; trace conservée ensuite à des fins d'audit",
+        "period": "Jusqu'à l'envoi, puis 7 jours ; le contenu du message est ensuite effacé",
         "reason": "Nécessaire pour remettre les messages que vous programmez"
       },
       {
         "category": "Envois retenus pour approbation",
-        "period": "Chiffrés en attendant une décision (24 heures au maximum) ; trace conservée ensuite comme historique des approbations",
+        "period": "Chiffrés en attendant une décision (24 heures au maximum) et 7 jours après ; la trace de l'approbation (destinataires et objet, chiffrés) est conservée 90 jours",
         "reason": "Nécessaire pour montrer le message à la personne qui l'examine et l'envoyer une fois approuvé"
+      },
+      {
+        "category": "Relances et mises en attente (objet, expéditeur, destinataires, chiffrés)",
+        "period": "Jusqu'à ce que le rappel soit terminé ou annulé",
+        "reason": "Nécessaire pour vérifier l'arrivée d'une réponse et afficher le rappel"
+      },
+      {
+        "category": "Journal d'exécution des automatisations (expéditeur, 120 premiers caractères de l'objet)",
+        "period": "90 jours",
+        "reason": "Afficher et annuler ce qu'une automatisation a fait"
+      },
+      {
+        "category": "Messages que vous envoyez au support",
+        "period": "Jusqu'à la suppression du compte, plus 30 jours",
+        "reason": "Répondre à votre demande"
       }
     ],
-    "outro": "Lorsque vous supprimez votre compte, nous engageons la suppression de toutes les données personnelles dans un délai de 30 jours. Les statistiques d'utilisation agrégées et non personnelles dérivées de votre compte peuvent être conservées au-delà de cette période sous forme anonymisée."
+    "outro": "Lorsque vous supprimez votre compte, nous supprimons immédiatement les mots de passe et jetons enregistrés de chaque boîte connectée, révoquons vos autorisations Google, vos clés d'API et vos connexions d'applications d'IA, et bloquons la connexion. Dans les 30 jours, nous effaçons tout le reste lié au compte : les données du compte et des espaces de travail, les paramètres des boîtes, le journal d'activité, l'historique des envois programmés et approuvés, et les messages que vous avez envoyés au support. Les données supprimées peuvent subsister jusqu'à 7 jours de plus dans des sauvegardes chiffrées de la base de données, après quoi ces sauvegardes expirent. Des statistiques agrégées et non personnelles peuvent être conservées."
   },
   "thirdParties": {
     "title": "5. Tiers et partage des données",
     "infraTitle": "5.1 Fournisseurs d'infrastructure (sous-traitants)",
-    "infraP": "Nous faisons appel aux sous-traitants ultérieurs suivants pour exploiter le service. Chacun est lié par un accord de traitement des données et ne traite les données que sur nos instructions :",
+    "infraP": "Nous faisons appel aux sous-traitants ultérieurs suivants pour exploiter le service. Chacun ne traite les données que sur nos instructions, dans le cadre d'un accord de traitement des données ou des conditions standard de traitement des données du fournisseur. Pour les clients qui traitent des données personnelles d'autres personnes via MCPEmails, notre <dpa>accord de traitement des données</dpa> couvre ce traitement :",
     "thProvider": "Fournisseur",
     "thPurpose": "Finalité",
     "thData": "Données traitées",
@@ -164,12 +180,18 @@
     "relayPurpose": "Relais de messagerie pour les rares fournisseurs qui refusent les connexions depuis des adresses cloud",
     "relayData": "La connexion IMAP et SMTP chiffrée vers ces fournisseurs, qui transite comme un tunnel avec TLS de bout en bout : le relais ne peut lire ni le courrier ni les mots de passe",
     "relayLocation": "Allemagne (UE)",
+    "resendPurpose": "Envoi des e-mails liés au compte, à la facturation et au support, et des e-mails marketing si vous y avez consenti",
+    "resendData": "Votre adresse e-mail et votre nom, et le contenu des e-mails que nous vous envoyons, y compris les confirmations du support qui reprennent votre message. Jamais le contenu de votre boîte mail",
+    "resendLocation": "UE (Irlande) ; Resend Inc. est une entreprise américaine",
+    "migaduPurpose": "Hébergement de nos propres boîtes mail : la boîte du support et l'adresse noreply qui envoie les e-mails d'inscription et de mot de passe",
+    "migaduData": "Votre adresse e-mail, les e-mails d'inscription et de mot de passe que nous vous envoyons, et ce que vous écrivez au support",
+    "migaduLocation": "Suisse / UE",
     "stripeProvider": "(plans payants uniquement)",
     "stripePurpose": "Traitement des paiements",
     "stripeData": "E-mail de facturation, données de carte de paiement (stockées par Stripe, pas par nous)",
     "stripeLocation": "États-Unis (Stripe est certifié PCI-DSS)",
     "emailProvidersTitle": "5.2 Fournisseurs de messagerie (vos fournisseurs, pas les nôtres)",
-    "emailProvidersP": "Lorsque vous connectez un compte Gmail, Outlook / Microsoft 365, Fastmail ou un autre compte IMAP, MCPEmails s'authentifie auprès de ce fournisseur à l'aide des identifiants que vous fournissez. La politique de confidentialité propre à votre fournisseur de messagerie régit les données conservées dans votre boîte aux lettres. MCPEmails accède à votre boîte aux lettres uniquement lorsque votre agent effectue un appel d'outil, et uniquement pour les messages ou dossiers spécifiques que l'outil demande.",
+    "emailProvidersP": "Lorsque vous connectez un compte Gmail, Outlook / Microsoft 365, Fastmail ou un autre compte IMAP, MCPEmails s'authentifie auprès de ce fournisseur à l'aide des identifiants que vous fournissez. La politique de confidentialité propre à votre fournisseur de messagerie régit les données conservées dans votre boîte aux lettres. MCPEmails accède à votre boîte aux lettres lorsque votre agent effectue un appel d'outil, et en arrière-plan uniquement pour les fonctionnalités que vous activez : envois programmés, automatisations, relances et mises en attente, récapitulatif du matin et webhooks de nouveaux e-mails. Chacune ne lit que ce dont elle a besoin.",
     "noBrokersTitle": "5.3 Aucun courtier en données ni réseau publicitaire",
     "noBrokersP": "Nous ne partageons aucune donnée avec des courtiers en données, des réseaux publicitaires, des plateformes de réseaux sociaux ou des sociétés d'analyse qui établissent des profils d'utilisateurs.",
     "legalDisclosuresTitle": "5.4 Divulgations légales",
@@ -180,7 +202,7 @@
   "internationalTransfers": {
     "title": "6. Transferts internationaux de données",
     "p1": "MCPEmails est exploité depuis la Norvège, qui est soumise au cadre de protection des données de l'Espace économique européen (EEE). Si vous accédez au service depuis l'extérieur de l'EEE, vos données peuvent être transférées et traitées dans des pays situés au sein de l'EEE.",
-    "p2": "Nos sous-traitants d'infrastructure (Supabase, Vercel) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par leur certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework).",
+    "p2": "Nos sous-traitants ultérieurs établis aux États-Unis (Supabase, Vercel et Resend) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par sa certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework). Hetzner traite les données en Allemagne et Migadu en Suisse, pays que la Commission européenne reconnaît comme offrant un niveau de protection adéquat.",
     "p3": "Notre base de données, qui contient les données de compte et de configuration, est hébergée dans l'UE (Stockholm, Suède) pour tous les clients. Aucun forfait ni réglage ne la déplace vers une autre région. Les serveurs qui traitent les requêtes de votre agent ne sont pas tous dans l'UE : les fonctions edge qui se connectent à votre boîte aux lettres s'exécutent aux États-Unis (côte Est), tout comme la partie de notre site qui relaie ces requêtes. Le contenu des e-mails y transite en direct, pour répondre à la requête, et n'y est pas stocké. Les identifiants chiffrés sont déchiffrés dans ce même environnement américain le temps de la requête."
   },
   "yourRights": {
@@ -205,7 +227,7 @@
       },
       {
         "term": "Portabilité des données.",
-        "desc": " Demander vos données dans un format lisible par machine (JSON)."
+        "desc": " Demander vos données dans un format lisible par machine (JSON). Nous fournissons l'export sur demande ; il n'existe pas d'outil d'export en libre-service."
       },
       {
         "term": "Opposition.",
@@ -216,7 +238,7 @@
         "desc": " Lorsque le traitement est fondé sur le consentement, le retirer à tout moment sans affecter la licéité du traitement antérieur."
       }
     ],
-    "exercise": "Pour exercer l'un de ces droits, écrivez-nous à l'adresse <email></email>. Nous répondrons dans un délai de 30 jours (ou de 72 heures pour les demandes urgentes liées à la sécurité). Nous pouvons vous demander de vérifier votre identité avant de traiter la demande.",
+    "exercise": "Pour exercer l'un de ces droits, écrivez-nous à l'adresse <email></email>. Nous répondrons dans un délai d'un mois (ou de 72 heures pour les demandes urgentes liées à la sécurité). Nous pouvons vous demander de vérifier votre identité avant de traiter la demande.",
     "complaint": "Si vous êtes situé dans l'EEE ou au Royaume-Uni, vous avez le droit d'introduire une réclamation auprès de votre autorité de contrôle locale. En Norvège, il s'agit du <b>Datatilsynet</b> (datatilsynet.no)."
   },
   "security": {
@@ -230,7 +252,7 @@
       "L'accès administratif à l'infrastructure de production nécessite une authentification multifacteur et est journalisé."
     ],
     "reportP": "Malgré ces mesures, aucun système n'est parfaitement sécurisé. Si vous découvrez une vulnérabilité de sécurité, veuillez la signaler de manière responsable à <securityEmail></securityEmail>. Nous nous efforçons d'accuser réception des signalements dans un délai de 24 heures et de corriger les vulnérabilités confirmées dans un délai de 72 heures pour les problèmes critiques.",
-    "breachP": "En cas de violation de données personnelles susceptible d'entraîner un risque pour vos droits et libertés, nous informerons les utilisateurs concernés et l'autorité de contrôle compétente dans un délai de 72 heures après en avoir pris connaissance, comme l'exige l'article 33 du RGPD."
+    "breachP": "En cas de violation de données personnelles susceptible d'engendrer un risque pour vos droits et libertés, nous en informons l'autorité de contrôle compétente dans les 72 heures après en avoir pris connaissance, comme l'exige l'article 33 du RGPD. Lorsque le risque pour vous est élevé, nous informons aussi les utilisateurs concernés dans les meilleurs délais, comme l'exige l'article 34."
   },
   "children": {
     "title": "9. Confidentialité des enfants",
@@ -254,11 +276,11 @@
     "postalLabel": "Adresse postale",
     "postalValue": "{companyName} (numéro d'organisation {orgNumber}), {companyAddress}",
     "responseLabel": "Délai de réponse",
-    "responseValue": "Nous répondons à toutes les demandes relatives à la confidentialité dans un délai de 30 jours"
+    "responseValue": "Nous répondons à toutes les demandes relatives à la confidentialité dans un délai d'un mois"
   },
   "cta": {
     "title": "Des questions sur vos données ?",
-    "sub": "Écrivez-nous au sujet de n'importe quel point de cette politique et nous répondrons sous 30 jours.",
+    "sub": "Écrivez-nous au sujet de n'importe quel point de cette politique et nous répondrons sous un mois.",
     "contactBtn": "Nous contacter sur la confidentialité",
     "termsBtn": "Lire nos Conditions"
   }

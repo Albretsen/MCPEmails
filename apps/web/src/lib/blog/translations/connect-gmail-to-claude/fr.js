@@ -83,7 +83,7 @@ Une chose à anticiper d'emblée : MCPEmails fonctionne par interrogation (polli
 
 En bref : oui, et la conception est pensée pour ça.
 
-- **Vos e-mails ne sont jamais stockés.** Les corps de messages, les objets et les pièces jointes sont récupérés en direct à chaque appel, transmis à Claude, puis aussitôt supprimés. La seule chose conservée par boîte mail est l'identifiant chiffré, votre mot de passe d'application. Voici [pourquoi « les e-mails ne sont jamais stockés » compte vraiment](/blog/why-email-never-stored-matters).
+- **Vos e-mails ne sont jamais stockés.** Les corps de messages, les objets et les pièces jointes sont récupérés en direct à chaque appel, transmis à Claude, puis aussitôt supprimés. Pour chaque boîte mail, nous conservons l'identifiant chiffré, votre mot de passe d'application, plus les quelques informations dont a besoin une fonctionnalité que vous activez, comme un message programmé en attente d'envoi. Voici [pourquoi « les e-mails ne sont jamais stockés » compte vraiment](/blog/why-email-never-stored-matters).
 - **Vous contrôlez la portée.** Approuvez la lecture seule et Claude est littéralement incapable d'envoyer. Approuvez les deux et vous pouvez toujours révoquer l'une ou l'autre à tout moment.
 - **Aucun partage de mot de passe.** Votre mot de passe Google habituel n'arrive jamais chez MCPEmails. Un mot de passe d'application est un identifiant distinct que vous pouvez révoquer à tout moment sur myaccount.google.com/apppasswords, ou vous pouvez supprimer la boîte dans MCPEmails.
 
@@ -95,7 +95,7 @@ Le modèle de menace complet (ce qui est chiffré, ce qu'un attaquant verrait ou
 Non. Claude prend en charge OAuth, vous collez donc l'URL de l'endpoint et approuvez une connexion. Les clés API ne sont nécessaires que pour les clients sans OAuth intégré.
 
 **Claude stocke-t-il mes messages Gmail ?**
-Non. Les e-mails sont récupérés en direct depuis Gmail à chaque requête et supprimés juste après que Claude les a lus. Rien n'est conservé, à l'exception de votre identifiant chiffré (le mot de passe d'application).
+Non. Les e-mails sont récupérés en direct depuis Gmail à chaque requête et supprimés juste après que Claude les a lus. Rien n'est conservé du courrier que Claude lit ; ce qui est gardé, c'est votre identifiant chiffré (le mot de passe d'application).
 
 **Claude peut-il envoyer des e-mails depuis mon Gmail ?**
 Oui, si vous accordez la portée \`send:email\`. Les envois partent via Gmail comme des messages normaux depuis votre propre compte. Accordez la lecture seule si vous préférez que Claude n'envoie jamais.

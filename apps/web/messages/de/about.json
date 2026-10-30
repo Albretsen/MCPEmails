@@ -29,7 +29,7 @@
   "why": {
     "title": "Warum ich es gebaut habe",
     "p1": "Ich wollte, dass meine eigenen Agenten mein Postfach bearbeiten. Jede Lösung, die ich fand, wollte zuerst eine Kopie meiner E-Mails: synchronisieren, indexieren und in einer fremden Datenbank aufbewahren, solange das Konto besteht. Bei einem Postfach voller Rechnungen, Verträge und Passwort-Resets ist das viel, was man für etwas hergibt, das man nur ab und zu braucht.",
-    "p2": "Also habe ich die Version gebaut, die ich selbst nutzen wollte. E-Mails werden live abgerufen, wenn Ihr Agent danach fragt, und verworfen, sobald die Antwort gesendet ist, es gibt also keine gespeicherte Kopie. Aufbewahrt wird nur die Zugangsberechtigung zum Postfach, verschlüsselt gespeichert, weil der nächste Aufruf sie braucht. Ich lasse meine eigenen E-Mails jeden Tag darüber laufen."
+    "p2": "Also habe ich die Version gebaut, die ich selbst nutzen wollte. E-Mails werden live abgerufen, wenn Ihr Agent danach fragt, und verworfen, sobald die Antwort gesendet ist, es gibt also keine gespeicherte Kopie. Aufbewahrt wird pro Postfach die Zugangsberechtigung, verschlüsselt gespeichert, weil der nächste Aufruf sie braucht, dazu die wenigen Angaben, die eine von Ihnen eingeschaltete Funktion braucht, etwa eine geplante Nachricht, die noch auf den Versand wartet. Ich lasse meine eigenen E-Mails jeden Tag darüber laufen."
   },
   "trusting": {
     "title": "Wem Sie vertrauen",

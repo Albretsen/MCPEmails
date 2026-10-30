@@ -6,13 +6,13 @@
   "hero": {
     "eyebrow": "Juridisk",
     "title": "Personvernerklæring",
-    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Unntakene er utgående meldinger som må vente: en melding du planlegger å sende senere, eller en sending som holdes tilbake for godkjenning, som vi lagrer kryptert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
+    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Noen funksjoner du slår på, tar vare på deler av en melding i en begrenset periode, for eksempel en melding du planlegger å sende senere eller en sending som holdes tilbake for godkjenning. Avsnitt 2.5 viser hver av dem. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
     "dates": "Sist oppdatert: {lastUpdated}  ·  Gjelder fra: {effectiveDate}"
   },
   "whoWeAre": {
     "title": "1. Hvem vi er",
     "p1": "MCPEmails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
-    "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
+    "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke. Hvis du bruker MCPEmails til å behandle andres personopplysninger, for eksempel e-posten til et team eller kundene dine, beskriver <dpa>databehandleravtalen</dpa> vår hvordan vi behandler dem på dine vegne.",
     "p3": "Opplysninger om tjenesteyteren: {companyName} er et aksjeselskap etablert i Norge, eid av {ownerName}, som også er styreleder. Selskapet er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Forretningsadressen vår er {companyAddress}.",
     "p4": "Du kan kontakte oss om personvern på <email></email>."
   },
@@ -27,14 +27,14 @@
     "logsTitle": "2.4 Bruks- og revisjonslogger",
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>email_read</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
-    "emailContentP": "Når agenten din kaller <c>email_read</c> (for å liste, lese eller søke) eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Det finnes to unntak, begge utgående meldinger som må vente. Planlagte sendinger: når du ber agenten din om å planlegge en melding for fremtidig levering, lagrer vi den utgående meldingen (mottakere, emne, brødtekst og eventuelle vedlegg) i databasen vår frem til den er sendt, og vi beholder oppføringen etterpå for revisjon og feilsøking. Sendinger som venter på godkjenning: når en innboks krever godkjenning, lagres en sending, et svar, en videresending eller en utkastsending agenten din ber om kryptert i databasen vår til et medlem av arbeidsområdet godkjenner eller avviser den, eller til den utløper etter 24 timer, og oppføringen beholdes etterpå som godkjenningshistorikken din. E-post agenten din leser, og e-post den sender umiddelbart uten å vente på godkjenning, lagres aldri.",
-    "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
+    "emailContentP": "Når agenten din kaller <c>email_read</c> (for å liste, lese eller søke) eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Noen funksjoner må ta vare på deler av en melding, og bare når du bruker dem. Planlagte sendinger: vi lagrer den utgående meldingen (mottakere, emne, brødtekst og vedlegg) kryptert til den er sendt, og sletter innholdet 7 dager etter at den er sendt. Sendinger som venter på godkjenning: når en innboks krever godkjenning, lagres en sending, et svar, en videresending eller en utkastsending agenten din ber om kryptert til et medlem av arbeidsområdet godkjenner eller avviser den, eller til den utløper etter 24 timer. Innholdet slettes 7 dager etter avgjørelsen, og godkjenningsoppføringen, med mottakere og emne kryptert, beholdes i 90 dager som godkjenningshistorikken din. Oppfølging og utsettelse: vi tar vare på meldingens emne, avsender og mottakere, kryptert, til påminnelsen er fullført eller avbrutt. Automatiseringer: kjøreloggen tar vare på avsenderen og de første 120 tegnene i emnet for hver melding en automatisering har behandlet, i 90 dager, slik at du kan se hva den gjorde og angre det. E-post agenten din leser, og e-post den sender umiddelbart uten å vente på godkjenning, lagres aldri.",
+    "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet. Hvis du setter opp en webhook (Pro og Business), sender vi også varsler om ny e-post til nettadressen du oppgir. Som standard inneholder et varsel bare meldings-ID-er; hvis du velger å ta med overskrifter, inneholder det også avsender og emne for hver ny melding.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
-    "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
+    "technicalP": "Vi samler inn vanlige driftsdata på serversiden: IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Når du logger inn, kobler til en AI-app, eller en AI-app fornyer tilgangen sin, registrerer vi også IP-adressen og brukeragenten i en sikkerhetslogg knyttet til kontoen din, slik at du og vi kan undersøke uventet tilgang. Rå IP-adresser og brukeragenter i sikkerhetsloggene våre slettes etter 30 dager; etter det finnes bare aggregerte, anonymiserte tall.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
-    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Hvis du krysser av for markedsføring på e-post på registreringsskjemaet og deretter fortsetter med Google eller GitHub, setter vi også en kortvarig førsteparts informasjonskapsel (<c>mcpe_signup_mc</c>) som tar med valget ditt gjennom innloggingen. Den utløper etter 15 minutter og slettes så snart du er tilbake. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer to små førstepartsverdier i nettleserens lokale lagring og ingen andre steder: temapreferansen din (<c>mcpe-theme</c>) og en oppføring av hvordan du først kom til nettstedet (<c>mcpe-acquisition</c>). Den siste inneholder bare en grov kategori for trafikkilde (for eksempel <c>reddit</c> eller <c>organic_google</c>) og hvilken type side du kom til, aldri en identifikator, et søkeord eller en fullstendig URL. Den oppbevares i inntil 30 dager, og den brukes ikke til å spore deg på tvers av andre nettsteder.",
+    "cookiesP": "Vi setter bare førsteparts informasjonskapsler, aldri tredjeparts. En øktinformasjonskapsel fra Supabase Auth holder deg innlogget, og <c>mcpe_active_ws</c> husker hvilket arbeidsområde du sist åpnet. Kortvarige informasjonskapsler tar med et valg gjennom en innlogging: <c>mcpe_signup_mc</c> (valget ditt om markedsføring på e-post, 15 minutter) og informasjonskapslene for Outlook-tilkoblingen, som slettes når du er tilbake. Hvis du kommer via en vervelenke, tar <c>mcpe_ref</c> vare på vervekoden i inntil 60 dager, slik at vervingen kan godskrives når du registrerer deg. <c>mx_subject</c> er en tilfeldig ID som oppbevares i inntil 12 måneder og lar oss se om to besøk kom fra samme nettleser, slik at vi kan måle tester av nettstedet. Den er ikke avledet av noe om deg og deles aldri med annonsører eller andre nettsteder. Hvis du oppretter en konto, kobler vi den til kontoen for å telle hvilken versjon av en side som førte til registreringen. <c>mx_ai_client</c> husker hvilken AI-assistent du kom fra, i inntil 30 dager, slik at nettstedet viser oppsettstegene for den. I nettleserens lokale lagring tar vi vare på temaet ditt (<c>mcpe-theme</c>), språket ditt (<c>mcpe-locale</c>), hvordan du først kom til nettstedet (<c>mcpe-acquisition</c>: en grov kategori for trafikkilde, som <c>reddit</c> eller <c>organic_google</c>, og hvilken type side du kom til, aldri et søkeord eller en fullstendig URL; oppbevares i inntil 30 dager og lagres med arbeidsområdet ditt hvis du registrerer deg) og noen visningsvalg i dashbordet. Vi bruker ikke reklameinformasjonskapsler eller informasjonskapsler som sporer deg på tvers av andre nettsteder.",
     "productAnalyticsTitle": "2.8 Produktanalyse",
-    "productAnalyticsP": "Vi bruker Vercel Web Analytics til personvernvennlig, informasjonskapsel-fri produktanalyse. Vi måler sidebesøk og et lite oppsettsløp med kun aggregerte kategorier. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener, bruker- eller arbeidsområde-ID-er, MCP-forespørsler eller postkassedata. Se <link>Vercels analysedokumentasjon</link>. Siden oppsettet er uten informasjonskapsler og ikke bruker ikke-nødvendige identifikatorer, kreves ingen samtykkebanner etter vår valgte policy."
+    "productAnalyticsP": "Vi bruker Vercel Web Analytics til personvernvennlig, informasjonskapsel-fri produktanalyse. Vi måler sidebesøk og et lite oppsettsløp med kun aggregerte kategorier. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener, bruker- eller arbeidsområde-ID-er, MCP-forespørsler eller postkassedata. Se <link>Vercels analysedokumentasjon</link>. Vercel Web Analytics setter ingen informasjonskapsel. Informasjonskapselen <c>mx_subject</c> som er beskrevet i avsnitt 2.7, er vår egen og brukes bare til å måle tester av nettstedet vårt."
   },
   "howWeUseData": {
     "title": "3. Hvordan vi bruker dataene dine",
@@ -44,7 +44,7 @@
     "securityTitle": "3.2 Sikkerhet og forebygging av misbruk",
     "securityP": "Vi bruker IP-adresser, forespørselsfrekvenser og feilmønstre for å oppdage og blokkere misbruk, håndheve hastighetsgrenser og beskytte tilgjengeligheten til tjenesten for alle brukere. Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å drive en sikker tjeneste.",
     "analyticsTitle": "3.3 Bruksanalyse og produktforbedring",
-    "analyticsP": "Vi bruker aggregerte, anonymiserte bruksdata (antall verktøykall, feilrater, ventetid) for å forstå hvordan tjenesten brukes og for å prioritere forbedringer. Analysen forblir aggregert: vi bruker ikke bruksdata på individnivå til dette formålet. Konto- og bruksdata for den enkelte brukes bare til å håndheve abonnementsgrenser (punkt 3.4) og, hvis du har samtykket, til å velge hvilken markedsførings-e-post vi sender deg (punkt 3.9). Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å forbedre tjenesten.",
+    "analyticsP": "Vi bruker aggregerte, anonymiserte bruksdata (antall verktøykall, feilrater, ventetid) for å forstå hvordan tjenesten brukes og for å prioritere forbedringer. Produktstatistikk er aggregert. Vi bruker konto- og bruksdata for den enkelte til å håndheve abonnementsgrenser (punkt 3.4), til å sende e-postene om oppsett som er beskrevet i punkt 3.10, til å måle tester av nettstedet vårt (punkt 2.7), til å hjelpe deg når noe feiler, og, hvis du har samtykket, til å velge hvilken markedsførings-e-post vi sender deg (punkt 3.9). Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å forbedre tjenesten.",
     "billingTitle": "3.4 Fakturering og håndheving av abonnement",
     "billingP": "Vi bruker brukstellinger for å avgjøre om arbeidsområdet ditt har nådd abonnementsgrensene og for å beregne fakturaen din på betalte abonnementer. Det rettslige grunnlaget er <b>oppfyllelse av en kontrakt</b>.",
     "legalTitle": "3.5 Etterlevelse av lov",
@@ -58,10 +58,11 @@
     ],
     "googleTitle": "3.7 Google API-tjenester: Begrenset bruk",
     "googleP1": "MCPEmails' bruk og overføring til enhver annen app av informasjon mottatt fra Google APIs (inkludert Gmail API) vil overholde <link>Google API Services User Data Policy</link>, inkludert kravene til <b>Begrenset bruk</b>.",
-    "googleP2": "Når du kobler til en Gmail-konto, gir du MCPEmails følgende Gmail-omfang. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
+    "googleP2": "Når du kobler til en Gmail-konto med Google-pålogging (OAuth), gir du MCPEmails følgende Gmail-omfang. Hvis du i stedet kobler til Gmail med et app-passord, gis det ikke noe Google API-omfang, og postkassen din nås over IMAP og SMTP. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
     "googleScopeReadonly": "<c>gmail.readonly</c>: liste opp meldinger og lese meldingsinnhold slik at agenten din kan søke i, lese og oppsummere e-post på din forespørsel.",
     "googleScopeSend": "<c>gmail.send</c>: skrive og sende meldinger som agenten din oppretter på din forespørsel.",
     "googleScopeModify": "<c>gmail.modify</c>: organisere e-posten din etter dine instruksjoner, inkludert å legge til og fjerne etiketter, merke meldinger som lest eller ulest, arkivere meldinger, flytte meldinger mellom mapper og flytte meldinger til papirkurven.",
+    "googleScopeSettings": "<c>gmail.settings.basic</c>: lese «Send e-post som»-adressene dine i Gmail og signaturen som er satt for dem, slik at agenten din kan sende fra et alias Google allerede har bekreftet for deg, med Gmail-signaturen din. Vi leser bare disse innstillingene og endrer dem aldri.",
     "googleLimitedIntro": "I samsvar med kravene til Begrenset bruk vil MCPEmails:",
     "googleLimitedList": [
       "kun bruke Google-brukerdata til å levere og forbedre de brukervendte funksjonene beskrevet ovenfor;",
@@ -70,7 +71,7 @@
       "ikke bruke Google-brukerdata til å utvikle, forbedre eller trene generaliserte eller ikke-personaliserte AI- eller maskinlæringsmodeller;",
       "ikke tillate at mennesker leser Google-brukerdata med mindre (a) du gir uttrykkelig samtykke for spesifikke meldinger, (b) det er nødvendig av sikkerhetsmessige hensyn, slik som undersøkelse av misbruk, (c) det er påkrevd for å overholde gjeldende lov, eller (d) dataene er aggregert og anonymisert."
     ],
-    "googleP3": "Som beskrevet i avsnitt 2.5 strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCPEmails.",
+    "googleP3": "Bortsett fra de få funksjonsoppføringene som er listet i avsnitt 2.5, strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCPEmails.",
     "microsoftTitle": "3.8 Microsoft-API-er: postkassetilgang og hvordan du trekker den tilbake",
     "microsoftP1": "Når du kobler til en Outlook- eller Microsoft 365-postkasse, ber Microsoft deg godkjenne et bestemt, navngitt sett med tillatelser: å lese og organisere e-posten din, og å sende e-post på dine vegne. Vi bruker denne tilgangen bare til å utføre det du ber en KI-agent gjøre med postkassen din, som å lese, søke, organisere, skrive utkast og sende. Vi bruker den ikke til å bygge en kopi av postkassen din, og vi bruker aldri e-postinnhold, eller noe utledet av det, til annonsering eller markedsføring.",
     "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen. Hvis IT-administratoren godkjente MCPEmails for hele organisasjonen, er det bare en administrator som kan fjerne den organisasjonsomfattende godkjenningen.",
@@ -116,7 +117,7 @@
       },
       {
         "category": "Aktivitetslogg for MCP-verktøykall",
-        "period": "Opptil 90 dager på Free og Personal, opptil 2 år på Pro og Business",
+        "period": "Free: vises i 30 dager, lagres i 90. Personal: 90 dager. Pro og Business: 2 år",
         "reason": "Sikkerhet; brukshistorikk i dashbordet"
       },
       {
@@ -125,32 +126,47 @@
         "reason": "Faktureringshistorikk; produktanalyse"
       },
       {
-        "category": "Driftslogger på serveren (IP, status)",
+        "category": "Server- og sikkerhetslogger (IP-adresse, brukeragent, status)",
         "period": "30 dager rå; anonymisert aggregat beholdes",
         "reason": "Forebygging av misbruk; tilgjengelighet"
       },
       {
-        "category": "E-postinnhold (lest eller sendt umiddelbart)",
+        "category": "E-postinnhold agenten din leser eller sender umiddelbart",
         "period": "Ikke lagret; null lagring",
         "reason": "Innebygd personvern"
       },
       {
         "category": "Planlagte sendingsmeldinger",
-        "period": "Frem til sendt; oppføring beholdes etterpå for revisjon",
+        "period": "Frem til sendt, deretter 7 dager; så slettes innholdet i meldingen",
         "reason": "Nødvendig for å levere meldinger du planlegger"
       },
       {
         "category": "Sendinger som venter på godkjenning",
-        "period": "Kryptert mens de venter på en avgjørelse (høyst 24 timer); oppføringen beholdes etterpå som godkjenningshistorikk",
+        "period": "Kryptert mens de venter på en avgjørelse (høyst 24 timer) og i 7 dager etterpå; godkjenningsoppføringen (mottakere og emne, kryptert) beholdes i 90 dager",
         "reason": "Nødvendig for å vise meldingen til den som godkjenner, og sende den når den er godkjent"
+      },
+      {
+        "category": "Oppfølging og utsettelse (emne, avsender, mottakere, kryptert)",
+        "period": "Til påminnelsen er fullført eller avbrutt",
+        "reason": "Nødvendig for å se etter svar og vise påminnelsen"
+      },
+      {
+        "category": "Kjørelogg for automatiseringer (avsender, de første 120 tegnene i emnet)",
+        "period": "90 dager",
+        "reason": "Vise og angre hva en automatisering gjorde"
+      },
+      {
+        "category": "Meldinger du sender til support",
+        "period": "Inntil kontosletting, pluss 30 dager",
+        "reason": "Svare på henvendelsen din"
       }
     ],
-    "outro": "Når du sletter kontoen din, igangsetter vi sletting av alle personopplysninger innen 30 dager. Aggregert, ikke-personlig bruksstatistikk avledet fra kontoen din kan oppbevares utover denne perioden i anonymisert form."
+    "outro": "Når du sletter kontoen din, sletter vi umiddelbart de lagrede passordene og tokenene for alle tilkoblede innbokser, tilbakekaller Google-tilgangene, API-nøklene og AI-app-tilkoblingene dine, og sperrer innlogging. Innen 30 dager sletter vi alt annet som hører til kontoen: konto- og arbeidsområdeoppføringer, innboksinnstillinger, aktivitetsloggen, historikken over planlagte og godkjente sendinger, og meldinger du har sendt til support. Slettede data kan ligge i krypterte sikkerhetskopier av databasen i opptil 7 dager til, før sikkerhetskopiene utløper. Aggregert, ikke-personlig statistikk kan beholdes."
   },
   "thirdParties": {
     "title": "5. Tredjeparter og datadeling",
     "infraTitle": "5.1 Infrastrukturleverandører (databehandlere)",
-    "infraP": "Vi bruker følgende underdatabehandlere for å drive tjenesten. Hver er bundet av en databehandleravtale og behandler data kun etter våre instruksjoner:",
+    "infraP": "Vi bruker følgende underdatabehandlere for å drive tjenesten. Hver av dem behandler data kun etter våre instruksjoner og under en databehandleravtale eller leverandørens standardvilkår for databehandling. For kunder som behandler andres personopplysninger gjennom MCPEmails, dekker vår <dpa>databehandleravtale</dpa> denne behandlingen:",
     "thProvider": "Leverandør",
     "thPurpose": "Formål",
     "thData": "Data som behandles",
@@ -164,12 +180,18 @@
     "relayPurpose": "E-postrelé for de få leverandørene som avviser tilkoblinger fra skyadresser",
     "relayData": "Den krypterte IMAP- og SMTP-tilkoblingen til disse leverandørene, sendt gjennom som en tunnel med TLS hele veien: reléet kan ikke lese e-post eller passord",
     "relayLocation": "Tyskland (EU)",
+    "resendPurpose": "Sending av e-post om konto, fakturering og support, og markedsførings-e-post hvis du har samtykket",
+    "resendData": "E-postadressen og navnet ditt, og innholdet i e-postene vi sender deg, inkludert supportbekreftelser som gjengir meldingen din. Aldri innhold fra postkassen din",
+    "resendLocation": "EU (Irland); Resend Inc. er et amerikansk selskap",
+    "migaduPurpose": "Drift av våre egne postkasser: supportpostkassen og noreply-adressen som sender e-post om registrering og passord",
+    "migaduData": "E-postadressen din, e-postene om registrering og passord vi sender deg, og det du skriver til support",
+    "migaduLocation": "Sveits / EU",
     "stripeProvider": "(kun betalte abonnementer)",
     "stripePurpose": "Betalingsbehandling",
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
-    "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
+    "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din når agenten din gjør et verktøykall, og i bakgrunnen bare for funksjoner du slår på: planlagte sendinger, automatiseringer, oppfølging og utsettelse, morgenoppsummeringen og webhooks for ny e-post. Hver av dem leser bare det funksjonen trenger.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
     "noBrokersP": "Vi deler ingen data med datameglere, annonsenettverk, sosiale medieplattformer eller analyseselskaper som bygger brukerprofiler.",
     "legalDisclosuresTitle": "5.4 Rettslige utleveringer",
@@ -180,7 +202,7 @@
   "internationalTransfers": {
     "title": "6. Internasjonale dataoverføringer",
     "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
-    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
+    "p2": "Underdatabehandlerne våre i USA (Supabase, Vercel og Resend) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering. Hetzner behandler data i Tyskland og Migadu i Sveits, som Europakommisjonen har anerkjent som et land med tilstrekkelig beskyttelsesnivå.",
     "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region. Ikke alle serverne som håndterer forespørslene fra agenten din, står i EU: edge-funksjonene som kobler til innboksen din, kjører i USA (østkysten), og det samme gjør delen av nettstedet vårt som videresender disse forespørslene. E-postinnhold passerer gjennom dem direkte for å besvare forespørselen og lagres ikke der. Kryptert legitimasjon dekrypteres i det samme amerikanske miljøet mens forespørselen pågår."
   },
   "yourRights": {
@@ -205,7 +227,7 @@
       },
       {
         "term": "Dataportabilitet.",
-        "desc": " Be om dataene dine i et maskinlesbart format (JSON)."
+        "desc": " Be om dataene dine i et maskinlesbart format (JSON). Vi lager eksporten på forespørsel; det finnes ikke noe selvbetjent eksportverktøy."
       },
       {
         "term": "Innsigelse.",
@@ -216,7 +238,7 @@
         "desc": " Der behandlingen er basert på samtykke, kan du trekke det tilbake når som helst uten at det påvirker lovligheten av tidligere behandling."
       }
     ],
-    "exercise": "For å utøve noen av disse rettighetene, send oss en e-post på <email></email>. Vi vil svare innen 30 dager (eller 72 timer for hastesaker knyttet til sikkerhet). Vi kan be deg om å bekrefte identiteten din før vi behandler forespørselen.",
+    "exercise": "For å utøve noen av disse rettighetene, send oss en e-post på <email></email>. Vi vil svare innen én måned (eller 72 timer for hastesaker knyttet til sikkerhet). Vi kan be deg om å bekrefte identiteten din før vi behandler forespørselen.",
     "complaint": "Hvis du befinner deg i EØS eller Storbritannia, har du rett til å klage til din lokale tilsynsmyndighet. I Norge er dette <b>Datatilsynet</b> (datatilsynet.no)."
   },
   "security": {
@@ -230,7 +252,7 @@
       "Administrativ tilgang til produksjonsinfrastruktur krever flerfaktorautentisering og logges."
     ],
     "reportP": "Til tross for disse tiltakene er ingen systemer fullstendig sikre. Hvis du oppdager en sikkerhetssårbarhet, vennligst rapporter den ansvarlig til <securityEmail></securityEmail>. Vi tar sikte på å bekrefte rapporter innen 24 timer og løse bekreftede sårbarheter innen 72 timer for kritiske saker.",
-    "breachP": "Ved et brudd på personopplysningssikkerheten som sannsynligvis vil medføre en risiko for dine rettigheter og friheter, vil vi varsle berørte brukere og den relevante tilsynsmyndigheten innen 72 timer etter at vi ble klar over bruddet, slik GDPR artikkel 33 krever."
+    "breachP": "Ved et brudd på personopplysningssikkerheten som sannsynligvis vil medføre en risiko for dine rettigheter og friheter, vil vi varsle den relevante tilsynsmyndigheten innen 72 timer etter at vi ble klar over bruddet, slik GDPR artikkel 33 krever. Når risikoen for deg er høy, varsler vi også berørte brukere uten ugrunnet opphold, slik artikkel 34 krever."
   },
   "children": {
     "title": "9. Barns personvern",
@@ -254,11 +276,11 @@
     "postalLabel": "Postadresse",
     "postalValue": "{companyName} (organisasjonsnummer {orgNumber}), {companyAddress}",
     "responseLabel": "Responstid",
-    "responseValue": "Vi svarer på alle personvernforespørsler innen 30 dager"
+    "responseValue": "Vi svarer på alle personvernforespørsler innen én måned"
   },
   "cta": {
     "title": "Spørsmål om dataene dine?",
-    "sub": "Send oss en e-post om hva som helst i denne erklæringen, så svarer vi innen 30 dager.",
+    "sub": "Send oss en e-post om hva som helst i denne erklæringen, så svarer vi innen én måned.",
     "contactBtn": "Kontakt oss om personvern",
     "termsBtn": "Les vilkårene våre"
   }

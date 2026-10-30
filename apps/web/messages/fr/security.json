@@ -12,8 +12,8 @@
     "title": "1. La version courte",
     "intro": "Si vous ne lisez rien d'autre sur cette page :",
     "points": [
-      "Vos e-mails sont récupérés en direct à chaque requête et supprimés dès que la réponse est envoyée. Nous ne conservons aucune copie d'un quelconque corps de message, objet, pièce jointe ou contact.",
-      "Nous stockons exactement une seule chose sensible par boîte de réception : un jeton d'accès ou un mot de passe d'application, chiffré avec AES-256-GCM, afin de pouvoir effectuer le prochain appel que vous demandez.",
+      "Vos e-mails sont récupérés en direct à chaque requête et abandonnés dès que la réponse est envoyée. Nous ne gardons aucune copie du courrier que votre agent lit.",
+      "Pour chaque boîte, nous stockons un jeton d'accès ou un mot de passe d'application, chiffré en AES-256-GCM, afin de pouvoir effectuer le prochain appel que vous demandez. Quelques fonctionnalités conservent une petite partie d'un message pendant que vous les utilisez : envois programmés et retenus, relances et mises en attente, et journal d'exécution des automatisations. La section 2 les détaille une par une.",
       "Nous n'entraînons jamais aucun modèle d'IA sur vos e-mails, et nous n'envoyons jamais vos e-mails à un modèle de notre choix. Votre agent est la seule chose qui les lit, sous votre contrôle.",
       "L'accès est limité par l'identifiant que vous configurez : les clés API peuvent être restreintes à certaines boîtes ou autorisées à atteindre toutes les boîtes de l'espace de travail. Vous pouvez révoquer l'accès du fournisseur à tout moment depuis les paramètres de Google, de Microsoft ou de votre fournisseur.",
       "Le code qui fait tourner le service est public. Vous pouvez le lire, l'auditer ou héberger l'ensemble vous-même."
@@ -49,12 +49,22 @@
       {
         "data": "Messages que vous programmez pour plus tard",
         "accessed": "Conservés jusqu'à l'heure d'envoi, puis expédiés",
-        "stored": "Oui, chiffrés au repos jusqu'à l'envoi, puis conservés dans votre historique"
+        "stored": "Oui, chiffrés au repos jusqu'à l'envoi ; le contenu est effacé 7 jours après l'envoi"
       },
       {
         "data": "Envois retenus pour votre approbation",
         "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou expirent au bout de 24 heures",
-        "stored": "Oui, chiffrés au repos, puis conservés dans votre historique des approbations"
+        "stored": "Oui, chiffrés au repos. Le contenu est effacé 7 jours après la décision ; la trace de l'approbation (destinataires et objet, chiffrés) est conservée 90 jours"
+      },
+      {
+        "data": "Relances et mises en attente",
+        "accessed": "Vérifiées en arrière-plan jusqu'à ce que le rappel soit terminé",
+        "stored": "Objet, expéditeur et destinataires, chiffrés, jusqu'à ce que le rappel soit terminé. Jamais le corps"
+      },
+      {
+        "data": "Journal d'exécution des automatisations",
+        "accessed": "Écrit lorsqu'une automatisation agit sur un message",
+        "stored": "Expéditeur et 120 premiers caractères de l'objet, pendant 90 jours. Jamais le corps"
       },
       {
         "data": "Activité des appels d'outils (métadonnées)",
@@ -62,13 +72,13 @@
         "stored": "Nom de l'outil, boîte de réception, horodatage et statut uniquement. Aucun contenu d'e-mail"
       }
     ],
-    "outro": "Les exceptions délibérées sont les messages sortants qui doivent attendre : un message que vous demandez à l'agent de programmer pour plus tard, et un envoi retenu pour votre approbation. Nous devons les conserver jusqu'à leur départ, nous les stockons donc chiffrés entre-temps, puis nous en gardons une trace pour votre historique."
+    "outro": "Les exceptions délibérées sont les fonctionnalités qui doivent se souvenir d'une partie d'un message : un envoi programmé ou retenu, une relance ou mise en attente, et le journal d'exécution des automatisations. Chacune ne garde que ce dont elle a besoin, pendant la durée indiquée dans le tableau ci-dessus."
   },
   "verify": {
     "title": "3. Vous n'avez pas à me faire confiance, vous pouvez vérifier",
     "p1": "« Une personne quelconque a bricolé ça » est une inquiétude légitime pour tout outil hébergé qui touche à vos e-mails. La bonne réponse n'est pas une promesse plus grande. C'est de supprimer le besoin de me croire sur parole.",
     "points": [
-      "<b>Lisez le code.</b> Le serveur qui fait tourner MCPEmails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré) et ce qu'il ne conserve pas (vos e-mails).",
+      "<b>Lisez le code.</b> Le serveur qui fait tourner MCPEmails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré, plus les données de fonctionnalités listées ci-dessus) et ce qu'il ne conserve pas (le courrier que votre agent lit).",
       "<selfhost><b>Hébergez-le vous-même.</b></selfhost> Si vous préférez ne pas utiliser du tout le service hébergé, vous pouvez exécuter le même code sur votre propre infrastructure, avec vos propres clés : une pile Docker en une seule commande se trouve dans <selfhost>self-host/</selfhost>.",
       "<b>Utilisez une connexion limitée et révocable.</b> Vous vous connectez avec OAuth ou un mot de passe d'application qui n'accorde qu'un accès au courrier, et vous pouvez le révoquer en un clic depuis votre fournisseur, sans aucune intervention de ma part.",
       "<b>Surveillez ce qu'il fait.</b> Chaque appel d'outil effectué par votre agent est enregistré dans un journal d'activité que vous pouvez consulter, pour voir précisément ce qui a été consulté et quand."
@@ -81,14 +91,14 @@
     "points": [
       "<b>L'accès aux boîtes est configurable.</b> Les clés API peuvent être restreintes à certaines boîtes ou délibérément autorisées à atteindre toutes les boîtes d'un espace de travail. Une clé restreinte ne peut pas atteindre une boîte qui ne lui a pas été accordée.",
       "<b>Les actions destructrices sont séparées et signalées.</b> L'envoi et la suppression sont des outils distincts avec des portées séparées ; la suppression exige <code>confirm: true</code>. La présentation d'une confirmation à l'utilisateur dépend de la politique du client.",
-      "<b>Moindre privilège.</b> Les connexions demandent un accès en lecture et en rédaction du courrier, pas un contrôle sur l'ensemble du compte. Même un jeton entièrement compromis est borné par la portée que vous avez accordée.",
+      "<b>Le courrier, rien d'autre.</b> Les connexions demandent un accès au courrier, jamais à l'ensemble de votre compte : ni agenda, ni fichiers, ni contacts. Au sein du courrier, l'accès est large, car les outils en ont besoin : lire, organiser, supprimer et envoyer. Avec la connexion Google, Gmail nous permet aussi de lire vos adresses « Envoyer des e-mails en tant que ». Ce que votre agent peut faire de cet accès est restreint par les autorisations que vous accordez à chaque application d'IA ou clé d'API, et par les restrictions de boîtes.",
       "<b>Débit limité.</b> Chaque clé a un débit limité, de sorte qu'un agent emballé ou détourné ne peut pas déclencher des milliers d'actions sans que cela se remarque."
     ],
     "outro": "Pas résolu. Contenu : les actions irréversibles sont protégées, et les portées des clés API ainsi que les restrictions de boîtes peuvent réduire le rayon d'impact."
   },
   "credentials": {
     "title": "5. Comment vos identifiants sont protégés",
-    "intro": "Vos jetons sont la seule chose sensible que nous détenons, ils bénéficient donc de la protection la plus forte que nous puissions leur offrir :",
+    "intro": "Les jetons et mots de passe de vos boîtes sont ce que nous détenons de plus sensible, ils bénéficient donc de la protection la plus forte que nous puissions leur offrir :",
     "measures": [
       "Toutes les données en transit sont chiffrées avec TLS 1.2 ou supérieur. Les connexions qui ne prennent pas en charge TLS sont rejetées.",
       "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée comme secret serveur, séparément de la base de données, et n'est jamais stockée avec les données chiffrées.",
@@ -105,7 +115,7 @@
   },
   "subprocessors": {
     "title": "7. Sous-traitants",
-    "intro": "Nous gardons courte la liste des entreprises qui touchent à des données, et chacune est liée par un accord de traitement des données. Notez ce qui est absent : aucun fournisseur d'IA ne figure sur cette liste. MCPEmails n'envoie vos e-mails à aucun modèle de son choix. C'est votre agent qui le fait, sous votre contrôle et selon la politique de données de son fournisseur.",
+    "intro": "Nous gardons courte la liste des entreprises qui touchent à des données. Chacune ne traite les données que sur nos instructions, dans le cadre d'un accord de traitement des données ou des conditions standard de traitement des données du fournisseur, et notre <dpa>accord de traitement des données</dpa> est à la disposition des clients qui en ont besoin. Notez ce qui est absent : aucun fournisseur d'IA ne figure sur cette liste. MCPEmails n'envoie vos e-mails à aucun modèle de son choix. C'est votre agent qui le fait, sous votre contrôle et selon la politique de données de son fournisseur.",
     "thProvider": "Fournisseur",
     "thPurpose": "Finalité",
     "thLocation": "Emplacement",
@@ -124,6 +134,16 @@
         "provider": "Hetzner",
         "purpose": "Relais de messagerie pour les rares fournisseurs qui refusent les connexions depuis des adresses cloud (un tunnel TLS : il ne peut lire ni le courrier ni les mots de passe)",
         "location": "Allemagne (UE)"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "E-mails de compte, de facturation et de support, et e-mails marketing si vous y avez consenti (jamais le contenu de votre boîte)",
+        "location": "UE (Irlande) ; Resend Inc. est une entreprise américaine"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Nos propres boîtes de support et noreply (e-mails d'inscription et de mot de passe, messages au support)",
+        "location": "Suisse / UE"
       },
       {
         "provider": "Stripe",

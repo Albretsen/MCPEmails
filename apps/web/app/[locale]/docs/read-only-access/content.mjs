@@ -24,6 +24,11 @@
 //                          messages/<locale>/dashboardChrome.json
 //   search                 searchImapMessages in mcp-server/index.ts (UID SEARCH,
 //                          INBOX default, page max 100, SEARCH_TIMEOUT_MS 30s)
+//   background work        cron dispatchers in supabase/migrations (triage rules,
+//                          scheduled sends), 20261024235200_reminders.sql and
+//                          mcp-server/reminders-engine.ts, 20261024235400_
+//                          morning_briefs.sql (inserts the brief), webhooks in
+//                          supabase/functions/client-api/webhooks/deliver.ts
 //
 // Inline markup: `code` and **bold**, rendered by the page. No other syntax.
 
@@ -84,7 +89,7 @@ const en = {
       items: [
         'We open a TLS connection, verify the server\'s certificate, sign in once to check your password or app password, and sign out.',
         'Nothing is downloaded, copied or indexed. Messages are fetched from your provider only when a tool asks for them.',
-        'Background work runs only for automations and scheduled sends, and both need write permissions a read-only connection does not have.',
+        'Background work runs only for features you turn on. Automations, scheduled sends, follow-ups and snoozes need write permissions a read-only connection does not have. The morning brief and new-mail webhooks are dashboard settings, not connection permissions: the brief reads your inbox and adds one message to it, and webhooks check for new mail. Both stay off unless you turn them on.',
         'If you never want to send from the address, choose **Advanced settings** → **Connection type** → **Receive only (IMAP)** when you connect it. No SMTP server is configured or contacted.',
       ],
     },
@@ -159,7 +164,7 @@ const nb = {
       items: [
         'Vi åpner en TLS-tilkobling, sjekker serverens sertifikat, logger inn én gang for å kontrollere passordet eller app-passordet ditt, og logger ut.',
         'Ingenting lastes ned, kopieres eller indekseres. Meldinger hentes fra leverandøren din bare når et verktøy ber om dem.',
-        'Bakgrunnsarbeid kjører bare for automatiseringer og planlagte utsendelser, og begge krever skrivetillatelser som en skrivebeskyttet tilkobling ikke har.',
+        'Bakgrunnsarbeid kjører bare for funksjoner du slår på. Automatiseringer, planlagte utsendelser, oppfølging og utsettelse krever skrivetillatelser som en skrivebeskyttet tilkobling ikke har. Morgenoppsummeringen og webhooks for ny e-post er innstillinger i dashbordet, ikke tilkoblingstillatelser: oppsummeringen leser innboksen din og legger til én melding i den, og webhooks ser etter ny e-post. Begge er av til du slår dem på.',
         'Hvis du aldri vil sende fra adressen, velger du **Avanserte innstillinger** → **Tilkoblingstype** → **Kun motta (IMAP)** når du kobler den til. Ingen SMTP-server settes opp eller kontaktes.',
       ],
     },
@@ -234,7 +239,7 @@ const es = {
       items: [
         'Abrimos una conexión TLS, verificamos el certificado del servidor, iniciamos sesión una vez para comprobar tu contraseña o contraseña de aplicación, y cerramos la sesión.',
         'No se descarga, copia ni indexa nada. Los mensajes se obtienen de tu proveedor solo cuando una herramienta los pide.',
-        'Solo hay trabajo en segundo plano para automatizaciones y envíos programados, y ambos requieren permisos de escritura que una conexión de solo lectura no tiene.',
+        'Solo hay trabajo en segundo plano para las funciones que activas. Las automatizaciones, los envíos programados, los seguimientos y los mensajes pospuestos requieren permisos de escritura que una conexión de solo lectura no tiene. El resumen matinal y los webhooks de correo nuevo son ajustes del panel, no permisos de la conexión: el resumen lee tu bandeja y le añade un mensaje, y los webhooks comprueban si hay correo nuevo. Ambos siguen desactivados salvo que los actives.',
         'Si nunca quieres enviar desde la dirección, elige **Configuración avanzada** → **Tipo de conexión** → **Solo recibir (IMAP)** al conectarla. No se configura ni se contacta ningún servidor SMTP.',
       ],
     },
@@ -309,7 +314,7 @@ const fr = {
       items: [
         'Nous ouvrons une connexion TLS, vérifions le certificat du serveur, nous connectons une fois pour contrôler votre mot de passe ou mot de passe d\'application, puis nous déconnectons.',
         'Rien n\'est téléchargé, copié ni indexé. Les messages ne sont récupérés chez votre fournisseur que lorsqu\'un outil les demande.',
-        'Aucun travail en arrière-plan ne tourne, sauf pour les automatisations et les envois programmés, qui exigent des autorisations d\'écriture qu\'une connexion en lecture seule n\'a pas.',
+        'Aucun travail en arrière-plan ne tourne, sauf pour les fonctionnalités que vous activez. Les automatisations, les envois programmés, les relances et les mises en attente exigent des autorisations d\'écriture qu\'une connexion en lecture seule n\'a pas. Le récapitulatif du matin et les webhooks de nouveaux e-mails sont des réglages du tableau de bord, pas des autorisations de connexion : le récapitulatif lit votre boîte et y ajoute un message, et les webhooks vérifient l\'arrivée de nouveaux e-mails. Les deux restent désactivés tant que vous ne les activez pas.',
         'Si vous ne voulez jamais envoyer depuis l\'adresse, choisissez **Paramètres avancés** → **Type de connexion** → **Réception uniquement (IMAP)** en la connectant. Aucun serveur SMTP n\'est configuré ni contacté.',
       ],
     },
@@ -383,7 +388,7 @@ const zh = {
       items: [
         '我们建立 TLS 连接，验证服务器证书，登录一次以检查您的密码或应用专用密码，然后退出。',
         '不会下载、复制或索引任何内容。只有当工具请求时，才会从您的服务商获取邮件。',
-        '后台任务只为自动化和定时发送运行，两者都需要只读连接所没有的写入权限。',
+        '后台任务只为你开启的功能运行。自动化、定时发送、跟进提醒和稍后处理都需要只读连接所没有的写入权限。晨间简报和新邮件 Webhook 是控制台设置，而不是连接权限：简报会读取你的收件箱并向其中添加一封邮件，Webhook 会检查是否有新邮件。两者默认关闭，除非你开启。',
         '如果您从不打算用该地址发信，连接时选择 **高级设置** → **连接类型** → **仅接收 (IMAP)**。不会配置或联系任何 SMTP 服务器。',
       ],
     },
@@ -458,7 +463,7 @@ const de = {
       items: [
         'Wir öffnen eine TLS-Verbindung, prüfen das Zertifikat des Servers, melden uns einmal an, um Ihr Passwort oder App-Passwort zu prüfen, und melden uns wieder ab.',
         'Nichts wird heruntergeladen, kopiert oder indexiert. Nachrichten werden nur dann bei Ihrem Anbieter abgerufen, wenn ein Tool sie anfordert.',
-        'Im Hintergrund laufen nur Automatisierungen und zeitversetzte Sendungen, und beide brauchen Schreibrechte, die eine Verbindung mit Nur-Lese-Zugriff nicht hat.',
+        'Im Hintergrund läuft nur, was Sie selbst einschalten. Automatisierungen, zeitversetzte Sendungen, Nachfassen und Zurückstellen brauchen Schreibrechte, die eine Verbindung mit Nur-Lese-Zugriff nicht hat. Das Morgen-Briefing und Webhooks für neue E-Mails sind Dashboard-Einstellungen, keine Verbindungsrechte: Das Briefing liest Ihren Posteingang und fügt ihm eine Nachricht hinzu, und Webhooks prüfen auf neue E-Mails. Beides bleibt aus, bis Sie es einschalten.',
         'Wenn Sie von der Adresse nie senden möchten, wählen Sie beim Verbinden **Erweiterte Einstellungen** → **Verbindungstyp** → **Nur empfangen (IMAP)**. Dann wird kein SMTP-Server eingerichtet oder kontaktiert.',
       ],
     },

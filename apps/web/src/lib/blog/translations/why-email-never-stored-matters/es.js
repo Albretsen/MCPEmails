@@ -1,9 +1,9 @@
 const translation = {
   title: 'Por qué importa que «el correo nunca se almacene» al conectar la IA a tu bandeja',
   description:
-    'Que el correo nunca se almacene significa que MCPEmails obtiene tu correo en vivo y lo descarta, guardando solo un token cifrado. Mira por qué supera a las herramientas que copian toda tu bandeja.',
+    'Que el correo nunca se almacene significa que MCPEmails obtiene tu correo en vivo y lo descarta, guardando un token cifrado por bandeja. Mira por qué supera a las herramientas que copian toda tu bandeja.',
   coverAlt: 'Correo obtenido en vivo y descartado frente a una segunda copia almacenada en la base de datos de un proveedor',
-  content: `Cuando conectas un agente de IA a tu bandeja de entrada, la pregunta más importante de todas es dónde acaba tu correo. Con MCPEmails la respuesta es: en ningún sitio. Cada llamada a una herramienta obtiene tu correo en vivo desde Gmail, Microsoft Graph o tu servidor IMAP, se lo entrega al agente y lo desecha. Lo único que conservamos es un token cifrado para que la siguiente llamada pueda producirse.
+  content: `Cuando conectas un agente de IA a tu bandeja de entrada, la pregunta más importante de todas es dónde acaba tu correo. Con MCPEmails la respuesta es: en ningún sitio. Cada llamada a una herramienta obtiene tu correo en vivo desde Gmail, Microsoft Graph o tu servidor IMAP, se lo entrega al agente y lo desecha. Lo que conservamos por bandeja es un token cifrado, para que la siguiente llamada pueda producirse, además de los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse.
 
 Eso suena a un detalle de implementación menor. No lo es. Es la diferencia entre darle a un agente una *llave de tu casa* y darle una *fotocopia de todo lo que hay en tu casa*, guardada para siempre en el archivador de otra persona. Muchas herramientas de «IA para el correo» hacen lo segundo sin decirlo. Esta publicación trata de por qué eso importa y de cómo difiere de verdad la arquitectura.
 
@@ -50,7 +50,7 @@ agente  ←  resultado analizado  ←  servidor MCP
                          (cuerpo descartado, nada escrito)
 \`\`\`
 
-La credencial es lo único que queda en reposo, y está cifrada con **AES-256-GCM**. Se descifra en nuestros servidores solo cuando una petición lo necesita y nunca se envía a tu agente, y la clave de cifrado se guarda como secreto del servidor, separada de la base de datos, de modo que un volcado de la base de datos por sí solo no sirve de nada. El mensaje en sí nunca toca el almacenamiento duradero. Se analiza, se devuelve a tu agente y desaparece.
+La credencial es el único secreto que queda en reposo, y está cifrada con **AES-256-GCM**. Se descifra en nuestros servidores solo cuando una petición lo necesita y nunca se envía a tu agente, y la clave de cifrado se guarda como secreto del servidor, separada de la base de datos, de modo que un volcado de la base de datos por sí solo no sirve de nada. El mensaje en sí nunca toca el almacenamiento duradero. Se analiza, se devuelve a tu agente y desaparece.
 
 El envío funciona igual y añade una garantía más: el correo saliente pasa por *tu* proveedor: Gmail u otro proveedor por SMTP, o Microsoft Graph para Outlook. Nunca lo retransmitimos desde nuestro propio dominio, así que tu entregabilidad y la reputación de tu dominio siguen siendo enteramente tuyas. No hay ningún grupo de envío compartido que te haga caer en la reputación de spam de otra persona.
 

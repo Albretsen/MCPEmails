@@ -88,7 +88,7 @@ MCPEmails no envía el correo nuevo a Claude por iniciativa propia. Claude lo co
 
 ## ¿Se guarda mi correo de Outlook.com en algún sitio?
 
-No. Cada vez que Claude pide un mensaje, MCPEmails lo obtiene en directo de Microsoft, se lo entrega a Claude y lo descarta. Lo único que se guarda del buzón es el token OAuth de tu inicio de sesión con Microsoft, cifrado en reposo. Para desconectarlo, elimina el buzón en MCPEmails o quita MCPEmails de las aplicaciones que tienen acceso a tu cuenta de Microsoft. [Por qué importa que el correo nunca se almacene](/blog/why-email-never-stored-matters) explica el modelo, y [¿es seguro dar a un agente de IA acceso a tu correo?](/blog/is-it-safe-to-give-ai-agent-email-access) repasa en qué fijarse, como las instrucciones ocultas dentro de un correo.
+No. Cada vez que Claude pide un mensaje, MCPEmails lo obtiene en directo de Microsoft, se lo entrega a Claude y lo descarta. Del buzón se guarda el token OAuth de tu inicio de sesión con Microsoft, cifrado en reposo, además de los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse. Para desconectarlo, elimina el buzón en MCPEmails o quita MCPEmails de las aplicaciones que tienen acceso a tu cuenta de Microsoft. [Por qué importa que el correo nunca se almacene](/blog/why-email-never-stored-matters) explica el modelo, y [¿es seguro dar a un agente de IA acceso a tu correo?](/blog/is-it-safe-to-give-ai-agent-email-access) repasa en qué fijarse, como las instrucciones ocultas dentro de un correo.
 
 ## Preguntas frecuentes
 
