@@ -98,7 +98,7 @@ import { createResend } from '@/lib/email/resend';
 
 import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
-import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
+import { lifecycleFrom, lifecycleReplyTo, unsubscribeUrl } from '@/lib/email/lifecycle';
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { CANCEL_REASONS, CANCEL_REASON_EMAIL_LABELS } from '@/lib/billing/cancel-reasons';
 import { issueFeedbackToken } from '@/lib/billing/feedback-token';
@@ -2123,12 +2123,16 @@ export async function sendBillingLifecycleEmail(
         ? lifecycleFrom()
         : process.env.BILLING_EMAIL_FROM ?? DEFAULT_BILLING_FROM;
 
-    // The cancellation question is the one email whose entire purpose is the
-    // reply, so it can be pointed somewhere other than the support address.
+    // Win-backs go out from the founder sender, so a reply goes back to the
+    // founder (lifecycleReplyTo), never to support@. Transactional mail keeps
+    // support@. The cancellation question is the one transactional email whose
+    // entire purpose is the reply, so it can be pointed elsewhere.
     const replyTo =
-      input.template === 'cancel_ask'
-        ? process.env.CANCEL_REPLY_TO ?? SUPPORT_ADDRESS
-        : SUPPORT_ADDRESS;
+      category === 'marketing'
+        ? lifecycleReplyTo()
+        : input.template === 'cancel_ask'
+          ? process.env.CANCEL_REPLY_TO ?? SUPPORT_ADDRESS
+          : SUPPORT_ADDRESS;
 
     // List-Unsubscribe on MARKETING ONLY. Putting it on a payment-failure
     // notice would advertise an opt-out from a message the customer is not

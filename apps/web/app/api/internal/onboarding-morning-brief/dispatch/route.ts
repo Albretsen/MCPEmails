@@ -22,8 +22,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { createResend } from '@/lib/email/resend';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { lifecycleFrom } from '@/lib/email/lifecycle';
-import { SUPPORT_EMAIL } from '@/lib/support/help-content.mjs';
+import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { isInternalViewer } from '@/lib/onboarding/variant';
 import { assistLocale, morningBriefEmail } from '@/lib/onboarding/assist';
@@ -83,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
     if (key) {
       try {
         const { error: sendError } = await createResend(key).emails.send(
-          { from: lifecycleFrom(), to: email, replyTo: SUPPORT_EMAIL, subject: message.subject, html: message.html, text: message.text },
+          { from: lifecycleFrom(), to: email, replyTo: lifecycleReplyTo(), subject: message.subject, html: message.html, text: message.text },
           { idempotencyKey: `onboarding-morning-brief-${row.workspace_id}-${row.send_at}` },
         );
         ok = !sendError;

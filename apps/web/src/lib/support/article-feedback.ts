@@ -40,14 +40,34 @@ export function knownArticleIds(): Promise<Set<string>> {
   return knownIds;
 }
 
-/** The vote in the body, or null when it is not one. */
-export async function parseArticleFeedback(body: unknown): Promise<ArticleFeedback | null> {
-  if (!body || typeof body !== 'object') return null;
+/** Longer than any article id; a longer one is malformed, not unknown. */
+export const MAX_ARTICLE_ID_LENGTH = 120;
+
+export type ParsedArticleFeedback =
+  | { kind: 'vote'; vote: ArticleFeedback }
+  /** Well formed, but no such article: answered 204, nothing written. */
+  | { kind: 'unknown_article' }
+  /** Not a vote at all: answered 400. */
+  | { kind: 'invalid'; error: 'invalid_body' | 'invalid_article_id' | 'invalid_helpful' | 'invalid_locale' };
+
+/**
+ * Classify a request body. A missing `locale` means English; a locale that is
+ * present but not a help locale is malformed.
+ */
+export async function parseArticleFeedback(body: unknown): Promise<ParsedArticleFeedback> {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { kind: 'invalid', error: 'invalid_body' };
   const { articleId, locale, helpful } = body as Record<string, unknown>;
-  if (typeof articleId !== 'string' || typeof helpful !== 'boolean') return null;
-  if (!(await knownArticleIds()).has(articleId)) return null;
-  const loc = typeof locale === 'string' && HELP_LOCALES.includes(locale) ? locale : 'en';
-  return { articleId, locale: loc, helpful };
+  if (typeof articleId !== 'string' || articleId.length === 0 || articleId.length > MAX_ARTICLE_ID_LENGTH) {
+    return { kind: 'invalid', error: 'invalid_article_id' };
+  }
+  if (typeof helpful !== 'boolean') return { kind: 'invalid', error: 'invalid_helpful' };
+  let loc = 'en';
+  if (locale !== undefined && locale !== null) {
+    if (typeof locale !== 'string' || !HELP_LOCALES.includes(locale)) return { kind: 'invalid', error: 'invalid_locale' };
+    loc = locale;
+  }
+  if (!(await knownArticleIds()).has(articleId)) return { kind: 'unknown_article' };
+  return { kind: 'vote', vote: { articleId, locale: loc, helpful } };
 }
 
 /** `u:<id>` for a signed-in voter, `ip:<hash>` otherwise, null when neither is known. */
