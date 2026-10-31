@@ -30655,46 +30655,6 @@ async function resolveNewDraftAttachments(
   return { ok: true, attachments };
 }
 
-/**
- * The addressing an Outlook reply draft is patched with when the original has a
- * Reply-To, by the rule every other reply path runs (recipient-rules.ts), or
- * null to keep what createReply wrote. With no Reply-To nothing changes. A
- * failed read also keeps Graph's addressing: the call that follows reports a
- * real problem with the message, and a draft is never sent without review.
- */
-async function outlookReplyToAddressing(
-  token: string,
-  inbox: InboxRow,
-  messageId: string,
-  replyAll: boolean,
-): Promise<{ to: { name: string; email: string }[]; toRecipients: { emailAddress: { name?: string; address: string } }[] } | null> {
-  const resp = await graphFetch(
-    token,
-    `/me/messages/${encodeURIComponent(messageId)}?$select=from,replyTo,toRecipients,ccRecipients`,
-  );
-  if (!resp.ok) {
-    await resp.body?.cancel().catch(() => {});
-    console.warn("[mcp-server] outlook_reply_to_read_failed", { inbox_id: inbox.id, status: resp.status });
-    return null;
-  }
-  type Recipient = { emailAddress?: { name?: string; address?: string } };
-  const original = (await resp.json()) as { from?: Recipient; replyTo?: Recipient[]; toRecipients?: Recipient[]; ccRecipients?: Recipient[] };
-  if (!original.replyTo?.some((r) => r.emailAddress?.address)) return null;
-  const resolved = computeReplyRecipients({
-    from: original.from ? [graphAddressEntry(original.from)] : [],
-    replyTo: original.replyTo.map(graphAddressEntry),
-    to: (original.toRecipients ?? []).map(graphAddressEntry),
-    cc: (original.ccRecipients ?? []).map(graphAddressEntry),
-    ownAddresses: inboxOwnAddresses(inbox),
-    replyAll,
-  });
-  if (!resolved.ok) return null;
-  return {
-    to: resolved.recipients.map((r) => ({ name: r.name ?? "", email: r.email })),
-    toRecipients: resolved.recipients.map((r) => ({ emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email } })),
-  };
-}
-
 /** Create a provider-native, unsent reply draft.  Keep this separate from the
  * send path: draft-only credentials must never acquire send capability. */
 async function executeCreateReplyDraft(
@@ -30741,21 +30701,22 @@ async function executeCreateReplyDraft(
     if (inbox.provider === "outlook") {
       const token = await withFreshOutlookToken(inbox);
       const signed = applySignatureOnce({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
-      const replyToAddressing = await outlookReplyToAddressing(token, inbox, messageId, replyAll);
       // createReply with a `message.body` REPLACES the body Graph generates,
       // quote and all. So: create the threaded draft as Graph builds it, then
       // put the caller's text above the quote it already holds.
       const draft = await graphPrepareResponseDraft(token, {
         messageId,
         kind: replyAll ? "createReplyAll" : "createReply",
-        patch: replyToAddressing ? { toRecipients: replyToAddressing.toRecipients, ccRecipients: [] } : {},
+        // No addressing here: Graph's own rule already answers Reply-To, on both
+        // kinds (checked against a live mailbox 2026-10-31).
+        patch: {},
         html: signed.htmlBody,
         text: signed.textBody,
         ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}),
       });
       const outlookCreatedAt = draft.createdDateTime ?? new Date().toISOString();
       const outlookRevision = await recordDraftLine(apiKey, inbox, null, draft.id, "agent", outlookCreatedAt);
-      const outlookOutput = { draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: replyToAddressing?.to ?? draft.toRecipients, created_at: outlookCreatedAt, in_reply_to: messageId, threading: "native", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) };
+      const outlookOutput = { draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: outlookCreatedAt, in_reply_to: messageId, threading: "native", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) };
       // The card (2026-10-26). This branch returned bare `jsonOk` since the
       // card shipped, so an Outlook reply mounted "Draft: no preview for this
       // result." while the tool description told the model it was in a card.
@@ -30771,7 +30732,7 @@ async function executeCreateReplyDraft(
         return null;
       });
       const outlookParams: DraftParams = {
-        to: stored?.to ?? (replyToAddressing?.to ?? draft.toRecipients).map((r) => formatAddressEntry({ name: r.name, email: r.email })),
+        to: stored?.to ?? draft.toRecipients.map((r) => formatAddressEntry({ name: r.name, email: r.email })),
         cc: stored?.cc ?? [],
         bcc: stored?.bcc ?? [],
         subject: stored?.subject ?? draft.subject ?? "",

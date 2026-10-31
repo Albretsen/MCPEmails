@@ -2,6 +2,8 @@
 // reply-to-recipients.test.ts: reply drafts follow Reply-To through the real
 // draft_reply handler over the fake provider network (2026-10-31). The rule
 // itself is in recipient-rules.test.ts. Every mailbox here is invented.
+// Outlook reply drafts are not here: Graph's createReply and createReplyAll
+// address them, and answered Reply-To correctly against a live mailbox.
 // ---------------------------------------------------------------------------
 
 import { assert, assertEquals, assertFalse } from "jsr:@std/assert@1";
@@ -10,7 +12,6 @@ import { parseAddressHeader } from "./address-header.ts";
 import { getHeader, parseEmail } from "./mime.ts";
 
 const GMAIL = "https://gmail.googleapis.com/gmail/v1/users/me";
-const GRAPH = "https://graph.microsoft.com/v1.0";
 const DRAFT_KEY = { ...API_KEY, scopes: [...API_KEY.scopes, "manage:drafts"] };
 
 function encodedWord(text: string): string {
@@ -95,62 +96,9 @@ Deno.test("Gmail reply draft: raw headers unavailable with a Reply-To creates no
   assertEquals(to, null);
 });
 
-/** An Outlook reply draft whose original carries this Reply-To. */
-async function outlookReply(
-  replyTo: { emailAddress: { name?: string; address: string } }[],
-  opts: { readStatus?: number; replyAll?: boolean } = {},
-) {
-  const inbox = await inboxRow("outlook");
-  const graphBuilt = { emailAddress: { name: "Graph", address: "graph-built@corp.example" } };
-  const { value, world } = await runTool(inbox, (call) => {
-    if (call.method === "GET" && call.url.startsWith(`${GRAPH}/me/messages/orig1?`)) {
-      if (opts.readStatus) return json({ error: { message: "nope" } }, opts.readStatus);
-      return json({
-        from: { emailAddress: { address: inbox.email_address } },
-        replyTo,
-        toRecipients: [{ emailAddress: { address: inbox.email_address } }],
-        ccRecipients: [],
-      });
-    }
-    if (call.method === "POST" && /\/me\/messages\/orig1\/createReply(All)?$/.test(call.url)) {
-      return json({ id: "d1", conversationId: "c1", subject: "RE: hi", body: { contentType: "html", content: "<p>quote</p>" }, toRecipients: [graphBuilt] }, 201);
-    }
-    if (call.method === "PATCH" && call.url === `${GRAPH}/me/messages/d1`) return json({ id: "d1" });
-    if (call.method === "GET" && call.url.startsWith(`${GRAPH}/me/messages/d1`)) return json({ error: { message: "read-back skipped" } }, 503);
-    return json({ error: { message: `unexpected ${call.method} ${call.url}` } }, 500);
-  }, () =>
-    executeCreateReplyDraft({ message_id: "orig1", body: "ok", reply_all: opts.replyAll === true }, DRAFT_KEY) as Promise<
-      { result: unknown; logStatus: string }
-    >);
-  const patch = world.calls.find((c) => c.method === "PATCH" && c.url === `${GRAPH}/me/messages/d1`);
-  return { value, world, patched: JSON.parse(patch?.body ?? "{}") as Record<string, unknown> };
-}
-
-Deno.test("Outlook reply draft: Reply-To is written onto the draft and reported", async () => {
-  const { value, patched } = await outlookReply([{ emailAddress: { name: "Customer", address: "customer@corp.example" } }]);
-  assertEquals(value.logStatus, "success", JSON.stringify(value.result));
-  assertEquals(patched.toRecipients, [{ emailAddress: { name: "Customer", address: "customer@corp.example" } }]);
-  assertEquals(patched.ccRecipients, []);
-  const text = JSON.stringify(value.result);
-  assert(text.includes("customer@corp.example"), text);
-  assertFalse(text.includes("graph-built@corp.example"), text);
-});
-
-Deno.test("Outlook reply draft: no Reply-To keeps what createReply wrote", async () => {
-  const { patched } = await outlookReply([]);
-  assertFalse("toRecipients" in patched);
-  assertFalse("ccRecipients" in patched);
-});
-
-Deno.test("Outlook reply draft: a failed read of the original keeps createReply's addressing", async () => {
-  const { value, patched } = await outlookReply([], { readStatus: 503 });
-  assertEquals(value.logStatus, "success", JSON.stringify(value.result));
-  assertFalse("toRecipients" in patched);
-});
-
 Deno.test("every reply path hands Reply-To to the shared rule", async () => {
   const index = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const calls = index.split("computeReplyRecipients({").slice(1).map((rest) => rest.slice(0, rest.indexOf("});")));
-  assertEquals(calls.length, 7, "a reply path was added or removed: update this count and check it reads Reply-To");
+  assertEquals(calls.length, 6, "a reply path was added or removed: update this count and check it reads Reply-To");
   for (const call of calls) assert(/\breplyTo:/.test(call), `no replyTo in: ${call}`);
 });
