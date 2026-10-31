@@ -26,6 +26,7 @@ export type DeliveryReason =
   | 'key'
   | 'expired'
   | 'send_limit'
+  | 'allowance'
   | 'generic';
 
 export interface ApprovalDelivery {
@@ -46,6 +47,7 @@ const REASON_PATTERNS: Array<[RegExp, DeliveryReason]> = [
   [/no longer connected|receiving only|imap_auth_failed|gmail_auth_failed|outlook_auth_failed|Inbox .* not found/i, 'mailbox'],
   [/API key is unavailable|scope_denied|no longer has access/i, 'key'],
   [/expired before it was decided/, 'expired'],
+  [/included actions/, 'allowance'],
   [/send limit|daily_send_limit|sends_paused|sends_frozen|many recipients/i, 'send_limit'],
 ];
 

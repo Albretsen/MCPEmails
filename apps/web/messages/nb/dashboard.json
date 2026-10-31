@@ -1302,7 +1302,8 @@
         "key": "API-nøkkelen bak denne sendingen kan ikke lenger sende fra denne postkassen. Ingenting ble sendt.",
         "expired": "Den utløp før noen tok stilling, så ingenting ble sendt.",
         "send_limit": "En sendegrense holder denne tilbake nå. Den går ut når grensen er over.",
-        "generic": "Sendingen gikk ikke gjennom."
+        "generic": "Sendingen gikk ikke gjennom.",
+        "allowance": "Dette arbeidsområdet har brukt opp den inkluderte bruken for denne perioden, så videresendingen ble ikke sendt."
       }
     },
     "original": {

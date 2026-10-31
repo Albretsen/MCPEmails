@@ -60,7 +60,11 @@ class FakeDb {
     this.tables = tables;
   }
   from(table: string) { return new FakeQuery(this, table); }
-  async rpc() { this.rpcs += 1; return { data: null, error: null }; }
+  rpc(name: string) {
+    if (name === 'dispatch_scheduled_sends') this.rpcs += 1;
+    const answer = { data: null, error: null };
+    return { maybeSingle: async () => answer, then: (resolve: (v: any) => unknown) => Promise.resolve(answer).then(resolve) };
+  }
 }
 
 let signedIn: { id: string } | null = { id: 'user-1' };
@@ -152,6 +156,7 @@ test('delivery: reasons are reduced to known codes, and a provider sentence neve
   assert.equal(deliveryReasonFromDetail('approved email_forward failed: delivery_uncertain'), 'may_have_sent');
   assert.equal(deliveryReasonFromDetail('dispatch interrupted; marked failed to avoid double-send'), 'may_have_sent');
   assert.equal(deliveryReasonFromDetail('originating API key is unavailable'), 'key');
+  assert.equal(deliveryReasonFromDetail('This workspace has used its included actions for this period, so this forward was not sent.'), 'allowance');
   assert.equal(deliveryReasonFromDetail('550 5.7.1 message from <someone@example.com> refused'), 'generic');
 });
 

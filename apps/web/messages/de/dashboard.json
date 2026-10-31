@@ -1302,7 +1302,8 @@
         "key": "Der API-Schlüssel dieser Sendung kann aus diesem Postfach nicht mehr senden. Es wurde nichts gesendet.",
         "expired": "Sie ist abgelaufen, bevor jemand entschieden hat, daher wurde nichts gesendet.",
         "send_limit": "Ein Sendelimit hält das gerade zurück. Es geht raus, sobald das Limit aufgehoben ist.",
-        "generic": "Der Versand ist nicht durchgegangen."
+        "generic": "Der Versand ist nicht durchgegangen.",
+        "allowance": "Dieser Arbeitsbereich hat die enthaltene Nutzung für diesen Zeitraum aufgebraucht, daher wurde diese Weiterleitung nicht gesendet."
       }
     },
     "original": {

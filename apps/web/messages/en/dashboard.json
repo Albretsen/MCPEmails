@@ -1302,7 +1302,8 @@
         "key": "The API key behind this send can no longer send from this mailbox. Nothing was sent.",
         "expired": "It expired before it was decided, so nothing was sent.",
         "send_limit": "A sending limit is holding this for now. It goes out once the limit lifts.",
-        "generic": "The send did not go through."
+        "generic": "The send did not go through.",
+        "allowance": "This workspace has used its included usage for this period, so this forward was not sent."
       }
     },
     "original": {

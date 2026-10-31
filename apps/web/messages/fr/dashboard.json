@@ -1302,7 +1302,8 @@
         "key": "La clé d'API de cet envoi ne peut plus envoyer depuis cette boîte. Rien n'a été envoyé.",
         "expired": "La demande a expiré avant toute décision, donc rien n'a été envoyé.",
         "send_limit": "Une limite d'envoi le retient pour le moment. Il partira dès qu'elle sera levée.",
-        "generic": "L'envoi n'a pas abouti."
+        "generic": "L'envoi n'a pas abouti.",
+        "allowance": "Cet espace de travail a épuisé l'usage inclus pour cette période, ce transfert n'a donc pas été envoyé."
       }
     },
     "original": {

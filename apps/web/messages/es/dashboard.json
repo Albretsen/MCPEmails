@@ -1302,7 +1302,8 @@
         "key": "La clave de API de este envío ya no puede enviar desde este buzón. No se envió nada.",
         "expired": "Caducó antes de que nadie decidiera, así que no se envió nada.",
         "send_limit": "Un límite de envío lo retiene por ahora. Saldrá cuando se levante.",
-        "generic": "El envío no se completó."
+        "generic": "El envío no se completó.",
+        "allowance": "Este espacio de trabajo ha agotado el uso incluido de este periodo, así que este reenvío no se envió."
       }
     },
     "original": {

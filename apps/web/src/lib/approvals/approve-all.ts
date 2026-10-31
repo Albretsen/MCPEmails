@@ -165,6 +165,9 @@ export async function approveAllFromRule(args: {
       outcomes.push({ id: item.id, outcome: 'approved' });
     } else if (decision.code === 'expired' || decision.code === 'changed' || decision.code === 'not_pending') {
       outcomes.push({ id: item.id, outcome: decision.code });
+    } else if (decision.code === 'usage_limit') {
+      // Still pending, inside its deadline, and approvable once there is room.
+      outcomes.push({ id: item.id, outcome: 'left_waiting' });
     } else {
       outcomes.push({ id: item.id, outcome: 'failed' });
     }
