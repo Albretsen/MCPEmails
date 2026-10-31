@@ -378,11 +378,15 @@ test('row 24 and 16: a run with nothing new says so, and one that only queued fo
   const { view } = await render(t, {
     rules: [
       aiRule({ id: 'rule-a', name: 'Quiet', last_run: { status: 'skipped', started_at: '2026-10-31T10:00:00Z', matched: 4, succeeded: 0, queued: 0, failed: 0, skipped: 4 } }),
-      aiRule({ id: 'rule-b', name: 'Busy', last_run: { status: 'completed', started_at: '2026-10-31T10:00:00Z', matched: 3, succeeded: 0, queued: 3, failed: 0, skipped: 0 } }),
+      aiRule({ id: 'rule-b', name: 'Busy', last_run: { status: 'completed', started_at: '2026-10-31T10:00:00Z', matched: 3, succeeded: 0, queued: 3, failed: 0, skipped: 0, forwards: { waiting: 1, sending: 0, sent: 2, failed: 0, rejected: 0, expired: 0 } } }),
+      aiRule({ id: 'rule-c', name: 'Decided', last_run: { status: 'completed', started_at: '2026-10-31T10:00:00Z', matched: 1, succeeded: 0, queued: 1, failed: 0, skipped: 0, forwards: { waiting: 0, sending: 0, sent: 1, failed: 0, rejected: 0, expired: 0 } } }),
     ],
   });
   await flush();
-  assert.ok(view.container.textContent.includes(copy.status.skipped));
+  const rowText = (name) => [...view.container.querySelectorAll('tbody tr')].find((row) => row.textContent.includes(name)).textContent;
   assert.equal(copy.status.skipped, 'Nothing new');
-  assert.ok(view.container.textContent.includes(copy.status.queued));
+  assert.ok(rowText('Quiet').includes(copy.status.skipped));
+  assert.ok(rowText('Busy').includes(copy.status.queued));
+  assert.ok(rowText('Decided').includes(copy.status.completed));
+  assert.ok(!rowText('Decided').includes(copy.status.queued));
 });

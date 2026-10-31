@@ -112,11 +112,13 @@ export async function attachForwardStates<T extends { outcome?: unknown; detail?
 
 export type ForwardCounts = Record<Exclude<ForwardState, 'closed'>, number>;
 
-/** Per run, how its queued forwards stand now. Runs that queued none are left out. */
+/**
+ * Per run, how its queued forwards stand now. Runs that queued none are left out.
+ * The caller must already have scoped `runs` to the workspace: items are read by run id.
+ */
 export async function forwardCountsByRun(
   db: any,
   workspaceId: string,
-  ruleId: string,
   runs: ReadonlyArray<Record<string, unknown>>,
 ): Promise<Map<string, ForwardCounts>> {
   const runIds = runs.filter((run) => Number(run.queued ?? 0) > 0).map((run) => run.id as string);
@@ -128,7 +130,6 @@ export async function forwardCountsByRun(
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await db.from('triage_run_items')
       .select('id, run_id, detail')
-      .eq('rule_id', ruleId)
       .eq('outcome', 'queued_for_approval')
       .in('run_id', runIds)
       .order('id', { ascending: true })

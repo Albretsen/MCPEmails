@@ -109,15 +109,18 @@ const OUTCOME_KEY = {
 // What became of a held forward, read from its approval when the log is opened.
 const FORWARD_STATE_TONE = { waiting: 'amber', sending: 'amber', sent: 'live', failed: 'red', rejected: 'neutral', expired: 'neutral', closed: 'neutral' };
 
-/** A run that only queued forwards has done nothing to the mailbox yet, so it does not say Completed. */
+/** While a run has forwards waiting and did nothing else, it says so rather than Completed. */
+function runIsWaiting(run) {
+  if (run.status !== 'completed' || (run.queued ?? 0) === 0 || (run.succeeded ?? 0) > 0) return false;
+  return (run.forwards?.waiting ?? run.queued) > 0;
+}
+
 function runStatusKey(run) {
-  if (run.status === 'completed' && (run.queued ?? 0) > 0 && (run.succeeded ?? 0) === 0) return 'automations.status.queued';
-  return RUN_STATUS_KEY[run.status] ?? null;
+  return runIsWaiting(run) ? 'automations.status.queued' : (RUN_STATUS_KEY[run.status] ?? null);
 }
 
 function runStatusTone(run) {
-  if (run.status === 'completed' && (run.queued ?? 0) > 0 && (run.succeeded ?? 0) === 0) return 'amber';
-  return RUN_STATUS_TONE[run.status] ?? 'neutral';
+  return runIsWaiting(run) ? 'amber' : (RUN_STATUS_TONE[run.status] ?? 'neutral');
 }
 
 /** Text filter fields the form exposes, in the order they read best. */
