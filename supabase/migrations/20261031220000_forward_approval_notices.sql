@@ -1,6 +1,6 @@
 -- ============================================================
 -- MCPEmails - tell owners and admins when rule forwards wait for approval
--- 20261031180000_forward_approval_notices
+-- 20261031220000_forward_approval_notices
 -- ============================================================
 --
 -- A forward queued by an automation only wrote a send_approvals row. Nobody was

@@ -3,7 +3,7 @@
  * them, one before they expire. Sent to the workspace's owners and admins, the
  * only people who can approve.
  *
- * WHAT DECIDES A NOTICE EXISTS. supabase/migrations/20261031180000_forward_approval_notices.sql:
+ * WHAT DECIDES A NOTICE EXISTS. supabase/migrations/20261031220000_forward_approval_notices.sql:
  * pg_cron stamps the approvals and writes one notice per rule, then posts to
  * app/api/internal/forward-notices/dispatch, which calls dispatchForwardNotices.
  * The rule run knows nothing about any of this, so nothing here can stop a run.

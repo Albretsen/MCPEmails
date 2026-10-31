@@ -50,7 +50,7 @@ import type { Database } from '@/types/database.types';
  *
  * `approval_notices` is the emails about rule forwards waiting for approval
  * (src/lib/approvals/forward-notices.ts). Added by
- * 20261031180000_forward_approval_notices.sql. That sender reads only this
+ * 20261031220000_forward_approval_notices.sql. That sender reads only this
  * category, not the global opt-out: stopping win-backs must not stop being told
  * that a forward is about to expire.
  */
