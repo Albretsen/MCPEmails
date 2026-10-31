@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-31',
+    kind: 'fixed',
+    title: 'Replies follow the Reply-To address',
+    body:
+      "Replies and reply drafts now go to a message's Reply-To address when it has one, on every provider. Before, a reply to a contact form or help desk message could be addressed to the From address, which was often your own mailbox.",
+  },
+  {
     date: '2026-10-30',
     kind: 'fixed',
     title: 'Inboxes page shows when a password was refused',
