@@ -26,7 +26,7 @@
 // Run: deno test supabase/functions/mcp-server/
 // ---------------------------------------------------------------------------
 
-import { assert, assertStringIncludes } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 
 const INDEX_SOURCE = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 
@@ -163,5 +163,27 @@ Deno.test("the fallback re-uses resolveFolderId rather than reimplementing it", 
     deps,
     "await resolveFolderId(inboxRow, nameOrId, { session: imap })",
     "the unverified branch must call the real resolver with no strict flag",
+  );
+});
+
+Deno.test("a queued forward records its rule, and the rule never reaches the gate", () => {
+  const forward = functionSource("applyTriageAction");
+  assertStringIncludes(forward, '"email_forward",\n        input.rule,\n', "the forward must pass its rule");
+  assertStringIncludes(
+    forward,
+    "{ ...inboxRow, send_approval_required: true }",
+    "a rule forward stays forced through the hold",
+  );
+
+  // The first statement of queueSendApproval decides the hold from the inbox and
+  // the key alone. The link is only spread into the insert, further down.
+  const queue = functionSource("queueSendApproval");
+  assertStringIncludes(queue, "if (!sendWillBeHeld(inbox, apiKey)) return null;");
+  const beforeGate = queue.slice(queue.indexOf("{\n"), queue.indexOf("if (!sendWillBeHeld"));
+  assertEquals(beforeGate.includes("rule"), false, "nothing before the gate reads the rule");
+  assertStringIncludes(queue, "...approvalRuleLinkColumns(rule),", "the rule is written to the row");
+  assert(
+    !/send_approval_required\s*[:=]/.test(queue),
+    "queueSendApproval must not set the gate flag itself",
   );
 });

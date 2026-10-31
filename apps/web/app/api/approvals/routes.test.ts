@@ -123,6 +123,40 @@ test('queue: lists summaries with the revision, and no payload or Bcc addresses'
   assert.equal(JSON.stringify(body).includes('"data"'), false, 'no ciphertext either');
 });
 
+test('queue: a rule forward names its rule, kind and expiry', async () => {
+  seed('owner', { to: ['colleague@example.com'] }, 'email_forward');
+  Object.assign(tables.send_approvals[0], {
+    triage_rule_id: 'rule-1',
+    triage_rule_name: 'Invoices',
+    expires_at: '2026-10-17T10:00:00.000Z',
+  });
+  const [row] = (await (await list.GET()).json()).approvals;
+  assert.equal(row.kind, 'rule_forward');
+  assert.equal(row.rule_id, 'rule-1');
+  assert.equal(row.rule_name, 'Invoices');
+  assert.equal(row.expires_at, '2026-10-17T10:00:00.000Z');
+  assert.equal('triage_rule_id' in row, false, 'one name for the field');
+});
+
+test('queue: a rule forward whose rule row is gone still reads as one, by name', async () => {
+  seed('owner', { to: ['colleague@example.com'] }, 'email_forward');
+  Object.assign(tables.send_approvals[0], { triage_rule_id: null, triage_rule_name: 'Invoices' });
+  const [row] = (await (await list.GET()).json()).approvals;
+  assert.equal(row.kind, 'rule_forward');
+  assert.equal(row.rule_id, null);
+  assert.equal(row.rule_name, 'Invoices');
+});
+
+test('queue: an AI send has no rule', async () => {
+  seed('owner', { to: ['colleague@example.com'] });
+  Object.assign(tables.send_approvals[0], { expires_at: '2026-10-17T10:00:00.000Z' });
+  const [row] = (await (await list.GET()).json()).approvals;
+  assert.equal(row.kind, 'ai_send');
+  assert.equal(row.rule_id, null);
+  assert.equal(row.rule_name, null);
+  assert.equal(row.expires_at, '2026-10-17T10:00:00.000Z');
+});
+
 // Since 2026-10-30 mcp-server stores the summary encrypted; older rows hold it
 // in clear. Both must render the same.
 function sealSummary() {

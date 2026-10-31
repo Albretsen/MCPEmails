@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
+import { APPROVAL_RULE_LINK_COLUMNS, withApprovalOrigin } from '@/lib/approvals/origin';
 import { readSummary } from '@/lib/approvals/payload';
 
 async function context() {
@@ -21,9 +22,13 @@ async function context() {
 export async function GET() {
   const c = await context();
   if (!c) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-  const { data, error } = await c.db.from('send_approvals')
-    .select('id, inbox_id, operation, summary, send_at, status, created_at, revision, inboxes(email_address, display_name)')
-    .eq('workspace_id', c.workspaceId).eq('status', 'pending').order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await selectTolerantly<unknown[]>(
+    ['id', 'inbox_id', 'operation', 'summary', 'send_at', 'status', 'created_at', 'expires_at', 'revision', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'],
+    APPROVAL_RULE_LINK_COLUMNS,
+    (columns) => c.db.from('send_approvals')
+      .select(columns)
+      .eq('workspace_id', c.workspaceId).eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
+  );
   if (error) return NextResponse.json({ error: 'Failed to load approvals.' }, { status: 500 });
 
   // No payload here: the queue lists summaries only, and nothing is
@@ -31,14 +36,17 @@ export async function GET() {
   // when it opens (GET /api/approvals/[id]).
   // The summary is stored encrypted since 2026-10-30 (older rows in clear);
   // the panel gets the plain object either way.
-  const approvals = (data ?? []).map((row) => ({ ...row, summary: readSummary(row.summary) }));
+  const approvals = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+    ...withApprovalOrigin(row),
+    summary: readSummary(row.summary),
+  }));
 
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure
   // here is not fatal — the pending queue is the load-bearing part of the view.
   const { data: decided } = await selectTolerantly<unknown[]>(
-    ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'decided_at', 'decided_via', 'inboxes(email_address, display_name)'],
-    PENDING_APPROVAL_COLUMNS,
+    ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'expires_at', 'decided_at', 'decided_via', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'],
+    [...PENDING_APPROVAL_COLUMNS, ...APPROVAL_RULE_LINK_COLUMNS],
     (columns) => c.db.from('send_approvals')
       .select(columns)
       .eq('workspace_id', c.workspaceId).neq('status', 'pending')
@@ -46,7 +54,7 @@ export async function GET() {
   );
 
   const decidedRows = ((decided ?? []) as Record<string, unknown>[]).map((row) => ({
-    ...row,
+    ...withApprovalOrigin(row),
     summary: readSummary(row.summary),
   }));
   return NextResponse.json({ approvals, decided: decidedRows });
