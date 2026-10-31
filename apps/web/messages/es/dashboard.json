@@ -1273,7 +1273,8 @@
       "completed": "Completada",
       "completedWithErrors": "Completada con errores",
       "failed": "Fallida",
-      "skipped": "Sin nada que hacer"
+      "skipped": "Nada nuevo",
+      "queued": "Esperando aprobación"
     },
     "modal": {
       "createTitle": "Nueva automatización",
@@ -1360,7 +1361,11 @@
       "previewKeyCannotRead": "Esa clave de API no puede leer correo, así que no puede mostrar la vista previa. Elige una clave con el permiso read:email.",
       "previewKeyNotForInbox": "Esa clave de API no puede usar esta bandeja de entrada. Elige otra.",
       "previewInboxNotAvailable": "Esta bandeja de entrada no está disponible en este momento. Revísala en Bandejas de entrada.",
-      "previewSearchFailed": "No se pudo buscar en el buzón. Revisa la conexión de la bandeja de entrada e inténtalo de nuevo."
+      "previewSearchFailed": "No se pudo buscar en el buzón. Revisa la conexión de la bandeja de entrada e inténtalo de nuevo.",
+      "includePastMail": "Incluir correo anterior",
+      "includePastMailHelp": "Desactivado: solo el correo que llegue después de activar esta regla por primera vez. Activado: también el que ya está en la bandeja.",
+      "previewPastNote": "{count, plural, =1 {1 de estos llegó antes de que empiece esta regla. No se procesará salvo que actives Incluir correo anterior.} other {# de estos llegaron antes de que empiece esta regla. No se procesarán salvo que actives Incluir correo anterior.}}",
+      "previewPastBadge": "Correo anterior"
     },
     "runs": {
       "title": "Registro de ejecuciones",
@@ -1376,7 +1381,7 @@
       "colResult": "Resultado",
       "triggerSchedule": "Programada",
       "triggerManual": "Manual",
-      "resultSummary": "{matched} coincidencias, {succeeded} aplicadas, {failed} fallidas, {skipped} omitidas",
+      "resultSummary": "{matched} coincidencias, {succeeded} aplicadas, {queued} esperando aprobación, {failed} fallidas, {skipped} ya gestionadas",
       "viewItems": "Mensajes",
       "loadMore": "Cargar ejecuciones anteriores",
       "loading": "Cargando…",
@@ -1398,7 +1403,27 @@
       "detailMoved": "Movido a {folder}.",
       "detailQueued": "No se cambió nada. Está esperando en Aprobaciones.",
       "detailSkipped": "Esta automatización ya había gestionado este mensaje.",
-      "detailFailed": "Falló con {code}."
+      "detailFailed": "Falló con {code}.",
+      "forwardSummary": "Reenvíos: {waiting} en espera, {sending} enviándose, {sent} enviados, {failed} fallidos, {rejected} rechazados, {expired} caducados",
+      "forwardState": {
+        "waiting": "En espera",
+        "sending": "Enviándose",
+        "sent": "Enviado",
+        "failed": "Fallido",
+        "rejected": "Rechazado",
+        "expired": "Caducado",
+        "closed": "Cerrado"
+      },
+      "forwardDetail": {
+        "sending": "Aprobado. Ya está en camino.",
+        "sent": "Aprobado y enviado.",
+        "failed": "Aprobado, pero no se pudo enviar.",
+        "rejected": "Rechazado. No se envió nada.",
+        "expired": "Nadie lo aprobó a tiempo. No se envió nada.",
+        "closed": "Esta aprobación ya no consta."
+      },
+      "outcomeLoop": "No reenviado",
+      "detailLoop": "Este mensaje ya es un reenvío de una regla. Reenviarlo otra vez podría hacerlo circular en bucle."
     },
     "delete": {
       "title": "¿Eliminar esta automatización?",
@@ -1430,7 +1455,7 @@
       "markRead": "Cada coincidencia se marca como leída.",
       "draftReply": "Cada coincidencia recibe un borrador de respuesta, que se guarda y nunca se envía.",
       "pastIncluded": "El correo que ya está en el buzón también cuenta, hasta {max} por ejecución.",
-      "pastExcluded": "El correo que llegó antes de activar la automatización no se toca.",
+      "pastExcluded": "Empieza con el correo que llegue después de activarla por primera vez.",
       "cond": {
         "from": "de {value}",
         "to": "dirigido a {value}",

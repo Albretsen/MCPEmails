@@ -34,9 +34,15 @@ import {
   permanentFlagsAllowKeyword,
 } from "./label-target.ts";
 import {
+  approvalWindowText,
   checkTriageAuthority,
+  forwardApprovalWhere,
   handleTriageDispatch,
+  isPastMail,
   MAX_RULES_PER_INVOCATION,
+  narrowFilterToStart,
+  ruleStartMs,
+  TRIAGE_SCAN_MAX_MATCHES,
   redactForRunLog,
   renderTriageTemplate,
   reportedActionErrorCode,
@@ -2844,4 +2850,332 @@ Deno.test("deps with no session support at all still run", async () => {
 
   assertEquals(summary.succeeded, 1, "the run works with no session seam implemented");
   assertEquals(applied.calls[0].session, null, "and the action is told there is no connection");
+});
+
+// ---------------------------------------------------------------------------
+// When a rule starts, what it looks at, what it counts
+// ---------------------------------------------------------------------------
+
+const T0 = Date.parse("2026-10-31T12:00:00Z");
+const before = (minutes: number) => new Date(T0 - minutes * 60_000).toISOString();
+const after = (minutes: number) => new Date(T0 + minutes * 60_000).toISOString();
+
+/** A store whose ledger can be read, as index.ts's can. */
+function ledgerStore(state: FakeState): TriageStore {
+  return {
+    ...fakeStore(state),
+    seenDigests: (ruleId, digests) =>
+      Promise.resolve(new Set(digests.filter((d) => state.seen.has(`${ruleId}:${d}`)))),
+  };
+}
+
+/** Searches like a provider: newest first, honouring the limit. */
+function listingDeps(state: FakeState, matches: TriageMatch[], applied: { calls: any[] }, overrides: Partial<TriageDeps> = {}) {
+  const searches: { limit: number; filter: any; options: any }[] = [];
+  const deps = fakeDeps(state, matches, applied, { ok: true, undo: null }, {
+    store: ledgerStore(state),
+    now: () => T0 + 60 * 60_000,
+    search: (_inbox, filter, limit, options) => {
+      searches.push({ limit, filter, options });
+      return Promise.resolve(matches.slice(0, limit));
+    },
+    ...overrides,
+  });
+  return { deps, searches };
+}
+
+Deno.test("row 2: a new rule leaves mail from before its start alone, to the minute", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const { deps, searches } = listingDeps(state, [
+    fakeMatch("after", { date: after(5) }),
+    // Same day, a minute before the rule was turned on: SINCE alone lets it through.
+    fakeMatch("same-day-before", { date: before(1) }),
+    fakeMatch("days-old", { date: before(60 * 24 * 3) }),
+  ], applied);
+  const summary = await runTriageRule(deps, fakeRule({ include_past_mail: false, active_from: new Date(T0).toISOString() }));
+  assertEquals(applied.calls.map((c) => c.match.id), ["after"], "only mail after the start");
+  assertEquals(summary.matched, 1, "past mail is not a match of this rule");
+  assertEquals(state.runItems.length, 1, "past mail logs nothing");
+  assertEquals(searches[0].filter.since, "2026-10-30", "narrowed a day early, by date");
+  assertEquals(searches[0].options.arrival, true, "asks for the arrival time");
+});
+
+Deno.test("row 2: arrival decides, not the sender's Date header", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const { deps } = listingDeps(state, [
+    // Delayed in transit: written before the start, delivered after it. It runs.
+    fakeMatch("delayed", { date: before(30), received_at: after(2) }),
+    // A Date header written to look new on old mail. It does not.
+    fakeMatch("forged", { date: after(30), received_at: before(60) }),
+    // Nothing we can read: not let through.
+    fakeMatch("unknown", { date: "garbage", received_at: null }),
+  ], applied);
+  await runTriageRule(deps, fakeRule({ include_past_mail: false, active_from: new Date(T0).toISOString() }));
+  assertEquals(applied.calls.map((c) => c.match.id), ["delayed"], "arrival, not Date");
+});
+
+Deno.test("row 2: Include past mail, and a rule from before the option, search as before", async () => {
+  for (const flags of [{ include_past_mail: true, active_from: new Date(T0).toISOString() }, {}]) {
+    const state = freshState();
+    const applied = { calls: [] as any[] };
+    const { deps, searches } = listingDeps(state, [fakeMatch("old", { date: before(60 * 24 * 365) })], applied);
+    await runTriageRule(deps, fakeRule(flags));
+    assertEquals(applied.calls.length, 1, "old mail runs");
+    assertEquals(searches[0].filter.since, undefined, "no narrowing");
+    assertEquals(searches[0].options.arrival, false, "no extra fetch");
+  }
+});
+
+Deno.test("row 2: start helpers", () => {
+  assertEquals(ruleStartMs({ include_past_mail: true, active_from: null }, 5), null, "opted in: no start");
+  assertEquals(ruleStartMs({}, 5), null, "from before the option: no start");
+  assertEquals(ruleStartMs({ include_past_mail: false, active_from: null }, 5), 5, "not started yet: now");
+  assertEquals(isPastMail({ date: before(1) }, T0), true, "before");
+  assertEquals(isPastMail({ date: new Date(T0).toISOString() }, T0), false, "at the start");
+  assertEquals(isPastMail({ date: before(1) }, null), false, "no start");
+  assertEquals(narrowFilterToStart({ from: "a" }, T0).since, "2026-10-30", "narrows");
+  assertEquals(narrowFilterToStart({ since: "2026-10-31T06:00:00Z" }, T0).since, "2026-10-31T06:00:00Z", "a later since stands");
+  assertEquals(narrowFilterToStart({ since: "2026-01-01" }, T0).since, "2026-10-30", "an earlier since is narrowed");
+});
+
+Deno.test("row 21: a limit of 2 with 4 matches works through all 4, oldest first, without starving", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const matches = [
+    fakeMatch("m4", { date: before(10) }),
+    fakeMatch("m3", { date: before(20) }),
+    fakeMatch("m2", { date: before(30) }),
+    fakeMatch("m1", { date: before(40) }),
+  ];
+  const { deps } = listingDeps(state, matches, applied);
+  let rule = fakeRule({ max_messages_per_run: 2 });
+
+  await runTriageRule(deps, rule);
+  assertEquals(applied.calls.map((c) => c.match.id), ["m1", "m2"], "oldest first");
+  assertEquals(state.released.at(-1).scan_drained_at, null, "two left: not caught up");
+
+  await runTriageRule(deps, rule);
+  assertEquals(applied.calls.map((c) => c.match.id), ["m1", "m2", "m3", "m4"], "the rest");
+  assert(typeof state.released.at(-1).scan_drained_at === "string", "now caught up");
+
+  rule = fakeRule({ max_messages_per_run: 2, scan_drained_at: state.released.at(-1).scan_drained_at });
+  const items = state.runItems.length;
+  const summary = await runTriageRule(deps, rule);
+  assertEquals(applied.calls.length, 4, "nothing done twice");
+  assertEquals(state.runItems.length, items, "row 24: no item rows for old mail");
+  assertEquals(summary.status, "skipped", "row 24: a healthy run with nothing new");
+  assertEquals(summary.skipped, 4, "still counted");
+});
+
+Deno.test("row 21: handled mail above a backlog is looked past, with a bound", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const matches = Array.from({ length: 150 }, (_, i) => fakeMatch(`m${i}`, { date: before(i + 1) }));
+  // The newest 120 are handled; the 30 below them are not.
+  for (let i = 0; i < 120; i++) state.seen.add(`rule-1:digest-m${i}`);
+  const { deps, searches } = listingDeps(state, matches, applied);
+  await runTriageRule(deps, fakeRule({ max_messages_per_run: 5 }));
+  assertEquals(applied.calls.map((c) => c.match.id), ["m149", "m148", "m147", "m146", "m145"], "oldest of the backlog");
+  assertEquals(searches.map((s) => s.limit), [25, 100, 400], "the window grows only until it runs out");
+
+  // Far more handled mail than a run will read: stops at the bound, and does not
+  // rescan the same mail forever.
+  const hugeState = freshState();
+  const huge = Array.from({ length: TRIAGE_SCAN_MAX_MATCHES + 50 }, (_, i) => fakeMatch(`h${i}`, { date: before(i + 1) }));
+  for (const m of huge) hugeState.seen.add(`rule-1:digest-${m.id}`);
+  const hugeRun = listingDeps(hugeState, huge, applied);
+  await runTriageRule(hugeRun.deps, fakeRule({ max_messages_per_run: 5 }));
+  assertEquals(hugeRun.searches.at(-1)?.limit, TRIAGE_SCAN_MAX_MATCHES, "bounded");
+  assert(typeof hugeState.released.at(-1).scan_drained_at === "string", "treated as caught up");
+});
+
+Deno.test("row 21: a caught-up rule costs one search; a slow one stops growing; a failed later search keeps what it had", async () => {
+  const applied = { calls: [] as any[] };
+  const many = Array.from({ length: 60 }, (_, i) => fakeMatch(`m${i}`, { date: before(i + 1) }));
+
+  const caught = freshState();
+  caught.seen.add("rule-1:digest-m3");
+  const one = listingDeps(caught, many, applied);
+  await runTriageRule(one.deps, fakeRule({ scan_drained_at: before(5) }));
+  assertEquals(one.searches.length, 1, "one search, as before");
+
+  // Each search takes 10 s of a 15 s budget, so a window four times the size will not fit.
+  const slowState = freshState();
+  const clock = fakeClock(T0);
+  const slow = listingDeps(slowState, many, applied, {
+    now: clock.now,
+    search: (_i, _f, limit) => {
+      clock.advance(10_000);
+      return Promise.resolve(many.slice(0, limit));
+    },
+  });
+  const summary = await runTriageRule(slow.deps, fakeRule());
+  assertEquals(summary.status, "completed", "works with what it found");
+  assertEquals(slowState.released.at(-1).scan_drained_at, null, "not caught up: it never saw the end");
+
+  let calls = 0;
+  const flakyState = freshState();
+  const flakyApplied = { calls: [] as any[] };
+  const flaky = listingDeps(flakyState, many, flakyApplied, {
+    search: (_i, _f, limit) => {
+      if (++calls > 1) return Promise.reject(new Error("search_timeout"));
+      return Promise.resolve(many.slice(0, limit));
+    },
+  });
+  const flakySummary = await runTriageRule(flaky.deps, fakeRule({ max_messages_per_run: 2 }));
+  assertEquals(flakySummary.status, "completed", "not a failed run");
+  assertEquals(flakyApplied.calls.length, 2, "acted on what the first search found");
+});
+
+Deno.test("row 21: a rule from before the option does not reach back past its own creation", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const matches = [
+    fakeMatch("after-created", { date: before(10) }),
+    fakeMatch("old-newest-1", { date: before(100) }),
+    ...Array.from({ length: 40 }, (_, i) => fakeMatch(`ancient${i}`, { date: before(1000 + i) })),
+  ];
+  const { deps, searches } = listingDeps(state, matches, applied);
+  // Limit 2: as before, the newest two run whatever their age. Nothing older does.
+  await runTriageRule(deps, fakeRule({ max_messages_per_run: 2, deep_scan_floor: before(50) }));
+  assertEquals(applied.calls.map((c) => c.match.id), ["old-newest-1", "after-created"], "the newest two only");
+  assertEquals(searches.length, 1, "the floor ends the scan");
+});
+
+Deno.test("row 24: a filter a provider cannot run still fails and warns", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const summary = await runTriageRule(
+    fakeDeps(state, [], applied),
+    fakeRule({ filter: { raw: "anything" } as any }),
+  );
+  assertEquals(summary.status, "failed", "not Nothing new");
+  assertEquals(state.released[0].consecutive_failures, 1, "counts toward the warning");
+});
+
+const FORWARD_ACTION = { type: "forward", to: ["staging-b@mcpemails.com"] };
+
+Deno.test("row 15: a rule refuses our own forward, says why, and decides once", async () => {
+  const state = freshState({
+    apiKey: { id: "key-1", workspace_id: "ws-1", name: "k", scopes: ["send:email", "read:email"], inbox_ids: null, expires_at: null, deleted_at: null },
+  });
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  const { deps } = listingDeps(state, [
+    fakeMatch("ours", { subject: "Fwd: invoice", own_rule_forward: true, date: before(2) }),
+    // A person's forward has the same subject and no header. It runs.
+    fakeMatch("human", { subject: "Fwd: invoice", own_rule_forward: false, date: before(1) }),
+  ], applied, {
+    applyAction: (input) => {
+      applied.calls.push(input);
+      return Promise.resolve({ ok: true, approval_id: "appr-1" });
+    },
+    meter: (input) => {
+      metered.push(input);
+      return Promise.resolve();
+    },
+  });
+  const rule = fakeRule({ action: FORWARD_ACTION });
+  const summary = await runTriageRule(deps, rule);
+  assertEquals(applied.calls.map((c) => c.match.id), ["human"], "only the person's forward");
+  const item = state.runItems.find((i) => i.outcome === "skipped_loop");
+  assert(Boolean(item), "a run item says why");
+  assertEquals(item.detail.reason, "own_rule_forward", "the reason");
+  assertEquals(metered.length, 1, "the refusal is not metered");
+  assertEquals(summary.processed, 1, "the refusal is not processed");
+
+  const again = state.runItems.length;
+  await runTriageRule(deps, rule);
+  assertEquals(state.runItems.length, again, "not logged again");
+});
+
+Deno.test("row 15: when the header cannot be read, nothing is queued and the message is retried", async () => {
+  const state = freshState({
+    apiKey: { id: "key-1", workspace_id: "ws-1", name: "k", scopes: ["send:email", "read:email"], inbox_ids: null, expires_at: null, deleted_at: null },
+  });
+  const applied = { calls: [] as any[] };
+  let answer: () => Promise<boolean> = () => Promise.reject(new Error("graph 503"));
+  const { deps } = listingDeps(state, [fakeMatch("m", { date: before(1) })], applied, {
+    isOwnRuleForward: () => answer(),
+    applyAction: (input) => {
+      applied.calls.push(input);
+      return Promise.resolve({ ok: true, approval_id: "appr-1" });
+    },
+  });
+  const rule = fakeRule({ action: FORWARD_ACTION });
+  const first = await runTriageRule(deps, rule);
+  assertEquals(applied.calls.length, 0, "not queued on an unknown answer");
+  assertEquals(first.failed, 1, "shown as a failed item");
+  assertEquals(state.released.at(-1).scan_drained_at, null, "not caught up");
+  answer = () => Promise.resolve(false);
+  await runTriageRule(deps, rule);
+  assertEquals(applied.calls.length, 1, "picked up on the next run");
+});
+
+Deno.test("row 16 and 25: a queued forward is counted as waiting, takes no reservation and writes no usage", async () => {
+  const state = freshState({
+    apiKey: { id: "key-1", workspace_id: "ws-1", name: "k", scopes: ["send:email", "read:email"], inbox_ids: null, expires_at: null, deleted_at: null },
+  });
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  let reservations = 0;
+  const { deps } = listingDeps(state, [fakeMatch("a", { date: before(2) }), fakeMatch("b", { date: before(1) })], applied, {
+    applyAction: (input) => {
+      applied.calls.push(input);
+      return Promise.resolve({ ok: true, approval_id: `appr-${input.match.id}` });
+    },
+    reserveAction: () => {
+      reservations++;
+      return Promise.resolve({ allowed: true, reservation_id: "r" });
+    },
+    meter: (input) => {
+      metered.push(input);
+      return Promise.resolve();
+    },
+  });
+  const summary = await runTriageRule(deps, fakeRule({ action: FORWARD_ACTION }));
+  assertEquals(reservations, 0, "no reservation at queue");
+  assertEquals(metered.map((m) => m.billable), [false, false], "audit only");
+  assertEquals(state.runs[0].queued, 2, "two waiting");
+  assertEquals(state.runs[0].succeeded, 0, "none applied");
+  assertEquals(summary.status, "completed", "the run itself finished");
+});
+
+Deno.test("row 25: every other action is metered as before", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  let reservations = 0;
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, { ok: true, undo: null }, {
+    reserveAction: () => {
+      reservations++;
+      return Promise.resolve({ allowed: true, reservation_id: "r" });
+    },
+    meter: (input) => {
+      metered.push(input);
+      return Promise.resolve();
+    },
+  });
+  await runTriageRule(deps, fakeRule());
+  assertEquals(reservations, 1, "reserved");
+  assertEquals(metered[0].billable, true, "billable");
+  assertEquals(metered[0].reservationId, "r", "finalised");
+});
+
+Deno.test("row 19: the AI is told where to approve and by when, from the constant that decides it", () => {
+  const where = forwardApprovalWhere("https://staging.example.test/dashboard/approvals");
+  assert(where.includes("https://staging.example.test/dashboard/approvals"), "where");
+  assert(where.includes(approvalWindowText(24 * 60 * 60 * 1000)) || where.includes("days"), "by when");
+  assert(where.includes("cannot approve"), "an AI cannot");
+  assertEquals(approvalWindowText(7 * 24 * 60 * 60 * 1000), "7 days", "days");
+  assertEquals(approvalWindowText(24 * 60 * 60 * 1000), "24 hours", "one day reads as hours");
+});
+
+Deno.test("row 2: include_past_mail must be a boolean", () => {
+  const bad = validateAutomationBody({ include_past_mail: "yes" }, "imap", true);
+  assertEquals(bad.ok, false, "refused");
+  const good = validateAutomationBody({ include_past_mail: true }, "imap", true);
+  assertEquals(good.ok && good.value.include_past_mail, true, "kept");
 });

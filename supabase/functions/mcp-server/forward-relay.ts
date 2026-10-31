@@ -413,6 +413,12 @@ export interface RelayForwardInput {
   includeAttachments: boolean;
   /** Wrap the whole original as message/rfc822 instead of relaying its body inline. */
   asAttachment: boolean;
+  /**
+   * Extra `Name: value` header lines for the outer message. Our own, never
+   * message-derived: a rule's forward marks itself here, on the outside, so the
+   * original's bytes below stay untouched.
+   */
+  extraHeaders?: readonly string[];
 }
 
 export interface RelayForwardResult {
@@ -461,6 +467,7 @@ export function buildRelayForwardMime(input: RelayForwardInput): RelayForwardRes
   head.push(`Subject: ${encodeMimeHeaderValue(input.subject)}`);
   head.push(`Date: ${new Date().toUTCString()}`);
   head.push(`Message-ID: <${input.messageId}@mcpemails.com>`);
+  for (const line of input.extraHeaders ?? []) head.push(line);
   head.push("MIME-Version: 1.0");
   head.push(`Content-Type: multipart/mixed; boundary="${outer}"`);
   head.push("");

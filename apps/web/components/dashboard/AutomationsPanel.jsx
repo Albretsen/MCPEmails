@@ -94,6 +94,7 @@ const OUTCOME_TONE = {
   queued_for_approval: 'amber',
   failed: 'red',
   skipped_duplicate: 'neutral',
+  skipped_loop: 'neutral',
 };
 
 const OUTCOME_KEY = {
@@ -101,7 +102,22 @@ const OUTCOME_KEY = {
   queued_for_approval: 'automations.runs.outcomeQueued',
   failed: 'automations.runs.outcomeFailed',
   skipped_duplicate: 'automations.runs.outcomeSkipped',
+  skipped_loop: 'automations.runs.outcomeLoop',
 };
+
+// What became of a held forward, read from its approval when the log is opened.
+const FORWARD_STATE_TONE = { waiting: 'amber', sending: 'amber', sent: 'live', failed: 'red', rejected: 'neutral', expired: 'neutral', closed: 'neutral' };
+
+/** A run that only queued forwards has done nothing to the mailbox yet, so it does not say Completed. */
+function runStatusKey(run) {
+  if (run.status === 'completed' && (run.queued ?? 0) > 0 && (run.succeeded ?? 0) === 0) return 'automations.status.queued';
+  return RUN_STATUS_KEY[run.status] ?? null;
+}
+
+function runStatusTone(run) {
+  if (run.status === 'completed' && (run.queued ?? 0) > 0 && (run.succeeded ?? 0) === 0) return 'amber';
+  return RUN_STATUS_TONE[run.status] ?? 'neutral';
+}
 
 /** Text filter fields the form exposes, in the order they read best. */
 const TEXT_FILTERS = [
@@ -518,8 +534,8 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onDuplicate, onAp
           <Badge tone="brand">{t('automations.status.running')}</Badge>
         ) : lastRun ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-            <Badge tone={RUN_STATUS_TONE[lastRun.status] ?? 'neutral'}>
-              {RUN_STATUS_KEY[lastRun.status] ? t(RUN_STATUS_KEY[lastRun.status]) : lastRun.status}
+            <Badge tone={runStatusTone(lastRun)}>
+              {runStatusKey(lastRun) ? t(runStatusKey(lastRun)) : lastRun.status}
             </Badge>
             {lastRunAt ? <span className="sub" style={{ fontSize: 12 }}>{lastRunAt}</span> : null}
           </div>
@@ -614,6 +630,7 @@ function initialFormState(rule) {
     forwardTo: Array.isArray(action.to) ? action.to.join(', ') : '',
     forwardNote: action.note ?? '',
     template: action.template ?? '',
+    includePastMail: rule?.include_past_mail === true,
   };
 }
 
@@ -691,7 +708,13 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
       const response = await fetch('/api/automations/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inbox_id: form.inboxId, api_key_id: apiKeyId, filter }),
+        body: JSON.stringify({
+          inbox_id: form.inboxId,
+          api_key_id: apiKeyId,
+          filter,
+          include_past_mail: form.includePastMail,
+          ...(mode === 'edit' && rule?.id ? { automation_id: rule.id } : {}),
+        }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -732,10 +755,12 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
         max_messages_per_run: Number(form.maxMessages),
         filter,
         action: buildRuleAction(form),
+        // Off is the default for a new rule, and a rule read without the column counts as off.
+        ...(mode === 'create' && !form.includePastMail ? {} : { include_past_mail: form.includePastMail }),
       };
       // An edit sends what changed and nothing else, so a rename cannot rewrite the
       // filter or the action, and cannot re-check a key it did not touch.
-      const payloadBody = mode === 'create' ? fullBody : editPatch(rule, fullBody);
+      const payloadBody = mode === 'create' ? fullBody : editPatch({ ...rule, include_past_mail: rule.include_past_mail === true }, fullBody);
       if (Object.keys(payloadBody).length === 0) {
         await onSaved(t('automations.toastUpdated'));
         return;
@@ -921,6 +946,20 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
               ) : null}
             </fieldset>
 
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13 }}>
+              <input
+                type="checkbox"
+                checked={form.includePastMail}
+                onChange={(event) => set('includePastMail', event.target.checked)}
+                disabled={submitting}
+                style={{ accentColor: 'var(--brand)', marginTop: 2 }}
+              />
+              <span>
+                {t('automations.modal.includePastMail')}
+                <span className="sub" style={{ display: 'block', fontSize: 12 }}>{t('automations.modal.includePastMailHelp')}</span>
+              </span>
+            </label>
+
             {/* Preview. Placed between the filter and the action on purpose: it
                 answers "what does this match" while the filter is still the
                 thing on screen, before the user decides what to do to it. */}
@@ -957,11 +996,17 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13 }}>
                       {t('automations.modal.previewCount', { count: preview.matched })}
                     </div>
+                    {preview.messages.some((message) => message.past_mail) ? (
+                      <div className="alert" role="note" data-testid="automation-preview-past">
+                        <span>{t('automations.modal.previewPastNote', { count: preview.messages.filter((message) => message.past_mail).length })}</span>
+                      </div>
+                    ) : null}
                     <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {preview.messages.map((message, index) => (
                         <li key={message.id ?? index} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>
                             {message.subject || t('automations.modal.previewNoSubject')}
+                            {message.past_mail ? <> <Badge tone="neutral">{t('automations.modal.previewPastBadge')}</Badge></> : null}
                           </div>
                           <div className="sub" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
                             {message.from || t('automations.modal.previewUnknownSender')}
@@ -1154,7 +1199,9 @@ function RuleSentence({ form, filter, mailbox }) {
           conditions: joinPhrases(phrases, t),
         })}{' '}
         {outcome}{' '}
-        {t('automations.sentence.pastIncluded', { max: Number(form.maxMessages) || 0 })}
+        {form.includePastMail
+          ? t('automations.sentence.pastIncluded', { max: Number(form.maxMessages) || 0 })
+          : t('automations.sentence.pastExcluded')}
       </span>
     </div>
   );
@@ -1281,13 +1328,14 @@ function RunHistoryModal({ rule, onClose }) {
                       <tr key={run.id}>
                         <td>{formatTimestamp(run.started_at) ?? t('automations.unknownTime')}</td>
                         <td>
-                          <Badge tone={RUN_STATUS_TONE[run.status] ?? 'neutral'}>
-                            {RUN_STATUS_KEY[run.status] ? t(RUN_STATUS_KEY[run.status]) : run.status}
+                          <Badge tone={runStatusTone(run)}>
+                            {runStatusKey(run) ? t(runStatusKey(run)) : run.status}
                           </Badge>
                         </td>
                         <td>{run.trigger === 'manual' ? t('automations.runs.triggerManual') : t('automations.runs.triggerSchedule')}</td>
                         <td>
-                          <div>{t('automations.runs.resultSummary', { matched: run.matched ?? 0, succeeded: run.succeeded ?? 0, failed: run.failed ?? 0, skipped: run.skipped ?? 0 })}</div>
+                          <div>{t('automations.runs.resultSummary', { matched: run.matched ?? 0, succeeded: run.succeeded ?? 0, queued: run.queued ?? 0, failed: run.failed ?? 0, skipped: run.skipped ?? 0 })}</div>
+                          {run.forwards ? <div className="sub" style={{ fontSize: 12 }}>{t('automations.runs.forwardSummary', run.forwards)}</div> : null}
                           {run.error_detail ? <div className="sub" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>{run.error_detail}</div> : null}
                         </td>
                         <td className="right">
@@ -1391,9 +1439,15 @@ function RunItems({ rule, run, onBack }) {
                   <td style={{ overflowWrap: 'anywhere' }}>{item.subject_redacted || <span className="sub">{t('automations.runs.noSubject')}</span>}</td>
                   <td style={{ overflowWrap: 'anywhere' }}>{item.sender_redacted || <span className="sub">{t('automations.runs.unknownSender')}</span>}</td>
                   <td>
-                    <Badge tone={OUTCOME_TONE[item.outcome] ?? 'neutral'}>
-                      {OUTCOME_KEY[item.outcome] ? t(OUTCOME_KEY[item.outcome]) : item.outcome}
-                    </Badge>
+                    {item.outcome === 'queued_for_approval' && item.forward_state ? (
+                      <Badge tone={FORWARD_STATE_TONE[item.forward_state] ?? 'neutral'}>
+                        {t(`automations.runs.forwardState.${item.forward_state}`)}
+                      </Badge>
+                    ) : (
+                      <Badge tone={OUTCOME_TONE[item.outcome] ?? 'neutral'}>
+                        {OUTCOME_KEY[item.outcome] ? t(OUTCOME_KEY[item.outcome]) : item.outcome}
+                      </Badge>
+                    )}
                   </td>
                   <td className="sub" style={{ fontSize: 12.5, overflowWrap: 'anywhere' }}>{describeItemDetail(item, t)}</td>
                 </tr>
@@ -1414,8 +1468,13 @@ function describeItemDetail(item, t) {
     if (detail.error_code === 'imap_keywords_unsupported') return t('automations.runs.detailKeywordsUnsupported');
     if (detail.error_code) return t('automations.runs.detailFailed', { code: String(detail.error_code) });
   }
-  if (item.outcome === 'queued_for_approval') return t('automations.runs.detailQueued');
+  if (item.outcome === 'queued_for_approval') {
+    return item.forward_state && item.forward_state !== 'waiting'
+      ? t(`automations.runs.forwardDetail.${item.forward_state}`)
+      : t('automations.runs.detailQueued');
+  }
   if (item.outcome === 'skipped_duplicate') return t('automations.runs.detailSkipped');
+  if (item.outcome === 'skipped_loop') return t('automations.runs.detailLoop');
   if (detail.to_folder) return t('automations.runs.detailMoved', { folder: String(detail.to_folder) });
   // `applied_as` is what the mailbox actually carries, which is not always the
   // label that was typed: an IMAP keyword cannot hold a space.

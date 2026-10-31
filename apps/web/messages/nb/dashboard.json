@@ -1273,7 +1273,8 @@
       "completed": "Fullført",
       "completedWithErrors": "Fullført med feil",
       "failed": "Mislyktes",
-      "skipped": "Ingenting å gjøre"
+      "skipped": "Ingenting nytt",
+      "queued": "Venter på godkjenning"
     },
     "modal": {
       "createTitle": "Ny automatisering",
@@ -1360,7 +1361,11 @@
       "previewKeyCannotRead": "Den API-nøkkelen kan ikke lese e-post, så den kan ikke forhåndsvise. Velg en nøkkel med tillatelsen read:email.",
       "previewKeyNotForInbox": "Den API-nøkkelen har ikke lov til å bruke denne innboksen. Velg en annen.",
       "previewInboxNotAvailable": "Denne innboksen er ikke tilgjengelig akkurat nå. Sjekk den under Innbokser.",
-      "previewSearchFailed": "Det gikk ikke å søke i postkassen. Sjekk tilkoblingen til innboksen og prøv igjen."
+      "previewSearchFailed": "Det gikk ikke å søke i postkassen. Sjekk tilkoblingen til innboksen og prøv igjen.",
+      "includePastMail": "Ta med tidligere e-post",
+      "includePastMailHelp": "Av: bare e-post som kommer etter at du slår på regelen første gang. På: også e-post som allerede ligger i innboksen.",
+      "previewPastNote": "{count, plural, =1 {1 av disse kom før regelen starter. Den kjøres ikke med mindre Ta med tidligere e-post er på.} other {# av disse kom før regelen starter. De kjøres ikke med mindre Ta med tidligere e-post er på.}}",
+      "previewPastBadge": "Tidligere e-post"
     },
     "runs": {
       "title": "Kjørelogg",
@@ -1376,7 +1381,7 @@
       "colResult": "Resultat",
       "triggerSchedule": "Planlagt",
       "triggerManual": "Manuell",
-      "resultSummary": "{matched} treff, {succeeded} utført, {failed} feilet, {skipped} hoppet over",
+      "resultSummary": "{matched} treff, {succeeded} utført, {queued} venter på godkjenning, {failed} feilet, {skipped} allerede håndtert",
       "viewItems": "Meldinger",
       "loadMore": "Last eldre kjøringer",
       "loading": "Laster…",
@@ -1398,7 +1403,27 @@
       "detailMoved": "Flyttet til {folder}.",
       "detailQueued": "Ingenting ble endret. Den venter under Godkjenninger.",
       "detailSkipped": "Denne automatiseringen hadde allerede håndtert denne meldingen.",
-      "detailFailed": "Mislyktes med {code}."
+      "detailFailed": "Mislyktes med {code}.",
+      "forwardSummary": "Videresendinger: {waiting} venter, {sending} sendes, {sent} sendt, {failed} feilet, {rejected} avvist, {expired} utløpt",
+      "forwardState": {
+        "waiting": "Venter",
+        "sending": "Sendes",
+        "sent": "Sendt",
+        "failed": "Feilet",
+        "rejected": "Avvist",
+        "expired": "Utløpt",
+        "closed": "Lukket"
+      },
+      "forwardDetail": {
+        "sending": "Godkjent. Den er på vei.",
+        "sent": "Godkjent og sendt.",
+        "failed": "Godkjent, men den kunne ikke sendes.",
+        "rejected": "Avvist. Ingenting ble sendt.",
+        "expired": "Ingen godkjente den i tide. Ingenting ble sendt.",
+        "closed": "Denne godkjenningen finnes ikke lenger."
+      },
+      "outcomeLoop": "Ikke videresendt",
+      "detailLoop": "Denne meldingen er selv en videresending fra en regel. Å videresende den igjen kunne sendt den rundt i ring."
     },
     "delete": {
       "title": "Slette denne automatiseringen?",
@@ -1430,7 +1455,7 @@
       "markRead": "Hvert treff merkes som lest.",
       "draftReply": "Hvert treff får et svarutkast, som lagres og aldri sendes.",
       "pastIncluded": "E-post som allerede ligger i postkassen, teller også, opptil {max} per kjøring.",
-      "pastExcluded": "E-post som kom før automatiseringen slås på, blir ikke rørt.",
+      "pastExcluded": "Den starter med e-post som kommer etter at du slår den på første gang.",
       "cond": {
         "from": "fra {value}",
         "to": "adressert til {value}",

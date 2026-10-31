@@ -1273,7 +1273,8 @@
       "completed": "Completed",
       "completedWithErrors": "Completed with errors",
       "failed": "Failed",
-      "skipped": "Nothing to do"
+      "skipped": "Nothing new",
+      "queued": "Waiting for approval"
     },
     "modal": {
       "createTitle": "New automation",
@@ -1360,7 +1361,11 @@
       "previewKeyCannotRead": "That API key cannot read mail, so it cannot preview. Choose a key with the read:email permission.",
       "previewKeyNotForInbox": "That API key is not allowed to use this inbox. Choose another one.",
       "previewInboxNotAvailable": "This inbox is not available right now. Check it under Inboxes.",
-      "previewSearchFailed": "The mailbox could not be searched. Check the inbox connection, then try again."
+      "previewSearchFailed": "The mailbox could not be searched. Check the inbox connection, then try again.",
+      "includePastMail": "Include past mail",
+      "includePastMailHelp": "Off: only mail that arrives after you first turn this rule on. On: mail already in the inbox too.",
+      "previewPastNote": "{count, plural, =1 {1 of these arrived before this rule starts. It will not run unless Include past mail is on.} other {# of these arrived before this rule starts. They will not run unless Include past mail is on.}}",
+      "previewPastBadge": "Past mail"
     },
     "runs": {
       "title": "Run log",
@@ -1376,7 +1381,7 @@
       "colResult": "Result",
       "triggerSchedule": "Scheduled",
       "triggerManual": "Manual",
-      "resultSummary": "{matched} matched, {succeeded} applied, {failed} failed, {skipped} skipped",
+      "resultSummary": "{matched} matched, {succeeded} applied, {queued} queued for approval, {failed} failed, {skipped} already handled",
       "viewItems": "Messages",
       "loadMore": "Load older runs",
       "loading": "Loading…",
@@ -1398,7 +1403,27 @@
       "detailMoved": "Moved to {folder}.",
       "detailQueued": "Nothing was changed. It is waiting under Approvals.",
       "detailSkipped": "This automation had already handled this message.",
-      "detailFailed": "Failed with {code}."
+      "detailFailed": "Failed with {code}.",
+      "forwardSummary": "Forwards: {waiting} waiting, {sending} sending, {sent} sent, {failed} failed, {rejected} rejected, {expired} expired",
+      "forwardState": {
+        "waiting": "Waiting",
+        "sending": "Sending",
+        "sent": "Sent",
+        "failed": "Failed",
+        "rejected": "Rejected",
+        "expired": "Expired",
+        "closed": "Closed"
+      },
+      "forwardDetail": {
+        "sending": "Approved. It is on its way.",
+        "sent": "Approved and sent.",
+        "failed": "Approved, but it could not be sent.",
+        "rejected": "Rejected. Nothing was sent.",
+        "expired": "Nobody approved it in time. Nothing was sent.",
+        "closed": "This approval is no longer on record."
+      },
+      "outcomeLoop": "Not forwarded",
+      "detailLoop": "This message is itself a forward from a rule. Forwarding it again could send it around in a loop."
     },
     "delete": {
       "title": "Delete this automation?",
@@ -1430,7 +1455,7 @@
       "markRead": "Each match is marked as read.",
       "draftReply": "Each match gets a draft reply, which is saved and never sent.",
       "pastIncluded": "Mail already in the mailbox counts too, up to {max} each run.",
-      "pastExcluded": "Mail that arrived before the automation is switched on is left alone.",
+      "pastExcluded": "It starts with mail that arrives after you first turn it on.",
       "cond": {
         "from": "from {value}",
         "to": "addressed to {value}",

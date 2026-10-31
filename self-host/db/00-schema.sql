@@ -1452,6 +1452,10 @@ CREATE TABLE IF NOT EXISTS public.triage_rules (
     deleted_at timestamp with time zone,
     paused_reason text,
     paused_until timestamp with time zone,
+    include_past_mail boolean DEFAULT false NOT NULL,
+    active_from timestamp with time zone,
+    deep_scan_floor timestamp with time zone,
+    scan_drained_at timestamp with time zone,
     CONSTRAINT triage_rules_paused_reason_check CHECK (((paused_reason IS NULL) OR (paused_reason = ANY (ARRAY['plan_limit'::text, 'inbox_parked'::text])))),
     CONSTRAINT triage_rules_interval_minutes_check CHECK ((interval_minutes = ANY (ARRAY[15, 30, 60, 180, 360, 720, 1440]))),
     CONSTRAINT triage_rules_interval_required_check CHECK ((interval_minutes IS NOT NULL)),
@@ -1482,6 +1486,7 @@ CREATE TABLE IF NOT EXISTS public.triage_runs (
     skipped integer DEFAULT 0 NOT NULL,
     error_code text,
     error_detail text,
+    queued integer DEFAULT 0 NOT NULL,
     CONSTRAINT triage_runs_completed_at_check CHECK (((status = 'running'::text) = (completed_at IS NULL))),
     CONSTRAINT triage_runs_status_check CHECK ((status = ANY (ARRAY['running'::text, 'completed'::text, 'completed_with_errors'::text, 'failed'::text, 'skipped'::text]))),
     CONSTRAINT triage_runs_trigger_check CHECK ((trigger = ANY (ARRAY['schedule'::text, 'manual'::text]))),
@@ -1490,6 +1495,43 @@ CREATE TABLE IF NOT EXISTS public.triage_runs (
     CONSTRAINT triage_runs_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS triage_runs_rule_idx ON public.triage_runs (rule_id, started_at DESC);
+
+-- When a rule starts, and when the dedupe ledger's coverage resets. See
+-- supabase/migrations/20261031210000_triage_engine_start_and_ledger.sql. The
+-- ledger has no age-based delete: it lasts as long as the rule.
+CREATE OR REPLACE FUNCTION public.triage_rules_set_start()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    NEW.active_from := CASE WHEN NEW.enabled THEN now() ELSE NULL END;
+    NEW.scan_drained_at := NULL;
+    RETURN NEW;
+  END IF;
+  IF NEW.active_from IS NULL AND NEW.enabled AND (
+       NOT OLD.enabled
+       OR (OLD.include_past_mail AND NOT NEW.include_past_mail)
+     ) THEN
+    NEW.active_from := now();
+  END IF;
+  IF NEW.filter IS DISTINCT FROM OLD.filter
+     OR NEW.inbox_id IS DISTINCT FROM OLD.inbox_id
+     OR NEW.include_past_mail IS DISTINCT FROM OLD.include_past_mail THEN
+    NEW.scan_drained_at := NULL;
+  END IF;
+  IF NEW.include_past_mail AND NOT OLD.include_past_mail THEN
+    NEW.deep_scan_floor := NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS triage_rules_set_start ON public.triage_rules;
+CREATE TRIGGER triage_rules_set_start
+  BEFORE INSERT OR UPDATE ON public.triage_rules
+  FOR EACH ROW EXECUTE FUNCTION public.triage_rules_set_start();
 
 CREATE TABLE IF NOT EXISTS public.triage_run_items (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1503,7 +1545,7 @@ CREATE TABLE IF NOT EXISTS public.triage_run_items (
     undo_state jsonb,
     undone_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT triage_run_items_outcome_check CHECK ((outcome = ANY (ARRAY['applied'::text, 'queued_for_approval'::text, 'failed'::text, 'skipped_duplicate'::text]))),
+    CONSTRAINT triage_run_items_outcome_check CHECK ((outcome = ANY (ARRAY['applied'::text, 'queued_for_approval'::text, 'failed'::text, 'skipped_duplicate'::text, 'skipped_loop'::text]))),
     CONSTRAINT triage_run_items_pkey PRIMARY KEY (id),
     CONSTRAINT triage_run_items_rule_id_fkey FOREIGN KEY (rule_id) REFERENCES public.triage_rules(id) ON DELETE CASCADE,
     CONSTRAINT triage_run_items_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.triage_runs(id) ON DELETE CASCADE

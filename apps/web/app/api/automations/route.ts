@@ -17,6 +17,7 @@ import {
   validateActionForProvider,
   validateFilter,
   validateFilterForProvider,
+  validateIncludePastMail,
   validateInterval,
   validateMaxMessages,
   validateName,
@@ -54,6 +55,7 @@ type RunSummary = {
   matched: number;
   processed: number;
   succeeded: number;
+  queued: number;
   failed: number;
   skipped: number;
   error_code: string | null;
@@ -81,7 +83,7 @@ export async function GET() {
   if (rows.length > 0) {
     const ruleIds = rows.map((row) => row.id as string);
     const { data: runs } = await c.db.from('triage_runs')
-      .select('id, rule_id, status, started_at, completed_at, matched, processed, succeeded, failed, skipped, error_code')
+      .select('id, rule_id, status, started_at, completed_at, matched, processed, succeeded, queued, failed, skipped, error_code')
       .eq('workspace_id', c.workspaceId)
       .in('rule_id', ruleIds)
       .order('started_at', { ascending: false })
@@ -123,6 +125,8 @@ export async function POST(request: NextRequest) {
   if (!filter.ok) return NextResponse.json({ error: filter.error }, { status: 400 });
   const action = validateAction(body.action);
   if (!action.ok) return NextResponse.json({ error: action.error }, { status: 400 });
+  const includePastMail = validateIncludePastMail(body.include_past_mail);
+  if (!includePastMail.ok) return NextResponse.json({ error: includePastMail.error }, { status: 400 });
 
   if (!isUuid(body.inbox_id)) return NextResponse.json({ error: 'Choose the inbox this automation runs against.' }, { status: 400 });
   if (!isUuid(body.api_key_id)) return NextResponse.json({ error: 'Choose the API key this automation acts with.' }, { status: 400 });
@@ -168,6 +172,8 @@ export async function POST(request: NextRequest) {
     action: action.value,
     interval_minutes: interval.value,
     max_messages_per_run: maxMessages.value,
+    // When it starts is the database's to stamp (active_from), not a client's.
+    include_past_mail: includePastMail.value,
   }).select(RULE_COLUMNS).maybeSingle();
 
   if (error || !data) return NextResponse.json({ error: 'Could not create this automation.' }, { status: 500 });

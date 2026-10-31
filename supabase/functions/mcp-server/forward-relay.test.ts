@@ -327,3 +327,27 @@ Deno.test("singleByteTextToBytes is the exact inverse of the IMAP literal decode
   assertNotEquals(asRead.charCodeAt(0x85), 0x85, "the decoder really does remap 0x80-0x9F");
   assertEquals(singleByteTextToBytes(asRead), all, "and every octet comes back");
 });
+
+Deno.test("a rule's forward carries its marker on the outer message, and the original's bytes are untouched", () => {
+  const original = new TextEncoder().encode(
+    "From: a@example.com\r\nSubject: Invoice\r\nContent-Type: text/plain\r\n\r\nBody bytes\r\n",
+  );
+  const base = {
+    from: "x@example.com",
+    to: ["y@example.com"],
+    subject: "Fwd: Invoice",
+    messageId: "m",
+    introText: "intro",
+    original,
+    includeAttachments: true,
+    asAttachment: false,
+  };
+  const marked = new TextDecoder().decode(
+    buildRelayForwardMime({ ...base, extraHeaders: ["X-MCPEmails-Rule-Forward: 1"] }).bytes,
+  );
+  const [outer] = marked.split("\r\n\r\n");
+  if (!outer.includes("X-MCPEmails-Rule-Forward: 1")) throw new Error("marker not on the outer headers");
+  if (!marked.includes("Body bytes")) throw new Error("original body lost");
+  const plain = new TextDecoder().decode(buildRelayForwardMime(base).bytes);
+  if (plain.includes("X-MCPEmails-Rule-Forward")) throw new Error("an ordinary forward is not marked");
+});

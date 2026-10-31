@@ -1125,7 +1125,8 @@
       "completed": "已完成",
       "completedWithErrors": "完成但有错误",
       "failed": "失败",
-      "skipped": "无事可做"
+      "skipped": "没有新邮件",
+      "queued": "等待审批"
     },
     "modal": {
       "createTitle": "新建自动化",
@@ -1212,7 +1213,11 @@
       "previewKeyCannotRead": "该 API 密钥无法读取邮件，因此无法预览。请选择具有 read:email 权限的密钥。",
       "previewKeyNotForInbox": "该 API 密钥不能使用此收件箱。请选择其他密钥。",
       "previewInboxNotAvailable": "此收件箱暂时不可用。请在“收件箱”中检查。",
-      "previewSearchFailed": "无法搜索邮箱。请检查收件箱连接后重试。"
+      "previewSearchFailed": "无法搜索邮箱。请检查收件箱连接后重试。",
+      "includePastMail": "包含以前的邮件",
+      "includePastMailHelp": "关闭：只处理首次开启此规则后到达的邮件。开启：也处理邮箱中已有的邮件。",
+      "previewPastNote": "{count, plural, other {其中 # 封在此规则开始之前到达。除非开启“包含以前的邮件”，否则不会处理。}}",
+      "previewPastBadge": "以前的邮件"
     },
     "runs": {
       "title": "运行记录",
@@ -1228,7 +1233,7 @@
       "colResult": "结果",
       "triggerSchedule": "计划触发",
       "triggerManual": "手动触发",
-      "resultSummary": "匹配 {matched} 封，已执行 {succeeded} 封，失败 {failed} 封，跳过 {skipped} 封",
+      "resultSummary": "匹配 {matched} 封，已执行 {succeeded} 封，等待审批 {queued} 封，失败 {failed} 封，此前已处理 {skipped} 封",
       "viewItems": "邮件明细",
       "loadMore": "加载更早的运行",
       "loading": "加载中…",
@@ -1250,7 +1255,27 @@
       "detailMoved": "已移动到 {folder}。",
       "detailQueued": "没有做任何改动，正在“审批”中等待。",
       "detailSkipped": "该自动化此前已经处理过这封邮件。",
-      "detailFailed": "失败，错误码 {code}。"
+      "detailFailed": "失败，错误码 {code}。",
+      "forwardSummary": "转发：等待 {waiting}，发送中 {sending}，已发送 {sent}，失败 {failed}，已拒绝 {rejected}，已过期 {expired}",
+      "forwardState": {
+        "waiting": "等待中",
+        "sending": "发送中",
+        "sent": "已发送",
+        "failed": "失败",
+        "rejected": "已拒绝",
+        "expired": "已过期",
+        "closed": "已关闭"
+      },
+      "forwardDetail": {
+        "sending": "已批准，正在发送。",
+        "sent": "已批准并发送。",
+        "failed": "已批准，但未能发送。",
+        "rejected": "已拒绝，没有发送任何内容。",
+        "expired": "无人及时批准，没有发送任何内容。",
+        "closed": "此审批记录已不存在。"
+      },
+      "outcomeLoop": "未转发",
+      "detailLoop": "这封邮件本身就是规则发出的转发。再次转发可能造成循环。"
     },
     "delete": {
       "title": "要删除这个自动化吗？",
@@ -1282,7 +1307,7 @@
       "markRead": "每封匹配的邮件都会标记为已读。",
       "draftReply": "每封匹配的邮件都会生成一封回复草稿，只保存，绝不发送。",
       "pastIncluded": "邮箱中已有的邮件也计算在内，每次运行最多 {max} 封。",
-      "pastExcluded": "在自动化开启之前收到的邮件不会受到影响。",
+      "pastExcluded": "它从首次开启后到达的邮件开始处理。",
       "cond": {
         "from": "来自 {value}",
         "to": "发送给 {value}",

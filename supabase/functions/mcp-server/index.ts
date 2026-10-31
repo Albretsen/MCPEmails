@@ -411,7 +411,11 @@ import {
   type TriageStore,
   type AutomationDeps,
   automationRuleActionScope,
+  isPastMail,
+  RULE_FORWARD_HEADER,
+  ruleStartMs,
   runAutomationTool,
+  type TriageSearchOptions,
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
@@ -1542,6 +1546,14 @@ interface ApiKeyRow {
    */
   card_listed?: boolean | null;
   internalApprovalDispatch?: boolean;
+  /**
+   * The approved send being dispatched is a forward a rule queued, so it goes out
+   * marked with RULE_FORWARD_HEADER. Set only by the dispatcher, beside
+   * `internalApprovalDispatch`, from the approval row. Like that marker it cannot
+   * come from an MCP request: `authenticateRequest` builds this row from named
+   * columns and there is no such column.
+   */
+  ruleForwardDispatch?: boolean;
   /**
    * The caller is a signed-in human using the first-party web mail client
    * (`client-api`), not an agent holding a key.
@@ -7092,6 +7104,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "Per-run blast radius. Caps how much mail one misconfigured filter can " +
             "touch before a human sees the run log.",
         },
+        include_past_mail: {
+          type: "boolean",
+          default: false,
+          description:
+            "Off: the rule only acts on mail that arrives after it is first enabled. " +
+            "On: it also acts on matching mail already in the inbox.",
+        },
       },
       required: ["name", "filter", "action", "interval_minutes"],
       additionalProperties: false,
@@ -7181,6 +7200,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Per-run blast radius. Caps how much mail one misconfigured filter can " +
             "touch before a human sees the run log.",
+        },
+        include_past_mail: {
+          type: "boolean",
+          default: false,
+          description:
+            "Off: the rule only acts on mail that arrives after it is first enabled. " +
+            "On: it also acts on matching mail already in the inbox.",
         },
       },
       required: ["automation_id"],
@@ -7314,6 +7340,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Per-run blast radius. Caps how much mail one misconfigured filter can " +
             "touch before a human sees the run log.",
+        },
+        include_past_mail: {
+          type: "boolean",
+          default: false,
+          description:
+            "Off: the rule only acts on mail that arrives after it is first enabled. " +
+            "On: it also acts on matching mail already in the inbox.",
         },
       },
       additionalProperties: false,
@@ -8455,8 +8488,10 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       matched: { type: "integer" },
       capped_at: { type: "integer" },
       matches: { type: "array", items: { type: "object", additionalProperties: true } },
+      past_mail_count: { type: "integer" },
       untrusted_content: UNTRUSTED_CONTENT_SCHEMA,
       message: { type: "string" },
+      notes: { type: "array", items: { type: "string" } },
     },
     required: ["applied", "matched", "matches"],
     additionalProperties: false,
@@ -9694,8 +9729,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "Gmail label, an Outlook category or an IMAP keyword), mark_read, forward and " +
       "draft_reply. DELETING MAIL IS NOT AVAILABLE to an automation. A forward is ALWAYS " +
       "held for human approval whatever the inbox's approval setting says, and a " +
-      "draft_reply only ever writes a draft. Use automation_read to list rules, read " +
-      "one in full, see run history, and dry-run a filter before enabling it. " +
+      "draft_reply only ever writes a draft. A new rule only acts on mail that arrives " +
+      "after it is first enabled, unless `include_past_mail` is true. Use automation_read " +
+      "to list rules, read one in full, see run history, and dry-run a filter before " +
+      "enabling it. " +
       "Every action needs manage:automations.",
     // Per-tool, not per-action: 'delete' governs. See the note on `folder`.
     // openWorldHint: true — a rule's action can be {type:'forward', to:[...]},
@@ -18086,6 +18123,8 @@ interface ForwardEmailParams {
    * signature is not appended to the forward intro even if reply-mode would.
    */
   include_signature?: boolean;
+  /** Mark this message as a rule's forward. See ApiKeyRow.ruleForwardDispatch. */
+  ruleForward?: boolean;
 }
 
 interface ForwardEmailResult {
@@ -18225,6 +18264,7 @@ async function forwardRelayMessage(
       original: original.bytes,
       includeAttachments: params.includeAttachments,
       asAttachment: params.asAttachment,
+      ...(params.ruleForward ? { extraHeaders: [`${RULE_FORWARD_HEADER}: 1`] } : {}),
     });
     return { fwdSubject, bytes: relay.bytes, messageId };
   });
@@ -18349,6 +18389,7 @@ async function outlookForwardViaDraft(
       html: params.htmlBody,
       text: params.body,
       removeFileAttachments: !params.includeAttachments,
+      ...(params.ruleForward ? { customHeaders: [{ name: RULE_FORWARD_HEADER, value: "1" }] } : {}),
     });
     return { accessToken, draft: created, subject: created.subject ?? "" };
   });
@@ -18965,6 +19006,7 @@ async function executeForwardEmail(
     includeAttachments,
     asAttachment,
     include_signature: includeSignature,
+    ruleForward: apiKey.internalApprovalDispatch === true && apiKey.ruleForwardDispatch === true,
   };
 
   // Provider support is a property of the inbox, not of any one message, so it
@@ -36011,7 +36053,19 @@ interface ScheduledDispatchDeps {
   ): Promise<BrakeDecision>;
   /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
   noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
+  /**
+   * The allowance, for a rule's approved forward about to be sent. Optional, as
+   * above. Queued forwards are not counted (triage-engine.ts), so this is what
+   * keeps them from getting past the cap.
+   */
+  reserveRuleForward?(workspaceId: string): Promise<{ allowed: boolean; reservationId: string | null }>;
+  /** Books the forward when it was sent. Anything else hands the reservation back. */
+  settleRuleForward?(workspaceId: string, status: "success" | "error", reservationId: string | null): Promise<void>;
 }
+
+/** On the send's record, for the person who approved it. Plain, no plan slugs. */
+const RULE_FORWARD_LIMIT_REFUSAL =
+  "This workspace has used its included actions for this period, so this forward was not sent.";
 
 const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
   runApprovedOperation(operation, original, internalKey) {
@@ -36044,6 +36098,15 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
     return decision;
   },
   noteRefusal: noteProviderRefusal,
+  async reserveRuleForward(workspaceId) {
+    if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true") return { allowed: true, reservationId: null };
+    const reservation = await reserveBillableAction(workspaceId, "triage_forward");
+    if (reservation.outcome === "refused") return { allowed: false, reservationId: null };
+    return { allowed: true, reservationId: reservation.outcome === "reserved" ? reservation.reservationId : null };
+  },
+  async settleRuleForward(workspaceId, status, reservationId) {
+    await writeActionUsage(workspaceId, "triage_forward", status, reservationId);
+  },
   sendViaProvider(inbox, params) {
     switch (inbox.provider) {
       case "gmail":
@@ -36411,12 +36474,40 @@ async function handleScheduledDispatch(
           }
           payload = original;
         } else {
-          const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true };
-          const dispatchedResult = await deps.runApprovedOperation(
-            String(approval.operation),
-            original,
-            internalKey,
-          );
+          // A rule's forward: marked on the way out so another rule will not
+          // forward it again, and counted now, because this is when it is sent.
+          // triage_rule_name, not the id: a removed rule nulls the id, and the
+          // name is what still says this row was a rule forward.
+          const ruleForward = String(approval.operation) === "email_forward" &&
+            typeof approval.triage_rule_name === "string";
+          const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true, ruleForwardDispatch: ruleForward };
+          // Nothing was sent, so a refusal costs nothing: not counted, and not
+          // retried either, because the allowance may not free up until the period
+          // ends and a forward going out weeks after it was approved surprises
+          // everyone. decide.ts refuses the approval at the cap in the first place;
+          // this is for the approvals that passed that check together.
+          let forwardReservationId: string | null = null;
+          if (ruleForward && deps.reserveRuleForward) {
+            const reservation = await deps.reserveRuleForward(String(row.workspace_id));
+            if (!reservation.allowed) throw new Error(RULE_FORWARD_LIMIT_REFUSAL);
+            forwardReservationId = reservation.reservationId;
+          }
+          let dispatchedResult: ApprovedDispatchOutcome;
+          try {
+            dispatchedResult = await deps.runApprovedOperation(
+              String(approval.operation),
+              original,
+              internalKey,
+            );
+          } catch (error) {
+            if (ruleForward) {
+              await deps.settleRuleForward?.(String(row.workspace_id), "error", forwardReservationId);
+            }
+            throw error;
+          }
+          if (ruleForward) {
+            await deps.settleRuleForward?.(String(row.workspace_id), dispatchedResult.logStatus, forwardReservationId);
+          }
           // An abuse brake refused the approved send (outbound-brakes.ts):
           // nothing was sent, and the approval must not be lost or settled as
           // failed. Hold the row and try again on a later tick, once the
@@ -36643,7 +36734,7 @@ const TRIAGE_API_KEY_COLUMNS =
 const TRIAGE_RULE_COLUMNS =
   "id, workspace_id, inbox_id, api_key_id, name, enabled, filter, action, " +
   "interval_minutes, max_messages_per_run, next_run_at, running_since, consecutive_failures, " +
-  "paused_reason, paused_until";
+  "paused_reason, paused_until, include_past_mail, active_from, deep_scan_floor, scan_drained_at";
 
 /**
  * The plan-limit pause, as a PostgREST filter: `paused_until IS NULL OR
@@ -36911,6 +37002,22 @@ const triageStore: TriageStore = {
       return false;
     }
     return Array.isArray(data) && data.length > 0;
+  },
+
+  async seenDigests(ruleId, digests) {
+    // Chunked for the URL, not for the row cap: a chunk can match only as many
+    // rows as it names, so PostgREST's 1000-row cut cannot truncate one.
+    const seen = new Set<string>();
+    for (let i = 0; i < digests.length; i += 100) {
+      const { data, error } = await supabase
+        .from("triage_seen_messages")
+        .select("message_digest")
+        .eq("rule_id", ruleId)
+        .in("message_digest", digests.slice(i, i + 100));
+      if (error) throw new Error(error.message);
+      for (const row of (data ?? []) as { message_digest: string }[]) seen.add(row.message_digest);
+    }
+    return seen;
   },
 
   async writeRunItem(input) {
@@ -37356,7 +37463,8 @@ function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
     // Preview reuses the runner's own search seam, so a dry run and a real run
     // resolve the same messages. A preview that searched differently from the
     // thing it previews would be worse than no preview at all.
-    preview: (inbox, filter, limit) => triageDeps().search(inbox, filter, limit),
+    preview: (inbox, filter, limit) => triageDeps().search(inbox, filter, limit, { arrival: true }),
+    approvalsUrl: `${APP_URL}/dashboard/approvals`,
   };
 }
 
@@ -37475,13 +37583,32 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     return json({ error: "inbox_not_permitted" }, 403);
   }
 
+  // What Preview marks as past mail: this rule's start when it has one, and for a
+  // rule that has not started, "now". `include_past_mail` is the form's current
+  // tick, so the labels follow it before anything is saved.
+  let activeFrom: string | null = null;
+  const automationId = typeof body["automation_id"] === "string" ? body["automation_id"] : "";
+  if (automationId) {
+    const { data: ruleRow } = await supabase
+      .from("triage_rules")
+      .select("active_from")
+      .eq("id", automationId)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+    activeFrom = (ruleRow as { active_from: string | null } | null)?.active_from ?? null;
+  }
+  const startMs = ruleStartMs(
+    { include_past_mail: body["include_past_mail"] === true, active_from: activeFrom },
+    Date.now(),
+  );
+
   // ── Search ──────────────────────────────────────────────────────────────
   // Ask for one more than the cap so `truncated` reports a real fact rather than
   // the tautology "we returned exactly what we asked for".
-  let result: SearchEmailsResult;
+  let result: Awaited<ReturnType<typeof searchForRule>>;
   try {
     result = await Promise.race([
-      searchMessagesForProvider(inboxRow, filterCheck.value, limit + 1, 0, []),
+      searchForRule(inboxRow, filterCheck.value, limit + 1, { arrival: true }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
       ),
@@ -37503,6 +37630,7 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     from: neutralizeMaybe(m.from?.email ?? ""),
     date: m.date ?? "",
     unread: m.is_read === false,
+    ...(isPastMail({ received_at: m.received_at, date: m.date ?? "" }, startMs) ? { past_mail: true } : {}),
   }));
 
   return json({
@@ -37521,26 +37649,135 @@ async function handleTriagePreview(req: Request): Promise<Response> {
   }, 200);
 }
 
+interface RuleSearchResult extends Omit<SearchEmailsResult, "messages"> {
+  messages: (SearchEmailSummary & { received_at?: string | null; own_rule_forward?: boolean })[];
+}
+
+/**
+ * A rule's search: the interactive path, plus what a rule needs from IMAP that a
+ * summary does not carry.
+ *
+ * On IMAP `date` is the sender's Date header, so a start time needs INTERNALDATE,
+ * and a forward rule needs the loop header. One more FETCH on the search's own
+ * connection answers both, and is only made when asked for. Gmail and Outlook
+ * already report arrival in `date`; their header check is per message (see
+ * messageCarriesRuleForwardHeader).
+ */
+async function searchForRule(
+  inboxRow: InboxRow,
+  filter: NormalizedSearch,
+  limit: number,
+  options: TriageSearchOptions = {},
+): Promise<RuleSearchResult> {
+  if (!isImapProvider(inboxRow) || (!options.arrival && !options.ownForwardHeader)) {
+    return await searchMessagesForProvider(inboxRow, filter, limit, 0, []);
+  }
+  const session = new ImapSession(imapSessionOpener(inboxRow));
+  try {
+    const result = await discloseUnappliedCriteria(
+      await searchImapMessages(inboxRow, filter, limit, 0, [], false, session),
+      filter,
+      inboxRow.provider,
+    );
+    const uids = result.messages.map((m) => decodeImapId(m.id).uid);
+    const rows = uids.length > 0
+      ? await (await session.client()).fetchHeaderFields(uids, [RULE_FORWARD_HEADER])
+      : [];
+    const byUid = new Map(rows.map((row) => [row.uid, row]));
+    return {
+      ...result,
+      messages: result.messages.map((m) => {
+        const row = byUid.get(decodeImapId(m.id).uid);
+        return {
+          ...m,
+          received_at: row?.internalDate ?? null,
+          // A message the second FETCH did not return stays unknown, so the
+          // per-message check asks again rather than reading absence as "no".
+          ...(row && options.ownForwardHeader ? { own_rule_forward: hasRuleForwardHeader(row.headers) } : {}),
+        };
+      }),
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    await session.close();
+  }
+}
+
+/** Whether a raw header block holds the rule-forward marker. */
+function hasRuleForwardHeader(headers: string): boolean {
+  const name = RULE_FORWARD_HEADER.toLowerCase();
+  return headers.split(/\r?\n/).some((line) => line.toLowerCase().startsWith(`${name}:`));
+}
+
+/** The header check for one message, on any provider. Throws when it cannot tell. */
+async function messageCarriesRuleForwardHeader(inbox: InboxRow, messageId: string): Promise<boolean> {
+  if (isImapProvider(inbox)) {
+    const { folder, uid } = decodeImapId(messageId);
+    const session = new ImapSession(imapSessionOpener(inbox));
+    try {
+      await session.select(folder);
+      const rows = await (await session.client()).fetchHeaderFields([uid], [RULE_FORWARD_HEADER]);
+      return rows.some((row) => hasRuleForwardHeader(row.headers));
+    } finally {
+      await session.close();
+    }
+  }
+  if (inbox.provider === "gmail") {
+    const accessToken = await withFreshGmailToken(inbox);
+    const params = new URLSearchParams({ format: "metadata", metadataHeaders: RULE_FORWARD_HEADER });
+    const resp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`gmail_header_check_${resp.status}`);
+    }
+    const data = (await resp.json()) as { payload?: { headers?: { name?: string }[] } };
+    const name = RULE_FORWARD_HEADER.toLowerCase();
+    return (data.payload?.headers ?? []).some((h) => h.name?.toLowerCase() === name);
+  }
+  if (inbox.provider === "outlook") {
+    const accessToken = await withFreshOutlookToken(inbox);
+    const resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(messageId)}?$select=internetMessageHeaders`,
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`outlook_header_check_${resp.status}`);
+    }
+    const data = (await resp.json()) as { internetMessageHeaders?: { name?: string }[] };
+    const name = RULE_FORWARD_HEADER.toLowerCase();
+    return (data.internetMessageHeaders ?? []).some((h) => h.name?.toLowerCase() === name);
+  }
+  return false;
+}
+
 /** Assembles the dependency bundle the engine runs on. */
 function triageDeps(): TriageDeps {
   return {
     store: triageStore,
     digest: triageMessageDigest,
     encrypt: encryptForStorage,
-    async search(inbox, filter, limit) {
+    async search(inbox, filter, limit, options) {
       const inboxRow = await loadInboxRowForTriage(inbox.id);
       if (!inboxRow) throw new Error("inbox_unavailable");
       // The SAME search path an interactive email_search takes. Storing the
       // NormalizedSearch rather than a provider query string is what makes that
       // possible, and it is why there is no second search dialect to keep correct.
       const result = await Promise.race([
-        searchMessagesForProvider(inboxRow, filter, limit, 0, []),
+        searchForRule(inboxRow, filter, limit, options),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
         ),
       ]);
       return result.messages.slice(0, limit).map((m): TriageMatch => ({
         id: m.id,
+        ...(m.received_at !== undefined ? { received_at: m.received_at } : {}),
+        ...(m.own_rule_forward !== undefined ? { own_rule_forward: m.own_rule_forward } : {}),
         // Already neutralized by the read-path boundary; the engine truncates.
         subject: m.subject ?? "",
         from_name: m.from?.name ?? "",
@@ -37605,6 +37842,11 @@ function triageDeps(): TriageDeps {
       }
     },
     applyAction: applyTriageAction,
+    async isOwnRuleForward(inbox, match) {
+      const inboxRow = await loadInboxRowForTriage(inbox.id);
+      if (!inboxRow) throw new Error("inbox_unavailable");
+      return await messageCarriesRuleForwardHeader(inboxRow, match.id);
+    },
     /**
      * One IMAP connection, and one inbox row, for a whole run.
      *
@@ -37640,6 +37882,8 @@ function triageDeps(): TriageDeps {
         // No client to attribute: this request came from pg_cron, not a browser.
         serverAgent: "mcp-emails-triage-runner",
       });
+      // A queued forward is audited here and counted when it is sent.
+      if (input.billable === false) return;
       await writeActionUsage(input.workspaceId, input.operation, input.status, input.reservationId ?? null);
     },
     async checkAllowance(workspaceId) {

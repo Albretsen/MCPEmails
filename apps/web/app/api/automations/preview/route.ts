@@ -109,6 +109,10 @@ export async function POST(request: NextRequest) {
         api_key_id: body.api_key_id,
         filter: filter.value,
         limit: PREVIEW_LIMIT,
+        // Which matches to mark as past mail: the form's tick, and this rule's
+        // start when it has one. Read by the edge function within the workspace.
+        include_past_mail: body.include_past_mail === true,
+        ...(isUuid(body.automation_id) ? { automation_id: body.automation_id } : {}),
       }),
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
@@ -161,6 +165,7 @@ export async function POST(request: NextRequest) {
         from: typeof row.from === 'string' ? row.from : '',
         date: typeof row.date === 'string' ? row.date : null,
         unread: row.unread === true,
+        past_mail: row.past_mail === true,
       };
     }),
   });

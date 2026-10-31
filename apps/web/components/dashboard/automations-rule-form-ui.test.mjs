@@ -333,3 +333,56 @@ test('row 19: the past-mail line follows the engine', () => {
 test('row 17: the page does not say nobody is watching', () => {
   assert.equal(/nobody watching|unattended/i.test(JSON.stringify({ s: copy.subtitle, f: copy.modal.filterUnsupported })), false);
 });
+
+test('row 2: Include past mail is off for a new rule, sent when ticked, and Preview marks past mail', async (t) => {
+  const { view, calls } = await render(t, {
+    rules: [aiRule({ include_past_mail: false })],
+    respond: (target) => (target.endsWith('/preview')
+      ? {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          matched: 2,
+          truncated: false,
+          limit: 25,
+          notes: [],
+          messages: [
+            { id: 'a', subject: 'New invoice', from: 'x@example.com', date: null, unread: true, past_mail: false },
+            { id: 'b', subject: 'Old invoice', from: 'x@example.com', date: null, unread: false, past_mail: true },
+          ],
+        }),
+      }
+      : { ok: true, status: 200, json: async () => ({ automation: {} }) }),
+  });
+  await click(buttonNamed(view.container, copy.rowEdit));
+  const dialog = dialogOf(view);
+  const label = [...dialog.querySelectorAll('label')].find((l) => l.textContent.includes(copy.modal.includePastMail));
+  const box = label.querySelector('input');
+  assert.equal(box.checked, false);
+
+  await click(buttonNamed(dialog, copy.modal.preview));
+  await flush();
+  assert.equal(calls[0].body.include_past_mail, false);
+  assert.equal(calls[0].body.automation_id, 'rule-0001');
+  const note = dialog.querySelector('[data-testid="automation-preview-past"]');
+  assert.ok(note.textContent.includes('1 of these arrived before this rule starts'));
+  assert.ok(dialog.textContent.includes(copy.modal.previewPastBadge));
+
+  await click(box);
+  await submit(dialog);
+  const save = calls.find((call) => call.method === 'PATCH');
+  assert.deepEqual(save.body, { include_past_mail: true });
+});
+
+test('row 24 and 16: a run with nothing new says so, and one that only queued forwards says it is waiting', async (t) => {
+  const { view } = await render(t, {
+    rules: [
+      aiRule({ id: 'rule-a', name: 'Quiet', last_run: { status: 'skipped', started_at: '2026-10-31T10:00:00Z', matched: 4, succeeded: 0, queued: 0, failed: 0, skipped: 4 } }),
+      aiRule({ id: 'rule-b', name: 'Busy', last_run: { status: 'completed', started_at: '2026-10-31T10:00:00Z', matched: 3, succeeded: 0, queued: 3, failed: 0, skipped: 0 } }),
+    ],
+  });
+  await flush();
+  assert.ok(view.container.textContent.includes(copy.status.skipped));
+  assert.equal(copy.status.skipped, 'Nothing new');
+  assert.ok(view.container.textContent.includes(copy.status.queued));
+});

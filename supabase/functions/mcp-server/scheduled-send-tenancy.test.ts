@@ -683,3 +683,88 @@ Deno.test("a row deferred by the brake itself is still counted when it finally s
   assertEquals((await h.run()).dispatched, 1);
   assertEquals(h.calls.brake.map((b) => b.alreadyCounted), [false]);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A rule's forward counts when it is sent
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ruleForwardHarness(
+  approval: Row,
+  allowed: boolean,
+  outcome: { logStatus: "success" | "error"; logErrorCode: string | null } = { logStatus: "success", logErrorCode: null },
+) {
+  const rec = recordingClient({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  });
+  const seen = {
+    keys: [] as Row[],
+    reserved: 0,
+    settled: [] as Array<[string, string | null]>,
+  };
+  const deps = {
+    runApprovedOperation(_operation: string, _original: Row, key: Row) {
+      seen.keys.push(key);
+      return Promise.resolve(outcome);
+    },
+    completeApprovedIdempotency: () => Promise.resolve(),
+    sendViaProvider: () => Promise.reject(new Error("not used")),
+    reserveRuleForward() {
+      seen.reserved++;
+      return Promise.resolve({ allowed, reservationId: allowed ? "res-1" : null });
+    },
+    settleRuleForward(_ws: string, status: string, reservationId: string | null) {
+      seen.settled.push([status, reservationId]);
+      return Promise.resolve();
+    },
+  };
+  // deno-lint-ignore no-explicit-any
+  const run = async () => await (await handleScheduledDispatch(rec.client as any, deps as any)).json();
+  return { run, seen, tables: rec.tables };
+}
+
+const asForward = async (extra: Row) => ({
+  ...(await approvalRow()),
+  operation: "email_forward",
+  ...extra,
+});
+
+Deno.test("an approved rule forward is reserved, sent marked, and booked once sent", async () => {
+  const h = ruleForwardHarness(await asForward({ triage_rule_id: null, triage_rule_name: "Invoices" }), true);
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.seen.reserved, 1);
+  assertEquals(h.seen.keys[0].ruleForwardDispatch, true);
+  assertEquals(h.seen.settled, [["success", "res-1"]]);
+});
+
+Deno.test("at the cap an approved rule forward is not sent, not counted, and says why", async () => {
+  const h = ruleForwardHarness(await asForward({ triage_rule_name: "Invoices" }), false);
+  const summary = await h.run();
+  assertEquals(summary.errored, 1);
+  assertEquals(h.seen.keys.length, 0, "nothing was sent");
+  assertEquals(h.seen.settled.length, 0, "nothing to book");
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "error");
+  assertStringIncludes(String(row.error_detail), "included actions");
+});
+
+Deno.test("a rule forward that fails hands its reservation back", async () => {
+  const h = ruleForwardHarness(await asForward({ triage_rule_name: "Invoices" }), true, {
+    logStatus: "error",
+    logErrorCode: "message_not_found",
+  });
+  await h.run();
+  assertEquals(h.seen.settled, [["error", "res-1"]]);
+});
+
+Deno.test("an AI's forward is not a rule forward: no marker, no second count", async () => {
+  const h = ruleForwardHarness(await asForward({}), true);
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.seen.reserved, 0);
+  assertEquals(h.seen.keys[0].ruleForwardDispatch, false);
+  assertEquals(h.seen.settled.length, 0);
+});

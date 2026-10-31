@@ -292,12 +292,19 @@ export function validateAction(raw: unknown): ValidationResult<StoredAction> {
   return { ok: true, value: { type: 'draft_reply', template } };
 }
 
+/** Off by default: a rule starts with mail that arrives after it is first turned on. */
+export function validateIncludePastMail(value: unknown): ValidationResult<boolean> {
+  if (value === undefined) return { ok: true, value: false };
+  if (typeof value !== 'boolean') return fail('Include past mail must be true or false.');
+  return { ok: true, value };
+}
+
 /** Columns the dashboard reads. Never selects anything holding message content. */
 export const RULE_COLUMNS =
-  'id, workspace_id, inbox_id, api_key_id, name, enabled, filter, action, interval_minutes, max_messages_per_run, next_run_at, last_run_at, running_since, consecutive_failures, disabled_reason, created_at, updated_at';
+  'id, workspace_id, inbox_id, api_key_id, name, enabled, filter, action, interval_minutes, max_messages_per_run, include_past_mail, active_from, next_run_at, last_run_at, running_since, consecutive_failures, disabled_reason, created_at, updated_at';
 
 export const RUN_COLUMNS =
-  'id, rule_id, status, trigger, started_at, completed_at, duration_ms, matched, processed, succeeded, failed, skipped, error_code, error_detail';
+  'id, rule_id, status, trigger, started_at, completed_at, duration_ms, matched, processed, succeeded, queued, failed, skipped, error_code, error_detail';
 
 export const RUN_ITEM_COLUMNS =
   'id, run_id, outcome, subject_redacted, sender_redacted, detail, undone_at, created_at';

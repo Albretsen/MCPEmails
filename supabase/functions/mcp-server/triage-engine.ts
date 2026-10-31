@@ -72,6 +72,7 @@ import { labelTargetFor } from "./label-target.ts";
 // labelTargetFor is, so the runner and the interactive tools cannot drift into
 // two different accounts of what went wrong.
 import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts";
+import { APPROVAL_TTL_MS } from "./mcp-app-approvals.ts";
 
 // ---------------------------------------------------------------------------
 // Budgets and constants
@@ -144,6 +145,37 @@ export const TRIAGE_MAX_FORWARD_RECIPIENTS = 10;
  * front of mail leaving the account.
  */
 export const TRIAGE_MAX_FORWARD_NOTE_CHARS = 500;
+
+/**
+ * The first search a run makes, in matches. A rule with a lower per-run limit
+ * still looks this far, so a run usually learns what is below the limit without
+ * a second search.
+ */
+export const TRIAGE_SCAN_FIRST_WINDOW = 25;
+
+/** Each further search asks for this many times the last one. */
+export const TRIAGE_SCAN_GROWTH = 4;
+
+/**
+ * The most matches one run looks through. A rule whose newest matches are all
+ * handled and which has more than this may never reach what lies below them, and
+ * is treated as caught up rather than rescanning the same mail on every run.
+ */
+export const TRIAGE_SCAN_MAX_MATCHES = 1600;
+
+/** How long a run may spend looking, out of the invocation's TRIAGE_TIME_BUDGET_MS. */
+export const TRIAGE_SCAN_BUDGET_MS = 15_000;
+
+/**
+ * Stamped on every forward a rule sends, and looked for before a rule forwards.
+ *
+ * NOT the "Fwd:" subject prefix, which a person forwarding an invoice also
+ * writes. Two mailboxes whose rules forward to each other would otherwise pass
+ * one message back and forth, one approval at a time. A header survives delivery
+ * as it is, and a person forwarding the message on by hand starts a new message
+ * without it, so only our own forward is refused.
+ */
+export const RULE_FORWARD_HEADER = "X-MCPEmails-Rule-Forward";
 
 /** Consecutive failed runs before the rule disables itself. */
 export const TRIAGE_MAX_CONSECUTIVE_FAILURES = 5;
@@ -671,6 +703,18 @@ export interface TriageRuleRow {
    */
   paused_reason?: string | null;
   paused_until?: string | null;
+  /**
+   * Whether the rule acts on mail from before `active_from`. False is the
+   * default for new rules. Absent counts as true, the behaviour of a rule that
+   * predates this.
+   */
+  include_past_mail?: boolean;
+  /** When it was first turned on. Stamped by a database trigger. */
+  active_from?: string | null;
+  /** See the column comment in migration 20261031210000. */
+  deep_scan_floor?: string | null;
+  /** See the column comment in migration 20261031210000. */
+  scan_drained_at?: string | null;
 }
 
 /** The authority a run acts with. Projected from `api_keys`. */
@@ -736,6 +780,22 @@ export interface TriageMatch {
   from_email: string;
   date: string;
   folder?: string;
+  /**
+   * When the mailbox received it, where that differs from `date`: on IMAP `date`
+   * is the sender's Date header, and this is INTERNALDATE. Gmail and Outlook
+   * already report arrival in `date` and leave this out.
+   */
+  received_at?: string | null;
+  /** Carries {@link RULE_FORWARD_HEADER}. Undefined means not looked at yet. */
+  own_rule_forward?: boolean;
+}
+
+/** What a search needs to fetch beyond the summary. Both cost one more IMAP FETCH. */
+export interface TriageSearchOptions {
+  /** Set `received_at`. */
+  arrival?: boolean;
+  /** Set `own_rule_forward` where the provider can answer in the same pass. */
+  ownForwardHeader?: boolean;
 }
 
 /** What a provider action reports back. */
@@ -815,6 +875,8 @@ export interface TriageStore {
       disabled_reason?: string | null;
       paused_reason?: string | null;
       paused_until?: string | null;
+      /** Omitted leaves it as it is. */
+      scan_drained_at?: string | null;
     },
   ): Promise<void>;
   createRun(input: {
@@ -832,6 +894,8 @@ export interface TriageStore {
       succeeded: number;
       failed: number;
       skipped: number;
+      /** Forwards held for approval. Not in `succeeded`: nothing has happened yet. */
+      queued?: number;
       error_code?: string | null;
       error_detail?: string | null;
     },
@@ -846,13 +910,20 @@ export interface TriageStore {
    * mail twice, which is the most damaging failure this feature could have.
    */
   claimMessage(ruleId: string, digest: string): Promise<boolean>;
+  /**
+   * Which of these digests the ledger already holds for this rule. A read, used
+   * to look past handled mail without logging it; `claimMessage` stays what
+   * decides. Optional: without it every match reaches the claim, which still
+   * refuses a duplicate.
+   */
+  seenDigests?(ruleId: string, digests: readonly string[]): Promise<Set<string>>;
   writeRunItem(input: {
     run_id: string | null;
     rule_id: string;
     message_digest: string;
     subject_redacted: string | null;
     sender_redacted: string | null;
-    outcome: "applied" | "queued_for_approval" | "failed" | "skipped_duplicate";
+    outcome: "applied" | "queued_for_approval" | "failed" | "skipped_duplicate" | "skipped_loop";
     detail: Record<string, unknown>;
     undo_state: Record<string, unknown> | null;
   }): Promise<void>;
@@ -940,8 +1011,20 @@ export interface TriageDeps {
   digest(providerMessageId: string): Promise<string>;
   /** AES-256-GCM, the same helper scheduled_sends.payload uses. */
   encrypt(plaintext: string): Promise<string>;
-  /** Run a stored NormalizedSearch through the interactive search path. */
-  search(inbox: TriageInbox, filter: NormalizedSearch, limit: number): Promise<TriageMatch[]>;
+  /** Run a stored NormalizedSearch through the interactive search path, newest first. */
+  search(
+    inbox: TriageInbox,
+    filter: NormalizedSearch,
+    limit: number,
+    options?: TriageSearchOptions,
+  ): Promise<TriageMatch[]>;
+  /**
+   * Does this message carry {@link RULE_FORWARD_HEADER}? Asked before a forward
+   * for a match whose search could not say (Gmail and Outlook: one request per
+   * message, so only for the ones about to be queued). Optional, and a throw
+   * leaves the message for the next run: an unknown answer does not queue it.
+   */
+  isOwnRuleForward?(inbox: TriageInbox, match: TriageMatch): Promise<boolean>;
   /** Resolve a folder/label name to a provider-native id. */
   resolveFolder(
     inbox: TriageInbox,
@@ -1012,6 +1095,11 @@ export interface TriageDeps {
     errorCode: string | null;
     durationMs: number;
     reservationId?: string | null;
+    /**
+     * False: audit only, no usage row. A queued forward has done nothing yet, and
+     * counts when the dispatcher sends it. Absent means true.
+     */
+    billable?: boolean;
   }): Promise<void>;
   /**
    * The allowance gate, asked ONCE per rule after the lease is won and before
@@ -1378,6 +1466,9 @@ export async function runTriageRule(
    */
   let destinationMissingFailures = 0;
 
+  /** Forwards held for approval. Not in `succeeded`: nothing has happened yet. */
+  let queuedCount = 0;
+
   /**
    * Terminal failure: release the lease, count it, auto-disable at the ceiling.
    *
@@ -1551,13 +1642,21 @@ export async function runTriageRule(
     Math.max(rule.max_messages_per_run, TRIAGE_MIN_MESSAGES_PER_RUN),
     TRIAGE_MAX_MESSAGES_PER_RUN,
   );
-  let matches: TriageMatch[];
+  let scan: TriageScan;
   try {
-    matches = await deps.search(inbox, filterCheck.value, cap);
+    scan = await scanForUnhandled(deps, rule, inbox, filterCheck.value, cap, {
+      ownForwardHeader: action.type === "forward",
+      deadlineMs: opts.deadlineMs,
+    });
   } catch (error) {
     return await failRun("search_failed", redactErrorDetail(error));
   }
-  matched = matches.length;
+  matched = scan.matched;
+  // Handled mail is counted, and logged nowhere: a healthy rule would otherwise
+  // write one row per old message on every run.
+  skipped = scan.handled;
+  /** A message this run could not decide about, left unclaimed for the next. */
+  let leftUnclaimed = false;
 
   // ── One provider connection for the whole run ─────────────────────────────
   // Opened AFTER the search, which owns a connection of its own for as long as
@@ -1638,6 +1737,7 @@ export async function runTriageRule(
         succeeded,
         failed,
         skipped,
+        queued: queuedCount,
         error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
         error_detail: `Stopped after ${processed} of ${matched} matches: the workspace has used ` +
           `${limit.used} of ${limit.cap} email actions this period. The automation is paused ` +
@@ -1684,6 +1784,7 @@ export async function runTriageRule(
         succeeded,
         failed,
         skipped,
+        queued: queuedCount,
         error_code: TRIAGE_STOP_REASON_TIME_BUDGET,
         error_detail: `Stopped after ${processed} of ${matched} matches: this invocation ran ` +
           `out of time. Nothing was left half-applied and the remaining matches are ` +
@@ -1716,7 +1817,8 @@ export async function runTriageRule(
     };
 
     // ── Act, message by message ───────────────────────────────────────────────
-    for (const match of matches.slice(0, cap)) {
+    const actionable = scan.unhandled.slice(0, cap);
+    for (const { match, digest } of actionable) {
       // THE BUDGET, BEFORE THE MESSAGE. Checked here and not merely between
       // rules, which is where the dispatcher used to check it and nowhere
       // else. A rule may match up to TRIAGE_MAX_MESSAGES_PER_RUN messages and
@@ -1732,7 +1834,48 @@ export async function runTriageRule(
         return await stopForBudget();
       }
 
-      const digest = await deps.digest(match.id);
+      // A rule never forwards a forward a rule sent. Before the reservation and
+      // the claim, so it costs nothing, and claimed so it is decided once.
+      if (action.type === "forward") {
+        let ownForward: boolean;
+        try {
+          ownForward = match.own_rule_forward ??
+            (deps.isOwnRuleForward ? await deps.isOwnRuleForward(inbox, match) : false);
+        } catch (error) {
+          console.warn("[triage] own_forward_check_failed", {
+            rule_id: rule.id,
+            error: redactErrorDetail(error),
+          });
+          leftUnclaimed = true;
+          failed++;
+          await store.writeRunItem({
+            run_id: runId,
+            rule_id: rule.id,
+            message_digest: digest,
+            subject_redacted: redactForRunLog(match.subject),
+            sender_redacted: redactForRunLog(match.from_email),
+            outcome: "failed",
+            detail: { error_code: "own_forward_check_failed" },
+            undo_state: null,
+          });
+          continue;
+        }
+        if (ownForward) {
+          await store.claimMessage(rule.id, digest);
+          skipped++;
+          await store.writeRunItem({
+            run_id: runId,
+            rule_id: rule.id,
+            message_digest: digest,
+            subject_redacted: redactForRunLog(match.subject),
+            sender_redacted: redactForRunLog(match.from_email),
+            outcome: "skipped_loop",
+            detail: { reason: "own_rule_forward" },
+            undo_state: null,
+          });
+          continue;
+        }
+      }
 
       // RESERVE BEFORE CLAIMING. Each unattended action is metered against the
       // workspace's allowance exactly like an interactive one, and the
@@ -1741,8 +1884,12 @@ export async function runTriageRule(
       // the other order loses a message per pause). A throw is read as
       // "allowed, unmetered": the allowance is a plan rule, and an
       // infrastructure error in it must not become a rule failure.
+      //
+      // Not a forward: queueing one takes no action. It counts when it is sent,
+      // and the dispatcher takes the reservation then, so being queued cannot get
+      // a forward past the cap.
       let reservationId: string | null = null;
-      if (deps.reserveAction) {
+      if (deps.reserveAction && action.type !== "forward") {
         let reservation: TriageActionReservation = { allowed: true, reservation_id: null };
         try {
           reservation = await deps.reserveAction({
@@ -1860,6 +2007,7 @@ export async function runTriageRule(
         errorCode: outcome.ok ? null : (outcome.error_code ?? "provider_error"),
         durationMs: nowMs(deps) - actionStartMs,
         reservationId,
+        billable: action.type !== "forward",
       });
 
       if (!outcome.ok) {
@@ -1886,11 +2034,12 @@ export async function runTriageRule(
         continue;
       }
 
-      succeeded++;
       // forward stops at an approval row: nothing has happened to the mailbox and
       // nothing will until a human decides. That is a distinct terminal outcome,
       // not a success, which is why the migration gave it its own value.
       const queued = typeof outcome.approval_id === "string" && outcome.approval_id.length > 0;
+      if (queued) queuedCount++;
+      else succeeded++;
       let undoState: Record<string, unknown> | null = null;
       if (outcome.undo) {
         // Provider message ids ARE message identifiers, so the narrow carve-out
@@ -1959,12 +2108,23 @@ export async function runTriageRule(
       succeeded,
       failed,
       skipped,
+      queued: queuedCount,
       error_code: null,
       error_detail: null,
     });
+    // Everything the filter matches has now been handled: from here on a window
+    // holding one handled message says nothing older needs a look. Left below the
+    // limit, the next run has to look past handled mail again.
+    const leftOver = scan.unhandled.length - actionable.length;
+    const drainedAt = leftOver > 0
+      ? null
+      : scan.covered && !leftUnclaimed
+      ? (rule.scan_drained_at ?? new Date(endedMs).toISOString())
+      : (rule.scan_drained_at ?? null);
     await store.releaseRule(rule.id, {
       next_run_at: new Date(endedMs + rule.interval_minutes * 60_000).toISOString(),
       last_run_at: new Date(endedMs).toISOString(),
+      scan_drained_at: drainedAt,
       // A run that completed, even with per-message errors, proves the mailbox and
       // the key are reachable. The failure counter tracks RUN failures, not
       // individual provider hiccups, so it resets here.
@@ -2007,6 +2167,192 @@ export async function runTriageRule(
       }
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// What a run looks at
+// ---------------------------------------------------------------------------
+
+/** When the mailbox received a message, as far as the search could tell. NaN when unknown. */
+export function matchArrivalMs(match: Pick<TriageMatch, "received_at" | "date">): number {
+  return Date.parse(match.received_at || match.date || "");
+}
+
+/**
+ * The moment before which a rule leaves mail alone, or null when it has none.
+ *
+ * A rule that has not started has no `active_from`, and nothing has arrived after
+ * a start that has not happened, so "now" is the honest answer. A preview of a
+ * rule that is still off uses this too.
+ */
+export function ruleStartMs(
+  rule: Pick<TriageRuleRow, "include_past_mail" | "active_from">,
+  nowMillis: number,
+): number | null {
+  if (rule.include_past_mail !== false) return null;
+  const start = rule.active_from ? Date.parse(rule.active_from) : NaN;
+  return Number.isFinite(start) ? start : nowMillis;
+}
+
+/**
+ * True when this message arrived before the rule's start. An unknown arrival is
+ * past mail: a rule acts on a message only when it knows it arrived after the
+ * start. So a message delayed in transit runs (it ARRIVED after the start), and a
+ * Date header written to look recent does not (on IMAP arrival is INTERNALDATE).
+ */
+export function isPastMail(match: Pick<TriageMatch, "received_at" | "date">, startMs: number | null): boolean {
+  if (startMs === null) return false;
+  const arrived = matchArrivalMs(match);
+  return !Number.isFinite(arrived) || arrived < startMs;
+}
+
+/**
+ * The filter a rule with a start date searches with, so an old mailbox costs an
+ * old rule nothing.
+ *
+ * A day earlier than the start, on purpose. IMAP SINCE and Gmail's after: take a
+ * date, read in a time zone we do not control (the server's, Pacific time), so an
+ * exact date could lose mail that arrived just after the start. This only narrows
+ * what is fetched. `isPastMail` decides, on the exact time.
+ */
+export function narrowFilterToStart(filter: NormalizedSearch, startMs: number): NormalizedSearch {
+  const floor = new Date(startMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const own = filter.since ? Date.parse(filter.since) : NaN;
+  if (filter.since && (!Number.isFinite(own) || own >= Date.parse(floor))) return filter;
+  return { ...filter, since: floor };
+}
+
+export interface TriageScan {
+  /** Matches the rule may act on: past mail and anything below a floor left out. */
+  matched: number;
+  /** How many of those the ledger already holds. */
+  handled: number;
+  /** The rest, oldest first. */
+  unhandled: { match: TriageMatch; digest: string }[];
+  /** True when nothing unhandled can be left outside what this scan saw. */
+  covered: boolean;
+}
+
+/**
+ * Finds what a run should act on: the oldest matches the ledger does not hold.
+ *
+ * A search limited to the run's cap and handed newest first starves older mail:
+ * limit 2 with 4 matches handles the newest 2, and from then on those two fill
+ * the page on every run. So this looks past handled mail, growing the window, and
+ * returns the unhandled matches oldest first. The cap decides how many of them
+ * this run takes, and the rest are there for the next.
+ *
+ * What stops it, in the order that matters for cost:
+ *   - the search ran out of matches;
+ *   - it reached mail older than the rule looks at;
+ *   - the rule was caught up last time and this window holds handled mail, so
+ *     nothing older needs a look. That is every ordinary run: one search, the same
+ *     cost as before this existed;
+ *   - TRIAGE_SCAN_MAX_MATCHES, or too little of TRIAGE_SCAN_BUDGET_MS left for the
+ *     next search. A growing search that fails keeps what the last one found.
+ *
+ * Reads only. Nothing is claimed here; the act loop's claim still decides.
+ */
+export async function scanForUnhandled(
+  deps: TriageDeps,
+  rule: TriageRuleRow,
+  inbox: TriageInbox,
+  filter: NormalizedSearch,
+  cap: number,
+  opts: { ownForwardHeader?: boolean; deadlineMs?: number } = {},
+): Promise<TriageScan> {
+  const startedMs = nowMs(deps);
+  const startMs = ruleStartMs(rule, startedMs);
+  const floorParsed = rule.deep_scan_floor ? Date.parse(rule.deep_scan_floor) : NaN;
+  const floorMs = startMs === null && Number.isFinite(floorParsed) ? floorParsed : null;
+  const searchFilter = startMs === null ? filter : narrowFilterToStart(filter, startMs);
+  const searchOptions: TriageSearchOptions = {
+    arrival: startMs !== null || floorMs !== null,
+    ownForwardHeader: opts.ownForwardHeader === true,
+  };
+  const scanDeadline = Math.min(startedMs + TRIAGE_SCAN_BUDGET_MS, opts.deadlineMs ?? Infinity);
+
+  const digests = new Map<string, string>();
+  const seen = new Set<string>();
+  const looked = new Set<string>();
+
+  let window = Math.max(cap, TRIAGE_SCAN_FIRST_WINDOW);
+  let kept: TriageMatch[] = [];
+  let covered = false;
+  let searches = 0;
+
+  while (true) {
+    const searchStartedMs = nowMs(deps);
+    let found: TriageMatch[];
+    try {
+      found = await deps.search(inbox, searchFilter, window, searchOptions);
+    } catch (error) {
+      if (searches === 0) throw error;
+      console.warn("[triage] scan_stopped_on_search_error", {
+        rule_id: rule.id,
+        error: redactErrorDetail(error),
+      });
+      break;
+    }
+    searches++;
+    const page = found.slice(0, window);
+
+    // A rule from before include_past_mail keeps the newest matches it always
+    // saw, whatever their age, and goes no further back than its own creation.
+    const belowFloor = (match: TriageMatch, index: number) => {
+      if (floorMs === null || index < cap) return false;
+      const arrived = matchArrivalMs(match);
+      return !Number.isFinite(arrived) || arrived < floorMs;
+    };
+    kept = page.filter((match, index) => !isPastMail(match, startMs) && !belowFloor(match, index));
+
+    for (const match of kept) {
+      if (!digests.has(match.id)) digests.set(match.id, await deps.digest(match.id));
+    }
+    const fresh = kept.map((match) => digests.get(match.id) as string).filter((digest) => !looked.has(digest));
+    if (fresh.length > 0 && deps.store.seenDigests) {
+      try {
+        for (const digest of await deps.store.seenDigests(rule.id, fresh)) seen.add(digest);
+      } catch (error) {
+        // The claim still refuses a duplicate. It only logs one more item.
+        console.warn("[triage] seen_lookup_failed", { rule_id: rule.id, error: redactErrorDetail(error) });
+      }
+    }
+    for (const digest of fresh) looked.add(digest);
+
+    const holdsHandled = kept.some((match) => seen.has(digests.get(match.id) as string));
+    if (
+      page.length < window ||
+      page.some((match) => isPastMail(match, startMs)) ||
+      page.some(belowFloor) ||
+      (rule.scan_drained_at && holdsHandled)
+    ) {
+      covered = true;
+      break;
+    }
+    if (window >= TRIAGE_SCAN_MAX_MATCHES) {
+      // Nothing to do in the newest matches we are willing to read. Reading them
+      // again on every run will not change that.
+      covered = kept.every((match) => seen.has(digests.get(match.id) as string));
+      if (covered) console.info("[triage] scan_limit_reached", { rule_id: rule.id });
+      break;
+    }
+    const searchMs = nowMs(deps) - searchStartedMs;
+    if (nowMs(deps) + searchMs * TRIAGE_SCAN_GROWTH > scanDeadline) break;
+    window = Math.min(window * TRIAGE_SCAN_GROWTH, TRIAGE_SCAN_MAX_MATCHES);
+  }
+
+  const unhandled = kept
+    .map((match) => ({ match, digest: digests.get(match.id) as string }))
+    .filter(({ digest }) => !seen.has(digest));
+  // Oldest first, keeping the search's order where arrival is the same or unknown.
+  const order = (m: TriageMatch) => {
+    const arrived = matchArrivalMs(m);
+    return Number.isFinite(arrived) ? arrived : 0;
+  };
+  unhandled.sort((a, b) => order(a.match) - order(b.match));
+
+  return { matched: kept.length, handled: kept.length - unhandled.length, unhandled, covered };
 }
 
 // ---------------------------------------------------------------------------
@@ -2254,8 +2600,10 @@ export interface AutomationDeps {
   resolveInbox(
     args: Record<string, unknown>,
   ): Promise<{ ok: true; inbox: TriageInbox } | { ok: false; message: string }>;
-  /** Read-only dry run of a filter. Applies nothing. */
+  /** Read-only dry run of a filter. Applies nothing. Sets `received_at` where it differs from `date`. */
   preview(inbox: TriageInbox, filter: NormalizedSearch, limit: number): Promise<TriageMatch[]>;
+  /** Where a person approves a held forward. Defaults to production's page. */
+  approvalsUrl?: string;
   now?(): number;
 }
 
@@ -2303,7 +2651,8 @@ function hasInboxSelector(args: Record<string, unknown>): boolean {
 export const AUTOMATION_PUBLIC_COLUMNS =
   "id, name, enabled, inbox_id, filter, action, interval_minutes, " +
   "max_messages_per_run, next_run_at, last_run_at, consecutive_failures, " +
-  "disabled_reason, paused_reason, paused_until, created_at, updated_at";
+  "disabled_reason, paused_reason, paused_until, created_at, updated_at, " +
+  "include_past_mail, active_from";
 
 /**
  * What loadAutomation reads: the public columns plus `api_key_id`, the key the
@@ -2316,7 +2665,7 @@ export const AUTOMATION_LOAD_COLUMNS =
   "id, name, enabled, inbox_id, filter, action, interval_minutes, " +
   "max_messages_per_run, next_run_at, last_run_at, consecutive_failures, " +
   "disabled_reason, paused_reason, paused_until, created_at, updated_at, " +
-  "api_key_id";
+  "include_past_mail, active_from, api_key_id";
 
 /**
  * Validates the create/update body as a whole.
@@ -2362,6 +2711,7 @@ export function validateAutomationBody(
   action?: TriageAction;
   interval_minutes?: number;
   max_messages_per_run?: number;
+  include_past_mail?: boolean;
 }> {
   const out: Record<string, unknown> = {};
 
@@ -2412,6 +2762,10 @@ export function validateAutomationBody(
     if (!check.ok) return fail(check.error);
     out.max_messages_per_run = check.value;
   }
+  if (args["include_past_mail"] !== undefined) {
+    if (typeof args["include_past_mail"] !== "boolean") return fail("include_past_mail must be true or false.");
+    out.include_past_mail = args["include_past_mail"];
+  }
   return { ok: true, value: out };
 }
 
@@ -2449,13 +2803,43 @@ function labelAppliedNote(action: TriageAction | undefined, provider: string | n
  * nothing. A caller that enables it and then reports "invoices are now being
  * forwarded" is wrong in a way nobody discovers until the approvals pile up.
  */
-function forwardApprovalNote(action: TriageAction | undefined): string | null {
+function forwardApprovalNote(action: TriageAction | undefined, approvalsUrl?: string): string | null {
   if (!action || action.type !== "forward") return null;
   return (
     "A forward rule is ALWAYS held for human approval: each match creates an " +
     "approval a person has to accept before anything is sent, whatever this " +
-    "inbox's approval setting says. Nothing leaves the mailbox unattended."
+    "inbox's approval setting says. Nothing leaves the mailbox unattended. " +
+    forwardApprovalWhere(approvalsUrl)
   );
+}
+
+const DEFAULT_APPROVALS_URL = "https://mcpemails.com/dashboard/approvals";
+
+/** "24 hours", "7 days": how long a held forward waits, from the constant that decides it. */
+export function approvalWindowText(ms: number): string {
+  const hours = Math.round(ms / (60 * 60 * 1000));
+  if (hours % 24 === 0) {
+    const days = hours / 24;
+    return days === 1 ? "24 hours" : `${days} days`;
+  }
+  return `${hours} hours`;
+}
+
+/** Where a person approves a held forward, and by when. Copy must match the code. */
+export function forwardApprovalWhere(approvalsUrl: string = DEFAULT_APPROVALS_URL): string {
+  return (
+    `A workspace owner or admin approves each forward at ${approvalsUrl} , within ` +
+    `${approvalWindowText(APPROVAL_TTL_MS)} of it being queued. After that it expires unsent. ` +
+    "An AI assistant cannot approve one."
+  );
+}
+
+/** Where a new rule starts, said when the rule is written and when it is turned on. */
+function pastMailNote(rule: { include_past_mail?: unknown }): string {
+  return rule.include_past_mail === true
+    ? "It also acts on mail already in the inbox that matches the filter (include_past_mail is on)."
+    : "It only acts on mail that arrives after it is first enabled. Mail already in the inbox " +
+      "is left alone unless include_past_mail is set to true.";
 }
 
 /**
@@ -2709,6 +3093,7 @@ export async function runAutomationTool(
           filter: body.value.filter,
           action: body.value.action,
           interval_minutes: body.value.interval_minutes,
+          include_past_mail: body.value.include_past_mail === true,
           ...(body.value.max_messages_per_run !== undefined
             ? { max_messages_per_run: body.value.max_messages_per_run }
             : {}),
@@ -2724,7 +3109,7 @@ export async function runAutomationTool(
         return toolErr(`automation create: could not save the rule (${error?.code ?? "unknown"}).`, "db_error");
       }
       const createNote = labelAppliedNote(body.value.action, resolved.inbox.provider);
-      const approvalNote = forwardApprovalNote(body.value.action);
+      const approvalNote = forwardApprovalNote(body.value.action, deps.approvalsUrl);
       return toolOk({
         automation: data,
         enabled: false,
@@ -2736,6 +3121,7 @@ export async function runAutomationTool(
           "Created and DISABLED. Nothing will run until you call automation with " +
           "action 'enable'. Call action 'preview' first to see what the filter matches." +
           (createNote ? ` ${createNote}` : "") +
+          ` ${pastMailNote({ include_past_mail: body.value.include_past_mail })}` +
           (approvalNote ? ` ${approvalNote}` : ""),
       });
     }
@@ -2787,7 +3173,7 @@ export async function runAutomationTool(
       const body = validateAutomationBody(args, provider, true);
       if (!body.ok) return toolErr(`automation update: ${body.error}`, "-32602");
       if (Object.keys(body.value).length === 0) {
-        return toolErr("automation update: supply at least one of name, filter, action, interval_minutes, max_messages_per_run.", "-32602");
+        return toolErr("automation update: supply at least one of name, filter, action, interval_minutes, max_messages_per_run, include_past_mail.", "-32602");
       }
       if (body.value.action) {
         const needed = TRIAGE_ACTION_SCOPES[body.value.action.type];
@@ -2808,7 +3194,12 @@ export async function runAutomationTool(
       if (error || !data) return toolErr("automation update: could not save the change.", "db_error");
       const updateNote = labelAppliedNote(body.value.action, provider);
       const updateRebound = Object.keys(updateRebind.patch).length > 0;
-      const updateMessage = [updateNote, updateRebound ? REBOUND_NOTE : null]
+      const updateMessage = [
+        updateNote,
+        forwardApprovalNote(body.value.action, deps.approvalsUrl),
+        body.value.include_past_mail !== undefined ? pastMailNote(body.value) : null,
+        updateRebound ? REBOUND_NOTE : null,
+      ]
         .filter((part): part is string => part !== null)
         .join(" ");
       return toolOk({
@@ -2856,7 +3247,11 @@ export async function runAutomationTool(
       return toolOk({
         automation: publicAutomation(data),
         enabled: true,
-        ...(Object.keys(enableRebind.patch).length > 0 ? { message: REBOUND_NOTE } : {}),
+        message: [
+          pastMailNote(data),
+          forwardApprovalNote(actionCheck.value, deps.approvalsUrl),
+          Object.keys(enableRebind.patch).length > 0 ? REBOUND_NOTE : null,
+        ].filter((part): part is string => part !== null).join(" "),
       });
     }
 
@@ -2921,7 +3316,7 @@ export async function runAutomationTool(
       if (runsMismatch) return runsMismatch;
       const { data, error } = await deps.db
         .from("triage_runs")
-        .select("id, status, trigger, started_at, completed_at, duration_ms, matched, processed, succeeded, failed, skipped, error_code, error_detail")
+        .select("id, status, trigger, started_at, completed_at, duration_ms, matched, processed, succeeded, queued, failed, skipped, error_code, error_detail")
         .eq("rule_id", ruleIdArg)
         .eq("workspace_id", deps.caller.workspace_id)
         .order("started_at", { ascending: false })
@@ -2957,6 +3352,9 @@ export async function runAutomationTool(
       let filter: NormalizedSearch;
       const selector: Record<string, unknown> = args;
       let defaultSelector: Record<string, unknown> | null = null;
+      // What Preview marks as past mail: the stored rule's start, or for an unsaved
+      // filter the same default a new rule gets. `include_past_mail` asks "what if".
+      let startRule: Pick<TriageRuleRow, "include_past_mail" | "active_from"> = { include_past_mail: false };
 
       if (args["automation_id"] !== undefined) {
         if (!UUID_RE.test(ruleIdArg)) return toolErr("automation preview: automation_id must be a UUID.", "-32602");
@@ -2965,6 +3363,7 @@ export async function runAutomationTool(
         const check = validateTriageFilter(rule.filter);
         if (!check.ok) return toolErr(`automation preview: the stored filter is invalid (${check.error})`, "invalid_filter");
         filter = check.value;
+        startRule = { include_past_mail: rule.include_past_mail, active_from: rule.active_from };
         if (!hasInboxSelector(args) && rule.inbox_id) {
           defaultSelector = { inbox_id: rule.inbox_id };
         }
@@ -3001,12 +3400,18 @@ export async function runAutomationTool(
         ? [buildUnappliedSearchNote(resolved.inbox.provider, unapplied)]
         : [];
 
+      if (typeof args["include_past_mail"] === "boolean") {
+        startRule = { ...startRule, include_past_mail: args["include_past_mail"] };
+      }
+      const startMs = ruleStartMs(startRule, deps.now ? deps.now() : Date.now());
+
       let matches: TriageMatch[];
       try {
         matches = await deps.preview(resolved.inbox, filter, cap);
       } catch (error) {
         return toolErr(`automation preview: the search failed (${redactErrorDetail(error)}).`, "search_failed");
       }
+      const pastCount = matches.filter((m) => isPastMail(m, startMs)).length;
       return toolOk({
         applied: false,
         inbox_id: resolved.inbox.id,
@@ -3019,9 +3424,15 @@ export async function runAutomationTool(
           from: redactForRunLog(m.from_email),
           date: m.date,
           folder: m.folder ?? null,
+          ...(isPastMail(m, startMs) ? { past_mail: true } : {}),
         })),
+        ...(pastCount > 0 ? { past_mail_count: pastCount } : {}),
         untrusted_content: true,
-        message: "Dry run. Nothing was changed and no message was claimed in the deduplication ledger.",
+        message: "Dry run. Nothing was changed and no message was claimed in the deduplication ledger." +
+          (pastCount > 0
+            ? ` ${pastCount} of these arrived before this rule's start and will not run ` +
+              "unless include_past_mail is true."
+            : ""),
         // A preview DISCLOSES where create/update refuses. It changes nothing,
         // so the read-only reasoning in consolidated-arguments.ts applies, and
         // it is the one surface on which a caller can see what the provider

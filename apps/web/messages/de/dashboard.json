@@ -1273,7 +1273,8 @@
       "completed": "Abgeschlossen",
       "completedWithErrors": "Mit Fehlern abgeschlossen",
       "failed": "Fehlgeschlagen",
-      "skipped": "Nichts zu tun"
+      "skipped": "Nichts Neues",
+      "queued": "Wartet auf Freigabe"
     },
     "modal": {
       "createTitle": "Neue Automatisierung",
@@ -1360,7 +1361,11 @@
       "previewKeyCannotRead": "Dieser API-Schlüssel kann keine E-Mails lesen und daher keine Vorschau anzeigen. Wählen Sie einen Schlüssel mit der Berechtigung read:email.",
       "previewKeyNotForInbox": "Dieser API-Schlüssel darf dieses Postfach nicht verwenden. Wählen Sie einen anderen.",
       "previewInboxNotAvailable": "Dieses Postfach ist gerade nicht verfügbar. Prüfen Sie es unter Postfächer.",
-      "previewSearchFailed": "Das Postfach konnte nicht durchsucht werden. Prüfen Sie die Verbindung und versuchen Sie es erneut."
+      "previewSearchFailed": "Das Postfach konnte nicht durchsucht werden. Prüfen Sie die Verbindung und versuchen Sie es erneut.",
+      "includePastMail": "Frühere E-Mails einbeziehen",
+      "includePastMailHelp": "Aus: nur E-Mails, die eintreffen, nachdem du diese Regel zum ersten Mal einschaltest. Ein: auch E-Mails, die schon im Postfach liegen.",
+      "previewPastNote": "{count, plural, =1 {1 davon kam an, bevor diese Regel beginnt. Sie wird nur verarbeitet, wenn Frühere E-Mails einbeziehen eingeschaltet ist.} other {# davon kamen an, bevor diese Regel beginnt. Sie werden nur verarbeitet, wenn Frühere E-Mails einbeziehen eingeschaltet ist.}}",
+      "previewPastBadge": "Frühere E-Mail"
     },
     "runs": {
       "title": "Ausführungsprotokoll",
@@ -1376,7 +1381,7 @@
       "colResult": "Ergebnis",
       "triggerSchedule": "Geplant",
       "triggerManual": "Manuell",
-      "resultSummary": "{matched} Treffer, {succeeded} angewendet, {failed} fehlgeschlagen, {skipped} übersprungen",
+      "resultSummary": "{matched} Treffer, {succeeded} angewendet, {queued} warten auf Freigabe, {failed} fehlgeschlagen, {skipped} bereits bearbeitet",
       "viewItems": "Nachrichten",
       "loadMore": "Ältere Läufe laden",
       "loading": "Wird geladen…",
@@ -1398,7 +1403,27 @@
       "detailMoved": "Nach {folder} verschoben.",
       "detailQueued": "Nichts wurde geändert. Die Nachricht wartet unter Freigaben.",
       "detailSkipped": "Diese Automatisierung hatte die Nachricht bereits bearbeitet.",
-      "detailFailed": "Fehlgeschlagen mit {code}."
+      "detailFailed": "Fehlgeschlagen mit {code}.",
+      "forwardSummary": "Weiterleitungen: {waiting} wartend, {sending} im Versand, {sent} gesendet, {failed} fehlgeschlagen, {rejected} abgelehnt, {expired} abgelaufen",
+      "forwardState": {
+        "waiting": "Wartet",
+        "sending": "Im Versand",
+        "sent": "Gesendet",
+        "failed": "Fehlgeschlagen",
+        "rejected": "Abgelehnt",
+        "expired": "Abgelaufen",
+        "closed": "Geschlossen"
+      },
+      "forwardDetail": {
+        "sending": "Freigegeben. Sie ist unterwegs.",
+        "sent": "Freigegeben und gesendet.",
+        "failed": "Freigegeben, konnte aber nicht gesendet werden.",
+        "rejected": "Abgelehnt. Nichts wurde gesendet.",
+        "expired": "Niemand hat sie rechtzeitig freigegeben. Nichts wurde gesendet.",
+        "closed": "Diese Freigabe ist nicht mehr gespeichert."
+      },
+      "outcomeLoop": "Nicht weitergeleitet",
+      "detailLoop": "Diese Nachricht ist selbst eine Weiterleitung einer Regel. Sie erneut weiterzuleiten könnte eine Schleife auslösen."
     },
     "delete": {
       "title": "Diese Automatisierung löschen?",
@@ -1430,7 +1455,7 @@
       "markRead": "Jeder Treffer wird als gelesen markiert.",
       "draftReply": "Jeder Treffer erhält einen Antwortentwurf, der gespeichert und nie gesendet wird.",
       "pastIncluded": "E-Mails, die schon im Postfach liegen, zählen auch, bis zu {max} pro Ausführung.",
-      "pastExcluded": "E-Mails, die vor dem Einschalten der Automatisierung eingegangen sind, bleiben unberührt.",
+      "pastExcluded": "Sie beginnt mit E-Mails, die eintreffen, nachdem du sie zum ersten Mal einschaltest.",
       "cond": {
         "from": "von {value}",
         "to": "an {value}",
