@@ -1279,7 +1279,11 @@
         "sends_paused": "Das Senden ist gerade pausiert, daher wurde nichts freigegeben. Versuche es später erneut.",
         "role": "Das können nur Inhaber oder Admins.",
         "generic": "Es wurde nichts freigegeben. Bitte versuche es erneut."
-      }
+      },
+      "filterShowing": "Weiterleitungen von {rule} werden angezeigt.",
+      "filterShowingUnnamed": "Weiterleitungen einer Automatisierung werden angezeigt.",
+      "filterClear": "Alle Freigaben anzeigen",
+      "filterEmpty": "Von dieser Automatisierung wartet nichts."
     },
     "timeLeft": {
       "days": "{count, plural, one {noch # Tag} other {noch # Tage}}",
@@ -1614,7 +1618,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatisierung gelöscht und 1 wartende Weiterleitung abgebrochen.} other {Automatisierung gelöscht und # wartende Weiterleitungen abgebrochen.}}",
-    "toastDeletedCancelFailed": "Automatisierung gelöscht, aber die wartenden Weiterleitungen konnten nicht abgebrochen werden. Lehnen Sie sie unter Freigaben ab."
+    "toastDeletedCancelFailed": "Automatisierung gelöscht, aber die wartenden Weiterleitungen konnten nicht abgebrochen werden. Lehnen Sie sie unter Freigaben ab.",
+    "waitingLink": "{count, plural, one {# wartet} other {# warten}}",
+    "waitingLinkMore": "{count}+ warten"
   },
   "workflows": {
     "bulkRuns": {

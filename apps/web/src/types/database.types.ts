@@ -2351,6 +2351,63 @@ export type Database = {
         }
         Relationships: []
       }
+      forward_approval_notices: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          deadline: string
+          error: string | null
+          id: string
+          kind: string
+          sent_at: string | null
+          status: string
+          triage_rule_id: string
+          workspace_id: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          deadline: string
+          error?: string | null
+          id?: string
+          kind: string
+          sent_at?: string | null
+          status?: string
+          triage_rule_id: string
+          workspace_id: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          deadline?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          sent_at?: string | null
+          status?: string
+          triage_rule_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forward_approval_notices_triage_rule_id_fkey"
+            columns: ["triage_rule_id"]
+            isOneToOne: false
+            referencedRelation: "triage_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forward_approval_notices_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       growth_activity_daily: {
         Row: {
           calls: number
@@ -4285,6 +4342,8 @@ export type Database = {
           operation: string
           payload: Json
           payload_encrypted: boolean
+          queued_notice_at: string | null
+          reminder_notice_at: string | null
           revision: number
           send_at: string | null
           status: string
@@ -4308,6 +4367,8 @@ export type Database = {
           operation: string
           payload: Json
           payload_encrypted?: boolean
+          queued_notice_at?: string | null
+          reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -4331,6 +4392,8 @@ export type Database = {
           operation?: string
           payload?: Json
           payload_encrypted?: boolean
+          queued_notice_at?: string | null
+          reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -6343,6 +6406,28 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_forward_approval_notices: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          deadline: string
+          error: string | null
+          id: string
+          kind: string
+          sent_at: string | null
+          status: string
+          triage_rule_id: string
+          workspace_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "forward_approval_notices"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_onboarding_welcome: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -6372,6 +6457,7 @@ export type Database = {
       dispatch_black_week_email: { Args: never; Returns: undefined }
       dispatch_eur_launch: { Args: never; Returns: undefined }
       dispatch_first_30_days: { Args: never; Returns: undefined }
+      dispatch_forward_approval_notices: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_morning_briefs: { Args: never; Returns: undefined }
       dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
@@ -6416,6 +6502,7 @@ export type Database = {
         Args: { p_event_type: string; p_payload: Json }
         Returns: undefined
       }
+      enqueue_forward_approval_notices: { Args: never; Returns: number }
       ensure_activity_log_partitions: {
         Args: { months_ahead?: number }
         Returns: undefined

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { APPROVAL_LIST_LIMIT, waitingForRule } from '@/lib/approvals/waiting';
 import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
 // Health is derived in one place, shared with the server-side validator module,
@@ -209,7 +210,7 @@ function causeText(errorCode, t) {
  * @param inboxes   [{ id, label, address }] from the dashboard's server fetch
  * @param keys      [{ id, name, scopes, inboxIds }] from the dashboard's server fetch
  */
-export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
+export function AutomationsPanel({ userRole, inboxes = [], keys = [], pendingApprovals = [], onOpenApprovalsForRule }) {
   const t = useTranslations('dashboard');
   const { toast } = useToast();
 
@@ -382,6 +383,9 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
                     key={rule.id}
                     rule={rule}
                     t={t}
+                    waiting={waitingForRule(pendingApprovals, rule.id).length}
+                    waitingPageFull={pendingApprovals.length >= APPROVAL_LIST_LIMIT}
+                    onOpenApprovals={onOpenApprovalsForRule}
                     canManage={canManage}
                     busy={busyId === rule.id}
                     onToggle={() => toggleEnabled(rule)}
@@ -487,7 +491,7 @@ function HealthBanner({ rules, t }) {
 
 /* ── Row ───────────────────────────────────────────────────────────────── */
 
-function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onDuplicate, onApprovalHelp, onRuns, onDelete }) {
+function RuleRow({ rule, t, waiting = 0, waitingPageFull = false, onOpenApprovals, canManage, busy, onToggle, onEdit, onDuplicate, onApprovalHelp, onRuns, onDelete }) {
   const cadence = CADENCE_OPTIONS.find((option) => option.minutes === rule.interval_minutes);
   const lastRun = rule.last_run;
   const lastRunAt = formatTimestamp(lastRun?.started_at);
@@ -498,6 +502,20 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onDuplicate, onAp
     <tr>
       <td>
         <div style={{ fontWeight: 500 }}>{rule.name}</div>
+        {waiting > 0 ? (
+          <a
+            href={`/dashboard/approvals?rule=${encodeURIComponent(rule.id)}`}
+            style={{ display: 'inline-block', fontSize: 12.5, marginTop: 2, padding: '2px 0' }}
+            onClick={(event) => {
+              // A real link, so a new tab works. A plain click stays in the page.
+              if (!onOpenApprovals || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+              event.preventDefault();
+              onOpenApprovals(rule.id);
+            }}
+          >
+            {t(waitingPageFull ? 'automations.waitingLinkMore' : 'automations.waitingLink', { count: waiting })}
+          </a>
+        ) : null}
         {health.state === 'auto_disabled' ? (
           <div className="sub" style={{ fontSize: 12, color: 'var(--red-700)', marginTop: 2 }}>
             {t('automations.autoDisabled')} {causeText(health.errorCode, t)}

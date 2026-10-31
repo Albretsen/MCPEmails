@@ -117,7 +117,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "members",  label: tr('sidebar.navMembers'),  icon: "users",   count: counts.members > 1 ? counts.members : undefined },
     { id: "usage",    label: tr('sidebar.navUsage'),    icon: "zap" },
     { id: "workflows", label: tr('sidebar.navWorkflows'), icon: "activity" },
-    { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield" },
+    { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield", count: counts.approvals },
     { id: "automations", label: tr('sidebar.navAutomations'), icon: "zap" },
     // The referral program, only while workspaces.referral_enabled is on (the
     // dashboard page hands that flag down as `referralVisible`, the same way

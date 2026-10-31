@@ -181,12 +181,12 @@ function compatibilityForInbox(provider) {
   };
 }
 
-export function ApprovalsPage({ userRole }) {
-  return <ApprovalsPanel userRole={userRole} />;
+export function ApprovalsPage({ userRole, onItemsChange, ruleFilter, onClearRuleFilter }) {
+  return <ApprovalsPanel userRole={userRole} onItemsChange={onItemsChange} ruleFilter={ruleFilter} onClearRuleFilter={onClearRuleFilter} />;
 }
 
-export function AutomationsPage({ userRole, inboxes, keys }) {
-  return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
+export function AutomationsPage({ userRole, inboxes, keys, pendingApprovals, onOpenApprovalsForRule }) {
+  return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} pendingApprovals={pendingApprovals} onOpenApprovalsForRule={onOpenApprovalsForRule} />;
 }
 
 /** The referral program's Invite page (InvitePanel.jsx). */

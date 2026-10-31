@@ -1033,7 +1033,11 @@
       "loadingDetails": "正在加载…",
       "approveAndSend": "批准并发送",
       "approveSub": "这会立即发送准备好的邮件。",
-      "approvedToast": "邮件已批准，正在发送。"
+      "approvedToast": "邮件已批准，正在发送。",
+      "filterShowing": "正在显示 {rule} 的转发。",
+      "filterShowingUnnamed": "正在显示一个自动化的转发。",
+      "filterClear": "显示全部审批",
+      "filterEmpty": "此自动化没有待处理的内容。"
     }
   },
   "automations": {
@@ -1326,7 +1330,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, other {自动化已删除，并已取消 # 条等待中的转发。}}",
-    "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。"
+    "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。",
+    "waitingLink": "{count} 个待处理",
+    "waitingLinkMore": "{count}+ 个待处理"
   },
   "workflows": {
     "bulkRuns": {
