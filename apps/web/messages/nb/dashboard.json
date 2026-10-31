@@ -1186,7 +1186,7 @@
   },
   "automations": {
     "title": "Automatiseringer",
-    "subtitle": "Regler som rydder i en innboks etter en fast plan, uten at noen ser på.",
+    "subtitle": "Regler som sjekker en innboks etter en tidsplan og gjør én fast handling.",
     "newButton": "Ny automatisering",
     "retry": "Prøv igjen",
     "loadingLabel": "Laster automatiseringer",
@@ -1204,7 +1204,7 @@
       "rowFailing": "{count, plural, =0 {Forrige kjøring feilet.} =1 {1 kjøring på rad har feilet.} other {# kjøringer på rad har feilet; den slår seg av ved 5.}}",
       "causeConnectionEnded": "Tilkoblingen denne automatiseringen kjører som er avsluttet. Koble til MCPEmails på nytt i MCP-klienten din.",
       "causeKeyRevoked": "API-nøkkelen denne automatiseringen kjører som er trukket tilbake. Velg en aktiv nøkkel.",
-      "causeScopeDenied": "API-nøkkelen har ikke lenger tillatelse til handlingen denne automatiseringen gjør.",
+      "causeScopeDenied": "API-nøkkelen har ikke tillatelse til handlingen denne automatiseringen gjør. Velg en nøkkel som har det.",
       "causeInboxNotPermitted": "API-nøkkelen har ikke lenger lov til å bruke innboksen til denne automatiseringen.",
       "causeInboxUnavailable": "Innboksen denne automatiseringen bruker er ikke lenger tilgjengelig.",
       "causeSearchFailed": "Kunne ikke søke i postkassen. Sjekk tilkoblingen til innboksen.",
@@ -1264,7 +1264,7 @@
       "move": "Flytt til {folder}",
       "label": "Merk som {label}",
       "markRead": "Marker som lest",
-      "forward": "Videresend til {count, plural, =1 {1 mottaker} other {# mottakere}}",
+      "forward": "Videresend til {address}",
       "draftReply": "Lag et svarutkast"
     },
     "status": {
@@ -1309,7 +1309,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "vanlig IMAP",
-      "filterUnsupported": "Denne innboksen bruker {provider}, som ikke kan søke på {fields}. En automatisering kjører uten tilsyn, så regelen ville handlet på alle meldinger som treffer resten av filteret, altså et videre utvalg enn den beskriver. Endre eller fjern {fields} for å lagre automatiseringen.",
+      "filterUnsupported": "Denne innboksen bruker {provider}, som ikke kan søke på {fields}. En automatisering kjører etter en tidsplan, så regelen ville handlet på alle meldinger som treffer resten av filteret, altså et videre utvalg enn den beskriver. Endre eller fjern {fields} for å lagre automatiseringen.",
       "previewTitle": "Forhåndsvis treffene",
       "previewHelp": "Kjører filteret mot innboksen akkurat nå, uten å endre noe.",
       "preview": "Forhåndsvis treff",
@@ -1342,7 +1342,25 @@
       "create": "Opprett automatisering",
       "creating": "Oppretter…",
       "save": "Lagre endringer",
-      "saving": "Lagrer…"
+      "saving": "Lagrer…",
+      "duplicateTitle": "Dupliser automatisering",
+      "duplicateSub": "Sjekk innboksen og detaljene. Kopien starter avslått og tar ikke med seg kjøreloggen eller godkjenningene til originalen.",
+      "duplicateName": "Kopi av {name}",
+      "keyCurrent": "Nåværende tilkobling",
+      "keyCannotSend": "Denne nøkkelen kan ikke sende e-post, så en videresending ville aldri gått ut. Velg en nøkkel med tillatelsen send:email.",
+      "keyMissingScope": "Denne nøkkelen har ikke tillatelsen denne handlingen trenger. Velg en nøkkel som har den.",
+      "hiddenFilterHelp": "Disse betingelsene ble satt utenfor dette skjemaet, for eksempel av KI-assistenten din. De beholdes når du lagrer.",
+      "hiddenFilterNo": "nei",
+      "hiddenFilterRemove": "Fjern",
+      "hiddenFilterRemoveLabel": "Fjern {label}",
+      "previewUnavailable": "Forhåndsvisning er ikke tilgjengelig akkurat nå. Feilen er hos oss, og automatiseringen din er ikke berørt. Prøv igjen om litt.",
+      "previewTimeout": "Postkassen svarte ikke i tide. Prøv forhåndsvisningen igjen om et øyeblikk.",
+      "previewKeyNotAvailable": "Den API-nøkkelen er ikke lenger tilgjengelig. Velg en annen.",
+      "previewKeyExpired": "Den API-nøkkelen er utløpt. Velg en annen.",
+      "previewKeyCannotRead": "Den API-nøkkelen kan ikke lese e-post, så den kan ikke forhåndsvise. Velg en nøkkel med tillatelsen read:email.",
+      "previewKeyNotForInbox": "Den API-nøkkelen har ikke lov til å bruke denne innboksen. Velg en annen.",
+      "previewInboxNotAvailable": "Denne innboksen er ikke tilgjengelig akkurat nå. Sjekk den under Innbokser.",
+      "previewSearchFailed": "Det gikk ikke å søke i postkassen. Sjekk tilkoblingen til innboksen og prøv igjen."
     },
     "runs": {
       "title": "Kjørelogg",
@@ -1388,8 +1406,50 @@
       "historyNote": "Kjøreloggen beholdes, så du kan fortsatt se alt denne automatiseringen gjorde.",
       "cancel": "Avbryt",
       "confirm": "Slett automatisering",
-      "deleting": "Sletter…"
-    }
+      "deleting": "Sletter…",
+      "waiting": "{count, plural, =1 {1 videresending fra denne automatiseringen venter på godkjenning.} other {# videresendinger fra denne automatiseringen venter på godkjenning.}}",
+      "cancelWaiting": "{count, plural, =1 {Avbryt den, så den aldri kan sendes} other {Avbryt dem, så de aldri kan sendes}}",
+      "keepWaitingNote": "{count, plural, =1 {Den blir liggende under Godkjenninger og kan fortsatt godkjennes.} other {De blir liggende under Godkjenninger og kan fortsatt godkjennes.}}",
+      "waitingUnknown": "Kunne ikke sjekke om videresendinger venter. De som venter, blir liggende under Godkjenninger."
+    },
+    "rowDuplicate": "Dupliser",
+    "approvalHelp": {
+      "title": "Slik fungerer godkjenning",
+      "step1": "Når denne automatiseringen finner en e-post som passer, sendes ingenting. En videresending legges til under Godkjenninger.",
+      "step2": "En eier eller administrator åpner Godkjenninger, sjekker e-posten og adressen og godkjenner eller avviser.",
+      "step3": "Bare en godkjent videresending blir sendt. Hvis ingen godkjenner den i tide, blir den ikke sendt.",
+      "open": "Åpne Godkjenninger",
+      "close": "Lukk"
+    },
+    "sentence": {
+      "title": "Dette skjer:",
+      "search": "{cadence} sjekker MCPEmails {mailbox} etter e-post {conditions}.",
+      "forward": "Hvert treff venter på at en eier eller administrator godkjenner det, og først da går det til {address}.",
+      "move": "Hvert treff flyttes til {folder}.",
+      "label": "Hvert treff får etiketten {label}.",
+      "markRead": "Hvert treff merkes som lest.",
+      "draftReply": "Hvert treff får et svarutkast, som lagres og aldri sendes.",
+      "pastIncluded": "E-post som allerede ligger i postkassen, teller også, opptil {max} per kjøring.",
+      "pastExcluded": "E-post som kom før automatiseringen slås på, blir ikke rørt.",
+      "cond": {
+        "from": "fra {value}",
+        "to": "adressert til {value}",
+        "cc": "med kopi til {value}",
+        "subject": "med \"{value}\" i emnet",
+        "body": "med \"{value}\" i teksten",
+        "text": "som inneholder \"{value}\"",
+        "unread": "som er ulest",
+        "unreadNo": "som allerede er lest",
+        "hasAttachment": "med vedlegg",
+        "hasAttachmentNo": "uten vedlegg",
+        "flagged": "som er flagget",
+        "flaggedNo": "som ikke er flagget",
+        "since": "mottatt {value} eller senere",
+        "before": "mottatt før {value}"
+      }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatiseringen er slettet og 1 ventende videresending er avbrutt.} other {Automatiseringen er slettet og # ventende videresendinger er avbrutt.}}",
+    "toastDeletedCancelFailed": "Automatiseringen er slettet, men de ventende videresendingene kunne ikke avbrytes. Avvis dem under Godkjenninger."
   },
   "workflows": {
     "bulkRuns": {

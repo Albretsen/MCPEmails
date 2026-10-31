@@ -8,6 +8,7 @@ import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
 import type { StoredAction, StoredFilter } from '@/lib/automations/rules';
 import {
   RULE_COLUMNS,
+  assertKeyCanRunAction,
   assertWorkspaceResources,
   isUuid,
   readInboxProvider,
@@ -143,6 +144,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.enabled !== 'boolean') {
       return NextResponse.json({ error: 'The enabled flag must be true or false.' }, { status: 400 });
     }
+  }
+
+  // A key that could not run this action would fail its next run `scope_denied`.
+  // Checked when the pairing changes or the rule is switched on, so a rename of a
+  // rule that is already off, and switching a rule off, are never held up by it.
+  if (patch.action !== undefined || patch.api_key_id !== undefined || body.enabled === true) {
+    const scopeRefusal = await assertKeyCanRunAction(c.db, c.workspaceId, nextApiKeyId, nextAction);
+    if (scopeRefusal) return NextResponse.json({ error: scopeRefusal.error, code: scopeRefusal.code }, { status: scopeRefusal.status });
+  }
+
+  if (body.enabled !== undefined) {
     patch.enabled = body.enabled;
     if (body.enabled) {
       // Turning a rule on schedules its first run and clears whatever auto-disabled
@@ -191,10 +203,28 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
 
+  const body = await request.json().catch(() => null);
+  const cancelWaiting = body?.cancel_waiting === true;
+
+  // A run in flight can still queue a forward after the cancel below, and that
+  // forward would stay approvable while the person was told it had gone.
+  if (cancelWaiting) {
+    const { data: current } = await c.db.from('triage_rules')
+      .select('running_since')
+      .eq('id', id)
+      .eq('workspace_id', c.workspaceId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (current?.running_since) {
+      return NextResponse.json({ error: 'This automation is running right now. Try again once the run finishes.' }, { status: 409 });
+    }
+  }
+
   // Soft delete via the service-role client. The SELECT policy is evaluated
   // against the NEW row, so an RLS user client cannot write deleted_at.
+  const now = new Date().toISOString();
   const { data, error } = await c.db.from('triage_rules')
-    .update({ enabled: false, next_run_at: null, deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({ enabled: false, next_run_at: null, deleted_at: now, updated_at: now })
     .eq('id', id)
     .eq('workspace_id', c.workspaceId)
     .is('deleted_at', null)
@@ -202,5 +232,22 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     .maybeSingle();
   if (error) return NextResponse.json({ error: 'Could not delete this automation.' }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
-  return NextResponse.json({ success: true });
+
+  if (!cancelWaiting) return NextResponse.json({ success: true, cancelled: 0 });
+
+  // After the delete, so nothing new can be queued once it has run. Cancelling
+  // only ever stops a send, and this route is reached only with a signed-in owner
+  // or admin session. `.select` rather than a count, because the toast reports what
+  // was really cancelled, which can be more than the queue's first page.
+  const { data: cancelled, error: cancelError } = await c.db.from('send_approvals')
+    .update({ status: 'cancelled', decided_at: now, decided_by: c.user.id, decided_via: 'dashboard' })
+    .eq('workspace_id', c.workspaceId)
+    .eq('triage_rule_id', id)
+    .eq('status', 'pending')
+    .select('id');
+  if (cancelError) {
+    console.error('[api/automations] could not cancel waiting forwards', cancelError.code);
+    return NextResponse.json({ success: true, cancelled: 0, cancel_failed: true });
+  }
+  return NextResponse.json({ success: true, cancelled: cancelled?.length ?? 0 });
 }

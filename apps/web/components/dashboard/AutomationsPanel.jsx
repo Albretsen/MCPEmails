@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
@@ -13,9 +14,23 @@ import { useToast } from './Toast';
 import {
   automationHealth,
   AUTOMATION_ERROR_MESSAGE_KEYS,
+  KEY_MISSING_SCOPE_CODE,
+  MAX_NAME_LENGTH,
+  missingActionScopes,
   searchDialectFor,
   unrunnableFilterFields,
 } from '@/lib/automations/rules';
+import {
+  buildRuleAction,
+  buildRuleFilter,
+  duplicateRuleDraft,
+  editPatch,
+  filterConditions,
+  hiddenActionFields,
+  hiddenFilterFields,
+  parseRecipients,
+} from '@/lib/automations/rule-form';
+import { PREVIEW_ERROR_MESSAGE_KEYS } from '@/lib/automations/preview-errors';
 
 /* AutomationsPanel.jsx: scheduled, unattended triage rules.
 
@@ -189,6 +204,7 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
   const [runsRule, setRunsRule] = useState(null);
   const [deleteRule, setDeleteRule] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [approvalHelpOpen, setApprovalHelpOpen] = useState(false);
 
   const canManage = userRole === 'owner' || userRole === 'admin';
 
@@ -230,7 +246,11 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
         body: JSON.stringify({ enabled: !rule.enabled }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || t('automations.errorGeneric'));
+      if (!response.ok) {
+        throw new Error(payload.code === KEY_MISSING_SCOPE_CODE
+          ? t('automations.health.causeScopeDenied')
+          : (payload.error || t('automations.errorGeneric')));
+      }
       toast({ message: rule.enabled ? t('automations.toastDisabled') : t('automations.toastEnabled'), variant: 'success' });
       await load();
     } catch (toggleError) {
@@ -240,17 +260,24 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
     }
   };
 
-  const removeRule = async () => {
+  const removeRule = async (cancelWaiting) => {
     if (!deleteRule || busyId) return;
     setBusyId(deleteRule.id);
     try {
       const response = await fetch(`/api/automations/${deleteRule.id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancel_waiting: cancelWaiting }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || t('automations.errorGeneric'));
-      toast({ message: t('automations.toastDeleted'), variant: 'success' });
+      if (payload.cancel_failed) {
+        toast({ message: t('automations.toastDeletedCancelFailed'), variant: 'error' });
+      } else if (payload.cancelled > 0) {
+        toast({ message: t('automations.toastDeletedCancelled', { count: payload.cancelled }), variant: 'success' });
+      } else {
+        toast({ message: t('automations.toastDeleted'), variant: 'success' });
+      }
       setDeleteRule(null);
       await load();
     } catch (removeError) {
@@ -343,6 +370,16 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
                     busy={busyId === rule.id}
                     onToggle={() => toggleEnabled(rule)}
                     onEdit={() => setFormRule({ mode: 'edit', rule })}
+                    onDuplicate={() => setFormRule({
+                      mode: 'create',
+                      duplicate: true,
+                      rule: duplicateRuleDraft(
+                        rule,
+                        t('automations.modal.duplicateName', { name: rule.name }).slice(0, MAX_NAME_LENGTH),
+                        inboxes.length,
+                      ),
+                    })}
+                    onApprovalHelp={() => setApprovalHelpOpen(true)}
                     onRuns={() => setRunsRule(rule)}
                     onDelete={() => setDeleteRule(rule)}
                   />
@@ -357,6 +394,7 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
         <RuleFormModal
           mode={formRule.mode}
           rule={formRule.rule}
+          duplicate={Boolean(formRule.duplicate)}
           inboxes={inboxes}
           keys={keys}
           onClose={() => setFormRule(null)}
@@ -369,6 +407,8 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
       ) : null}
 
       {runsRule ? <RunHistoryModal rule={runsRule} onClose={() => setRunsRule(null)} /> : null}
+
+      {approvalHelpOpen ? <ApprovalHelpDialog onClose={() => setApprovalHelpOpen(false)} /> : null}
 
       {deleteRule ? (
         <DeleteDialog
@@ -431,7 +471,7 @@ function HealthBanner({ rules, t }) {
 
 /* ── Row ───────────────────────────────────────────────────────────────── */
 
-function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete }) {
+function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onDuplicate, onApprovalHelp, onRuns, onDelete }) {
   const cadence = CADENCE_OPTIONS.find((option) => option.minutes === rule.interval_minutes);
   const lastRun = rule.last_run;
   const lastRunAt = formatTimestamp(lastRun?.started_at);
@@ -457,7 +497,7 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
       </td>
       <td>{inboxLabel(rule) ?? <span className="sub">{t('automations.unknownInbox')}</span>}</td>
       <td>{cadence ? t(`automations.cadence.${cadence.key}`) : `${rule.interval_minutes}`}</td>
-      <td>{describeAction(rule.action, t)}</td>
+      <td>{describeAction(rule.action, t, onApprovalHelp)}</td>
       <td>
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: canManage && !busy ? 'pointer' : 'default' }}>
           <input
@@ -491,6 +531,7 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Btn size="sm" variant="secondary" icon="activity" onClick={onRuns}>{t('automations.rowRuns')}</Btn>
           {canManage ? <Btn size="sm" variant="secondary" onClick={onEdit} disabled={busy}>{t('automations.rowEdit')}</Btn> : null}
+          {canManage ? <Btn size="sm" variant="secondary" onClick={onDuplicate} disabled={busy}>{t('automations.rowDuplicate')}</Btn> : null}
           {canManage ? <Btn size="sm" variant="danger" icon="trash" onClick={onDelete} disabled={busy} aria-label={t('automations.rowDelete')}>{t('automations.rowDelete')}</Btn> : null}
         </div>
       </td>
@@ -498,7 +539,7 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
   );
 }
 
-function describeAction(action, t) {
+function describeAction(action, t, onApprovalHelp) {
   if (!action || typeof action !== 'object') return <span className="sub">{t('automations.actionType.unknown')}</span>;
   if (action.type === 'move') return t('automations.actionSummary.move', { folder: action.folder ?? '' });
   if (action.type === 'label') return t('automations.actionSummary.label', { label: action.label ?? '' });
@@ -506,8 +547,17 @@ function describeAction(action, t) {
   if (action.type === 'forward') {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        {t('automations.actionSummary.forward', { count: Array.isArray(action.to) ? action.to.length : 0 })}
-        <Badge tone="amber">{t('automations.approvalBadge')}</Badge>
+        <span style={{ overflowWrap: 'anywhere' }}>
+          {t('automations.actionSummary.forward', { address: Array.isArray(action.to) ? action.to.join(', ') : '' })}
+        </span>
+        <button
+          type="button"
+          className="badge b-amber"
+          onClick={onApprovalHelp}
+          style={{ border: 0, cursor: 'pointer', textDecoration: 'underline', font: 'inherit', fontSize: 12 }}
+        >
+          {t('automations.approvalBadge')}
+        </button>
       </span>
     );
   }
@@ -537,6 +587,8 @@ function RuleTableSkeleton({ label }) {
 /* ── Create / edit modal ───────────────────────────────────────────────── */
 
 function initialFormState(rule) {
+  // `hiddenFilter` and `hiddenAction` are what the inputs below cannot represent.
+  // They travel with the form so saving can never delete them. See rule-form.ts.
   const filter = (rule?.filter && typeof rule.filter === 'object') ? rule.filter : {};
   const action = (rule?.action && typeof rule.action === 'object') ? rule.action : { type: 'move' };
   return {
@@ -552,6 +604,9 @@ function initialFormState(rule) {
     unread: filter.unread === true,
     has_attachment: filter.has_attachment === true,
     flagged: filter.flagged === true,
+    hiddenFilter: hiddenFilterFields(filter),
+    hiddenAction: hiddenActionFields(action),
+    hiddenActionType: action.type ?? null,
     actionType: ACTION_TYPES.includes(action.type) ? action.type : 'move',
     folder: action.folder ?? '',
     label: action.label ?? '',
@@ -561,31 +616,7 @@ function initialFormState(rule) {
   };
 }
 
-function buildFilter(form) {
-  const filter = {};
-  for (const { field } of TEXT_FILTERS) {
-    const value = (form[field] ?? '').trim();
-    if (value) filter[field] = value;
-  }
-  for (const { field } of BOOLEAN_FILTERS) {
-    if (form[field]) filter[field] = true;
-  }
-  return filter;
-}
-
-function buildAction(form) {
-  if (form.actionType === 'move') return { type: 'move', folder: form.folder.trim() };
-  if (form.actionType === 'label') return { type: 'label', label: form.label.trim() };
-  if (form.actionType === 'mark_read') return { type: 'mark_read' };
-  if (form.actionType === 'forward') {
-    const recipients = form.forwardTo.split(/[,;\s]+/).map((entry) => entry.trim()).filter(Boolean);
-    const note = form.forwardNote.trim();
-    return note ? { type: 'forward', to: recipients, note } : { type: 'forward', to: recipients };
-  }
-  return { type: 'draft_reply', template: form.template.trim() };
-}
-
-function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
+function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved }) {
   const t = useTranslations('dashboard');
   const [form, setForm] = useState(() => initialFormState(rule));
   const [submitting, setSubmitting] = useState(false);
@@ -605,9 +636,23 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
     return !Array.isArray(bound) || bound.includes(form.inboxId);
   }), [keys, form.inboxId]);
 
-  const filter = buildFilter(form);
+  // A rule can run as a key the list does not offer here. Editing must keep it,
+  // and only it: any other value the list cannot show is no selection at all,
+  // since the browser would display the first option while the form held the old id.
+  const ownKeyId = mode === 'edit' && rule?.api_key_id && !keys.some((key) => key.id === rule.api_key_id) ? rule.api_key_id : null;
+  const apiKeyId = form.apiKeyId === ownKeyId || usableKeys.some((key) => key.id === form.apiKeyId) ? form.apiKeyId : '';
+
+  const filter = buildRuleFilter(form);
   const hasFilter = Object.keys(filter).length > 0;
-  const canPreview = Boolean(form.inboxId && form.apiKeyId && hasFilter) && !previewing && !submitting;
+  const canPreview = Boolean(form.inboxId && apiKeyId && hasFilter) && !previewing && !submitting;
+
+  // The same check /api/automations makes when saving, said while the key is still
+  // being chosen, because a rule on a key that cannot run its action fails every run.
+  const selectedKey = keys.find((key) => key.id === apiKeyId) ?? null;
+  const keyLacksScope = selectedKey !== null && missingActionScopes(form.actionType, selectedKey.scopes).length > 0;
+  const keyProblem = keyLacksScope
+    ? (form.actionType === 'forward' ? t('automations.modal.keyCannotSend') : t('automations.modal.keyMissingScope'))
+    : '';
 
   // Criteria the chosen mailbox's provider has no predicate for. Computed from
   // the SAME function the edge function's write path refuses on, so this form
@@ -645,10 +690,14 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
       const response = await fetch('/api/automations/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inbox_id: form.inboxId, api_key_id: form.apiKeyId, filter }),
+        body: JSON.stringify({ inbox_id: form.inboxId, api_key_id: apiKeyId, filter }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || t('automations.modal.previewFailed'));
+      if (!response.ok) {
+        // Always one of our own sentences, never whatever the server said.
+        const messageKey = PREVIEW_ERROR_MESSAGE_KEYS[payload.code] ?? 'previewFailed';
+        throw new Error(t(`automations.modal.${messageKey}`));
+      }
       setPreview(payload);
     } catch (error_) {
       setPreview(null);
@@ -669,25 +718,38 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
       setError(filterUnsupportedMessage);
       return;
     }
+    // Already said next to the key, and it clears as soon as the key is changed.
+    if (keyLacksScope) return;
     setSubmitting(true);
     setError('');
     try {
-      const payloadBody = {
+      const fullBody = {
         name: form.name,
         inbox_id: form.inboxId,
-        api_key_id: form.apiKeyId,
+        api_key_id: apiKeyId,
         interval_minutes: Number(form.intervalMinutes),
         max_messages_per_run: Number(form.maxMessages),
         filter,
-        action: buildAction(form),
+        action: buildRuleAction(form),
       };
+      // An edit sends what changed and nothing else, so a rename cannot rewrite the
+      // filter or the action, and cannot re-check a key it did not touch.
+      const payloadBody = mode === 'create' ? fullBody : editPatch(rule, fullBody);
+      if (Object.keys(payloadBody).length === 0) {
+        await onSaved(t('automations.toastUpdated'));
+        return;
+      }
       const response = await fetch(mode === 'create' ? '/api/automations' : `/api/automations/${rule.id}`, {
         method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payloadBody),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || t('automations.errorGeneric'));
+      if (!response.ok) {
+        throw new Error(payload.code === KEY_MISSING_SCOPE_CODE
+          ? t('automations.health.causeScopeDenied')
+          : (payload.error || t('automations.errorGeneric')));
+      }
       await onSaved(mode === 'create' ? t('automations.toastCreated') : t('automations.toastUpdated'));
     } catch (submitError) {
       setError(submitError instanceof Error && submitError.message ? submitError.message : t('automations.errorGeneric'));
@@ -702,10 +764,14 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <h2 id="automation-form-title" style={{ margin: 0 }}>
-                {mode === 'create' ? t('automations.modal.createTitle') : t('automations.modal.editTitle')}
+                {duplicate
+                  ? t('automations.modal.duplicateTitle')
+                  : mode === 'create' ? t('automations.modal.createTitle') : t('automations.modal.editTitle')}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                {mode === 'create' ? t('automations.modal.createSub') : t('automations.modal.editSub')}
+                {duplicate
+                  ? t('automations.modal.duplicateSub')
+                  : mode === 'create' ? t('automations.modal.createSub') : t('automations.modal.editSub')}
               </div>
             </div>
             <button
@@ -758,16 +824,18 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
               <select
                 id="automation-key"
                 className="input"
-                value={form.apiKeyId}
+                value={apiKeyId}
                 onChange={(event) => set('apiKeyId', event.target.value)}
                 disabled={submitting}
               >
                 <option value="">{t('automations.modal.keyPlaceholder')}</option>
+                {ownKeyId ? <option value={ownKeyId}>{t('automations.modal.keyCurrent')}</option> : null}
                 {usableKeys.map((key) => (
                   <option key={key.id} value={key.id}>{key.name}</option>
                 ))}
               </select>
               <div className="sub" style={{ fontSize: 12 }}>{t('automations.modal.keyHelp')}</div>
+              {keyProblem ? <div className="alert alert-error" role="alert"><span>{keyProblem}</span></div> : null}
             </div>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -834,6 +902,15 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
                   </label>
                 ))}
               </div>
+              <HiddenFilterList
+                fields={form.hiddenFilter}
+                disabled={submitting}
+                onRemove={(field) => setForm((current) => {
+                  const hiddenFilter = { ...current.hiddenFilter };
+                  delete hiddenFilter[field];
+                  return { ...current, hiddenFilter };
+                })}
+              />
               {/* An ordinary field-level validation error, inside the fieldset
                   whose conditions caused it, so the fix is next to the message. */}
               {filterUnsupported ? (
@@ -972,6 +1049,8 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
               ) : null}
             </fieldset>
 
+            <RuleSentence form={form} filter={filter} mailbox={selectedInbox?.address || selectedInbox?.label || null} />
+
             {mode === 'create' ? (
               <div className="sub" style={{ fontSize: 12.5 }}>{t('automations.modal.createdNote')}</div>
             ) : null}
@@ -981,13 +1060,125 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
 
           <div className="modal-foot">
             <Btn variant="ghost" onClick={onClose} disabled={submitting}>{t('automations.modal.cancel')}</Btn>
-            <Btn variant="primary" type="submit" disabled={submitting || filterUnsupported}>
+            <Btn variant="primary" type="submit" disabled={submitting || filterUnsupported || keyLacksScope}>
               {submitting
                 ? (mode === 'create' ? t('automations.modal.creating') : t('automations.modal.saving'))
                 : (mode === 'create' ? t('automations.modal.create') : t('automations.modal.save'))}
             </Btn>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The conditions this form has no input for, shown rather than kept secretly: a
+ * person saving a rule should see everything it will match on.
+ */
+function HiddenFilterList({ fields, disabled, onRemove }) {
+  const t = useTranslations('dashboard');
+  const conditions = filterConditions(fields);
+  if (conditions.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="sub" style={{ fontSize: 12 }}>{t('automations.modal.hiddenFilterHelp')}</div>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {conditions.map(({ field, value }) => {
+          const label = FILTER_FIELD_LABEL_KEY[field] ? t(FILTER_FIELD_LABEL_KEY[field]) : field;
+          return (
+            <li key={field} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13 }}>
+              <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+                {label}: {value === false ? t('automations.modal.hiddenFilterNo') : String(value)}
+              </span>
+              <Btn size="sm" variant="ghost" onClick={() => onRemove(field)} disabled={disabled} aria-label={t('automations.modal.hiddenFilterRemoveLabel', { label })}>
+                {t('automations.modal.hiddenFilterRemove')}
+              </Btn>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** One condition of a filter, as a phrase that follows "mail". */
+function conditionPhrase({ field, value }, t) {
+  if (value === true || value === false) {
+    const key = { unread: 'unread', has_attachment: 'hasAttachment', flagged: 'flagged' }[field];
+    if (!key) return null;
+    return t(`automations.sentence.cond.${value ? key : `${key}No`}`);
+  }
+  if (!['from', 'to', 'cc', 'subject', 'body', 'text', 'since', 'before'].includes(field)) return `${field}: ${value}`;
+  return t(`automations.sentence.cond.${field}`, { value });
+}
+
+function joinPhrases(phrases, t) {
+  if (phrases.length <= 1) return phrases.join('');
+  return `${phrases.slice(0, -1).join(', ')} ${t('automations.modal.filterFieldAnd')} ${phrases[phrases.length - 1]}`;
+}
+
+/**
+ * What this rule will do, in one plain paragraph, from the values on screen. Nothing
+ * here is stored: it is built from the same filter and action that Save sends.
+ */
+function RuleSentence({ form, filter, mailbox }) {
+  const t = useTranslations('dashboard');
+  const phrases = filterConditions(filter).map((condition) => conditionPhrase(condition, t)).filter(Boolean);
+  const cadence = CADENCE_OPTIONS.find((option) => option.minutes === Number(form.intervalMinutes));
+  const action = buildRuleAction(form);
+
+  let outcome = null;
+  if (form.actionType === 'forward' && parseRecipients(form.forwardTo).length > 0) {
+    outcome = t('automations.sentence.forward', { address: action.to.join(', ') });
+  } else if (form.actionType === 'move' && action.folder) {
+    outcome = t('automations.sentence.move', { folder: action.folder });
+  } else if (form.actionType === 'label' && action.label) {
+    outcome = t('automations.sentence.label', { label: action.label });
+  } else if (form.actionType === 'mark_read') {
+    outcome = t('automations.sentence.markRead');
+  } else if (form.actionType === 'draft_reply' && action.template) {
+    outcome = t('automations.sentence.draftReply');
+  }
+  if (!mailbox || phrases.length === 0 || !cadence || !outcome) return null;
+
+  return (
+    <div className="alert" role="note" data-testid="automation-rule-sentence" style={{ alignItems: 'flex-start' }}>
+      <Icon name="zap" size={16} />
+      <span style={{ overflowWrap: 'anywhere' }}>
+        <strong>{t('automations.sentence.title')}</strong>{' '}
+        {t('automations.sentence.search', {
+          cadence: t(`automations.cadence.${cadence.key}`),
+          mailbox,
+          conditions: joinPhrases(phrases, t),
+        })}{' '}
+        {outcome}{' '}
+        {t('automations.sentence.pastIncluded', { max: Number(form.maxMessages) || 0 })}
+      </span>
+    </div>
+  );
+}
+
+/** What "Needs approval" means, step by step, with the way to the place it happens. */
+function ApprovalHelpDialog({ onClose }) {
+  const t = useTranslations('dashboard');
+  return (
+    <div className="scrim" onClick={onClose}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="automation-approval-help-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
+        <div className="modal-h">
+          <h2 id="automation-approval-help-title" style={{ margin: 0 }}>{t('automations.approvalHelp.title')}</h2>
+        </div>
+        <div className="modal-body">
+          <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5 }}>
+            <li>{t('automations.approvalHelp.step1')}</li>
+            <li>{t('automations.approvalHelp.step2')}</li>
+            <li>{t('automations.approvalHelp.step3')}</li>
+          </ol>
+        </div>
+        <div className="modal-foot">
+          <Btn variant="ghost" onClick={onClose}>{t('automations.approvalHelp.close')}</Btn>
+          <Link className="btn btn-primary" href="/dashboard/approvals">{t('automations.approvalHelp.open')}</Link>
+        </div>
       </div>
     </div>
   );
@@ -1239,6 +1430,27 @@ function describeItemDetail(item, t) {
 
 function DeleteDialog({ rule, submitting, onCancel, onConfirm }) {
   const t = useTranslations('dashboard');
+  // From the same list the Approvals page shows, so the two cannot disagree.
+  // null while loading, 'unknown' if the list could not be read.
+  const [waiting, setWaiting] = useState(null);
+  // On by default: the likely reason to delete a forwarding rule is to stop it
+  // forwarding, and a cancelled forward can never send anything by mistake.
+  const [cancelWaiting, setCancelWaiting] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    fetch('/api/approvals', { cache: 'no-store' })
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error('approvals'))))
+      .then((payload) => {
+        if (!live) return;
+        const rows = Array.isArray(payload.approvals) ? payload.approvals : [];
+        setWaiting(rows.filter((row) => row.rule_id === rule.id).length);
+      })
+      .catch(() => { if (live) setWaiting('unknown'); });
+    return () => { live = false; };
+  }, [rule.id]);
+
+  const count = typeof waiting === 'number' ? waiting : 0;
   return (
     <div className="scrim" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="automation-delete-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -1248,10 +1460,29 @@ function DeleteDialog({ rule, submitting, onCancel, onConfirm }) {
         </div>
         <div className="modal-body">
           <div className="alert" role="note"><span>{t('automations.delete.historyNote')}</span></div>
+          {count > 0 ? (
+            <div className="alert" role="status" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+              <strong>{t('automations.delete.waiting', { count })}</strong>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={cancelWaiting}
+                  onChange={(event) => setCancelWaiting(event.target.checked)}
+                  disabled={submitting}
+                  style={{ accentColor: 'var(--brand)' }}
+                />
+                {t('automations.delete.cancelWaiting', { count })}
+              </label>
+              {!cancelWaiting ? <span className="sub" style={{ fontSize: 12 }}>{t('automations.delete.keepWaitingNote', { count })}</span> : null}
+            </div>
+          ) : null}
+          {waiting === 'unknown' ? (
+            <div className="sub" style={{ fontSize: 12.5 }}>{t('automations.delete.waitingUnknown')}</div>
+          ) : null}
         </div>
         <div className="modal-foot">
           <Btn variant="ghost" onClick={onCancel} disabled={submitting}>{t('automations.delete.cancel')}</Btn>
-          <Btn variant="destructive" onClick={onConfirm} disabled={submitting}>
+          <Btn variant="destructive" onClick={() => onConfirm(count > 0 && cancelWaiting)} disabled={submitting || waiting === null}>
             {submitting ? t('automations.delete.deleting') : t('automations.delete.confirm')}
           </Btn>
         </div>

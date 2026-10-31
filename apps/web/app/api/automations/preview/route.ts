@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
 import { assertWorkspaceResources, isUuid, validateFilter } from '@/lib/automations/rules';
+import { PREVIEW_TIMEOUT, PREVIEW_UNAVAILABLE_ANSWER, previewFailureFor } from '@/lib/automations/preview-errors';
 
 /**
  * POST /api/automations/preview
@@ -90,7 +91,8 @@ export async function POST(request: NextRequest) {
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !serviceRoleKey) {
-    return NextResponse.json({ error: 'Preview is not available right now.' }, { status: 503 });
+    console.error('[api/automations/preview] no Supabase URL or service key configured');
+    return NextResponse.json({ error: PREVIEW_UNAVAILABLE_ANSWER.error, code: PREVIEW_UNAVAILABLE_ANSWER.code }, { status: PREVIEW_UNAVAILABLE_ANSWER.status });
   }
 
   let upstream: Response;
@@ -114,21 +116,19 @@ export async function POST(request: NextRequest) {
     // Deliberately no error body in the log: the request carries the service
     // role key and a search term the user typed.
     console.error('[api/automations/preview] upstream request failed');
-    return NextResponse.json({ error: 'The mailbox did not answer in time. Try the preview again in a moment.' }, { status: 504 });
+    return NextResponse.json({ error: 'The mailbox did not answer in time. Try the preview again in a moment.', code: PREVIEW_TIMEOUT }, { status: 504 });
   }
 
   const payload = await upstream.json().catch(() => null);
 
   if (!upstream.ok || !payload || typeof payload !== 'object') {
-    // A 404 here means the Edge Function does not expose the preview route yet.
-    // Saying so plainly beats a generic failure that reads like a broken filter.
-    if (upstream.status === 404) {
-      return NextResponse.json({ error: 'Preview is not available on this server yet.' }, { status: 503 });
+    const upstreamError = payload && typeof payload === 'object' ? (payload as { error?: unknown }).error : null;
+    // Never forwarded as it stands: these are machine codes, not sentences.
+    const failure = previewFailureFor(upstream.status, upstreamError);
+    if (failure.code === PREVIEW_UNAVAILABLE_ANSWER.code) {
+      console.error('[api/automations/preview] edge function refused the request', upstream.status);
     }
-    const upstreamError = payload && typeof payload === 'object' && typeof (payload as { error?: unknown }).error === 'string'
-      ? (payload as { error: string }).error
-      : 'Could not preview this filter against the mailbox.';
-    return NextResponse.json({ error: upstreamError }, { status: upstream.status >= 400 && upstream.status < 500 ? 400 : 502 });
+    return NextResponse.json({ error: failure.error, code: failure.code }, { status: failure.status });
   }
 
   const source = payload as { matched?: unknown; truncated?: unknown; messages?: unknown; notes?: unknown };

@@ -1186,7 +1186,7 @@
   },
   "automations": {
     "title": "Automatizaciones",
-    "subtitle": "Reglas que ordenan una bandeja de entrada según un horario, sin que nadie esté mirando.",
+    "subtitle": "Reglas que revisan una bandeja de entrada según un horario y aplican una acción fija.",
     "newButton": "Nueva automatización",
     "retry": "Reintentar",
     "loadingLabel": "Cargando automatizaciones",
@@ -1204,7 +1204,7 @@
       "rowFailing": "{count, plural, =0 {La última ejecución falló.} =1 {1 ejecución seguida ha fallado.} other {# ejecuciones seguidas han fallado; se desactiva sola a las 5.}}",
       "causeConnectionEnded": "La conexión con la que se ejecuta esta automatización ha terminado. Vuelve a conectar MCPEmails en tu cliente MCP.",
       "causeKeyRevoked": "La clave de API con la que se ejecuta esta automatización fue revocada. Asígnale una clave activa.",
-      "causeScopeDenied": "La clave de API ya no tiene permiso para la acción de esta automatización.",
+      "causeScopeDenied": "La clave de API no tiene permiso para la acción de esta automatización. Elige una clave que lo tenga.",
       "causeInboxNotPermitted": "La clave de API ya no puede usar la bandeja de esta automatización.",
       "causeInboxUnavailable": "La bandeja de entrada de esta automatización ya no está disponible.",
       "causeSearchFailed": "No se pudo buscar en el buzón. Revisa la conexión de la bandeja.",
@@ -1264,7 +1264,7 @@
       "move": "Mover a {folder}",
       "label": "Etiquetar como {label}",
       "markRead": "Marcar como leído",
-      "forward": "Reenviar a {count, plural, =1 {1 destinatario} other {# destinatarios}}",
+      "forward": "Reenviar a {address}",
       "draftReply": "Redactar un borrador de respuesta"
     },
     "status": {
@@ -1309,7 +1309,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "IMAP genérico",
-      "filterUnsupported": "Esta bandeja usa {provider}, que no puede buscar por {fields}. Una automatización se ejecuta sin supervisión, así que la regla actuaría sobre todos los mensajes que cumplan el resto del filtro, un conjunto más amplio del que describe. Cambia o quita {fields} para guardar esta automatización.",
+      "filterUnsupported": "Esta bandeja usa {provider}, que no puede buscar por {fields}. Una automatización se ejecuta según un horario, así que la regla actuaría sobre todos los mensajes que cumplan el resto del filtro, un conjunto más amplio del que describe. Cambia o quita {fields} para guardar esta automatización.",
       "previewTitle": "Previsualizar las coincidencias",
       "previewHelp": "Ejecuta este filtro contra la bandeja ahora mismo y no cambia nada.",
       "preview": "Previsualizar coincidencias",
@@ -1342,7 +1342,25 @@
       "create": "Crear automatización",
       "creating": "Creando…",
       "save": "Guardar cambios",
-      "saving": "Guardando…"
+      "saving": "Guardando…",
+      "duplicateTitle": "Duplicar automatización",
+      "duplicateSub": "Revisa la bandeja de entrada y los detalles. La copia empieza desactivada y no conserva el registro de ejecuciones ni las aprobaciones del original.",
+      "duplicateName": "Copia de {name}",
+      "keyCurrent": "Conexión actual",
+      "keyCannotSend": "Esta clave no puede enviar correo, así que un reenvío nunca saldría. Elige una clave con el permiso send:email.",
+      "keyMissingScope": "Esta clave no tiene el permiso que necesita esta acción. Elige una clave que lo tenga.",
+      "hiddenFilterHelp": "Estas condiciones se definieron fuera de este formulario, por ejemplo por tu asistente de IA. Se conservan al guardar.",
+      "hiddenFilterNo": "no",
+      "hiddenFilterRemove": "Quitar",
+      "hiddenFilterRemoveLabel": "Quitar {label}",
+      "previewUnavailable": "La vista previa no está disponible en este momento. El problema es nuestro y tu automatización no se ve afectada. Vuelve a intentarlo dentro de un rato.",
+      "previewTimeout": "El buzón no respondió a tiempo. Vuelve a intentar la vista previa en un momento.",
+      "previewKeyNotAvailable": "Esa clave de API ya no está disponible. Elige otra.",
+      "previewKeyExpired": "Esa clave de API ha caducado. Elige otra.",
+      "previewKeyCannotRead": "Esa clave de API no puede leer correo, así que no puede mostrar la vista previa. Elige una clave con el permiso read:email.",
+      "previewKeyNotForInbox": "Esa clave de API no puede usar esta bandeja de entrada. Elige otra.",
+      "previewInboxNotAvailable": "Esta bandeja de entrada no está disponible en este momento. Revísala en Bandejas de entrada.",
+      "previewSearchFailed": "No se pudo buscar en el buzón. Revisa la conexión de la bandeja de entrada e inténtalo de nuevo."
     },
     "runs": {
       "title": "Registro de ejecuciones",
@@ -1388,8 +1406,50 @@
       "historyNote": "Se conserva el registro de ejecuciones, así que podrás seguir viendo todo lo que hizo esta automatización.",
       "cancel": "Cancelar",
       "confirm": "Eliminar automatización",
-      "deleting": "Eliminando…"
-    }
+      "deleting": "Eliminando…",
+      "waiting": "{count, plural, =1 {1 reenvío de esta automatización está esperando aprobación.} other {# reenvíos de esta automatización están esperando aprobación.}}",
+      "cancelWaiting": "{count, plural, =1 {Cancelarlo, para que nunca se envíe} other {Cancelarlos, para que nunca se envíen}}",
+      "keepWaitingNote": "{count, plural, =1 {Sigue en Aprobaciones y todavía se puede aprobar.} other {Siguen en Aprobaciones y todavía se pueden aprobar.}}",
+      "waitingUnknown": "No se pudo comprobar si hay reenvíos en espera. Los que haya siguen en Aprobaciones."
+    },
+    "rowDuplicate": "Duplicar",
+    "approvalHelp": {
+      "title": "Cómo funciona la aprobación",
+      "step1": "Cuando esta automatización encuentra un correo que coincide, no se envía nada. Se añade un reenvío en Aprobaciones.",
+      "step2": "Un propietario o administrador abre Aprobaciones, revisa el correo y la dirección, y lo aprueba o lo rechaza.",
+      "step3": "Solo se envía un reenvío aprobado. Si nadie lo aprueba a tiempo, no se envía.",
+      "open": "Abrir Aprobaciones",
+      "close": "Cerrar"
+    },
+    "sentence": {
+      "title": "Qué hará:",
+      "search": "{cadence}, MCPEmails revisa {mailbox} en busca de correo {conditions}.",
+      "forward": "Cada coincidencia espera a que un propietario o administrador la apruebe, y solo entonces va a {address}.",
+      "move": "Cada coincidencia se mueve a {folder}.",
+      "label": "Cada coincidencia recibe la etiqueta {label}.",
+      "markRead": "Cada coincidencia se marca como leída.",
+      "draftReply": "Cada coincidencia recibe un borrador de respuesta, que se guarda y nunca se envía.",
+      "pastIncluded": "El correo que ya está en el buzón también cuenta, hasta {max} por ejecución.",
+      "pastExcluded": "El correo que llegó antes de activar la automatización no se toca.",
+      "cond": {
+        "from": "de {value}",
+        "to": "dirigido a {value}",
+        "cc": "con copia a {value}",
+        "subject": "con \"{value}\" en el asunto",
+        "body": "con \"{value}\" en el texto",
+        "text": "que contiene \"{value}\"",
+        "unread": "sin leer",
+        "unreadNo": "ya leído",
+        "hasAttachment": "con un adjunto",
+        "hasAttachmentNo": "sin adjuntos",
+        "flagged": "marcado",
+        "flaggedNo": "sin marcar",
+        "since": "recibido el {value} o después",
+        "before": "recibido antes del {value}"
+      }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatización eliminada y 1 reenvío en espera cancelado.} other {Automatización eliminada y # reenvíos en espera cancelados.}}",
+    "toastDeletedCancelFailed": "Automatización eliminada, pero no se pudieron cancelar sus reenvíos en espera. Recházalos en Aprobaciones."
   },
   "workflows": {
     "bulkRuns": {

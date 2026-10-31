@@ -150,3 +150,20 @@ jobs:
           supabase functions deploy "$FN" \
             --project-ref "$PROJECT_REF" \
             --no-verify-jwt
+      # Automation Preview authenticates the site to mcp-server, and a failure
+      # there breaks nothing else that would be noticed. 404 means the site has
+      # not shipped the route yet, which is not a broken preview.
+      - name: Check automation preview still works
+        if: inputs.function == 'mcp-server'
+        env:
+          SITE: ${{ inputs.target == 'production' && 'https://mcpemails.com' || 'https://staging.mcpemails.com' }}
+        run: |
+          # A new function version takes a few seconds to serve.
+          for attempt in 1 2 3 4 5; do
+            sleep 20
+            status=$(curl -s -o /tmp/answer.json -w '%{http_code}' "$SITE/api/automations/preview/health" || true)
+            if [ "$status" = "200" ]; then echo "Preview is healthy: $(cat /tmp/answer.json)"; exit 0; fi
+            if [ "$status" = "404" ]; then echo "::notice::$SITE has no preview health route yet."; exit 0; fi
+          done
+          echo "::error::Preview on $SITE is broken ($status): $(cat /tmp/answer.json). The site's key was refused or the function did not answer."
+          exit 1

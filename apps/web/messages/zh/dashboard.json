@@ -1038,7 +1038,7 @@
   },
   "automations": {
     "title": "自动化",
-    "subtitle": "按固定时间表整理收件箱的规则，无需有人盯着。",
+    "subtitle": "按计划检查收件箱并执行一个固定操作的规则。",
     "newButton": "新建自动化",
     "retry": "重试",
     "loadingLabel": "正在加载自动化",
@@ -1056,7 +1056,7 @@
       "rowFailing": "{count, plural, =0 {上一次运行失败。} other {已连续 # 次运行失败，达到 5 次将自动关闭。}}",
       "causeConnectionEnded": "此自动化所用的连接已结束。请在 MCP 客户端中重新连接 MCPEmails。",
       "causeKeyRevoked": "此自动化所用的 API 密钥已被撤销。请改用有效的密钥。",
-      "causeScopeDenied": "该 API 密钥已不再具备此自动化所需操作的权限。",
+      "causeScopeDenied": "该 API 密钥没有此自动化操作所需的权限。请选择具备该权限的密钥。",
       "causeInboxNotPermitted": "该 API 密钥已不再允许使用此自动化的收件箱。",
       "causeInboxUnavailable": "此自动化所针对的收件箱已不可用。",
       "causeSearchFailed": "无法搜索该邮箱。请检查收件箱连接。",
@@ -1116,7 +1116,7 @@
       "move": "移动到 {folder}",
       "label": "标记为 {label}",
       "markRead": "标记为已读",
-      "forward": "转发给 {count, plural, other {# 位收件人}}",
+      "forward": "转发给 {address}",
       "draftReply": "起草回复"
     },
     "status": {
@@ -1161,7 +1161,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "通用 IMAP",
-      "filterUnsupported": "此邮箱使用 {provider}，无法按{fields}搜索。自动化在无人看管的情况下运行，因此该规则会对满足其余筛选条件的所有邮件执行操作，范围比规则描述的更广。请修改或移除{fields}后再保存此自动化。",
+      "filterUnsupported": "此邮箱使用 {provider}，无法按{fields}搜索。自动化按计划运行，因此该规则会对满足其余筛选条件的所有邮件执行操作，范围比规则描述的更广。请修改或移除{fields}后再保存此自动化。",
       "previewTitle": "预览匹配结果",
       "previewHelp": "立即用该筛选条件搜索邮箱，不会改动任何内容。",
       "preview": "预览匹配",
@@ -1194,7 +1194,25 @@
       "create": "创建自动化",
       "creating": "正在创建…",
       "save": "保存更改",
-      "saving": "正在保存…"
+      "saving": "正在保存…",
+      "duplicateTitle": "复制自动化",
+      "duplicateSub": "请检查收件箱和详细信息。副本初始为关闭状态，不保留原规则的运行日志或审批。",
+      "duplicateName": "{name} 的副本",
+      "keyCurrent": "当前连接",
+      "keyCannotSend": "此密钥无法发送邮件，因此转发永远无法发出。请选择具有 send:email 权限的密钥。",
+      "keyMissingScope": "此密钥没有该操作所需的权限。请选择具备该权限的密钥。",
+      "hiddenFilterHelp": "这些条件是在此表单之外设置的，例如由您的 AI 助手设置。保存时会保留它们。",
+      "hiddenFilterNo": "否",
+      "hiddenFilterRemove": "移除",
+      "hiddenFilterRemoveLabel": "移除 {label}",
+      "previewUnavailable": "预览暂时不可用。问题出在我们这边，您的自动化不受影响。请稍后再试。",
+      "previewTimeout": "邮箱未及时响应。请稍后重新预览。",
+      "previewKeyNotAvailable": "该 API 密钥已不可用。请选择其他密钥。",
+      "previewKeyExpired": "该 API 密钥已过期。请选择其他密钥。",
+      "previewKeyCannotRead": "该 API 密钥无法读取邮件，因此无法预览。请选择具有 read:email 权限的密钥。",
+      "previewKeyNotForInbox": "该 API 密钥不能使用此收件箱。请选择其他密钥。",
+      "previewInboxNotAvailable": "此收件箱暂时不可用。请在“收件箱”中检查。",
+      "previewSearchFailed": "无法搜索邮箱。请检查收件箱连接后重试。"
     },
     "runs": {
       "title": "运行记录",
@@ -1240,8 +1258,50 @@
       "historyNote": "运行记录会保留，你仍然可以查看这个自动化做过的一切。",
       "cancel": "取消",
       "confirm": "删除自动化",
-      "deleting": "正在删除…"
-    }
+      "deleting": "正在删除…",
+      "waiting": "{count, plural, other {此自动化有 # 条转发正在等待审批。}}",
+      "cancelWaiting": "{count, plural, other {取消它们，使其永远不会发送}}",
+      "keepWaitingNote": "{count, plural, other {它们会保留在“审批”中，仍可被批准。}}",
+      "waitingUnknown": "无法检查等待中的转发。等待中的转发会保留在“审批”中。"
+    },
+    "rowDuplicate": "复制",
+    "approvalHelp": {
+      "title": "审批如何运作",
+      "step1": "当此自动化找到匹配的邮件时，不会发送任何内容，而是在“审批”下添加一条转发。",
+      "step2": "所有者或管理员打开“审批”，检查邮件和地址，然后批准或拒绝。",
+      "step3": "只有获批的转发才会发送。如果无人及时批准，则不会发送。",
+      "open": "打开审批",
+      "close": "关闭"
+    },
+    "sentence": {
+      "title": "将会发生：",
+      "search": "{cadence}，MCPEmails 在 {mailbox} 中查找{conditions}的邮件。",
+      "forward": "每封匹配的邮件都要等所有者或管理员批准后，才会发送给 {address}。",
+      "move": "每封匹配的邮件都会移动到 {folder}。",
+      "label": "每封匹配的邮件都会加上标签 {label}。",
+      "markRead": "每封匹配的邮件都会标记为已读。",
+      "draftReply": "每封匹配的邮件都会生成一封回复草稿，只保存，绝不发送。",
+      "pastIncluded": "邮箱中已有的邮件也计算在内，每次运行最多 {max} 封。",
+      "pastExcluded": "在自动化开启之前收到的邮件不会受到影响。",
+      "cond": {
+        "from": "来自 {value}",
+        "to": "发送给 {value}",
+        "cc": "抄送给 {value}",
+        "subject": "主题包含“{value}”",
+        "body": "正文包含“{value}”",
+        "text": "包含“{value}”",
+        "unread": "未读",
+        "unreadNo": "已读",
+        "hasAttachment": "带附件",
+        "hasAttachmentNo": "不带附件",
+        "flagged": "已标记",
+        "flaggedNo": "未标记",
+        "since": "在 {value} 或之后收到",
+        "before": "在 {value} 之前收到"
+      }
+    },
+    "toastDeletedCancelled": "{count, plural, other {自动化已删除，并已取消 # 条等待中的转发。}}",
+    "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。"
   },
   "workflows": {
     "bulkRuns": {

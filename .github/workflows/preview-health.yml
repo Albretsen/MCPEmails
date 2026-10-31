@@ -1,0 +1,42 @@
+name: Preview health
+
+# Automation Preview is the one thing that calls the edge function with the site's
+# service key, so a rotated key breaks Preview and nothing else notices. This asks
+# the deployed site whether its key still gets through, after each Vercel deploy.
+# deploy-edge-function.yml runs the same check after each edge deploy.
+
+on:
+  # Vercel reports its deploys as GitHub deployments. GitHub runs this from the
+  # default branch's copy of the file.
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Site to check
+        required: true
+        default: https://staging.mcpemails.com
+        type: choice
+        options:
+          - https://staging.mcpemails.com
+          - https://mcpemails.com
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && (github.event.deployment.ref == 'main' || github.event.deployment.ref == 'staging'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the site
+        env:
+          SITE: ${{ inputs.site || (github.event.deployment.ref == 'main' && 'https://mcpemails.com' || 'https://staging.mcpemails.com') }}
+        run: |
+          # A deploy reports success slightly before the domain serves it.
+          for attempt in 1 2 3 4 5; do
+            status=$(curl -s -o /tmp/answer.json -w '%{http_code}' "$SITE/api/automations/preview/health" || true)
+            [ "$status" = "200" ] && { echo "$SITE preview is healthy: $(cat /tmp/answer.json)"; exit 0; }
+            sleep 30
+          done
+          echo "::error::Preview on $SITE is broken ($status): $(cat /tmp/answer.json). A key may have been rotated."
+          exit 1

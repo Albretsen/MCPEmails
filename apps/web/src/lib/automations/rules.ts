@@ -432,6 +432,63 @@ export async function assertWorkspaceResources(
 }
 
 // ---------------------------------------------------------------------------
+// Can this key run this action?
+//
+// Kept in step with TRIAGE_ACTION_SCOPES in triage-engine.ts, the enforcing copy
+// (rules.test.ts compares them). Without this check the dashboard saved a forward
+// rule on a key that could not send, and the first run failed `scope_denied`.
+// ---------------------------------------------------------------------------
+
+export const ACTION_SCOPES: Record<StoredAction['type'], string> = {
+  move: 'manage:folders',
+  label: 'manage:folders',
+  mark_read: 'manage:folders',
+  forward: 'send:email',
+  draft_reply: 'manage:drafts',
+};
+
+/** The scopes this action needs and the key lacks. Empty when the key can run it. */
+export function missingActionScopes(actionType: unknown, scopes: unknown): string[] {
+  const needed = ACTION_SCOPES[actionType as StoredAction['type']];
+  if (!needed) return [];
+  const held = Array.isArray(scopes) ? scopes : [];
+  const required = actionType === 'draft_reply' ? [needed, 'read:email'] : [needed];
+  return required.filter((scope) => !held.includes(scope));
+}
+
+/** Machine-readable reason, so the form can say it in the reader's language. */
+export const KEY_MISSING_SCOPE_CODE = 'key_missing_scope';
+
+/**
+ * Refuses a key that could not run this action, or null when it can.
+ *
+ * Only a key this workspace owns is judged. A key that cannot be read is left to
+ * assertWorkspaceResources, which has its own message for it.
+ */
+export async function assertKeyCanRunAction(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  workspaceId: string,
+  apiKeyId: string,
+  action: { type?: unknown } | null,
+): Promise<{ error: string; status: number; code: string } | null> {
+  if (!action) return null;
+  const { data: key } = await db.from('api_keys')
+    .select('scopes')
+    .eq('id', apiKeyId)
+    .eq('workspace_id', workspaceId)
+    .maybeSingle();
+  if (!key) return null;
+  const missing = missingActionScopes(action.type, key.scopes);
+  if (missing.length === 0) return null;
+  return {
+    error: `This API key does not have the ${missing.join(' and ')} permission this action needs. Choose a key that has it.`,
+    status: 400,
+    code: KEY_MISSING_SCOPE_CODE,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // What "apply a label" means on each provider
 //
 // A label is one idea with three provider-native spellings, and only one of

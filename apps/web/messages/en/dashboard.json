@@ -1186,7 +1186,7 @@
   },
   "automations": {
     "title": "Automations",
-    "subtitle": "Rules that sort an inbox on a schedule, with nobody watching.",
+    "subtitle": "Rules that check an inbox on a schedule and apply one fixed action.",
     "newButton": "New automation",
     "retry": "Try again",
     "loadingLabel": "Loading automations",
@@ -1204,7 +1204,7 @@
       "rowFailing": "{count, plural, =0 {The last run failed.} =1 {1 run in a row has failed.} other {# runs in a row have failed; it switches itself off at 5.}}",
       "causeConnectionEnded": "The connection this automation runs as has ended. Reconnect MCPEmails in your MCP client.",
       "causeKeyRevoked": "The API key this automation runs as was revoked. Point it at a live key.",
-      "causeScopeDenied": "The API key no longer has permission for this automation's action.",
+      "causeScopeDenied": "The API key does not have permission for this automation's action. Choose a key that does.",
       "causeInboxNotPermitted": "The API key is no longer allowed to use this automation's inbox.",
       "causeInboxUnavailable": "The inbox this automation targets is no longer available.",
       "causeSearchFailed": "The mailbox could not be searched. Check the inbox connection.",
@@ -1264,7 +1264,7 @@
       "move": "Move to {folder}",
       "label": "Label as {label}",
       "markRead": "Mark as read",
-      "forward": "Forward to {count, plural, =1 {1 recipient} other {# recipients}}",
+      "forward": "Forward to {address}",
       "draftReply": "Draft a reply"
     },
     "status": {
@@ -1309,7 +1309,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "generic IMAP",
-      "filterUnsupported": "This inbox is on {provider}, which cannot search by {fields}. An automation runs unattended, so the rule would act on every message matching the rest of the filter, a wider set than it describes. Change or remove {fields} to save this automation.",
+      "filterUnsupported": "This inbox is on {provider}, which cannot search by {fields}. An automation runs on a schedule, so the rule would act on every message matching the rest of the filter, a wider set than it describes. Change or remove {fields} to save this automation.",
       "previewTitle": "Preview the matches",
       "previewHelp": "Runs this filter against the mailbox right now and changes nothing.",
       "preview": "Preview matches",
@@ -1342,7 +1342,25 @@
       "create": "Create automation",
       "creating": "Creating…",
       "save": "Save changes",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "duplicateTitle": "Duplicate automation",
+      "duplicateSub": "Check the inbox and the details. The copy starts switched off and keeps none of the original's run log or approvals.",
+      "duplicateName": "Copy of {name}",
+      "keyCurrent": "Current connection",
+      "keyCannotSend": "This key cannot send email, so a forward could never go out. Choose a key with the send:email permission.",
+      "keyMissingScope": "This key does not have the permission this action needs. Choose a key that does.",
+      "hiddenFilterHelp": "These conditions were set outside this form, for example by your AI assistant. Saving keeps them.",
+      "hiddenFilterNo": "no",
+      "hiddenFilterRemove": "Remove",
+      "hiddenFilterRemoveLabel": "Remove {label}",
+      "previewUnavailable": "Preview is not available right now. The problem is on our side and your automation is not affected. Try again in a little while.",
+      "previewTimeout": "The mailbox did not answer in time. Try the preview again in a moment.",
+      "previewKeyNotAvailable": "That API key is not available any more. Choose another one.",
+      "previewKeyExpired": "That API key has expired. Choose another one.",
+      "previewKeyCannotRead": "That API key cannot read mail, so it cannot preview. Choose a key with the read:email permission.",
+      "previewKeyNotForInbox": "That API key is not allowed to use this inbox. Choose another one.",
+      "previewInboxNotAvailable": "This inbox is not available right now. Check it under Inboxes.",
+      "previewSearchFailed": "The mailbox could not be searched. Check the inbox connection, then try again."
     },
     "runs": {
       "title": "Run log",
@@ -1388,8 +1406,50 @@
       "historyNote": "The run log is kept, so you can still see everything this automation did.",
       "cancel": "Cancel",
       "confirm": "Delete automation",
-      "deleting": "Deleting…"
-    }
+      "deleting": "Deleting…",
+      "waiting": "{count, plural, =1 {1 forward from this automation is waiting for approval.} other {# forwards from this automation are waiting for approval.}}",
+      "cancelWaiting": "{count, plural, =1 {Cancel it, so it can never be sent} other {Cancel them, so they can never be sent}}",
+      "keepWaitingNote": "{count, plural, =1 {It stays under Approvals and can still be approved.} other {They stay under Approvals and can still be approved.}}",
+      "waitingUnknown": "Could not check for waiting forwards. Any that are waiting stay under Approvals."
+    },
+    "rowDuplicate": "Duplicate",
+    "approvalHelp": {
+      "title": "How approval works",
+      "step1": "When this automation finds a matching email, nothing is sent. A forward is added under Approvals.",
+      "step2": "An owner or admin opens Approvals, checks the email and the address, then approves or rejects it.",
+      "step3": "Only an approved forward is sent. If nobody approves it in time, it is not sent.",
+      "open": "Open Approvals",
+      "close": "Close"
+    },
+    "sentence": {
+      "title": "What this will do:",
+      "search": "{cadence}, MCPEmails checks {mailbox} for mail {conditions}.",
+      "forward": "Each match waits for an owner or admin to approve it, and only then goes to {address}.",
+      "move": "Each match moves to {folder}.",
+      "label": "Each match gets the label {label}.",
+      "markRead": "Each match is marked as read.",
+      "draftReply": "Each match gets a draft reply, which is saved and never sent.",
+      "pastIncluded": "Mail already in the mailbox counts too, up to {max} each run.",
+      "pastExcluded": "Mail that arrived before the automation is switched on is left alone.",
+      "cond": {
+        "from": "from {value}",
+        "to": "addressed to {value}",
+        "cc": "copied to {value}",
+        "subject": "with \"{value}\" in the subject",
+        "body": "with \"{value}\" in the text",
+        "text": "containing \"{value}\"",
+        "unread": "that is unread",
+        "unreadNo": "that is already read",
+        "hasAttachment": "with an attachment",
+        "hasAttachmentNo": "without an attachment",
+        "flagged": "that is flagged",
+        "flaggedNo": "that is not flagged",
+        "since": "received on or after {value}",
+        "before": "received before {value}"
+      }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automation deleted and 1 waiting forward cancelled.} other {Automation deleted and # waiting forwards cancelled.}}",
+    "toastDeletedCancelFailed": "Automation deleted, but its waiting forwards could not be cancelled. Reject them under Approvals."
   },
   "workflows": {
     "bulkRuns": {
