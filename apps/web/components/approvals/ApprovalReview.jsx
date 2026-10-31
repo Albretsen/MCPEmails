@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Btn, Icon } from '../Primitives';
+import { OriginalMessage, formatBytes } from './OriginalMessage';
+import { deliveryInFlight, deliveryReasonText, formatTimeLeft, useNow } from './approvalDisplay';
 
 /**
  * The authenticated one-click review of a prepared send.
@@ -56,12 +58,9 @@ function LocalTime({ iso, fallback }) {
   );
 }
 
-function formatBytes(bytes) {
-  if (typeof bytes !== 'number' || bytes <= 0) return null;
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+/** How often to look again while an approved send is on its way, and for how long. */
+const DELIVERY_POLL_MS = 3000;
+const DELIVERY_POLL_MAX = 40;
 
 function Row({ label, children }) {
   return (
@@ -99,6 +98,8 @@ export function ApprovalReview({ review, csrfToken }) {
   const [staleFrom, setStaleFrom] = useState(null);
   const awaitingFresh =
     staleFrom !== null && staleFrom.token === csrfToken && staleFrom.revision === review.revision;
+  const [delivery, setDelivery] = useState(review.delivery ?? null);
+  const now = useNow();
 
   const decide = async (decision) => {
     if (submitting || outcome || !csrfToken || awaitingFresh) return;
@@ -128,6 +129,33 @@ export function ApprovalReview({ review, csrfToken }) {
     }
   };
 
+  // After approval, ask until the send has an outcome. A request sent long ago
+  // that has one already asks nothing.
+  const watching = outcome === 'approve' || (review.state === 'approved' && deliveryInFlight(review.delivery));
+  useEffect(() => {
+    if (!watching) return undefined;
+    let tries = 0;
+    let timer;
+    let stopped = false;
+    const look = async () => {
+      tries += 1;
+      const payload = await fetch(`/api/approvals/${review.id}`, { cache: 'no-store' })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null);
+      if (stopped) return;
+      if (payload?.delivery) setDelivery(payload.delivery);
+      const settled = payload?.delivery && !deliveryInFlight(payload.delivery);
+      if (!settled && tries < DELIVERY_POLL_MAX) timer = window.setTimeout(look, DELIVERY_POLL_MS);
+    };
+    timer = window.setTimeout(look, 1000);
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+    };
+  }, [watching, review.id]);
+
+  const isRule = review.kind === 'rule_forward';
+  const isForward = review.operation === 'email_forward';
   const operationKey = `approvals.review.operations.${review.operation}`;
   const operationLabel = t.has(operationKey) ? t(operationKey) : review.operation;
   const routeLabel = t(`approvals.review.routes.${review.provider.labelKey}`);
@@ -137,12 +165,30 @@ export function ApprovalReview({ review, csrfToken }) {
   };
 
   // A pending row whose decision raced with another surface. Once the fetch
-  // reports it, the page must stop offering a button that cannot work.
-  const raced = failure === 'not_pending' || failure === 'expired' || failure === 'not_found';
+  // reports it, the page must stop offering a button that cannot work. An expired
+  // one is not "decided elsewhere": nobody decided it. The same goes for a deadline
+  // that passes while the page is open.
+  const pastDeadline = review.state === 'pending' && Boolean(review.expires_at) && Date.parse(review.expires_at) <= now;
+  const lapsed = failure === 'expired' || pastDeadline;
+  const raced = failure === 'not_pending' || failure === 'not_found';
   const decided = outcome !== null;
-  const live = review.state === 'pending' && !decided && !raced;
+  const state = lapsed ? 'expired' : review.state;
+  const live = state === 'pending' && !decided && !raced;
+  const timeLeft = live ? formatTimeLeft(t, review.expires_at, now) : null;
+  const expiredBodyKey = isRule ? 'approvals.review.states.expiredBodyRule' : 'approvals.review.states.expiredBody';
+  const reason = deliveryReasonText(t, delivery);
 
-  const banner = decided ? (
+  const deliveryBanner = delivery && delivery.state !== 'scheduled' ? (
+    <StatusBanner
+      tone={delivery.state === 'sent' ? 'good' : delivery.state === 'failed' ? 'warn' : 'neutral'}
+      icon={delivery.state === 'sent' ? 'check' : delivery.state === 'failed' ? 'alert-triangle' : 'refresh'}
+      title={t(`approvals.review.delivery.${delivery.state}Title`)}
+    >
+      {reason ?? t(`approvals.review.delivery.${delivery.state}Body`)}
+    </StatusBanner>
+  ) : null;
+
+  const banner = (decided && outcome === 'approve' && deliveryBanner) || (state === 'approved' && deliveryBanner) || (decided ? (
     <StatusBanner
       tone={outcome === 'approve' ? 'good' : 'neutral'}
       icon={outcome === 'approve' ? 'check' : 'x'}
@@ -158,17 +204,20 @@ export function ApprovalReview({ review, csrfToken }) {
     <StatusBanner tone="warn" icon="alert-triangle" title={t('approvals.review.states.changedTitle')}>
       {awaitingFresh ? t('approvals.review.states.changedLoading') : t('approvals.review.states.changedBody')}
     </StatusBanner>
-  ) : review.state !== 'pending' ? (
+  ) : state !== 'pending' ? (
     <StatusBanner
-      tone={review.state === 'approved' ? 'good' : review.state === 'expired' ? 'warn' : 'neutral'}
-      icon={review.state === 'approved' ? 'check' : review.state === 'expired' ? 'alert-triangle' : 'x'}
-      title={t(`approvals.review.states.${review.state}Title`)}
+      tone={state === 'approved' ? 'good' : state === 'expired' ? 'warn' : 'neutral'}
+      icon={state === 'approved' ? 'check' : state === 'expired' ? 'alert-triangle' : 'x'}
+      title={t(`approvals.review.states.${state}Title`)}
     >
-      {t(`approvals.review.states.${review.state}Body`)}
+      {state === 'expired' ? t(expiredBodyKey) : t(`approvals.review.states.${state}Body`)}
     </StatusBanner>
-  ) : null;
+  ) : null);
 
-  const hasAttachments = review.attachment_count > 0 || review.forward_carries_original;
+  // A forward's files are the original's, listed from the mailbox below.
+  const hasAttachments = review.attachment_count > 0 || (review.forward_carries_original && !isForward);
+  // The original is read live only while someone can still act on it.
+  const showOriginal = isForward && !decided && review.role !== 'viewer' && (state === 'pending' || state === 'expired');
 
   return (
     <div className="review-shell">
@@ -180,14 +229,18 @@ export function ApprovalReview({ review, csrfToken }) {
         {live ? (
           <div className="review-head">
             <span className="review-kicker">{t('approvals.review.kicker')}</span>
-            <h1>{t('approvals.review.title')}</h1>
-            <p className="sub">{t('approvals.review.subtitle')}</p>
+            <h1>{t(isRule ? 'approvals.review.titleRule' : 'approvals.review.title')}</h1>
+            <p className="sub">
+              {isRule
+                ? t('approvals.review.subtitleRule', { rule: review.rule_name ?? t('approvals.panel.unnamedRule') })
+                : t('approvals.review.subtitle')}
+            </p>
           </div>
         ) : null}
 
         {banner}
 
-        {!decided && review.state !== 'pending' && review.decided_at ? (
+        {!decided && state !== 'pending' && state !== 'expired' && review.decided_at ? (
           <p className="review-provenance">
             <LocalTime iso={review.decided_at} fallback="" />
             {review.decided_by_label ? ` · ${review.decided_by_label}` : ''}
@@ -244,13 +297,20 @@ export function ApprovalReview({ review, csrfToken }) {
                 <span className="review-strong"><LocalTime iso={review.send_at} fallback="" /></span>
               </Row>
             ) : null}
+
+            {review.expires_at && state !== 'approved' && state !== 'rejected' && state !== 'cancelled' ? (
+              <Row label={t('approvals.review.expires')}>
+                <span className="review-strong"><LocalTime iso={review.expires_at} fallback="" /></span>
+                {timeLeft ? <span className="review-muted"> · {timeLeft}</span> : null}
+              </Row>
+            ) : null}
           </dl>
 
           <h2 className={`review-subject review-wrapany${review.subject ? '' : ' review-muted'}`}>
             {review.subject || t('approvals.review.noSubject')}
           </h2>
 
-          {review.body.unavailable ? (
+          {review.body.unavailable === 'absent' && isForward ? null : review.body.unavailable ? (
             <p className="review-body-note">
               {t(`approvals.review.body${review.body.unavailable === 'withheld_role' ? 'WithheldRole'
                 : review.body.unavailable === 'stored_with_provider' ? 'StoredWithProvider'
@@ -259,12 +319,17 @@ export function ApprovalReview({ review, csrfToken }) {
             </p>
           ) : (
             <>
+              {review.body.text && isForward ? (
+                <div className="review-muted review-hint">{t('approvals.review.forwardNote')}</div>
+              ) : null}
               {review.body.text ? <div className="review-body">{review.body.text}</div> : null}
               {review.body.truncated ? (
                 <p className="review-body-note">{t('approvals.review.bodyTruncated')}</p>
               ) : null}
             </>
           )}
+
+          {showOriginal ? <OriginalMessage approvalId={review.id} /> : null}
 
           {hasAttachments ? (
             <div className="review-attachments">
@@ -305,11 +370,6 @@ export function ApprovalReview({ review, csrfToken }) {
             <Row label={t('approvals.review.requested')}>
               <LocalTime iso={review.created_at} fallback={t('approvals.review.unknownTime')} />
             </Row>
-            {review.expires_at ? (
-              <Row label={t('approvals.review.expires')}>
-                <LocalTime iso={review.expires_at} fallback="" />
-              </Row>
-            ) : null}
           </dl>
           {review.body.html && !review.body.unavailable ? (
             <div className="review-html">
@@ -361,7 +421,9 @@ export function ApprovalReview({ review, csrfToken }) {
         )}
 
         <p className="review-note">
-          {live ? t('approvals.review.footnote') : t('approvals.review.backToConversation')}
+          {live
+            ? t(isRule ? 'approvals.review.footnoteRule' : 'approvals.review.footnote')
+            : t(isRule ? 'approvals.review.backToApprovals' : 'approvals.review.backToConversation')}
         </p>
       </div>
     </div>

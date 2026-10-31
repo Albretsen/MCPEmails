@@ -262,7 +262,8 @@ import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_RULE_LINK_COLUMNS,
   APPROVAL_TOOL_DEFINITIONS,
-  APPROVAL_TTL_MS,
+  approvalTtlMs,
+  isRuleForwardApproval,
   approvalLapsedBeforeDecision,
   approvalReviewUrl,
   approvalRuleLinkColumns,
@@ -606,6 +607,20 @@ import {
   SNOOZE_MIN_LEAD_MS,
   statusesForFilter,
 } from "./reminders-engine.ts";
+import {
+  DELIVERY_UNCERTAIN_CODE,
+  locateOriginal,
+  ORIGINAL_AMBIGUOUS_CODE,
+  ORIGINAL_NOT_FOUND_CODE,
+  type OriginalFacts,
+  type OriginalLocation,
+  type OriginalLookup,
+  type OriginalMatch,
+  type OriginalRef,
+  parseOriginalRef,
+  replayOutcome,
+  ruleForwardLedgerKey,
+} from "./original-locator.ts";
 import {
   BRIEF_FROM_NAME,
   BRIEF_LIST_LIMIT,
@@ -20104,9 +20119,10 @@ async function queueSendApproval(
     await resolveApprovalSummaryFields(inbox, operation, payload),
     operation,
   );
-  // A pending request stays decidable for 24h and is then dead: the tools
-  // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
-  const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
+  // A pending request stays decidable until this deadline and is then dead: the
+  // tools refuse it, the decide paths refuse it, and the dispatcher re-checks it.
+  // 24h for an AI send, 7 days for a rule forward (see approvalTtlMs).
+  const expiresAt = new Date(Date.now() + approvalTtlMs(rule)).toISOString();
   // `select("*")` rather than `select("id")`: the caller turns this row into the
   // review card's envelope (see `buildHeldSendEnvelope`), and returning it from
   // the statement that wrote it is both cheaper and less failure-prone than a
@@ -36061,6 +36077,82 @@ interface ScheduledDispatchDeps {
   reserveRuleForward?(workspaceId: string): Promise<{ allowed: boolean; reservationId: string | null }>;
   /** Books the forward when it was sent. Anything else hands the reservation back. */
   settleRuleForward?(workspaceId: string, status: "success" | "error", reservationId: string | null): Promise<void>;
+  /** Ledger claim and original lookup for an approved rule forward. Optional, as above. */
+  prepareRuleForward?(
+    approvalId: string,
+    stored: Record<string, unknown>,
+    key: ApiKeyRow,
+    inbox: InboxRow,
+  ): Promise<RuleForwardDispatch>;
+}
+
+/** What an approved rule forward should do at dispatch. */
+type RuleForwardDispatch =
+  | {
+    kind: "ready";
+    args: Record<string, unknown>;
+    settle(logStatus: "success" | "error", logErrorCode: string | null): Promise<void>;
+  }
+  /** The ledger says it went out. Do not send it again. */
+  | { kind: "already_sent" }
+  /** Not sent, and final: the code goes on the row and into the person's reason. */
+  | { kind: "refused"; code: string }
+  /** Nothing was sent and nothing is known yet. Try again on a later tick. */
+  | { kind: "not_ready" };
+
+/**
+ * Gives an approved rule forward what every other send has: a ledger row, and so
+ * no second delivery. Written here rather than when the rule queued it, so the
+ * row's 24 hours run from the send and not from the start of a wait of up to 7
+ * days (RULE_FORWARD_APPROVAL_TTL_MS).
+ *
+ * A provable non-send releases the row (completeOutboundIdempotency), so a brake
+ * hold or a refused connection can retry. Any other state left behind is a send
+ * that may have happened, and is never run again.
+ */
+async function prepareRuleForward(
+  approvalId: string,
+  stored: Record<string, unknown>,
+  key: ApiKeyRow,
+  inbox: InboxRow,
+): Promise<RuleForwardDispatch> {
+  const { original_ref: rawRef, ...args } = stored;
+  const claim = await claimOutboundIdempotency(
+    "email_forward",
+    { approval_id: approvalId, to: args.to },
+    key,
+    ruleForwardLedgerKey(approvalId),
+  );
+  if (!claim || claim.kind === "unavailable" || claim.kind === "invalid" || claim.kind === "conflict") {
+    return { kind: "not_ready" };
+  }
+  if (claim.kind === "processing") return { kind: "refused", code: DELIVERY_UNCERTAIN_CODE };
+  if (claim.kind === "replay") {
+    return replayOutcome(claim.status) === "already_sent"
+      ? { kind: "already_sent" }
+      : { kind: "refused", code: DELIVERY_UNCERTAIN_CODE };
+  }
+  const settle = (logStatus: "success" | "error", logErrorCode: string | null) =>
+    completeOutboundIdempotency(claim, "email_forward", key.id, logStatus, logErrorCode);
+
+  const storedId = typeof args.message_id === "string" ? args.message_id : "";
+  let location: OriginalLocation;
+  const session = imapSessionFor(inbox);
+  try {
+    location = await locateOriginal(storedId, parseOriginalRef(rawRef), originalLookupFor(inbox, session));
+  } catch (error) {
+    console.warn("[dispatch] rule_forward_locate_failed", { inbox_id: inbox.id, error: providerErrorCode(error) });
+    await settle("error", PROVIDER_NOT_SENT_ERROR_CODE);
+    return { kind: "not_ready" };
+  } finally {
+    await session?.close();
+  }
+  if (location.kind !== "found") {
+    const code = location.kind === "ambiguous" ? ORIGINAL_AMBIGUOUS_CODE : ORIGINAL_NOT_FOUND_CODE;
+    await settle("error", code);
+    return { kind: "refused", code };
+  }
+  return { kind: "ready", args: { ...args, message_id: location.id }, settle };
 }
 
 /** On the send's record, for the person who approved it. Plain, no plan slugs. */
@@ -36107,6 +36199,7 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
   async settleRuleForward(workspaceId, status, reservationId) {
     await writeActionUsage(workspaceId, "triage_forward", status, reservationId);
   },
+  prepareRuleForward,
   sendViaProvider(inbox, params) {
     switch (inbox.provider) {
       case "gmail":
@@ -36481,6 +36574,24 @@ async function handleScheduledDispatch(
           const ruleForward = String(approval.operation) === "email_forward" &&
             typeof approval.triage_rule_name === "string";
           const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true, ruleForwardDispatch: ruleForward };
+          // A rule forward has no ledger row from when it was queued, and may
+          // have waited days for the person. So it claims one now, and finds its
+          // original by Message-ID in case the message has moved. This comes before
+          // the allowance: a forward that will not go must not reserve anything.
+          const prepared = deps.prepareRuleForward && isRuleForwardApproval(approval)
+            ? await deps.prepareRuleForward(String(approval.id), original, internalKey, inbox)
+            : null;
+          if (prepared?.kind === "already_sent") {
+            await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
+            dispatched++;
+            continue;
+          }
+          if (prepared?.kind === "not_ready") {
+            throw new SmtpNotSentError("the mailbox could not be read to find the original message", true);
+          }
+          if (prepared?.kind === "refused") {
+            throw new Error(`approved ${approval.operation} failed: ${prepared.code}`);
+          }
           // Nothing was sent, so a refusal costs nothing: not counted, and not
           // retried either, because the allowance may not free up until the period
           // ends and a forward going out weeks after it was approved surprises
@@ -36489,14 +36600,18 @@ async function handleScheduledDispatch(
           let forwardReservationId: string | null = null;
           if (ruleForward && deps.reserveRuleForward) {
             const reservation = await deps.reserveRuleForward(String(row.workspace_id));
-            if (!reservation.allowed) throw new Error(RULE_FORWARD_LIMIT_REFUSAL);
+            if (!reservation.allowed) {
+              // Provably not sent, so the ledger row is released rather than left.
+              if (prepared?.kind === "ready") await prepared.settle("error", PROVIDER_NOT_SENT_ERROR_CODE);
+              throw new Error(RULE_FORWARD_LIMIT_REFUSAL);
+            }
             forwardReservationId = reservation.reservationId;
           }
           let dispatchedResult: ApprovedDispatchOutcome;
           try {
             dispatchedResult = await deps.runApprovedOperation(
               String(approval.operation),
-              original,
+              prepared?.kind === "ready" ? prepared.args : original,
               internalKey,
             );
           } catch (error) {
@@ -36504,6 +36619,9 @@ async function handleScheduledDispatch(
               await deps.settleRuleForward?.(String(row.workspace_id), "error", forwardReservationId);
             }
             throw error;
+          }
+          if (prepared?.kind === "ready") {
+            await prepared.settle(dispatchedResult.logStatus, dispatchedResult.logErrorCode);
           }
           if (ruleForward) {
             await deps.settleRuleForward?.(String(row.workspace_id), dispatchedResult.logStatus, forwardReservationId);
@@ -37246,11 +37364,19 @@ async function applyTriageAction(input: {
       // an approved forward is re-run through the ordinary tool path by the
       // scheduled dispatcher. Note what is NOT here: internalApprovalDispatch is
       // never set by the runner, so this cannot short-circuit its own gate.
+      //
+      // `original_ref` is the message's stable identity, encrypted with the rest
+      // of the payload: by the time a person approves, the provider id above may
+      // name nothing, or something else (original-locator.ts). The dispatcher
+      // takes it back off before the forward runs. A failed read leaves it out,
+      // and the forward can then only go from the id it was queued with.
+      const originalRef = await readOriginalRef(inboxRow, match.id, imapSession);
       const payload: Record<string, unknown> = {
         inbox_id: inboxRow.id,
         message_id: match.id,
         to: action.to,
         ...(action.note ? { body: action.note } : {}),
+        ...(originalRef ? { original_ref: originalRef } : {}),
       };
       const approval = await queueSendApproval(
         gatedInbox,
@@ -38493,6 +38619,227 @@ async function graphFindByInternetMessageId(
   if (!resp.ok) throw new Error(`Outlook folder search error ${resp.status}`);
   const body = (await resp.json()) as { value?: { id?: string }[] };
   return { searched: true, id: body.value?.[0]?.id ?? null };
+}
+
+/** One message's identity from the provider, or null when the id does not answer. */
+async function readOriginalFacts(
+  inbox: InboxRow,
+  session: ImapSession<ImapClient> | null,
+  messageId: string,
+): Promise<OriginalFacts | null> {
+  try {
+    const facts = await readReminderMessage({ inboxRow: inbox, imap: session }, messageId, new Date().toISOString());
+    return { rfc_message_id: facts.ref.rfc_message_id, from: facts.summary.from, subject: facts.summary.subject };
+  } catch (error) {
+    if (error instanceof Error && error.message === "message_not_found") return null;
+    throw error;
+  }
+}
+
+const ORIGINAL_SEARCH_MAX_FOLDERS = 100;
+/** More than one match is already a refusal, so a few hits answer the question. */
+const ORIGINAL_SEARCH_MAX_HITS = 5;
+
+/** Every copy of one Message-ID in an IMAP account, by folder. */
+async function imapSearchAllFolders(
+  session: ImapSession<ImapClient>,
+  rfcMessageId: string,
+): Promise<string[]> {
+  const client = await session.client();
+  const has = (box: ImapMailboxInfo, name: string) => box.flags.some((flag) => flag.toLowerCase() === name);
+  const boxes = (await client.listMailboxes()).filter((box) => !has(box, "\\noselect"));
+  // Where an All Mail folder exists (Gmail), the other folders are labels on the
+  // same message, and would read as duplicates of it. All Mail leaves out only
+  // Trash and Spam.
+  const targets = boxes.some((box) => has(box, "\\all"))
+    ? boxes.filter((box) => has(box, "\\all") || has(box, "\\trash") || has(box, "\\junk"))
+    : boxes;
+  if (targets.length > ORIGINAL_SEARCH_MAX_FOLDERS) throw new Error("original_search_too_many_folders");
+  const found: string[] = [];
+  for (const box of targets) {
+    const selected = await session.select(imapMailboxForServerFolder(box.name));
+    const uids = await selected.uidSearch(`HEADER Message-ID "${rfcMessageId}"`);
+    for (const uid of uids) found.push(encodeImapId(box.name, uid));
+  }
+  return found;
+}
+
+/** The provider ids of every message with this Message-ID. `id` is already clean. */
+async function providerIdsForMessageId(
+  inbox: InboxRow,
+  session: ImapSession<ImapClient> | null,
+  id: string,
+): Promise<string[]> {
+  if (inbox.provider === "gmail") {
+    const token = await withFreshGmailToken(inbox);
+    const params = new URLSearchParams({
+      q: `rfc822msgid:${id}`,
+      includeSpamTrash: "true",
+      maxResults: String(ORIGINAL_SEARCH_MAX_HITS),
+    });
+    const resp = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (!resp.ok) throw new Error(`Gmail messages.list error ${resp.status}`);
+    const body = (await resp.json()) as { messages?: { id: string }[] };
+    return (body.messages ?? []).map((message) => message.id);
+  }
+  if (inbox.provider === "outlook") {
+    const token = await withFreshOutlookToken(inbox);
+    const filter = `internetMessageId eq '<${id.replace(/'/g, "''")}>'`;
+    const resp = await graphFetch(
+      token,
+      `/me/messages?$filter=${encodeURIComponent(filter)}&$select=id&$top=${ORIGINAL_SEARCH_MAX_HITS}`,
+    );
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (!resp.ok) throw new Error(`Outlook message search error ${resp.status}`);
+    const body = (await resp.json()) as { value?: { id?: string }[] };
+    return (body.value ?? []).map((message) => message.id ?? "").filter(Boolean);
+  }
+  if (!session) throw new Error("imap_auth_failed");
+  return await imapSearchAllFolders(session, id);
+}
+
+/** Message-ID lookups through each provider, for original-locator.ts. */
+function originalLookupFor(inbox: InboxRow, session: ImapSession<ImapClient> | null): OriginalLookup {
+  return {
+    read: (messageId) => readOriginalFacts(inbox, session, messageId),
+    async search(rfcMessageId) {
+      const id = cleanRfcMessageId(rfcMessageId);
+      if (!id) return [];
+      const ids = await providerIdsForMessageId(inbox, session, id);
+      // Two or more is already a refusal, so their facts are not worth reading.
+      if (ids.length > 1) return ids.map((hit) => ({ id: hit, rfc_message_id: id, from: null, subject: null }));
+      const matches: OriginalMatch[] = [];
+      for (const hit of ids) {
+        const facts = await readOriginalFacts(inbox, session, hit);
+        if (facts) matches.push({ id: hit, ...facts });
+      }
+      return matches;
+    },
+  };
+}
+
+/**
+ * The stable identity of a message, for a rule forward's stored payload. Null when
+ * it cannot be read or has no usable Message-ID. Never throws: queueing a forward
+ * must not depend on it.
+ */
+async function readOriginalRef(
+  inbox: InboxRow,
+  messageId: string,
+  shared: ImapSession<ImapClient> | null | undefined,
+): Promise<OriginalRef | null> {
+  const session = shared ?? imapSessionFor(inbox);
+  try {
+    const facts = await readOriginalFacts(inbox, session, messageId);
+    const rfc = cleanRfcMessageId(facts?.rfc_message_id ?? null);
+    return rfc ? { rfc_message_id: rfc, from: facts?.from ?? null, subject: facts?.subject ?? null } : null;
+  } catch (error) {
+    console.warn("[triage] original_ref_read_failed", { inbox_id: inbox.id, error: providerErrorCode(error) });
+    return null;
+  } finally {
+    if (!shared) await session?.close();
+  }
+}
+
+/**
+ * Entry point: POST /approval-original
+ * Caller:      apps/web/app/api/approvals/[id]/original/route.ts (server side only)
+ * Auth:        Authorization: Bearer <service key>, as /triage-preview
+ *
+ * What the person is about to forward, read live from the mailbox: sender, date,
+ * a text preview, attachment names and sizes. Nothing here is stored or logged.
+ * It reads without marking anything read, and it finds a moved message the same
+ * way the dispatcher does, so the review shows what would be sent. The caller has
+ * already checked the signed-in person's membership and role.
+ */
+async function handleApprovalOriginal(req: Request): Promise<Response> {
+  const json = (body: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  const header = req.headers.get("authorization") ?? "";
+  const bearer = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
+  const authorized = await isServiceKeyForThisProject(bearer, {
+    ownKey: supabaseServiceKey,
+    supabaseUrl,
+    timingSafeEqual: timingSafeStringEqual,
+  });
+  if (!authorized) return json({ error: "unauthorized" }, 401);
+
+  const body = await req.json().catch(() => null) as Record<string, unknown> | null;
+  const approvalId = typeof body?.approval_id === "string" ? body.approval_id : "";
+  const workspaceId = typeof body?.workspace_id === "string" ? body.workspace_id : "";
+  if (!approvalId || !workspaceId) return json({ error: "invalid_body" }, 400);
+
+  const { data: approval } = await supabase
+    .from("send_approvals")
+    .select("id, operation, inbox_id, workspace_id, payload, payload_encrypted")
+    .eq("id", approvalId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (!approval || approval.operation !== "email_forward") return json({ status: "unavailable", reason: "not_forward" });
+
+  let stored: Record<string, unknown>;
+  try {
+    stored = await resolveScheduledPayload(approval);
+  } catch {
+    return json({ status: "unavailable", reason: "unreadable" });
+  }
+  const storedId = typeof stored.message_id === "string" ? stored.message_id : "";
+  if (!storedId) return json({ status: "unavailable", reason: "unreadable" });
+
+  const { data: inboxData } = await supabase
+    .from("inboxes")
+    .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
+    .eq("id", approval.inbox_id)
+    .eq("workspace_id", workspaceId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!inboxData || !inboxIsReachable(inboxData as unknown as InboxReachabilityRow)) {
+    return json({ status: "unavailable", reason: "mailbox" });
+  }
+  const inbox = inboxData as unknown as InboxRow;
+
+  const session = imapSessionFor(inbox);
+  try {
+    const location = await locateOriginal(
+      storedId,
+      parseOriginalRef(stored.original_ref),
+      originalLookupFor(inbox, session),
+    );
+    if (location.kind !== "found") {
+      return json({ status: "unavailable", reason: location.kind === "ambiguous" ? "ambiguous" : "not_found" });
+    }
+    // On the same connection: some hosts cap connections per account.
+    const message = session
+      ? await readImapMessage(inbox, location.id, false, false, false, ATTACHMENT_DATA_BUDGET, undefined, session)
+      : await readMessageForSummary(inbox, location.id);
+    return json({
+      status: "ok",
+      moved: location.moved,
+      from: { name: message.from?.name ?? null, email: message.from?.email ?? null },
+      date: message.date ?? null,
+      subject: message.subject ?? null,
+      preview: tidyPreview(message.body_text ?? ""),
+      attachments: (message.attachments ?? []).slice(0, 50).map((file) => ({
+        filename: file.filename,
+        mime_type: file.mime_type,
+        size_bytes: file.size_bytes,
+      })),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "message_not_found") {
+      return json({ status: "unavailable", reason: "not_found" });
+    }
+    console.warn("[approval-original] read_failed", { inbox_id: inbox.id, error: providerErrorCode(error) });
+    return json({ status: "unavailable", reason: "mailbox" });
+  } finally {
+    await session?.close();
+  }
 }
 
 /**
@@ -39809,6 +40156,18 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       );
     }
     return await handleTriagePreview(req);
+  }
+
+  // ── Live read of a held forward's original ────────────────────────────────
+  // Same caller and same guard as /triage-preview. Read-only.
+  if (reqUrl.pathname.endsWith("/approval-original")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed - use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return await handleApprovalOriginal(req);
   }
 
   // ── HTTP method guard ─────────────────────────────────────────────────────

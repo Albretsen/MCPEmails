@@ -45,7 +45,7 @@ function review(overrides = {}) {
     decided_at: null,
     decided_via: null,
     decided_by_label: null,
-    expires_at: '2026-10-17T10:00:00.000Z',
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     send_at: null,
     identity: { inbox_id: 'inbox-1', email_address: 'me@example.com', display_name: null, provider: 'gmail', service: null },
     recipients: { to: ['colleague@example.com'], cc: [], bcc: ['drop@evil.example'], bcc_count: 1 },
@@ -301,4 +301,240 @@ test('review page: a Reply-To is shown', async (t) => {
   t.after(() => view.unmount());
   assert.ok(view.container.textContent.includes(dashboard.approvals.review.replyTo));
   assert.match(view.container.textContent, /desk@example\.com/);
+});
+
+// ---------------------------------------------------------------------------
+// Rule forwards: what the queue says, deadlines, delivery, Forward again and
+// Approve all.
+// ---------------------------------------------------------------------------
+
+const ADDRESS = 'ap@example.com';
+
+function ruleRow(id, overrides = {}) {
+  return {
+    id,
+    kind: 'rule_forward',
+    rule_id: 'rule-1',
+    rule_name: 'Invoices',
+    rule_deleted: false,
+    operation: 'email_forward',
+    status: 'pending',
+    revision: 2,
+    created_at: '2026-10-30T10:00:00.000Z',
+    expires_at: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000 + 60_000).toISOString(),
+    inboxes: { email_address: 'me@example.com', display_name: null },
+    summary: { to: [ADDRESS], subject: `Invoice ${id}` },
+    ...overrides,
+  };
+}
+
+function panelFetch({ approvals = [], decided = [], routes = {} }) {
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push({ url: String(url), init });
+    const route = routes[String(url)];
+    if (route) return route(init);
+    if (String(url) === '/api/approvals') {
+      return new Response(JSON.stringify({ approvals, decided }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ status: 'unavailable', reason: 'mailbox' }), { status: 200 });
+  };
+  return calls;
+}
+
+function mountPanel(role = 'owner') {
+  return mount(
+    createElement(
+      NextIntlClientProvider,
+      { locale: 'en', messages: { dashboard, dashboardChrome } },
+      createElement(ToastProvider, null, createElement(ApprovalsPanel, { userRole: role })),
+    ),
+  );
+}
+
+const mountReview = (model) => mount(page({ review: model, csrfToken: 'tok-1' }));
+const buttonNamed = (name) => [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === name);
+
+test('queue: a rule forward shows its rule, Forward, the address and the time left', async () => {
+  panelFetch({ approvals: [ruleRow('a')] });
+  const root = await mountPanel();
+  await waitFor(() => document.body.textContent.includes('Invoices'));
+  const text = document.body.textContent;
+  assert.equal(text.includes('Forward'), true);
+  assert.equal(text.includes(ADDRESS), true);
+  assert.equal(text.includes('6 days left'), true);
+  root.unmount();
+});
+
+test('queue: an expired row is not offered, and is listed as Expired with nobody deciding', async () => {
+  panelFetch({
+    approvals: [],
+    decided: [ruleRow('b', { status: 'expired', decider: 'none', decided_via: null, can_forward_again: true })],
+  });
+  const root = await mountPanel();
+  await waitFor(() => document.body.textContent.includes('Recently decided'));
+  const text = document.body.textContent;
+  assert.equal(text.includes('Expired'), true);
+  assert.equal(text.includes('Nobody decided'), true);
+  assert.equal(text.includes('Decided in the dashboard'), false);
+  assert.equal(buttonNamed('Review & approve') === undefined, true);
+  root.unmount();
+});
+
+test('queue: a member sees no Forward again and no Approve all', async () => {
+  panelFetch({
+    approvals: [ruleRow('a'), ruleRow('c')],
+    decided: [ruleRow('b', { status: 'expired', decider: 'none', can_forward_again: true })],
+  });
+  const root = await mountPanel('member');
+  await waitFor(() => document.body.textContent.includes('Recently decided'));
+  assert.equal(buttonNamed('Forward again') === undefined, true);
+  assert.equal(buttonNamed('Approve all from this rule') === undefined, true);
+  root.unmount();
+});
+
+test('decided list: an approved send shows Sent or Failed with a plain reason, never the raw error', async () => {
+  panelFetch({
+    decided: [
+      ruleRow('s', { status: 'approved', decider: 'person', decided_via: 'dashboard', delivery: { state: 'sent', reason: null, at: null } }),
+      ruleRow('f', { status: 'approved', decider: 'person', decided_via: 'dashboard', delivery: { state: 'failed', reason: 'original_ambiguous', at: null } }),
+    ],
+  });
+  const root = await mountPanel();
+  await waitFor(() => document.body.textContent.includes('Recently decided'));
+  const text = document.body.textContent;
+  assert.equal(text.includes('Sent'), true);
+  assert.equal(text.includes('Failed'), true);
+  assert.equal(text.includes('same Message-ID'), true);
+  root.unmount();
+});
+
+test('decided list: an automatic decision does not read as a person in the dashboard', async () => {
+  panelFetch({
+    decided: [ruleRow('z', { status: 'approved', decider: 'automatic', decided_via: 'auto_rule', delivery: null })],
+  });
+  const root = await mountPanel();
+  await waitFor(() => document.body.textContent.includes('Recently decided'));
+  assert.equal(document.body.textContent.includes('Decided automatically'), true);
+  root.unmount();
+});
+
+test('Forward again posts an empty body: no address can be supplied', async () => {
+  const calls = panelFetch({
+    decided: [ruleRow('b', { status: 'expired', decider: 'none', can_forward_again: true })],
+    routes: {
+      '/api/approvals/b/forward-again': async () => new Response(JSON.stringify({ success: true, id: 'n' }), { status: 201 }),
+    },
+  });
+  const root = await mountPanel();
+  await waitFor(() => buttonNamed('Forward again'));
+  await flush(() => buttonNamed('Forward again').click());
+  assert.equal(document.body.textContent.includes(ADDRESS), true, 'the confirmation names the address');
+  await flush(() => buttonNamed('Create request').click());
+  await waitFor(() => calls.some((call) => call.url === '/api/approvals/b/forward-again'));
+  const post = calls.find((call) => call.url === '/api/approvals/b/forward-again');
+  assert.equal(post.init.body, '{}');
+  root.unmount();
+});
+
+test('Approve all shows the count and address, sends the rows seen, and reports each row', async () => {
+  const calls = panelFetch({
+    approvals: [ruleRow('a'), ruleRow('c')],
+    routes: {
+      '/api/approvals/approve-rule': async () =>
+        new Response(JSON.stringify({ outcomes: [{ id: 'a', outcome: 'approved' }, { id: 'c', outcome: 'expired' }] }), { status: 200 }),
+    },
+  });
+  const root = await mountPanel();
+  await waitFor(() => buttonNamed('Approve all from this rule'));
+  await flush(() => buttonNamed('Approve all from this rule').click());
+  assert.equal(document.body.textContent.includes('2 forwards from the rule "Invoices" will go to ap@example.com.'), true);
+  await flush(() => buttonNamed('Approve 2').click());
+  await waitFor(() => document.body.textContent.includes('1 of 2 approved'));
+  const post = calls.find((call) => call.url === '/api/approvals/approve-rule');
+  assert.deepEqual(JSON.parse(post.init.body), {
+    rule_id: 'rule-1',
+    address: ADDRESS,
+    items: [{ id: 'a', revision: 2 }, { id: 'c', revision: 2 }],
+  });
+  assert.equal(document.body.textContent.includes('Expired, skipped'), true);
+  root.unmount();
+});
+
+test('Approve all is not offered for rows going to two addresses', async () => {
+  panelFetch({ approvals: [ruleRow('a'), ruleRow('c', { summary: { to: ['other@example.com'], subject: 'x' } })] });
+  const root = await mountPanel();
+  await waitFor(() => document.body.textContent.includes('more than one address'));
+  assert.equal(buttonNamed('Approve all from this rule') === undefined, true);
+  root.unmount();
+});
+
+test('the dialog closes on an expired answer, with a message, and offers no retry', async () => {
+  panelFetch({
+    approvals: [ruleRow('a')],
+    routes: {
+      '/api/approvals/a': async () => new Response(JSON.stringify({ revision: 2, to: [ADDRESS], subject: 'x', approvable: true }), { status: 200 }),
+    },
+  });
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    if (String(url) === '/api/approvals' && init.method === 'PATCH') {
+      return new Response(JSON.stringify({ code: 'expired', error: 'x' }), { status: 409 });
+    }
+    return realFetch(url, init);
+  };
+  const root = await mountPanel();
+  await waitFor(() => buttonNamed('Review & approve'));
+  await flush(() => buttonNamed('Review & approve').click());
+  await waitFor(() => buttonNamed('Approve & send') && !buttonNamed('Approve & send').disabled);
+  await flush(() => buttonNamed('Approve & send').click());
+  await waitFor(() => document.body.textContent.includes('This request expired'));
+  assert.equal(document.querySelector('[role="dialog"]') === null, true);
+  root.unmount();
+});
+
+test('review page: the original is read live, and a failed read still allows Reject', async () => {
+  const calls = panelFetch({});
+  const root = await mountReview(
+    review({ kind: 'rule_forward', rule_name: 'Invoices', operation: 'email_forward', forward_carries_original: true, body: { text: null, html: null, truncated: false, unavailable: 'absent' }, role: 'owner' }),
+  );
+  await waitFor(() => document.body.textContent.includes('The mailbox could not be read'));
+  assert.equal(calls.some((call) => call.url === `/api/approvals/${ID}/original`), true);
+  assert.equal(document.body.textContent.includes('This request has no message text'), false);
+  assert.equal(document.body.textContent.includes('The rule "Invoices" prepared this forward'), true);
+  assert.equal(buttonNamed('Reject').disabled, false);
+  root.unmount();
+});
+
+test('review page: names, date, preview and files of the original are shown as text', async () => {
+  panelFetch({
+    routes: {
+      [`/api/approvals/${ID}/original`]: async () => new Response(JSON.stringify({
+        status: 'ok', moved: true, from_name: 'Billing', from_email: 'b@example.com', date: '2026-10-30T10:00:00.000Z',
+        preview: '<img src=x onerror=alert(1)>', attachments: [{ filename: 'invoice.pdf', size_bytes: 2048 }],
+      }), { status: 200 }),
+    },
+  });
+  const root = await mountReview(review({ kind: 'rule_forward', rule_name: 'Invoices', operation: 'email_forward', role: 'owner' }));
+  await waitFor(() => document.body.textContent.includes('invoice.pdf'));
+  assert.equal(document.body.textContent.includes('b@example.com'), true);
+  assert.equal(document.body.textContent.includes('2 KB'), true);
+  assert.equal(document.body.textContent.includes('<img src=x'), true, 'markup stays text');
+  assert.equal(document.querySelector('.original-message img') === null, true);
+  assert.equal(document.body.textContent.includes('has moved'), true);
+  root.unmount();
+});
+
+test('review page: an expired rule forward does not say someone decided, and points at Forward again', async () => {
+  panelFetch({});
+  const root = await mountReview(
+    review({ kind: 'rule_forward', rule_name: 'Invoices', operation: 'email_forward', state: 'expired', status: 'expired', decided_at: '2026-10-20T10:00:00.000Z', decided_via: null, role: 'owner' }),
+  );
+  await flush();
+  const text = document.body.textContent;
+  assert.equal(text.includes('This request expired'), true);
+  assert.equal(text.includes('forward it again'), true);
+  assert.equal(text.includes('Ask your assistant'), false);
+  assert.equal(text.includes('Decided in'), false);
+  root.unmount();
 });

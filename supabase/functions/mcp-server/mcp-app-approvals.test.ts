@@ -23,6 +23,9 @@ import {
   APPROVAL_TOOL_DEFINITIONS,
   APPROVAL_TOOL_NAMES,
   APPROVAL_TTL_MS,
+  approvalTtlMs,
+  isRuleForwardApproval,
+  RULE_FORWARD_APPROVAL_TTL_MS,
   approvalLapsedBeforeDecision,
   approvalReviewUrl,
   type ApprovalCaller,
@@ -533,6 +536,23 @@ Deno.test("expiry helpers key the dispatcher gate on the decision, not the deliv
     "a decision after the window does not resurrect it",
   );
   assertEquals(APPROVAL_TTL_MS, 24 * 60 * 60 * 1000, "24h TTL");
+});
+
+Deno.test("rule forwards wait 7 days; an AI send keeps 24 hours", () => {
+  const rule = { id: "r", name: "Invoices" };
+  assertEquals(RULE_FORWARD_APPROVAL_TTL_MS, 7 * 24 * 60 * 60 * 1000, "window");
+  assertEquals(approvalTtlMs(rule), RULE_FORWARD_APPROVAL_TTL_MS, "window");
+  assertEquals(approvalTtlMs(undefined), APPROVAL_TTL_MS, "window");
+  // The web's Forward again uses the same window, by its own constant.
+  const web = Deno.readTextFileSync(new URL("../../../apps/web/src/lib/approvals/forward-again.ts", import.meta.url));
+  assertEquals(web.includes("RULE_FORWARD_APPROVAL_TTL_MS = 7 * 24 * 60 * 60 * 1000"), true, "window");
+});
+
+Deno.test("a rule forward is known by either link column, and only for a forward", () => {
+  assertEquals(isRuleForwardApproval({ operation: "email_forward", triage_rule_id: "r" }), true, "window");
+  assertEquals(isRuleForwardApproval({ operation: "email_forward", triage_rule_id: null, triage_rule_name: "Old" }), true, "window");
+  assertEquals(isRuleForwardApproval({ operation: "email_forward", triage_rule_id: null, triage_rule_name: null }), false, "window");
+  assertEquals(isRuleForwardApproval({ operation: "email_send", triage_rule_id: "r" }), false, "window");
 });
 
 // ---------------------------------------------------------------------------

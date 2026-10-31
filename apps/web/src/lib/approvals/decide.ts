@@ -101,6 +101,13 @@ export interface DecideArgs {
    * it. Required to approve; null approves nothing.
    */
   revision: number | null;
+  /**
+   * When an approved send should go, where that is not "now" or the time on the
+   * approval. "Approve all" paces its rows with this (approve-all.ts).
+   */
+  dispatchAt?: string;
+  /** False when the caller asks the dispatcher to run itself, once, for many rows. */
+  kick?: boolean;
 }
 
 /**
@@ -135,6 +142,8 @@ export async function decideApproval({
   decision,
   via,
   revision,
+  dispatchAt,
+  kick = true,
 }: DecideArgs): Promise<DecisionOutcome> {
   const { data: approval, error } = await db
     .from('send_approvals')
@@ -157,14 +166,15 @@ export async function decideApproval({
 
   // An expired request must never be sendable, even by an authorised human
   // arriving from a stale review card. Retire the row so the next visit reads
-  // a terminal state rather than a live one.
+  // a terminal state rather than a live one. Dated at its own deadline, with no
+  // `decided_via`, because nobody decided it: pressing a button afterwards changed
+  // nothing. (The MCP tools and retention write it the same way.)
   if (isExpired(approval)) {
-    await runTolerantly(
-      { status: 'expired', decided_at: now, decided_via: via },
-      PENDING_APPROVAL_COLUMNS,
-      (patch) =>
-        db.from('send_approvals').update(patch).eq('id', approvalId).eq('status', 'pending'),
-    );
+    await db
+      .from('send_approvals')
+      .update({ status: 'expired', decided_at: approval.expires_at })
+      .eq('id', approvalId)
+      .eq('status', 'pending');
     return {
       ok: false,
       code: 'expired',
@@ -248,7 +258,7 @@ export async function decideApproval({
       inbox_id: approval.inbox_id,
       payload: { approval_id: approval.id },
       payload_encrypted: false,
-      send_at: approval.send_at ?? now,
+      send_at: approval.send_at ?? dispatchAt ?? now,
       status: 'pending',
     });
 
@@ -273,7 +283,7 @@ export async function decideApproval({
     // cron calls (pg_net POST to the mcp-server dispatcher, returns at once),
     // and the dispatcher's pending -> sending claim makes racing the cron safe.
     // A failure here is logged only: the row is queued and the cron sends it.
-    if (!approval.send_at || Date.parse(approval.send_at) <= Date.now()) {
+    if (kick && (!approval.send_at || Date.parse(approval.send_at) <= Date.now())) {
       await kickDispatch(db);
     }
 
