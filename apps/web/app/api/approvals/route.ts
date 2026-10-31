@@ -32,8 +32,8 @@ export async function GET() {
   // Read at one moment, so a row is on one side of its deadline or the other.
   const nowIso = new Date().toISOString();
   const { data, error } = await selectTolerantly<unknown[]>(
-    ['id', 'inbox_id', 'operation', 'summary', 'send_at', 'status', 'created_at', 'expires_at', 'revision', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'],
-    APPROVAL_RULE_LINK_COLUMNS,
+    ['id', 'inbox_id', 'operation', 'summary', 'send_at', 'status', 'created_at', 'expires_at', 'revision', 'no_approval_wait_reason', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'],
+    ['no_approval_wait_reason', ...APPROVAL_RULE_LINK_COLUMNS],
     (columns) => c.db.from('send_approvals')
       .select(columns)
       .eq('workspace_id', c.workspaceId).eq('status', 'pending')
@@ -56,10 +56,10 @@ export async function GET() {
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure
   // here is not fatal — the pending queue is the load-bearing part of the view.
-  const decidedColumns = ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'expires_at', 'decided_at', 'decided_by', 'decided_via', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'];
+  const decidedColumns = ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'expires_at', 'decided_at', 'decided_by', 'decided_via', 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'];
   const { data: decided } = await selectTolerantly<unknown[]>(
     decidedColumns,
-    [...PENDING_APPROVAL_COLUMNS, ...APPROVAL_RULE_LINK_COLUMNS],
+    [...PENDING_APPROVAL_COLUMNS, 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS],
     (columns) => c.db.from('send_approvals')
       .select(columns)
       .eq('workspace_id', c.workspaceId).neq('status', 'pending')
@@ -69,7 +69,7 @@ export async function GET() {
   // Nobody decided these, and the list says so.
   const { data: lapsed } = await selectTolerantly<unknown[]>(
     decidedColumns,
-    [...PENDING_APPROVAL_COLUMNS, ...APPROVAL_RULE_LINK_COLUMNS],
+    [...PENDING_APPROVAL_COLUMNS, 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS],
     (columns) => c.db.from('send_approvals')
       .select(columns)
       .eq('workspace_id', c.workspaceId).eq('status', 'pending')

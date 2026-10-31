@@ -43,10 +43,10 @@ export const APPROVAL_NOTICES_CATEGORY = 'approval_notices' as const;
  */
 export const NOTICE_LOOP_GUARD_HEADER = 'X-MCPEmails-Rule-Forward';
 
-export type NoticeKind = 'queued' | 'reminder';
+export type NoticeKind = 'queued' | 'reminder' | 'receipt' | 'coverage_paused';
 
 export interface NoticeFacts {
-  kind: NoticeKind;
+  kind: 'queued' | 'reminder';
   ruleId: string;
   ruleName: string;
   count: number;
@@ -142,6 +142,72 @@ export function composeForwardNotice(facts: NoticeFacts, unsubscribeToken: strin
   };
 }
 
+export function runLogLink(ruleId: string): string {
+  return `${appUrl()}/dashboard/automations?runs=${encodeURIComponent(ruleId)}`;
+}
+
+export interface ReceiptFacts {
+  ruleId: string;
+  ruleName: string;
+  noApprovalRuleName: string | null;
+  count: number;
+  addresses: string[];
+}
+
+/**
+ * What a no-approval rule sent. No rule name in the subject, for the reason above.
+ * The opt-out line says what remains when these stop: the run log.
+ */
+export function composeReceipt(facts: ReceiptFacts, unsubscribeToken: string): ComposedNotice {
+  const rule = cleanRuleName(facts.ruleName);
+  const link = runLogLink(facts.ruleId);
+  const unsubscribe = unsubscribeUrl(unsubscribeToken, APPROVAL_NOTICES_CATEGORY);
+  const one = facts.count === 1;
+  const forwards = one ? '1 forward' : `${facts.count} forwards`;
+  const subject = `${forwards} sent without approval`;
+  const lead = `Your automation "${rule}" sent ${forwards} to ${addressPhrase(facts.addresses)}.`;
+  const why = facts.noApprovalRuleName
+    ? `The no-approval rule "${cleanRuleName(facts.noApprovalRuleName)}" allowed ${one ? 'it' : 'them'}, so nobody reviewed ${one ? 'it' : 'them'} first.`
+    : `A no-approval rule allowed ${one ? 'it' : 'them'}, so nobody reviewed ${one ? 'it' : 'them'} first.`;
+  const footer = 'You get this because you are an owner or admin of this workspace. Replies reach support.';
+  const stop = 'If you stop these emails, the run log on the Automations page is the record of what was sent.';
+  return {
+    subject,
+    text: [lead, '', why, '', 'See the run log here:', link, '', footer, stop, `Stop these emails: ${unsubscribe}`, '', 'MCPEmails'].join('\n'),
+    html: shell({
+      title: subject,
+      html: p(lead) + p(why),
+      ctaUrl: link.replace(/&/g, '&amp;'),
+      ctaLabel: 'See the run log',
+      footerNote: `${footer} ${stop} <a href="${unsubscribe.replace(/&/g, '&amp;')}" style="color:#64748b;text-decoration:underline;">Stop these emails</a>.`,
+    }),
+    unsubscribe,
+  };
+}
+
+/** Repeated send failures stopped a no-approval rule. */
+export function composeCoveragePaused(ruleName: string, unsubscribeToken: string): ComposedNotice {
+  const rule = cleanRuleName(ruleName);
+  const link = `${appUrl()}/dashboard/automations`;
+  const unsubscribe = unsubscribeUrl(unsubscribeToken, APPROVAL_NOTICES_CATEGORY);
+  const subject = 'A no-approval rule has been paused';
+  const lead = `Several forwards in a row failed to send under the no-approval rule "${rule}", so MCPEmails paused it.`;
+  const next = 'New forwards it covered now wait for approval, so nothing is lost. To resume it, switch it off and on again on the Automations page.';
+  const footer = 'You get this because you are an owner or admin of this workspace. Replies reach support.';
+  return {
+    subject,
+    text: [lead, '', next, '', link, '', footer, `Stop these emails: ${unsubscribe}`, '', 'MCPEmails'].join('\n'),
+    html: shell({
+      title: subject,
+      html: p(lead) + p(next),
+      ctaUrl: link,
+      ctaLabel: 'Open Automations',
+      footerNote: `${footer} <a href="${unsubscribe.replace(/&/g, '&amp;')}" style="color:#64748b;text-decoration:underline;">Stop these emails</a>.`,
+    }),
+    unsubscribe,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // The dispatcher
 // ---------------------------------------------------------------------------
@@ -149,7 +215,8 @@ export function composeForwardNotice(facts: NoticeFacts, unsubscribeToken: strin
 export interface ClaimedNotice {
   id: string;
   workspace_id: string;
-  triage_rule_id: string;
+  triage_rule_id: string | null;
+  no_approval_rule_id?: string | null;
   kind: NoticeKind;
   attempts: number;
 }
@@ -176,6 +243,9 @@ export interface NoticeStore {
   claim(limit: number): Promise<ClaimedNotice[]>;
   ruleName(ruleId: string): Promise<string | null>;
   waiting(ruleId: string): Promise<WaitingForwards | null>;
+  /** The forwards one receipt counts. */
+  receipt?(noticeId: string): Promise<{ count: number; addresses: string[]; noApprovalRuleName: string | null } | null>;
+  noApprovalRuleName?(ruleId: string): Promise<string | null>;
   /** Owners and admins of a live workspace who have not opted out. */
   recipients(workspaceId: string): Promise<NoticeRecipient[]>;
   finish(id: string, outcome: NoticeFinish): Promise<void>;
@@ -203,15 +273,58 @@ export interface DispatchSummary {
   failed: number;
 }
 
-async function dispatchOne(notice: ClaimedNotice, store: NoticeStore, send: NoticeSender): Promise<keyof Omit<DispatchSummary, 'claimed'>> {
-  const waiting = await store.waiting(notice.triage_rule_id);
-  if (!waiting || waiting.count === 0) {
-    await store.finish(notice.id, { status: 'cancelled', error: 'nothing_waiting' });
-    return 'cancelled';
+/** What this notice says, read live, or why there is nothing to say. */
+async function noticeContent(
+  notice: ClaimedNotice,
+  store: NoticeStore,
+): Promise<
+  | { cancel: string }
+  | { compose: (unsubscribeToken: string) => ComposedNotice; count: number }
+> {
+  if (notice.kind === 'coverage_paused') {
+    const name = notice.no_approval_rule_id && store.noApprovalRuleName
+      ? await store.noApprovalRuleName(notice.no_approval_rule_id)
+      : null;
+    if (name === null) return { cancel: 'rule_gone' };
+    return { compose: (token) => composeCoveragePaused(name, token), count: 0 };
   }
-  const ruleName = await store.ruleName(notice.triage_rule_id);
-  if (ruleName === null) {
-    await store.finish(notice.id, { status: 'cancelled', error: 'rule_gone' });
+  const ruleId = notice.triage_rule_id;
+  if (!ruleId) return { cancel: 'rule_gone' };
+  if (notice.kind === 'receipt') {
+    const receipt = store.receipt ? await store.receipt(notice.id) : null;
+    if (!receipt || receipt.count === 0) return { cancel: 'nothing_sent' };
+    const ruleName = await store.ruleName(ruleId);
+    if (ruleName === null) return { cancel: 'rule_gone' };
+    return {
+      compose: (token) => composeReceipt({
+        ruleId,
+        ruleName,
+        noApprovalRuleName: receipt.noApprovalRuleName,
+        count: receipt.count,
+        addresses: receipt.addresses,
+      }, token),
+      count: receipt.count,
+    };
+  }
+  const waiting = await store.waiting(ruleId);
+  if (!waiting || waiting.count === 0) return { cancel: 'nothing_waiting' };
+  const ruleName = await store.ruleName(ruleId);
+  if (ruleName === null) return { cancel: 'rule_gone' };
+  const facts: NoticeFacts = {
+    kind: notice.kind,
+    ruleId,
+    ruleName,
+    count: waiting.count,
+    addresses: waiting.addresses,
+    deadline: waiting.deadline,
+  };
+  return { compose: (token) => composeForwardNotice(facts, token), count: waiting.count };
+}
+
+async function dispatchOne(notice: ClaimedNotice, store: NoticeStore, send: NoticeSender): Promise<keyof Omit<DispatchSummary, 'claimed'>> {
+  const content = await noticeContent(notice, store);
+  if ('cancel' in content) {
+    await store.finish(notice.id, { status: 'cancelled', error: content.cancel });
     return 'cancelled';
   }
   const recipients = await store.recipients(notice.workspace_id);
@@ -220,21 +333,12 @@ async function dispatchOne(notice: ClaimedNotice, store: NoticeStore, send: Noti
     return 'cancelled';
   }
 
-  const facts: NoticeFacts = {
-    kind: notice.kind,
-    ruleId: notice.triage_rule_id,
-    ruleName,
-    count: waiting.count,
-    addresses: waiting.addresses,
-    deadline: waiting.deadline,
-  };
-
   let delivered = 0;
   let skipped = 0;
   let failedCount = 0;
   let lastReason = '';
   for (const recipient of recipients) {
-    const composed = composeForwardNotice(facts, recipient.unsubscribeToken);
+    const composed = content.compose(recipient.unsubscribeToken);
     const result = await send({
       to: recipient.email,
       subject: composed.subject,
@@ -264,8 +368,9 @@ async function dispatchOne(notice: ClaimedNotice, store: NoticeStore, send: Noti
     notice_id: notice.id,
     workspace_id: notice.workspace_id,
     rule_id: notice.triage_rule_id,
+    no_approval_rule_id: notice.no_approval_rule_id ?? null,
     kind: notice.kind,
-    waiting: waiting.count,
+    waiting: content.count,
     recipients: recipients.length,
     delivered,
     skipped,

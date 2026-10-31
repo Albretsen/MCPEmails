@@ -142,7 +142,9 @@ export function automationSentence(rule: Record<string, unknown>): string {
       break;
     case "forward": {
       const to = (Array.isArray(a.to) ? a.to : []).map(str).filter(Boolean);
-      what = `Forward ${mail} to ${to.join(", ") || "a recipient"}, each one held for approval`;
+      what = `Forward ${mail} to ${to.join(", ") || "a recipient"}, ${
+        rule.runs_without_approval === true ? "without waiting for approval" : "each one held for approval"
+      }`;
       break;
     }
     case "draft_reply":
@@ -164,7 +166,10 @@ function noteFor(rule: Record<string, unknown>, approvalsUrl?: string): string |
   const reason = str(rule.disabled_reason);
   if (rule.enabled !== true && reason && reason !== "Disabled by request.") return `Turned off: ${reason}`;
   const action = rule.action as { type?: unknown } | null | undefined;
-  return action?.type === "forward" ? forwardApprovalWhere(approvalsUrl) : null;
+  if (action?.type !== "forward") return null;
+  return rule.runs_without_approval === true
+    ? "A no-approval rule an owner or admin set in the dashboard covers these addresses."
+    : forwardApprovalWhere(approvalsUrl);
 }
 
 interface CardMatch {

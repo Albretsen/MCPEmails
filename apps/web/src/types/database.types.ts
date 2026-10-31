@@ -2360,9 +2360,10 @@ export type Database = {
           error: string | null
           id: string
           kind: string
+          no_approval_rule_id: string | null
           sent_at: string | null
           status: string
-          triage_rule_id: string
+          triage_rule_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -2373,9 +2374,10 @@ export type Database = {
           error?: string | null
           id?: string
           kind: string
+          no_approval_rule_id?: string | null
           sent_at?: string | null
           status?: string
-          triage_rule_id: string
+          triage_rule_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -2386,9 +2388,10 @@ export type Database = {
           error?: string | null
           id?: string
           kind?: string
+          no_approval_rule_id?: string | null
           sent_at?: string | null
           status?: string
-          triage_rule_id?: string
+          triage_rule_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -3289,6 +3292,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      no_approval_rule_automations: {
+        Row: {
+          confirmed_at: string
+          confirmed_by: string | null
+          fingerprint: string
+          no_approval_rule_id: string
+          triage_rule_id: string
+          workspace_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          fingerprint: string
+          no_approval_rule_id: string
+          triage_rule_id: string
+          workspace_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          fingerprint?: string
+          no_approval_rule_id?: string
+          triage_rule_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      no_approval_rules: {
+        Row: {
+          consecutive_failures: number
+          created_at: string
+          created_by: string | null
+          daily_limit: number
+          enabled: boolean
+          enabled_at: string | null
+          id: string
+          inbox_ids: string[] | null
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          recipients: string[]
+          scope: string
+          time_zone: string
+          updated_at: string
+          updated_by: string | null
+          verified_senders_only: boolean
+          workspace_id: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          enabled?: boolean
+          enabled_at?: string | null
+          id?: string
+          inbox_ids?: string[] | null
+          name: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          recipients: string[]
+          scope?: string
+          time_zone?: string
+          updated_at?: string
+          updated_by?: string | null
+          verified_senders_only?: boolean
+          workspace_id: string
+        }
+        Update: {
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          enabled?: boolean
+          enabled_at?: string | null
+          id?: string
+          inbox_ids?: string[] | null
+          name?: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          recipients?: string[]
+          scope?: string
+          time_zone?: string
+          updated_at?: string
+          updated_by?: string | null
+          verified_senders_only?: boolean
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      no_approval_usage: {
+        Row: { day: string; no_approval_rule_id: string; used: number }
+        Insert: { day: string; no_approval_rule_id: string; used?: number }
+        Update: { day?: string; no_approval_rule_id?: string; used?: number }
+        Relationships: []
+      }
+      no_approval_workspace_state: {
+        Row: { paused_at: string | null; paused_by: string | null; updated_at: string; workspace_id: string }
+        Insert: { paused_at?: string | null; paused_by?: string | null; updated_at?: string; workspace_id: string }
+        Update: { paused_at?: string | null; paused_by?: string | null; updated_at?: string; workspace_id?: string }
+        Relationships: []
       }
       oauth_auth_codes: {
         Row: {
@@ -4381,9 +4486,14 @@ export type Database = {
           inbox_id: string
           operation: string
           payload: Json
+          no_approval_rule_id: string | null
+          no_approval_rule_name: string | null
+          no_approval_usage: Json | null
+          no_approval_wait_reason: string | null
           payload_encrypted: boolean
           queued_notice_at: string | null
           reforward_of: string | null
+          receipt_notice_id: string | null
           reminder_notice_at: string | null
           revision: number
           send_at: string | null
@@ -4407,9 +4517,14 @@ export type Database = {
           inbox_id: string
           operation: string
           payload: Json
+          no_approval_rule_id?: string | null
+          no_approval_rule_name?: string | null
+          no_approval_usage?: Json | null
+          no_approval_wait_reason?: string | null
           payload_encrypted?: boolean
           queued_notice_at?: string | null
           reforward_of?: string | null
+          receipt_notice_id?: string | null
           reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
@@ -4433,9 +4548,14 @@ export type Database = {
           inbox_id?: string
           operation?: string
           payload?: Json
+          no_approval_rule_id?: string | null
+          no_approval_rule_name?: string | null
+          no_approval_usage?: Json | null
+          no_approval_wait_reason?: string | null
           payload_encrypted?: boolean
           queued_notice_at?: string | null
           reforward_of?: string | null
+          receipt_notice_id?: string | null
           reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
@@ -6466,9 +6586,10 @@ export type Database = {
           error: string | null
           id: string
           kind: string
+          no_approval_rule_id: string | null
           sent_at: string | null
           status: string
-          triage_rule_id: string
+          triage_rule_id: string | null
           workspace_id: string
         }[]
         SetofOptions: {
@@ -7417,6 +7538,83 @@ export type Database = {
       }
       my_workspace_ids: { Args: never; Returns: string[] }
       next_support_ticket_ref: { Args: never; Returns: string }
+      no_approval_auto_decide: {
+        Args: {
+          p_approval_id: string
+          p_message_date: string
+          p_recipients: string[]
+          p_revision: number
+          p_sender_verdict: string
+        }
+        Returns: Json
+      }
+      no_approval_evaluate: {
+        Args: {
+          p_check_limit?: boolean
+          p_message_date?: string
+          p_recipients: string[]
+          p_sender_verdict?: string
+          p_triage_rule_id: string
+        }
+        Returns: Json
+      }
+      no_approval_note_send_result: {
+        Args: { p_approval_id: string; p_ok: boolean }
+        Returns: undefined
+      }
+      no_approval_pause_all: {
+        Args: { p_paused: boolean; p_workspace_id: string }
+        Returns: boolean
+      }
+      no_approval_recheck: {
+        Args: { p_approval_id: string; p_recipients: string[] }
+        Returns: Json
+      }
+      no_approval_recipients_valid: {
+        Args: { p_recipients: string[] }
+        Returns: boolean
+      }
+      no_approval_return_to_waiting: {
+        Args: { p_approval_id: string; p_reason: string; p_scheduled_send_id: string }
+        Returns: boolean
+      }
+      no_approval_rule_confirm: {
+        Args: { p_rule_id: string; p_triage_rule_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      no_approval_rule_delete: {
+        Args: { p_rule_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      no_approval_rule_save: {
+        Args: {
+          p_automation_ids: string[]
+          p_daily_limit: number
+          p_enabled: boolean
+          p_inbox_ids: string[]
+          p_name: string
+          p_recipients: string[]
+          p_rule_id: string
+          p_scope: string
+          p_time_zone: string
+          p_verified_senders_only: boolean
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      no_approval_rules_overview: {
+        Args: { p_workspace_id: string }
+        Returns: Json
+      }
+      no_approval_workspace_coverage: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          reason: string
+          rule_names: string[]
+          runs_without_approval: boolean
+          triage_rule_id: string
+        }[]
+      }
       onboarding_convert_on: {
         Args: { p_workspace_id: string }
         Returns: boolean

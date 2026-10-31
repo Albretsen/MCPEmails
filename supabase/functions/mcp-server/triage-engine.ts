@@ -19,7 +19,7 @@
 //      human between the injection and the send.
 //
 //   2. EVERY ACTION IS REVERSIBLE OR HUMAN-GATED. move / label / mark_read are
-//      reversible and record `undo_state`. forward is ALWAYS routed through
+//      reversible and record `undo_state`. forward is ALWAYS written through
 //      send_approvals, regardless of `inboxes.send_approval_required`, because
 //      the inbox-level switch expresses "a human is watching this mailbox's
 //      sends", which is exactly the assumption an unattended runner breaks.
@@ -2607,6 +2607,12 @@ export interface AutomationDeps {
   preview(inbox: TriageInbox, filter: NormalizedSearch, limit: number): Promise<TriageMatch[]>;
   /** Where a person approves a held forward. Defaults to production's page. */
   approvalsUrl?: string;
+  /**
+   * The workspace's automations that currently run without approval, because an
+   * owner or admin set a no-approval rule in the dashboard. Read-only. A failure or
+   * its absence reads as none: the note then says "held", which is the safe side.
+   */
+  noApprovalCoverage?(): Promise<ReadonlySet<string>>;
   now?(): number;
 }
 
@@ -2806,14 +2812,44 @@ function labelAppliedNote(action: TriageAction | undefined, provider: string | n
  * nothing. A caller that enables it and then reports "invoices are now being
  * forwarded" is wrong in a way nobody discovers until the approvals pile up.
  */
-function forwardApprovalNote(action: TriageAction | undefined, approvalsUrl?: string): string | null {
+function forwardApprovalNote(
+  action: TriageAction | undefined,
+  approvalsUrl?: string,
+  runsWithoutApproval = false,
+): string | null {
   if (!action || action.type !== "forward") return null;
+  if (runsWithoutApproval) {
+    return (
+      `Forwards from this rule to ${action.to.join(", ")} run without approval right now: an owner ` +
+      "or admin has allowed those addresses with a no-approval rule in the dashboard. Change the " +
+      "addresses and they wait for approval again. No tool or API key can set or widen a no-approval rule."
+    );
+  }
   return (
-    "A forward rule is ALWAYS held for human approval: each match creates an " +
-    "approval a person has to accept before anything is sent, whatever this " +
-    "inbox's approval setting says. Nothing leaves the mailbox unattended. " +
+    "This forward rule is held for human approval: each match creates an approval a person " +
+    "has to accept before anything is sent, whatever this inbox's approval setting says. " +
+    "Nothing leaves the mailbox unattended unless an owner or admin allows every address " +
+    "with a no-approval rule in the dashboard, and none covers this rule right now. " +
     forwardApprovalWhere(approvalsUrl)
   );
+}
+
+/** Which automations run without approval now. Anything going wrong reads as none. */
+async function coveredAutomations(deps: AutomationDeps): Promise<ReadonlySet<string>> {
+  try {
+    return deps.noApprovalCoverage ? await deps.noApprovalCoverage() : new Set<string>();
+  } catch (error) {
+    console.warn("[automation] no_approval_coverage_failed", { error: redactErrorDetail(error) });
+    return new Set<string>();
+  }
+}
+
+/** A forward rule says whether it runs without approval. That, and nothing more. */
+// deno-lint-ignore no-explicit-any
+function withCoverage(rule: any, covered: ReadonlySet<string>): any {
+  return rule?.action?.type === "forward"
+    ? { ...rule, runs_without_approval: covered.has(String(rule.id)) }
+    : rule;
 }
 
 const DEFAULT_APPROVALS_URL = "https://mcpemails.com/dashboard/approvals";
@@ -3112,14 +3148,16 @@ export async function runAutomationTool(
         return toolErr(`automation create: could not save the rule (${error?.code ?? "unknown"}).`, "db_error");
       }
       const createNote = labelAppliedNote(body.value.action, resolved.inbox.provider);
-      const approvalNote = forwardApprovalNote(body.value.action, deps.approvalsUrl);
+      const createCovered = await coveredAutomations(deps);
+      const createRuns = createCovered.has(String((data as { id?: unknown }).id));
+      const approvalNote = forwardApprovalNote(body.value.action, deps.approvalsUrl, createRuns);
       return toolOk({
-        automation: data,
+        automation: withCoverage(data, createCovered),
         enabled: false,
         ...(createNote ? { label_applied_as: createNote } : {}),
         // Machine-readable half of the same statement, so a client does not
-        // have to parse prose to know this rule cannot send on its own.
-        ...(approvalNote ? { held_for_approval: true } : {}),
+        // have to parse prose to know whether this rule can send on its own.
+        ...(approvalNote ? { held_for_approval: !createRuns, runs_without_approval: createRuns } : {}),
         message:
           "Created and DISABLED. Nothing will run until you call automation with " +
           "action 'enable'. Call action 'preview' first to see what the filter matches." +
@@ -3150,7 +3188,13 @@ export async function runAutomationTool(
       const visible = ((data ?? []) as any[]).filter((row) =>
         automationVisibleToCaller(deps.caller, row?.inbox_id)
       );
-      return toolOk({ automations: visible, count: visible.length });
+      const listCovered = visible.some((row) => row?.action?.type === "forward")
+        ? await coveredAutomations(deps)
+        : new Set<string>();
+      return toolOk({
+        automations: visible.map((row) => withCoverage(row, listCovered)),
+        count: visible.length,
+      });
     }
 
     case "get": {
@@ -3158,7 +3202,7 @@ export async function runAutomationTool(
       if (!rule) return toolErr("automation get: no automation with that id in this workspace.", "not_found");
       const getMismatch = await ruleInboxMismatch(deps, rule, args, "get");
       if (getMismatch) return getMismatch;
-      return toolOk({ automation: publicAutomation(rule) });
+      return toolOk({ automation: withCoverage(publicAutomation(rule), await coveredAutomations(deps)) });
     }
 
     case "update": {
@@ -3197,16 +3241,21 @@ export async function runAutomationTool(
       if (error || !data) return toolErr("automation update: could not save the change.", "db_error");
       const updateNote = labelAppliedNote(body.value.action, provider);
       const updateRebound = Object.keys(updateRebind.patch).length > 0;
+      const updateCovered = await coveredAutomations(deps);
       const updateMessage = [
         updateNote,
-        forwardApprovalNote(body.value.action, deps.approvalsUrl),
+        forwardApprovalNote(
+          body.value.action,
+          deps.approvalsUrl,
+          updateCovered.has(String((data as { id?: unknown }).id)),
+        ),
         body.value.include_past_mail !== undefined ? pastMailNote(body.value) : null,
         updateRebound ? REBOUND_NOTE : null,
       ]
         .filter((part): part is string => part !== null)
         .join(" ");
       return toolOk({
-        automation: publicAutomation(data),
+        automation: withCoverage(publicAutomation(data), updateCovered),
         ...(updateNote ? { label_applied_as: updateNote } : {}),
         ...(updateMessage ? { message: updateMessage } : {}),
       });
@@ -3247,12 +3296,17 @@ export async function runAutomationTool(
         .select(AUTOMATION_PUBLIC_COLUMNS)
         .maybeSingle();
       if (error || !data) return toolErr("automation enable: could not enable the automation.", "db_error");
+      const enableCovered = await coveredAutomations(deps);
       return toolOk({
-        automation: publicAutomation(data),
+        automation: withCoverage(publicAutomation(data), enableCovered),
         enabled: true,
         message: [
           pastMailNote(data),
-          forwardApprovalNote(actionCheck.value, deps.approvalsUrl),
+          forwardApprovalNote(
+            actionCheck.value,
+            deps.approvalsUrl,
+            enableCovered.has(String((data as { id?: unknown }).id)),
+          ),
           Object.keys(enableRebind.patch).length > 0 ? REBOUND_NOTE : null,
         ].filter((part): part is string => part !== null).join(" "),
       });

@@ -974,7 +974,8 @@
       "via": {
         "dashboard": "在控制台中决定",
         "review_page": "通过审核链接决定",
-        "mcp_app": "在助手的审核卡片中决定"
+        "mcp_app": "在助手的审核卡片中决定",
+        "no_approval_rule": "由免审批规则发送"
       },
       "states": {
         "approvedTitle": "已批准",
@@ -1037,7 +1038,9 @@
       "filterShowing": "正在显示 {rule} 的转发。",
       "filterShowingUnnamed": "正在显示一个自动化的转发。",
       "filterClear": "显示全部审批",
-      "filterEmpty": "此自动化没有待处理的内容。"
+      "filterEmpty": "此自动化没有待处理的内容。",
+      "sentWithoutApproval": "无需审批已发送({rule})",
+      "sentWithoutApprovalUnnamed": "无需审批已发送"
     }
   },
   "automations": {
@@ -1327,12 +1330,99 @@
         "flaggedNo": "未标记",
         "since": "在 {value} 或之后收到",
         "before": "在 {value} 之前收到"
-      }
+      },
+      "forwardNoApproval": "每个匹配项都会发往 {address},无需等待审批,因为免审批规则覆盖了该地址。"
     },
     "toastDeletedCancelled": "{count, plural, other {自动化已删除，并已取消 # 条等待中的转发。}}",
     "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。",
     "waitingLink": "{count} 个待处理",
-    "waitingLinkMore": "{count}+ 个待处理"
+    "waitingLinkMore": "{count}+ 个待处理",
+    "noApproval": {
+      "title": "免审批规则",
+      "sub": "转发到这些确切地址的邮件无需等待审批即可发出。除非规则覆盖转发的所有地址,否则转发都要等待审批。",
+      "add": "添加规则",
+      "pauseAllButton": "全部暂停",
+      "resumeAllButton": "全部恢复",
+      "pausedAll": "所有免审批规则已暂停。",
+      "resumedAll": "免审批规则已恢复。",
+      "pausedAllNotice": "已暂停。在你恢复之前,所有转发都要等待审批。",
+      "saved": "已保存。",
+      "cancel": "取消",
+      "save": "保存",
+      "colName": "名称",
+      "colAddresses": "地址",
+      "colScope": "适用于",
+      "colToday": "今天",
+      "todayCount": "{used} / {limit}",
+      "scopeAll": "所有自动化",
+      "scopeChosen": "选定的自动化",
+      "scopeLabel": "适用于",
+      "scopeAllHelp": "此工作区中现在或以后的任何自动化都可以无需审批发送到这些地址,包括 AI 助手编写或修改的自动化。你信任的是地址,因此更改自动化的筛选条件不会使其停止。",
+      "scopeChosenHelp": "仅限你勾选的自动化。如果有人更改其筛选条件、地址、收件箱或密钥,它将等待审批,直到你在这里再次确认。",
+      "voided": "已更改,因此等待审批",
+      "reconfirm": "再次确认",
+      "reconfirmTitle": "再次确认 {automation}?",
+      "reconfirmBody": "它转发到 {addresses} 的邮件将按当前设置再次无需审核发出。请先确认它仍符合你的预期。",
+      "reconfirmButton": "确认",
+      "pausedByFailures": "多次发送失败后已暂停。转发将等待审批。关闭再打开即可恢复。",
+      "runsWithoutApproval": "无需审批运行",
+      "confirmTitle": "无需审批发送?",
+      "confirmBody": "发往 {addresses} 的邮件将不经审核发出。没有人会事先审批。",
+      "confirmAllNote": "这涵盖工作区中的所有自动化,包括 AI 助手以后编写或修改的自动化。",
+      "confirmChosenNote": "这仅涵盖你选择的自动化的当前状态。",
+      "confirmButton": "是,无需审批发送",
+      "deleteTitle": "删除 {name}?",
+      "deleteBody": "转发到其地址的邮件将重新等待审批。已发送的记录保留在日志中。",
+      "formAddTitle": "添加免审批规则",
+      "formEditTitle": "编辑免审批规则",
+      "nameLabel": "名称",
+      "namePlaceholder": "财务发票",
+      "recipientsLabel": "地址",
+      "recipientsPlaceholder": "accounts@example.com, receipts@example.com",
+      "recipientsHelp": "仅限确切地址,用逗号分隔。不支持通配符或整个域名。",
+      "noForwardRules": "还没有转发邮件的自动化。",
+      "limitLabel": "每日上限",
+      "limitHelp": "按 {zone} 的每天计算,最多 {max}。超过上限后,转发将等待审批,你会收到通常的邮件。",
+      "verifiedLabel": "仅限已验证的发件人",
+      "verifiedHelp": "邮件必须显示发件人的域名通过了 DKIM 或 DMARC。如果接收服务器没有相关信息,邮件将等待审批。未通过检查的邮件总是等待审批。",
+      "inboxesLabel": "仅限选定的收件箱",
+      "enabledLabel": "开启此规则",
+      "receiptHelp": "所有者和管理员在每次运行后都会收到邮件回执。关闭回执后,运行日志仍是记录。",
+      "formCovered": "免审批规则覆盖这些地址,因此这些转发无需等待审批即可发出。",
+      "formVoids": "免审批规则仅覆盖此自动化确认时的状态。保存此更改后,它将等待审批,直到有人再次确认。",
+      "errors": {
+        "generic": "无法保存,请重试。",
+        "forbidden": "只有工作区所有者或管理员可以更改免审批规则。",
+        "not_found": "该规则已不存在。",
+        "save_failed": "无法保存,请重试。",
+        "invalid_name": "请为规则命名。",
+        "invalid_recipients": "请输入 1 到 20 个确切地址。",
+        "notExact": "{address} 不是确切的邮箱地址。",
+        "invalid_scope": "请选择规则的适用范围。",
+        "invalid_automation": "其中一个自动化不转发邮件。",
+        "automations_required": "请至少选择一个自动化。",
+        "invalid_inbox": "请至少选择一个收件箱。",
+        "invalid_limit": "请输入 1 到 {max} 之间的每日上限。",
+        "invalid_time_zone": "无法识别该时区。"
+      },
+      "reason": {
+        "address_not_covered": "等待审批:并非所有地址都被免审批规则覆盖。",
+        "coverage_voided": "等待审批:此自动化在确认后已更改。",
+        "coverage_paused": "等待审批:免审批规则因发送失败已暂停。",
+        "paused_all": "等待审批:免审批规则已暂停。",
+        "past_mail": "等待审批:此邮件在免审批规则开启前到达。",
+        "sender_unverified": "等待审批:无法验证发件人。",
+        "sender_failed": "等待审批:发件人未通过 DKIM 或 DMARC。",
+        "daily_limit": "等待审批:免审批规则已达到每日上限。",
+        "recipients_changed": "等待审批:自动化的地址已更改。",
+        "rule_gone": "等待审批:自动化已不存在。",
+        "usage_limit": "等待审批:此工作区已用完本期包含的额度。",
+        "fanout_hold": "等待审批:此收件箱在一小时内将一封邮件发给了许多人。",
+        "daily_send_limit": "等待审批:此收件箱已达到每日发送上限。",
+        "sends_paused_provider_refusals": "等待审批:邮件服务商拒绝了此收件箱最近的邮件。",
+        "sends_frozen": "等待审批:此工作区已暂停发送。"
+      }
+    }
   },
   "workflows": {
     "bulkRuns": {

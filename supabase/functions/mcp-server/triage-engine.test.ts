@@ -1775,7 +1775,7 @@ async function createForwardRule(): Promise<{ result: any; log: FakeDbLog }> {
   return { result, log };
 }
 
-Deno.test("a forward rule's create result says it is always held for approval", async () => {
+Deno.test("a forward rule's create result says it is held for approval", async () => {
   const { result } = await createForwardRule();
   assertEquals(result.logStatus, "success", "a forward rule is accepted");
   const payload = result.result.structuredContent as any;
@@ -1786,9 +1786,10 @@ Deno.test("a forward rule's create result says it is always held for approval", 
   );
   assert(message.includes("approval"), "and the approval hold is now stated too");
   assert(
-    /ALWAYS|always/.test(message),
-    "unconditionally: the inbox's own approval setting does not change it",
+    message.includes("whatever this inbox's approval setting says"),
+    "the inbox's own approval setting does not change it",
   );
+  assert(message.includes("no-approval rule"), "and it names the one thing that does");
   assertEquals(
     payload.held_for_approval,
     true,
