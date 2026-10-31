@@ -392,3 +392,42 @@ test('Reply-To is on the review model (from the draft snapshot or the send argum
   if (viewer === 'not_found') throw new Error('not found');
   assert.deepEqual(viewer.reply_to, []);
 });
+
+// A rule's forward counts when it is sent, so the approve click is where the
+// allowance has to be asked. It stays pending, and nothing is queued.
+function allowanceDb(row: Record<string, unknown>, allowance: Record<string, unknown> | null, rpcError: unknown = null) {
+  const fake = db(row);
+  (fake as any).rpc = () => ({
+    maybeSingle: async () => ({ data: allowance, error: rpcError }),
+  });
+  return fake;
+}
+
+const asRuleForward = (extra: Record<string, unknown> = {}) => ({ ...approval(), operation: 'email_forward', ...extra });
+const approveAt = (fake: any) => decide(fake, 'approve', 1);
+
+test('a rule forward at the allowance limit is refused and stays pending', async () => {
+  const fake = allowanceDb(asRuleForward({ triage_rule_name: 'Invoices' }), { exempt: false, in_grace: false, cap: 150, remaining: 0 });
+  const outcome = await approveAt(fake);
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.ok === false && outcome.code, 'usage_limit');
+  assert.equal(fake.tables.send_approvals[0].status, 'pending');
+  assert.equal(fake.tables.scheduled_sends.length, 0);
+});
+
+test('with allowance left, exempt, in grace, or an unreadable allowance, a rule forward is approved', async () => {
+  for (const [allowance, error] of [
+    [{ exempt: false, in_grace: false, cap: 150, remaining: 1 }, null],
+    [{ exempt: true, in_grace: false, cap: null, remaining: null }, null],
+    [{ exempt: false, in_grace: true, cap: 150, remaining: 0 }, null],
+    [null, { message: 'boom' }],
+  ] as const) {
+    const outcome = await approveAt(allowanceDb(asRuleForward({ triage_rule_name: 'Invoices' }), allowance as any, error));
+    assert.equal(outcome.ok, true);
+  }
+});
+
+test("an AI's forward is not asked about the allowance here", async () => {
+  const outcome = await approveAt(allowanceDb(asRuleForward(), { exempt: false, in_grace: false, cap: 150, remaining: 0 }));
+  assert.equal(outcome.ok, true);
+});

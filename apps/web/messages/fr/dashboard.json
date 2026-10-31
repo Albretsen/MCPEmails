@@ -1273,7 +1273,8 @@
       "completed": "Terminée",
       "completedWithErrors": "Terminée avec des erreurs",
       "failed": "Échec",
-      "skipped": "Rien à faire"
+      "skipped": "Rien de nouveau",
+      "queued": "En attente d'approbation"
     },
     "modal": {
       "createTitle": "Nouvelle automatisation",
@@ -1360,7 +1361,11 @@
       "previewKeyCannotRead": "Cette clé API ne peut pas lire les e-mails, elle ne peut donc pas afficher d'aperçu. Choisissez une clé avec l'autorisation read:email.",
       "previewKeyNotForInbox": "Cette clé API n'a pas le droit d'utiliser cette boîte de réception. Choisissez-en une autre.",
       "previewInboxNotAvailable": "Cette boîte de réception n'est pas disponible pour le moment. Vérifiez-la dans Boîtes de réception.",
-      "previewSearchFailed": "La recherche dans la boîte mail a échoué. Vérifiez la connexion de la boîte de réception, puis réessayez."
+      "previewSearchFailed": "La recherche dans la boîte mail a échoué. Vérifiez la connexion de la boîte de réception, puis réessayez.",
+      "includePastMail": "Inclure les anciens e-mails",
+      "includePastMailHelp": "Désactivé : seulement les e-mails reçus après la première activation de cette règle. Activé : aussi ceux déjà dans la boîte.",
+      "previewPastNote": "{count, plural, =1 {1 de ces messages est arrivé avant le début de cette règle. Il ne sera pas traité sauf si Inclure les anciens e-mails est activé.} other {# de ces messages sont arrivés avant le début de cette règle. Ils ne seront pas traités sauf si Inclure les anciens e-mails est activé.}}",
+      "previewPastBadge": "Ancien e-mail"
     },
     "runs": {
       "title": "Journal d'exécution",
@@ -1376,7 +1381,7 @@
       "colResult": "Résultat",
       "triggerSchedule": "Programmée",
       "triggerManual": "Manuelle",
-      "resultSummary": "{matched} correspondances, {succeeded} appliquées, {failed} en échec, {skipped} ignorées",
+      "resultSummary": "{matched} correspondances, {succeeded} appliquées, {queued} en attente d'approbation, {failed} en échec, {skipped} déjà traitées",
       "viewItems": "Messages",
       "loadMore": "Charger les exécutions plus anciennes",
       "loading": "Chargement…",
@@ -1398,7 +1403,27 @@
       "detailMoved": "Déplacé vers {folder}.",
       "detailQueued": "Rien n'a été modifié. En attente dans Approbations.",
       "detailSkipped": "Cette automatisation avait déjà traité ce message.",
-      "detailFailed": "Échec avec {code}."
+      "detailFailed": "Échec avec {code}.",
+      "forwardSummary": "Transferts : {waiting} en attente, {sending} en cours d'envoi, {sent} envoyés, {failed} en échec, {rejected} refusés, {expired} expirés",
+      "forwardState": {
+        "waiting": "En attente",
+        "sending": "Envoi en cours",
+        "sent": "Envoyé",
+        "failed": "Échec",
+        "rejected": "Refusé",
+        "expired": "Expiré",
+        "closed": "Clos"
+      },
+      "forwardDetail": {
+        "sending": "Approuvé. Il est en route.",
+        "sent": "Approuvé et envoyé.",
+        "failed": "Approuvé, mais l'envoi a échoué.",
+        "rejected": "Refusé. Rien n'a été envoyé.",
+        "expired": "Personne ne l'a approuvé à temps. Rien n'a été envoyé.",
+        "closed": "Cette approbation n'est plus conservée."
+      },
+      "outcomeLoop": "Non transféré",
+      "detailLoop": "Ce message est lui-même un transfert envoyé par une règle. Le transférer à nouveau pourrait créer une boucle."
     },
     "delete": {
       "title": "Supprimer cette automatisation ?",
@@ -1446,7 +1471,8 @@
         "flaggedNo": "non suivis",
         "since": "reçus le {value} ou après",
         "before": "reçus avant le {value}"
-      }
+      },
+      "startsNew": "Elle commence avec les e-mails reçus après sa première activation."
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatisation supprimée et 1 transfert en attente annulé.} other {Automatisation supprimée et # transferts en attente annulés.}}",
     "toastDeletedCancelFailed": "Automatisation supprimée, mais ses transferts en attente n'ont pas pu être annulés. Refusez-les dans Approbations."

@@ -43,6 +43,7 @@ export type DecisionFailureCode =
   | 'expired'
   | 'changed'
   | 'not_sendable'
+  | 'usage_limit'
   | 'queue_failed'
   | 'write_failed';
 
@@ -100,6 +101,23 @@ export interface DecideArgs {
    * it. Required to approve; null approves nothing.
    */
   revision: number | null;
+}
+
+/**
+ * True when an approval is a rule's forward and the allowance has nothing left.
+ *
+ * Reads the one definition of the allowance (`workspace_action_allowance`), so
+ * this and the edge function's reservation agree. Exempt, in grace and failed
+ * lookups are all "no": the allowance is a plan rule, and an outage in it must not
+ * stop a person approving a send. The dispatcher's reservation is what enforces.
+ */
+async function ruleForwardOverAllowance(db: any, approval: any, workspaceId: string): Promise<boolean> {
+  if (approval.operation !== 'email_forward' || typeof approval.triage_rule_name !== 'string') return false;
+  const { data, error } = await db
+    .rpc('workspace_action_allowance', { p_workspace_id: workspaceId })
+    .maybeSingle();
+  if (error || !data) return false;
+  return !data.exempt && !data.in_grace && data.cap !== null && data.remaining !== null && data.remaining <= 0;
 }
 
 /**
@@ -171,6 +189,19 @@ export async function decideApproval({
         status: 409,
         error:
           'This draft send was prepared before a copy of the draft was recorded, so it cannot be sent. Reject it and send the draft again.',
+      };
+    }
+    // A rule's forward counts when it is sent, so this is the moment the allowance
+    // is its business. Refused here it stays pending and can be approved once the
+    // allowance is back, inside its expiry. The dispatcher checks again, for the
+    // approvals that pass this together.
+    if (await ruleForwardOverAllowance(db, approval, workspaceId)) {
+      return {
+        ok: false,
+        code: 'usage_limit',
+        status: 409,
+        error:
+          'This workspace has used its included actions for this period, so this forward cannot be sent yet. It stays here until it expires.',
       };
     }
     // Atomic claim: only one caller can move pending → approved, and only for

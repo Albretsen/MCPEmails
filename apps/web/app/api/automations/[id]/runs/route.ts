@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { RUN_COLUMNS, RUN_ITEM_COLUMNS, isUuid } from '@/lib/automations/rules';
+import { attachForwardStates, forwardCountsByRun } from '@/lib/automations/run-forward-state';
 
 /**
  * GET /api/automations/[id]/runs
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       rule: { id: rule.id, name: rule.name, deleted: Boolean(rule.deleted_at), inbox: rule.inboxes ?? null },
       run,
-      items: items ?? [],
+      items: await attachForwardStates(c.db, c.workspaceId, items ?? []),
     });
   }
 
@@ -130,10 +131,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const hasMore = rows.length > limit;
   const runs = hasMore ? rows.slice(0, limit) : rows;
+  const forwards = await forwardCountsByRun(c.db, c.workspaceId, id, runs);
 
   return NextResponse.json({
     rule: { id: rule.id, name: rule.name, deleted: Boolean(rule.deleted_at), inbox: rule.inboxes ?? null },
-    runs,
+    runs: runs.map((run) => {
+      const counts = forwards.get(run.id as string);
+      return counts ? { ...run, forwards: counts } : run;
+    }),
     has_more: hasMore,
     next_before: hasMore ? (runs[runs.length - 1]?.started_at ?? null) : null,
   });

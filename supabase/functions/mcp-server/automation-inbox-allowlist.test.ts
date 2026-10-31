@@ -499,7 +499,7 @@ Deno.test("an unrestricted key still manages every rule; same-key edits never re
   assertEquals(rule(tables, RULE_ON_Y).api_key_id, KEY_OWNER, "still its creator");
   const enabled = await runAutomationTool("enable", { automation_id: RULE_ON_Y }, deps);
   assertEquals(payload(enabled).enabled, true, "enable on Y");
-  assertEquals(payload(enabled).message, undefined, "no re-bind note");
+  assertEquals(String(payload(enabled).message).includes("different API key"), false, "no re-bind note");
   const got = await runAutomationTool("get", { automation_id: RULE_ON_X }, deps);
   assertEquals(payload(got).automation.id, RULE_ON_X, "get on X");
 });

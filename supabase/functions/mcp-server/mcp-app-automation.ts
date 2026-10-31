@@ -35,7 +35,12 @@
 
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { neutralizeText } from "./text-safety.ts";
-import { type AutomationDeps, runAutomationTool, type TriageToolResult } from "./triage-engine.ts";
+import {
+  type AutomationDeps,
+  forwardApprovalWhere,
+  runAutomationTool,
+  type TriageToolResult,
+} from "./triage-engine.ts";
 
 export const AUTOMATION_CARD_TOOL = "card_automation";
 export const AUTOMATION_CARD = "automation";
@@ -150,14 +155,16 @@ export function automationSentence(rule: Record<string, unknown>): string {
   return `${what}${every ? `, ${every}` : ""}.`;
 }
 
-/** Why an OFF rule is off, when it was not simply switched off. */
-function noteFor(rule: Record<string, unknown>): string | null {
-  if (rule.enabled === true) {
-    return rule.paused_reason ? "Paused: this workspace reached its plan limit." : null;
-  }
+/**
+ * The line under the sentence: why an OFF rule is off, when it was not simply
+ * switched off, and otherwise, for a forward rule, where its forwards wait.
+ */
+function noteFor(rule: Record<string, unknown>, approvalsUrl?: string): string | null {
+  if (rule.enabled === true && rule.paused_reason) return "Paused: this workspace reached its plan limit.";
   const reason = str(rule.disabled_reason);
-  if (!reason || reason === "Disabled by request.") return null;
-  return `Turned off: ${reason}`;
+  if (rule.enabled !== true && reason && reason !== "Disabled by request.") return `Turned off: ${reason}`;
+  const action = rule.action as { type?: unknown } | null | undefined;
+  return action?.type === "forward" ? forwardApprovalWhere(approvalsUrl) : null;
 }
 
 interface CardMatch {
@@ -253,7 +260,7 @@ export async function runAutomationCard(
       enabled: rule.enabled === true,
       sentence: automationSentence(rule),
       inbox,
-      note: noteFor(rule),
+      note: noteFor(rule, deps.approvalsUrl),
       // Absent when no dry run was asked for, so the card keeps the one it has.
       ...(preview
         ? {

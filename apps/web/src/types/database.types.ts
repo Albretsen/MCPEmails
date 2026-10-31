@@ -4935,16 +4935,19 @@ export type Database = {
       triage_rules: {
         Row: {
           action: Json
+          active_from: string | null
           api_key_id: string
           consecutive_failures: number
           created_at: string
           created_by: string | null
+          deep_scan_floor: string | null
           deleted_at: string | null
           disabled_reason: string | null
           enabled: boolean
           filter: Json
           id: string
           inbox_id: string
+          include_past_mail: boolean
           interval_minutes: number
           last_run_at: string | null
           max_messages_per_run: number
@@ -4953,21 +4956,25 @@ export type Database = {
           paused_reason: string | null
           paused_until: string | null
           running_since: string | null
+          scan_drained_at: string | null
           updated_at: string
           workspace_id: string
         }
         Insert: {
           action: Json
+          active_from?: string | null
           api_key_id: string
           consecutive_failures?: number
           created_at?: string
           created_by?: string | null
+          deep_scan_floor?: string | null
           deleted_at?: string | null
           disabled_reason?: string | null
           enabled?: boolean
           filter: Json
           id?: string
           inbox_id: string
+          include_past_mail?: boolean
           interval_minutes: number
           last_run_at?: string | null
           max_messages_per_run?: number
@@ -4976,21 +4983,25 @@ export type Database = {
           paused_reason?: string | null
           paused_until?: string | null
           running_since?: string | null
+          scan_drained_at?: string | null
           updated_at?: string
           workspace_id: string
         }
         Update: {
           action?: Json
+          active_from?: string | null
           api_key_id?: string
           consecutive_failures?: number
           created_at?: string
           created_by?: string | null
+          deep_scan_floor?: string | null
           deleted_at?: string | null
           disabled_reason?: string | null
           enabled?: boolean
           filter?: Json
           id?: string
           inbox_id?: string
+          include_past_mail?: boolean
           interval_minutes?: number
           last_run_at?: string | null
           max_messages_per_run?: number
@@ -4999,6 +5010,7 @@ export type Database = {
           paused_reason?: string | null
           paused_until?: string | null
           running_since?: string | null
+          scan_drained_at?: string | null
           updated_at?: string
           workspace_id?: string
         }
@@ -5100,6 +5112,7 @@ export type Database = {
           id: string
           matched: number
           processed: number
+          queued: number
           rule_id: string
           skipped: number
           started_at: string
@@ -5117,6 +5130,7 @@ export type Database = {
           id?: string
           matched?: number
           processed?: number
+          queued?: number
           rule_id: string
           skipped?: number
           started_at?: string
@@ -5134,6 +5148,7 @@ export type Database = {
           id?: string
           matched?: number
           processed?: number
+          queued?: number
           rule_id?: string
           skipped?: number
           started_at?: string

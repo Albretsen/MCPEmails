@@ -16,6 +16,7 @@ import {
   validateActionForProvider,
   validateFilter,
   validateFilterForProvider,
+  validateIncludePastMail,
   validateInterval,
   validateMaxMessages,
   validateName,
@@ -94,6 +95,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const action = validateAction(body.action);
     if (!action.ok) return NextResponse.json({ error: action.error }, { status: 400 });
     patch.action = action.value;
+  }
+  if (body.include_past_mail !== undefined) {
+    const includePastMail = validateIncludePastMail(body.include_past_mail);
+    if (!includePastMail.ok) return NextResponse.json({ error: includePastMail.error }, { status: 400 });
+    patch.include_past_mail = includePastMail.value;
   }
 
   const nextInboxId = body.inbox_id !== undefined ? body.inbox_id : existing.inbox_id;

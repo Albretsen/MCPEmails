@@ -1876,6 +1876,12 @@ export async function graphCreateResponseDraft(
   accessToken: string,
   messageId: string,
   kind: "createReply" | "createReplyAll" | "createForward",
+  /**
+   * `x-` headers for the draft. Graph takes them only when the draft is created,
+   * and if it refuses them here the draft is created without: a forward must not
+   * fail for a marker.
+   */
+  customHeaders?: readonly { name: string; value: string }[],
 ): Promise<{
   id: string;
   conversationId: string | null;
@@ -1884,12 +1890,18 @@ export async function graphCreateResponseDraft(
   createdDateTime: string | null;
   toRecipients: { name: string; email: string }[];
 }> {
-  const resp = await graphJson(
+  const path = `/me/messages/${encodeURIComponent(messageId)}/${kind}`;
+  let resp = await graphJson(
     accessToken,
-    `/me/messages/${encodeURIComponent(messageId)}/${kind}`,
+    path,
     "POST",
-    {},
+    customHeaders?.length ? { message: { internetMessageHeaders: customHeaders } } : {},
   );
+  if (!resp.ok && resp.status === 400 && customHeaders?.length) {
+    await resp.body?.cancel().catch(() => {});
+    console.warn("[outlook-graph] custom_headers_refused", { kind });
+    resp = await graphJson(accessToken, path, "POST", {});
+  }
   if (!resp.ok) {
     if (resp.status === 404) {
       await resp.body?.cancel().catch(() => {});
@@ -1944,6 +1956,8 @@ export async function graphPrepareResponseDraft(
     attachments?: readonly GraphAttachmentInput[];
     /** Forward with include_attachments: false — drop the original's files. */
     removeFileAttachments?: boolean;
+    /** See {@link graphCreateResponseDraft}. */
+    customHeaders?: readonly { name: string; value: string }[];
   },
 ): Promise<{
   id: string;
@@ -1952,7 +1966,7 @@ export async function graphPrepareResponseDraft(
   toRecipients: { name: string; email: string }[];
   createdDateTime: string | null;
 }> {
-  const draft = await graphCreateResponseDraft(accessToken, opts.messageId, opts.kind);
+  const draft = await graphCreateResponseDraft(accessToken, opts.messageId, opts.kind, opts.customHeaders);
   try {
     await graphPatchMessage(accessToken, draft.id, {
       ...opts.patch,

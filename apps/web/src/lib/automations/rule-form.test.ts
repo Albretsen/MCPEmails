@@ -146,3 +146,12 @@ test('every preview message exists in every locale', () => {
     }
   }
 });
+
+test('a copy of a rule never carries Include past mail over', () => {
+  const copy = duplicateRuleDraft({
+    name: 'Invoices', inbox_id: 'i', api_key_id: 'k', interval_minutes: 60, max_messages_per_run: 25,
+    filter: { from: 'a@example.com' }, action: { type: 'move', folder: 'F' }, include_past_mail: true, active_from: '2026-01-01T00:00:00Z',
+  }, 'Invoices copy', 2);
+  assert.equal(copy.include_past_mail, undefined);
+  assert.equal(copy.active_from, undefined);
+});
