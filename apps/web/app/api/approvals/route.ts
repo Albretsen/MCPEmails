@@ -81,8 +81,9 @@ export async function GET() {
     ...((lapsed ?? []) as Record<string, unknown>[]).map((row) => ({ ...row, status: 'expired' })),
     ...((decided ?? []) as Record<string, unknown>[]),
   ]
-    .sort((a, b) => closedAt(b).localeCompare(closedAt(a)))
-    .slice(0, 20);
+    // Both lists are kept whole. Cutting the merge to 20 would let a busy day push
+    // out a row that expired just now, and with it the Forward again button.
+    .sort((a, b) => closedAt(b).localeCompare(closedAt(a)));
 
   const closedIds = closed.map((row) => String(row.id));
   const ruleIds = [

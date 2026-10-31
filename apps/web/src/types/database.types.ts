@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   graphql_public: {
     Tables: {
@@ -2403,6 +2403,13 @@ export type Database = {
             foreignKeyName: "forward_approval_notices_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "forward_approval_notices_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -2498,6 +2505,39 @@ export type Database = {
           error_code?: string | null
           status?: string
           tool_name?: string
+        }
+        Relationships: []
+      }
+      help_article_feedback: {
+        Row: {
+          article_id: string
+          created_at: string
+          helpful: boolean
+          id: string
+          locale: string
+          updated_at: string
+          user_id: string | null
+          voter_key: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          helpful: boolean
+          id?: string
+          locale: string
+          updated_at?: string
+          user_id?: string | null
+          voter_key: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          helpful?: boolean
+          id?: string
+          locale?: string
+          updated_at?: string
+          user_id?: string | null
+          voter_key?: string
         }
         Relationships: []
       }
@@ -4343,6 +4383,7 @@ export type Database = {
           payload: Json
           payload_encrypted: boolean
           queued_notice_at: string | null
+          reforward_of: string | null
           reminder_notice_at: string | null
           revision: number
           send_at: string | null
@@ -4368,6 +4409,7 @@ export type Database = {
           payload: Json
           payload_encrypted?: boolean
           queued_notice_at?: string | null
+          reforward_of?: string | null
           reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
@@ -4393,6 +4435,7 @@ export type Database = {
           payload?: Json
           payload_encrypted?: boolean
           queued_notice_at?: string | null
+          reforward_of?: string | null
           reminder_notice_at?: string | null
           revision?: number
           send_at?: string | null
@@ -4436,6 +4479,13 @@ export type Database = {
             columns: ["inbox_id"]
             isOneToOne: false
             referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "send_approvals_reforward_of_fkey"
+            columns: ["reforward_of"]
+            isOneToOne: false
+            referencedRelation: "send_approvals"
             referencedColumns: ["id"]
           },
           {
@@ -7366,6 +7416,7 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      next_support_ticket_ref: { Args: never; Returns: string }
       onboarding_convert_on: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -7404,6 +7455,7 @@ export type Database = {
       purge_operational_history: { Args: never; Returns: Json }
       purge_outbound_send_events: { Args: never; Returns: Json }
       purge_send_history: { Args: never; Returns: Json }
+      purge_support_history: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -7587,6 +7639,7 @@ export type Database = {
       sso_is_consumer_domain: { Args: { p_domain: string }; Returns: boolean }
       sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
       sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
+      staging_before_user_created: { Args: { event: Json }; Returns: Json }
       sync_inbox_watch_state: { Args: never; Returns: undefined }
       try_timestamptz: { Args: { p_value: string }; Returns: string }
       usage_month_summary: {
