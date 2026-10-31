@@ -38817,7 +38817,10 @@ async function handleApprovalOriginal(req: Request): Promise<Response> {
     if (location.kind !== "found") {
       return json({ status: "unavailable", reason: location.kind === "ambiguous" ? "ambiguous" : "not_found" });
     }
-    const message = await readMessageForSummary(inbox, location.id);
+    // On the same connection: some hosts cap connections per account.
+    const message = session
+      ? await readImapMessage(inbox, location.id, false, false, false, ATTACHMENT_DATA_BUDGET, undefined, session)
+      : await readMessageForSummary(inbox, location.id);
     return json({
       status: "ok",
       moved: location.moved,
