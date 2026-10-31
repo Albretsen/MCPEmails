@@ -423,5 +423,5 @@ function RuleForm({ rule, automations, inboxes, working, onClose, onSubmit }) {
 /** The row's badge. Used by AutomationsPanel. */
 export function RunsWithoutApprovalBadge() {
   const t = useTranslations('dashboard');
-  return <Badge tone="green">{t('automations.noApproval.runsWithoutApproval')}</Badge>;
+  return <Badge tone="live">{t('automations.noApproval.runsWithoutApproval')}</Badge>;
 }

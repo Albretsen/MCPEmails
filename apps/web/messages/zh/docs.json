@@ -369,7 +369,7 @@
     },
     "automation": {
       "title": "自动化",
-      "desc": "创建、更改、启用、停用和删除无人值守的定时分拣规则。一条规则就是一个已保存的搜索加上一个固定动作，按固定周期重新求值，回路中没有任何模型：邮件只被匹配，绝不被解读。设置 action：'create'（name、filter、rule_action 与 interval_minutes；规则创建时始终处于停用状态）、'update'（automation_id 加上要更改的字段）、'enable'、'disable'，或 'delete'（automation_id，运行历史会保留）。列出规则、完整读取某条规则、查看运行历史以及试运行过滤条件，都是独立的只读工具 automation_read。可用的规则动作为 move、label（Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward 和 draft_reply。删除邮件不向自动化开放。无论邮箱的审批设置如何，转发始终会被扣留等待人工批准，而 draft_reply 只会写入草稿。启用前请先预览。每个操作都需要 manage:automations。",
+      "desc": "创建、更改、启用、停用和删除无人值守的定时分拣规则。一条规则就是一个已保存的搜索加上一个固定动作，按固定周期重新求值，回路中没有任何模型：邮件只被匹配，绝不被解读。设置 action：'create'（name、filter、rule_action 与 interval_minutes；规则创建时始终处于停用状态）、'update'（automation_id 加上要更改的字段）、'enable'、'disable'，或 'delete'（automation_id，运行历史会保留）。列出规则、完整读取某条规则、查看运行历史以及试运行过滤条件，都是独立的只读工具 automation_read。可用的规则动作为 move、label（Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward 和 draft_reply。删除邮件不向自动化开放。无论邮箱的审批设置如何，转发都会被扣留等待人工批准，除非所有者或管理员已在控制台用免审批规则允许了所有地址（任何工具或 API 密钥都无法设置），而 draft_reply 只会写入草稿。启用前请先预览。每个操作都需要 manage:automations。",
       "params": {
         "action": "要执行的操作：「create」、「update」、「enable」、「disable」或「delete」。它决定其余参数中哪些会生效。读取规则和预览过滤条件是独立的 automation_read 工具。",
         "automation_id": "目标规则的 UUID，由 'create' 或 automation_read 的 'list' 返回。update、enable、disable 和 delete 必填。",
@@ -377,7 +377,7 @@
         "inbox": "邮箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "name": "规则的可读名称，1 至 80 个字符。'create' 时必填。",
         "filter": "已保存的搜索，使用与 email_read 的 'search' 操作相同的结构化条件：from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。至少需要一个条件，因为空过滤条件会匹配你的整个邮箱。此处不接受提供商原生的原始查询字符串：一条规则会在无人值守的情况下连续运行数月，而原始字符串是一种无人校验的方言。",
-        "rule_action": "对每个匹配项施加的那一个固定动作，形式为带类型标签的对象，type 可为 move（另加 folder）、label（另加 label；写入为 Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward（另加 to 以及可选的 note）或 draft_reply（另加 template）。它之所以叫 rule_action，是因为 action 已用于选择操作。不存在任何删除类动作，提出这种请求会被拒绝而非被忽略。转发始终扣留等待批准，draft_reply 只写入草稿。模板只会替换 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}'，且全部经过 HTML 转义；其余内容一律为字面文本，邮件正文绝不会被插入模板。",
+        "rule_action": "对每个匹配项施加的那一个固定动作，形式为带类型标签的对象，type 可为 move（另加 folder）、label（另加 label；写入为 Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward（另加 to 以及可选的 note）或 draft_reply（另加 template）。它之所以叫 rule_action，是因为 action 已用于选择操作。不存在任何删除类动作，提出这种请求会被拒绝而非被忽略。转发会扣留等待批准，除非真人在控制台设置的免审批规则覆盖了所有地址，draft_reply 只写入草稿。模板只会替换 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}'，且全部经过 HTML 转义；其余内容一律为字面文本，邮件正文绝不会被插入模板。",
         "interval_minutes": "两次运行之间的分钟数，取自固定档位 15、30、60、180、360、720 或 1440。'create' 时必填。使用档位而非自由整数，是为了让一分钟一次的规则无法把提供商打到触发限流。",
         "max_messages_per_run": "单次运行最多可处理的匹配邮件数：1 至 200，默认 25。这就是影响半径，限定一个写错的过滤条件在有人查看运行日志之前最多能触及多少邮件。"
       }
@@ -427,8 +427,8 @@
         "body": "删除并非可用动作，这是刻意设计。移动、加标签、标为已读、转发和起草回复就是全部动作集合。删除是规则一旦出错便无法挽回的唯一动作，因此它在校验层就被排除：任何仅仅提到删除的动作都会被拒绝，而不是被悄悄忽略。"
       },
       "forward": {
-        "heading": "转发始终等待真人。",
-        "body": "自动化产生的转发会进入审批队列，只有工作区成员批准后才会离开你的邮箱，无论各邮箱的发送审批设置如何。每条规则的收件人数量也有上限。无人值守的规则无法自行把邮件送出你的组织。"
+        "heading": "转发等待真人，除非你允许该地址。",
+        "body": "自动化产生的转发会进入审批队列，只有工作区所有者或管理员批准后才会离开你的邮箱，无论各邮箱的发送审批设置如何。唯一的例外是所有者或管理员在控制台设置的免审批规则：发往其列出的确切地址的转发会自动发出，受每日上限限制，并附邮件回执。任何 AI 助手或 API 密钥都无法设置或扩大此类规则。每条规则的收件人数量也有上限。"
       },
       "draftReply": {
         "heading": "草稿回复永远只是草稿。",

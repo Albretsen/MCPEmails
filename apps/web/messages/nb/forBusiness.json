@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Rutine",
         "h": "Sett rutinearbeidet på timeplan",
-        "p": "Gjentakende oppgaver kan kjøre som <b>automatiserte sorteringsregler</b>: et lagret søk pluss én fast handling (flytt, merk, marker som lest, videresend eller skriv et svarutkast) med faste mellomrom, uten noen AI-modell i løkken. En automatisering kan aldri slette e-post, og en videresending den legger i kø, venter alltid på din godkjenning."
+        "p": "Gjentakende oppgaver kan kjøre som <b>automatiserte sorteringsregler</b>: et lagret søk pluss én fast handling (flytt, merk, marker som lest, videresend eller skriv et svarutkast) med faste mellomrom, uten noen AI-modell i løkken. En automatisering kan aldri slette e-post, og en videresending den legger i kø, venter på din godkjenning med mindre du har tillatt akkurat den adressen."
       }
     }
   },

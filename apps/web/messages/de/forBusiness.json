@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Routine",
         "h": "Routinearbeit nach Zeitplan",
-        "p": "Wiederkehrende Aufgaben laufen als <b>Triage-Automatisierungen</b>: eine gespeicherte Suche plus eine feste Aktion (verschieben, mit Label versehen, als gelesen markieren, weiterleiten oder einen Antwortentwurf erstellen) in festem Rhythmus, ohne KI-Modell dazwischen. Eine Automatisierung kann nie E-Mails löschen, und eine von ihr eingereihte Weiterleitung wartet immer auf Ihre Freigabe."
+        "p": "Wiederkehrende Aufgaben laufen als <b>Triage-Automatisierungen</b>: eine gespeicherte Suche plus eine feste Aktion (verschieben, mit Label versehen, als gelesen markieren, weiterleiten oder einen Antwortentwurf erstellen) in festem Rhythmus, ohne KI-Modell dazwischen. Eine Automatisierung kann nie E-Mails löschen, und eine von ihr eingereihte Weiterleitung wartet auf Ihre Freigabe, außer Sie haben genau diese Adresse erlaubt."
       }
     }
   },

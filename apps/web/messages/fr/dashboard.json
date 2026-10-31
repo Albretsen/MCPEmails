@@ -1374,7 +1374,7 @@
     "trust": {
       "headline": "Une automatisation ne supprime jamais d'e-mail.",
       "neverDeletes": "Elle peut seulement déplacer, étiqueter ou marquer comme lu, et chaque changement est consigné message par message.",
-      "forwardApproval": "Un transfert attend toujours l'approbation d'une personne, et une réponse n'est jamais qu'enregistrée en brouillon."
+      "forwardApproval": "Un transfert attend l'approbation d'une personne, sauf si une règle sans approbation ci-dessous couvre toutes ses adresses, et une réponse n'est jamais qu'enregistrée en brouillon."
     },
     "empty": {
       "title": "Aucune automatisation pour l'instant",

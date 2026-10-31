@@ -1374,7 +1374,7 @@
     "trust": {
       "headline": "Las automatizaciones nunca eliminan correo.",
       "neverDeletes": "Solo pueden mover, etiquetar o marcar como leído, y cada cambio queda registrado mensaje a mensaje.",
-      "forwardApproval": "Un reenvío siempre espera a que una persona lo apruebe, y una respuesta solo se guarda como borrador."
+      "forwardApproval": "Un reenvío espera a que una persona lo apruebe salvo que una regla sin aprobación de abajo cubra todas sus direcciones, y una respuesta solo se guarda como borrador."
     },
     "empty": {
       "title": "Todavía no hay automatizaciones",

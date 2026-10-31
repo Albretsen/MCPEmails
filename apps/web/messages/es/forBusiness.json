@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Rutina",
         "h": "Pon la rutina en piloto automático",
-        "p": "Las tareas repetitivas pueden funcionar como <b>automatizaciones de triaje</b>: una búsqueda guardada más una acción fija (mover, etiquetar, marcar como leído, reenviar o redactar una respuesta) con una cadencia, sin ningún modelo de IA de por medio. Una automatización nunca puede borrar correo, y un reenvío que ponga en cola siempre espera tu aprobación."
+        "p": "Las tareas repetitivas pueden funcionar como <b>automatizaciones de triaje</b>: una búsqueda guardada más una acción fija (mover, etiquetar, marcar como leído, reenviar o redactar una respuesta) con una cadencia, sin ningún modelo de IA de por medio. Una automatización nunca puede borrar correo, y un reenvío que ponga en cola espera tu aprobación salvo que hayas permitido esa dirección exacta."
       }
     }
   },

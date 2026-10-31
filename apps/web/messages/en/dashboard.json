@@ -1374,7 +1374,7 @@
     "trust": {
       "headline": "Automations never delete email.",
       "neverDeletes": "They can only move, label or mark mail as read, and every change is recorded message by message.",
-      "forwardApproval": "Forwarding always waits for a person to approve it, and a reply is only ever saved as a draft."
+      "forwardApproval": "A forward waits for a person to approve it unless a no-approval rule below covers every address, and a reply is only ever saved as a draft."
     },
     "empty": {
       "title": "No automations yet",
