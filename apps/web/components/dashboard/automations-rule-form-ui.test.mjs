@@ -11,6 +11,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { installDom, mount, flush } from '../../scripts/test-dom.mjs';
 
@@ -298,6 +299,35 @@ test('row 22: nothing waiting, nothing to ask', async (t) => {
   await click(buttonNamed(dialog, copy.delete.confirm));
   await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
   assert.deepEqual(calls[0].body, { cancel_waiting: false });
+});
+
+test('row 22: the toast reports what the server really cancelled', async (t) => {
+  // More than the queue's first page could count.
+  const { view } = await render(t, {
+    approvals: waitingRows,
+    respond: () => ({ ok: true, status: 200, json: async () => ({ success: true, cancelled: 120 }) }),
+  });
+  await click(buttonNamed(view.container, copy.rowDelete));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  await click(buttonNamed(dialogOf(view), copy.delete.confirm));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  assert.ok(document.body.textContent.includes('Automation deleted and 120 waiting forwards cancelled.'), document.body.textContent);
+});
+
+// The rule sentence says mail already in the mailbox counts, which is what the
+// engine does today. Whoever adds "Include past mail" makes that false for some
+// rules, so this fails until RuleSentence reads the new value: pick between
+// automations.sentence.pastIncluded and pastExcluded, both already translated.
+test('row 19: the past-mail line follows the engine', () => {
+  const root = new URL('../../../../supabase/functions/mcp-server/triage-engine.ts', import.meta.url);
+  const engine = readFileSync(root, 'utf8');
+  const panel = readFileSync(new URL('./AutomationsPanel.jsx', import.meta.url), 'utf8');
+  const hasOption = /include_?past|past_?mail|start_?from|starts_?from/i.test(engine);
+  assert.equal(
+    hasOption && !panel.includes('sentence.pastExcluded'),
+    false,
+    'The engine has a past-mail option. Make RuleSentence say sentence.pastExcluded when past mail is left out.',
+  );
 });
 
 test('row 17: the page does not say nobody is watching', () => {
