@@ -129,6 +129,16 @@
         "provider": "Stripe",
         "purpose": "Procesamiento de pagos (solo facturación, sin datos de correo)",
         "location": "EE. UU.; certificado PCI-DSS"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "Correos de la cuenta: recibos, avisos de facturación, invitaciones, respuestas de soporte, enlaces de inicio de sesión y de restablecimiento de contraseña",
+        "location": "Enviado desde la UE (Irlanda); Resend es una empresa de EE. UU."
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Nuestros propios buzones de empresa, como nuestra dirección de soporte",
+        "location": "Operado desde Suiza"
       }
     ]
   },

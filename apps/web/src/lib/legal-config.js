@@ -4,5 +4,5 @@
 // 2026-09-29 (the marketing-email consent purpose), because bumping one
 // document's date must not claim the other changed too.
 export const LAST_UPDATED = 'October 24, 2026';
-export const PRIVACY_LAST_UPDATED = 'October 24, 2026';
+export const PRIVACY_LAST_UPDATED = 'October 31, 2026';
 export const EFFECTIVE_DATE = 'May 25, 2026';

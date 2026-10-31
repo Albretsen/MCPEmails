@@ -85,7 +85,7 @@ Ce que vous pouvez écrire noir sur blanc :
 - Le contenu des messages n'est jamais stocké. Il est récupéré en direct chez le fournisseur du client à chaque requête, puis abandonné.
 - La seule donnée de boîte conservée est l'identifiant du fournisseur, chiffré au repos en AES-256-GCM, la clé étant gardée séparément.
 - L'activité est journalisée en métadonnées seulement : nom de l'outil, boîte, horodatage et statut, jamais le contenu.
-- Aucun fournisseur d'IA n'est sous-traitant. MCPEmails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel et Stripe.
+- Aucun fournisseur d'IA n'est sous-traitant. MCPEmails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel, Hetzner, Stripe, Resend et Migadu.
 - La seule exception au "jamais stocké" est un message programmé pour plus tard, conservé chiffré jusqu'à son heure d'envoi.
 
 Ne promettez pas que l'injection de consignes est résolue. Elle est contenue, pas résolue, et c'est bien pour cela que les clés en lecture seule, les boîtes restreintes et le blocage avant envoi existent. Ne promettez pas de réaction instantanée, ni des certifications que le produit n'a pas revendiquées. Envoyez celui qui fait la revue de sécurité vers [/security](/security) et rédigez votre contrat pour coller à cette page, pas pour aller au-delà. Le code est public et auto-hébergeable, ce qui répond à un audit mieux que n'importe quelle promesse.

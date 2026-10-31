@@ -85,7 +85,7 @@ Påstander du trygt kan skrive i en avtale:
 - Meldingsinnhold lagres aldri. Det hentes live fra kundens leverandør ved hver forespørsel og forkastes etterpå.
 - Den eneste postkassedataen som beholdes, er leverandørlegitimasjonen, kryptert i ro med AES-256-GCM og med nøkkelen oppbevart separat.
 - Aktivitet logges kun som metadata: verktøynavn, postkasse, tidsstempel og status, aldri innhold.
-- Ingen AI-leverandør er underleverandør. MCPEmails sender verken e-posten din til en egen modell eller trener på den. Underleverandørene er Supabase, Vercel og Stripe.
+- Ingen AI-leverandør er underleverandør. MCPEmails sender verken e-posten din til en egen modell eller trener på den. Underleverandørene er Supabase, Vercel, Hetzner, Stripe, Resend og Migadu.
 - Det ene unntaket fra "lagres aldri" er en melding som planlegges for senere, som holdes kryptert fram til sendetidspunktet.
 
 Ikke lov at instruksjonsinjeksjon er løst. Den er begrenset, ikke løst, og nettopp derfor finnes lesetilgangsnøkler, begrensede postkasser og godkjenningssperren. Ikke lov øyeblikkelig reaksjon, og ikke lov sertifiseringer produktet aldri har hevdet. Send kundens sikkerhetsansvarlige til [/security](/security) og skriv avtalen slik at den passer til den siden, ikke foran den. Koden er offentlig og kan driftes selv, noe som besvarer en sikkerhetsgjennomgang bedre enn et løfte.

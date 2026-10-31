@@ -168,6 +168,12 @@
     "stripePurpose": "Traitement des paiements",
     "stripeData": "E-mail de facturation, données de carte de paiement (stockées par Stripe, pas par nous)",
     "stripeLocation": "États-Unis (Stripe est certifié PCI-DSS)",
+    "resendPurpose": "E-mails liés au compte : reçus, avis de facturation, invitations, réponses du support, liens de connexion et de réinitialisation du mot de passe",
+    "resendData": "Votre adresse e-mail et le contenu de ces e-mails, y compris les liens de connexion à usage unique",
+    "resendLocation": "Envoi depuis l'UE (Irlande) ; Resend est une société américaine",
+    "migaduPurpose": "Nos propres boîtes aux lettres professionnelles, comme notre adresse de support",
+    "migaduData": "Les e-mails que vous nous envoyez et nos réponses",
+    "migaduLocation": "Exploité depuis la Suisse",
     "emailProvidersTitle": "5.2 Fournisseurs de messagerie (vos fournisseurs, pas les nôtres)",
     "emailProvidersP": "Lorsque vous connectez un compte Gmail, Outlook / Microsoft 365, Fastmail ou un autre compte IMAP, MCPEmails s'authentifie auprès de ce fournisseur à l'aide des identifiants que vous fournissez. La politique de confidentialité propre à votre fournisseur de messagerie régit les données conservées dans votre boîte aux lettres. MCPEmails accède à votre boîte aux lettres uniquement lorsque votre agent effectue un appel d'outil, et uniquement pour les messages ou dossiers spécifiques que l'outil demande.",
     "noBrokersTitle": "5.3 Aucun courtier en données ni réseau publicitaire",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. Transferts internationaux de données",
     "p1": "MCPEmails est exploité depuis la Norvège, qui est soumise au cadre de protection des données de l'Espace économique européen (EEE). Si vous accédez au service depuis l'extérieur de l'EEE, vos données peuvent être transférées et traitées dans des pays situés au sein de l'EEE.",
-    "p2": "Nos sous-traitants d'infrastructure (Supabase, Vercel) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par leur certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework).",
+    "p2": "Nos sous-traitants d'infrastructure (Supabase, Vercel, Resend) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par leur certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework). Migadu est établi en Suisse, pays couvert par une décision d'adéquation de l'UE.",
     "p3": "Notre base de données, qui contient les données de compte et de configuration, est hébergée dans l'UE (Stockholm, Suède) pour tous les clients. Aucun forfait ni réglage ne la déplace vers une autre région. Les serveurs qui traitent les requêtes de votre agent ne sont pas tous dans l'UE : les fonctions edge qui se connectent à votre boîte aux lettres s'exécutent aux États-Unis (côte Est), tout comme la partie de notre site qui relaie ces requêtes. Le contenu des e-mails y transite en direct, pour répondre à la requête, et n'y est pas stocké. Les identifiants chiffrés sont déchiffrés dans ce même environnement américain le temps de la requête."
   },
   "yourRights": {

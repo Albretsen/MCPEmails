@@ -85,7 +85,7 @@ Afirmaciones que puedes poner por escrito:
 - El contenido de los mensajes nunca se almacena. Se obtiene en vivo del proveedor del cliente en cada petición y se descarta.
 - El único dato del buzón que se conserva es la credencial del proveedor, cifrada en reposo con AES-256-GCM y con la clave guardada por separado.
 - La actividad se registra solo como metadatos: nombre de la herramienta, buzón, marca de tiempo y estado, nunca contenido.
-- Ningún proveedor de IA es subencargado. MCPEmails ni envía tu correo a un modelo propio ni entrena con él. Los subencargados son Supabase, Vercel y Stripe.
+- Ningún proveedor de IA es subencargado. MCPEmails ni envía tu correo a un modelo propio ni entrena con él. Los subencargados son Supabase, Vercel, Hetzner, Stripe, Resend y Migadu.
 - La única excepción al "nunca se almacena" es un mensaje programado para más tarde, que se guarda cifrado hasta su hora de envío.
 
 No prometas que la inyección de instrucciones está resuelta. Está contenida, no resuelta, y por eso existen las claves de solo lectura, los buzones restringidos y la aprobación previa. No prometas reacción instantánea ni certificaciones que el producto no ha reclamado. Manda a quien revise la seguridad a [/security](/security) y redacta tu contrato para que encaje con esa página, no por delante de ella. El código es público y se puede autoalojar, lo que responde a una auditoría mejor que cualquier promesa.
