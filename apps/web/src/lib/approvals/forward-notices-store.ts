@@ -107,7 +107,7 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     // system-notify, which mails the operator. The audit trail is what is wanted.
     const { error } = await this.db.from('system_events').insert({
       event_type: 'automation.forward_notice',
-      payload: event.payload as Json,
+      payload: event.payload as { [key: string]: Json | undefined },
       status: event.status,
       error: event.error?.slice(0, 120) ?? null,
       processed_at: new Date().toISOString(),

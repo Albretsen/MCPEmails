@@ -87,6 +87,10 @@ async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owne
     if (String(url).endsWith('/send-as') && (init.method ?? 'GET') === 'GET') {
       return { ok: true, status: 200, json: async () => ({ aliases: [] }) };
     }
+    // The dashboard's waiting count, loaded on every section. Same treatment.
+    if (String(url) === '/api/approvals') {
+      return { ok: true, status: 200, json: async () => ({ approvals: [], decided: [] }) };
+    }
     let body = null;
     if (typeof init.body === 'string') body = JSON.parse(init.body);
     const request = { url: String(url), method: init.method ?? 'GET', body, raw: init.body };
