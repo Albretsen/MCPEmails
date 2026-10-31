@@ -10,7 +10,7 @@
     "usernameForm": "Tu dirección completa, incluido el dominio: name@yandex.com."
   },
   "meta": {
-    "title": "Conecta Yandex Mail a Claude, Cursor y clientes MCP",
+    "title": "Conecta Yandex Mail a Claude, ChatGPT y clientes MCP",
     "description": "Conecta Yandex Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imap.yandex.com:993. Ajustes verificados, contraseña de aplicación obligatoria."
   },
   "hero": {

@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Zoho Mail til Claude, Cursor og MCP-klienter",
+    "title": "Koble Zoho Mail til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Zoho Mail til Claude, Cursor og enhver MCP-klient via IMAP på imap.zoho.com:993. IMAP er av som standard, og verten følger Zoho-datasenteret ditt."
   },
   "hero": {

@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble GoDaddy-e-post til Claude, Cursor og MCP",
+    "title": "Koble GoDaddy-e-post til Claude, ChatGPT og MCP",
     "description": "Koble GoDaddy Professional Email til Claude og enhver MCP-klient over IMAP på imap.secureserver.net:993. Microsoft 365 fra GoDaddy kobles til med Outlook."
   },
   "hero": {

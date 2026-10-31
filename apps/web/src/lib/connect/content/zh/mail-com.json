@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Mail.com 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Mail.com 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过 imap.mail.com:993 的 IMAP 将 mail.com 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。POP3/IMAP 是 mail.com Premium 功能，默认关闭。"
   },
   "hero": {

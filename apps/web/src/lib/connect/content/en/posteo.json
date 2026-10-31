@@ -14,7 +14,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Posteo to Claude, Cursor and MCP Clients",
+    "title": "Connect Posteo to Claude, ChatGPT and MCP Clients",
     "description": "Connect Posteo to Claude, Cursor and any MCP client over IMAP at posteo.de:993. Extra account protection makes an app password mandatory for every mail client."
   },
   "hero": {

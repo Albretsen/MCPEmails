@@ -14,7 +14,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Posteo mit Claude, Cursor & MCP verbinden (IMAP)",
+    "title": "Posteo mit Claude, ChatGPT & MCP verbinden (IMAP)",
     "description": "Posteo mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über posteo.de:993. Mit zusätzlichem Postfachschutz ist für jedes Mailprogramm ein App-Passwort Pflicht."
   },
   "hero": {
