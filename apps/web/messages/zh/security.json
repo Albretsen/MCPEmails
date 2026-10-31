@@ -129,6 +129,16 @@
         "provider": "Stripe",
         "purpose": "支付处理（仅限计费，不含邮件数据）",
         "location": "美国；通过 PCI-DSS 认证"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "账户邮件：收据、账单通知、邀请、支持回复、登录链接和密码重置链接",
+        "location": "从欧盟（爱尔兰）发送；Resend 是一家美国公司"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "我们自己的企业邮箱，例如我们的支持邮箱",
+        "location": "从瑞士运营"
       }
     ]
   },

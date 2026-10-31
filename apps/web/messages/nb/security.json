@@ -129,6 +129,16 @@
         "provider": "Stripe",
         "purpose": "Betalingsbehandling (kun fakturering, ingen e-postdata)",
         "location": "USA; PCI-DSS-sertifisert"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "Konto-e-post: kvitteringer, fakturavarsler, invitasjoner, svar fra support, innloggingslenker og lenker for å tilbakestille passord",
+        "location": "Sendes fra EU (Irland); Resend er et amerikansk selskap"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Våre egne bedriftspostkasser, som supportadressen vår",
+        "location": "Driftes fra Sveits"
       }
     ]
   },

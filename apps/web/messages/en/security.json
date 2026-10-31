@@ -129,6 +129,16 @@
         "provider": "Stripe",
         "purpose": "Payment processing (billing only, no email data)",
         "location": "US; PCI-DSS certified"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "Account email: receipts, billing notices, invites, support replies, sign-in and password reset links",
+        "location": "Sent from the EU (Ireland); Resend is a US company"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Our own business mailboxes, such as our support address",
+        "location": "Operated from Switzerland"
       }
     ]
   },

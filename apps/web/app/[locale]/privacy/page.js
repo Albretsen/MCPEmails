@@ -320,6 +320,18 @@ export default async function PrivacyPage({ params }) {
                       <td>{t('thirdParties.stripeData')}</td>
                       <td>{t('thirdParties.stripeLocation')}</td>
                     </tr>
+                    <tr>
+                      <td><strong>Resend</strong></td>
+                      <td>{t('thirdParties.resendPurpose')}</td>
+                      <td>{t('thirdParties.resendData')}</td>
+                      <td>{t('thirdParties.resendLocation')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Migadu</strong></td>
+                      <td>{t('thirdParties.migaduPurpose')}</td>
+                      <td>{t('thirdParties.migaduData')}</td>
+                      <td>{t('thirdParties.migaduLocation')}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>

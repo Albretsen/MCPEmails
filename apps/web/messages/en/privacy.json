@@ -168,6 +168,12 @@
     "stripePurpose": "Payment processing",
     "stripeData": "Billing email, payment card data (stored by Stripe, not us)",
     "stripeLocation": "US (Stripe is PCI-DSS certified)",
+    "resendPurpose": "Account email: receipts, billing notices, invites, support replies, sign-in and password reset links",
+    "resendData": "Your email address and the content of those emails, including single-use sign-in links",
+    "resendLocation": "Sent from the EU (Ireland); Resend is a US company",
+    "migaduPurpose": "Our own business mailboxes, such as our support address",
+    "migaduData": "Email you send us and our replies",
+    "migaduLocation": "Operated from Switzerland",
     "emailProvidersTitle": "5.2 Email providers (your providers, not ours)",
     "emailProvidersP": "When you connect Gmail, Outlook / Microsoft 365, Fastmail, or another IMAP account, MCPEmails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCPEmails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.",
     "noBrokersTitle": "5.3 No data brokers or advertising networks",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. International Data Transfers",
     "p1": "MCPEmails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.",
-    "p2": "Our infrastructure sub-processors (Supabase, Vercel) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification.",
+    "p2": "Our infrastructure sub-processors (Supabase, Vercel, Resend) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification. Migadu is based in Switzerland, which has an EU adequacy decision.",
     "p3": "Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region. Not every server that handles your agent's requests is in the EU: the edge functions that connect to your mailbox run in the United States (US East), and so does the part of our website that relays those requests. Email content passes through them live, to answer the request, and is not stored there. Encrypted credentials are decrypted in that same US environment for the duration of a request."
   },
   "yourRights": {

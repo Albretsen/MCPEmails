@@ -129,6 +129,16 @@
         "provider": "Stripe",
         "purpose": "Zahlungsabwicklung (nur Abrechnung, keine E-Mail-Daten)",
         "location": "USA; PCI-DSS-zertifiziert"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "Konto-E-Mails: Belege, Abrechnungshinweise, Einladungen, Support-Antworten, Anmelde- und Passwort-Links",
+        "location": "Versand aus der EU (Irland); Resend ist ein US-Unternehmen"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "Unsere eigenen geschäftlichen Postfächer, etwa unsere Support-Adresse",
+        "location": "Betrieb aus der Schweiz"
       }
     ]
   },

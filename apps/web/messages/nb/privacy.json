@@ -168,6 +168,12 @@
     "stripePurpose": "Betalingsbehandling",
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
+    "resendPurpose": "Konto-e-post: kvitteringer, fakturavarsler, invitasjoner, svar fra support, innloggingslenker og lenker for å tilbakestille passord",
+    "resendData": "E-postadressen din og innholdet i disse e-postene, inkludert engangslenker for innlogging",
+    "resendLocation": "Sendes fra EU (Irland); Resend er et amerikansk selskap",
+    "migaduPurpose": "Våre egne bedriftspostkasser, som supportadressen vår",
+    "migaduData": "E-post du sender oss og svarene våre",
+    "migaduLocation": "Driftes fra Sveits",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
     "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. Internasjonale dataoverføringer",
     "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
-    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
+    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel, Resend) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering. Migadu holder til i Sveits, som har en beslutning om tilstrekkelig beskyttelsesnivå fra EU.",
     "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region. Ikke alle serverne som håndterer forespørslene fra agenten din, står i EU: edge-funksjonene som kobler til innboksen din, kjører i USA (østkysten), og det samme gjør delen av nettstedet vårt som videresender disse forespørslene. E-postinnhold passerer gjennom dem direkte for å besvare forespørselen og lagres ikke der. Kryptert legitimasjon dekrypteres i det samme amerikanske miljøet mens forespørselen pågår."
   },
   "yourRights": {

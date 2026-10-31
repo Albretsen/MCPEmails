@@ -92,7 +92,7 @@ Claims you can put in writing:
 - Message content is never stored. It is fetched live from the client's provider on each request and discarded.
 - The only inbox data retained is the provider credential, encrypted at rest with AES-256-GCM, the key held separately.
 - Activity is logged as metadata only: tool name, inbox, timestamp, status, never content.
-- No AI provider is a subprocessor. MCPEmails neither sends email to a model of its own nor trains on it. The subprocessors are Supabase, Vercel, and Stripe.
+- No AI provider is a subprocessor. MCPEmails neither sends email to a model of its own nor trains on it. The subprocessors are Supabase, Vercel, Hetzner, Stripe, Resend, and Migadu.
 - The one exception to "never stored" is a message scheduled for later, held encrypted until its send time.
 
 Do not promise that prompt injection is solved. It is contained, not solved, which is why read-only keys, restricted inboxes, and the approval hold exist. Do not promise instant reaction, and do not promise certifications the product has not claimed. Send the client's reviewer to [/security](/security) and write your contract to match that page, not ahead of it. The code is public and self-hostable, which answers a security review better than a promise.
