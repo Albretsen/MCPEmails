@@ -263,6 +263,124 @@ Deno.test("an inbox with no own addresses configured never self-filters", () => 
   assertEquals(emails(result), ["them@example.com", "bjellanda@gmail.com"]);
 });
 
+// ── Reply-To (2026-10-31) ───────────────────────────────────────────────────
+
+Deno.test("a reply goes to Reply-To, not to a From that is the inbox itself", () => {
+  const result = computeReplyRecipients({
+    from: [addr(OWN[0])],
+    replyTo: [addr("customer@example.com", "A Customer")],
+    to: [addr(OWN[0])],
+    ownAddresses: OWN,
+  });
+  assert(result.ok);
+  assertEquals(result.recipients, [{ name: "A Customer", email: "customer@example.com" }]);
+  assertEquals(result.selfReply, false);
+});
+
+Deno.test("a reply goes to Reply-To instead of an outside From", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr("form@example.com")],
+      replyTo: [addr("person@example.com")],
+      ownAddresses: OWN,
+    })),
+    ["person@example.com"],
+  );
+});
+
+Deno.test("with no Reply-To, or none with a usable address, the reply goes to From", () => {
+  for (const replyTo of [undefined, null, [], [null], [addr("")], [addr("not an address")]]) {
+    assertEquals(
+      emails(computeReplyRecipients({ from: [addr("sender@example.com")], replyTo, ownAddresses: OWN })),
+      ["sender@example.com"],
+    );
+  }
+});
+
+Deno.test("every address of a Reply-To list receives the reply, once", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr("sender@example.com")],
+      replyTo: [addr("a@example.com"), addr("b@example.com"), addr("A@example.com")],
+      ownAddresses: OWN,
+    })),
+    ["a@example.com", "b@example.com"],
+  );
+});
+
+Deno.test("reply_all is Reply-To plus To and Cc, and leaves out a From they do not name", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr("sender@example.com")],
+      replyTo: [addr("list@example.com")],
+      to: [addr(OWN[0]), addr("colleague@example.com")],
+      cc: [addr("cc@example.com")],
+      ownAddresses: OWN,
+      replyAll: true,
+    })),
+    ["list@example.com", "colleague@example.com", "cc@example.com"],
+  );
+});
+
+Deno.test("reply_all keeps a From that To or Cc also names", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr("sender@example.com")],
+      replyTo: [addr("list@example.com")],
+      cc: [addr("sender@example.com")],
+      ownAddresses: OWN,
+      replyAll: true,
+    })),
+    ["list@example.com", "sender@example.com"],
+  );
+});
+
+Deno.test("reply_all on a form ticket reaches only the customer", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr(OWN[0])],
+      replyTo: [addr("customer@example.com")],
+      to: [addr(OWN[0])],
+      ownAddresses: OWN,
+      replyAll: true,
+    })),
+    ["customer@example.com"],
+  );
+});
+
+Deno.test("the inbox's own address is dropped from a Reply-To list that names someone else", () => {
+  assertEquals(
+    emails(computeReplyRecipients({
+      from: [addr("sender@example.com")],
+      replyTo: [addr(OWN[1]), addr("other@example.com")],
+      ownAddresses: OWN,
+    })),
+    ["other@example.com"],
+  );
+});
+
+Deno.test("a Reply-To that is only the inbox itself is a reply to yourself, exactly once", () => {
+  for (const replyAll of [false, true]) {
+    const result = computeReplyRecipients({
+      from: [addr("sender@example.com")],
+      replyTo: [addr(OWN[0]), addr(OWN[1])],
+      ownAddresses: OWN,
+      replyAll,
+    });
+    assertEquals(emails(result), [OWN[0]]);
+    assert(result.ok && result.selfReply);
+  }
+});
+
+Deno.test("a Reply-To list is capped like reply_all", () => {
+  const replyTo = Array.from({ length: 60 }, (_, i) => addr(`p${i}@example.com`));
+  assertEquals(emails(computeReplyRecipients({ replyTo, ownAddresses: OWN })).length, 50);
+});
+
+Deno.test("a message with only a Reply-To can be replied to", () => {
+  assertEquals(emails(computeReplyRecipients({ replyTo: [addr("only@example.com")] })), ["only@example.com"]);
+});
+
 Deno.test("ownAddressSet lower-cases and ignores junk", () => {
   const own = ownAddressSet(["BJellanda@Gmail.com", "", null, "not-an-address"]);
   assertEquals(own.has("bjellanda@gmail.com"), true);
