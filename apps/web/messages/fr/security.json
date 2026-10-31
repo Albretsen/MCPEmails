@@ -53,7 +53,7 @@
       },
       {
         "data": "Envois retenus pour votre approbation",
-        "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou expirent au bout de 24 heures",
+        "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou jusqu'à leur expiration : au bout de 24 heures pour un envoi d'un assistant IA, au bout de 7 jours pour un transfert d'une automatisation",
         "stored": "Oui, chiffrés au repos, puis conservés dans votre historique des approbations"
       },
       {

@@ -22,6 +22,9 @@ export type DeliveryReason =
   | 'original_too_large'
   | 'original_unavailable'
   | 'may_have_sent'
+  | 'refused'
+  | 'recipient_refused'
+  | 'provider_quota'
   | 'mailbox'
   | 'key'
   | 'expired'
@@ -44,7 +47,10 @@ const REASON_PATTERNS: Array<[RegExp, DeliveryReason]> = [
   [/original_too_large/, 'original_too_large'],
   [/original_unavailable/, 'original_unavailable'],
   [/delivery_uncertain|dispatch interrupted|provider_error|-32603/, 'may_have_sent'],
-  [/no longer connected|receiving only|imap_auth_failed|gmail_auth_failed|outlook_auth_failed|Inbox .* not found/i, 'mailbox'],
+  [/refused before transmission \(recipient\)|invalid_recipient|outbound_recipient_not_allowed/, 'recipient_refused'],
+  [/refused before transmission/, 'refused'],
+  [/quota_exceeded/, 'provider_quota'],
+  [/no longer connected|receiving only|imap_auth_failed|gmail_auth_failed|outlook_auth_failed|Inbox .* not found|could not be read to find the original/i, 'mailbox'],
   [/API key is unavailable|scope_denied|no longer has access/i, 'key'],
   [/expired before it was decided/, 'expired'],
   [/included actions/, 'allowance'],
@@ -57,6 +63,31 @@ export function deliveryReasonFromDetail(detail: unknown): DeliveryReason {
     if (pattern.test(text)) return reason;
   }
   return 'generic';
+}
+
+/**
+ * The reasons that prove nothing went out, because the failure came before any
+ * byte reached the provider. Anything else, a new reason and `generic` included,
+ * may have been sent, and is never offered for sending again. This is a list of
+ * what is proven, on purpose: a new failure has to be added here to get a retry.
+ */
+const NOT_SENT_REASONS: ReadonlySet<DeliveryReason> = new Set<DeliveryReason>([
+  'original_ambiguous',
+  'original_not_found',
+  'original_too_large',
+  'original_unavailable',
+  'refused',
+  'recipient_refused',
+  'provider_quota',
+  'mailbox',
+  'key',
+  'expired',
+  'allowance',
+]);
+
+/** True only for a failed marker whose recorded reason proves nothing was sent. */
+export function provablyNotSent(row: { status?: unknown; error_detail?: unknown } | null | undefined): boolean {
+  return row?.status === 'error' && NOT_SENT_REASONS.has(deliveryReasonFromDetail(row.error_detail));
 }
 
 /**
@@ -93,6 +124,24 @@ export function deliveryFromScheduledSend(
     default:
       return null;
   }
+}
+
+/**
+ * Every marker row of one approval, or null when they could not be read. An
+ * approval has one, but a decision about sending again should not assume it.
+ */
+export async function loadAllScheduledSends(
+  db: any,
+  workspaceId: string,
+  approvalId: string,
+): Promise<Array<Record<string, unknown>> | null> {
+  const { data, error } = await db
+    .from('scheduled_sends')
+    .select('payload, status, error_detail, sent_at, send_at')
+    .eq('workspace_id', workspaceId)
+    .eq('payload_encrypted', false)
+    .in('payload->>approval_id', [approvalId]);
+  return error || !Array.isArray(data) ? null : data;
 }
 
 /**

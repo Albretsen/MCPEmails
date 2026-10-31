@@ -15,6 +15,7 @@ const {
   composeForwardNotice,
   composeReceipt,
   composeCoveragePaused,
+  composeFailedNotice,
   dispatchForwardNotices,
   cleanRuleName,
   formatDeadline,
@@ -57,6 +58,108 @@ test('the reminder says it expires, in the singular when there is one', () => {
   const email = composeForwardNotice(facts({ kind: 'reminder', count: 1 }), TOKEN);
   assert.equal(email.subject, '1 forward expires soon');
   assert.match(email.text, /Decide by 7 November 2026/);
+});
+
+test('the reminder says how many expire soon and how many more wait', () => {
+  const email = composeForwardNotice(facts({ kind: 'reminder', count: 7, expiringSoon: 1 }), TOKEN);
+  assert.equal(email.subject, '1 forward expires soon, 6 more waiting');
+  assert.match(email.text, /has 1 forward that expires soon, and 6 more waiting for approval/);
+  assert.ok(!email.text.includes('still has 7'));
+});
+
+test('the reminder reads as before when all of them are near the deadline', () => {
+  const email = composeForwardNotice(facts({ kind: 'reminder', count: 3, expiringSoon: 3 }), TOKEN);
+  assert.equal(email.subject, '3 forwards expire soon');
+});
+
+test('a reminder with nothing near its deadline any more is cancelled', async () => {
+  const { store, send, state } = harness({
+    notices: [{ id: 'n1', workspace_id: 'w1', triage_rule_id: RULE, kind: 'reminder', attempts: 1 }],
+    waiting: { count: 2, addresses: ['books@example.test'], deadline: DEADLINE, expiringSoon: 0 },
+  });
+  const summary = await dispatchForwardNotices(store, send);
+  assert.equal(summary.cancelled, 1);
+  assert.equal(state.sent.length, 0);
+});
+
+test('the address line is true for one address, several, and forwards that differ', () => {
+  assert.match(composeForwardNotice(facts(), TOKEN).text, /They go to books@example\.test\./);
+  assert.match(
+    composeForwardNotice(facts({ count: 1, addresses: ['a@example.test', 'b@example.test'] }), TOKEN).text,
+    /It goes to a@example\.test and b@example\.test\./,
+  );
+  assert.match(
+    composeForwardNotice(facts({ addresses: ['a@example.test', 'b@example.test'], addressesVary: true }), TOKEN).text,
+    /They go to different addresses: a@example\.test and b@example\.test\./,
+  );
+});
+
+test('a receipt stops receipts only; the others stop the notices', () => {
+  const receipt = composeReceipt({ ruleId: RULE, ruleName: 'Invoices', noApprovalRuleName: 'Trusted', count: 1, addresses: ['a@example.test'] }, TOKEN);
+  assert.ok(receipt.unsubscribe.includes('c=approval_receipts'));
+  assert.ok(receipt.text.includes('Stop these receipts'));
+  assert.ok(receipt.text.includes('You still hear when forwards wait or fail'));
+  assert.ok(composeForwardNotice(facts(), TOKEN).unsubscribe.includes('c=approval_notices'));
+  assert.ok(composeCoveragePaused('Trusted', TOKEN).unsubscribe.includes('c=approval_notices'));
+});
+
+const failedFacts = (over: Record<string, unknown> = {}) => ({
+  ruleId: RULE,
+  ruleName: 'Invoices',
+  count: 1,
+  addresses: ['books@example.test'],
+  canRetry: 1,
+  mayHaveSent: 0,
+  reason: 'recipient_refused' as const,
+  ...over,
+});
+
+test('the failed email says what happened and what to do, with no rule name in the subject', () => {
+  const email = composeFailedNotice(failedFacts(), TOKEN);
+  assert.equal(email.subject, '1 forward could not be sent');
+  for (const part of [email.text, email.html]) {
+    assert.ok(part.includes('Invoices'));
+    assert.ok(part.includes('books@example.test'));
+    assert.ok(part.includes('The address was refused.'));
+    assert.ok(part.includes('Forward again'));
+    assert.ok(part.includes(`/dashboard/approvals?rule=${RULE}`));
+    assert.ok(part.includes('c=approval_notices'));
+  }
+});
+
+test('the failed email never offers again what may have gone out', () => {
+  const maybe = composeFailedNotice(failedFacts({ canRetry: 0, mayHaveSent: 1, reason: 'may_have_sent' }), TOKEN);
+  assert.ok(!maybe.text.includes('Forward again'));
+  assert.match(maybe.text, /may have gone out/);
+  const mixed = composeFailedNotice(failedFacts({ count: 3, canRetry: 2, mayHaveSent: 1, reason: null }), TOKEN);
+  assert.match(mixed.text, /For 2 of them nothing was sent/);
+  assert.match(mixed.text, /1 may have gone out/);
+});
+
+test('a receipt reads the receipts opt-out, every other notice the notices one', async () => {
+  const seen: string[] = [];
+  const { store, send } = harness({
+    notices: [
+      { id: 'n1', workspace_id: 'w1', triage_rule_id: RULE, kind: 'receipt', attempts: 1 },
+      { id: 'n2', workspace_id: 'w1', triage_rule_id: RULE, kind: 'queued', attempts: 1 },
+      { id: 'n3', workspace_id: 'w1', triage_rule_id: RULE, kind: 'failed', attempts: 1 },
+    ],
+  });
+  store.receipt = async () => ({ count: 1, addresses: ['a@example.test'], noApprovalRuleName: null });
+  store.failed = async () => ({ count: 1, addresses: ['a@example.test'], canRetry: 1, mayHaveSent: 0, reason: 'refused' });
+  store.recipients = async (_workspace: string, category: string) => {
+    seen.push(category);
+    return [{ userId: 'u1', email: 'owner@example.test', unsubscribeToken: TOKEN }];
+  };
+  await dispatchForwardNotices(store, send);
+  assert.deepEqual(seen, ['approval_receipts', 'approval_notices', 'approval_notices']);
+});
+
+test('a failed notice whose rows are gone is cancelled', async () => {
+  const { store, send, state } = harness({ notices: [{ id: 'n1', workspace_id: 'w1', triage_rule_id: RULE, kind: 'failed', attempts: 1 }] });
+  store.failed = async () => null;
+  assert.equal((await dispatchForwardNotices(store, send)).cancelled, 1);
+  assert.equal(state.sent.length, 0);
 });
 
 test('the subject never names the rule, so a rule cannot match its own notice', () => {
@@ -255,7 +358,7 @@ test('a receipt states count, address, rule and the run log, and what remains if
     assert.ok(part.includes('Bookkeeping'));
     assert.ok(part.includes('books@example.test'));
     assert.ok(part.includes(`/dashboard/automations?runs=${RULE}`));
-    assert.ok(part.includes('c=approval_notices'));
+    assert.ok(part.includes('c=approval_receipts'));
     assert.ok(part.includes('the run log on the Automations page is the record'));
   }
 });

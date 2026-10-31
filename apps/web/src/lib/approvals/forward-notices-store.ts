@@ -3,11 +3,13 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { deliveryReasonFromDetail, loadScheduledSendsByApproval, provablyNotSent, type DeliveryReason } from '@/lib/approvals/delivery';
 import { readSummary } from '@/lib/approvals/payload';
 import type { Database, Json } from '@/types/database.types';
 import {
-  APPROVAL_NOTICES_CATEGORY,
+  EXPIRES_SOON_MS,
   type ClaimedNotice,
+  type FailedForwards,
   type NoticeFinish,
   type NoticeRecipient,
   type NoticeStore,
@@ -28,7 +30,7 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
       workspace_id: row.workspace_id,
       triage_rule_id: row.triage_rule_id,
       no_approval_rule_id: row.no_approval_rule_id,
-      kind: (['reminder', 'receipt', 'coverage_paused'] as const).find((kind) => kind === row.kind) ?? 'queued',
+      kind: (['reminder', 'receipt', 'coverage_paused', 'failed'] as const).find((kind) => kind === row.kind) ?? 'queued',
       attempts: row.attempts,
     }));
   }
@@ -52,13 +54,21 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     const rows = data ?? [];
     if (rows.length === 0) return null;
     const addresses = new Set<string>();
+    const shapes = new Set<string>();
     for (const row of rows) {
       const to = readSummary(row.summary).to;
-      if (Array.isArray(to)) {
-        for (const address of to) if (typeof address === 'string' && address) addresses.add(address);
-      }
+      const own = Array.isArray(to) ? to.filter((address): address is string => typeof address === 'string' && Boolean(address)) : [];
+      own.forEach((address) => addresses.add(address));
+      shapes.add([...own].map((address) => address.trim().toLowerCase()).sort().join(','));
     }
-    return { count: rows.length, addresses: [...addresses], deadline: rows[0].expires_at as string };
+    const soonBefore = Date.now() + EXPIRES_SOON_MS;
+    return {
+      count: rows.length,
+      addresses: [...addresses],
+      deadline: rows[0].expires_at as string,
+      expiringSoon: rows.filter((row) => Date.parse(row.expires_at as string) <= soonBefore).length,
+      addressesVary: shapes.size > 1,
+    };
   }
 
   async receipt(noticeId: string) {
@@ -81,13 +91,51 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     return { count: rows.length, addresses: [...addresses], noApprovalRuleName: rows[0].no_approval_rule_name ?? null };
   }
 
+  async failed(noticeId: string, workspaceId: string): Promise<FailedForwards | null> {
+    const { data, error } = await this.db
+      .from('send_approvals')
+      .select('id, summary, triage_rule_id, decided_at')
+      .eq('failed_notice_id', noticeId)
+      .limit(WAITING_READ_LIMIT);
+    if (error) throw new Error(error.message);
+    const rows = data ?? [];
+    if (rows.length === 0) return null;
+    const ruleIds = [...new Set(rows.map((row) => row.triage_rule_id).filter((id): id is string => Boolean(id)))];
+    const { data: liveRules, error: rulesError } = await this.db
+      .from('triage_rules').select('id').in('id', ruleIds).is('deleted_at', null);
+    if (rulesError) throw new Error(rulesError.message);
+    const live = new Set((liveRules ?? []).map((rule) => rule.id));
+    const markers = await loadScheduledSendsByApproval(this.db, workspaceId, rows.map((row) => row.id));
+    const addresses = new Set<string>();
+    const reasons = new Set<DeliveryReason>();
+    let canRetry = 0;
+    let mayHaveSent = 0;
+    for (const row of rows) {
+      const to = readSummary(row.summary).to;
+      if (Array.isArray(to)) {
+        for (const address of to) if (typeof address === 'string' && address) addresses.add(address);
+      }
+      const marker = markers.get(row.id);
+      reasons.add(deliveryReasonFromDetail(marker?.error_detail));
+      if (!provablyNotSent(marker)) mayHaveSent += 1;
+      else if (row.triage_rule_id && live.has(row.triage_rule_id)) canRetry += 1;
+    }
+    return {
+      count: rows.length,
+      addresses: [...addresses],
+      canRetry,
+      mayHaveSent,
+      reason: reasons.size === 1 ? [...reasons][0] : null,
+    };
+  }
+
   async noApprovalRuleName(ruleId: string): Promise<string | null> {
     const { data, error } = await this.db.from('no_approval_rules').select('name').eq('id', ruleId).maybeSingle();
     if (error) throw new Error(error.message);
     return data?.name ?? null;
   }
 
-  async recipients(workspaceId: string): Promise<NoticeRecipient[]> {
+  async recipients(workspaceId: string, category: string): Promise<NoticeRecipient[]> {
     const { data: workspace, error: workspaceError } = await this.db
       .from('workspaces')
       .select('id')
@@ -113,7 +161,7 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
       .is('deleted_at', null);
     if (usersError) throw new Error(usersError.message);
     return (users ?? [])
-      .filter((user) => !(user.unsubscribed_categories ?? []).includes(APPROVAL_NOTICES_CATEGORY))
+      .filter((user) => !(user.unsubscribed_categories ?? []).includes(category))
       .map((user) => ({ userId: user.id, email: user.email, unsubscribeToken: user.unsubscribe_token }));
   }
 

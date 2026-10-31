@@ -1155,7 +1155,7 @@
       "details": "Details",
       "titleRule": "Diese E-Mail weiterleiten?",
       "subtitleRule": "Die Regel \"{rule}\" hat diese Weiterleitung vorbereitet. Es wird nichts gesendet, bis du sie freigibst.",
-      "footnoteRule": "Nur angemeldete Inhaber oder Admins können freigeben. Eine Regel oder ein KI-Assistent kann nie eine Sendung freigeben.",
+      "footnoteRule": "Nur ein angemeldeter Inhaber oder Admin des Workspace kann freigeben. Eine Automatisierung oder ein KI-Assistent kann keinen Versand freigeben.",
       "backToApprovals": "Du kannst diesen Tab schließen. Das Ergebnis bleibt auf der Seite Freigaben.",
       "forwardNote": "Notiz über der weitergeleiteten Nachricht:",
       "delivery": {
@@ -1256,7 +1256,9 @@
         "gone": "Diese Anfrage ist zu alt, um sie erneut weiterzuleiten.",
         "key_gone": "Der API-Schlüssel dieser Regel wurde gelöscht, daher kann das nicht gesendet werden.",
         "role": "Das können nur Inhaber oder Admins.",
-        "generic": "Die neue Anfrage konnte nicht erstellt werden. Es wurde nichts gesendet."
+        "generic": "Die neue Anfrage konnte nicht erstellt werden. Es wurde nichts gesendet.",
+        "may_have_sent": "Diese Weiterleitung ist möglicherweise rausgegangen und kann daher nicht erneut gesendet werden. Prüfen Sie den Ordner Gesendet.",
+        "not_failed": "Diese Weiterleitung ist nicht fehlgeschlagen."
       },
       "ruleGroup": "{rule}: {count} Weiterleitungen an {address}",
       "ruleGroupMixed": "{rule}: {count} Weiterleitungen an mehrere Adressen. Gib sie einzeln frei.",
@@ -1272,7 +1274,8 @@
         "changed": "Geändert, bitte erneut prüfen",
         "not_pending": "Bereits entschieden",
         "left_waiting": "Wartet noch, später freigeben",
-        "failed": "Nicht freigegeben"
+        "failed": "Nicht freigegeben",
+        "needs_review": "Ausgelassen: einzeln prüfen"
       },
       "approveAllErrors": {
         "mixed_addresses": "Diese gehen nicht mehr alle an eine Adresse, daher wurde nichts freigegeben. Prüfe sie einzeln.",
@@ -1286,7 +1289,11 @@
       "filterClear": "Alle Freigaben anzeigen",
       "filterEmpty": "Von dieser Automatisierung wartet nichts.",
       "sentWithoutApproval": "Ohne Freigabe gesendet ({rule})",
-      "sentWithoutApprovalUnnamed": "Ohne Freigabe gesendet"
+      "sentWithoutApprovalUnnamed": "Ohne Freigabe gesendet",
+      "approveAllHeld": "{count, plural, =1 {1 muss einzeln geprüft werden: Der Absender hat DKIM oder DMARC nicht bestanden oder konnte nicht bestätigt werden.} other {# müssen einzeln geprüft werden: Die Absender haben DKIM oder DMARC nicht bestanden oder konnten nicht bestätigt werden.}}",
+      "ruleGroupHeld": "{count, plural, =1 {1 weitere muss wegen des Absenders einzeln geprüft werden.} other {# weitere müssen wegen der Absender einzeln geprüft werden.}}",
+      "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 Weiterleitung muss} other {# Weiterleitungen müssen}} wegen des Absenders einzeln geprüft werden.",
+      "forwardAgainBodyFailed": "Beim letzten Mal wurde nichts gesendet. Dies erstellt eine neue Anfrage für dieselbe Nachricht und dieselbe Adresse. Sie wartet bis zu 7 Tage, und nichts wird gesendet, bis ein Inhaber oder Admin sie freigibt. Besteht die Ursache noch, schlägt sie erneut fehl."
     },
     "timeLeft": {
       "days": "{count, plural, one {noch # Tag} other {noch # Tage}}",
@@ -1309,8 +1316,11 @@
         "key": "Der API-Schlüssel dieser Sendung kann aus diesem Postfach nicht mehr senden. Es wurde nichts gesendet.",
         "expired": "Sie ist abgelaufen, bevor jemand entschieden hat, daher wurde nichts gesendet.",
         "send_limit": "Ein Sendelimit hält das gerade zurück. Es geht raus, sobald das Limit aufgehoben ist.",
-        "generic": "Der Versand ist nicht durchgegangen.",
-        "allowance": "Dieser Arbeitsbereich hat die enthaltene Nutzung für diesen Zeitraum aufgebraucht, daher wurde diese Weiterleitung nicht gesendet."
+        "generic": "Das Senden ist fehlgeschlagen und der Eintrag nennt keinen Grund, die Nachricht ist also möglicherweise rausgegangen. Prüfen Sie den Ordner Gesendet.",
+        "allowance": "Dieser Arbeitsbereich hat die enthaltene Nutzung für diesen Zeitraum aufgebraucht, daher wurde diese Weiterleitung nicht gesendet.",
+        "refused": "Sie wurde abgelehnt, bevor sie rausging, es wurde also nichts gesendet. Die Ursache kann die Adresse oder der Mailserver sein. Prüfen Sie die Adresse und das Postfach.",
+        "recipient_refused": "Die Adresse wurde abgelehnt, es wurde also nichts gesendet. Prüfen Sie die Adresse.",
+        "provider_quota": "Der E-Mail-Anbieter meldet, dass das Sendekontingent aufgebraucht ist, es wurde also nichts gesendet. Versuchen Sie es später erneut."
       }
     },
     "original": {
@@ -1329,6 +1339,11 @@
         "mailbox": "Das Postfach konnte gerade nicht gelesen werden, daher kann die Nachricht nicht angezeigt werden. Du kannst diese Anfrage weiterhin ablehnen.",
         "unreadable": "Die gespeicherte Anfrage konnte nicht gelesen werden, daher kann die Nachricht nicht angezeigt werden. Du kannst diese Anfrage weiterhin ablehnen."
       }
+    },
+    "senderWarning": {
+      "title": "Prüfen Sie den Absender vor der Freigabe",
+      "sender_failed": "Der Absender hat DKIM oder DMARC nicht bestanden. Diese E-Mail stammt also womöglich nicht von der angegebenen Person. Prüfen Sie sie vor der Freigabe sorgfältig.",
+      "sender_unverified": "Der Absender konnte nicht bestätigt werden. Diese E-Mail stammt also womöglich nicht von der angegebenen Person. Prüfen Sie sie vor der Freigabe."
     }
   },
   "automations": {
@@ -1481,7 +1496,7 @@
       "forwardToHelp": "Mehrere Adressen mit Kommas trennen. Höchstens zehn.",
       "forwardNoteLabel": "Notiz hinzufügen (optional)",
       "forwardNotePlaceholder": "Automatisch weitergeleitet",
-      "forwardApprovalNote": "Weiterleitungen passieren nie von selbst. Jede Weiterleitung wartet unter Freigaben, bis eine Person sie freigibt.",
+      "forwardApprovalNote": "Diese Weiterleitung wartet unter Freigaben, bis eine Person sie freigibt, es sei denn, eine Regel ohne Freigabe deckt ihre Adressen ab.",
       "templateLabel": "Antwortvorlage",
       "templatePlaceholder": "Vielen Dank für Ihre Nachricht. Wir melden uns in Kürze.",
       "templateHelp": "Wird als Entwurf gespeichert, nie gesendet. Platzhalter in doppelten geschweiften Klammern werden ausgefüllt: sender_name, sender_email, subject, date. Alles andere ist wörtlicher Text.",
@@ -1589,7 +1604,7 @@
       "title": "So funktioniert die Freigabe",
       "step1": "Findet diese Automatisierung eine passende E-Mail, wird nichts gesendet. Unter Freigaben kommt eine Weiterleitung hinzu.",
       "step2": "Ein Inhaber oder Admin öffnet Freigaben, prüft die E-Mail und die Adresse und gibt sie frei oder lehnt sie ab.",
-      "step3": "Nur eine freigegebene Weiterleitung wird gesendet. Gibt sie niemand rechtzeitig frei, wird sie nicht gesendet.",
+      "step3": "Nur eine freigegebene Weiterleitung wird gesendet. Sie wartet 7 Tage. Gibt sie bis dahin niemand frei, läuft sie ab und wird nicht gesendet.",
       "open": "Freigaben öffnen",
       "close": "Schließen"
     },
@@ -1708,7 +1723,8 @@
         "fanout_hold": "Wartet auf Freigabe: Dieses Postfach hat innerhalb einer Stunde eine Nachricht an viele Personen gesendet.",
         "daily_send_limit": "Wartet auf Freigabe: Dieses Postfach hat sein tägliches Sendelimit erreicht.",
         "sends_paused_provider_refusals": "Wartet auf Freigabe: Der E-Mail-Anbieter hat neue Nachrichten dieses Postfachs abgelehnt.",
-        "sends_frozen": "Wartet auf Freigabe: Das Senden ist für diesen Workspace ausgesetzt."
+        "sends_frozen": "Wartet auf Freigabe: Das Senden ist für diesen Workspace ausgesetzt.",
+        "coverage_off": "Wartet auf Freigabe: Die Regel ohne Freigabe für diese Adresse ist ausgeschaltet."
       }
     }
   },

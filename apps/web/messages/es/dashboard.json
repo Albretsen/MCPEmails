@@ -1155,7 +1155,7 @@
       "details": "Detalles",
       "titleRule": "¿Reenviar este correo?",
       "subtitleRule": "La regla \"{rule}\" preparó este reenvío. No se envía nada hasta que lo apruebes.",
-      "footnoteRule": "Solo un propietario o administrador con sesión iniciada puede aprobar. Una regla o un asistente de IA nunca pueden aprobar un envío.",
+      "footnoteRule": "Solo un propietario o administrador del espacio de trabajo con sesión iniciada puede aprobar. Una automatización o un asistente de IA no puede aprobar un envío.",
       "backToApprovals": "Puedes cerrar esta pestaña. El resultado queda en la página Aprobaciones.",
       "forwardNote": "Nota añadida encima del mensaje reenviado:",
       "delivery": {
@@ -1256,7 +1256,9 @@
         "gone": "Esta solicitud es demasiado antigua para reenviarla de nuevo.",
         "key_gone": "La clave de API de esta regla se eliminó, así que esto no se puede enviar.",
         "role": "Solo un propietario o administrador puede hacer esto.",
-        "generic": "No se pudo crear la nueva solicitud. No se envió nada."
+        "generic": "No se pudo crear la nueva solicitud. No se envió nada.",
+        "may_have_sent": "Este reenvío puede haber salido, así que no se puede enviar de nuevo. Revisa la carpeta de enviados.",
+        "not_failed": "Este reenvío no ha fallado."
       },
       "ruleGroup": "{rule}: {count} reenvíos a {address}",
       "ruleGroupMixed": "{rule}: {count} reenvíos a más de una dirección. Apruébalos de uno en uno.",
@@ -1272,7 +1274,8 @@
         "changed": "Cambió, revísalo de nuevo",
         "not_pending": "Ya decidido",
         "left_waiting": "Sigue pendiente, apruébalo más tarde",
-        "failed": "No aprobado"
+        "failed": "No aprobado",
+        "needs_review": "Excluido: revísalo por separado"
       },
       "approveAllErrors": {
         "mixed_addresses": "Ya no van todos a una sola dirección, así que no se aprobó nada. Revísalos de uno en uno.",
@@ -1286,7 +1289,11 @@
       "filterClear": "Ver todas las aprobaciones",
       "filterEmpty": "No hay nada en espera de esta automatización.",
       "sentWithoutApproval": "Enviado sin aprobación ({rule})",
-      "sentWithoutApprovalUnnamed": "Enviado sin aprobación"
+      "sentWithoutApprovalUnnamed": "Enviado sin aprobación",
+      "approveAllHeld": "{count, plural, =1 {1 necesita revisión individual: su remitente no superó DKIM o DMARC, o no se pudo verificar.} other {# necesitan revisión una a una: sus remitentes no superaron DKIM o DMARC, o no se pudieron verificar.}}",
+      "ruleGroupHeld": "{count, plural, =1 {1 más necesita revisión individual por su remitente.} other {# más necesitan revisión una a una por sus remitentes.}}",
+      "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 reenvío necesita revisión individual} other {# reenvíos necesitan revisión uno a uno}} por el remitente.",
+      "forwardAgainBodyFailed": "La última vez no salió nada. Esto crea una nueva solicitud para el mismo mensaje y la misma dirección. Espera hasta 7 días y no se envía nada hasta que un propietario o administrador la apruebe. Si la causa sigue ahí, volverá a fallar."
     },
     "timeLeft": {
       "days": "{count, plural, one {Queda # día} other {Quedan # días}}",
@@ -1309,8 +1316,11 @@
         "key": "La clave de API de este envío ya no puede enviar desde este buzón. No se envió nada.",
         "expired": "Caducó antes de que nadie decidiera, así que no se envió nada.",
         "send_limit": "Un límite de envío lo retiene por ahora. Saldrá cuando se levante.",
-        "generic": "El envío no se completó.",
-        "allowance": "Este espacio de trabajo ha agotado el uso incluido de este periodo, así que este reenvío no se envió."
+        "generic": "El envío falló y el registro no dice por qué, así que puede haber salido. Revisa la carpeta de enviados.",
+        "allowance": "Este espacio de trabajo ha agotado el uso incluido de este periodo, así que este reenvío no se envió.",
+        "refused": "Se rechazó antes de salir, así que no se envió nada. La causa puede ser la dirección o el servidor de correo. Comprueba la dirección y el buzón.",
+        "recipient_refused": "Se rechazó la dirección, así que no se envió nada. Comprueba la dirección.",
+        "provider_quota": "El proveedor de correo indica que se agotó la cuota de envío, así que no se envió nada. Inténtalo más tarde."
       }
     },
     "original": {
@@ -1329,6 +1339,11 @@
         "mailbox": "No se pudo leer el buzón en este momento, así que el mensaje no se puede mostrar. Puedes rechazar la solicitud.",
         "unreadable": "No se pudo leer la solicitud guardada, así que el mensaje no se puede mostrar. Puedes rechazar la solicitud."
       }
+    },
+    "senderWarning": {
+      "title": "Comprueba el remitente antes de aprobar",
+      "sender_failed": "El remitente no superó DKIM o DMARC, así que este correo puede no ser de quien dice. Revísalo con cuidado antes de aprobar.",
+      "sender_unverified": "No se pudo verificar el remitente, así que este correo puede no ser de quien dice. Revísalo antes de aprobar."
     }
   },
   "automations": {
@@ -1481,7 +1496,7 @@
       "forwardToHelp": "Separa varias direcciones con comas. Diez como máximo.",
       "forwardNoteLabel": "Nota que añadir (opcional)",
       "forwardNotePlaceholder": "Reenviado automáticamente",
-      "forwardApprovalNote": "El reenvío nunca ocurre por sí solo. Cada reenvío espera en Aprobaciones hasta que una persona lo aprueba.",
+      "forwardApprovalNote": "Este reenvío espera en Aprobaciones hasta que una persona lo apruebe, salvo que una regla sin aprobación cubra sus direcciones.",
       "templateLabel": "Plantilla de respuesta",
       "templatePlaceholder": "Gracias por escribir. Alguien te responderá en breve.",
       "templateHelp": "Se guarda como borrador, nunca se envía. Los marcadores escritos entre llaves dobles se rellenan: sender_name, sender_email, subject, date. Todo lo demás es texto literal.",
@@ -1589,7 +1604,7 @@
       "title": "Cómo funciona la aprobación",
       "step1": "Cuando esta automatización encuentra un correo que coincide, no se envía nada. Se añade un reenvío en Aprobaciones.",
       "step2": "Un propietario o administrador abre Aprobaciones, revisa el correo y la dirección, y lo aprueba o lo rechaza.",
-      "step3": "Solo se envía un reenvío aprobado. Si nadie lo aprueba a tiempo, no se envía.",
+      "step3": "Solo se envía un reenvío aprobado. Espera 7 días. Si nadie lo aprueba antes, caduca y no se envía.",
       "open": "Abrir Aprobaciones",
       "close": "Cerrar"
     },
@@ -1708,7 +1723,8 @@
         "fanout_hold": "Espera aprobación: esta bandeja envió un mensaje a muchas personas en una hora.",
         "daily_send_limit": "Espera aprobación: esta bandeja alcanzó su límite diario de envío.",
         "sends_paused_provider_refusals": "Espera aprobación: el proveedor de correo rechazó mensajes recientes de esta bandeja.",
-        "sends_frozen": "Espera aprobación: el envío está suspendido para este espacio de trabajo."
+        "sends_frozen": "Espera aprobación: el envío está suspendido para este espacio de trabajo.",
+        "coverage_off": "Esperando aprobación: la regla sin aprobación de esta dirección está desactivada."
       }
     }
   },

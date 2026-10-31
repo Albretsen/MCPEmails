@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge, Btn } from '../Primitives';
+import { useEscapeKey } from './useEscapeKey';
 import { useToast } from './Toast';
 import {
   NO_APPROVAL_DEFAULT_LIMIT,
@@ -268,6 +269,7 @@ export function NoApprovalRules({ canManage, overview, automations = [], inboxes
 
 function ConfirmDialog({ title, body, note, confirmLabel, danger = false, working, onCancel, onConfirm }) {
   const t = useTranslations('dashboard');
+  useEscapeKey(() => { if (!working) onCancel(); });
   return (
     <div className="scrim" onClick={() => !working && onCancel()}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="no-approval-confirm-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -289,6 +291,7 @@ function ConfirmDialog({ title, body, note, confirmLabel, danger = false, workin
 
 function RuleForm({ rule, automations, inboxes, working, onClose, onSubmit }) {
   const t = useTranslations('dashboard');
+  useEscapeKey(() => { if (!working) onClose(); });
   const [name, setName] = useState(rule?.name ?? '');
   const [recipients, setRecipients] = useState((rule?.recipients ?? []).join(', '));
   const [scope, setScope] = useState(rule?.scope ?? 'all_automations');

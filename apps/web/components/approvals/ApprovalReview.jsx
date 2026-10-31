@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Btn, Icon } from '../Primitives';
+import { hasSenderWarning } from '@/lib/approvals/no-approval';
 import { OriginalMessage, formatBytes } from './OriginalMessage';
 import { deliveryInFlight, deliveryReasonText, formatTimeLeft, useNow } from './approvalDisplay';
 
@@ -239,6 +240,12 @@ export function ApprovalReview({ review, csrfToken }) {
         ) : null}
 
         {banner}
+
+        {live && hasSenderWarning(review.wait_reason) ? (
+          <StatusBanner tone="warn" icon="alert-triangle" title={t('approvals.senderWarning.title')}>
+            {t(`approvals.senderWarning.${review.wait_reason}`)}
+          </StatusBanner>
+        ) : null}
 
         {!decided && state !== 'pending' && state !== 'expired' && review.decided_at ? (
           <p className="review-provenance">

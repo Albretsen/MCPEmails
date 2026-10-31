@@ -15,6 +15,15 @@ export const NO_APPROVAL_MAX_NAME = 80;
 /** `send_approvals.decided_via` of a row a no-approval rule decided. */
 export const NO_APPROVAL_DECIDED_VIA = 'no_approval_rule';
 
+/**
+ * `no_approval_wait_reason` values that are about who sent the mail. A person has
+ * to look at each of these: they are shown at the decision and never approved in
+ * bulk (src/lib/approvals/approve-all.ts).
+ */
+export function hasSenderWarning(reason: unknown): boolean {
+  return reason === 'sender_failed' || reason === 'sender_unverified';
+}
+
 /** The same test as public.no_approval_recipients_valid: one exact address, no wildcard. */
 const EXACT_ADDRESS = /^[a-z0-9.!#$&'+^_`{|}~-]+@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/;
 

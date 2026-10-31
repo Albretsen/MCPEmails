@@ -1155,7 +1155,7 @@
       "details": "Détails",
       "titleRule": "Transférer cet e-mail ?",
       "subtitleRule": "La règle « {rule} » a préparé ce transfert. Rien n'est envoyé tant que vous ne l'avez pas approuvé.",
-      "footnoteRule": "Seul un propriétaire ou un administrateur connecté peut approuver. Une règle ou un assistant IA ne peut jamais approuver un envoi.",
+      "footnoteRule": "Seul un propriétaire ou un administrateur connecté de l'espace de travail peut approuver. Une automatisation ou un assistant IA ne peut pas approuver un envoi.",
       "backToApprovals": "Vous pouvez fermer cet onglet. Le résultat reste sur la page Approbations.",
       "forwardNote": "Note ajoutée au-dessus du message transféré :",
       "delivery": {
@@ -1256,7 +1256,9 @@
         "gone": "Cette demande est trop ancienne pour être transférée à nouveau.",
         "key_gone": "La clé d'API de cette règle a été supprimée, cet e-mail ne peut donc pas être envoyé.",
         "role": "Seul un propriétaire ou un administrateur peut faire cela.",
-        "generic": "Impossible de créer la nouvelle demande. Rien n'a été envoyé."
+        "generic": "Impossible de créer la nouvelle demande. Rien n'a été envoyé.",
+        "may_have_sent": "Ce transfert est peut-être parti, il ne peut donc pas être renvoyé. Vérifiez le dossier Envoyés.",
+        "not_failed": "Ce transfert n'a pas échoué."
       },
       "ruleGroup": "{rule} : {count} transferts vers {address}",
       "ruleGroupMixed": "{rule} : {count} transferts vers plusieurs adresses. Approuvez-les un par un.",
@@ -1272,7 +1274,8 @@
         "changed": "Modifié, à vérifier de nouveau",
         "not_pending": "Déjà décidé",
         "left_waiting": "Toujours en attente, à approuver plus tard",
-        "failed": "Non approuvé"
+        "failed": "Non approuvé",
+        "needs_review": "Laissé de côté : à examiner à part"
       },
       "approveAllErrors": {
         "mixed_addresses": "Ils ne vont plus tous vers une seule adresse, donc rien n'a été approuvé. Vérifiez-les un par un.",
@@ -1286,7 +1289,11 @@
       "filterClear": "Afficher toutes les approbations",
       "filterEmpty": "Rien n'attend pour cette automatisation.",
       "sentWithoutApproval": "Envoyé sans approbation ({rule})",
-      "sentWithoutApprovalUnnamed": "Envoyé sans approbation"
+      "sentWithoutApprovalUnnamed": "Envoyé sans approbation",
+      "approveAllHeld": "{count, plural, =1 {1 doit être examiné à part : son expéditeur a échoué à DKIM ou DMARC, ou n'a pas pu être vérifié.} other {# doivent être examinés un par un : leurs expéditeurs ont échoué à DKIM ou DMARC, ou n'ont pas pu être vérifiés.}}",
+      "ruleGroupHeld": "{count, plural, =1 {1 autre doit être examiné à part à cause de son expéditeur.} other {# autres doivent être examinés un par un à cause de leurs expéditeurs.}}",
+      "ruleGroupAllHeld": "{rule} : {count, plural, =1 {1 transfert doit être examiné à part} other {# transferts doivent être examinés un par un}} à cause de l'expéditeur.",
+      "forwardAgainBodyFailed": "Rien n'est parti la dernière fois. Cela crée une nouvelle demande pour le même message et la même adresse. Elle attend jusqu'à 7 jours, et rien n'est envoyé tant qu'un propriétaire ou un administrateur ne l'a pas approuvée. Si la cause est toujours là, l'envoi échouera de nouveau."
     },
     "timeLeft": {
       "days": "{count, plural, one {# jour restant} other {# jours restants}}",
@@ -1309,8 +1316,11 @@
         "key": "La clé d'API de cet envoi ne peut plus envoyer depuis cette boîte. Rien n'a été envoyé.",
         "expired": "La demande a expiré avant toute décision, donc rien n'a été envoyé.",
         "send_limit": "Une limite d'envoi le retient pour le moment. Il partira dès qu'elle sera levée.",
-        "generic": "L'envoi n'a pas abouti.",
-        "allowance": "Cet espace de travail a épuisé l'usage inclus pour cette période, ce transfert n'a donc pas été envoyé."
+        "generic": "L'envoi a échoué et le journal n'indique pas pourquoi : il est donc peut-être parti. Vérifiez le dossier Envoyés.",
+        "allowance": "Cet espace de travail a épuisé l'usage inclus pour cette période, ce transfert n'a donc pas été envoyé.",
+        "refused": "Il a été refusé avant de partir, donc rien n'a été envoyé. L'adresse ou le serveur de messagerie peut en être la cause. Vérifiez l'adresse et la boîte.",
+        "recipient_refused": "L'adresse a été refusée, donc rien n'a été envoyé. Vérifiez l'adresse.",
+        "provider_quota": "Le fournisseur de messagerie indique que le quota d'envoi est épuisé, donc rien n'a été envoyé. Réessayez plus tard."
       }
     },
     "original": {
@@ -1329,6 +1339,11 @@
         "mailbox": "La boîte n'a pas pu être lue pour le moment, le message ne peut donc pas être affiché. Vous pouvez toujours refuser cette demande.",
         "unreadable": "La demande enregistrée n'a pas pu être lue, le message ne peut donc pas être affiché. Vous pouvez toujours refuser cette demande."
       }
+    },
+    "senderWarning": {
+      "title": "Vérifiez l'expéditeur avant d'approuver",
+      "sender_failed": "L'expéditeur a échoué à DKIM ou DMARC : ce message ne vient peut-être pas de la personne indiquée. Vérifiez-le avec soin avant d'approuver.",
+      "sender_unverified": "L'expéditeur n'a pas pu être vérifié : ce message ne vient peut-être pas de la personne indiquée. Vérifiez-le avant d'approuver."
     }
   },
   "automations": {
@@ -1481,7 +1496,7 @@
       "forwardToHelp": "Séparez plusieurs adresses par des virgules. Dix au maximum.",
       "forwardNoteLabel": "Note à ajouter (facultatif)",
       "forwardNotePlaceholder": "Transféré automatiquement",
-      "forwardApprovalNote": "Un transfert ne part jamais tout seul. Chaque transfert attend dans Approbations qu'une personne l'approuve.",
+      "forwardApprovalNote": "Ce transfert attend dans Approbations qu'une personne l'approuve, sauf si une règle sans approbation couvre ses adresses.",
       "templateLabel": "Modèle de réponse",
       "templatePlaceholder": "Merci de votre message. Quelqu'un vous répondra sous peu.",
       "templateHelp": "Enregistré en brouillon, jamais envoyé. Les variables écrites entre doubles accolades sont remplacées : sender_name, sender_email, subject, date. Tout le reste est du texte littéral.",
@@ -1589,7 +1604,7 @@
       "title": "Comment fonctionne l'approbation",
       "step1": "Quand cette automatisation trouve un e-mail correspondant, rien n'est envoyé. Un transfert est ajouté dans Approbations.",
       "step2": "Un propriétaire ou un administrateur ouvre Approbations, vérifie l'e-mail et l'adresse, puis approuve ou refuse.",
-      "step3": "Seul un transfert approuvé est envoyé. Si personne ne l'approuve à temps, il n'est pas envoyé.",
+      "step3": "Seul un transfert approuvé est envoyé. Il attend 7 jours. Si personne ne l'approuve d'ici là, il expire et n'est pas envoyé.",
       "open": "Ouvrir Approbations",
       "close": "Fermer"
     },
@@ -1708,7 +1723,8 @@
         "fanout_hold": "Attend une approbation : cette boîte a envoyé un message à de nombreuses personnes en une heure.",
         "daily_send_limit": "Attend une approbation : cette boîte a atteint sa limite d’envoi quotidienne.",
         "sends_paused_provider_refusals": "Attend une approbation : le fournisseur de messagerie a refusé des messages récents de cette boîte.",
-        "sends_frozen": "Attend une approbation : l’envoi est suspendu pour cet espace de travail."
+        "sends_frozen": "Attend une approbation : l’envoi est suspendu pour cet espace de travail.",
+        "coverage_off": "En attente d'approbation : la règle sans approbation de cette adresse est désactivée."
       }
     }
   },

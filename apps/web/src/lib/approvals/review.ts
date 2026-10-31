@@ -156,6 +156,8 @@ export interface ApprovalReviewModel {
   rule_name: string | null;
   /** What happened after approval; null for any other state. */
   delivery: ApprovalDelivery | null;
+  /** Why a no-approval rule did not send this one, while it waits. */
+  wait_reason: string | null;
 }
 
 /**
@@ -409,6 +411,7 @@ export async function loadApprovalForReview(
     kind: origin.kind,
     rule_name: neutralizeNullable(origin.rule_name),
     delivery,
+    wait_reason: typeof approval.no_approval_wait_reason === 'string' ? approval.no_approval_wait_reason : null,
     // Used to mean "an empty To is expected here". It no longer is: since
     // `buildApprovalSummary` (supabase/functions/mcp-server/index.ts) resolves
     // the real recipients and subject at queue time, a reply and a draft-send

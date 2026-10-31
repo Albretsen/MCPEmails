@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Godkjenning før utgående e-post",
-        "p": "Slå det på per postkasse, så venter hver sending, hvert svar, hver videresending, utkastsending og planlagte sending i dashbordet til du godkjenner eller avviser den. Det er med i alle planer, også Gratis."
+        "p": "Slå det på per postkasse, så venter hver sending, hvert svar, hver videresending, utkastsending og planlagte sending fra AI-klienten din i dashbordet til du godkjenner eller avviser den. Det er med i alle planer, også Gratis."
       },
       "stored": {
         "h": "E-posten den leser, lagres aldri",
@@ -143,7 +143,7 @@
       },
       {
         "q": "Kan jeg hindre at den sender noe uten meg?",
-        "a": "Ja. Slå på godkjenning for en postkasse, så venter hver utgående melding fra den i dashbordet til du godkjenner eller avviser den. Du kan også gi en AI-klient en API-nøkkel helt uten sendetillatelse. Begge deler er tilgjengelig i alle planer."
+        "a": "Ja. Slå på godkjenning for en postkasse, så venter hver utgående melding AI-klienten din sender fra den, i dashbordet til du godkjenner eller avviser den. Du kan også gi en AI-klient en API-nøkkel helt uten sendetillatelse. Begge deler er tilgjengelig i alle planer."
       },
       {
         "q": "Lagres firmaets e-post på serverne deres?",

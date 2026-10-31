@@ -765,7 +765,7 @@ test('activity_summary is a lifecycle category and the migration lets the databa
   assert.ok((LIFECYCLE_CATEGORIES as readonly string[]).includes('activity_summary'));
   assert.equal(tpl.ACTIVITY_SUMMARY_CATEGORY, 'activity_summary');
   // The newest migration to redefine the constraint. Move this when another does.
-  const sql = readMigration('20261031220000_forward_approval_notices.sql');
+  const sql = readMigration('20261031235000_forward_test_fixes.sql');
   const m = /CHECK \(unsubscribed_categories <@ ARRAY\[([^\]]+)\]/.exec(sql);
   assert.ok(m);
   const inSql = m![1].split(',').map((s) => s.trim().replace(/'/g, ''));

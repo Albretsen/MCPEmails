@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { APPROVAL_LIST_LIMIT, waitingForRule } from '@/lib/approvals/waiting';
 import { Badge, Btn, Icon } from '../Primitives';
+import { useEscapeKey } from './useEscapeKey';
 import { useToast } from './Toast';
 import { NoApprovalRules, RunsWithoutApprovalBadge } from './NoApprovalRules';
 import { canonicalJson, formCoverage } from '@/lib/approvals/no-approval';
@@ -1306,6 +1307,7 @@ function RuleSentence({ form, filter, mailbox, noApprovalCoverage = 'waits' }) {
 /** What "Needs approval" means, step by step, with the way to the place it happens. */
 function ApprovalHelpDialog({ onClose }) {
   const t = useTranslations('dashboard');
+  useEscapeKey(onClose);
   return (
     <div className="scrim" onClick={onClose}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="automation-approval-help-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -1332,6 +1334,7 @@ function ApprovalHelpDialog({ onClose }) {
 
 function RunHistoryModal({ rule, onClose }) {
   const t = useTranslations('dashboard');
+  useEscapeKey(onClose);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -1615,6 +1618,7 @@ function DeleteDialog({ rule, submitting, onCancel, onConfirm }) {
     return () => { live = false; };
   }, [rule.id]);
 
+  useEscapeKey(onCancel);
   const count = typeof waiting === 'number' ? waiting : 0;
   return (
     <div className="scrim" onClick={onCancel}>

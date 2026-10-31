@@ -303,6 +303,19 @@ test('review page: a Reply-To is shown', async (t) => {
   assert.match(view.container.textContent, /desk@example\.com/);
 });
 
+test('review page: a sender warning is shown while it can still be decided, and no other reason is', async (t) => {
+  const warned = await mount(page({ review: review({ wait_reason: 'sender_failed' }), csrfToken: 'tok-1' }));
+  t.after(() => warned.unmount());
+  assert.ok(warned.container.textContent.includes(dashboard.approvals.senderWarning.title));
+  assert.ok(warned.container.textContent.includes(dashboard.approvals.senderWarning.sender_failed));
+  const other = await mount(page({ review: review({ wait_reason: 'daily_limit' }), csrfToken: 'tok-1' }));
+  t.after(() => other.unmount());
+  assert.ok(!other.container.textContent.includes(dashboard.approvals.senderWarning.title));
+  const decided = await mount(page({ review: review({ wait_reason: 'sender_failed', status: 'rejected', state: 'rejected' }), csrfToken: 'tok-1' }));
+  t.after(() => decided.unmount());
+  assert.ok(!decided.container.textContent.includes(dashboard.approvals.senderWarning.title));
+});
+
 // ---------------------------------------------------------------------------
 // Rule forwards: what the queue says, deadlines, delivery, Forward again and
 // Approve all.

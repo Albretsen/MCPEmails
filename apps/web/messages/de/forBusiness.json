@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Freigabe für ausgehende E-Mails",
-        "p": "Schalten Sie sie pro Postfach ein, und jedes Senden, Antworten, Weiterleiten, jeder gesendete Entwurf und jeder geplante Versand wartet in Ihrem Dashboard, bis Sie freigeben oder ablehnen. Enthalten in jedem Tarif, auch in Free."
+        "p": "Schalten Sie sie pro Postfach ein, und jedes Senden, Antworten, Weiterleiten, jeder gesendete Entwurf und jeder geplante Versand Ihres KI-Clients wartet in Ihrem Dashboard, bis Sie freigeben oder ablehnen. Enthalten in jedem Tarif, auch in Free."
       },
       "stored": {
         "h": "Gelesene E-Mails werden nie gespeichert",
@@ -143,7 +143,7 @@
       },
       {
         "q": "Kann ich verhindern, dass er ohne mich etwas sendet?",
-        "a": "Ja. Schalten Sie die Freigabe für ein Postfach ein, und jede ausgehende Nachricht wartet in Ihrem Dashboard, bis Sie sie freigeben oder ablehnen. Sie können einem KI-Client auch einen API-Schlüssel ganz ohne Sendeberechtigung geben. Beides gibt es in jedem Tarif."
+        "a": "Ja. Schalten Sie die Freigabe für ein Postfach ein, und jede ausgehende Nachricht, die Ihr KI-Client von dort sendet, wartet in Ihrem Dashboard, bis Sie sie freigeben oder ablehnen. Sie können einem KI-Client auch einen API-Schlüssel ganz ohne Sendeberechtigung geben. Beides gibt es in jedem Tarif."
       },
       {
         "q": "Werden Firmen-E-Mails auf Ihren Servern gespeichert?",

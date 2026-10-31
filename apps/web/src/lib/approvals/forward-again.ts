@@ -1,22 +1,34 @@
 import { isExpired } from './decide';
+import { loadAllScheduledSends, provablyNotSent } from './delivery';
+import { hasSenderWarning } from './no-approval';
 import { readPayload } from './payload';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * "Forward again" on an expired rule forward.
+ * "Forward again" on a rule forward that expired, or that was approved and failed.
  *
  * SAFETY. This widens nothing. It takes an approval id and nothing else: the
- * message and the address are copied from the expired row, as encrypted, and the
+ * message and the address are copied from the old row, as encrypted, and the
  * caller has no way to supply either. The result is a NEW PENDING request, which
  * still needs a person to approve it. Only a dashboard session with an owner or
  * admin role reaches this (app/api/approvals/[id]/forward-again/route.ts).
+ *
+ * NO SECOND COPY. A failed forward is offered again only when its record proves
+ * nothing went out (provablyNotSent). A send that may have gone is final. Nothing
+ * is created while the same message from the same rule is waiting, on its way or
+ * sent, whichever row holds it.
  *
  * WHEN THE RULE IS GONE. A person who deleted a rule said they do not want it
  * producing more mail, so a forward from a deleted rule can not be asked for
  * again. Requests already waiting when it was deleted stay approvable one by one,
  * since each is a person's explicit decision; deleting a rule offers to cancel
  * them (DELETE /api/automations/[id]).
+ *
+ * A SENDER WARNING STAYS. The new row keeps the old one's `sender_failed` or
+ * `sender_unverified`, so it is shown at the decision and left out of "Approve all"
+ * as the first was. No other wait reason carries over: they said why a no-approval
+ * rule did not send it, and a forward asked for again always waits for a person.
  */
 
 /** Mirror of the same constant in mcp-app-approvals.ts (a test pins them). */
@@ -31,6 +43,8 @@ const PAYLOAD_KEPT_MS = 7 * 24 * 60 * 60 * 1000;
 export type ForwardAgainFailure =
   | 'not_found'
   | 'not_expired'
+  | 'not_failed'
+  | 'may_have_sent'
   | 'not_rule_forward'
   | 'rule_deleted'
   | 'already'
@@ -59,6 +73,58 @@ export function forwardAgainWindowOpen(
   return Number.isFinite(at) && nowMs - at < PAYLOAD_KEPT_MS;
 }
 
+/**
+ * What the record of an approved forward allows. `ok` needs at least one failed
+ * marker, and every marker to be one that provably sent nothing.
+ */
+export function failedForwardVerdict(
+  markers: Array<{ status?: unknown; error_detail?: unknown }>,
+): 'ok' | 'not_failed' | 'may_have_sent' {
+  const live = markers.filter((marker) => marker.status !== 'cancelled');
+  if (!live.some((marker) => marker.status === 'error')) return 'not_failed';
+  if (live.some((marker) => marker.status !== 'error')) return 'not_failed';
+  return live.every(provablyNotSent) ? 'ok' : 'may_have_sent';
+}
+
+/** How far back another row for the same message counts. Payloads go after 7 days. */
+const SAME_MESSAGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Refuses when another row of this rule holds the same message and is still
+ * waiting, or sent or may have sent it. Fails closed if that can not be read.
+ */
+async function sameMessageConflict(
+  db: any,
+  old: any,
+  messageId: string,
+  nowMs: number,
+): Promise<ForwardAgainOutcome | null> {
+  const { data: others, error } = await db
+    .from('send_approvals')
+    .select('id, status, expires_at, payload, payload_encrypted')
+    .eq('workspace_id', old.workspace_id)
+    .eq('triage_rule_id', old.triage_rule_id)
+    .in('status', ['pending', 'approved'])
+    .gte('created_at', new Date(nowMs - SAME_MESSAGE_WINDOW_MS).toISOString())
+    .limit(500);
+  if (error) return fail('write_failed', 500, 'Could not check for another copy of this forward.');
+  for (const other of others ?? []) {
+    if (other.id === old.id) continue;
+    if (readPayload(other)?.message_id !== messageId) continue;
+    if (other.status === 'pending') {
+      if (isExpired(other)) continue;
+      return fail('already', 409, 'This message is already waiting for approval.');
+    }
+    const markers = await loadAllScheduledSends(db, old.workspace_id, other.id);
+    if (!markers) return fail('write_failed', 500, 'Could not check for another copy of this forward.');
+    // No marker yet: approved a moment ago and about to get one.
+    if (markers.length === 0 || failedForwardVerdict(markers) !== 'ok') {
+      return fail('may_have_sent', 409, 'Another forward of this message was sent or may have been sent.');
+    }
+  }
+  return null;
+}
+
 export async function forwardAgain(args: {
   db: any;
   approvalId: string;
@@ -78,7 +144,18 @@ export async function forwardAgain(args: {
     return fail('not_rule_forward', 409, 'Only a forward from a rule can be forwarded again.');
   }
   const expired = old.status === 'expired' || (old.status === 'pending' && isExpired(old));
-  if (!expired) return fail('not_expired', 409, 'Only an expired request can be forwarded again.');
+  if (!expired && old.status !== 'approved') {
+    return fail('not_expired', 409, 'Only an expired or failed forward can be forwarded again.');
+  }
+  if (old.status === 'approved') {
+    const markers = await loadAllScheduledSends(db, workspaceId, approvalId);
+    if (!markers) return fail('write_failed', 500, 'Could not read what happened to this forward.');
+    const verdict = failedForwardVerdict(markers);
+    if (verdict === 'not_failed') return fail('not_failed', 409, 'This forward has not failed.');
+    if (verdict === 'may_have_sent') {
+      return fail('may_have_sent', 409, 'This forward may have gone out, so it cannot be sent again.');
+    }
+  }
 
   if (typeof old.triage_rule_id !== 'string') {
     return fail('rule_deleted', 409, 'The rule behind this forward was deleted, so it cannot be forwarded again.');
@@ -98,6 +175,9 @@ export async function forwardAgain(args: {
   if (!stored || typeof stored.message_id !== 'string' || !Array.isArray(stored.to) || stored.to.length === 0) {
     return fail('gone', 410, 'This request is too old to forward again.');
   }
+
+  const conflict = await sameMessageConflict(db, old, stored.message_id, nowMs);
+  if (conflict) return conflict;
 
   const { data: key } = await db
     .from('api_keys')
@@ -123,6 +203,7 @@ export async function forwardAgain(args: {
       triage_rule_id: old.triage_rule_id,
       triage_rule_name: old.triage_rule_name,
       reforward_of: old.id,
+      ...(hasSenderWarning(old.no_approval_wait_reason) ? { no_approval_wait_reason: old.no_approval_wait_reason } : {}),
     })
     .select('id')
     .maybeSingle();

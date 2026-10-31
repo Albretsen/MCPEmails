@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Retenue des messages sortants jusqu'à approbation",
-        "p": "Activez-la boîte par boîte, et chaque envoi, réponse, transfert, envoi de brouillon et envoi programmé attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Elle est incluse dans toutes les formules, Gratuit compris."
+        "p": "Activez-la boîte par boîte, et chaque envoi, réponse, transfert, envoi de brouillon et envoi programmé de votre client IA attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Elle est incluse dans toutes les formules, Gratuit compris."
       },
       "stored": {
         "h": "Le courrier qu'il lit n'est jamais stocké",
@@ -143,7 +143,7 @@
       },
       {
         "q": "Puis-je l'empêcher d'envoyer quoi que ce soit sans moi ?",
-        "a": "Oui. Activez la retenue pour une boîte, et chaque message sortant de cette boîte attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Vous pouvez aussi donner à un client IA une clé d'API sans aucune permission d'envoi. Les deux sont disponibles dans toutes les formules."
+        "a": "Oui. Activez la retenue pour une boîte, et chaque message sortant que votre client IA envoie depuis cette boîte attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Vous pouvez aussi donner à un client IA une clé d'API sans aucune permission d'envoi. Les deux sont disponibles dans toutes les formules."
       },
       {
         "q": "Les e-mails de l'entreprise sont-ils stockés sur vos serveurs ?",

@@ -67,6 +67,19 @@ export type SendStage = "source" | "compose";
  * result, and (via the error code alongside them) the idempotency ledger - and
  * a typo in one of those fails by quietly meaning the other.
  */
+/**
+ * True when a not-sent tool result's text says the ADDRESS was the problem, so the
+ * person can be told to check it. The dispatcher notes that much on the send's
+ * record and keeps nothing else from the text: never the provider's words or an
+ * address. False just means "refused", which is still true.
+ */
+export function refusalNamesRecipient(text: string): boolean {
+  // Only the reason, not the sentences around it, which talk about delivery.
+  const reason = /(?:Reason given|The failure was): ([\s\S]*?)\. (?:Retrying|$)/.exec(text)?.[1] ?? text;
+  return /outbound_recipient_not_allowed|\b5\.1\.[0-9]\b|user unknown|no such user|(mailbox|recipient|address)[^.]{0,40}(unknown|not found|does not exist|refused|rejected|unavailable)/i
+    .test(reason);
+}
+
 export const DELIVERY_STATUS_NOT_SENT = "not_sent";
 export const DELIVERY_STATUS_UNKNOWN = "unknown";
 

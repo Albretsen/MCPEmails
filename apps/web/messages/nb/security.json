@@ -53,7 +53,7 @@
       },
       {
         "data": "Sendinger som venter på godkjenning",
-        "accessed": "Holdes til noen godkjenner eller avviser dem, eller de utløper etter 24 timer",
+        "accessed": "Holdes til noen godkjenner eller avviser dem, eller de utløper: etter 24 timer for en sending fra en AI-assistent, etter 7 dager for en videresending fra en automatisering",
         "stored": "Ja, kryptert i hvile, deretter beholdt som godkjenningshistorikken din"
       },
       {
