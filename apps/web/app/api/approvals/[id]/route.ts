@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isUnsendableLegacyDraft, readPayload, readSummary, reviewerBccFor } from '@/lib/approvals/payload';
+import { deliveryFromScheduledSend, loadScheduledSendsByApproval } from '@/lib/approvals/delivery';
 import { neutralizeList, neutralizeText } from '@/lib/textSafety';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -37,7 +38,7 @@ export async function GET(
   const db = createServiceRoleClient();
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id, operation, summary, status, revision, payload, payload_encrypted')
+    .select('id, workspace_id, operation, summary, status, revision, payload, payload_encrypted, expires_at, send_at')
     .eq('id', id)
     .maybeSingle();
 
@@ -55,11 +56,20 @@ export async function GET(
   const payload = readPayload(approval);
   const bcc = reviewerBccFor(approval, membership.role);
   const summaryBccCount = typeof summary.bcc_count === 'number' ? summary.bcc_count : 0;
+  // Polled by the review page after approval, so it can say Sent or Failed.
+  const delivery = approval.status === 'approved'
+    ? deliveryFromScheduledSend(
+        (await loadScheduledSendsByApproval(db, approval.workspace_id, [approval.id])).get(approval.id),
+        approval.send_at,
+      )
+    : null;
 
   return NextResponse.json(
     {
       id: approval.id,
       status: approval.status,
+      expires_at: approval.expires_at,
+      delivery,
       revision: approval.revision,
       to: neutralizeList(summary.to).filter(Boolean),
       cc: neutralizeList(summary.cc).filter(Boolean),

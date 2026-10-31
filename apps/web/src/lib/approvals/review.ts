@@ -1,6 +1,8 @@
 import { neutralizeList, neutralizeNullable, neutralizeText } from '@/lib/textSafety';
 import { canDecide, isExpired } from './decide';
 import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload, readSummary } from './payload';
+import { deliveryFromScheduledSend, loadScheduledSendsByApproval, type ApprovalDelivery } from './delivery';
+import { withApprovalOrigin, type ApprovalKind } from './origin';
 
 export { reviewerBccFor } from './payload';
 
@@ -149,6 +151,11 @@ export interface ApprovalReviewModel {
   canDecide: boolean;
   /** Recipients/subject are resolved at send time, not stored on the approval. */
   recipientsResolvedAtSend: boolean;
+  /** A rule forward or an AI send, and which rule. */
+  kind: ApprovalKind;
+  rule_name: string | null;
+  /** What happened after approval; null for any other state. */
+  delivery: ApprovalDelivery | null;
 }
 
 /**
@@ -350,6 +357,16 @@ export async function loadApprovalForReview(
   // so a viewer's read-only page and an admin's page agree on it.
   const approvable = !isUnsendableLegacyDraft(approval, payload ?? readPayload(approval));
   const summaryBccCount = typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0;
+  const origin = withApprovalOrigin({
+    triage_rule_id: approval.triage_rule_id,
+    triage_rule_name: approval.triage_rule_name,
+  });
+  const delivery = approval.status === 'approved'
+    ? deliveryFromScheduledSend(
+        (await loadScheduledSendsByApproval(db, approval.workspace_id, [approval.id])).get(approval.id),
+        approval.send_at,
+      )
+    : null;
 
   return {
     id: approval.id,
@@ -358,8 +375,9 @@ export async function loadApprovalForReview(
     state,
     created_at: approval.created_at ?? null,
     decided_at: approval.decided_at ?? null,
-    decided_via: approval.decided_via ?? null,
-    decided_by_label: decidedByLabel,
+    // Older expired rows may carry the surface that noticed. Nobody decided them.
+    decided_via: state === 'expired' ? null : approval.decided_via ?? null,
+    decided_by_label: state === 'expired' ? null : decidedByLabel,
     expires_at: approval.expires_at ?? null,
     send_at: approval.send_at ?? null,
     identity: {
@@ -388,6 +406,9 @@ export async function loadApprovalForReview(
     provider: providerRouteFor(inbox),
     role,
     canDecide: canDecide(role),
+    kind: origin.kind,
+    rule_name: neutralizeNullable(origin.rule_name),
+    delivery,
     // Used to mean "an empty To is expected here". It no longer is: since
     // `buildApprovalSummary` (supabase/functions/mcp-server/index.ts) resolves
     // the real recipients and subject at queue time, a reply and a draft-send

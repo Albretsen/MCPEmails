@@ -245,6 +245,8 @@ function harness(
     send?: () => void;
     /** Stand in the outbound brake (always "allow"); left out, deps has none. */
     brake?: boolean;
+    /** Stand in the rule forward's ledger claim and lookup. */
+    prepareRuleForward?: (id: string, stored: Row) => Promise<unknown>;
   } = {},
 ) {
   const rec = recordingClient(tables);
@@ -263,6 +265,7 @@ function harness(
       behaviour.send?.();
       return Promise.resolve({ message_id: "<m@x>", sent_at: new Date().toISOString() });
     },
+    ...(behaviour.prepareRuleForward ? { prepareRuleForward: behaviour.prepareRuleForward } : {}),
     ...(behaviour.brake
       ? {
         outboundBrake(_ws: string, _inbox: Row, _params: Row, _approved: boolean, alreadyCounted: boolean) {
@@ -767,4 +770,126 @@ Deno.test("an AI's forward is not a rule forward: no marker, no second count", a
   assertEquals(h.seen.reserved, 0);
   assertEquals(h.seen.keys[0].ruleForwardDispatch, false);
   assertEquals(h.seen.settled.length, 0);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// An approved rule forward: late, moved, retried
+// ═══════════════════════════════════════════════════════════════════════════
+
+const RULE_LINK = { operation: "email_forward", triage_rule_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", triage_rule_name: "Invoices" };
+
+async function ruleForwardTables(overrides: Row = {}) {
+  const payload = {
+    inbox_id: INBOX_VICTIM,
+    message_id: "INBOX:7",
+    to: ["ap@example.com"],
+    original_ref: { rfc_message_id: "abc@example.com", from: "b@example.com", subject: "Invoice" },
+  };
+  return {
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({
+      ...RULE_LINK,
+      payload: { v: 1, data: await encrypt(JSON.stringify(payload)) },
+      ...overrides,
+    })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  };
+}
+
+/** The real shape of a "ready" answer, recording what was settled. */
+function ready(settled: Array<[string, string | null]>, id = "Archive:3") {
+  return (_approvalId: string, stored: Row) => {
+    const { original_ref: _ref, ...args } = stored;
+    return Promise.resolve({
+      kind: "ready",
+      args: { ...args, message_id: id },
+      settle: (status: string, code: string | null) => {
+        settled.push([status, code]);
+        return Promise.resolve();
+      },
+    });
+  };
+}
+
+Deno.test("a moved original is forwarded from where it is now, without the stored ref", async () => {
+  const settled: Array<[string, string | null]> = [];
+  const h = harness(await ruleForwardTables(), { prepareRuleForward: ready(settled) });
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(h.calls.approved[0].original.message_id, "Archive:3");
+  assertEquals("original_ref" in h.calls.approved[0].original, false);
+  assertEquals(settled, [["success", null]]);
+  assertEquals(sendRow(h.tables, SEND_A).status, "sent");
+});
+
+Deno.test("approved on day 6 and sent a week later still goes out: the deadline is on the decision", async () => {
+  const day = 24 * 60 * 60 * 1000;
+  const settled: Array<[string, string | null]> = [];
+  const h = harness(
+    await ruleForwardTables({
+      expires_at: new Date(Date.now() - 6 * day).toISOString(),
+      decided_at: new Date(Date.now() - 7 * day).toISOString(),
+    }),
+    { prepareRuleForward: ready(settled) },
+  );
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(h.calls.approved.length, 1);
+});
+
+Deno.test("the ledger says it went out: marked sent, not sent again", async () => {
+  const h = harness(await ruleForwardTables(), {
+    prepareRuleForward: () => Promise.resolve({ kind: "already_sent" }),
+  });
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(h.calls.approved.length, 0);
+  assertEquals(sendRow(h.tables, SEND_A).status, "sent");
+});
+
+for (const code of ["original_not_found", "original_ambiguous", "delivery_uncertain"]) {
+  Deno.test(`a refused rule forward (${code}) fails with that code and sends nothing`, async () => {
+    const h = harness(await ruleForwardTables(), {
+      prepareRuleForward: () => Promise.resolve({ kind: "refused", code }),
+    });
+    assertEquals((await h.run()).errored, 1);
+    assertEquals(h.calls.approved.length, 0);
+    const row = sendRow(h.tables, SEND_A);
+    assertEquals(row.status, "error");
+    assertStringIncludes(String(row.error_detail), code);
+  });
+}
+
+Deno.test("a mailbox that could not be read defers the rule forward; nothing is failed or sent", async () => {
+  const h = harness(await ruleForwardTables(), {
+    prepareRuleForward: () => Promise.resolve({ kind: "not_ready" }),
+  });
+  assertEquals((await h.run()).deferred, 1);
+  assertEquals(h.calls.approved.length, 0);
+  assertEquals(sendRow(h.tables, SEND_A).status, "pending");
+});
+
+Deno.test("a brake hold settles the ledger so the same forward can go when the hold lifts", async () => {
+  const settled: Array<[string, string | null]> = [];
+  const h = harness(await ruleForwardTables(), {
+    prepareRuleForward: ready(settled),
+    approved: () => ({ logStatus: "error", logErrorCode: "daily_send_limit" }),
+  });
+  assertEquals((await h.run()).deferred, 1);
+  assertEquals(settled, [["error", "daily_send_limit"]]);
+  assertEquals(sendRow(h.tables, SEND_A).status, "pending");
+});
+
+Deno.test("an AI forward does not take the rule forward path", async () => {
+  let asked = 0;
+  const h = harness(
+    await ruleForwardTables({ triage_rule_id: null, triage_rule_name: null }),
+    {
+      prepareRuleForward: () => {
+        asked++;
+        return Promise.resolve({ kind: "already_sent" });
+      },
+    },
+  );
+  assertEquals((await h.run()).dispatched, 1);
+  assertEquals(asked, 0);
+  assertEquals(h.calls.approved.length, 1);
 });

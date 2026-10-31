@@ -27,7 +27,11 @@ function query(table: string) {
   // stopped selecting the payload really does not get it.
   const project = (r: Row) =>
     columns ? Object.fromEntries(columns.filter((c) => c in r).map((c) => [c, r[c]])) : { ...r };
-  const rows = () => (tables[table] ?? []).filter((r) => filters.every(([c, v]) => r[c] === v)).map(project);
+  const extra: Array<(r: Row) => boolean> = [];
+  const rows = () =>
+    (tables[table] ?? [])
+      .filter((r) => filters.every(([c, v]) => r[c] === v) && extra.every((keep) => keep(r)))
+      .map(project);
   const builder: any = {
     select: (list = '*') => {
       const names = String(list).split(',').map((c) => c.trim()).filter((c) => c && !c.includes('('));
@@ -35,7 +39,15 @@ function query(table: string) {
       return builder;
     },
     eq: (c: string, v: unknown) => (filters.push([c, v]), builder),
-    neq: () => builder,
+    neq: (c: string, v: unknown) => (extra.push((r) => r[c] !== v), builder),
+    // Only the queue's one `or`: null, or after the moment it names.
+    or: (clause: string) => {
+      const after = clause.split('.gt.')[1];
+      extra.push((r) => r.expires_at == null || r.expires_at > after);
+      return builder;
+    },
+    lte: (c: string, v: unknown) => (extra.push((r) => r[c] != null && r[c] <= (v as string)), builder),
+    in: () => builder,
     order: () => builder,
     limit: () => builder,
     maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
@@ -128,13 +140,13 @@ test('queue: a rule forward names its rule, kind and expiry', async () => {
   Object.assign(tables.send_approvals[0], {
     triage_rule_id: 'rule-1',
     triage_rule_name: 'Invoices',
-    expires_at: '2026-10-17T10:00:00.000Z',
+    expires_at: '2099-10-17T10:00:00.000Z',
   });
   const [row] = (await (await list.GET()).json()).approvals;
   assert.equal(row.kind, 'rule_forward');
   assert.equal(row.rule_id, 'rule-1');
   assert.equal(row.rule_name, 'Invoices');
-  assert.equal(row.expires_at, '2026-10-17T10:00:00.000Z');
+  assert.equal(row.expires_at, '2099-10-17T10:00:00.000Z');
   assert.equal('triage_rule_id' in row, false, 'one name for the field');
 });
 
@@ -149,12 +161,12 @@ test('queue: a rule forward whose rule row is gone still reads as one, by name',
 
 test('queue: an AI send has no rule', async () => {
   seed('owner', { to: ['colleague@example.com'] });
-  Object.assign(tables.send_approvals[0], { expires_at: '2026-10-17T10:00:00.000Z' });
+  Object.assign(tables.send_approvals[0], { expires_at: '2099-10-17T10:00:00.000Z' });
   const [row] = (await (await list.GET()).json()).approvals;
   assert.equal(row.kind, 'ai_send');
   assert.equal(row.rule_id, null);
   assert.equal(row.rule_name, null);
-  assert.equal(row.expires_at, '2026-10-17T10:00:00.000Z');
+  assert.equal(row.expires_at, '2099-10-17T10:00:00.000Z');
 });
 
 // Since 2026-10-30 mcp-server stores the summary encrypted; older rows hold it
@@ -188,4 +200,34 @@ test('details: a summary that does not decrypt reads as empty, not a 500', async
   const res = await get();
   assert.equal(res.status, 200);
   assert.equal((await res.json()).subject, '');
+});
+
+// ---------------------------------------------------------------------------
+// The deadline: an expired row is out of the queue, and in the decided list as
+// expired, with no claim that anyone decided it.
+// ---------------------------------------------------------------------------
+
+test('queue: a row past its deadline is not offered, and is listed as expired', async () => {
+  tables = {
+    workspace_members: [{ workspace_id: 'ws-1', user_id: 'user-1', role: 'owner' }],
+    send_approvals: [
+      {
+        id: 'late',
+        workspace_id: 'ws-1',
+        status: 'pending',
+        operation: 'email_forward',
+        summary: { to: ['a@example.com'], subject: 'S' },
+        expires_at: new Date(Date.now() - 60_000).toISOString(),
+        triage_rule_id: null,
+        triage_rule_name: 'Invoices',
+      },
+    ],
+  };
+  const payload = await (await list.GET()).json();
+  assert.equal(payload.approvals.length, 0);
+  assert.equal(payload.decided.length, 1);
+  assert.equal(payload.decided[0].status, 'expired');
+  assert.equal(payload.decided[0].decider, 'none');
+  assert.equal(payload.decided[0].decided_via, null);
+  assert.equal('decided_by' in payload.decided[0], false);
 });

@@ -1558,6 +1558,10 @@ ALTER TABLE public.send_approvals
   ADD COLUMN IF NOT EXISTS triage_rule_id uuid REFERENCES public.triage_rules(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS triage_rule_name text;
 CREATE INDEX IF NOT EXISTS send_approvals_triage_rule_idx ON public.send_approvals (triage_rule_id, status, created_at DESC) WHERE (triage_rule_id IS NOT NULL);
+-- "Forward again" on an expired rule forward (hosted migration 20261031170000).
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS reforward_of uuid REFERENCES public.send_approvals(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS send_approvals_reforward_of_key ON public.send_approvals (reforward_of) WHERE (reforward_of IS NOT NULL);
 
 CREATE TABLE IF NOT EXISTS public.triage_seen_messages (
     rule_id uuid NOT NULL,

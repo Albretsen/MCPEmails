@@ -195,15 +195,16 @@ body { background: var(--bg-page); }
 .card-body { padding: 18px 20px; }
 
 /* === Table === */
-.tbl { width: 100%; border-collapse: collapse; font-family: var(--font-sans); font-size: 14px; }
-.tbl th {
+.tbl, .data-table { width: 100%; border-collapse: collapse; font-family: var(--font-sans); font-size: 14px; }
+.tbl th, .data-table th {
   text-align: left; font-weight: 500; font-size: 12px; color: var(--fg-3);
   padding: 12px 20px; border-bottom: 1px solid var(--border-1);
   letter-spacing: 0.04em; text-transform: uppercase;
 }
-.tbl td { padding: 14px 20px; border-bottom: 1px solid var(--border-1); color: var(--fg-1); vertical-align: middle; }
-.tbl tr:last-child td { border-bottom: none; }
-.tbl tr:hover td { background: var(--ink-25); }
+.tbl td, .data-table td { padding: 14px 20px; border-bottom: 1px solid var(--border-1); color: var(--fg-1); vertical-align: middle; }
+.tbl tr:last-child td, .data-table tr:last-child td { border-bottom: none; }
+.tbl tr:hover td, .data-table tbody tr:hover td { background: var(--ink-25); }
+.data-table .right { text-align: right; }
 .tbl .mono { font-family: var(--font-mono); font-size: 13px; color: var(--fg-2); }
 .tbl .right { text-align: right; }
 
@@ -492,7 +493,7 @@ body { background: var(--bg-page); }
    all-clear a clear home, while keeping the one-time setup instructions close
    to the action that starts them. */
 .approvals-card { min-height: 0; }
-.approval-list-skeleton { min-width: 720px; }
+.approval-list-skeleton { min-width: 0; }
 .approval-skeleton-row {
   display: grid; grid-template-columns: 1fr 1.5fr 1.5fr 1fr 132px;
   align-items: center; gap: 20px; min-height: 58px; padding: 0 20px;
@@ -2227,6 +2228,59 @@ select.input:disabled {
 }
 
 /* === Approvals: decided history ================================ */
+/* ── The approvals queue ──────────────────────────────────────────────── */
+.approvals-source { font-weight: 500; overflow-wrap: anywhere; }
+.approvals-source-kind { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 400; color: var(--fg-3); }
+.approvals-cell-sub { display: block; margin-top: 2px; font-size: 12.5px; color: var(--fg-3); overflow-wrap: anywhere; }
+.approvals-wrap { overflow-wrap: anywhere; }
+.approvals-time-left { white-space: nowrap; }
+.approvals-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.approvals-rule-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 12px 20px; border-bottom: 1px solid var(--border-1);
+  font-family: var(--font-sans); font-size: 13.5px; color: var(--fg-2);
+}
+.approvals-rule-bar > span { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.approvals-outcome { display: block; font-weight: 500; }
+.approvals-outcome-failed { color: var(--red-500); }
+.approvals-outcome-reason { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 400; color: var(--fg-3); max-width: 340px; }
+.approvals-result-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-family: var(--font-sans); font-size: 13.5px; }
+.approvals-result-list li { display: flex; justify-content: space-between; gap: 12px; overflow-wrap: anywhere; }
+.approvals-result-list li > span:last-child { flex: none; color: var(--fg-3); }
+
+/* The original of a held forward, written by its sender. */
+.original-message { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-1); font-family: var(--font-sans); font-size: 13.5px; color: var(--fg-1); }
+.original-message-title { font-size: 12.5px; color: var(--fg-3); margin-bottom: 8px; }
+.original-message dl { margin: 0; display: grid; gap: 6px; }
+.original-message dl > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; }
+.original-message dt { color: var(--fg-3); }
+.original-message dd { margin: 0; overflow-wrap: anywhere; }
+.original-message-preview { unicode-bidi: isolate; white-space: pre-wrap; overflow-wrap: anywhere; }
+.original-message-files { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.original-message-files li { display: flex; gap: 8px; align-items: baseline; overflow-wrap: anywhere; min-width: 0; }
+.original-message-files li > span:first-child { min-width: 0; unicode-bidi: isolate; }
+.original-message-files li > span:last-child { flex: none; color: var(--fg-3); }
+.original-message-note { margin: 8px 0 0; font-size: 12.5px; color: var(--fg-3); }
+
+/* A phone: each row becomes a block, with its label beside the value. */
+@media (max-width: 720px) {
+  .approvals-table thead { display: none; }
+  .approvals-table, .approvals-table tbody, .approvals-table tr, .approvals-table td { display: block; width: 100%; }
+  .approvals-table tr { padding: 12px 16px; border-bottom: 1px solid var(--border-1); }
+  .approvals-table tr:last-child { border-bottom: 0; }
+  .approvals-table td, .approvals-table td.right { padding: 4px 0; border: 0; text-align: left; }
+  .approvals-table tbody tr:hover td { background: transparent; }
+  .approvals-table td[data-label]:not([data-label=""])::before {
+    content: attr(data-label); display: block; font-size: 12px; color: var(--fg-3);
+  }
+  .approvals-actions { justify-content: stretch; margin-top: 8px; }
+  .approvals-actions .btn { flex: 1 1 auto; justify-content: center; }
+  .approvals-time-left { white-space: normal; }
+  .approvals-rule-bar { padding: 12px 16px; }
+  .approvals-rule-bar .btn { width: 100%; justify-content: center; }
+  .original-message dl > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
 .approvals-decided { margin-top: 20px; }
 .approvals-decided-title {
   font-family: var(--font-sans); font-size: 13px; font-weight: 600;

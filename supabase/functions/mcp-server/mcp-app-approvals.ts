@@ -75,6 +75,34 @@ export const CARD_SCHEMA_VERSION = "review-card-v1";
  */
 export const APPROVAL_TTL_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * How long a forward held by an automation rule stays decidable. Nobody is
+ * waiting on the other side of a rule, so a day was too short for a weekend.
+ *
+ * This outlives the 24h ledger window on purpose, and it is safe because of
+ * where a rule forward's ledger row is written: at DISPATCH, not at queue time.
+ * The runner has no caller key and no retrying caller, so nothing depends on a
+ * row surviving the wait, and a row claimed when the approved send runs lives
+ * its full 24h from that moment, however late the approval came. See
+ * `prepareRuleForward` in index.ts.
+ */
+export const RULE_FORWARD_APPROVAL_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** The decision window for a new approval. The rule is a label; see queueSendApproval. */
+export function approvalTtlMs(rule: unknown): number {
+  return rule ? RULE_FORWARD_APPROVAL_TTL_MS : APPROVAL_TTL_MS;
+}
+
+/** A forward an automation rule queued, by either link column (see origin.ts on the web). */
+export function isRuleForwardApproval(row: {
+  operation?: unknown;
+  triage_rule_id?: unknown;
+  triage_rule_name?: unknown;
+}): boolean {
+  return row.operation === "email_forward" &&
+    (typeof row.triage_rule_id === "string" || typeof row.triage_rule_name === "string");
+}
+
 /** Contract §2: each body is clipped at 64 KB and the clip is flagged. */
 const BODY_CLIP_BYTES = 64 * 1024;
 
@@ -556,7 +584,7 @@ async function loadPendingApproval(
           outcome: "expired",
           headline: "This request expired before it was decided.",
           detail:
-            "Pending sends stay decidable for 24 hours. Nothing was sent. Ask the agent to compose it again if it is still wanted.",
+            "It was not decided before its deadline. Nothing was sent. Ask the agent to compose it again if it is still wanted.",
           affected_count: 0,
           dashboard_url: `${deps.appUrl}/dashboard/approvals`,
           error_code: null,
