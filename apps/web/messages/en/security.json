@@ -53,7 +53,7 @@
       },
       {
         "data": "Sends held for your approval",
-        "accessed": "Held until a reviewer approves or rejects it, or it expires after 24 hours",
+        "accessed": "Held until a reviewer approves or rejects it, or it expires: after 24 hours for an AI assistant's send, after 7 days for an automation's forward",
         "stored": "Yes, encrypted at rest, then kept as your approval history"
       },
       {

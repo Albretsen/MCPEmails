@@ -2754,6 +2754,8 @@ DECLARE
   v_unverified boolean := false;
   v_past       boolean := false;
   v_paused     boolean := false;
+  v_paused_all boolean;
+  v_off        text[];
   v_used       integer;
   v_reason     text;
 BEGIN
@@ -2784,10 +2786,10 @@ BEGIN
     RETURN jsonb_build_object('covered', false, 'reason', 'recipients_changed');
   END IF;
 
-  IF EXISTS (SELECT 1 FROM public.no_approval_workspace_state s
-             WHERE s.workspace_id = v_rule.workspace_id AND s.paused_at IS NOT NULL) THEN
-    RETURN jsonb_build_object('covered', false, 'reason', 'paused_all');
-  END IF;
+  -- Pause all stops everything, but it only explains a wait for a forward that
+  -- would otherwise have gone: checked at the very end, below.
+  v_paused_all := EXISTS (SELECT 1 FROM public.no_approval_workspace_state s
+                          WHERE s.workspace_id = v_rule.workspace_id AND s.paused_at IS NOT NULL);
 
   v_remaining := v_recipients;
   FOR v_candidate IN
@@ -2853,9 +2855,20 @@ BEGIN
   END LOOP;
 
   IF cardinality(v_remaining) > 0 THEN
-    IF NOT (v_recipients <@ v_reachable) THEN
+    -- What a rule that is switched off would add. It covers nothing; it only says
+    -- why this forward waits.
+    SELECT coalesce(array_agg(DISTINCT x.address), '{}') INTO v_off
+      FROM public.no_approval_rules r, unnest(r.recipients) AS x(address)
+     WHERE r.workspace_id = v_rule.workspace_id
+       AND NOT r.enabled
+       AND (r.inbox_ids IS NULL OR v_rule.inbox_id = ANY (r.inbox_ids))
+       AND (r.scope = 'all_automations' OR EXISTS (
+             SELECT 1 FROM public.no_approval_rule_automations a
+              WHERE a.no_approval_rule_id = r.id AND a.triage_rule_id = v_rule.id));
+    IF NOT (v_recipients <@ (v_reachable || v_off)) THEN
       -- Nothing to say about an address nobody trusted, unless another was trusted.
-      v_reason := CASE WHEN v_recipients && v_reachable THEN 'address_not_covered' END;
+      v_reason := CASE WHEN v_recipients && (v_reachable || v_off) THEN 'address_not_covered' END;
+    ELSIF NOT (v_recipients <@ v_reachable) THEN v_reason := 'coverage_off';
     ELSIF v_voided THEN v_reason := 'coverage_voided';
     ELSIF v_paused THEN v_reason := 'coverage_paused';
     ELSIF v_past THEN v_reason := 'past_mail';
@@ -2871,6 +2884,12 @@ BEGIN
   END IF;
   IF p_sender_verdict = 'unreadable' THEN
     RETURN jsonb_build_object('covered', false, 'reason', 'sender_unverified');
+  END IF;
+
+  -- Covered in every way but this. After the sender checks, so a mail that failed
+  -- them says so, and stays out of "Approve all", whatever the pause says.
+  IF v_paused_all THEN
+    RETURN jsonb_build_object('covered', false, 'reason', 'paused_all');
   END IF;
 
   RETURN jsonb_build_object(

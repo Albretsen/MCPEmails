@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Retención del correo saliente hasta tu aprobación",
-        "p": "Actívala por buzón y cada envío, respuesta, reenvío, envío de borrador y envío programado espera en tu panel hasta que lo apruebes o lo rechaces. Está incluida en todos los planes, también en Gratis."
+        "p": "Actívala por buzón y cada envío, respuesta, reenvío, envío de borrador y envío programado de tu cliente de IA espera en tu panel hasta que lo apruebes o rechaces. Está incluida en todos los planes, también en Gratis."
       },
       "stored": {
         "h": "El correo que lee nunca se almacena",
@@ -143,7 +143,7 @@
       },
       {
         "q": "¿Puedo impedir que envíe algo sin mí?",
-        "a": "Sí. Activa la retención para un buzón y cada mensaje saliente de ese buzón espera en tu panel hasta que lo apruebes o lo rechaces. También puedes darle a un cliente de IA una clave de API sin ningún permiso de envío. Las dos cosas están disponibles en todos los planes."
+        "a": "Sí. Activa la retención en un buzón y cada mensaje saliente que tu cliente de IA envíe desde él espera en tu panel hasta que lo apruebes o rechaces. También puedes darle a un cliente de IA una clave de API sin ningún permiso de envío. Las dos cosas están disponibles en todos los planes."
       },
       {
         "q": "¿El correo de la empresa se almacena en vuestros servidores?",

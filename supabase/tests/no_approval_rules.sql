@@ -1,6 +1,6 @@
 -- No-approval rules: who can write them, and what they let through.
 BEGIN;
-SELECT plan(35);
+SELECT plan(42);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -185,6 +185,32 @@ RESET ROLE;
 SELECT is(
   (public.no_approval_evaluate('e0000000-0000-4000-8000-000000000004', '{a@na-test.invalid}')->>'covered'),
   'true', 'and a person confirming brings it back');
+
+-- Why a forward waits while rules are paused or off: only when one would cover it.
+CREATE FUNCTION pg_temp.wait_reason(p_to text[], p_verdict text DEFAULT NULL) RETURNS text LANGUAGE sql AS $$
+  SELECT public.no_approval_evaluate('e0000000-0000-4000-8000-000000000004', p_to, p_verdict)->>'reason';
+$$;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user('e0000000-0000-4000-8000-000000000001');
+SELECT public.no_approval_pause_all('e0000000-0000-4000-8000-000000000002', true);
+RESET ROLE;
+SELECT is(pg_temp.wait_reason('{a@na-test.invalid}'), 'paused_all', 'paused: a covered forward says so');
+SELECT is(
+  (public.no_approval_evaluate('e0000000-0000-4000-8000-000000000004', '{a@na-test.invalid}')->>'covered'),
+  'false', 'and it is not covered');
+SELECT is(pg_temp.wait_reason('{a@na-test.invalid}', 'failed'), 'sender_failed', 'a failed sender still says so while paused');
+SELECT is(pg_temp.wait_reason('{b@na-test.invalid}'), 'recipients_changed', 'paused says nothing about an address the rule does not send to');
+UPDATE public.triage_rules SET action = '{"type":"forward","to":["a@na-test.invalid","nobody@na-test.invalid"]}'::jsonb
+ WHERE id = 'e0000000-0000-4000-8000-000000000004';
+SELECT is(pg_temp.wait_reason('{nobody@na-test.invalid}'), NULL, 'paused gives no reason to an address nobody trusted');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user('e0000000-0000-4000-8000-000000000001');
+SELECT public.no_approval_pause_all('e0000000-0000-4000-8000-000000000002', false);
+SELECT public.no_approval_rule_delete('e0000000-0000-4000-8000-000000000002', (SELECT id FROM pg_temp.ids WHERE name = 'chosen'));
+INSERT INTO pg_temp.ids VALUES ('off', public.no_approval_rule_save('e0000000-0000-4000-8000-000000000002', NULL, 'Off', '{a@na-test.invalid}', 'all_automations', '{}', NULL, 25, 'UTC', false, false));
+RESET ROLE;
+SELECT is(pg_temp.wait_reason('{a@na-test.invalid}'), 'coverage_off', 'a rule switched off says so');
+SELECT is(pg_temp.wait_reason('{nobody@na-test.invalid}'), NULL, 'and says nothing about another address');
 
 SELECT * FROM finish();
 ROLLBACK;

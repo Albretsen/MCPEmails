@@ -472,6 +472,7 @@ import {
   preTransmission,
   preTransmissionMessage,
   preTransmissionSync,
+  refusalNamesRecipient,
   TargetUnresolvedError,
 } from "./send-stages.ts";
 import { assertOutboundRecipientsAllowed, outboundAllowlist } from "./outbound-allowlist.ts";
@@ -36759,7 +36760,11 @@ async function handleScheduledDispatch(
             // row instead of failing it. Same reasoning as the interactive path:
             // nothing was transmitted, so a retry is free of consequence.
             if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
-              throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
+              // Whether the address was the cause is all that is kept of the text:
+              // it is what the person can act on (approvals/delivery.ts).
+              const refusal = (dispatchedResult as { result?: { content?: { text?: unknown }[] } }).result?.content?.[0]?.text;
+              const hint = typeof refusal === "string" && refusalNamesRecipient(refusal) ? " (recipient)" : "";
+              throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission${hint}`, true);
             }
             // The draft could not be read to check it against what was approved:
             // nothing was sent and nothing is known to have changed, so the send
@@ -38096,8 +38101,11 @@ async function forwardWithoutApproval(
       console.warn("[triage] no_approval_evaluate_failed", { rule_id: ruleId, error: firstError.message });
       return false;
     }
-    const verdictNeeded = (first as { covered?: unknown } | null)?.covered === true;
-    if (!verdictNeeded && !(first as { reason?: unknown } | null)?.reason) return false;
+    // Paused: covered in every other way, so the sender still counts. A mail that
+    // failed the check says so while rules are paused, not only once they resume.
+    const firstReason = (first as { reason?: unknown } | null)?.reason;
+    const verdictNeeded = (first as { covered?: unknown } | null)?.covered === true || firstReason === "paused_all";
+    if (!verdictNeeded && !firstReason) return false;
     let verdict: SenderVerdict | "unreadable" = "unverified";
     if (verdictNeeded) {
       try {

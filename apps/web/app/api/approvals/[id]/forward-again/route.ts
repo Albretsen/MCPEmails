@@ -8,8 +8,8 @@ import { forwardAgain } from '@/lib/approvals/forward-again';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * POST /api/approvals/[id]/forward-again: a new pending request from an expired
- * rule forward, with the same message and address and a new deadline.
+ * POST /api/approvals/[id]/forward-again: a new pending request from a rule forward
+ * that expired or failed, with the same message and address and a new deadline.
  *
  * A dashboard session with an owner or admin role only. A key can never reach
  * this: a request carrying any Authorization header is refused before anything

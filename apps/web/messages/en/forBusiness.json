@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Approval hold on outgoing mail",
-        "p": "Turn it on per mailbox and every send, reply, forward, draft send and scheduled send waits in your dashboard until you approve or reject it. It is included on every plan, Free too."
+        "p": "Turn it on per mailbox and every send, reply, forward, draft send and scheduled send from your AI client waits in your dashboard until you approve or reject it. It is included on every plan, Free too."
       },
       "stored": {
         "h": "The mail it reads is never stored",
@@ -143,7 +143,7 @@
       },
       {
         "q": "Can I stop it sending anything without me?",
-        "a": "Yes. Turn on the approval hold for a mailbox and every outgoing message from it waits in your dashboard until you approve or reject it. You can also give an AI client an API key that has no send permission at all. Both are available on every plan."
+        "a": "Yes. Turn on the approval hold for a mailbox and every outgoing message your AI client sends from it waits in your dashboard until you approve or reject it. You can also give an AI client an API key that has no send permission at all. Both are available on every plan."
       },
       {
         "q": "Is company email stored on your servers?",

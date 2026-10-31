@@ -38,6 +38,7 @@ import {
   preTransmission,
   preTransmissionMessage,
   preTransmissionSync,
+  refusalNamesRecipient,
   TargetUnresolvedError,
 } from "./send-stages.ts";
 import { targetUnresolvedMessage } from "./message-id-errors.ts";
@@ -218,4 +219,16 @@ Deno.test("the two delivery statuses are the wire values, unchanged", () => {
   // constants are `const`, so TypeScript rejects a comparison between them.)
   assertEquals(DELIVERY_STATUS_NOT_SENT, "not_sent");
   assertEquals(DELIVERY_STATUS_UNKNOWN, "unknown");
+});
+
+Deno.test("refusalNamesRecipient: only the reason counts, and only when it is about the address", () => {
+  const wrap = (reason: string) =>
+    `The mail server refused this message before any of it was transmitted, so nothing was sent: there is no delivery. ` +
+    `Reason given: ${reason}. Retrying is safe and will not duplicate anything. If retries keep failing this way, the ` +
+    `mail host is refusing the sending connection rather than the message.`;
+  assertEquals(refusalNamesRecipient(wrap("550 5.1.1 user unknown")), true);
+  assertEquals(refusalNamesRecipient(wrap("recipient address rejected")), true);
+  assertEquals(refusalNamesRecipient(wrap("outbound_recipient_not_allowed: this is a test deployment")), true);
+  assertEquals(refusalNamesRecipient(wrap("550 5.7.1 access denied, banned sender")), false);
+  assertEquals(refusalNamesRecipient(wrap("connection closed")), false);
 });

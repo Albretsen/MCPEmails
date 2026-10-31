@@ -1,4 +1,5 @@
 import { decideApproval, isExpired, kickDispatch } from './decide';
+import { hasSenderWarning } from './no-approval';
 import { readSummary } from './payload';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -12,6 +13,11 @@ import { readSummary } from './payload';
  * recipient the dialog did not name. Every row still goes through decideApproval,
  * with the revision the page showed. Only a dashboard session with an owner or
  * admin role reaches this (app/api/approvals/approve-rule/route.ts).
+ *
+ * WHO SENT IT. A forward waiting because its sender failed DKIM or DMARC, or could
+ * not be verified, is never approved here, whatever the request lists. It stays
+ * waiting for someone to read that warning on that one forward. Those rows do not
+ * count towards the one address either, since this can not send them.
  *
  * PACING (20261024130000_outbound_abuse_brakes.sql). Three things can stop sends:
  *   * a workspace freeze and a provider-refusal pause: while either is on, nothing
@@ -31,7 +37,7 @@ export const APPROVE_ALL_PACE_SECONDS = 15;
 /** Mirror of DAILY_SEND_LIMIT_PER_INBOX in mcp-server/outbound-brakes.ts. */
 const DAILY_SEND_LIMIT_PER_INBOX = 500;
 
-export type RowOutcome = 'approved' | 'expired' | 'changed' | 'not_pending' | 'left_waiting' | 'failed';
+export type RowOutcome = 'approved' | 'expired' | 'changed' | 'not_pending' | 'left_waiting' | 'needs_review' | 'failed';
 
 export interface ApproveAllItem {
   id: string;
@@ -93,7 +99,7 @@ export async function approveAllFromRule(args: {
 
   const { data: rows, error } = await db
     .from('send_approvals')
-    .select('id, inbox_id, operation, summary, status, expires_at, revision')
+    .select('id, inbox_id, operation, summary, status, expires_at, revision, no_approval_wait_reason')
     .eq('workspace_id', workspaceId)
     .eq('triage_rule_id', ruleId)
     .eq('status', 'pending');
@@ -106,11 +112,12 @@ export async function approveAllFromRule(args: {
   if (live.some((row: any) => row.operation !== 'email_forward')) {
     return refuse('mixed_addresses', 409, 'These cannot be approved together. Review them one at a time.');
   }
-  if (live.length > 0 && singleAddress(live.map((row: any) => readSummary(row.summary))) !== address) {
+  const bulk = live.filter((row: any) => !hasSenderWarning(row.no_approval_wait_reason));
+  if (bulk.length > 0 && singleAddress(bulk.map((row: any) => readSummary(row.summary))) !== address) {
     return refuse('mixed_addresses', 409, 'These do not all go to that one address. Review them one at a time.');
   }
 
-  const inboxIds = [...new Set<string>(live.map((row: any) => row.inbox_id))];
+  const inboxIds = [...new Set<string>(bulk.map((row: any) => row.inbox_id))];
   const { data: workspace } = await db.from('workspaces').select('sends_frozen_at').eq('id', workspaceId).maybeSingle();
   if (workspace?.sends_frozen_at) return refuse('sends_paused', 409, 'Sending is paused for this workspace, so nothing was approved.');
 
@@ -141,6 +148,10 @@ export async function approveAllFromRule(args: {
       // another rule or workspace reads the same as one already decided.
       const stale = (rows ?? []).find((candidate: any) => candidate.id === item.id);
       outcomes.push({ id: item.id, outcome: stale ? 'expired' : 'not_pending' });
+      continue;
+    }
+    if (hasSenderWarning(row.no_approval_wait_reason)) {
+      outcomes.push({ id: item.id, outcome: 'needs_review' });
       continue;
     }
     const left = leftToday.get(row.inbox_id) ?? 0;

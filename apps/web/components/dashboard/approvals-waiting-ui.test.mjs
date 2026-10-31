@@ -175,3 +175,62 @@ test('a member sees the same count and rows, with no way to decide', async (t) =
   assert.ok(view.container.textContent.includes('Mail a1'));
   assert.equal(buttonNamed(view.container, 'Reject'), undefined);
 });
+
+// ---------------------------------------------------------------------------
+// Sender warnings at the moment of decision, and Escape.
+// ---------------------------------------------------------------------------
+const pressEscape = async () => {
+  await flush(async () => { document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' })); });
+  await settle();
+};
+const openApprovals = async (t, approvals) => {
+  const rendered = await render(t, { approvals });
+  await click(navItem(rendered.view.container, 'Approvals'));
+  return rendered;
+};
+const warned = (id, reason = 'sender_failed') => approval(id, { no_approval_wait_reason: reason });
+
+test('the review dialog shows a sender warning prominently, and Escape closes it', async (t) => {
+  const { view } = await openApprovals(t, [warned('a1')]);
+  await click(buttonNamed(view.container, panel.reviewApprove));
+  const dialog = view.container.querySelector('[aria-labelledby="approval-decision-title"]');
+  assert.ok(dialog);
+  assert.equal(dialog.querySelector('.alert-error')?.textContent, dashboard.approvals.senderWarning.sender_failed);
+  await pressEscape();
+  assert.equal(view.container.querySelectorAll('[aria-labelledby="approval-decision-title"]').length, 0);
+});
+
+test('Approve all leaves warned forwards out, and says how many and why', async (t) => {
+  const { view } = await openApprovals(t, [approval('a1'), approval('a2'), warned('a3')]);
+  await click(buttonNamed(view.container, panel.approveAll));
+  const dialog = view.container.querySelector('[aria-labelledby="approve-all-title"]');
+  assert.ok(dialog.textContent.includes('Approve 2 forwards?'));
+  assert.ok(dialog.textContent.includes('1 needs review one by one'));
+  assert.ok(buttonNamed(dialog, 'Approve 2'));
+  const sent = [];
+  const previous = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url) === '/api/approvals/approve-rule') {
+      sent.push(JSON.parse(init.body));
+      return { ok: true, status: 200, json: async () => ({ outcomes: [] }) };
+    }
+    return previous(url, init);
+  };
+  t.after(() => { globalThis.fetch = previous; });
+  await click(buttonNamed(dialog, 'Approve 2'));
+  assert.deepEqual(sent[0].items.map((item) => item.id), ['a1', 'a2']);
+});
+
+test('Approve all stays off when every waiting forward has a warning', async (t) => {
+  const { view } = await openApprovals(t, [warned('a1'), warned('a2', 'sender_unverified')]);
+  assert.equal(buttonNamed(view.container, panel.approveAll), undefined);
+  assert.ok(view.container.textContent.includes('2 forwards need review one by one'));
+});
+
+test('Escape closes the Approve all dialog', async (t) => {
+  const { view } = await openApprovals(t, [approval('a1'), approval('a2')]);
+  await click(buttonNamed(view.container, panel.approveAll));
+  assert.ok(view.container.querySelector('[aria-labelledby="approve-all-title"]'));
+  await pressEscape();
+  assert.equal(view.container.querySelectorAll('[aria-labelledby="approve-all-title"]').length, 0);
+});

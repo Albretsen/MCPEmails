@@ -34,6 +34,11 @@ class FakeQuery {
   eq(c: string, v: unknown) { this.filters.push((r) => r[c] === v); return this; }
   is(c: string, v: unknown) { this.filters.push((r) => (r[c] ?? null) === v); return this; }
   gt(c: string, v: string) { this.filters.push((r) => r[c] > v); return this; }
+  gte(c: string, v: string) { this.filters.push((r) => (r[c] ?? '9999') >= v); return this; }
+  in(c: string, values: unknown[]) {
+    this.filters.push((r) => values.includes(c === 'payload->>approval_id' ? r.payload?.approval_id : r[c]));
+    return this;
+  }
   limit() { return this; }
   async maybeSingle() { return this.run(true); }
   then(resolve: (v: any) => unknown) { return Promise.resolve(this.run(false)).then(resolve); }
@@ -77,10 +82,10 @@ nodeMock.module('@/lib/supabase/service', { namedExports: { createServiceRoleCli
 nodeMock.module('@/lib/workspace/active', { namedExports: { resolveActiveWorkspaceId: async () => 'ws-1' } });
 
 const { encryptToken } = await import('../crypto.ts');
-const { deliveryFromScheduledSend, deliveryReasonFromDetail } = await import('./delivery.ts');
+const { deliveryFromScheduledSend, deliveryReasonFromDetail, provablyNotSent } = await import('./delivery.ts');
 const { approvalDecider } = await import('./origin.ts');
 const { cleanOriginal } = await import('./original.ts');
-const { forwardAgain, forwardAgainWindowOpen, RULE_FORWARD_APPROVAL_TTL_MS } = await import('./forward-again.ts');
+const { failedForwardVerdict, forwardAgain, forwardAgainWindowOpen, RULE_FORWARD_APPROVAL_TTL_MS } = await import('./forward-again.ts');
 const { approveAllFromRule, parseApproveAllItems, singleAddress, APPROVE_ALL_MAX, APPROVE_ALL_PACE_SECONDS } = await import('./approve-all.ts');
 const forwardRoute = (await import('../../../app/api/approvals/[id]/forward-again/route.ts')) as any;
 const approveRoute = (await import('../../../app/api/approvals/approve-rule/route.ts')) as any;
@@ -236,7 +241,7 @@ test('forward again: past its deadline but not retired yet counts, and is closed
 
 const refusals: Array<[string, () => FakeDb, string]> = [
   ['still pending', () => forwardDb(expiredForward({ status: 'pending', decided_at: null, expires_at: future() })), 'not_expired'],
-  ['approved', () => forwardDb(expiredForward({ status: 'approved' })), 'not_expired'],
+  ['approved with no send yet', () => forwardDb(expiredForward({ status: 'approved' })), 'not_failed'],
   ['rejected', () => forwardDb(expiredForward({ status: 'rejected' })), 'not_expired'],
   ['an AI forward', () => forwardDb(expiredForward({ triage_rule_id: null, triage_rule_name: null })), 'not_rule_forward'],
   ['a soft-deleted rule', () => forwardDb(expiredForward(), { id: 'rule-1', deleted_at: past() }), 'rule_deleted'],
@@ -263,6 +268,130 @@ test('forward again: the button goes away once retention would have cleared the 
   const day = 24 * 60 * 60 * 1000;
   assert.equal(forwardAgainWindowOpen({ decided_at: past(6 * day) }), true);
   assert.equal(forwardAgainWindowOpen({ decided_at: past(8 * day) }), false);
+});
+
+// ── Forward again on a failed forward ───────────────────────────────────────
+
+const marker = (approvalId: string, status: string, errorDetail: string | null = null): Row => ({
+  workspace_id: 'ws-1',
+  payload_encrypted: false,
+  payload: { approval_id: approvalId },
+  status,
+  error_detail: errorDetail,
+});
+const REFUSED = 'approved email_forward was refused before transmission';
+
+function failedDb(detail: string | null = REFUSED, status = 'error', overrides: Row = {}) {
+  const db = forwardDb(expiredForward({ status: 'approved', expires_at: future(), ...overrides }));
+  db.tables.scheduled_sends = [marker(ID, status, detail)];
+  return db;
+}
+
+test('delivery: the refusal has its own reason, and the address when the record names it', () => {
+  assert.equal(deliveryReasonFromDetail(REFUSED), 'refused');
+  assert.equal(deliveryReasonFromDetail(`${REFUSED} (recipient)`), 'recipient_refused');
+  assert.equal(deliveryReasonFromDetail('approved email_forward failed: invalid_recipient'), 'recipient_refused');
+  assert.equal(deliveryReasonFromDetail('the mailbox could not be read to find the original message'), 'mailbox');
+  assert.equal(deliveryReasonFromDetail('approved email_forward failed: quota_exceeded'), 'provider_quota');
+});
+
+test('only a record that proves nothing went out counts as not sent', () => {
+  for (const detail of [REFUSED, `${REFUSED} (recipient)`, 'approved email_forward failed: original_not_found', 'originating API key is unavailable']) {
+    assert.equal(provablyNotSent({ status: 'error', error_detail: detail }), true, detail);
+  }
+  for (const detail of [
+    'approved email_forward failed: delivery_uncertain',
+    'approved email_forward failed: provider_error',
+    'dispatch interrupted; marked failed to avoid double-send',
+    'This approval was already dispatched by another scheduled send. An approval sends once; nothing was sent.',
+    'approved email_forward failed: something_new',
+    '',
+    null,
+  ]) {
+    assert.equal(provablyNotSent({ status: 'error', error_detail: detail }), false, String(detail));
+  }
+  assert.equal(provablyNotSent({ status: 'sent', error_detail: REFUSED }), false);
+  assert.equal(provablyNotSent(null), false);
+});
+
+test('forward again on a failed forward: a new pending request, same message and address', async () => {
+  const db = failedDb();
+  const before = db.tables.send_approvals[0];
+  const outcome = await forwardAgain({ db, approvalId: ID, workspaceId: 'ws-1' });
+  assert.equal(outcome.ok, true);
+  const created = db.tables.send_approvals[1];
+  assert.equal(created.status, 'pending');
+  assert.equal(created.reforward_of, ID);
+  assert.equal(created.payload, before.payload);
+  assert.equal(before.status, 'approved', 'the record of what happened stays');
+});
+
+test('forward again on a failed forward: covers a forward a no-approval rule sent, and needs a person', async () => {
+  const db = failedDb(REFUSED, 'error', { decided_via: 'no_approval_rule', decided_by: null, no_approval_rule_name: 'Trusted' });
+  assert.equal((await forwardAgain({ db, approvalId: ID, workspaceId: 'ws-1' })).ok, true);
+  const created = db.tables.send_approvals[1];
+  assert.equal(created.status, 'pending');
+  assert.equal(created.decided_via, undefined);
+  assert.equal(created.no_approval_rule_name, undefined);
+});
+
+const failedRefusals: Array<[string, () => FakeDb, string]> = [
+  ['a send that may have gone out', () => failedDb('approved email_forward failed: delivery_uncertain'), 'may_have_sent'],
+  ['a failure the record does not explain', () => failedDb('approved email_forward failed: something_new'), 'may_have_sent'],
+  ['a send that went out', () => failedDb(null, 'sent'), 'not_failed'],
+  ['a send on its way', () => failedDb(null, 'sending'), 'not_failed'],
+  ['a send waiting to go', () => failedDb(null, 'pending'), 'not_failed'],
+];
+for (const [name, build, code] of failedRefusals) {
+  test(`forward again refuses ${name}`, async () => {
+    const db = build();
+    const outcome = await forwardAgain({ db, approvalId: ID, workspaceId: 'ws-1' });
+    assert.equal(!outcome.ok && outcome.code, code);
+    assert.equal(db.tables.send_approvals.length, 1);
+  });
+}
+
+test('forward again: one bad marker among several refuses', () => {
+  assert.equal(failedForwardVerdict([]), 'not_failed');
+  assert.equal(failedForwardVerdict([{ status: 'cancelled' }]), 'not_failed');
+  assert.equal(failedForwardVerdict([{ status: 'cancelled' }, { status: 'error', error_detail: REFUSED }]), 'ok');
+  assert.equal(failedForwardVerdict([{ status: 'error', error_detail: REFUSED }, { status: 'sent' }]), 'not_failed');
+  assert.equal(failedForwardVerdict([{ status: 'error', error_detail: REFUSED }, { status: 'error', error_detail: 'x' }]), 'may_have_sent');
+});
+
+test('forward again refuses when the same message is already waiting from the rule', async () => {
+  const db = failedDb();
+  const other = expiredForward({ id: 'other', status: 'pending', expires_at: future(), decided_at: null });
+  db.tables.send_approvals.push(other);
+  const outcome = await forwardAgain({ db, approvalId: ID, workspaceId: 'ws-1' });
+  assert.equal(!outcome.ok && outcome.code, 'already');
+  assert.equal(db.tables.send_approvals.length, 2);
+});
+
+test('forward again refuses when another row sent the same message, and allows a different one', async () => {
+  const sent = failedDb();
+  sent.tables.send_approvals.push(expiredForward({ id: 'other', status: 'approved' }));
+  sent.tables.scheduled_sends.push(marker('other', 'sent'));
+  const outcome = await forwardAgain({ db: sent, approvalId: ID, workspaceId: 'ws-1' });
+  assert.equal(!outcome.ok && outcome.code, 'may_have_sent');
+
+  const different = failedDb();
+  different.tables.send_approvals.push(expiredForward({
+    id: 'other',
+    status: 'approved',
+    payload: sealed({ inbox_id: 'inbox-1', message_id: 'INBOX:8', to: [ADDRESS] }),
+  }));
+  different.tables.scheduled_sends.push(marker('other', 'sent'));
+  assert.equal((await forwardAgain({ db: different, approvalId: ID, workspaceId: 'ws-1' })).ok, true);
+});
+
+test('forward again keeps a sender warning, and no other wait reason', async () => {
+  const warned = forwardDb(expiredForward({ no_approval_wait_reason: 'sender_failed' }));
+  await forwardAgain({ db: warned, approvalId: ID, workspaceId: 'ws-1' });
+  assert.equal(warned.tables.send_approvals[1].no_approval_wait_reason, 'sender_failed');
+  const other = forwardDb(expiredForward({ no_approval_wait_reason: 'daily_limit' }));
+  await forwardAgain({ db: other, approvalId: ID, workspaceId: 'ws-1' });
+  assert.equal(other.tables.send_approvals[1].no_approval_wait_reason, undefined);
 });
 
 function request(body: unknown, headers: Record<string, string> = {}) {
@@ -345,6 +474,37 @@ test('approve all: one address is all rows, once, with nobody else on them', () 
   assert.equal(singleAddress([{ to: ['a@example.com'], cc: ['b@example.com'] }]), null);
   assert.equal(singleAddress([{ to: ['a@example.com'], bcc_count: 1 }]), null);
   assert.equal(singleAddress([]), null);
+});
+
+test('approve all never approves a forward with a sender warning, whatever the request lists', async () => {
+  const db = approveDb([
+    waiting('a'),
+    waiting('b', { no_approval_wait_reason: 'sender_failed' }),
+    waiting('c', { no_approval_wait_reason: 'sender_unverified' }),
+    waiting('d', { no_approval_wait_reason: 'daily_limit' }),
+  ]);
+  const result = await run(db, ['a', 'b', 'c', 'd'].map((id) => ({ id, revision: 3 })));
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.deepEqual(result.outcomes.map((row) => row.outcome), ['approved', 'needs_review', 'needs_review', 'approved']);
+  const status = (id: string) => db.tables.send_approvals.find((row) => row.id === id)?.status;
+  assert.equal(status('b'), 'pending');
+  assert.equal(status('c'), 'pending');
+  assert.equal(db.tables.scheduled_sends.length, 2);
+});
+
+test('approve all: a warned forward to another address does not stop the rest', async () => {
+  const other = sealed({ to: ['other@example.com'], subject: 'x' });
+  const db = approveDb([waiting('a'), waiting('b', { summary: other, no_approval_wait_reason: 'sender_failed' })]);
+  const result = await run(db, [{ id: 'a', revision: 3 }]);
+  assert.equal(result.ok && result.outcomes[0].outcome, 'approved');
+});
+
+test('approve all: when every row has a warning, nothing is approved', async () => {
+  const db = approveDb([waiting('a', { no_approval_wait_reason: 'sender_failed' })]);
+  const result = await run(db, [{ id: 'a', revision: 3 }]);
+  assert.equal(result.ok && result.outcomes[0].outcome, 'needs_review');
+  assert.equal(db.tables.scheduled_sends.length, 0);
 });
 
 test('approve all: rows are approved at the revision shown, and paced apart', async () => {

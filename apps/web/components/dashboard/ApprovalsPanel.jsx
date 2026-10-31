@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Btn, Icon } from '../Primitives';
 import { OriginalMessage } from '../approvals/OriginalMessage';
 import { deliveryInFlight, deliveryReasonText, formatTimeLeft, useNow } from '../approvals/approvalDisplay';
+import { hasSenderWarning } from '@/lib/approvals/no-approval';
+import { useEscapeKey } from './useEscapeKey';
 import { useToast } from './Toast';
 
 /** How often the page looks again while a send is on its way, and for how long. */
@@ -36,18 +38,19 @@ class ClosedError extends Error {}
 
 /**
  * Waiting forwards grouped by the rule that queued them, from the live list on this
- * page. A rule qualifies for "Approve all" only when every row goes to one address,
- * with nobody copied. The server checks the same thing again.
+ * page. A forward with a sender warning is left for one-by-one review (`held`), and
+ * "Approve all" covers the rest (`rows`), only when each of those goes to one address
+ * with nobody copied. The server checks the same things again.
  */
 function ruleGroups(items) {
   const groups = new Map();
   for (const item of items) {
     if (item.kind !== 'rule_forward' || !item.rule_id || item.rule_deleted) continue;
-    const group = groups.get(item.rule_id) ?? { ruleId: item.rule_id, ruleName: item.rule_name, rows: [] };
-    group.rows.push(item);
+    const group = groups.get(item.rule_id) ?? { ruleId: item.rule_id, ruleName: item.rule_name, rows: [], held: [] };
+    (hasSenderWarning(item.no_approval_wait_reason) ? group.held : group.rows).push(item);
     groups.set(item.rule_id, group);
   }
-  return [...groups.values()].filter((group) => group.rows.length > 1).map((group) => {
+  return [...groups.values()].filter((group) => group.rows.length + group.held.length > 1).map((group) => {
     const addresses = new Set();
     let single = true;
     for (const row of group.rows) {
@@ -276,9 +279,12 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
             {groups.map((group) => (
               <div className="approvals-rule-bar" key={group.ruleId}>
                 <span>
-                  {group.address
-                    ? t('approvals.panel.ruleGroup', { rule: group.ruleName ?? '', count: group.rows.length, address: group.address })
-                    : t('approvals.panel.ruleGroupMixed', { rule: group.ruleName ?? '', count: group.rows.length })}
+                  {group.rows.length === 0
+                    ? t('approvals.panel.ruleGroupAllHeld', { rule: group.ruleName ?? '', count: group.held.length })
+                    : group.address
+                      ? t('approvals.panel.ruleGroup', { rule: group.ruleName ?? '', count: group.rows.length, address: group.address })
+                      : t('approvals.panel.ruleGroupMixed', { rule: group.ruleName ?? '', count: group.rows.length })}
+                  {group.rows.length > 0 && group.held.length > 0 ? ` ${t('approvals.panel.ruleGroupHeld', { count: group.held.length })}` : ''}
                 </span>
                 {group.address ? (
                   <Btn size="sm" variant="secondary" onClick={() => setApproveAll({ group, outcomes: null })}>
@@ -442,7 +448,7 @@ function DecidedTable({ rows, canDecide, onForwardAgain, t }) {
                       <div className="approvals-actions">
                         <Btn size="sm" variant="secondary" onClick={() => onForwardAgain(row)}>{t('approvals.panel.forwardAgain')}</Btn>
                       </div>
-                    ) : canDecide && row.status === 'expired' && row.kind === 'rule_forward' && row.rule_deleted ? (
+                    ) : canDecide && (row.status === 'expired' || row.delivery?.state === 'failed') && row.kind === 'rule_forward' && row.rule_deleted ? (
                       <span className="sub">{t('approvals.panel.forwardAgainRuleDeleted')}</span>
                     ) : null}
                   </td>
@@ -460,6 +466,7 @@ function ForwardAgainDialog({ row, onClose, onDone, t, toast }) {
   const [working, setWorking] = useState(false);
   const [failure, setFailure] = useState('');
   const address = recipientLabel(row, t);
+  useEscapeKey(() => { if (!working) onClose(); });
   const submit = async () => {
     setWorking(true);
     setFailure('');
@@ -488,7 +495,7 @@ function ForwardAgainDialog({ row, onClose, onDone, t, toast }) {
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="forward-again-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
         <div className="modal-h">
           <h2 id="forward-again-title" style={{ margin: 0 }}>{t('approvals.panel.forwardAgainTitle')}</h2>
-          <div className="sub" style={{ marginTop: 4 }}>{t('approvals.panel.forwardAgainBody')}</div>
+          <div className="sub" style={{ marginTop: 4 }}>{t(row.delivery?.state === 'failed' ? 'approvals.panel.forwardAgainBodyFailed' : 'approvals.panel.forwardAgainBody')}</div>
         </div>
         <div className="modal-body">
           {failure ? <div className="alert alert-error" role="alert">{failure}</div> : null}
@@ -511,6 +518,7 @@ function ApproveAllDialog({ state, setState, onDone, t }) {
   const [working, setWorking] = useState(false);
   const [failure, setFailure] = useState('');
   const close = () => { if (!working) setState(null); };
+  useEscapeKey(close);
   const subjectOf = (id) => group.rows.find((row) => row.id === id)?.summary?.subject || t('approvals.panel.noSubject');
 
   const submit = async () => {
@@ -571,7 +579,12 @@ function ApproveAllDialog({ state, setState, onDone, t }) {
               ))}
             </ul>
           ) : (
-            <p className="sub" style={{ margin: 0 }}>{t('approvals.panel.approveAllPacing')}</p>
+            <>
+              {group.held.length > 0 ? (
+                <div className="alert" role="status">{t('approvals.panel.approveAllHeld', { count: group.held.length })}</div>
+              ) : null}
+              <p className="sub" style={{ margin: 0 }}>{t('approvals.panel.approveAllPacing')}</p>
+            </>
           )}
         </div>
         <div className="modal-foot">
@@ -611,6 +624,7 @@ function DecisionDialog({ item, decision, changed, submitting, now, onCancel, on
   const approving = decision === 'approve';
   const [details, setDetails] = useState(null);
   const [detailsFailed, setDetailsFailed] = useState(false);
+  useEscapeKey(onCancel);
 
   useEffect(() => {
     let live = true;
@@ -653,6 +667,11 @@ function DecisionDialog({ item, decision, changed, submitting, now, onCancel, on
           </div>
         </div>
         <div className="modal-body">
+          {hasSenderWarning(item.no_approval_wait_reason) ? (
+            <div className="alert alert-error" role="alert">
+              {t(`approvals.senderWarning.${item.no_approval_wait_reason}`)}
+            </div>
+          ) : null}
           {changed ? (
             <div className="alert" role="alert">
               {t('approvals.panel.changedNotice')}

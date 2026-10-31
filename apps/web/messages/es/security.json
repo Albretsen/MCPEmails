@@ -53,7 +53,7 @@
       },
       {
         "data": "Envíos retenidos para tu aprobación",
-        "accessed": "Se conservan hasta que alguien los aprueba o rechaza, o caducan a las 24 horas",
+        "accessed": "Se conservan hasta que alguien los aprueba o rechaza, o caducan: a las 24 horas si es un envío de un asistente de IA, a los 7 días si es un reenvío de una automatización",
         "stored": "Sí, cifrados en reposo, luego se conservan como tu historial de aprobaciones"
       },
       {

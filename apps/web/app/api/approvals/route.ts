@@ -7,7 +7,7 @@ import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approval
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { APPROVAL_RULE_LINK_COLUMNS, approvalDecider, withApprovalOrigin } from '@/lib/approvals/origin';
 import { readSummary } from '@/lib/approvals/payload';
-import { deliveryFromScheduledSend, loadScheduledSendsByApproval } from '@/lib/approvals/delivery';
+import { deliveryFromScheduledSend, loadScheduledSendsByApproval, provablyNotSent } from '@/lib/approvals/delivery';
 import { forwardAgainWindowOpen } from '@/lib/approvals/forward-again';
 
 async function context() {
@@ -121,6 +121,9 @@ export async function GET() {
     const { decided_by: _decidedBy, ...rest } = origin as typeof origin & { decided_by?: unknown };
     const expired = row.status === 'expired';
     const isDeleted = ruleDeleted(origin.kind, origin.rule_id);
+    const marker = markers.get(String(row.id));
+    // Failed, and the record proves nothing went out. The route checks again.
+    const failedNotSent = row.status === 'approved' && provablyNotSent(marker);
     return {
       ...rest,
       summary: readSummary(row.summary),
@@ -129,10 +132,10 @@ export async function GET() {
       decided_via: expired ? null : row.decided_via ?? null,
       decided_at: row.decided_at ?? null,
       delivery: row.status === 'approved'
-        ? deliveryFromScheduledSend(markers.get(String(row.id)))
+        ? deliveryFromScheduledSend(marker)
         : null,
       rule_deleted: isDeleted,
-      can_forward_again: expired
+      can_forward_again: (expired || failedNotSent)
         && origin.kind === 'rule_forward'
         && row.operation === 'email_forward'
         && !isDeleted

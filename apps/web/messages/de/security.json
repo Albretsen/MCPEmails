@@ -53,7 +53,7 @@
       },
       {
         "data": "Sendungen, die auf Ihre Freigabe warten",
-        "accessed": "Vorgehalten, bis jemand sie freigibt oder ablehnt, oder sie nach 24 Stunden ablaufen",
+        "accessed": "Vorgehalten, bis jemand sie freigibt oder ablehnt, oder bis sie ablaufen: nach 24 Stunden beim Versand eines KI-Assistenten, nach 7 Tagen bei der Weiterleitung einer Automatisierung",
         "stored": "Ja, verschlüsselt gespeichert, danach als Ihr Freigabeverlauf aufbewahrt"
       },
       {

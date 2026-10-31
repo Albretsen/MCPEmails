@@ -1155,7 +1155,7 @@
       "details": "Detaljer",
       "titleRule": "Videresende denne e-posten?",
       "subtitleRule": "Regelen \"{rule}\" forberedte denne videresendingen. Ingenting sendes før du godkjenner den.",
-      "footnoteRule": "Bare en innlogget eier eller administrator kan godkjenne. En regel eller en KI-assistent kan aldri godkjenne en sending.",
+      "footnoteRule": "Bare en innlogget eier eller administrator av arbeidsområdet kan godkjenne. En automatisering eller en AI-assistent kan ikke godkjenne en sending.",
       "backToApprovals": "Du kan lukke denne fanen. Resultatet blir stående på siden Godkjenninger.",
       "forwardNote": "Notat over den videresendte meldingen:",
       "delivery": {
@@ -1256,7 +1256,9 @@
         "gone": "Denne forespørselen er for gammel til å videresendes på nytt.",
         "key_gone": "API-nøkkelen denne regelen brukte, er slettet, så dette kan ikke sendes.",
         "role": "Bare en eier eller administrator kan gjøre dette.",
-        "generic": "Kunne ikke lage den nye forespørselen. Ingenting ble sendt."
+        "generic": "Kunne ikke lage den nye forespørselen. Ingenting ble sendt.",
+        "may_have_sent": "Denne videresendingen kan ha gått ut, så den kan ikke sendes på nytt. Sjekk Sendt-mappen.",
+        "not_failed": "Denne videresendingen har ikke feilet."
       },
       "ruleGroup": "{rule}: {count} videresendinger til {address}",
       "ruleGroupMixed": "{rule}: {count} videresendinger til flere adresser. Godkjenn disse én om gangen.",
@@ -1272,7 +1274,8 @@
         "changed": "Endret, se over på nytt",
         "not_pending": "Allerede avgjort",
         "left_waiting": "Venter fortsatt, godkjenn senere",
-        "failed": "Ikke godkjent"
+        "failed": "Ikke godkjent",
+        "needs_review": "Holdt utenfor: gjennomgå den for seg"
       },
       "approveAllErrors": {
         "mixed_addresses": "Disse går ikke lenger til én adresse, så ingenting ble godkjent. Se over dem én om gangen.",
@@ -1286,7 +1289,11 @@
       "filterClear": "Vis alle godkjenninger",
       "filterEmpty": "Ingenting fra denne automatiseringen venter.",
       "sentWithoutApproval": "Sendt uten godkjenning ({rule})",
-      "sentWithoutApprovalUnnamed": "Sendt uten godkjenning"
+      "sentWithoutApprovalUnnamed": "Sendt uten godkjenning",
+      "approveAllHeld": "{count, plural, =1 {1 må gjennomgås for seg: avsenderen besto ikke DKIM eller DMARC, eller kunne ikke bekreftes.} other {# må gjennomgås én etter én: avsenderne besto ikke DKIM eller DMARC, eller kunne ikke bekreftes.}}",
+      "ruleGroupHeld": "{count, plural, =1 {1 til må gjennomgås for seg på grunn av avsenderen.} other {# til må gjennomgås én etter én på grunn av avsenderne.}}",
+      "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 videresending må gjennomgås for seg} other {# videresendinger må gjennomgås én etter én}} på grunn av avsenderen.",
+      "forwardAgainBodyFailed": "Ingenting ble sendt forrige gang. Dette lager en ny forespørsel for samme melding og samme adresse. Den venter i opptil 7 dager, og ingenting sendes før en eier eller administrator godkjenner den. Hvis årsaken fortsatt er der, feiler den igjen."
     },
     "timeLeft": {
       "days": "{count, plural, one {# dag igjen} other {# dager igjen}}",
@@ -1309,8 +1316,11 @@
         "key": "API-nøkkelen bak denne sendingen kan ikke lenger sende fra denne postkassen. Ingenting ble sendt.",
         "expired": "Den utløp før noen tok stilling, så ingenting ble sendt.",
         "send_limit": "En sendegrense holder denne tilbake nå. Den går ut når grensen er over.",
-        "generic": "Sendingen gikk ikke gjennom.",
-        "allowance": "Dette arbeidsområdet har brukt opp den inkluderte bruken for denne perioden, så videresendingen ble ikke sendt."
+        "generic": "Sendingen feilet og det står ikke hvorfor, så den kan ha gått ut. Sjekk Sendt-mappen.",
+        "allowance": "Dette arbeidsområdet har brukt opp den inkluderte bruken for denne perioden, så videresendingen ble ikke sendt.",
+        "refused": "Den ble avvist før den gikk ut, så ingenting ble sendt. Årsaken kan være adressen eller e-postserveren. Sjekk adressen og innboksen.",
+        "recipient_refused": "Adressen ble avvist, så ingenting ble sendt. Sjekk adressen.",
+        "provider_quota": "E-postleverandøren sier at sendekvoten er brukt opp, så ingenting ble sendt. Prøv igjen senere."
       }
     },
     "original": {
@@ -1329,6 +1339,11 @@
         "mailbox": "Postkassen kunne ikke leses akkurat nå, så meldingen kan ikke vises. Du kan fortsatt avvise forespørselen.",
         "unreadable": "Den lagrede forespørselen kunne ikke leses, så meldingen kan ikke vises. Du kan fortsatt avvise forespørselen."
       }
+    },
+    "senderWarning": {
+      "title": "Sjekk avsenderen før du godkjenner",
+      "sender_failed": "Avsenderen besto ikke DKIM eller DMARC, så denne e-posten er kanskje ikke fra den den utgir seg for å være. Sjekk den nøye før du godkjenner.",
+      "sender_unverified": "Avsenderen kunne ikke bekreftes, så denne e-posten er kanskje ikke fra den den utgir seg for å være. Sjekk den før du godkjenner."
     }
   },
   "automations": {
@@ -1481,7 +1496,7 @@
       "forwardToHelp": "Skill flere adresser med komma. Maks ti.",
       "forwardNoteLabel": "Notat som legges ved (valgfritt)",
       "forwardNotePlaceholder": "Videresendt automatisk",
-      "forwardApprovalNote": "Videresending skjer aldri av seg selv. Hver videresending venter under Godkjenninger til et menneske godkjenner den.",
+      "forwardApprovalNote": "Denne videresendingen venter under Godkjenninger til en person godkjenner den, med mindre en regel uten godkjenning dekker adressene.",
       "templateLabel": "Svarmal",
       "templatePlaceholder": "Takk for at du tok kontakt. Noen svarer deg snart.",
       "templateHelp": "Lagres som utkast, sendes aldri. Plassholdere skrevet i doble krøllparenteser fylles ut: sender_name, sender_email, subject, date. Alt annet er ren tekst.",
@@ -1589,7 +1604,7 @@
       "title": "Slik fungerer godkjenning",
       "step1": "Når denne automatiseringen finner en e-post som passer, sendes ingenting. En videresending legges til under Godkjenninger.",
       "step2": "En eier eller administrator åpner Godkjenninger, sjekker e-posten og adressen og godkjenner eller avviser.",
-      "step3": "Bare en godkjent videresending blir sendt. Hvis ingen godkjenner den i tide, blir den ikke sendt.",
+      "step3": "Bare en godkjent videresending blir sendt. Den venter i 7 dager. Hvis ingen godkjenner den innen da, utløper den og blir ikke sendt.",
       "open": "Åpne Godkjenninger",
       "close": "Lukk"
     },
@@ -1708,7 +1723,8 @@
         "fanout_hold": "Venter på godkjenning: denne innboksen sendte én melding til mange mottakere i løpet av en time.",
         "daily_send_limit": "Venter på godkjenning: denne innboksen har nådd den daglige sendegrensen.",
         "sends_paused_provider_refusals": "Venter på godkjenning: e-postleverandøren avviste nylige meldinger fra denne innboksen.",
-        "sends_frozen": "Venter på godkjenning: sending er stanset for dette arbeidsområdet."
+        "sends_frozen": "Venter på godkjenning: sending er stanset for dette arbeidsområdet.",
+        "coverage_off": "Venter på godkjenning: regelen uten godkjenning for denne adressen er slått av."
       }
     }
   },

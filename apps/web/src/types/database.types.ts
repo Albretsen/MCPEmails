@@ -4482,6 +4482,8 @@ export type Database = {
           decision_note: string | null
           dispatch_scheduled_send_id: string | null
           expires_at: string | null
+          failed_notice_at: string | null
+          failed_notice_id: string | null
           id: string
           inbox_id: string
           operation: string
@@ -4513,6 +4515,8 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          failed_notice_at?: string | null
+          failed_notice_id?: string | null
           id?: string
           inbox_id: string
           operation: string
@@ -4544,6 +4548,8 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          failed_notice_at?: string | null
+          failed_notice_id?: string | null
           id?: string
           inbox_id?: string
           operation?: string

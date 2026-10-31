@@ -1155,7 +1155,7 @@
       "details": "Details",
       "titleRule": "Forward this email?",
       "subtitleRule": "The rule \"{rule}\" prepared this forward. Nothing is sent until you approve it.",
-      "footnoteRule": "Only a signed-in workspace owner or admin can approve. A rule or an AI assistant can never approve a send.",
+      "footnoteRule": "Only a signed-in workspace owner or admin can approve. An automation or an AI assistant cannot approve a send.",
       "backToApprovals": "You can close this tab. The outcome stays on the Approvals page.",
       "forwardNote": "Note added above the forwarded message:",
       "delivery": {
@@ -1256,7 +1256,9 @@
         "gone": "This request is too old to forward again.",
         "key_gone": "The API key this rule ran with was deleted, so this cannot be sent.",
         "role": "Only a workspace owner or admin can do this.",
-        "generic": "Could not create the new request. Nothing was sent."
+        "generic": "Could not create the new request. Nothing was sent.",
+        "may_have_sent": "This forward may have gone out, so it cannot be sent again. Check the Sent folder.",
+        "not_failed": "This forward has not failed."
       },
       "ruleGroup": "{rule}: {count} forwards to {address}",
       "ruleGroupMixed": "{rule}: {count} forwards to more than one address. Approve these one at a time.",
@@ -1272,7 +1274,8 @@
         "changed": "Changed, review it again",
         "not_pending": "Already decided",
         "left_waiting": "Still waiting, approve it later",
-        "failed": "Not approved"
+        "failed": "Not approved",
+        "needs_review": "Left out: review it on its own"
       },
       "approveAllErrors": {
         "mixed_addresses": "These no longer all go to one address, so nothing was approved. Review them one at a time.",
@@ -1286,7 +1289,11 @@
       "filterClear": "Show all approvals",
       "filterEmpty": "Nothing from this automation is waiting.",
       "sentWithoutApproval": "Sent without approval ({rule})",
-      "sentWithoutApprovalUnnamed": "Sent without approval"
+      "sentWithoutApprovalUnnamed": "Sent without approval",
+      "approveAllHeld": "{count, plural, =1 {1 needs review one by one: its sender failed DKIM or DMARC, or could not be verified.} other {# need review one by one: their senders failed DKIM or DMARC, or could not be verified.}}",
+      "ruleGroupHeld": "{count, plural, =1 {1 more needs review one by one because of its sender.} other {# more need review one by one because of their senders.}}",
+      "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 forward needs} other {# forwards need}} review one by one because of the sender.",
+      "forwardAgainBodyFailed": "Nothing went out last time. This creates a new request for the same message and the same address. It waits up to 7 days, and nothing is sent until an owner or admin approves it. If the cause is still there, it fails again."
     },
     "timeLeft": {
       "days": "{count, plural, one {# day left} other {# days left}}",
@@ -1309,8 +1316,11 @@
         "key": "The API key behind this send can no longer send from this mailbox. Nothing was sent.",
         "expired": "It expired before it was decided, so nothing was sent.",
         "send_limit": "A sending limit is holding this for now. It goes out once the limit lifts.",
-        "generic": "The send did not go through.",
-        "allowance": "This workspace has used its included usage for this period, so this forward was not sent."
+        "generic": "The send failed and the record does not say why, so it may have gone out. Check the Sent folder.",
+        "allowance": "This workspace has used its included usage for this period, so this forward was not sent.",
+        "refused": "It was refused before it left, so nothing was sent. The address or the mail server may be the cause. Check the address and the mailbox.",
+        "recipient_refused": "The address was refused, so nothing was sent. Check the address.",
+        "provider_quota": "The mail provider says the sending quota is used up, so nothing was sent. Try again later."
       }
     },
     "original": {
@@ -1329,6 +1339,11 @@
         "mailbox": "The mailbox could not be read just now, so the message cannot be shown. You can still reject this request.",
         "unreadable": "The stored request could not be read, so the message cannot be shown. You can still reject this request."
       }
+    },
+    "senderWarning": {
+      "title": "Check the sender before you approve",
+      "sender_failed": "The sender failed DKIM or DMARC, so this mail may not be from who it says. Check it carefully before you approve.",
+      "sender_unverified": "The sender could not be verified, so this mail may not be from who it says. Check it before you approve."
     }
   },
   "automations": {
@@ -1481,7 +1496,7 @@
       "forwardToHelp": "Separate several addresses with commas. Ten at most.",
       "forwardNoteLabel": "Note to add (optional)",
       "forwardNotePlaceholder": "Forwarded automatically",
-      "forwardApprovalNote": "Forwarding never happens on its own. Every forward waits under Approvals until a person approves it.",
+      "forwardApprovalNote": "This forward waits under Approvals until a person approves it, unless a no-approval rule covers its addresses.",
       "templateLabel": "Reply template",
       "templatePlaceholder": "Thanks for getting in touch. Someone will reply shortly.",
       "templateHelp": "Saved as a draft, never sent. Placeholders written in double curly braces are filled in: sender_name, sender_email, subject, date. Everything else is literal text.",
@@ -1589,7 +1604,7 @@
       "title": "How approval works",
       "step1": "When this automation finds a matching email, nothing is sent. A forward is added under Approvals.",
       "step2": "An owner or admin opens Approvals, checks the email and the address, then approves or rejects it.",
-      "step3": "Only an approved forward is sent. If nobody approves it in time, it is not sent.",
+      "step3": "Only an approved forward is sent. It waits for 7 days. If nobody approves it by then, it expires and is not sent.",
       "open": "Open Approvals",
       "close": "Close"
     },
@@ -1708,7 +1723,8 @@
         "fanout_hold": "Waiting for approval: this inbox sent one message to many people within an hour.",
         "daily_send_limit": "Waiting for approval: this inbox reached its daily sending limit.",
         "sends_paused_provider_refusals": "Waiting for approval: the mail provider refused recent messages from this inbox.",
-        "sends_frozen": "Waiting for approval: sending is suspended for this workspace."
+        "sends_frozen": "Waiting for approval: sending is suspended for this workspace.",
+        "coverage_off": "Waiting for approval: the no-approval rule for this address is switched off."
       }
     }
   },

@@ -53,8 +53,12 @@ import type { Database } from '@/types/database.types';
  * 20261031220000_forward_approval_notices.sql. That sender reads only this
  * category, not the global opt-out: stopping win-backs must not stop being told
  * that a forward is about to expire.
+ *
+ * `approval_receipts` is the receipts for forwards a no-approval rule sent. Added
+ * by 20261031235000_forward_test_fixes.sql. It is its own category so that stopping
+ * receipts never stops the emails saying forwards are waiting or failing.
  */
-export const LIFECYCLE_CATEGORIES = ['lifecycle', 'product_update', 'research', 'activity_summary', 'approval_notices'] as const;
+export const LIFECYCLE_CATEGORIES = ['lifecycle', 'product_update', 'research', 'activity_summary', 'approval_notices', 'approval_receipts'] as const;
 export type LifecycleCategory = (typeof LIFECYCLE_CATEGORIES)[number];
 
 export function isLifecycleCategory(value: string): value is LifecycleCategory {

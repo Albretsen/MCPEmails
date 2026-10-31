@@ -1193,7 +1193,7 @@
       "forwardToHelp": "多个地址用逗号分隔，最多十个。",
       "forwardNoteLabel": "附加备注（可选）",
       "forwardNotePlaceholder": "自动转发",
-      "forwardApprovalNote": "转发绝不会自行发生。每一封转发都会停在“审批”里，等人工批准。",
+      "forwardApprovalNote": "这次转发会在“审批”下等待，直到有人批准，除非某条免审批规则覆盖了它的地址。",
       "templateLabel": "回复模板",
       "templatePlaceholder": "感谢来信，我们会尽快回复你。",
       "templateHelp": "只保存为草稿，绝不发送。写在双大括号里的占位符会被填充：sender_name、sender_email、subject、date。其余内容都按原样保留。",
@@ -1301,7 +1301,7 @@
       "title": "审批如何运作",
       "step1": "当此自动化找到匹配的邮件时，不会发送任何内容，而是在“审批”下添加一条转发。",
       "step2": "所有者或管理员打开“审批”，检查邮件和地址，然后批准或拒绝。",
-      "step3": "只有获批的转发才会发送。如果无人及时批准，则不会发送。",
+      "step3": "只有已批准的转发才会发送。它会等待 7 天。如果到时无人批准，它会过期且不会发送。",
       "open": "打开审批",
       "close": "关闭"
     },

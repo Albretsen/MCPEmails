@@ -97,6 +97,11 @@ It forces `send_approval_required: true` on a local copy of the inbox row before
 `queueSendApproval`, which is how the override is expressed without giving `queueSendApproval` a bypass
 parameter that some later caller would reach for.
 
+The one way a forward goes without a click is a no-approval rule, which only a signed-in owner or admin
+can write (`no_approval_rule_save`, granted to `authenticated` and refused to the service role). The runner
+still writes the ordinary approval row; `no_approval_auto_decide` then decides that row in the database,
+and the dispatcher checks coverage again before it sends. Nothing the runner holds can say yes.
+
 **The runner must never set `internalApprovalDispatch`.** See `triageApiKeyAsApiKeyRow` in `index.ts`:
 that flag is what lets the approved-send dispatcher skip the approval gate after a human has already said
 yes. An unattended runner holding it would be able to skip its own gate, which defeats the only human
