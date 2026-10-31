@@ -62,6 +62,7 @@ const MARKETING_PAGES: {
   { path: '/privacy', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/withdrawal', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/dpa', lastModified: '2026-10-30', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/cancel', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
 ];
 
