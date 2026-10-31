@@ -1406,7 +1406,11 @@
       "historyNote": "Kjøreloggen beholdes, så du kan fortsatt se alt denne automatiseringen gjorde.",
       "cancel": "Avbryt",
       "confirm": "Slett automatisering",
-      "deleting": "Sletter…"
+      "deleting": "Sletter…",
+      "waiting": "{count, plural, =1 {1 videresending fra denne automatiseringen venter på godkjenning.} other {# videresendinger fra denne automatiseringen venter på godkjenning.}}",
+      "cancelWaiting": "{count, plural, =1 {Avbryt den, så den aldri kan sendes} other {Avbryt dem, så de aldri kan sendes}}",
+      "keepWaitingNote": "{count, plural, =1 {Den blir liggende under Godkjenninger og kan fortsatt godkjennes.} other {De blir liggende under Godkjenninger og kan fortsatt godkjennes.}}",
+      "waitingUnknown": "Kunne ikke sjekke om videresendinger venter. De som venter, blir liggende under Godkjenninger."
     },
     "rowDuplicate": "Dupliser",
     "approvalHelp": {
@@ -1443,7 +1447,9 @@
         "since": "mottatt {value} eller senere",
         "before": "mottatt før {value}"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatiseringen er slettet og 1 ventende videresending er avbrutt.} other {Automatiseringen er slettet og # ventende videresendinger er avbrutt.}}",
+    "toastDeletedCancelFailed": "Automatiseringen er slettet, men de ventende videresendingene kunne ikke avbrytes. Avvis dem under Godkjenninger."
   },
   "workflows": {
     "bulkRuns": {

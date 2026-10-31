@@ -1258,7 +1258,11 @@
       "historyNote": "运行记录会保留，你仍然可以查看这个自动化做过的一切。",
       "cancel": "取消",
       "confirm": "删除自动化",
-      "deleting": "正在删除…"
+      "deleting": "正在删除…",
+      "waiting": "{count, plural, other {此自动化有 # 条转发正在等待审批。}}",
+      "cancelWaiting": "{count, plural, other {取消它们，使其永远不会发送}}",
+      "keepWaitingNote": "{count, plural, other {它们会保留在“审批”中，仍可被批准。}}",
+      "waitingUnknown": "无法检查等待中的转发。等待中的转发会保留在“审批”中。"
     },
     "rowDuplicate": "复制",
     "approvalHelp": {
@@ -1295,7 +1299,9 @@
         "since": "在 {value} 或之后收到",
         "before": "在 {value} 之前收到"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, other {自动化已删除，并已取消 # 条等待中的转发。}}",
+    "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。"
   },
   "workflows": {
     "bulkRuns": {

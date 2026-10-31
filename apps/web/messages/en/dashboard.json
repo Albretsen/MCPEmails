@@ -1406,7 +1406,11 @@
       "historyNote": "The run log is kept, so you can still see everything this automation did.",
       "cancel": "Cancel",
       "confirm": "Delete automation",
-      "deleting": "Deleting…"
+      "deleting": "Deleting…",
+      "waiting": "{count, plural, =1 {1 forward from this automation is waiting for approval.} other {# forwards from this automation are waiting for approval.}}",
+      "cancelWaiting": "{count, plural, =1 {Cancel it, so it can never be sent} other {Cancel them, so they can never be sent}}",
+      "keepWaitingNote": "{count, plural, =1 {It stays under Approvals and can still be approved.} other {They stay under Approvals and can still be approved.}}",
+      "waitingUnknown": "Could not check for waiting forwards. Any that are waiting stay under Approvals."
     },
     "rowDuplicate": "Duplicate",
     "approvalHelp": {
@@ -1443,7 +1447,9 @@
         "since": "received on or after {value}",
         "before": "received before {value}"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automation deleted and 1 waiting forward cancelled.} other {Automation deleted and # waiting forwards cancelled.}}",
+    "toastDeletedCancelFailed": "Automation deleted, but its waiting forwards could not be cancelled. Reject them under Approvals."
   },
   "workflows": {
     "bulkRuns": {

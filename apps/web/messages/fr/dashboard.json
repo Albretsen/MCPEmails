@@ -1406,7 +1406,11 @@
       "historyNote": "Le journal d'exécution est conservé : vous pourrez toujours voir tout ce que cette automatisation a fait.",
       "cancel": "Annuler",
       "confirm": "Supprimer l'automatisation",
-      "deleting": "Suppression…"
+      "deleting": "Suppression…",
+      "waiting": "{count, plural, =1 {1 transfert de cette automatisation attend une approbation.} other {# transferts de cette automatisation attendent une approbation.}}",
+      "cancelWaiting": "{count, plural, =1 {L'annuler, pour qu'il ne puisse jamais partir} other {Les annuler, pour qu'ils ne puissent jamais partir}}",
+      "keepWaitingNote": "{count, plural, =1 {Il reste dans Approbations et peut encore être approuvé.} other {Ils restent dans Approbations et peuvent encore être approuvés.}}",
+      "waitingUnknown": "Impossible de vérifier les transferts en attente. Ceux qui attendent restent dans Approbations."
     },
     "rowDuplicate": "Dupliquer",
     "approvalHelp": {
@@ -1443,7 +1447,9 @@
         "since": "reçus le {value} ou après",
         "before": "reçus avant le {value}"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatisation supprimée et 1 transfert en attente annulé.} other {Automatisation supprimée et # transferts en attente annulés.}}",
+    "toastDeletedCancelFailed": "Automatisation supprimée, mais ses transferts en attente n'ont pas pu être annulés. Refusez-les dans Approbations."
   },
   "workflows": {
     "bulkRuns": {

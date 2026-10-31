@@ -57,11 +57,14 @@ const aiRule = (overrides = {}) => ({
   ...overrides,
 });
 
-async function render(t, { rules = [aiRule()], keys = [SENDING_KEY, READ_KEY], respond } = {}) {
+async function render(t, { rules = [aiRule()], keys = [SENDING_KEY, READ_KEY], respond, approvals = [] } = {}) {
   const calls = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     const target = String(url);
+    if (target === '/api/approvals') {
+      return { ok: true, status: 200, json: async () => ({ approvals, decided: [] }) };
+    }
     if (target === '/api/automations' && (!init || !init.method || init.method === 'GET')) {
       return { ok: true, status: 200, json: async () => ({ role: 'owner', automations: rules }) };
     }
@@ -260,6 +263,41 @@ test('row 23: a duplicate asks for the inbox, keeps hidden conditions, and posts
   ]);
   assert.equal(calls[0].body.inbox_id, 'ib-0002');
   assert.deepEqual(calls[0].body.filter, aiRule().filter);
+});
+
+async function openDelete(t, approvals) {
+  const { view, calls } = await render(t, { approvals });
+  await click(buttonNamed(view.container, copy.rowDelete));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  return { view, calls, dialog: dialogOf(view) };
+}
+
+const waitingRows = [{ id: 'a1', rule_id: 'rule-0001' }, { id: 'a2', rule_id: 'rule-0001' }, { id: 'a3', rule_id: 'someone-else' }, { id: 'a4', rule_id: null }];
+
+test('row 22: the delete dialog counts this rule\'s forwards and cancels them by default', async (t) => {
+  const { dialog, calls } = await openDelete(t, waitingRows);
+  assert.ok(dialog.textContent.includes('2 forwards from this automation are waiting for approval.'), dialog.textContent);
+  await click(buttonNamed(dialog, copy.delete.confirm));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  assert.equal(calls[0].method, 'DELETE');
+  assert.deepEqual(calls[0].body, { cancel_waiting: true });
+});
+
+test('row 22: unticking keeps them, and says where they stay', async (t) => {
+  const { dialog, calls } = await openDelete(t, waitingRows);
+  await click(dialog.querySelector('input[type="checkbox"]'));
+  assert.ok(dialog.textContent.includes('They stay under Approvals'), dialog.textContent);
+  await click(buttonNamed(dialog, copy.delete.confirm));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  assert.deepEqual(calls[0].body, { cancel_waiting: false });
+});
+
+test('row 22: nothing waiting, nothing to ask', async (t) => {
+  const { dialog, calls } = await openDelete(t, [{ id: 'a3', rule_id: 'someone-else' }]);
+  assert.equal(dialog.querySelector('input[type="checkbox"]'), null);
+  await click(buttonNamed(dialog, copy.delete.confirm));
+  await flush(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+  assert.deepEqual(calls[0].body, { cancel_waiting: false });
 });
 
 test('row 17: the page does not say nobody is watching', () => {

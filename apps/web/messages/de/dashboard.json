@@ -1406,7 +1406,11 @@
       "historyNote": "Das Ausführungsprotokoll bleibt erhalten, Sie sehen also weiterhin alles, was diese Automatisierung getan hat.",
       "cancel": "Abbrechen",
       "confirm": "Automatisierung löschen",
-      "deleting": "Wird gelöscht…"
+      "deleting": "Wird gelöscht…",
+      "waiting": "{count, plural, =1 {1 Weiterleitung dieser Automatisierung wartet auf Freigabe.} other {# Weiterleitungen dieser Automatisierung warten auf Freigabe.}}",
+      "cancelWaiting": "{count, plural, =1 {Abbrechen, damit sie nie gesendet werden kann} other {Abbrechen, damit sie nie gesendet werden können}}",
+      "keepWaitingNote": "{count, plural, =1 {Sie bleibt unter Freigaben und kann weiter freigegeben werden.} other {Sie bleiben unter Freigaben und können weiter freigegeben werden.}}",
+      "waitingUnknown": "Wartende Weiterleitungen konnten nicht geprüft werden. Wartende bleiben unter Freigaben."
     },
     "rowDuplicate": "Duplizieren",
     "approvalHelp": {
@@ -1443,7 +1447,9 @@
         "since": "eingegangen am {value} oder später",
         "before": "eingegangen vor dem {value}"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatisierung gelöscht und 1 wartende Weiterleitung abgebrochen.} other {Automatisierung gelöscht und # wartende Weiterleitungen abgebrochen.}}",
+    "toastDeletedCancelFailed": "Automatisierung gelöscht, aber die wartenden Weiterleitungen konnten nicht abgebrochen werden. Lehnen Sie sie unter Freigaben ab."
   },
   "workflows": {
     "bulkRuns": {

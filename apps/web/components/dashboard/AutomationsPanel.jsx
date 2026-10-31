@@ -260,17 +260,24 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
     }
   };
 
-  const removeRule = async () => {
+  const removeRule = async (cancelWaiting) => {
     if (!deleteRule || busyId) return;
     setBusyId(deleteRule.id);
     try {
       const response = await fetch(`/api/automations/${deleteRule.id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancel_waiting: cancelWaiting }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || t('automations.errorGeneric'));
-      toast({ message: t('automations.toastDeleted'), variant: 'success' });
+      if (payload.cancel_failed) {
+        toast({ message: t('automations.toastDeletedCancelFailed'), variant: 'error' });
+      } else if (payload.cancelled > 0) {
+        toast({ message: t('automations.toastDeletedCancelled', { count: payload.cancelled }), variant: 'success' });
+      } else {
+        toast({ message: t('automations.toastDeleted'), variant: 'success' });
+      }
       setDeleteRule(null);
       await load();
     } catch (removeError) {
@@ -1423,6 +1430,27 @@ function describeItemDetail(item, t) {
 
 function DeleteDialog({ rule, submitting, onCancel, onConfirm }) {
   const t = useTranslations('dashboard');
+  // From the same list the Approvals page shows, so the two cannot disagree.
+  // null while loading, 'unknown' if the list could not be read.
+  const [waiting, setWaiting] = useState(null);
+  // On by default: the likely reason to delete a forwarding rule is to stop it
+  // forwarding, and a cancelled forward can never send anything by mistake.
+  const [cancelWaiting, setCancelWaiting] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    fetch('/api/approvals', { cache: 'no-store' })
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error('approvals'))))
+      .then((payload) => {
+        if (!live) return;
+        const rows = Array.isArray(payload.approvals) ? payload.approvals : [];
+        setWaiting(rows.filter((row) => row.rule_id === rule.id).length);
+      })
+      .catch(() => { if (live) setWaiting('unknown'); });
+    return () => { live = false; };
+  }, [rule.id]);
+
+  const count = typeof waiting === 'number' ? waiting : 0;
   return (
     <div className="scrim" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="automation-delete-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -1432,10 +1460,29 @@ function DeleteDialog({ rule, submitting, onCancel, onConfirm }) {
         </div>
         <div className="modal-body">
           <div className="alert" role="note"><span>{t('automations.delete.historyNote')}</span></div>
+          {count > 0 ? (
+            <div className="alert" role="status" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+              <strong>{t('automations.delete.waiting', { count })}</strong>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={cancelWaiting}
+                  onChange={(event) => setCancelWaiting(event.target.checked)}
+                  disabled={submitting}
+                  style={{ accentColor: 'var(--brand)' }}
+                />
+                {t('automations.delete.cancelWaiting', { count })}
+              </label>
+              {!cancelWaiting ? <span className="sub" style={{ fontSize: 12 }}>{t('automations.delete.keepWaitingNote', { count })}</span> : null}
+            </div>
+          ) : null}
+          {waiting === 'unknown' ? (
+            <div className="sub" style={{ fontSize: 12.5 }}>{t('automations.delete.waitingUnknown')}</div>
+          ) : null}
         </div>
         <div className="modal-foot">
           <Btn variant="ghost" onClick={onCancel} disabled={submitting}>{t('automations.delete.cancel')}</Btn>
-          <Btn variant="destructive" onClick={onConfirm} disabled={submitting}>
+          <Btn variant="destructive" onClick={() => onConfirm(count > 0 && cancelWaiting)} disabled={submitting || waiting === null}>
             {submitting ? t('automations.delete.deleting') : t('automations.delete.confirm')}
           </Btn>
         </div>

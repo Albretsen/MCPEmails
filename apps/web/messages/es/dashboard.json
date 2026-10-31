@@ -1406,7 +1406,11 @@
       "historyNote": "Se conserva el registro de ejecuciones, así que podrás seguir viendo todo lo que hizo esta automatización.",
       "cancel": "Cancelar",
       "confirm": "Eliminar automatización",
-      "deleting": "Eliminando…"
+      "deleting": "Eliminando…",
+      "waiting": "{count, plural, =1 {1 reenvío de esta automatización está esperando aprobación.} other {# reenvíos de esta automatización están esperando aprobación.}}",
+      "cancelWaiting": "{count, plural, =1 {Cancelarlo, para que nunca se envíe} other {Cancelarlos, para que nunca se envíen}}",
+      "keepWaitingNote": "{count, plural, =1 {Sigue en Aprobaciones y todavía se puede aprobar.} other {Siguen en Aprobaciones y todavía se pueden aprobar.}}",
+      "waitingUnknown": "No se pudo comprobar si hay reenvíos en espera. Los que haya siguen en Aprobaciones."
     },
     "rowDuplicate": "Duplicar",
     "approvalHelp": {
@@ -1443,7 +1447,9 @@
         "since": "recibido el {value} o después",
         "before": "recibido antes del {value}"
       }
-    }
+    },
+    "toastDeletedCancelled": "{count, plural, =1 {Automatización eliminada y 1 reenvío en espera cancelado.} other {Automatización eliminada y # reenvíos en espera cancelados.}}",
+    "toastDeletedCancelFailed": "Automatización eliminada, pero no se pudieron cancelar sus reenvíos en espera. Recházalos en Aprobaciones."
   },
   "workflows": {
     "bulkRuns": {
