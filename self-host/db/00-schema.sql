@@ -2810,6 +2810,11 @@ BEGIN
     END IF;
     v_reachable := v_reachable || v_candidate.recipients;
 
+    IF p_sender_verdict = 'unverified' AND v_candidate.verified_senders_only THEN
+      v_unverified := true;
+      CONTINUE;
+    END IF;
+
     IF v_candidate.scope = 'chosen_automations' AND NOT EXISTS (
       SELECT 1 FROM public.no_approval_rule_automations a
        WHERE a.no_approval_rule_id = v_candidate.id
@@ -2825,10 +2830,6 @@ BEGIN
     END IF;
     IF p_message_date IS NOT NULL AND (v_candidate.enabled_at IS NULL OR p_message_date < v_candidate.enabled_at) THEN
       v_past := true;
-      CONTINUE;
-    END IF;
-    IF p_sender_verdict = 'unverified' AND v_candidate.verified_senders_only THEN
-      v_unverified := true;
       CONTINUE;
     END IF;
     IF p_check_limit THEN
@@ -2868,11 +2869,15 @@ BEGIN
     IF NOT (v_recipients <@ (v_reachable || v_off)) THEN
       -- Nothing to say about an address nobody trusted, unless another was trusted.
       v_reason := CASE WHEN v_recipients && (v_reachable || v_off) THEN 'address_not_covered' END;
+    -- A person has to see these whatever else is in the way, so they come first: a
+    -- failed sender over the daily limit must not read as only over the limit, and
+    -- then be approved in bulk.
+    ELSIF p_sender_verdict = 'failed' THEN v_reason := 'sender_failed';
+    ELSIF p_sender_verdict = 'unreadable' OR v_unverified THEN v_reason := 'sender_unverified';
     ELSIF NOT (v_recipients <@ v_reachable) THEN v_reason := 'coverage_off';
     ELSIF v_voided THEN v_reason := 'coverage_voided';
     ELSIF v_paused THEN v_reason := 'coverage_paused';
     ELSIF v_past THEN v_reason := 'past_mail';
-    ELSIF v_unverified THEN v_reason := 'sender_unverified';
     ELSIF v_over THEN v_reason := 'daily_limit';
     END IF;
     RETURN jsonb_build_object('covered', false, 'reason', v_reason);
