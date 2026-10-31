@@ -719,6 +719,7 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, noApprovalOvervie
   const t = useTranslations('dashboard');
   const [form, setForm] = useState(() => initialFormState(rule));
   const [submitting, setSubmitting] = useState(false);
+  useEscapeKey(() => { if (!submitting) onClose(); });
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(null);
   const [previewing, setPreviewing] = useState(false);

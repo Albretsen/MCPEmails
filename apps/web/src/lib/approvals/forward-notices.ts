@@ -142,7 +142,7 @@ export function composeForwardNotice(facts: NoticeFacts, unsubscribeToken: strin
     : later > 0
       ? `Your automation "${rule}" has ${soonForwards} that ${soon === 1 ? 'expires' : 'expire'} soon, and ${later} more waiting for approval.`
       : `Your automation "${rule}" still has ${forwards} waiting for approval.`;
-  const where = `${whereTheyGo(one, facts.addresses, facts.addressesVary === true)} Only once an owner or admin approves. Nothing has been sent.`;
+  const where = `${whereTheyGo(one, facts.addresses, facts.addressesVary === true)} An owner or admin has to approve first. Nothing has been sent.`;
   const when = one
     ? `Decide by ${deadline}. After that it expires and is not sent.`
     : `The first expires on ${deadline}. A forward nobody approves by its deadline is not sent.`;

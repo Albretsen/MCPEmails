@@ -1,6 +1,6 @@
 -- No-approval rules: who can write them, and what they let through.
 BEGIN;
-SELECT plan(42);
+SELECT plan(45);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -211,6 +211,18 @@ INSERT INTO pg_temp.ids VALUES ('off', public.no_approval_rule_save('e0000000-00
 RESET ROLE;
 SELECT is(pg_temp.wait_reason('{a@na-test.invalid}'), 'coverage_off', 'a rule switched off says so');
 SELECT is(pg_temp.wait_reason('{nobody@na-test.invalid}'), NULL, 'and says nothing about another address');
+SELECT is(pg_temp.wait_reason('{a@na-test.invalid}', 'failed'), 'sender_failed', 'a failed sender comes before a rule switched off');
+SELECT is(pg_temp.wait_reason('{nobody@na-test.invalid}', 'failed'), NULL, 'no rule would cover it, so nothing is said');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user('e0000000-0000-4000-8000-000000000001');
+SELECT public.no_approval_rule_delete('e0000000-0000-4000-8000-000000000002', (SELECT id FROM pg_temp.ids WHERE name = 'off'));
+INSERT INTO pg_temp.ids VALUES ('full', public.no_approval_rule_save('e0000000-0000-4000-8000-000000000002', NULL, 'Full', '{a@na-test.invalid}', 'all_automations', '{}', NULL, 1, 'UTC', false, true));
+RESET ROLE;
+INSERT INTO public.no_approval_usage (no_approval_rule_id, day, used)
+SELECT id, (now() AT TIME ZONE 'UTC')::date, 1 FROM pg_temp.ids WHERE name = 'full';
+SELECT is(
+  public.no_approval_evaluate('e0000000-0000-4000-8000-000000000004', '{a@na-test.invalid}', 'failed', NULL, true)->>'reason',
+  'sender_failed', 'a failed sender over the daily limit says so, not only that it is over');
 
 SELECT * FROM finish();
 ROLLBACK;

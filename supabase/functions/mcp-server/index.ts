@@ -38101,10 +38101,13 @@ async function forwardWithoutApproval(
       console.warn("[triage] no_approval_evaluate_failed", { rule_id: ruleId, error: firstError.message });
       return false;
     }
-    // Paused: covered in every other way, so the sender still counts. A mail that
-    // failed the check says so while rules are paused, not only once they resume.
+    // Waiting for a reason other than who sent it: a rule would cover this but for
+    // that reason, so the sender still counts. A mail that failed the check says so
+    // whatever else holds it, and stays out of "Approve all".
     const firstReason = (first as { reason?: unknown } | null)?.reason;
-    const verdictNeeded = (first as { covered?: unknown } | null)?.covered === true || firstReason === "paused_all";
+    const verdictNeeded = (first as { covered?: unknown } | null)?.covered === true ||
+      firstReason === "paused_all" || firstReason === "coverage_paused" ||
+      firstReason === "coverage_voided" || firstReason === "coverage_off";
     if (!verdictNeeded && !firstReason) return false;
     let verdict: SenderVerdict | "unreadable" = "unverified";
     if (verdictNeeded) {
