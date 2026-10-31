@@ -415,6 +415,7 @@ import {
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
+import { isServiceKeyForThisProject } from "./service-key-auth.ts";
 import { purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import {
@@ -37389,11 +37390,17 @@ async function handleTriagePreview(req: Request): Promise<Response> {
   // ── Auth ────────────────────────────────────────────────────────────────
   const header = req.headers.get("authorization") ?? "";
   const bearer = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
-  // Constant-time: the service-role key is a bearer secret, and a short-circuit
-  // compare leaks its prefix to anyone who can time the response.
-  if (!supabaseServiceKey || !bearer || !timingSafeStringEqual(bearer, supabaseServiceKey)) {
-    return json({ error: "unauthorized" }, 401);
-  }
+  // Constant-time for this function's own key: it is a bearer secret, and a
+  // short-circuit compare leaks its prefix to anyone who can time the response.
+  // The site can legitimately hold a different service key than this function
+  // does (legacy JWT vs sb_secret), so any other candidate is put to the project
+  // itself. See service-key-auth.ts.
+  const authorized = await isServiceKeyForThisProject(bearer, {
+    ownKey: supabaseServiceKey,
+    supabaseUrl,
+    timingSafeEqual: timingSafeStringEqual,
+  });
+  if (!authorized) return json({ error: "unauthorized" }, 401);
 
   let body: Record<string, unknown>;
   try {
@@ -37403,6 +37410,10 @@ async function handleTriagePreview(req: Request): Promise<Response> {
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
+
+  // The post-deploy check (apps/web/app/api/automations/preview/health): proves
+  // the site's key gets through, without opening any mailbox.
+  if (body["probe"] === true) return json({ ok: true }, 200);
 
   const workspaceId = typeof body["workspace_id"] === "string" ? body["workspace_id"] : "";
   const inboxId = typeof body["inbox_id"] === "string" ? body["inbox_id"] : "";

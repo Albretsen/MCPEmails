@@ -9,6 +9,7 @@ import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
 import {
   RULE_COLUMNS,
+  assertKeyCanRunAction,
   assertWorkspaceResources,
   isUuid,
   readInboxProvider,
@@ -128,6 +129,10 @@ export async function POST(request: NextRequest) {
 
   const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id);
   if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
+
+  // A key that could not run this action would fail its first run `scope_denied`.
+  const scopeRefusal = await assertKeyCanRunAction(c.db, c.workspaceId, body.api_key_id, action.value);
+  if (scopeRefusal) return NextResponse.json({ error: scopeRefusal.error, code: scopeRefusal.code }, { status: scopeRefusal.status });
 
   // A label works on every provider, but not every NAME does: on IMAP a label
   // is a keyword, which is an atom. Refuse it here rather than store a rule

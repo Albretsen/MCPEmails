@@ -8,6 +8,7 @@ import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
 import type { StoredAction, StoredFilter } from '@/lib/automations/rules';
 import {
   RULE_COLUMNS,
+  assertKeyCanRunAction,
   assertWorkspaceResources,
   isUuid,
   readInboxProvider,
@@ -143,6 +144,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.enabled !== 'boolean') {
       return NextResponse.json({ error: 'The enabled flag must be true or false.' }, { status: 400 });
     }
+  }
+
+  // A key that could not run this action would fail its next run `scope_denied`.
+  // Checked when the pairing changes or the rule is switched on, so a rename of a
+  // rule that is already off, and switching a rule off, are never held up by it.
+  if (patch.action !== undefined || patch.api_key_id !== undefined || body.enabled === true) {
+    const scopeRefusal = await assertKeyCanRunAction(c.db, c.workspaceId, nextApiKeyId, nextAction);
+    if (scopeRefusal) return NextResponse.json({ error: scopeRefusal.error, code: scopeRefusal.code }, { status: scopeRefusal.status });
+  }
+
+  if (body.enabled !== undefined) {
     patch.enabled = body.enabled;
     if (body.enabled) {
       // Turning a rule on schedules its first run and clears whatever auto-disabled

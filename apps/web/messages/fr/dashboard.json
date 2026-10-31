@@ -1186,7 +1186,7 @@
   },
   "automations": {
     "title": "Automatisations",
-    "subtitle": "Des règles qui trient une boîte de réception selon un horaire, sans que personne ne surveille.",
+    "subtitle": "Des règles qui vérifient une boîte de réception selon un calendrier et appliquent une action fixe.",
     "newButton": "Nouvelle automatisation",
     "retry": "Réessayer",
     "loadingLabel": "Chargement des automatisations",
@@ -1204,7 +1204,7 @@
       "rowFailing": "{count, plural, =0 {La dernière exécution a échoué.} =1 {1 exécution consécutive a échoué.} other {# exécutions consécutives ont échoué ; elle se désactive à 5.}}",
       "causeConnectionEnded": "La connexion sous laquelle tourne cette automatisation a pris fin. Reconnectez MCPEmails dans votre client MCP.",
       "causeKeyRevoked": "La clé API sous laquelle tourne cette automatisation a été révoquée. Choisissez une clé active.",
-      "causeScopeDenied": "La clé API n'a plus l'autorisation nécessaire à l'action de cette automatisation.",
+      "causeScopeDenied": "La clé API n'a pas l'autorisation nécessaire à l'action de cette automatisation. Choisissez une clé qui l'a.",
       "causeInboxNotPermitted": "La clé API n'a plus le droit d'utiliser la boîte de cette automatisation.",
       "causeInboxUnavailable": "La boîte de réception visée par cette automatisation n'est plus disponible.",
       "causeSearchFailed": "La recherche dans la boîte a échoué. Vérifiez la connexion de la boîte.",
@@ -1264,7 +1264,7 @@
       "move": "Déplacer vers {folder}",
       "label": "Étiqueter comme {label}",
       "markRead": "Marquer comme lu",
-      "forward": "Transférer à {count, plural, =1 {1 destinataire} other {# destinataires}}",
+      "forward": "Transférer à {address}",
       "draftReply": "Préparer un brouillon de réponse"
     },
     "status": {
@@ -1309,7 +1309,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "IMAP générique",
-      "filterUnsupported": "Cette boîte utilise {provider}, qui ne sait pas filtrer sur {fields}. Une automatisation s'exécute sans surveillance : la règle agirait donc sur tous les messages remplissant le reste du filtre, un ensemble plus large que ce qu'elle décrit. Modifiez ou retirez {fields} pour enregistrer cette automatisation.",
+      "filterUnsupported": "Cette boîte utilise {provider}, qui ne sait pas filtrer sur {fields}. Une automatisation s'exécute selon un calendrier : la règle agirait donc sur tous les messages remplissant le reste du filtre, un ensemble plus large que ce qu'elle décrit. Modifiez ou retirez {fields} pour enregistrer cette automatisation.",
       "previewTitle": "Prévisualiser les correspondances",
       "previewHelp": "Exécute ce filtre sur la boîte maintenant, sans rien modifier.",
       "preview": "Prévisualiser",
@@ -1342,7 +1342,25 @@
       "create": "Créer l'automatisation",
       "creating": "Création…",
       "save": "Enregistrer",
-      "saving": "Enregistrement…"
+      "saving": "Enregistrement…",
+      "duplicateTitle": "Dupliquer l'automatisation",
+      "duplicateSub": "Vérifiez la boîte de réception et les détails. La copie démarre désactivée et ne garde ni le journal d'exécution ni les approbations de l'original.",
+      "duplicateName": "Copie de {name}",
+      "keyCurrent": "Connexion actuelle",
+      "keyCannotSend": "Cette clé ne peut pas envoyer d'e-mails, donc aucun transfert ne pourrait partir. Choisissez une clé avec l'autorisation send:email.",
+      "keyMissingScope": "Cette clé n'a pas l'autorisation nécessaire à cette action. Choisissez une clé qui l'a.",
+      "hiddenFilterHelp": "Ces conditions ont été définies en dehors de ce formulaire, par exemple par votre assistant IA. Elles sont conservées à l'enregistrement.",
+      "hiddenFilterNo": "non",
+      "hiddenFilterRemove": "Retirer",
+      "hiddenFilterRemoveLabel": "Retirer {label}",
+      "previewUnavailable": "L'aperçu n'est pas disponible pour le moment. Le problème vient de chez nous et votre automatisation n'est pas touchée. Réessayez dans un moment.",
+      "previewTimeout": "La boîte mail n'a pas répondu à temps. Relancez l'aperçu dans un instant.",
+      "previewKeyNotAvailable": "Cette clé API n'est plus disponible. Choisissez-en une autre.",
+      "previewKeyExpired": "Cette clé API a expiré. Choisissez-en une autre.",
+      "previewKeyCannotRead": "Cette clé API ne peut pas lire les e-mails, elle ne peut donc pas afficher d'aperçu. Choisissez une clé avec l'autorisation read:email.",
+      "previewKeyNotForInbox": "Cette clé API n'a pas le droit d'utiliser cette boîte de réception. Choisissez-en une autre.",
+      "previewInboxNotAvailable": "Cette boîte de réception n'est pas disponible pour le moment. Vérifiez-la dans Boîtes de réception.",
+      "previewSearchFailed": "La recherche dans la boîte mail a échoué. Vérifiez la connexion de la boîte de réception, puis réessayez."
     },
     "runs": {
       "title": "Journal d'exécution",
@@ -1389,6 +1407,42 @@
       "cancel": "Annuler",
       "confirm": "Supprimer l'automatisation",
       "deleting": "Suppression…"
+    },
+    "rowDuplicate": "Dupliquer",
+    "approvalHelp": {
+      "title": "Comment fonctionne l'approbation",
+      "step1": "Quand cette automatisation trouve un e-mail correspondant, rien n'est envoyé. Un transfert est ajouté dans Approbations.",
+      "step2": "Un propriétaire ou un administrateur ouvre Approbations, vérifie l'e-mail et l'adresse, puis approuve ou refuse.",
+      "step3": "Seul un transfert approuvé est envoyé. Si personne ne l'approuve à temps, il n'est pas envoyé.",
+      "open": "Ouvrir Approbations",
+      "close": "Fermer"
+    },
+    "sentence": {
+      "title": "Ce qui va se passer :",
+      "search": "{cadence}, MCPEmails vérifie {mailbox} pour trouver les e-mails {conditions}.",
+      "forward": "Chaque résultat attend l'approbation d'un propriétaire ou d'un administrateur, et ce n'est qu'ensuite qu'il part vers {address}.",
+      "move": "Chaque résultat est déplacé vers {folder}.",
+      "label": "Chaque résultat reçoit le libellé {label}.",
+      "markRead": "Chaque résultat est marqué comme lu.",
+      "draftReply": "Chaque résultat reçoit un brouillon de réponse, enregistré et jamais envoyé.",
+      "pastIncluded": "Les e-mails déjà présents dans la boîte comptent aussi, jusqu'à {max} par exécution.",
+      "pastExcluded": "Les e-mails arrivés avant l'activation de l'automatisation ne sont pas touchés.",
+      "cond": {
+        "from": "venant de {value}",
+        "to": "adressés à {value}",
+        "cc": "avec {value} en copie",
+        "subject": "avec « {value} » dans l'objet",
+        "body": "avec « {value} » dans le texte",
+        "text": "contenant « {value} »",
+        "unread": "non lus",
+        "unreadNo": "déjà lus",
+        "hasAttachment": "avec une pièce jointe",
+        "hasAttachmentNo": "sans pièce jointe",
+        "flagged": "suivis",
+        "flaggedNo": "non suivis",
+        "since": "reçus le {value} ou après",
+        "before": "reçus avant le {value}"
+      }
     }
   },
   "workflows": {

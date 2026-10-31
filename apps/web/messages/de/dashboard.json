@@ -1186,7 +1186,7 @@
   },
   "automations": {
     "title": "Automatisierungen",
-    "subtitle": "Regeln, die ein Postfach nach Zeitplan sortieren, ganz ohne Aufsicht.",
+    "subtitle": "Regeln, die ein Postfach nach Zeitplan prüfen und eine feste Aktion ausführen.",
     "newButton": "Neue Automatisierung",
     "retry": "Erneut versuchen",
     "loadingLabel": "Automatisierungen werden geladen",
@@ -1204,7 +1204,7 @@
       "rowFailing": "{count, plural, =0 {Der letzte Lauf ist fehlgeschlagen.} =1 {1 Lauf in Folge ist fehlgeschlagen.} other {# Läufe in Folge sind fehlgeschlagen; bei 5 schaltet sie sich selbst aus.}}",
       "causeConnectionEnded": "Die Verbindung, unter der diese Automatisierung läuft, ist beendet. Verbinden Sie MCPEmails in Ihrem MCP-Client neu.",
       "causeKeyRevoked": "Der API-Schlüssel dieser Automatisierung wurde widerrufen. Weisen Sie ihr einen gültigen Schlüssel zu.",
-      "causeScopeDenied": "Der API-Schlüssel hat keine Berechtigung mehr für die Aktion dieser Automatisierung.",
+      "causeScopeDenied": "Der API-Schlüssel hat keine Berechtigung für die Aktion dieser Automatisierung. Wählen Sie einen Schlüssel, der sie hat.",
       "causeInboxNotPermitted": "Der API-Schlüssel darf das Postfach dieser Automatisierung nicht mehr nutzen.",
       "causeInboxUnavailable": "Das Zielpostfach dieser Automatisierung ist nicht mehr verfügbar.",
       "causeSearchFailed": "Das Postfach konnte nicht durchsucht werden. Prüfen Sie die Verbindung des Postfachs.",
@@ -1264,7 +1264,7 @@
       "move": "Nach {folder} verschieben",
       "label": "Label {label} zuweisen",
       "markRead": "Als gelesen markieren",
-      "forward": "An {count, plural, =1 {1 Empfänger} other {# Empfänger}} weiterleiten",
+      "forward": "Weiterleiten an {address}",
       "draftReply": "Antwortentwurf erstellen"
     },
     "status": {
@@ -1309,7 +1309,7 @@
       "dialectGmail": "Gmail",
       "dialectOutlook": "Outlook",
       "dialectImap": "generischem IMAP",
-      "filterUnsupported": "Dieses Postfach läuft auf {provider} und kann nicht nach {fields} suchen. Eine Automatisierung läuft ohne Aufsicht, die Regel würde also jede Nachricht treffen, die zum Rest des Filters passt, und damit mehr als beschrieben. Ändern oder entfernen Sie {fields}, um die Automatisierung zu speichern.",
+      "filterUnsupported": "Dieses Postfach läuft auf {provider} und kann nicht nach {fields} suchen. Eine Automatisierung läuft nach Zeitplan, die Regel würde also jede Nachricht treffen, die zum Rest des Filters passt, und damit mehr als beschrieben. Ändern oder entfernen Sie {fields}, um die Automatisierung zu speichern.",
       "previewTitle": "Treffer ansehen",
       "previewHelp": "Führt diesen Filter jetzt im Postfach aus, ohne etwas zu ändern.",
       "preview": "Treffer anzeigen",
@@ -1342,7 +1342,25 @@
       "create": "Automatisierung erstellen",
       "creating": "Wird erstellt…",
       "save": "Änderungen speichern",
-      "saving": "Wird gespeichert…"
+      "saving": "Wird gespeichert…",
+      "duplicateTitle": "Automatisierung duplizieren",
+      "duplicateSub": "Prüfen Sie das Postfach und die Details. Die Kopie startet ausgeschaltet und übernimmt weder das Ausführungsprotokoll noch die Freigaben des Originals.",
+      "duplicateName": "Kopie von {name}",
+      "keyCurrent": "Aktuelle Verbindung",
+      "keyCannotSend": "Dieser Schlüssel kann keine E-Mails senden, eine Weiterleitung käme also nie an. Wählen Sie einen Schlüssel mit der Berechtigung send:email.",
+      "keyMissingScope": "Dieser Schlüssel hat nicht die Berechtigung, die diese Aktion braucht. Wählen Sie einen Schlüssel, der sie hat.",
+      "hiddenFilterHelp": "Diese Bedingungen wurden außerhalb dieses Formulars festgelegt, zum Beispiel von Ihrem KI-Assistenten. Beim Speichern bleiben sie erhalten.",
+      "hiddenFilterNo": "nein",
+      "hiddenFilterRemove": "Entfernen",
+      "hiddenFilterRemoveLabel": "{label} entfernen",
+      "previewUnavailable": "Die Vorschau ist gerade nicht verfügbar. Das Problem liegt bei uns, Ihre Automatisierung ist nicht betroffen. Versuchen Sie es später noch einmal.",
+      "previewTimeout": "Das Postfach hat nicht rechtzeitig geantwortet. Starten Sie die Vorschau gleich noch einmal.",
+      "previewKeyNotAvailable": "Dieser API-Schlüssel ist nicht mehr verfügbar. Wählen Sie einen anderen.",
+      "previewKeyExpired": "Dieser API-Schlüssel ist abgelaufen. Wählen Sie einen anderen.",
+      "previewKeyCannotRead": "Dieser API-Schlüssel kann keine E-Mails lesen und daher keine Vorschau anzeigen. Wählen Sie einen Schlüssel mit der Berechtigung read:email.",
+      "previewKeyNotForInbox": "Dieser API-Schlüssel darf dieses Postfach nicht verwenden. Wählen Sie einen anderen.",
+      "previewInboxNotAvailable": "Dieses Postfach ist gerade nicht verfügbar. Prüfen Sie es unter Postfächer.",
+      "previewSearchFailed": "Das Postfach konnte nicht durchsucht werden. Prüfen Sie die Verbindung und versuchen Sie es erneut."
     },
     "runs": {
       "title": "Ausführungsprotokoll",
@@ -1389,6 +1407,42 @@
       "cancel": "Abbrechen",
       "confirm": "Automatisierung löschen",
       "deleting": "Wird gelöscht…"
+    },
+    "rowDuplicate": "Duplizieren",
+    "approvalHelp": {
+      "title": "So funktioniert die Freigabe",
+      "step1": "Findet diese Automatisierung eine passende E-Mail, wird nichts gesendet. Unter Freigaben kommt eine Weiterleitung hinzu.",
+      "step2": "Ein Inhaber oder Admin öffnet Freigaben, prüft die E-Mail und die Adresse und gibt sie frei oder lehnt sie ab.",
+      "step3": "Nur eine freigegebene Weiterleitung wird gesendet. Gibt sie niemand rechtzeitig frei, wird sie nicht gesendet.",
+      "open": "Freigaben öffnen",
+      "close": "Schließen"
+    },
+    "sentence": {
+      "title": "Das passiert:",
+      "search": "{cadence} prüft MCPEmails {mailbox} auf E-Mails {conditions}.",
+      "forward": "Jeder Treffer wartet auf die Freigabe durch einen Inhaber oder Admin und geht erst dann an {address}.",
+      "move": "Jeder Treffer wird nach {folder} verschoben.",
+      "label": "Jeder Treffer erhält das Label {label}.",
+      "markRead": "Jeder Treffer wird als gelesen markiert.",
+      "draftReply": "Jeder Treffer erhält einen Antwortentwurf, der gespeichert und nie gesendet wird.",
+      "pastIncluded": "E-Mails, die schon im Postfach liegen, zählen auch, bis zu {max} pro Ausführung.",
+      "pastExcluded": "E-Mails, die vor dem Einschalten der Automatisierung eingegangen sind, bleiben unberührt.",
+      "cond": {
+        "from": "von {value}",
+        "to": "an {value}",
+        "cc": "mit {value} in Kopie",
+        "subject": "mit „{value}“ im Betreff",
+        "body": "mit „{value}“ im Text",
+        "text": "die „{value}“ enthalten",
+        "unread": "die ungelesen sind",
+        "unreadNo": "die schon gelesen sind",
+        "hasAttachment": "mit Anhang",
+        "hasAttachmentNo": "ohne Anhang",
+        "flagged": "die markiert sind",
+        "flaggedNo": "die nicht markiert sind",
+        "since": "eingegangen am {value} oder später",
+        "before": "eingegangen vor dem {value}"
+      }
     }
   },
   "workflows": {

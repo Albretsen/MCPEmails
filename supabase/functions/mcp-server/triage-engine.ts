@@ -1162,7 +1162,8 @@ export function checkTriageAuthority(
     return {
       ok: false,
       error_code: "scope_denied",
-      error_detail: `The API key no longer holds the '${needed}' scope this automation needs.`,
+      // "does not hold", never "no longer holds": we cannot know it ever did.
+      error_detail: `The API key does not hold the '${needed}' scope this automation needs.`,
     };
   }
   // draft_reply derives recipients and threading from the original message, so
@@ -1171,7 +1172,7 @@ export function checkTriageAuthority(
     return {
       ok: false,
       error_code: "scope_denied",
-      error_detail: "The API key no longer holds the 'read:email' scope draft replies need.",
+      error_detail: "The API key does not hold the 'read:email' scope draft replies need.",
     };
   }
   if (apiKey.inbox_ids && !apiKey.inbox_ids.includes(inboxId)) {
