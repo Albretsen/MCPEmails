@@ -284,7 +284,7 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
                     : group.address
                       ? t('approvals.panel.ruleGroup', { rule: group.ruleName ?? '', count: group.rows.length, address: group.address })
                       : t('approvals.panel.ruleGroupMixed', { rule: group.ruleName ?? '', count: group.rows.length })}
-                  {group.rows.length > 0 && group.held.length > 0 ? ` ${t('approvals.panel.ruleGroupHeld', { count: group.held.length })}` : ''}
+                  {group.rows.length > 0 && group.held.length > 0 ? ` · ${t('approvals.panel.ruleGroupHeld', { count: group.held.length })}` : ''}
                 </span>
                 {group.address ? (
                   <Btn size="sm" variant="secondary" onClick={() => setApproveAll({ group, outcomes: null })}>
