@@ -13,7 +13,7 @@
  */
 import { timingSafeEqual } from 'node:crypto';
 
-import { dispatchForwardNotices, type NoticeSender } from '@/lib/approvals/forward-notices';
+import { dispatchForwardNotices, NOTICE_LOOP_GUARD_HEADER, type NoticeSender } from '@/lib/approvals/forward-notices';
 import { SupabaseForwardNoticeStore } from '@/lib/approvals/forward-notices-store';
 import { createResend } from '@/lib/email/resend';
 import { createServiceRoleClient } from '@/lib/supabase/service';
@@ -54,6 +54,7 @@ const resendSender: NoticeSender = async (email) => {
         html: email.html,
         text: email.text,
         headers: {
+          [NOTICE_LOOP_GUARD_HEADER]: 'notice',
           'List-Unsubscribe': `<${email.unsubscribe}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },

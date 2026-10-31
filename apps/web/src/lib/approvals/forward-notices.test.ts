@@ -17,6 +17,7 @@ const {
   cleanRuleName,
   formatDeadline,
   NOTICE_MAX_ATTEMPTS,
+  NOTICE_LOOP_GUARD_HEADER,
 } = await import('./forward-notices.ts');
 const { waitingApprovals, waitingForRule, waitingLabel, APPROVAL_LIST_LIMIT } = await import('./waiting.ts');
 const { SKIPPED_ID_PREFIX } = await import('../email/resend.ts');
@@ -39,7 +40,7 @@ const facts = (over: Record<string, unknown> = {}) => ({
 
 test('the queued email states rule, count, address, deadline and the filtered link', () => {
   const email = composeForwardNotice(facts(), TOKEN);
-  assert.match(email.subject, /5 forwards from "Invoices"/);
+  assert.equal(email.subject, '5 forwards need your approval');
   for (const part of [email.text, email.html]) {
     assert.ok(part.includes('Invoices'));
     assert.ok(part.includes('5 forwards'));
@@ -52,15 +53,24 @@ test('the queued email states rule, count, address, deadline and the filtered li
 
 test('the reminder says it expires, in the singular when there is one', () => {
   const email = composeForwardNotice(facts({ kind: 'reminder', count: 1 }), TOKEN);
-  assert.match(email.subject, /1 forward from "Invoices" expires soon/);
+  assert.equal(email.subject, '1 forward expires soon');
   assert.match(email.text, /Decide by 7 November 2026/);
 });
 
-test('a rule name cannot add a header line or run on', () => {
+test('the subject never names the rule, so a rule cannot match its own notice', () => {
+  const email = composeForwardNotice(facts({ ruleName: 'Invoices' }), TOKEN);
+  assert.ok(!email.subject.includes('Invoices'));
+});
+
+test('the loop guard header is the one the engine refuses', async () => {
+  const { readFileSync } = await import('node:fs');
+  const engine = readFileSync(new URL('../../../../../supabase/functions/mcp-server/triage-engine.ts', import.meta.url), 'utf8');
+  assert.ok(engine.includes(`RULE_FORWARD_HEADER = "${NOTICE_LOOP_GUARD_HEADER}"`));
+});
+
+test('a rule name stays on one line and bounded', () => {
   assert.equal(cleanRuleName('a\r\nBcc: x@example.test'), 'a Bcc: x@example.test');
   assert.ok(cleanRuleName('x'.repeat(300)).length <= 80);
-  const email = composeForwardNotice(facts({ ruleName: 'a\nb' }), TOKEN);
-  assert.ok(!email.subject.includes('\n'));
 });
 
 test('a rule name is escaped in the html', () => {

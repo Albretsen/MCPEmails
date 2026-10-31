@@ -35,6 +35,13 @@ export const NOTICE_BATCH = 25;
 export const NOTICE_MAX_ATTEMPTS = 5;
 const MAX_ADDRESSES_SHOWN = 5;
 export const APPROVAL_NOTICES_CATEGORY = 'approval_notices' as const;
+/**
+ * The same header a rule's own forward carries (RULE_FORWARD_HEADER in
+ * mcp-server/triage-engine.ts). The body names the rule, so a forward rule with a
+ * body filter could match this email; the engine refuses anything with this
+ * header, so a notice can never queue a forward of itself.
+ */
+export const NOTICE_LOOP_GUARD_HEADER = 'X-MCPEmails-Rule-Forward';
 
 export type NoticeKind = 'queued' | 'reminder';
 
@@ -92,9 +99,12 @@ export function composeForwardNotice(facts: NoticeFacts, unsubscribeToken: strin
   const deadline = formatDeadline(facts.deadline);
   const to = addressPhrase(facts.addresses);
 
+  // No rule name here. The email lands in the owner's own mailbox, and a rule
+  // called "Invoices" that files mail with "invoice" in the subject would pick up
+  // its own notice.
   const subject = facts.kind === 'queued'
-    ? `${forwards} from "${rule}" ${one ? 'needs' : 'need'} your approval`
-    : `${forwards} from "${rule}" ${one ? 'expires' : 'expire'} soon`;
+    ? `${forwards} ${one ? 'needs' : 'need'} your approval`
+    : `${forwards} ${one ? 'expires' : 'expire'} soon`;
 
   const lead = facts.kind === 'queued'
     ? `Your automation "${rule}" has ${forwards} waiting for approval.`
