@@ -72,7 +72,7 @@ import { labelTargetFor } from "./label-target.ts";
 // labelTargetFor is, so the runner and the interactive tools cannot drift into
 // two different accounts of what went wrong.
 import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts";
-import { APPROVAL_TTL_MS } from "./mcp-app-approvals.ts";
+import { RULE_FORWARD_APPROVAL_TTL_MS } from "./mcp-app-approvals.ts";
 
 // ---------------------------------------------------------------------------
 // Budgets and constants
@@ -1468,6 +1468,8 @@ export async function runTriageRule(
 
   /** Forwards held for approval. Not in `succeeded`: nothing has happened yet. */
   let queuedCount = 0;
+  /** Messages refused as our own forwards. They are news, once, unlike handled mail. */
+  let loopRefused = 0;
 
   /**
    * Terminal failure: release the lease, count it, auto-disable at the ceiling.
@@ -1863,6 +1865,7 @@ export async function runTriageRule(
         if (ownForward) {
           await store.claimMessage(rule.id, digest);
           skipped++;
+          loopRefused++;
           await store.writeRunItem({
             run_id: runId,
             rule_id: rule.id,
@@ -2092,11 +2095,11 @@ export async function runTriageRule(
     }
 
     // ── Settle ────────────────────────────────────────────────────────────────
-    // 'skipped' is a distinct status from 'completed' because a rule that only
-    // ever skips is a misconfigured filter, and that is worth surfacing.
+    // 'skipped' reads as "Nothing new" in the dashboard: this run found only mail
+    // already handled, or none. A filter that cannot run fails above instead.
     const status: TriageRunSummary["status"] = failed > 0
       ? "completed_with_errors"
-      : processed === 0
+      : processed === 0 && loopRefused === 0
       ? "skipped"
       : "completed";
     const endedMs = nowMs(deps);
@@ -2829,7 +2832,7 @@ export function approvalWindowText(ms: number): string {
 export function forwardApprovalWhere(approvalsUrl: string = DEFAULT_APPROVALS_URL): string {
   return (
     `A workspace owner or admin approves each forward at ${approvalsUrl} , within ` +
-    `${approvalWindowText(APPROVAL_TTL_MS)} of it being queued. After that it expires unsent. ` +
+    `${approvalWindowText(RULE_FORWARD_APPROVAL_TTL_MS)} of it being queued. After that it expires unsent. ` +
     "An AI assistant cannot approve one."
   );
 }

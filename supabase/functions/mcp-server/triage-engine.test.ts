@@ -3089,6 +3089,12 @@ Deno.test("row 15: a rule refuses our own forward, says why, and decides once", 
   const again = state.runItems.length;
   await runTriageRule(deps, rule);
   assertEquals(state.runItems.length, again, "not logged again");
+
+  // Only the refusal: that is worth more than "Nothing new", once.
+  const alone = freshState({ apiKey: state.apiKey });
+  const onlyOurs = listingDeps(alone, [fakeMatch("ours", { own_rule_forward: true, date: before(2) })], applied);
+  assertEquals((await runTriageRule(onlyOurs.deps, rule)).status, "completed", "says something happened");
+  assertEquals((await runTriageRule(onlyOurs.deps, rule)).status, "skipped", "then nothing new");
 });
 
 Deno.test("row 15: when the header cannot be read, nothing is queued and the message is retried", async () => {
@@ -3167,7 +3173,7 @@ Deno.test("row 25: every other action is metered as before", async () => {
 Deno.test("row 19: the AI is told where to approve and by when, from the constant that decides it", () => {
   const where = forwardApprovalWhere("https://staging.example.test/dashboard/approvals");
   assert(where.includes("https://staging.example.test/dashboard/approvals"), "where");
-  assert(where.includes(approvalWindowText(24 * 60 * 60 * 1000)) || where.includes("days"), "by when");
+  assert(where.includes("within 7 days"), "by when: the rule forward window");
   assert(where.includes("cannot approve"), "an AI cannot");
   assertEquals(approvalWindowText(7 * 24 * 60 * 60 * 1000), "7 days", "days");
   assertEquals(approvalWindowText(24 * 60 * 60 * 1000), "24 hours", "one day reads as hours");

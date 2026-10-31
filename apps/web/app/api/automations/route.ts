@@ -7,6 +7,7 @@ import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 // predicate is imported rather than duplicated. If the two ever diverge,
 // split them: silently sharing a role set is how one of them ends up wrong.
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
+import { type ForwardCounts, forwardCountsByRun } from '@/lib/automations/run-forward-state';
 import {
   RULE_COLUMNS,
   assertKeyCanRunAction,
@@ -59,6 +60,7 @@ type RunSummary = {
   failed: number;
   skipped: number;
   error_code: string | null;
+  forwards?: ForwardCounts;
 };
 
 export async function GET() {
@@ -90,6 +92,12 @@ export async function GET() {
       .limit(600);
     for (const run of (runs ?? []) as RunSummary[]) {
       if (!lastRunByRule.has(run.rule_id)) lastRunByRule.set(run.rule_id, run);
+    }
+    // So a rule row stops saying "Waiting for approval" once nothing is.
+    const forwards = await forwardCountsByRun(c.db, c.workspaceId, [...lastRunByRule.values()]);
+    for (const run of lastRunByRule.values()) {
+      const counts = forwards.get(run.id);
+      if (counts) run.forwards = counts;
     }
   }
 

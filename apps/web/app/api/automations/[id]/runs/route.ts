@@ -131,7 +131,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const hasMore = rows.length > limit;
   const runs = hasMore ? rows.slice(0, limit) : rows;
-  const forwards = await forwardCountsByRun(c.db, c.workspaceId, id, runs);
+  const forwards = await forwardCountsByRun(c.db, c.workspaceId, runs);
 
   return NextResponse.json({
     rule: { id: rule.id, name: rule.name, deleted: Boolean(rule.deleted_at), inbox: rule.inboxes ?? null },
