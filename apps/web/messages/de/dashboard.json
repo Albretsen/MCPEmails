@@ -1455,7 +1455,7 @@
       "markRead": "Jeder Treffer wird als gelesen markiert.",
       "draftReply": "Jeder Treffer erhält einen Antwortentwurf, der gespeichert und nie gesendet wird.",
       "pastIncluded": "E-Mails, die schon im Postfach liegen, zählen auch, bis zu {max} pro Ausführung.",
-      "pastExcluded": "E-Mails, die vor dem Einschalten der Automatisierung eingegangen sind, bleiben unberührt.",
+      "pastExcluded": "Sie beginnt mit E-Mails, die eintreffen, nachdem du sie zum ersten Mal einschaltest.",
       "cond": {
         "from": "von {value}",
         "to": "an {value}",
@@ -1471,8 +1471,7 @@
         "flaggedNo": "die nicht markiert sind",
         "since": "eingegangen am {value} oder später",
         "before": "eingegangen vor dem {value}"
-      },
-      "startsNew": "Sie beginnt mit E-Mails, die eintreffen, nachdem du sie zum ersten Mal einschaltest."
+      }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatisierung gelöscht und 1 wartende Weiterleitung abgebrochen.} other {Automatisierung gelöscht und # wartende Weiterleitungen abgebrochen.}}",
     "toastDeletedCancelFailed": "Automatisierung gelöscht, aber die wartenden Weiterleitungen konnten nicht abgebrochen werden. Lehnen Sie sie unter Freigaben ab."

@@ -1455,7 +1455,7 @@
       "markRead": "Cada coincidencia se marca como leída.",
       "draftReply": "Cada coincidencia recibe un borrador de respuesta, que se guarda y nunca se envía.",
       "pastIncluded": "El correo que ya está en el buzón también cuenta, hasta {max} por ejecución.",
-      "pastExcluded": "El correo que llegó antes de activar la automatización no se toca.",
+      "pastExcluded": "Empieza con el correo que llegue después de activarla por primera vez.",
       "cond": {
         "from": "de {value}",
         "to": "dirigido a {value}",
@@ -1471,8 +1471,7 @@
         "flaggedNo": "sin marcar",
         "since": "recibido el {value} o después",
         "before": "recibido antes del {value}"
-      },
-      "startsNew": "Empieza con el correo que llegue después de activarla por primera vez."
+      }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatización eliminada y 1 reenvío en espera cancelado.} other {Automatización eliminada y # reenvíos en espera cancelados.}}",
     "toastDeletedCancelFailed": "Automatización eliminada, pero no se pudieron cancelar sus reenvíos en espera. Recházalos en Aprobaciones."

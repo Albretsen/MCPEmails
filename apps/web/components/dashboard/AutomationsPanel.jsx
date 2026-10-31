@@ -1201,7 +1201,7 @@ function RuleSentence({ form, filter, mailbox }) {
         {outcome}{' '}
         {form.includePastMail
           ? t('automations.sentence.pastIncluded', { max: Number(form.maxMessages) || 0 })
-          : t('automations.sentence.startsNew')}
+          : t('automations.sentence.pastExcluded')}
       </span>
     </div>
   );

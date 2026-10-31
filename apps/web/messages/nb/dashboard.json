@@ -1455,7 +1455,7 @@
       "markRead": "Hvert treff merkes som lest.",
       "draftReply": "Hvert treff får et svarutkast, som lagres og aldri sendes.",
       "pastIncluded": "E-post som allerede ligger i postkassen, teller også, opptil {max} per kjøring.",
-      "pastExcluded": "E-post som kom før automatiseringen slås på, blir ikke rørt.",
+      "pastExcluded": "Den starter med e-post som kommer etter at du slår den på første gang.",
       "cond": {
         "from": "fra {value}",
         "to": "adressert til {value}",
@@ -1471,8 +1471,7 @@
         "flaggedNo": "som ikke er flagget",
         "since": "mottatt {value} eller senere",
         "before": "mottatt før {value}"
-      },
-      "startsNew": "Den starter med e-post som kommer etter at du slår den på første gang."
+      }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatiseringen er slettet og 1 ventende videresending er avbrutt.} other {Automatiseringen er slettet og # ventende videresendinger er avbrutt.}}",
     "toastDeletedCancelFailed": "Automatiseringen er slettet, men de ventende videresendingene kunne ikke avbrytes. Avvis dem under Godkjenninger."

@@ -1455,7 +1455,7 @@
       "markRead": "Chaque résultat est marqué comme lu.",
       "draftReply": "Chaque résultat reçoit un brouillon de réponse, enregistré et jamais envoyé.",
       "pastIncluded": "Les e-mails déjà présents dans la boîte comptent aussi, jusqu'à {max} par exécution.",
-      "pastExcluded": "Les e-mails arrivés avant l'activation de l'automatisation ne sont pas touchés.",
+      "pastExcluded": "Elle commence avec les e-mails reçus après sa première activation.",
       "cond": {
         "from": "venant de {value}",
         "to": "adressés à {value}",
@@ -1471,8 +1471,7 @@
         "flaggedNo": "non suivis",
         "since": "reçus le {value} ou après",
         "before": "reçus avant le {value}"
-      },
-      "startsNew": "Elle commence avec les e-mails reçus après sa première activation."
+      }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatisation supprimée et 1 transfert en attente annulé.} other {Automatisation supprimée et # transferts en attente annulés.}}",
     "toastDeletedCancelFailed": "Automatisation supprimée, mais ses transferts en attente n'ont pas pu être annulés. Refusez-les dans Approbations."

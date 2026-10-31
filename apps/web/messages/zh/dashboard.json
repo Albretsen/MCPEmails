@@ -1307,7 +1307,7 @@
       "markRead": "每封匹配的邮件都会标记为已读。",
       "draftReply": "每封匹配的邮件都会生成一封回复草稿，只保存，绝不发送。",
       "pastIncluded": "邮箱中已有的邮件也计算在内，每次运行最多 {max} 封。",
-      "pastExcluded": "在自动化开启之前收到的邮件不会受到影响。",
+      "pastExcluded": "它从首次开启后到达的邮件开始处理。",
       "cond": {
         "from": "来自 {value}",
         "to": "发送给 {value}",
@@ -1323,8 +1323,7 @@
         "flaggedNo": "未标记",
         "since": "在 {value} 或之后收到",
         "before": "在 {value} 之前收到"
-      },
-      "startsNew": "它从首次开启后到达的邮件开始处理。"
+      }
     },
     "toastDeletedCancelled": "{count, plural, other {自动化已删除，并已取消 # 条等待中的转发。}}",
     "toastDeletedCancelFailed": "自动化已删除，但无法取消其等待中的转发。请在“审批”中拒绝它们。"

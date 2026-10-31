@@ -1455,7 +1455,7 @@
       "markRead": "Each match is marked as read.",
       "draftReply": "Each match gets a draft reply, which is saved and never sent.",
       "pastIncluded": "Mail already in the mailbox counts too, up to {max} each run.",
-      "pastExcluded": "Mail that arrived before the automation is switched on is left alone.",
+      "pastExcluded": "It starts with mail that arrives after you first turn it on.",
       "cond": {
         "from": "from {value}",
         "to": "addressed to {value}",
@@ -1471,8 +1471,7 @@
         "flaggedNo": "that is not flagged",
         "since": "received on or after {value}",
         "before": "received before {value}"
-      },
-      "startsNew": "It starts with mail that arrives after you first turn it on."
+      }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automation deleted and 1 waiting forward cancelled.} other {Automation deleted and # waiting forwards cancelled.}}",
     "toastDeletedCancelFailed": "Automation deleted, but its waiting forwards could not be cancelled. Reject them under Approvals."
