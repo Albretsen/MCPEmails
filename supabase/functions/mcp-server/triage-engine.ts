@@ -953,6 +953,8 @@ export interface TriageDeps {
     inbox: TriageInbox;
     apiKey: TriageApiKey;
     action: TriageAction;
+    /** The rule being run, so a queued forward can record which one queued it. */
+    rule: { id: string; name: string };
     match: TriageMatch;
     /** Pre-resolved provider-native destination for move; null otherwise. */
     destinationId: string | null;
@@ -1798,6 +1800,7 @@ export async function runTriageRule(
           inbox,
           apiKey: key,
           action,
+          rule: { id: rule.id, name: rule.name },
           match,
           destinationId,
           destinationVerified,

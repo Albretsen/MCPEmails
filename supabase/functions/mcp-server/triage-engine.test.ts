@@ -292,6 +292,13 @@ Deno.test("a message already in the seen ledger is skipped and never acted on", 
   assertEquals(skippedItem.message_digest, "digest-msg-a", "the skip names the right message");
 });
 
+Deno.test("every action is told which rule it runs for, so a queued forward can record it", async () => {
+  const applied = { calls: [] as any[] };
+  const rule = fakeRule();
+  await runTriageRule(fakeDeps(freshState(), [fakeMatch("msg-a")], applied), rule);
+  assertEquals(JSON.stringify(applied.calls[0].rule), JSON.stringify({ id: rule.id, name: rule.name }), "the action gets the rule");
+});
+
 Deno.test("re-running the same rule over the same mail acts zero further times", async () => {
   const state = freshState();
   const applied = { calls: [] as any[] };

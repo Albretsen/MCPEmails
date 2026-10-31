@@ -261,6 +261,27 @@ export const PENDING_APPROVAL_COLUMNS = [
   "expires_at",
 ] as const;
 
+/**
+ * The rule link on a held forward (migration 20261031150000).
+ *
+ * The only columns a rule forward's insert may drop. Not added to the list
+ * above, because `writeTolerantly` drops every listed key it finds: a database
+ * behind on this migration would also lose `expires_at`, and a request with no
+ * expiry never lapses. Losing the link only loses the label.
+ */
+export const APPROVAL_RULE_LINK_COLUMNS = ["triage_rule_id", "triage_rule_name"] as const;
+
+/** Which automation rule queued a held send. Labels the row; grants nothing. */
+export interface ApprovalRuleOrigin {
+  id: string;
+  name: string;
+}
+
+/** The insert columns for an origin. An AI send has none and writes neither. */
+export function approvalRuleLinkColumns(rule?: ApprovalRuleOrigin): Record<string, string> {
+  return rule ? { triage_rule_id: rule.id, triage_rule_name: rule.name } : {};
+}
+
 // ---------------------------------------------------------------------------
 // Envelope builders (contract §§1-5)
 // ---------------------------------------------------------------------------

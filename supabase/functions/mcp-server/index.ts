@@ -260,10 +260,13 @@ import {
 import { readFlagWithOneRetry } from "./flag-read-retry.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
+  APPROVAL_RULE_LINK_COLUMNS,
   APPROVAL_TOOL_DEFINITIONS,
   APPROVAL_TTL_MS,
   approvalLapsedBeforeDecision,
   approvalReviewUrl,
+  approvalRuleLinkColumns,
+  type ApprovalRuleOrigin,
   buildApprovalSummary,
   buildHeldSendEnvelope,
   heldSendToolResult,
@@ -20043,6 +20046,9 @@ async function queueSendApproval(
   payload: Record<string, unknown>,
   sendAt?: string,
   operation = "email_send",
+  // A label for the row, stored and shown. It is not an input to the gate below
+  // and must never become one: this is not a way to skip the hold.
+  rule?: ApprovalRuleOrigin,
 ): Promise<QueuedApproval | null> {
   if (!sendWillBeHeld(inbox, apiKey)) return null;
   const ciphertext = await encryptForStorage(JSON.stringify(payload));
@@ -20090,8 +20096,9 @@ async function queueSendApproval(
       summary: await sealApprovalSummary(summary, encryptForStorage),
       expires_at: expiresAt,
       ...(sendAt ? { send_at: sendAt } : {}),
+      ...approvalRuleLinkColumns(rule),
     },
-    PENDING_APPROVAL_COLUMNS,
+    rule ? APPROVAL_RULE_LINK_COLUMNS : PENDING_APPROVAL_COLUMNS,
     (row) => supabase.from("send_approvals").insert(row).select("*").maybeSingle(),
   );
   if (error || !data) {
@@ -36995,6 +37002,8 @@ async function applyTriageAction(input: {
   inbox: TriageInbox;
   apiKey: TriageApiKey;
   action: TriageAction;
+  /** The rule this run belongs to. Only a queued forward records it. */
+  rule: ApprovalRuleOrigin;
   match: TriageMatch;
   destinationId: string | null;
   // NOT `destinationVerified`, which the engine also passes: what that bit
@@ -37141,6 +37150,7 @@ async function applyTriageAction(input: {
         payload,
         undefined,
         "email_forward",
+        input.rule,
       );
       if (!approval) return { ok: false, error_code: "approval_unavailable" };
       return { ok: true, approval_id: approval.id, detail: { recipients: action.to.length } };

@@ -4289,6 +4289,8 @@ export type Database = {
           send_at: string | null
           status: string
           summary: Json
+          triage_rule_id: string | null
+          triage_rule_name: string | null
           workspace_id: string
         }
         Insert: {
@@ -4310,6 +4312,8 @@ export type Database = {
           send_at?: string | null
           status?: string
           summary?: Json
+          triage_rule_id?: string | null
+          triage_rule_name?: string | null
           workspace_id: string
         }
         Update: {
@@ -4331,6 +4335,8 @@ export type Database = {
           send_at?: string | null
           status?: string
           summary?: Json
+          triage_rule_id?: string | null
+          triage_rule_name?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -4367,6 +4373,13 @@ export type Database = {
             columns: ["inbox_id"]
             isOneToOne: false
             referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "send_approvals_triage_rule_id_fkey"
+            columns: ["triage_rule_id"]
+            isOneToOne: false
+            referencedRelation: "triage_rules"
             referencedColumns: ["id"]
           },
           {

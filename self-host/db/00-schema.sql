@@ -1510,6 +1510,13 @@ CREATE TABLE IF NOT EXISTS public.triage_run_items (
 );
 CREATE INDEX IF NOT EXISTS triage_run_items_run_idx ON public.triage_run_items (run_id, created_at);
 
+-- The rule that queued a held forward (hosted migration 20261031150000). Added
+-- here because send_approvals is created before triage_rules.
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS triage_rule_id uuid REFERENCES public.triage_rules(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS triage_rule_name text;
+CREATE INDEX IF NOT EXISTS send_approvals_triage_rule_idx ON public.send_approvals (triage_rule_id, status, created_at DESC) WHERE (triage_rule_id IS NOT NULL);
+
 CREATE TABLE IF NOT EXISTS public.triage_seen_messages (
     rule_id uuid NOT NULL,
     message_digest text NOT NULL,
