@@ -8,6 +8,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
+import { waitingApprovals, waitingLabel } from '@/lib/approvals/waiting';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal, supportContactHref } from './ConnectModal';
 import { HelpSection, prefetchHelpData } from './HelpSection';
@@ -220,13 +221,54 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const setRoute = (r) => {
     setRouteState(r);
     setSidebarOpen(false);
+    // The rule filter belongs to one visit to Approvals, not to the whole session.
+    setApprovalsRule(null);
     try {
       const path = sectionToPath(r);
-      if (window.location.pathname !== path) {
-        window.history.pushState({ route: r }, '', path + window.location.search);
+      const params = new URLSearchParams(window.location.search);
+      const hadFilter = params.has('rule');
+      params.delete('rule');
+      if (window.location.pathname !== path || hadFilter) {
+        const search = params.toString();
+        window.history.pushState({ route: r }, '', path + (search ? `?${search}` : ''));
       }
     } catch { /* SSR / unsupported history: state still updates */ }
   };
+
+  // Approvals filtered to one automation: /dashboard/approvals?rule=<id>. The
+  // link from an automation row and the link in the notice email both land here.
+  const [approvalsRule, setApprovalsRule] = useState(() => readQuery(searchParams, 'rule'));
+  const openApprovalsForRule = (ruleId) => {
+    setRouteState('approvals');
+    setSidebarOpen(false);
+    setApprovalsRule(ruleId);
+    try {
+      window.history.pushState({ route: 'approvals' }, '', `${sectionToPath('approvals')}?rule=${encodeURIComponent(ruleId)}`);
+    } catch { /* SSR / unsupported history: state still updates */ }
+  };
+
+  // The one list of waiting approvals. The sidebar, the automation rows and the
+  // queue all count from it; the queue also writes back to it after a decision,
+  // so every count moves at once. Refreshed on arriving at a section and when
+  // the tab comes back, which is when something may have queued meanwhile.
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const refreshApprovals = useCallback(async () => {
+    try {
+      const response = await fetch('/api/approvals', { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await response.json().catch(() => null);
+      if (Array.isArray(payload?.approvals)) setPendingApprovals(payload.approvals);
+    } catch { /* A count that cannot refresh keeps its last value. */ }
+  }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void refreshApprovals(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refreshApprovals, route]);
+  useEffect(() => {
+    const onFocus = () => { void refreshApprovals(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refreshApprovals]);
 
   // Bumped to remount the help section when the connect modal sends someone
   // there with a new topic, so it refetches with the new form seed.
@@ -272,6 +314,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       const segment = window.location.pathname.replace(/^\/dashboard\/?/, '').split('/')[0];
       const resolved = pathSegmentToSection(segment);
       setRouteState(resolved ?? 'overview');
+      setApprovalsRule(new URLSearchParams(window.location.search).get('rule'));
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -805,7 +848,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     document.documentElement.setAttribute("data-density", t.density);
   }, [t.density]);
 
-  const counts = { inboxes: inboxes.length, keys: keys.length, members: members.length };
+  const counts = {
+    inboxes: inboxes.length,
+    keys: keys.length,
+    members: members.length,
+    approvals: waitingLabel(waitingApprovals(pendingApprovals).length, pendingApprovals.length),
+  };
   // Inboxes that hold a slot under the plan's inbox cap. A parked inbox
   // (src/lib/billing/parking.ts) is still listed but does not, matching the
   // server's checkInboxLimit.
@@ -1446,8 +1494,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
-        {route === "approvals" && <ApprovalsPage userRole={userRole} />}
-        {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
+        {route === "approvals" && <ApprovalsPage userRole={userRole} onItemsChange={setPendingApprovals} ruleFilter={approvalsRule} onClearRuleFilter={() => setRoute('approvals')} />}
+        {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} pendingApprovals={pendingApprovals} onOpenApprovalsForRule={openApprovalsForRule} />}
         {route === "invite" && workspace?.referralEnabled === true && <InvitePage />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} inboxes={inboxes} proFeatures={workspace?.proFeatures ?? null} stripePrices={stripePrices} passState={passState} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={activeInboxCount} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} onGoToInvite={() => setRoute("invite")} />}
         {route === "settings" && serverWorkspace?.onboarding?.canReset && (

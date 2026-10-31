@@ -1279,7 +1279,11 @@
         "sends_paused": "Sending is paused for now, so nothing was approved. Try again later.",
         "role": "Only a workspace owner or admin can do this.",
         "generic": "Nothing was approved. Please try again."
-      }
+      },
+      "filterShowing": "Showing forwards from {rule}.",
+      "filterShowingUnnamed": "Showing forwards from one automation.",
+      "filterClear": "Show all approvals",
+      "filterEmpty": "Nothing from this automation is waiting."
     },
     "timeLeft": {
       "days": "{count, plural, one {# day left} other {# days left}}",
@@ -1614,7 +1618,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automation deleted and 1 waiting forward cancelled.} other {Automation deleted and # waiting forwards cancelled.}}",
-    "toastDeletedCancelFailed": "Automation deleted, but its waiting forwards could not be cancelled. Reject them under Approvals."
+    "toastDeletedCancelFailed": "Automation deleted, but its waiting forwards could not be cancelled. Reject them under Approvals.",
+    "waitingLink": "{count} waiting",
+    "waitingLinkMore": "{count}+ waiting"
   },
   "workflows": {
     "bulkRuns": {

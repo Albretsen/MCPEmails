@@ -1279,7 +1279,11 @@
         "sends_paused": "Sending er satt på pause nå, så ingenting ble godkjent. Prøv igjen senere.",
         "role": "Bare en eier eller administrator kan gjøre dette.",
         "generic": "Ingenting ble godkjent. Prøv igjen."
-      }
+      },
+      "filterShowing": "Viser videresendinger fra {rule}.",
+      "filterShowingUnnamed": "Viser videresendinger fra én automatisering.",
+      "filterClear": "Vis alle godkjenninger",
+      "filterEmpty": "Ingenting fra denne automatiseringen venter."
     },
     "timeLeft": {
       "days": "{count, plural, one {# dag igjen} other {# dager igjen}}",
@@ -1614,7 +1618,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatiseringen er slettet og 1 ventende videresending er avbrutt.} other {Automatiseringen er slettet og # ventende videresendinger er avbrutt.}}",
-    "toastDeletedCancelFailed": "Automatiseringen er slettet, men de ventende videresendingene kunne ikke avbrytes. Avvis dem under Godkjenninger."
+    "toastDeletedCancelFailed": "Automatiseringen er slettet, men de ventende videresendingene kunne ikke avbrytes. Avvis dem under Godkjenninger.",
+    "waitingLink": "{count} venter",
+    "waitingLinkMore": "{count}+ venter"
   },
   "workflows": {
     "bulkRuns": {

@@ -47,8 +47,14 @@ import type { Database } from '@/types/database.types';
  * `activity_summary` is the day-8 "Your first week with MCPEmails" report
  * (src/lib/retention/first-30-days.ts). Added to the constraint by
  * 20261024170000_first_30_days.sql.
+ *
+ * `approval_notices` is the emails about rule forwards waiting for approval
+ * (src/lib/approvals/forward-notices.ts). Added by
+ * 20261031220000_forward_approval_notices.sql. That sender reads only this
+ * category, not the global opt-out: stopping win-backs must not stop being told
+ * that a forward is about to expire.
  */
-export const LIFECYCLE_CATEGORIES = ['lifecycle', 'product_update', 'research', 'activity_summary'] as const;
+export const LIFECYCLE_CATEGORIES = ['lifecycle', 'product_update', 'research', 'activity_summary', 'approval_notices'] as const;
 export type LifecycleCategory = (typeof LIFECYCLE_CATEGORIES)[number];
 
 export function isLifecycleCategory(value: string): value is LifecycleCategory {

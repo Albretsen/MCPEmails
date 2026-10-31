@@ -64,7 +64,7 @@ function ruleGroups(items) {
  * supplied by the API. The original of a forward is read live, for one row, when a
  * person opens it.
  */
-export function ApprovalsPanel({ userRole }) {
+export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onClearRuleFilter }) {
   const t = useTranslations('dashboard');
   const { toast } = useToast();
   const [items, setItems] = useState([]);
@@ -134,6 +134,11 @@ export function ApprovalsPanel({ userRole }) {
     return () => window.clearTimeout(timer);
   }, [decisionLapsed, toast, t]);
 
+  // Every count on the dashboard reads this list, so a decision moves them all.
+  useEffect(() => {
+    if (!loading && !error) onItemsChange?.(items);
+  }, [items, loading, error, onItemsChange]);
+
   const decide = async (details) => {
     if (!decisionItem || submitting) return;
     setSubmitting(true);
@@ -202,7 +207,12 @@ export function ApprovalsPanel({ userRole }) {
   };
 
   const visible = items.filter((item) => !isPastDeadline(item, now));
-  const groups = canDecide ? ruleGroups(visible) : [];
+  const shown = ruleFilter ? visible.filter((item) => item.rule_id === ruleFilter) : visible;
+  const shownDecided = ruleFilter ? decided.filter((row) => row.rule_id === ruleFilter) : decided;
+  const filterRuleName = ruleFilter
+    ? (shown.find((item) => item.rule_name) ?? shownDecided.find((row) => row.rule_name))?.rule_name ?? null
+    : null;
+  const groups = canDecide ? ruleGroups(shown) : [];
 
   return (
     <div className="page">
@@ -226,8 +236,19 @@ export function ApprovalsPanel({ userRole }) {
         </div>
       ) : null}
 
+      {ruleFilter ? (
+        <div className="alert" role="status" style={{ marginBottom: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <span style={{ overflowWrap: 'anywhere' }}>
+            {filterRuleName ? t('approvals.panel.filterShowing', { rule: filterRuleName }) : t('approvals.panel.filterShowingUnnamed')}
+          </span>
+          <Btn size="sm" variant="secondary" onClick={onClearRuleFilter}>{t('approvals.panel.filterClear')}</Btn>
+        </div>
+      ) : null}
+
       <div className="card approvals-card">
-        {loading ? <ApprovalListSkeleton t={t} /> : visible.length === 0 ? (
+        {loading ? <ApprovalListSkeleton t={t} /> : ruleFilter && shown.length === 0 ? (
+          <div className="empty"><p>{t('approvals.panel.filterEmpty')}</p></div>
+        ) : visible.length === 0 ? (
           <div className="approvals-empty">
             <div className="approvals-empty-summary">
               <div className="approvals-empty-icon" aria-hidden="true"><Icon name="shield" size={26} /></div>
@@ -276,7 +297,7 @@ export function ApprovalsPanel({ userRole }) {
                   <th aria-label={t('approvals.panel.colDecision')} />
                 </tr>
               </thead>
-              <tbody>{visible.map((item) => (
+              <tbody>{shown.map((item) => (
                 <tr key={item.id}>
                   <td data-label={t('approvals.panel.colRequest')}>
                     <RequestSource item={item} t={t} />
@@ -304,7 +325,7 @@ export function ApprovalsPanel({ userRole }) {
         )}
       </div>
 
-      {!loading && decided.length ? <DecidedTable rows={decided} canDecide={canDecide} onForwardAgain={setAgain} t={t} /> : null}
+      {!loading && shownDecided.length ? <DecidedTable rows={shownDecided} canDecide={canDecide} onForwardAgain={setAgain} t={t} /> : null}
 
       {decisionItem ? <DecisionDialog key={`${decisionItem.item.id}:${decisionItem.nonce ?? 0}`} item={decisionItem.item} decision={decisionItem.decision} changed={decisionItem.changed === true} submitting={submitting} now={now} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} t={t} /> : null}
       {again ? <ForwardAgainDialog row={again} onClose={() => setAgain(null)} onDone={() => { setAgain(null); void load({ quiet: true }); }} t={t} toast={toast} /> : null}

@@ -1279,7 +1279,11 @@
         "sends_paused": "Los envíos están en pausa por ahora, así que no se aprobó nada. Inténtalo más tarde.",
         "role": "Solo un propietario o administrador puede hacer esto.",
         "generic": "No se aprobó nada. Inténtalo de nuevo."
-      }
+      },
+      "filterShowing": "Mostrando reenvíos de {rule}.",
+      "filterShowingUnnamed": "Mostrando reenvíos de una automatización.",
+      "filterClear": "Ver todas las aprobaciones",
+      "filterEmpty": "No hay nada en espera de esta automatización."
     },
     "timeLeft": {
       "days": "{count, plural, one {Queda # día} other {Quedan # días}}",
@@ -1614,7 +1618,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatización eliminada y 1 reenvío en espera cancelado.} other {Automatización eliminada y # reenvíos en espera cancelados.}}",
-    "toastDeletedCancelFailed": "Automatización eliminada, pero no se pudieron cancelar sus reenvíos en espera. Recházalos en Aprobaciones."
+    "toastDeletedCancelFailed": "Automatización eliminada, pero no se pudieron cancelar sus reenvíos en espera. Recházalos en Aprobaciones.",
+    "waitingLink": "{count} en espera",
+    "waitingLinkMore": "{count}+ en espera"
   },
   "workflows": {
     "bulkRuns": {

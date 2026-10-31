@@ -1279,7 +1279,11 @@
         "sends_paused": "Les envois sont en pause pour le moment, donc rien n'a été approuvé. Réessayez plus tard.",
         "role": "Seul un propriétaire ou un administrateur peut faire cela.",
         "generic": "Rien n'a été approuvé. Veuillez réessayer."
-      }
+      },
+      "filterShowing": "Transferts de {rule} uniquement.",
+      "filterShowingUnnamed": "Transferts d'une seule automatisation.",
+      "filterClear": "Afficher toutes les approbations",
+      "filterEmpty": "Rien n'attend pour cette automatisation."
     },
     "timeLeft": {
       "days": "{count, plural, one {# jour restant} other {# jours restants}}",
@@ -1614,7 +1618,9 @@
       }
     },
     "toastDeletedCancelled": "{count, plural, =1 {Automatisation supprimée et 1 transfert en attente annulé.} other {Automatisation supprimée et # transferts en attente annulés.}}",
-    "toastDeletedCancelFailed": "Automatisation supprimée, mais ses transferts en attente n'ont pas pu être annulés. Refusez-les dans Approbations."
+    "toastDeletedCancelFailed": "Automatisation supprimée, mais ses transferts en attente n'ont pas pu être annulés. Refusez-les dans Approbations.",
+    "waitingLink": "{count} en attente",
+    "waitingLinkMore": "{count}+ en attente"
   },
   "workflows": {
     "bulkRuns": {
