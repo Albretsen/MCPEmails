@@ -13,6 +13,8 @@ process.env.ENCRYPTION_KEY ??= 'a'.repeat(64);
 
 const {
   composeForwardNotice,
+  composeReceipt,
+  composeCoveragePaused,
   dispatchForwardNotices,
   cleanRuleName,
   formatDeadline,
@@ -236,4 +238,72 @@ test('the label is hidden at zero and honest at the list limit', () => {
   assert.equal(waitingLabel(0, 0), undefined);
   assert.equal(waitingLabel(3, 3), '3');
   assert.equal(waitingLabel(APPROVAL_LIST_LIMIT, APPROVAL_LIST_LIMIT), `${APPROVAL_LIST_LIMIT}+`);
+});
+
+test('a receipt states count, address, rule and the run log, and what remains if you stop them', () => {
+  const email = composeReceipt({
+    ruleId: RULE,
+    ruleName: 'Invoices',
+    noApprovalRuleName: 'Bookkeeping',
+    count: 3,
+    addresses: ['books@example.test'],
+  }, TOKEN);
+  assert.equal(email.subject, '3 forwards sent without approval');
+  assert.ok(!email.subject.includes('Invoices'), 'a rule can not match its own receipt by subject');
+  for (const part of [email.text, email.html]) {
+    assert.ok(part.includes('Invoices'));
+    assert.ok(part.includes('Bookkeeping'));
+    assert.ok(part.includes('books@example.test'));
+    assert.ok(part.includes(`/dashboard/automations?runs=${RULE}`));
+    assert.ok(part.includes('c=approval_notices'));
+    assert.ok(part.includes('the run log on the Automations page is the record'));
+  }
+});
+
+test('a paused rule says what happens to the mail and how to resume', () => {
+  const email = composeCoveragePaused('Bookkeeping', TOKEN);
+  assert.ok(email.text.includes('Bookkeeping'));
+  assert.ok(email.text.includes('wait for approval'));
+  assert.ok(email.text.includes('switch it off and on'));
+});
+
+function receiptStore(over: Record<string, unknown>) {
+  const finished: unknown[] = [];
+  const store: any = {
+    claim: async () => [over],
+    ruleName: async () => 'Invoices',
+    waiting: async () => { throw new Error('a receipt does not read the waiting list'); },
+    receipt: async () => ({ count: 2, addresses: ['books@example.test'], noApprovalRuleName: 'Bookkeeping' }),
+    noApprovalRuleName: async () => 'Bookkeeping',
+    recipients: async () => [{ userId: 'u1', email: 'owner@example.test', unsubscribeToken: TOKEN }],
+    finish: async (_id: string, outcome: unknown) => { finished.push(outcome); },
+    logEvent: async () => {},
+  };
+  return { store, finished };
+}
+
+test('the dispatcher sends a receipt from the rows it counted', async () => {
+  const { store, finished } = receiptStore({ id: 'n1', workspace_id: 'w', triage_rule_id: RULE, kind: 'receipt', attempts: 1 });
+  const sent: any[] = [];
+  const summary = await dispatchForwardNotices(store, async (email: any) => { sent.push(email); return { ok: true, id: 'r1' }; });
+  assert.equal(summary.sent, 1);
+  assert.equal(sent[0].subject, '2 forwards sent without approval');
+  assert.deepEqual(finished, [{ status: 'sent' }]);
+});
+
+test('a receipt with nothing behind it is cancelled, and so is one for a removed rule', async () => {
+  const empty = receiptStore({ id: 'n1', workspace_id: 'w', triage_rule_id: RULE, kind: 'receipt', attempts: 1 });
+  empty.store.receipt = async () => null;
+  const summary = await dispatchForwardNotices(empty.store, async () => { throw new Error('no send'); });
+  assert.equal(summary.cancelled, 1);
+  const gone = receiptStore({ id: 'n2', workspace_id: 'w', triage_rule_id: null, no_approval_rule_id: 'x', kind: 'coverage_paused', attempts: 1 });
+  gone.store.noApprovalRuleName = async () => null;
+  assert.equal((await dispatchForwardNotices(gone.store, async () => { throw new Error('no send'); })).cancelled, 1);
+});
+
+test('the paused notice goes out with no automation attached', async () => {
+  const { store } = receiptStore({ id: 'n3', workspace_id: 'w', triage_rule_id: null, no_approval_rule_id: 'x', kind: 'coverage_paused', attempts: 1 });
+  const sent: any[] = [];
+  await dispatchForwardNotices(store, async (email: any) => { sent.push(email); return { ok: true, id: 'r1' }; });
+  assert.equal(sent[0].subject, 'A no-approval rule has been paused');
 });

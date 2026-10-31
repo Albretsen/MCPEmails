@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { APPROVAL_LIST_LIMIT, waitingForRule } from '@/lib/approvals/waiting';
 import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
+import { NoApprovalRules, RunsWithoutApprovalBadge } from './NoApprovalRules';
+import { canonicalJson, formCoverage } from '@/lib/approvals/no-approval';
 // Health is derived in one place, shared with the server-side validator module,
 // so the banner and the row can never disagree about whether a rule is broken.
 // `unrunnableFilterFields` is the same idea one level deeper: it re-exports the
@@ -225,8 +227,46 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [], pendingApp
   const [deleteRule, setDeleteRule] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [approvalHelpOpen, setApprovalHelpOpen] = useState(false);
+  const [noApproval, setNoApproval] = useState(null);
 
   const canManage = userRole === 'owner' || userRole === 'admin';
+
+  // A failure here leaves the section out and every row saying what it says
+  // without coverage. The server decides at run time regardless.
+  const loadNoApproval = useCallback(async () => {
+    try {
+      const response = await fetch('/api/no-approval-rules', { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await response.json().catch(() => null);
+      if (payload) setNoApproval(payload);
+    } catch {
+      // Keep what the page has.
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadNoApproval(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadNoApproval]);
+
+  const coverageByRule = useMemo(
+    () => new Map((noApproval?.coverage ?? []).map((row) => [row.triage_rule_id, row])),
+    [noApproval],
+  );
+
+  // The receipt email links here: ?runs=<automation id> opens that run log.
+  const [wantedRuns, setWantedRuns] = useState(() => (
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('runs')
+  ));
+  useEffect(() => {
+    if (!wantedRuns || rules.length === 0) return undefined;
+    const rule = rules.find((row) => row.id === wantedRuns);
+    const timer = window.setTimeout(() => {
+      if (rule) setRunsRule(rule);
+      setWantedRuns(null);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [wantedRuns, rules]);
 
   const load = useCallback(async () => {
     try {
@@ -387,6 +427,7 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [], pendingApp
                     rule={rule}
                     t={t}
                     waiting={waitingForRule(pendingApprovals, rule.id).length}
+                    coverage={coverageByRule.get(rule.id)}
                     waitingPageFull={pendingApprovals.length >= APPROVAL_LIST_LIMIT}
                     onOpenApprovals={onOpenApprovalsForRule}
                     canManage={canManage}
@@ -413,8 +454,19 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [], pendingApp
         </div>
       </div>
 
+      {!loading ? (
+        <NoApprovalRules
+          canManage={canManage}
+          overview={noApproval?.overview ?? null}
+          automations={rules}
+          inboxes={inboxes}
+          onChanged={loadNoApproval}
+        />
+      ) : null}
+
       {formRule ? (
         <RuleFormModal
+          noApprovalOverview={noApproval?.overview ?? null}
           mode={formRule.mode}
           rule={formRule.rule}
           duplicate={Boolean(formRule.duplicate)}
@@ -424,7 +476,7 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [], pendingApp
           onSaved={async (message) => {
             setFormRule(null);
             toast({ message, variant: 'success' });
-            await load();
+            await Promise.all([load(), loadNoApproval()]);
           }}
         />
       ) : null}
@@ -494,7 +546,7 @@ function HealthBanner({ rules, t }) {
 
 /* ── Row ───────────────────────────────────────────────────────────────── */
 
-function RuleRow({ rule, t, waiting = 0, waitingPageFull = false, onOpenApprovals, canManage, busy, onToggle, onEdit, onDuplicate, onApprovalHelp, onRuns, onDelete }) {
+function RuleRow({ rule, t, coverage, waiting = 0, waitingPageFull = false, onOpenApprovals, canManage, busy, onToggle, onEdit, onDuplicate, onApprovalHelp, onRuns, onDelete }) {
   const cadence = CADENCE_OPTIONS.find((option) => option.minutes === rule.interval_minutes);
   const lastRun = rule.last_run;
   const lastRunAt = formatTimestamp(lastRun?.started_at);
@@ -534,7 +586,7 @@ function RuleRow({ rule, t, waiting = 0, waitingPageFull = false, onOpenApproval
       </td>
       <td>{inboxLabel(rule) ?? <span className="sub">{t('automations.unknownInbox')}</span>}</td>
       <td>{cadence ? t(`automations.cadence.${cadence.key}`) : `${rule.interval_minutes}`}</td>
-      <td>{describeAction(rule.action, t, onApprovalHelp)}</td>
+      <td>{describeAction(rule.action, t, onApprovalHelp, coverage)}</td>
       <td>
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: canManage && !busy ? 'pointer' : 'default' }}>
           <input
@@ -576,7 +628,7 @@ function RuleRow({ rule, t, waiting = 0, waitingPageFull = false, onOpenApproval
   );
 }
 
-function describeAction(action, t, onApprovalHelp) {
+function describeAction(action, t, onApprovalHelp, coverage) {
   if (!action || typeof action !== 'object') return <span className="sub">{t('automations.actionType.unknown')}</span>;
   if (action.type === 'move') return t('automations.actionSummary.move', { folder: action.folder ?? '' });
   if (action.type === 'label') return t('automations.actionSummary.label', { label: action.label ?? '' });
@@ -588,14 +640,21 @@ function describeAction(action, t, onApprovalHelp) {
         <span style={{ overflowWrap: 'break-word' }}>
           {t('automations.actionSummary.forward', { address: Array.isArray(action.to) ? action.to.join(', ') : '' })}
         </span>
-        <button
-          type="button"
-          className="badge b-amber"
-          onClick={onApprovalHelp}
-          style={{ border: 0, cursor: 'pointer', textDecoration: 'underline', font: 'inherit', fontSize: 12 }}
-        >
-          {t('automations.approvalBadge')}
-        </button>
+        {coverage?.runs_without_approval ? (
+          <RunsWithoutApprovalBadge />
+        ) : (
+          <button
+            type="button"
+            className="badge b-amber"
+            onClick={onApprovalHelp}
+            style={{ border: 0, cursor: 'pointer', textDecoration: 'underline', font: 'inherit', fontSize: 12 }}
+          >
+            {t('automations.approvalBadge')}
+          </button>
+        )}
+        {!coverage?.runs_without_approval && coverage?.reason && t.has(`automations.noApproval.reason.${coverage.reason}`) ? (
+          <span className="sub" style={{ fontSize: 12, flexBasis: '100%' }}>{t(`automations.noApproval.reason.${coverage.reason}`)}</span>
+        ) : null}
       </span>
     );
   }
@@ -655,7 +714,7 @@ function initialFormState(rule) {
   };
 }
 
-function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved }) {
+function RuleFormModal({ mode, rule, duplicate, inboxes, keys, noApprovalOverview, onClose, onSaved }) {
   const t = useTranslations('dashboard');
   const [form, setForm] = useState(() => initialFormState(rule));
   const [submitting, setSubmitting] = useState(false);
@@ -682,6 +741,19 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
   const apiKeyId = form.apiKeyId === ownKeyId || usableKeys.some((key) => key.id === form.apiKeyId) ? form.apiKeyId : '';
 
   const filter = buildRuleFilter(form);
+  const noApprovalCoverage = form.actionType === 'forward'
+    ? formCoverage({
+        overview: noApprovalOverview,
+        ruleId: mode === 'edit' ? rule?.id ?? null : null,
+        inboxId: form.inboxId,
+        to: parseRecipients(form.forwardTo),
+        changed: mode !== 'edit'
+          || canonicalJson(filter) !== canonicalJson(rule?.filter ?? {})
+          || canonicalJson(buildRuleAction(form)) !== canonicalJson(rule?.action ?? {})
+          || form.inboxId !== rule?.inbox_id
+          || form.apiKeyId !== rule?.api_key_id,
+      })
+    : 'waits';
   const hasFilter = Object.keys(filter).length > 0;
   const canPreview = Boolean(form.inboxId && apiKeyId && hasFilter) && !previewing && !submitting;
 
@@ -1093,7 +1165,7 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
                     <label htmlFor="automation-forward-note">{t('automations.modal.forwardNoteLabel')}</label>
                     <input id="automation-forward-note" className="input" type="text" maxLength={500} value={form.forwardNote} placeholder={t('automations.modal.forwardNotePlaceholder')} onChange={(event) => set('forwardNote', event.target.value)} disabled={submitting} />
                   </div>
-                  <div className="alert" role="note"><span>{t('automations.modal.forwardApprovalNote')}</span></div>
+                  <div className="alert" role="note"><span>{t(noApprovalCoverage === 'covered' ? 'automations.noApproval.formCovered' : noApprovalCoverage === 'voids_on_save' ? 'automations.noApproval.formVoids' : 'automations.modal.forwardApprovalNote')}</span></div>
                 </>
               ) : null}
 
@@ -1116,7 +1188,7 @@ function RuleFormModal({ mode, rule, duplicate, inboxes, keys, onClose, onSaved 
               ) : null}
             </fieldset>
 
-            <RuleSentence form={form} filter={filter} mailbox={selectedInbox?.address || selectedInbox?.label || null} />
+            <RuleSentence form={form} filter={filter} noApprovalCoverage={noApprovalCoverage} mailbox={selectedInbox?.address || selectedInbox?.label || null} />
 
             {mode === 'create' ? (
               <div className="sub" style={{ fontSize: 12.5 }}>{t('automations.modal.createdNote')}</div>
@@ -1189,7 +1261,7 @@ function joinPhrases(phrases, t) {
  * What this rule will do, in one plain paragraph, from the values on screen. Nothing
  * here is stored: it is built from the same filter and action that Save sends.
  */
-function RuleSentence({ form, filter, mailbox }) {
+function RuleSentence({ form, filter, mailbox, noApprovalCoverage = 'waits' }) {
   const t = useTranslations('dashboard');
   const phrases = filterConditions(filter).map((condition) => conditionPhrase(condition, t)).filter(Boolean);
   const cadence = CADENCE_OPTIONS.find((option) => option.minutes === Number(form.intervalMinutes));
@@ -1197,7 +1269,10 @@ function RuleSentence({ form, filter, mailbox }) {
 
   let outcome = null;
   if (form.actionType === 'forward' && parseRecipients(form.forwardTo).length > 0) {
-    outcome = t('automations.sentence.forward', { address: action.to.join(', ') });
+    outcome = t(
+      noApprovalCoverage === 'covered' ? 'automations.sentence.forwardNoApproval' : 'automations.sentence.forward',
+      { address: action.to.join(', ') },
+    );
   } else if (form.actionType === 'move' && action.folder) {
     outcome = t('automations.sentence.move', { folder: action.folder });
   } else if (form.actionType === 'label' && action.label) {
@@ -1490,6 +1565,15 @@ function describeItemDetail(item, t) {
     if (detail.error_code) return t('automations.runs.detailFailed', { code: String(detail.error_code) });
   }
   if (item.outcome === 'queued_for_approval') {
+    const note = item.forward_note;
+    if (note?.sent_without_approval) {
+      return note.no_approval_rule_name
+        ? t('approvals.panel.sentWithoutApproval', { rule: note.no_approval_rule_name })
+        : t('approvals.panel.sentWithoutApprovalUnnamed');
+    }
+    if (note?.wait_reason && t.has(`automations.noApproval.reason.${note.wait_reason}`)) {
+      return t(`automations.noApproval.reason.${note.wait_reason}`);
+    }
     return item.forward_state && item.forward_state !== 'waiting'
       ? t(`automations.runs.forwardDetail.${item.forward_state}`)
       : t('automations.runs.detailQueued');

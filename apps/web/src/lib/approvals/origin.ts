@@ -26,9 +26,9 @@ export function withApprovalOrigin<T extends Record<string, unknown>>(row: T) {
  *
  *   none       Nobody did: it expired or was cancelled.
  *   person     A signed-in owner or admin (`decided_by`).
- *   automatic  No person, but a surface recorded a decision. Nothing writes this
- *              yet: rules that approve by themselves will flow through the same
- *              row, and the list must not call that a person's decision.
+ *   automatic  No person, but a surface recorded a decision: a no-approval rule
+ *              (`decided_via` 'no_approval_rule'). The list must not call that a
+ *              person's decision.
  */
 export type ApprovalDecider = 'none' | 'person' | 'automatic';
 

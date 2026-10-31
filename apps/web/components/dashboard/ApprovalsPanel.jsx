@@ -306,6 +306,9 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
                   <td data-label={t('approvals.panel.colSubject')}>
                     <span className="approvals-wrap">{item.summary?.subject || t('approvals.panel.noSubject')}</span>
                     <span className="approvals-cell-sub">{approvalLabel(item, t)}</span>
+                    {item.no_approval_wait_reason && t.has(`automations.noApproval.reason.${item.no_approval_wait_reason}`) ? (
+                      <span className="approvals-cell-sub">{t(`automations.noApproval.reason.${item.no_approval_wait_reason}`)}</span>
+                    ) : null}
                   </td>
                   <td data-label={t('approvals.panel.colTimeLeft')} className="approvals-time-left">
                     {formatTimeLeft(t, item.expires_at, now) ?? '—'}
@@ -413,7 +416,14 @@ function DecidedTable({ rows, canDecide, onForwardAgain, t }) {
                   </td>
                   <td data-label={t('approvals.panel.colOutcome')}><Outcome row={row} t={t} /></td>
                   <td data-label={t('approvals.panel.colWhere')}>
-                    {row.decider === 'automatic' ? (
+                    {row.decided_via === 'no_approval_rule' ? (
+                      <span className="approvals-via">
+                        <Icon name="zap" size={12} />
+                        {row.no_approval_rule_name
+                          ? t('approvals.panel.sentWithoutApproval', { rule: row.no_approval_rule_name })
+                          : t('approvals.panel.sentWithoutApprovalUnnamed')}
+                      </span>
+                    ) : row.decider === 'automatic' ? (
                       <span className="approvals-via"><Icon name="zap" size={12} />{t('approvals.panel.decidedAutomatically')}</span>
                     ) : row.decider === 'person' && viaKey && t.has(viaKey) ? (
                       <span className="approvals-via">

@@ -27,7 +27,8 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
       id: row.id,
       workspace_id: row.workspace_id,
       triage_rule_id: row.triage_rule_id,
-      kind: row.kind === 'reminder' ? 'reminder' : 'queued',
+      no_approval_rule_id: row.no_approval_rule_id,
+      kind: (['reminder', 'receipt', 'coverage_paused'] as const).find((kind) => kind === row.kind) ?? 'queued',
       attempts: row.attempts,
     }));
   }
@@ -58,6 +59,32 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
       }
     }
     return { count: rows.length, addresses: [...addresses], deadline: rows[0].expires_at as string };
+  }
+
+  async receipt(noticeId: string) {
+    const { data, error } = await this.db
+      .from('send_approvals')
+      .select('summary, no_approval_rule_name, decided_at')
+      .eq('receipt_notice_id', noticeId)
+      .order('decided_at', { ascending: true })
+      .limit(WAITING_READ_LIMIT);
+    if (error) throw new Error(error.message);
+    const rows = data ?? [];
+    if (rows.length === 0) return null;
+    const addresses = new Set<string>();
+    for (const row of rows) {
+      const to = readSummary(row.summary).to;
+      if (Array.isArray(to)) {
+        for (const address of to) if (typeof address === 'string' && address) addresses.add(address);
+      }
+    }
+    return { count: rows.length, addresses: [...addresses], noApprovalRuleName: rows[0].no_approval_rule_name ?? null };
+  }
+
+  async noApprovalRuleName(ruleId: string): Promise<string | null> {
+    const { data, error } = await this.db.from('no_approval_rules').select('name').eq('id', ruleId).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data?.name ?? null;
   }
 
   async recipients(workspaceId: string): Promise<NoticeRecipient[]> {

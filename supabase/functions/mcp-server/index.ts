@@ -487,6 +487,7 @@ import {
   OUTBOUND_BRAKE_ERROR_CODES,
   recordProviderRefusal,
 } from "./outbound-brakes.ts";
+import { headerValues, type SenderVerdict, senderVerdict, trustedAuthResults } from "./auth-results.ts";
 import { headroom, type RateLimitHeadroom, rateLimitHeaders, withRateLimitHeaders } from "./rate-limit-headers.ts";
 import {
   type AttachmentManifestEntry,
@@ -7097,7 +7098,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "atom, so spaces become underscores and ( ) [ ] { } % * \" \\ are refused) | " +
             "{type:'mark_read'} | {type:'forward',to:[...],note} | {type:'draft_reply',template}. " +
             "DELETING MAIL IS NOT AVAILABLE to an automation and is refused. 'forward' is " +
-            "ALWAYS held for human approval regardless of the inbox's approval setting, and " +
+            "held for human approval regardless of the inbox's approval setting, unless a person has allowed every address with a no-approval rule in the dashboard (no tool or API key can set one), and " +
             "'draft_reply' only ever creates a draft. A draft_reply template substitutes " +
             "{{sender_name}}, {{sender_email}}, {{subject}} and {{date}} and nothing else; " +
             "everything else is literal text and message bodies are never interpolated.",
@@ -7194,7 +7195,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "atom, so spaces become underscores and ( ) [ ] { } % * \" \\ are refused) | " +
             "{type:'mark_read'} | {type:'forward',to:[...],note} | {type:'draft_reply',template}. " +
             "DELETING MAIL IS NOT AVAILABLE to an automation and is refused. 'forward' is " +
-            "ALWAYS held for human approval regardless of the inbox's approval setting, and " +
+            "held for human approval regardless of the inbox's approval setting, unless a person has allowed every address with a no-approval rule in the dashboard (no tool or API key can set one), and " +
             "'draft_reply' only ever creates a draft. A draft_reply template substitutes " +
             "{{sender_name}}, {{sender_email}}, {{subject}} and {{date}} and nothing else; " +
             "everything else is literal text and message bodies are never interpolated.",
@@ -9742,8 +9743,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "`action` selects the operation on this tool, while `rule_action` is the action " +
       "the RULE performs on matching mail. Rule actions are move, label (applied as a " +
       "Gmail label, an Outlook category or an IMAP keyword), mark_read, forward and " +
-      "draft_reply. DELETING MAIL IS NOT AVAILABLE to an automation. A forward is ALWAYS " +
-      "held for human approval whatever the inbox's approval setting says, and a " +
+      "draft_reply. DELETING MAIL IS NOT AVAILABLE to an automation. A forward is " +
+      "held for human approval whatever the inbox's approval setting says, unless a person " +
+      "has allowed every address with a no-approval rule in the dashboard (no tool or API " +
+      "key can set one). A " +
       "draft_reply only ever writes a draft. A new rule only acts on mail that arrives " +
       "after it is first enabled, unless `include_past_mail` is true. Use automation_read " +
       "to list rules, read one in full, see run history, and dry-run a filter before " +
@@ -9752,8 +9755,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     // Per-tool, not per-action: 'delete' governs. See the note on `folder`.
     // openWorldHint: true — a rule's action can be {type:'forward', to:[...]},
     // which addresses recipients outside the mailbox, and 'create'/'update'
-    // are how that gets configured. That the forward itself is always held for
-    // human approval is a safeguard on the delivery, not a reason to tell a
+    // are how that gets configured. That the forward itself is held for human
+    // approval, or sent under a no-approval rule a person set, is a safeguard on the delivery, not a reason to tell a
     // client this tool is confined to the account.
     annotations: {
       readOnlyHint: false,
@@ -36077,6 +36080,20 @@ interface ScheduledDispatchDeps {
   reserveRuleForward?(workspaceId: string): Promise<{ allowed: boolean; reservationId: string | null }>;
   /** Books the forward when it was sent. Anything else hands the reservation back. */
   settleRuleForward?(workspaceId: string, status: "success" | "error", reservationId: string | null): Promise<void>;
+  /**
+   * A row a no-approval rule decided, just before it is sent: does that rule still
+   * cover it, and do the abuse brakes let it through as an unattended send? Without
+   * this, such a row does not go.
+   */
+  recheckNoApproval?(
+    approval: Record<string, unknown>,
+    original: Record<string, unknown>,
+    inbox: InboxRow,
+  ): Promise<{ ok: true } | { ok: false; reason: string }>;
+  /** Nothing was sent: the row goes back to waiting for a person, saying why. */
+  returnNoApprovalToWaiting?(approvalId: string, scheduledSendId: string, reason: string): Promise<void>;
+  /** Repeated failures stop a no-approval rule's coverage. */
+  noteNoApprovalResult?(approvalId: string, ok: boolean): Promise<void>;
   /** Ledger claim and original lookup for an approved rule forward. Optional, as above. */
   prepareRuleForward?(
     approvalId: string,
@@ -36200,6 +36217,52 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
     await writeActionUsage(workspaceId, "triage_forward", status, reservationId);
   },
   prepareRuleForward,
+  async recheckNoApproval(approval, original, inbox) {
+    const recipients = [...addressList(original.to), ...addressList(original.cc), ...addressList(original.bcc)];
+    const { data, error } = await supabase.rpc("no_approval_recheck", {
+      p_approval_id: String(approval.id),
+      p_recipients: recipients,
+    });
+    // Could not tell: the row stays approved and queued for the next tick.
+    if (error) throw new SmtpNotSentError(`no-approval check failed: ${error.message}`, true);
+    const verdict = data as { covered?: unknown; reason?: unknown } | null;
+    if (verdict?.covered !== true) {
+      return { ok: false, reason: typeof verdict?.reason === "string" ? verdict.reason : "address_not_covered" };
+    }
+    // humanApproved false, which is the point: nobody decided this one, so the
+    // fan-out brake applies. commit false: the send itself still counts once.
+    const workspaceId = String(approval.workspace_id);
+    const ids = addressList(original.message_id ?? original.message_ids);
+    const brake = await checkOutboundBrakes(supabase as unknown as BrakeDb, {
+      workspaceId,
+      inboxId: inbox.id,
+      messages: Math.max(1, ids.length),
+      subject: `forward\n${[...ids].sort().join("\n")}`,
+      body: typeof original.body === "string" ? original.body : null,
+      recipients,
+      humanApproved: false,
+    }, { commit: false });
+    if (brake.kind === "refuse") return { ok: false, reason: brake.code };
+    if (brake.kind === "hold") {
+      if (brake.newlyTripped) {
+        await notifyBrakeTripped({ workspaceId, inboxId: inbox.id, brake: "fanout_hold", retryAt: brake.retryAt });
+      }
+      return { ok: false, reason: "fanout_hold" };
+    }
+    return { ok: true };
+  },
+  async returnNoApprovalToWaiting(approvalId, scheduledSendId, reason) {
+    const { error } = await supabase.rpc("no_approval_return_to_waiting", {
+      p_approval_id: approvalId,
+      p_scheduled_send_id: scheduledSendId,
+      p_reason: reason,
+    });
+    if (error) throw new SmtpNotSentError(`could not return the forward to waiting: ${error.message}`, true);
+  },
+  async noteNoApprovalResult(approvalId, ok) {
+    const { error } = await supabase.rpc("no_approval_note_send_result", { p_approval_id: approvalId, p_ok: ok });
+    if (error) console.error("[dispatch] no_approval_note_failed", { approval_id: approvalId, error: error.message });
+  },
   sendViaProvider(inbox, params) {
     switch (inbox.provider) {
       case "gmail":
@@ -36232,6 +36295,9 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
  * approval `row.inbox_id`). A row naming another tenant's inbox or approval is
  * failed, never sent.
  */
+/** `send_approvals.decided_via` of a row a no-approval rule decided. Only the database writes it. */
+const NO_APPROVAL_DECIDED_VIA = "no_approval_rule";
+
 async function handleScheduledDispatch(
   db: InboxQueryClient = supabase,
   deps: ScheduledDispatchDeps = DEFAULT_SCHEDULED_DISPATCH_DEPS,
@@ -36328,6 +36394,9 @@ async function handleScheduledDispatch(
     // earlier deferred one. A deferral carries it forward in error_detail.
     let brakeCounted = typeof row.error_detail === "string" &&
       row.error_detail.startsWith(SCHEDULED_SEND_COUNTED_DEFER_PREFIX);
+    // Set once a row a no-approval rule decided has passed its re-check: a send
+    // that then fails for good counts against that rule.
+    let noApprovalId: string | null = null;
 
     try {
       // ── Look up the inbox ──────────────────────────────────────────────
@@ -36481,6 +36550,25 @@ async function handleScheduledDispatch(
           throw new Error("approved request expired before it was decided");
         }
 
+        // ── Decided by a no-approval rule: is it still covered? ───────────
+        // The rule may have been switched off, the automation's `to` edited or
+        // the abuse brakes tripped since it was decided. No person looked at this
+        // row, so the answer now is the one that counts. Not covered means back to
+        // waiting for a person, never sent and never dropped. Before the binding,
+        // so a returned row can be approved later by anybody.
+        if (approval.decided_via === NO_APPROVAL_DECIDED_VIA) {
+          if (!deps.recheckNoApproval || !deps.returnNoApprovalToWaiting) {
+            throw new ScheduledDispatchHeld("a forward without approval could not be re-checked; nothing was sent");
+          }
+          const verdict = await deps.recheckNoApproval(approval, await resolveScheduledPayload(approval), inbox);
+          if (!verdict.ok) {
+            await deps.returnNoApprovalToWaiting(String(approval.id), String(row.id), verdict.reason);
+            deferred++;
+            continue;
+          }
+          noApprovalId = String(approval.id);
+        }
+
         // ── Single use: bind the approval to THIS row ─────────────────────
         // An approval stays 'approved' after it is sent (that is what the
         // dashboard history shows), so status alone cannot stop a second row
@@ -36603,6 +36691,13 @@ async function handleScheduledDispatch(
             if (!reservation.allowed) {
               // Provably not sent, so the ledger row is released rather than left.
               if (prepared?.kind === "ready") await prepared.settle("error", PROVIDER_NOT_SENT_ERROR_CODE);
+              // Nobody approved this one, so nobody is waiting on it to fail:
+              // it waits for a person, who can send it once the allowance is back.
+              if (noApprovalId !== null && deps.returnNoApprovalToWaiting) {
+                await deps.returnNoApprovalToWaiting(noApprovalId, String(row.id), "usage_limit");
+                deferred++;
+                continue;
+              }
               throw new Error(RULE_FORWARD_LIMIT_REFUSAL);
             }
             forwardReservationId = reservation.reservationId;
@@ -36630,6 +36725,16 @@ async function handleScheduledDispatch(
           // nothing was sent, and the approval must not be lost or settled as
           // failed. Hold the row and try again on a later tick, once the
           // freeze, the pause or the daily ceiling has lifted.
+          if (
+            noApprovalId !== null && deps.returnNoApprovalToWaiting &&
+            dispatchedResult.logErrorCode !== null &&
+            OUTBOUND_BRAKE_ERROR_CODES.has(dispatchedResult.logErrorCode)
+          ) {
+            // Nobody decided this one, so it waits for somebody who can.
+            await deps.returnNoApprovalToWaiting(noApprovalId, String(row.id), dispatchedResult.logErrorCode);
+            deferred++;
+            continue;
+          }
           if (
             dispatchedResult.logStatus !== "success" &&
             dispatchedResult.logErrorCode !== null &&
@@ -36674,6 +36779,7 @@ async function handleScheduledDispatch(
             );
           }
           await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
+          if (noApprovalId !== null) await deps.noteNoApprovalResult?.(noApprovalId, true);
           dispatched++;
           continue;
         }
@@ -36795,6 +36901,8 @@ async function handleScheduledDispatch(
         `[dispatch] scheduled_send ${row.id} failed:`,
         detail,
       );
+
+      if (noApprovalId !== null) await deps.noteNoApprovalResult?.(noApprovalId, false);
 
       // A deferred row above is still in flight, so only a terminal failure
       // settles the approved schedule's idempotency record.
@@ -37353,7 +37461,7 @@ async function applyTriageAction(input: {
     }
 
     case "forward": {
-      // ALWAYS gated, regardless of inboxes.send_approval_required. That switch
+      // ALWAYS written as an approval, regardless of inboxes.send_approval_required. That switch
       // means "a human is watching this mailbox's sends", which is exactly the
       // assumption an unattended runner breaks, so the runner cannot be allowed
       // to inherit its 'off' setting. Forcing the flag on a local copy of the row
@@ -37387,7 +37495,14 @@ async function applyTriageAction(input: {
         input.rule,
       );
       if (!approval) return { ok: false, error_code: "approval_unavailable" };
-      return { ok: true, approval_id: approval.id, detail: { recipients: action.to.length } };
+      // The row is written either way. A no-approval rule a person set in the
+      // dashboard may then decide it, in the database, from the database.
+      const unattended = await forwardWithoutApproval(input.rule.id, inboxRow, approval, action.to, match, imapSession);
+      return {
+        ok: true,
+        approval_id: approval.id,
+        detail: { recipients: action.to.length, ...(unattended ? { unattended: true } : {}) },
+      };
     }
 
     case "draft_reply": {
@@ -37591,6 +37706,20 @@ function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
     // thing it previews would be worse than no preview at all.
     preview: (inbox, filter, limit) => triageDeps().search(inbox, filter, limit, { arrival: true }),
     approvalsUrl: `${APP_URL}/dashboard/approvals`,
+    // Read-only, and only ever a yes or no per rule. Nothing in this bundle, and
+    // no other path a key reaches, can write a no-approval rule: the tables grant
+    // this database role no write, and the write functions refuse it.
+    async noApprovalCoverage() {
+      const { data, error } = await supabase.rpc("no_approval_workspace_coverage", {
+        p_workspace_id: apiKey.workspace_id,
+      });
+      if (error) throw new Error(error.message);
+      return new Set(
+        ((data ?? []) as { triage_rule_id: string; runs_without_approval: boolean }[])
+          .filter((row) => row.runs_without_approval)
+          .map((row) => row.triage_rule_id),
+      );
+    },
   };
 }
 
@@ -37880,6 +38009,129 @@ async function messageCarriesRuleForwardHeader(inbox: InboxRow, messageId: strin
     return (data.internetMessageHeaders ?? []).some((h) => h.name?.toLowerCase() === name);
   }
   return false;
+}
+
+/** The Authentication-Results and Received headers of one message, top first. */
+async function readSenderHeaders(
+  inbox: InboxRow,
+  messageId: string,
+  shared: ImapSession<ImapClient> | null | undefined,
+): Promise<{ authResults: string[]; received: string[] }> {
+  const fields = ["Authentication-Results", "Received"];
+  const pick = (headers: { name?: string; value?: string }[], name: string) =>
+    headers.filter((h) => h.name?.toLowerCase() === name).map((h) => h.value ?? "");
+  if (isImapProvider(inbox)) {
+    const session = shared ?? imapSessionFor(inbox);
+    if (!session) throw new Error("imap_session_unavailable");
+    try {
+      const { folder, uid } = decodeImapId(messageId);
+      await session.select(folder);
+      const rows = await (await session.client()).fetchHeaderFields([uid], fields);
+      const raw = rows.find((row) => row.uid === uid)?.headers ?? "";
+      return { authResults: headerValues(raw, fields[0]), received: headerValues(raw, fields[1]) };
+    } finally {
+      if (!shared) await session.close();
+    }
+  }
+  if (inbox.provider === "gmail") {
+    const accessToken = await withFreshGmailToken(inbox);
+    const params = new URLSearchParams({ format: "metadata" });
+    for (const field of fields) params.append("metadataHeaders", field);
+    const resp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`gmail_header_read_${resp.status}`);
+    }
+    const data = (await resp.json()) as { payload?: { headers?: { name?: string; value?: string }[] } };
+    const headers = data.payload?.headers ?? [];
+    return { authResults: pick(headers, "authentication-results"), received: pick(headers, "received") };
+  }
+  if (inbox.provider === "outlook") {
+    const accessToken = await withFreshOutlookToken(inbox);
+    const resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(messageId)}?$select=internetMessageHeaders`,
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`outlook_header_read_${resp.status}`);
+    }
+    const data = (await resp.json()) as { internetMessageHeaders?: { name?: string; value?: string }[] };
+    const headers = data.internetMessageHeaders ?? [];
+    return { authResults: pick(headers, "authentication-results"), received: pick(headers, "received") };
+  }
+  return { authResults: [], received: [] };
+}
+
+/**
+ * Does this forward go out without a person? Runs after the ordinary approval row
+ * is written, and only ever decides that row, through no_approval_auto_decide.
+ *
+ * Everything that matters is read in the database when it decides: the no-approval
+ * rule, the addresses it trusts, the automation's own `to` and fingerprint. All it
+ * gets from here is what the send is addressed to, the mail's date and one word on
+ * the sender (auth-results.ts). Nothing in a rule's filter or action, in the mail,
+ * or in anything a key can write can say "yes".
+ *
+ * Never throws. Any failure leaves the row waiting for a person, as it was.
+ */
+async function forwardWithoutApproval(
+  ruleId: string,
+  inbox: InboxRow,
+  approval: QueuedApproval,
+  recipients: string[],
+  match: TriageMatch,
+  session: ImapSession<ImapClient> | null | undefined,
+): Promise<boolean> {
+  try {
+    // The usual answer, and cheap: nothing covers this, so no header is read.
+    const { data: first, error: firstError } = await supabase.rpc("no_approval_evaluate", {
+      p_triage_rule_id: ruleId,
+      p_recipients: recipients,
+    });
+    if (firstError) {
+      console.warn("[triage] no_approval_evaluate_failed", { rule_id: ruleId, error: firstError.message });
+      return false;
+    }
+    const verdictNeeded = (first as { covered?: unknown } | null)?.covered === true;
+    if (!verdictNeeded && !(first as { reason?: unknown } | null)?.reason) return false;
+    let verdict: SenderVerdict | "unreadable" = "unverified";
+    if (verdictNeeded) {
+      try {
+        const headers = await readSenderHeaders(inbox, match.id, session);
+        verdict = senderVerdict(
+          trustedAuthResults(headers.authResults, headers.received, {
+            provider: inbox.provider === "gmail" ? "gmail" : inbox.provider === "outlook" ? "outlook" : "imap",
+            imapHost: inbox.imap_host,
+          }),
+          match.from_email,
+        );
+      } catch (error) {
+        console.warn("[triage] sender_headers_unreadable", { inbox_id: inbox.id, error: providerErrorCode(error) });
+        verdict = "unreadable";
+      }
+    }
+    const when = Date.parse(match.received_at ?? match.date ?? "");
+    const { data, error } = await supabase.rpc("no_approval_auto_decide", {
+      p_approval_id: approval.id,
+      p_revision: approval.row.revision as number,
+      p_recipients: recipients,
+      p_sender_verdict: verdict,
+      // A mail with no readable date reads as old, and waits.
+      p_message_date: Number.isFinite(when) ? new Date(when).toISOString() : new Date(0).toISOString(),
+    });
+    if (error) {
+      console.warn("[triage] no_approval_decide_failed", { rule_id: ruleId, error: error.message });
+      return false;
+    }
+    return (data as { decided?: unknown } | null)?.decided === true;
+  } catch (error) {
+    console.warn("[triage] no_approval_failed", { rule_id: ruleId, error: providerErrorCode(error) });
+    return false;
+  }
 }
 
 /** Assembles the dependency bundle the engine runs on. */

@@ -16,6 +16,18 @@ export interface ForwardApprovalRow {
   status: string;
   expires_at: string | null;
   dispatch_scheduled_send_id: string | null;
+  decided_via?: string | null;
+  no_approval_rule_name?: string | null;
+  no_approval_wait_reason?: string | null;
+}
+
+/** What the run log says besides the state: which it was, and why it waits. */
+export interface ForwardNote {
+  /** Set when a no-approval rule sent it with nobody deciding. */
+  no_approval_rule_name?: string | null;
+  sent_without_approval?: boolean;
+  /** Set when a covered forward waits for a person after all. */
+  wait_reason?: string | null;
 }
 
 export interface ForwardSendRow {
@@ -61,13 +73,23 @@ export async function loadForwardStates(
   approvalIds: readonly string[],
   nowMs = Date.now(),
 ): Promise<Map<string, ForwardState>> {
+  const details = await loadForwardDetails(db, workspaceId, approvalIds, nowMs);
+  return new Map([...details].map(([id, detail]) => [id, detail.state]));
+}
+
+export async function loadForwardDetails(
+  db: any,
+  workspaceId: string,
+  approvalIds: readonly string[],
+  nowMs = Date.now(),
+): Promise<Map<string, ForwardNote & { state: ForwardState }>> {
   const ids = [...new Set(approvalIds)];
   const approvals = new Map<string, ForwardApprovalRow>();
   const sends = new Map<string, ForwardSendRow>();
   for (let i = 0; i < ids.length; i += CHUNK) {
     const chunk = ids.slice(i, i + CHUNK);
     const { data } = await db.from('send_approvals')
-      .select('id, status, expires_at, dispatch_scheduled_send_id')
+      .select('id, status, expires_at, dispatch_scheduled_send_id, decided_via, no_approval_rule_name, no_approval_wait_reason')
       .eq('workspace_id', workspaceId)
       .in('id', chunk);
     for (const row of (data ?? []) as ForwardApprovalRow[]) approvals.set(row.id, row);
@@ -82,9 +104,19 @@ export async function loadForwardStates(
       if (row.approval_id) sends.set(row.approval_id, row);
     }
   }
-  const states = new Map<string, ForwardState>();
-  for (const id of ids) states.set(id, forwardStateOf(approvals.get(id), sends.get(id), nowMs));
-  return states;
+  const details = new Map<string, ForwardNote & { state: ForwardState }>();
+  for (const id of ids) {
+    const approval = approvals.get(id);
+    const state = forwardStateOf(approval, sends.get(id), nowMs);
+    details.set(id, {
+      state,
+      ...(approval?.decided_via === 'no_approval_rule'
+        ? { sent_without_approval: true, no_approval_rule_name: approval.no_approval_rule_name ?? null }
+        : {}),
+      ...(state === 'waiting' && approval?.no_approval_wait_reason ? { wait_reason: approval.no_approval_wait_reason } : {}),
+    });
+  }
+  return details;
 }
 
 function approvalIdOf(item: { detail?: unknown }): string | null {
@@ -97,16 +129,20 @@ export async function attachForwardStates<T extends { outcome?: unknown; detail?
   db: any,
   workspaceId: string,
   items: readonly T[],
-): Promise<(T & { forward_state?: ForwardState })[]> {
+): Promise<(T & { forward_state?: ForwardState; forward_note?: ForwardNote })[]> {
   const ids = items
     .filter((item) => item.outcome === 'queued_for_approval')
     .map(approvalIdOf)
     .filter((id): id is string => id !== null);
   if (ids.length === 0) return [...items];
-  const states = await loadForwardStates(db, workspaceId, ids);
+  const details = await loadForwardDetails(db, workspaceId, ids);
   return items.map((item) => {
     const id = item.outcome === 'queued_for_approval' ? approvalIdOf(item) : null;
-    return id ? { ...item, forward_state: states.get(id) } : item;
+    if (!id) return item;
+    const detail = details.get(id);
+    if (!detail) return { ...item, forward_state: undefined };
+    const { state, ...note } = detail;
+    return { ...item, forward_state: state, ...(Object.keys(note).length > 0 ? { forward_note: note } : {}) };
   });
 }
 
