@@ -38744,9 +38744,6 @@ async function readOriginalRef(
   }
 }
 
-/** Enough to recognise a message, not enough to read it here instead of there. */
-const ORIGINAL_PREVIEW_CHARS = 600;
-
 /**
  * Entry point: POST /approval-original
  * Caller:      apps/web/app/api/approvals/[id]/original/route.ts (server side only)
@@ -38827,7 +38824,7 @@ async function handleApprovalOriginal(req: Request): Promise<Response> {
       from: { name: message.from?.name ?? null, email: message.from?.email ?? null },
       date: message.date ?? null,
       subject: message.subject ?? null,
-      preview: (message.body_text ?? "").replace(/\s+/g, " ").trim().slice(0, ORIGINAL_PREVIEW_CHARS),
+      preview: tidyPreview(message.body_text ?? ""),
       attachments: (message.attachments ?? []).slice(0, 50).map((file) => ({
         filename: file.filename,
         mime_type: file.mime_type,

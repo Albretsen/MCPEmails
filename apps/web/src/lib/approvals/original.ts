@@ -6,9 +6,10 @@ import { neutralizeNullable, neutralizeText } from '@/lib/textSafety';
  *
  * All of it is written by whoever sent the message. The names are short facts a
  * reviewer scans, so invisible and bidi characters are stripped from them: a file
- * named `invoice<U+202E>fdp.exe` must not read as a PDF. The preview is prose, and
- * those characters are legitimate there, so it keeps them and the page isolates
- * its direction instead. React escapes everything; none of it is rendered as HTML.
+ * named `invoice<U+202E>fdp.exe` must not read as a PDF. The preview is prose: the
+ * mcp-server tidies it as it does any list preview, this file leaves it alone, and
+ * the page isolates its direction. React escapes everything; none of it is rendered
+ * as HTML.
  */
 
 export type OriginalUnavailableReason = 'not_found' | 'ambiguous' | 'mailbox' | 'unreadable' | 'not_forward';

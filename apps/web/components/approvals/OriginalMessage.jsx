@@ -18,8 +18,7 @@ const REASONS = new Set(['not_found', 'ambiguous', 'mailbox', 'unreadable']);
  *
  * All of it is written by the message's sender. It is rendered as plain text, the
  * names have had invisible and bidi characters taken out on the server, and the
- * preview keeps them (they are legitimate in right-to-left prose) with its direction
- * isolated so it can not reorder what is around it.
+ * preview has its direction isolated so it can not reorder what is around it.
  *
  * Failing to read it never stands in the way of rejecting: the buttons are outside.
  */

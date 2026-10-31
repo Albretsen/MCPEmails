@@ -445,6 +445,8 @@ Deno.test("preview: index.ts cleans every provider's preview, and decodes entiti
     'preview: normalizePreview(msg.bodyPreview ?? ""),',
     'preview: normalizePreview(msg.snippet ?? ""),',
     'preview: normalizePreview(msg.snippet ?? ""),',
+    // A held forward's original (/approval-original): a body already decoded.
+    'preview: tidyPreview(message.body_text ?? ""),',
     // IMAP: `cleanPreviewFromBodyPart` already decoded the entities, once.
     // A second decode here is what turned `&amp;lt;` into `<`.
     "preview: tidyPreview(s.preview),",
