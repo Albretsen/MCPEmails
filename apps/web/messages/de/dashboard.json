@@ -1374,7 +1374,7 @@
     "trust": {
       "headline": "Automatisierungen löschen nie E-Mails.",
       "neverDeletes": "Sie können E-Mails nur verschieben, mit Labels versehen oder als gelesen markieren, und jede Änderung wird pro Nachricht protokolliert.",
-      "forwardApproval": "Weiterleitungen warten immer auf die Freigabe durch eine Person, und Antworten werden nur als Entwurf gespeichert."
+      "forwardApproval": "Eine Weiterleitung wartet auf die Freigabe durch eine Person, außer eine Regel ohne Freigabe unten deckt alle ihre Adressen ab, und Antworten werden nur als Entwurf gespeichert."
     },
     "empty": {
       "title": "Noch keine Automatisierungen",

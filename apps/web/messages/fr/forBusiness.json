@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Routine",
         "h": "Mettez la routine en pilote automatique",
-        "p": "Les tâches récurrentes peuvent tourner sous forme d'<b>automatisations de tri</b> : une recherche enregistrée plus une action fixe (déplacer, étiqueter, marquer comme lu, transférer ou rédiger une réponse) à intervalle régulier, sans aucun modèle d'IA dans la boucle. Une automatisation ne peut jamais supprimer de courrier, et un transfert qu'elle met en file attend toujours votre approbation."
+        "p": "Les tâches récurrentes peuvent tourner sous forme d'<b>automatisations de tri</b> : une recherche enregistrée plus une action fixe (déplacer, étiqueter, marquer comme lu, transférer ou rédiger une réponse) à intervalle régulier, sans aucun modèle d'IA dans la boucle. Une automatisation ne peut jamais supprimer de courrier, et un transfert qu'elle met en file attend votre approbation, sauf si vous avez autorisé cette adresse précise."
       }
     }
   },

@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Routine",
         "h": "Put the routine on a schedule",
-        "p": "Recurring chores can run as <b>triage automations</b>: a saved search plus one fixed action (move, label, mark as read, forward or draft a reply) on a cadence, with no AI model in the loop. An automation can never delete mail, and a forward it queues always waits for your approval."
+        "p": "Recurring chores can run as <b>triage automations</b>: a saved search plus one fixed action (move, label, mark as read, forward or draft a reply) on a cadence, with no AI model in the loop. An automation can never delete mail, and a forward it queues waits for your approval unless you have allowed that exact address."
       }
     }
   },

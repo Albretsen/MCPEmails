@@ -1374,7 +1374,7 @@
     "trust": {
       "headline": "Automatiseringer sletter aldri e-post.",
       "neverDeletes": "De kan bare flytte, merke eller markere som lest, og hver endring loggføres melding for melding.",
-      "forwardApproval": "Videresending venter alltid på at et menneske godkjenner den, og et svar lagres bare som utkast."
+      "forwardApproval": "En videresending venter på at et menneske godkjenner den, med mindre en regel uten godkjenning nedenfor dekker alle adressene, og et svar lagres bare som utkast."
     },
     "empty": {
       "title": "Ingen automatiseringer ennå",
