@@ -547,7 +547,8 @@ function describeAction(action, t, onApprovalHelp) {
   if (action.type === 'forward') {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ overflowWrap: 'anywhere' }}>
+        {/* break-word, not anywhere: the column grows to fit one address whole. */}
+        <span style={{ overflowWrap: 'break-word' }}>
           {t('automations.actionSummary.forward', { address: Array.isArray(action.to) ? action.to.join(', ') : '' })}
         </span>
         <button
