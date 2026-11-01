@@ -12,6 +12,7 @@ import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { shouldStampDeviceOnDashboard, stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
 import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
+import { stampArabicGuideBrowserLanguage } from '@/lib/acquisition-browser-language';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -833,8 +834,10 @@ export default async function DashboardPage({ params, searchParams }) {
     const requestHeaders = await headers();
     const device = deviceClassFromHeaders(requestHeaders);
     const country = countryFromHeaders(requestHeaders);
+    const acceptLanguage = requestHeaders.get('accept-language');
     after(() => stampAcquisitionDevice(createServiceRoleClient(), { ownerId: user.id, device }));
     after(() => stampAcquisitionCountry(createServiceRoleClient(), { ownerId: user.id, country }));
+    after(() => stampArabicGuideBrowserLanguage(createServiceRoleClient(), { ownerId: user.id, acceptLanguage }));
   }
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
