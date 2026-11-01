@@ -76,6 +76,8 @@ export type SubscriptionFacts = {
    * `taxInclusiveRatio` for how kiosk-revenue.ts fills it.
    */
   taxInclusiveRatio?: number;
+  /** Stripe's recurring interval: 'month' or 'year'. Splits out `monthlyBilledChurnRate`. */
+  billingInterval: string;
   /** Plan and interval as a person would say it, or 'Other'. */
   planLabel: string;
   /** One of our own accounts rather than a customer's. */
@@ -163,6 +165,9 @@ export function pausedNow(
   return !Number.isFinite(from) || from === 0 || from <= nowSeconds;
 }
 
+/** Average month length, for the subscriber-month churn denominator. */
+const DAYS_PER_MONTH = 30.44;
+
 /** Statuses where the money is live but not arriving. */
 const AT_RISK_STATUSES = new Set(['past_due', 'unpaid']);
 
@@ -221,15 +226,24 @@ export type RevenueSummary = {
   cancelledCustomers: number;
   cancelledMrrMinor: number;
   /**
-   * Everyone who paid us at any point in the window: the churn denominator.
-   * Paying at the start plus everyone new, so a window that starts with zero
-   * customers still has an honest base instead of a division by zero.
+   * The churn denominator: subscriber-months actually at risk inside the
+   * window, stopping at the day each customer pressed cancel. See
+   * `subscriberMonths` for why this is not a head count.
    */
-  churnBaseCustomers: number;
-  churnBaseMrrMinor: number;
-  /** cancelled / base, 0..1, null when nobody paid in the window. */
+  churnSubscriberMonths: number;
+  /** The same exposure weighted by what each customer pays. */
+  churnMrrMonthsMinor: number;
+  /** cancelled per subscriber-month, 0..1+, null when nobody was at risk. */
   customerChurnRate: number | null;
   revenueChurnRate: number | null;
+  /**
+   * The same rate on monthly-billed subscriptions alone. Annual plans cannot
+   * lapse until their first renewal, so they sit in the rate above as months
+   * nobody could have left in. This is the figure to plan on until they renew.
+   */
+  monthlyBilledCancelled: number;
+  monthlyBilledSubscriberMonths: number;
+  monthlyBilledChurnRate: number | null;
   /**
    * The movement rail's rows, with every customer on at most one of them.
    * The fields above overlap on purpose (a cancel scheduled inside the window
@@ -443,9 +457,16 @@ export function summarizeSubscriptions(
   const cancelled = base.filter(
     (row) => row.sub.canceledAt !== null && row.sub.canceledAt >= windowStart && row.sub.canceledAt <= nowSeconds,
   );
-  const baseMrrMinor = Math.round(sum(base.map((row) => row.monthly)));
   const movements = disjointMovements(paying, churned, windowStart);
   const cancelledMrrMinor = Math.round(sum(cancelled.map((row) => row.monthly)));
+
+  const exposed = base.filter((row) => row.sub.paused !== true);
+  const monthsAtRisk = (sub: SubscriptionFacts) => subscriberMonths(sub, windowStart, nowSeconds);
+  const churnSubscriberMonths = sum(exposed.map((row) => monthsAtRisk(row.sub)));
+  const churnMrrMonthsMinor = sum(exposed.map((row) => row.monthly * monthsAtRisk(row.sub)));
+  const monthlyBilled = (row: { sub: SubscriptionFacts }) => row.sub.billingInterval === 'month';
+  const monthlyBilledCancelled = cancelled.filter(monthlyBilled).length;
+  const monthlyBilledSubscriberMonths = sum(exposed.filter(monthlyBilled).map((row) => monthsAtRisk(row.sub)));
 
   return {
     currency: 'usd',
@@ -467,16 +488,36 @@ export function summarizeSubscriptions(
     netNewMrrMinor: newMrrMinor - churnedMrrMinor,
     cancelledCustomers: cancelled.length,
     cancelledMrrMinor,
-    churnBaseCustomers: base.length,
-    churnBaseMrrMinor: baseMrrMinor,
-    customerChurnRate: base.length > 0 ? cancelled.length / base.length : null,
-    revenueChurnRate: baseMrrMinor > 0 ? cancelledMrrMinor / baseMrrMinor : null,
+    churnSubscriberMonths,
+    churnMrrMonthsMinor,
+    customerChurnRate: churnSubscriberMonths > 0 ? cancelled.length / churnSubscriberMonths : null,
+    revenueChurnRate: churnMrrMonthsMinor > 0 ? cancelledMrrMinor / churnMrrMonthsMinor : null,
+    monthlyBilledCancelled,
+    monthlyBilledSubscriberMonths,
+    monthlyBilledChurnRate: monthlyBilledSubscriberMonths > 0 ? monthlyBilledCancelled / monthlyBilledSubscriberMonths : null,
     movements,
     byPlan: groupByPlan(paying),
     internalCustomers: subscriptions.filter((sub) => sub.internal && LIVE_STATUSES.has(sub.status)).length,
     byCurrency: groupByCurrency(livePriced.filter((row) => row.native > 0)),
     otherCurrencies,
   };
+}
+
+/**
+ * How long a subscription was at risk of cancelling inside the window, in
+ * months: from when it started (or the window did) to when its customer pressed
+ * cancel (or now).
+ *
+ * WHY NOT DIVIDE BY A HEAD COUNT. Stripe's churn, and this board until
+ * 2026-11-01, is cancelled / (paying at the start + everyone new). In a business
+ * growing fast most of that base signed up days ago. They inflate the denominator
+ * with customers who have had almost no time to leave, which read about half the
+ * per-subscriber-month rate, and the gap widens the faster sales grow.
+ */
+function subscriberMonths(sub: SubscriptionFacts, windowStart: number, nowSeconds: number): number {
+  const from = Math.max(windowStart, sub.createdAt);
+  const to = Math.min(nowSeconds, sub.canceledAt ?? nowSeconds, sub.endedAt ?? nowSeconds);
+  return Math.max(0, to - from) / (DAYS_PER_MONTH * 86_400);
 }
 
 /**

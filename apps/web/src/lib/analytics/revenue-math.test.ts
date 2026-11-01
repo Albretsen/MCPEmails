@@ -29,6 +29,7 @@ function sub(overrides: Partial<SubscriptionFacts> = {}): SubscriptionFacts {
     currency: 'usd',
     grossMonthlyMinor: 2900,
     discount: NO_DISCOUNT,
+    billingInterval: 'month',
     planLabel: 'Pro monthly',
     internal: false,
     ...overrides,
@@ -153,13 +154,13 @@ test('REGRESSION: no live subscription is dropped from MRR because of its curren
   const summary = summarizeSubscriptions(subs, WINDOW);
   assert.equal(summary.payingCustomers, codes.length);
   assert.equal(summary.newCustomers, codes.length);
-  assert.equal(summary.churnBaseCustomers, codes.length);
+  assert.ok(Math.abs(summary.churnSubscriberMonths - (codes.length * 5) / 30.44) < 1e-9);
   assert.equal(summary.byCurrency.length, codes.length);
   assert.deepEqual(summary.otherCurrencies, []);
   const expected = codes.reduce((total, code) => total + 900 * (usdPerUnit(code, monthOf(NOW)) ?? NaN), 0);
   assert.equal(summary.mrrMinor, Math.round(expected));
   assert.equal(summary.newMrrMinor, Math.round(expected));
-  assert.equal(summary.churnBaseMrrMinor, Math.round(expected));
+  assert.ok(Math.abs(summary.churnMrrMonthsMinor - (expected * 5) / 30.44) < 1e-6);
 });
 
 test('a currency with no rate is named, not counted as zero', () => {
@@ -206,7 +207,9 @@ test('churn converts at the rate of the month billing stopped', () => {
   assert.equal(summary.mrrMinor, Math.round(1000 * octoberRate));
   assert.equal(summary.churnedMrrMinor, Math.round(1000 * marchRate));
   assert.equal(summary.movements.stopped.mrrMinor, Math.round(1000 * marchRate));
-  assert.equal(summary.churnBaseMrrMinor, Math.round(1000 * octoberRate + 1000 * marchRate));
+  const goneDays = (ended - DAY - (now - 365 * DAY)) / DAY;
+  const mrrMonths = (1000 * octoberRate * 365 + 1000 * marchRate * goneDays) / 30.44;
+  assert.ok(Math.abs(summary.churnMrrMonthsMinor - mrrMonths) < 1e-6);
   assert.equal(summary.cancelledCustomers, 1);
 });
 
@@ -391,7 +394,7 @@ test('a cancel scheduled through cancel_at counts as set to stop, not only the b
   assert.equal(scheduledToStop({ cancel_at_period_end: false, cancel_at: null }), false);
 });
 
-test('cancelled counts the click, churn rate divides by everyone who paid in the window', () => {
+test('cancelled counts the click, churn rate divides by subscriber-months at risk', () => {
   const summary = summarizeSubscriptions(
     [
       // Pressed cancel 5 days ago, still paying until period end.
@@ -413,12 +416,61 @@ test('cancelled counts the click, churn rate divides by everyone who paid in the
   );
   assert.equal(summary.cancelledCustomers, 2);
   assert.equal(summary.cancelledMrrMinor, 2000);
-  assert.equal(summary.churnBaseCustomers, 4);
-  assert.equal(summary.churnBaseMrrMinor, 4000);
-  assert.equal(summary.customerChurnRate, 0.5);
-  assert.equal(summary.revenueChurnRate, 0.5);
+  // Days at risk: leaving 23, gone 18, a 28, b 2.
+  const months = (days: number) => days / 30.44;
+  assert.ok(Math.abs(summary.churnSubscriberMonths - months(71)) < 1e-9);
+  assert.ok(Math.abs(summary.customerChurnRate! - 2 / months(71)) < 1e-9);
+  const mrrMonths = months(23) * 500 + months(18) * 1500 + months(28) * 500 + months(2) * 1500;
+  assert.ok(Math.abs(summary.churnMrrMonthsMinor - mrrMonths) < 1e-6);
+  assert.ok(Math.abs(summary.revenueChurnRate! - 2000 / mrrMonths) < 1e-9);
   assert.equal(summary.leavingCustomers, 1);
   assert.equal(summary.churnedCustomers, 1);
+});
+
+test('customers signed up days ago barely dilute churn, however many there are', () => {
+  const old = [
+    sub({ id: 'gone', status: 'canceled', canceledAt: NOW - DAY, endedAt: NOW - DAY }),
+    ...Array.from({ length: 9 }, (_, i) => sub({ id: `old${i}` })),
+  ];
+  const fresh = Array.from({ length: 90 }, (_, i) => sub({ id: `new${i}`, createdAt: NOW - DAY }));
+  const before = summarizeSubscriptions(old, WINDOW).customerChurnRate!;
+  const after = summarizeSubscriptions([...old, ...fresh], WINDOW).customerChurnRate!;
+  // A head count would have cut this tenfold.
+  assert.ok(after > before * 0.5, `${after} against ${before}`);
+});
+
+test('a cancel from before the window stops counting as exposure and as churn', () => {
+  const summary = summarizeSubscriptions(
+    [
+      sub({ id: 'notice', cancelAtPeriodEnd: true, canceledAt: NOW - 40 * DAY }),
+      sub({ id: 'stays' }),
+    ],
+    WINDOW,
+  );
+  assert.equal(summary.cancelledCustomers, 0);
+  assert.ok(Math.abs(summary.churnSubscriberMonths - 28 / 30.44) < 1e-9);
+});
+
+test('monthly-billed churn leaves out annual plans, which cannot lapse yet', () => {
+  const summary = summarizeSubscriptions(
+    [
+      sub({ id: 'm-gone', status: 'canceled', canceledAt: NOW, endedAt: NOW }),
+      sub({ id: 'm' }),
+      sub({ id: 'y1', billingInterval: 'year' }),
+      sub({ id: 'y2', billingInterval: 'year' }),
+    ],
+    WINDOW,
+  );
+  const months = 28 / 30.44;
+  assert.equal(summary.monthlyBilledCancelled, 1);
+  assert.ok(Math.abs(summary.monthlyBilledSubscriberMonths - 2 * months) < 1e-9);
+  assert.ok(Math.abs(summary.monthlyBilledChurnRate! - 1 / (2 * months)) < 1e-9);
+  assert.ok(Math.abs(summary.customerChurnRate! - 1 / (4 * months)) < 1e-9);
+});
+
+test('a paused subscription is not at risk while it bills nothing', () => {
+  const summary = summarizeSubscriptions([sub({ id: 'p', paused: true }), sub({ id: 'a' })], WINDOW);
+  assert.ok(Math.abs(summary.churnSubscriberMonths - 28 / 30.44) < 1e-9);
 });
 
 test('churn rate is null, not zero, when nobody paid in the window', () => {

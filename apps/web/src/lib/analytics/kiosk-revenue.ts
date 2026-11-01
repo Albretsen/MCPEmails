@@ -220,6 +220,7 @@ export function subscriptionFacts(
     grossMonthlyMinor,
     discount: discountFacts(subscription, interval, intervalCount, priced.currency),
     ...(ratio === undefined ? {} : { taxInclusiveRatio: ratio }),
+    billingInterval: interval,
     planLabel: planLabel(first),
     internal: isInternalAccount(customerEmail(subscription.customer)),
     paused: pausedNow(subscription, Math.floor(Date.now() / 1000)),
