@@ -32870,7 +32870,9 @@ async function executeSearchContacts(
  *
  * Returns null when the feature is not visible to this workspace: the caller
  * then runs the ordinary executor, which answers "all" exactly as it always
- * did. Visible but not on Pro or Business: the standard Pro refusal.
+ * did. Visible but not on Pro or Business: the standard Pro refusal, unless the
+ * key can only see one inbox. "All" of one inbox is an ordinary search of it, so
+ * there is nothing to upgrade for and the call runs on any plan.
  *
  * Inboxes come from the same enumeration contact_search uses, then are held
  * to resolveInbox's own allowlist rule, so "all" is never wider than what the
@@ -32889,19 +32891,32 @@ async function executeCrossInbox(
 ): Promise<ExecutorOutcome | null> {
   const access = await proFeatureAccess(apiKey);
   if (!access.visible) return null;
-  if (!access.allowed) {
-    return {
-      result: await proFeatureRefusalToolResult(apiKey, "cross_inbox_search", access),
-      logStatus: "error",
-      logErrorCode: PRO_FEATURE_ERROR_CODE,
-    };
-  }
 
   const toolError = (text: string, code = "-32602"): ExecutorOutcome => ({
     result: { content: [{ type: "text", text }], isError: true },
     logStatus: "error",
     logErrorCode: code,
   });
+
+  const { data, error } = await accessibleActiveInboxes(apiKey);
+  if (error) {
+    console.error("[mcp-server] cross_inbox: inbox_enumeration_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return toolError(`${dispatchName}: failed to enumerate inboxes.`, "db_error");
+  }
+  const allowed = (data ?? []).filter((inbox) =>
+    apiKey.inbox_ids === null || apiKey.inbox_ids.includes(inbox.id)
+  );
+
+  if (!access.allowed && allowed.length !== 1) {
+    return {
+      result: await proFeatureRefusalToolResult(apiKey, "cross_inbox_search", access),
+      logStatus: "error",
+      logErrorCode: PRO_FEATURE_ERROR_CODE,
+    };
+  }
 
   if (typeof rawArgs["inbox"] === "string" && rawArgs["inbox"].trim() !== "") {
     return toolError(
@@ -32925,18 +32940,6 @@ async function executeCrossInbox(
     if (!built.ok) return invalidSearchDateError(built.badDate, "email_search");
     if (built.empty) return noSearchCriterionError("email_search");
   }
-
-  const { data, error } = await accessibleActiveInboxes(apiKey);
-  if (error) {
-    console.error("[mcp-server] cross_inbox: inbox_enumeration_failed", {
-      workspace_id: apiKey.workspace_id,
-      error: error.message,
-    });
-    return toolError(`${dispatchName}: failed to enumerate inboxes.`, "db_error");
-  }
-  const allowed = (data ?? []).filter((inbox) =>
-    apiKey.inbox_ids === null || apiKey.inbox_ids.includes(inbox.id)
-  );
 
   const legs: CrossInboxLeg[] = [];
   const runnable: InboxRow[] = [];

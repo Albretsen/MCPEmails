@@ -90,9 +90,15 @@ const key = (overrides: Record<string, unknown> = {}) => ({ ...harness.API_KEY, 
 async function run(
   tool: string,
   args: Record<string, unknown>,
-  opts: { rows?: Record<string, unknown[]>; mail?: Mailboxes; fail?: Record<string, number>; apiKey?: unknown } = {},
+  opts: {
+    rows?: Record<string, unknown[]>;
+    mail?: Mailboxes;
+    fail?: Record<string, number>;
+    apiKey?: unknown;
+    connected?: ("a" | "b" | "c")[];
+  } = {},
 ) {
-  const inboxes = [await gmailInbox("a"), await gmailInbox("b"), await gmailInbox("c")];
+  const inboxes = await Promise.all((opts.connected ?? ["a", "b", "c"]).map(gmailInbox));
   const { value, world } = await harness.runToolWithInboxes(
     inboxes,
     gmail(opts.mail ?? MAIL, opts.fail),
@@ -196,6 +202,42 @@ Deno.test("visible but not on Pro or Business: the standard Pro refusal, no mail
     assertStringIncludes(outcome.result.content[0].text, "Search across all inboxes is part of the Pro and Business plans.");
     assertEquals(world.calls.length, 0, plan);
   }
+});
+
+Deno.test("not on Pro with one inbox connected: all reads that inbox, no refusal", async () => {
+  for (const plan of ["free", "personal"]) {
+    for (const [tool, args] of [
+      ["email_list", { inbox_id: "all" }],
+      ["email_search", { inbox_id: "all", subject: "hello" }],
+    ] as const) {
+      const { outcome, world } = await run(tool, args, { rows: gate(plan), connected: ["a"] });
+      assertEquals(outcome.logStatus, "success", `${plan} ${tool}`);
+      assertEquals(outcome.logErrorCode, null);
+      assertEquals(outcome.result.isError, false);
+      const body = outcome.result.structuredContent!;
+      assertEquals((body.messages as Record<string, unknown>[]).map((m) => m.inbox_id), [IDS.a, IDS.a, IDS.a]);
+      assertEquals([...tokensAsked(world)], ["token-a"]);
+    }
+  }
+});
+
+Deno.test("not on Pro with a key limited to one of several inboxes: all reads that one", async () => {
+  const { outcome, world } = await run("email_list", { inbox_id: "all" }, {
+    rows: gate("personal"),
+    apiKey: key({ inbox_ids: [IDS.b] }),
+  });
+  assertEquals(outcome.logErrorCode, null);
+  assertEquals((outcome.result.structuredContent!.inboxes as Record<string, unknown>[]).map((i) => i.inbox_id), [IDS.b]);
+  assertEquals(tokensAsked(world).has("token-a"), false);
+});
+
+Deno.test("not on Pro with a key limited to two inboxes: still the Pro refusal", async () => {
+  const { outcome, world } = await run("email_list", { inbox_id: "all" }, {
+    rows: gate("personal"),
+    apiKey: key({ inbox_ids: [IDS.a, IDS.b] }),
+  });
+  assertEquals(outcome.logErrorCode, PRO_FEATURE_ERROR_CODE);
+  assertEquals(world.calls.length, 0);
 });
 
 Deno.test("not visible: all is answered exactly as before the feature existed", async () => {

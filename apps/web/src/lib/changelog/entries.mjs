@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-01',
+    kind: 'fixed',
+    title: 'Searching all inboxes works with one inbox',
+    body:
+      "When your AI app asks to list or search all inboxes and you have one connected, it now reads that inbox. Before, the request came back with a plan notice and the app had to ask again.",
+  },
+  {
     date: '2026-10-31',
     kind: 'fixed',
     title: 'Replies follow the Reply-To address',
