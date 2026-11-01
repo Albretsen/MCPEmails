@@ -711,6 +711,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             <strong>{t('enterprise.title')}</strong>{' '}
             {t.rich('enterprise.body', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
+              dpa: (chunks) => <Link href="/dpa">{chunks}</Link>,
             })}
           </p>
         </div>
