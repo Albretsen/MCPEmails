@@ -6,6 +6,7 @@ import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
 import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
+import { stampArabicGuideBrowserLanguage } from '@/lib/acquisition-browser-language';
 import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
@@ -211,6 +212,13 @@ export async function GET(request: Request) {
       await stampAcquisitionCountry(service, {
         ownerId: user.id,
         country: countryFromHeaders(request.headers),
+      });
+
+      // The browser language, only for a signup that landed on the Arabic guide.
+      // After the attribution write above, which is what it reads. Never throws.
+      await stampArabicGuideBrowserLanguage(service, {
+        ownerId: user.id,
+        acceptLanguage: request.headers.get('accept-language'),
       });
     }
   }
