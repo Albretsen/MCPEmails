@@ -458,17 +458,17 @@ export async function MoneySection({ days }: { days: number }) {
                   : 'unavailable',
               },
               {
-                label: 'Monthly plans churn, per month',
+                label: 'Monthly plans churn/month',
                 value: mrr ? monthlyChurn(mrr.monthlyBilledChurnRate, mrr.monthlyBilledSubscriberMonths) : NO_DATA,
                 note: mrr
                   ? `${formatCount(mrr.monthlyBilledCancelled)} cancelled in ${formatCount(Math.round(mrr.monthlyBilledSubscriberMonths))} subscriber-months`
                   : 'Stripe unavailable',
               },
               {
-                label: 'All plans churn, per month',
+                label: 'All plans churn/month',
                 value: mrr ? monthlyChurn(mrr.customerChurnRate, mrr.churnSubscriberMonths) : NO_DATA,
                 note: mrr
-                  ? `${formatCount(mrr.cancelledCustomers)} in ${formatCount(Math.round(mrr.churnSubscriberMonths))} subscriber-months · revenue ${monthlyChurn(mrr.revenueChurnRate, mrr.churnSubscriberMonths)}`
+                  ? `revenue ${monthlyChurn(mrr.revenueChurnRate, mrr.churnSubscriberMonths)} · ${formatCount(mrr.cancelledCustomers)} in ${formatCount(Math.round(mrr.churnSubscriberMonths))} sub-months`
                   : 'Stripe unavailable',
               },
             ]}
