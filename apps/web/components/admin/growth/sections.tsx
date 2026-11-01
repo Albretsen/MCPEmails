@@ -357,6 +357,17 @@ function rate(numerator: number, denominator: number): string {
   return formatPercent(numerator / denominator, 1);
 }
 
+/**
+ * A per-month churn rate. Under ten subscriber-months one cancel swings it by
+ * more than ten points, so it says so rather than printing a precise-looking
+ * figure.
+ */
+function monthlyChurn(value: number | null, subscriberMonths: number): string {
+  if (value == null) return NO_DATA;
+  if (subscriberMonths < 10) return 'too few';
+  return formatPercent(value, 1);
+}
+
 /** One MRR movement row. Churn is passed negative so it reads as a loss. */
 function move(
   key: string,
@@ -447,28 +458,26 @@ export async function MoneySection({ days }: { days: number }) {
                   : 'unavailable',
               },
               {
-                label: `Customer churn, ${days}d`,
-                value: mrr?.customerChurnRate != null
-                  ? rate(mrr.cancelledCustomers, mrr.churnBaseCustomers)
-                  : NO_DATA,
+                label: 'Monthly plans churn, per month',
+                value: mrr ? monthlyChurn(mrr.monthlyBilledChurnRate, mrr.monthlyBilledSubscriberMonths) : NO_DATA,
                 note: mrr
-                  ? `${formatCount(mrr.cancelledCustomers)} of ${formatCount(mrr.churnBaseCustomers)} cancelled`
+                  ? `${formatCount(mrr.monthlyBilledCancelled)} cancelled in ${formatCount(Math.round(mrr.monthlyBilledSubscriberMonths))} subscriber-months`
                   : 'Stripe unavailable',
               },
               {
-                label: `Revenue churn, ${days}d`,
-                value: mrr?.revenueChurnRate != null
-                  ? rate(mrr.cancelledMrrMinor, mrr.churnBaseMrrMinor)
-                  : NO_DATA,
+                label: 'All plans churn, per month',
+                value: mrr ? monthlyChurn(mrr.customerChurnRate, mrr.churnSubscriberMonths) : NO_DATA,
                 note: mrr
-                  ? `${formatMoney(mrr.cancelledMrrMinor, mrr.currency)} of ${formatMoney(mrr.churnBaseMrrMinor, mrr.currency)} MRR`
+                  ? `${formatCount(mrr.cancelledCustomers)} in ${formatCount(Math.round(mrr.churnSubscriberMonths))} subscriber-months · revenue ${monthlyChurn(mrr.revenueChurnRate, mrr.churnSubscriberMonths)}`
                   : 'Stripe unavailable',
               },
             ]}
           />
           <p className="kiosk-big-caption">
             Churn counts a customer on the day they pressed cancel, including cancels that only take effect at
-            the end of the period, out of everyone who paid at any point in the window. Signup → paid follows the
+            the end of the period, per month a customer was actually subscribed in the window. Stripe divides by
+            a head count that includes everyone new, so it reads lower while sales grow. Annual plans have not
+            reached a renewal, so monthly plans are the figure to plan on. Signup → paid follows the
             window&apos;s signup cohort, which is young and will keep converting.
           </p>
         </Tile>
