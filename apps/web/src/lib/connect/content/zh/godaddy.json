@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 GoDaddy 邮箱连接到 Claude、Cursor 与 MCP",
+    "title": "将 GoDaddy 邮箱连接到 Claude、ChatGPT 与 MCP",
     "description": "通过 imap.secureserver.net:993 的 IMAP 将 GoDaddy Professional Email 连接到 Claude 及任意 MCP 客户端。通过 GoDaddy 购买的 Microsoft 365 邮箱请用 Outlook 连接。"
   },
   "hero": {

@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Hostinger 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Hostinger 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过 imap.hostinger.com:993 的 IMAP 将 Hostinger Email 连接到 Claude、Cursor 及任意 MCP 客户端。基于 Titan 的 Business Email 使用完全不同的服务器。"
   },
   "hero": {

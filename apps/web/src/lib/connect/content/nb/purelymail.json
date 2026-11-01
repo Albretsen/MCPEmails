@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Purelymail til Claude, Cursor og MCP-klienter",
+    "title": "Koble Purelymail til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Purelymail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP på imap.purelymail.com:993 med postkassepassordet. Én innboks gratis, for alltid."
   },
   "hero": {

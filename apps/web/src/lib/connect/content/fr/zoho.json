@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez Zoho Mail à Claude, Cursor et aux clients MCP",
+    "title": "Connectez Zoho Mail à Claude, ChatGPT et aux clients MCP",
     "description": "Connectez Zoho Mail à Claude, Cursor et tout client MCP en IMAP sur imap.zoho.com:993. L'IMAP est désactivé par défaut et le serveur dépend de votre centre Zoho."
   },
   "hero": {
