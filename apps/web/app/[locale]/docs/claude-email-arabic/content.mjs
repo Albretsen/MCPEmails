@@ -14,7 +14,8 @@
 //     (connect.*) and messages/en/auth.json.
 //   - Claude only. Whether ChatGPT Plus and Go can add a custom MCP server is
 //     unsettled, so ChatGPT is not named here until someone has tested it.
-//   - Any change to the Arabic goes back to the native reviewer before it ships.
+//   - The Arabic was reviewed by Fable (an AI) on 2026-11-01, not by a native
+//     speaker, and the owner accepted that for this test.
 //
 // Only `code`, **bold** and [text](url) are understood by the page's renderer.
 
@@ -65,10 +66,11 @@ export const copy = {
       lead: 'تناسب هذه الطريقة بريد الشركة على استضافة خاصة وأي خدمة بريد تدعم IMAP وSMTP. احصل على إعدادات الخادم من مزوّد البريد قبل أن تبدأ.',
       ordered: true,
       items: [
-        'في صفحة **Inboxes** اضغط على **Connect inbox**، ثم اختر **IMAP / SMTP**.',
+        'في صفحة **Inboxes** اضغط على **Connect inbox**، ثم اختر **IMAP / SMTP** واضغط على **Enter credentials**.',
         'اكتب عنوان بريدك في **Email address**، ثم تحقق من **IMAP host** و**IMAP port** و**SMTP host** و**SMTP port** واملأ ما لم يُملأ تلقائيًا. وتستخدم معظم الخدمات المنفذ `993` للاستقبال والمنفذ `465` أو `587` للإرسال.',
         'اكتب كلمة المرور في **Password**. وإذا كان مزوّدك يتيح كلمات مرور التطبيقات فاستخدم إحداها، إذ يمكنك إلغاؤها دون تغيير كلمة مرور حسابك.',
         'إذا كان اسم المستخدم يختلف عن عنوان البريد، فافتح **Advanced settings** واكتبه في **Username (optional)**.',
+        'اضغط على **Connect inbox** لإتمام الربط.',
       ],
     },
     {

@@ -1,5 +1,5 @@
-// Structural checks for the Arabic setup guide. The Arabic itself is checked by
-// a native reviewer; these pin the rules a reviewer should not have to police.
+// Structural checks for the Arabic setup guide. These pin the rules a language
+// review should not have to police.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -49,7 +49,7 @@ test('MCPEmails labels in the steps are the strings the product renders', () => 
   const scopes = JSON.stringify(read('auth'));
   const labels = [
     inboxes.title, inboxes.connectInbox,
-    connect.connectWithMicrosoft, connect.genericLabel, connect.emailLabel,
+    connect.connectWithMicrosoft, connect.enterCredentials, connect.genericLabel, connect.emailLabel,
     connect.imapHostLabel, connect.imapPortLabel, connect.smtpHostLabel, connect.smtpPortLabel,
     connect.passwordLabel, connect.advancedToggle, connect.usernameLabel,
   ];

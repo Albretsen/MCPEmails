@@ -1,8 +1,8 @@
 -- ============================================================
 -- Read-out of the Arabic setup guide test (/docs/claude-email-arabic).
 --
--- READ ONLY. Only aggregate counts come out. Run 90 days after the page went
--- live, with the start date below set to the day it landed on main:
+-- READ ONLY. Only aggregate counts come out. Run on or after 2027-01-30, 90 days
+-- after the page went live:
 --   npx supabase db query --linked -f scripts/report-arabic-guide-test.sql
 --
 -- A signup counts when its first-touch landing path is the guide, within 90
@@ -19,7 +19,7 @@
 -- ============================================================
 
 WITH launch AS (
-  SELECT DATE '2026-11-01' AS started_on -- Set to the day the page landed on main.
+  SELECT DATE '2026-11-01' AS started_on -- The day the page landed on main.
 ),
 cohort AS (
   SELECT
