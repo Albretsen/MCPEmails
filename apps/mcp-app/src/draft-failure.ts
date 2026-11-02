@@ -74,8 +74,9 @@ export interface FailureNotice {
  * the code the card shows it under, or null when the result says nothing
  * certain (not an error, no text, a send whose delivery is unknown, or a
  * sentence that is not one of the server's refusals), which the caller then
- * treats as a lost answer. Only `draft{action}` answers are read this way: the
- * draft editor's own tools always answer with an envelope.
+ * treats as a lost answer. Only `draft{action}`, `draft_send` and `draft_delete`
+ * answers are read this way (same handlers, same sentences): the draft editor's
+ * own tools always answer with an envelope.
  *
  * These used to be "unreadable", i.e. a lost answer, and a send refused for
  * its quota read "the connection dropped while sending" with Send held off

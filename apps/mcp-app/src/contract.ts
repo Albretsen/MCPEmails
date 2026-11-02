@@ -468,6 +468,12 @@ export interface Envelope {
    * `true` and nothing else turns it on (diagnostics.ts#diagnosticsEnabled).
    */
   diagnostics?: boolean;
+  /**
+   * `true` or absent: this draft result came from a per-operation tool, so the
+   * host lists `draft_send` and `draft_delete` (draft-tools.ts). Set at the end
+   * of `tools/call` dispatch (mcp-server/card-tool-surface.ts).
+   */
+  per_operation_tools?: boolean;
   outbound?: Outbound;
   plan?: Plan;
   /** §9, on a `subscription_plan` card. */

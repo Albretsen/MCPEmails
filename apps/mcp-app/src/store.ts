@@ -31,6 +31,7 @@ import {
   plainResultReceipt,
 } from "./plain-result";
 import { announceDraft } from "./draft-signal";
+import { noteToolSurface } from "./draft-tools";
 import { draftShownContextLine } from "./model-context";
 
 /**
@@ -454,6 +455,7 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
 /** Everything an envelope goes through on its way in. See `classifyResult`. */
 function admit(env: Envelope, result: ToolResultParams): Envelope {
   const next = resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+  noteToolSurface(next);
   // A bulk result card's sample rides in result `_meta` (card-only); a host
   // that drops it just shows no sample.
   const rows = result._meta?.[BULK_SAMPLE_META_KEY];
