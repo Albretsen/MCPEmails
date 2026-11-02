@@ -189,8 +189,7 @@ Deno.test("the APP-ONLY paragraph names each card family for what it is, and dra
   assertEquals(
     appOnly,
     "APP-ONLY: `approval_*` (a held send), `bulk_*` (a bulk plan) and " +
-      "`draft_editor_save` back the in-chat cards. The host drives them, not " +
-      "you.",
+      "`draft_editor_save` back the in-chat cards. The host calls them.",
   );
   assert(!SERVER_INSTRUCTIONS.includes("draft_editor_hide"), "hide is the model's to call");
   // `draft_read` is NOT app-only: the model calls it. It belongs with the reads.
@@ -202,15 +201,14 @@ Deno.test("the APP-ONLY paragraph names each card family for what it is, and dra
   assert(!SERVER_INSTRUCTIONS.includes("\u2014"), "no em dash");
 });
 
-Deno.test("the DRAFTS paragraph tells a model to save a requested email as a draft", () => {
+Deno.test("the DRAFTS paragraph states that a saved draft is one the user can see and edit", () => {
   // 2026-10-25: asked to write an email, models wrote it in the chat and never
   // called a draft tool, so the draft editor card never appeared. Worded
   // without a tool name so it holds on both listings and on hosts with no card.
   const drafts = SERVER_INSTRUCTIONS.split("\n\n").find((p: string) => p.startsWith("DRAFTS:"));
   assertEquals(
     drafts,
-    "DRAFTS: save an email the user asks you to write as a draft, not only as " +
-      "chat text, so they can see and edit it.",
+    "DRAFTS: an email saved with `draft` is one the user can see and edit; chat text alone is not saved.",
   );
 });
 

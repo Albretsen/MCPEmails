@@ -553,7 +553,10 @@ Deno.test("index.ts claims the note on the MCP tools/call path only, scoped to t
 
   // draft_list too: it is where a model goes to look a draft up (re-test 2026-10-17).
   assert(
-    src.includes('"The user can edit, save and send a draft in the draft editor card without you " +'),
+    src.includes(
+      "The user can edit, save and send a draft in the draft editor card with no notice to this tool, " +
+        "so its current subject, recipients and sent state are what draft_read reports.",
+    ),
     "the draft_list description carries the re-read guidance",
   );
   // The `draft` tool tells the model the card can act without it, and to re-read.

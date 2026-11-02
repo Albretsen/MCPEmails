@@ -43,22 +43,22 @@ export const PER_OPERATION_REWORDINGS: ReadonlyArray<readonly [string, string]> 
   ],
   ["SEPARATE from email_organize, and flagged", "SEPARATE from email_move and email_move_batch, and flagged"],
   [
-    "use email_organize (action 'move' or 'move_batch') instead",
-    "use email_move or email_move_batch instead",
+    "email_organize (action 'move' or 'move_batch') is for",
+    "email_move and email_move_batch are for",
   ],
   [
-    "finish any remainder with email_organize (action 'move_batch')",
-    "finish any remainder with email_move_batch",
+    "email_organize (action 'move_batch') takes the remainder",
+    "email_move_batch takes the remainder",
   ],
   ["the same cap as email_read action: read_batch", "the same cap as email_read_batch"],
   [
-    "as the 'folder' argument for email_read (action 'list'), and as source/destination " +
-    "for email_organize (action 'move')",
-    "as the 'folder' argument for email_list, and as source/destination for email_move",
+    "the 'folder' argument of email_read (action 'list') and the source/destination of " +
+    "email_organize (action 'move')",
+    "the 'folder' argument of email_list and the source/destination of email_move",
   ],
   [
-    "with draft_read or the draft tool (action 'update', 'send' or 'delete')",
-    "with draft_read, draft_update, draft_send or draft_delete",
+    "what draft_read and the draft tool (action 'update', 'send' or 'delete') take",
+    "what draft_read, draft_update, draft_send and draft_delete take",
   ],
   // draft_editor_save, one of the card's own tools: listed on both surfaces
   // from one definition, and its description compares itself to the update.
@@ -66,8 +66,11 @@ export const PER_OPERATION_REWORDINGS: ReadonlyArray<readonly [string, string]> 
     "unlike the draft tool's 'update' when it is given a body",
     "unlike draft_update when it is given a body",
   ],
-  ["Use the schedule tool (action 'cancel') with the returned `id`", "Use schedule_cancel with the returned `id`"],
-  ["Use the reminder tool with an `id` to mark one done or cancel it.", "Use reminder_done or reminder_cancel with an `id`."],
+  ["what the schedule tool (action 'cancel') takes", "what schedule_cancel takes"],
+  [
+    "The reminder tool takes an `id` from here to mark one done or cancel it.",
+    "reminder_done and reminder_cancel take an `id` from here.",
+  ],
   [
     "reference form is email_compose's, not this tool's",
     "reference form belongs to email_send, email_reply and email_forward, not to this tool",
