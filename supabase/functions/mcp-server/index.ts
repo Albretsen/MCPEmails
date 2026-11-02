@@ -258,6 +258,7 @@ import {
   stampDiagnostics,
 } from "./card-diagnostics.ts";
 import { readFlagWithOneRetry } from "./flag-read-retry.ts";
+import { stampToolSurface } from "./card-tool-surface.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_RULE_LINK_COLUMNS,
@@ -35888,6 +35889,13 @@ async function handleToolsCall(
   // See card-diagnostics.ts.
   await stampBulkResultCard(toolResult, apiKey, logCtx.bulkCard);
   await stampCardDiagnostics(toolResult, apiKey.workspace_id, ctx.cardDiagnostics);
+  // Which names this host lists, for the draft card's Send and Delete.
+  if ("result" in toolResult) {
+    stampToolSurface(
+      (toolResult.result as { structuredContent?: unknown } | undefined)?.structuredContent,
+      toolName,
+    );
+  }
 
   return toolResult;
 }
