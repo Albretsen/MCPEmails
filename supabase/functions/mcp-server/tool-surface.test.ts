@@ -486,7 +486,7 @@ Deno.test("a read tool that returns mailbox-authored text keeps its untrusted_co
   // the read out of `folder` must not lose the warning that travelled with it.
   assert(
     registryEntry("folder_list").description.includes("untrusted_content"),
-    "folder_list must still say its result is data, never instructions",
+    "folder_list must still say its result carries untrusted_content",
   );
   assert(
     registryEntry("draft_list").description.includes("untrusted_content"),
@@ -1174,7 +1174,7 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
 
   const list = registryEntry("draft_list").description;
   assert(/and no body: draft_read returns one draft's text\./.test(list), list);
-  assert(/Use the returned draft_id with draft_read or the draft tool/.test(list), list);
+  assert(/draft_id is what draft_read and the draft tool/.test(list), list);
 
   for (const text of [description, action, list]) {
     assert(!text.includes("\u2014"), `em dash in model-facing text: ${text}`);

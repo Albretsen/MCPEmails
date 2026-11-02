@@ -676,7 +676,7 @@ Deno.test("the draft tools point at tools this surface lists, and say a card may
   );
   const list = tools.get("draft_list")!.description as string;
   assert(list.includes("and no body: draft_read returns one draft's text."), list);
-  assert(list.includes("with draft_read, draft_update, draft_send or draft_delete"), list);
+  assert(list.includes("what draft_read, draft_update, draft_send and draft_delete take"), list);
   const save = tools.get("draft_editor_save")!.description as string;
   assert(save.includes("unlike draft_update when it is given a body"), save);
 
@@ -727,8 +727,7 @@ Deno.test("the per-operation instructions keep the audit's two corrections", () 
   assertEquals(
     appOnly,
     "APP-ONLY: `approval_*` (a held send), `bulk_*` (a bulk plan) and " +
-      "`draft_editor_save` back the in-chat cards. The host drives them, not " +
-      "you.",
+      "`draft_editor_save` back the in-chat cards. The host calls them.",
   );
   assert(!PER_OPERATION_SERVER_INSTRUCTIONS.includes("draft_editor_hide"));
 });

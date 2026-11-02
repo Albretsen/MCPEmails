@@ -2186,9 +2186,7 @@ export const SUBSCRIPTION_TOOL_DEFINITIONS: SubscriptionToolDefinition[] = [
       "by the server; senders that unsubscribe by email get a DRAFT in Drafts that the user sends " +
       "themselves (nothing is ever sent); link-only senders come back as a link for the user to open. " +
       "backlog \"archive\" also archives what those senders already sent. Only sender_keys from the plan " +
-      "are accepted, and each sender is asked once. Use continue: true with the same plan_id to finish " +
-      "archiving. When the scan's card is shown, the user picks and runs the cleanup on the card; call " +
-      "this tool only when the user named the senders in chat.",
+      "are accepted, and each sender is asked once. continue: true with the same plan_id finishes archiving. When the scan's card is shown, the user picks and runs the cleanup on the card; this tool is for senders the user named in chat.",
     // manage:folders covers the backlog step (it moves mail). The outbound
     // part has no scope of its own on purpose: send:email is reserved for
     // sending drafts (mcp-server CLAUDE.md) and an unsubscribe POST sends no
