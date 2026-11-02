@@ -10486,6 +10486,12 @@ const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
   // The automation card's switch, which can enable a rule. The card itself is
   // consolidated-only (mcp-app-resources.ts#AUTOMATION_CARD_TOOL_NAMES).
   AUTOMATION_CARD_TOOL,
+  // OpenAI's scan of 2026-11-02: "This new tool definition needs further review
+  // before it can be published." Same remedy as the automation tools above:
+  // not listed for OpenAI clients, still callable by name, unchanged for every
+  // other client.
+  "subscriptions_scan",
+  "subscriptions_cleanup",
 ]);
 
 /** Every per-operation tool, listed or not, in listing order. */
@@ -10514,9 +10520,16 @@ for (const tool of TOOL_REGISTRY) {
     // same rewording every other listed description does. Nothing else about
     // the entry changes, and a description with no such phrase comes back
     // identical.
+    // OpenAI's scan of 2026-11-02 read draft_editor_save as destructive: it
+    // overwrites a stored draft. Only this listing says so, as it does for
+    // signature_set and draft_update. The consolidated entry is a separate
+    // object and keeps false, so Claude's card save does not start to prompt.
     PER_OPERATION_TOOLS.push({
       ...tool,
       description: perOperationWording(tool.description) as string,
+      ...(tool.name === "draft_editor_save"
+        ? { annotations: { ...tool.annotations, destructiveHint: true } }
+        : {}),
     });
   }
 }

@@ -713,10 +713,26 @@ Deno.test("draft_read and draft_editor_hide follow the annotation rules every mo
   const hide = tools.get("draft_editor_hide")!.annotations as Record<string, unknown>;
   assertEquals(hide.readOnlyHint, false);
   assertEquals(hide.destructiveHint, true);
-  // Still app-only, and deliberately left false: see the open question on it
-  // in docs/openai-tool-annotation-justifications.md.
+  // App-only, and an overwrite of a stored draft: OpenAI's scan of 2026-11-02
+  // flagged false, so this listing says true. The consolidated listing (Claude
+  // and every other client) keeps false so the card's Save does not prompt.
   const save = tools.get("draft_editor_save")!.annotations as Record<string, unknown>;
-  assertEquals(save.destructiveHint, false);
+  assertEquals(save.destructiveHint, true);
+  assertEquals(save.readOnlyHint, false);
+  const consolidated = TOOL_REGISTRY.find((tool) => tool.name === "draft_editor_save")!;
+  assertEquals(consolidated.annotations?.destructiveHint, false);
+  assertEquals(consolidated.annotations?.readOnlyHint, false);
+});
+
+Deno.test("the subscription tools the scan flagged are unlisted for OpenAI, and still callable", async () => {
+  const listed = PER_OPERATION_LISTING.map((tool) => tool.name);
+  for (const name of ["subscriptions_scan", "subscriptions_cleanup"]) {
+    assert(!listed.includes(name), `${name} is listed to OpenAI clients`);
+    // Still registered for everyone else, and still resolvable by name.
+    assert(TOOL_REGISTRY.some((tool) => tool.name === name), `${name} left the registry`);
+    const response = await call(chatGpt(["read:email"]), name, {});
+    assert(response.error?.code !== -32601, `${name} became an unknown tool`);
+  }
 });
 
 Deno.test("the per-operation instructions keep the audit's two corrections", () => {
