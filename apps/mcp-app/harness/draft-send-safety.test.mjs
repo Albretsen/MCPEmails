@@ -1050,6 +1050,183 @@ async function main() {
     await c.done();
   }
 
+  // ── 9. ChatGPT lists one tool per operation, and refuses `draft` ─────────
+  //
+  // Live, 2026-11-02: Send pressed in ChatGPT went to its backend as tools/call
+  // `draft`, the backend answered 404 {"detail":"MCP Resource not found"}, and
+  // the call never reached the server. The card read it as a lost answer.
+
+  const NOT_LISTED = { error: { code: -32000, message: '{"detail":"MCP Resource not found"}' } };
+  const SAID_SO = { per_operation_tools: true };
+  const opCard = async (field = {}) => {
+    const c = await boot();
+    c.mod.setSendUndoMs(UNDO);
+    c.deliver(TOOL_INPUT);
+    c.push({ ...draftEnvelope(), ...field });
+    await settle();
+    return c;
+  };
+  const named = (c) => c.calls.map((x) => x.name);
+  const pressSend = async (c) => {
+    c.press(c.btn(/^Send$/));
+    await pastUndo();
+    await settle();
+  };
+  const pressDelete = async (c) => {
+    c.press(c.btn(/^Delete draft$/));
+    await settle();
+    c.press(c.btn(/^Yes, delete$/));
+    await settle();
+    await settle();
+  };
+
+  group("9a. A draft the server says came from a per-operation tool sends with draft_send");
+  {
+    const c = await opCard(SAID_SO);
+    c.tools.draft_send = () => sentResult();
+    await pressSend(c);
+    expectJson("one call, by the listed name", named(c), ["draft_send"]);
+    expect("no action argument: the tool has none", "action" in c.calls[0].args, false);
+    expect("base_revision still marks it as the card's send", Number.isInteger(c.calls[0].args.base_revision), true);
+    expect("with the draft and the inbox", `${c.calls[0].args.draft_id} ${c.calls[0].args.inbox_id}`, `Drafts:102 ${INBOX}`);
+    expect("and it ends on the receipt", c.mod.getState().envelope?.receipt?.outcome, "sent");
+    await c.done();
+  }
+
+  group("9b. And Delete draft with draft_delete");
+  {
+    const c = await opCard(SAID_SO);
+    c.tools.draft_delete = () => discardedResult();
+    await pressDelete(c);
+    expectJson("one call, by the listed name", named(c), ["draft_delete"]);
+    expect("no action argument", "action" in c.calls[0].args, false);
+    expect("base_revision marks it as the card's", Number.isInteger(c.calls[0].args.base_revision), true);
+    expect("and it ends on the receipt", c.mod.getState().envelope?.receipt?.outcome, "discarded");
+    await c.done();
+  }
+
+  group("9c. A host that lists `draft` is not touched: same name, same action");
+  {
+    const c = await opCard();
+    c.tools.draft = () => sentResult();
+    await pressSend(c);
+    expectJson("send", c.calls.map((x) => [x.name, x.args.action]), [["draft", "send"]]);
+    await c.done();
+    const d = await opCard();
+    d.tools.draft = () => discardedResult();
+    await pressDelete(d);
+    expectJson("delete", d.calls.map((x) => [x.name, x.args.action]), [["draft", "delete"]]);
+    await d.done();
+  }
+
+  group("9d. The signal survives a save, whose answer does not carry it");
+  {
+    const c = await opCard(SAID_SO);
+    c.tools.draft_editor_save = () => draftResult({ subject: "Edited", revision: 2 });
+    c.tools.draft_send = () => sentResult();
+    c.input("d-subject", "Edited");
+    await settle();
+    await pressSend(c);
+    expectJson("saved, then sent by the listed name", named(c), ["draft_editor_save", "draft_send"]);
+    await c.done();
+  }
+
+  group("9e. No signal (an older result): the host's own refusal is the only proof that allows a second name");
+  {
+    const c = await opCard();
+    c.tools.draft = () => NOT_LISTED;
+    c.tools.draft_send = () => sentResult();
+    await pressSend(c);
+    expectJson("`draft`, refused, then draft_send", named(c), ["draft", "draft_send"]);
+    expect("the second call carries no action", "action" in c.calls[1].args, false);
+    expect("and it ends on the receipt, with no doubt on screen", c.mod.getState().envelope?.receipt?.outcome, "sent");
+    await c.done();
+    const d = await opCard();
+    d.tools.draft = () => NOT_LISTED;
+    d.tools.draft_delete = () => discardedResult();
+    await pressDelete(d);
+    expectJson("delete the same way", named(d), ["draft", "draft_delete"]);
+    expect("and it ends on the receipt", d.mod.getState().envelope?.receipt?.outcome, "discarded");
+    await d.done();
+  }
+
+  group("9f. The other way round: a host that has only `draft` cached");
+  {
+    const c = await opCard(SAID_SO);
+    c.tools.draft_send = () => NOT_LISTED;
+    c.tools.draft = () => sentResult();
+    await pressSend(c);
+    expectJson("draft_send, refused, then `draft`", c.calls.map((x) => [x.name, x.args.action ?? null]), [["draft_send", null], ["draft", "send"]]);
+    expect("and it ends on the receipt", c.mod.getState().envelope?.receipt?.outcome, "sent");
+    await c.done();
+  }
+
+  group("9g. NEVER A SECOND SEND: anything but that refusal stays a lost answer");
+  for (const [label, answer] of [
+    ["a dropped connection", { error: { code: -32603, message: "Failed to fetch" } }],
+    ["a host timeout", { error: { code: -32000, message: "Request timed out" } }],
+    ["a 404 with other words", { error: { code: -32000, message: '{"detail":"Not found"}' } }],
+    ["our server's internal error", { error: { code: -32603, message: "Internal error executing tool 'draft'." } }],
+    ["the words inside a longer message", { error: { code: -32000, message: 'upstream said {"detail":"MCP Resource not found"} after sending' } }],
+    ["the same words as an answer, not a refusal", { isError: true, content: [{ type: "text", text: '{"detail":"MCP Resource not found"}' }] }],
+    ["an answer nobody can read", { content: [{ type: "text", text: "hello" }] }],
+  ]) {
+    const c = await opCard();
+    c.tools.draft = () => answer;
+    c.tools.draft_send = () => sentResult();
+    c.tools.draft_read = () => draftResult();
+    await pressSend(c);
+    expectJson(`${label}: one send call and no other name`, named(c).filter((n) => n !== "draft_read"), ["draft"]);
+    // An isError answer is the server refusing, read by textRefusalCode.
+    if (!answer.isError) expect(`${label}: the card still doubts it`, /Check your Sent folder/.test(c.text()), true);
+    await c.done();
+  }
+
+  group("9h. A second refusal stops there: two names, two calls, and a lost answer");
+  {
+    const c = await opCard();
+    c.tools.draft = () => NOT_LISTED;
+    c.tools.draft_send = () => NOT_LISTED;
+    c.tools.draft_read = () => draftResult();
+    await pressSend(c);
+    expectJson("no third call", named(c).filter((n) => n !== "draft_read"), ["draft", "draft_send"]);
+    await c.done();
+  }
+
+  group("9i. draft_send answers are read the way `draft` answers are");
+  {
+    const quota = { isError: true, content: [{ type: "text", text: "draft_send: sending quota reached." }] };
+    const c = await opCard(SAID_SO);
+    c.tools.draft_send = () => quota;
+    await pressSend(c);
+    expect("a bare refusal is a refusal, in a person's words", /reached its sending limit/.test(c.text()), true);
+    expect("not a lost connection", /connection dropped|Could not reach the server/.test(c.text()), false);
+    expect("Send is not held back", c.softOff(c.btn(/^Send$/)), false);
+    expectJson("and no second name", named(c), ["draft_send"]);
+    await c.done();
+
+    const unknown = {
+      isError: true,
+      delivery_status: "unknown",
+      content: [{ type: "text", text: "draft_send: the message may or may not have been delivered." }],
+    };
+    const d = await opCard(SAID_SO);
+    d.tools.draft_send = () => unknown;
+    d.tools.draft_read = () => draftResult();
+    await pressSend(d);
+    expect("delivery unknown stays a lost answer", /Check your Sent folder/.test(d.text()), true);
+    expectJson("and no second name", named(d).filter((n) => n !== "draft_read"), ["draft_send"]);
+    await d.done();
+
+    const gone = { isError: true, content: [{ type: "text", text: "draft_delete: draft not found." }] };
+    const e = await opCard(SAID_SO);
+    e.tools.draft_delete = () => gone;
+    await pressDelete(e);
+    expect("a delete of a draft already gone ends the card", e.mod.getState().envelope?.card, "receipt");
+    expectJson("with one call", named(e), ["draft_delete"]);
+    await e.done();
+  }
+
   report(null);
 }
 

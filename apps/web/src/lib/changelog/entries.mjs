@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-02',
+    kind: 'fixed',
+    title: 'Send and Delete draft work in the ChatGPT draft card',
+    body:
+      "The Send and Delete draft buttons in the draft card now work in ChatGPT. Before, they stopped with a message that the connection had dropped, and nothing was sent or deleted.",
+  },
+  {
     date: '2026-11-01',
     kind: 'fixed',
     title: 'Searching all inboxes works with one inbox',
