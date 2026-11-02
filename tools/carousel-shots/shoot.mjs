@@ -28,7 +28,7 @@ const pw = createRequire(import.meta.url)(
 );
 
 const V = "review-card-v1";
-const NORA = "nora@harborknowledge.example";
+const NORA = "hello@harborknowledge.com";
 const INBOX_ID = "6f0d3c1e-2a54-4b87-9d10-7a3e5c9b2f41";
 const ELIN = "events@nordic-logistics-forum.example";
 const iso = (min) => new Date(Date.now() + min * 60000).toISOString();
@@ -45,8 +45,16 @@ const REPLY_BODY =
   "Logistics Forum in Bergen on 4 November, and the afternoon panel on port " +
   "throughput measurement suits me well.\n\nPlease send the programme details when " +
   "you have them.\n\nBest regards,\nNora\n\n" +
-  "On Mon, 15 Sep 2026, Elin Kvamme wrote:\n> We would like to invite you to speak at the Nordic Logistics Forum in\n" +
-  "> Bergen on 4 November. Could you let us know by 20 September?";
+  "On Wed, 2 Sep 2026 09:00:00 +0200, Nordic Logistics Forum <events@nordic-logistics-forum.example> wrote:\n" +
+  "> Dear Nora,\n>\n" +
+  "> We would like to invite you to speak at the Nordic Logistics Forum in\n" +
+  "> Bergen on 4 November. The slot is 25 minutes plus questions, on the\n" +
+  "> afternoon panel about port throughput measurement.\n>\n" +
+  "> Could you let us know by 20 September whether you are able to join?\n>\n" +
+  "> Warm regards,\n> Elin Kvamme\n> Programme Committee";
+
+// The server marks where the quoted original starts, in lines (quoted-reply.ts#quotedTextLine).
+const QUOTED = { line: REPLY_BODY.slice(0, REPLY_BODY.indexOf("On Wed,")).split("\n").length - 1 };
 
 // draft{action:"reply"}: deferred body (review-card-v2) with the text in result _meta.
 const DRAFT = {
@@ -73,19 +81,19 @@ const DRAFT = {
         identity,
         recipients: { to: [ELIN], cc: [], bcc: [] },
         subject: "Re: Speaker invitation: Nordic Logistics Forum, 4 November",
-        body: { text: null, html: null, truncated: false, deferred: true },
+        body: { text: null, html: null, truncated: false, deferred: true, quoted: QUOTED },
         attachments: [],
         signature: { embedded: false },
         in_reply_to: {
           message_id: "INBOX:14",
           subject: "Speaker invitation: Nordic Logistics Forum, 4 November",
-          from: ELIN,
-          date: "2026-09-15T09:12:00Z",
+          from: "Nordic Logistics Forum <events@nordic-logistics-forum.example>",
+          date: "2026-09-02T09:00:00Z",
         },
         can_send: true,
       },
     },
-    _meta: { "mcpemails/draft_body": { text: REPLY_BODY, html: null, truncated: false } },
+    _meta: { "mcpemails/draft_body": { text: REPLY_BODY, html: null, truncated: false, quoted: QUOTED } },
   },
 };
 
@@ -208,7 +216,7 @@ DRAFT.tools = {
         ...DRAFT.result.structuredContent.draft,
         origin: "read",
         in_reply_to: null,
-        body: { text: REPLY_BODY, html: null, truncated: false },
+        body: { text: REPLY_BODY, html: null, truncated: false, quoted: QUOTED },
       },
     },
   },
@@ -217,7 +225,7 @@ DRAFT.tools = {
 const SCENES = { draft: DRAFT, held: HELD, automation: AUTOMATION, bulk: BULK };
 
 const HOST = `<!doctype html><meta charset="utf-8"><title>host</title>
-<style>html,body{margin:0;background:#fff}#f{display:block;width:700px;height:200px;border:0}</style>
+<style>html,body{margin:0;background:#fff}#f{display:block;width:700px;height:1400px;border:0}</style>
 <iframe id="f" src="/card.html"></iframe>
 <script type="module">
 const scene = await (await fetch("/scene.json?name=" + new URLSearchParams(location.search).get("scene"))).json();
@@ -239,7 +247,6 @@ window.addEventListener("message", (e) => {
     return;
   }
   if (m.method === "ui/notifications/size-changed") {
-    if (m.params?.height) f.style.height = Math.ceil(m.params.height) + "px";
     window.__ready = true;
     return;
   }
@@ -273,6 +280,7 @@ for (const [scene, file] of Object.entries(names)) {
   await page.goto(`${base}/?scene=${scene}`);
   await page.waitForFunction(() => window.__ready, null, { timeout: 8000 });
   const frame = page.frameLocator("#f");
+  if (scene === "draft") await frame.getByText("Show quote").click();
   if (scene === "bulk") await frame.locator("details summary").click();
   await page.waitForTimeout(700);
   // The card's real height after any expansion, then shoot the frame alone.
