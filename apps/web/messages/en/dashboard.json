@@ -1163,7 +1163,8 @@
       "dashboard": "Approve on mcpemails.com only",
       "dashboardHint": "No card in the conversation. The assistant is told the send is waiting, and you decide here.",
       "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary.",
-      "ownerAdminOnly": "Only workspace owners and admins can change the review setting."
+      "ownerAdminOnly": "Only workspace owners and admins can change the review setting.",
+      "fanoutHold": "Automatic safety hold: one message from this inbox reached many recipients within an hour, so further copies of that message wait for approval until {time}. Other email sends normally, whatever the setting below."
     },
     "panel": {
       "decidedTitle": "Recently decided",

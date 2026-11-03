@@ -11396,6 +11396,8 @@ interface InboxRow {
   signature_updated_at: string | null;
   /** Opt-in server-side human gate for outbound delivery. */
   send_approval_required: boolean;
+  /** Not a column: set only by `brakeHeldInbox`, so a held send can say why. */
+  brakeHold?: BrakeHold;
 }
 
 /**
@@ -18916,7 +18918,7 @@ async function executeForwardEmail(
   // execute the same threaded forward once a human approves it.
   try {
     const approval = await queueSendApproval(
-      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -19336,7 +19338,7 @@ async function executeReplyToEmail(
   // to derive threading headers at approved-dispatch time.
   try {
     const approval = await queueSendApproval(
-      brake.hold ? brakeHeldInbox(senderInbox) : senderInbox,
+      brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -19547,6 +19549,8 @@ interface QueuedApproval {
   reviewUrl: string;
   /** The inbox's `send_review_mode`: 'off' | 'inline' | 'dashboard'. */
   reviewMode: string;
+  /** Set when the fan-out brake held it, not the inbox's review setting. */
+  brakeHold?: BrakeHold;
   /**
    * The row exactly as the database returned it from the INSERT.
    *
@@ -19776,7 +19780,8 @@ function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
 /** What the brakes decided for one tool-initiated send. */
 type OutboundBrakeVerdict =
   | { refusal: ReturnType<typeof brakeRefusalResult> }
-  | { hold: boolean };
+  | { hold: false }
+  | { hold: true; retryAt: string | null };
 
 async function outboundBrakeGate(input: {
   tool: string;
@@ -19811,14 +19816,25 @@ async function outboundBrakeGate(input: {
         retryAt: decision.retryAt,
       });
     }
-    return { hold: true };
+    return { hold: true, retryAt: decision.retryAt };
   }
   return { hold: false };
 }
 
-/** The inbox as queueSendApproval must see it while the fan-out brake holds it. */
-function brakeHeldInbox(inbox: InboxRow): InboxRow {
-  return { ...inbox, send_approval_required: true };
+/** Why a send the inbox would have sent at once was held anyway. */
+interface BrakeHold {
+  reason: "fanout";
+  /** When the same message stops being held (ISO), or null when unknown. */
+  retryAt: string | null;
+}
+
+/**
+ * The inbox as queueSendApproval must see it while the fan-out brake holds
+ * this send. `brakeHold` is not a column: it rides on the object so the held
+ * result can say the brake held it, not the inbox's review setting.
+ */
+function brakeHeldInbox(inbox: InboxRow, retryAt: string | null): InboxRow {
+  return { ...inbox, send_approval_required: true, brakeHold: { reason: "fanout", retryAt } };
 }
 
 /**
@@ -20083,6 +20099,7 @@ async function queueSendApproval(
     row: inserted,
     reviewUrl: approvalReviewUrl(APP_URL, id),
     reviewMode: await readSendReviewMode(inbox.id),
+    ...(inbox.brakeHold ? { brakeHold: inbox.brakeHold } : {}),
   };
 }
 
@@ -20112,6 +20129,7 @@ function pendingApprovalPayload(
   noun: string,
   extra: Record<string, unknown> = {},
 ): Record<string, unknown> {
+  if (approval.brakeHold) return brakeHeldPayload(approval, approval.brakeHold, inboxId, noun, extra);
   const message = approval.reviewMode === "inline"
     ? `This ${noun} has not been sent. It is waiting for a person to approve it: ` +
       `open ${approval.reviewUrl} to approve (sign-in required), or call approval_decide ` +
@@ -20133,6 +20151,36 @@ function pendingApprovalPayload(
     ...extra,
     review_url: approval.reviewUrl,
     message,
+  };
+}
+
+/**
+ * The pending-approval payload for a send the fan-out brake held. The inbox's
+ * review setting did not hold it, so the wording says what did, that only this
+ * message is held, and when it may be sent again. `hold_reason` and `retry_at`
+ * describe our own brake, not the message, so contract §7 still holds.
+ */
+function brakeHeldPayload(
+  approval: QueuedApproval,
+  hold: BrakeHold,
+  inboxId: string,
+  noun: string,
+  extra: Record<string, unknown>,
+): Record<string, unknown> {
+  const when = hold.retryAt ? ` after ${hold.retryAt}` : " in an hour";
+  return {
+    status: "pending_approval",
+    approval_id: approval.id,
+    inbox_id: inboxId,
+    ...extra,
+    hold_reason: hold.reason,
+    retry_at: hold.retryAt,
+    review_url: approval.reviewUrl,
+    message:
+      `This ${noun} has not been sent. MCPEmails held it because the same message already went to ` +
+      `many recipients from this inbox within the last hour. This is an automatic safety hold, ` +
+      `not the inbox's review setting, and it applies only to this message: other email from the ` +
+      `inbox sends normally. Approve it at ${approval.reviewUrl} (sign-in required), or send it again${when}.`,
   };
 }
 
@@ -20515,7 +20563,7 @@ async function executeSendEmail(
     // `heldSendSnapshot` (not an object literal) because this payload carries a
     // load-bearing key that is invisible here: `include_signature: false`, which
     // records that the body above is FINAL. See that function.
-    const approval = await queueSendApproval(brake.hold ? brakeHeldInbox(senderInbox) : senderInbox, apiKey, heldSendSnapshot({
+    const approval = await queueSendApproval(brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox, apiKey, heldSendSnapshot({
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
       subject: sendParams.subject, textBody: sendParams.textBody,
@@ -31846,8 +31894,8 @@ async function executeSendDraft(
   // Abuse brakes (outbound-brakes.ts): freeze, provider-refusal pause and the
   // daily ceiling. No content is passed, so the fan-out brake does not apply
   // here: the draft's content is held by the provider and is not read on this
-  // path, and a read per send would cost a provider round trip. A held fan-out
-  // (from email_send and the others) still holds a draft send from the inbox.
+  // path, and a read per send would cost a provider round trip. A fan-out
+  // hold covers only the message that tripped it, so it never holds a draft.
   const brake = await outboundBrakeGate({
     tool: "draft_send",
     apiKey,
@@ -31856,10 +31904,10 @@ async function executeSendDraft(
     recipients: [],
   });
   if ("refusal" in brake) return brake.refusal;
-  const brakeHold = brake.hold;
+  const heldInbox = brake.hold ? brakeHeldInbox(inbox, brake.retryAt) : inbox;
 
   let approvalRecord: Record<string, unknown> = {};
-  if (sendWillBeHeld(brakeHold ? brakeHeldInbox(inbox) : inbox, apiKey)) {
+  if (sendWillBeHeld(heldInbox, apiKey)) {
     let read: DraftContent | null;
     try {
       read = await readDraftForApproval(inbox, draftId);
@@ -31879,7 +31927,7 @@ async function executeSendDraft(
   // without permitting an external MCP credential to bypass the gate.
   try {
     const approval = await queueSendApproval(
-      brakeHold ? brakeHeldInbox(inbox) : inbox,
+      heldInbox,
       apiKey,
       { ...approvalArgs, inbox_id: inbox.id, ...approvalRecord },
       undefined,
