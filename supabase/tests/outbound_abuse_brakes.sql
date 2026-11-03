@@ -15,7 +15,7 @@
 
 BEGIN;
 
-SELECT plan(20);
+SELECT plan(24);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -88,14 +88,32 @@ SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000003', 1, repeat('b', 64
   ARRAY[repeat('4', 64)], false), 'allow', 'other content is counted separately');
 SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000003', 1, repeat('a', 64),
   ARRAY[repeat('4', 64)], false), 'hold', 'a fourth distinct recipient of the same content holds the inbox');
+SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000003', 1, repeat('a', 64),
+  ARRAY[repeat('1', 64)], false), 'hold', 'while held, the same content is held, even to a known recipient');
 SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000003', 1, repeat('c', 64),
-  ARRAY[repeat('5', 64)], false), 'hold', 'while held, every further send from the inbox is held');
+  ARRAY[repeat('5', 64)], false), 'allow', 'while held, other content from the inbox still sends');
+SELECT is(
+  public.outbound_send_gate('b0a0aaaa-0000-0000-0000-00000000000a', 'b0a01111-0000-0000-0000-000000000003',
+    1, NULL, NULL, 5, 3, 3600000, false, false)->>'decision',
+  'allow', 'while held, a send without content (a draft send) still sends');
+SELECT is(
+  public.outbound_send_gate('b0a0aaaa-0000-0000-0000-00000000000a', 'b0a01111-0000-0000-0000-000000000003',
+    1, repeat('a', 64), ARRAY[repeat('8', 64)], 5, 3, 3600000, false, false)->>'reason',
+  'fanout', 'a hold says it is the fan-out brake');
 SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000003', 1, repeat('a', 64),
   ARRAY[repeat('9', 64)], true), 'allow', 'an approved send skips the fan-out brake');
 SELECT ok(
-  (SELECT fanout_hold_until > now() AND fanout_hold_until <= date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' + interval '1 day'
+  (SELECT fanout_hold_until > now() AND fanout_hold_until <= now() + interval '1 hour'
+       AND fanout_content_hash = repeat('a', 64)
      FROM public.inbox_send_brakes WHERE inbox_id = 'b0a01111-0000-0000-0000-000000000003'),
-  'the hold ends at the end of the UTC day');
+  'the hold lasts one window and names the content it holds');
+
+-- A workspace override replaces the default limit (3 here).
+UPDATE public.workspaces SET fanout_recipient_limit = 10 WHERE id = 'b0a0aaaa-0000-0000-0000-00000000000a';
+SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000002', 1, repeat('d', 64),
+  ARRAY[repeat('1', 64), repeat('2', 64), repeat('3', 64), repeat('4', 64), repeat('5', 64)], false), 'allow',
+  'with fanout_recipient_limit = 10, five recipients of one content is fine');
+UPDATE public.workspaces SET fanout_recipient_limit = NULL WHERE id = 'b0a0aaaa-0000-0000-0000-00000000000a';
 
 -- ── Provider-refusal pause ─────────────────────────────────────────────────
 SELECT is(

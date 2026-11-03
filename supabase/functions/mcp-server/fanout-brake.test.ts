@@ -26,6 +26,9 @@ const SOURCE = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 const MIGRATION = await Deno.readTextFile(
   new URL("../../migrations/20261024130000_outbound_abuse_brakes.sql", import.meta.url),
 );
+const SCOPE_MIGRATION = await Deno.readTextFile(
+  new URL("../../migrations/20261103120000_fanout_brake_scope.sql", import.meta.url),
+);
 
 function recordingDb(answer: unknown = { decision: "allow" }) {
   const calls: Record<string, unknown>[] = [];
@@ -107,9 +110,23 @@ Deno.test("a hold answer is a hold, with its end and whether it just tripped", (
   );
   assertEquals(parseGateAnswer({ decision: "hold" }), { kind: "hold", retryAt: null, newlyTripped: false });
   assert(
-    /date_trunc\('day', v_now AT TIME ZONE 'UTC'\) \+ interval '1 day'/.test(MIGRATION),
-    "held until the end of the UTC day",
+    /v_hold_until := v_now \+ \(p_fanout_window_ms \|\| ' milliseconds'\)::interval;/.test(SCOPE_MIGRATION),
+    "held for one window, not to the end of the UTC day",
   );
+  assert(
+    /AND p_content_hash IS NOT NULL AND v_brake\.fanout_content_hash = p_content_hash THEN/.test(SCOPE_MIGRATION),
+    "only the content that tripped the brake is held",
+  );
+});
+
+Deno.test("a brake-held send says the brake held it, not the review setting", () => {
+  assert(/if \(approval\.brakeHold\) return brakeHeldPayload\(/.test(SOURCE), "the payload branches on the brake");
+  const start = SOURCE.indexOf("function brakeHeldPayload(");
+  const body = SOURCE.slice(start, SOURCE.indexOf("\n}\n", start));
+  assert(/hold_reason: hold\.reason,/.test(body), "it carries hold_reason");
+  assert(/retry_at: hold\.retryAt,/.test(body), "it carries retry_at");
+  assert(/not the inbox's review setting/.test(body), "it says the review setting did not hold it");
+  assert(!/\b25\b/.test(body), "the limit itself is not named");
 });
 
 Deno.test("a held send goes to the approval queue (held, never dropped)", () => {
@@ -117,12 +134,12 @@ Deno.test("a held send goes to the approval queue (held, never dropped)", () => 
     const start = SOURCE.indexOf(`async function ${handler}(`);
     const body = SOURCE.slice(start, SOURCE.indexOf("\nasync function ", start + 1));
     assert(
-      /queueSendApproval\(\s*brake(?:\.hold|Hold) \? brakeHeldInbox\(/.test(body),
+      /queueSendApproval\(\s*(?:brake\.hold \? brakeHeldInbox\(|heldInbox,)/.test(body),
       `${handler} queues the send for approval while the inbox is held`,
     );
   }
   assert(
-    /function brakeHeldInbox\(inbox: InboxRow\): InboxRow \{\s*return \{ \.\.\.inbox, send_approval_required: true \};/
+    /function brakeHeldInbox\(inbox: InboxRow, retryAt: string \| null\): InboxRow \{\s*return \{ \.\.\.inbox, send_approval_required: true, brakeHold: \{ reason: "fanout", retryAt \} \};/
       .test(SOURCE),
     "holding reuses the existing approval gate (send_approval_required)",
   );

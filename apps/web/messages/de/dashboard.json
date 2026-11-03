@@ -1180,7 +1180,8 @@
       "dashboard": "Nur auf mcpemails.com freigeben",
       "dashboardHint": "Keine Karte in der Unterhaltung. Der Assistent erfährt, dass die Sendung wartet, und Sie entscheiden hier.",
       "guarantee": "In beiden Prüfmodi wird die E-Mail vorbereitet, aber nicht zugestellt. Freigeben ist nur in einer angemeldeten Browsersitzung eines Inhabers oder Admins des Workspace möglich, die der Assistent nicht hat. Die Prüfkarte dient der Bequemlichkeit und ist keine Berechtigungsgrenze.",
-      "ownerAdminOnly": "Nur Inhaber und Admins des Workspace können die Prüfeinstellung ändern."
+      "ownerAdminOnly": "Nur Inhaber und Admins des Workspace können die Prüfeinstellung ändern.",
+      "fanoutHold": "Automatische Sicherheitssperre: Eine Nachricht aus diesem Postfach ging innerhalb einer Stunde an viele Empfänger. Weitere Kopien dieser Nachricht warten bis {time} auf Freigabe. Andere E-Mails werden normal gesendet, unabhängig von der Einstellung unten."
     },
     "panel": {
       "decidedTitle": "Zuletzt entschieden",

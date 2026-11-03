@@ -1504,6 +1504,17 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 }
 .read-only-list li { margin: 0 0 10px; }
 .read-only-list a { color: var(--fg-1); }
+/* /docs/claude-email-arabic. Geist has no Arabic glyphs, so Arabic falls through
+   the --font-sans stack to the system font. Letter-spacing breaks the joins
+   between Arabic letters. */
+.ar-guide h1, .ar-guide h2, .ar-guide .eye-label, .ar-guide .btn { letter-spacing: 0; text-transform: none; }
+.ar-guide p, .ar-guide li { line-height: 1.8; }
+.ar-guide .read-only-list { padding-left: 0; padding-right: 20px; }
+.ar-guide-answer {
+  max-width: 720px; margin: 0; padding: 16px 20px; font-size: 16px; color: var(--fg-1);
+  background: var(--bg-page); border: 1px solid var(--border-1); border-radius: 8px;
+}
+.ar-guide bdi code { font-size: 14px; }
 
 /* /docs/api and /developers: prose, tables and a jump list. */
 .dev-h3 {

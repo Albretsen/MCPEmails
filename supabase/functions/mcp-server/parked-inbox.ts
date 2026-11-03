@@ -25,6 +25,7 @@
 // ---------------------------------------------------------------------------
 
 import type { InboxQueryClient } from "./reachable-inbox.ts";
+import { type PlanLimitWording, plansInfoUrl } from "./usage-limit-message.ts";
 
 /** The `status` an `inbox_list` entry carries when its inbox is parked. */
 export const PARKED_INBOX_STATUS = "parked";
@@ -44,9 +45,17 @@ export function billingPageUrl(appUrl: string): string {
  * One sentence for the assistant, on every parked `inbox_list` entry.
  *
  * No plan names or slugs: the assistant does not need them, and a slug is
- * never shown to a customer.
+ * never shown to a customer. `directory` (ChatGPT and Codex keys) states the
+ * fact and links the informational plans page: no instruction to the model and
+ * no upgrade pitch, as for the cap refusal (usage-limit-message.ts).
  */
-export function parkedInboxHint(appUrl: string): string {
+export function parkedInboxHint(appUrl: string, wording: PlanLimitWording = "standard"): string {
+  if (wording === "directory") {
+    return (
+      "This inbox is parked: the workspace's plan includes fewer inboxes than are " +
+      `connected. Nothing was deleted. Plans: ${plansInfoUrl(appUrl.replace(/\/+$/, ""))}`
+    );
+  }
   return (
     "This inbox is parked: the workspace's current MCPEmails plan includes fewer " +
     "inboxes than are connected. Nothing was deleted, but no tool can use it until " +
@@ -59,7 +68,11 @@ export function parkedInboxHint(appUrl: string): string {
  * The error text for a tool call that named a parked inbox, or that had no
  * active inbox to fall back on because every inbox the key can see is parked.
  */
-export function parkedInboxErrorText(emailAddresses: readonly string[], appUrl: string): string {
+export function parkedInboxErrorText(
+  emailAddresses: readonly string[],
+  appUrl: string,
+  wording: PlanLimitWording = "standard",
+): string {
   const one = emailAddresses.length === 1;
   const subject = emailAddresses.length === 0
     ? "Every inbox this key can use is"
@@ -67,6 +80,13 @@ export function parkedInboxErrorText(emailAddresses: readonly string[], appUrl: 
     ? `The inbox ${emailAddresses[0]} is`
     : `The inboxes ${emailAddresses.join(", ")} are`;
   const it = one ? "it" : "them";
+  if (wording === "directory") {
+    return (
+      `${subject} parked: the workspace's plan includes fewer inboxes than are connected, ` +
+      `so this tool cannot use ${it}. Nothing was deleted and nothing was done. ` +
+      `Plans: ${plansInfoUrl(appUrl.replace(/\/+$/, ""))} . Call inbox_list to see which inboxes are active.`
+    );
+  }
   return (
     `${subject} parked: the workspace's current MCPEmails plan includes fewer inboxes ` +
     `than are connected, so this tool cannot use ${it}. Nothing was deleted and nothing ` +

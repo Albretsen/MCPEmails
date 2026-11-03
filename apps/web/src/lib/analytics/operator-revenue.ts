@@ -222,6 +222,7 @@ export function toCustomerRow(
     grossMonthlyMinor,
     discount: { percentOff, amountOffMonthlyMinor },
     ...(ratio === undefined ? {} : { taxInclusiveRatio: ratio }),
+    billingInterval: interval,
     planLabel: planLabel(price),
     internal: false,
   };

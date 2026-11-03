@@ -261,7 +261,7 @@ test('a running pause is not MRR and not churn; a scheduled one is still MRR', (
   const nowSeconds = sec('2026-11-20T00:00:00Z');
   const fact = (id: string, paused: boolean) => ({
     id, status: 'active', createdAt: sec('2026-01-01T00:00:00Z'), endedAt: null, cancelAtPeriodEnd: false, canceledAt: null,
-    currency: 'usd', grossMonthlyMinor: 1500, discount: { percentOff: 0, amountOffMonthlyMinor: 0 }, planLabel: 'Pro monthly',
+    currency: 'usd', grossMonthlyMinor: 1500, discount: { percentOff: 0, amountOffMonthlyMinor: 0 }, billingInterval: 'month', planLabel: 'Pro monthly',
     internal: false, paused,
   });
   const summary = summarizeSubscriptions([fact('a', false), fact('b', true)], { nowSeconds, windowDays: 28 });

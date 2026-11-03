@@ -1180,7 +1180,8 @@
       "dashboard": "Aprobar solo en mcpemails.com",
       "dashboardHint": "Sin tarjeta en la conversación. Se informa al asistente de que el envío está esperando y tú decides aquí.",
       "guarantee": "En ambos modos de revisión el correo se prepara pero no se entrega. La aprobación solo ocurre en una sesión de navegador iniciada por un propietario o administrador del espacio, algo que el asistente no tiene. La tarjeta de revisión es una comodidad, no un límite de permisos.",
-      "ownerAdminOnly": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el ajuste de revisión."
+      "ownerAdminOnly": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el ajuste de revisión.",
+      "fanoutHold": "Retención automática de seguridad: un mensaje de este buzón llegó a muchos destinatarios en una hora, así que las demás copias de ese mensaje esperan aprobación hasta las {time}. El resto del correo se envía con normalidad, sea cual sea el ajuste de abajo."
     },
     "panel": {
       "decidedTitle": "Decididos recientemente",

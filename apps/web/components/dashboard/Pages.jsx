@@ -2733,6 +2733,31 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
+/**
+ * Shown while the fan-out brake holds one message from this inbox
+ * (mcp-server/outbound-brakes.ts). Without it a held send looks like the
+ * review setting failed. The limit itself is deliberately not named.
+ */
+function FanoutHoldNotice({ until }) {
+  const t = useTranslations('dashboard');
+  if (!until) return null;
+  const end = new Date(until);
+  // The page loads only holds that are still active.
+  if (isNaN(end.getTime())) return null;
+  const time = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return (
+    <div
+      role="status"
+      style={{
+        fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)',
+        background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8, padding: '8px 10px', marginBottom: 10,
+      }}
+    >
+      {t('approvals.mode.fanoutHold', { time })}
+    </div>
+  );
+}
+
 function ReviewModeSelector({ value, onChange, disabled, lockedNote = null, chatRolledOut = false }) {
   const t = useTranslations('dashboard');
   // 'chat' follows workspaces.chat_send_confirm_enabled, on for every workspace
@@ -3323,6 +3348,8 @@ function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview =
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
+
+      <FanoutHoldNotice until={inbox.fanoutHoldUntil} />
 
       <ReviewModeSelector
         value={reviewMode}

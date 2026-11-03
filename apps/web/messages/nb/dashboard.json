@@ -1180,7 +1180,8 @@
       "dashboard": "Godkjenn bare på mcpemails.com",
       "dashboardHint": "Ingen kort i samtalen. Assistenten får beskjed om at utsendingen venter, og du bestemmer her.",
       "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense.",
-      "ownerAdminOnly": "Bare eiere og administratorer i arbeidsområdet kan endre gjennomgangsinnstillingen."
+      "ownerAdminOnly": "Bare eiere og administratorer i arbeidsområdet kan endre gjennomgangsinnstillingen.",
+      "fanoutHold": "Automatisk sikkerhetsstopp: én melding fra denne innboksen gikk til mange mottakere i løpet av en time, så flere kopier av den meldingen venter på godkjenning til {time}. Annen e-post sendes som vanlig, uansett innstillingen nedenfor."
     },
     "panel": {
       "decidedTitle": "Nylig avgjort",

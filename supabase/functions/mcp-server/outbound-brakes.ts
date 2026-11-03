@@ -14,10 +14,13 @@
 //   daily_send_limit                500 messages from this inbox in a rolling
 //                                   24 hours (messages, not recipients)
 //   hold (fan-out)                  one normalized subject+body went to more
-//                                   than 25 distinct recipients within an hour;
-//                                   further sends from the inbox are held for a
-//                                   human in send_approvals until the end of the
-//                                   UTC day. Held, never dropped.
+//                                   than 25 distinct recipients within an hour
+//                                   (workspaces.fanout_recipient_limit overrides
+//                                   the 25); further sends of THAT content from
+//                                   the inbox are held for a human in
+//                                   send_approvals for an hour. Other mail goes
+//                                   out. Held, never dropped (migration
+//                                   20261103120000_fanout_brake_scope.sql).
 //
 // The first three are refusals: an isError tool result (never a JSON-RPC
 // error) with `error_code` in `_meta`, delivery_status "not_sent", and a

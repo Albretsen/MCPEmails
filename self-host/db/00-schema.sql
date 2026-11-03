@@ -120,6 +120,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS fanout_recipient_limit             integer CHECK (fanout_recipient_limit IS NULL OR fanout_recipient_limit > 0),
   ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
   ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
   ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
@@ -446,7 +447,8 @@ $$;
 -- ============================================================
 -- Outbound abuse brakes: outbound_send_events, inbox_send_brakes,
 -- outbound_send_gate(), outbound_send_refusal()
--- (migration 20261024130000_outbound_abuse_brakes.sql). The hosted
+-- (migrations 20261024130000_outbound_abuse_brakes.sql and
+-- 20261103120000_fanout_brake_scope.sql). The hosted
 -- schema runs purge_outbound_send_events() hourly with pg_cron; self-host has
 -- no pg_cron, so run it from your own scheduler to keep the table small.
 -- ============================================================
@@ -478,6 +480,7 @@ CREATE TABLE IF NOT EXISTS public.inbox_send_brakes (
   inbox_id            uuid PRIMARY KEY REFERENCES public.inboxes(id) ON DELETE CASCADE,
   workspace_id        uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   fanout_hold_until   timestamptz,
+  fanout_content_hash text CHECK (fanout_content_hash IS NULL OR fanout_content_hash ~ '^[0-9a-f]{64}$'),
   refusal_pause_until timestamptz,
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
@@ -524,10 +527,14 @@ DECLARE
   v_oldest     timestamptz;
   v_distinct   bigint;
   v_hold_until timestamptz;
+  v_limit      integer;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended('outbound_send_gate:' || p_inbox_id::text, 0));
 
-  SELECT sends_frozen_at INTO v_frozen FROM public.workspaces WHERE id = p_workspace_id;
+  SELECT sends_frozen_at, COALESCE(fanout_recipient_limit, p_fanout_limit)
+    INTO v_frozen, v_limit
+    FROM public.workspaces WHERE id = p_workspace_id;
+  v_limit := COALESCE(v_limit, p_fanout_limit);
   IF v_frozen IS NOT NULL THEN
     RETURN jsonb_build_object('decision', 'frozen');
   END IF;
@@ -548,8 +555,12 @@ BEGIN
   END IF;
 
   IF NOT COALESCE(p_human_approved, false) THEN
-    IF v_brake.fanout_hold_until IS NOT NULL AND v_brake.fanout_hold_until > v_now THEN
-      RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_brake.fanout_hold_until, 'newly_tripped', false);
+    -- Only the message that tripped the brake is held. Other mail from the
+    -- inbox goes out. A row from before fanout_content_hash existed has no
+    -- hash, so it holds nothing.
+    IF v_brake.fanout_hold_until IS NOT NULL AND v_brake.fanout_hold_until > v_now
+       AND p_content_hash IS NOT NULL AND v_brake.fanout_content_hash = p_content_hash THEN
+      RETURN jsonb_build_object('decision', 'hold', 'reason', 'fanout', 'retry_at', v_brake.fanout_hold_until, 'newly_tripped', false);
     END IF;
 
     IF p_content_hash IS NOT NULL AND COALESCE(cardinality(p_recipient_hashes), 0) > 0 THEN
@@ -562,14 +573,16 @@ BEGIN
         UNION
         SELECT unnest(p_recipient_hashes)
       ) AS recipients;
-      IF v_distinct > p_fanout_limit THEN
-        -- Held until the end of the current UTC day.
-        v_hold_until := (date_trunc('day', v_now AT TIME ZONE 'UTC') + interval '1 day') AT TIME ZONE 'UTC';
-        INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, fanout_hold_until, updated_at)
-        VALUES (p_inbox_id, p_workspace_id, v_hold_until, v_now)
+      IF v_distinct > v_limit THEN
+        -- Held for one window, the same span the count looks back over.
+        v_hold_until := v_now + (p_fanout_window_ms || ' milliseconds')::interval;
+        INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, fanout_hold_until, fanout_content_hash, updated_at)
+        VALUES (p_inbox_id, p_workspace_id, v_hold_until, p_content_hash, v_now)
         ON CONFLICT (inbox_id) DO UPDATE
-          SET fanout_hold_until = EXCLUDED.fanout_hold_until, updated_at = v_now;
-        RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_hold_until, 'newly_tripped', true);
+          SET fanout_hold_until = EXCLUDED.fanout_hold_until,
+              fanout_content_hash = EXCLUDED.fanout_content_hash,
+              updated_at = v_now;
+        RETURN jsonb_build_object('decision', 'hold', 'reason', 'fanout', 'retry_at', v_hold_until, 'newly_tripped', true);
       END IF;
     END IF;
   END IF;
